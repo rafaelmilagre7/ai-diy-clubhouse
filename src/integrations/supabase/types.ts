@@ -4384,6 +4384,42 @@ export type Database = {
           },
         ]
       }
+      security_anomalies: {
+        Row: {
+          affected_user_id: string | null
+          anomaly_type: string
+          confidence_score: number | null
+          description: string | null
+          detected_at: string
+          detection_data: Json | null
+          id: string
+          resolved_at: string | null
+          status: string
+        }
+        Insert: {
+          affected_user_id?: string | null
+          anomaly_type: string
+          confidence_score?: number | null
+          description?: string | null
+          detected_at?: string
+          detection_data?: Json | null
+          id?: string
+          resolved_at?: string | null
+          status?: string
+        }
+        Update: {
+          affected_user_id?: string | null
+          anomaly_type?: string
+          confidence_score?: number | null
+          description?: string | null
+          detected_at?: string
+          detection_data?: Json | null
+          id?: string
+          resolved_at?: string | null
+          status?: string
+        }
+        Relationships: []
+      }
       security_audit_logs: {
         Row: {
           action_type: string
@@ -4420,6 +4456,129 @@ export type Database = {
           resource_type?: string
           user_agent?: string | null
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      security_incidents: {
+        Row: {
+          assigned_to: string | null
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          metadata: Json | null
+          related_logs: string[] | null
+          resolved_at: string | null
+          severity: string
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          assigned_to?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          metadata?: Json | null
+          related_logs?: string[] | null
+          resolved_at?: string | null
+          severity: string
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          assigned_to?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          metadata?: Json | null
+          related_logs?: string[] | null
+          resolved_at?: string | null
+          severity?: string
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      security_logs: {
+        Row: {
+          action: string
+          correlation_id: string | null
+          details: Json | null
+          event_type: string
+          id: string
+          ip_address: string | null
+          location: Json | null
+          processed: boolean | null
+          resource_id: string | null
+          resource_type: string | null
+          severity: string
+          timestamp: string
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          correlation_id?: string | null
+          details?: Json | null
+          event_type: string
+          id?: string
+          ip_address?: string | null
+          location?: Json | null
+          processed?: boolean | null
+          resource_id?: string | null
+          resource_type?: string | null
+          severity: string
+          timestamp?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          correlation_id?: string | null
+          details?: Json | null
+          event_type?: string
+          id?: string
+          ip_address?: string | null
+          location?: Json | null
+          processed?: boolean | null
+          resource_id?: string | null
+          resource_type?: string | null
+          severity?: string
+          timestamp?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      security_metrics: {
+        Row: {
+          id: string
+          labels: Json | null
+          metric_name: string
+          metric_type: string
+          metric_value: number
+          recorded_at: string
+        }
+        Insert: {
+          id?: string
+          labels?: Json | null
+          metric_name: string
+          metric_type: string
+          metric_value: number
+          recorded_at?: string
+        }
+        Update: {
+          id?: string
+          labels?: Json | null
+          metric_name?: string
+          metric_type?: string
+          metric_value?: number
+          recorded_at?: string
         }
         Relationships: []
       }
@@ -5922,6 +6081,10 @@ export type Database = {
         Args: { post_id: string }
         Returns: Json
       }
+      detect_login_anomaly: {
+        Args: { p_user_id: string; p_ip_address: string }
+        Returns: boolean
+      }
       generate_certificate_validation_code: {
         Args: Record<PropertyKey, never>
         Returns: string
@@ -5941,6 +6104,10 @@ export type Database = {
       generate_referral_token: {
         Args: Record<PropertyKey, never>
         Returns: string
+      }
+      generate_security_metrics: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
       }
       get_current_user_role: {
         Args: Record<PropertyKey, never>
