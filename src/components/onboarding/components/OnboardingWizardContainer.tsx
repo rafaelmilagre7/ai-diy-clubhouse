@@ -1,8 +1,6 @@
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { useOnboardingData } from '../hooks/useOnboardingData';
 import { useOnboardingValidation } from '../hooks/useOnboardingValidation';
-import { useOnboardingSubmission } from '../hooks/useOnboardingSubmission';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/lib/supabase';
 import { OnboardingData } from '../types/onboardingTypes';
@@ -17,13 +15,11 @@ interface OnboardingWizardContextType {
   hasUnsavedChanges: boolean;
   validationErrors: Array<{ field: string; message: string }>;
   getFieldError: (field: string) => string | undefined;
-  syncStatus: 'idle' | 'syncing' | 'synced' | 'error';
   handleNext: () => Promise<void>;
   handlePrevious: () => void;
   handleDataChange: (newData: Partial<OnboardingData>) => void;
   handleSubmit: () => Promise<void>;
   isCurrentStepValid: boolean;
-  // Simplificado: apenas uma mensagem e um estado de loading
   currentAIMessage: string | null;
   isGeneratingAI: boolean;
   generateAIMessage: () => Promise<void>;
@@ -47,31 +43,42 @@ export const OnboardingWizardContainer: React.FC<OnboardingWizardContainerProps>
   const [currentStep, setCurrentStep] = useState(1);
   const totalSteps = 6;
 
-  // Estados simplificados para IA
+  // Estados básicos
+  const [data, setData] = useState<OnboardingData>({
+    memberType: 'club',
+    name: '',
+    email: '',
+    city: ''
+  });
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [lastSaved, setLastSaved] = useState<Date | null>(null);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+
+  // Estados para IA
   const [currentAIMessage, setCurrentAIMessage] = useState<string | null>(null);
   const [isGeneratingAI, setIsGeneratingAI] = useState(false);
 
   const { toast } = useToast();
 
   const {
-    data,
-    isLoading,
-    lastSaved,
-    hasUnsavedChanges,
-    syncStatus,
-    updateData,
-  } = useOnboardingData();
-
-  const {
     validationErrors,
     getFieldError,
-    validateStep,
-    isCurrentStepValid,
-  } = useOnboardingValidation(data, currentStep);
+    validateCurrentStep,
+  } = useOnboardingValidation();
 
-  const { isSubmitting, handleSubmit } = useOnboardingSubmission(data);
+  // Função para validar etapa atual
+  const validateStep = useCallback((step: number) => {
+    console.log('[WIZARD-CONTAINER] Validando etapa:', step);
+    const result = validateCurrentStep(step, data, data.memberType || 'club');
+    console.log('[WIZARD-CONTAINER] Resultado da validação:', result);
+    return result.isValid;
+  }, [validateCurrentStep, data]);
 
-  // Função simplificada para gerar mensagem de IA
+  // Computed property para verificar se a etapa atual é válida
+  const isCurrentStepValid = validateStep(currentStep);
+
+  // Função para gerar mensagem de IA
   const generateAIMessage = useCallback(async () => {
     console.log('[WIZARD-CONTAINER] Iniciando geração de mensagem IA');
     console.log('[WIZARD-CONTAINER] Dados atuais:', { name: data.name, city: data.city });
@@ -162,7 +169,32 @@ export const OnboardingWizardContainer: React.FC<OnboardingWizardContainerProps>
 
   const handleDataChange = (newData: Partial<OnboardingData>) => {
     console.log('[WIZARD-CONTAINER] Dados alterados:', newData);
-    updateData(newData);
+    setData(prev => ({ ...prev, ...newData }));
+    setHasUnsavedChanges(true);
+    setLastSaved(new Date());
+  };
+
+  const handleSubmit = async () => {
+    console.log('[WIZARD-CONTAINER] Finalizando onboarding');
+    setIsSubmitting(true);
+    
+    try {
+      // Simular envio
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      toast({
+        title: "Onboarding concluído!",
+        description: "Suas informações foram salvas com sucesso.",
+      });
+    } catch (error) {
+      console.error('[WIZARD-CONTAINER] Erro ao finalizar:', error);
+      toast({
+        title: "Erro",
+        description: "Houve um erro ao salvar suas informações.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const contextValue: OnboardingWizardContextType = {
@@ -175,7 +207,6 @@ export const OnboardingWizardContainer: React.FC<OnboardingWizardContainerProps>
     hasUnsavedChanges,
     validationErrors,
     getFieldError,
-    syncStatus,
     handleNext,
     handlePrevious,
     handleDataChange,

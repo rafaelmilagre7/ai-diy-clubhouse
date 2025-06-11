@@ -27,7 +27,6 @@ const OnboardingWizard = () => {
         hasUnsavedChanges,
         validationErrors,
         getFieldError,
-        syncStatus,
         handleNext,
         handlePrevious,
         handleDataChange,
@@ -86,7 +85,11 @@ const OnboardingWizard = () => {
                       isLoading={isSubmitting}
                       hasUnsavedChanges={hasUnsavedChanges}
                       lastSaved={lastSaved}
-                      syncStatus={syncStatus}
+                      syncStatus={{
+                        isSyncing: false,
+                        lastSyncTime: lastSaved?.toISOString() || '',
+                        syncError: ''
+                      }}
                     />
                   )}
                 </Card>

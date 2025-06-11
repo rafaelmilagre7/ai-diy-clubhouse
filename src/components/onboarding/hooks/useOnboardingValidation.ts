@@ -8,10 +8,15 @@ interface ValidationError {
   message: string;
 }
 
+interface ValidationResult {
+  isValid: boolean;
+  errors: ValidationError[];
+}
+
 export const useOnboardingValidation = () => {
   const [validationErrors, setValidationErrors] = useState<ValidationError[]>([]);
 
-  const validateCurrentStep = useCallback((step: number, data: OnboardingData, memberType: 'club' | 'formacao') => {
+  const validateCurrentStep = useCallback((step: number, data: OnboardingData, memberType: 'club' | 'formacao'): ValidationResult => {
     let result;
     
     if (memberType === 'formacao') {
@@ -25,6 +30,11 @@ export const useOnboardingValidation = () => {
     return result;
   }, []);
 
+  const validateStep = useCallback((step: number, data: OnboardingData, memberType: 'club' | 'formacao') => {
+    const result = validateCurrentStep(step, data, memberType);
+    return result.isValid;
+  }, [validateCurrentStep]);
+
   const clearValidationErrors = useCallback(() => {
     setValidationErrors([]);
   }, []);
@@ -36,6 +46,7 @@ export const useOnboardingValidation = () => {
   return {
     validationErrors,
     validateCurrentStep,
+    validateStep,
     clearValidationErrors,
     getFieldError
   };
