@@ -1,58 +1,132 @@
 
-import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Shield, AlertTriangle, Activity, Clock, Users, Database, TrendingUp, Zap } from 'lucide-react';
+import { 
+  Shield, 
+  AlertTriangle, 
+  Activity, 
+  Users, 
+  RefreshCw,
+  TrendingUp,
+  Clock,
+  Zap
+} from 'lucide-react';
 import { useRealTimeSecurityMonitor } from '@/hooks/security/useRealTimeSecurityMonitor';
 import { useAnomalyDetection } from '@/hooks/security/useAnomalyDetection';
-import { SecurityAuditTrail } from './SecurityAuditTrail';
 import { SecurityMetricsPanel } from './SecurityMetricsPanel';
 import { SecurityIncidentManager } from './SecurityIncidentManager';
+import { SecurityAuditTrail } from './SecurityAuditTrail';
 import { SecurityAlertSystem } from './SecurityAlertSystem';
 
+interface AlertNotification {
+  id: string;
+  title: string;
+  message: string;
+  severity: 'low' | 'medium' | 'high' | 'critical';
+  alert_type: string;
+  created_at: string;
+  is_acknowledged: boolean;
+  data?: Record<string, any>;
+}
+
 export const RealTimeSecurityDashboard = () => {
-  const { events, incidents, metrics, isLoading, error, triggerAnomalyDetection, refreshData } = useRealTimeSecurityMonitor();
-  const { anomalies, patterns, isAnalyzing, runAnomalyDetection } = useAnomalyDetection();
   const [activeTab, setActiveTab] = useState('overview');
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
 
-  // Simular alertas para o SecurityAlertSystem
-  const mockAlerts = anomalies.map(anomaly => ({
-    id: anomaly.id,
-    title: `Anomalia de Segurança: ${anomaly.anomaly_type}`,
-    message: anomaly.description || 'Anomalia detectada no sistema',
-    severity: anomaly.confidence_score > 0.8 ? 'critical' : 'high',
-    alert_type: anomaly.anomaly_type,
-    created_at: anomaly.detected_at,
-    is_acknowledged: anomaly.status !== 'detected',
-    data: anomaly.detection_data
-  }));
+  // Hooks de monitoramento
+  const {
+    events,
+    incidents,
+    metrics,
+    isLoading,
+    error,
+    triggerAnomalyDetection,
+    refreshData
+  } = useRealTimeSecurityMonitor();
 
-  const handleAcknowledgeAlert = async (alertId: string) => {
-    // Implementar lógica de reconhecimento
-    console.log('Acknowledging alert:', alertId);
-  };
+  const {
+    anomalies,
+    patterns,
+    runAnomalyDetection,
+    updateAnomalyStatus,
+    lastAnalysis
+  } = useAnomalyDetection();
 
-  const handleDismissAlert = async (alertId: string) => {
-    // Implementar lógica de dismissal
-    console.log('Dismissing alert:', alertId);
-  };
-
+  // Função para executar análise completa
   const handleRunAnalysis = async () => {
+    setIsAnalyzing(true);
     try {
-      await runAnomalyDetection();
+      await Promise.all([
+        runAnomalyDetection(),
+        triggerAnomalyDetection()
+      ]);
       await refreshData();
     } catch (error) {
       console.error('Erro ao executar análise:', error);
+    } finally {
+      setIsAnalyzing(false);
     }
+  };
+
+  // Função para gerar alertas mockados para demonstração
+  const generateMockAlerts = (): AlertNotification[] => {
+    const mockAlerts: AlertNotification[] = [
+      {
+        id: '1',
+        title: 'Tentativas de Login Suspeitas',
+        message: 'Detectadas 5 tentativas de login falhadas consecutivas do IP 192.168.1.100',
+        severity: 'high' as const,
+        alert_type: 'authentication_anomaly',
+        created_at: new Date().toISOString(),
+        is_acknowledged: false,
+        data: { ip: '192.168.1.100', attempts: 5 }
+      },
+      {
+        id: '2',
+        title: 'Acesso Fora do Horário',
+        message: 'Usuário acessou o sistema às 03:45 AM, fora do horário normal de trabalho',
+        severity: 'medium' as const,
+        alert_type: 'time_anomaly',
+        created_at: new Date(Date.now() - 15 * 60 * 1000).toISOString(),
+        is_acknowledged: false,
+        data: { timestamp: '03:45:00', user_id: 'user123' }
+      },
+      {
+        id: '3',
+        title: 'Múltiplos IPs Detectados',
+        message: 'Mesmo usuário acessando de 3 localizações diferentes em 1 hora',
+        severity: 'critical' as const,
+        alert_type: 'location_anomaly',
+        created_at: new Date(Date.now() - 30 * 60 * 1000).toISOString(),
+        is_acknowledged: true,
+        data: { locations: ['São Paulo', 'Rio de Janeiro', 'Brasília'] }
+      }
+    ];
+    
+    return mockAlerts;
+  };
+
+  const mockAlerts = generateMockAlerts();
+
+  // Funções de manipulação de alertas
+  const handleAcknowledgeAlert = (alertId: string) => {
+    console.log('Reconhecendo alerta:', alertId);
+    // Implementar lógica de reconhecimento
+  };
+
+  const handleDismissAlert = (alertId: string) => {
+    console.log('Descartando alerta:', alertId);
+    // Implementar lógica de descarte
   };
 
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="flex items-center gap-2">
-          <Activity className="h-5 w-5 animate-spin" />
+        <div className="flex items-center space-x-2">
+          <RefreshCw className="h-6 w-6 animate-spin" />
           <span>Carregando dashboard de segurança...</span>
         </div>
       </div>
@@ -61,13 +135,11 @@ export const RealTimeSecurityDashboard = () => {
 
   if (error) {
     return (
-      <Card>
+      <Card className="border-red-200">
         <CardContent className="p-6">
-          <div className="text-center py-8">
-            <AlertTriangle className="h-12 w-12 mx-auto mb-4 text-red-500" />
-            <h3 className="text-lg font-semibold mb-2">Erro ao Carregar Dashboard</h3>
-            <p className="text-muted-foreground mb-4">{error}</p>
-            <Button onClick={refreshData}>Tentar Novamente</Button>
+          <div className="flex items-center space-x-2 text-red-600">
+            <AlertTriangle className="h-5 w-5" />
+            <span>Erro ao carregar dados de segurança: {error}</span>
           </div>
         </CardContent>
       </Card>
@@ -76,214 +148,134 @@ export const RealTimeSecurityDashboard = () => {
 
   return (
     <div className="space-y-6">
-      {/* Header com métricas principais */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* Header com Métricas Rápidas */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
+          <CardContent className="p-4">
+            <div className="flex items-center space-x-2">
+              <Shield className="h-5 w-5 text-green-500" />
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Eventos (24h)</p>
+                <p className="text-sm font-medium">Status do Sistema</p>
+                <p className="text-2xl font-bold text-green-600">Seguro</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center space-x-2">
+              <Activity className="h-5 w-5 text-blue-500" />
+              <div>
+                <p className="text-sm font-medium">Eventos (24h)</p>
                 <p className="text-2xl font-bold">{metrics.totalEvents}</p>
               </div>
-              <Activity className="h-8 w-8 text-blue-500" />
             </div>
           </CardContent>
         </Card>
 
         <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
+          <CardContent className="p-4">
+            <div className="flex items-center space-x-2">
+              <AlertTriangle className="h-5 w-5 text-orange-500" />
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Eventos Críticos</p>
-                <p className="text-2xl font-bold text-red-600">{metrics.criticalEvents}</p>
+                <p className="text-sm font-medium">Incidentes Ativos</p>
+                <p className="text-2xl font-bold">{metrics.activeIncidents}</p>
               </div>
-              <AlertTriangle className="h-8 w-8 text-red-500" />
             </div>
           </CardContent>
         </Card>
 
         <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
+          <CardContent className="p-4">
+            <div className="flex items-center space-x-2">
+              <TrendingUp className="h-5 w-5 text-purple-500" />
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Incidentes Ativos</p>
-                <p className="text-2xl font-bold text-orange-600">{metrics.activeIncidents}</p>
+                <p className="text-sm font-medium">Anomalias</p>
+                <p className="text-2xl font-bold">{metrics.anomaliesDetected}</p>
               </div>
-              <Shield className="h-8 w-8 text-orange-500" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Anomalias</p>
-                <p className="text-2xl font-bold text-purple-600">{metrics.anomaliesDetected}</p>
-              </div>
-              <TrendingUp className="h-8 w-8 text-purple-500" />
             </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Ações rápidas */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Zap className="h-5 w-5" />
-            Ações de Segurança
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-wrap gap-3">
-            <Button 
-              onClick={handleRunAnalysis}
-              disabled={isAnalyzing}
-              className="flex items-center gap-2"
-            >
-              {isAnalyzing ? (
-                <Activity className="h-4 w-4 animate-spin" />
-              ) : (
-                <Shield className="h-4 w-4" />
-              )}
-              {isAnalyzing ? 'Analisando...' : 'Executar Análise de Anomalias'}
-            </Button>
-            
-            <Button variant="outline" onClick={refreshData}>
-              <Clock className="h-4 w-4 mr-2" />
-              Atualizar Dados
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+      {/* Controles de Ação */}
+      <div className="flex justify-between items-center">
+        <div className="flex items-center space-x-2">
+          <Badge variant="outline" className="flex items-center space-x-1">
+            <Clock className="h-3 w-3" />
+            <span>Última atualização: {metrics.lastUpdate.toLocaleTimeString('pt-BR')}</span>
+          </Badge>
+          {lastAnalysis && (
+            <Badge variant="secondary" className="flex items-center space-x-1">
+              <Zap className="h-3 w-3" />
+              <span>Última análise: {lastAnalysis.toLocaleTimeString('pt-BR')}</span>
+            </Badge>
+          )}
+        </div>
+        
+        <div className="flex space-x-2">
+          <Button variant="outline" onClick={refreshData}>
+            <RefreshCw className="mr-2 h-4 w-4" />
+            Atualizar
+          </Button>
+          <Button 
+            onClick={handleRunAnalysis} 
+            disabled={isAnalyzing}
+            className="bg-blue-600 hover:bg-blue-700"
+          >
+            {isAnalyzing ? (
+              <>
+                <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                Analisando...
+              </>
+            ) : (
+              <>
+                <Zap className="mr-2 h-4 w-4" />
+                Executar Análise
+              </>
+            )}
+          </Button>
+        </div>
+      </div>
 
-      {/* Padrões de anomalias detectados */}
-      {patterns.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Padrões de Anomalias Detectados</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {patterns.map((pattern, index) => (
-                <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
-                  <div>
-                    <p className="font-medium">{pattern.description}</p>
-                    <p className="text-sm text-muted-foreground">{pattern.count} ocorrências</p>
-                  </div>
-                  <Badge variant={
-                    pattern.severity === 'critical' ? 'destructive' :
-                    pattern.severity === 'high' ? 'destructive' :
-                    pattern.severity === 'medium' ? 'default' : 'secondary'
-                  }>
-                    {pattern.severity}
-                  </Badge>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Tabs com diferentes visualizações */}
+      {/* Dashboard Principal */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="overview">Visão Geral</TabsTrigger>
           <TabsTrigger value="alerts">Alertas</TabsTrigger>
           <TabsTrigger value="incidents">Incidentes</TabsTrigger>
-          <TabsTrigger value="metrics">Métricas</TabsTrigger>
           <TabsTrigger value="audit">Auditoria</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="space-y-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Últimos eventos */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Últimos Eventos de Segurança</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  {events.slice(0, 5).map((event) => (
-                    <div key={event.id} className="flex items-center justify-between p-3 border rounded-lg">
-                      <div>
-                        <p className="font-medium">{event.action}</p>
-                        <p className="text-sm text-muted-foreground">
-                          {new Date(event.timestamp).toLocaleString('pt-BR')}
-                        </p>
-                      </div>
-                      <Badge variant={
-                        event.severity === 'critical' ? 'destructive' :
-                        event.severity === 'high' ? 'destructive' :
-                        'default'
-                      }>
-                        {event.severity}
-                      </Badge>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Incidentes recentes */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Incidentes Recentes</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  {incidents.slice(0, 5).map((incident) => (
-                    <div key={incident.id} className="flex items-center justify-between p-3 border rounded-lg">
-                      <div>
-                        <p className="font-medium">{incident.title}</p>
-                        <p className="text-sm text-muted-foreground">
-                          {new Date(incident.created_at).toLocaleString('pt-BR')}
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Badge variant={
-                          incident.severity === 'critical' ? 'destructive' :
-                          incident.severity === 'high' ? 'destructive' :
-                          'default'
-                        }>
-                          {incident.severity}
-                        </Badge>
-                        <Badge variant="outline">{incident.status}</Badge>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+          <SecurityMetricsPanel 
+            metrics={metrics}
+            anomalies={anomalies}
+            patterns={patterns}
+          />
         </TabsContent>
 
-        <TabsContent value="alerts">
-          <SecurityAlertSystem 
+        <TabsContent value="alerts" className="space-y-6">
+          <SecurityAlertSystem
             alerts={mockAlerts}
             onAcknowledge={handleAcknowledgeAlert}
             onDismiss={handleDismissAlert}
           />
         </TabsContent>
 
-        <TabsContent value="incidents">
-          <SecurityIncidentManager />
+        <TabsContent value="incidents" className="space-y-6">
+          <SecurityIncidentManager 
+            incidents={incidents || []}
+          />
         </TabsContent>
 
-        <TabsContent value="metrics">
-          <SecurityMetricsPanel />
-        </TabsContent>
-
-        <TabsContent value="audit">
-          <SecurityAuditTrail />
+        <TabsContent value="audit" className="space-y-6">
+          <SecurityAuditTrail 
+            events={events || []}
+          />
         </TabsContent>
       </Tabs>
-
-      {/* Informações de última atualização */}
-      <div className="text-center text-sm text-muted-foreground">
-        Última atualização: {metrics.lastUpdate.toLocaleString('pt-BR')}
-      </div>
     </div>
   );
 };

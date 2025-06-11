@@ -152,16 +152,16 @@ export const useAnomalyDetection = () => {
         return acc;
       }, {} as Record<string, number>);
 
-      // Corrigir operações matemáticas
+      // Corrigir operações matemáticas com tipos explícitos
       const hourlyEntries = Object.entries(hourlyActivity);
       const dailyEntries = Object.entries(dailyActivity);
       
       const mostActiveHour = hourlyEntries.length > 0 
-        ? hourlyEntries.sort(([,a], [,b]) => b - a)[0]?.[0]
+        ? hourlyEntries.sort(([,a], [,b]) => (b as number) - (a as number))[0]?.[0]
         : undefined;
         
       const mostActiveDay = dailyEntries.length > 0
-        ? dailyEntries.sort(([,a], [,b]) => b - a)[0]?.[0]
+        ? dailyEntries.sort(([,a], [,b]) => (b as number) - (a as number))[0]?.[0]
         : undefined;
 
       return {
