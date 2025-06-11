@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/auth';
@@ -23,6 +22,7 @@ interface SecurityIncident {
   created_at: string;
   updated_at: string;
   metadata: Record<string, any>;
+  related_logs?: string[]; // Adicionar campo esperado
 }
 
 interface SecurityMetrics {
@@ -81,7 +81,8 @@ export const useRealTimeSecurityMonitor = () => {
         status: 'investigating',
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
-        metadata: { source: 'automated_detection' }
+        metadata: { source: 'automated_detection' },
+        related_logs: ['log-1', 'log-2', 'log-3']
       }
     ];
 

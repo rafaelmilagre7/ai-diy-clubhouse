@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/auth';
 
@@ -9,6 +8,7 @@ interface SecurityAnomaly {
   description?: string;
   status: string;
   detected_at: string;
+  detection_data?: Record<string, any>; // Adicionar campo esperado
 }
 
 interface AnomalyPattern {
@@ -34,7 +34,8 @@ export const useAnomalyDetection = () => {
         confidence_score: 0.85,
         description: 'Múltiplas tentativas de login falhadas detectadas',
         status: 'active',
-        detected_at: new Date().toISOString()
+        detected_at: new Date().toISOString(),
+        detection_data: { ip_addresses: ['192.168.1.100'], attempt_count: 5 }
       },
       {
         id: '2',
@@ -42,7 +43,8 @@ export const useAnomalyDetection = () => {
         confidence_score: 0.72,
         description: 'Padrão de acesso fora do horário normal',
         status: 'investigating',
-        detected_at: new Date(Date.now() - 1800000).toISOString()
+        detected_at: new Date(Date.now() - 1800000).toISOString(),
+        detection_data: { access_time: '03:45', normal_hours: '09:00-18:00' }
       }
     ];
 
