@@ -43,7 +43,7 @@ export const useAnomalyDetection = () => {
 
       setAnomalies(data || []);
 
-      // Analisar padrões
+      // Analisar padrões com tipos corretos
       const typeGroups = (data || []).reduce((acc, anomaly) => {
         acc[anomaly.anomaly_type] = (acc[anomaly.anomaly_type] || 0) + 1;
         return acc;
@@ -51,9 +51,9 @@ export const useAnomalyDetection = () => {
 
       const detectedPatterns: AnomalyPattern[] = Object.entries(typeGroups).map(([type, count]) => ({
         type,
-        count,
+        count: Number(count), // Garantir que seja number
         severity: count > 10 ? 'critical' : count > 5 ? 'high' : count > 2 ? 'medium' : 'low',
-        description: getAnomalyDescription(type, count)
+        description: getAnomalyDescription(type, Number(count))
       }));
 
       setPatterns(detectedPatterns);
@@ -130,7 +130,7 @@ export const useAnomalyDetection = () => {
 
       if (!userLogs || userLogs.length === 0) return null;
 
-      // Análise de padrões simples
+      // Análise de padrões simples com tipos corretos
       const hourlyActivity = userLogs.reduce((acc, log) => {
         const hour = new Date(log.timestamp).getHours();
         acc[hour] = (acc[hour] || 0) + 1;
@@ -149,6 +149,18 @@ export const useAnomalyDetection = () => {
         return acc;
       }, {} as Record<string, number>);
 
+      // Corrigir operações matemáticas
+      const hourlyEntries = Object.entries(hourlyActivity);
+      const dailyEntries = Object.entries(dailyActivity);
+      
+      const mostActiveHour = hourlyEntries.length > 0 
+        ? hourlyEntries.sort(([,a], [,b]) => Number(b) - Number(a))[0]?.[0]
+        : undefined;
+        
+      const mostActiveDay = dailyEntries.length > 0
+        ? dailyEntries.sort(([,a], [,b]) => Number(b) - Number(a))[0]?.[0]
+        : undefined;
+
       return {
         totalEvents: userLogs.length,
         hourlyActivity,
@@ -156,8 +168,8 @@ export const useAnomalyDetection = () => {
         uniqueIPs: ipAddresses.length,
         ipAddresses,
         eventTypes,
-        mostActiveHour: Object.entries(hourlyActivity).sort(([,a], [,b]) => b - a)[0]?.[0],
-        mostActiveDay: Object.entries(dailyActivity).sort(([,a], [,b]) => b - a)[0]?.[0],
+        mostActiveHour,
+        mostActiveDay,
         riskScore: calculateRiskScore(userLogs, ipAddresses.length)
       };
     } catch (error) {

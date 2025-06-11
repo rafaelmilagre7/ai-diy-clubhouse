@@ -21,7 +21,9 @@ interface SecurityIncident {
   severity: string;
   status: string;
   created_at: string;
+  updated_at: string;
   metadata: Record<string, any>;
+  related_logs: string[]; // Adicionado para compatibilidade
 }
 
 interface SecurityMetrics {
@@ -85,12 +87,20 @@ export const useRealTimeSecurityMonitor = () => {
       if (metricsError) throw metricsError;
 
       setEvents(eventsData || []);
-      setIncidents(incidentsData || []);
+      
+      // Transformar incidentes para incluir propriedades necessárias
+      const transformedIncidents = (incidentsData || []).map(incident => ({
+        ...incident,
+        related_logs: incident.related_logs || [],
+        updated_at: incident.updated_at || incident.created_at
+      }));
+      
+      setIncidents(transformedIncidents);
 
       // Calcular métricas
       const totalEvents = eventsData?.length || 0;
       const criticalEvents = eventsData?.filter(e => e.severity === 'critical').length || 0;
-      const activeIncidents = incidentsData?.length || 0;
+      const activeIncidents = transformedIncidents.length;
       const anomaliesMetric = metricsData?.find(m => m.metric_name === 'anomalies_detected_24h');
       const anomaliesDetected = anomaliesMetric?.metric_value || 0;
 
@@ -149,8 +159,13 @@ export const useRealTimeSecurityMonitor = () => {
           table: 'security_incidents'
         },
         (payload) => {
-          const newIncident = payload.new as SecurityIncident;
-          setIncidents(prev => [newIncident, ...prev]);
+          const newIncident = payload.new as any;
+          const transformedIncident: SecurityIncident = {
+            ...newIncident,
+            related_logs: newIncident.related_logs || [],
+            updated_at: newIncident.updated_at || newIncident.created_at
+          };
+          setIncidents(prev => [transformedIncident, ...prev]);
           setMetrics(prev => ({
             ...prev,
             activeIncidents: prev.activeIncidents + 1,
@@ -166,15 +181,21 @@ export const useRealTimeSecurityMonitor = () => {
           table: 'security_incidents'
         },
         (payload) => {
-          const updatedIncident = payload.new as SecurityIncident;
+          const updatedIncident = payload.new as any;
+          const transformedIncident: SecurityIncident = {
+            ...updatedIncident,
+            related_logs: updatedIncident.related_logs || [],
+            updated_at: updatedIncident.updated_at || updatedIncident.created_at
+          };
+          
           setIncidents(prev => 
             prev.map(incident => 
-              incident.id === updatedIncident.id ? updatedIncident : incident
+              incident.id === transformedIncident.id ? transformedIncident : incident
             )
           );
           
           // Se incidente foi resolvido, decrementar contador
-          if (['resolved', 'false_positive'].includes(updatedIncident.status)) {
+          if (['resolved', 'false_positive'].includes(transformedIncident.status)) {
             setMetrics(prev => ({
               ...prev,
               activeIncidents: Math.max(0, prev.activeIncidents - 1),
