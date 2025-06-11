@@ -1,5 +1,5 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo, useCallback } from 'react';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useIBGELocations } from '@/hooks/useIBGELocations';
@@ -22,21 +22,41 @@ export const LocationSelector: React.FC<LocationSelectorProps> = ({
 }) => {
   const { estados, cidadesPorEstado, isLoading, loadCidades } = useIBGELocations();
 
+  // Memoizar as cidades para evitar re-renders desnecessários
+  const citiesForSelectedState = useMemo(() => {
+    return selectedState ? cidadesPorEstado[selectedState] || [] : [];
+  }, [selectedState, cidadesPorEstado]);
+
+  const isCitiesLoading = useMemo(() => {
+    return selectedState && !cidadesPorEstado[selectedState];
+  }, [selectedState, cidadesPorEstado]);
+
   // Carregar cidades quando estado for selecionado
   useEffect(() => {
     if (selectedState && !cidadesPorEstado[selectedState]) {
+      console.log('[LocationSelector] Carregando cidades para estado:', selectedState);
       loadCidades(selectedState);
     }
   }, [selectedState, cidadesPorEstado, loadCidades]);
 
-  // Limpar cidade quando estado mudar
-  const handleStateChange = (stateCode: string) => {
+  // Usar useCallback para evitar re-criação das funções
+  const handleStateChange = useCallback((stateCode: string) => {
+    console.log('[LocationSelector] Estado selecionado:', stateCode);
     onStateChange(stateCode);
-    onCityChange(''); // Limpar cidade selecionada
-  };
+    
+    // Só limpar cidade se realmente mudou o estado
+    if (selectedState !== stateCode) {
+      console.log('[LocationSelector] Limpando cidade selecionada');
+      onCityChange('');
+    }
+  }, [onStateChange, onCityChange, selectedState]);
 
-  const citiesForSelectedState = selectedState ? cidadesPorEstado[selectedState] || [] : [];
-  const isCitiesLoading = selectedState && !cidadesPorEstado[selectedState];
+  const handleCityChange = useCallback((cityName: string) => {
+    console.log('[LocationSelector] Cidade selecionada:', cityName);
+    onCityChange(cityName);
+  }, [onCityChange]);
+
+  console.log('[LocationSelector] Render - selectedState:', selectedState, 'selectedCity:', selectedCity);
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -49,7 +69,7 @@ export const LocationSelector: React.FC<LocationSelectorProps> = ({
           <SelectTrigger className="mt-1 bg-[#151823] border-white/20 text-white">
             <SelectValue placeholder={isLoading ? "Carregando estados..." : "Selecione seu estado"} />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent className="bg-[#151823] border-white/20">
             {isLoading ? (
               <div className="flex items-center justify-center p-4">
                 <Loader2 className="w-4 h-4 animate-spin mr-2" />
@@ -57,7 +77,11 @@ export const LocationSelector: React.FC<LocationSelectorProps> = ({
               </div>
             ) : (
               estados.map((estado) => (
-                <SelectItem key={estado.code} value={estado.code}>
+                <SelectItem 
+                  key={estado.code} 
+                  value={estado.code}
+                  className="text-white hover:bg-white/10"
+                >
                   {estado.name}
                 </SelectItem>
               ))
@@ -76,7 +100,7 @@ export const LocationSelector: React.FC<LocationSelectorProps> = ({
         </Label>
         <Select 
           value={selectedCity || ''} 
-          onValueChange={onCityChange}
+          onValueChange={handleCityChange}
           disabled={!selectedState}
         >
           <SelectTrigger className="mt-1 bg-[#151823] border-white/20 text-white">
@@ -90,7 +114,7 @@ export const LocationSelector: React.FC<LocationSelectorProps> = ({
               } 
             />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent className="bg-[#151823] border-white/20">
             {isCitiesLoading ? (
               <div className="flex items-center justify-center p-4">
                 <Loader2 className="w-4 h-4 animate-spin mr-2" />
@@ -98,7 +122,11 @@ export const LocationSelector: React.FC<LocationSelectorProps> = ({
               </div>
             ) : citiesForSelectedState.length > 0 ? (
               citiesForSelectedState.map((cidade) => (
-                <SelectItem key={cidade.name} value={cidade.name}>
+                <SelectItem 
+                  key={cidade.name} 
+                  value={cidade.name}
+                  className="text-white hover:bg-white/10"
+                >
                   {cidade.name}
                 </SelectItem>
               ))

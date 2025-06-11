@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { OnboardingData } from '../types/onboardingTypes';
 import { useCloudSync } from './useCloudSync';
 import { useAuth } from '@/contexts/auth';
@@ -13,9 +14,13 @@ export const useOnboardingStorage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  
+  // Usar ref para evitar updates desnecessários
+  const updateTimeoutRef = useRef<NodeJS.Timeout>();
+  const lastDataRef = useRef<OnboardingData>({});
 
   // Função para salvar dados no localStorage e tentar sync na nuvem
-  const saveDataToStorage = async (dataToSave: OnboardingData) => {
+  const saveDataToStorage = useCallback(async (dataToSave: OnboardingData) => {
     try {
       // Sempre salvar no localStorage primeiro (prioridade)
       localStorage.setItem(STORAGE_KEY, JSON.stringify(dataToSave));
@@ -48,7 +53,7 @@ export const useOnboardingStorage = () => {
       console.error('[OnboardingStorage] Erro ao salvar dados:', error);
       throw error;
     }
-  };
+  }, [saveToCloud, user?.id]);
 
   // Carregar dados na inicialização
   useEffect(() => {
@@ -62,6 +67,7 @@ export const useOnboardingStorage = () => {
           try {
             const parsedLocalData = JSON.parse(localData);
             setData(parsedLocalData);
+            lastDataRef.current = parsedLocalData;
             console.log('[OnboardingStorage] Dados recuperados do localStorage');
             
             // Se há dados locais, usar eles imediatamente
@@ -76,6 +82,7 @@ export const useOnboardingStorage = () => {
                   
                   if (cloudTime > localTime) {
                     setData(cloudData);
+                    lastDataRef.current = cloudData;
                     localStorage.setItem(STORAGE_KEY, JSON.stringify(cloudData));
                     console.log('[OnboardingStorage] Dados da nuvem mais recentes aplicados');
                   }
@@ -99,6 +106,7 @@ export const useOnboardingStorage = () => {
             const cloudData = await loadFromCloud();
             if (cloudData) {
               setData(cloudData);
+              lastDataRef.current = cloudData;
               localStorage.setItem(STORAGE_KEY, JSON.stringify(cloudData));
               console.log('[OnboardingStorage] Dados carregados da nuvem');
               return;
@@ -119,26 +127,37 @@ export const useOnboardingStorage = () => {
     };
 
     loadInitialData();
-  }, [user?.id, loadFromCloud, saveToCloud]);
+  }, [user?.id, loadFromCloud]);
 
-  // Atualizar dados (sem auto-save, apenas atualiza estado local)
-  const updateData = (newData: Partial<OnboardingData>) => {
+  // Atualizar dados com debounce para evitar re-renders excessivos
+  const updateData = useCallback((newData: Partial<OnboardingData>) => {
     const updatedData = { 
-      ...data, 
+      ...lastDataRef.current, 
       ...newData, 
       updatedAt: new Date().toISOString() 
     };
-    setData(updatedData);
-    setHasUnsavedChanges(true);
     
-    // Log para debugging
-    console.log('[OnboardingStorage] Dados atualizados (pendente salvamento):', Object.keys(newData));
-  };
+    // Verificar se realmente houve mudança para evitar updates desnecessários
+    const hasRealChange = JSON.stringify(updatedData) !== JSON.stringify(lastDataRef.current);
+    
+    if (hasRealChange) {
+      setData(updatedData);
+      lastDataRef.current = updatedData;
+      setHasUnsavedChanges(true);
+      
+      console.log('[OnboardingStorage] Dados atualizados:', Object.keys(newData));
+      
+      // Debounce para auto-save (opcional, pode ser removido se causar problemas)
+      if (updateTimeoutRef.current) {
+        clearTimeout(updateTimeoutRef.current);
+      }
+    }
+  }, []);
 
   // Salvamento manual forçado (usado nas mudanças de etapas)
-  const forceSave = async () => {
+  const forceSave = useCallback(async () => {
     try {
-      await saveDataToStorage(data);
+      await saveDataToStorage(lastDataRef.current);
       setHasUnsavedChanges(false);
       setLastSaved(new Date());
       console.log('[OnboardingStorage] Salvamento manual concluído');
@@ -146,11 +165,13 @@ export const useOnboardingStorage = () => {
       console.error('[OnboardingStorage] Erro no salvamento manual:', error);
       throw error;
     }
-  };
+  }, [saveDataToStorage]);
 
   // Limpar dados
-  const clearData = async () => {
-    setData({});
+  const clearData = useCallback(async () => {
+    const emptyData = {};
+    setData(emptyData);
+    lastDataRef.current = emptyData;
     setHasUnsavedChanges(false);
     setLastSaved(null);
     
@@ -164,20 +185,21 @@ export const useOnboardingStorage = () => {
     } catch (error) {
       console.error('[OnboardingStorage] Erro ao limpar dados:', error);
     }
-  };
+  }, [clearCloudData, user?.id]);
 
   // Verificar se onboarding foi completado
-  const isCompleted = () => {
-    return !!data.completedAt;
-  };
+  const isCompleted = useCallback(() => {
+    return !!lastDataRef.current.completedAt;
+  }, []);
 
   // Recuperar dados perdidos (função de emergência)
-  const recoverData = () => {
+  const recoverData = useCallback(() => {
     try {
       const localData = localStorage.getItem(STORAGE_KEY);
       if (localData) {
         const parsedData = JSON.parse(localData);
         setData(parsedData);
+        lastDataRef.current = parsedData;
         setHasUnsavedChanges(false); // Dados recuperados estão salvos
         console.log('[OnboardingStorage] Dados recuperados do localStorage');
         return true;
@@ -187,7 +209,7 @@ export const useOnboardingStorage = () => {
       console.error('[OnboardingStorage] Erro ao recuperar dados:', error);
       return false;
     }
-  };
+  }, []);
 
   return {
     data,

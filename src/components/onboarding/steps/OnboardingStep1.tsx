@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { User, Mail, Phone, Instagram, Linkedin, Calendar, Sparkles } from 'lucide-react';
+import { User, Mail, Instagram, Linkedin, Sparkles } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -10,6 +10,7 @@ import { OnboardingStepProps } from '../types/onboardingTypes';
 import { LocationSelector } from '../components/LocationSelector';
 import { ProfilePictureUpload } from '../components/ProfilePictureUpload';
 import { BirthDateSelector } from '../components/BirthDateSelector';
+import { WhatsAppInput } from '../components/WhatsAppInput';
 
 const OnboardingStep1: React.FC<OnboardingStepProps> = ({
   data,
@@ -84,25 +85,13 @@ const OnboardingStep1: React.FC<OnboardingStepProps> = ({
             )}
           </div>
 
-          {/* WhatsApp */}
+          {/* WhatsApp - usando o novo componente */}
           <div>
-            <Label htmlFor="phone" className="text-slate-200">
-              WhatsApp *
-            </Label>
-            <div className="relative mt-1">
-              <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
-              <Input
-                id="phone"
-                type="tel"
-                value={data.phone || ''}
-                onChange={(e) => onUpdateData({ phone: e.target.value })}
-                className="pl-10 bg-[#151823] border-white/20 text-white"
-                placeholder="(11) 99999-9999"
-              />
-            </div>
-            {getFieldError?.('phone') && (
-              <p className="text-red-400 text-sm mt-1">{getFieldError('phone')}</p>
-            )}
+            <WhatsAppInput
+              value={data.phone}
+              onChange={(phone) => onUpdateData({ phone })}
+              getFieldError={getFieldError}
+            />
           </div>
 
           {/* Instagram */}
