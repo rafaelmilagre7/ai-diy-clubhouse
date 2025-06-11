@@ -69,10 +69,10 @@ export const OnboardingWizardContainer: React.FC<OnboardingWizardContainerProps>
     validateCurrentStep,
   } = useOnboardingValidation();
 
-  // Usar dados do storage ou dados vazios como fallback
-  const data = useMemo(() => {
+  // Usar dados do storage ou dados vazios como fallback com tipos corretos
+  const data: OnboardingData = useMemo(() => {
     return storageData || {
-      memberType: 'club',
+      memberType: 'club' as const,
       name: '',
       email: '',
       city: ''
