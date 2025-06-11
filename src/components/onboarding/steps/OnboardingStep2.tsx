@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Building2, User, MapPin, Target, Briefcase, TrendingUp } from 'lucide-react';
+import { Building2, User, TrendingUp } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -10,9 +10,9 @@ import { OnboardingStepProps } from '../types/onboardingTypes';
 import { Step2AIInteraction } from '../components/Step2AIInteraction';
 
 interface OnboardingStep2Props extends OnboardingStepProps {
-  aiMessage?: string;
-  isGeneratingAI?: boolean;
-  onGenerateAIMessage?: () => void;
+  aiMessage: string | null;
+  isGeneratingAI: boolean;
+  onGenerateAIMessage: () => Promise<void>;
 }
 
 const businessSectors = [
@@ -42,6 +42,12 @@ const OnboardingStep2: React.FC<OnboardingStep2Props> = ({
   isGeneratingAI,
   onGenerateAIMessage
 }) => {
+  console.log('[STEP2] Renderizando com:', {
+    hasAIMessage: !!aiMessage,
+    isGeneratingAI,
+    userName: data.name
+  });
+
   return (
     <motion.div
       initial={{ opacity: 0, x: 20 }}
@@ -66,11 +72,10 @@ const OnboardingStep2: React.FC<OnboardingStep2Props> = ({
         </p>
       </div>
 
-      {/* Mensagem Personalizada da IA */}
+      {/* Mensagem Personalizada da IA - Simplificada */}
       <Step2AIInteraction 
         message={aiMessage}
         isLoading={isGeneratingAI}
-        onGenerateMessage={onGenerateAIMessage}
       />
 
       <Card className="p-6 bg-[#1A1E2E]/80 backdrop-blur-sm border-white/10">

@@ -1,30 +1,20 @@
 
-import React, { useEffect } from 'react';
+import React from 'react';
 import { motion } from 'framer-motion';
 import { Bot } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { TypingEffect } from './TypingEffect';
 
 interface Step2AIInteractionProps {
-  message?: string;
-  isLoading?: boolean;
-  onGenerateMessage?: () => void;
+  message: string | null;
+  isLoading: boolean;
 }
 
 export const Step2AIInteraction: React.FC<Step2AIInteractionProps> = ({
   message,
-  isLoading = false,
-  onGenerateMessage
+  isLoading
 }) => {
-  // Tentar gerar mensagem quando o componente monta
-  useEffect(() => {
-    if (!message && !isLoading && onGenerateMessage) {
-      console.log('[Step2AI] Solicitando geração de mensagem');
-      onGenerateMessage();
-    }
-  }, [message, isLoading, onGenerateMessage]);
-
-  console.log('[Step2AI] Renderizando com:', {
+  console.log('[STEP2AI] Renderizando com:', {
     hasMessage: !!message,
     isLoading,
     messageLength: message?.length || 0
