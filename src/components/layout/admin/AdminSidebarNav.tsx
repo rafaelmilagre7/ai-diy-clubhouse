@@ -11,7 +11,8 @@ import {
   Mail, 
   MessageSquare,
   Stethoscope,
-  GraduationCap
+  GraduationCap,
+  Shield
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -76,6 +77,11 @@ const navigationItems = [
     title: "Comunicações",
     href: "/admin/communications",
     icon: Mail,
+  },
+  {
+    title: "Segurança",
+    href: "/admin/security",
+    icon: Shield,
   },
   {
     title: "WhatsApp Debug",
