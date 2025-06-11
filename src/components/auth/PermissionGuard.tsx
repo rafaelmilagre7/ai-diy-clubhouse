@@ -19,10 +19,10 @@ export const PermissionGuard: React.FC<PermissionGuardProps> = ({
   fallback,
   timeoutSeconds = 1
 }) => {
-  const { profile, user } = useAuth();
+  const { profile } = useAuth();
   const [timedOut, setTimedOut] = useState(false);
   
-  // Verificação rápida e simplificada
+  // Verificação rápida e simplificada - APENAS via banco de dados
   const isAdmin = getUserRoleName(profile) === 'admin';
   const isLoading = !profile && !timedOut;
   
@@ -50,15 +50,6 @@ export const PermissionGuard: React.FC<PermissionGuardProps> = ({
         <Skeleton className="h-[80px] w-full rounded-md" />
       </div>
     );
-  }
-
-  // Verificação por email como fallback
-  if (user?.email && (
-    user.email.includes('@viverdeia.ai') || 
-    user.email === 'admin@teste.com' || 
-    user.email === 'admin@viverdeia.ai'
-  )) {
-    return <>{children}</>;
   }
 
   // Caso contrário, mostrar mensagem de erro ou fallback
