@@ -63,6 +63,21 @@ export const OnboardingWizardContainer: React.FC<OnboardingWizardContainerProps>
 
   const totalSteps = 6;
 
+  // Log detalhado dos dados quando mudarem
+  console.log('[WizardContainer] Estado atual dos dados:', {
+    currentStep,
+    hasData: !!data,
+    dataKeys: Object.keys(data || {}),
+    name: data?.name,
+    email: data?.email,
+    phone: data?.phone,
+    state: data?.state,
+    city: data?.city,
+    curiosity: data?.curiosity,
+    isLoading,
+    hasUnsavedChanges
+  });
+
   // Função para scroll suave para o topo
   const scrollToTop = useCallback(() => {
     try {
@@ -96,6 +111,15 @@ export const OnboardingWizardContainer: React.FC<OnboardingWizardContainerProps>
   const isCurrentStepValid = useMemo(() => {
     try {
       const validationResult = validateCurrentStep(currentStep, data, memberType);
+      console.log('[WizardContainer] Resultado da validação:', {
+        currentStep,
+        isValid: validationResult.isValid,
+        hasName: !!data?.name,
+        hasEmail: !!data?.email,
+        hasPhone: !!data?.phone,
+        hasCity: !!data?.city,
+        hasState: !!data?.state
+      });
       return validationResult.isValid;
     } catch (error) {
       console.warn('Validation error:', error);
@@ -106,7 +130,14 @@ export const OnboardingWizardContainer: React.FC<OnboardingWizardContainerProps>
   const handleNext = useCallback(async () => {
     if (currentStep < totalSteps && isCurrentStepValid) {
       try {
-        console.log('[OnboardingWizard] Avançando da etapa', currentStep, 'para', currentStep + 1);
+        console.log('[WizardContainer] Avançando da etapa', currentStep, 'para', currentStep + 1);
+        console.log('[WizardContainer] Dados antes de salvar:', {
+          name: data?.name,
+          city: data?.city,
+          state: data?.state,
+          phone: data?.phone,
+          email: data?.email
+        });
         
         // Salvar dados antes de avançar
         await forceSave();
@@ -114,21 +145,37 @@ export const OnboardingWizardContainer: React.FC<OnboardingWizardContainerProps>
         // Avançar etapa
         setCurrentStep(prev => prev + 1);
         
+        // Log após mudança de etapa
+        console.log('[WizardContainer] Etapa avançada para:', currentStep + 1);
+        
         // Scroll suave para o topo após um pequeno delay para permitir a renderização
         setTimeout(() => {
           scrollToTop();
         }, 100);
         
-        console.log('[OnboardingWizard] Etapa avançada com sucesso');
+        console.log('[WizardContainer] Etapa avançada com sucesso');
       } catch (error) {
         console.error('Erro ao avançar etapa:', error);
       }
+    } else {
+      console.warn('[WizardContainer] Não pode avançar:', {
+        currentStep,
+        totalSteps,
+        isCurrentStepValid,
+        missingData: {
+          name: !data?.name,
+          email: !data?.email,
+          phone: !data?.phone,
+          city: !data?.city,
+          state: !data?.state
+        }
+      });
     }
-  }, [currentStep, totalSteps, isCurrentStepValid, forceSave, scrollToTop]);
+  }, [currentStep, totalSteps, isCurrentStepValid, forceSave, scrollToTop, data]);
 
   const handlePrevious = useCallback(() => {
     if (currentStep > 1) {
-      console.log('[OnboardingWizard] Voltando da etapa', currentStep, 'para', currentStep - 1);
+      console.log('[WizardContainer] Voltando da etapa', currentStep, 'para', currentStep - 1);
       
       setCurrentStep(prev => prev - 1);
       
@@ -137,11 +184,12 @@ export const OnboardingWizardContainer: React.FC<OnboardingWizardContainerProps>
         scrollToTop();
       }, 100);
       
-      console.log('[OnboardingWizard] Etapa anterior com sucesso');
+      console.log('[WizardContainer] Etapa anterior com sucesso');
     }
   }, [currentStep, scrollToTop]);
 
   const handleDataChange = useCallback((newData: Partial<OnboardingData>) => {
+    console.log('[WizardContainer] Atualizando dados:', newData);
     updateData(newData);
   }, [updateData]);
 

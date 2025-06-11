@@ -1,282 +1,303 @@
-import React, { useEffect, useState, useMemo, useRef } from 'react';
-import { useAIMessageGeneration } from '../hooks/useAIMessageGeneration';
-import { TypingEffect } from './TypingEffect';
-import { OnboardingData } from '../types/onboardingTypes';
+
+import React, { useEffect, useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { Bot, Sparkles } from 'lucide-react';
+import { Sparkles, RefreshCw } from 'lucide-react';
+import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { TypingEffect } from './TypingEffect';
+import { useAIMessageGeneration } from '../hooks/useAIMessageGeneration';
+import { OnboardingData } from '../types/onboardingTypes';
 
 interface Step2AIInteractionProps {
   data: OnboardingData;
   memberType: 'club' | 'formacao';
 }
 
-export const Step2AIInteraction: React.FC<Step2AIInteractionProps> = ({
-  data,
-  memberType
+export const Step2AIInteraction: React.FC<Step2AIInteractionProps> = ({ 
+  data, 
+  memberType 
 }) => {
-  const {
-    generateMessage,
-    isGenerating,
-    generatedMessage,
-    error,
-    clearMessage
+  const [isInitialized, setIsInitialized] = useState(false);
+  const [showMessage, setShowMessage] = useState(false);
+  
+  const { 
+    generateMessage, 
+    clearMessage, 
+    isGenerating, 
+    generatedMessage, 
+    error, 
+    progress 
   } = useAIMessageGeneration();
 
-  const [messageKey, setMessageKey] = useState(0);
-  const [hasRequestedGeneration, setHasRequestedGeneration] = useState(false);
-  const [isInitialized, setIsInitialized] = useState(false);
-  
-  // Usar refs para detectar mudanças reais nos dados
-  const previousDataRef = useRef<{ name?: string; city?: string }>({});
+  // Log detalhado dos dados recebidos
+  console.log('[Step2AIInteraction] Props recebidas:', {
+    hasData: !!data,
+    dataKeys: Object.keys(data || {}),
+    name: data?.name,
+    city: data?.city,
+    state: data?.state,
+    phone: data?.phone,
+    email: data?.email,
+    curiosity: data?.curiosity,
+    memberType
+  });
 
-  // Verificar se temos dados suficientes
-  const hasMinimumData = useMemo(() => {
-    const hasData = !!(data.name && data.city);
-    console.log('[Step2AIInteraction] Verificando dados mínimos:', { 
-      name: data.name, 
-      city: data.city, 
-      hasData 
-    });
-    return hasData;
-  }, [data.name, data.city]);
-
-  // Inicializar previousDataRef na primeira renderização com dados
-  useEffect(() => {
-    if (hasMinimumData && !isInitialized) {
-      console.log('[Step2AIInteraction] Inicializando previousDataRef com dados atuais:', {
-        name: data.name,
-        city: data.city
-      });
-      previousDataRef.current = { name: data.name, city: data.city };
-      setIsInitialized(true);
-    }
-  }, [hasMinimumData, data.name, data.city, isInitialized]);
-
-  // Detectar se os dados importantes mudaram realmente (apenas após inicialização)
-  const dataChanged = useMemo(() => {
-    if (!isInitialized) {
-      return false; // Não considerar mudança antes da inicialização
-    }
-
-    const current = { name: data.name, city: data.city };
-    const previous = previousDataRef.current;
-    const changed = current.name !== previous.name || current.city !== previous.city;
-    
-    console.log('[Step2AIInteraction] Verificando mudança de dados:', {
-      current,
-      previous,
-      changed,
-      isInitialized
-    });
-    
-    return changed;
-  }, [data.name, data.city, isInitialized]);
-
-  // Gerar mensagem uma única vez quando houver dados suficientes e estivermos inicializados
-  useEffect(() => {
-    if (hasMinimumData && isInitialized && !hasRequestedGeneration && !isGenerating && !generatedMessage && !error) {
-      console.log('[Step2AIInteraction] Solicitando geração de mensagem para:', data.name);
-      setHasRequestedGeneration(true);
-      generateMessage(data, memberType, 2);
-    }
-  }, [hasMinimumData, isInitialized, hasRequestedGeneration, isGenerating, generatedMessage, error, data, memberType, generateMessage]);
-
-  // Reset apenas quando dados importantes mudarem de fato (após inicialização)
-  useEffect(() => {
-    if (dataChanged && hasMinimumData && isInitialized) {
-      console.log('[Step2AIInteraction] Dados importantes mudaram, resetando estado');
-      
-      // Atualizar ref com novos dados
-      previousDataRef.current = { name: data.name, city: data.city };
-      
-      // Reset do estado
-      setHasRequestedGeneration(false);
-      setMessageKey(prev => prev + 1);
-      clearMessage();
-    }
-  }, [dataChanged, hasMinimumData, isInitialized, clearMessage, data.name, data.city]);
-
-  const handleTypingComplete = () => {
-    console.log('[Step2AIInteraction] Digitação completada');
-  };
-
-  // Debug detalhado: mostrar estado atual com TODAS as condições
-  const debugState = {
-    hasMinimumData,
-    isInitialized,
-    hasRequestedGeneration,
+  // Log do estado do hook
+  console.log('[Step2AIInteraction] Estado do hook:', {
     isGenerating,
     hasGeneratedMessage: !!generatedMessage,
     messageLength: generatedMessage?.length || 0,
-    hasError: !!error,
-    messageKey,
-    dataChanged,
-    // Condições específicas de renderização
-    canShowLoading: isGenerating,
-    canShowMessage: generatedMessage && !isGenerating && isInitialized,
-    canShowError: !!error,
-    canShowPreparation: hasMinimumData && !isInitialized,
-    willReturnNull: !isGenerating && !generatedMessage && !error && (!hasMinimumData || isInitialized)
-  };
-  
-  console.log('[Step2AIInteraction] Estado atual COMPLETO:', debugState);
+    error,
+    progress,
+    isInitialized,
+    showMessage
+  });
 
-  // Mostrar loading enquanto gera
+  // Verificar se temos dados mínimos necessários
+  const hasMinimumData = data?.name && (data?.city || data?.state);
+  
+  console.log('[Step2AIInteraction] Verificação de dados:', {
+    hasMinimumData,
+    hasName: !!data?.name,
+    hasCity: !!data?.city,
+    hasState: !!data?.state,
+    namValue: data?.name,
+    cityValue: data?.city,
+    stateValue: data?.state
+  });
+
+  // Gerar mensagem automaticamente quando componente carrega
+  useEffect(() => {
+    console.log('[Step2AIInteraction] useEffect - Verificando se deve gerar mensagem');
+    
+    if (!isInitialized && hasMinimumData && !isGenerating && !generatedMessage) {
+      console.log('[Step2AIInteraction] Iniciando geração automática da mensagem');
+      setIsInitialized(true);
+      generateMessage(data, memberType, 2);
+    } else {
+      console.log('[Step2AIInteraction] Não vai gerar mensagem:', {
+        isInitialized,
+        hasMinimumData,
+        isGenerating,
+        hasGeneratedMessage: !!generatedMessage
+      });
+    }
+  }, [data, memberType, isInitialized, hasMinimumData, isGenerating, generatedMessage, generateMessage]);
+
+  // Mostrar mensagem quando ela estiver pronta
+  useEffect(() => {
+    if (generatedMessage && !isGenerating && !showMessage) {
+      console.log('[Step2AIInteraction] Mensagem pronta, vai mostrar');
+      setShowMessage(true);
+    }
+  }, [generatedMessage, isGenerating, showMessage]);
+
+  const handleRegenerateMessage = useCallback(() => {
+    console.log('[Step2AIInteraction] Regenerando mensagem');
+    setShowMessage(false);
+    clearMessage();
+    generateMessage(data, memberType, 2);
+  }, [data, memberType, clearMessage, generateMessage]);
+
+  // Se não temos dados mínimos, mostrar fallback
+  if (!hasMinimumData) {
+    console.log('[Step2AIInteraction] Renderizando fallback por falta de dados');
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="mb-6"
+      >
+        <Card className="p-6 bg-gradient-to-r from-viverblue/10 to-purple-500/10 border-viverblue/20">
+          <div className="flex items-start gap-4">
+            <div className="w-10 h-10 bg-viverblue/20 rounded-full flex items-center justify-center flex-shrink-0">
+              <Sparkles className="w-5 h-5 text-viverblue" />
+            </div>
+            <div className="flex-1">
+              <h3 className="text-lg font-semibold text-white mb-2">
+                Bem-vindo à Viver de IA! 🚀
+              </h3>
+              <div className="text-slate-300 leading-relaxed">
+                Que bom ter você aqui! Vamos descobrir como podemos acelerar sua jornada empresarial com IA. 
+                Agora vamos para seu perfil de negócios!
+              </div>
+              
+              <div className="mt-4 p-3 bg-amber-500/10 border border-amber-500/20 rounded-lg">
+                <p className="text-amber-200 text-sm">
+                  💡 Complete seus dados na etapa anterior para receber uma mensagem personalizada
+                </p>
+              </div>
+            </div>
+          </div>
+        </Card>
+      </motion.div>
+    );
+  }
+
+  // Se está carregando
   if (isGenerating) {
-    console.log('[Step2AIInteraction] Renderizando: Loading');
+    console.log('[Step2AIInteraction] Renderizando estado de carregamento');
     return (
       <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        className="bg-gradient-to-r from-viverblue/10 to-viverblue-light/10 border border-viverblue/30 rounded-xl p-6 mb-6"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="mb-6"
       >
-        <div className="flex items-center justify-center gap-2 mb-4">
-          <div className="bg-viverblue/20 p-2 rounded-full">
-            <Bot className="w-5 h-5 text-viverblue animate-pulse" />
+        <Card className="p-6 bg-gradient-to-r from-viverblue/10 to-purple-500/10 border-viverblue/20">
+          <div className="flex items-start gap-4">
+            <div className="w-10 h-10 bg-viverblue/20 rounded-full flex items-center justify-center flex-shrink-0">
+              <Sparkles className="w-5 h-5 text-viverblue animate-pulse" />
+            </div>
+            <div className="flex-1">
+              <h3 className="text-lg font-semibold text-white mb-2">
+                Criando sua mensagem personalizada...
+              </h3>
+              <div className="space-y-3">
+                <div className="flex items-center gap-2 text-slate-300">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-viverblue"></div>
+                  <span>Analisando seu perfil...</span>
+                </div>
+                {progress > 0 && (
+                  <div className="w-full bg-slate-700 rounded-full h-2">
+                    <div 
+                      className="bg-viverblue h-2 rounded-full transition-all duration-300"
+                      style={{ width: `${progress}%` }}
+                    ></div>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
-          <Sparkles className="w-4 h-4 text-viverblue animate-pulse" />
-          <span className="text-sm font-semibold text-viverblue">IA VIVER DE IA</span>
-        </div>
-        
-        <div className="space-y-3">
-          <div className="animate-pulse space-y-2">
-            <div className="h-4 bg-slate-300/30 rounded w-full"></div>
-            <div className="h-4 bg-slate-300/30 rounded w-5/6"></div>
-            <div className="h-4 bg-slate-300/30 rounded w-4/6"></div>
-          </div>
-          <div className="flex items-center justify-center gap-2">
-            <div className="w-2 h-2 bg-viverblue rounded-full animate-bounce"></div>
-            <div className="w-2 h-2 bg-viverblue rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-            <div className="w-2 h-2 bg-viverblue rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-          </div>
-          <p className="text-sm text-slate-400 text-center">
-            Analisando seu perfil e gerando mensagem personalizada...
-          </p>
-        </div>
+        </Card>
       </motion.div>
     );
   }
 
-  // Mostrar mensagem com efeito de digitação
-  if (generatedMessage && !isGenerating && isInitialized) {
-    console.log('[Step2AIInteraction] Renderizando: Mensagem da IA');
-    return (
-      <motion.div
-        key={`message-${messageKey}`}
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        className="bg-gradient-to-r from-viverblue/10 to-viverblue-light/10 border border-viverblue/30 rounded-xl p-6 mb-6"
-      >
-        <div className="flex items-center justify-center gap-2 mb-4">
-          <div className="bg-viverblue/20 p-2 rounded-full">
-            <Bot className="w-5 h-5 text-viverblue" />
-          </div>
-          <Sparkles className="w-4 h-4 text-viverblue" />
-          <span className="text-sm font-semibold text-viverblue">IA VIVER DE IA</span>
-        </div>
-        
-        <div className="prose prose-slate max-w-none">
-          <div className="leading-relaxed text-slate-100">
-            <TypingEffect
-              key={`typing-${messageKey}-${generatedMessage.length}`}
-              text={generatedMessage}
-              speed={25}
-              onComplete={handleTypingComplete}
-              startDelay={300}
-            />
-          </div>
-        </div>
-      </motion.div>
-    );
-  }
-
-  // Mostrar erro se houver
+  // Se tem erro
   if (error) {
-    console.log('[Step2AIInteraction] Renderizando: Erro');
+    console.log('[Step2AIInteraction] Renderizando estado de erro');
     return (
       <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        className="bg-gradient-to-r from-red-500/10 to-red-600/10 border border-red-500/30 rounded-xl p-6 mb-6"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="mb-6"
       >
-        <div className="flex items-center justify-center gap-2 mb-4">
-          <div className="bg-red-500/20 p-2 rounded-full">
-            <Bot className="w-5 h-5 text-red-500" />
+        <Card className="p-6 bg-gradient-to-r from-red-500/10 to-orange-500/10 border-red-500/20">
+          <div className="flex items-start gap-4">
+            <div className="w-10 h-10 bg-red-500/20 rounded-full flex items-center justify-center flex-shrink-0">
+              <Sparkles className="w-5 h-5 text-red-400" />
+            </div>
+            <div className="flex-1">
+              <h3 className="text-lg font-semibold text-white mb-2">
+                Ops! Algo deu errado
+              </h3>
+              <p className="text-slate-300 mb-4">
+                Não conseguimos gerar sua mensagem personalizada, mas você pode continuar com o onboarding.
+              </p>
+              <Button
+                onClick={handleRegenerateMessage}
+                variant="outline"
+                size="sm"
+                className="flex items-center gap-2"
+              >
+                <RefreshCw className="w-4 h-4" />
+                Tentar novamente
+              </Button>
+            </div>
           </div>
-          <span className="text-sm font-semibold text-red-500">ERRO NA IA</span>
-        </div>
-        
-        <div className="prose prose-slate max-w-none">
-          <p className="leading-relaxed text-slate-100">
-            Houve um problema ao gerar sua mensagem personalizada. Mas não se preocupe, você pode continuar o onboarding normalmente.
-          </p>
-        </div>
+        </Card>
       </motion.div>
     );
   }
 
-  // Mostrar estado de preparação se temos dados mas ainda não inicializamos
-  if (hasMinimumData && !isInitialized) {
-    console.log('[Step2AIInteraction] Renderizando: Preparação');
+  // Se tem mensagem para mostrar
+  if (generatedMessage && showMessage) {
+    console.log('[Step2AIInteraction] Renderizando mensagem gerada');
     return (
       <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        className="bg-gradient-to-r from-viverblue/5 to-viverblue-light/5 border border-viverblue/20 rounded-xl p-6 mb-6"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="mb-6"
       >
-        <div className="flex items-center justify-center gap-2 mb-4">
-          <div className="bg-viverblue/10 p-2 rounded-full">
-            <Bot className="w-5 h-5 text-viverblue/70" />
+        <Card className="p-6 bg-gradient-to-r from-viverblue/10 to-purple-500/10 border-viverblue/20">
+          <div className="flex items-start gap-4">
+            <div className="w-10 h-10 bg-viverblue/20 rounded-full flex items-center justify-center flex-shrink-0">
+              <Sparkles className="w-5 h-5 text-viverblue" />
+            </div>
+            <div className="flex-1">
+              <h3 className="text-lg font-semibold text-white mb-2">
+                Mensagem personalizada para você ✨
+              </h3>
+              <div className="text-slate-300 leading-relaxed">
+                <TypingEffect
+                  text={generatedMessage}
+                  speed={30}
+                  startDelay={500}
+                />
+              </div>
+              
+              <div className="flex gap-2 mt-4">
+                <Button
+                  onClick={handleRegenerateMessage}
+                  variant="outline"
+                  size="sm"
+                  className="flex items-center gap-2"
+                >
+                  <RefreshCw className="w-4 h-4" />
+                  Nova mensagem
+                </Button>
+              </div>
+            </div>
           </div>
-          <span className="text-sm font-semibold text-viverblue/70">IA VIVER DE IA</span>
-        </div>
-        
-        <div className="prose prose-slate max-w-none">
-          <p className="leading-relaxed text-slate-300 text-center">
-            Preparando sua mensagem personalizada...
-          </p>
-        </div>
+        </Card>
       </motion.div>
     );
   }
 
-  // ÚLTIMO CASO: mostrar debug em vez de retornar null
-  console.log('[Step2AIInteraction] ATENÇÃO: Nenhuma condição atendida - Estado de debug:', debugState);
-  
-  // Fallback de debug para investigar o problema
-  if (generatedMessage && isInitialized) {
-    console.log('[Step2AIInteraction] FORÇANDO renderização da mensagem - todas as condições atendidas');
-    return (
-      <motion.div
-        key={`debug-message-${messageKey}`}
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        className="bg-gradient-to-r from-viverblue/10 to-viverblue-light/10 border border-viverblue/30 rounded-xl p-6 mb-6"
-      >
-        <div className="flex items-center justify-center gap-2 mb-4">
-          <div className="bg-viverblue/20 p-2 rounded-full">
-            <Bot className="w-5 h-5 text-viverblue" />
+  // Estado de debug - mostrar o que está acontecendo
+  console.log('[Step2AIInteraction] Renderizando estado de debug/fallback');
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="mb-6"
+    >
+      <Card className="p-6 bg-gradient-to-r from-viverblue/10 to-purple-500/10 border-viverblue/20">
+        <div className="flex items-start gap-4">
+          <div className="w-10 h-10 bg-viverblue/20 rounded-full flex items-center justify-center flex-shrink-0">
+            <Sparkles className="w-5 h-5 text-viverblue" />
           </div>
-          <Sparkles className="w-4 h-4 text-viverblue" />
-          <span className="text-sm font-semibold text-viverblue">IA VIVER DE IA</span>
-        </div>
-        
-        <div className="prose prose-slate max-w-none">
-          <div className="leading-relaxed text-slate-100">
-            <TypingEffect
-              key={`typing-debug-${messageKey}-${generatedMessage.length}`}
-              text={generatedMessage}
-              speed={25}
-              onComplete={handleTypingComplete}
-              startDelay={300}
-            />
+          <div className="flex-1">
+            <h3 className="text-lg font-semibold text-white mb-2">
+              Preparando sua experiência...
+            </h3>
+            <div className="text-slate-300 leading-relaxed mb-4">
+              Olá {data?.name || 'Membro'}! Vamos descobrir como podemos acelerar sua jornada empresarial com IA.
+            </div>
+            
+            <div className="mt-4 p-3 bg-slate-700/50 border border-slate-600 rounded-lg text-xs">
+              <p className="text-slate-400 mb-2">Debug info:</p>
+              <ul className="text-slate-500 space-y-1">
+                <li>• Dados: {hasMinimumData ? '✅ OK' : '❌ Incompletos'}</li>
+                <li>• Mensagem: {generatedMessage ? '✅ Gerada' : '❌ Não gerada'}</li>
+                <li>• Carregando: {isGenerating ? '✅ Sim' : '❌ Não'}</li>
+                <li>• Mostrar: {showMessage ? '✅ Sim' : '❌ Não'}</li>
+                <li>• Inicializado: {isInitialized ? '✅ Sim' : '❌ Não'}</li>
+              </ul>
+            </div>
+            
+            <Button
+              onClick={handleRegenerateMessage}
+              variant="outline"
+              size="sm"
+              className="flex items-center gap-2 mt-3"
+            >
+              <RefreshCw className="w-4 h-4" />
+              Gerar mensagem
+            </Button>
           </div>
         </div>
-      </motion.div>
-    );
-  }
-
-  // Não mostrar nada se não houver dados suficientes
-  console.log('[Step2AIInteraction] Retornando NULL - dados insuficientes');
-  return null;
+      </Card>
+    </motion.div>
+  );
 };
