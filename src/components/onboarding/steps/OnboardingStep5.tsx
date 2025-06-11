@@ -33,7 +33,7 @@ const OnboardingStep5: React.FC<OnboardingStepProps> = ({
   onUpdateData,
   getFieldError
 }) => {
-  const selectedPreferences = data.contentPreference || [];
+  const selectedPreferences = Array.isArray(data.contentPreference) ? data.contentPreference : [];
 
   const handlePreferenceToggle = (preference: string, checked: boolean) => {
     const currentPreferences = selectedPreferences;
