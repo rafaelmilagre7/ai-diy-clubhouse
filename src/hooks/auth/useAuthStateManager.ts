@@ -44,17 +44,6 @@ export const useAuthStateManager = (params: AuthStateManagerParams) => {
         console.log("[AUTH-STATE-MANAGER] Sessão ativa encontrada:", session.user.id.substring(0, 8) + '***');
         setUser(session.user);
         
-        // CORREÇÃO CRÍTICA 2: Verificação imediata de admin por email
-        const isAdminByEmail = session.user.email && [
-          'rafael@viverdeia.ai',
-          'admin@viverdeia.ai',
-          'admin@teste.com'
-        ].includes(session.user.email.toLowerCase());
-        
-        if (isAdminByEmail) {
-          console.log("[AUTH-STATE-MANAGER] Admin detectado por email, priorizando carregamento");
-        }
-        
         // Process user profile with error handling
         try {
           const profile = await processUserProfile(
@@ -67,19 +56,13 @@ export const useAuthStateManager = (params: AuthStateManagerParams) => {
           
           console.log("[AUTH-STATE-MANAGER] Perfil processado com sucesso:", {
             hasProfile: !!profile,
-            isAdmin: isAdminByEmail || profile?.role_id === 'admin',
+            isAdmin: profile?.user_roles?.name === 'admin',
             roleName: profile?.user_roles?.name || 'sem role'
           });
           
         } catch (profileError) {
           console.error("[AUTH-STATE-MANAGER] Erro ao processar perfil do usuário:", profileError);
-          // CORREÇÃO CRÍTICA 4: Se é admin por email, permitir acesso mesmo sem perfil
-          if (isAdminByEmail) {
-            console.log("[AUTH-STATE-MANAGER] Admin por email - permitindo acesso sem perfil completo");
-            setProfile(null);
-          } else {
-            setProfile(null);
-          }
+          setProfile(null);
         }
       } else {
         console.log("[AUTH-STATE-MANAGER] Nenhuma sessão ativa encontrada");
