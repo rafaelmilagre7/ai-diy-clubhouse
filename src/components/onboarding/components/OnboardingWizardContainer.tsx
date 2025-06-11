@@ -1,5 +1,5 @@
 
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import { useOnboardingValidation } from '../hooks/useOnboardingValidation';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/lib/supabase';
@@ -55,7 +55,7 @@ export const OnboardingWizardContainer: React.FC<OnboardingWizardContainerProps>
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
-  // Estados para IA
+  // Estados para IA - SIMPLIFICADOS
   const [currentAIMessage, setCurrentAIMessage] = useState<string | null>(null);
   const [isGeneratingAI, setIsGeneratingAI] = useState(false);
 
@@ -67,24 +67,20 @@ export const OnboardingWizardContainer: React.FC<OnboardingWizardContainerProps>
     validateCurrentStep,
   } = useOnboardingValidation();
 
-  // Função para validar etapa atual
-  const validateStep = useCallback((step: number) => {
-    console.log('[WIZARD-CONTAINER] Validando etapa:', step);
-    const result = validateCurrentStep(step, data, data.memberType || 'club');
-    console.log('[WIZARD-CONTAINER] Resultado da validação:', result);
+  // Mover validação para useMemo para evitar re-renders infinitos
+  const isCurrentStepValid = useMemo(() => {
+    console.log('[WIZARD-CONTAINER] Validando etapa (useMemo):', currentStep);
+    const result = validateCurrentStep(currentStep, data, data.memberType || 'club');
+    console.log('[WIZARD-CONTAINER] Resultado da validação (useMemo):', result);
     return result.isValid;
-  }, [validateCurrentStep, data]);
+  }, [currentStep, data, validateCurrentStep]);
 
-  // Computed property para verificar se a etapa atual é válida
-  const isCurrentStepValid = validateStep(currentStep);
-
-  // Função para gerar mensagem de IA
+  // Função para gerar mensagem de IA - SIMPLIFICADA
   const generateAIMessage = useCallback(async () => {
-    console.log('[WIZARD-CONTAINER] Iniciando geração de mensagem IA');
-    console.log('[WIZARD-CONTAINER] Dados atuais:', { name: data.name, city: data.city });
+    console.log('[WIZARD-CONTAINER] Iniciando geração de mensagem IA - SIMPLIFICADA');
+    console.log('[WIZARD-CONTAINER] Dados para IA:', { name: data.name, city: data.city });
     
     setIsGeneratingAI(true);
-    setCurrentAIMessage(null);
 
     try {
       const { data: result, error } = await supabase.functions.invoke('generate-onboarding-message', {
@@ -106,10 +102,10 @@ export const OnboardingWizardContainer: React.FC<OnboardingWizardContainerProps>
       console.log('[WIZARD-CONTAINER] Resposta da API:', result);
 
       if (result?.message) {
-        console.log('[WIZARD-CONTAINER] Mensagem recebida:', result.message);
+        console.log('[WIZARD-CONTAINER] Mensagem recebida da API:', result.message);
         setCurrentAIMessage(result.message);
       } else {
-        console.warn('[WIZARD-CONTAINER] Sem mensagem na resposta, usando fallback');
+        console.warn('[WIZARD-CONTAINER] API sem mensagem, usando fallback');
         const fallbackMessage = `Olá${data.name ? ` ${data.name}` : ''}! Vamos continuar configurando seu perfil empresarial para personalizar ainda mais sua experiência na Viver de IA. 🚀`;
         setCurrentAIMessage(fallbackMessage);
       }
@@ -123,18 +119,24 @@ export const OnboardingWizardContainer: React.FC<OnboardingWizardContainerProps>
     }
   }, [data.name, data.city, data.memberType]);
 
-  // Gerar mensagem automaticamente quando entrar na etapa 2
+  // Gerar mensagem automaticamente quando entrar na etapa 2 - SIMPLIFICADO
   useEffect(() => {
-    if (currentStep === 2 && !currentAIMessage && !isGeneratingAI) {
-      console.log('[WIZARD-CONTAINER] Etapa 2 detectada, gerando mensagem automaticamente');
+    if (currentStep === 2) {
+      console.log('[WIZARD-CONTAINER] Etapa 2 detectada - gerando mensagem');
+      // Sempre gerar nova mensagem na etapa 2
       generateAIMessage();
+    } else {
+      // Limpar mensagem quando sair da etapa 2
+      console.log('[WIZARD-CONTAINER] Saindo da etapa 2 - limpando mensagem');
+      setCurrentAIMessage(null);
+      setIsGeneratingAI(false);
     }
-  }, [currentStep, currentAIMessage, isGeneratingAI, generateAIMessage]);
+  }, [currentStep, generateAIMessage]);
 
-  const handleNext = async () => {
+  const handleNext = useCallback(async () => {
     console.log('[WIZARD-CONTAINER] Tentando avançar para próxima etapa');
     
-    if (!validateStep(currentStep)) {
+    if (!isCurrentStepValid) {
       console.log('[WIZARD-CONTAINER] Validação falhou, não avançando');
       toast({
         title: "Campos obrigatórios",
@@ -147,34 +149,22 @@ export const OnboardingWizardContainer: React.FC<OnboardingWizardContainerProps>
     const nextStep = currentStep + 1;
     console.log('[WIZARD-CONTAINER] Avançando para etapa:', nextStep);
     setCurrentStep(nextStep);
+  }, [isCurrentStepValid, currentStep, toast]);
 
-    // Limpar mensagem quando sair da etapa 2
-    if (currentStep === 2) {
-      console.log('[WIZARD-CONTAINER] Saindo da etapa 2, limpando mensagem');
-      setCurrentAIMessage(null);
-    }
-  };
-
-  const handlePrevious = () => {
+  const handlePrevious = useCallback(() => {
     console.log('[WIZARD-CONTAINER] Voltando para etapa anterior');
     const prevStep = Math.max(1, currentStep - 1);
     setCurrentStep(prevStep);
+  }, [currentStep]);
 
-    // Limpar mensagem quando sair da etapa 2
-    if (currentStep === 2) {
-      console.log('[WIZARD-CONTAINER] Saindo da etapa 2, limpando mensagem');
-      setCurrentAIMessage(null);
-    }
-  };
-
-  const handleDataChange = (newData: Partial<OnboardingData>) => {
+  const handleDataChange = useCallback((newData: Partial<OnboardingData>) => {
     console.log('[WIZARD-CONTAINER] Dados alterados:', newData);
     setData(prev => ({ ...prev, ...newData }));
     setHasUnsavedChanges(true);
     setLastSaved(new Date());
-  };
+  }, []);
 
-  const handleSubmit = async () => {
+  const handleSubmit = useCallback(async () => {
     console.log('[WIZARD-CONTAINER] Finalizando onboarding');
     setIsSubmitting(true);
     
@@ -195,9 +185,9 @@ export const OnboardingWizardContainer: React.FC<OnboardingWizardContainerProps>
     } finally {
       setIsSubmitting(false);
     }
-  };
+  }, [toast]);
 
-  const contextValue: OnboardingWizardContextType = {
+  const contextValue: OnboardingWizardContextType = useMemo(() => ({
     currentStep,
     totalSteps,
     data,
@@ -215,7 +205,25 @@ export const OnboardingWizardContainer: React.FC<OnboardingWizardContainerProps>
     currentAIMessage,
     isGeneratingAI,
     generateAIMessage,
-  };
+  }), [
+    currentStep,
+    totalSteps,
+    data,
+    isLoading,
+    isSubmitting,
+    lastSaved,
+    hasUnsavedChanges,
+    validationErrors,
+    getFieldError,
+    handleNext,
+    handlePrevious,
+    handleDataChange,
+    handleSubmit,
+    isCurrentStepValid,
+    currentAIMessage,
+    isGeneratingAI,
+    generateAIMessage,
+  ]);
 
   return children(contextValue);
 };
