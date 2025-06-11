@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 
 interface TypingEffectProps {
   text: string;
@@ -16,61 +16,95 @@ export const TypingEffect: React.FC<TypingEffectProps> = ({
 }) => {
   const [displayedText, setDisplayedText] = useState('');
   const [isComplete, setIsComplete] = useState(false);
-  const [hasStarted, setHasStarted] = useState(false);
+  const [isTyping, setIsTyping] = useState(false);
+  
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const isMountedRef = useRef(true);
 
+  // Cleanup function
+  const cleanup = useCallback(() => {
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
+    }
+  }, []);
+
+  // Start typing effect
   const startTyping = useCallback(() => {
-    if (!text || hasStarted || isComplete) {
+    if (!text || !isMountedRef.current || isTyping) {
+      console.log('[TypingEffect] Não pode iniciar:', { text: !!text, mounted: isMountedRef.current, isTyping });
       return;
     }
 
-    console.log('[TypingEffect] Iniciando digitação:', text.substring(0, 50) + '...');
-    setHasStarted(true);
+    console.log('[TypingEffect] Iniciando digitação para:', text.substring(0, 30) + '...');
+    setIsTyping(true);
     setDisplayedText('');
+    setIsComplete(false);
     
     let currentIndex = 0;
     
-    const typeInterval = setInterval(() => {
+    intervalRef.current = setInterval(() => {
+      if (!isMountedRef.current) {
+        cleanup();
+        return;
+      }
+
       if (currentIndex < text.length) {
-        // Garantir que o primeiro caractere não seja cortado
         const nextChar = text[currentIndex];
         setDisplayedText(prev => prev + nextChar);
         currentIndex++;
       } else {
-        clearInterval(typeInterval);
+        cleanup();
         setIsComplete(true);
+        setIsTyping(false);
         console.log('[TypingEffect] Digitação completa');
         onComplete?.();
       }
     }, speed);
+  }, [text, speed, onComplete, isTyping, cleanup]);
 
-    return () => clearInterval(typeInterval);
-  }, [text, speed, onComplete, hasStarted, isComplete]);
-
+  // Reset and start typing when text changes
   useEffect(() => {
-    if (!text || isComplete) {
-      return;
-    }
+    if (!text) return;
 
-    const timer = setTimeout(() => {
-      startTyping();
+    console.log('[TypingEffect] Texto mudou, resetando:', text.substring(0, 30) + '...');
+    
+    // Reset states
+    setDisplayedText('');
+    setIsComplete(false);
+    setIsTyping(false);
+    
+    // Clear any existing timers
+    cleanup();
+
+    // Start typing after delay
+    timeoutRef.current = setTimeout(() => {
+      if (isMountedRef.current) {
+        startTyping();
+      }
     }, startDelay);
 
-    return () => clearTimeout(timer);
-  }, [text, startDelay, startTyping, isComplete]);
+    return cleanup;
+  }, [text, startDelay, startTyping, cleanup]);
 
-  // Reset quando o texto muda (nova mensagem)
+  // Cleanup on unmount
   useEffect(() => {
-    if (text && !isComplete) {
-      setDisplayedText('');
-      setIsComplete(false);
-      setHasStarted(false);
-    }
-  }, [text]);
+    return () => {
+      console.log('[TypingEffect] Componente desmontando');
+      isMountedRef.current = false;
+      cleanup();
+    };
+  }, [cleanup]);
 
   return (
     <div className="whitespace-pre-wrap">
       {displayedText}
-      {!isComplete && (
+      {!isComplete && isTyping && (
         <span className="animate-pulse text-viverblue">|</span>
       )}
     </div>

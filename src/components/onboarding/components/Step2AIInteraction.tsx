@@ -1,7 +1,6 @@
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { useAIMessageGeneration } from '../hooks/useAIMessageGeneration';
-import { AIMessageDisplay } from './AIMessageDisplay';
 import { TypingEffect } from './TypingEffect';
 import { OnboardingData } from '../types/onboardingTypes';
 import { motion } from 'framer-motion';
@@ -21,32 +20,38 @@ export const Step2AIInteraction: React.FC<Step2AIInteractionProps> = ({
     isGenerating,
     generatedMessage,
     error,
-    progress
+    clearMessage
   } = useAIMessageGeneration();
 
-  const [shouldShowMessage, setShouldShowMessage] = useState(false);
-  const [typingComplete, setTypingComplete] = useState(false);
+  const [messageKey, setMessageKey] = useState(0);
+  const [hasRequestedGeneration, setHasRequestedGeneration] = useState(false);
 
-  // Gerar mensagem quando houver dados suficientes
+  // Verificar se temos dados suficientes
+  const hasMinimumData = useMemo(() => {
+    return !!(data.name && data.city);
+  }, [data.name, data.city]);
+
+  // Gerar mensagem uma única vez quando houver dados suficientes
   useEffect(() => {
-    if (data.name && data.city && !isGenerating && !generatedMessage && !error) {
-      console.log('[Step2AIInteraction] Gerando mensagem para:', data.name);
+    if (hasMinimumData && !hasRequestedGeneration && !isGenerating && !generatedMessage && !error) {
+      console.log('[Step2AIInteraction] Solicitando geração de mensagem para:', data.name);
+      setHasRequestedGeneration(true);
       generateMessage(data, memberType, 2);
     }
-  }, [data.name, data.city, generateMessage, memberType, isGenerating, generatedMessage, error]);
+  }, [hasMinimumData, hasRequestedGeneration, generateMessage, data, memberType, isGenerating, generatedMessage, error]);
 
-  // Controlar quando mostrar a mensagem
+  // Reset quando mudar dados importantes
   useEffect(() => {
-    if (generatedMessage && !isGenerating) {
-      console.log('[Step2AIInteraction] Mensagem recebida, iniciando exibição');
-      setShouldShowMessage(true);
-      setTypingComplete(false);
+    if (data.name || data.city) {
+      console.log('[Step2AIInteraction] Dados importantes mudaram, resetando');
+      setHasRequestedGeneration(false);
+      setMessageKey(prev => prev + 1);
+      clearMessage();
     }
-  }, [generatedMessage, isGenerating]);
+  }, [data.name, data.city, clearMessage]);
 
   const handleTypingComplete = () => {
     console.log('[Step2AIInteraction] Digitação completada');
-    setTypingComplete(true);
   };
 
   // Mostrar loading enquanto gera
@@ -85,9 +90,10 @@ export const Step2AIInteraction: React.FC<Step2AIInteractionProps> = ({
   }
 
   // Mostrar mensagem com efeito de digitação
-  if (shouldShowMessage && generatedMessage) {
+  if (generatedMessage && !isGenerating) {
     return (
       <motion.div
+        key={`message-${messageKey}`}
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         className="bg-gradient-to-r from-viverblue/10 to-viverblue-light/10 border border-viverblue/30 rounded-xl p-6 mb-6"
@@ -103,6 +109,7 @@ export const Step2AIInteraction: React.FC<Step2AIInteractionProps> = ({
         <div className="prose prose-slate max-w-none">
           <div className="leading-relaxed text-slate-100">
             <TypingEffect
+              key={`typing-${messageKey}-${generatedMessage.length}`}
               text={generatedMessage}
               speed={25}
               onComplete={handleTypingComplete}

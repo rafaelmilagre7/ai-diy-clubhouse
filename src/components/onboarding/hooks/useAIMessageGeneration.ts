@@ -1,5 +1,5 @@
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import { OnboardingData } from '../types/onboardingTypes';
 import { useErrorHandler } from '@/hooks/useErrorHandler';
@@ -10,14 +10,17 @@ export const useAIMessageGeneration = () => {
   const [error, setError] = useState<string | null>(null);
   const [progress, setProgress] = useState(0);
   const { handleError } = useErrorHandler();
+  
+  const isGeneratingRef = useRef(false);
 
   const generateMessage = useCallback(async (onboardingData: OnboardingData, memberType: 'club' | 'formacao', currentStep?: number) => {
-    // Evitar gerar novamente se já está gerando ou se não tem dados mínimos
-    if (isGenerating || !onboardingData.name) {
-      console.log('[AIMessageGeneration] Não é possível gerar - faltam dados ou já está gerando');
+    // Evitar múltiplas gerações simultâneas
+    if (isGeneratingRef.current || !onboardingData.name) {
+      console.log('[AIMessageGeneration] Bloqueando geração duplicada ou faltam dados');
       return;
     }
 
+    isGeneratingRef.current = true;
     setIsGenerating(true);
     setError(null);
     setProgress(0);
@@ -71,8 +74,7 @@ export const useAIMessageGeneration = () => {
             cleanMessage = getFallbackMessage(onboardingData, currentStep);
           }
           
-          console.log('[AIMessageGeneration] Primeiro caractere:', cleanMessage.charAt(0));
-          console.log('[AIMessageGeneration] Mensagem sanitizada (50 chars):', cleanMessage.substring(0, 50));
+          console.log('[AIMessageGeneration] Mensagem limpa e validada:', cleanMessage.substring(0, 50));
         }
         
         setGeneratedMessage(cleanMessage);
@@ -92,12 +94,13 @@ export const useAIMessageGeneration = () => {
       setGeneratedMessage(fallbackMessage);
       console.log('[AIMessageGeneration] Fallback aplicado devido a erro');
     } finally {
+      isGeneratingRef.current = false;
       setIsGenerating(false);
       setProgress(100);
       
       setTimeout(() => setProgress(0), 1500);
     }
-  }, [isGenerating, handleError]);
+  }, [handleError]);
 
   const getFallbackMessage = (onboardingData: OnboardingData, currentStep?: number) => {
     if (currentStep === 2) {
@@ -110,6 +113,7 @@ export const useAIMessageGeneration = () => {
     setGeneratedMessage(null);
     setError(null);
     setProgress(0);
+    isGeneratingRef.current = false;
   }, []);
 
   return {
