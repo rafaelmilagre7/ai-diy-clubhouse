@@ -10,17 +10,18 @@ export const useAIMessageGeneration = () => {
   const [error, setError] = useState<string | null>(null);
   const { handleError } = useErrorHandler();
 
-  const generateMessage = async (onboardingData: OnboardingData, memberType: 'club' | 'formacao') => {
+  const generateMessage = async (onboardingData: OnboardingData, memberType: 'club' | 'formacao', currentStep?: number) => {
     setIsGenerating(true);
     setError(null);
     
     try {
-      console.log('[AIMessageGeneration] Iniciando geração de mensagem para:', onboardingData.name);
+      console.log('[AIMessageGeneration] Iniciando geração de mensagem para:', onboardingData.name, 'Etapa:', currentStep);
       
       const { data, error: functionError } = await supabase.functions.invoke('generate-onboarding-message', {
         body: {
           onboardingData,
-          memberType
+          memberType,
+          currentStep
         }
       });
 
@@ -43,7 +44,13 @@ export const useAIMessageGeneration = () => {
       setError('Erro ao gerar mensagem personalizada');
       
       // Fallback local em caso de erro total
-      const fallbackMessage = `Parabéns ${onboardingData.name || 'Membro'}! 
+      const fallbackMessage = currentStep === 2 
+        ? `Olá ${onboardingData.name || 'Membro'}! 
+
+Que bom ter você aqui conosco! Vi que você está em ${onboardingData.city || 'sua cidade'} e isso me deixa empolgado - há muitas oportunidades incríveis de IA surgindo em todo o Brasil.
+
+Agora vamos falar sobre seu negócio. Conte-me mais sobre sua empresa e como posso ajudar você a identificar as melhores oportunidades de transformação digital para seu setor! 🚀`
+        : `Parabéns ${onboardingData.name || 'Membro'}! 
 
 Ficamos muito felizes em tê-lo conosco nesta jornada de transformação digital. Seu onboarding foi concluído com sucesso e agora você tem acesso completo a todas as nossas soluções e recursos.
 
