@@ -1,5 +1,5 @@
 
-import React, { useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
@@ -14,17 +14,41 @@ export const BirthDateSelector: React.FC<BirthDateSelectorProps> = ({
   onChange,
   getFieldError
 }) => {
-  // Parse current value
-  const currentDate = value ? new Date(value) : null;
-  const selectedDay = currentDate?.getDate().toString() || '';
-  const selectedMonth = currentDate ? (currentDate.getMonth() + 1).toString() : '';
-  const selectedYear = currentDate?.getFullYear().toString() || '';
+  // Estados internos para cada campo
+  const [selectedDay, setSelectedDay] = useState<string>('');
+  const [selectedMonth, setSelectedMonth] = useState<string>('');
+  const [selectedYear, setSelectedYear] = useState<string>('');
 
-  // Generate options
+  // Inicializar estados internos quando value prop mudar
+  useEffect(() => {
+    if (value) {
+      const date = new Date(value);
+      if (!isNaN(date.getTime())) {
+        setSelectedDay(date.getDate().toString().padStart(2, '0'));
+        setSelectedMonth((date.getMonth() + 1).toString().padStart(2, '0'));
+        setSelectedYear(date.getFullYear().toString());
+        console.log('[BirthDateSelector] Inicializando com valor:', value);
+      }
+    } else {
+      setSelectedDay('');
+      setSelectedMonth('');
+      setSelectedYear('');
+      console.log('[BirthDateSelector] Limpando valores');
+    }
+  }, [value]);
+
+  // Gerar lista de dias baseado no mês e ano selecionados
   const days = useMemo(() => {
     const daysArray = [];
-    const maxDays = selectedMonth && selectedYear ? 
-      new Date(parseInt(selectedYear), parseInt(selectedMonth), 0).getDate() : 31;
+    let maxDays = 31;
+    
+    if (selectedMonth && selectedYear) {
+      maxDays = new Date(parseInt(selectedYear), parseInt(selectedMonth), 0).getDate();
+    } else if (selectedMonth) {
+      // Se só o mês foi selecionado, usar ano atual para calcular
+      const currentYear = new Date().getFullYear();
+      maxDays = new Date(currentYear, parseInt(selectedMonth), 0).getDate();
+    }
     
     for (let i = 1; i <= maxDays; i++) {
       daysArray.push(i.toString().padStart(2, '0'));
@@ -56,37 +80,69 @@ export const BirthDateSelector: React.FC<BirthDateSelectorProps> = ({
     return yearsArray;
   }, []);
 
-  // Handle changes
-  const handleDateChange = (day: string, month: string, year: string) => {
+  // Função para validar e enviar data completa
+  const updateParentIfComplete = (day: string, month: string, year: string) => {
+    console.log('[BirthDateSelector] Verificando completude:', { day, month, year });
+    
     if (day && month && year) {
-      // Validate date exists
+      // Validar se a data é válida
       const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
-      if (date.getDate() === parseInt(day)) {
+      if (date.getDate() === parseInt(day) && 
+          date.getMonth() === parseInt(month) - 1 && 
+          date.getFullYear() === parseInt(year)) {
         const isoDate = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+        console.log('[BirthDateSelector] Enviando data válida:', isoDate);
         onChange(isoDate);
+      } else {
+        console.log('[BirthDateSelector] Data inválida detectada');
+        onChange('');
       }
     } else {
+      console.log('[BirthDateSelector] Data incompleta, enviando string vazia');
       onChange('');
     }
   };
 
   const handleDayChange = (day: string) => {
-    handleDateChange(day, selectedMonth, selectedYear);
+    console.log('[BirthDateSelector] Dia selecionado:', day);
+    setSelectedDay(day);
+    updateParentIfComplete(day, selectedMonth, selectedYear);
   };
 
   const handleMonthChange = (month: string) => {
-    // If selected day is invalid for new month, clear it
-    const maxDaysInMonth = new Date(parseInt(selectedYear) || 2024, parseInt(month), 0).getDate();
-    const dayToUse = selectedDay && parseInt(selectedDay) <= maxDaysInMonth ? selectedDay : '';
-    handleDateChange(dayToUse, month, selectedYear);
+    console.log('[BirthDateSelector] Mês selecionado:', month);
+    setSelectedMonth(month);
+    
+    // Verificar se o dia selecionado é válido para o novo mês
+    let dayToUse = selectedDay;
+    if (selectedDay && selectedYear) {
+      const maxDaysInMonth = new Date(parseInt(selectedYear), parseInt(month), 0).getDate();
+      if (parseInt(selectedDay) > maxDaysInMonth) {
+        console.log('[BirthDateSelector] Ajustando dia inválido para o mês');
+        dayToUse = '';
+        setSelectedDay('');
+      }
+    }
+    
+    updateParentIfComplete(dayToUse, month, selectedYear);
   };
 
   const handleYearChange = (year: string) => {
-    // Check if current day/month is valid for new year (leap year check)
-    const maxDaysInMonth = selectedMonth ? 
-      new Date(parseInt(year), parseInt(selectedMonth), 0).getDate() : 31;
-    const dayToUse = selectedDay && parseInt(selectedDay) <= maxDaysInMonth ? selectedDay : '';
-    handleDateChange(dayToUse, selectedMonth, year);
+    console.log('[BirthDateSelector] Ano selecionado:', year);
+    setSelectedYear(year);
+    
+    // Verificar se o dia selecionado é válido para o novo ano (anos bissextos)
+    let dayToUse = selectedDay;
+    if (selectedDay && selectedMonth) {
+      const maxDaysInMonth = new Date(parseInt(year), parseInt(selectedMonth), 0).getDate();
+      if (parseInt(selectedDay) > maxDaysInMonth) {
+        console.log('[BirthDateSelector] Ajustando dia inválido para o ano');
+        dayToUse = '';
+        setSelectedDay('');
+      }
+    }
+    
+    updateParentIfComplete(dayToUse, selectedMonth, year);
   };
 
   return (
