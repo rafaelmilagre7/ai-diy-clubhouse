@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { useAuth } from '@/contexts/auth';
-import { RealTimeSecurityDashboard } from './RealTimeSecurityDashboard';
+import { OptimizedRealTimeSecurityDashboard } from './OptimizedRealTimeSecurityDashboard';
 import { Card, CardContent } from '@/components/ui/card';
 import { Shield, AlertTriangle } from 'lucide-react';
 
@@ -25,7 +25,7 @@ export const SecurityDashboard = () => {
     );
   }
 
-  // Se for admin, renderizar o dashboard avançado
+  // Se for admin, renderizar o dashboard otimizado
   return (
     <div className="space-y-6">
       {/* Banner de identificação */}
@@ -33,16 +33,16 @@ export const SecurityDashboard = () => {
         <div className="flex items-center gap-3">
           <Shield className="h-6 w-6" />
           <div>
-            <h2 className="text-lg font-semibold">Sistema de Segurança Avançado - FASE 3</h2>
+            <h2 className="text-lg font-semibold">Sistema de Segurança Avançado - FASE 4 (OTIMIZADO)</h2>
             <p className="text-sm opacity-90">
-              Monitoramento em tempo real com detecção de anomalias e alertas inteligentes
+              Monitoramento em tempo real com detecção de anomalias, alertas inteligentes e performance otimizada
             </p>
           </div>
         </div>
       </div>
 
-      {/* Dashboard principal */}
-      <RealTimeSecurityDashboard />
+      {/* Dashboard otimizado */}
+      <OptimizedRealTimeSecurityDashboard />
     </div>
   );
 };
