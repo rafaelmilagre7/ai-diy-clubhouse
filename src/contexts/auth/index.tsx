@@ -171,9 +171,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     signOut,
     signInAsMember,
     signInAsAdmin,
+    setSession,
+    setUser,
     setProfile,
     setIsLoading,
-    setAuthError,
   };
 
   return (
