@@ -161,11 +161,16 @@ const OnboardingStep2: React.FC<OnboardingStepProps> = ({
                 </SelectTrigger>
                 <SelectContent className="bg-[#151823] border-white/20">
                   <SelectItem value="0-50k" className="text-white hover:bg-white/10">Até R$ 50.000</SelectItem>
-                  <SelectItem value="50k-200k" className="text-white hover:bg-white/10">R$ 50.000 - R$ 200.000</SelectItem>
+                  <SelectItem value="50k-100k" className="text-white hover:bg-white/10">R$ 50.000 - R$ 100.000</SelectItem>
+                  <SelectItem value="100k-200k" className="text-white hover:bg-white/10">R$ 100.000 - R$ 200.000</SelectItem>
                   <SelectItem value="200k-500k" className="text-white hover:bg-white/10">R$ 200.000 - R$ 500.000</SelectItem>
                   <SelectItem value="500k-1M" className="text-white hover:bg-white/10">R$ 500.000 - R$ 1.000.000</SelectItem>
-                  <SelectItem value="1M-5M" className="text-white hover:bg-white/10">R$ 1.000.000 - R$ 5.000.000</SelectItem>
-                  <SelectItem value="5M+" className="text-white hover:bg-white/10">Acima de R$ 5.000.000</SelectItem>
+                  <SelectItem value="1M-2M" className="text-white hover:bg-white/10">R$ 1.000.000 - R$ 2.000.000</SelectItem>
+                  <SelectItem value="2M-5M" className="text-white hover:bg-white/10">R$ 2.000.000 - R$ 5.000.000</SelectItem>
+                  <SelectItem value="5M-10M" className="text-white hover:bg-white/10">R$ 5.000.000 - R$ 10.000.000</SelectItem>
+                  <SelectItem value="10M-20M" className="text-white hover:bg-white/10">R$ 10.000.000 - R$ 20.000.000</SelectItem>
+                  <SelectItem value="20M-50M" className="text-white hover:bg-white/10">R$ 20.000.000 - R$ 50.000.000</SelectItem>
+                  <SelectItem value="50M+" className="text-white hover:bg-white/10">Acima de R$ 50.000.000</SelectItem>
                   <SelectItem value="confidential" className="text-white hover:bg-white/10">Prefiro não informar</SelectItem>
                 </SelectContent>
               </Select>
