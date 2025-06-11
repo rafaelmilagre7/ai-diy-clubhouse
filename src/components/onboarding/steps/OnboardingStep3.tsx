@@ -1,423 +1,289 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { Card } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Checkbox } from '@/components/ui/checkbox';
-import { OnboardingData } from '../types/onboardingTypes';
-import { EnhancedFieldIndicator } from '../components/EnhancedFieldIndicator';
-import { ChevronRight, Brain, Target, TrendingUp, Clock, Users, DollarSign } from 'lucide-react';
+import { Brain, Zap, Target, Sparkles } from 'lucide-react';
+import { OnboardingStepProps } from '../types/onboardingTypes';
+import { AIMessageDisplay } from '../components/AIMessageDisplay';
+import { useAIMessageGeneration } from '../hooks/useAIMessageGeneration';
 
-interface OnboardingStep3Props {
-  data: OnboardingData;
-  onUpdateData: (data: Partial<OnboardingData>) => void;
-  onNext: () => void;
-  onPrev: () => void;
-  memberType: 'club' | 'formacao';
-  validationErrors: any;
-  getFieldError: (field: string) => string | undefined;
-}
-
-const OnboardingStep3: React.FC<OnboardingStep3Props> = ({
+const OnboardingStep3: React.FC<OnboardingStepProps> = ({
   data,
   onUpdateData,
-  onNext,
-  onPrev,
   memberType,
-  validationErrors,
   getFieldError
 }) => {
-  const handleInputChange = (field: keyof OnboardingData, value: any) => {
+  const { generateMessage, isGenerating, generatedMessage } = useAIMessageGeneration();
+  const [shouldGenerateMessage, setShouldGenerateMessage] = useState(false);
+
+  const aiTools = [
+    'ChatGPT', 'Claude', 'Gemini', 'Copilot', 'Midjourney', 'DALL-E', 
+    'Notion AI', 'Jasper', 'Copy.ai', 'Canva AI', 'Loom AI', 'Outras'
+  ];
+
+  const dailyToolsOptions = [
+    'Microsoft Office', 'Google Workspace', 'Slack', 'Trello/Asana', 
+    'CRM (Salesforce, HubSpot)', 'Adobe Creative Suite', 'Figma', 'Outras'
+  ];
+
+  // Gerar mensagem quando dados de maturidade estiverem preenchidos
+  useEffect(() => {
+    const hasMaturityInfo = data.hasImplementedAI && data.aiKnowledgeLevel && data.whoWillImplement;
+    if (hasMaturityInfo && !generatedMessage && !isGenerating && !shouldGenerateMessage) {
+      setShouldGenerateMessage(true);
+      generateMessage(data, memberType);
+    }
+  }, [data.hasImplementedAI, data.aiKnowledgeLevel, data.whoWillImplement, generatedMessage, isGenerating, shouldGenerateMessage, generateMessage, data, memberType]);
+
+  const handleRadioChange = (field: string, value: string) => {
     onUpdateData({ [field]: value });
   };
 
-  const handleCheckboxChange = (field: keyof OnboardingData, option: string, checked: boolean) => {
-    const currentValues = data[field] as string[] || [];
-    let newValues: string[];
+  const handleCheckboxChange = (field: string, value: string, checked: boolean) => {
+    const currentValues = data[field] || [];
+    let newValues;
     
     if (checked) {
-      newValues = [...currentValues, option];
+      newValues = [...currentValues, value];
     } else {
-      newValues = currentValues.filter(item => item !== option);
+      newValues = currentValues.filter(item => item !== value);
     }
     
     onUpdateData({ [field]: newValues });
   };
 
-  const aiToolsOptions = [
-    'ChatGPT',
-    'Claude',
-    'Gemini',
-    'Copilot',
-    'Midjourney',
-    'DALL-E',
-    'Notion AI',
-    'Jasper',
-    'Copy.ai',
-    'Writesonic',
-    'Grammarly',
-    'Loom AI',
-    'Otter.ai',
-    'Synthesia',
-    'Runway',
-    'Stable Diffusion',
-    'Make.com (Integromat)',
-    'Zapier',
-    'Monday.com AI',
-    'Salesforce Einstein',
-    'HubSpot AI',
-    'Intercom AI',
-    'Zendesk AI',
-    'Canva AI',
-    'Adobe Firefly',
-    'Figma AI',
-    'GitHub Copilot',
-    'Cursor',
-    'Replit AI',
-    'Perplexity',
-    'You.com',
-    'Bing AI',
-    'Google Bard',
-    'Character.AI',
-    'Poe',
-    'Replika',
-    'Outro'
-  ];
-
-  const dailyToolsOptions = [
-    'Google Workspace',
-    'Microsoft Office',
-    'Slack',
-    'Teams',
-    'Zoom',
-    'Notion',
-    'Trello',
-    'Asana',
-    'Monday.com',
-    'Salesforce',
-    'HubSpot',
-    'Mailchimp',
-    'Canva',
-    'Adobe Creative Suite',
-    'Figma',
-    'WhatsApp Business',
-    'Instagram',
-    'Facebook',
-    'LinkedIn',
-    'TikTok',
-    'YouTube',
-    'WordPress',
-    'Shopify',
-    'WooCommerce',
-    'Google Analytics',
-    'Google Ads',
-    'Facebook Ads',
-    'Outro'
-  ];
-
   return (
     <div className="space-y-8">
+      {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="text-center mb-8"
+        className="text-center space-y-4"
       >
-        <div className="w-16 h-16 mx-auto mb-4 bg-viverblue/20 rounded-full flex items-center justify-center">
+        <div className="w-16 h-16 mx-auto bg-viverblue/20 rounded-full flex items-center justify-center">
           <Brain className="w-8 h-8 text-viverblue" />
         </div>
-        <h2 className="text-2xl font-bold text-white mb-2">Seu Perfil com IA</h2>
-        <p className="text-slate-300">Vamos entender sua experiência e objetivos com inteligência artificial</p>
+        <h2 className="text-2xl font-bold text-white">
+          Maturidade em IA
+        </h2>
+        <p className="text-slate-300">
+          Vamos entender seu nível atual de conhecimento e experiência com Inteligência Artificial
+        </p>
       </motion.div>
 
-      <div className="grid gap-6">
-        {/* Experiência com IA */}
+      <div className="grid lg:grid-cols-2 gap-8">
+        {/* Coluna Esquerda - Experiência */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="space-y-4"
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.2 }}
+          className="space-y-6"
         >
-          <div className="flex items-center gap-2 mb-4">
-            <Brain className="w-5 h-5 text-viverblue" />
-            <h3 className="text-lg font-semibold text-white">Experiência com IA</h3>
-          </div>
+          {/* Experiência com IA */}
+          <Card className="p-6 bg-[#1A1E2E]/60 backdrop-blur-sm border-white/10">
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 mb-4">
+                <Zap className="w-5 h-5 text-viverblue" />
+                <h3 className="text-lg font-semibold text-white">Experiência Prévia</h3>
+              </div>
 
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="hasImplementedAI" className="text-white mb-2 block">
-                Sua empresa já implementou alguma solução de IA? *
-              </Label>
-              <EnhancedFieldIndicator
-                isRequired={true}
-                isValid={!!data.hasImplementedAI}
-                message={getFieldError('hasImplementedAI')}
-              />
-              <Select value={data.hasImplementedAI} onValueChange={(value) => handleInputChange('hasImplementedAI', value)}>
-                <SelectTrigger className="bg-[#1A1E2E] border-white/20 text-white">
-                  <SelectValue placeholder="Selecione uma opção" />
-                </SelectTrigger>
-                <SelectContent className="bg-[#1A1E2E] border-white/20">
-                  <SelectItem value="nao">Não, ainda não implementamos</SelectItem>
-                  <SelectItem value="parcial">Sim, implementações pontuais</SelectItem>
-                  <SelectItem value="ampla">Sim, uso amplo e estratégico</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <Label className="text-white mb-2 block">
-                Quais ferramentas de IA você já utilizou? *
-              </Label>
-              <EnhancedFieldIndicator
-                isRequired={true}
-                isValid={data.aiToolsUsed && data.aiToolsUsed.length > 0}
-                message={getFieldError('aiToolsUsed')}
-              />
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-2 max-h-40 overflow-y-auto bg-[#1A1E2E] p-4 rounded-lg border border-white/20">
-                {aiToolsOptions.map((tool) => (
-                  <div key={tool} className="flex items-center space-x-2">
-                    <Checkbox
-                      id={`aitool-${tool}`}
-                      checked={data.aiToolsUsed?.includes(tool) || false}
-                      onCheckedChange={(checked) => handleCheckboxChange('aiToolsUsed', tool, checked as boolean)}
-                      className="border-white/30"
-                    />
-                    <Label htmlFor={`aitool-${tool}`} className="text-sm text-white cursor-pointer">
-                      {tool}
-                    </Label>
+              <div>
+                <Label className="text-slate-200 mb-3 block">
+                  Você já implementou alguma solução de IA no seu negócio? *
+                </Label>
+                <RadioGroup 
+                  value={data.hasImplementedAI || ''}
+                  onValueChange={(value) => handleRadioChange('hasImplementedAI', value)}
+                  className="space-y-3"
+                >
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="sim_sucesso" id="sim_sucesso" className="border-viverblue text-viverblue" />
+                    <Label htmlFor="sim_sucesso" className="text-slate-200">Sim, com sucesso</Label>
                   </div>
-                ))}
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="sim_dificuldades" id="sim_dificuldades" className="border-viverblue text-viverblue" />
+                    <Label htmlFor="sim_dificuldades" className="text-slate-200">Sim, mas com dificuldades</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="tentei_nao_funcionou" id="tentei_nao_funcionou" className="border-viverblue text-viverblue" />
+                    <Label htmlFor="tentei_nao_funcionou" className="text-slate-200">Tentei, mas não funcionou</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="nao_implementei" id="nao_implementei" className="border-viverblue text-viverblue" />
+                    <Label htmlFor="nao_implementei" className="text-slate-200">Não, ainda não implementei</Label>
+                  </div>
+                </RadioGroup>
+                {getFieldError?.('hasImplementedAI') && (
+                  <p className="text-red-400 text-sm mt-2">{getFieldError('hasImplementedAI')}</p>
+                )}
+              </div>
+
+              <div>
+                <Label className="text-slate-200 mb-3 block">
+                  Qual seu nível de conhecimento em IA? *
+                </Label>
+                <RadioGroup 
+                  value={data.aiKnowledgeLevel || ''}
+                  onValueChange={(value) => handleRadioChange('aiKnowledgeLevel', value)}
+                  className="space-y-3"
+                >
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="iniciante" id="iniciante" className="border-viverblue text-viverblue" />
+                    <Label htmlFor="iniciante" className="text-slate-200">Iniciante (pouco ou nenhum conhecimento)</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="basico" id="basico" className="border-viverblue text-viverblue" />
+                    <Label htmlFor="basico" className="text-slate-200">Básico (uso ferramentas simples)</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="intermediario" id="intermediario" className="border-viverblue text-viverblue" />
+                    <Label htmlFor="intermediario" className="text-slate-200">Intermediário (implemento soluções)</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="avancado" id="avancado" className="border-viverblue text-viverblue" />
+                    <Label htmlFor="avancado" className="text-slate-200">Avançado (desenvolvo estratégias)</Label>
+                  </div>
+                </RadioGroup>
+                {getFieldError?.('aiKnowledgeLevel') && (
+                  <p className="text-red-400 text-sm mt-2">{getFieldError('aiKnowledgeLevel')}</p>
+                )}
               </div>
             </div>
+          </Card>
 
-            <div>
-              <Label htmlFor="aiKnowledgeLevel" className="text-white mb-2 block">
-                Como você avalia seu nível de conhecimento em IA? *
-              </Label>
-              <EnhancedFieldIndicator
-                isRequired={true}
-                isValid={!!data.aiKnowledgeLevel}
-                message={getFieldError('aiKnowledgeLevel')}
-              />
-              <Select value={data.aiKnowledgeLevel} onValueChange={(value) => handleInputChange('aiKnowledgeLevel', value)}>
-                <SelectTrigger className="bg-[#1A1E2E] border-white/20 text-white">
-                  <SelectValue placeholder="Selecione seu nível" />
-                </SelectTrigger>
-                <SelectContent className="bg-[#1A1E2E] border-white/20">
-                  <SelectItem value="iniciante">Iniciante - Pouco ou nenhum conhecimento</SelectItem>
-                  <SelectItem value="basico">Básico - Já usei algumas ferramentas</SelectItem>
-                  <SelectItem value="intermediario">Intermediário - Uso regularmente</SelectItem>
-                  <SelectItem value="avancado">Avançado - Domino bem as ferramentas</SelectItem>
-                  <SelectItem value="especialista">Especialista - Implemento soluções complexas</SelectItem>
-                </SelectContent>
-              </Select>
+          {/* Implementação */}
+          <Card className="p-6 bg-[#1A1E2E]/60 backdrop-blur-sm border-white/10">
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 mb-4">
+                <Target className="w-5 h-5 text-viverblue" />
+                <h3 className="text-lg font-semibold text-white">Implementação</h3>
+              </div>
+
+              <div>
+                <Label className="text-slate-200 mb-3 block">
+                  Quem será responsável pela implementação das soluções de IA? *
+                </Label>
+                <RadioGroup 
+                  value={data.whoWillImplement || ''}
+                  onValueChange={(value) => handleRadioChange('whoWillImplement', value)}
+                  className="space-y-3"
+                >
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="eu_mesmo" id="eu_mesmo" className="border-viverblue text-viverblue" />
+                    <Label htmlFor="eu_mesmo" className="text-slate-200">Eu mesmo(a)</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="equipe_interna" id="equipe_interna" className="border-viverblue text-viverblue" />
+                    <Label htmlFor="equipe_interna" className="text-slate-200">Equipe interna</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="consultoria_externa" id="consultoria_externa" className="border-viverblue text-viverblue" />
+                    <Label htmlFor="consultoria_externa" className="text-slate-200">Consultoria externa</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="ainda_nao_sei" id="ainda_nao_sei" className="border-viverblue text-viverblue" />
+                    <Label htmlFor="ainda_nao_sei" className="text-slate-200">Ainda não sei</Label>
+                  </div>
+                </RadioGroup>
+                {getFieldError?.('whoWillImplement') && (
+                  <p className="text-red-400 text-sm mt-2">{getFieldError('whoWillImplement')}</p>
+                )}
+              </div>
             </div>
-          </div>
+          </Card>
         </motion.div>
 
-        {/* Ferramentas Diárias */}
+        {/* Coluna Direita - Ferramentas */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="space-y-4"
-        >
-          <div className="flex items-center gap-2 mb-4">
-            <Users className="w-5 h-5 text-viverblue" />
-            <h3 className="text-lg font-semibold text-white">Ferramentas do Dia a Dia</h3>
-          </div>
-
-          <div>
-            <Label className="text-white mb-2 block">
-              Quais ferramentas você usa diariamente no trabalho? *
-            </Label>
-            <EnhancedFieldIndicator
-              isRequired={true}
-              isValid={data.dailyTools && data.dailyTools.length > 0}
-              message={getFieldError('dailyTools')}
-            />
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-2 max-h-40 overflow-y-auto bg-[#1A1E2E] p-4 rounded-lg border border-white/20">
-              {dailyToolsOptions.map((tool) => (
-                <div key={tool} className="flex items-center space-x-2">
-                  <Checkbox
-                    id={`dailytool-${tool}`}
-                    checked={data.dailyTools?.includes(tool) || false}
-                    onCheckedChange={(checked) => handleCheckboxChange('dailyTools', tool, checked as boolean)}
-                    className="border-white/30"
-                  />
-                  <Label htmlFor={`dailytool-${tool}`} className="text-sm text-white cursor-pointer">
-                    {tool}
-                  </Label>
-                </div>
-              ))}
-            </div>
-          </div>
-        </motion.div>
-
-        {/* Objetivos de Implementação */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.3 }}
-          className="space-y-4"
+          className="space-y-6"
         >
-          <div className="flex items-center gap-2 mb-4">
-            <Target className="w-5 h-5 text-viverblue" />
-            <h3 className="text-lg font-semibold text-white">Seus Objetivos</h3>
-          </div>
+          {/* Ferramentas de IA */}
+          <Card className="p-6 bg-[#1A1E2E]/60 backdrop-blur-sm border-white/10">
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 mb-4">
+                <Brain className="w-5 h-5 text-viverblue" />
+                <h3 className="text-lg font-semibold text-white">Ferramentas de IA</h3>
+                <span className="text-xs text-slate-400">(opcional)</span>
+              </div>
 
-          <div className="grid md:grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="whoWillImplement" className="text-white mb-2 block">
-                Quem implementará as soluções de IA? *
-              </Label>
-              <EnhancedFieldIndicator
-                isRequired={true}
-                isValid={!!data.whoWillImplement}
-                message={getFieldError('whoWillImplement')}
-              />
-              <Select value={data.whoWillImplement} onValueChange={(value) => handleInputChange('whoWillImplement', value)}>
-                <SelectTrigger className="bg-[#1A1E2E] border-white/20 text-white">
-                  <SelectValue placeholder="Selecione uma opção" />
-                </SelectTrigger>
-                <SelectContent className="bg-[#1A1E2E] border-white/20">
-                  <SelectItem value="eu">Eu mesmo(a)</SelectItem>
-                  <SelectItem value="equipe">Nossa equipe interna</SelectItem>
-                  <SelectItem value="terceiros">Empresa terceirizada</SelectItem>
-                  <SelectItem value="consultoria">Consultoria especializada</SelectItem>
-                  <SelectItem value="ainda_indefinido">Ainda não definimos</SelectItem>
-                </SelectContent>
-              </Select>
+              <div>
+                <Label className="text-slate-200 mb-3 block">
+                  Quais ferramentas de IA você já usou?
+                </Label>
+                <div className="grid grid-cols-2 gap-3">
+                  {aiTools.map((tool) => (
+                    <div key={tool} className="flex items-center space-x-2">
+                      <Checkbox
+                        id={`ai_tool_${tool}`}
+                        checked={(data.aiToolsUsed || []).includes(tool)}
+                        onCheckedChange={(checked) => handleCheckboxChange('aiToolsUsed', tool, checked)}
+                        className="border-viverblue data-[state=checked]:bg-viverblue"
+                      />
+                      <Label htmlFor={`ai_tool_${tool}`} className="text-slate-200 text-sm">{tool}</Label>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
+          </Card>
 
-            <div>
-              <Label htmlFor="mainObjective" className="text-white mb-2 block">
-                Principal objetivo com IA *
-              </Label>
-              <Select value={data.mainObjective} onValueChange={(value) => handleInputChange('mainObjective', value)}>
-                <SelectTrigger className="bg-[#1A1E2E] border-white/20 text-white">
-                  <SelectValue placeholder="Selecione seu objetivo" />
-                </SelectTrigger>
-                <SelectContent className="bg-[#1A1E2E] border-white/20">
-                  <SelectItem value="reduzir_custos">Reduzir custos operacionais</SelectItem>
-                  <SelectItem value="aumentar_receita">Aumentar receita</SelectItem>
-                  <SelectItem value="melhorar_eficiencia">Melhorar eficiência</SelectItem>
-                  <SelectItem value="inovar_produtos">Inovar produtos/serviços</SelectItem>
-                  <SelectItem value="melhorar_experiencia">Melhorar experiência do cliente</SelectItem>
-                  <SelectItem value="automatizar_processos">Automatizar processos</SelectItem>
-                </SelectContent>
-              </Select>
+          {/* Ferramentas Diárias */}
+          <Card className="p-6 bg-[#1A1E2E]/60 backdrop-blur-sm border-white/10">
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 mb-4">
+                <Zap className="w-5 h-5 text-viverblue" />
+                <h3 className="text-lg font-semibold text-white">Ferramentas do Dia a Dia</h3>
+              </div>
+
+              <div>
+                <Label className="text-slate-200 mb-3 block">
+                  Quais ferramentas você usa no trabalho diariamente? *
+                </Label>
+                <div className="grid grid-cols-1 gap-3">
+                  {dailyToolsOptions.map((tool) => (
+                    <div key={tool} className="flex items-center space-x-2">
+                      <Checkbox
+                        id={`daily_tool_${tool}`}
+                        checked={(data.dailyTools || []).includes(tool)}
+                        onCheckedChange={(checked) => handleCheckboxChange('dailyTools', tool, checked)}
+                        className="border-viverblue data-[state=checked]:bg-viverblue"
+                      />
+                      <Label htmlFor={`daily_tool_${tool}`} className="text-slate-200 text-sm">{tool}</Label>
+                    </div>
+                  ))}
+                </div>
+                {getFieldError?.('dailyTools') && (
+                  <p className="text-red-400 text-sm mt-2">{getFieldError('dailyTools')}</p>
+                )}
+              </div>
             </div>
-          </div>
-
-          <div>
-            <Label htmlFor="areaToImpact" className="text-white mb-2 block">
-              Principal área que deseja impactar *
-            </Label>
-            <Select value={data.areaToImpact} onValueChange={(value) => handleInputChange('areaToImpact', value)}>
-              <SelectTrigger className="bg-[#1A1E2E] border-white/20 text-white">
-                <SelectValue placeholder="Selecione a área" />
-              </SelectTrigger>
-              <SelectContent className="bg-[#1A1E2E] border-white/20">
-                <SelectItem value="vendas">Vendas e Marketing</SelectItem>
-                <SelectItem value="atendimento">Atendimento ao Cliente</SelectItem>
-                <SelectItem value="operacoes">Operações</SelectItem>
-                <SelectItem value="financeiro">Financeiro</SelectItem>
-                <SelectItem value="rh">Recursos Humanos</SelectItem>
-                <SelectItem value="tecnologia">Tecnologia</SelectItem>
-                <SelectItem value="producao">Produção</SelectItem>
-                <SelectItem value="logistica">Logística</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div>
-            <Label htmlFor="expectedResult90Days" className="text-white mb-2 block">
-              Resultado esperado em 90 dias *
-            </Label>
-            <Textarea
-              id="expectedResult90Days"
-              value={data.expectedResult90Days}
-              onChange={(e) => handleInputChange('expectedResult90Days', e.target.value)}
-              placeholder="Descreva o resultado específico que espera alcançar..."
-              className="bg-[#1A1E2E] border-white/20 text-white placeholder:text-gray-400 min-h-[100px]"
-            />
-          </div>
-        </motion.div>
-
-        {/* Investimento e Capacitação */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-          className="space-y-4"
-        >
-          <div className="flex items-center gap-2 mb-4">
-            <DollarSign className="w-5 h-5 text-viverblue" />
-            <h3 className="text-lg font-semibold text-white">Investimento e Capacitação</h3>
-          </div>
-
-          <div className="grid md:grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="aiImplementationBudget" className="text-white mb-2 block">
-                Orçamento mensal para IA *
-              </Label>
-              <Select value={data.aiImplementationBudget} onValueChange={(value) => handleInputChange('aiImplementationBudget', value)}>
-                <SelectTrigger className="bg-[#1A1E2E] border-white/20 text-white">
-                  <SelectValue placeholder="Selecione a faixa" />
-                </SelectTrigger>
-                <SelectContent className="bg-[#1A1E2E] border-white/20">
-                  <SelectItem value="ate_500">Até R$ 500</SelectItem>
-                  <SelectItem value="500_1500">R$ 500 - R$ 1.500</SelectItem>
-                  <SelectItem value="1500_5000">R$ 1.500 - R$ 5.000</SelectItem>
-                  <SelectItem value="5000_15000">R$ 5.000 - R$ 15.000</SelectItem>
-                  <SelectItem value="acima_15000">Acima de R$ 15.000</SelectItem>
-                  <SelectItem value="ainda_nao_definido">Ainda não definido</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <Label htmlFor="weeklyLearningTime" className="text-white mb-2 block">
-                Tempo semanal para aprendizado *
-              </Label>
-              <Select value={data.weeklyLearningTime} onValueChange={(value) => handleInputChange('weeklyLearningTime', value)}>
-                <SelectTrigger className="bg-[#1A1E2E] border-white/20 text-white">
-                  <SelectValue placeholder="Selecione o tempo" />
-                </SelectTrigger>
-                <SelectContent className="bg-[#1A1E2E] border-white/20">
-                  <SelectItem value="1_2_horas">1-2 horas</SelectItem>
-                  <SelectItem value="3_5_horas">3-5 horas</SelectItem>
-                  <SelectItem value="6_10_horas">6-10 horas</SelectItem>
-                  <SelectItem value="mais_10_horas">Mais de 10 horas</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          <div>
-            <Label htmlFor="contentPreference" className="text-white mb-2 block">
-              Preferência de formato de conteúdo *
-            </Label>
-            <Select value={data.contentPreference} onValueChange={(value) => handleInputChange('contentPreference', value)}>
-              <SelectTrigger className="bg-[#1A1E2E] border-white/20 text-white">
-                <SelectValue placeholder="Selecione sua preferência" />
-              </SelectTrigger>
-              <SelectContent className="bg-[#1A1E2E] border-white/20">
-                <SelectItem value="videos">Vídeos explicativos</SelectItem>
-                <SelectItem value="textos">Textos e guias</SelectItem>
-                <SelectItem value="praticos">Exercícios práticos</SelectItem>
-                <SelectItem value="webinars">Webinars ao vivo</SelectItem>
-                <SelectItem value="mentoria">Mentoria personalizada</SelectItem>
-                <SelectItem value="comunidade">Discussões em comunidade</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+          </Card>
         </motion.div>
       </div>
+
+      {/* Mensagem da IA */}
+      {(generatedMessage || isGenerating) && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5 }}
+        >
+          <div className="flex items-center gap-2 mb-4">
+            <Sparkles className="w-5 h-5 text-viverblue" />
+            <h3 className="text-lg font-semibold text-white">Análise do seu Perfil de IA</h3>
+          </div>
+          <AIMessageDisplay 
+            message={generatedMessage || ''} 
+            isLoading={isGenerating}
+          />
+        </motion.div>
+      )}
     </div>
   );
 };

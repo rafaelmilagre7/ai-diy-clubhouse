@@ -1,281 +1,279 @@
 
-import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import React, { useEffect, useState } from 'react';
+import { motion } from 'framer-motion';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Card } from '@/components/ui/card';
+import { Sparkles, User, MapPin, Calendar, MessageCircle } from 'lucide-react';
 import { OnboardingStepProps } from '../types/onboardingTypes';
-import { motion } from 'framer-motion';
-import { User, Calendar, MapPin, Sparkles } from 'lucide-react';
 import { AIMessageDisplay } from '../components/AIMessageDisplay';
-import { EnhancedFieldIndicator } from '../components/EnhancedFieldIndicator';
+import { useAIMessageGeneration } from '../hooks/useAIMessageGeneration';
 
-const OnboardingStep1 = ({ data, onUpdateData, validationErrors = [], getFieldError }: OnboardingStepProps) => {
-  const [localData, setLocalData] = useState({
-    name: data.name || '',
-    email: data.email || '',
-    phone: data.phone || '',
-    instagram: data.instagram || '',
-    linkedin: data.linkedin || '',
-    state: data.state || '',
-    city: data.city || '',
-    birthDay: '',
-    birthMonth: '',
-    birthYear: '',
-    curiosity: data.curiosity || ''
-  });
+const OnboardingStep1: React.FC<OnboardingStepProps> = ({
+  data,
+  onUpdateData,
+  memberType,
+  getFieldError
+}) => {
+  const { generateMessage, isGenerating, generatedMessage } = useAIMessageGeneration();
+  const [shouldGenerateMessage, setShouldGenerateMessage] = useState(false);
 
-  // Extrair dia, mês e ano da data existente se houver
+  // Estados brasileiros
+  const estados = [
+    'AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA', 
+    'MT', 'MS', 'MG', 'PA', 'PB', 'PR', 'PE', 'PI', 'RJ', 'RN', 
+    'RS', 'RO', 'RR', 'SC', 'SP', 'SE', 'TO'
+  ];
+
+  // Gerar mensagem quando dados básicos estiverem preenchidos
   useEffect(() => {
-    if (data.birthDate) {
-      const date = new Date(data.birthDate);
-      if (!isNaN(date.getTime())) {
-        setLocalData(prev => ({
-          ...prev,
-          birthDay: date.getDate().toString(),
-          birthMonth: (date.getMonth() + 1).toString(),
-          birthYear: date.getFullYear().toString()
-        }));
-      }
+    const hasBasicInfo = data.name && data.email && data.state && data.city;
+    if (hasBasicInfo && !generatedMessage && !isGenerating && !shouldGenerateMessage) {
+      setShouldGenerateMessage(true);
+      generateMessage(data, memberType);
     }
-  }, [data.birthDate]);
+  }, [data.name, data.email, data.state, data.city, generatedMessage, isGenerating, shouldGenerateMessage, generateMessage, data, memberType]);
 
-  const handleFieldChange = (field: string, value: string) => {
-    const newData = { ...localData, [field]: value };
-    setLocalData(newData);
-
-    // Se mudou dia, mês ou ano, reconstruir a data
-    if (field === 'birthDay' || field === 'birthMonth' || field === 'birthYear') {
-      const { birthDay, birthMonth, birthYear } = newData;
-      if (birthDay && birthMonth && birthYear) {
-        const birthDate = new Date(parseInt(birthYear), parseInt(birthMonth) - 1, parseInt(birthDay));
-        onUpdateData({ 
-          ...newData, 
-          birthDate: birthDate.toISOString().split('T')[0]
-        });
-      } else {
-        onUpdateData({ ...newData, birthDate: '' });
-      }
-    } else {
-      onUpdateData(newData);
-    }
+  const handleInputChange = (field: string, value: string) => {
+    onUpdateData({ [field]: value });
   };
 
-  // Gerar opções para os selects
-  const dayOptions = Array.from({ length: 31 }, (_, i) => i + 1);
-  const monthOptions = [
-    { value: '1', label: 'Janeiro' },
-    { value: '2', label: 'Fevereiro' },
-    { value: '3', label: 'Março' },
-    { value: '4', label: 'Abril' },
-    { value: '5', label: 'Maio' },
-    { value: '6', label: 'Junho' },
-    { value: '7', label: 'Julho' },
-    { value: '8', label: 'Agosto' },
-    { value: '9', label: 'Setembro' },
-    { value: '10', label: 'Outubro' },
-    { value: '11', label: 'Novembro' },
-    { value: '12', label: 'Dezembro' }
-  ];
-  const currentYear = new Date().getFullYear();
-  const yearOptions = Array.from({ length: currentYear - 1940 + 1 }, (_, i) => currentYear - i);
-
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -20 }}
-      className="space-y-6"
-    >
-      <AIMessageDisplay 
-        message={data.aiMessage1} 
-        isLoading={false}
-      />
+    <div className="space-y-8">
+      {/* Header */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="text-center space-y-4"
+      >
+        <div className="w-16 h-16 mx-auto bg-viverblue/20 rounded-full flex items-center justify-center">
+          <User className="w-8 h-8 text-viverblue" />
+        </div>
+        <h2 className="text-2xl font-bold text-white">
+          Informações Pessoais
+        </h2>
+        <p className="text-slate-300">
+          Vamos começar conhecendo você melhor para personalizar sua experiência
+        </p>
+      </motion.div>
 
-      <Card className="bg-[#151823] border-white/10">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-white">
-            <User className="w-5 h-5 text-viverblue" />
-            Informações Pessoais
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="name" className="text-white flex items-center gap-2">
-                Nome completo
-                <EnhancedFieldIndicator isRequired />
+      {/* Formulário */}
+      <div className="grid lg:grid-cols-2 gap-8">
+        {/* Coluna Esquerda - Dados Básicos */}
+        <motion.div
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.2 }}
+        >
+          <Card className="p-6 bg-[#1A1E2E]/60 backdrop-blur-sm border-white/10">
+            <div className="space-y-6">
+              <div className="flex items-center gap-2 mb-4">
+                <User className="w-5 h-5 text-viverblue" />
+                <h3 className="text-lg font-semibold text-white">Dados Básicos</h3>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="name" className="text-slate-200">Nome completo *</Label>
+                  <Input
+                    id="name"
+                    value={data.name || ''}
+                    onChange={(e) => handleInputChange('name', e.target.value)}
+                    placeholder="Seu nome completo"
+                    className="mt-1 bg-[#151823] border-white/20 text-white placeholder:text-slate-400"
+                  />
+                  {getFieldError?.('name') && (
+                    <p className="text-red-400 text-sm mt-1">{getFieldError('name')}</p>
+                  )}
+                </div>
+
+                <div>
+                  <Label htmlFor="email" className="text-slate-200">E-mail *</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    value={data.email || ''}
+                    onChange={(e) => handleInputChange('email', e.target.value)}
+                    placeholder="seu@email.com"
+                    className="mt-1 bg-[#151823] border-white/20 text-white placeholder:text-slate-400"
+                  />
+                  {getFieldError?.('email') && (
+                    <p className="text-red-400 text-sm mt-1">{getFieldError('email')}</p>
+                  )}
+                </div>
+
+                <div>
+                  <Label htmlFor="phone" className="text-slate-200">Telefone *</Label>
+                  <Input
+                    id="phone"
+                    value={data.phone || ''}
+                    onChange={(e) => handleInputChange('phone', e.target.value)}
+                    placeholder="(11) 99999-9999"
+                    className="mt-1 bg-[#151823] border-white/20 text-white placeholder:text-slate-400"
+                  />
+                  {getFieldError?.('phone') && (
+                    <p className="text-red-400 text-sm mt-1">{getFieldError('phone')}</p>
+                  )}
+                </div>
+
+                <div>
+                  <Label htmlFor="birthDate" className="text-slate-200">Data de nascimento *</Label>
+                  <Input
+                    id="birthDate"
+                    type="date"
+                    value={data.birthDate || ''}
+                    onChange={(e) => handleInputChange('birthDate', e.target.value)}
+                    className="mt-1 bg-[#151823] border-white/20 text-white"
+                  />
+                  {getFieldError?.('birthDate') && (
+                    <p className="text-red-400 text-sm mt-1">{getFieldError('birthDate')}</p>
+                  )}
+                </div>
+              </div>
+            </div>
+          </Card>
+        </motion.div>
+
+        {/* Coluna Direita - Localização e Redes */}
+        <motion.div
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.3 }}
+          className="space-y-6"
+        >
+          {/* Localização */}
+          <Card className="p-6 bg-[#1A1E2E]/60 backdrop-blur-sm border-white/10">
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 mb-4">
+                <MapPin className="w-5 h-5 text-viverblue" />
+                <h3 className="text-lg font-semibold text-white">Localização</h3>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="state" className="text-slate-200">Estado *</Label>
+                  <Select value={data.state || ''} onValueChange={(value) => handleInputChange('state', value)}>
+                    <SelectTrigger className="mt-1 bg-[#151823] border-white/20 text-white">
+                      <SelectValue placeholder="UF" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {estados.map((estado) => (
+                        <SelectItem key={estado} value={estado}>{estado}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {getFieldError?.('state') && (
+                    <p className="text-red-400 text-sm mt-1">{getFieldError('state')}</p>
+                  )}
+                </div>
+
+                <div>
+                  <Label htmlFor="city" className="text-slate-200">Cidade *</Label>
+                  <Input
+                    id="city"
+                    value={data.city || ''}
+                    onChange={(e) => handleInputChange('city', e.target.value)}
+                    placeholder="Sua cidade"
+                    className="mt-1 bg-[#151823] border-white/20 text-white placeholder:text-slate-400"
+                  />
+                  {getFieldError?.('city') && (
+                    <p className="text-red-400 text-sm mt-1">{getFieldError('city')}</p>
+                  )}
+                </div>
+              </div>
+            </div>
+          </Card>
+
+          {/* Redes Sociais */}
+          <Card className="p-6 bg-[#1A1E2E]/60 backdrop-blur-sm border-white/10">
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 mb-4">
+                <MessageCircle className="w-5 h-5 text-viverblue" />
+                <h3 className="text-lg font-semibold text-white">Redes Sociais</h3>
+                <span className="text-xs text-slate-400">(opcional)</span>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="instagram" className="text-slate-200">Instagram</Label>
+                  <Input
+                    id="instagram"
+                    value={data.instagram || ''}
+                    onChange={(e) => handleInputChange('instagram', e.target.value)}
+                    placeholder="@seuusuario"
+                    className="mt-1 bg-[#151823] border-white/20 text-white placeholder:text-slate-400"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="linkedin" className="text-slate-200">LinkedIn</Label>
+                  <Input
+                    id="linkedin"
+                    value={data.linkedin || ''}
+                    onChange={(e) => handleInputChange('linkedin', e.target.value)}
+                    placeholder="linkedin.com/in/seuperfil"
+                    className="mt-1 bg-[#151823] border-white/20 text-white placeholder:text-slate-400"
+                  />
+                </div>
+              </div>
+            </div>
+          </Card>
+        </motion.div>
+      </div>
+
+      {/* Curiosidade */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.4 }}
+      >
+        <Card className="p-6 bg-[#1A1E2E]/60 backdrop-blur-sm border-white/10">
+          <div className="space-y-4">
+            <div className="flex items-center gap-2 mb-4">
+              <Calendar className="w-5 h-5 text-viverblue" />
+              <h3 className="text-lg font-semibold text-white">Conte um pouco sobre você</h3>
+            </div>
+
+            <div>
+              <Label htmlFor="curiosity" className="text-slate-200">
+                O que te trouxe até aqui? Qual sua curiosidade sobre IA? *
               </Label>
-              <Input
-                id="name"
-                value={localData.name}
-                onChange={(e) => handleFieldChange('name', e.target.value)}
-                placeholder="Seu nome completo"
-                className="bg-white/5 border-white/20 text-white placeholder:text-neutral-400"
+              <Textarea
+                id="curiosity"
+                value={data.curiosity || ''}
+                onChange={(e) => handleInputChange('curiosity', e.target.value)}
+                placeholder="Conte sua história, o que desperta sua curiosidade sobre IA e como pretende usar..."
+                rows={4}
+                className="mt-1 bg-[#151823] border-white/20 text-white placeholder:text-slate-400"
               />
-              {getFieldError?.('name') && (
-                <p className="text-red-400 text-sm">{getFieldError('name')}</p>
+              {getFieldError?.('curiosity') && (
+                <p className="text-red-400 text-sm mt-1">{getFieldError('curiosity')}</p>
               )}
             </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="email" className="text-white flex items-center gap-2">
-                E-mail
-                <EnhancedFieldIndicator isRequired />
-              </Label>
-              <Input
-                id="email"
-                type="email"
-                value={localData.email}
-                onChange={(e) => handleFieldChange('email', e.target.value)}
-                placeholder="seu@email.com"
-                className="bg-white/5 border-white/20 text-white placeholder:text-neutral-400"
-              />
-              {getFieldError?.('email') && (
-                <p className="text-red-400 text-sm">{getFieldError('email')}</p>
-              )}
-            </div>
           </div>
+        </Card>
+      </motion.div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="phone" className="text-white">
-                Telefone (WhatsApp)
-              </Label>
-              <Input
-                id="phone"
-                value={localData.phone}
-                onChange={(e) => handleFieldChange('phone', e.target.value)}
-                placeholder="(11) 99999-9999"
-                className="bg-white/5 border-white/20 text-white placeholder:text-neutral-400"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="instagram" className="text-white">
-                Instagram
-              </Label>
-              <Input
-                id="instagram"
-                value={localData.instagram}
-                onChange={(e) => handleFieldChange('instagram', e.target.value)}
-                placeholder="@seuinstagram"
-                className="bg-white/5 border-white/20 text-white placeholder:text-neutral-400"
-              />
-            </div>
+      {/* Mensagem da IA */}
+      {(generatedMessage || isGenerating) && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5 }}
+        >
+          <div className="flex items-center gap-2 mb-4">
+            <Sparkles className="w-5 h-5 text-viverblue" />
+            <h3 className="text-lg font-semibold text-white">Mensagem Personalizada</h3>
           </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="linkedin" className="text-white">
-              LinkedIn
-            </Label>
-            <Input
-              id="linkedin"
-              value={localData.linkedin}
-              onChange={(e) => handleFieldChange('linkedin', e.target.value)}
-              placeholder="https://linkedin.com/in/seuperfil"
-              className="bg-white/5 border-white/20 text-white placeholder:text-neutral-400"
-            />
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label className="text-white flex items-center gap-2">
-                <MapPin className="w-4 h-4" />
-                Estado
-              </Label>
-              <Input
-                value={localData.state}
-                onChange={(e) => handleFieldChange('state', e.target.value)}
-                placeholder="São Paulo"
-                className="bg-white/5 border-white/20 text-white placeholder:text-neutral-400"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label className="text-white">
-                Cidade
-              </Label>
-              <Input
-                value={localData.city}
-                onChange={(e) => handleFieldChange('city', e.target.value)}
-                placeholder="São Paulo"
-                className="bg-white/5 border-white/20 text-white placeholder:text-neutral-400"
-              />
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label className="text-white flex items-center gap-2">
-              <Calendar className="w-4 h-4" />
-              Data de nascimento
-            </Label>
-            <div className="grid grid-cols-3 gap-3">
-              <div>
-                <Select value={localData.birthDay} onValueChange={(value) => handleFieldChange('birthDay', value)}>
-                  <SelectTrigger className="bg-white/5 border-white/20 text-white">
-                    <SelectValue placeholder="Dia" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {dayOptions.map(day => (
-                      <SelectItem key={day} value={day.toString()}>
-                        {day.toString().padStart(2, '0')}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Select value={localData.birthMonth} onValueChange={(value) => handleFieldChange('birthMonth', value)}>
-                  <SelectTrigger className="bg-white/5 border-white/20 text-white">
-                    <SelectValue placeholder="Mês" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {monthOptions.map(month => (
-                      <SelectItem key={month.value} value={month.value}>
-                        {month.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Select value={localData.birthYear} onValueChange={(value) => handleFieldChange('birthYear', value)}>
-                  <SelectTrigger className="bg-white/5 border-white/20 text-white">
-                    <SelectValue placeholder="Ano" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {yearOptions.map(year => (
-                      <SelectItem key={year} value={year.toString()}>
-                        {year}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            {getFieldError?.('birthDate') && (
-              <p className="text-red-400 text-sm">{getFieldError('birthDate')}</p>
-            )}
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="curiosity" className="text-white flex items-center gap-2">
-              <Sparkles className="w-4 h-4" />
-              O que te trouxe até aqui? Qual sua curiosidade sobre IA?
-            </Label>
-            <Textarea
-              id="curiosity"
-              value={localData.curiosity}
-              onChange={(e) => handleFieldChange('curiosity', e.target.value)}
-              placeholder="Conte-nos o que despertou seu interesse pela Inteligência Artificial..."
-              className="bg-white/5 border-white/20 text-white placeholder:text-neutral-400 min-h-[80px]"
-            />
-          </div>
-        </CardContent>
-      </Card>
-    </motion.div>
+          <AIMessageDisplay 
+            message={generatedMessage || ''} 
+            isLoading={isGenerating}
+          />
+        </motion.div>
+      )}
+    </div>
   );
 };
 
