@@ -10,15 +10,21 @@ interface PreferencesSectionProps {
 }
 
 export const PreferencesSection = ({ data }: PreferencesSectionProps) => {
-  const getContentPreferenceInfo = (preference: string) => {
+  const getContentPreferenceDisplay = (preferences: string[] | undefined) => {
+    if (!preferences || preferences.length === 0) return null;
+    
     const preferenceMap: Record<string, { label: string; color: string }> = {
       'theoretical': { label: 'Mais Teórico', color: 'bg-blue-500/20 text-blue-400' },
       'hands-on': { label: 'Mais Prático', color: 'bg-green-500/20 text-green-400' },
+      'videos': { label: 'Vídeos', color: 'bg-purple-500/20 text-purple-400' },
+      'texts': { label: 'Textos e Artigos', color: 'bg-orange-500/20 text-orange-400' },
+      'interactive': { label: 'Conteúdo Interativo', color: 'bg-cyan-500/20 text-cyan-400' },
     };
-    return preferenceMap[preference] || { label: preference, color: 'bg-gray-500/20 text-gray-400' };
+    
+    return preferences.map(pref => preferenceMap[pref] || { label: pref, color: 'bg-gray-500/20 text-gray-400' });
   };
 
-  const contentPreferenceInfo = data.contentPreference ? getContentPreferenceInfo(data.contentPreference) : null;
+  const contentPreferences = getContentPreferenceDisplay(data.contentPreference);
 
   return (
     <Card className="glass-dark">
@@ -42,15 +48,19 @@ export const PreferencesSection = ({ data }: PreferencesSectionProps) => {
             </div>
           )}
 
-          {contentPreferenceInfo && (
+          {contentPreferences && contentPreferences.length > 0 && (
             <div>
               <label className="text-sm text-medium-contrast flex items-center gap-1">
                 <BookOpen className="h-4 w-4" />
                 Tipo de Conteúdo
               </label>
-              <Badge className={`${contentPreferenceInfo.color} mt-1`}>
-                {contentPreferenceInfo.label}
-              </Badge>
+              <div className="flex flex-wrap gap-1 mt-2">
+                {contentPreferences.map((pref, index) => (
+                  <Badge key={index} className={`${pref.color} text-xs`}>
+                    {pref.label}
+                  </Badge>
+                ))}
+              </div>
             </div>
           )}
 

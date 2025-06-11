@@ -21,6 +21,20 @@ export const OnboardingPreview = ({ data, className = '' }: OnboardingPreviewPro
     }
   };
 
+  const getContentPreferenceDisplay = (preferences: string[] | undefined) => {
+    if (!preferences || preferences.length === 0) return '';
+    
+    const preferenceMap: Record<string, string> = {
+      'theoretical': 'Mais teórico',
+      'hands-on': 'Mais prático',
+      'videos': 'Vídeos',
+      'texts': 'Textos e artigos',
+      'interactive': 'Conteúdo interativo'
+    };
+    
+    return preferences.map(pref => preferenceMap[pref] || pref).join(', ');
+  };
+
   const sections = [
     {
       id: 'personal',
@@ -67,8 +81,10 @@ export const OnboardingPreview = ({ data, className = '' }: OnboardingPreviewPro
       title: 'Preferências',
       items: [
         { label: 'Tempo semanal', value: data.weeklyLearningTime },
-        { label: 'Tipo de conteúdo', value: data.contentPreference === 'theoretical' ? 'Mais teórico' : 'Mais prático' },
+        { label: 'Tipo de conteúdo', value: getContentPreferenceDisplay(data.contentPreference) },
         { label: 'Networking', value: data.wantsNetworking === 'yes' ? 'Sim' : 'Não' },
+        { label: 'Melhores dias', value: data.bestDays?.join(', ') },
+        { label: 'Melhores períodos', value: data.bestPeriods?.join(', ') },
         { label: 'Case de sucesso', value: data.acceptsCaseStudy === 'yes' ? 'Aceita compartilhar' : 'Prefere privacidade' }
       ]
     }
