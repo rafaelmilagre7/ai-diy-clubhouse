@@ -16,7 +16,7 @@ export const OnboardingLoader = ({ children }: OnboardingLoaderProps) => {
   console.log('[OnboardingLoader] Renderizando');
   
   const { user, profile, isLoading: authLoading, isAdmin } = useAuth();
-  const { isRequired, isLoading: onboardingLoading } = useOnboardingStatus();
+  const { isRequired, isLoading: onboardingLoading, hasCompleted } = useOnboardingStatus();
   const { isAdminPreviewMode, isValidAdminAccess } = useAdminPreview();
 
   // CORREÇÃO CRÍTICA: Usar getUserRoleName baseado em role_id
@@ -29,6 +29,7 @@ export const OnboardingLoader = ({ children }: OnboardingLoaderProps) => {
     user: !!user,
     profile: !!profile,
     isRequired,
+    hasCompleted,
     memberType,
     isAdmin,
     roleName,
@@ -66,8 +67,8 @@ export const OnboardingLoader = ({ children }: OnboardingLoaderProps) => {
     return <Navigate to="/dashboard" replace />;
   }
 
-  // Se onboarding não é necessário, redirecionar para dashboard apropriado
-  if (isRequired === false) {
+  // Se onboarding foi concluído, redirecionar para dashboard apropriado
+  if (hasCompleted && !isRequired) {
     console.log('[OnboardingLoader] Onboarding completo, redirecionando para dashboard');
     const redirectPath = memberType === 'formacao' ? '/formacao' : '/dashboard';
     return <Navigate to={redirectPath} replace />;

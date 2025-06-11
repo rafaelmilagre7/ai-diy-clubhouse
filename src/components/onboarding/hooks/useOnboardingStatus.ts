@@ -18,12 +18,17 @@ export const useOnboardingStatus = () => {
       }
 
       try {
+        console.log('[OnboardingStatus] Verificando status para usuário:', user.id);
+        
         // CORREÇÃO DE SEGURANÇA: Verificação de admin APENAS via banco de dados
         const userRole = getUserRoleName(profile);
         const isAdmin = userRole === 'admin';
 
+        console.log('[OnboardingStatus] Role do usuário:', userRole, 'É admin:', isAdmin);
+
         // Admins não precisam de onboarding
         if (isAdmin) {
+          console.log('[OnboardingStatus] Admin detectado - onboarding não necessário');
           setIsRequired(false);
           setHasCompleted(true);
           setIsLoading(false);
@@ -33,21 +38,23 @@ export const useOnboardingStatus = () => {
         // Verificar se o usuário já completou o onboarding
         const { data: onboardingData, error } = await supabase
           .from('user_onboarding')
-          .select('completed_at')
+          .select('completed_at, user_id')
           .eq('user_id', user.id)
-          .single();
+          .maybeSingle();
 
         if (error && error.code !== 'PGRST116') {
-          console.error('Erro ao verificar onboarding:', error);
+          console.error('[OnboardingStatus] Erro ao verificar onboarding:', error);
           setIsRequired(true);
           setHasCompleted(false);
         } else {
           const completed = !!onboardingData?.completed_at;
+          console.log('[OnboardingStatus] Dados do onboarding encontrados:', !!onboardingData, 'Completado:', completed);
+          
           setHasCompleted(completed);
           setIsRequired(!completed);
         }
       } catch (error) {
-        console.error('Erro ao verificar status do onboarding:', error);
+        console.error('[OnboardingStatus] Erro ao verificar status do onboarding:', error);
         setIsRequired(true);
         setHasCompleted(false);
       } finally {
@@ -57,6 +64,14 @@ export const useOnboardingStatus = () => {
 
     checkOnboardingStatus();
   }, [user, profile, authLoading]);
+
+  console.log('[OnboardingStatus] Estado atual:', {
+    isLoading,
+    isRequired,
+    hasCompleted,
+    userId: user?.id,
+    userRole: getUserRoleName(profile)
+  });
 
   return {
     isRequired,
