@@ -1,108 +1,129 @@
 
 import { OnboardingData } from '../types/onboardingTypes';
 
-interface ValidationError {
-  field: string;
-  message: string;
+interface ValidationResult {
+  isValid: boolean;
+  errors: Array<{ field: string; message: string }>;
 }
 
-export const validateFormacaoStep = (step: number, data: OnboardingData): { isValid: boolean; errors: ValidationError[] } => {
-  const errors: ValidationError[] = [];
+export const validateFormacaoStep = (step: number, data: OnboardingData): ValidationResult => {
+  const errors: Array<{ field: string; message: string }> = [];
 
   switch (step) {
     case 1:
-      // Etapa 1 - Informações Pessoais
+      // Informações Pessoais - campos obrigatórios
       if (!data.name?.trim()) {
         errors.push({ field: 'name', message: 'Nome é obrigatório' });
       }
+      
       if (!data.email?.trim()) {
         errors.push({ field: 'email', message: 'E-mail é obrigatório' });
       } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) {
         errors.push({ field: 'email', message: 'E-mail inválido' });
       }
+      
       if (!data.phone?.trim()) {
-        errors.push({ field: 'phone', message: 'Telefone é obrigatório' });
+        errors.push({ field: 'phone', message: 'WhatsApp é obrigatório' });
       }
-      if (!data.state) {
+      
+      if (!data.state?.trim()) {
         errors.push({ field: 'state', message: 'Estado é obrigatório' });
       }
-      if (!data.city) {
+      
+      if (!data.city?.trim()) {
         errors.push({ field: 'city', message: 'Cidade é obrigatória' });
       }
-      if (!data.birthDate) {
+      
+      if (!data.birthDate?.trim()) {
         errors.push({ field: 'birthDate', message: 'Data de nascimento é obrigatória' });
       }
+      
       if (!data.curiosity?.trim()) {
-        errors.push({ field: 'curiosity', message: 'Curiosidade é obrigatória' });
+        errors.push({ field: 'curiosity', message: 'Conte uma curiosidade sobre você' });
       }
       break;
 
     case 2:
-      // Etapa 2 - Perfil Empresarial
-      if (!data.businessSector) {
-        errors.push({ field: 'businessSector', message: 'Setor/segmento é obrigatório' });
+      // Perfil Empresarial - campos obrigatórios
+      if (!data.businessSector?.trim()) {
+        errors.push({ field: 'businessSector', message: 'Setor é obrigatório' });
       }
-      if (!data.position) {
-        errors.push({ field: 'position', message: 'Cargo/posição é obrigatório' });
+      
+      if (!data.position?.trim()) {
+        errors.push({ field: 'position', message: 'Cargo/Posição é obrigatório' });
       }
       break;
 
     case 3:
-      // Etapa 3 - Maturidade em IA
+      // Maturidade em IA - campos obrigatórios
       if (!data.hasImplementedAI) {
-        errors.push({ field: 'hasImplementedAI', message: 'Experiência com IA é obrigatória' });
+        errors.push({ field: 'hasImplementedAI', message: 'Resposta é obrigatória' });
       }
+      
       if (!data.aiKnowledgeLevel) {
         errors.push({ field: 'aiKnowledgeLevel', message: 'Nível de conhecimento é obrigatório' });
       }
+      
       if (!data.dailyTools || data.dailyTools.length === 0) {
         errors.push({ field: 'dailyTools', message: 'Selecione pelo menos uma ferramenta' });
       }
+      
       if (!data.whoWillImplement) {
-        errors.push({ field: 'whoWillImplement', message: 'Implementação é obrigatória' });
+        errors.push({ field: 'whoWillImplement', message: 'Resposta é obrigatória' });
       }
       break;
 
     case 4:
-      // Etapa 4 - Objetivos e Expectativas
+      // Objetivos e Expectativas - campos obrigatórios
       if (!data.mainObjective) {
-        errors.push({ field: 'mainObjective', message: 'Principal objetivo é obrigatório' });
+        errors.push({ field: 'mainObjective', message: 'Objetivo principal é obrigatório' });
       }
+      
       if (!data.areaToImpact?.trim()) {
-        errors.push({ field: 'areaToImpact', message: 'Área para implementar IA é obrigatória' });
+        errors.push({ field: 'areaToImpact', message: 'Área de impacto é obrigatória' });
       }
+      
       if (!data.expectedResult90Days?.trim()) {
         errors.push({ field: 'expectedResult90Days', message: 'Resultado esperado é obrigatório' });
       }
+      
       if (!data.aiImplementationBudget) {
         errors.push({ field: 'aiImplementationBudget', message: 'Orçamento é obrigatório' });
       }
       break;
 
     case 5:
-      // Etapa 5 - Personalização da Experiência
+      // Personalização da Experiência - campos obrigatórios
       if (!data.weeklyLearningTime) {
-        errors.push({ field: 'weeklyLearningTime', message: 'Tempo de aprendizado é obrigatório' });
+        errors.push({ field: 'weeklyLearningTime', message: 'Tempo semanal é obrigatório' });
       }
+      
       if (!data.contentPreference) {
         errors.push({ field: 'contentPreference', message: 'Preferência de conteúdo é obrigatória' });
       }
+      
       if (!data.wantsNetworking) {
-        errors.push({ field: 'wantsNetworking', message: 'Networking é obrigatório' });
+        errors.push({ field: 'wantsNetworking', message: 'Resposta sobre networking é obrigatória' });
       }
+      
       if (!data.bestDays || data.bestDays.length === 0) {
         errors.push({ field: 'bestDays', message: 'Selecione pelo menos um dia' });
       }
+      
       if (!data.bestPeriods || data.bestPeriods.length === 0) {
         errors.push({ field: 'bestPeriods', message: 'Selecione pelo menos um período' });
       }
+      
       if (!data.acceptsCaseStudy) {
-        errors.push({ field: 'acceptsCaseStudy', message: 'Case de sucesso é obrigatório' });
+        errors.push({ field: 'acceptsCaseStudy', message: 'Resposta sobre estudo de caso é obrigatória' });
       }
       break;
 
     case 6:
-      // Etapa 6 - Finalização (sem validações específicas)
+      // Finalização - não há validações específicas
+      break;
+
+    default:
       break;
   }
 
