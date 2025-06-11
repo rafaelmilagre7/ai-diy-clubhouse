@@ -21,14 +21,7 @@ export default defineConfig(({ mode }) => ({
   },
   build: {
     sourcemap: false,
-    minify: 'terser',
-    terserOptions: {
-      compress: {
-        drop_console: true,
-        drop_debugger: true
-      },
-      mangle: true
-    },
+    minify: 'esbuild', // Usar esbuild ao invés de terser
     rollupOptions: {
       output: {
         manualChunks: {
