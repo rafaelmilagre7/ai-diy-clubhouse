@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useEffect, useState, ReactNode, useCallback } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
@@ -46,17 +45,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     setIsLoading,
   });
 
-  // CORREÇÃO: Verificação de admin mais robusta
-  const isAdmin = Boolean(
-    user && (
-      // Verificação por email (prioridade máxima)
-      ['rafael@viverdeia.ai', 'admin@viverdeia.ai', 'admin@teste.com'].includes(user.email?.toLowerCase() || '') ||
-      // Verificação por role no perfil
-      profile?.user_roles?.name === 'admin' ||
-      // Verificação por role direto (legacy)
-      profile?.role === 'admin'
-    )
-  );
+  // CORREÇÃO CRÍTICA 3: Verificação de admin apenas via banco de dados
+  const isAdmin = Boolean(profile?.user_roles?.name === 'admin');
 
   const isFormacao = Boolean(
     profile?.user_roles?.name === 'formacao' || 
@@ -158,3 +148,5 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     </AuthContext.Provider>
   );
 };
+
+export default AuthProvider;
