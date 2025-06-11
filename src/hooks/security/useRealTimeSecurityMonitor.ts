@@ -22,7 +22,7 @@ interface SecurityIncident {
   created_at: string;
   updated_at: string;
   metadata: Record<string, any>;
-  related_logs?: string[]; // Adicionar campo esperado
+  related_logs: string[]; // Obrigatório
 }
 
 interface SecurityMetrics {

@@ -8,7 +8,7 @@ interface SecurityAnomaly {
   description?: string;
   status: string;
   detected_at: string;
-  detection_data?: Record<string, any>; // Adicionar campo esperado
+  detection_data: Record<string, any>; // Obrigatório
 }
 
 interface AnomalyPattern {
