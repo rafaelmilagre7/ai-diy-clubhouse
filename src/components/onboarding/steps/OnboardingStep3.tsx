@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { OnboardingStepProps } from '../types/onboardingTypes';
+import { availableTools } from '@/components/admin/tools/data';
 
 const aiKnowledgeLevels = [
   'Iniciante - Pouco ou nenhum conhecimento',
@@ -16,26 +17,17 @@ const aiKnowledgeLevels = [
   'Especialista - Desenvolvo e treino modelos'
 ];
 
-const aiTools = [
-  'ChatGPT', 'Claude', 'Gemini', 'Copilot', 'Midjourney', 'DALL-E',
-  'Stable Diffusion', 'Notion AI', 'Jasper', 'Copy.ai', 'Grammarly',
-  'Canva AI', 'Zapier', 'Make (Integromat)', 'Bubble', 'Airtable AI',
-  'Monday.com AI', 'Salesforce Einstein', 'HubSpot AI', 'Intercom Resolution Bot',
-  'Calendly AI', 'Loom AI', 'Otter.ai', 'Descript', 'RunwayML', 'Synthesia',
-  'Murf', 'ElevenLabs', 'Pictory', 'InVideo', 'Brandmark', 'Looka',
-  'GitHub Copilot', 'Tabnine', 'Replit AI', 'Cursor', 'v0.dev', 'Bolt.new',
-  'Perplexity', 'You.com', 'Phind', 'Sourcegraph Cody', 'Amazon CodeWhisperer',
-  'Google Bard', 'Microsoft Bing Chat', 'Character.ai', 'Poe', 'Anthropic Claude',
-  'Cohere', 'Hugging Face', 'OpenAI Playground', 'Replicate', 'Scale AI',
-  'Labelbox', 'DataRobot', 'H2O.ai', 'Databricks', 'Weights & Biases'
-];
-
 const OnboardingStep3: React.FC<OnboardingStepProps> = ({
   data,
   onUpdateData,
   getFieldError
 }) => {
   const selectedTools = data.aiToolsUsed || [];
+  
+  // Extrair nomes das ferramentas do sistema e organizar alfabeticamente
+  const systemTools = availableTools
+    .map(tool => tool.name)
+    .sort((a, b) => a.localeCompare(b));
 
   const handleToolToggle = (tool: string, checked: boolean) => {
     const currentTools = selectedTools;
@@ -152,7 +144,7 @@ const OnboardingStep3: React.FC<OnboardingStepProps> = ({
             </p>
             
             <div className="grid grid-cols-2 md:grid-cols-3 gap-3 max-h-60 overflow-y-auto">
-              {aiTools.map((tool) => (
+              {systemTools.map((tool) => (
                 <div key={tool} className="flex items-center space-x-2">
                   <Checkbox
                     id={tool}
