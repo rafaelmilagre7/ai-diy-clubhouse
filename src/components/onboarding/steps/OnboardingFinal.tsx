@@ -4,7 +4,6 @@ import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { CheckCircle, Loader2, Sparkles, ArrowRight } from 'lucide-react';
 import { OnboardingData } from '../types/onboardingTypes';
-import { AIMessageDisplay } from '../components/AIMessageDisplay';
 
 interface OnboardingFinalProps {
   data: OnboardingData;
@@ -19,11 +18,6 @@ export const OnboardingFinal: React.FC<OnboardingFinalProps> = ({
   isCompleting,
   memberType
 }) => {
-  // Mensagem de parabéns personalizada
-  const congratsMessage = data.name 
-    ? `Parabéns ${data.name}! Seu onboarding foi concluído com sucesso. Agora você está pronto(a) para explorar todas as funcionalidades da Viver de IA e começar sua jornada de transformação digital. Seja bem-vindo(a) à nossa comunidade! 🚀`
-    : `Parabéns! Seu onboarding foi concluído com sucesso. Agora você está pronto(a) para explorar todas as funcionalidades da Viver de IA e começar sua jornada de transformação digital. Seja bem-vindo(a) à nossa comunidade! 🚀`;
-
   const handleComplete = async () => {
     try {
       await onComplete();
@@ -58,11 +52,16 @@ export const OnboardingFinal: React.FC<OnboardingFinalProps> = ({
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.3 }}
+        className="bg-gradient-to-r from-viverblue/10 to-viverblue-light/10 border border-viverblue/30 rounded-xl p-6"
       >
-        <AIMessageDisplay 
-          message={congratsMessage} 
-          isLoading={false}
-        />
+        <div className="prose prose-slate max-w-none">
+          <p className="leading-relaxed text-slate-100 text-lg text-center">
+            {data.name 
+              ? `Parabéns ${data.name}! Seu onboarding foi concluído com sucesso. Agora você está pronto(a) para explorar todas as funcionalidades da Viver de IA e começar sua jornada de transformação digital. Seja bem-vindo(a) à nossa comunidade! 🚀`
+              : `Parabéns! Seu onboarding foi concluído com sucesso. Agora você está pronto(a) para explorar todas as funcionalidades da Viver de IA e começar sua jornada de transformação digital. Seja bem-vindo(a) à nossa comunidade! 🚀`
+            }
+          </p>
+        </div>
       </motion.div>
 
       {/* Próximos Passos */}
