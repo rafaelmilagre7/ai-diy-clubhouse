@@ -4,11 +4,10 @@ import { motion } from 'framer-motion';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Brain, Lightbulb, Settings, Users, Sparkles } from 'lucide-react';
+import { Brain, Code, Zap, Users, Sparkles } from 'lucide-react';
 import { OnboardingStepProps } from '../types/onboardingTypes';
 import { AIMessageDisplay } from '../components/AIMessageDisplay';
 import { useAIMessageGeneration } from '../hooks/useAIMessageGeneration';
@@ -22,19 +21,26 @@ const OnboardingStep3: React.FC<OnboardingStepProps> = ({
   const { generateMessage, isGenerating, generatedMessage } = useAIMessageGeneration();
   const [shouldGenerateMessage, setShouldGenerateMessage] = useState(false);
 
+  const conhecimentoLevels = [
+    'Iniciante - Nunca usei IA',
+    'Básico - Já testei algumas ferramentas',
+    'Intermediário - Uso regularmente algumas IAs',
+    'Avançado - Implemento soluções com IA',
+    'Especialista - Desenvolvo/treino modelos'
+  ];
+
   const ferramentasIA = [
     'ChatGPT',
     'Claude',
     'Gemini',
     'Midjourney',
     'DALL-E',
-    'GitHub Copilot',
+    'Copilot',
     'Notion AI',
     'Jasper',
     'Copy.ai',
-    'Canva AI',
-    'Loom AI',
-    'Zoom AI',
+    'Runway',
+    'Stable Diffusion',
     'Outras'
   ];
 
@@ -42,35 +48,28 @@ const OnboardingStep3: React.FC<OnboardingStepProps> = ({
     'Microsoft Office',
     'Google Workspace',
     'Slack',
-    'Trello/Asana',
-    'Zoom/Teams',
     'WhatsApp Business',
+    'Zoom',
+    'Trello/Asana',
     'Canva',
     'Adobe Creative',
-    'Notion',
-    'Excel avançado',
-    'CRM/ERP',
-    'Outras'
+    'Shopify',
+    'WordPress',
+    'HubSpot',
+    'Salesforce'
   ];
 
-  const niveisConhecimento = [
-    'Iniciante - Nunca usei IA',
-    'Básico - Já testei algumas ferramentas',
-    'Intermediário - Uso regularmente algumas IAs',
-    'Avançado - Integro IA no meu trabalho',
-    'Especialista - Implemento soluções complexas'
-  ];
-
-  // Gerar mensagem quando maturidade em IA estiver preenchida
+  // Gerar mensagem quando maturidade IA estiver preenchida
   useEffect(() => {
-    const hasMaturityData = data.hasImplementedAI && data.aiKnowledgeLevel;
-    const hasImplementedAIBool = data.hasImplementedAI === 'sim' || data.hasImplementedAI === true;
+    const hasAIMaturity = data.hasImplementedAI === 'sim' && 
+                         data.aiKnowledgeLevel && 
+                         data.aiToolsUsed && data.aiToolsUsed.length > 0;
     
-    if (hasMaturityData && !generatedMessage && !isGenerating && !shouldGenerateMessage) {
+    if (hasAIMaturity && !generatedMessage && !isGenerating && !shouldGenerateMessage) {
       setShouldGenerateMessage(true);
       generateMessage(data, memberType);
     }
-  }, [data.hasImplementedAI, data.aiKnowledgeLevel, generatedMessage, isGenerating, shouldGenerateMessage, generateMessage, data, memberType]);
+  }, [data.hasImplementedAI, data.aiKnowledgeLevel, data.aiToolsUsed, generatedMessage, isGenerating, shouldGenerateMessage, generateMessage, data, memberType]);
 
   const handleInputChange = (field: string, value: string | string[]) => {
     onUpdateData({ [field]: value });
@@ -78,15 +77,16 @@ const OnboardingStep3: React.FC<OnboardingStepProps> = ({
 
   const handleCheckboxChange = (field: string, value: string, checked: boolean) => {
     const currentValues = (data[field as keyof typeof data] as string[]) || [];
+    let newValues;
+    
     if (checked) {
-      handleInputChange(field, [...currentValues, value]);
+      newValues = [...currentValues, value];
     } else {
-      handleInputChange(field, currentValues.filter(item => item !== value));
+      newValues = currentValues.filter(item => item !== value);
     }
+    
+    onUpdateData({ [field]: newValues });
   };
-
-  // Converter string para boolean de forma segura
-  const hasImplementedAI = data.hasImplementedAI === 'sim' || data.hasImplementedAI === true;
 
   return (
     <div className="space-y-8">
@@ -103,29 +103,29 @@ const OnboardingStep3: React.FC<OnboardingStepProps> = ({
           Maturidade em IA
         </h2>
         <p className="text-slate-300">
-          Conte-nos sobre sua experiência atual com inteligência artificial
+          Entenda seu nível atual com inteligência artificial
         </p>
       </motion.div>
 
       <div className="grid lg:grid-cols-2 gap-8">
-        {/* Coluna Esquerda - Experiência */}
+        {/* Coluna Esquerda - Experiência Atual */}
         <motion.div
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.2 }}
           className="space-y-6"
         >
-          {/* Experiência com IA */}
+          {/* Implementação de IA */}
           <Card className="p-6 bg-[#1A1E2E]/60 backdrop-blur-sm border-white/10">
             <div className="space-y-4">
               <div className="flex items-center gap-2 mb-4">
-                <Brain className="w-5 h-5 text-viverblue" />
+                <Zap className="w-5 h-5 text-viverblue" />
                 <h3 className="text-lg font-semibold text-white">Experiência com IA</h3>
               </div>
 
               <div>
                 <Label htmlFor="hasImplementedAI" className="text-slate-200">
-                  Sua empresa já implementou alguma solução de IA? *
+                  Já implementou ou usa IA na sua empresa/trabalho? *
                 </Label>
                 <RadioGroup 
                   value={data.hasImplementedAI || ''} 
@@ -133,12 +133,16 @@ const OnboardingStep3: React.FC<OnboardingStepProps> = ({
                   className="mt-2"
                 >
                   <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="sim" id="implemented-sim" className="border-white/20 text-viverblue" />
-                    <Label htmlFor="implemented-sim" className="text-slate-200">Sim</Label>
+                    <RadioGroupItem value="sim" id="sim" />
+                    <Label htmlFor="sim" className="text-slate-200">Sim</Label>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="nao" id="implemented-nao" className="border-white/20 text-viverblue" />
-                    <Label htmlFor="implemented-nao" className="text-slate-200">Não</Label>
+                    <RadioGroupItem value="nao" id="nao" />
+                    <Label htmlFor="nao" className="text-slate-200">Não</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="planejando" id="planejando" />
+                    <Label htmlFor="planejando" className="text-slate-200">Estou planejando</Label>
                   </div>
                 </RadioGroup>
                 {getFieldError?.('hasImplementedAI') && (
@@ -146,46 +150,17 @@ const OnboardingStep3: React.FC<OnboardingStepProps> = ({
                 )}
               </div>
 
-              {hasImplementedAI && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: 'auto' }}
-                  className="space-y-4"
-                >
-                  <div>
-                    <Label htmlFor="aiToolsUsed" className="text-slate-200">
-                      Quais ferramentas de IA vocês já usaram?
-                    </Label>
-                    <div className="mt-2 grid grid-cols-2 gap-2 max-h-48 overflow-y-auto p-3 bg-[#151823] rounded-lg border border-white/20">
-                      {ferramentasIA.map((ferramenta) => (
-                        <div key={ferramenta} className="flex items-center space-x-2">
-                          <Checkbox
-                            id={`ai-tool-${ferramenta}`}
-                            checked={(data.aiToolsUsed || []).includes(ferramenta)}
-                            onCheckedChange={(checked) => handleCheckboxChange('aiToolsUsed', ferramenta, checked as boolean)}
-                            className="border-white/20"
-                          />
-                          <Label htmlFor={`ai-tool-${ferramenta}`} className="text-slate-200 text-sm">
-                            {ferramenta}
-                          </Label>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </motion.div>
-              )}
-
               <div>
                 <Label htmlFor="aiKnowledgeLevel" className="text-slate-200">
-                  Como você avalia seu conhecimento em IA? *
+                  Qual seu nível de conhecimento em IA? *
                 </Label>
                 <Select value={data.aiKnowledgeLevel || ''} onValueChange={(value) => handleInputChange('aiKnowledgeLevel', value)}>
                   <SelectTrigger className="mt-1 bg-[#151823] border-white/20 text-white">
                     <SelectValue placeholder="Selecione seu nível" />
                   </SelectTrigger>
                   <SelectContent>
-                    {niveisConhecimento.map((nivel) => (
-                      <SelectItem key={nivel} value={nivel}>{nivel}</SelectItem>
+                    {conhecimentoLevels.map((level) => (
+                      <SelectItem key={level} value={level}>{level}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -196,28 +171,68 @@ const OnboardingStep3: React.FC<OnboardingStepProps> = ({
             </div>
           </Card>
 
-          {/* Ferramentas Atuais */}
+          {/* Ferramentas Utilizadas */}
           <Card className="p-6 bg-[#1A1E2E]/60 backdrop-blur-sm border-white/10">
             <div className="space-y-4">
               <div className="flex items-center gap-2 mb-4">
-                <Settings className="w-5 h-5 text-viverblue" />
-                <h3 className="text-lg font-semibold text-white">Ferramentas Atuais</h3>
+                <Code className="w-5 h-5 text-viverblue" />
+                <h3 className="text-lg font-semibold text-white">Ferramentas</h3>
               </div>
 
               <div>
-                <Label htmlFor="dailyTools" className="text-slate-200">
-                  Quais ferramentas você usa diariamente no trabalho? *
+                <Label className="text-slate-200 mb-3 block">
+                  Quais ferramentas de IA você já usou? (selecione todas) *
                 </Label>
-                <div className="mt-2 grid grid-cols-2 gap-2 max-h-48 overflow-y-auto p-3 bg-[#151823] rounded-lg border border-white/20">
+                <div className="grid grid-cols-2 gap-3 max-h-48 overflow-y-auto">
+                  {ferramentasIA.map((ferramenta) => (
+                    <div key={ferramenta} className="flex items-center space-x-2">
+                      <Checkbox
+                        id={`ai-${ferramenta}`}
+                        checked={(data.aiToolsUsed || []).includes(ferramenta)}
+                        onCheckedChange={(checked) => handleCheckboxChange('aiToolsUsed', ferramenta, checked === true)}
+                      />
+                      <Label htmlFor={`ai-${ferramenta}`} className="text-slate-200 text-sm">
+                        {ferramenta}
+                      </Label>
+                    </div>
+                  ))}
+                </div>
+                {getFieldError?.('aiToolsUsed') && (
+                  <p className="text-red-400 text-sm mt-1">{getFieldError('aiToolsUsed')}</p>
+                )}
+              </div>
+            </div>
+          </Card>
+        </motion.div>
+
+        {/* Coluna Direita - Ferramentas Diárias + Implementação */}
+        <motion.div
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.3 }}
+          className="space-y-6"
+        >
+          {/* Ferramentas Diárias */}
+          <Card className="p-6 bg-[#1A1E2E]/60 backdrop-blur-sm border-white/10">
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 mb-4">
+                <Users className="w-5 h-5 text-viverblue" />
+                <h3 className="text-lg font-semibold text-white">Rotina de Trabalho</h3>
+              </div>
+
+              <div>
+                <Label className="text-slate-200 mb-3 block">
+                  Quais ferramentas você usa no dia a dia? (selecione todas) *
+                </Label>
+                <div className="grid grid-cols-2 gap-3 max-h-48 overflow-y-auto">
                   {ferramentasDiarias.map((ferramenta) => (
                     <div key={ferramenta} className="flex items-center space-x-2">
                       <Checkbox
-                        id={`daily-tool-${ferramenta}`}
+                        id={`daily-${ferramenta}`}
                         checked={(data.dailyTools || []).includes(ferramenta)}
-                        onCheckedChange={(checked) => handleCheckboxChange('dailyTools', ferramenta, checked as boolean)}
-                        className="border-white/20"
+                        onCheckedChange={(checked) => handleCheckboxChange('dailyTools', ferramenta, checked === true)}
                       />
-                      <Label htmlFor={`daily-tool-${ferramenta}`} className="text-slate-200 text-sm">
+                      <Label htmlFor={`daily-${ferramenta}`} className="text-slate-200 text-sm">
                         {ferramenta}
                       </Label>
                     </div>
@@ -230,45 +245,26 @@ const OnboardingStep3: React.FC<OnboardingStepProps> = ({
 
               <div>
                 <Label htmlFor="whoWillImplement" className="text-slate-200">
-                  Quem será responsável por implementar IA na sua empresa? *
+                  Quem vai implementar as soluções de IA? *
                 </Label>
-                <RadioGroup 
-                  value={data.whoWillImplement || ''} 
-                  onValueChange={(value) => handleInputChange('whoWillImplement', value)}
-                  className="mt-2"
-                >
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="eu-mesmo" id="implement-myself" className="border-white/20 text-viverblue" />
-                    <Label htmlFor="implement-myself" className="text-slate-200">Eu mesmo</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="equipe-interna" id="implement-team" className="border-white/20 text-viverblue" />
-                    <Label htmlFor="implement-team" className="text-slate-200">Equipe interna</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="consultoria-externa" id="implement-external" className="border-white/20 text-viverblue" />
-                    <Label htmlFor="implement-external" className="text-slate-200">Consultoria externa</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="ainda-nao-sei" id="implement-unknown" className="border-white/20 text-viverblue" />
-                    <Label htmlFor="implement-unknown" className="text-slate-200">Ainda não sei</Label>
-                  </div>
-                </RadioGroup>
+                <Select value={data.whoWillImplement || ''} onValueChange={(value) => handleInputChange('whoWillImplement', value)}>
+                  <SelectTrigger className="mt-1 bg-[#151823] border-white/20 text-white">
+                    <SelectValue placeholder="Selecione quem implementará" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="eu-mesmo">Eu mesmo</SelectItem>
+                    <SelectItem value="equipe-interna">Equipe interna</SelectItem>
+                    <SelectItem value="consultoria-externa">Consultoria externa</SelectItem>
+                    <SelectItem value="ainda-nao-sei">Ainda não sei</SelectItem>
+                  </SelectContent>
+                </Select>
                 {getFieldError?.('whoWillImplement') && (
                   <p className="text-red-400 text-sm mt-1">{getFieldError('whoWillImplement')}</p>
                 )}
               </div>
             </div>
           </Card>
-        </motion.div>
 
-        {/* Coluna Direita - Insights da IA */}
-        <motion.div
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.3 }}
-          className="space-y-6"
-        >
           {/* Mensagem da IA */}
           {(generatedMessage || isGenerating) && (
             <motion.div
@@ -278,7 +274,7 @@ const OnboardingStep3: React.FC<OnboardingStepProps> = ({
             >
               <div className="flex items-center gap-2 mb-4">
                 <Sparkles className="w-5 h-5 text-viverblue" />
-                <h3 className="text-lg font-semibold text-white">Recomendações Personalizadas</h3>
+                <h3 className="text-lg font-semibold text-white">Análise do Seu Perfil</h3>
               </div>
               <AIMessageDisplay 
                 message={generatedMessage || ''} 
@@ -286,31 +282,6 @@ const OnboardingStep3: React.FC<OnboardingStepProps> = ({
               />
             </motion.div>
           )}
-
-          {/* Dicas adicionais */}
-          <Card className="p-6 bg-[#1A1E2E]/60 backdrop-blur-sm border-white/10">
-            <div className="space-y-4">
-              <div className="flex items-center gap-2 mb-4">
-                <Lightbulb className="w-5 h-5 text-viverblue" />
-                <h3 className="text-lg font-semibold text-white">Dicas Importantes</h3>
-              </div>
-
-              <div className="space-y-3 text-sm text-slate-300">
-                <div className="flex items-start gap-3">
-                  <div className="w-2 h-2 bg-viverblue rounded-full mt-2 flex-shrink-0"></div>
-                  <p>Seja honesto sobre seu nível atual - isso nos ajuda a personalizar melhor o conteúdo</p>
-                </div>
-                <div className="flex items-start gap-3">
-                  <div className="w-2 h-2 bg-viverblue rounded-full mt-2 flex-shrink-0"></div>
-                  <p>Não há problema em ser iniciante - todos começaram do zero em IA</p>
-                </div>
-                <div className="flex items-start gap-3">
-                  <div className="w-2 h-2 bg-viverblue rounded-full mt-2 flex-shrink-0"></div>
-                  <p>As ferramentas que você já usa podem ser potencializadas com IA</p>
-                </div>
-              </div>
-            </div>
-          </Card>
         </motion.div>
       </div>
     </div>

@@ -4,11 +4,10 @@ import { motion } from 'framer-motion';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Heart, Calendar, Clock, Users, BookOpen, Sparkles } from 'lucide-react';
+import { Settings, Clock, BookOpen, Users, Calendar, Sparkles } from 'lucide-react';
 import { OnboardingStepProps } from '../types/onboardingTypes';
 import { AIMessageDisplay } from '../components/AIMessageDisplay';
 import { useAIMessageGeneration } from '../hooks/useAIMessageGeneration';
@@ -27,7 +26,7 @@ const OnboardingStep5: React.FC<OnboardingStepProps> = ({
     '3-5 horas por semana',
     '6-10 horas por semana',
     'Mais de 10 horas por semana',
-    'Conforme disponibilidade'
+    'Ainda não sei'
   ];
 
   const tiposConteudo = [
@@ -35,10 +34,9 @@ const OnboardingStep5: React.FC<OnboardingStepProps> = ({
     'Vídeos longos (mais de 30 min)',
     'Artigos e textos',
     'Podcasts',
-    'Webinars ao vivo',
-    'Workshops práticos',
-    'Cases de sucesso',
-    'Templates e checklists'
+    'Lives e webinars',
+    'Exercícios práticos',
+    'Cases e estudos'
   ];
 
   const diasSemana = [
@@ -52,16 +50,17 @@ const OnboardingStep5: React.FC<OnboardingStepProps> = ({
   ];
 
   const periodosDia = [
-    'Manhã (6h - 12h)',
-    'Tarde (12h - 18h)',
-    'Noite (18h - 22h)',
-    'Madrugada (22h - 6h)'
+    'Manhã (6h-12h)',
+    'Tarde (12h-18h)',
+    'Noite (18h-22h)',
+    'Madrugada (22h-6h)'
   ];
 
   // Gerar mensagem quando preferências estiverem preenchidas
   useEffect(() => {
-    const hasPreferences = data.weeklyLearningTime && data.contentPreference && data.wantsNetworking;
-    const wantsNetworkingBool = data.wantsNetworking === 'sim' || data.wantsNetworking === true;
+    const hasPreferences = data.weeklyLearningTime && 
+                          data.contentPreference && 
+                          data.wantsNetworking === 'sim';
     
     if (hasPreferences && !generatedMessage && !isGenerating && !shouldGenerateMessage) {
       setShouldGenerateMessage(true);
@@ -75,16 +74,16 @@ const OnboardingStep5: React.FC<OnboardingStepProps> = ({
 
   const handleCheckboxChange = (field: string, value: string, checked: boolean) => {
     const currentValues = (data[field as keyof typeof data] as string[]) || [];
+    let newValues;
+    
     if (checked) {
-      handleInputChange(field, [...currentValues, value]);
+      newValues = [...currentValues, value];
     } else {
-      handleInputChange(field, currentValues.filter(item => item !== value));
+      newValues = currentValues.filter(item => item !== value);
     }
+    
+    onUpdateData({ [field]: newValues });
   };
-
-  // Converter string para boolean de forma segura
-  const wantsNetworking = data.wantsNetworking === 'sim' || data.wantsNetworking === true;
-  const acceptsCaseStudy = data.acceptsCaseStudy === 'sim' || data.acceptsCaseStudy === true;
 
   return (
     <div className="space-y-8">
@@ -95,35 +94,35 @@ const OnboardingStep5: React.FC<OnboardingStepProps> = ({
         className="text-center space-y-4"
       >
         <div className="w-16 h-16 mx-auto bg-viverblue/20 rounded-full flex items-center justify-center">
-          <Heart className="w-8 h-8 text-viverblue" />
+          <Settings className="w-8 h-8 text-viverblue" />
         </div>
         <h2 className="text-2xl font-bold text-white">
           Personalização da Experiência
         </h2>
         <p className="text-slate-300">
-          Vamos personalizar sua jornada de aprendizado em IA
+          Configure sua jornada de aprendizado ideal
         </p>
       </motion.div>
 
       <div className="grid lg:grid-cols-2 gap-8">
-        {/* Coluna Esquerda - Preferências de Aprendizado */}
+        {/* Coluna Esquerda - Tempo e Conteúdo */}
         <motion.div
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.2 }}
           className="space-y-6"
         >
-          {/* Tempo de Aprendizado */}
+          {/* Preferências de Aprendizado */}
           <Card className="p-6 bg-[#1A1E2E]/60 backdrop-blur-sm border-white/10">
             <div className="space-y-4">
               <div className="flex items-center gap-2 mb-4">
                 <Clock className="w-5 h-5 text-viverblue" />
-                <h3 className="text-lg font-semibold text-white">Tempo de Estudo</h3>
+                <h3 className="text-lg font-semibold text-white">Tempo de Aprendizado</h3>
               </div>
 
               <div>
                 <Label htmlFor="weeklyLearningTime" className="text-slate-200">
-                  Quanto tempo você pode dedicar ao aprendizado por semana? *
+                  Quanto tempo por semana você pode dedicar ao aprendizado? *
                 </Label>
                 <Select value={data.weeklyLearningTime || ''} onValueChange={(value) => handleInputChange('weeklyLearningTime', value)}>
                   <SelectTrigger className="mt-1 bg-[#151823] border-white/20 text-white">
@@ -144,21 +143,16 @@ const OnboardingStep5: React.FC<OnboardingStepProps> = ({
                 <Label htmlFor="contentPreference" className="text-slate-200">
                   Que tipo de conteúdo você prefere? *
                 </Label>
-                <div className="mt-2 grid grid-cols-1 gap-2 max-h-48 overflow-y-auto p-3 bg-[#151823] rounded-lg border border-white/20">
-                  {tiposConteudo.map((tipo) => (
-                    <div key={tipo} className="flex items-center space-x-2">
-                      <Checkbox
-                        id={`content-${tipo}`}
-                        checked={(data.contentPreference || []).includes(tipo)}
-                        onCheckedChange={(checked) => handleCheckboxChange('contentPreference', tipo, checked as boolean)}
-                        className="border-white/20"
-                      />
-                      <Label htmlFor={`content-${tipo}`} className="text-slate-200 text-sm">
-                        {tipo}
-                      </Label>
-                    </div>
-                  ))}
-                </div>
+                <Select value={data.contentPreference || ''} onValueChange={(value) => handleInputChange('contentPreference', value)}>
+                  <SelectTrigger className="mt-1 bg-[#151823] border-white/20 text-white">
+                    <SelectValue placeholder="Selecione seu tipo preferido" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {tiposConteudo.map((tipo) => (
+                      <SelectItem key={tipo} value={tipo}>{tipo}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
                 {getFieldError?.('contentPreference') && (
                   <p className="text-red-400 text-sm mt-1">{getFieldError('contentPreference')}</p>
                 )}
@@ -166,7 +160,7 @@ const OnboardingStep5: React.FC<OnboardingStepProps> = ({
             </div>
           </Card>
 
-          {/* Networking e Comunidade */}
+          {/* Networking */}
           <Card className="p-6 bg-[#1A1E2E]/60 backdrop-blur-sm border-white/10">
             <div className="space-y-4">
               <div className="flex items-center gap-2 mb-4">
@@ -176,7 +170,7 @@ const OnboardingStep5: React.FC<OnboardingStepProps> = ({
 
               <div>
                 <Label htmlFor="wantsNetworking" className="text-slate-200">
-                  Tem interesse em fazer networking com outros membros? *
+                  Gostaria de fazer networking com outros membros? *
                 </Label>
                 <RadioGroup 
                   value={data.wantsNetworking || ''} 
@@ -184,73 +178,52 @@ const OnboardingStep5: React.FC<OnboardingStepProps> = ({
                   className="mt-2"
                 >
                   <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="sim" id="networking-sim" className="border-white/20 text-viverblue" />
-                    <Label htmlFor="networking-sim" className="text-slate-200">Sim, quero conhecer outros membros</Label>
+                    <RadioGroupItem value="sim" id="networking-sim" />
+                    <Label htmlFor="networking-sim" className="text-slate-200">Sim, quero conectar com outros membros</Label>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="nao" id="networking-nao" className="border-white/20 text-viverblue" />
-                    <Label htmlFor="networking-nao" className="text-slate-200">Não, prefiro estudar sozinho</Label>
+                    <RadioGroupItem value="nao" id="networking-nao" />
+                    <Label htmlFor="networking-nao" className="text-slate-200">Não, prefiro focar só no conteúdo</Label>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="talvez" id="networking-talvez" className="border-white/20 text-viverblue" />
-                    <Label htmlFor="networking-talvez" className="text-slate-200">Talvez, depende da oportunidade</Label>
+                    <RadioGroupItem value="talvez" id="networking-talvez" />
+                    <Label htmlFor="networking-talvez" className="text-slate-200">Talvez no futuro</Label>
                   </div>
                 </RadioGroup>
                 {getFieldError?.('wantsNetworking') && (
                   <p className="text-red-400 text-sm mt-1">{getFieldError('wantsNetworking')}</p>
                 )}
               </div>
-
-              <div>
-                <Label htmlFor="acceptsCaseStudy" className="text-slate-200">
-                  Gostaria de ter seu caso de sucesso divulgado como exemplo?
-                </Label>
-                <RadioGroup 
-                  value={data.acceptsCaseStudy || ''} 
-                  onValueChange={(value) => handleInputChange('acceptsCaseStudy', value)}
-                  className="mt-2"
-                >
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="sim" id="case-sim" className="border-white/20 text-viverblue" />
-                    <Label htmlFor="case-sim" className="text-slate-200">Sim, quero inspirar outros</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="nao" id="case-nao" className="border-white/20 text-viverblue" />
-                    <Label htmlFor="case-nao" className="text-slate-200">Não, prefiro privacidade</Label>
-                  </div>
-                </RadioGroup>
-              </div>
             </div>
           </Card>
         </motion.div>
 
-        {/* Coluna Direita - Horários e IA */}
+        {/* Coluna Direita - Horários e Estudos de Caso */}
         <motion.div
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.3 }}
           className="space-y-6"
         >
-          {/* Disponibilidade */}
+          {/* Horários Preferenciais */}
           <Card className="p-6 bg-[#1A1E2E]/60 backdrop-blur-sm border-white/10">
             <div className="space-y-4">
               <div className="flex items-center gap-2 mb-4">
                 <Calendar className="w-5 h-5 text-viverblue" />
-                <h3 className="text-lg font-semibold text-white">Sua Disponibilidade</h3>
+                <h3 className="text-lg font-semibold text-white">Horários Preferenciais</h3>
               </div>
 
               <div>
-                <Label htmlFor="bestDays" className="text-slate-200">
-                  Quais são os melhores dias para você estudar? *
+                <Label className="text-slate-200 mb-3 block">
+                  Quais os melhores dias para você estudar? (selecione todos)
                 </Label>
-                <div className="mt-2 grid grid-cols-2 gap-2 p-3 bg-[#151823] rounded-lg border border-white/20">
+                <div className="grid grid-cols-1 gap-2">
                   {diasSemana.map((dia) => (
                     <div key={dia} className="flex items-center space-x-2">
                       <Checkbox
                         id={`day-${dia}`}
                         checked={(data.bestDays || []).includes(dia)}
-                        onCheckedChange={(checked) => handleCheckboxChange('bestDays', dia, checked as boolean)}
-                        className="border-white/20"
+                        onCheckedChange={(checked) => handleCheckboxChange('bestDays', dia, checked === true)}
                       />
                       <Label htmlFor={`day-${dia}`} className="text-slate-200 text-sm">
                         {dia}
@@ -258,23 +231,19 @@ const OnboardingStep5: React.FC<OnboardingStepProps> = ({
                     </div>
                   ))}
                 </div>
-                {getFieldError?.('bestDays') && (
-                  <p className="text-red-400 text-sm mt-1">{getFieldError('bestDays')}</p>
-                )}
               </div>
 
               <div>
-                <Label htmlFor="bestPeriods" className="text-slate-200">
-                  Quais são os melhores períodos do dia? *
+                <Label className="text-slate-200 mb-3 block">
+                  Quais os melhores períodos do dia? (selecione todos)
                 </Label>
-                <div className="mt-2 grid grid-cols-1 gap-2 p-3 bg-[#151823] rounded-lg border border-white/20">
+                <div className="grid grid-cols-1 gap-2">
                   {periodosDia.map((periodo) => (
                     <div key={periodo} className="flex items-center space-x-2">
                       <Checkbox
                         id={`period-${periodo}`}
                         checked={(data.bestPeriods || []).includes(periodo)}
-                        onCheckedChange={(checked) => handleCheckboxChange('bestPeriods', periodo, checked as boolean)}
-                        className="border-white/20"
+                        onCheckedChange={(checked) => handleCheckboxChange('bestPeriods', periodo, checked === true)}
                       />
                       <Label htmlFor={`period-${periodo}`} className="text-slate-200 text-sm">
                         {periodo}
@@ -282,9 +251,40 @@ const OnboardingStep5: React.FC<OnboardingStepProps> = ({
                     </div>
                   ))}
                 </div>
-                {getFieldError?.('bestPeriods') && (
-                  <p className="text-red-400 text-sm mt-1">{getFieldError('bestPeriods')}</p>
-                )}
+              </div>
+            </div>
+          </Card>
+
+          {/* Estudo de Caso */}
+          <Card className="p-6 bg-[#1A1E2E]/60 backdrop-blur-sm border-white/10">
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 mb-4">
+                <BookOpen className="w-5 h-5 text-viverblue" />
+                <h3 className="text-lg font-semibold text-white">Participação em Estudos</h3>
+              </div>
+
+              <div>
+                <Label htmlFor="acceptsCaseStudy" className="text-slate-200">
+                  Aceita participar de estudos de caso sobre implementação de IA?
+                </Label>
+                <RadioGroup 
+                  value={data.acceptsCaseStudy || ''} 
+                  onValueChange={(value) => handleInputChange('acceptsCaseStudy', value)}
+                  className="mt-2"
+                >
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="sim" id="case-sim" />
+                    <Label htmlFor="case-sim" className="text-slate-200">Sim, posso compartilhar minha experiência</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="nao" id="case-nao" />
+                    <Label htmlFor="case-nao" className="text-slate-200">Não, prefiro manter privacidade</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="anonimo" id="case-anonimo" />
+                    <Label htmlFor="case-anonimo" className="text-slate-200">Sim, mas de forma anônima</Label>
+                  </div>
+                </RadioGroup>
               </div>
             </div>
           </Card>
