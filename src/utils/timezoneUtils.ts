@@ -1,64 +1,33 @@
 
-import { format, parseISO } from 'date-fns';
-import { toZonedTime, fromZonedTime } from 'date-fns-tz';
-
-// Fuso horário de Brasília (BRT)
-export const BRASIL_TIMEZONE = 'America/Sao_Paulo';
-
-/**
- * Converte um timestamp UTC para o fuso horário de Brasília
- */
-export function toLocalTime(utcTimestamp: string | Date): Date {
-  return toZonedTime(
-    typeof utcTimestamp === 'string' ? parseISO(utcTimestamp) : utcTimestamp,
-    BRASIL_TIMEZONE
-  );
-}
-
-/**
- * Converte um timestamp do fuso horário de Brasília para UTC
- */
-export function toUTCTime(localTimestamp: string | Date): Date {
-  return fromZonedTime(
-    typeof localTimestamp === 'string' ? parseISO(localTimestamp) : localTimestamp,
-    BRASIL_TIMEZONE
-  );
-}
-
-/**
- * Formata uma data para exibição no formato local do Brasil
- */
-export function formatLocalDateTime(timestamp: string | Date, formatStr: string = "dd/MM/yyyy HH:mm"): string {
-  const localDate = toLocalTime(timestamp);
-  return format(localDate, formatStr);
-}
-
-/**
- * Formata apenas o horário para exibição no formato local do Brasil
- */
-export function formatLocalTime(timestamp: string | Date, formatStr: string = "HH:mm"): string {
-  const localDate = toLocalTime(timestamp);
-  return format(localDate, formatStr);
-}
-
-/**
- * Extrai o horário de um timestamp ISO no fuso horário de Brasília
- */
-export function extractLocalTime(timestamp: string): string {
-  if (!timestamp) return '';
+// Utilitários para manipulação de timezone e horários
+export const extractLocalTime = (dateTimeString: string): string => {
+  if (!dateTimeString || !dateTimeString.includes('T')) {
+    return '';
+  }
   
-  const localDate = toLocalTime(timestamp);
-  return format(localDate, 'HH:mm');
-}
-
-/**
- * Cria uma data ISO combinando uma data e um horário no fuso horário de Brasília
- */
-export function createUTCDateWithLocalTime(date: string, time: string): string {
-  // Combinar data e hora
-  const localDateTime = `${date}T${time}:00`;
+  const timePart = dateTimeString.split('T')[1];
+  if (!timePart) return '';
   
-  // Converter para UTC antes de armazenar
-  const utcDate = toUTCTime(localDateTime);
-  return utcDate.toISOString();
-}
+  const [hours, minutes] = timePart.split(':');
+  return `${hours}:${minutes}`;
+};
+
+export const formatDateTimeLocal = (date: Date): string => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  
+  return `${year}-${month}-${day}T${hours}:${minutes}`;
+};
+
+export const formatTimeForDisplay = (timeString: string): string => {
+  if (!timeString) return '';
+  
+  if (timeString.includes('T')) {
+    return extractLocalTime(timeString);
+  }
+  
+  return timeString;
+};
