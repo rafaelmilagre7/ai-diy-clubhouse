@@ -1,201 +1,109 @@
 
-import React, { useState, useEffect, memo, useCallback, Suspense } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { 
-  Shield, 
-  AlertTriangle, 
-  Activity, 
-  RefreshCw,
-  TrendingUp,
-  Clock,
-  Zap
-} from 'lucide-react';
+import React, { memo, Suspense } from 'react';
 import { useRealTimeSecurityMonitor } from '@/hooks/security/useRealTimeSecurityMonitor';
 import { useAnomalyDetection } from '@/hooks/security/useAnomalyDetection';
-import { OptimizedSecurityMetricsPanel } from './OptimizedSecurityMetricsPanel';
-import { useSecurityWorker } from '@/hooks/performance/useSecurityWorker';
-import { useSecurityCache } from '@/hooks/performance/useSecurityCache';
 import { usePerformanceMonitor } from '@/hooks/performance/usePerformanceMonitor';
-import { useLazyComponent } from '@/hooks/performance/useLazyComponent';
+import { useSecurityCache } from '@/hooks/performance/useSecurityCache';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
+import { PerformanceIndicator } from './PerformanceIndicator';
+import { 
+  Shield, 
+  Activity, 
+  AlertTriangle, 
+  TrendingUp,
+  Zap
+} from 'lucide-react';
 
-// Lazy loading dos componentes menos críticos
-const SecurityIncidentManager = React.lazy(() => 
-  import('./SecurityIncidentManager').then(module => ({ default: module.SecurityIncidentManager }))
-);
-
-const SecurityAuditTrail = React.lazy(() => 
-  import('./SecurityAuditTrail').then(module => ({ default: module.SecurityAuditTrail }))
-);
-
-const SecurityAlertSystem = React.lazy(() => 
-  import('./SecurityAlertSystem').then(module => ({ default: module.SecurityAlertSystem }))
-);
-
-interface AlertNotification {
-  id: string;
+// Componente simplificado para métricas básicas
+const SimpleMetricsCard = memo<{
   title: string;
-  message: string;
-  severity: 'low' | 'medium' | 'high' | 'critical';
-  alert_type: string;
-  created_at: string;
-  is_acknowledged: boolean;
-  data?: Record<string, any>;
-}
-
-// Componente memoizado para estatísticas rápidas
-const QuickStatsCard = memo<{
+  value: number;
   icon: React.ReactNode;
-  title: string;
-  value: string | number;
-  color: string;
-}>(({ icon, title, value, color }) => (
+  trend?: 'up' | 'down' | 'stable';
+}>(({ title, value, icon, trend = 'stable' }) => (
   <Card>
     <CardContent className="p-4">
-      <div className="flex items-center space-x-2">
-        {icon}
-        <div>
-          <p className="text-sm font-medium">{title}</p>
-          <p className={`text-2xl font-bold ${color}`}>{value}</p>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          {icon}
+          <span className="text-sm font-medium">{title}</span>
+        </div>
+        <div className="text-right">
+          <div className="text-2xl font-bold">{value}</div>
+          {trend !== 'stable' && (
+            <TrendingUp className={`h-4 w-4 ${trend === 'up' ? 'text-green-500' : 'text-red-500'}`} />
+          )}
         </div>
       </div>
     </CardContent>
   </Card>
 ));
 
-QuickStatsCard.displayName = 'QuickStatsCard';
+SimpleMetricsCard.displayName = 'SimpleMetricsCard';
+
+// Componente simplificado para alertas
+const SimpleAlertsCard = memo<{
+  alerts: Array<{ id: string; type: string; message: string; severity: string }>;
+}>(({ alerts }) => (
+  <Card>
+    <CardHeader>
+      <CardTitle className="flex items-center gap-2">
+        <AlertTriangle className="h-5 w-5" />
+        Alertas Recentes
+      </CardTitle>
+    </CardHeader>
+    <CardContent>
+      {alerts.length === 0 ? (
+        <p className="text-muted-foreground text-center py-4">Nenhum alerta ativo</p>
+      ) : (
+        <div className="space-y-2">
+          {alerts.slice(0, 5).map((alert) => (
+            <div key={alert.id} className="flex items-center justify-between p-2 border rounded">
+              <span className="text-sm">{alert.message}</span>
+              <Badge variant={alert.severity === 'critical' ? 'destructive' : 'default'}>
+                {alert.severity}
+              </Badge>
+            </div>
+          ))}
+        </div>
+      )}
+    </CardContent>
+  </Card>
+));
+
+SimpleAlertsCard.displayName = 'SimpleAlertsCard';
 
 export const OptimizedRealTimeSecurityDashboard = memo(() => {
-  const [activeTab, setActiveTab] = useState('overview');
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
-
-  // Performance monitoring
-  const { metrics: perfMetrics, markStart, markEnd, logPerformance } = usePerformanceMonitor('SecurityDashboard');
-
-  // Cache para dados de segurança
-  const cache = useSecurityCache<any>({ ttl: 5 * 60 * 1000 }); // 5 minutos
-
-  // Web worker para análises
-  const { analyzeAnomalies, isWorkerAvailable } = useSecurityWorker();
-
-  // Hooks de monitoramento com cache
-  const {
-    events,
-    incidents,
-    metrics,
-    isLoading,
-    error,
-    triggerAnomalyDetection,
-    refreshData
-  } = useRealTimeSecurityMonitor();
-
-  const {
-    anomalies,
-    patterns,
-    runAnomalyDetection,
-    updateAnomalyStatus,
-    lastAnalysis
-  } = useAnomalyDetection();
-
-  // Função otimizada para executar análise
-  const handleRunAnalysis = useCallback(async () => {
-    markStart('analysis');
-    setIsAnalyzing(true);
-    
-    try {
-      // Usar cache para evitar análises desnecessárias
-      const cacheKey = `analysis_${Date.now() - (Date.now() % (5 * 60 * 1000))}`;
-      
-      await cache.getOrSet(cacheKey, async () => {
-        if (isWorkerAvailable && events.length > 0) {
-          // Usar web worker para análise pesada
-          await new Promise<void>((resolve) => {
-            analyzeAnomalies(events, (result) => {
-              console.log('Análise via Web Worker concluída:', result);
-              resolve();
-            });
-          });
-        }
-        
-        await Promise.all([
-          runAnomalyDetection(),
-          triggerAnomalyDetection()
-        ]);
-        
-        return true;
-      });
-      
-      await refreshData();
-    } catch (error) {
-      console.error('Erro ao executar análise:', error);
-    } finally {
-      setIsAnalyzing(false);
-      markEnd('analysis');
-    }
-  }, [
-    events, 
-    isWorkerAvailable, 
-    analyzeAnomalies, 
-    runAnomalyDetection, 
-    triggerAnomalyDetection, 
-    refreshData,
-    cache,
-    markStart,
-    markEnd
-  ]);
-
-  // Memoizar alertas mockados
-  const mockAlerts = React.useMemo((): AlertNotification[] => [
-    {
-      id: '1',
-      title: 'Tentativas de Login Suspeitas',
-      message: 'Detectadas 5 tentativas de login falhadas consecutivas do IP 192.168.1.100',
-      severity: 'high' as const,
-      alert_type: 'authentication_anomaly',
-      created_at: new Date().toISOString(),
-      is_acknowledged: false,
-      data: { ip: '192.168.1.100', attempts: 5 }
-    },
-    {
-      id: '2',
-      title: 'Acesso Fora do Horário',
-      message: 'Usuário acessou o sistema às 03:45 AM, fora do horário normal de trabalho',
-      severity: 'medium' as const,
-      alert_type: 'time_anomaly',
-      created_at: new Date(Date.now() - 15 * 60 * 1000).toISOString(),
-      is_acknowledged: false,
-      data: { timestamp: '03:45:00', user_id: 'user123' }
-    }
-  ], []);
-
-  // Handlers memoizados
-  const handleAcknowledgeAlert = useCallback((alertId: string) => {
-    console.log('Reconhecendo alerta:', alertId);
-  }, []);
-
-  const handleDismissAlert = useCallback((alertId: string) => {
-    console.log('Descartando alerta:', alertId);
-  }, []);
-
-  // Log de performance periodicamente
-  useEffect(() => {
-    const interval = setInterval(() => {
-      if (perfMetrics.renderTime > 100) {
-        logPerformance('warn');
-      }
-    }, 30000);
-
-    return () => clearInterval(interval);
-  }, [perfMetrics, logPerformance]);
+  const { metrics, events, isLoading, error } = useRealTimeSecurityMonitor();
+  const { anomalies, patterns } = useAnomalyDetection();
+  const { metrics: perfMetrics } = usePerformanceMonitor('SecurityDashboard');
+  const cache = useSecurityCache({ ttl: 5 * 60 * 1000 });
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="flex items-center space-x-2">
-          <RefreshCw className="h-6 w-6 animate-spin" />
-          <span>Carregando dashboard de segurança...</span>
+      <div className="space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          {Array(4).fill(0).map((_, i) => (
+            <Card key={i}>
+              <CardContent className="p-4">
+                <Skeleton className="h-16 w-full" />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <Card>
+            <CardContent className="p-6">
+              <Skeleton className="h-40 w-full" />
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-6">
+              <Skeleton className="h-40 w-full" />
+            </CardContent>
+          </Card>
         </div>
       </div>
     );
@@ -203,139 +111,124 @@ export const OptimizedRealTimeSecurityDashboard = memo(() => {
 
   if (error) {
     return (
-      <Card className="border-red-200">
+      <Card>
         <CardContent className="p-6">
-          <div className="flex items-center space-x-2 text-red-600">
-            <AlertTriangle className="h-5 w-5" />
-            <span>Erro ao carregar dados de segurança: {error}</span>
+          <div className="text-center py-8">
+            <AlertTriangle className="h-12 w-12 mx-auto mb-4 text-red-500" />
+            <h3 className="text-lg font-semibold mb-2">Erro ao Carregar Dashboard</h3>
+            <p className="text-muted-foreground">{error}</p>
           </div>
         </CardContent>
       </Card>
     );
   }
 
+  // Simplificar alertas para reduzir uso de memória
+  const simpleAlerts = events.slice(0, 10).map(event => ({
+    id: event.id,
+    type: event.event_type,
+    message: `Evento ${event.event_type} detectado`,
+    severity: event.severity
+  }));
+
   return (
     <div className="space-y-6">
-      {/* Header com Métricas Rápidas */}
+      {/* Indicador de Performance */}
+      <PerformanceIndicator
+        renderTime={perfMetrics.renderTime}
+        cacheHitRatio={cache.hitRatio}
+        workerAvailable={true}
+        componentName="SecurityDashboard"
+      />
+
+      {/* Métricas Principais */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <QuickStatsCard
-          icon={<Shield className="h-5 w-5 text-green-500" />}
-          title="Status do Sistema"
-          value="Seguro"
-          color="text-green-600"
-        />
-        
-        <QuickStatsCard
-          icon={<Activity className="h-5 w-5 text-blue-500" />}
-          title="Eventos (24h)"
+        <SimpleMetricsCard
+          title="Total de Eventos"
           value={metrics.totalEvents}
-          color="text-blue-600"
+          icon={<Activity className="h-5 w-5 text-blue-500" />}
         />
-        
-        <QuickStatsCard
-          icon={<AlertTriangle className="h-5 w-5 text-orange-500" />}
+        <SimpleMetricsCard
+          title="Eventos Críticos"
+          value={metrics.criticalEvents}
+          icon={<AlertTriangle className="h-5 w-5 text-red-500" />}
+          trend={metrics.criticalEvents > 0 ? 'up' : 'stable'}
+        />
+        <SimpleMetricsCard
           title="Incidentes Ativos"
           value={metrics.activeIncidents}
-          color="text-orange-600"
+          icon={<Shield className="h-5 w-5 text-orange-500" />}
         />
-        
-        <QuickStatsCard
-          icon={<TrendingUp className="h-5 w-5 text-purple-500" />}
+        <SimpleMetricsCard
           title="Anomalias"
           value={metrics.anomaliesDetected}
-          color="text-purple-600"
+          icon={<Zap className="h-5 w-5 text-purple-500" />}
         />
       </div>
 
-      {/* Controles de Ação */}
-      <div className="flex justify-between items-center">
-        <div className="flex items-center space-x-2">
-          <Badge variant="outline" className="flex items-center space-x-1">
-            <Clock className="h-3 w-3" />
-            <span>Última atualização: {metrics.lastUpdate.toLocaleTimeString('pt-BR')}</span>
-          </Badge>
-          {lastAnalysis && (
-            <Badge variant="secondary" className="flex items-center space-x-1">
-              <Zap className="h-3 w-3" />
-              <span>Última análise: {lastAnalysis.toLocaleTimeString('pt-BR')}</span>
-            </Badge>
-          )}
-          {cache.hitRatio > 0 && (
-            <Badge variant="outline" className="flex items-center space-x-1">
-              <span>Cache: {Math.round(cache.hitRatio * 100)}%</span>
-            </Badge>
-          )}
-        </div>
+      {/* Alertas e Status */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <SimpleAlertsCard alerts={simpleAlerts} />
         
-        <div className="flex space-x-2">
-          <Button variant="outline" onClick={refreshData}>
-            <RefreshCw className="mr-2 h-4 w-4" />
-            Atualizar
-          </Button>
-          <Button 
-            onClick={handleRunAnalysis} 
-            disabled={isAnalyzing}
-            className="bg-blue-600 hover:bg-blue-700"
-          >
-            {isAnalyzing ? (
-              <>
-                <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-                Analisando...
-              </>
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <TrendingUp className="h-5 w-5" />
+              Padrões Detectados
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {patterns.length === 0 ? (
+              <p className="text-muted-foreground text-center py-4">
+                Nenhum padrão anômalo detectado
+              </p>
             ) : (
-              <>
-                <Zap className="mr-2 h-4 w-4" />
-                Executar Análise
-                {isWorkerAvailable && <span className="ml-1 text-xs">⚡</span>}
-              </>
+              <div className="space-y-2">
+                {patterns.slice(0, 5).map((pattern, index) => (
+                  <div key={index} className="flex items-center justify-between p-2 border rounded">
+                    <span className="text-sm">{pattern.type}</span>
+                    <div className="flex items-center gap-2">
+                      <Badge variant={pattern.severity === 'critical' ? 'destructive' : 'default'}>
+                        {pattern.count}
+                      </Badge>
+                    </div>
+                  </div>
+                ))}
+              </div>
             )}
-          </Button>
-        </div>
+          </CardContent>
+        </Card>
       </div>
 
-      {/* Dashboard Principal */}
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="overview">Visão Geral</TabsTrigger>
-          <TabsTrigger value="alerts">Alertas</TabsTrigger>
-          <TabsTrigger value="incidents">Incidentes</TabsTrigger>
-          <TabsTrigger value="audit">Auditoria</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="overview" className="space-y-6">
-          <OptimizedSecurityMetricsPanel 
-            metrics={metrics}
-            anomalies={anomalies}
-            patterns={patterns}
-          />
-        </TabsContent>
-
-        <TabsContent value="alerts" className="space-y-6">
-          <Suspense fallback={<div className="h-64 flex items-center justify-center">Carregando alertas...</div>}>
-            <SecurityAlertSystem
-              alerts={mockAlerts}
-              onAcknowledge={handleAcknowledgeAlert}
-              onDismiss={handleDismissAlert}
-            />
-          </Suspense>
-        </TabsContent>
-
-        <TabsContent value="incidents" className="space-y-6">
-          <Suspense fallback={<div className="h-64 flex items-center justify-center">Carregando incidentes...</div>}>
-            <SecurityIncidentManager 
-              incidents={incidents || []}
-            />
-          </Suspense>
-        </TabsContent>
-
-        <TabsContent value="audit" className="space-y-6">
-          <Suspense fallback={<div className="h-64 flex items-center justify-center">Carregando auditoria...</div>}>
-            <SecurityAuditTrail 
-              events={events || []}
-            />
-          </Suspense>
-        </TabsContent>
-      </Tabs>
+      {/* Status do Sistema */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Shield className="h-5 w-5" />
+            Status do Sistema de Segurança
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
+            <div className="p-4 border rounded-lg">
+              <div className="text-lg font-bold text-green-600">Online</div>
+              <p className="text-sm text-muted-foreground">Monitoramento Ativo</p>
+            </div>
+            <div className="p-4 border rounded-lg">
+              <div className="text-lg font-bold text-blue-600">
+                {cache.hitRatio > 0.8 ? 'Otimizado' : 'Normal'}
+              </div>
+              <p className="text-sm text-muted-foreground">Performance</p>
+            </div>
+            <div className="p-4 border rounded-lg">
+              <div className="text-lg font-bold text-purple-600">
+                {new Date().toLocaleTimeString('pt-BR')}
+              </div>
+              <p className="text-sm text-muted-foreground">Última Atualização</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 });
