@@ -53,32 +53,37 @@ export const useAIMessageGeneration = () => {
       console.log('[AIMessageGeneration] Dados recebidos:', data);
 
       if (data?.success && data?.message) {
-        // Sanitização mais robusta da mensagem recebida
+        // Sanitização melhorada que preserva todos os caracteres válidos
         let cleanMessage = data.message;
         if (typeof cleanMessage === 'string') {
           cleanMessage = cleanMessage
+            // Remove apenas espaços no início e fim
             .trim()
-            // Remove undefined, null e outros valores inválidos
-            .replace(/undefined/gi, '')
-            .replace(/null/gi, '')
+            // Remove palavras inválidas mas preserva caracteres válidos
+            .replace(/\bundefined\b/gi, '')
+            .replace(/\bnull\b/gi, '')
             .replace(/\[object Object\]/gi, '')
-            // Remove espaços extras e quebras de linha desnecessárias
+            // Normaliza espaçamento sem remover caracteres válidos
             .replace(/\s+/g, ' ')
             .replace(/\n\s*\n/g, '\n\n')
-            // Remove caracteres de controle
-            .replace(/[\x00-\x1F\x7F]/g, '')
-            // Remove espaços no início e fim
+            // Remove apenas caracteres de controle, preservando acentos e emojis
+            .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '')
+            // Trim final para remover espaços desnecessários
             .trim();
           
-          // Validação adicional - se a mensagem ficou muito pequena, usar fallback
-          if (cleanMessage.length < 20) {
+          // Validação adicional - verificar se perdeu conteúdo importante
+          if (cleanMessage.length < 10) {
             console.warn('[AIMessageGeneration] Mensagem muito pequena após sanitização, usando fallback');
             cleanMessage = getFallbackMessage(onboardingData, currentStep);
           }
+          
+          // Log para debug - verificar se o primeiro caractere está sendo preservado
+          console.log('[AIMessageGeneration] Primeiro caractere:', cleanMessage.charAt(0));
+          console.log('[AIMessageGeneration] Mensagem sanitizada (50 chars):', cleanMessage.substring(0, 50));
         }
         
         setGeneratedMessage(cleanMessage);
-        console.log('[AIMessageGeneration] Mensagem sanitizada e definida:', cleanMessage.substring(0, 100) + '...');
+        console.log('[AIMessageGeneration] Mensagem definida com sucesso');
       } else {
         // Usar mensagem de fallback se houve erro mas ainda retornou uma mensagem
         const fallbackMessage = data?.message || getFallbackMessage(onboardingData, currentStep);

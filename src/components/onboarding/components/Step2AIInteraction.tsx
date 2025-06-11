@@ -1,11 +1,11 @@
 
-import React, { useEffect, useState, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Bot, Sparkles, RefreshCw, Zap, MessageSquare } from 'lucide-react';
-import { OnboardingData } from '../types/onboardingTypes';
+import React, { useEffect, useState } from 'react';
 import { useAIMessageGeneration } from '../hooks/useAIMessageGeneration';
-import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
+import { AIMessageDisplay } from './AIMessageDisplay';
+import { TypingEffect } from './TypingEffect';
+import { OnboardingData } from '../types/onboardingTypes';
+import { motion } from 'framer-motion';
+import { Bot, Sparkles } from 'lucide-react';
 
 interface Step2AIInteractionProps {
   data: OnboardingData;
@@ -16,283 +16,128 @@ export const Step2AIInteraction: React.FC<Step2AIInteractionProps> = ({
   data,
   memberType
 }) => {
-  const { generateMessage, isGenerating, generatedMessage, error, clearMessage, progress } = useAIMessageGeneration();
-  const [displayedMessage, setDisplayedMessage] = useState('');
-  const [isTyping, setIsTyping] = useState(false);
-  const [hasInitialGeneration, setHasInitialGeneration] = useState(false);
-  const [showThinkingDots, setShowThinkingDots] = useState(false);
-  const [shouldRender, setShouldRender] = useState(false);
-  const typingIntervalRef = useRef<NodeJS.Timeout | null>(null);
-  const thinkingIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const {
+    generateMessage,
+    isGenerating,
+    generatedMessage,
+    error,
+    progress
+  } = useAIMessageGeneration();
 
-  // Verificar se deve renderizar o componente
-  useEffect(() => {
-    const canRender = data.name && data.city && data.curiosity;
-    console.log('[Step2AIInteraction] Verificando renderização:', { 
-      name: data.name, 
-      city: data.city, 
-      curiosity: data.curiosity,
-      canRender 
-    });
-    setShouldRender(!!canRender);
-  }, [data.name, data.city, data.curiosity]);
+  const [shouldShowMessage, setShouldShowMessage] = useState(false);
+  const [typingComplete, setTypingComplete] = useState(false);
 
-  // Gerar mensagem inicial quando chega na etapa 2
+  // Gerar mensagem quando houver dados suficientes
   useEffect(() => {
-    if (shouldRender && !hasInitialGeneration && !isGenerating && !generatedMessage) {
-      console.log('[Step2AIInteraction] Iniciando geração automática da mensagem');
+    if (data.name && data.city && !isGenerating && !generatedMessage && !error) {
+      console.log('[Step2AIInteraction] Gerando mensagem para:', data.name);
       generateMessage(data, memberType, 2);
-      setHasInitialGeneration(true);
     }
-  }, [shouldRender, hasInitialGeneration, isGenerating, generatedMessage, generateMessage, data, memberType]);
+  }, [data.name, data.city, generateMessage, memberType, isGenerating, generatedMessage, error]);
 
-  // Efeito de digitação quando recebe nova mensagem
+  // Controlar quando mostrar a mensagem
   useEffect(() => {
-    if (generatedMessage && generatedMessage !== displayedMessage && !isTyping) {
-      console.log('[Step2AIInteraction] Iniciando efeito de digitação');
-      startTypingEffect(generatedMessage);
+    if (generatedMessage && !isGenerating) {
+      console.log('[Step2AIInteraction] Mensagem recebida, iniciando exibição');
+      setShouldShowMessage(true);
+      setTypingComplete(false);
     }
-  }, [generatedMessage, displayedMessage, isTyping]);
+  }, [generatedMessage, isGenerating]);
 
-  // Animação de "pensando" durante geração
-  useEffect(() => {
-    if (isGenerating) {
-      setShowThinkingDots(true);
-      let dotCount = 0;
-      thinkingIntervalRef.current = setInterval(() => {
-        dotCount = (dotCount + 1) % 4;
-        setShowThinkingDots(true);
-      }, 600);
-    } else {
-      setShowThinkingDots(false);
-      if (thinkingIntervalRef.current) {
-        clearInterval(thinkingIntervalRef.current);
-      }
-    }
-
-    return () => {
-      if (thinkingIntervalRef.current) {
-        clearInterval(thinkingIntervalRef.current);
-      }
-    };
-  }, [isGenerating]);
-
-  const startTypingEffect = (message: string) => {
-    if (typingIntervalRef.current) {
-      clearInterval(typingIntervalRef.current);
-    }
-    
-    setIsTyping(true);
-    setDisplayedMessage('');
-    
-    let index = 0;
-    typingIntervalRef.current = setInterval(() => {
-      if (index < message.length) {
-        setDisplayedMessage(prev => prev + message[index]);
-        index++;
-      } else {
-        clearInterval(typingIntervalRef.current!);
-        setIsTyping(false);
-      }
-    }, 25); // Velocidade de digitação otimizada
+  const handleTypingComplete = () => {
+    console.log('[Step2AIInteraction] Digitação completada');
+    setTypingComplete(true);
   };
 
-  const handleRegenerate = () => {
-    console.log('[Step2AIInteraction] Regenerando mensagem');
-    clearMessage();
-    setDisplayedMessage('');
-    setIsTyping(false);
-    setHasInitialGeneration(false);
-    if (typingIntervalRef.current) {
-      clearInterval(typingIntervalRef.current);
-    }
-    // Pequeno delay para melhor UX
-    setTimeout(() => {
-      generateMessage(data, memberType, 2);
-      setHasInitialGeneration(true);
-    }, 500);
-  };
-
-  // Cleanup dos intervals
-  useEffect(() => {
-    return () => {
-      if (typingIntervalRef.current) {
-        clearInterval(typingIntervalRef.current);
-      }
-      if (thinkingIntervalRef.current) {
-        clearInterval(thinkingIntervalRef.current);
-      }
-    };
-  }, []);
-
-  // Não renderizar se não atende aos critérios mínimos
-  if (!shouldRender) {
-    console.log('[Step2AIInteraction] Não renderizando - critérios não atendidos');
-    return null;
-  }
-
-  // Estado de loading melhorado durante geração inicial
-  if (isGenerating && !displayedMessage) {
+  // Mostrar loading enquanto gera
+  if (isGenerating) {
     return (
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="mb-6"
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="bg-gradient-to-r from-viverblue/10 to-viverblue-light/10 border border-viverblue/30 rounded-xl p-6 mb-6"
       >
-        <div className="bg-gradient-to-r from-viverblue/10 to-viverblue-light/10 border border-viverblue/30 rounded-xl p-6">
-          <div className="flex items-center justify-center gap-3 mb-6">
-            <div className="bg-viverblue/20 p-3 rounded-full">
-              <motion.div
-                animate={{ rotate: 360 }}
-                transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-              >
-                <Bot className="w-6 h-6 text-viverblue" />
-              </motion.div>
-            </div>
-            <motion.div
-              animate={{ scale: [1, 1.3, 1] }}
-              transition={{ duration: 1.8, repeat: Infinity }}
-            >
-              <Sparkles className="w-5 h-5 text-viverblue" />
-            </motion.div>
-            <span className="text-base font-semibold text-viverblue">IA VIVER DE IA</span>
+        <div className="flex items-center justify-center gap-2 mb-4">
+          <div className="bg-viverblue/20 p-2 rounded-full">
+            <Bot className="w-5 h-5 text-viverblue animate-pulse" />
           </div>
-          
-          {/* Barra de progresso melhorada */}
-          <div className="mb-6">
-            <div className="flex items-center justify-between text-sm text-slate-300 mb-2">
-              <span>Analisando seu perfil</span>
-              <span>{progress}%</span>
-            </div>
-            <Progress 
-              value={progress} 
-              className="h-2 bg-slate-700"
-              indicatorClassName="bg-gradient-to-r from-viverblue to-viverblue-light transition-all duration-500"
+          <Sparkles className="w-4 h-4 text-viverblue animate-pulse" />
+          <span className="text-sm font-semibold text-viverblue">IA VIVER DE IA</span>
+        </div>
+        
+        <div className="space-y-3">
+          <div className="animate-pulse space-y-2">
+            <div className="h-4 bg-slate-300/30 rounded w-full"></div>
+            <div className="h-4 bg-slate-300/30 rounded w-5/6"></div>
+            <div className="h-4 bg-slate-300/30 rounded w-4/6"></div>
+          </div>
+          <div className="flex items-center justify-center gap-2">
+            <div className="w-2 h-2 bg-viverblue rounded-full animate-bounce"></div>
+            <div className="w-2 h-2 bg-viverblue rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+            <div className="w-2 h-2 bg-viverblue rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+          </div>
+          <p className="text-sm text-slate-400 text-center">
+            Analisando seu perfil e gerando mensagem personalizada...
+          </p>
+        </div>
+      </motion.div>
+    );
+  }
+
+  // Mostrar mensagem com efeito de digitação
+  if (shouldShowMessage && generatedMessage) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="bg-gradient-to-r from-viverblue/10 to-viverblue-light/10 border border-viverblue/30 rounded-xl p-6 mb-6"
+      >
+        <div className="flex items-center justify-center gap-2 mb-4">
+          <div className="bg-viverblue/20 p-2 rounded-full">
+            <Bot className="w-5 h-5 text-viverblue" />
+          </div>
+          <Sparkles className="w-4 h-4 text-viverblue" />
+          <span className="text-sm font-semibold text-viverblue">IA VIVER DE IA</span>
+        </div>
+        
+        <div className="prose prose-slate max-w-none">
+          <div className="leading-relaxed text-slate-100">
+            <TypingEffect
+              text={generatedMessage}
+              speed={25}
+              onComplete={handleTypingComplete}
+              startDelay={300}
             />
-          </div>
-          
-          {/* Skeleton animado mais realista */}
-          <div className="space-y-4">
-            <motion.div 
-              className="space-y-3"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.3 }}
-            >
-              {[95, 80, 65, 40].map((width, index) => (
-                <motion.div
-                  key={index}
-                  className="h-4 bg-viverblue/20 rounded-md"
-                  style={{ width: `${width}%` }}
-                  animate={{ opacity: [0.4, 1, 0.4] }}
-                  transition={{ 
-                    duration: 2, 
-                    repeat: Infinity, 
-                    delay: index * 0.3 
-                  }}
-                />
-              ))}
-            </motion.div>
-            
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.6 }}
-              className="flex items-center justify-center gap-3 mt-6"
-            >
-              <motion.div
-                animate={{ rotate: [0, 180, 360] }}
-                transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-              >
-                <Zap className="w-5 h-5 text-viverblue" />
-              </motion.div>
-              <p className="text-sm text-slate-200 text-center">
-                Criando mensagem personalizada especialmente para você
-                {showThinkingDots && (
-                  <motion.span
-                    animate={{ opacity: [1, 0] }}
-                    transition={{ duration: 0.8, repeat: Infinity }}
-                  >
-                    ...
-                  </motion.span>
-                )}
-              </p>
-            </motion.div>
           </div>
         </div>
       </motion.div>
     );
   }
 
-  // Não renderizar se não tem mensagem para exibir
-  if (!displayedMessage && !isGenerating) {
-    console.log('[Step2AIInteraction] Não renderizando - sem mensagem');
-    return null;
-  }
-
-  return (
-    <AnimatePresence>
+  // Mostrar erro se houver
+  if (error) {
+    return (
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: -20 }}
-        className="mb-6"
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="bg-gradient-to-r from-red-500/10 to-red-600/10 border border-red-500/30 rounded-xl p-6 mb-6"
       >
-        <div className="bg-gradient-to-r from-viverblue/10 to-viverblue-light/10 border border-viverblue/30 rounded-xl p-6">
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-3">
-              <div className="bg-viverblue/20 p-3 rounded-full">
-                <MessageSquare className="w-5 h-5 text-viverblue" />
-              </div>
-              <motion.div
-                animate={{ rotate: [0, 15, -15, 0] }}
-                transition={{ duration: 3, repeat: Infinity }}
-              >
-                <Sparkles className="w-5 h-5 text-viverblue" />
-              </motion.div>
-              <span className="text-base font-semibold text-viverblue">IA VIVER DE IA</span>
-            </div>
-            
-            <Button
-              onClick={handleRegenerate}
-              disabled={isGenerating}
-              variant="ghost"
-              size="sm"
-              className="text-viverblue hover:bg-viverblue/10 transition-colors"
-            >
-              <RefreshCw className={`w-4 h-4 ${isGenerating ? 'animate-spin' : ''}`} />
-              <span className="ml-2 hidden sm:inline">Regenerar</span>
-            </Button>
+        <div className="flex items-center justify-center gap-2 mb-4">
+          <div className="bg-red-500/20 p-2 rounded-full">
+            <Bot className="w-5 h-5 text-red-500" />
           </div>
-          
-          <div className="prose prose-slate max-w-none">
-            <motion.p
-              className="leading-relaxed text-slate-100 mb-0 text-base"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-            >
-              {displayedMessage}
-              {isTyping && (
-                <motion.span 
-                  className="inline-block w-2 h-5 bg-viverblue ml-1 rounded-sm"
-                  animate={{ opacity: [1, 0] }}
-                  transition={{ duration: 1, repeat: Infinity }}
-                />
-              )}
-            </motion.p>
-          </div>
-          
-          {error && (
-            <motion.p 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="text-red-400 text-sm mt-4 bg-red-500/10 border border-red-500/20 px-3 py-2 rounded-lg"
-            >
-              ⚠️ {error}
-            </motion.p>
-          )}
+          <span className="text-sm font-semibold text-red-500">ERRO NA IA</span>
+        </div>
+        
+        <div className="prose prose-slate max-w-none">
+          <p className="leading-relaxed text-slate-100">
+            Houve um problema ao gerar sua mensagem personalizada. Mas não se preocupe, você pode continuar o onboarding normalmente.
+          </p>
         </div>
       </motion.div>
-    </AnimatePresence>
-  );
+    );
+  }
+
+  // Não mostrar nada se não houver dados suficientes
+  return null;
 };
