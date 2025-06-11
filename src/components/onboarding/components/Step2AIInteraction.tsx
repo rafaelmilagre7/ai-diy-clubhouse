@@ -15,62 +15,38 @@ export const Step2AIInteraction: React.FC<Step2AIInteractionProps> = ({
   data,
   memberType
 }) => {
-  const { generateMessage, isGenerating, generatedMessage, error } = useAIMessageGeneration();
+  const { generateMessage, isGenerating, generatedMessage, error, clearMessage } = useAIMessageGeneration();
   const [hasGeneratedInitial, setHasGeneratedInitial] = useState(false);
+  const [displayedMessage, setDisplayedMessage] = useState('');
+  const [isTyping, setIsTyping] = useState(false);
 
   // Gerar mensagem inicial quando chega na etapa 2
   useEffect(() => {
     if (!hasGeneratedInitial && data.name) {
       console.log('[Step2AIInteraction] Gerando mensagem inicial para etapa 2');
-      generateStep2Message();
+      generateMessage(data, memberType, 2);
       setHasGeneratedInitial(true);
     }
-  }, [data.name, hasGeneratedInitial]);
+  }, [data.name, hasGeneratedInitial, generateMessage, memberType]);
 
   // Re-gerar quando dados empresariais importantes são preenchidos
   useEffect(() => {
     if (hasGeneratedInitial && (data.companyName || data.businessSector || data.position)) {
       console.log('[Step2AIInteraction] Dados empresariais detectados, re-gerando mensagem');
       const timer = setTimeout(() => {
-        generateStep2Message();
+        generateMessage(data, memberType, 2);
       }, 1000); // Debounce de 1 segundo
 
       return () => clearTimeout(timer);
     }
-  }, [data.companyName, data.businessSector, data.position, hasGeneratedInitial]);
+  }, [data.companyName, data.businessSector, data.position, hasGeneratedInitial, generateMessage, memberType]);
 
-  const generateStep2Message = async () => {
-    try {
-      // Chamar a API com currentStep = 2 para usar o prompt específico
-      const response = await fetch('/functions/v1/generate-onboarding-message', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          onboardingData: data,
-          memberType,
-          currentStep: 2 // Especificar que é etapa 2
-        })
-      });
-
-      if (!response.ok) {
-        throw new Error('Falha na requisição');
-      }
-
-      const result = await response.json();
-      
-      if (result.success && result.message) {
-        // Simular efeito de digitação
-        setTypingMessage(result.message);
-      }
-    } catch (error) {
-      console.error('[Step2AIInteraction] Erro ao gerar mensagem:', error);
+  // Efeito de digitação quando recebe nova mensagem
+  useEffect(() => {
+    if (generatedMessage && generatedMessage !== displayedMessage) {
+      setTypingMessage(generatedMessage);
     }
-  };
-
-  const [displayedMessage, setDisplayedMessage] = useState('');
-  const [isTyping, setIsTyping] = useState(false);
+  }, [generatedMessage]);
 
   const setTypingMessage = (message: string) => {
     setIsTyping(true);
@@ -89,7 +65,8 @@ export const Step2AIInteraction: React.FC<Step2AIInteractionProps> = ({
   };
 
   const handleRegenerate = () => {
-    generateStep2Message();
+    clearMessage();
+    generateMessage(data, memberType, 2);
   };
 
   if (isGenerating && !displayedMessage) {

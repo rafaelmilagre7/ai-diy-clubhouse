@@ -95,19 +95,29 @@ const OnboardingStep2: React.FC<OnboardingStepProps> = ({
                 <SelectValue placeholder="Selecione o setor" />
               </SelectTrigger>
               <SelectContent className="bg-[#151823] border-white/20">
-                <SelectItem value="tecnologia">Tecnologia</SelectItem>
-                <SelectItem value="varejo">Varejo</SelectItem>
-                <SelectItem value="servicos">Serviços</SelectItem>
-                <SelectItem value="manufatura">Manufatura</SelectItem>
-                <SelectItem value="saude">Saúde</SelectItem>
-                <SelectItem value="educacao">Educação</SelectItem>
-                <SelectItem value="financeiro">Financeiro</SelectItem>
                 <SelectItem value="agronegocio">Agronegócio</SelectItem>
-                <SelectItem value="logistica">Logística</SelectItem>
-                <SelectItem value="construcao">Construção</SelectItem>
                 <SelectItem value="alimenticio">Alimentício</SelectItem>
-                <SelectItem value="marketing">Marketing</SelectItem>
                 <SelectItem value="consultoria">Consultoria</SelectItem>
+                <SelectItem value="construcao">Construção</SelectItem>
+                <SelectItem value="contabilidade">Contabilidade</SelectItem>
+                <SelectItem value="design">Design</SelectItem>
+                <SelectItem value="e-commerce">E-commerce</SelectItem>
+                <SelectItem value="educacao">Educação</SelectItem>
+                <SelectItem value="entretenimento">Entretenimento</SelectItem>
+                <SelectItem value="esportes">Esportes</SelectItem>
+                <SelectItem value="financeiro">Financeiro</SelectItem>
+                <SelectItem value="imobiliario">Imobiliário</SelectItem>
+                <SelectItem value="inteligencia-artificial">Inteligência Artificial</SelectItem>
+                <SelectItem value="juridico">Jurídico</SelectItem>
+                <SelectItem value="logistica">Logística</SelectItem>
+                <SelectItem value="manufatura">Manufatura</SelectItem>
+                <SelectItem value="marketing">Marketing</SelectItem>
+                <SelectItem value="recursos-humanos">Recursos Humanos</SelectItem>
+                <SelectItem value="saude">Saúde</SelectItem>
+                <SelectItem value="servicos">Serviços</SelectItem>
+                <SelectItem value="tecnologia">Tecnologia</SelectItem>
+                <SelectItem value="turismo">Turismo</SelectItem>
+                <SelectItem value="varejo">Varejo</SelectItem>
                 <SelectItem value="outro">Outro</SelectItem>
               </SelectContent>
             </Select>
@@ -123,14 +133,18 @@ const OnboardingStep2: React.FC<OnboardingStepProps> = ({
             </Label>
             <Select value={data.companySize || ''} onValueChange={(value) => onUpdateData({ companySize: value })}>
               <SelectTrigger className="mt-1 bg-[#151823] border-white/20 text-white">
-                <SelectValue placeholder="Selecione o tamanho" />
+                <SelectValue placeholder="Selecione o número de colaboradores" />
               </SelectTrigger>
               <SelectContent className="bg-[#151823] border-white/20">
-                <SelectItem value="mei">MEI (1 pessoa)</SelectItem>
-                <SelectItem value="micro">Microempresa (2-9 funcionários)</SelectItem>
-                <SelectItem value="pequena">Pequena empresa (10-49 funcionários)</SelectItem>
-                <SelectItem value="media">Média empresa (50-249 funcionários)</SelectItem>
-                <SelectItem value="grande">Grande empresa (250+ funcionários)</SelectItem>
+                <SelectItem value="apenas-eu">Apenas eu (1 pessoa)</SelectItem>
+                <SelectItem value="2-5">2-5 colaboradores</SelectItem>
+                <SelectItem value="6-10">6-10 colaboradores</SelectItem>
+                <SelectItem value="11-25">11-25 colaboradores</SelectItem>
+                <SelectItem value="26-50">26-50 colaboradores</SelectItem>
+                <SelectItem value="51-100">51-100 colaboradores</SelectItem>
+                <SelectItem value="101-250">101-250 colaboradores</SelectItem>
+                <SelectItem value="251-500">251-500 colaboradores</SelectItem>
+                <SelectItem value="mais-500">Mais de 500 colaboradores</SelectItem>
               </SelectContent>
             </Select>
             {getFieldError?.('companySize') && (
@@ -145,14 +159,18 @@ const OnboardingStep2: React.FC<OnboardingStepProps> = ({
             </Label>
             <Select value={data.annualRevenue || ''} onValueChange={(value) => onUpdateData({ annualRevenue: value })}>
               <SelectTrigger className="mt-1 bg-[#151823] border-white/20 text-white">
-                <SelectValue placeholder="Selecione a faixa" />
+                <SelectValue placeholder="Selecione a faixa de faturamento" />
               </SelectTrigger>
               <SelectContent className="bg-[#151823] border-white/20">
-                <SelectItem value="ate-81k">Até R$ 81.000</SelectItem>
-                <SelectItem value="81k-360k">R$ 81.001 - R$ 360.000</SelectItem>
-                <SelectItem value="360k-4-8mi">R$ 360.001 - R$ 4.800.000</SelectItem>
-                <SelectItem value="4-8mi-300mi">R$ 4.800.001 - R$ 300.000.000</SelectItem>
-                <SelectItem value="acima-300mi">Acima de R$ 300.000.000</SelectItem>
+                <SelectItem value="ate-50k">Até R$ 50.000</SelectItem>
+                <SelectItem value="50k-150k">R$ 50.001 - R$ 150.000</SelectItem>
+                <SelectItem value="150k-300k">R$ 150.001 - R$ 300.000</SelectItem>
+                <SelectItem value="300k-500k">R$ 300.001 - R$ 500.000</SelectItem>
+                <SelectItem value="500k-1mi">R$ 500.001 - R$ 1.000.000</SelectItem>
+                <SelectItem value="1mi-2-5mi">R$ 1.000.001 - R$ 2.500.000</SelectItem>
+                <SelectItem value="2-5mi-5mi">R$ 2.500.001 - R$ 5.000.000</SelectItem>
+                <SelectItem value="5mi-10mi">R$ 5.000.001 - R$ 10.000.000</SelectItem>
+                <SelectItem value="acima-10mi">Acima de R$ 10.000.000</SelectItem>
                 <SelectItem value="nao-informar">Prefiro não informar</SelectItem>
               </SelectContent>
             </Select>
@@ -166,17 +184,25 @@ const OnboardingStep2: React.FC<OnboardingStepProps> = ({
             <Label htmlFor="position" className="text-slate-200">
               Seu Cargo/Posição *
             </Label>
-            <div className="relative mt-1">
-              <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
-              <Input
-                id="position"
-                type="text"
-                value={data.position || ''}
-                onChange={(e) => onUpdateData({ position: e.target.value })}
-                className="pl-10 bg-[#151823] border-white/20 text-white"
-                placeholder="CEO, Diretor, Gerente, etc."
-              />
-            </div>
+            <Select value={data.position || ''} onValueChange={(value) => onUpdateData({ position: value })}>
+              <SelectTrigger className="mt-1 bg-[#151823] border-white/20 text-white">
+                <SelectValue placeholder="Selecione seu cargo" />
+              </SelectTrigger>
+              <SelectContent className="bg-[#151823] border-white/20">
+                <SelectItem value="ceo-presidente">CEO/Presidente</SelectItem>
+                <SelectItem value="diretor">Diretor(a)</SelectItem>
+                <SelectItem value="gerente">Gerente</SelectItem>
+                <SelectItem value="coordenador">Coordenador(a)</SelectItem>
+                <SelectItem value="supervisor">Supervisor(a)</SelectItem>
+                <SelectItem value="analista">Analista</SelectItem>
+                <SelectItem value="assistente">Assistente</SelectItem>
+                <SelectItem value="consultor">Consultor(a)</SelectItem>
+                <SelectItem value="freelancer">Freelancer/Autônomo</SelectItem>
+                <SelectItem value="proprietario">Proprietário/Sócio</SelectItem>
+                <SelectItem value="empreendedor">Empreendedor</SelectItem>
+                <SelectItem value="outro">Outro</SelectItem>
+              </SelectContent>
+            </Select>
             {getFieldError?.('position') && (
               <p className="text-red-400 text-sm mt-1">{getFieldError('position')}</p>
             )}
