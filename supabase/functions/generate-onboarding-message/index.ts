@@ -26,47 +26,37 @@ serve(async (req) => {
     let userPrompt = '';
 
     if (currentStep === 2) {
-      // System prompt ultra-específico para etapa 2 - apenas 1 parágrafo personalizado
-      systemPrompt = `Você é um consultor sênior em IA empresarial com expertise em perfis regionais brasileiros.
+      // System prompt ultra-otimizado para etapa 2 - resposta rápida
+      systemPrompt = `Você é um consultor em IA empresarial especialista em perfis brasileiros.
 
-MISSÃO: Criar UM ÚNICO PARÁGRAFO hiper-personalizado que conecte o perfil pessoal da pessoa com oportunidades empresariais de IA.
+MISSÃO: Criar UM parágrafo personalizado conectando perfil pessoal com oportunidades empresariais de IA.
 
-REGRAS RÍGIDAS:
-1. APENAS 1 parágrafo (máximo 4-5 frases)
-2. Use o nome da pessoa naturalmente
-3. Mencione a cidade/localização de forma contextual
-4. Integre a curiosidade pessoal de forma inteligente
-5. Conecte perfil pessoal com potencial empresarial
-6. Tom caloroso mas profissional
-7. Foque na transição para falar sobre negócios
+REGRAS:
+1. Máximo 3-4 frases
+2. Use nome da pessoa naturalmente  
+3. Mencione cidade contextualmente
+4. Integre curiosidade pessoal
+5. Tom caloroso mas profissional
+6. Foque na transição para negócios
 
-ESTRUTURA: Saudação personalizada + conexão cidade/curiosidade + ponte para empresarial + convite para próximo passo
-
-IMPORTANTE: Seja específico, não genérico. Demonstre que realmente analisou o perfil desta pessoa única.`;
+ESTRUTURA: Saudação + conexão cidade/curiosidade + ponte empresarial + convite próximo passo`;
 
       const contextData = {
-        nome: onboardingData.name,
-        cidade: onboardingData.city,
-        estado: onboardingData.state,
-        curiosidade: onboardingData.curiosity,
-        instagram: onboardingData.instagram,
-        linkedin: onboardingData.linkedin,
-        tipoMembro: memberType
+        nome: onboardingData.name || 'Membro',
+        cidade: onboardingData.city || 'sua cidade',
+        estado: onboardingData.state || '',
+        curiosidade: onboardingData.curiosity || ''
       };
 
-      userPrompt = `Crie UM ÚNICO PARÁGRAFO hiper-personalizado para:
+      userPrompt = `Crie 1 parágrafo personalizado para:
 
-PERFIL:
-- Nome: ${contextData.nome}
-- Localização: ${contextData.cidade}, ${contextData.estado}  
-- Curiosidade: ${contextData.curiosidade}
-- Instagram: ${contextData.instagram || 'Não informado'}
-- LinkedIn: ${contextData.linkedin || 'Não informado'}
-- Tipo: ${contextData.tipoMembro}
+Nome: ${contextData.nome}
+Local: ${contextData.cidade}, ${contextData.estado}
+Curiosidade: ${contextData.curiosidade}
 
-CONTEXTO: A pessoa completou dados pessoais e agora está na etapa empresarial. Use os dados pessoais para criar uma conexão única e fazer a ponte para falar sobre negócios.
+Contexto: Pessoa completou dados pessoais, agora vai para etapa empresarial. Use dados pessoais para criar conexão única e preparar para discussão sobre negócios.
 
-RESULTADO: 1 parágrafo que demonstre compreensão profunda do perfil e prepare naturalmente para discutir oportunidades empresariais.`;
+Resposta: 1 parágrafo demonstrando compreensão do perfil.`;
 
     } else {
       // System prompt original para outras etapas
@@ -129,8 +119,8 @@ Crie uma mensagem que demonstre que você realmente entendeu este perfil especí
           { role: 'system', content: systemPrompt },
           { role: 'user', content: userPrompt }
         ],
-        temperature: 0.8,
-        max_tokens: 300, // Reduzido para respostas mais concisas
+        temperature: 0.7,
+        max_tokens: 150, // Reduzido para respostas mais rápidas
       }),
     });
 
@@ -139,7 +129,17 @@ Crie uma mensagem que demonstre que você realmente entendeu este perfil especí
     }
 
     const data = await response.json();
-    const generatedMessage = data.choices[0].message.content;
+    let generatedMessage = data.choices[0].message.content;
+
+    // Sanitizar e limpar a mensagem
+    if (generatedMessage) {
+      generatedMessage = generatedMessage
+        .trim()
+        .replace(/undefined/g, '')
+        .replace(/null/g, '')
+        .replace(/\s+/g, ' ')
+        .replace(/\n\s*\n/g, '\n\n');
+    }
 
     console.log(`Mensagem gerada com sucesso para: ${onboardingData.name} (Etapa ${currentStep || 'final'})`);
 
@@ -153,7 +153,7 @@ Crie uma mensagem que demonstre que você realmente entendeu este perfil especí
   } catch (error) {
     console.error('Erro na generate-onboarding-message:', error);
     
-    // Fallback message otimizado para etapa 2
+    // Fallback message otimizado e limpo
     const fallbackMessage = `Olá ${onboardingData?.name || 'Membro'}! Que bom ter você aqui conosco! Vi que você está em ${onboardingData?.city || 'sua cidade'} e isso me deixa empolgado com as possibilidades. ${onboardingData?.curiosity ? `Adorei saber que ${onboardingData.curiosity.toLowerCase()}.` : ''} Agora vamos falar sobre seu negócio e como posso ajudar você a identificar as melhores oportunidades de IA! 🚀`;
 
     return new Response(JSON.stringify({ 

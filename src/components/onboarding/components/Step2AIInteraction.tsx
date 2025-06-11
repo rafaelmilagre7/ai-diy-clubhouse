@@ -1,10 +1,11 @@
 
 import React, { useEffect, useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Bot, Sparkles, RefreshCw } from 'lucide-react';
+import { Bot, Sparkles, RefreshCw, Zap } from 'lucide-react';
 import { OnboardingData } from '../types/onboardingTypes';
 import { useAIMessageGeneration } from '../hooks/useAIMessageGeneration';
 import { Button } from '@/components/ui/button';
+import { Progress } from '@/components/ui/progress';
 
 interface Step2AIInteractionProps {
   data: OnboardingData;
@@ -15,11 +16,13 @@ export const Step2AIInteraction: React.FC<Step2AIInteractionProps> = ({
   data,
   memberType
 }) => {
-  const { generateMessage, isGenerating, generatedMessage, error, clearMessage } = useAIMessageGeneration();
+  const { generateMessage, isGenerating, generatedMessage, error, clearMessage, progress } = useAIMessageGeneration();
   const [displayedMessage, setDisplayedMessage] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [hasInitialGeneration, setHasInitialGeneration] = useState(false);
+  const [showThinkingDots, setShowThinkingDots] = useState(false);
   const typingIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const thinkingIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   // Gerar mensagem inicial quando chega na etapa 2
   useEffect(() => {
@@ -35,7 +38,30 @@ export const Step2AIInteraction: React.FC<Step2AIInteractionProps> = ({
     if (generatedMessage && generatedMessage !== displayedMessage) {
       startTypingEffect(generatedMessage);
     }
-  }, [generatedMessage]);
+  }, [generatedMessage, displayedMessage]);
+
+  // Animação de "pensando" durante geração
+  useEffect(() => {
+    if (isGenerating) {
+      setShowThinkingDots(true);
+      let dotCount = 0;
+      thinkingIntervalRef.current = setInterval(() => {
+        dotCount = (dotCount + 1) % 4;
+        setShowThinkingDots(true);
+      }, 500);
+    } else {
+      setShowThinkingDots(false);
+      if (thinkingIntervalRef.current) {
+        clearInterval(thinkingIntervalRef.current);
+      }
+    }
+
+    return () => {
+      if (thinkingIntervalRef.current) {
+        clearInterval(thinkingIntervalRef.current);
+      }
+    };
+  }, [isGenerating]);
 
   const startTypingEffect = (message: string) => {
     if (typingIntervalRef.current) {
@@ -54,7 +80,7 @@ export const Step2AIInteraction: React.FC<Step2AIInteractionProps> = ({
         clearInterval(typingIntervalRef.current!);
         setIsTyping(false);
       }
-    }, 25); // Velocidade de digitação otimizada
+    }, 20); // Digitação mais rápida
   };
 
   const handleRegenerate = () => {
@@ -67,16 +93,19 @@ export const Step2AIInteraction: React.FC<Step2AIInteractionProps> = ({
     generateMessage(data, memberType, 2);
   };
 
-  // Cleanup do interval
+  // Cleanup dos intervals
   useEffect(() => {
     return () => {
       if (typingIntervalRef.current) {
         clearInterval(typingIntervalRef.current);
       }
+      if (thinkingIntervalRef.current) {
+        clearInterval(thinkingIntervalRef.current);
+      }
     };
   }, []);
 
-  // Loading state durante geração inicial
+  // Estado de loading melhorado durante geração inicial
   if (isGenerating && !displayedMessage) {
     return (
       <motion.div
@@ -87,21 +116,73 @@ export const Step2AIInteraction: React.FC<Step2AIInteractionProps> = ({
         <div className="bg-gradient-to-r from-viverblue/10 to-viverblue-light/10 border border-viverblue/30 rounded-xl p-6">
           <div className="flex items-center justify-center gap-2 mb-4">
             <div className="bg-viverblue/20 p-2 rounded-full">
-              <Bot className="w-5 h-5 text-viverblue animate-pulse" />
+              <motion.div
+                animate={{ rotate: 360 }}
+                transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+              >
+                <Bot className="w-5 h-5 text-viverblue" />
+              </motion.div>
             </div>
-            <Sparkles className="w-4 h-4 text-viverblue animate-pulse" />
+            <motion.div
+              animate={{ scale: [1, 1.2, 1] }}
+              transition={{ duration: 1.5, repeat: Infinity }}
+            >
+              <Sparkles className="w-4 h-4 text-viverblue" />
+            </motion.div>
             <span className="text-sm font-semibold text-viverblue">IA VIVER DE IA</span>
           </div>
           
+          {/* Barra de progresso */}
+          <div className="mb-4">
+            <Progress 
+              value={progress} 
+              className="h-2 bg-slate-700"
+              indicatorClassName="bg-gradient-to-r from-viverblue to-viverblue-light transition-all duration-300"
+            />
+          </div>
+          
+          {/* Skeleton animado mais realista */}
           <div className="space-y-3">
-            <div className="animate-pulse space-y-2">
-              <div className="h-4 bg-viverblue/20 rounded w-full"></div>
-              <div className="h-4 bg-viverblue/20 rounded w-5/6"></div>
-              <div className="h-4 bg-viverblue/20 rounded w-4/6"></div>
-            </div>
-            <p className="text-sm text-slate-400 text-center">
-              Analisando seu perfil e criando uma mensagem personalizada...
-            </p>
+            <motion.div 
+              className="space-y-2"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.2 }}
+            >
+              {[100, 85, 70, 45].map((width, index) => (
+                <motion.div
+                  key={index}
+                  className="h-4 bg-viverblue/20 rounded"
+                  style={{ width: `${width}%` }}
+                  animate={{ opacity: [0.3, 0.8, 0.3] }}
+                  transition={{ 
+                    duration: 1.5, 
+                    repeat: Infinity, 
+                    delay: index * 0.2 
+                  }}
+                />
+              ))}
+            </motion.div>
+            
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.5 }}
+              className="flex items-center justify-center gap-2 mt-4"
+            >
+              <Zap className="w-4 h-4 text-viverblue animate-pulse" />
+              <p className="text-sm text-slate-300 text-center">
+                Analisando seu perfil e criando mensagem personalizada
+                {showThinkingDots && (
+                  <motion.span
+                    animate={{ opacity: [1, 0] }}
+                    transition={{ duration: 0.5, repeat: Infinity }}
+                  >
+                    ...
+                  </motion.span>
+                )}
+              </p>
+            </motion.div>
           </div>
         </div>
       </motion.div>
@@ -127,7 +208,12 @@ export const Step2AIInteraction: React.FC<Step2AIInteractionProps> = ({
               <div className="bg-viverblue/20 p-2 rounded-full">
                 <Bot className="w-5 h-5 text-viverblue" />
               </div>
-              <Sparkles className="w-4 h-4 text-viverblue" />
+              <motion.div
+                animate={{ rotate: [0, 10, -10, 0] }}
+                transition={{ duration: 2, repeat: Infinity }}
+              >
+                <Sparkles className="w-4 h-4 text-viverblue" />
+              </motion.div>
               <span className="text-sm font-semibold text-viverblue">IA VIVER DE IA</span>
             </div>
             
@@ -151,7 +237,7 @@ export const Step2AIInteraction: React.FC<Step2AIInteractionProps> = ({
               {displayedMessage}
               {isTyping && (
                 <motion.span 
-                  className="inline-block w-2 h-5 bg-viverblue ml-1"
+                  className="inline-block w-2 h-5 bg-viverblue ml-1 rounded-sm"
                   animate={{ opacity: [1, 0] }}
                   transition={{ duration: 0.8, repeat: Infinity }}
                 />
