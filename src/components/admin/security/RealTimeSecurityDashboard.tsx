@@ -251,8 +251,8 @@ export const RealTimeSecurityDashboard = () => {
         <TabsContent value="overview" className="space-y-6">
           <SecurityMetricsPanel 
             metrics={metrics}
-            anomalies={anomalies}
-            patterns={patterns}
+            anomalies={anomalies || []}
+            patterns={patterns || []}
           />
         </TabsContent>
 
