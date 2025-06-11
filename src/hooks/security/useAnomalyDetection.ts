@@ -49,12 +49,15 @@ export const useAnomalyDetection = () => {
         return acc;
       }, {} as Record<string, number>);
 
-      const detectedPatterns: AnomalyPattern[] = Object.entries(typeGroups).map(([type, count]) => ({
-        type,
-        count: Number(count), // Garantir que seja number
-        severity: count > 10 ? 'critical' : count > 5 ? 'high' : count > 2 ? 'medium' : 'low',
-        description: getAnomalyDescription(type, Number(count))
-      }));
+      const detectedPatterns: AnomalyPattern[] = Object.entries(typeGroups).map(([type, count]) => {
+        const numericCount = Number(count);
+        return {
+          type,
+          count: numericCount,
+          severity: numericCount > 10 ? 'critical' : numericCount > 5 ? 'high' : numericCount > 2 ? 'medium' : 'low',
+          description: getAnomalyDescription(type, numericCount)
+        };
+      });
 
       setPatterns(detectedPatterns);
 
@@ -154,11 +157,11 @@ export const useAnomalyDetection = () => {
       const dailyEntries = Object.entries(dailyActivity);
       
       const mostActiveHour = hourlyEntries.length > 0 
-        ? hourlyEntries.sort(([,a], [,b]) => Number(b) - Number(a))[0]?.[0]
+        ? hourlyEntries.sort(([,a], [,b]) => b - a)[0]?.[0]
         : undefined;
         
       const mostActiveDay = dailyEntries.length > 0
-        ? dailyEntries.sort(([,a], [,b]) => Number(b) - Number(a))[0]?.[0]
+        ? dailyEntries.sort(([,a], [,b]) => b - a)[0]?.[0]
         : undefined;
 
       return {
