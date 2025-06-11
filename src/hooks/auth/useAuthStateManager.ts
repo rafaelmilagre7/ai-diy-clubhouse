@@ -13,27 +13,25 @@ interface AuthStateManagerParams {
 export const useAuthStateManager = (params: AuthStateManagerParams) => {
   const { setSession, setUser, setProfile, setIsLoading } = params;
   
-  // Setup auth session function with optimized performance and better error handling
+  // Setup auth session function com lógica simplificada
   const setupAuthSession = useCallback(async () => {
     try {
       console.log("[AUTH-STATE-MANAGER] Verificando sessão atual");
       
-      // CORREÇÃO CRÍTICA 1: Timeout reduzido para 2 segundos com retry mais agressivo
+      // Timeout de 3 segundos para obter sessão
       const sessionPromise = supabase.auth.getSession();
       const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error("Session fetch timeout")), 2000)
+        setTimeout(() => reject(new Error("Session fetch timeout")), 3000)
       );
       
       let sessionResult;
       try {
-        // Race between actual fetch and timeout
         sessionResult = await Promise.race([
           sessionPromise,
           timeoutPromise
         ]) as { data: { session: any } };
       } catch (timeoutError) {
-        // Em caso de timeout, tentar uma vez mais sem timeout
-        console.warn("[AUTH-STATE-MANAGER] Session fetch timeout, trying again without timeout...");
+        console.warn("[AUTH-STATE-MANAGER] Session fetch timeout, trying again...");
         sessionResult = await supabase.auth.getSession();
       }
       
@@ -44,7 +42,7 @@ export const useAuthStateManager = (params: AuthStateManagerParams) => {
         console.log("[AUTH-STATE-MANAGER] Sessão ativa encontrada:", session.user.id.substring(0, 8) + '***');
         setUser(session.user);
         
-        // Process user profile with error handling
+        // Process user profile com tratamento de erro simples
         try {
           const profile = await processUserProfile(
             session.user.id,
@@ -83,7 +81,6 @@ export const useAuthStateManager = (params: AuthStateManagerParams) => {
         error: error instanceof Error ? error : new Error('Erro desconhecido de autenticação')
       };
     } finally {
-      // CORREÇÃO CRÍTICA 5: Set loading to false regardless of the outcome
       console.log("[AUTH-STATE-MANAGER] ✅ Finalizando loading - sistema pronto");
       setIsLoading(false);
     }

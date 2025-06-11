@@ -47,14 +47,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setIsLoading,
   });
 
-  // Circuit breaker - timeout de 5 segundos para inicialização
+  // Circuit breaker - timeout de 3 segundos para inicialização
   useEffect(() => {
     timeoutRef.current = setTimeout(() => {
       if (isLoading) {
         console.warn("⚠️ [AUTH] Circuit breaker ativado - forçando fim do loading");
         setIsLoading(false);
       }
-    }, 5000);
+    }, 3000);
 
     return () => {
       if (timeoutRef.current) {
@@ -63,7 +63,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     };
   }, [isLoading]);
 
-  // CORREÇÃO CRÍTICA: Verificação de admin usando função do banco
+  // Verificação de admin usando função do banco
   const checkAdminStatus = useCallback(async () => {
     if (!user) {
       setIsAdmin(false);
@@ -80,10 +80,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
       
       setIsAdmin(Boolean(data));
-      
-      if (process.env.NODE_ENV !== 'production') {
-        console.log('[AUTH] Status de admin verificado:', Boolean(data));
-      }
+      console.log('[AUTH] Status de admin verificado:', Boolean(data));
       
     } catch (error) {
       console.error('[AUTH] Erro crítico na verificação de admin:', error);
