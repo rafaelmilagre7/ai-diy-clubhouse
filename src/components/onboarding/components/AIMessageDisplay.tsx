@@ -41,6 +41,31 @@ export const AIMessageDisplay: React.FC<AIMessageDisplayProps> = ({
     );
   }
 
+  // Verificar se message existe e não é vazio antes de processar
+  if (!message || typeof message !== 'string') {
+    return (
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="bg-gradient-to-r from-viverblue/10 to-viverblue-light/10 border border-viverblue/30 rounded-xl p-6"
+      >
+        <div className="flex items-center justify-center gap-2 mb-4">
+          <div className="bg-viverblue/20 p-2 rounded-full">
+            <Bot className="w-5 h-5 text-viverblue" />
+          </div>
+          <Sparkles className="w-4 h-4 text-viverblue" />
+          <span className="text-sm font-semibold text-viverblue">IA VIVER DE IA</span>
+        </div>
+        
+        <div className="prose prose-slate max-w-none">
+          <p className="leading-relaxed text-slate-100">
+            Aguardando mensagem...
+          </p>
+        </div>
+      </motion.div>
+    );
+  }
+
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.95 }}
