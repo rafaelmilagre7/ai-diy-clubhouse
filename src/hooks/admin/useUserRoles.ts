@@ -6,7 +6,6 @@ import { useAuth } from '@/contexts/auth';
 import { toast } from 'sonner';
 import { logSecurityEvent, clearPermissionCache } from '@/contexts/auth/utils/securityUtils';
 import { clearProfileCache } from '@/hooks/auth/utils/authSessionUtils';
-import { useAdminCheck } from '@/hooks/auth/useAdminCheck';
 
 interface UserRoleResult {
   roleId: string | null;
@@ -21,7 +20,6 @@ interface UserRoleData {
 
 export function useUserRoles() {
   const { user } = useAuth();
-  const { checkIsAdmin } = useAdminCheck();
   const [isUpdating, setIsUpdating] = useState(false);
   const [error, setError] = useState<Error | null>(null);
   const roleCache = useRef<Map<string, UserRoleResult>>(new Map());
@@ -31,14 +29,7 @@ export function useUserRoles() {
       setIsUpdating(true);
       setError(null);
       
-      // CORREÇÃO CRÍTICA: Verificar admin usando função do banco
-      const isUserAdmin = await checkIsAdmin();
-      if (!isUserAdmin) {
-        const errorMsg = 'Acesso negado: apenas administradores podem alterar papéis';
-        console.error('❌ [USER-ROLES] ' + errorMsg);
-        throw new Error(errorMsg);
-      }
-      
+      // CORREÇÃO BUG BAIXO 1: Proteger logs de debug em produção
       if (process.env.NODE_ENV !== 'production') {
         console.log(`🔄 [USER-ROLES] Iniciando atribuição de role: userId=${userId.substring(0, 8)}***, roleId=${roleId}`);
       }
@@ -50,7 +41,7 @@ export function useUserRoles() {
         .eq("id", userId)
         .single();
       
-      // Log da ação no sistema de auditoria de segurança
+      // CORREÇÃO: Log da ação no sistema de auditoria de segurança com argumentos corretos
       await logSecurityEvent(
         'assign_role',
         'profiles',
@@ -65,6 +56,7 @@ export function useUserRoles() {
         .select();
       
       if (error) {
+        // Log de erro sempre visível (crítico)
         console.error('❌ [USER-ROLES] Erro ao atualizar role:', error);
         throw error;
       }
@@ -73,9 +65,11 @@ export function useUserRoles() {
         console.log('✅ [USER-ROLES] Role atualizado com sucesso no banco de dados');
       }
       
-      // Invalidação de cache mais abrangente para sincronização imediata
+      // CORREÇÃO BUG MÉDIO 3: Invalidação de cache mais abrangente para sincronização imediata
       roleCache.current.delete(userId);
       clearPermissionCache(userId);
+      
+      // CORREÇÃO: Limpar cache de perfil para forçar refresh na próxima busca
       clearProfileCache();
       
       if (process.env.NODE_ENV !== 'production') {
@@ -90,6 +84,7 @@ export function useUserRoles() {
       
       return data;
     } catch (err: any) {
+      // Log de erro sempre visível (crítico)
       console.error('❌ [USER-ROLES] Erro ao atribuir papel:', err);
       setError(err);
       toast.error('Erro ao atualizar papel', {
@@ -102,7 +97,7 @@ export function useUserRoles() {
         console.log('✅ [USER-ROLES] Finalizando operação assignRoleToUser');
       }
     }
-  }, [checkIsAdmin]);
+  }, [user?.id]);
 
   const getUserRole = useCallback(async (userId: string): Promise<UserRoleResult> => {
     if (roleCache.current.has(userId)) {
@@ -133,6 +128,7 @@ export function useUserRoles() {
         .single();
       
       if (error) {
+        // Log de erro sempre visível (crítico)
         console.error('❌ [USER-ROLES] Erro ao buscar papel do usuário:', error);
         return { roleId: null, roleName: null, roleData: null };
       }
@@ -163,6 +159,7 @@ export function useUserRoles() {
       }
       return result;
     } catch (err) {
+      // Log de erro sempre visível (crítico)
       console.error('❌ [USER-ROLES] Erro ao buscar papel do usuário:', err);
       return { roleId: null, roleName: null, roleData: null };
     }

@@ -17,22 +17,30 @@ const AuthLayout = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
-  const { user, profile } = useAuth();
+  const { user, profile, isAdmin } = useAuth();
 
-  // Verificar se usuário já está logado e redirecionar
+  // CORREÇÃO CRÍTICA 1: Verificar se usuário já está logado e redirecionar
   useEffect(() => {
     if (user && profile) {
-      console.log("[AUTH-LAYOUT] Usuário já autenticado detectado, redirecionando...");
+      console.log("[AUTH-LAYOUT] Usuário já autenticado detectado, redirecionando...", {
+        email: user.email,
+        isAdmin,
+        profileRole: profile.role_id
+      });
       
-      const roleName = profile.user_roles?.name;
-      
-      if (roleName === 'formacao') {
+      // Redirecionar baseado no papel do usuário
+      if (isAdmin || profile.role_id === 'admin') {
+        console.log("[AUTH-LAYOUT] Redirecionando admin para /admin");
+        navigate('/admin', { replace: true });
+      } else if (profile.role_id === 'formacao') {
+        console.log("[AUTH-LAYOUT] Redirecionando formação para /formacao");
         navigate('/formacao', { replace: true });
       } else {
+        console.log("[AUTH-LAYOUT] Redirecionando usuário comum para /dashboard");
         navigate('/dashboard', { replace: true });
       }
     }
-  }, [user, profile, navigate]);
+  }, [user, profile, isAdmin, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -67,7 +75,8 @@ const AuthLayout = () => {
           description: "Redirecionando...",
         });
         
-        // Redirecionar para a raiz após login
+        // CORREÇÃO CRÍTICA 2: Redirecionar explicitamente para a raiz após login
+        console.log("[AUTH-LAYOUT] Redirecionando para / para acionar RootRedirect");
         navigate('/', { replace: true });
       }
       
@@ -95,8 +104,10 @@ const AuthLayout = () => {
         });
       }
     } finally {
+      // CORREÇÃO CRÍTICA 3: Timeout mais curto e sempre finalizar loading
       setTimeout(() => {
         setIsLoading(false);
+        console.log("[AUTH-LAYOUT] Loading finalizado");
       }, 1000);
     }
   };

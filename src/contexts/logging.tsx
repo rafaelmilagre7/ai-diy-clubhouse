@@ -13,44 +13,31 @@ interface LoggingContextType {
   info: (message: string, data?: LogData) => void;
 }
 
-// Implementação simplificada que não causa dependência circular
-const LoggingContext = createContext<LoggingContextType | undefined>(undefined);
-
+// Redireciona para a implementação principal em hooks/useLogging
 export const useLogging = (): LoggingContextType => {
-  const context = useContext(LoggingContext);
-  if (context === undefined) {
-    // Fallback silencioso para evitar erros
-    return {
-      log: () => {},
-      error: () => {},
-      warn: () => {},
-      info: () => {}
-    };
-  }
-  return context;
-};
-
-// Provider simplificado
-export const LoggingProvider = ({ children }: { children: ReactNode }) => {
-  // Implementação básica de logging
-  const contextValue: LoggingContextType = {
+  // Usa a implementação de useLogging do hooks/useLogging.tsx
+  const loggingHook = useLoggingHook();
+  
+  // Adapta a interface para manter compatibilidade com o código existente
+  return {
     log: (message: string, data: LogData = {}, category: string = "general") => {
-      console.log(`[${category.toUpperCase()}] ${message}`, data);
+      // Agora passamos category dentro do objeto data
+      loggingHook.log(message, { ...data, category });
     },
     error: (message: string, data: LogData = {}) => {
-      console.error(`[ERROR] ${message}`, data);
+      loggingHook.logError(message, { ...data, message });
     },
     warn: (message: string, data: LogData = {}) => {
-      console.warn(`[WARN] ${message}`, data);
+      loggingHook.logWarning(message, data);
     },
     info: (message: string, data: LogData = {}) => {
-      console.info(`[INFO] ${message}`, data);
+      // Substitui terceiro argumento por propriedade no objeto
+      loggingHook.log(message, { ...data, category: "info" });
     }
   };
+};
 
-  return (
-    <LoggingContext.Provider value={contextValue}>
-      {children}
-    </LoggingContext.Provider>
-  );
+// Implementação do provider redirecionada para o hooks/useLogging.tsx
+export const LoggingProvider = ({ children }: { children: ReactNode }) => {
+  return <OriginalLoggingProvider>{children}</OriginalLoggingProvider>;
 };

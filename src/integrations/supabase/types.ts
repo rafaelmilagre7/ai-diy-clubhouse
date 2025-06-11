@@ -6187,10 +6187,6 @@ export type Database = {
         Args: { role_name: string }
         Returns: boolean
       }
-      has_role_name: {
-        Args: { role_name: string; check_user_id?: string }
-        Returns: boolean
-      }
       increment: {
         Args: { row_id: string; table_name: string; column_name: string }
         Returns: undefined
@@ -6216,7 +6212,7 @@ export type Database = {
         Returns: Json
       }
       is_admin: {
-        Args: Record<PropertyKey, never> | { check_user_id?: string }
+        Args: Record<PropertyKey, never>
         Returns: boolean
       }
       is_admin_user: {

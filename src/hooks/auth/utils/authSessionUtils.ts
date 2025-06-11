@@ -34,7 +34,7 @@ export const validateUserSession = async () => {
 };
 
 /**
- * Busca o perfil do usuário usando query direta simples
+ * Busca o perfil do usuário usando a nova função segura
  */
 export const fetchUserProfileSecurely = async (userId: string): Promise<UserProfile | null> => {
   try {
@@ -45,31 +45,56 @@ export const fetchUserProfileSecurely = async (userId: string): Promise<UserProf
       return cached.profile;
     }
 
-    logger.info('[PROFILE-FETCH] Buscando perfil do usuário');
+    logger.info('[PROFILE-FETCH] Buscando perfil usando função segura');
     
-    // Query direta simples que funciona
-    const { data: profileData, error } = await supabase
-      .from('profiles')
-      .select(`
-        *,
-        user_roles (
-          id,
-          name,
-          description,
-          permissions
-        )
-      `)
-      .eq('id', userId)
-      .single();
+    // CORREÇÃO: Usar a nova função segura get_user_profile_safe
+    const { data: profiles, error } = await supabase
+      .rpc('get_user_profile_safe', { user_id: userId });
     
     if (error) {
-      logger.error('[PROFILE-FETCH] Erro ao buscar perfil:', error);
-      return null;
+      logger.error('[PROFILE-FETCH] Erro na função segura:', error);
+      // Fallback para query direta simples
+      const { data: directData, error: directError } = await supabase
+        .from('profiles')
+        .select(`
+          *,
+          user_roles (
+            id,
+            name,
+            description,
+            permissions
+          )
+        `)
+        .eq('id', userId)
+        .single();
+      
+      if (directError) {
+        logger.error('[PROFILE-FETCH] Erro no fallback direto:', directError);
+        return null;
+      }
+      
+      const profile = directData as UserProfile;
+      // Cache o resultado
+      profileCache.set(userId, { profile, timestamp: Date.now() });
+      return profile;
     }
     
-    const profile = profileData as UserProfile;
+    const profile = profiles?.[0] || null;
     
     if (profile) {
+      // Buscar informações do role separadamente se necessário
+      if (!profile.user_roles && profile.role_id) {
+        const { data: roleData } = await supabase
+          .from('user_roles')
+          .select('id, name, description, permissions')
+          .eq('id', profile.role_id)
+          .single();
+        
+        if (roleData) {
+          profile.user_roles = roleData;
+        }
+      }
+      
       logger.info('[PROFILE-FETCH] Perfil carregado com sucesso:', {
         userId: profile.id.substring(0, 8) + '***',
         hasRole: !!profile.user_roles,
