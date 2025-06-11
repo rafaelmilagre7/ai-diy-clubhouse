@@ -2,6 +2,8 @@
 import { sanitizeForLogging } from './securityUtils';
 
 type LogLevel = 'debug' | 'info' | 'warn' | 'error' | 'security';
+const isProduction = process.env.NODE_ENV === 'production';
+const isDevelopment = process.env.NODE_ENV === 'development';
 
 interface SecureLogEntry {
   timestamp: string;
@@ -29,20 +31,6 @@ interface SecurityEvent {
 
 class SecureLogger {
   private logBuffer: SecureLogEntry[] = [];
-  private maxBufferSize = 100;
-  private flushInterval = 30000; // 30 segundos
-  
-  constructor() {
-    // Flush automático dos logs
-    setInterval(() => {
-      this.flushLogs();
-    }, this.flushInterval);
-    
-    // Flush antes de sair da página
-    window.addEventListener('beforeunload', () => {
-      this.flushLogs();
-    });
-  }
   
   private createLogEntry(
     level: LogLevel,
@@ -54,162 +42,163 @@ class SecureLogger {
       timestamp: new Date().toISOString(),
       level,
       component,
-      message,
-      userId: metadata?.userId ? String(metadata.userId).substring(0, 8) + '***' : undefined,
-      sessionId: metadata?.sessionId ? String(metadata.sessionId).substring(0, 8) + '***' : undefined,
+      message: isProduction ? '[REDACTED]' : message,
+      userId: undefined, // Sempre undefined em produção
+      sessionId: undefined, // Sempre undefined em produção
       action: metadata?.action,
       resource: metadata?.resource,
-      metadata: metadata ? sanitizeForLogging(metadata) : undefined,
+      metadata: isProduction ? undefined : (metadata ? sanitizeForLogging(metadata) : undefined),
       securityContext: {
-        userAgent: navigator.userAgent.substring(0, 100),
-        location: window.location.pathname
+        userAgent: isProduction ? '[REDACTED]' : navigator.userAgent.substring(0, 100),
+        location: isProduction ? '[REDACTED]' : window.location.pathname
       }
     };
   }
   
   debug(message: string, component: string, metadata?: Record<string, any>) {
-    if (process.env.NODE_ENV === 'development') {
-      const entry = this.createLogEntry('debug', message, component, metadata);
-      console.debug('🐛 [DEBUG]', entry);
-      this.addToBuffer(entry);
+    if (isProduction) return; // Não logar em produção
+    
+    try {
+      if (isDevelopment) {
+        const entry = this.createLogEntry('debug', message, component, metadata);
+        console.debug('🐛 [DEBUG]', entry);
+      }
+    } catch {
+      // Falha silenciosamente
     }
   }
   
   info(message: string, component: string, metadata?: Record<string, any>) {
-    const entry = this.createLogEntry('info', message, component, metadata);
-    console.info('ℹ️ [INFO]', entry);
-    this.addToBuffer(entry);
+    if (isProduction) return; // Não logar em produção
+    
+    try {
+      if (isDevelopment) {
+        const entry = this.createLogEntry('info', message, component, metadata);
+        console.info('ℹ️ [INFO]', entry);
+      }
+    } catch {
+      // Falha silenciosamente
+    }
   }
   
   warn(message: string, component: string, metadata?: Record<string, any>) {
-    const entry = this.createLogEntry('warn', message, component, metadata);
-    console.warn('⚠️ [WARN]', entry);
-    this.addToBuffer(entry);
+    if (isProduction) return; // Não logar em produção
+    
+    try {
+      if (isDevelopment) {
+        const entry = this.createLogEntry('warn', message, component, metadata);
+        console.warn('⚠️ [WARN]', entry);
+      }
+    } catch {
+      // Falha silenciosamente
+    }
   }
   
   error(message: string, component: string, metadata?: Record<string, any>) {
-    const entry = this.createLogEntry('error', message, component, metadata);
-    console.error('❌ [ERROR]', entry);
-    this.addToBuffer(entry);
+    if (isProduction) return; // Não logar em produção
+    
+    try {
+      if (isDevelopment) {
+        const entry = this.createLogEntry('error', message, component, metadata);
+        console.error('❌ [ERROR]', entry);
+      }
+    } catch {
+      // Falha silenciosamente
+    }
   }
   
   security(event: SecurityEvent, component: string, metadata?: Record<string, any>) {
-    const entry = this.createLogEntry('security', 
-      `[${event.severity.toUpperCase()}] ${event.type}: ${event.description}`, 
-      component, 
-      { ...metadata, securityEvent: event }
-    );
-    
-    console.warn('🔒 [SECURITY]', entry);
-    this.addToBuffer(entry);
-    
-    // Eventos críticos devem ser enviados imediatamente
-    if (event.severity === 'critical') {
-      this.flushLogs();
-    }
-  }
-  
-  private addToBuffer(entry: SecureLogEntry) {
-    this.logBuffer.push(entry);
-    
-    // Flush se buffer estiver cheio
-    if (this.logBuffer.length >= this.maxBufferSize) {
-      this.flushLogs();
-    }
-  }
-  
-  private async flushLogs() {
-    if (this.logBuffer.length === 0) return;
-    
-    const logsToFlush = [...this.logBuffer];
-    this.logBuffer = [];
+    if (isProduction) return; // Não logar em produção
     
     try {
-      // Em produção, enviar para serviço de logging
-      if (process.env.NODE_ENV === 'production') {
-        // Aqui você pode integrar com serviços como:
-        // - Supabase Edge Functions
-        // - LogRocket
-        // - Sentry
-        // - DataDog
+      if (isDevelopment) {
+        const entry = this.createLogEntry('security', 
+          `[${event.severity.toUpperCase()}] ${event.type}: ${event.description}`, 
+          component, 
+          { ...metadata, securityEvent: event }
+        );
         
-        // Por enquanto, armazenar localmente para análise
-        const existingLogs = JSON.parse(localStorage.getItem('app_security_logs') || '[]');
-        const updatedLogs = [...existingLogs, ...logsToFlush].slice(-500); // Manter apenas 500 logs
-        localStorage.setItem('app_security_logs', JSON.stringify(updatedLogs));
+        console.warn('🔒 [SECURITY]', entry);
       }
-      
-      // Log de desenvolvimento
-      if (process.env.NODE_ENV === 'development') {
-        console.group('📋 Secure Logs Flush');
-        logsToFlush.forEach(log => {
-          console.log(log);
-        });
-        console.groupEnd();
-      }
-      
-    } catch (error) {
-      console.error('Erro ao fazer flush dos logs:', error);
-    }
-  }
-  
-  // Método para obter logs para análise
-  getStoredLogs(): SecureLogEntry[] {
-    try {
-      return JSON.parse(localStorage.getItem('app_security_logs') || '[]');
     } catch {
-      return [];
+      // Falha silenciosamente
     }
   }
   
-  // Método para limpar logs armazenados
-  clearStoredLogs() {
-    localStorage.removeItem('app_security_logs');
+  // Métodos que não fazem nada em produção
+  getStoredLogs(): SecureLogEntry[] {
+    return isProduction ? [] : [];
   }
   
-  // Método para exportar logs (útil para suporte)
+  clearStoredLogs() {
+    // Não faz nada
+  }
+  
   exportLogs(): string {
-    const logs = this.getStoredLogs();
-    return JSON.stringify(logs, null, 2);
+    return isProduction ? '[]' : '[]';
   }
 }
 
 // Instância singleton
 export const secureLogger = new SecureLogger();
 
-// Helpers para diferentes tipos de eventos de segurança
+// Helpers que não fazem nada em produção
 export const logAuthEvent = (action: string, metadata?: Record<string, any>) => {
-  secureLogger.security({
-    type: 'auth',
-    severity: 'medium',
-    description: `Authentication event: ${action}`,
-    details: metadata || {}
-  }, 'AUTH_SYSTEM', metadata);
+  if (isProduction) return;
+  
+  try {
+    secureLogger.security({
+      type: 'auth',
+      severity: 'medium',
+      description: `Authentication event: ${action}`,
+      details: metadata || {}
+    }, 'AUTH_SYSTEM', metadata);
+  } catch {
+    // Falha silenciosamente
+  }
 };
 
 export const logAccessEvent = (resource: string, action: string, metadata?: Record<string, any>) => {
-  secureLogger.security({
-    type: 'access',
-    severity: 'low',
-    description: `Access event: ${action} on ${resource}`,
-    details: metadata || {}
-  }, 'ACCESS_CONTROL', metadata);
+  if (isProduction) return;
+  
+  try {
+    secureLogger.security({
+      type: 'access',
+      severity: 'low',
+      description: `Access event: ${action} on ${resource}`,
+      details: metadata || {}
+    }, 'ACCESS_CONTROL', metadata);
+  } catch {
+    // Falha silenciosamente
+  }
 };
 
 export const logDataEvent = (action: string, table?: string, metadata?: Record<string, any>) => {
-  secureLogger.security({
-    type: 'data',
-    severity: 'medium',
-    description: `Data event: ${action}${table ? ` on ${table}` : ''}`,
-    details: metadata || {}
-  }, 'DATA_ACCESS', metadata);
+  if (isProduction) return;
+  
+  try {
+    secureLogger.security({
+      type: 'data',
+      severity: 'medium',
+      description: `Data event: ${action}${table ? ` on ${table}` : ''}`,
+      details: metadata || {}
+    }, 'DATA_ACCESS', metadata);
+  } catch {
+    // Falha silenciosamente
+  }
 };
 
 export const logCriticalEvent = (description: string, metadata?: Record<string, any>) => {
-  secureLogger.security({
-    type: 'system',
-    severity: 'critical',
-    description,
-    details: metadata || {}
-  }, 'CRITICAL_SYSTEM', metadata);
+  if (isProduction) return;
+  
+  try {
+    secureLogger.security({
+      type: 'system',
+      severity: 'critical',
+      description,
+      details: metadata || {}
+    }, 'CRITICAL_SYSTEM', metadata);
+  } catch {
+    // Falha silenciosamente
+  }
 };
