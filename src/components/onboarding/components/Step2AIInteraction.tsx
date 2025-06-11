@@ -25,6 +25,7 @@ export const Step2AIInteraction: React.FC<Step2AIInteractionProps> = ({
 
   const [messageKey, setMessageKey] = useState(0);
   const [hasRequestedGeneration, setHasRequestedGeneration] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
   
   // Usar refs para detectar mudanças reais nos dados
   const previousDataRef = useRef<{ name?: string; city?: string }>({});
@@ -40,8 +41,24 @@ export const Step2AIInteraction: React.FC<Step2AIInteractionProps> = ({
     return hasData;
   }, [data.name, data.city]);
 
-  // Detectar se os dados importantes mudaram realmente
+  // Inicializar previousDataRef na primeira renderização com dados
+  useEffect(() => {
+    if (hasMinimumData && !isInitialized) {
+      console.log('[Step2AIInteraction] Inicializando previousDataRef com dados atuais:', {
+        name: data.name,
+        city: data.city
+      });
+      previousDataRef.current = { name: data.name, city: data.city };
+      setIsInitialized(true);
+    }
+  }, [hasMinimumData, data.name, data.city, isInitialized]);
+
+  // Detectar se os dados importantes mudaram realmente (apenas após inicialização)
   const dataChanged = useMemo(() => {
+    if (!isInitialized) {
+      return false; // Não considerar mudança antes da inicialização
+    }
+
     const current = { name: data.name, city: data.city };
     const previous = previousDataRef.current;
     const changed = current.name !== previous.name || current.city !== previous.city;
@@ -49,24 +66,25 @@ export const Step2AIInteraction: React.FC<Step2AIInteractionProps> = ({
     console.log('[Step2AIInteraction] Verificando mudança de dados:', {
       current,
       previous,
-      changed
+      changed,
+      isInitialized
     });
     
     return changed;
-  }, [data.name, data.city]);
+  }, [data.name, data.city, isInitialized]);
 
-  // Gerar mensagem uma única vez quando houver dados suficientes
+  // Gerar mensagem uma única vez quando houver dados suficientes e estivermos inicializados
   useEffect(() => {
-    if (hasMinimumData && !hasRequestedGeneration && !isGenerating && !generatedMessage && !error) {
+    if (hasMinimumData && isInitialized && !hasRequestedGeneration && !isGenerating && !generatedMessage && !error) {
       console.log('[Step2AIInteraction] Solicitando geração de mensagem para:', data.name);
       setHasRequestedGeneration(true);
       generateMessage(data, memberType, 2);
     }
-  }, [hasMinimumData, hasRequestedGeneration, isGenerating, generatedMessage, error]);
+  }, [hasMinimumData, isInitialized, hasRequestedGeneration, isGenerating, generatedMessage, error, data, memberType, generateMessage]);
 
-  // Reset apenas quando dados importantes mudarem de fato
+  // Reset apenas quando dados importantes mudarem de fato (após inicialização)
   useEffect(() => {
-    if (dataChanged && hasMinimumData) {
+    if (dataChanged && hasMinimumData && isInitialized) {
       console.log('[Step2AIInteraction] Dados importantes mudaram, resetando estado');
       
       // Atualizar ref com novos dados
@@ -77,7 +95,7 @@ export const Step2AIInteraction: React.FC<Step2AIInteractionProps> = ({
       setMessageKey(prev => prev + 1);
       clearMessage();
     }
-  }, [dataChanged, hasMinimumData, clearMessage, data.name, data.city]);
+  }, [dataChanged, hasMinimumData, isInitialized, clearMessage, data.name, data.city]);
 
   const handleTypingComplete = () => {
     console.log('[Step2AIInteraction] Digitação completada');
@@ -86,11 +104,13 @@ export const Step2AIInteraction: React.FC<Step2AIInteractionProps> = ({
   // Debug: mostrar estado atual
   console.log('[Step2AIInteraction] Estado atual:', {
     hasMinimumData,
+    isInitialized,
     hasRequestedGeneration,
     isGenerating,
     hasGeneratedMessage: !!generatedMessage,
     hasError: !!error,
-    messageKey
+    messageKey,
+    dataChanged
   });
 
   // Mostrar loading enquanto gera
@@ -129,7 +149,7 @@ export const Step2AIInteraction: React.FC<Step2AIInteractionProps> = ({
   }
 
   // Mostrar mensagem com efeito de digitação
-  if (generatedMessage && !isGenerating) {
+  if (generatedMessage && !isGenerating && isInitialized) {
     return (
       <motion.div
         key={`message-${messageKey}`}
@@ -184,9 +204,9 @@ export const Step2AIInteraction: React.FC<Step2AIInteractionProps> = ({
     );
   }
 
-  // Mostrar estado de aguardo se temos dados mas ainda não solicitamos geração
-  if (hasMinimumData && !hasRequestedGeneration) {
-    console.log('[Step2AIInteraction] Dados disponíveis, aguardando solicitação de geração');
+  // Mostrar estado de preparação se temos dados mas ainda não inicializamos
+  if (hasMinimumData && !isInitialized) {
+    console.log('[Step2AIInteraction] Dados disponíveis, preparando inicialização');
     return (
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
