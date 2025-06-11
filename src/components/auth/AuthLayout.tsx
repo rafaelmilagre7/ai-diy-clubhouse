@@ -17,9 +17,20 @@ const AuthLayout = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
-  const { user, profile, isAdmin } = useAuth();
+  
+  // CORREÇÃO: Verificação segura do contexto de autenticação
+  let authContext;
+  try {
+    authContext = useAuth();
+  } catch (error) {
+    console.error("[AUTH-LAYOUT] Auth context não disponível:", error);
+    // Se o contexto não está disponível, renderizar apenas o formulário básico
+    authContext = { user: null, profile: null, isAdmin: false };
+  }
 
-  // CORREÇÃO CRÍTICA 1: Verificar se usuário já está logado e redirecionar
+  const { user, profile, isAdmin } = authContext;
+
+  // CORREÇÃO: Verificar se usuário já está logado e redirecionar
   useEffect(() => {
     if (user && profile) {
       console.log("[AUTH-LAYOUT] Usuário já autenticado detectado, redirecionando...", {
@@ -75,7 +86,7 @@ const AuthLayout = () => {
           description: "Redirecionando...",
         });
         
-        // CORREÇÃO CRÍTICA 2: Redirecionar explicitamente para a raiz após login
+        // CORREÇÃO: Redirecionar explicitamente para a raiz após login
         console.log("[AUTH-LAYOUT] Redirecionando para / para acionar RootRedirect");
         navigate('/', { replace: true });
       }
@@ -104,7 +115,7 @@ const AuthLayout = () => {
         });
       }
     } finally {
-      // CORREÇÃO CRÍTICA 3: Timeout mais curto e sempre finalizar loading
+      // CORREÇÃO: Timeout mais curto e sempre finalizar loading
       setTimeout(() => {
         setIsLoading(false);
         console.log("[AUTH-LAYOUT] Loading finalizado");
