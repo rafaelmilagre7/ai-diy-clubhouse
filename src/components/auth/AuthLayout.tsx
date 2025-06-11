@@ -17,41 +17,22 @@ const AuthLayout = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
-  
-  // CORREÇÃO: Verificação segura do contexto de autenticação
-  let authContext;
-  try {
-    authContext = useAuth();
-  } catch (error) {
-    console.error("[AUTH-LAYOUT] Auth context não disponível:", error);
-    // Se o contexto não está disponível, renderizar apenas o formulário básico
-    authContext = { user: null, profile: null, isAdmin: false };
-  }
+  const { user, profile } = useAuth();
 
-  const { user, profile, isAdmin } = authContext;
-
-  // CORREÇÃO: Verificar se usuário já está logado e redirecionar
+  // Verificar se usuário já está logado e redirecionar
   useEffect(() => {
     if (user && profile) {
-      console.log("[AUTH-LAYOUT] Usuário já autenticado detectado, redirecionando...", {
-        email: user.email,
-        isAdmin,
-        profileRole: profile.role_id
-      });
+      console.log("[AUTH-LAYOUT] Usuário já autenticado detectado, redirecionando...");
       
-      // Redirecionar baseado no papel do usuário
-      if (isAdmin || profile.role_id === 'admin') {
-        console.log("[AUTH-LAYOUT] Redirecionando admin para /admin");
-        navigate('/admin', { replace: true });
-      } else if (profile.role_id === 'formacao') {
-        console.log("[AUTH-LAYOUT] Redirecionando formação para /formacao");
+      const roleName = profile.user_roles?.name;
+      
+      if (roleName === 'formacao') {
         navigate('/formacao', { replace: true });
       } else {
-        console.log("[AUTH-LAYOUT] Redirecionando usuário comum para /dashboard");
         navigate('/dashboard', { replace: true });
       }
     }
-  }, [user, profile, isAdmin, navigate]);
+  }, [user, profile, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -86,8 +67,7 @@ const AuthLayout = () => {
           description: "Redirecionando...",
         });
         
-        // CORREÇÃO: Redirecionar explicitamente para a raiz após login
-        console.log("[AUTH-LAYOUT] Redirecionando para / para acionar RootRedirect");
+        // Redirecionar para a raiz após login
         navigate('/', { replace: true });
       }
       
@@ -115,10 +95,8 @@ const AuthLayout = () => {
         });
       }
     } finally {
-      // CORREÇÃO: Timeout mais curto e sempre finalizar loading
       setTimeout(() => {
         setIsLoading(false);
-        console.log("[AUTH-LAYOUT] Loading finalizado");
       }, 1000);
     }
   };

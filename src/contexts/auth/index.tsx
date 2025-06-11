@@ -32,10 +32,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   
   const authListenerRef = useRef<any>(null);
   const isInitialized = useRef(false);
-  const lastUserId = useRef<string | null>(null);
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Inicializar useAuthStateManager com os setters como parâmetros
+  // Inicializar useAuthStateManager
   const { setupAuthSession } = useAuthStateManager({
     setSession,
     setUser,
@@ -46,22 +44,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const { signIn, signOut, signInAsMember, signInAsAdmin } = useAuthMethods({
     setIsLoading,
   });
-
-  // Circuit breaker - timeout de 3 segundos para inicialização
-  useEffect(() => {
-    timeoutRef.current = setTimeout(() => {
-      if (isLoading) {
-        console.warn("⚠️ [AUTH] Circuit breaker ativado - forçando fim do loading");
-        setIsLoading(false);
-      }
-    }, 3000);
-
-    return () => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
-    };
-  }, [isLoading]);
 
   // Verificação de admin usando função do banco
   const checkAdminStatus = useCallback(async () => {
@@ -102,16 +84,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   }, [user, profile, checkAdminStatus]);
 
-  // Cache bust quando muda usuário
-  useEffect(() => {
-    if (user?.id !== lastUserId.current) {
-      if (lastUserId.current !== null) {
-        clearProfileCache();
-      }
-      lastUserId.current = user?.id || null;
-    }
-  }, [user?.id]);
-
   // Setup inicial da autenticação
   useEffect(() => {
     if (!isInitialized.current) {
@@ -134,6 +106,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             setIsAdmin(false);
             setIsLoading(false);
             setAuthError(null);
+            clearProfileCache();
           } else if (event === 'SIGNED_IN' && currentSession?.user) {
             setUser(currentSession.user);
             setSession(currentSession);

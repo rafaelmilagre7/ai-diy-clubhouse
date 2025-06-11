@@ -13,31 +13,44 @@ interface LoggingContextType {
   info: (message: string, data?: LogData) => void;
 }
 
-// Redireciona para a implementação principal em hooks/useLogging
+// Implementação simplificada que não causa dependência circular
+const LoggingContext = createContext<LoggingContextType | undefined>(undefined);
+
 export const useLogging = (): LoggingContextType => {
-  // Usa a implementação de useLogging do hooks/useLogging.tsx
-  const loggingHook = useLoggingHook();
-  
-  // Adapta a interface para manter compatibilidade com o código existente
-  return {
-    log: (message: string, data: LogData = {}, category: string = "general") => {
-      // Agora passamos category dentro do objeto data
-      loggingHook.log(message, { ...data, category });
-    },
-    error: (message: string, data: LogData = {}) => {
-      loggingHook.logError(message, { ...data, message });
-    },
-    warn: (message: string, data: LogData = {}) => {
-      loggingHook.logWarning(message, data);
-    },
-    info: (message: string, data: LogData = {}) => {
-      // Substitui terceiro argumento por propriedade no objeto
-      loggingHook.log(message, { ...data, category: "info" });
-    }
-  };
+  const context = useContext(LoggingContext);
+  if (context === undefined) {
+    // Fallback silencioso para evitar erros
+    return {
+      log: () => {},
+      error: () => {},
+      warn: () => {},
+      info: () => {}
+    };
+  }
+  return context;
 };
 
-// Implementação do provider redirecionada para o hooks/useLogging.tsx
+// Provider simplificado
 export const LoggingProvider = ({ children }: { children: ReactNode }) => {
-  return <OriginalLoggingProvider>{children}</OriginalLoggingProvider>;
+  // Implementação básica de logging
+  const contextValue: LoggingContextType = {
+    log: (message: string, data: LogData = {}, category: string = "general") => {
+      console.log(`[${category.toUpperCase()}] ${message}`, data);
+    },
+    error: (message: string, data: LogData = {}) => {
+      console.error(`[ERROR] ${message}`, data);
+    },
+    warn: (message: string, data: LogData = {}) => {
+      console.warn(`[WARN] ${message}`, data);
+    },
+    info: (message: string, data: LogData = {}) => {
+      console.info(`[INFO] ${message}`, data);
+    }
+  };
+
+  return (
+    <LoggingContext.Provider value={contextValue}>
+      {children}
+    </LoggingContext.Provider>
+  );
 };

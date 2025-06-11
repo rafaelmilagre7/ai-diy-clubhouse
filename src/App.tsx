@@ -6,6 +6,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "sonner";
 import AppRoutes from '@/routes/AppRoutes';
 import { AuthProvider } from '@/contexts/auth';
+import { LoggingProvider } from '@/hooks/useLogging';
 import './App.css';
 
 const queryClient = new QueryClient({
@@ -21,13 +22,15 @@ const queryClient = new QueryClient({
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
-        <AuthProvider>
-          <AppRoutes />
-          <Toaster />
-          <Sonner />
-        </AuthProvider>
-      </BrowserRouter>
+      <LoggingProvider>
+        <BrowserRouter>
+          <AuthProvider>
+            <AppRoutes />
+            <Toaster />
+            <Sonner />
+          </AuthProvider>
+        </BrowserRouter>
+      </LoggingProvider>
     </QueryClientProvider>
   );
 }
