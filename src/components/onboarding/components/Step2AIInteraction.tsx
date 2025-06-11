@@ -1,9 +1,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Bot, RefreshCw } from 'lucide-react';
+import { Bot } from 'lucide-react';
 import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { TypingEffect } from './TypingEffect';
 import { OnboardingData } from '../types/onboardingTypes';
 import { supabase } from '@/lib/supabase';
@@ -19,64 +18,48 @@ export const Step2AIInteraction: React.FC<Step2AIInteractionProps> = ({
 }) => {
   const [message, setMessage] = useState<string>('');
   const [isLoading, setIsLoading] = useState(false);
-  const [hasGenerated, setHasGenerated] = useState(false);
 
-  // Função para gerar mensagem personalizada
-  const generateMessage = async () => {
-    if (!data.name) {
-      setMessage(getStaticFallbackMessage());
-      return;
-    }
-
-    setIsLoading(true);
-    
-    try {
-      const { data: response, error } = await supabase.functions.invoke('generate-onboarding-message', {
-        body: {
-          onboardingData: data,
-          memberType,
-          currentStep: 2
-        }
-      });
-
-      if (error) throw error;
-
-      if (response?.success && response?.message) {
-        setMessage(response.message);
-      } else {
-        setMessage(getPersonalizedFallbackMessage());
-      }
-    } catch (error) {
-      console.warn('[Step2AI] Erro ao gerar mensagem, usando fallback:', error);
-      setMessage(getPersonalizedFallbackMessage());
-    } finally {
-      setIsLoading(false);
-      setHasGenerated(true);
-    }
-  };
-
-  // Fallback personalizado com dados do usuário
-  const getPersonalizedFallbackMessage = () => {
-    return `Olá ${data.name}! Que bom ter você aqui na Viver de IA! ${data.city ? `Vi que você está em ${data.city}` : ''} e fico empolgado em ver mais um apaixonado por IA se juntando à nossa comunidade. ${data.curiosity ? `Adorei saber que ${data.curiosity.toLowerCase()}.` : ''} Agora vamos descobrir como podemos acelerar sua jornada empresarial com IA - vamos para seu perfil de negócios! 🚀`;
-  };
-
-  // Fallback estático para casos sem dados
-  const getStaticFallbackMessage = () => {
-    return `Bem-vindo à Viver de IA! Estamos empolgados em ter você aqui na nossa comunidade. Agora vamos descobrir mais sobre seu perfil empresarial para personalizar sua experiência na plataforma. Vamos começar! 🚀`;
-  };
-
-  // Gerar mensagem automaticamente ao montar o componente
+  // Gerar mensagem automaticamente quando o componente monta
   useEffect(() => {
-    if (!hasGenerated) {
-      generateMessage();
-    }
-  }, [data.name, hasGenerated]);
+    const generateMessage = async () => {
+      // Se não tem nome, usar fallback estático imediatamente
+      if (!data.name) {
+        setMessage('Bem-vindo à Viver de IA! Estamos empolgados em ter você aqui na nossa comunidade. Agora vamos descobrir mais sobre seu perfil empresarial para personalizar sua experiência na plataforma. Vamos começar! 🚀');
+        return;
+      }
 
-  // Função para regenerar mensagem
-  const handleRegenerate = () => {
-    setHasGenerated(false);
+      setIsLoading(true);
+      
+      try {
+        const { data: response, error } = await supabase.functions.invoke('generate-onboarding-message', {
+          body: {
+            onboardingData: data,
+            memberType,
+            currentStep: 2
+          }
+        });
+
+        if (error) throw error;
+
+        if (response?.success && response?.message) {
+          setMessage(response.message);
+        } else {
+          throw new Error('Resposta inválida da API');
+        }
+      } catch (error) {
+        console.warn('[Step2AI] Erro ao gerar mensagem, usando fallback:', error);
+        
+        // Fallback personalizado com dados do usuário
+        const fallbackMessage = `Olá ${data.name}! Que bom ter você aqui na Viver de IA! ${data.city ? `Vi que você está em ${data.city}` : ''} e fico empolgado em ver mais um apaixonado por IA se juntando à nossa comunidade. ${data.curiosity ? `Adorei saber que ${data.curiosity.toLowerCase()}.` : ''} Agora vamos descobrir como podemos acelerar sua jornada empresarial com IA - vamos para seu perfil de negócios! 🚀`;
+        
+        setMessage(fallbackMessage);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
     generateMessage();
-  };
+  }, []); // Executar apenas uma vez quando o componente montar
 
   return (
     <Card className="p-6 bg-gradient-to-r from-viverblue/10 to-purple-600/10 border-viverblue/20 mb-6">
@@ -91,22 +74,9 @@ export const Step2AIInteraction: React.FC<Step2AIInteractionProps> = ({
         </motion.div>
         
         <div className="flex-1">
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="text-lg font-semibold text-white">
-              Assistente Viver de IA
-            </h3>
-            {hasGenerated && !isLoading && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleRegenerate}
-                className="text-viverblue hover:text-viverblue/80"
-              >
-                <RefreshCw className="w-4 h-4 mr-1" />
-                Nova mensagem
-              </Button>
-            )}
-          </div>
+          <h3 className="text-lg font-semibold text-white mb-3">
+            Assistente Viver de IA
+          </h3>
           
           <div className="text-slate-300 leading-relaxed">
             {isLoading ? (
