@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import { OnboardingData } from '../types/onboardingTypes';
 import { useErrorHandler } from '@/hooks/useErrorHandler';
@@ -10,7 +10,12 @@ export const useAIMessageGeneration = () => {
   const [error, setError] = useState<string | null>(null);
   const { handleError } = useErrorHandler();
 
-  const generateMessage = async (onboardingData: OnboardingData, memberType: 'club' | 'formacao', currentStep?: number) => {
+  const generateMessage = useCallback(async (onboardingData: OnboardingData, memberType: 'club' | 'formacao', currentStep?: number) => {
+    // Evitar gerar novamente se já está gerando ou se não tem dados mínimos
+    if (isGenerating || !onboardingData.name) {
+      return;
+    }
+
     setIsGenerating(true);
     setError(null);
     
@@ -47,27 +52,19 @@ export const useAIMessageGeneration = () => {
       const fallbackMessage = currentStep === 2 
         ? `Olá ${onboardingData.name || 'Membro'}! 
 
-Que bom ter você aqui conosco! Vi que você está em ${onboardingData.city || 'sua cidade'} e isso me deixa empolgado - há muitas oportunidades incríveis de IA surgindo em todo o Brasil.
-
-Agora vamos falar sobre seu negócio. Conte-me mais sobre sua empresa e como posso ajudar você a identificar as melhores oportunidades de transformação digital para seu setor! 🚀`
-        : `Parabéns ${onboardingData.name || 'Membro'}! 
-
-Ficamos muito felizes em tê-lo conosco nesta jornada de transformação digital. Seu onboarding foi concluído com sucesso e agora você tem acesso completo a todas as nossas soluções e recursos.
-
-Com base no seu perfil, acreditamos que você está pronto para começar a implementar soluções de IA que farão a diferença no seu negócio.
-
-Vamos juntos transformar o futuro com IA! 🚀`;
+Que incrível ter você aqui conosco! Vi que você está em ${onboardingData.city || 'sua cidade'} e isso me deixa empolgado com as possibilidades. ${onboardingData.curiosity ? `Adorei saber que ${onboardingData.curiosity.toLowerCase()}.` : ''} Agora vamos falar sobre seu negócio e como posso ajudar você a identificar as melhores oportunidades de IA! 🚀`
+        : `Parabéns ${onboardingData.name || 'Membro'}! Seu onboarding foi concluído com sucesso. Vamos transformar o futuro com IA! 🚀`;
       
       setGeneratedMessage(fallbackMessage);
     } finally {
       setIsGenerating(false);
     }
-  };
+  }, [isGenerating, handleError]);
 
-  const clearMessage = () => {
+  const clearMessage = useCallback(() => {
     setGeneratedMessage(null);
     setError(null);
-  };
+  }, []);
 
   return {
     generateMessage,

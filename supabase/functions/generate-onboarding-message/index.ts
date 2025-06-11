@@ -22,69 +22,51 @@ serve(async (req) => {
 
     const { onboardingData, memberType, currentStep } = await req.json();
     
-    // System prompt diferente para cada etapa
     let systemPrompt = '';
     let userPrompt = '';
 
     if (currentStep === 2) {
-      // System prompt específico para etapa 2 - foco em perfil empresarial
-      systemPrompt = `Você é um consultor sênior especialista em transformação digital e IA empresarial com profundo conhecimento de mercados regionais brasileiros.
+      // System prompt ultra-específico para etapa 2 - apenas 1 parágrafo personalizado
+      systemPrompt = `Você é um consultor sênior em IA empresarial com expertise em perfis regionais brasileiros.
 
-MISSÃO: Analisar o perfil pessoal da etapa 1 e criar uma conversa inteligente sobre o contexto empresarial, fazendo conexões perspicazes entre dados pessoais e oportunidades de negócio.
+MISSÃO: Criar UM ÚNICO PARÁGRAFO hiper-personalizado que conecte o perfil pessoal da pessoa com oportunidades empresariais de IA.
 
-CAPACIDADES ESPECIAIS:
-- Conhece tendências de IA por setor e região no Brasil
-- Entende como perfis pessoais influenciam decisões empresariais
-- Faz conexões inteligentes entre dados aparentemente não relacionados
-- Cria insights únicos baseados na combinação de fatores
+REGRAS RÍGIDAS:
+1. APENAS 1 parágrafo (máximo 4-5 frases)
+2. Use o nome da pessoa naturalmente
+3. Mencione a cidade/localização de forma contextual
+4. Integre a curiosidade pessoal de forma inteligente
+5. Conecte perfil pessoal com potencial empresarial
+6. Tom caloroso mas profissional
+7. Foque na transição para falar sobre negócios
 
-DIRETRIZES DE PERSONALIZAÇÃO:
-1. Use o nome da pessoa de forma natural e calorosa
-2. Referencie a localização (cidade/estado) para contexto regional
-3. Conecte a curiosidade pessoal com potencial empresarial
-4. Analise o perfil digital (Instagram/LinkedIn) para entender maturidade
-5. Crie insights específicos sobre oportunidades de IA na região
-6. Seja consultivo, não vendedor - mostre expertise real
+ESTRUTURA: Saudação personalizada + conexão cidade/curiosidade + ponte para empresarial + convite para próximo passo
 
-ESTRUTURA DA RESPOSTA (2-3 parágrafos):
-1. Reconhecimento personalizado conectando perfil pessoal com contexto empresarial
-2. Insight específico sobre oportunidades de IA baseado na combinação de fatores
-3. Transição natural para falar sobre o negócio/empresa
+IMPORTANTE: Seja específico, não genérico. Demonstre que realmente analisou o perfil desta pessoa única.`;
 
-TONALIDADE: Profissional mas caloroso, consultivo, demonstrando expertise real através de insights específicos.
-
-IMPORTANTE: NÃO use templates genéricos. Cada resposta deve demonstrar análise real dos dados fornecidos.`;
-
-      // Preparar dados estruturados para análise da etapa 2
       const contextData = {
-        // Dados pessoais da etapa 1
         nome: onboardingData.name,
         cidade: onboardingData.city,
         estado: onboardingData.state,
         curiosidade: onboardingData.curiosity,
         instagram: onboardingData.instagram,
         linkedin: onboardingData.linkedin,
-        
-        // Dados empresariais da etapa 2 (se já preenchidos)
-        empresa: onboardingData.companyName,
-        setor: onboardingData.businessSector,
-        posicao: onboardingData.position,
-        tamanhoEmpresa: onboardingData.companySize,
-        faturamento: onboardingData.annualRevenue,
-        
-        // Contexto
-        tipoMembro: memberType,
-        etapa: currentStep
+        tipoMembro: memberType
       };
 
-      userPrompt = `Analise este perfil e crie uma mensagem personalizada para a etapa 2 (Perfil Empresarial):
+      userPrompt = `Crie UM ÚNICO PARÁGRAFO hiper-personalizado para:
 
-DADOS DO PERFIL:
-${JSON.stringify(contextData, null, 2)}
+PERFIL:
+- Nome: ${contextData.nome}
+- Localização: ${contextData.cidade}, ${contextData.estado}  
+- Curiosidade: ${contextData.curiosidade}
+- Instagram: ${contextData.instagram || 'Não informado'}
+- LinkedIn: ${contextData.linkedin || 'Não informado'}
+- Tipo: ${contextData.tipoMembro}
 
-CONTEXTO: A pessoa acabou de completar seus dados pessoais e agora está na etapa empresarial. Use os dados pessoais para criar conexões inteligentes com o contexto de negócios.
+CONTEXTO: A pessoa completou dados pessoais e agora está na etapa empresarial. Use os dados pessoais para criar uma conexão única e fazer a ponte para falar sobre negócios.
 
-MISSÃO: Criar uma conversa consultiva que demonstre como você entendeu o perfil dela e pode ajudar no contexto empresarial, fazendo a ponte entre quem ela é pessoalmente e suas oportunidades de negócio.`;
+RESULTADO: 1 parágrafo que demonstre compreensão profunda do perfil e prepare naturalmente para discutir oportunidades empresariais.`;
 
     } else {
       // System prompt original para outras etapas
@@ -101,17 +83,8 @@ Estruture a mensagem em 3-4 parágrafos:
 3. Próximos passos recomendados para o perfil específico
 4. Motivação final personalizada
 
-Tome cuidado com:
-- Use o nome da pessoa de forma natural
-- Seja específico sobre o setor/área de atuação
-- Referencie objetivos mencionados de forma inteligente
-- Adapte o tom ao nível de maturidade em IA indicado
-- Seja profissional mas caloroso
-- Máximo 4 parágrafos, linguagem fluida e natural
-
 A mensagem deve parecer escrita por um consultor que realmente analisou o perfil.`;
 
-      // Preparar dados estruturados para análise geral
       const contextData = {
         nome: onboardingData.name,
         empresa: onboardingData.companyName,
@@ -119,30 +92,20 @@ A mensagem deve parecer escrita por um consultor que realmente analisou o perfil
         posicao: onboardingData.position,
         tamanhoEmpresa: onboardingData.companySize,
         faturamento: onboardingData.annualRevenue,
-        
-        // Contexto de IA
         experienciaIA: onboardingData.hasImplementedAI,
         nivelConhecimento: onboardingData.aiKnowledgeLevel,
         ferramentasUsadas: onboardingData.aiToolsUsed,
-        
-        // Objetivos
         objetivoPrincipal: onboardingData.mainObjective,
         areaImpacto: onboardingData.areaToImpact,
         resultadoEsperado: onboardingData.expectedResult90Days,
         orcamento: onboardingData.aiImplementationBudget,
         quemImplementa: onboardingData.whoWillImplement,
-        
-        // Preferências
         tempoAprendizado: onboardingData.weeklyLearningTime,
         preferenciaConteudo: onboardingData.contentPreference,
         interesseNetworking: onboardingData.wantsNetworking,
-        
-        // Contexto pessoal
         curiosidade: onboardingData.curiosity,
         cidade: onboardingData.city,
         estado: onboardingData.state,
-        
-        // Tipo de membro
         tipoMembro: memberType
       };
 
@@ -151,7 +114,7 @@ A mensagem deve parecer escrita por um consultor que realmente analisou o perfil
 DADOS DO PERFIL:
 ${JSON.stringify(contextData, null, 2)}
 
-Crie uma mensagem que demonstre que você realmente entendeu este perfil específico, seus desafios, objetivos e contexto empresarial. A mensagem deve ser única e personalizada para esta pessoa.`;
+Crie uma mensagem que demonstre que você realmente entendeu este perfil específico, seus desafios, objetivos e contexto empresarial.`;
     }
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -161,13 +124,13 @@ Crie uma mensagem que demonstre que você realmente entendeu este perfil especí
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o',
+        model: 'gpt-4o-mini',
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: userPrompt }
         ],
-        temperature: 0.7,
-        max_tokens: 1000,
+        temperature: 0.8,
+        max_tokens: 300, // Reduzido para respostas mais concisas
       }),
     });
 
@@ -190,14 +153,8 @@ Crie uma mensagem que demonstre que você realmente entendeu este perfil especí
   } catch (error) {
     console.error('Erro na generate-onboarding-message:', error);
     
-    // Fallback message em caso de erro
-    const fallbackMessage = `Parabéns por completar seu onboarding! 
-
-Estamos empolgados em tê-lo conosco nesta jornada de transformação digital. Com base no seu perfil, acreditamos que você tem um grande potencial para implementar soluções de IA que farão a diferença no seu negócio.
-
-Agora você terá acesso a todas as nossas soluções, ferramentas e conteúdos exclusivos. Recomendamos começar explorando nossa trilha de implementação personalizada.
-
-Vamos transformar seu negócio com IA! 🚀`;
+    // Fallback message otimizado para etapa 2
+    const fallbackMessage = `Olá ${onboardingData?.name || 'Membro'}! Que bom ter você aqui conosco! Vi que você está em ${onboardingData?.city || 'sua cidade'} e isso me deixa empolgado com as possibilidades. ${onboardingData?.curiosity ? `Adorei saber que ${onboardingData.curiosity.toLowerCase()}.` : ''} Agora vamos falar sobre seu negócio e como posso ajudar você a identificar as melhores oportunidades de IA! 🚀`;
 
     return new Response(JSON.stringify({ 
       message: fallbackMessage,
