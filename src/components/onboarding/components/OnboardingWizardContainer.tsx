@@ -63,20 +63,30 @@ export const OnboardingWizardContainer: React.FC<OnboardingWizardContainerProps>
 
   const totalSteps = 3;
 
-  // Memoizar o resultado da validação para evitar re-cálculos desnecessários
+  // Memoizar apenas os valores, não as funções dos hooks
+  const memberType = useMemo(() => data.memberType || 'club', [data.memberType]);
+  
+  // Simplificar a validação para evitar dependências circulares
   const isCurrentStepValid = useMemo(() => {
-    const validationResult = validateCurrentStep(currentStep, data, data.memberType || 'club');
-    return validationResult.isValid;
-  }, [validateCurrentStep, currentStep, data, data.memberType]);
+    try {
+      const validationResult = validateCurrentStep(currentStep, data, memberType);
+      return validationResult.isValid;
+    } catch (error) {
+      console.warn('Validation error:', error);
+      return false;
+    }
+  }, [currentStep, data, memberType]); // Remover validateCurrentStep das dependências
 
-  // Usar useCallback para todas as funções para evitar re-renderizações
   const handleNext = useCallback(async () => {
     if (currentStep < totalSteps && isCurrentStepValid) {
-      // Salvar dados antes de avançar
-      await forceSave();
-      setCurrentStep(prev => prev + 1);
+      try {
+        await forceSave();
+        setCurrentStep(prev => prev + 1);
+      } catch (error) {
+        console.error('Error saving on next:', error);
+      }
     }
-  }, [currentStep, totalSteps, isCurrentStepValid, forceSave]);
+  }, [currentStep, totalSteps, isCurrentStepValid]); // Remover forceSave das dependências
 
   const handlePrevious = useCallback(() => {
     if (currentStep > 1) {
@@ -86,13 +96,12 @@ export const OnboardingWizardContainer: React.FC<OnboardingWizardContainerProps>
 
   const handleDataChange = useCallback((newData: Partial<OnboardingData>) => {
     updateData(newData);
-  }, [updateData]);
+  }, []); // Remover updateData das dependências
 
   const handleSubmit = useCallback(async () => {
     if (isCurrentStepValid && !isSubmitting) {
       setIsSubmitting(true);
       try {
-        // Marcar como completado
         const finalData = {
           ...data,
           completedAt: new Date().toISOString()
@@ -102,7 +111,6 @@ export const OnboardingWizardContainer: React.FC<OnboardingWizardContainerProps>
         await forceSave();
         await saveToCloud(finalData);
         
-        // Redirecionar após conclusão
         setTimeout(() => {
           if (isAdminPreviewMode) {
             window.location.href = '/admin';
@@ -116,9 +124,9 @@ export const OnboardingWizardContainer: React.FC<OnboardingWizardContainerProps>
         setIsSubmitting(false);
       }
     }
-  }, [isCurrentStepValid, isSubmitting, data, updateData, forceSave, saveToCloud, isAdminPreviewMode]);
+  }, [isCurrentStepValid, isSubmitting, data, isAdminPreviewMode]); // Simplificar dependências
 
-  // Memoizar o objeto de props para evitar re-renderizações desnecessárias
+  // Memoizar o objeto de props com dependências estáveis
   const childrenProps = useMemo(() => ({
     currentStep,
     setCurrentStep,
@@ -142,21 +150,16 @@ export const OnboardingWizardContainer: React.FC<OnboardingWizardContainerProps>
     currentStep,
     isSubmitting,
     data,
-    updateData,
-    forceSave,
     isLoading,
     lastSaved,
     hasUnsavedChanges,
     validationErrors,
-    getFieldError,
-    syncStatus,
     handleNext,
     handlePrevious,
     handleDataChange,
     handleSubmit,
-    isCurrentStepValid,
-    totalSteps
-  ]);
+    isCurrentStepValid
+  ]); // Remover referências de função que mudam constantemente
 
   return children(childrenProps);
 };
