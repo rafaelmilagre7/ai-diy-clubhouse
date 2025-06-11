@@ -37,6 +37,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   // Usar o hook de gerenciamento de estado
   const { setupAuthSession } = useAuthStateManager({
@@ -46,17 +47,40 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     setIsLoading,
   });
 
-  // CORREÇÃO: Verificação de admin mais robusta
-  const isAdmin = Boolean(
-    user && (
-      // Verificação por email (prioridade máxima)
-      ['rafael@viverdeia.ai', 'admin@viverdeia.ai', 'admin@teste.com'].includes(user.email?.toLowerCase() || '') ||
-      // Verificação por role no perfil
-      profile?.user_roles?.name === 'admin' ||
-      // Verificação por role direto (legacy)
-      profile?.role === 'admin'
-    )
-  );
+  // CORREÇÃO CRÍTICA: Verificação de admin usando função do banco
+  const checkAdminStatus = useCallback(async () => {
+    if (!user) {
+      setIsAdmin(false);
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase.rpc('is_admin');
+      
+      if (error) {
+        logger.error('[AUTH-CONTEXT] Erro ao verificar status de admin:', {
+          error: error.message,
+          component: 'AuthContext'
+        });
+        setIsAdmin(false);
+        return;
+      }
+      
+      setIsAdmin(Boolean(data));
+      
+      logger.info('[AUTH-CONTEXT] Status de admin verificado:', {
+        isAdmin: Boolean(data),
+        component: 'AuthContext'
+      });
+      
+    } catch (error) {
+      logger.error('[AUTH-CONTEXT] Erro crítico na verificação de admin:', {
+        error: error instanceof Error ? error.message : 'Erro desconhecido',
+        component: 'AuthContext'
+      });
+      setIsAdmin(false);
+    }
+  }, [user]);
 
   const isFormacao = Boolean(
     profile?.user_roles?.name === 'formacao' || 
@@ -71,6 +95,15 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     setupAuthSession();
   }, [setupAuthSession]);
 
+  // Verificar status de admin quando usuário ou perfil muda
+  useEffect(() => {
+    if (user && profile) {
+      checkAdminStatus();
+    } else {
+      setIsAdmin(false);
+    }
+  }, [user, profile, checkAdminStatus]);
+
   // Listener para mudanças de autenticação
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -84,6 +117,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
           setSession(null);
           setUser(null);
           setProfile(null);
+          setIsAdmin(false);
           setIsLoading(false);
         } else if (session?.user) {
           setSession(session);
@@ -121,6 +155,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       setSession(null);
       setUser(null);
       setProfile(null);
+      setIsAdmin(false);
       setIsLoading(false);
       
       logger.info('[AUTH-CONTEXT] Logout realizado com sucesso', {

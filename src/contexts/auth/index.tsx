@@ -2,7 +2,7 @@
 import React, { createContext, useContext, useEffect, useState, useRef, useCallback } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
-import { UserProfile, getUserRoleName, isAdminRole, isFormacaoRole } from '@/lib/supabase';
+import { UserProfile, getUserRoleName, isFormacaoRole } from '@/lib/supabase';
 import { useAuthMethods } from './hooks/useAuthMethods';
 import { useAuthStateManager } from '../../hooks/auth/useAuthStateManager';
 import { clearProfileCache } from '@/hooks/auth/utils/authSessionUtils';
@@ -28,6 +28,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [authError, setAuthError] = useState<Error | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
   
   const authListenerRef = useRef<any>(null);
   const isInitialized = useRef(false);
@@ -62,98 +63,103 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     };
   }, [isLoading]);
 
-  // Verificação imediata de admin baseada em email
-  const isAdminByEmail = user?.email && [
-    'rafael@viverdeia.ai',
-    'admin@viverdeia.ai',
-    'admin@teste.com'
-  ].includes(user.email.toLowerCase());
+  // CORREÇÃO CRÍTICA: Verificação de admin usando função do banco
+  const checkAdminStatus = useCallback(async () => {
+    if (!user) {
+      setIsAdmin(false);
+      return;
+    }
 
-  // Computar isAdmin com cache
-  const isAdmin = React.useMemo(() => {
-    return isAdminRole(profile) || isAdminByEmail;
-  }, [profile, isAdminByEmail]);
-
-  // Computar isFormacao
-  const isFormacao = React.useMemo(() => {
-    return isFormacaoRole(profile);
-  }, [profile]);
-
-  // Inicialização única otimizada
-  useEffect(() => {
-    if (isInitialized.current) return;
-    
-    const initializeAuth = async () => {
-      console.log('🚀 [AUTH] Inicializando sistema de autenticação');
+    try {
+      const { data, error } = await supabase.rpc('is_admin');
       
-      try {
-        // CORREÇÃO: Configurar listener ANTES de tentar setup
-        const { data: { subscription } } = supabase.auth.onAuthStateChange(
-          async (event, session) => {
-            console.log(`🔄 [AUTH] Evento: ${event}`);
-            
-            const currentUserId = session?.user?.id;
-            if (lastUserId.current && lastUserId.current !== currentUserId) {
-              console.log('👤 [AUTH] Mudança de usuário - limpando cache');
-              clearProfileCache();
-            }
-            lastUserId.current = currentUserId;
-            
-            if (event === 'SIGNED_IN' && session?.user) {
-              console.log(`🎉 [AUTH] Login: ${session.user.email}`);
-              
-              // Defer a busca do perfil para evitar deadlock
-              setTimeout(async () => {
-                try {
-                  await setupAuthSession();
-                } catch (error) {
-                  console.error('❌ [AUTH] Erro no setup pós-login:', error);
-                  setAuthError(error instanceof Error ? error : new Error('Erro no setup'));
-                  setUser(session.user);
-                  setSession(session);
-                  setIsLoading(false);
-                }
-              }, 0);
-            } else if (event === 'SIGNED_OUT') {
-              console.log('👋 [AUTH] Logout');
-              clearProfileCache();
-              setUser(null);
-              setProfile(null);
-              setSession(null);
-              setAuthError(null);
-              setIsLoading(false);
-            }
-          }
-        );
-        
-        authListenerRef.current = subscription;
-        
-        // DEPOIS de configurar o listener, tentar setup inicial
-        await setupAuthSession();
-        
-        isInitialized.current = true;
-        console.log('✅ [AUTH] Inicialização concluída');
-        
-      } catch (error) {
-        console.error('❌ [AUTH] Erro na inicialização:', error);
-        setAuthError(error instanceof Error ? error : new Error('Erro na inicialização'));
-        setIsLoading(false);
+      if (error) {
+        console.error('[AUTH] Erro ao verificar status de admin:', error);
+        setIsAdmin(false);
+        return;
       }
-    };
+      
+      setIsAdmin(Boolean(data));
+      
+      if (process.env.NODE_ENV !== 'production') {
+        console.log('[AUTH] Status de admin verificado:', Boolean(data));
+      }
+      
+    } catch (error) {
+      console.error('[AUTH] Erro crítico na verificação de admin:', error);
+      setIsAdmin(false);
+    }
+  }, [user]);
 
-    initializeAuth();
+  const isFormacao = Boolean(
+    profile?.user_roles?.name === 'formacao' || 
+    profile?.role === 'formacao'
+  );
+
+  // Verificar status de admin quando usuário ou perfil muda
+  useEffect(() => {
+    if (user && profile) {
+      checkAdminStatus();
+    } else {
+      setIsAdmin(false);
+    }
+  }, [user, profile, checkAdminStatus]);
+
+  // Cache bust quando muda usuário
+  useEffect(() => {
+    if (user?.id !== lastUserId.current) {
+      if (lastUserId.current !== null) {
+        clearProfileCache();
+      }
+      lastUserId.current = user?.id || null;
+    }
+  }, [user?.id]);
+
+  // Setup inicial da autenticação
+  useEffect(() => {
+    if (!isInitialized.current) {
+      isInitialized.current = true;
+      setupAuthSession();
+    }
+  }, [setupAuthSession]);
+
+  // Auth state change listener
+  useEffect(() => {
+    if (!authListenerRef.current) {
+      const { data: { subscription } } = supabase.auth.onAuthStateChange(
+        async (event, currentSession) => {
+          console.log('[AUTH] Auth state change:', event);
+          
+          if (event === 'SIGNED_OUT') {
+            setUser(null);
+            setSession(null);
+            setProfile(null);
+            setIsAdmin(false);
+            setIsLoading(false);
+            setAuthError(null);
+          } else if (event === 'SIGNED_IN' && currentSession?.user) {
+            setUser(currentSession.user);
+            setSession(currentSession);
+            await setupAuthSession();
+          } else if (event === 'TOKEN_REFRESHED' && currentSession?.user) {
+            setUser(currentSession.user);
+            setSession(currentSession);
+          }
+        }
+      );
+      
+      authListenerRef.current = subscription;
+    }
 
     return () => {
       if (authListenerRef.current) {
         authListenerRef.current.unsubscribe();
-      }
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
+        authListenerRef.current = null;
       }
     };
-  }, []); // Sem dependências para evitar re-inicialização
+  }, [setupAuthSession]);
 
-  const value: AuthContextType = {
+  const contextValue: AuthContextType = {
     user,
     session,
     profile,
@@ -165,14 +171,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     signOut,
     signInAsMember,
     signInAsAdmin,
-    setUser,
-    setSession,
     setProfile,
     setIsLoading,
+    setAuthError,
   };
 
   return (
-    <AuthContext.Provider value={value}>
+    <AuthContext.Provider value={contextValue}>
       {children}
     </AuthContext.Provider>
   );
