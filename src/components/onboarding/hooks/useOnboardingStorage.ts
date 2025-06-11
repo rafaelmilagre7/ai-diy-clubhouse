@@ -1,8 +1,8 @@
-
 import { useState, useEffect } from 'react';
 import { OnboardingData } from '../types/onboardingTypes';
 import { useCloudSync } from './useCloudSync';
 import { useAuth } from '@/contexts/auth';
+import { supabase } from '@/lib/supabase';
 
 const STORAGE_KEY = 'viver-ia-onboarding-data';
 
@@ -20,6 +20,19 @@ export const useOnboardingStorage = () => {
       // Sempre salvar no localStorage primeiro (prioridade)
       localStorage.setItem(STORAGE_KEY, JSON.stringify(dataToSave));
       console.log('[OnboardingStorage] Dados salvos no localStorage');
+      
+      // Se há foto de perfil, atualizar avatar do usuário
+      if (dataToSave.profilePicture && user?.id) {
+        try {
+          await supabase
+            .from('profiles')
+            .update({ avatar_url: dataToSave.profilePicture })
+            .eq('id', user.id);
+          console.log('[OnboardingStorage] Avatar atualizado no perfil');
+        } catch (avatarError) {
+          console.warn('[OnboardingStorage] Falha ao atualizar avatar (não crítico):', avatarError);
+        }
+      }
       
       // Tentar sincronizar na nuvem (não crítico se falhar)
       if (user?.id) {

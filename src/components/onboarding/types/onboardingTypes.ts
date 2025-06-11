@@ -1,4 +1,3 @@
-
 export interface OnboardingData {
   // Etapa 1 - Informações pessoais
   name?: string;
@@ -10,6 +9,7 @@ export interface OnboardingData {
   city?: string;
   birthDate?: string;
   curiosity?: string;
+  profilePicture?: string; // Nova foto de perfil opcional
   
   // Etapa 2 - Perfil Empresarial
   companyName?: string;
