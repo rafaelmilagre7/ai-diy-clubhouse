@@ -13,6 +13,16 @@ export const useAIMessageGeneration = () => {
   
   const isGeneratingRef = useRef(false);
 
+  // Log sempre que o estado da mensagem mudar
+  const setGeneratedMessageWithLog = useCallback((message: string | null) => {
+    console.log('[AIMessageGeneration] Definindo generatedMessage:', { 
+      previousMessage: generatedMessage?.substring(0, 50) + '...', 
+      newMessage: message?.substring(0, 50) + '...',
+      messageLength: message?.length || 0
+    });
+    setGeneratedMessage(message);
+  }, [generatedMessage]);
+
   const generateMessage = useCallback(async (onboardingData: OnboardingData, memberType: 'club' | 'formacao', currentStep?: number) => {
     // Verificar se dados essenciais estão presentes
     if (!onboardingData.name) {
@@ -32,7 +42,7 @@ export const useAIMessageGeneration = () => {
     setIsGenerating(true);
     setError(null);
     setProgress(0);
-    setGeneratedMessage(null);
+    setGeneratedMessageWithLog(null);
     
     try {
       // Simular progresso para melhor UX
@@ -83,12 +93,16 @@ export const useAIMessageGeneration = () => {
           console.log('[AIMessageGeneration] Mensagem limpa e validada:', cleanMessage.substring(0, 50));
         }
         
-        setGeneratedMessage(cleanMessage);
-        console.log('[AIMessageGeneration] Mensagem definida com sucesso');
+        setGeneratedMessageWithLog(cleanMessage);
+        console.log('[AIMessageGeneration] Mensagem definida com sucesso - Estado final do hook:', {
+          isGenerating: false,
+          hasMessage: !!cleanMessage,
+          messagePreview: cleanMessage?.substring(0, 100)
+        });
       } else {
         const fallbackMessage = data?.message || getFallbackMessage(onboardingData, currentStep);
         console.warn('[AIMessageGeneration] Usando mensagem de fallback:', data?.error);
-        setGeneratedMessage(fallbackMessage);
+        setGeneratedMessageWithLog(fallbackMessage);
       }
 
     } catch (err) {
@@ -97,7 +111,7 @@ export const useAIMessageGeneration = () => {
       setError('Erro ao gerar mensagem personalizada');
       
       const fallbackMessage = getFallbackMessage(onboardingData, currentStep);
-      setGeneratedMessage(fallbackMessage);
+      setGeneratedMessageWithLog(fallbackMessage);
       console.log('[AIMessageGeneration] Fallback aplicado devido a erro');
     } finally {
       isGeneratingRef.current = false;
@@ -106,7 +120,7 @@ export const useAIMessageGeneration = () => {
       
       setTimeout(() => setProgress(0), 1500);
     }
-  }, [handleError]);
+  }, [handleError, setGeneratedMessageWithLog]);
 
   const getFallbackMessage = (onboardingData: OnboardingData, currentStep?: number) => {
     if (currentStep === 2) {
@@ -117,11 +131,20 @@ export const useAIMessageGeneration = () => {
 
   const clearMessage = useCallback(() => {
     console.log('[AIMessageGeneration] Limpando mensagem e resetando estado');
-    setGeneratedMessage(null);
+    setGeneratedMessageWithLog(null);
     setError(null);
     setProgress(0);
     isGeneratingRef.current = false;
-  }, []);
+  }, [setGeneratedMessageWithLog]);
+
+  // Log do estado atual sempre que houver mudança
+  console.log('[useAIMessageGeneration] Estado atual do hook:', {
+    isGenerating,
+    hasGeneratedMessage: !!generatedMessage,
+    messageLength: generatedMessage?.length || 0,
+    hasError: !!error,
+    progress
+  });
 
   return {
     generateMessage,

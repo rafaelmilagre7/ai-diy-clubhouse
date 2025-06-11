@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState, useMemo, useRef } from 'react';
 import { useAIMessageGeneration } from '../hooks/useAIMessageGeneration';
 import { TypingEffect } from './TypingEffect';
@@ -101,20 +100,30 @@ export const Step2AIInteraction: React.FC<Step2AIInteractionProps> = ({
     console.log('[Step2AIInteraction] Digitação completada');
   };
 
-  // Debug: mostrar estado atual
-  console.log('[Step2AIInteraction] Estado atual:', {
+  // Debug detalhado: mostrar estado atual com TODAS as condições
+  const debugState = {
     hasMinimumData,
     isInitialized,
     hasRequestedGeneration,
     isGenerating,
     hasGeneratedMessage: !!generatedMessage,
+    messageLength: generatedMessage?.length || 0,
     hasError: !!error,
     messageKey,
-    dataChanged
-  });
+    dataChanged,
+    // Condições específicas de renderização
+    canShowLoading: isGenerating,
+    canShowMessage: generatedMessage && !isGenerating && isInitialized,
+    canShowError: !!error,
+    canShowPreparation: hasMinimumData && !isInitialized,
+    willReturnNull: !isGenerating && !generatedMessage && !error && (!hasMinimumData || isInitialized)
+  };
+  
+  console.log('[Step2AIInteraction] Estado atual COMPLETO:', debugState);
 
   // Mostrar loading enquanto gera
   if (isGenerating) {
+    console.log('[Step2AIInteraction] Renderizando: Loading');
     return (
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
@@ -150,6 +159,7 @@ export const Step2AIInteraction: React.FC<Step2AIInteractionProps> = ({
 
   // Mostrar mensagem com efeito de digitação
   if (generatedMessage && !isGenerating && isInitialized) {
+    console.log('[Step2AIInteraction] Renderizando: Mensagem da IA');
     return (
       <motion.div
         key={`message-${messageKey}`}
@@ -182,6 +192,7 @@ export const Step2AIInteraction: React.FC<Step2AIInteractionProps> = ({
 
   // Mostrar erro se houver
   if (error) {
+    console.log('[Step2AIInteraction] Renderizando: Erro');
     return (
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
@@ -206,7 +217,7 @@ export const Step2AIInteraction: React.FC<Step2AIInteractionProps> = ({
 
   // Mostrar estado de preparação se temos dados mas ainda não inicializamos
   if (hasMinimumData && !isInitialized) {
-    console.log('[Step2AIInteraction] Dados disponíveis, preparando inicialização');
+    console.log('[Step2AIInteraction] Renderizando: Preparação');
     return (
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
@@ -229,7 +240,43 @@ export const Step2AIInteraction: React.FC<Step2AIInteractionProps> = ({
     );
   }
 
+  // ÚLTIMO CASO: mostrar debug em vez de retornar null
+  console.log('[Step2AIInteraction] ATENÇÃO: Nenhuma condição atendida - Estado de debug:', debugState);
+  
+  // Fallback de debug para investigar o problema
+  if (generatedMessage && isInitialized) {
+    console.log('[Step2AIInteraction] FORÇANDO renderização da mensagem - todas as condições atendidas');
+    return (
+      <motion.div
+        key={`debug-message-${messageKey}`}
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="bg-gradient-to-r from-viverblue/10 to-viverblue-light/10 border border-viverblue/30 rounded-xl p-6 mb-6"
+      >
+        <div className="flex items-center justify-center gap-2 mb-4">
+          <div className="bg-viverblue/20 p-2 rounded-full">
+            <Bot className="w-5 h-5 text-viverblue" />
+          </div>
+          <Sparkles className="w-4 h-4 text-viverblue" />
+          <span className="text-sm font-semibold text-viverblue">IA VIVER DE IA</span>
+        </div>
+        
+        <div className="prose prose-slate max-w-none">
+          <div className="leading-relaxed text-slate-100">
+            <TypingEffect
+              key={`typing-debug-${messageKey}-${generatedMessage.length}`}
+              text={generatedMessage}
+              speed={25}
+              onComplete={handleTypingComplete}
+              startDelay={300}
+            />
+          </div>
+        </div>
+      </motion.div>
+    );
+  }
+
   // Não mostrar nada se não houver dados suficientes
-  console.log('[Step2AIInteraction] Dados insuficientes para exibir mensagem');
+  console.log('[Step2AIInteraction] Retornando NULL - dados insuficientes');
   return null;
 };
