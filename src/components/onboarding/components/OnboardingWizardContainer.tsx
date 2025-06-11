@@ -1,6 +1,7 @@
 
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import { useOnboardingValidation } from '../hooks/useOnboardingValidation';
+import { useOnboardingStorage } from '../hooks/useOnboardingStorage';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/lib/supabase';
 import { OnboardingData } from '../types/onboardingTypes';
@@ -43,18 +44,19 @@ export const OnboardingWizardContainer: React.FC<OnboardingWizardContainerProps>
   const [currentStep, setCurrentStep] = useState(1);
   const totalSteps = 6;
 
-  // Estados básicos
-  const [data, setData] = useState<OnboardingData>({
-    memberType: 'club',
-    name: '',
-    email: '',
-    city: ''
-  });
-  const [isLoading, setIsLoading] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [lastSaved, setLastSaved] = useState<Date | null>(null);
-  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  // Hook de storage para persistência
+  const {
+    data: storageData,
+    updateData,
+    forceSave,
+    isLoading: storageLoading,
+    hasUnsavedChanges,
+    lastSaved
+  } = useOnboardingStorage();
 
+  // Estados básicos
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  
   // Estados para IA - SIMPLIFICADOS
   const [currentAIMessage, setCurrentAIMessage] = useState<string | null>(null);
   const [isGeneratingAI, setIsGeneratingAI] = useState(false);
@@ -66,6 +68,16 @@ export const OnboardingWizardContainer: React.FC<OnboardingWizardContainerProps>
     getFieldError,
     validateCurrentStep,
   } = useOnboardingValidation();
+
+  // Usar dados do storage ou dados vazios como fallback
+  const data = useMemo(() => {
+    return storageData || {
+      memberType: 'club',
+      name: '',
+      email: '',
+      city: ''
+    };
+  }, [storageData]);
 
   // Mover validação para useMemo para evitar re-renders infinitos
   const isCurrentStepValid = useMemo(() => {
@@ -146,10 +158,24 @@ export const OnboardingWizardContainer: React.FC<OnboardingWizardContainerProps>
       return;
     }
 
+    // Salvar dados antes de avançar
+    try {
+      await forceSave();
+      console.log('[WIZARD-CONTAINER] Dados salvos antes de avançar');
+    } catch (error) {
+      console.error('[WIZARD-CONTAINER] Erro ao salvar dados:', error);
+      toast({
+        title: "Erro ao salvar",
+        description: "Houve um erro ao salvar seus dados. Tente novamente.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     const nextStep = currentStep + 1;
     console.log('[WIZARD-CONTAINER] Avançando para etapa:', nextStep);
     setCurrentStep(nextStep);
-  }, [isCurrentStepValid, currentStep, toast]);
+  }, [isCurrentStepValid, currentStep, toast, forceSave]);
 
   const handlePrevious = useCallback(() => {
     console.log('[WIZARD-CONTAINER] Voltando para etapa anterior');
@@ -159,17 +185,19 @@ export const OnboardingWizardContainer: React.FC<OnboardingWizardContainerProps>
 
   const handleDataChange = useCallback((newData: Partial<OnboardingData>) => {
     console.log('[WIZARD-CONTAINER] Dados alterados:', newData);
-    setData(prev => ({ ...prev, ...newData }));
-    setHasUnsavedChanges(true);
-    setLastSaved(new Date());
-  }, []);
+    // Usar updateData do storage para persistir automaticamente
+    updateData(newData);
+  }, [updateData]);
 
   const handleSubmit = useCallback(async () => {
     console.log('[WIZARD-CONTAINER] Finalizando onboarding');
     setIsSubmitting(true);
     
     try {
-      // Simular envio
+      // Salvar dados finais
+      await forceSave();
+      
+      // Simular envio final
       await new Promise(resolve => setTimeout(resolve, 2000));
       toast({
         title: "Onboarding concluído!",
@@ -185,13 +213,14 @@ export const OnboardingWizardContainer: React.FC<OnboardingWizardContainerProps>
     } finally {
       setIsSubmitting(false);
     }
-  }, [toast]);
+  }, [toast, forceSave]);
 
+  // Context value usando useMemo para evitar re-renders desnecessários
   const contextValue: OnboardingWizardContextType = useMemo(() => ({
     currentStep,
     totalSteps,
     data,
-    isLoading,
+    isLoading: storageLoading,
     isSubmitting,
     lastSaved,
     hasUnsavedChanges,
@@ -209,7 +238,7 @@ export const OnboardingWizardContainer: React.FC<OnboardingWizardContainerProps>
     currentStep,
     totalSteps,
     data,
-    isLoading,
+    storageLoading,
     isSubmitting,
     lastSaved,
     hasUnsavedChanges,
