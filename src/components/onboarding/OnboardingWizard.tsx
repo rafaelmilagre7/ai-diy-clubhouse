@@ -8,7 +8,10 @@ import { Card } from '@/components/ui/card';
 
 const stepTitles = [
   'Informações Pessoais',
-  'Perfil de IA',
+  'Perfil Empresarial', 
+  'Maturidade em IA',
+  'Objetivos e Expectativas',
+  'Personalização da Experiência',
   'Finalização'
 ];
 

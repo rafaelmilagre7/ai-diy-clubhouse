@@ -1,7 +1,10 @@
 
 import React from 'react';
 import OnboardingStep1 from '../steps/OnboardingStep1';
+import OnboardingStep2 from '../steps/OnboardingStep2';
 import OnboardingStep3 from '../steps/OnboardingStep3';
+import OnboardingStep4 from '../steps/OnboardingStep4';
+import OnboardingStep5 from '../steps/OnboardingStep5';
 import { OnboardingFinal } from '../steps/OnboardingFinal';
 import { OnboardingData } from '../types/onboardingTypes';
 
@@ -37,12 +40,25 @@ export const OnboardingStepRenderer: React.FC<OnboardingStepRendererProps> = ({
           data={data}
           onUpdateData={onUpdateData}
           onNext={onNext}
+          onPrev={onPrev}
           memberType={memberType}
           validationErrors={validationErrors}
           getFieldError={getFieldError}
         />
       );
     case 2:
+      return (
+        <OnboardingStep2
+          data={data}
+          onUpdateData={onUpdateData}
+          onNext={onNext}
+          onPrev={onPrev}
+          memberType={memberType}
+          validationErrors={validationErrors}
+          getFieldError={getFieldError}
+        />
+      );
+    case 3:
       return (
         <OnboardingStep3
           data={data}
@@ -54,7 +70,31 @@ export const OnboardingStepRenderer: React.FC<OnboardingStepRendererProps> = ({
           getFieldError={getFieldError}
         />
       );
-    case 3:
+    case 4:
+      return (
+        <OnboardingStep4
+          data={data}
+          onUpdateData={onUpdateData}
+          onNext={onNext}
+          onPrev={onPrev}
+          memberType={memberType}
+          validationErrors={validationErrors}
+          getFieldError={getFieldError}
+        />
+      );
+    case 5:
+      return (
+        <OnboardingStep5
+          data={data}
+          onUpdateData={onUpdateData}
+          onNext={onNext}
+          onPrev={onPrev}
+          memberType={memberType}
+          validationErrors={validationErrors}
+          getFieldError={getFieldError}
+        />
+      );
+    case 6:
       return (
         <OnboardingFinal
           data={data}

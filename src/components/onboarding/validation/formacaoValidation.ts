@@ -11,6 +11,7 @@ export const validateFormacaoStep = (step: number, data: OnboardingData): { isVa
 
   switch (step) {
     case 1:
+      // Etapa 1 - Informações Pessoais
       if (!data.name?.trim()) {
         errors.push({ field: 'name', message: 'Nome é obrigatório' });
       }
@@ -37,18 +38,17 @@ export const validateFormacaoStep = (step: number, data: OnboardingData): { isVa
       break;
 
     case 2:
+      // Etapa 2 - Perfil Empresarial
       if (!data.businessSector) {
         errors.push({ field: 'businessSector', message: 'Setor/segmento é obrigatório' });
       }
       if (!data.position) {
         errors.push({ field: 'position', message: 'Cargo/posição é obrigatório' });
       }
-      if (!data.areaToImpact) {
-        errors.push({ field: 'areaToImpact', message: 'Área para implementar IA é obrigatória' });
-      }
       break;
 
     case 3:
+      // Etapa 3 - Maturidade em IA
       if (!data.hasImplementedAI) {
         errors.push({ field: 'hasImplementedAI', message: 'Experiência com IA é obrigatória' });
       }
@@ -64,13 +64,14 @@ export const validateFormacaoStep = (step: number, data: OnboardingData): { isVa
       break;
 
     case 4:
+      // Etapa 4 - Objetivos e Expectativas
       if (!data.mainObjective) {
         errors.push({ field: 'mainObjective', message: 'Principal objetivo é obrigatório' });
       }
-      if (!data.areaToImpact) {
-        errors.push({ field: 'areaToImpact', message: 'Setor de mercado é obrigatório' });
+      if (!data.areaToImpact?.trim()) {
+        errors.push({ field: 'areaToImpact', message: 'Área para implementar IA é obrigatória' });
       }
-      if (!data.expectedResult90Days) {
+      if (!data.expectedResult90Days?.trim()) {
         errors.push({ field: 'expectedResult90Days', message: 'Resultado esperado é obrigatório' });
       }
       if (!data.aiImplementationBudget) {
@@ -79,6 +80,7 @@ export const validateFormacaoStep = (step: number, data: OnboardingData): { isVa
       break;
 
     case 5:
+      // Etapa 5 - Personalização da Experiência
       if (!data.weeklyLearningTime) {
         errors.push({ field: 'weeklyLearningTime', message: 'Tempo de aprendizado é obrigatório' });
       }
@@ -97,6 +99,10 @@ export const validateFormacaoStep = (step: number, data: OnboardingData): { isVa
       if (!data.acceptsCaseStudy) {
         errors.push({ field: 'acceptsCaseStudy', message: 'Case de sucesso é obrigatório' });
       }
+      break;
+
+    case 6:
+      // Etapa 6 - Finalização (sem validações específicas)
       break;
   }
 

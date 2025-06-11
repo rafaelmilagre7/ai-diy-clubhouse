@@ -1,309 +1,182 @@
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { motion } from 'framer-motion';
-import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Building2, Briefcase, Target } from 'lucide-react';
-import { OnboardingStepProps } from '../types/onboardingTypes';
-import { AIMessageDisplay } from '../components/AIMessageDisplay';
-import { generateAIMessage } from '../utils/aiMessageGenerator';
+import { OnboardingData } from '../types/onboardingTypes';
+import { Building2, Globe, Users, DollarSign, Briefcase } from 'lucide-react';
 
-const businessSectors = [
-  'Inteligência Artificial',
-  'Tecnologia da Informação',
-  'E-commerce',
-  'Marketing Digital',
-  'Consultoria Empresarial',
-  'Educação',
-  'Saúde e Medicina',
-  'Varejo',
-  'Serviços Financeiros',
-  'Manufatura',
-  'Agronegócio',
-  'Construção Civil',
-  'Alimentação',
-  'Turismo e Hospitalidade',
-  'Logística e Transporte',
-  'Imobiliário',
-  'Jurídico',
-  'Recursos Humanos',
-  'Contabilidade',
-  'Design e Criatividade',
-  'Outro'
-];
+interface OnboardingStep2Props {
+  data: OnboardingData;
+  onUpdateData: (newData: Partial<OnboardingData>) => void;
+  onNext: () => Promise<void>;
+  onPrev: () => void;
+  memberType: 'club' | 'formacao';
+  validationErrors: Array<{ field: string; message: string }>;
+  getFieldError: (field: string) => string | undefined;
+}
 
-const positions = [
-  'CEO/Fundador',
-  'Diretor',
-  'Gerente',
-  'Coordenador',
-  'Analista',
-  'Consultor',
-  'Especialista',
-  'Desenvolvedor',
-  'Designer',
-  'Profissional Liberal',
-  'Estudante',
-  'Empreendedor',
-  'Freelancer',
-  'Outro'
-];
-
-const areasToImpact = [
-  'Marketing e Vendas',
-  'Atendimento ao Cliente',
-  'Recursos Humanos',
-  'Finanças',
-  'Operações',
-  'Produção',
-  'Logística',
-  'Desenvolvimento de Produtos',
-  'Pesquisa e Desenvolvimento',
-  'Educação e Treinamento',
-  'Análise de Dados',
-  'Automação de Processos',
-  'Outro'
-];
-
-export const OnboardingStep2 = ({ 
-  data, 
-  onUpdateData, 
-  onNext, 
-  onPrev, 
-  memberType,
-  getFieldError 
-}: OnboardingStepProps) => {
-  const [formData, setFormData] = useState({
-    businessSector: data.businessSector || '',
-    position: data.position || '',
-    areaToImpact: data.areaToImpact || ''
-  });
-
-  const [showAIMessage, setShowAIMessage] = useState(false);
-
-  useEffect(() => {
-    // Mostrar mensagem da IA após preenchimento
-    const hasBasicInfo = formData.businessSector && formData.position;
-    if (hasBasicInfo && !showAIMessage) {
-      const timer = setTimeout(() => {
-        setShowAIMessage(true);
-      }, 1500);
-      return () => clearTimeout(timer);
-    }
-  }, [formData.businessSector, formData.position, showAIMessage]);
-
-  const handleInputChange = (field: string, value: string) => {
-    const newData = { ...formData, [field]: value };
-    setFormData(newData);
-    onUpdateData(newData);
-  };
-
-  const getTitle = () => {
-    if (memberType === 'formacao') {
-      return (
-        <>
-          Seu{' '}
-          <span className="bg-gradient-to-r from-viverblue to-viverblue-light bg-clip-text text-transparent">
-            Perfil de Mercado 💼
-          </span>
-        </>
-      );
-    }
-    return (
-      <>
-        Seu{' '}
-        <span className="bg-gradient-to-r from-viverblue to-viverblue-light bg-clip-text text-transparent">
-          Perfil Empresarial 💼
-        </span>
-      </>
-    );
-  };
-
-  const getSubtitle = () => {
-    if (memberType === 'formacao') {
-      return "Vamos entender sua área de atuação para personalizar sua formação em IA!";
-    }
-    return "Vamos entender sua empresa para criar soluções de IA personalizadas!";
-  };
-
+const OnboardingStep2: React.FC<OnboardingStep2Props> = ({
+  data,
+  onUpdateData,
+  validationErrors,
+  getFieldError
+}) => {
   return (
-    <div className="space-y-8">
-      {/* Header */}
-      <motion.div 
+    <div className="max-w-4xl mx-auto p-6 space-y-8">
+      <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         className="text-center space-y-4"
       >
-        <h1 className="text-4xl font-heading font-bold text-white">
-          {getTitle()}
+        <div className="w-16 h-16 mx-auto bg-viverblue/20 rounded-full flex items-center justify-center">
+          <Building2 className="w-8 h-8 text-viverblue" />
+        </div>
+        
+        <h1 className="text-3xl font-bold text-white">
+          Perfil Empresarial
         </h1>
-        <p className="text-xl text-neutral-300 max-w-2xl mx-auto leading-relaxed">
-          {getSubtitle()}
+        
+        <p className="text-xl text-slate-300">
+          Conte-nos sobre sua empresa e posição
         </p>
       </motion.div>
 
-      <div className="grid lg:grid-cols-2 gap-8">
-        {/* Formulário */}
-        <motion.div
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.2 }}
-          className="space-y-6"
-        >
-          <div className="bg-[#151823] border border-white/10 rounded-2xl p-6 space-y-6">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-full bg-viverblue/20 flex items-center justify-center">
-                <Building2 className="w-5 h-5 text-viverblue" />
-              </div>
-              <h3 className="text-xl font-heading font-semibold text-white">
-                {memberType === 'formacao' ? 'Perfil de Mercado' : 'Perfil Empresarial'}
-              </h3>
-            </div>
-
-            {/* Setor/Segmento */}
-            <div className="space-y-2">
-              <Label className="text-neutral-300 flex items-center gap-2">
-                <Briefcase className="w-4 h-4" />
-                Setor/segmento de atuação *
-              </Label>
-              <Select value={formData.businessSector} onValueChange={(value) => handleInputChange('businessSector', value)}>
-                <SelectTrigger className="bg-[#0F111A] border-white/20 text-white">
-                  <SelectValue placeholder="Selecione seu setor de atuação" />
-                </SelectTrigger>
-                <SelectContent>
-                  {businessSectors.map((sector) => (
-                    <SelectItem key={sector} value={sector}>
-                      {sector}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {getFieldError?.('businessSector') && (
-                <p className="text-red-400 text-sm">{getFieldError('businessSector')}</p>
-              )}
-            </div>
-
-            {/* Cargo/Posição */}
-            <div className="space-y-2">
-              <Label className="text-neutral-300">
-                Seu cargo/posição *
-              </Label>
-              <Select value={formData.position} onValueChange={(value) => handleInputChange('position', value)}>
-                <SelectTrigger className="bg-[#0F111A] border-white/20 text-white">
-                  <SelectValue placeholder="Selecione seu cargo/posição" />
-                </SelectTrigger>
-                <SelectContent>
-                  {positions.map((position) => (
-                    <SelectItem key={position} value={position}>
-                      {position}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {getFieldError?.('position') && (
-                <p className="text-red-400 text-sm">{getFieldError('position')}</p>
-              )}
-            </div>
-
-            {/* Área para implementar IA */}
-            <div className="space-y-2">
-              <Label className="text-neutral-300 flex items-center gap-2">
-                <Target className="w-4 h-4" />
-                Qual área você gostaria de implementar IA? *
-              </Label>
-              <Select value={formData.areaToImpact} onValueChange={(value) => handleInputChange('areaToImpact', value)}>
-                <SelectTrigger className="bg-[#0F111A] border-white/20 text-white">
-                  <SelectValue placeholder="Selecione a área de interesse" />
-                </SelectTrigger>
-                <SelectContent>
-                  {areasToImpact.map((area) => (
-                    <SelectItem key={area} value={area}>
-                      {area}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {getFieldError?.('areaToImpact') && (
-                <p className="text-red-400 text-sm">{getFieldError('areaToImpact')}</p>
-              )}
-            </div>
-          </div>
-        </motion.div>
-
-        {/* Mensagem da IA */}
-        <motion.div
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.4 }}
-          className="space-y-6"
-        >
-          {showAIMessage && (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.6 }}
-            >
-              <AIMessageDisplay 
-                message={generateAIMessage(2, { ...data, ...formData }, memberType)}
-              />
-            </motion.div>
-          )}
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.8 }}
-            className="bg-viverblue/10 border border-viverblue/30 rounded-xl p-6"
-          >
-            <h4 className="font-semibold text-viverblue mb-3">
-              {memberType === 'formacao' ? '🎯 Como personalizamos sua formação:' : '🎯 Como personalizamos para você:'}
-            </h4>
-            <ul className="space-y-2 text-sm text-neutral-300">
-              {memberType === 'formacao' ? (
-                <>
-                  <li>• Conteúdo específico para sua área de atuação</li>
-                  <li>• Projetos práticos do seu setor</li>
-                  <li>• Casos de sucesso similares ao seu perfil</li>
-                  <li>• Mentoria direcionada para seus objetivos</li>
-                </>
-              ) : (
-                <>
-                  <li>• Soluções de IA específicas para seu setor</li>
-                  <li>• Cases de sucesso da sua área</li>
-                  <li>• Estratégias personalizadas para seu cargo</li>
-                  <li>• ROI calculado para sua realidade</li>
-                </>
-              )}
-            </ul>
-          </motion.div>
-        </motion.div>
-      </div>
-
-      {/* Navegação */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 1 }}
-        className="flex justify-between pt-6"
+        transition={{ delay: 0.2 }}
+        className="bg-[#1A1E2E] rounded-xl p-6 border border-white/10 space-y-6"
       >
-        <Button 
-          onClick={onPrev}
-          variant="outline"
-          size="lg"
-          className="px-8 py-3 text-lg"
-        >
-          ← Voltar
-        </Button>
-        
-        <Button 
-          onClick={onNext}
-          size="lg"
-          className="bg-viverblue hover:bg-viverblue-dark text-[#0F111A] px-8 py-3 text-lg font-semibold rounded-xl"
-        >
-          Continuar →
-        </Button>
+        <div className="grid md:grid-cols-2 gap-6">
+          <div className="space-y-2">
+            <Label htmlFor="companyName" className="text-white flex items-center gap-2">
+              <Building2 className="w-4 h-4" />
+              Nome da Empresa
+            </Label>
+            <Input
+              id="companyName"
+              type="text"
+              value={data.companyName || ''}
+              onChange={(e) => onUpdateData({ companyName: e.target.value })}
+              placeholder="Ex: Minha Empresa LTDA"
+              className="bg-[#151823] border-white/20 text-white placeholder:text-slate-400"
+            />
+            {getFieldError('companyName') && (
+              <p className="text-red-400 text-sm">{getFieldError('companyName')}</p>
+            )}
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="companyWebsite" className="text-white flex items-center gap-2">
+              <Globe className="w-4 h-4" />
+              Website da Empresa
+            </Label>
+            <Input
+              id="companyWebsite"
+              type="url"
+              value={data.companyWebsite || ''}
+              onChange={(e) => onUpdateData({ companyWebsite: e.target.value })}
+              placeholder="Ex: https://minhaempresa.com"
+              className="bg-[#151823] border-white/20 text-white placeholder:text-slate-400"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="businessSector" className="text-white flex items-center gap-2">
+              <Briefcase className="w-4 h-4" />
+              Setor/Segmento *
+            </Label>
+            <Select value={data.businessSector || ''} onValueChange={(value) => onUpdateData({ businessSector: value })}>
+              <SelectTrigger className="bg-[#151823] border-white/20 text-white">
+                <SelectValue placeholder="Selecione o setor" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="tecnologia">Tecnologia</SelectItem>
+                <SelectItem value="saude">Saúde</SelectItem>
+                <SelectItem value="educacao">Educação</SelectItem>
+                <SelectItem value="financeiro">Financeiro</SelectItem>
+                <SelectItem value="varejo">Varejo</SelectItem>
+                <SelectItem value="manufatura">Manufatura</SelectItem>
+                <SelectItem value="servicos">Serviços</SelectItem>
+                <SelectItem value="consultoria">Consultoria</SelectItem>
+                <SelectItem value="outro">Outro</SelectItem>
+              </SelectContent>
+            </Select>
+            {getFieldError('businessSector') && (
+              <p className="text-red-400 text-sm">{getFieldError('businessSector')}</p>
+            )}
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="companySize" className="text-white flex items-center gap-2">
+              <Users className="w-4 h-4" />
+              Tamanho da Empresa
+            </Label>
+            <Select value={data.companySize || ''} onValueChange={(value) => onUpdateData({ companySize: value })}>
+              <SelectTrigger className="bg-[#151823] border-white/20 text-white">
+                <SelectValue placeholder="Número de funcionários" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="1-10">1-10 funcionários</SelectItem>
+                <SelectItem value="11-50">11-50 funcionários</SelectItem>
+                <SelectItem value="51-200">51-200 funcionários</SelectItem>
+                <SelectItem value="201-1000">201-1000 funcionários</SelectItem>
+                <SelectItem value="1000+">Mais de 1000 funcionários</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="annualRevenue" className="text-white flex items-center gap-2">
+              <DollarSign className="w-4 h-4" />
+              Faturamento Anual
+            </Label>
+            <Select value={data.annualRevenue || ''} onValueChange={(value) => onUpdateData({ annualRevenue: value })}>
+              <SelectTrigger className="bg-[#151823] border-white/20 text-white">
+                <SelectValue placeholder="Faixa de faturamento" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="ate-100k">Até R$ 100.000</SelectItem>
+                <SelectItem value="100k-500k">R$ 100.000 - R$ 500.000</SelectItem>
+                <SelectItem value="500k-1m">R$ 500.000 - R$ 1.000.000</SelectItem>
+                <SelectItem value="1m-5m">R$ 1.000.000 - R$ 5.000.000</SelectItem>
+                <SelectItem value="5m+">Acima de R$ 5.000.000</SelectItem>
+                <SelectItem value="nao-informar">Prefiro não informar</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="position" className="text-white flex items-center gap-2">
+              <Briefcase className="w-4 h-4" />
+              Seu Cargo/Posição *
+            </Label>
+            <Select value={data.position || ''} onValueChange={(value) => onUpdateData({ position: value })}>
+              <SelectTrigger className="bg-[#151823] border-white/20 text-white">
+                <SelectValue placeholder="Selecione seu cargo" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="ceo">CEO/Presidente</SelectItem>
+                <SelectItem value="diretor">Diretor</SelectItem>
+                <SelectItem value="gerente">Gerente</SelectItem>
+                <SelectItem value="coordenador">Coordenador</SelectItem>
+                <SelectItem value="analista">Analista</SelectItem>
+                <SelectItem value="especialista">Especialista</SelectItem>
+                <SelectItem value="consultor">Consultor</SelectItem>
+                <SelectItem value="empreendedor">Empreendedor</SelectItem>
+                <SelectItem value="outro">Outro</SelectItem>
+              </SelectContent>
+            </Select>
+            {getFieldError('position') && (
+              <p className="text-red-400 text-sm">{getFieldError('position')}</p>
+            )}
+          </div>
+        </div>
       </motion.div>
     </div>
   );
 };
+
+export default OnboardingStep2;
