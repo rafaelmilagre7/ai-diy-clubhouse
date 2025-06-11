@@ -1,296 +1,244 @@
 
-import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import React from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { LineChart, Line, AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
-import { TrendingUp, Activity, Shield, AlertTriangle } from 'lucide-react';
-import { supabase } from '@/lib/supabase';
+import { 
+  Shield, 
+  AlertTriangle, 
+  Activity, 
+  TrendingUp,
+  Clock,
+  BarChart3
+} from 'lucide-react';
 
-interface MetricData {
-  metric_name: string;
-  metric_value: number;
-  metric_type: string;
-  labels: Record<string, any>;
-  recorded_at: string;
+interface SecurityMetrics {
+  totalEvents: number;
+  criticalEvents: number;
+  activeIncidents: number;
+  anomaliesDetected: number;
+  lastUpdate: Date;
 }
 
-export const SecurityMetricsPanel = () => {
-  const [metrics, setMetrics] = useState<MetricData[]>([]);
-  const [timeRange, setTimeRange] = useState<string>('24h');
-  const [loading, setLoading] = useState(true);
+interface SecurityAnomaly {
+  id: string;
+  anomaly_type: string;
+  confidence_score: number;
+  description?: string;
+  affected_user_id?: string;
+  detection_data: Record<string, any>;
+  status: string;
+  detected_at: string;
+}
 
-  useEffect(() => {
-    loadMetrics();
-  }, [timeRange]);
+interface AnomalyPattern {
+  type: string;
+  count: number;
+  severity: 'low' | 'medium' | 'high' | 'critical';
+  description: string;
+}
 
-  const loadMetrics = async () => {
-    setLoading(true);
-    try {
-      const hoursBack = timeRange === '24h' ? 24 : timeRange === '7d' ? 168 : 720; // 30d
-      const since = new Date(Date.now() - hoursBack * 60 * 60 * 1000).toISOString();
+interface SecurityMetricsPanelProps {
+  metrics: SecurityMetrics;
+  anomalies: SecurityAnomaly[];
+  patterns: AnomalyPattern[];
+}
 
-      const { data, error } = await supabase
-        .from('security_metrics')
-        .select('*')
-        .gte('recorded_at', since)
-        .order('recorded_at', { ascending: true });
-
-      if (error) throw error;
-      setMetrics(data || []);
-    } catch (error) {
-      console.error('Erro ao carregar métricas:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Processar dados para os gráficos
-  const processTimeSeriesData = (metricName: string) => {
-    return metrics
-      .filter(m => m.metric_name === metricName)
-      .map(m => ({
-        timestamp: new Date(m.recorded_at).toLocaleDateString('pt-BR'),
-        value: Number(m.metric_value),
-        hour: new Date(m.recorded_at).getHours()
-      }));
-  };
-
-  const processSeverityData = () => {
-    const severityMetrics = metrics.filter(m => m.metric_name === 'security_events_by_severity');
-    const severityMap = {};
-    
-    severityMetrics.forEach(m => {
-      const severity = m.labels?.severity || 'unknown';
-      severityMap[severity] = (severityMap[severity] || 0) + Number(m.metric_value);
-    });
-
-    return Object.entries(severityMap).map(([severity, value]) => ({
-      name: severity,
-      value: Number(value),
-      color: getSeverityColor(severity)
-    }));
-  };
-
+export const SecurityMetricsPanel: React.FC<SecurityMetricsPanelProps> = ({
+  metrics,
+  anomalies,
+  patterns
+}) => {
   const getSeverityColor = (severity: string) => {
     switch (severity) {
-      case 'critical': return '#dc2626';
-      case 'high': return '#ea580c';
-      case 'medium': return '#d97706';
-      case 'low': return '#65a30d';
-      default: return '#6b7280';
+      case 'critical': return 'destructive';
+      case 'high': return 'destructive';
+      case 'medium': return 'default';
+      case 'low': return 'secondary';
+      default: return 'outline';
     }
   };
 
-  const activeUsersData = processTimeSeriesData('active_users_24h');
-  const anomaliesData = processTimeSeriesData('anomalies_detected_24h');
-  const severityData = processSeverityData();
-
-  if (loading) {
-    return (
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {[...Array(4)].map((_, i) => (
-          <Card key={i}>
-            <CardContent className="p-6">
-              <div className="animate-pulse space-y-3">
-                <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-                <div className="h-32 bg-gray-200 rounded"></div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-    );
-  }
+  const criticalPatterns = patterns.filter(p => p.severity === 'critical');
+  const recentAnomalies = anomalies.slice(0, 5);
 
   return (
-    <div className="space-y-6">
-      {/* Controles */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h3 className="text-lg font-semibold">Métricas de Segurança</h3>
-          <p className="text-sm text-muted-foreground">
-            Análise temporal dos eventos de segurança
-          </p>
-        </div>
-        <Select value={timeRange} onValueChange={setTimeRange}>
-          <SelectTrigger className="w-32">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="24h">24 horas</SelectItem>
-            <SelectItem value="7d">7 dias</SelectItem>
-            <SelectItem value="30d">30 dias</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-
-      {/* Gráficos */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Usuários Ativos */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Activity className="h-4 w-4" />
-              Usuários Ativos
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {activeUsersData.length > 0 ? (
-              <ResponsiveContainer width="100%" height={200}>
-                <AreaChart data={activeUsersData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="timestamp" />
-                  <YAxis />
-                  <Tooltip />
-                  <Area 
-                    type="monotone" 
-                    dataKey="value" 
-                    stroke="#3b82f6" 
-                    fill="#3b82f6" 
-                    fillOpacity={0.3}
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
-            ) : (
-              <div className="h-48 flex items-center justify-center text-muted-foreground">
-                Sem dados para o período selecionado
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Anomalias Detectadas */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <TrendingUp className="h-4 w-4" />
-              Anomalias Detectadas
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {anomaliesData.length > 0 ? (
-              <ResponsiveContainer width="100%" height={200}>
-                <LineChart data={anomaliesData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="timestamp" />
-                  <YAxis />
-                  <Tooltip />
-                  <Line 
-                    type="monotone" 
-                    dataKey="value" 
-                    stroke="#f59e0b" 
-                    strokeWidth={2}
-                    dot={{ fill: '#f59e0b' }}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
-            ) : (
-              <div className="h-48 flex items-center justify-center text-muted-foreground">
-                Sem dados para o período selecionado
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Distribuição por Severidade */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <AlertTriangle className="h-4 w-4" />
-              Eventos por Severidade
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {severityData.length > 0 ? (
-              <div className="space-y-4">
-                <ResponsiveContainer width="100%" height={200}>
-                  <PieChart>
-                    <Pie
-                      data={severityData}
-                      cx="50%"
-                      cy="50%"
-                      outerRadius={80}
-                      dataKey="value"
-                      label={({ name, value }) => `${name}: ${value}`}
-                    >
-                      {severityData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                    </Pie>
-                    <Tooltip />
-                  </PieChart>
-                </ResponsiveContainer>
-                <div className="flex flex-wrap gap-2">
-                  {severityData.map((item, index) => (
-                    <div key={index} className="flex items-center gap-2">
-                      <div 
-                        className="w-3 h-3 rounded-full" 
-                        style={{ backgroundColor: item.color }}
-                      />
-                      <span className="text-sm">
-                        {item.name}: {item.value}
-                      </span>
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      {/* Padrões de Anomalias */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <BarChart3 className="h-5 w-5" />
+            Padrões de Anomalias
+          </CardTitle>
+          <CardDescription>
+            Análise de padrões detectados nos últimos 7 dias
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {patterns.length === 0 ? (
+            <div className="text-center py-6 text-muted-foreground">
+              <Shield className="h-12 w-12 mx-auto mb-4 opacity-50" />
+              <p>Nenhum padrão de anomalia detectado</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {patterns.map((pattern, index) => (
+                <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <Badge variant={getSeverityColor(pattern.severity) as any}>
+                        {pattern.severity}
+                      </Badge>
+                      <span className="font-medium">{pattern.type}</span>
                     </div>
-                  ))}
+                    <p className="text-sm text-muted-foreground">
+                      {pattern.description}
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <span className="text-2xl font-bold">{pattern.count}</span>
+                    <p className="text-xs text-muted-foreground">ocorrências</p>
+                  </div>
                 </div>
-              </div>
-            ) : (
-              <div className="h-48 flex items-center justify-center text-muted-foreground">
-                Sem dados para o período selecionado
-              </div>
-            )}
-          </CardContent>
-        </Card>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
-        {/* Resumo Estatístico */}
-        <Card>
+      {/* Anomalias Recentes */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <AlertTriangle className="h-5 w-5" />
+            Anomalias Recentes
+          </CardTitle>
+          <CardDescription>
+            Últimas anomalias detectadas pelo sistema
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {recentAnomalies.length === 0 ? (
+            <div className="text-center py-6 text-muted-foreground">
+              <Shield className="h-12 w-12 mx-auto mb-4 opacity-50" />
+              <p>Nenhuma anomalia recente detectada</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {recentAnomalies.map((anomaly) => (
+                <div key={anomaly.id} className="p-3 border rounded-lg">
+                  <div className="flex items-center justify-between mb-2">
+                    <Badge variant="outline">
+                      {anomaly.anomaly_type}
+                    </Badge>
+                    <div className="flex items-center text-xs text-muted-foreground">
+                      <Clock className="h-3 w-3 mr-1" />
+                      {new Date(anomaly.detected_at).toLocaleString('pt-BR')}
+                    </div>
+                  </div>
+                  
+                  <p className="text-sm mb-2">
+                    {anomaly.description || 'Anomalia detectada pelo sistema'}
+                  </p>
+                  
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-muted-foreground">
+                      Confiança: {Math.round(anomaly.confidence_score * 100)}%
+                    </span>
+                    <Badge 
+                      variant={anomaly.status === 'resolved' ? 'secondary' : 'default'}
+                      className="text-xs"
+                    >
+                      {anomaly.status}
+                    </Badge>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Alertas Críticos */}
+      {criticalPatterns.length > 0 && (
+        <Card className="lg:col-span-2 border-red-200">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Shield className="h-4 w-4" />
-              Resumo Estatístico
+            <CardTitle className="flex items-center gap-2 text-red-600">
+              <AlertTriangle className="h-5 w-5" />
+              Alertas Críticos
             </CardTitle>
+            <CardDescription>
+              Padrões que requerem atenção imediata
+            </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="text-center p-3 bg-muted rounded-lg">
-                  <div className="text-2xl font-bold text-blue-600">
-                    {metrics.filter(m => m.metric_name === 'active_users_24h').length || 0}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {criticalPatterns.map((pattern, index) => (
+                <div key={index} className="bg-red-50 border border-red-200 rounded-lg p-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <Badge variant="destructive">
+                      {pattern.severity}
+                    </Badge>
+                    <span className="text-2xl font-bold text-red-600">
+                      {pattern.count}
+                    </span>
                   </div>
-                  <div className="text-sm text-muted-foreground">
-                    Pontos de dados
-                  </div>
+                  <h4 className="font-semibold text-red-800 mb-1">
+                    {pattern.type}
+                  </h4>
+                  <p className="text-sm text-red-700">
+                    {pattern.description}
+                  </p>
                 </div>
-                <div className="text-center p-3 bg-muted rounded-lg">
-                  <div className="text-2xl font-bold text-green-600">
-                    {Math.round(
-                      metrics
-                        .filter(m => m.metric_name === 'active_users_24h')
-                        .reduce((acc, m) => acc + Number(m.metric_value), 0) /
-                      Math.max(1, metrics.filter(m => m.metric_name === 'active_users_24h').length)
-                    )}
-                  </div>
-                  <div className="text-sm text-muted-foreground">
-                    Média de usuários
-                  </div>
-                </div>
-              </div>
-              
-              <div className="space-y-2">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm">Total de métricas coletadas:</span>
-                  <Badge variant="secondary">{metrics.length}</Badge>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm">Período de análise:</span>
-                  <Badge variant="outline">{timeRange}</Badge>
-                </div>
-              </div>
+              ))}
             </div>
           </CardContent>
         </Card>
-      </div>
+      )}
+
+      {/* Resumo de Métricas */}
+      <Card className="lg:col-span-2">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Activity className="h-5 w-5" />
+            Resumo de Segurança
+          </CardTitle>
+          <CardDescription>
+            Visão geral das métricas de segurança atuais
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+            <div className="p-4 border rounded-lg">
+              <div className="text-2xl font-bold text-blue-600">
+                {metrics.totalEvents}
+              </div>
+              <p className="text-sm text-muted-foreground">Total de Eventos</p>
+            </div>
+            
+            <div className="p-4 border rounded-lg">
+              <div className="text-2xl font-bold text-red-600">
+                {metrics.criticalEvents}
+              </div>
+              <p className="text-sm text-muted-foreground">Eventos Críticos</p>
+            </div>
+            
+            <div className="p-4 border rounded-lg">
+              <div className="text-2xl font-bold text-orange-600">
+                {metrics.activeIncidents}
+              </div>
+              <p className="text-sm text-muted-foreground">Incidentes Ativos</p>
+            </div>
+            
+            <div className="p-4 border rounded-lg">
+              <div className="text-2xl font-bold text-purple-600">
+                {metrics.anomaliesDetected}
+              </div>
+              <p className="text-sm text-muted-foreground">Anomalias Detectadas</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };
