@@ -14,11 +14,19 @@ export const useAIMessageGeneration = () => {
   const isGeneratingRef = useRef(false);
 
   const generateMessage = useCallback(async (onboardingData: OnboardingData, memberType: 'club' | 'formacao', currentStep?: number) => {
-    // Evitar múltiplas gerações simultâneas
-    if (isGeneratingRef.current || !onboardingData.name) {
-      console.log('[AIMessageGeneration] Bloqueando geração duplicada ou faltam dados');
+    // Verificar se dados essenciais estão presentes
+    if (!onboardingData.name) {
+      console.log('[AIMessageGeneration] Faltam dados essenciais para geração:', { name: onboardingData.name });
       return;
     }
+
+    // Evitar múltiplas gerações simultâneas
+    if (isGeneratingRef.current) {
+      console.log('[AIMessageGeneration] Bloqueando geração duplicada - já está gerando');
+      return;
+    }
+
+    console.log('[AIMessageGeneration] Iniciando geração de mensagem para:', onboardingData.name, 'Etapa:', currentStep);
 
     isGeneratingRef.current = true;
     setIsGenerating(true);
@@ -27,8 +35,6 @@ export const useAIMessageGeneration = () => {
     setGeneratedMessage(null);
     
     try {
-      console.log('[AIMessageGeneration] Iniciando geração de mensagem para:', onboardingData.name, 'Etapa:', currentStep);
-      
       // Simular progresso para melhor UX
       const progressInterval = setInterval(() => {
         setProgress(prev => {
@@ -110,6 +116,7 @@ export const useAIMessageGeneration = () => {
   };
 
   const clearMessage = useCallback(() => {
+    console.log('[AIMessageGeneration] Limpando mensagem e resetando estado');
     setGeneratedMessage(null);
     setError(null);
     setProgress(0);
