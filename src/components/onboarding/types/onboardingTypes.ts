@@ -20,31 +20,31 @@ export interface OnboardingData {
   position?: string;
   
   // Etapa 3 - Maturidade em IA
-  hasImplementedAI?: 'yes' | 'no' | 'tried-failed' | '';
+  hasImplementedAI?: string;
   aiToolsUsed?: string[];
-  aiKnowledgeLevel?: 'beginner' | 'intermediate' | 'advanced' | 'expert' | '';
+  aiKnowledgeLevel?: string;
   dailyTools?: string[];
-  whoWillImplement?: 'myself' | 'team' | 'hire' | '';
+  whoWillImplement?: string;
   
   // Etapa 4 - Objetivos e Expectativas
-  mainObjective?: 'reduce-costs' | 'increase-sales' | 'automate-processes' | 'innovate-products' | '';
+  mainObjective?: string;
   areaToImpact?: string;
   expectedResult90Days?: string;
   aiImplementationBudget?: string;
   
   // Etapa 5 - Personalização da Experiência
   weeklyLearningTime?: string;
-  contentPreference?: 'theoretical' | 'hands-on' | '';
-  wantsNetworking?: 'yes' | 'no' | '';
+  contentPreference?: string;
+  wantsNetworking?: string;
   bestDays?: string[];
   bestPeriods?: string[];
-  acceptsCaseStudy?: 'yes' | 'no' | '';
+  acceptsCaseStudy?: string;
   
   // Metadados
   memberType?: 'club' | 'formacao';
   completedAt?: string;
   startedAt?: string;
-  updatedAt?: string; // Adicionar esta propriedade que estava faltando
+  updatedAt?: string;
   
   // IA Interativa - mensagens personalizadas para cada etapa
   aiMessage1?: string;
