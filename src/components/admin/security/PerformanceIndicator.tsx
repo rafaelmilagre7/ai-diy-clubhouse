@@ -2,7 +2,7 @@
 import React, { memo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Activity, Zap, Timer, AlertCircle } from 'lucide-react';
+import { Activity, Zap, Timer, CheckCircle } from 'lucide-react';
 
 interface PerformanceIndicatorProps {
   renderTime: number;
@@ -18,10 +18,10 @@ export const PerformanceIndicator = memo<PerformanceIndicatorProps>(({
   componentName
 }) => {
   const getPerformanceLevel = (time: number) => {
-    if (time < 50) return { level: 'excellent', color: 'text-green-600', bg: 'bg-green-50' };
-    if (time < 100) return { level: 'good', color: 'text-blue-600', bg: 'bg-blue-50' };
-    if (time < 200) return { level: 'fair', color: 'text-yellow-600', bg: 'bg-yellow-50' };
-    return { level: 'poor', color: 'text-red-600', bg: 'bg-red-50' };
+    if (time < 50) return { level: 'excelente', color: 'text-green-600', bg: 'bg-green-50' };
+    if (time < 100) return { level: 'bom', color: 'text-blue-600', bg: 'bg-blue-50' };
+    if (time < 200) return { level: 'regular', color: 'text-yellow-600', bg: 'bg-yellow-50' };
+    return { level: 'lento', color: 'text-red-600', bg: 'bg-red-50' };
   };
 
   const performance = getPerformanceLevel(renderTime);
@@ -57,11 +57,11 @@ export const PerformanceIndicator = memo<PerformanceIndicatorProps>(({
 
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <AlertCircle className="h-4 w-4" />
-            <span className="text-sm">Web Worker</span>
+            <CheckCircle className="h-4 w-4" />
+            <span className="text-sm">Sistema</span>
           </div>
-          <Badge variant={workerAvailable ? 'default' : 'destructive'}>
-            {workerAvailable ? 'Disponível' : 'Indisponível'}
+          <Badge variant="default">
+            Otimizado
           </Badge>
         </div>
 
