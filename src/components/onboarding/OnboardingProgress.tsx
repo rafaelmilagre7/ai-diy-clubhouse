@@ -16,19 +16,19 @@ export const OnboardingProgress = ({
   stepTitles 
 }: OnboardingProgressProps) => {
   return (
-    <div className="w-full space-y-3">
+    <div className="w-full space-y-4">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-heading font-bold text-white">
+          <h1 className="text-2xl font-heading font-bold text-white">
             Configuração da Conta
           </h1>
-          <p className="text-neutral-400 text-xs mt-0.5">
+          <p className="text-slate-300 text-sm mt-1">
             Personalize sua experiência no VIVER DE IA Club
           </p>
         </div>
-        <div className="bg-[#151823] border border-white/10 rounded-lg px-3 py-1.5">
-          <span className="text-viverblue font-semibold text-xs">
+        <div className="bg-[#1A1E2E]/60 backdrop-blur-sm border border-viverblue/30 rounded-lg px-4 py-2">
+          <span className="text-viverblue font-semibold text-sm">
             {currentStep} de {totalSteps}
           </span>
         </div>
@@ -37,6 +37,13 @@ export const OnboardingProgress = ({
       {/* Indicadores de etapas para desktop */}
       <div className="hidden lg:block">
         <div className="relative">
+          {/* Linha de conexão */}
+          <div className="absolute top-4 left-0 right-0 h-0.5 bg-white/10 -z-10"></div>
+          <div 
+            className="absolute top-4 left-0 h-0.5 bg-gradient-to-r from-viverblue to-viverblue-light transition-all duration-500 -z-10"
+            style={{ width: `${((currentStep - 1) / (totalSteps - 1)) * 100}%` }}
+          ></div>
+          
           {/* Steps */}
           <div className="flex items-start justify-between">
             {stepTitles.map((title, index) => {
@@ -45,22 +52,22 @@ export const OnboardingProgress = ({
               const isCurrent = stepNumber === currentStep;
               
               return (
-                <div key={stepNumber} className="flex flex-col items-center max-w-[120px]">
+                <div key={stepNumber} className="flex flex-col items-center max-w-[140px]">
                   <motion.div
                     initial={{ scale: 0.8, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
                     transition={{ delay: index * 0.1 }}
                     className={cn(
-                      "relative w-8 h-8 rounded-full border-2 flex items-center justify-center text-xs font-semibold transition-all duration-300 z-10",
+                      "relative w-8 h-8 rounded-full border-2 flex items-center justify-center text-xs font-semibold transition-all duration-300 z-10 shadow-lg",
                       isCompleted 
-                        ? "bg-viverblue border-viverblue text-[#0F111A]"
+                        ? "bg-viverblue border-viverblue text-[#0F111A] shadow-viverblue/30"
                         : isCurrent 
-                          ? "border-viverblue bg-[#151823] text-viverblue"
-                          : "border-white/20 bg-[#151823] text-neutral-400"
+                          ? "border-viverblue bg-[#1A1E2E] text-viverblue shadow-viverblue/20"
+                          : "border-white/20 bg-[#151823] text-slate-400"
                     )}
                   >
                     {isCompleted ? (
-                      <CheckIcon className="w-3 h-3" />
+                      <CheckIcon className="w-4 h-4" />
                     ) : (
                       stepNumber
                     )}
@@ -70,13 +77,13 @@ export const OnboardingProgress = ({
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: index * 0.1 + 0.2 }}
-                    className="mt-2 text-center"
+                    className="mt-3 text-center"
                   >
                     <span className={cn(
-                      "text-xs font-medium leading-tight",
+                      "text-xs font-medium leading-tight block",
                       isCompleted || isCurrent 
                         ? "text-white" 
-                        : "text-neutral-400"
+                        : "text-slate-400"
                     )}>
                       {title}
                     </span>
@@ -90,21 +97,32 @@ export const OnboardingProgress = ({
 
       {/* Indicador simplificado para mobile/tablet */}
       <div className="lg:hidden">
-        <div className="bg-[#151823] border border-white/10 rounded-xl p-3">
-          <div className="flex items-center gap-2">
+        <div className="bg-[#1A1E2E]/60 backdrop-blur-sm border border-viverblue/20 rounded-xl p-4">
+          <div className="flex items-center gap-3">
             <div className={cn(
-              "w-6 h-6 rounded-full border-2 flex items-center justify-center text-xs font-semibold",
-              "bg-viverblue border-viverblue text-[#0F111A]"
+              "w-8 h-8 rounded-full border-2 flex items-center justify-center text-xs font-semibold shadow-lg",
+              "bg-viverblue border-viverblue text-[#0F111A] shadow-viverblue/30"
             )}>
               {currentStep}
             </div>
-            <div>
-              <h3 className="text-white font-semibold text-xs">
+            <div className="flex-1">
+              <h3 className="text-white font-semibold text-sm">
                 {stepTitles[currentStep - 1]}
               </h3>
-              <p className="text-neutral-400 text-xs">
+              <p className="text-slate-300 text-xs">
                 Etapa {currentStep} de {totalSteps}
               </p>
+            </div>
+            <div className="text-right">
+              <div className="w-16 bg-white/10 rounded-full h-2 overflow-hidden">
+                <div 
+                  className="h-full bg-gradient-to-r from-viverblue to-viverblue-light transition-all duration-300"
+                  style={{ width: `${(currentStep / totalSteps) * 100}%` }}
+                />
+              </div>
+              <span className="text-xs text-slate-300 mt-1 block">
+                {Math.round((currentStep / totalSteps) * 100)}%
+              </span>
             </div>
           </div>
         </div>

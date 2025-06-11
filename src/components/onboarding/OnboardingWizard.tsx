@@ -37,17 +37,17 @@ const OnboardingWizard = () => {
       }) => {
         if (isLoading) {
           return (
-            <div className="min-h-screen flex items-center justify-center">
+            <div className="min-h-screen bg-gradient-to-br from-[#0F111A] to-[#151823] flex items-center justify-center">
               <div className="text-center">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-viverblue mx-auto mb-4"></div>
-                <p className="text-gray-600">Carregando...</p>
+                <p className="text-slate-300">Carregando...</p>
               </div>
             </div>
           );
         }
 
         return (
-          <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
+          <div className="min-h-screen bg-gradient-to-br from-[#0F111A] to-[#151823]">
             <div className="container mx-auto px-4 py-8">
               <div className="max-w-4xl mx-auto">
                 <OnboardingProgress 
@@ -56,7 +56,7 @@ const OnboardingWizard = () => {
                   stepTitles={stepTitles}
                 />
                 
-                <Card className="mt-8 p-8">
+                <Card className="mt-8 p-8 bg-[#1A1E2E]/80 backdrop-blur-sm border-white/10">
                   <OnboardingStepRenderer
                     currentStep={currentStep}
                     data={data}
