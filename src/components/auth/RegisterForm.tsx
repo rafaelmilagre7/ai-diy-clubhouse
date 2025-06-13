@@ -49,17 +49,20 @@ const RegisterForm = ({ inviteToken, prefilledEmail }: RegisterFormProps = {}) =
         description: "Estamos processando seu cadastro.",
       });
       
+      // CORREÇÃO: Redirecionar para raiz para acionar RootRedirect
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
           data: {
             name,
-            invite_token: inviteToken, // Incluir o token de convite nos metadados
+            invite_token: inviteToken,
+            from_invite: !!inviteToken, // Flag especial para indicar origem do convite
           },
+          // CORREÇÃO CRÍTICA: Redirecionar para raiz em vez de /auth
           emailRedirectTo: window.location.origin.includes('localhost') 
-            ? 'http://localhost:3000/auth' 
-            : 'https://app.viverdeia.ai/auth'
+            ? 'http://localhost:3000/' 
+            : 'https://app.viverdeia.ai/'
         },
       });
       
@@ -83,8 +86,14 @@ const RegisterForm = ({ inviteToken, prefilledEmail }: RegisterFormProps = {}) =
       
       toast({
         title: "Cadastro realizado",
-        description: "Sua conta foi criada com sucesso!",
+        description: "Sua conta foi criada com sucesso! Redirecionando...",
       });
+      
+      // CORREÇÃO: Redirecionar para raiz para acionar verificação de onboarding
+      if (data.user) {
+        console.log("[REGISTER-FORM] Cadastro via convite concluído, redirecionando para /");
+        window.location.href = '/';
+      }
       
     } catch (error: any) {
       console.error("Erro ao criar conta:", error);

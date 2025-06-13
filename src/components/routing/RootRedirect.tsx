@@ -24,9 +24,12 @@ const RootRedirect = () => {
   const { user, profile, isAdmin, isLoading: authLoading } = authContext;
   const { isRequired: onboardingRequired, isLoading: onboardingLoading } = useOnboardingStatus();
   
-  // OTIMIZAÇÃO 1: Verificação de cache para navegação rápida
+  // OTIMIZAÇÃO: Verificação de cache para navegação rápida
   const hasCachedAdminAccess = user && navigationCache.isAdminVerified(user.id);
   const hasCachedFormacaoAccess = user && navigationCache.isFormacaoVerified(user.id);
+  
+  // CORREÇÃO CRÍTICA: Detectar usuários de convite
+  const isFromInvite = user?.user_metadata?.from_invite;
   
   console.log("[ROOT-REDIRECT] Estado atual:", {
     currentPath: location.pathname,
@@ -34,17 +37,20 @@ const RootRedirect = () => {
     hasProfile: !!profile,
     isAdmin,
     authLoading,
+    onboardingRequired,
+    onboardingLoading,
+    isFromInvite,
     hasCachedAdminAccess,
     hasCachedFormacaoAccess,
     forceRedirect
   });
   
-  // OTIMIZAÇÃO 2: Circuit breaker reduzido para 2 segundos
+  // OTIMIZAÇÃO: Circuit breaker reduzido para 2 segundos
   useEffect(() => {
     timeoutRef.current = window.setTimeout(() => {
       console.warn("⚠️ [ROOT REDIRECT] Circuit breaker ativado (2s), forçando redirecionamento");
       setForceRedirect(true);
-    }, 2000); // Reduzido de 4s para 2s
+    }, 2000);
     
     return () => {
       if (timeoutRef.current) {
@@ -53,7 +59,7 @@ const RootRedirect = () => {
     };
   }, []);
   
-  // OTIMIZAÇÃO 3: Limpeza de timeout para usuários com cache válido
+  // OTIMIZAÇÃO: Limpeza de timeout para usuários com cache válido
   useEffect(() => {
     if (user && (profile || hasCachedAdminAccess || hasCachedFormacaoAccess)) {
       if (timeoutRef.current) {
@@ -63,13 +69,13 @@ const RootRedirect = () => {
     }
   }, [user, profile, hasCachedAdminAccess, hasCachedFormacaoAccess]);
   
-  // OTIMIZAÇÃO 4: Navegação rápida com cache apenas para formação
+  // OTIMIZAÇÃO: Navegação rápida com cache apenas para formação
   if (user && hasCachedFormacaoAccess && location.pathname !== '/formacao') {
     console.log("🎯 [ROOT REDIRECT] Cache formação válido - redirecionamento direto");
     return <Navigate to="/formacao" replace />;
   }
   
-  // OTIMIZAÇÃO 5: Fallback mais rápido
+  // OTIMIZAÇÃO: Fallback mais rápido
   if (forceRedirect) {
     console.log("🚨 [ROOT REDIRECT] Circuit breaker ativo - redirecionamento forçado");
     
@@ -103,7 +109,7 @@ const RootRedirect = () => {
     return <Navigate to="/dashboard" replace />;
   }
   
-  // OTIMIZAÇÃO 6: Loading reduzido para 1.5s máximo
+  // OTIMIZAÇÃO: Loading reduzido para 1.5s máximo
   if (authLoading && !forceRedirect) {
     console.log("[ROOT-REDIRECT] Aguardando autenticação...");
     return <LoadingScreen message="Verificando sua sessão..." />;
@@ -138,10 +144,17 @@ const RootRedirect = () => {
     return <Navigate to="/dashboard" replace />;
   }
   
-  // APENAS para não-admins: verificação rápida de onboarding
+  // CORREÇÃO CRÍTICA: Verificação de onboarding com prioridade para usuários de convite
   if (onboardingLoading && !forceRedirect) {
     console.log("[ROOT-REDIRECT] Verificando onboarding...");
     return <LoadingScreen message="Verificando seu progresso..." />;
+  }
+  
+  // NOVA LÓGICA: Priorizar onboarding para usuários de convite
+  if (isFromInvite && onboardingRequired && !forceRedirect) {
+    console.log("📝 [ROOT REDIRECT] Usuário de convite precisa de onboarding - redirecionando para /onboarding");
+    clearTimeout(timeoutRef.current!);
+    return <Navigate to="/onboarding" replace />;
   }
   
   // Se precisa de onboarding (apenas para não-admins)
@@ -151,7 +164,7 @@ const RootRedirect = () => {
     return <Navigate to="/onboarding" replace />;
   }
   
-  // Caso padrão: dashboard de membro (MUDANÇA PRINCIPAL)
+  // Caso padrão: dashboard de membro
   console.log("🏠 [ROOT REDIRECT] Redirecionando para dashboard de membro");
   clearTimeout(timeoutRef.current!);
   return <Navigate to="/dashboard" replace />;

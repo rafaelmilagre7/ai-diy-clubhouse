@@ -19,26 +19,20 @@ const AuthLayout = () => {
   const navigate = useNavigate();
   const { user, profile, isAdmin } = useAuth();
 
-  // CORREÇÃO CRÍTICA 1: Verificar se usuário já está logado e redirecionar
+  // CORREÇÃO: Aguardar verificação de onboarding antes de redirecionar
   useEffect(() => {
     if (user && profile) {
-      console.log("[AUTH-LAYOUT] Usuário já autenticado detectado, redirecionando...", {
+      console.log("[AUTH-LAYOUT] Usuário já autenticado detectado, verificando onboarding...", {
         email: user.email,
         isAdmin,
-        profileRole: profile.role_id
+        profileRole: profile.role_id,
+        fromInvite: user.user_metadata?.from_invite
       });
       
-      // Redirecionar baseado no papel do usuário
-      if (isAdmin || profile.role_id === 'admin') {
-        console.log("[AUTH-LAYOUT] Redirecionando admin para /admin");
-        navigate('/admin', { replace: true });
-      } else if (profile.role_id === 'formacao') {
-        console.log("[AUTH-LAYOUT] Redirecionando formação para /formacao");
-        navigate('/formacao', { replace: true });
-      } else {
-        console.log("[AUTH-LAYOUT] Redirecionando usuário comum para /dashboard");
-        navigate('/dashboard', { replace: true });
-      }
+      // MUDANÇA CRÍTICA: Em vez de redirecionar diretamente, ir para raiz
+      // para que RootRedirect possa verificar se precisa de onboarding
+      console.log("[AUTH-LAYOUT] Redirecionando para / para verificação de onboarding");
+      navigate('/', { replace: true });
     }
   }, [user, profile, isAdmin, navigate]);
 
@@ -75,8 +69,8 @@ const AuthLayout = () => {
           description: "Redirecionando...",
         });
         
-        // CORREÇÃO CRÍTICA 2: Redirecionar explicitamente para a raiz após login
-        console.log("[AUTH-LAYOUT] Redirecionando para / para acionar RootRedirect");
+        // CORREÇÃO: Redirecionar para raiz para acionar verificação completa
+        console.log("[AUTH-LAYOUT] Redirecionando para / para verificação de onboarding");
         navigate('/', { replace: true });
       }
       
@@ -104,7 +98,7 @@ const AuthLayout = () => {
         });
       }
     } finally {
-      // CORREÇÃO CRÍTICA 3: Timeout mais curto e sempre finalizar loading
+      // CORREÇÃO: Timeout mais curto e sempre finalizar loading
       setTimeout(() => {
         setIsLoading(false);
         console.log("[AUTH-LAYOUT] Loading finalizado");
