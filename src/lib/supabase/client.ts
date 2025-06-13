@@ -1,14 +1,26 @@
 
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types/database.types';
+import { SUPABASE_CONFIG } from '@/config/app';
 
-// CORREÇÃO DE SEGURANÇA: Configurações do projeto Supabase movidas para variáveis de ambiente
-// Em um ambiente real, essas credenciais devem vir de variáveis de ambiente seguras
-const supabaseUrl = 'https://zotzvtepvpnkcoobdubt.supabase.co';
-const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpvdHp2dGVwdnBua2Nvb2JkdWJ0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQzNzgzODAsImV4cCI6MjA1OTk1NDM4MH0.dxjPkqTPnK8gjjxJbooPX5_kpu3INciLeDpuU8dszHQ';
+// Validar configuração antes de criar o cliente
+const configValidation = SUPABASE_CONFIG.validate();
+if (!configValidation.isValid) {
+  console.error('❌ [SUPABASE CLIENT] Falha na validação da configuração:', configValidation.errors);
+  
+  // Em produção, lançar erro para evitar funcionamento com configuração inválida
+  if (!import.meta.env.DEV) {
+    throw new Error('Configuração do Supabase inválida. Verifique as variáveis de ambiente.');
+  }
+}
+
+// Log seguro da configuração (apenas em desenvolvimento)
+if (import.meta.env.DEV) {
+  console.info('🔧 [SUPABASE CLIENT] Inicializando com configuração:', SUPABASE_CONFIG.getSafeConfig());
+}
 
 // Criação do cliente Supabase com configurações de segurança
-export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
+export const supabase = createClient<Database>(SUPABASE_CONFIG.url, SUPABASE_CONFIG.anonKey, {
   auth: {
     autoRefreshToken: true,
     persistSession: true,
