@@ -1,4 +1,3 @@
-
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types/database.types';
 import { SUPABASE_CONFIG } from '@/config/app';
@@ -6,44 +5,113 @@ import { logger } from '@/utils/logger';
 
 // Log seguro da configuração (apenas em desenvolvimento)
 if (import.meta.env.DEV) {
-  logger.info('🔧 [SUPABASE CLIENT] Inicializando com configuração segura', SUPABASE_CONFIG.getSafeConfig());
+  SUPABASE_CONFIG.getSafeConfig().then(safeConfig => {
+    logger.info('🔧 [SUPABASE CLIENT] Inicializando com configuração segura', safeConfig);
+  });
 }
 
-// Obter credenciais dinamicamente
-const credentials = SUPABASE_CONFIG.getCredentials();
+// Cliente Supabase inicializado de forma assíncrona
+let supabaseClient: ReturnType<typeof createClient<Database>> | null = null;
+let initializationPromise: Promise<ReturnType<typeof createClient<Database>>> | null = null;
 
-// VALIDAÇÃO RIGOROSA: Verificar se as credenciais estão disponíveis
-if (!credentials.url || !credentials.anonKey) {
-  const errorMessage = `
-🔒 ERRO CRÍTICO: Credenciais do Supabase não disponíveis
+// Função para inicializar o cliente Supabase
+async function initializeSupabaseClient(): Promise<ReturnType<typeof createClient<Database>>> {
+  try {
+    logger.info('🔧 [SUPABASE CLIENT] Inicializando cliente...');
+    
+    // Obter credenciais de forma assíncrona
+    const credentials = await SUPABASE_CONFIG.getCredentials();
+    
+    if (!credentials.url || !credentials.anonKey) {
+      throw new Error('Credenciais do Supabase não disponíveis');
+    }
 
-Ambiente detectado: ${SUPABASE_CONFIG.isLovableEnvironment() ? 'Lovable' : 'Outro'}
-URL disponível: ${!!credentials.url}
-Key disponível: ${!!credentials.anonKey}
+    // Criar cliente Supabase com configurações de segurança
+    const client = createClient<Database>(credentials.url, credentials.anonKey, {
+      auth: {
+        autoRefreshToken: true,
+        persistSession: true,
+        detectSessionInUrl: true,
+        storage: typeof window !== 'undefined' ? window.localStorage : undefined
+      },
+      global: {
+        headers: {
+          'X-Client-Info': 'viverdeia-app',
+          'X-Security-Level': 'high'
+        }
+      }
+    });
 
-${SUPABASE_CONFIG.isLovableEnvironment() 
-  ? 'No ambiente Lovable, as credenciais devem ser configuradas automaticamente.' 
-  : 'Configure as credenciais em .env.local para desenvolvimento local.'
+    logger.info('✅ [SUPABASE CLIENT] Cliente inicializado com sucesso');
+    return client;
+    
+  } catch (error) {
+    logger.error('❌ [SUPABASE CLIENT] Erro ao inicializar cliente:', error);
+    throw error;
+  }
 }
-`;
+
+// Função para obter o cliente Supabase (singleton assíncrono)
+export async function getSupabaseClient(): Promise<ReturnType<typeof createClient<Database>>> {
+  // Se já temos o cliente, retornar
+  if (supabaseClient) {
+    return supabaseClient;
+  }
+
+  // Se já está inicializando, aguardar
+  if (initializationPromise) {
+    return initializationPromise;
+  }
+
+  // Inicializar cliente
+  initializationPromise = initializeSupabaseClient();
+  supabaseClient = await initializationPromise;
   
-  throw new Error(errorMessage);
+  return supabaseClient;
 }
 
-// Criação do cliente Supabase com configurações de segurança
-export const supabase = createClient<Database>(credentials.url, credentials.anonKey, {
-  auth: {
-    autoRefreshToken: true,
-    persistSession: true,
-    detectSessionInUrl: true,
-    storage: typeof window !== 'undefined' ? window.localStorage : undefined
-  },
-  global: {
-    headers: {
-      'X-Client-Info': 'viverdeia-app',
-      'X-Security-Level': 'high'
+// Cliente síncrono para compatibilidade (com warning)
+let fallbackClient: ReturnType<typeof createClient<Database>> | null = null;
+
+// Tentar criar cliente com variáveis de ambiente para fallback
+try {
+  const envUrl = import.meta.env.VITE_SUPABASE_URL;
+  const envKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+  
+  if (envUrl && envKey) {
+    fallbackClient = createClient<Database>(envUrl, envKey, {
+      auth: {
+        autoRefreshToken: true,
+        persistSession: true,
+        detectSessionInUrl: true,
+        storage: typeof window !== 'undefined' ? window.localStorage : undefined
+      },
+      global: {
+        headers: {
+          'X-Client-Info': 'viverdeia-app-fallback',
+          'X-Security-Level': 'medium'
+        }
+      }
+    });
+    
+    if (import.meta.env.DEV) {
+      logger.warn('⚠️ [SUPABASE CLIENT] Usando cliente fallback com variáveis de ambiente');
     }
   }
+} catch (error) {
+  logger.error('❌ [SUPABASE CLIENT] Erro ao criar cliente fallback:', error);
+}
+
+// Exportação síncrona para compatibilidade (DEPRECATED)
+export const supabase = fallbackClient || ({} as ReturnType<typeof createClient<Database>>);
+
+// Inicializar cliente assíncrono automaticamente
+getSupabaseClient().then(client => {
+  // Substituir o cliente fallback pelo cliente correto
+  Object.assign(supabase, client);
+  logger.info('🔄 [SUPABASE CLIENT] Cliente fallback substituído pelo cliente seguro');
+}).catch(error => {
+  logger.error('❌ [SUPABASE CLIENT] Erro na inicialização automática:', error);
 });
 
 export type Tables = Database['public']['Tables'];
