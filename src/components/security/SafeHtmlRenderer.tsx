@@ -7,7 +7,7 @@ interface SafeHtmlRendererProps {
   className?: string;
   style?: React.CSSProperties;
   allowedTags?: string[];
-  allowedAttributes?: Record<string, string[]>;
+  allowedAttributes?: string[];
 }
 
 export const SafeHtmlRenderer: React.FC<SafeHtmlRendererProps> = ({
@@ -24,11 +24,11 @@ export const SafeHtmlRenderer: React.FC<SafeHtmlRendererProps> = ({
       'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
       'ul', 'ol', 'li', 'blockquote', 'pre', 'code',
       'a', 'img', 'table', 'thead', 'tbody', 'tr', 'td', 'th',
-      'hr', 'sup', 'sub', 'mark', 'del', 'ins'
+      'hr', 'sup', 'sub', 'mark', 'del', 'ins', 'style'
     ],
     ALLOWED_ATTR: allowedAttributes || [
       'class', 'style', 'href', 'target', 'rel', 'src', 'alt', 
-      'width', 'height', 'title', 'id', 'data-*'
+      'width', 'height', 'title', 'id', 'data-chart'
     ],
     FORBID_TAGS: ['script', 'object', 'embed', 'iframe', 'form', 'input'],
     FORBID_ATTR: ['onclick', 'onload', 'onerror', 'onmouseover', 'onfocus'],
