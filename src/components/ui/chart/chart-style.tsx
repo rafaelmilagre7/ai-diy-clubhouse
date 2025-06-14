@@ -1,4 +1,5 @@
 
+
 import * as React from "react"
 import { ChartConfig, THEMES } from "./context"
 import { SafeHtmlRenderer } from "@/components/security/SafeHtmlRenderer"
@@ -33,7 +34,8 @@ ${colorConfig
     <SafeHtmlRenderer
       html={`<style>${styleContent}</style>`}
       allowedTags={['style']}
-      allowedAttributes={{}}
+      allowedAttributes={[]}
     />
   )
 }
+
