@@ -6114,29 +6114,8 @@ export type Database = {
         Returns: string
       }
       get_user_profile_safe: {
-        Args: { user_id?: string }
-        Returns: {
-          available_for_networking: boolean | null
-          avatar_url: string | null
-          company_name: string | null
-          created_at: string
-          current_position: string | null
-          email: string
-          id: string
-          industry: string | null
-          last_active: string | null
-          linkedin_url: string | null
-          name: string | null
-          onboarding_completed: boolean
-          onboarding_completed_at: string | null
-          professional_bio: string | null
-          referrals_count: number
-          role: string
-          role_id: string | null
-          skills: string[] | null
-          successful_referrals_count: number
-          whatsapp_number: string | null
-        }[]
+        Args: { p_user_id?: string }
+        Returns: Json
       }
       get_user_security_permissions: {
         Args: { user_id: string }
