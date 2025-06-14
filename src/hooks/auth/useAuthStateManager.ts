@@ -24,7 +24,7 @@ export const useAuthStateManager = ({
   const { setLoading: setGlobalLoading, circuitBreakerActive } = useGlobalLoading();
 
   const setupAuthSession = useCallback(async () => {
-    logger.info('[AUTH-STATE] Iniciando setup com timeouts otimizados');
+    logger.info('[AUTH-STATE] Iniciando setup com timeouts otimizados para 10s');
     
     try {
       setIsLoading(true);
@@ -54,10 +54,10 @@ export const useAuthStateManager = ({
         }
       }
 
-      // CORREÇÃO: Timeout aumentado para 8 segundos (muito mais seguro)
+      // FASE 2: Timeout aumentado para 10 segundos (mais estável)
       const sessionPromise = validateUserSession();
       const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error("Auth session timeout")), 8000)
+        setTimeout(() => reject(new Error("Auth session timeout")), 10000)
       );
 
       let sessionResult;
@@ -118,11 +118,11 @@ export const useAuthStateManager = ({
         return;
       }
 
-      // CORREÇÃO: Buscar perfil com timeout aumentado para 6 segundos
+      // FASE 2: Buscar perfil com timeout aumentado para 8 segundos
       try {
         const profilePromise = fetchUserProfileSecurely(user.id);
         const profileTimeoutPromise = new Promise((_, reject) => 
-          setTimeout(() => reject(new Error("Profile timeout")), 6000)
+          setTimeout(() => reject(new Error("Profile timeout")), 8000)
         );
 
         let profile;
@@ -191,7 +191,7 @@ export const useAuthStateManager = ({
     } finally {
       setIsLoading(false);
       setGlobalLoading('auth', false);
-      logger.info('[AUTH-STATE] ✅ Setup finalizado (timeouts otimizados)');
+      logger.info('[AUTH-STATE] ✅ Setup finalizado (timeouts otimizados para 10s)');
     }
   }, [setSession, setUser, setProfile, setIsLoading, setGlobalLoading, circuitBreakerActive]);
 

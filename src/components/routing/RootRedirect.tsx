@@ -10,7 +10,7 @@ import { navigationCache } from "@/utils/navigationCache";
 const RootRedirect = () => {
   const location = useLocation();
   const [forceRedirect, setForceRedirect] = useState(false);
-  const [adaptiveTimeout, setAdaptiveTimeout] = useState(8000); // CORREÇÃO: Aumentado de 3000 para 8000
+  const [adaptiveTimeout, setAdaptiveTimeout] = useState(12000); // FASE 2: Aumentado para 12 segundos
   const timeoutRef = useRef<number | null>(null);
   const redirectProcessed = useRef(false);
   
@@ -29,17 +29,17 @@ const RootRedirect = () => {
   // CORREÇÃO: Cache formação verificado
   const hasCachedFormacaoAccess = user && navigationCache.isFormacaoVerified(user.id);
   
-  // CORREÇÃO: Detectar performance da conexão para timeout adaptativo
+  // FASE 2: Detectar performance da conexão para timeout adaptativo
   const detectConnectionSpeed = useCallback(() => {
     const connection = (navigator as any).connection;
     if (connection) {
       const effectiveType = connection.effectiveType;
       if (effectiveType === 'slow-2g' || effectiveType === '2g') {
-        setAdaptiveTimeout(12000); // CORREÇÃO: Aumentado para 12 segundos
+        setAdaptiveTimeout(15000); // FASE 2: Aumentado para 15 segundos
       } else if (effectiveType === '3g') {
-        setAdaptiveTimeout(10000); // CORREÇÃO: Aumentado para 10 segundos
+        setAdaptiveTimeout(12000); // FASE 2: Aumentado para 12 segundos
       } else {
-        setAdaptiveTimeout(8000); // CORREÇÃO: Padrão 8 segundos
+        setAdaptiveTimeout(10000); // FASE 2: Padrão 10 segundos
       }
     }
   }, []);
@@ -61,7 +61,7 @@ const RootRedirect = () => {
     adaptiveTimeout
   });
   
-  // CORREÇÃO: Circuit breaker adaptativo com timeouts maiores e mais seguros
+  // FASE 2: Circuit breaker adaptativo com timeouts otimizados
   useEffect(() => {
     detectConnectionSpeed();
     
@@ -99,7 +99,7 @@ const RootRedirect = () => {
     return handleCachedRedirect('/formacao', 'Cache formação válido');
   }
   
-  // CORREÇÃO: Fallback mais seguro com redirecionamento inteligente
+  // FASE 3: Fallback mais seguro com redirecionamento inteligente
   if (forceRedirect) {
     console.log("🚨 [ROOT REDIRECT] Circuit breaker ativo - redirecionamento forçado");
     
@@ -128,7 +128,7 @@ const RootRedirect = () => {
     return handleCachedRedirect('/dashboard', 'Usuário/Admin em /login');
   }
   
-  // CORREÇÃO: Loading otimizado com timeouts maiores e mais seguros
+  // FASE 2: Loading otimizado com timeouts maiores e mais seguros
   if (authLoading && !forceRedirect) {
     console.log("[ROOT-REDIRECT] Aguardando autenticação...");
     return <LoadingScreen message="Verificando sua sessão..." />;

@@ -33,16 +33,17 @@ export const useDashboardProgress = (solutions: Solution[] = []) => {
     return solutionsHash.current;
   }, [solutions]);
 
-  // Função de fetch otimizada e estável - usando campos corretos
+  // FASE 1: Função de fetch otimizada e estável - removendo campos inexistentes
   const fetchProgress = useCallback(async () => {
     if (!user?.id) {
       throw new Error("Usuário não autenticado");
     }
     
     try {
+      // CORREÇÃO CRÍTICA: Removido updated_at que não existe na tabela
       const { data, error } = await supabase
         .from("progress")
-        .select("solution_id, is_completed, current_module, completed_modules, updated_at")
+        .select("solution_id, is_completed, current_module, completed_modules")
         .eq("user_id", user.id);
         
       if (error) {
@@ -56,7 +57,7 @@ export const useDashboardProgress = (solutions: Solution[] = []) => {
     }
   }, [user?.id]); // DEPENDÊNCIA ESTÁVEL
   
-  // Query otimizada com configurações de performance máxima
+  // FASE 2: Query otimizada com configurações de performance máxima e timeouts maiores
   const { 
     data: progressData,
     isLoading,
@@ -64,12 +65,12 @@ export const useDashboardProgress = (solutions: Solution[] = []) => {
   } = useQuery({
     queryKey: ['dashboard-progress', user?.id, currentHash],
     queryFn: fetchProgress,
-    staleTime: 10 * 60 * 1000, // 10 minutos de cache
-    gcTime: 30 * 60 * 1000, // 30 minutos no cache
+    staleTime: 15 * 60 * 1000, // FASE 2: 15 minutos de cache para melhor performance
+    gcTime: 45 * 60 * 1000, // FASE 2: 45 minutos no cache
     enabled: !!(user?.id && currentHash !== 'empty'),
     refetchOnWindowFocus: false,
     refetchOnMount: false,
-    retry: 1,
+    retry: 2, // FASE 2: Mais tentativas para conexões instáveis
     // Cache inteligente com deduplicação
     structuralSharing: true,
   });
