@@ -5,133 +5,72 @@ import { Solution } from "@/lib/supabase";
 import { useAuth } from "@/contexts/auth";
 import { useSecurityEnforcement } from "@/hooks/auth/useSecurityEnforcement";
 import { logger } from "@/utils/logger";
+import { useOptimizedQuery } from "./cache/useOptimizedQueries";
+import { fetchOptimizedSolutions, preloadRelatedSolutions } from "@/services/optimizedSolutionsService";
 
-// Cache global para evitar requests desnecessários
+// Cache global otimizado - mantido para compatibilidade
 const solutionsCache = new Map<string, { data: Solution[], timestamp: number }>();
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutos
 
 export const useSolutionsData = () => {
   const { user, profile } = useAuth();
   const { logDataAccess } = useSecurityEnforcement();
-  const [solutions, setSolutions] = useState<Solution[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const lastFetchRef = useRef<number>(0);
-  const executionCountRef = useRef(0);
-  
-  // Estados de busca e filtragem
   const [searchQuery, setSearchQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState("all");
+
+  // Usar query otimizada para soluções
+  const { 
+    data: solutions = [], 
+    isLoading: loading, 
+    error: queryError 
+  } = useOptimizedQuery(
+    fetchOptimizedSolutions,
+    {
+      cacheType: 'solutions',
+      enablePreload: true,
+      enabled: !!user,
+      onSuccess: (data) => {
+        // Preload das categorias mais comuns
+        const categories = [...new Set(data.map(s => s.category))];
+        categories.slice(0, 3).forEach(category => {
+          if (category) preloadRelatedSolutions(category);
+        });
+      }
+    }
+  );
+
+  // Estados de compatibilidade
+  const [error, setError] = useState<string | null>(null);
+  
+  // Atualizar erro baseado na query
+  useEffect(() => {
+    if (queryError) {
+      setError(queryError instanceof Error ? queryError.message : "Erro ao carregar soluções");
+    } else {
+      setError(null);
+    }
+  }, [queryError]);
+
+  // Log de acesso otimizado
+  useEffect(() => {
+    if (solutions.length > 0 && user) {
+      // Fazer log apenas uma vez por sessão
+      const logKey = `solutions_access_${user.id}`;
+      if (!sessionStorage.getItem(logKey)) {
+        logDataAccess('solutions', 'fetch_list').catch(() => {
+          // Ignorar erros de auditoria
+        });
+        sessionStorage.setItem(logKey, 'true');
+      }
+    }
+  }, [solutions.length, user, logDataAccess]);
 
   // Computar canViewSolutions baseado no usuário atual
   const canViewSolutions = useMemo(() => {
     return !!user;
   }, [user]);
 
-  // Chave de cache baseada no perfil do usuário
-  const cacheKey = useMemo(() => {
-    const isAdmin = profile?.role === 'admin';
-    return `solutions_${user?.id}_${isAdmin ? 'admin' : 'user'}`;
-  }, [user?.id, profile?.role]);
-
-  useEffect(() => {
-    const fetchSolutions = async () => {
-      // Verificar autenticação
-      if (!user) {
-        logger.warn('[SOLUTIONS] Tentativa de carregar soluções sem autenticação');
-        setLoading(false);
-        return;
-      }
-
-      // Incrementar contador apenas em desenvolvimento
-      if (process.env.NODE_ENV === 'development') {
-        executionCountRef.current++;
-      }
-
-      // Debounce: evitar múltiplas execuções em sequência
-      const now = Date.now();
-      if (now - lastFetchRef.current < 1000) { // 1 segundo de debounce
-        return;
-      }
-      lastFetchRef.current = now;
-
-      // Verificar cache primeiro
-      const cached = solutionsCache.get(cacheKey);
-      if (cached && (now - cached.timestamp) < CACHE_TTL) {
-        setSolutions(cached.data);
-        setLoading(false);
-        setError(null);
-        
-        if (process.env.NODE_ENV === 'development') {
-          console.log('[SOLUTIONS] Dados carregados do cache:', {
-            execCount: executionCountRef.current,
-            count: cached.data.length,
-            cacheAge: Math.round((now - cached.timestamp) / 1000) + 's'
-          });
-        }
-        return;
-      }
-
-      try {
-        setLoading(true);
-        setError(null);
-
-        // Log de acesso apenas uma vez
-        try {
-          await logDataAccess('solutions', 'fetch_list');
-        } catch (auditError) {
-          // Ignorar erros de auditoria silenciosamente
-        }
-
-        // Query otimizada
-        let query = supabase.from("solutions").select("*");
-
-        // Se não for admin, mostrar apenas soluções publicadas
-        if (!profile || profile.role !== 'admin') {
-          query = query.eq("published", true);
-        }
-
-        const { data, error: fetchError } = await query.order("created_at", { ascending: false });
-
-        if (fetchError) {
-          logger.error('[SOLUTIONS] Erro ao buscar soluções:', fetchError);
-          throw fetchError;
-        }
-
-        // Validar dados antes de definir no estado
-        const validSolutions = (data || []).filter(solution => 
-          solution && typeof solution.id === 'string'
-        );
-
-        // Atualizar cache
-        solutionsCache.set(cacheKey, {
-          data: validSolutions,
-          timestamp: now
-        });
-
-        setSolutions(validSolutions);
-        
-        if (process.env.NODE_ENV === 'development') {
-          console.log('[SOLUTIONS] Soluções carregadas do servidor:', {
-            execCount: executionCountRef.current,
-            count: validSolutions.length,
-            isAdmin: profile?.role === 'admin',
-            userId: user.id.substring(0, 8) + '***'
-          });
-        }
-
-      } catch (error: any) {
-        logger.error('[SOLUTIONS] Erro ao carregar soluções:', error);
-        setError(error.message || "Erro ao carregar soluções");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchSolutions();
-  }, [user, profile?.role, cacheKey, logDataAccess]); // Dependências mínimas
-
-  // Implementar filtragem de soluções baseada na busca e categoria
+  // Implementar filtragem otimizada de soluções
   const filteredSolutions = useMemo(() => {
     let filtered = solutions;
 
@@ -142,7 +81,7 @@ export const useSolutionsData = () => {
       );
     }
 
-    // Filtrar por termo de busca
+    // Filtrar por termo de busca com debounce implícito
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter(solution =>
@@ -154,6 +93,18 @@ export const useSolutionsData = () => {
 
     return filtered;
   }, [solutions, activeCategory, searchQuery]);
+
+  // Debug em desenvolvimento
+  useEffect(() => {
+    if (process.env.NODE_ENV === 'development' && solutions.length > 0) {
+      console.log('[SOLUTIONS_OPTIMIZED] Soluções carregadas:', {
+        total: solutions.length,
+        filtered: filteredSolutions.length,
+        category: activeCategory,
+        searchQuery: searchQuery ? searchQuery.substring(0, 20) + '...' : 'none'
+      });
+    }
+  }, [solutions.length, filteredSolutions.length, activeCategory, searchQuery]);
 
   return { 
     solutions,

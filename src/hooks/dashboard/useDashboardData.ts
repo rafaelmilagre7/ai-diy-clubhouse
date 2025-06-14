@@ -4,89 +4,110 @@ import { useAuth } from "@/contexts/auth";
 import { supabase } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
 import { Solution } from "@/lib/supabase";
+import { useOptimizedQuery } from "../cache/useOptimizedQueries";
+import { fetchOptimizedSolutions } from "@/services/optimizedSolutionsService";
+import { fetchUserProgress } from "@/services/optimizedProgressService";
 
 export const useDashboardData = () => {
   const { user, profile } = useAuth();
   const { toast } = useToast();
-  const [loading, setLoading] = useState(true);
-  const [solutions, setSolutions] = useState<Solution[]>([]);
-  const [progressData, setProgressData] = useState<any[]>([]);
   const [analyticsData, setAnalyticsData] = useState<any[]>([]);
   const [profilesData, setProfilesData] = useState<any[]>([]);
   const [error, setError] = useState<string | null>(null);
   const isAdmin = profile?.role === 'admin';
 
+  // Query otimizada para soluções
+  const { 
+    data: solutions = [], 
+    isLoading: solutionsLoading 
+  } = useOptimizedQuery(
+    fetchOptimizedSolutions,
+    {
+      cacheType: 'solutions',
+      enabled: !!user
+    }
+  );
+
+  // Query otimizada para progresso
+  const { 
+    data: progressData = [], 
+    isLoading: progressLoading 
+  } = useOptimizedQuery(
+    () => fetchUserProgress(user?.id),
+    {
+      cacheType: 'progress',
+      identifier: user?.id,
+      enabled: !!user
+    }
+  );
+
+  // Loading consolidado
+  const loading = solutionsLoading || progressLoading;
+
+  // Fetch dados complementares (menos críticos)
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchComplementaryData = async () => {
+      if (!user) return;
+
       try {
-        setLoading(true);
         setError(null);
         
-        // Fetch solutions - filtrar apenas publicadas se não for admin
-        let query = supabase.from("solutions").select("*");
-        if (!isAdmin) {
-          query = query.eq("published", true);
+        // Analytics data (não crítico)
+        try {
+          const { data: analytics, error: analyticsError } = await supabase
+            .from("analytics")
+            .select("*")
+            .order("created_at", { ascending: false })
+            .limit(50);
+        
+          if (analyticsError && !analyticsError.message.includes('does not exist')) {
+            console.warn("Erro ao buscar analytics:", analyticsError);
+          } else {
+            setAnalyticsData(analytics || []);
+          }
+        } catch (analyticsErr) {
+          console.warn("Analytics fetch error:", analyticsErr);
         }
         
-        const { data: solutionsData, error: solutionsError } = await query;
-        
-        if (solutionsError) {
-          throw solutionsError;
+        // Profiles data (admin only)
+        if (isAdmin) {
+          try {
+            const { data: profiles, error: profilesError } = await supabase
+              .from("profiles")
+              .select("id, name, email, role, created_at")
+              .limit(100);
+            
+            if (profilesError) {
+              console.warn("Erro ao buscar profiles:", profilesError);
+            } else {
+              setProfilesData(profiles || []);
+            }
+          } catch (profilesErr) {
+            console.warn("Profiles fetch error:", profilesErr);
+          }
         }
-        
-        // Ensure solutions array is type-safe
-        setSolutions(solutionsData as Solution[]);
-        
-        // Fetch all progress data
-        const { data: progress, error: progressError } = await supabase
-          .from("progress")
-          .select("*");
-        
-        if (progressError) {
-          throw progressError;
-        }
-        
-        setProgressData(progress || []);
-        
-        // Fetch analytics data
-        const { data: analytics, error: analyticsError } = await supabase
-          .from("analytics")
-          .select("*")
-          .order("created_at", { ascending: false })
-          .limit(50);
-        
-        if (analyticsError && !analyticsError.message.includes('does not exist')) {
-          console.warn("Erro ao buscar analytics:", analyticsError);
-        } else {
-          setAnalyticsData(analytics || []);
-        }
-        
-        // Fetch profiles data
-        const { data: profiles, error: profilesError } = await supabase
-          .from("profiles")
-          .select("*");
-        
-        if (profilesError) {
-          throw profilesError;
-        }
-        
-        setProfilesData(profiles || []);
         
       } catch (error: any) {
-        console.error("Erro no carregamento de dados do dashboard:", error);
+        console.error("Erro no carregamento de dados complementares:", error);
         setError(error.message || "Erro inesperado ao carregar dados");
-        toast({
-          title: "Erro ao carregar dados",
-          description: "Ocorreu um erro ao carregar os dados do dashboard.",
-          variant: "destructive",
-        });
-      } finally {
-        setLoading(false);
       }
     };
     
-    fetchData();
-  }, [toast, isAdmin, profile?.role]);
+    // Delay para não impactar carregamento crítico
+    const timer = setTimeout(fetchComplementaryData, 1000);
+    return () => clearTimeout(timer);
+  }, [user, isAdmin]);
+
+  // Toast de erro apenas para erros críticos
+  useEffect(() => {
+    if (error) {
+      toast({
+        title: "Erro ao carregar dados",
+        description: "Alguns dados complementares podem não estar disponíveis.",
+        variant: "destructive",
+      });
+    }
+  }, [error, toast]);
   
   return { 
     solutions, 
