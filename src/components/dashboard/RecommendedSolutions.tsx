@@ -9,7 +9,7 @@ interface RecommendedSolutionsProps {
 }
 
 // Componente 100% memoizado para evitar re-renders desnecessários
-export const RecommendedSolutions: FC<RecommendedSolutionsProps> = memo({ 
+export const RecommendedSolutions: FC<RecommendedSolutionsProps> = memo(({ 
   solutions, 
   onSolutionClick 
 }) => {
@@ -25,3 +25,4 @@ export const RecommendedSolutions: FC<RecommendedSolutionsProps> = memo({
 });
 
 RecommendedSolutions.displayName = 'RecommendedSolutions';
+
