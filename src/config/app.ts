@@ -1,4 +1,5 @@
-// Configuração centralizada da aplicação - 100% LIVRE DE CREDENCIAIS HARDCODED
+
+// Configuração centralizada da aplicação - 100% SEGURA SEM CREDENCIAIS HARDCODED
 export const APP_CONFIG = {
   // Domínio principal da aplicação
   DOMAIN: import.meta.env.VITE_APP_DOMAIN || 'https://app.viverdeia.ai',
@@ -27,21 +28,20 @@ export const APP_CONFIG = {
   }
 };
 
-// Configuração do Supabase com detecção inteligente de ambiente - 100% SEGURA
+// Configuração do Supabase COMPLETAMENTE SEGURA - SEM CREDENCIAIS HARDCODED
 export const SUPABASE_CONFIG = {
   // DETECÇÃO CORRIGIDA DO AMBIENTE LOVABLE
   isLovableEnvironment(): boolean {
     const hostname = window.location.hostname;
-    // INCLUIR O DOMÍNIO DA APLICAÇÃO COMO AMBIENTE LOVABLE
     const isLovable =
       hostname.includes('lovableproject.com') ||
       hostname.includes('lovable.app') ||
       hostname.includes('lovable.dev') ||
-      hostname === "app.viverdeia.ai" || // <- Adiciona o domínio principal
+      hostname === "app.viverdeia.ai" ||
       /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}\.lovableproject\.com$/.test(hostname);
 
     // Log seguro da detecção
-    if (import.meta.env.DEV || true) { // Forçar log para debug de produção neste caso
+    if (import.meta.env.DEV) {
       console.info(
         `🔍 [AMBIENTE] Detecção: ${isLovable ? "Lovable" : "Outro"} (${hostname})`
       );
@@ -50,40 +50,28 @@ export const SUPABASE_CONFIG = {
     return isLovable;
   },
 
-  // Obter credenciais com fallback inteligente
+  // Obter credenciais EXCLUSIVAMENTE de variáveis de ambiente - MÉTODO SEGURO
   getCredentials(): { url: string; anonKey: string } {
-    // No Lovable, tentar acessar as credenciais automáticas primeiro
-    if (this.isLovableEnvironment()) {
-      // Tentar variáveis de ambiente primeiro
-      const envUrl = import.meta.env.VITE_SUPABASE_URL;
-      const envKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-      
-      if (envUrl && envKey) {
-        if (import.meta.env.DEV) {
-          console.info('✅ [LOVABLE] Usando credenciais automáticas do ambiente');
-        }
-        return { url: envUrl, anonKey: envKey };
-      }
-      
-      // Fallback para URL padrão do projeto (apenas no Lovable)
-      const projectUrl = 'https://zotzvtepvpnkcoobdubt.supabase.co';
-      const projectKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpvdHp2dGVwdnBua2Nvb2JkdWJ0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQzNzgzODAsImV4cCI6MjA1OTk1NDM4MH0.dxjPkqTPnK8gjjxJbooPX5_kpu3INciLeDpuU8dszHQ';
-      
+    // SEMPRE usar variáveis de ambiente - sem fallbacks hardcoded
+    const envUrl = import.meta.env.VITE_SUPABASE_URL;
+    const envKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+    
+    if (envUrl && envKey) {
       if (import.meta.env.DEV) {
-        console.info('⚠️ [LOVABLE] Usando credenciais do projeto como fallback');
+        console.info('✅ [SEGURO] Usando credenciais das variáveis de ambiente');
       }
-      
-      return { url: projectUrl, anonKey: projectKey };
+      return { url: envUrl, anonKey: envKey };
     }
     
-    // Em outros ambientes, usar apenas variáveis
-    return {
-      url: import.meta.env.VITE_SUPABASE_URL || '',
-      anonKey: import.meta.env.VITE_SUPABASE_ANON_KEY || ''
-    };
+    // SEGURANÇA: Se não há credenciais, retornar vazio ao invés de fallback inseguro
+    if (import.meta.env.DEV) {
+      console.warn('⚠️ [SEGURANÇA] Credenciais não configuradas nas variáveis de ambiente');
+    }
+    
+    return { url: '', anonKey: '' };
   },
 
-  // URLs e chaves obtidas dinamicamente
+  // URLs e chaves obtidas dinamicamente e de forma segura
   get url(): string {
     return this.getCredentials().url;
   },
@@ -92,7 +80,7 @@ export const SUPABASE_CONFIG = {
     return this.getCredentials().anonKey;
   },
   
-  // Validação inteligente por ambiente
+  // Validação inteligente por ambiente - MÉTODO SEGURO
   validate(): { isValid: boolean; errors: string[]; environment: string } {
     const errors: string[] = [];
     const environment = this.isLovableEnvironment() ? 'Lovable' : 
@@ -100,26 +88,13 @@ export const SUPABASE_CONFIG = {
     
     const credentials = this.getCredentials();
     
-    // No ambiente Lovable, sempre considerar válido se temos credenciais
-    if (this.isLovableEnvironment()) {
-      if (!credentials.url || !credentials.anonKey) {
-        errors.push('❌ Credenciais do Lovable não disponíveis');
-      }
-      
-      return {
-        isValid: credentials.url && credentials.anonKey ? true : false,
-        errors,
-        environment
-      };
-    }
-    
-    // Em outros ambientes, validar rigorosamente
+    // Validação consistente para todos os ambientes
     if (!credentials.url) {
-      errors.push('❌ VITE_SUPABASE_URL não está definida - Configure no .env.local');
+      errors.push('❌ VITE_SUPABASE_URL não está definida - Configure nas variáveis de ambiente');
     }
     
     if (!credentials.anonKey) {
-      errors.push('❌ VITE_SUPABASE_ANON_KEY não está definida - Configure no .env.local');
+      errors.push('❌ VITE_SUPABASE_ANON_KEY não está definida - Configure nas variáveis de ambiente');
     }
     
     // Validar formato da URL
@@ -139,7 +114,7 @@ export const SUPABASE_CONFIG = {
     };
   },
   
-  // Verificar se está configurado
+  // Verificar se está configurado de forma segura
   isConfigured(): boolean {
     const credentials = this.getCredentials();
     return !!(credentials.url && credentials.anonKey);
@@ -156,35 +131,14 @@ export const SUPABASE_CONFIG = {
       anonKey: credentials.anonKey ? `${credentials.anonKey.substring(0, 10)}...` : '❌ NÃO CONFIGURADA',
       isConfigured: this.isConfigured(),
       environment,
-      autoConfigured: this.isLovableEnvironment()
+      secureMode: true // Indica que estamos em modo seguro
     };
   },
   
-  // Validação rigorosa apenas quando necessário
+  // Validação rigorosa para garantir segurança
   requireValidConfig(): void {
     const validation = this.validate();
     
-    // No Lovable, dar mais informações se falhar
-    if (this.isLovableEnvironment() && !validation.isValid) {
-      const errorMessage = `
-🔒 ERRO DE CONFIGURAÇÃO NO LOVABLE
-
-As credenciais do Supabase não estão disponíveis no ambiente Lovable:
-
-${validation.errors.join('\n')}
-
-📋 POSSÍVEIS SOLUÇÕES:
-1. Verifique se o projeto Lovable está conectado ao Supabase
-2. Aguarde alguns segundos e recarregue a página
-3. Entre em contato com o suporte se o problema persistir
-
-⚠️  Este erro indica um problema na configuração automática do Lovable.
-      `;
-      
-      throw new Error(errorMessage);
-    }
-    
-    // Em outros ambientes, falhar apenas se realmente não configurado
     if (!validation.isValid) {
       const errorMessage = `
 🔒 CONFIGURAÇÃO DE SEGURANÇA NECESSÁRIA
@@ -194,14 +148,14 @@ As credenciais do Supabase não estão configuradas corretamente no ambiente ${v
 ${validation.errors.join('\n')}
 
 📋 COMO RESOLVER:
-1. Copie o arquivo .env.example para .env.local
-2. Configure suas credenciais do Supabase no .env.local
-3. Reinicie o servidor de desenvolvimento
+1. Configure VITE_SUPABASE_URL nas variáveis de ambiente do projeto
+2. Configure VITE_SUPABASE_ANON_KEY nas variáveis de ambiente do projeto
+3. Verifique se as credenciais estão corretas no dashboard do Supabase
 
 🔗 Onde encontrar as credenciais:
 https://supabase.com/dashboard/project/[seu-projeto]/settings/api
 
-⚠️  A aplicação não funcionará sem essas configurações em ambiente ${validation.environment}.
+⚠️  A aplicação não funcionará sem essas configurações de segurança.
       `;
       
       throw new Error(errorMessage);
@@ -209,22 +163,19 @@ https://supabase.com/dashboard/project/[seu-projeto]/settings/api
   }
 };
 
-// Validação automática na inicialização - apenas quando necessário
+// Validação automática na inicialização - MODO SEGURO
 if (import.meta.env.DEV) {
   const validation = SUPABASE_CONFIG.validate();
+  const safeConfig = SUPABASE_CONFIG.getSafeConfig();
   
-  if (SUPABASE_CONFIG.isLovableEnvironment()) {
-    if (validation.isValid) {
-      console.info('✅ [LOVABLE] Executando no ambiente Lovable - configuração automática ativa');
-    } else {
-      console.error('🔒 [LOVABLE ERRO] Credenciais não disponíveis no Lovable:');
-      validation.errors.forEach(error => console.error(`   ${error}`));
-    }
-  } else if (!validation.isValid) {
-    console.error('🔒 [CONFIGURAÇÃO CRÍTICA] Credenciais do Supabase não configuradas:');
-    validation.errors.forEach(error => console.error(`   ${error}`));
-    console.info('ℹ️  [SOLUÇÃO] Configure as credenciais em .env.local para desenvolvimento');
-  } else {
+  if (validation.isValid) {
     console.info(`✅ [SEGURANÇA] Configuração do Supabase validada com sucesso no ambiente ${validation.environment}`);
+    console.info('🔒 [SEGURANÇA] Modo seguro ativado - sem credenciais hardcoded');
+  } else {
+    console.error(`🔒 [CONFIGURAÇÃO CRÍTICA] Credenciais do Supabase não configuradas no ambiente ${validation.environment}:`);
+    validation.errors.forEach(error => console.error(`   ${error}`));
+    console.info('ℹ️  [SOLUÇÃO] Configure as credenciais nas variáveis de ambiente do projeto');
   }
+  
+  console.info('🔒 [CONFIGURAÇÃO SEGURA]', safeConfig);
 }
