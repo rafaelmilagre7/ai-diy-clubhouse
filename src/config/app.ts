@@ -1,4 +1,3 @@
-
 // Configuração centralizada da aplicação - 100% LIVRE DE CREDENCIAIS HARDCODED
 export const APP_CONFIG = {
   // Domínio principal da aplicação
@@ -30,20 +29,24 @@ export const APP_CONFIG = {
 
 // Configuração do Supabase com detecção inteligente de ambiente - 100% SEGURA
 export const SUPABASE_CONFIG = {
-  // Detecção aprimorada do ambiente Lovable
+  // DETECÇÃO CORRIGIDA DO AMBIENTE LOVABLE
   isLovableEnvironment(): boolean {
     const hostname = window.location.hostname;
-    const isLovable = hostname.includes('lovableproject.com') || 
-                     hostname.includes('lovable.app') ||
-                     hostname.includes('lovable.dev') ||
-                     // Padrões adicionais para detectar Lovable
-                     /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}\.lovableproject\.com$/.test(hostname);
-    
+    // INCLUIR O DOMÍNIO DA APLICAÇÃO COMO AMBIENTE LOVABLE
+    const isLovable =
+      hostname.includes('lovableproject.com') ||
+      hostname.includes('lovable.app') ||
+      hostname.includes('lovable.dev') ||
+      hostname === "app.viverdeia.ai" || // <- Adiciona o domínio principal
+      /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}\.lovableproject\.com$/.test(hostname);
+
     // Log seguro da detecção
-    if (import.meta.env.DEV) {
-      console.info(`🔍 [AMBIENTE] Detecção: ${isLovable ? 'Lovable' : 'Outro'} (${hostname})`);
+    if (import.meta.env.DEV || true) { // Forçar log para debug de produção neste caso
+      console.info(
+        `🔍 [AMBIENTE] Detecção: ${isLovable ? "Lovable" : "Outro"} (${hostname})`
+      );
     }
-    
+
     return isLovable;
   },
 
