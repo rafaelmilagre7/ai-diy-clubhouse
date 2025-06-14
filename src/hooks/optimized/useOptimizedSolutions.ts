@@ -62,13 +62,13 @@ export const useOptimizedSolutions = () => {
       const { data, error: fetchError } = await query;
 
       if (fetchError) {
-        logger.error('[OPTIMIZED] Erro ao buscar soluções:', fetchError);
+        logger.error('[OPTIMIZED] Erro ao buscar soluções', fetchError);
         throw fetchError;
       }
 
-      const validSolutions = (data || []).filter(solution => 
+      const validSolutions = (data || []).filter((solution): solution is Solution => 
         solution && typeof solution.id === 'string'
-      ) as Solution[];
+      );
 
       // Atualizar cache com TTL específico
       optimizedCache.set(cacheKey, {
@@ -79,7 +79,7 @@ export const useOptimizedSolutions = () => {
 
       return validSolutions;
     } catch (error: any) {
-      logger.error('[OPTIMIZED] Erro na query otimizada:', error);
+      logger.error('[OPTIMIZED] Erro na query otimizada', error);
       throw error;
     }
   }, [user, queryFields, isAdmin, cacheKey, cacheTTL]);
@@ -105,14 +105,14 @@ export const useOptimizedSolutions = () => {
         const data = await fetchOptimizedSolutions();
         setSolutions(data);
         
-        logger.info('[OPTIMIZED] Soluções carregadas:', {
+        logger.info('[OPTIMIZED] Soluções carregadas', {
           count: data.length,
           isAdmin,
           cached: optimizedCache.has(cacheKey)
         });
         
       } catch (error: any) {
-        logger.error('[OPTIMIZED] Erro ao carregar soluções:', error);
+        logger.error('[OPTIMIZED] Erro ao carregar soluções', error);
         setError(error.message || "Erro ao carregar soluções");
       } finally {
         setLoading(false);
@@ -125,7 +125,7 @@ export const useOptimizedSolutions = () => {
   // Função para invalidar cache (útil para atualizações)
   const invalidateCache = useMemo(() => () => {
     optimizedCache.delete(cacheKey);
-    logger.info('[OPTIMIZED] Cache invalidado para:', cacheKey);
+    logger.info('[OPTIMIZED] Cache invalidado', { cacheKey });
   }, [cacheKey]);
 
   return {

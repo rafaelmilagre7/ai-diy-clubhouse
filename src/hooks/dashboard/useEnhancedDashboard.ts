@@ -16,13 +16,13 @@ export const useEnhancedDashboard = () => {
   const shouldUseFallback = useMemo(() => {
     // Se otimizado tem erro, usar fallback
     if (optimized.error && !optimized.isLoading) {
-      logger.warn('[ENHANCED] Usando fallback devido a erro:', optimized.error);
+      logger.warn('[ENHANCED] Usando fallback devido a erro', { error: optimized.error });
       return true;
     }
     
     // Se otimizado não tem dados e não está loading, usar fallback
     if (!optimized.hasData && !optimized.isLoading) {
-      logger.info('[ENHANCED] Usando fallback - sem dados otimizados');
+      logger.info('[ENHANCED] Usando fallback - sem dados otimizados', { hasData: optimized.hasData });
       return true;
     }
     
