@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useCallback } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { validateUserSession, fetchUserProfileSecurely, clearProfileCache } from '@/hooks/auth/utils/authSessionUtils';
 import { UserProfile } from '@/lib/supabase';
@@ -7,7 +7,7 @@ import { logger } from '@/utils/logger';
 import { useGlobalLoading } from '@/hooks/useGlobalLoading';
 import { navigationCache } from '@/utils/navigationCache';
 import { secureSessionCache } from '@/utils/secureSessionCache';
-import { intelligentRateLimit } from '@/utils/intelligentRateLimit';
+import { rateLimit } from '@/utils/intelligentRateLimit'; // CORREÇÃO: importação correta
 
 interface UseAuthStateManagerProps {
   setSession: (session: Session | null) => void;
@@ -23,57 +23,32 @@ export const useAuthStateManager = ({
   setIsLoading,
 }: UseAuthStateManagerProps) => {
   const { setLoading: setGlobalLoading, circuitBreakerActive } = useGlobalLoading();
-  const [retryCount, setRetryCount] = useState(0);
-  const [lastAttemptTime, setLastAttemptTime] = useState(0);
-  const maxRetries = 3;
-  const retryDelay = 1000;
-  
-  // SEGURANÇA: Detectar IP do cliente para rate limiting
-  const getClientIdentifier = useCallback(() => {
-    // Em produção, isso viria do servidor. No cliente, usamos fallbacks
-    return `browser_${navigator.userAgent.substring(0, 50).replace(/\s+/g, '_')}`;
-  }, []);
 
-  // OTIMIZAÇÃO: Exponential backoff para retry
-  const getRetryDelay = useCallback((attempt: number) => {
-    return Math.min(retryDelay * Math.pow(2, attempt), 5000);
-  }, []);
+  // OTIMIZAÇÃO: Rate limiting para operações de autenticação
+  const authRateLimit = rateLimit({
+    windowMs: 60 * 1000, // 1 minuto
+    max: 10, // máximo 10 tentativas por minuto
+    message: 'Muitas tentativas de autenticação',
+    statusCode: 429
+  });
 
   const setupAuthSession = useCallback(async () => {
-    const now = Date.now();
-    const clientId = getClientIdentifier();
-    
-    // SEGURANÇA: Rate limiting inteligente
-    const rateLimitCheck = intelligentRateLimit.checkRateLimit(
-      clientId, 
-      'auth_setup', 
-      navigator.userAgent
-    );
-    
-    if (!rateLimitCheck.allowed) {
-      logger.warn('[AUTH-STATE] Bloqueado por rate limiting', {
-        reason: rateLimitCheck.reason,
-        retryAfter: rateLimitCheck.retryAfter
-      });
-      setIsLoading(false);
-      setGlobalLoading('auth', false);
-      return;
-    }
-    
-    // Rate limiting para evitar chamadas excessivas
-    if (now - lastAttemptTime < 500) {
-      logger.info('[AUTH-STATE] Rate limiting local - aguardando...');
-      return;
-    }
-    
-    setLastAttemptTime(now);
-    logger.info('[AUTH-STATE] Iniciando setup com segurança avançada');
+    logger.info('[AUTH-STATE] Iniciando setup com segurança aprimorada');
     
     try {
       setIsLoading(true);
       setGlobalLoading('auth', true);
 
-      // Verificar circuit breaker
+      // SEGURANÇA: Rate limiting para prevenir ataques
+      const rateLimitResult = authRateLimit('auth_session_setup');
+      if (!rateLimitResult.success) {
+        logger.warn('[AUTH-STATE] Rate limit atingido para setup de sessão');
+        setIsLoading(false);
+        setGlobalLoading('auth', false);
+        return;
+      }
+
+      // OTIMIZAÇÃO 1: Verificação de circuit breaker mais rápida
       if (circuitBreakerActive) {
         logger.warn('[AUTH-STATE] Circuit breaker ativo - setup simplificado');
         setIsLoading(false);
@@ -82,55 +57,43 @@ export const useAuthStateManager = ({
       }
 
       // SEGURANÇA: Verificar cache seguro primeiro
-      const userId = sessionStorage.getItem('current_user_id');
-      if (userId) {
-        const cachedSession = await secureSessionCache.getSecureSession(userId);
-        if (cachedSession) {
-          logger.info('[AUTH-STATE] Usando sessão segura em cache');
-          setSession(cachedSession);
-          setUser(cachedSession.user);
-          
-          // Verificar cache de navegação
-          const cachedNavigation = navigationCache.get(userId);
-          if (cachedNavigation?.userProfile) {
-            setProfile(cachedNavigation.userProfile);
-            setIsLoading(false);
-            setGlobalLoading('auth', false);
-            return;
-          }
+      const cachedSession = secureSessionCache.get('current_session');
+      if (cachedSession && cachedSession.isValid) {
+        logger.info('[AUTH-STATE] Sessão segura em cache encontrada');
+        setSession(cachedSession.session);
+        setUser(cachedSession.user);
+        
+        // Verificar cache de navegação
+        const cachedNavigation = navigationCache.get(cachedSession.user.id);
+        if (cachedNavigation?.userProfile) {
+          setProfile(cachedNavigation.userProfile);
+          logger.info('[AUTH-STATE] ✅ Setup completo via cache seguro');
+          return;
         }
       }
 
-      // Timeout adaptativo baseado no número de tentativas
-      const adaptiveTimeout = 1000 + (retryCount * 500);
+      // OTIMIZAÇÃO 2: Timeout reduzido para 2 segundos
       const sessionPromise = validateUserSession();
       const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error("Auth session timeout")), adaptiveTimeout)
+        setTimeout(() => reject(new Error("Auth session timeout")), 2000)
       );
 
       let sessionResult;
       try {
         sessionResult = await Promise.race([sessionPromise, timeoutPromise]) as { session: Session | null; user: User | null };
       } catch (timeoutError) {
-        // SEGURANÇA: Reportar tentativa de falha para rate limiting
-        intelligentRateLimit.checkRateLimit(clientId, 'auth_timeout', navigator.userAgent, true);
-        
-        if (retryCount < maxRetries) {
-          const delay = getRetryDelay(retryCount);
-          logger.warn(`[AUTH-STATE] Timeout - retry ${retryCount + 1}/${maxRetries} em ${delay}ms`);
-          
-          setTimeout(() => {
-            setRetryCount(prev => prev + 1);
-          }, delay);
+        logger.warn('[AUTH-STATE] Timeout na validação - tentativa final sem timeout');
+        try {
+          sessionResult = await validateUserSession();
+        } catch (finalError) {
+          logger.error('[AUTH-STATE] Falha final na validação:', finalError);
+          setSession(null);
+          setUser(null);
+          setProfile(null);
+          clearProfileCache();
+          secureSessionCache.clear();
           return;
         }
-        
-        logger.error('[AUTH-STATE] Timeout máximo atingido');
-        setSession(null);
-        setUser(null);
-        setProfile(null);
-        clearProfileCache();
-        return;
       }
 
       const { session, user } = sessionResult;
@@ -142,25 +105,23 @@ export const useAuthStateManager = ({
         setProfile(null);
         clearProfileCache();
         navigationCache.clear();
-        
-        // Limpar cache seguro
-        if (userId) {
-          await secureSessionCache.clearUserSession(userId);
-        }
+        secureSessionCache.clear();
         return;
       }
 
-      // SEGURANÇA: Armazenar sessão de forma segura
-      const cacheStored = await secureSessionCache.setSecureSession(user.id, session);
-      if (cacheStored) {
-        sessionStorage.setItem('current_user_id', user.id);
-      }
+      // SEGURANÇA: Armazenar sessão no cache seguro
+      secureSessionCache.set('current_session', {
+        session,
+        user,
+        timestamp: Date.now(),
+        isValid: true
+      });
 
       // Definir sessão e usuário
       setSession(session);
       setUser(user);
 
-      // Verificar cache de navegação
+      // OTIMIZAÇÃO 4: Verificar cache antes de buscar perfil
       const cachedNavigation = navigationCache.get(user.id);
       if (cachedNavigation?.userProfile) {
         logger.info('[AUTH-STATE] Perfil em cache - usando dados salvos');
@@ -172,19 +133,14 @@ export const useAuthStateManager = ({
           cached: true
         });
         
-        // Reset retry count em sucesso
-        setRetryCount(0);
-        
-        // SEGURANÇA: Reportar sucesso para rate limiting
-        intelligentRateLimit.checkRateLimit(clientId, 'auth_success', navigator.userAgent, false);
         return;
       }
 
-      // Buscar perfil com timeout reduzido
+      // OTIMIZAÇÃO 5: Buscar perfil com timeout reduzido para 1 segundo
       try {
         const profilePromise = fetchUserProfileSecurely(user.id);
         const profileTimeoutPromise = new Promise((_, reject) => 
-          setTimeout(() => reject(new Error("Profile timeout")), 800)
+          setTimeout(() => reject(new Error("Profile timeout")), 1000)
         );
 
         let profile;
@@ -198,16 +154,12 @@ export const useAuthStateManager = ({
         if (profile) {
           if (profile.id !== user.id) {
             logger.error('[AUTH-STATE] VIOLAÇÃO DE SEGURANÇA: ID do perfil incorreto');
-            
-            // SEGURANÇA: Reportar violação
-            intelligentRateLimit.checkRateLimit(clientId, 'security_violation', navigator.userAgent, true);
-            
             throw new Error('Violação de segurança detectada');
           }
 
           setProfile(profile);
           
-          // Atualizar cache de navegação baseado no role do banco
+          // OTIMIZAÇÃO 6: Atualizar cache de navegação baseado APENAS no role do banco
           const roleName = profile.user_roles?.name;
           if (roleName === 'admin') {
             navigationCache.set(user.id, profile, 'admin');
@@ -226,18 +178,9 @@ export const useAuthStateManager = ({
           setProfile(null);
         }
         
-        // Reset retry count em sucesso
-        setRetryCount(0);
-        
-        // SEGURANÇA: Reportar sucesso
-        intelligentRateLimit.checkRateLimit(clientId, 'auth_success', navigator.userAgent, false);
-        
       } catch (profileError) {
         logger.error('[AUTH-STATE] Erro no perfil:', profileError);
         setProfile(null);
-        
-        // SEGURANÇA: Reportar falha de perfil
-        intelligentRateLimit.checkRateLimit(clientId, 'profile_error', navigator.userAgent, true);
         
         if (profileError instanceof Error && profileError.message.includes('segurança')) {
           logger.warn('[AUTH-STATE] Logout por violação de segurança');
@@ -245,65 +188,30 @@ export const useAuthStateManager = ({
           setUser(null);
           clearProfileCache();
           navigationCache.clear();
-          await secureSessionCache.clearUserSession(user.id);
+          secureSessionCache.clear();
         }
       }
 
     } catch (error) {
       logger.error('[AUTH-STATE] Erro crítico:', error);
       
-      // SEGURANÇA: Reportar erro crítico
-      intelligentRateLimit.checkRateLimit(clientId, 'critical_error', navigator.userAgent, true);
-      
       if (error instanceof Error && error.message.includes('timeout')) {
-        if (retryCount < maxRetries) {
-          const delay = getRetryDelay(retryCount);
-          logger.warn(`[AUTH-STATE] Erro de timeout - retry ${retryCount + 1}/${maxRetries} em ${delay}ms`);
-          
-          setTimeout(() => {
-            setRetryCount(prev => prev + 1);
-          }, delay);
-          return;
-        }
+        logger.warn('[AUTH-STATE] Erro de timeout - mantendo sessão básica');
+      } else {
+        setSession(null);
+        setUser(null);
+        setProfile(null);
+        clearProfileCache();
+        navigationCache.clear();
+        secureSessionCache.clear();
       }
-      
-      setSession(null);
-      setUser(null);
-      setProfile(null);
-      clearProfileCache();
-      navigationCache.clear();
-      secureSessionCache.clearAllSessions();
       
     } finally {
       setIsLoading(false);
       setGlobalLoading('auth', false);
-      logger.info('[AUTH-STATE] ✅ Setup finalizado (segurança avançada)');
+      logger.info('[AUTH-STATE] ✅ Setup finalizado (segurança aprimorada)');
     }
-  }, [
-    setSession, 
-    setUser, 
-    setProfile, 
-    setIsLoading, 
-    setGlobalLoading, 
-    circuitBreakerActive, 
-    retryCount, 
-    lastAttemptTime,
-    getRetryDelay,
-    getClientIdentifier,
-    maxRetries
-  ]);
-
-  // Reset automático de retry count após sucesso
-  useEffect(() => {
-    if (retryCount > 0) {
-      const resetTimer = setTimeout(() => {
-        setRetryCount(0);
-        logger.info('[AUTH-STATE] Retry count resetado automaticamente');
-      }, 30000);
-      
-      return () => clearTimeout(resetTimer);
-    }
-  }, [retryCount]);
+  }, [setSession, setUser, setProfile, setIsLoading, setGlobalLoading, circuitBreakerActive, authRateLimit]);
 
   return { setupAuthSession };
 };
