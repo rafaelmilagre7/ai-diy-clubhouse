@@ -66,9 +66,16 @@ export const useOptimizedSolutions = () => {
         throw fetchError;
       }
 
-      const validSolutions = (data || []).filter((solution): solution is Solution => 
-        solution && typeof solution.id === 'string'
-      );
+      // Type guard mais específico para validar se é uma Solution válida
+      const isValidSolution = (item: any): item is Solution => {
+        return item && 
+               typeof item === 'object' && 
+               typeof item.id === 'string' &&
+               typeof item.title === 'string' &&
+               typeof item.description === 'string';
+      };
+
+      const validSolutions = (data || []).filter(isValidSolution);
 
       // Atualizar cache com TTL específico
       optimizedCache.set(cacheKey, {
