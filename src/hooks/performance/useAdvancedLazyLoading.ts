@@ -22,9 +22,9 @@ export const useAdvancedLazyLoading = (options: LazyLoadingOptions = {}) => {
     const preloadFunction = () => {
       preloadedRoutes.current.add(routePath);
       
-      // Mapear rotas para imports dinâmicos
+      // Mapear rotas para imports dinâmicos - usando caminhos corretos
       const routeImports: Record<string, () => Promise<any>> = {
-        '/dashboard': () => import('../../pages/Dashboard'),
+        '/dashboard': () => import('../../pages/member/Dashboard'),
         '/solutions': () => import('../../pages/Solutions'),
         '/tools': () => import('../../pages/Tools'),
         '/learning': () => import('../../pages/Learning'),

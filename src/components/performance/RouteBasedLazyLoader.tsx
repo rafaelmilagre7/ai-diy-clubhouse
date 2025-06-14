@@ -1,7 +1,7 @@
 
 import React, { Suspense, ComponentType, LazyExoticComponent } from 'react';
 import { useAdvancedLazyLoading } from '@/hooks/performance/useAdvancedLazyLoading';
-import { OptimizedLoadingScreen } from '../common/OptimizedLoadingScreen';
+import OptimizedLoadingScreen from '../common/OptimizedLoadingScreen';
 
 interface RouteBasedLazyLoaderProps {
   Component: LazyExoticComponent<ComponentType<any>>;

@@ -69,6 +69,12 @@ export const VirtualizedSolutionsGrid = memo<VirtualizedSolutionsGridProps>(({
     return Math.floor(containerWidth / itemsPerRow);
   }, [itemsPerRow]);
 
+  // Calcular largura total do grid
+  const gridWidth = useMemo(() => {
+    const containerWidth = typeof window !== 'undefined' ? window.innerWidth - 64 : 1200;
+    return Math.min(containerWidth, 1200); // Max width de 1200px
+  }, []);
+
   // Se há poucas soluções, usar grid normal
   if (solutions.length <= 12) {
     return (
@@ -90,6 +96,7 @@ export const VirtualizedSolutionsGrid = memo<VirtualizedSolutionsGridProps>(({
         columnCount={columnCount}
         columnWidth={getColumnWidth()}
         height={gridHeight}
+        width={gridWidth}
         rowCount={rowCount}
         rowHeight={rowHeight}
         itemData={gridData}
