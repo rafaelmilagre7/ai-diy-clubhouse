@@ -30,12 +30,12 @@ export class SecurityValidator {
   /**
    * Validação completa de segurança com configuração segura
    */
-  validateApplicationSecurity(): SecurityValidationResult {
+  async validateApplicationSecurity(): Promise<SecurityValidationResult> {
     const issues: string[] = [];
     const recommendations: string[] = [];
     let level: 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW' = 'LOW';
     
-    const supabaseValidation = SUPABASE_CONFIG.validate();
+    const supabaseValidation = await SUPABASE_CONFIG.validate();
     const environment = supabaseValidation.environment;
     
     // Validação de configuração segura
@@ -46,7 +46,7 @@ export class SecurityValidator {
     }
     
     // Verificar se estamos em modo seguro (sem credenciais hardcoded)
-    const safeConfig = SUPABASE_CONFIG.getSafeConfig();
+    const safeConfig = await SUPABASE_CONFIG.getSafeConfig();
     if (safeConfig.secureMode) {
       recommendations.push('✅ Configuração segura ativa - sem credenciais hardcoded no código');
     }
@@ -88,10 +88,10 @@ export class SecurityValidator {
   /**
    * Relatório de segurança seguro
    */
-  generateSecurityReport(): void {
+  async generateSecurityReport(): Promise<void> {
     if (!import.meta.env.DEV) return;
     
-    const validation = this.validateApplicationSecurity();
+    const validation = await this.validateApplicationSecurity();
     
     logger.info('🔒 [RELATÓRIO DE SEGURANÇA] Configuração segura validada', {
       isSecure: validation.isSecure,
@@ -119,17 +119,17 @@ export class SecurityValidator {
   /**
    * Monitoramento de segurança contínuo
    */
-  startContinuousMonitoring(): void {
+  async startContinuousMonitoring(): Promise<void> {
     if (!import.meta.env.DEV) return;
     
     // Executar validação inicial
-    this.generateSecurityReport();
+    await this.generateSecurityReport();
     
     // Monitoramento periódico
     const interval = 10 * 60 * 1000; // 10 minutos
     
-    setInterval(() => {
-      const validation = this.validateApplicationSecurity();
+    setInterval(async () => {
+      const validation = await this.validateApplicationSecurity();
       if (!validation.isSecure && validation.level === 'CRITICAL') {
         logger.warn(`🔒 [MONITOR] Problemas críticos de segurança no ambiente ${validation.environment}`);
       }
