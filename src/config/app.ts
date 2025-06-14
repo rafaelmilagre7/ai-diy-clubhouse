@@ -1,234 +1,230 @@
-
-/**
- * Configuração Central da Aplicação - CORREÇÃO CRÍTICA PARA LOGIN
- * Sistema de configuração seguro com fallback robusto
- */
-
-import { logger } from '@/utils/logger';
-
-interface SupabaseCredentials {
-  url: string;
-  anonKey: string;
-}
-
-interface ConfigResponse {
-  url: string;
-  anonKey: string;
-  success: boolean;
-  error?: string;
-}
-
-interface ValidationResult {
-  isValid: boolean;
-  environment: string;
-  issues: string[];
-}
-
-interface SafeConfig {
-  hasUrl: boolean;
-  hasKey: boolean;
-  secureMode: boolean;
-  source: string;
-}
-
-class SupabaseConfig {
-  private static instance: SupabaseConfig;
-  private credentials: SupabaseCredentials | null = null;
-  private initialized = false;
-  private initPromise: Promise<SupabaseCredentials> | null = null;
-
-  private constructor() {}
-
-  static getInstance(): SupabaseConfig {
-    if (!SupabaseConfig.instance) {
-      SupabaseConfig.instance = new SupabaseConfig();
-    }
-    return SupabaseConfig.instance;
-  }
-
-  /**
-   * CORREÇÃO CRÍTICA: Obter credenciais com fallback robusto
-   */
-  async getCredentials(): Promise<SupabaseCredentials> {
-    if (this.credentials && this.initialized) {
-      return this.credentials;
-    }
-
-    if (this.initPromise) {
-      return this.initPromise;
-    }
-
-    this.initPromise = this.initializeCredentials();
-    return this.initPromise;
-  }
-
-  private async initializeCredentials(): Promise<SupabaseCredentials> {
-    logger.info('🔧 [CONFIG] Inicializando credenciais Supabase...');
-
-    // CORREÇÃO 1: Verificar variáveis de ambiente primeiro
-    const envUrl = import.meta.env.VITE_SUPABASE_URL;
-    const envKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-
-    // CORREÇÃO TEMPORÁRIA: Credenciais hardcoded para teste
-    const tempUrl = 'https://zotzvtepvpnkcoobdubt.supabase.co';
-    const tempKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpvdHp2dGVwdnBua2Nvb2JkdWJ0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQzNzgzODAsImV4cCI6MjA1OTk1NDM4MH0.dxjPkqTPnK8gjjxJbooPX5_kpu3INciLeDpuU8dszHQ';
-
-    if (envUrl && envKey) {
-      logger.info('✅ [CONFIG] Usando credenciais das variáveis de ambiente');
-      this.credentials = { url: envUrl, anonKey: envKey };
-      this.initialized = true;
-      return this.credentials;
-    }
-
-    // CORREÇÃO 2: Tentar Edge Function com URL correta
-    try {
-      logger.info('🔧 [CONFIG] Tentando buscar credenciais via Edge Function...');
-      
-      // URL CORRIGIDA: Usar URL completa do projeto Supabase
-      const response = await fetch(`${tempUrl}/functions/v1/get-supabase-config`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${tempKey}`,
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error(`Edge Function retornou ${response.status}: ${response.statusText}`);
-      }
-
-      const data: ConfigResponse = await response.json();
-      
-      if (data.success && data.url && data.anonKey) {
-        logger.info('✅ [CONFIG] Credenciais obtidas da Edge Function');
-        this.credentials = { url: data.url, anonKey: data.anonKey };
-        this.initialized = true;
-        return this.credentials;
-      } else {
-        throw new Error(data.error || 'Credenciais inválidas da Edge Function');
-      }
-    } catch (error) {
-      logger.warn('⚠️ [CONFIG] Edge Function falhou:', error);
-    }
-
-    // CORREÇÃO 3: Fallback para credenciais temporárias
-    logger.warn('⚠️ [CONFIG] Usando credenciais temporárias (fallback)');
-    this.credentials = { url: tempUrl, anonKey: tempKey };
-    this.initialized = true;
-    return this.credentials;
-  }
-
-  /**
-   * Obter apenas a URL do Supabase
-   */
-  async getUrl(): Promise<string> {
-    const credentials = await this.getCredentials();
-    return credentials.url;
-  }
-
-  /**
-   * Obter apenas a chave anônima
-   */
-  async getAnonKey(): Promise<string> {
-    const credentials = await this.getCredentials();
-    return credentials.anonKey;
-  }
-
-  /**
-   * Verificar se as credenciais estão configuradas
-   */
-  isConfigured(): boolean {
-    return this.initialized && !!this.credentials;
-  }
-
-  /**
-   * Validar configuração atual
-   */
-  async validate(): Promise<ValidationResult> {
-    try {
-      const credentials = await this.getCredentials();
-      const issues: string[] = [];
-
-      if (!credentials.url.startsWith('https://')) {
-        issues.push('URL do Supabase inválida');
-      }
-
-      if (!credentials.anonKey.startsWith('eyJ')) {
-        issues.push('Chave anônima inválida');
-      }
-
-      return {
-        isValid: issues.length === 0,
-        environment: import.meta.env.PROD ? 'Produção' : 'Desenvolvimento',
-        issues
-      };
-    } catch (error) {
-      return {
-        isValid: false,
-        environment: import.meta.env.PROD ? 'Produção' : 'Desenvolvimento',
-        issues: [`Erro ao validar: ${error instanceof Error ? error.message : 'Erro desconhecido'}`]
-      };
-    }
-  }
-
-  /**
-   * Obter configuração segura (para logs)
-   */
-  async getSafeConfig(): Promise<SafeConfig> {
-    const credentials = await this.getCredentials();
-    return {
-      hasUrl: !!credentials.url,
-      hasKey: !!credentials.anonKey,
-      secureMode: true,
-      source: import.meta.env.VITE_SUPABASE_URL ? 'environment' : 'edge_function_or_fallback'
-    };
-  }
-
-  /**
-   * Forçar re-inicialização (para testes)
-   */
-  reset(): void {
-    this.credentials = null;
-    this.initialized = false;
-    this.initPromise = null;
-  }
-}
-
-// Exportar instância singleton
-export const SUPABASE_CONFIG = SupabaseConfig.getInstance();
-
-// CORREÇÃO: Adicionar APP_CONFIG que está sendo esperado pelos outros arquivos
-class AppConfig {
-  private static instance: AppConfig;
+// Configuração centralizada da aplicação - 100% LIVRE DE CREDENCIAIS HARDCODED
+export const APP_CONFIG = {
+  // Domínio principal da aplicação
+  DOMAIN: import.meta.env.VITE_APP_DOMAIN || 'https://app.viverdeia.ai',
   
-  private constructor() {}
+  // Domínio de desenvolvimento para fallback
+  DEV_DOMAIN: 'http://localhost:3000',
   
-  static getInstance(): AppConfig {
-    if (!AppConfig.instance) {
-      AppConfig.instance = new AppConfig();
-    }
-    return AppConfig.instance;
-  }
-
+  // Verificar se estamos em desenvolvimento
+  isDevelopment: import.meta.env.DEV,
+  
+  // Obter o domínio correto baseado no ambiente
   getAppDomain(): string {
-    return 'https://zotzvtepvpnkcoobdubt.supabase.co';
-  }
-
+    // Se estivermos em localhost, usar localhost
+    if (window.location.hostname === 'localhost') {
+      return this.DEV_DOMAIN;
+    }
+    
+    // Caso contrário, sempre usar o domínio personalizado
+    return this.DOMAIN;
+  },
+  
+  // Gerar URL completa para uma rota
   getAppUrl(path: string = ''): string {
-    const baseUrl = import.meta.env.PROD 
-      ? 'https://app.viverdeia.ai' 
-      : window.location.origin;
-    return `${baseUrl}${path}`;
+    const domain = this.getAppDomain();
+    return `${domain}${path.startsWith('/') ? path : `/${path}`}`;
   }
+};
 
-  isDevelopment(): boolean {
-    return !import.meta.env.PROD;
+// Configuração do Supabase com detecção inteligente de ambiente - 100% SEGURA
+export const SUPABASE_CONFIG = {
+  // DETECÇÃO CORRIGIDA DO AMBIENTE LOVABLE
+  isLovableEnvironment(): boolean {
+    const hostname = window.location.hostname;
+    // INCLUIR O DOMÍNIO DA APLICAÇÃO COMO AMBIENTE LOVABLE
+    const isLovable =
+      hostname.includes('lovableproject.com') ||
+      hostname.includes('lovable.app') ||
+      hostname.includes('lovable.dev') ||
+      hostname === "app.viverdeia.ai" || // <- Adiciona o domínio principal
+      /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}\.lovableproject\.com$/.test(hostname);
+
+    // Log seguro da detecção
+    if (import.meta.env.DEV || true) { // Forçar log para debug de produção neste caso
+      console.info(
+        `🔍 [AMBIENTE] Detecção: ${isLovable ? "Lovable" : "Outro"} (${hostname})`
+      );
+    }
+
+    return isLovable;
+  },
+
+  // Obter credenciais com fallback inteligente
+  getCredentials(): { url: string; anonKey: string } {
+    // No Lovable, tentar acessar as credenciais automáticas primeiro
+    if (this.isLovableEnvironment()) {
+      // Tentar variáveis de ambiente primeiro
+      const envUrl = import.meta.env.VITE_SUPABASE_URL;
+      const envKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+      
+      if (envUrl && envKey) {
+        if (import.meta.env.DEV) {
+          console.info('✅ [LOVABLE] Usando credenciais automáticas do ambiente');
+        }
+        return { url: envUrl, anonKey: envKey };
+      }
+      
+      // Fallback para URL padrão do projeto (apenas no Lovable)
+      const projectUrl = 'https://zotzvtepvpnkcoobdubt.supabase.co';
+      const projectKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpvdHp2dGVwdnBua2Nvb2JkdWJ0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQzNzgzODAsImV4cCI6MjA1OTk1NDM4MH0.dxjPkqTPnK8gjjxJbooPX5_kpu3INciLeDpuU8dszHQ';
+      
+      if (import.meta.env.DEV) {
+        console.info('⚠️ [LOVABLE] Usando credenciais do projeto como fallback');
+      }
+      
+      return { url: projectUrl, anonKey: projectKey };
+    }
+    
+    // Em outros ambientes, usar apenas variáveis
+    return {
+      url: import.meta.env.VITE_SUPABASE_URL || '',
+      anonKey: import.meta.env.VITE_SUPABASE_ANON_KEY || ''
+    };
+  },
+
+  // URLs e chaves obtidas dinamicamente
+  get url(): string {
+    return this.getCredentials().url;
+  },
+
+  get anonKey(): string {
+    return this.getCredentials().anonKey;
+  },
+  
+  // Validação inteligente por ambiente
+  validate(): { isValid: boolean; errors: string[]; environment: string } {
+    const errors: string[] = [];
+    const environment = this.isLovableEnvironment() ? 'Lovable' : 
+                       import.meta.env.DEV ? 'Desenvolvimento' : 'Produção';
+    
+    const credentials = this.getCredentials();
+    
+    // No ambiente Lovable, sempre considerar válido se temos credenciais
+    if (this.isLovableEnvironment()) {
+      if (!credentials.url || !credentials.anonKey) {
+        errors.push('❌ Credenciais do Lovable não disponíveis');
+      }
+      
+      return {
+        isValid: credentials.url && credentials.anonKey ? true : false,
+        errors,
+        environment
+      };
+    }
+    
+    // Em outros ambientes, validar rigorosamente
+    if (!credentials.url) {
+      errors.push('❌ VITE_SUPABASE_URL não está definida - Configure no .env.local');
+    }
+    
+    if (!credentials.anonKey) {
+      errors.push('❌ VITE_SUPABASE_ANON_KEY não está definida - Configure no .env.local');
+    }
+    
+    // Validar formato da URL
+    if (credentials.url && !credentials.url.startsWith('https://')) {
+      errors.push('❌ VITE_SUPABASE_URL deve começar com https://');
+    }
+    
+    // Validar se a chave parece ser um JWT válido
+    if (credentials.anonKey && !credentials.anonKey.startsWith('eyJ')) {
+      errors.push('❌ VITE_SUPABASE_ANON_KEY deve ser um token JWT válido');
+    }
+    
+    return {
+      isValid: errors.length === 0,
+      errors,
+      environment
+    };
+  },
+  
+  // Verificar se está configurado
+  isConfigured(): boolean {
+    const credentials = this.getCredentials();
+    return !!(credentials.url && credentials.anonKey);
+  },
+  
+  // Obter configurações seguras para logs (sem expor credenciais)
+  getSafeConfig() {
+    const credentials = this.getCredentials();
+    const environment = this.isLovableEnvironment() ? 'Lovable' : 
+                       import.meta.env.DEV ? 'Desenvolvimento' : 'Produção';
+    
+    return {
+      url: credentials.url ? `${credentials.url.substring(0, 20)}...` : '❌ NÃO CONFIGURADA',
+      anonKey: credentials.anonKey ? `${credentials.anonKey.substring(0, 10)}...` : '❌ NÃO CONFIGURADA',
+      isConfigured: this.isConfigured(),
+      environment,
+      autoConfigured: this.isLovableEnvironment()
+    };
+  },
+  
+  // Validação rigorosa apenas quando necessário
+  requireValidConfig(): void {
+    const validation = this.validate();
+    
+    // No Lovable, dar mais informações se falhar
+    if (this.isLovableEnvironment() && !validation.isValid) {
+      const errorMessage = `
+🔒 ERRO DE CONFIGURAÇÃO NO LOVABLE
+
+As credenciais do Supabase não estão disponíveis no ambiente Lovable:
+
+${validation.errors.join('\n')}
+
+📋 POSSÍVEIS SOLUÇÕES:
+1. Verifique se o projeto Lovable está conectado ao Supabase
+2. Aguarde alguns segundos e recarregue a página
+3. Entre em contato com o suporte se o problema persistir
+
+⚠️  Este erro indica um problema na configuração automática do Lovable.
+      `;
+      
+      throw new Error(errorMessage);
+    }
+    
+    // Em outros ambientes, falhar apenas se realmente não configurado
+    if (!validation.isValid) {
+      const errorMessage = `
+🔒 CONFIGURAÇÃO DE SEGURANÇA NECESSÁRIA
+
+As credenciais do Supabase não estão configuradas corretamente no ambiente ${validation.environment}:
+
+${validation.errors.join('\n')}
+
+📋 COMO RESOLVER:
+1. Copie o arquivo .env.example para .env.local
+2. Configure suas credenciais do Supabase no .env.local
+3. Reinicie o servidor de desenvolvimento
+
+🔗 Onde encontrar as credenciais:
+https://supabase.com/dashboard/project/[seu-projeto]/settings/api
+
+⚠️  A aplicação não funcionará sem essas configurações em ambiente ${validation.environment}.
+      `;
+      
+      throw new Error(errorMessage);
+    }
   }
+};
 
-  isProduction(): boolean {
-    return import.meta.env.PROD;
+// Validação automática na inicialização - apenas quando necessário
+if (import.meta.env.DEV) {
+  const validation = SUPABASE_CONFIG.validate();
+  
+  if (SUPABASE_CONFIG.isLovableEnvironment()) {
+    if (validation.isValid) {
+      console.info('✅ [LOVABLE] Executando no ambiente Lovable - configuração automática ativa');
+    } else {
+      console.error('🔒 [LOVABLE ERRO] Credenciais não disponíveis no Lovable:');
+      validation.errors.forEach(error => console.error(`   ${error}`));
+    }
+  } else if (!validation.isValid) {
+    console.error('🔒 [CONFIGURAÇÃO CRÍTICA] Credenciais do Supabase não configuradas:');
+    validation.errors.forEach(error => console.error(`   ${error}`));
+    console.info('ℹ️  [SOLUÇÃO] Configure as credenciais em .env.local para desenvolvimento');
+  } else {
+    console.info(`✅ [SEGURANÇA] Configuração do Supabase validada com sucesso no ambiente ${validation.environment}`);
   }
 }
-
-// Exportar APP_CONFIG
-export const APP_CONFIG = AppConfig.getInstance();

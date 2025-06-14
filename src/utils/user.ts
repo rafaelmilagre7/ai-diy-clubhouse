@@ -30,7 +30,7 @@ export const isValidImageUrl = (url: string | undefined | null): boolean => {
  * Formata a URL do avatar para garantir que seja válida
  * AGORA USA CONFIGURAÇÃO CENTRALIZADA - SEM CREDENCIAIS HARDCODED
  */
-export const getAvatarUrl = async (url: string | null | undefined): Promise<string | undefined> => {
+export const getAvatarUrl = (url: string | null | undefined): string | undefined => {
   if (!url) return undefined;
   
   // Se já for uma URL completa, retornar como está
@@ -44,17 +44,14 @@ export const getAvatarUrl = async (url: string | null | undefined): Promise<stri
     return undefined;
   }
   
-  // Obter URL do Supabase de forma assíncrona
-  const supabaseUrl = await SUPABASE_CONFIG.getUrl();
-  
   // Se começar com / (caminho relativo), adicionar domínio da API
   if (url.startsWith('/')) {
-    return `${supabaseUrl}${url}`;
+    return `${SUPABASE_CONFIG.url}${url}`;
   }
   
   // Se for um ID de storage do Supabase
   if (url.includes('storage/v1')) {
-    return `${supabaseUrl}/${url}`;
+    return `${SUPABASE_CONFIG.url}/${url}`;
   }
   
   return url;
