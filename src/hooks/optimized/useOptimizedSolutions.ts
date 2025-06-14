@@ -21,11 +21,11 @@ export const useOptimizedSolutions = () => {
   const cacheKey = `solutions_all_${user?.id}_${isAdmin ? 'admin' : 'user'}`;
   const cacheTTL = isAdmin ? ADMIN_TTL : DEFAULT_TTL;
 
-  // Campos otimizados para query
+  // CORREÇÃO: Campos otimizados para query - usar thumbnail_url em vez de cover_image_url
   const queryFields = useMemo(() => {
     const baseFields = [
       'id', 'title', 'description', 'category', 'difficulty', 
-      'published', 'created_at', 'updated_at', 'cover_image_url',
+      'published', 'created_at', 'thumbnail_url',
       'estimated_time', 'success_rate', 'tags'
     ];
     

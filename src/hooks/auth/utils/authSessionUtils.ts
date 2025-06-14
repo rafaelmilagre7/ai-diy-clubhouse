@@ -34,7 +34,7 @@ export const validateUserSession = async () => {
 };
 
 /**
- * Busca o perfil do usuário usando a nova função segura
+ * CORREÇÃO: Busca o perfil do usuário usando query direta simples
  */
 export const fetchUserProfileSecurely = async (userId: string): Promise<UserProfile | null> => {
   try {
@@ -45,56 +45,29 @@ export const fetchUserProfileSecurely = async (userId: string): Promise<UserProf
       return cached.profile;
     }
 
-    logger.info('[PROFILE-FETCH] Buscando perfil usando função segura');
+    logger.info('[PROFILE-FETCH] Buscando perfil usando query direta');
     
-    // CORREÇÃO: Usar a nova função segura get_user_profile_safe
-    const { data: profiles, error } = await supabase
-      .rpc('get_user_profile_safe', { user_id: userId });
+    // CORREÇÃO: Usar query direta simples em vez da função RPC inexistente
+    const { data: profile, error } = await supabase
+      .from('profiles')
+      .select(`
+        *,
+        user_roles (
+          id,
+          name,
+          description,
+          permissions
+        )
+      `)
+      .eq('id', userId)
+      .single();
     
     if (error) {
-      logger.error('[PROFILE-FETCH] Erro na função segura:', error);
-      // Fallback para query direta simples
-      const { data: directData, error: directError } = await supabase
-        .from('profiles')
-        .select(`
-          *,
-          user_roles (
-            id,
-            name,
-            description,
-            permissions
-          )
-        `)
-        .eq('id', userId)
-        .single();
-      
-      if (directError) {
-        logger.error('[PROFILE-FETCH] Erro no fallback direto:', directError);
-        return null;
-      }
-      
-      const profile = directData as UserProfile;
-      // Cache o resultado
-      profileCache.set(userId, { profile, timestamp: Date.now() });
-      return profile;
+      logger.error('[PROFILE-FETCH] Erro na query direta:', error);
+      return null;
     }
     
-    const profile = profiles?.[0] || null;
-    
     if (profile) {
-      // Buscar informações do role separadamente se necessário
-      if (!profile.user_roles && profile.role_id) {
-        const { data: roleData } = await supabase
-          .from('user_roles')
-          .select('id, name, description, permissions')
-          .eq('id', profile.role_id)
-          .single();
-        
-        if (roleData) {
-          profile.user_roles = roleData;
-        }
-      }
-      
       logger.info('[PROFILE-FETCH] Perfil carregado com sucesso:', {
         userId: profile.id.substring(0, 8) + '***',
         hasRole: !!profile.user_roles,
@@ -103,8 +76,8 @@ export const fetchUserProfileSecurely = async (userId: string): Promise<UserProf
     }
     
     // Cache o resultado
-    profileCache.set(userId, { profile, timestamp: Date.now() });
-    return profile;
+    profileCache.set(userId, { profile: profile as UserProfile, timestamp: Date.now() });
+    return profile as UserProfile;
     
   } catch (error) {
     logger.error('[PROFILE-FETCH] Erro crítico:', error);

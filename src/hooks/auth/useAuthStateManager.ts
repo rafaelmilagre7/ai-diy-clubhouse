@@ -7,7 +7,6 @@ import { logger } from '@/utils/logger';
 import { useGlobalLoading } from '@/hooks/useGlobalLoading';
 import { navigationCache } from '@/utils/navigationCache';
 import { secureSessionCache } from '@/utils/secureSessionCache';
-import { rateLimit } from '@/utils/intelligentRateLimit'; // CORREÇÃO: importação correta
 
 interface UseAuthStateManagerProps {
   setSession: (session: Session | null) => void;
@@ -24,31 +23,14 @@ export const useAuthStateManager = ({
 }: UseAuthStateManagerProps) => {
   const { setLoading: setGlobalLoading, circuitBreakerActive } = useGlobalLoading();
 
-  // OTIMIZAÇÃO: Rate limiting para operações de autenticação
-  const authRateLimit = rateLimit({
-    windowMs: 60 * 1000, // 1 minuto
-    max: 10, // máximo 10 tentativas por minuto
-    message: 'Muitas tentativas de autenticação',
-    statusCode: 429
-  });
-
   const setupAuthSession = useCallback(async () => {
-    logger.info('[AUTH-STATE] Iniciando setup com segurança aprimorada');
+    logger.info('[AUTH-STATE] Iniciando setup com correções aplicadas');
     
     try {
       setIsLoading(true);
       setGlobalLoading('auth', true);
 
-      // SEGURANÇA: Rate limiting para prevenir ataques
-      const rateLimitResult = authRateLimit('auth_session_setup');
-      if (!rateLimitResult.success) {
-        logger.warn('[AUTH-STATE] Rate limit atingido para setup de sessão');
-        setIsLoading(false);
-        setGlobalLoading('auth', false);
-        return;
-      }
-
-      // OTIMIZAÇÃO 1: Verificação de circuit breaker mais rápida
+      // CORREÇÃO: Verificação de circuit breaker mais rápida
       if (circuitBreakerActive) {
         logger.warn('[AUTH-STATE] Circuit breaker ativo - setup simplificado');
         setIsLoading(false);
@@ -56,7 +38,7 @@ export const useAuthStateManager = ({
         return;
       }
 
-      // SEGURANÇA: Verificar cache seguro primeiro
+      // CORREÇÃO: Verificar cache seguro primeiro
       const cachedSession = secureSessionCache.get('current_session');
       if (cachedSession && cachedSession.isValid) {
         logger.info('[AUTH-STATE] Sessão segura em cache encontrada');
@@ -72,10 +54,10 @@ export const useAuthStateManager = ({
         }
       }
 
-      // OTIMIZAÇÃO 2: Timeout reduzido para 2 segundos
+      // CORREÇÃO: Timeout aumentado para 5 segundos (era 2s)
       const sessionPromise = validateUserSession();
       const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error("Auth session timeout")), 2000)
+        setTimeout(() => reject(new Error("Auth session timeout")), 5000)
       );
 
       let sessionResult;
@@ -109,7 +91,7 @@ export const useAuthStateManager = ({
         return;
       }
 
-      // SEGURANÇA: Armazenar sessão no cache seguro
+      // CORREÇÃO: Armazenar sessão no cache seguro
       secureSessionCache.set('current_session', {
         session,
         user,
@@ -121,7 +103,7 @@ export const useAuthStateManager = ({
       setSession(session);
       setUser(user);
 
-      // OTIMIZAÇÃO 4: Verificar cache antes de buscar perfil
+      // CORREÇÃO: Verificar cache antes de buscar perfil
       const cachedNavigation = navigationCache.get(user.id);
       if (cachedNavigation?.userProfile) {
         logger.info('[AUTH-STATE] Perfil em cache - usando dados salvos');
@@ -136,11 +118,11 @@ export const useAuthStateManager = ({
         return;
       }
 
-      // OTIMIZAÇÃO 5: Buscar perfil com timeout reduzido para 1 segundo
+      // CORREÇÃO: Buscar perfil com timeout aumentado para 3 segundos (era 1s)
       try {
         const profilePromise = fetchUserProfileSecurely(user.id);
         const profileTimeoutPromise = new Promise((_, reject) => 
-          setTimeout(() => reject(new Error("Profile timeout")), 1000)
+          setTimeout(() => reject(new Error("Profile timeout")), 3000)
         );
 
         let profile;
@@ -159,7 +141,7 @@ export const useAuthStateManager = ({
 
           setProfile(profile);
           
-          // OTIMIZAÇÃO 6: Atualizar cache de navegação baseado APENAS no role do banco
+          // CORREÇÃO: Atualizar cache de navegação baseado APENAS no role do banco
           const roleName = profile.user_roles?.name;
           if (roleName === 'admin') {
             navigationCache.set(user.id, profile, 'admin');
@@ -209,9 +191,9 @@ export const useAuthStateManager = ({
     } finally {
       setIsLoading(false);
       setGlobalLoading('auth', false);
-      logger.info('[AUTH-STATE] ✅ Setup finalizado (segurança aprimorada)');
+      logger.info('[AUTH-STATE] ✅ Setup finalizado (correções aplicadas)');
     }
-  }, [setSession, setUser, setProfile, setIsLoading, setGlobalLoading, circuitBreakerActive, authRateLimit]);
+  }, [setSession, setUser, setProfile, setIsLoading, setGlobalLoading, circuitBreakerActive]);
 
   return { setupAuthSession };
 };

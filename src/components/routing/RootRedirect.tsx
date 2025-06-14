@@ -10,7 +10,7 @@ import { navigationCache } from "@/utils/navigationCache";
 const RootRedirect = () => {
   const location = useLocation();
   const [forceRedirect, setForceRedirect] = useState(false);
-  const [adaptiveTimeout, setAdaptiveTimeout] = useState(2000);
+  const [adaptiveTimeout, setAdaptiveTimeout] = useState(3000); // CORREÇÃO: Aumentado de 2000 para 3000
   const timeoutRef = useRef<number | null>(null);
   const redirectProcessed = useRef(false);
   
@@ -26,25 +26,25 @@ const RootRedirect = () => {
   const { user, profile, isAdmin, isLoading: authLoading } = authContext;
   const { isRequired: onboardingRequired, isLoading: onboardingLoading } = useOnboardingStatus();
   
-  // MUDANÇA: Remover cache admin específico - todos vão para dashboard membro
+  // CORREÇÃO: Remover cache admin específico - todos vão para dashboard membro
   const hasCachedFormacaoAccess = user && navigationCache.isFormacaoVerified(user.id);
   
-  // OTIMIZAÇÃO: Detectar performance da conexão para timeout adaptativo
+  // CORREÇÃO: Detectar performance da conexão para timeout adaptativo
   const detectConnectionSpeed = useCallback(() => {
     const connection = (navigator as any).connection;
     if (connection) {
       const effectiveType = connection.effectiveType;
       if (effectiveType === 'slow-2g' || effectiveType === '2g') {
-        setAdaptiveTimeout(4000);
+        setAdaptiveTimeout(6000); // CORREÇÃO: Aumentado de 4000 para 6000
       } else if (effectiveType === '3g') {
-        setAdaptiveTimeout(3000);
+        setAdaptiveTimeout(4500); // CORREÇÃO: Aumentado de 3000 para 4500
       } else {
-        setAdaptiveTimeout(1500);
+        setAdaptiveTimeout(3000); // CORREÇÃO: Aumentado de 1500 para 3000
       }
     }
   }, []);
 
-  // CORREÇÃO CRÍTICA: Detectar usuários de convite
+  // CORREÇÃO: Detectar usuários de convite
   const isFromInvite = user?.user_metadata?.from_invite;
   
   console.log("[ROOT-REDIRECT] Estado atualizado:", {
@@ -61,7 +61,7 @@ const RootRedirect = () => {
     adaptiveTimeout
   });
   
-  // OTIMIZAÇÃO: Circuit breaker adaptativo
+  // CORREÇÃO: Circuit breaker adaptativo com timeouts maiores
   useEffect(() => {
     detectConnectionSpeed();
     
@@ -77,7 +77,7 @@ const RootRedirect = () => {
     };
   }, [adaptiveTimeout, detectConnectionSpeed]);
   
-  // OTIMIZAÇÃO: Limpeza de timeout mais inteligente
+  // CORREÇÃO: Limpeza de timeout mais inteligente
   useEffect(() => {
     if (user && (profile || hasCachedFormacaoAccess)) {
       if (timeoutRef.current) {
@@ -87,7 +87,7 @@ const RootRedirect = () => {
     }
   }, [user, profile, hasCachedFormacaoAccess]);
   
-  // OTIMIZAÇÃO: Navegação instantânea com cache
+  // CORREÇÃO: Navegação instantânea com cache
   const handleCachedRedirect = useCallback((path: string, reason: string) => {
     if (redirectProcessed.current) return null;
     redirectProcessed.current = true;
@@ -99,10 +99,7 @@ const RootRedirect = () => {
     return handleCachedRedirect('/formacao', 'Cache formação válido');
   }
   
-  // MUDANÇA: Remover redirecionamento automático para admin
-  // Agora todos os usuários vão para dashboard membro por padrão
-  
-  // OTIMIZAÇÃO: Fallback mais rápido com redirecionamento inteligente
+  // CORREÇÃO: Fallback mais rápido com redirecionamento inteligente
   if (forceRedirect) {
     console.log("🚨 [ROOT REDIRECT] Circuit breaker ativo - redirecionamento forçado");
     
@@ -111,13 +108,13 @@ const RootRedirect = () => {
       if (roleName === 'formacao') {
         return handleCachedRedirect('/formacao', 'Formação no circuit breaker');
       }
-      // MUDANÇA: Admin também vai para dashboard membro
+      // CORREÇÃO: Admin também vai para dashboard membro
       return handleCachedRedirect('/dashboard', 'Usuário/Admin no circuit breaker');
     }
     return handleCachedRedirect('/login', 'Sem usuário no circuit breaker');
   }
   
-  // OTIMIZAÇÃO: Redirecionamento direto para usuários já autenticados em /login
+  // CORREÇÃO: Redirecionamento direto para usuários já autenticados em /login
   if (location.pathname === '/login' && user && profile) {
     console.log("🔄 [ROOT REDIRECT] Usuário autenticado em /login, redirecionando...");
     
@@ -127,11 +124,11 @@ const RootRedirect = () => {
       return handleCachedRedirect('/formacao', 'Formação em /login');
     }
     
-    // MUDANÇA: Admin também vai para dashboard membro
+    // CORREÇÃO: Admin também vai para dashboard membro
     return handleCachedRedirect('/dashboard', 'Usuário/Admin em /login');
   }
   
-  // OTIMIZAÇÃO: Loading otimizado
+  // CORREÇÃO: Loading otimizado com timeouts maiores
   if (authLoading && !forceRedirect) {
     console.log("[ROOT-REDIRECT] Aguardando autenticação...");
     return <LoadingScreen message="Verificando sua sessão..." />;
@@ -146,18 +143,18 @@ const RootRedirect = () => {
   // Verificação de roles APÓS verificação básica de usuário
   const roleName = getUserRoleName(profile);
   
-  // OTIMIZAÇÃO: Redirecionamento direto com cache
+  // CORREÇÃO: Redirecionamento direto com cache
   if (roleName === 'formacao') {
     navigationCache.set(user.id, profile, 'formacao');
     return handleCachedRedirect('/formacao', 'Formação detectado');
   }
   
-  // MUDANÇA: Admin não tem redirecionamento especial - vai para dashboard membro
+  // CORREÇÃO: Admin não tem redirecionamento especial - vai para dashboard membro
   if (roleName === 'admin') {
     console.log("[ROOT-REDIRECT] Admin detectado - direcionando para dashboard membro");
   }
   
-  // Se há usuário mas não há perfil, aguardar menos tempo
+  // Se há usuário mas não há perfil, aguardar mais tempo
   if (!profile && !forceRedirect) {
     console.log("[ROOT-REDIRECT] Usuário sem perfil - aguardando...");
     return <LoadingScreen message="Carregando seu perfil..." />;
@@ -168,13 +165,13 @@ const RootRedirect = () => {
     return handleCachedRedirect('/dashboard', 'Circuit breaker + sem perfil');
   }
   
-  // CORREÇÃO CRÍTICA: Verificação de onboarding otimizada
+  // CORREÇÃO: Verificação de onboarding otimizada
   if (onboardingLoading && !forceRedirect) {
     console.log("[ROOT-REDIRECT] Verificando onboarding...");
     return <LoadingScreen message="Verificando seu progresso..." />;
   }
   
-  // OTIMIZAÇÃO: Priorizar onboarding para usuários de convite
+  // CORREÇÃO: Priorizar onboarding para usuários de convite
   if (isFromInvite && onboardingRequired && !forceRedirect) {
     return handleCachedRedirect('/onboarding', 'Usuário de convite precisa de onboarding');
   }
@@ -184,7 +181,7 @@ const RootRedirect = () => {
     return handleCachedRedirect('/onboarding', 'Onboarding necessário');
   }
   
-  // MUDANÇA: Caso padrão sempre vai para dashboard membro (incluindo admin)
+  // CORREÇÃO: Caso padrão sempre vai para dashboard membro (incluindo admin)
   return handleCachedRedirect('/dashboard', 'Redirecionamento padrão para dashboard membro');
 };
 
