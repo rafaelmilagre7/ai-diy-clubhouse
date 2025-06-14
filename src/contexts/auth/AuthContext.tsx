@@ -1,10 +1,13 @@
-
 import { createContext, useContext, useEffect, useState, ReactNode, useCallback } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
 import { UserProfile } from '@/lib/supabase';
 import { logger } from '@/utils/logger';
 import { useAuthStateManager } from './hooks/useAuthStateManager';
+import { navigationCache } from '@/utils/navigationCache';
+import { clearProfileCache } from '@/hooks/auth/utils/authSessionUtils';
+import { toast } from "sonner";
+import { clearLocalStorage, clearAuthTokens } from '@/utils/storageHelper';
 
 interface AuthContextType {
   user: User | null;
@@ -92,44 +95,75 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     };
   }, [setupAuthSession]);
 
-  // Função de logout
+  // Função de logout centralizada e robusta
   const signOut = useCallback(async (): Promise<{ success: boolean; error?: string }> => {
-    try {
-      logger.info('[AUTH-CONTEXT] Iniciando logout', {
-        component: 'AuthContext'
-      });
-      const { error } = await supabase.auth.signOut();
-      
-      if (error) {
-        logger.error('[AUTH-CONTEXT] Erro no logout:', {
-          error: error.message,
-          component: 'AuthContext'
-        });
-        return { success: false, error: error.message };
-      }
-      
-      // Limpar estado local
+    if (!user && !session) {
+      // Já está deslogado, só limpa state/caches
       setSession(null);
       setUser(null);
       setProfile(null);
       setIsLoading(false);
-      
-      logger.info('[AUTH-CONTEXT] Logout realizado com sucesso', {
-        component: 'AuthContext'
-      });
+      navigationCache.clear();
+      clearProfileCache();
+      clearAuthTokens();
+      clearLocalStorage();
+      toast.success('Logout realizado com sucesso.');
+      window.location.href = '/login';
       return { success: true };
-      
+    }
+    try {
+      logger.info('[AUTH-CONTEXT] Iniciando logout global', { component: 'AuthContext' });
+
+      // Limpar caches de navegação e perfil antes
+      navigationCache.clear();
+      clearProfileCache();
+
+      // Limpar tokens
+      clearAuthTokens();
+      clearLocalStorage();
+
+      // Forçar signOut global (ajuda a evitar limbos - mesmo que falhe, continua)
+      try {
+        await supabase.auth.signOut({ scope: 'global' });
+      } catch (err) {
+        logger.warn('[AUTH-CONTEXT] Falha ao chamar signOut global:', err);
+      }
+
+      // Limpar state local
+      setSession(null);
+      setUser(null);
+      setProfile(null);
+      setIsLoading(false);
+
+      logger.info('[AUTH-CONTEXT] Logout concluído. Redirecionando para login');
+
+      toast.success('Logout realizado com sucesso.');
+      // Preferir navegação por hard redirect para garantir estado limpo
+      window.location.href = '/login';
+      return { success: true };
+
     } catch (error) {
       logger.error('[AUTH-CONTEXT] Erro crítico no logout:', {
         error: error instanceof Error ? error.message : 'Erro desconhecido',
         component: 'AuthContext'
       });
+      // Forçar limpeza mesmo com erro
+      setSession(null);
+      setUser(null);
+      setProfile(null);
+      setIsLoading(false);
+      navigationCache.clear();
+      clearProfileCache();
+      clearAuthTokens();
+      clearLocalStorage();
+      toast.error('Erro interno ao realizar logout. Por favor, faça login novamente.');
+      window.location.href = '/login';
       return { 
         success: false, 
         error: error instanceof Error ? error.message : 'Erro desconhecido' 
       };
     }
-  }, []);
+  }, [user, session]);
 
   const contextValue: AuthContextType = {
     user,

@@ -1,24 +1,34 @@
-
-// Utilitário para limpar o armazenamento local
+// Utilitário para limpar o armazenamento local (completo)
 export const clearLocalStorage = () => {
   try {
     console.log("[DEBUG] Limpando localStorage");
     localStorage.clear();
-    console.log("[DEBUG] localStorage limpo com sucesso");
+    if (typeof sessionStorage !== "undefined") sessionStorage.clear();
+    console.log("[DEBUG] localStorage e sessionStorage limpos com sucesso");
     return true;
   } catch (error) {
-    console.error("[ERRO] Falha ao limpar localStorage:", error);
+    console.error("[ERRO] Falha ao limpar localStorage/sessionStorage:", error);
     return false;
   }
 };
 
-// Utilitário para limpar apenas tokens de autenticação
+// Utilitário para limpar todos os tokens de autenticação Supabase no localStorage/sessionStorage
 export const clearAuthTokens = () => {
   try {
-    console.log("[DEBUG] Limpando tokens de autenticação");
-    localStorage.removeItem('sb-zotzvtepvpnkcoobdubt-auth-token');
-    localStorage.removeItem('supabase.auth.token');
-    console.log("[DEBUG] Tokens de autenticação limpos com sucesso");
+    // Remove diversos padrões utilizados pelo Supabase
+    Object.keys(localStorage).forEach(key => {
+      if (key.startsWith('supabase.auth.') || key.startsWith('sb-') || key.includes('supabase')) {
+        localStorage.removeItem(key);
+      }
+    });
+    if (typeof sessionStorage !== "undefined") {
+      Object.keys(sessionStorage).forEach(key => {
+        if (key.startsWith('supabase.auth.') || key.startsWith('sb-') || key.includes('supabase')) {
+          sessionStorage.removeItem(key);
+        }
+      });
+    }
+    console.log("[DEBUG] Tokens de autenticação Supabase limpos com sucesso");
     return true;
   } catch (error) {
     console.error("[ERRO] Falha ao limpar tokens de autenticação:", error);
