@@ -7,6 +7,8 @@ import { useAuth } from "@/contexts/auth";
 import { SolutionsGrid } from "./SolutionsGrid";
 import { NoSolutionsPlaceholder } from "./NoSolutionsPlaceholder";
 import { SolutionsGridLoader } from "./SolutionsGridLoader";
+import { Button } from "@/components/ui/button";
+import { RefreshCw } from "lucide-react";
 
 interface OptimizedDashboardLayoutProps {
   active: Solution[];
@@ -18,6 +20,7 @@ interface OptimizedDashboardLayoutProps {
     optimized: boolean;
     fallback?: boolean;
     cacheStatus?: any;
+    invalidateCache?: () => void;
   };
 }
 
@@ -54,6 +57,14 @@ export const OptimizedDashboardLayout: FC<OptimizedDashboardLayoutProps> = memo(
     inProgress: safeActive.length,
     total: safeActive.length + safeCompleted.length + safeRecommended.length
   }), [safeActive.length, safeCompleted.length, safeRecommended.length]);
+
+  // Handler para limpar cache
+  const handleClearCache = () => {
+    if (performance?.invalidateCache) {
+      performance.invalidateCache();
+      window.location.reload(); // Recarregar página para aplicar mudanças
+    }
+  };
 
   if (isLoading) {
     return (
@@ -100,11 +111,27 @@ export const OptimizedDashboardLayout: FC<OptimizedDashboardLayoutProps> = memo(
         isLoading={false}
       />
 
-      {/* Performance indicator (apenas em dev) */}
+      {/* Debug Panel - Temporário para correção */}
       {process.env.NODE_ENV === 'development' && performance && (
-        <div className="text-xs text-muted-foreground bg-muted p-2 rounded">
-          🚀 Modo: {performance.optimized ? 'Otimizado' : 'Fallback'} 
-          {performance.cacheStatus?.isCached && ' | Cache Hit'}
+        <div className="bg-muted/50 p-4 rounded-lg border border-muted space-y-2">
+          <div className="flex items-center justify-between">
+            <div className="text-sm space-y-1">
+              <div>🚀 Modo: {performance.optimized ? 'Otimizado' : 'Fallback'}</div>
+              <div>📊 Dados: {kpiTotals.completed} concluídas, {kpiTotals.inProgress} ativas, {kpiTotals.total} total</div>
+              {performance.cacheStatus?.isCached && (
+                <div>💾 Cache: Ativo ({Math.round(performance.cacheStatus.cacheAge / 1000)}s)</div>
+              )}
+            </div>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={handleClearCache}
+              className="gap-2"
+            >
+              <RefreshCw className="h-3 w-3" />
+              Limpar Cache
+            </Button>
+          </div>
         </div>
       )}
 

@@ -5,9 +5,9 @@ import { supabase } from "@/lib/supabase";
 import { Solution } from "@/lib/supabase";
 import { logger } from "@/utils/logger";
 
-// Cache otimizado para progresso
+// Cache otimizado para progresso - limpar cache corrompido
 const progressCache = new Map<string, { data: any[], timestamp: number }>();
-const PROGRESS_TTL = 2 * 60 * 1000; // 2 minutos - dados de progresso mudam mais
+const PROGRESS_TTL = 30 * 1000; // Reduzido para 30 segundos para debug
 
 export const useOptimizedProgress = (solutions: Solution[] = []) => {
   const { user } = useAuth();
@@ -15,34 +15,37 @@ export const useOptimizedProgress = (solutions: Solution[] = []) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Memoizar IDs das soluções para otimizar queries
-  const solutionIds = useMemo(() => 
-    solutions.map(s => s.id).filter(Boolean)
-  , [solutions]);
-
-  const cacheKey = `progress_${user?.id}_${solutionIds.join(',')}`;
-
-  // Função otimizada para buscar progresso
+  // CORREÇÃO CRÍTICA: Buscar TODOS os progressos do usuário, não apenas das soluções fornecidas
   const fetchOptimizedProgress = useCallback(async () => {
-    if (!user?.id || solutionIds.length === 0) {
+    if (!user?.id) {
       return [];
     }
 
     const now = Date.now();
+    const cacheKey = `progress_all_${user.id}`;
     const cached = progressCache.get(cacheKey);
     
-    // Verificar cache válido
+    // Cache mais curto para garantir dados atualizados
     if (cached && (now - cached.timestamp) < PROGRESS_TTL) {
+      logger.info('[OPTIMIZED] Usando cache de progresso', { count: cached.data.length });
       return cached.data;
     }
 
     try {
-      // Query otimizada: apenas campos que existem na tabela progress
+      logger.info('[OPTIMIZED] Buscando TODOS os progressos do usuário', { userId: user.id });
+      
+      // CORREÇÃO: Buscar TODOS os progressos do usuário, sem filtro por solution_id
       const { data, error: fetchError } = await supabase
         .from("progress")
-        .select("solution_id, is_completed, current_module, completed_modules, updated_at")
-        .eq("user_id", user.id)
-        .in("solution_id", solutionIds);
+        .select(`
+          solution_id, 
+          is_completed, 
+          current_module, 
+          completed_modules, 
+          updated_at,
+          solutions!inner(id, title, published)
+        `)
+        .eq("user_id", user.id);
 
       if (fetchError) {
         logger.error('[OPTIMIZED] Erro ao buscar progresso:', fetchError);
@@ -50,6 +53,11 @@ export const useOptimizedProgress = (solutions: Solution[] = []) => {
       }
 
       const validProgress = data || [];
+      logger.info('[OPTIMIZED] Progressos encontrados:', { 
+        total: validProgress.length,
+        completed: validProgress.filter(p => p.is_completed).length,
+        active: validProgress.filter(p => !p.is_completed).length
+      });
 
       // Atualizar cache
       progressCache.set(cacheKey, {
@@ -62,11 +70,12 @@ export const useOptimizedProgress = (solutions: Solution[] = []) => {
       logger.error('[OPTIMIZED] Erro na query de progresso:', error);
       throw error;
     }
-  }, [user?.id, solutionIds, cacheKey]);
+  }, [user?.id]);
 
-  // Processar dados de forma otimizada
+  // CORREÇÃO: Processar dados baseado em TODOS os progressos, não apenas nas soluções fornecidas
   const processedData = useMemo(() => {
-    if (!solutions.length || !progressData.length) {
+    if (!progressData.length) {
+      logger.info('[OPTIMIZED] Nenhum progresso encontrado, retornando soluções fornecidas como recomendadas');
       return {
         active: [],
         completed: [],
@@ -76,28 +85,49 @@ export const useOptimizedProgress = (solutions: Solution[] = []) => {
     }
 
     try {
-      // Usar Map para performance O(1)
+      // Criar mapa de progressos por solution_id
       const progressMap = new Map(
         progressData.map(progress => [progress.solution_id, progress])
       );
 
-      const result = solutions.reduce((acc, solution) => {
-        const progress = progressMap.get(solution.id);
-        
-        if (!progress) {
-          acc.recommended.push(solution);
-        } else if (progress.is_completed) {
-          acc.completed.push(solution);
-        } else {
-          // Se tem progresso mas não está completo, está ativo
-          acc.active.push(solution);
-        }
-        
-        return acc;
-      }, {
+      // CORREÇÃO: Categorizar baseado em TODOS os progressos encontrados
+      const result = {
         active: [] as Solution[],
         completed: [] as Solution[],
         recommended: [] as Solution[]
+      };
+
+      // Primeiro, processar soluções com progresso
+      progressData.forEach(progress => {
+        if (progress.solutions) {
+          const solution = {
+            id: progress.solutions.id,
+            title: progress.solutions.title,
+            published: progress.solutions.published,
+            // Adicionar outros campos necessários da solução
+          } as Solution;
+
+          if (progress.is_completed) {
+            result.completed.push(solution);
+          } else {
+            result.active.push(solution);
+          }
+        }
+      });
+
+      // Depois, adicionar soluções fornecidas que não têm progresso como recomendadas
+      solutions.forEach(solution => {
+        const hasProgress = progressMap.has(solution.id);
+        if (!hasProgress) {
+          result.recommended.push(solution);
+        }
+      });
+
+      logger.info('[OPTIMIZED] Dados processados:', {
+        active: result.active.length,
+        completed: result.completed.length,
+        recommended: result.recommended.length,
+        total: result.active.length + result.completed.length + result.recommended.length
       });
 
       return {
@@ -113,7 +143,7 @@ export const useOptimizedProgress = (solutions: Solution[] = []) => {
         isEmpty: false
       };
     }
-  }, [solutions, progressData]);
+  }, [progressData, solutions]);
 
   useEffect(() => {
     const loadProgress = async () => {
@@ -129,9 +159,10 @@ export const useOptimizedProgress = (solutions: Solution[] = []) => {
         const data = await fetchOptimizedProgress();
         setProgressData(data);
         
-        logger.info('[OPTIMIZED] Progresso carregado:', {
+        logger.info('[OPTIMIZED] Progresso carregado com sucesso:', {
           count: data.length,
-          cached: progressCache.has(cacheKey)
+          completed: data.filter(p => p.is_completed).length,
+          active: data.filter(p => !p.is_completed).length
         });
         
       } catch (error: any) {
@@ -143,7 +174,7 @@ export const useOptimizedProgress = (solutions: Solution[] = []) => {
     };
 
     loadProgress();
-  }, [fetchOptimizedProgress, cacheKey]);
+  }, [fetchOptimizedProgress, user?.id]);
 
   return {
     active: processedData.active,

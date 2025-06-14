@@ -4,7 +4,7 @@ import { useOptimizedDashboard } from "./useOptimizedDashboard";
 import { useDashboardData } from "./useDashboardData";
 import { logger } from "@/utils/logger";
 
-// Hook híbrido que usa otimizado com fallback para o original
+// Hook híbrido com fallback automático melhorado
 export const useEnhancedDashboard = () => {
   // Tentar usar versão otimizada primeiro
   const optimized = useOptimizedDashboard();
@@ -12,32 +12,32 @@ export const useEnhancedDashboard = () => {
   // Fallback para versão original em caso de erro
   const fallback = useDashboardData();
 
-  // Decidir qual usar baseado no estado
+  // CORREÇÃO: Lógica de fallback mais robusta
   const shouldUseFallback = useMemo(() => {
-    // Se otimizado tem erro, usar fallback
+    // Se otimizado tem erro crítico, usar fallback
     if (optimized.error && !optimized.isLoading) {
-      logger.warn('[ENHANCED] Usando fallback devido a erro', { error: optimized.error });
+      logger.warn('[ENHANCED] Usando fallback devido a erro crítico', { error: optimized.error });
       return true;
     }
     
-    // Se otimizado não tem dados válidos e não está loading, considerar fallback
-    const hasValidOptimizedData = optimized.totals && optimized.totals.total > 0;
-    if (!hasValidOptimizedData && !optimized.isLoading) {
-      logger.info('[ENHANCED] Considerando fallback - dados otimizados insuficientes', { 
+    // CORREÇÃO: Não usar fallback se otimizado está funcionando
+    // Mesmo que não tenha dados, pode ser normal (usuário novo)
+    if (!optimized.error && !optimized.isLoading) {
+      logger.info('[ENHANCED] Usando dados otimizados', { 
         totals: optimized.totals,
         hasData: optimized.hasData 
       });
-      
-      // Só usar fallback se o fallback tiver dados válidos
-      const hasFallbackData = fallback.solutions && fallback.solutions.length > 0;
-      if (hasFallbackData) {
-        logger.info('[ENHANCED] Usando fallback - tem dados no fallback');
-        return true;
-      }
+      return false;
+    }
+    
+    // Se otimizado ainda está carregando, aguardar
+    if (optimized.isLoading) {
+      logger.debug('[ENHANCED] Aguardando carregamento otimizado');
+      return false;
     }
     
     return false;
-  }, [optimized.error, optimized.isLoading, optimized.totals, optimized.hasData, fallback.solutions]);
+  }, [optimized.error, optimized.isLoading, optimized.totals, optimized.hasData]);
 
   // Retornar dados apropriados
   return useMemo(() => {
@@ -45,7 +45,7 @@ export const useEnhancedDashboard = () => {
       // Converter dados do fallback para formato esperado
       const { solutions, loading, error } = fallback;
       
-      // Para o fallback, assumir todas como recomendadas já que não temos dados de progresso
+      // CORREÇÃO: Processar soluções do fallback corretamente
       const fallbackResult = {
         active: [],
         completed: [],
@@ -83,6 +83,9 @@ export const useEnhancedDashboard = () => {
     
     logger.info('[ENHANCED] Retornando dados otimizados:', {
       totalSolutions: optimizedResult.totals?.total || 0,
+      active: optimizedResult.totals?.active || 0,
+      completed: optimizedResult.totals?.completed || 0,
+      recommended: optimizedResult.totals?.recommended || 0,
       hasError: !!optimizedResult.error
     });
     

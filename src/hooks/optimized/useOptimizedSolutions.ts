@@ -5,10 +5,10 @@ import { Solution } from "@/lib/supabase";
 import { useAuth } from "@/contexts/auth";
 import { logger } from "@/utils/logger";
 
-// Cache global otimizado com TTL
+// Cache global otimizado com TTL mais curto para debug
 const optimizedCache = new Map<string, { data: Solution[], timestamp: number, ttl: number }>();
-const DEFAULT_TTL = 5 * 60 * 1000; // 5 minutos
-const ADMIN_TTL = 2 * 60 * 1000; // 2 minutos para admins (dados mudam mais)
+const DEFAULT_TTL = 30 * 1000; // Reduzido para 30 segundos para debug
+const ADMIN_TTL = 15 * 1000; // 15 segundos para admins
 
 export const useOptimizedSolutions = () => {
   const { user, profile } = useAuth();
@@ -18,17 +18,17 @@ export const useOptimizedSolutions = () => {
   const lastFetchRef = useRef<number>(0);
   
   const isAdmin = profile?.role === 'admin';
-  const cacheKey = `solutions_${user?.id}_${isAdmin ? 'admin' : 'user'}`;
+  const cacheKey = `solutions_all_${user?.id}_${isAdmin ? 'admin' : 'user'}`;
   const cacheTTL = isAdmin ? ADMIN_TTL : DEFAULT_TTL;
 
-  // Memoizar campos específicos para query otimizada
+  // Campos otimizados para query
   const queryFields = useMemo(() => {
     const baseFields = [
       'id', 'title', 'description', 'category', 'difficulty', 
-      'published', 'created_at', 'updated_at', 'cover_image_url'
+      'published', 'created_at', 'updated_at', 'cover_image_url',
+      'estimated_time', 'success_rate', 'tags'
     ];
     
-    // Admins precisam de mais campos
     if (isAdmin) {
       return [...baseFields, 'created_by'].join(', ');
     }
@@ -44,19 +44,37 @@ export const useOptimizedSolutions = () => {
     // Verificar cache válido primeiro
     const cached = optimizedCache.get(cacheKey);
     if (cached && (now - cached.timestamp) < cached.ttl) {
+      logger.info('[OPTIMIZED] Usando cache de soluções', { count: cached.data.length });
       return cached.data;
     }
 
     try {
-      // Query otimizada com campos específicos
+      logger.info('[OPTIMIZED] Buscando soluções otimizadas', { isAdmin, userId: user.id });
+
+      // CORREÇÃO: Buscar soluções baseado no progresso do usuário também
+      // Primeiro buscar todas as soluções que o usuário tem permissão de ver
       let query = supabase
         .from("solutions")
         .select(queryFields)
         .order("created_at", { ascending: false });
 
-      // Filtro otimizado baseado no perfil
+      // CORREÇÃO: Incluir soluções não publicadas se o usuário tem progresso nelas
       if (!isAdmin) {
-        query = query.eq("published", true);
+        // Buscar IDs das soluções que o usuário tem progresso
+        const { data: userProgress } = await supabase
+          .from("progress")
+          .select("solution_id")
+          .eq("user_id", user.id);
+
+        const userSolutionIds = userProgress?.map(p => p.solution_id) || [];
+
+        if (userSolutionIds.length > 0) {
+          // Buscar soluções publicadas OU soluções que o usuário tem progresso
+          query = query.or(`published.eq.true,id.in.(${userSolutionIds.join(',')})`);
+        } else {
+          // Se não tem progresso, só soluções publicadas
+          query = query.eq("published", true);
+        }
       }
 
       const { data, error: fetchError } = await query;
@@ -66,17 +84,18 @@ export const useOptimizedSolutions = () => {
         throw fetchError;
       }
 
-      // Type guard mais específico para validar se é uma Solution válida
-      const isValidSolution = (item: unknown): item is Solution => {
-        const sol = item as Solution;
-        return sol && 
-               typeof sol === 'object' && 
-               typeof sol.id === 'string' &&
-               typeof sol.title === 'string' &&
-               typeof sol.description === 'string';
-      };
+      const validSolutions = ((data as any[]) || []).filter(item => {
+        return item && 
+               typeof item === 'object' && 
+               typeof item.id === 'string' &&
+               typeof item.title === 'string';
+      }) as Solution[];
 
-      const validSolutions = ((data as any[]) || []).filter(isValidSolution);
+      logger.info('[OPTIMIZED] Soluções carregadas:', {
+        total: validSolutions.length,
+        published: validSolutions.filter(s => s.published).length,
+        unpublished: validSolutions.filter(s => !s.published).length
+      });
 
       // Atualizar cache com TTL específico
       optimizedCache.set(cacheKey, {
@@ -113,7 +132,7 @@ export const useOptimizedSolutions = () => {
         const data = await fetchOptimizedSolutions();
         setSolutions(data);
         
-        logger.info('[OPTIMIZED] Soluções carregadas', {
+        logger.info('[OPTIMIZED] Soluções carregadas com sucesso', {
           count: data.length,
           isAdmin,
           cached: optimizedCache.has(cacheKey)
@@ -130,11 +149,11 @@ export const useOptimizedSolutions = () => {
     loadSolutions();
   }, [user, isAdmin, fetchOptimizedSolutions, cacheKey]);
 
-  // Função para invalidar cache (útil para atualizações)
+  // Função para invalidar cache
   const invalidateCache = useMemo(() => () => {
-    optimizedCache.delete(cacheKey);
-    logger.info('[OPTIMIZED] Cache invalidado', { cacheKey });
-  }, [cacheKey]);
+    optimizedCache.clear(); // Limpar todo o cache para garantir dados frescos
+    logger.info('[OPTIMIZED] Cache completamente limpo');
+  }, []);
 
   return {
     solutions,

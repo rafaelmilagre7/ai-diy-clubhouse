@@ -5,12 +5,13 @@ import { useOptimizedProgress } from "@/hooks/optimized/useOptimizedProgress";
 import { logger } from "@/utils/logger";
 
 export const useOptimizedDashboard = () => {
-  // Usar hooks otimizados com fallback automático
+  // Usar hooks otimizados corrigidos
   const { 
     solutions, 
     loading: solutionsLoading, 
     error: solutionsError,
-    cacheStatus: solutionsCacheStatus
+    cacheStatus: solutionsCacheStatus,
+    invalidateCache
   } = useOptimizedSolutions();
   
   const {
@@ -31,27 +32,39 @@ export const useOptimizedDashboard = () => {
     solutionsError || progressError
   , [solutionsError, progressError]);
 
-  // Totais memoizados
-  const totals = useMemo(() => ({
-    active: active.length,
-    completed: completed.length,
-    recommended: recommended.length,
-    total: active.length + completed.length + recommended.length
-  }), [active.length, completed.length, recommended.length]);
+  // Totais memoizados com logs detalhados
+  const totals = useMemo(() => {
+    const result = {
+      active: active.length,
+      completed: completed.length,
+      recommended: recommended.length,
+      total: active.length + completed.length + recommended.length
+    };
+
+    logger.info('[OPTIMIZED DASHBOARD] Totais calculados:', {
+      ...result,
+      solutionsCount: solutions.length,
+      isLoading,
+      hasError: !!error
+    });
+
+    return result;
+  }, [active.length, completed.length, recommended.length, solutions.length, isLoading, error]);
 
   // Log de performance para monitoramento
   useMemo(() => {
-    if (!isLoading && totals.total > 0) {
-      logger.info('[OPTIMIZED DASHBOARD] Performance stats:', {
+    if (!isLoading) {
+      logger.info('[OPTIMIZED DASHBOARD] Dashboard carregado:', {
         totalSolutions: totals.total,
         active: totals.active,
         completed: totals.completed,
         recommended: totals.recommended,
         cacheHit: solutionsCacheStatus.isCached,
-        cacheAge: solutionsCacheStatus.cacheAge
+        cacheAge: solutionsCacheStatus.cacheAge,
+        hasError: !!error
       });
     }
-  }, [isLoading, totals, solutionsCacheStatus]);
+  }, [isLoading, totals, solutionsCacheStatus, error]);
 
   return {
     active,
@@ -61,11 +74,12 @@ export const useOptimizedDashboard = () => {
     error,
     totals,
     hasData: totals.total > 0,
-    // Informações para debug
+    // Informações para debug e invalidação de cache
     performance: {
       cacheStatus: solutionsCacheStatus,
       totalQueries: 2, // solutions + progress
-      optimized: true
+      optimized: true,
+      invalidateCache // Função para limpar cache se necessário
     }
   };
 };
