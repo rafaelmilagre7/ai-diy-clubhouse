@@ -14,7 +14,8 @@ import {
   Route,
   Sparkles,
   Shield,
-  Gift
+  Gift,
+  MessageCircle
 } from 'lucide-react';
 import { useAuth } from '@/contexts/auth';
 import { getUserRoleName } from '@/lib/supabase/types';
@@ -68,6 +69,12 @@ export const MemberSidebarNavItems: React.FC<MemberSidebarNavItemsProps> = ({ si
       title: "Benefícios",
       href: "/benefits",
       icon: Gift,
+      type: "regular"
+    },
+    {
+      title: "Sugestões",
+      href: "/suggestions",
+      icon: MessageCircle,
       type: "regular"
     },
     {
