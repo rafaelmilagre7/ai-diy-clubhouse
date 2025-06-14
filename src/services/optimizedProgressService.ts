@@ -1,6 +1,4 @@
-
 import { supabase } from '@/lib/supabase';
-import { useAuth } from '@/contexts/auth';
 
 interface ProgressData {
   id: string;

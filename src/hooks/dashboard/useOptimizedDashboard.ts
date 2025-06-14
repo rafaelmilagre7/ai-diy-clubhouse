@@ -22,7 +22,7 @@ export const useOptimizedDashboard = () => {
       cacheType: 'solutions',
       enablePreload: true,
       select: (data: Solution[]) => data, // Manter compatibilidade
-      onSuccess: (data) => {
+      onQuerySuccess: (data) => {
         // Setup background sync após carregar dados iniciais
         setupAutoSync('solutions', async () => {
           const { fetchOptimizedSolutions } = await import('@/services/optimizedSolutionsService');

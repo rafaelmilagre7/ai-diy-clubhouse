@@ -28,6 +28,8 @@ export const fetchOptimizedSolutions = async (): Promise<Solution[]> => {
         thumbnail_url,
         published,
         created_at,
+        updated_at,
+        slug,
         estimated_time_minutes
       `)
       .eq("published", true)
