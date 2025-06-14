@@ -1,6 +1,6 @@
-
 import { useCallback } from 'react';
 import { toast } from 'sonner';
+import { logger } from '@/utils/logger';
 
 interface ErrorHandlerOptions {
   showToast?: boolean;
@@ -26,17 +26,8 @@ export const useErrorHandler = () => {
       context
     };
 
-    // Log detalhado no console para desenvolvimento
-    if (process.env.NODE_ENV === 'development') {
-      console.group(`🔴 Error in ${context || 'Unknown'}`);
-      console.error('Error:', error);
-      console.log('Error Info:', errorInfo);
-      console.log('Stack:', error?.stack);
-      console.groupEnd();
-    }
-
-    // Em produção, você poderia enviar para um serviço de logging
-    // como Sentry, LogRocket, etc.
+    // Log detalhado com o logger seguro
+    logger.error(`Error in ${context || 'Unknown'}`, error, { ...errorInfo, stack: error?.stack });
     
     return errorInfo;
   }, []);

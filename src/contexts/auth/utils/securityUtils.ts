@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabase';
+import { logger } from '@/utils/logger';
 
 /**
  * Utilitários de segurança centralizados com melhorias para trabalhar com as novas políticas RLS
@@ -15,7 +16,7 @@ const MAX_VERIFICATION_ATTEMPTS = 5;
  */
 export const verifyAdminStatus = async (userId: string): Promise<boolean> => {
   if (!userId || typeof userId !== 'string') {
-    console.warn('[SECURITY] Invalid userId for admin verification');
+    logger.warn('[SECURITY] Invalid userId for admin verification', { userId });
     return false;
   }
 
@@ -31,7 +32,7 @@ export const verifyAdminStatus = async (userId: string): Promise<boolean> => {
     
     // Verificar rate limiting
     if (cached.attempts >= MAX_VERIFICATION_ATTEMPTS) {
-      console.warn('[SECURITY] Too many admin verification attempts for user:', userId.substring(0, 8));
+      logger.warn('[SECURITY] Too many admin verification attempts for user:', { userId });
       return false;
     }
   }
@@ -49,7 +50,7 @@ export const verifyAdminStatus = async (userId: string): Promise<boolean> => {
     const { data, error } = await supabase.rpc('is_admin');
     
     if (error) {
-      console.error('[SECURITY] Admin verification error:', error.message);
+      logger.error('[SECURITY] Admin verification error:', error, { userId });
       return false;
     }
     
@@ -63,13 +64,13 @@ export const verifyAdminStatus = async (userId: string): Promise<boolean> => {
     });
     
     if (isAdmin) {
-      console.info('[SECURITY] Admin verified by database is_admin() function');
+      logger.info('[SECURITY] Admin verified by database is_admin() function', { userId });
     }
     
     return isAdmin;
     
   } catch (error) {
-    console.error('[SECURITY] Admin verification error:', error);
+    logger.error('[SECURITY] Admin verification error:', error, { userId });
     return false;
   }
 };
@@ -84,7 +85,7 @@ const PERMISSION_CACHE_TTL = 3 * 60 * 1000; // 3 minutos
  */
 export const getUserPermissions = async (userId: string): Promise<string[]> => {
   if (!userId || typeof userId !== 'string') {
-    console.warn('[SECURITY] Invalid userId for permissions');
+    logger.warn('[SECURITY] Invalid userId for permissions', { userId });
     return [];
   }
 
@@ -119,7 +120,7 @@ export const getUserPermissions = async (userId: string): Promise<string[]> => {
       .single();
     
     if (error) {
-      console.error('[SECURITY] Permissions fetch error:', error.message);
+      logger.error('[SECURITY] Permissions fetch error:', error, { userId });
       return [];
     }
     
@@ -139,7 +140,7 @@ export const getUserPermissions = async (userId: string): Promise<string[]> => {
           }
         }
       } catch (parseError) {
-        console.error('[SECURITY] Permission parsing error:', parseError);
+        logger.error('[SECURITY] Permission parsing error:', parseError, { userId });
       }
     }
     
@@ -151,7 +152,7 @@ export const getUserPermissions = async (userId: string): Promise<string[]> => {
     
     return permissions;
   } catch (error) {
-    console.error('[SECURITY] Permissions error:', error);
+    logger.error('[SECURITY] Permissions error:', error, { userId });
     return [];
   }
 };
@@ -164,14 +165,14 @@ export const clearPermissionCache = (userId?: string) => {
     if (userId) {
       permissionCache.delete(userId);
       adminCache.delete(userId);
-      console.info('[SECURITY] Permission cache cleared for user');
+      logger.info('[SECURITY] Permission cache cleared for user', { userId });
     } else {
       permissionCache.clear();
       adminCache.clear();
-      console.info('[SECURITY] All permission caches cleared');
+      logger.info('[SECURITY] All permission caches cleared');
     }
   } catch (error) {
-    console.error('[SECURITY] Cache clear error:', error);
+    logger.error('[SECURITY] Cache clear error:', error);
   }
 };
 
@@ -191,7 +192,7 @@ export const logSecurityEvent = async (
       p_resource_id: resourceId
     });
   } catch (error) {
-    console.error('[SECURITY] Error logging security event:', error);
+    logger.error('[SECURITY] Error logging security event:', error, { actionType, resourceType, resourceId });
     // Não falhar operações principais por causa de erros de log
   }
 };
@@ -205,25 +206,25 @@ export const validateSessionIntegrity = (session: any): boolean => {
     
     // Verificar campos obrigatórios
     if (!session.access_token || !session.user || !session.user.id) {
-      console.warn('[SECURITY] Session missing required fields');
+      logger.warn('[SECURITY] Session missing required fields');
       return false;
     }
     
     // Verificar expiração
     if (session.expires_at && session.expires_at < Math.floor(Date.now() / 1000)) {
-      console.warn('[SECURITY] Session expired');
+      logger.warn('[SECURITY] Session expired');
       return false;
     }
     
     // Verificar formato do token (básico)
     if (typeof session.access_token !== 'string' || session.access_token.length < 20) {
-      console.warn('[SECURITY] Invalid token format');
+      logger.warn('[SECURITY] Invalid token format');
       return false;
     }
     
     return true;
   } catch (error) {
-    console.error('[SECURITY] Session validation error:', error);
+    logger.error('[SECURITY] Session validation error:', error);
     return false;
   }
 };
@@ -248,7 +249,7 @@ export const checkRateLimit = (operation: string, maxAttempts: number = 10, wind
   operationLimits.set(key, limit);
   
   if (limit.count > maxAttempts) {
-    console.warn(`[SECURITY] Rate limit exceeded for operation: ${operation}`);
+    logger.warn(`[SECURITY] Rate limit exceeded for operation: ${operation}`);
     return false;
   }
   

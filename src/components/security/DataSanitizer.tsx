@@ -1,18 +1,23 @@
-
 import { ReactNode } from 'react';
 
-interface DataSanitizerProps {
-  children: ReactNode;
-  data?: any;
-  allowedFields?: string[];
-  sensitiveFields?: string[];
-}
+// --- Funções de Máscara ---
+const maskEmail = (email: string): string => {
+  if (typeof email !== 'string' || email.indexOf('@') === -1) return '[INVALID_EMAIL]';
+  const [user, domain] = email.split('@');
+  if (!user || !domain) return '[INVALID_EMAIL]';
+  return `${user.substring(0, 1)}***@${domain}`;
+};
 
-// Utilitário para sanitizar dados antes da exibição
+const maskId = (id: string): string => {
+  if (typeof id !== 'string' || id.length < 8) return `[REDACTED]`;
+  return `${id.substring(0, 4)}...${id.substring(id.length - 4)}`;
+};
+
+// Utilitário para sanitizar dados antes da exibição ou log
 export const sanitizeData = (
-  data: any, 
-  allowedFields?: string[], 
-  sensitiveFields: string[] = ['password', 'token', 'secret', 'key', 'email', 'phone']
+  data: any,
+  allowedFields?: string[],
+  sensitiveFields: string[] = ['password', 'token', 'secret', 'key', 'apiKey', 'accessToken', 'refreshToken', 'session']
 ): any => {
   if (!data || typeof data !== 'object') {
     return data;
@@ -26,16 +31,27 @@ export const sanitizeData = (
 
   Object.keys(data).forEach(key => {
     const value = data[key];
-    
-    // Pular campos sensíveis
-    if (sensitiveFields.some(field => key.toLowerCase().includes(field.toLowerCase()))) {
-      sanitized[key] = '[REDACTED]';
+    const lowerKey = key.toLowerCase();
+
+    // Se há lista de campos permitidos, pular os que não estão nela
+    if (allowedFields && !allowedFields.includes(key)) {
       return;
     }
 
-    // Se há lista de campos permitidos, verificar
-    if (allowedFields && !allowedFields.includes(key)) {
+    // Pular campos sensíveis genéricos
+    if (sensitiveFields.some(field => lowerKey.includes(field))) {
+      sanitized[key] = `[REDACTED_${key.toUpperCase()}]`;
       return;
+    }
+    
+    // Aplicar máscaras específicas
+    if (lowerKey.includes('email')) {
+        sanitized[key] = typeof value === 'string' ? maskEmail(value) : '[REDACTED]';
+        return;
+    }
+    if (lowerKey.includes('id') || lowerKey.includes('userid') || lowerKey.includes('user_id')) {
+        sanitized[key] = typeof value === 'string' ? maskId(value) : '[REDACTED]';
+        return;
     }
 
     // Recursivamente sanitizar objetos aninhados
