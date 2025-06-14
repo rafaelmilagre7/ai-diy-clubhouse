@@ -1,5 +1,4 @@
 import { logger } from './logger';
-import { secureLogger } from './secureLogger';
 
 interface RateLimitOptions {
   windowMs: number;
@@ -135,18 +134,15 @@ class IntelligentRateLimit {
         details
       });
 
-      secureLogger.security({
-        type: 'system',
+      logger.security(`Intelligent rate limit triggered: ${type}`, {
+        component: 'INTELLIGENT_RATE_LIMIT',
         severity,
-        description: `Intelligent rate limit triggered: ${type}`,
+        source,
         details: {
-          type,
-          source,
-          ...details
-        }
-      }, 'INTELLIGENT_RATE_LIMIT', {
-        timestamp: new Date().toISOString(), // CORREÇÃO: Convertendo para string
-        source
+            type,
+            source,
+            ...details,
+        },
       });
     } catch (error) {
       // Falha silenciosamente em caso de erro de logging
