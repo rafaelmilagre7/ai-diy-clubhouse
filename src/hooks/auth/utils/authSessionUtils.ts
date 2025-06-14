@@ -34,7 +34,7 @@ export const validateUserSession = async () => {
 };
 
 /**
- * CORREÇÃO: Busca o perfil do usuário usando query direta simples
+ * CORREÇÃO: Busca o perfil do usuário usando query direta simples (sem RPC)
  */
 export const fetchUserProfileSecurely = async (userId: string): Promise<UserProfile | null> => {
   try {
@@ -47,7 +47,7 @@ export const fetchUserProfileSecurely = async (userId: string): Promise<UserProf
 
     logger.info('[PROFILE-FETCH] Buscando perfil usando query direta');
     
-    // CORREÇÃO: Usar query direta simples em vez da função RPC inexistente
+    // CORREÇÃO: Query direta simples e segura
     const { data: profile, error } = await supabase
       .from('profiles')
       .select(`
@@ -60,7 +60,7 @@ export const fetchUserProfileSecurely = async (userId: string): Promise<UserProf
         )
       `)
       .eq('id', userId)
-      .single();
+      .maybeSingle(); // CORREÇÃO: Usar maybeSingle() em vez de single()
     
     if (error) {
       logger.error('[PROFILE-FETCH] Erro na query direta:', error);
@@ -117,7 +117,7 @@ export const processUserProfile = async (
             permissions
           )
         `)
-        .single();
+        .maybeSingle(); // CORREÇÃO: Usar maybeSingle() em vez de single()
       
       if (createError) {
         logger.error('[PROFILE-PROCESS] Erro ao criar perfil:', createError);

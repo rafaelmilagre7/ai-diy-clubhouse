@@ -5,10 +5,10 @@ import { Solution } from "@/lib/supabase";
 import { useAuth } from "@/contexts/auth";
 import { logger } from "@/utils/logger";
 
-// Cache global otimizado com TTL mais curto para debug
+// Cache global otimizado com TTL reduzido para debug
 const optimizedCache = new Map<string, { data: Solution[], timestamp: number, ttl: number }>();
-const DEFAULT_TTL = 30 * 1000; // Reduzido para 30 segundos para debug
-const ADMIN_TTL = 15 * 1000; // 15 segundos para admins
+const DEFAULT_TTL = 60 * 1000; // Aumentado para 60 segundos (mais estável)
+const ADMIN_TTL = 30 * 1000; // 30 segundos para admins
 
 export const useOptimizedSolutions = () => {
   const { user, profile } = useAuth();
@@ -21,12 +21,11 @@ export const useOptimizedSolutions = () => {
   const cacheKey = `solutions_all_${user?.id}_${isAdmin ? 'admin' : 'user'}`;
   const cacheTTL = isAdmin ? ADMIN_TTL : DEFAULT_TTL;
 
-  // CORREÇÃO: Campos otimizados para query - usar thumbnail_url em vez de cover_image_url
+  // CORREÇÃO: Campos simplificados - apenas campos que existem na tabela
   const queryFields = useMemo(() => {
     const baseFields = [
       'id', 'title', 'description', 'category', 'difficulty', 
-      'published', 'created_at', 'thumbnail_url',
-      'estimated_time', 'success_rate', 'tags'
+      'published', 'created_at', 'thumbnail_url', 'tags'
     ];
     
     if (isAdmin) {
@@ -51,8 +50,7 @@ export const useOptimizedSolutions = () => {
     try {
       logger.info('[OPTIMIZED] Buscando soluções otimizadas', { isAdmin, userId: user.id });
 
-      // CORREÇÃO: Buscar soluções baseado no progresso do usuário também
-      // Primeiro buscar todas as soluções que o usuário tem permissão de ver
+      // CORREÇÃO: Query simplificada - buscar soluções baseado no progresso do usuário
       let query = supabase
         .from("solutions")
         .select(queryFields)
@@ -151,7 +149,7 @@ export const useOptimizedSolutions = () => {
 
   // Função para invalidar cache
   const invalidateCache = useMemo(() => () => {
-    optimizedCache.clear(); // Limpar todo o cache para garantir dados frescos
+    optimizedCache.clear();
     logger.info('[OPTIMIZED] Cache completamente limpo');
   }, []);
 
