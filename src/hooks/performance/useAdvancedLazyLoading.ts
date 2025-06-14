@@ -25,12 +25,12 @@ export const useAdvancedLazyLoading = (options: LazyLoadingOptions = {}) => {
       // Mapear rotas para imports dinâmicos - usando caminhos corretos
       const routeImports: Record<string, () => Promise<any>> = {
         '/dashboard': () => import('../../pages/member/Dashboard'),
-        '/solutions': () => import('../../pages/Solutions'),
-        '/tools': () => import('../../pages/Tools'),
-        '/learning': () => import('../../pages/Learning'),
-        '/profile': () => import('../../pages/Profile'),
-        '/implementation': () => import('../../pages/Implementation'),
-        '/community': () => import('../../pages/Community')
+        '/solutions': () => import('../../pages/member/Solutions'),
+        '/tools': () => import('../../pages/member/Tools'),
+        '/learning': () => import('../../pages/member/learning/LearningPage'),
+        '/profile': () => import('../../pages/member/Profile'),
+        '/implementation': () => import('../../pages/member/ImplementationTrail'),
+        '/community': () => import('../../pages/member/community/CommunityHome')
       };
 
       const importFn = routeImports[routePath];
