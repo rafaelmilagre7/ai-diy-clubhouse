@@ -61,10 +61,14 @@ export const OnboardingLoader = ({ children }: OnboardingLoaderProps) => {
     );
   }
 
-  // CORREÇÃO CRÍTICA: Se é admin, nunca mostrar onboarding (apenas fora do modo preview)
+  // MUDANÇA: Admin não tem redirecionamento especial para /dashboard
+  // Agora admin vai para dashboard membro se onboarding estiver completo
   if (isAdmin || roleName === 'admin') {
-    console.log('[OnboardingLoader] Admin detectado - redirecionando para /dashboard');
-    return <Navigate to="/dashboard" replace />;
+    console.log('[OnboardingLoader] Admin detectado');
+    if (hasCompleted && !isRequired) {
+      console.log('[OnboardingLoader] Admin com onboarding completo - redirecionando para dashboard membro');
+      return <Navigate to="/dashboard" replace />;
+    }
   }
 
   // Se onboarding foi concluído, redirecionar para dashboard apropriado
@@ -74,7 +78,7 @@ export const OnboardingLoader = ({ children }: OnboardingLoaderProps) => {
     return <Navigate to={redirectPath} replace />;
   }
 
-  // Se onboarding é necessário (apenas para não-admins), renderizar wizard
+  // Se onboarding é necessário (para qualquer usuário), renderizar wizard
   console.log('[OnboardingLoader] Renderizando wizard de onboarding');
   return <>{children}</>;
 };
