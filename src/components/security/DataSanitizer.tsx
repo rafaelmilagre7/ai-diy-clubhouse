@@ -65,6 +65,14 @@ export const sanitizeData = (
   return sanitized;
 };
 
+// Adicionando a definição de props que estava faltando.
+interface DataSanitizerProps {
+  children?: React.ReactNode | ((sanitizedData: any) => React.ReactNode);
+  data?: any;
+  allowedFields?: string[];
+  sensitiveFields?: string[];
+}
+
 // Componente para exibir dados sanitizados
 export const DataSanitizer: React.FC<DataSanitizerProps> = ({ 
   children, 

@@ -1,8 +1,7 @@
-
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/lib/supabase";
-import { secureLogger } from "@/utils/secureLogger";
+import { logger } from "@/utils/logger";
 
 interface SystemActivity {
   id: string;
@@ -100,7 +99,8 @@ export const useRealSystemActivity = (timeRange: string) => {
         const eventsByType = groupEventsByType(userActivities);
         
         // Log de segurança para monitoramento
-        secureLogger.info('System activity data loaded', 'ADMIN_DASHBOARD', {
+        logger.info('System activity data loaded', {
+          component: 'ADMIN_DASHBOARD',
           timeRange,
           totalEvents: userActivities.length,
           uniqueUsers: uniqueUserIds.length,
@@ -117,8 +117,8 @@ export const useRealSystemActivity = (timeRange: string) => {
         console.error("Erro ao carregar atividade do sistema:", error);
         
         // Log de erro de segurança
-        secureLogger.error('Failed to load system activity', 'ADMIN_DASHBOARD', {
-          error: error.message,
+        logger.error('Failed to load system activity', error, {
+          component: 'ADMIN_DASHBOARD',
           timeRange
         });
         
