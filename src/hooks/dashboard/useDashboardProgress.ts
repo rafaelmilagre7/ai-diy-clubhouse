@@ -11,17 +11,29 @@ const progressCache = new WeakMap<object, any>();
 export const useDashboardProgress = (solutions: Solution[] = []) => {
   const { user } = useAuth();
   
-  // Memoizar hash das soluções para evitar recálculos
-  const solutionsHash = useMemo(() => {
+  // Estabilizar dependências usando refs para evitar loops infinitos
+  const stableSolutions = useRef<Solution[]>([]);
+  const solutionsHash = useRef<string>('');
+  
+  // Memoizar hash das soluções para evitar recálculos - DEPENDÊNCIA ESTÁVEL
+  const currentHash = useMemo(() => {
     if (!solutions || !Array.isArray(solutions) || solutions.length === 0) {
       return 'empty';
     }
     
     const ids = solutions.map(s => s.id).sort().join(',');
-    return `${ids}_${solutions.length}`;
+    const hash = `${ids}_${solutions.length}`;
+    
+    // Só atualizar se realmente mudou
+    if (hash !== solutionsHash.current) {
+      solutionsHash.current = hash;
+      stableSolutions.current = solutions;
+    }
+    
+    return solutionsHash.current;
   }, [solutions]);
 
-  // Função de fetch otimizada e memoizada
+  // Função de fetch otimizada e estável
   const fetchProgress = useCallback(async () => {
     if (!user?.id) {
       throw new Error("Usuário não autenticado");
@@ -42,27 +54,31 @@ export const useDashboardProgress = (solutions: Solution[] = []) => {
       console.error("Erro ao buscar progresso:", error);
       throw error;
     }
-  }, [user?.id]);
+  }, [user?.id]); // DEPENDÊNCIA ESTÁVEL
   
-  // Query otimizada com configurações de performance
+  // Query otimizada com configurações de performance máxima
   const { 
     data: progressData,
     isLoading,
     error
   } = useQuery({
-    queryKey: ['dashboard-progress', user?.id, solutionsHash],
+    queryKey: ['dashboard-progress', user?.id, currentHash],
     queryFn: fetchProgress,
-    staleTime: 5 * 60 * 1000, // 5 minutos de cache
-    gcTime: 10 * 60 * 1000, // 10 minutos no cache
-    enabled: !!(user?.id && Array.isArray(solutions) && solutions.length > 0),
+    staleTime: 10 * 60 * 1000, // 10 minutos de cache
+    gcTime: 30 * 60 * 1000, // 30 minutos no cache
+    enabled: !!(user?.id && currentHash !== 'empty'),
     refetchOnWindowFocus: false,
     refetchOnMount: false,
-    retry: 2,
+    retry: 1,
+    // Cache inteligente com deduplicação
+    structuralSharing: true,
   });
 
-  // Processar dados com memoização inteligente
+  // Processar dados com memoização inteligente e cache
   const processedData = useMemo(() => {
-    if (!solutions || !Array.isArray(solutions) || solutions.length === 0) {
+    const currentSolutions = stableSolutions.current;
+    
+    if (!currentSolutions || !Array.isArray(currentSolutions) || currentSolutions.length === 0) {
       return { 
         active: [], 
         completed: [], 
@@ -75,19 +91,25 @@ export const useDashboardProgress = (solutions: Solution[] = []) => {
       return { 
         active: [], 
         completed: [], 
-        recommended: solutions,
+        recommended: currentSolutions,
         isEmpty: false
       };
     }
 
     try {
+      // Cache no WeakMap para performance máxima
+      const cacheKey = { solutions: currentSolutions, progress: progressData };
+      if (progressCache.has(cacheKey)) {
+        return progressCache.get(cacheKey);
+      }
+
       // Usar Map para performance O(1) na busca
       const progressMap = new Map(
         progressData.map(progress => [progress.solution_id, progress])
       );
 
       // Categorizar soluções de forma eficiente
-      const categorizedSolutions = solutions.reduce((acc, solution) => {
+      const categorizedSolutions = currentSolutions.reduce((acc, solution) => {
         const progress = progressMap.get(solution.id);
         
         if (!progress) {
@@ -105,20 +127,25 @@ export const useDashboardProgress = (solutions: Solution[] = []) => {
         recommended: [] as Solution[]
       });
 
-      return {
+      const result = {
         ...categorizedSolutions,
         isEmpty: false
       };
+
+      // Armazenar no cache
+      progressCache.set(cacheKey, result);
+      
+      return result;
     } catch (err) {
       console.error("Erro ao processar dados:", err);
       return { 
         active: [], 
         completed: [], 
-        recommended: solutions,
+        recommended: currentSolutions,
         isEmpty: false
       };
     }
-  }, [solutions, progressData]);
+  }, [progressData]); // DEPENDÊNCIA ESTÁVEL
 
   return {
     active: processedData.active,
