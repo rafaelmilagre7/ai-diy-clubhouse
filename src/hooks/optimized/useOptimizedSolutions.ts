@@ -36,7 +36,7 @@ export const useOptimizedSolutions = () => {
     return baseFields.join(', ');
   }, [isAdmin]);
 
-  const fetchOptimizedSolutions = useMemo(() => async () => {
+  const fetchOptimizedSolutions = useMemo(() => async (): Promise<Solution[]> => {
     if (!user) return [];
 
     const now = Date.now();
@@ -62,17 +62,18 @@ export const useOptimizedSolutions = () => {
       const { data, error: fetchError } = await query;
 
       if (fetchError) {
-        logger.error('[OPTIMIZED] Erro ao buscar soluções', fetchError);
+        logger.error('[OPTIMIZED] Erro ao buscar soluções', { error: fetchError });
         throw fetchError;
       }
 
       // Type guard mais específico para validar se é uma Solution válida
-      const isValidSolution = (item: any): item is Solution => {
-        return item && 
-               typeof item === 'object' && 
-               typeof item.id === 'string' &&
-               typeof item.title === 'string' &&
-               typeof item.description === 'string';
+      const isValidSolution = (item: unknown): item is Solution => {
+        const sol = item as Solution;
+        return sol && 
+               typeof sol === 'object' && 
+               typeof sol.id === 'string' &&
+               typeof sol.title === 'string' &&
+               typeof sol.description === 'string';
       };
 
       const validSolutions = (data || []).filter(isValidSolution);
@@ -86,7 +87,7 @@ export const useOptimizedSolutions = () => {
 
       return validSolutions;
     } catch (error: any) {
-      logger.error('[OPTIMIZED] Erro na query otimizada', error);
+      logger.error('[OPTIMIZED] Erro na query otimizada', { error });
       throw error;
     }
   }, [user, queryFields, isAdmin, cacheKey, cacheTTL]);
@@ -119,7 +120,7 @@ export const useOptimizedSolutions = () => {
         });
         
       } catch (error: any) {
-        logger.error('[OPTIMIZED] Erro ao carregar soluções', error);
+        logger.error('[OPTIMIZED] Erro ao carregar soluções', { error: error.message || "Erro desconhecido" });
         setError(error.message || "Erro ao carregar soluções");
       } finally {
         setLoading(false);
