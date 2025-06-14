@@ -76,7 +76,7 @@ export const useOptimizedSolutions = () => {
                typeof sol.description === 'string';
       };
 
-      const validSolutions = (data || []).filter(isValidSolution);
+      const validSolutions = ((data as any[]) || []).filter(isValidSolution);
 
       // Atualizar cache com TTL específico
       optimizedCache.set(cacheKey, {
