@@ -1,49 +1,51 @@
 
-import { Badge } from "@/components/ui/badge";
-import { cn } from "@/lib/utils";
+import React, { memo, useMemo } from 'react';
+import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
 
 interface DifficultyBadgeProps {
   difficulty: string;
 }
 
-export const DifficultyBadge = ({ difficulty }: DifficultyBadgeProps) => {
-  // Função para obter label em português
-  const getLabel = () => {
+// Componente memoizado para badge de dificuldade
+export const DifficultyBadge = memo<DifficultyBadgeProps>(({ difficulty }) => {
+  // Memoizar configurações do badge
+  const badgeConfig = useMemo(() => {
     switch (difficulty) {
       case 'easy':
-        return 'Fácil';
+        return {
+          label: 'Fácil',
+          className: 'bg-green-900/40 text-green-300 border-green-700'
+        };
       case 'medium':
-        return 'Médio';
+        return {
+          label: 'Médio',
+          className: 'bg-amber-900/40 text-amber-300 border-amber-700'
+        };
       case 'advanced':
-        return 'Avançado';
+        return {
+          label: 'Avançado',
+          className: 'bg-red-900/40 text-red-300 border-red-700'
+        };
       default:
-        return difficulty;
+        return {
+          label: difficulty,
+          className: 'bg-neutral-900/40 text-neutral-300 border-neutral-700'
+        };
     }
-  };
-  
-  // Função para obter classe de estilo com melhor contraste
-  const getStyleClass = () => {
-    switch (difficulty) {
-      case 'easy':
-        return 'bg-neutral-800/60 text-emerald-400 border-0';
-      case 'medium':
-        return 'bg-neutral-800/60 text-amber-400 border-0';
-      case 'advanced':
-        return 'bg-neutral-800/60 text-rose-400 border-0';
-      default:
-        return 'bg-neutral-800/60 text-neutral-300 border-0';
-    }
-  };
-  
+  }, [difficulty]);
+
   return (
     <Badge 
       variant="outline" 
       className={cn(
-        "px-2 py-0.5 text-xs rounded-full",
-        getStyleClass()
+        "px-2 py-0.5 text-xs font-medium rounded-full",
+        badgeConfig.className
       )}
     >
-      {getLabel()}
+      {badgeConfig.label}
     </Badge>
   );
-};
+});
+
+DifficultyBadge.displayName = 'DifficultyBadge';

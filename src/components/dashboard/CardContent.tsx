@@ -1,23 +1,23 @@
 
-import { cn } from "@/lib/utils";
+import React, { memo } from 'react';
 
-interface CardContentProps {
+interface CardContentSectionProps {
   title: string;
   description: string;
 }
 
-export const CardContentSection = ({ title, description }: CardContentProps) => {
+// Componente memoizado para conteúdo do card
+export const CardContentSection = memo<CardContentSectionProps>(({ title, description }) => {
   return (
-    <div className="space-y-2">
-      <h3 className={cn(
-        "font-medium text-lg line-clamp-2 text-neutral-100",
-        "group-hover:text-white transition-colors duration-300"
-      )}>
+    <div>
+      <h3 className="font-semibold text-lg mb-2 line-clamp-2 text-white leading-tight">
         {title}
       </h3>
-      <p className="text-neutral-300 text-sm line-clamp-2 leading-relaxed">
+      <p className="text-sm text-neutral-400 line-clamp-3 leading-relaxed">
         {description}
       </p>
     </div>
   );
-};
+});
+
+CardContentSection.displayName = 'CardContentSection';

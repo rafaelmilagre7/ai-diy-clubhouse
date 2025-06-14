@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { memo, useCallback } from 'react';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Solution } from '@/lib/supabase';
@@ -12,8 +12,15 @@ interface SolutionCardProps {
   onClick: () => void;
 }
 
-export const SolutionCard: React.FC<SolutionCardProps> = ({ solution, onClick }) => {
-  const getCategoryStyle = (category: string) => {
+// Memoização para evitar re-renders desnecessários
+export const SolutionCard: React.FC<SolutionCardProps> = memo(({ solution, onClick }) => {
+  // Memoizar função de clique para evitar re-criação
+  const handleClick = useCallback(() => {
+    onClick();
+  }, [onClick]);
+
+  // Memoizar estilos de categoria
+  const categoryStyle = useCallback((category: string) => {
     switch (category) {
       case 'Receita':
         return "border-l-revenue border-l-4 bg-revenue-darker/20";
@@ -24,9 +31,10 @@ export const SolutionCard: React.FC<SolutionCardProps> = ({ solution, onClick })
       default:
         return "border-l-viverblue border-l-4 bg-viverblue/10";
     }
-  };
+  }, []);
   
-  const getCategoryIcon = (category: string) => {
+  // Memoizar ícones de categoria
+  const categoryIcon = useCallback((category: string) => {
     switch (category) {
       case 'Receita':
         return <TrendingUp className="h-3.5 w-3.5 mr-1" />;
@@ -37,9 +45,10 @@ export const SolutionCard: React.FC<SolutionCardProps> = ({ solution, onClick })
       default:
         return <TrendingUp className="h-3.5 w-3.5 mr-1" />;
     }
-  };
+  }, []);
   
-  const getDifficultyBadge = (difficulty: string) => {
+  // Memoizar badge de dificuldade
+  const difficultyBadge = useCallback((difficulty: string) => {
     switch (difficulty) {
       case 'easy':
         return <Badge variant="outline" className="bg-green-900/40 text-green-300 border-green-700">Fácil</Badge>;
@@ -50,15 +59,15 @@ export const SolutionCard: React.FC<SolutionCardProps> = ({ solution, onClick })
       default:
         return null;
     }
-  };
+  }, []);
 
   return (
     <Card 
       className={cn(
         "h-full cursor-pointer group transition-all duration-300 overflow-hidden transform hover:-translate-y-1 bg-[#151823] border-neutral-700",
-        getCategoryStyle(solution.category)
+        categoryStyle(solution.category)
       )}
-      onClick={onClick}
+      onClick={handleClick}
     >
       <div className="h-36 overflow-hidden relative">
         {solution.thumbnail_url ? (
@@ -66,6 +75,7 @@ export const SolutionCard: React.FC<SolutionCardProps> = ({ solution, onClick })
             src={solution.thumbnail_url}
             alt={solution.title}
             className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500"
+            loading="lazy"
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center bg-[#1A1E2E]">
@@ -83,11 +93,13 @@ export const SolutionCard: React.FC<SolutionCardProps> = ({ solution, onClick })
       
       <CardFooter className="px-4 py-3 flex items-center justify-between border-t border-neutral-800">
         <div className="flex items-center space-x-1 text-xs text-neutral-300">
-          {getCategoryIcon(solution.category)}
+          {categoryIcon(solution.category)}
           <span>{solution.category}</span>
         </div>
-        {getDifficultyBadge(solution.difficulty)}
+        {difficultyBadge(solution.difficulty)}
       </CardFooter>
     </Card>
   );
-};
+});
+
+SolutionCard.displayName = 'SolutionCard';

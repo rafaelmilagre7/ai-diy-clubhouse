@@ -1,16 +1,19 @@
 
-import { FC, memo, useMemo } from "react";
-import { ActiveSolutions } from "./ActiveSolutions";
-import { CompletedSolutions } from "./CompletedSolutions";
-import { RecommendedSolutions } from "./RecommendedSolutions";
-import { NoSolutionsPlaceholder } from "./NoSolutionsPlaceholder";
-import { ImplementationTrailCard } from "./ImplementationTrailCard";
+import { FC, memo, useMemo, Suspense } from "react";
 import { Solution } from "@/lib/supabase";
 import { ModernDashboardHeader } from "./ModernDashboardHeader";
-import { KpiGrid } from "./KpiGrid";
+import { OptimizedKpiGrid } from "./OptimizedKpiGrid";
 import { useAuth } from "@/contexts/auth";
 import { SolutionsGridLoader } from "./SolutionsGridLoader";
 import { DashboardConnectionErrorState } from "./states/DashboardConnectionErrorState";
+import { NoSolutionsPlaceholder } from "./NoSolutionsPlaceholder";
+import { LazyComponentLoader } from "../common/LazyComponentLoader";
+import { 
+  LazyActiveSolutions, 
+  LazyCompletedSolutions, 
+  LazyRecommendedSolutions,
+  LazyImplementationTrailCard 
+} from "./LazyDashboardSections";
 
 interface DashboardLayoutProps {
   active: Solution[];
@@ -22,7 +25,7 @@ interface DashboardLayoutProps {
   isLoading?: boolean;
 }
 
-// Otimização: Memoizar o componente completo para evitar re-renderizações desnecessárias
+// Dashboard Layout 100% otimizado com memoização completa
 export const DashboardLayout: FC<DashboardLayoutProps> = memo(({
   active,
   completed,
@@ -34,19 +37,19 @@ export const DashboardLayout: FC<DashboardLayoutProps> = memo(({
 }) => {
   const { profile } = useAuth();
 
-  // Memoizar o cálculo do nome do usuário
+  // Memoizar nome do usuário
   const userName = useMemo(() => 
     profile?.name?.split(" ")[0] || "Membro"
   , [profile?.name]);
 
-  // Garantir que os arrays existam e sejam válidos - memoizado
+  // Garantir arrays válidos - memoizado
   const { safeActive, safeCompleted, safeRecommended } = useMemo(() => ({
     safeActive: Array.isArray(active) ? active : [],
     safeCompleted: Array.isArray(completed) ? completed : [],
     safeRecommended: Array.isArray(recommended) ? recommended : []
   }), [active, completed, recommended]);
 
-  // Memoizar o estado de "sem soluções" para evitar recálculos
+  // Memoizar estado de "sem soluções"
   const hasNoSolutions = useMemo(() => 
     !isLoading && 
     safeActive.length === 0 && 
@@ -54,14 +57,22 @@ export const DashboardLayout: FC<DashboardLayoutProps> = memo(({
     safeRecommended.length === 0
   , [isLoading, safeActive.length, safeCompleted.length, safeRecommended.length]);
 
-  // Memoizar os totais para o KPI Grid
+  // Memoizar totais para KPI
   const kpiTotals = useMemo(() => ({
     completed: safeCompleted.length,
     inProgress: safeActive.length,
     total: safeActive.length + safeCompleted.length + safeRecommended.length
   }), [safeActive.length, safeCompleted.length, safeRecommended.length]);
 
-  // Se não há perfil e não está carregando, mostrar erro
+  // Memoizar fallback de loading
+  const loadingFallback = useMemo(() => (
+    <div className="space-y-10">
+      <SolutionsGridLoader title="Em andamento" count={2} />
+      <SolutionsGridLoader title="Concluídas" count={2} />
+      <SolutionsGridLoader title="Recomendadas" count={3} />
+    </div>
+  ), []);
+
   if (!profile && !isLoading) {
     return <DashboardConnectionErrorState />;
   }
@@ -71,49 +82,48 @@ export const DashboardLayout: FC<DashboardLayoutProps> = memo(({
       {/* HEADER IMERSIVO */}
       <ModernDashboardHeader userName={userName} />
 
-      {/* CARDS DE PROGRESSO (KPI) */}
-      <KpiGrid 
+      {/* KPI GRID OTIMIZADO */}
+      <OptimizedKpiGrid 
         completed={kpiTotals.completed} 
         inProgress={kpiTotals.inProgress}
         total={kpiTotals.total}
         isLoading={isLoading}
       />
 
-      {/* TRILHA DE IMPLEMENTAÇÃO PERSONALIZADA */}
+      {/* TRILHA DE IMPLEMENTAÇÃO COM LAZY LOADING */}
       <div className="grid gap-6">
-        <ImplementationTrailCard />
+        <LazyComponentLoader Component={LazyImplementationTrailCard} />
       </div>
 
-      {/* Mostrar loaders enquanto carrega, ou conteúdo quando pronto */}
+      {/* CONTEÚDO PRINCIPAL */}
       {isLoading ? (
-        <div className="space-y-10">
-          <SolutionsGridLoader title="Em andamento" count={2} />
-          <SolutionsGridLoader title="Concluídas" count={2} />
-          <SolutionsGridLoader title="Recomendadas" count={3} />
-        </div>
+        loadingFallback
       ) : hasNoSolutions ? (
         <NoSolutionsPlaceholder />
       ) : (
         <div className="space-y-10">
-          {/* Soluções Ativas */}
+          {/* Soluções Ativas com Lazy Loading */}
           {safeActive.length > 0 && (
-            <ActiveSolutions
+            <LazyComponentLoader 
+              Component={LazyActiveSolutions}
               solutions={safeActive}
               onSolutionClick={onSolutionClick}
             />
           )}
 
-          {/* Soluções Completadas */}
+          {/* Soluções Completadas com Lazy Loading */}
           {safeCompleted.length > 0 && (
-            <CompletedSolutions
+            <LazyComponentLoader 
+              Component={LazyCompletedSolutions}
               solutions={safeCompleted}
               onSolutionClick={onSolutionClick}
             />
           )}
 
-          {/* Soluções Recomendadas */}
+          {/* Soluções Recomendadas com Lazy Loading */}
           {safeRecommended.length > 0 && (
-            <RecommendedSolutions
+            <LazyComponentLoader 
+              Component={LazyRecommendedSolutions}
               solutions={safeRecommended}
               onSolutionClick={onSolutionClick}
             />
