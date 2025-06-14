@@ -30,8 +30,8 @@ export const DashboardHeader = ({
   return (
     <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
       <div>
-        <h1 className="text-3xl font-bold">Bem-vindo, {profile?.name?.split(" ")[0] || "Membro"}!</h1>
-        <p className="text-muted-foreground mt-1">
+        <h1 className="text-3xl font-bold text-neutral-100">Bem-vindo, {profile?.name?.split(" ")[0] || "Membro"}!</h1>
+        <p className="text-neutral-300 mt-1">
           Você tem {activeSolutionsCount} {activeSolutionsCount === 1 ? 'solução' : 'soluções'} em andamento 
           e {completedSolutionsCount} {completedSolutionsCount === 1 ? 'solução completada' : 'soluções completadas'}
         </p>
@@ -46,16 +46,16 @@ export const DashboardHeader = ({
           </Link>
         )}
         <div className="relative flex-1 md:w-64">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-neutral-400" />
           <Input
             type="search"
             placeholder="Buscar soluções..."
-            className="pl-8"
+            className="pl-8 bg-[#1A1E2E] border-neutral-700 text-neutral-100 placeholder:text-neutral-400"
             value={searchQuery}
             onChange={handleSearchChange}
           />
         </div>
-        <Button variant="outline" size="icon">
+        <Button variant="outline" size="icon" className="border-neutral-700">
           <Filter className="h-4 w-4" />
         </Button>
       </div>
