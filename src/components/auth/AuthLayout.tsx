@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -9,7 +9,7 @@ import { toast } from "@/hooks/use-toast";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/auth";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 
 const AuthLayout = () => {
   const [email, setEmail] = useState("");
@@ -18,6 +18,33 @@ const AuthLayout = () => {
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const { user, profile, isAdmin } = useAuth();
+  
+  // OTIMIZAÇÃO: Debounce para formulário
+  const submitTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const lastSubmitTime = useRef<number>(0);
+
+  // OTIMIZAÇÃO: Cleanup de estado de autenticação
+  const cleanupAuthState = useCallback(() => {
+    try {
+      // Limpar tokens do localStorage
+      Object.keys(localStorage).forEach((key) => {
+        if (key.startsWith('supabase.auth.') || key.includes('sb-')) {
+          localStorage.removeItem(key);
+        }
+      });
+      
+      // Limpar sessionStorage se existir
+      if (typeof sessionStorage !== 'undefined') {
+        Object.keys(sessionStorage).forEach((key) => {
+          if (key.startsWith('supabase.auth.') || key.includes('sb-')) {
+            sessionStorage.removeItem(key);
+          }
+        });
+      }
+    } catch (error) {
+      console.warn("[AUTH-LAYOUT] Erro ao limpar estado:", error);
+    }
+  }, []);
 
   // CORREÇÃO: Aguardar verificação de onboarding antes de redirecionar
   useEffect(() => {
@@ -36,9 +63,15 @@ const AuthLayout = () => {
     }
   }, [user, profile, isAdmin, navigate]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
+  // OTIMIZAÇÃO: Debounced submit para prevenir múltiplos submits
+  const debouncedSubmit = useCallback(async (email: string, password: string) => {
+    const now = Date.now();
+    if (now - lastSubmitTime.current < 1000) {
+      console.log("[AUTH-LAYOUT] Submit muito rápido - ignorando");
+      return;
+    }
+    lastSubmitTime.current = now;
+
     if (!email || !password) {
       toast({
         title: "Campos obrigatórios",
@@ -50,7 +83,17 @@ const AuthLayout = () => {
     
     try {
       setIsLoading(true);
-      console.log("[AUTH-LAYOUT] Iniciando processo de login");
+      console.log("[AUTH-LAYOUT] Iniciando processo de login otimizado");
+      
+      // OTIMIZAÇÃO: Cleanup antes do login para evitar conflitos
+      cleanupAuthState();
+      
+      // Tentar logout global primeiro
+      try {
+        await supabase.auth.signOut({ scope: 'global' });
+      } catch (signOutError) {
+        console.warn("[AUTH-LAYOUT] Erro no logout preventivo (continuando):", signOutError);
+      }
       
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
@@ -69,9 +112,9 @@ const AuthLayout = () => {
           description: "Redirecionando...",
         });
         
-        // CORREÇÃO: Redirecionar para raiz para acionar verificação completa
-        console.log("[AUTH-LAYOUT] Redirecionando para / para verificação de onboarding");
-        navigate('/', { replace: true });
+        // CORREÇÃO: Usar window.location.href para refresh completo
+        console.log("[AUTH-LAYOUT] Redirecionamento com refresh completo");
+        window.location.href = '/';
       }
       
     } catch (error: any) {
@@ -90,6 +133,12 @@ const AuthLayout = () => {
           description: "Verifique sua caixa de entrada e confirme seu email.",
           variant: "destructive",
         });
+      } else if (error.message?.includes('Too many requests')) {
+        toast({
+          title: "Muitas tentativas",
+          description: "Aguarde alguns minutos antes de tentar novamente.",
+          variant: "destructive",
+        });
       } else {
         toast({
           title: "Erro de autenticação",
@@ -98,13 +147,41 @@ const AuthLayout = () => {
         });
       }
     } finally {
-      // CORREÇÃO: Timeout mais curto e sempre finalizar loading
+      // CORREÇÃO: Timeout otimizado
       setTimeout(() => {
         setIsLoading(false);
         console.log("[AUTH-LAYOUT] Loading finalizado");
-      }, 1000);
+      }, 500); // Reduzido de 1000ms para 500ms
     }
-  };
+  }, [cleanupAuthState]);
+
+  const handleSubmit = useCallback((e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (isLoading) {
+      console.log("[AUTH-LAYOUT] Já processando - ignorando submit");
+      return;
+    }
+
+    // Limpar timeout anterior se existir
+    if (submitTimeoutRef.current) {
+      clearTimeout(submitTimeoutRef.current);
+    }
+
+    // OTIMIZAÇÃO: Debounce de 300ms
+    submitTimeoutRef.current = setTimeout(() => {
+      debouncedSubmit(email, password);
+    }, 300);
+  }, [email, password, isLoading, debouncedSubmit]);
+
+  // Cleanup timeout no unmount
+  useEffect(() => {
+    return () => {
+      if (submitTimeoutRef.current) {
+        clearTimeout(submitTimeoutRef.current);
+      }
+    };
+  }, []);
 
   return (
     <div className="min-h-screen w-full flex items-center justify-center bg-gradient-to-b from-gray-900 to-black p-4">
@@ -112,7 +189,7 @@ const AuthLayout = () => {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: -20 }}
-        transition={{ duration: 0.5 }}
+        transition={{ duration: 0.3 }} // Reduzido de 0.5s para 0.3s
         className="w-full max-w-md"
       >
         {/* Logo */}
@@ -156,6 +233,7 @@ const AuthLayout = () => {
                 onChange={(e) => setEmail(e.target.value)}
                 disabled={isLoading}
                 required
+                autoComplete="email"
                 className="bg-gray-700 border-gray-600 text-white placeholder-gray-400 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
@@ -181,6 +259,7 @@ const AuthLayout = () => {
                   onChange={(e) => setPassword(e.target.value)}
                   disabled={isLoading}
                   required
+                  autoComplete="current-password"
                   className="bg-gray-700 border-gray-600 text-white placeholder-gray-400 focus:ring-blue-500 focus:border-blue-500"
                 />
                 <Button
