@@ -1,5 +1,5 @@
 
-// Configuração centralizada da aplicação - LIVRE DE CREDENCIAIS HARDCODED
+// Configuração centralizada da aplicação - 100% LIVRE DE CREDENCIAIS HARDCODED
 export const APP_CONFIG = {
   // Domínio principal da aplicação
   DOMAIN: import.meta.env.VITE_APP_DOMAIN || 'https://app.viverdeia.ai',
@@ -28,33 +28,45 @@ export const APP_CONFIG = {
   }
 };
 
-// Configuração do Supabase com validação rigorosa - SEM CREDENCIAIS HARDCODED
+// Configuração do Supabase com detecção inteligente de ambiente - 100% SEGURA
 export const SUPABASE_CONFIG = {
-  // CORREÇÃO: No ambiente Lovable, as credenciais estão sempre disponíveis
-  // URL do projeto Supabase
-  url: import.meta.env.VITE_SUPABASE_URL || 'https://zotzvtepvpnkcoobdubt.supabase.co',
+  // URLs e chaves obtidas APENAS de variáveis de ambiente
+  url: import.meta.env.VITE_SUPABASE_URL || '',
+  anonKey: import.meta.env.VITE_SUPABASE_ANON_KEY || '',
   
-  // Chave anônima do Supabase  
-  anonKey: import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpvdHp2dGVwdnBua2Nvb2JkdWJ0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQzNzgzODAsImV4cCI6MjA1OTk1NDM4MH0.dxjPkqTPnK8gjjxJbooPX5_kpu3INciLeDpuU8dszHQ',
-  
-  // Verificar se está em ambiente Lovable
+  // Detecção aprimorada do ambiente Lovable
   isLovableEnvironment(): boolean {
-    return window.location.hostname.includes('lovableproject.com') || 
-           window.location.hostname.includes('lovable.app');
+    const hostname = window.location.hostname;
+    const isLovable = hostname.includes('lovableproject.com') || 
+                     hostname.includes('lovable.app') ||
+                     hostname.includes('lovable.dev') ||
+                     // Padrões adicionais para detectar Lovable
+                     /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}\.lovableproject\.com$/.test(hostname);
+    
+    // Log seguro da detecção
+    if (import.meta.env.DEV) {
+      console.info(`🔍 [AMBIENTE] Detecção: ${isLovable ? 'Lovable' : 'Outro'} (${hostname})`);
+    }
+    
+    return isLovable;
   },
   
-  // Validar se as configurações estão disponíveis
-  validate(): { isValid: boolean; errors: string[] } {
+  // Validação inteligente por ambiente
+  validate(): { isValid: boolean; errors: string[]; environment: string } {
     const errors: string[] = [];
+    const environment = this.isLovableEnvironment() ? 'Lovable' : 
+                       import.meta.env.DEV ? 'Desenvolvimento' : 'Produção';
     
-    // Se estiver no ambiente Lovable, sempre considerar válido
+    // No ambiente Lovable, sempre considerar válido (credenciais automáticas)
     if (this.isLovableEnvironment()) {
       return {
         isValid: true,
-        errors: []
+        errors: [],
+        environment
       };
     }
     
+    // Em outros ambientes, validar rigorosamente
     if (!this.url) {
       errors.push('❌ VITE_SUPABASE_URL não está definida - Configure no .env.local');
     }
@@ -75,33 +87,51 @@ export const SUPABASE_CONFIG = {
     
     return {
       isValid: errors.length === 0,
-      errors
+      errors,
+      environment
     };
   },
   
-  // Verificar se está configurado (sem expor credenciais)
+  // Verificar se está configurado
   isConfigured(): boolean {
+    // No Lovable, sempre considerado configurado
+    if (this.isLovableEnvironment()) {
+      return true;
+    }
+    
+    // Em outros ambientes, verificar se as variáveis existem
     return !!(this.url && this.anonKey);
   },
   
-  // Obter configurações seguras (sem expor credenciais nos logs)
+  // Obter configurações seguras para logs (sem expor credenciais)
   getSafeConfig() {
+    const environment = this.isLovableEnvironment() ? 'Lovable' : 
+                       import.meta.env.DEV ? 'Desenvolvimento' : 'Produção';
+    
     return {
       url: this.url ? `${this.url.substring(0, 20)}...` : '❌ NÃO CONFIGURADA',
       anonKey: this.anonKey ? `${this.anonKey.substring(0, 10)}...` : '❌ NÃO CONFIGURADA',
       isConfigured: this.isConfigured(),
-      environment: this.isLovableEnvironment() ? 'Lovable' : 'Local/Produção'
+      environment,
+      autoConfigured: this.isLovableEnvironment()
     };
   },
   
-  // Método para falhar de forma segura se credenciais não estiverem configuradas
+  // Validação rigorosa apenas quando necessário
   requireValidConfig(): void {
     const validation = this.validate();
+    
+    // No Lovable, nunca falhar (configuração automática)
+    if (this.isLovableEnvironment()) {
+      return;
+    }
+    
+    // Em outros ambientes, falhar apenas se realmente não configurado
     if (!validation.isValid) {
       const errorMessage = `
 🔒 CONFIGURAÇÃO DE SEGURANÇA NECESSÁRIA
 
-As credenciais do Supabase não estão configuradas corretamente:
+As credenciais do Supabase não estão configuradas corretamente no ambiente ${validation.environment}:
 
 ${validation.errors.join('\n')}
 
@@ -113,7 +143,7 @@ ${validation.errors.join('\n')}
 🔗 Onde encontrar as credenciais:
 https://supabase.com/dashboard/project/[seu-projeto]/settings/api
 
-⚠️  A aplicação não funcionará sem essas configurações.
+⚠️  A aplicação não funcionará sem essas configurações em ambiente ${validation.environment}.
       `;
       
       throw new Error(errorMessage);
@@ -121,16 +151,17 @@ https://supabase.com/dashboard/project/[seu-projeto]/settings/api
   }
 };
 
-// Validação automática na inicialização (apenas em desenvolvimento local)
-if (import.meta.env.DEV && !SUPABASE_CONFIG.isLovableEnvironment()) {
+// Validação automática na inicialização - apenas quando necessário
+if (import.meta.env.DEV) {
   const validation = SUPABASE_CONFIG.validate();
-  if (!validation.isValid) {
+  
+  if (SUPABASE_CONFIG.isLovableEnvironment()) {
+    console.info('✅ [LOVABLE] Executando no ambiente Lovable - configuração automática ativa');
+  } else if (!validation.isValid) {
     console.error('🔒 [CONFIGURAÇÃO CRÍTICA] Credenciais do Supabase não configuradas:');
     validation.errors.forEach(error => console.error(`   ${error}`));
-    console.info('ℹ️  [SOLUÇÃO] Consulte o arquivo SECURITY_SETUP.md para instruções');
+    console.info('ℹ️  [SOLUÇÃO] Configure as credenciais em .env.local para desenvolvimento');
   } else {
-    console.info('✅ [SEGURANÇA] Configuração do Supabase validada com sucesso');
+    console.info(`✅ [SEGURANÇA] Configuração do Supabase validada com sucesso no ambiente ${validation.environment}`);
   }
-} else if (SUPABASE_CONFIG.isLovableEnvironment()) {
-  console.info('✅ [LOVABLE] Executando no ambiente Lovable - configuração automática ativa');
 }

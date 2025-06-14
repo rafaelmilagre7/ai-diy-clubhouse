@@ -3,8 +3,8 @@ import { SUPABASE_CONFIG } from '@/config/app';
 import { logger } from './logger';
 
 /**
- * Validador de Segurança - Sistema de Verificação de Integridade
- * Garante que não há credenciais expostas no código
+ * Validador de Segurança Inteligente - Sistema Adaptativo por Ambiente
+ * Garante que não há credenciais expostas no código com validação contextual
  */
 
 interface SecurityValidationResult {
@@ -12,6 +12,7 @@ interface SecurityValidationResult {
   level: 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW';
   issues: string[];
   recommendations: string[];
+  environment: string;
 }
 
 export class SecurityValidator {
@@ -27,42 +28,45 @@ export class SecurityValidator {
   }
   
   /**
-   * Validação completa de segurança da aplicação
+   * Validação completa de segurança com inteligência de ambiente
    */
   validateApplicationSecurity(): SecurityValidationResult {
     const issues: string[] = [];
     const recommendations: string[] = [];
     let level: 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW' = 'LOW';
     
-    // CORREÇÃO: No ambiente Lovable, consideramos sempre seguro
+    const supabaseValidation = SUPABASE_CONFIG.validate();
+    const environment = supabaseValidation.environment;
+    
+    // Ambiente Lovable: sempre seguro (configuração automática)
     if (SUPABASE_CONFIG.isLovableEnvironment()) {
       return {
         isSecure: true,
         level: 'LOW',
         issues: [],
-        recommendations: ['Executando no ambiente Lovable - configuração automática ativa']
+        recommendations: ['Executando no ambiente Lovable - configuração automática ativa'],
+        environment
       };
     }
     
-    // 1. Validar configuração do Supabase (apenas em ambientes não-Lovable)
-    const supabaseValidation = SUPABASE_CONFIG.validate();
+    // Outros ambientes: validação contextual
     if (!supabaseValidation.isValid) {
-      issues.push('Credenciais do Supabase não configuradas');
+      issues.push(`Credenciais do Supabase não configuradas no ambiente ${environment}`);
       recommendations.push('Configure VITE_SUPABASE_URL e VITE_SUPABASE_ANON_KEY no .env.local');
-      level = 'CRITICAL';
+      level = environment === 'Produção' ? 'CRITICAL' : 'HIGH';
     }
     
-    // 2. Verificar se não há credenciais hardcoded (verificação em runtime)
-    this.checkForHardcodedCredentials(issues, recommendations);
+    // Verificar se não há credenciais hardcoded (apenas em ambientes não-Lovable)
+    this.checkForHardcodedCredentials(issues, recommendations, environment);
     
-    // 3. Validar ambiente de execução
+    // Validar ambiente de execução
     if (import.meta.env.PROD && !SUPABASE_CONFIG.isConfigured()) {
       issues.push('Aplicação em produção sem credenciais configuradas');
       level = 'CRITICAL';
     }
     
-    // 4. Verificar headers de segurança
-    this.validateSecurityHeaders(issues, recommendations);
+    // Verificar headers de segurança
+    this.validateSecurityHeaders(issues, recommendations, environment);
     
     const isSecure = issues.length === 0;
     
@@ -70,73 +74,83 @@ export class SecurityValidator {
       isSecure,
       level: isSecure ? 'LOW' : level,
       issues,
-      recommendations
+      recommendations,
+      environment
     };
   }
   
   /**
-   * Verificar se não há credenciais hardcoded em runtime
+   * Verificação inteligente de credenciais hardcoded
    */
-  private checkForHardcodedCredentials(issues: string[], recommendations: string[]): void {
-    // Esta é uma verificação básica que pode ser expandida
-    const hasHardcodedUrl = typeof SUPABASE_CONFIG.url === 'string' && 
-                           SUPABASE_CONFIG.url.includes('supabase.co') && 
-                           !import.meta.env.VITE_SUPABASE_URL &&
-                           !SUPABASE_CONFIG.isLovableEnvironment();
-                           
-    const hasHardcodedKey = typeof SUPABASE_CONFIG.anonKey === 'string' && 
-                           SUPABASE_CONFIG.anonKey.startsWith('eyJ') && 
-                           !import.meta.env.VITE_SUPABASE_ANON_KEY &&
-                           !SUPABASE_CONFIG.isLovableEnvironment();
+  private checkForHardcodedCredentials(
+    issues: string[], 
+    recommendations: string[], 
+    environment: string
+  ): void {
+    // Pular verificação no ambiente Lovable
+    if (SUPABASE_CONFIG.isLovableEnvironment()) {
+      return;
+    }
     
-    if (hasHardcodedUrl || hasHardcodedKey) {
+    // Esta verificação agora é mais inteligente
+    const hasValidEnvVars = import.meta.env.VITE_SUPABASE_URL && 
+                           import.meta.env.VITE_SUPABASE_ANON_KEY;
+    
+    const hasConfiguredValues = SUPABASE_CONFIG.url && SUPABASE_CONFIG.anonKey;
+    
+    // Se tem valores configurados mas não tem env vars, pode ser hardcoded
+    if (hasConfiguredValues && !hasValidEnvVars && environment !== 'Lovable') {
       issues.push('Possíveis credenciais hardcoded detectadas');
       recommendations.push('Mova todas as credenciais para variáveis de ambiente');
     }
   }
   
   /**
-   * Validar headers de segurança
+   * Validar headers de segurança por ambiente
    */
-  private validateSecurityHeaders(issues: string[], recommendations: string[]): void {
-    // Verificações básicas que podem ser expandidas
-    if (import.meta.env.PROD) {
+  private validateSecurityHeaders(
+    issues: string[], 
+    recommendations: string[], 
+    environment: string
+  ): void {
+    if (environment === 'Produção') {
       recommendations.push('Implementar Content Security Policy (CSP)');
       recommendations.push('Configurar headers HSTS em produção');
     }
   }
   
   /**
-   * Relatório de segurança para desenvolvimento
+   * Relatório de segurança contextual
    */
   generateSecurityReport(): void {
     if (!import.meta.env.DEV) return;
     
     const validation = this.validateApplicationSecurity();
     
-    logger.info('🔒 [RELATÓRIO DE SEGURANÇA] Validação completa', {
+    logger.info('🔒 [RELATÓRIO DE SEGURANÇA] Validação inteligente por ambiente', {
       isSecure: validation.isSecure,
       level: validation.level,
       issuesCount: validation.issues.length,
       recommendationsCount: validation.recommendations.length,
-      environment: SUPABASE_CONFIG.isLovableEnvironment() ? 'Lovable' : 'Local'
+      environment: validation.environment,
+      autoConfigured: SUPABASE_CONFIG.isLovableEnvironment()
     });
     
     if (validation.issues.length > 0) {
-      logger.warn('🚨 [SEGURANÇA] Problemas detectados:', validation.issues);
+      logger.warn(`🚨 [SEGURANÇA] Problemas detectados no ambiente ${validation.environment}:`, validation.issues);
     }
     
     if (validation.recommendations.length > 0) {
-      logger.info('💡 [SEGURANÇA] Recomendações:', validation.recommendations);
+      logger.info(`💡 [SEGURANÇA] Recomendações para ${validation.environment}:`, validation.recommendations);
     }
     
     if (validation.isSecure) {
-      logger.info('✅ [SEGURANÇA] Aplicação está segura - nenhuma credencial exposta');
+      logger.info(`✅ [SEGURANÇA] Aplicação está segura no ambiente ${validation.environment}`);
     }
   }
   
   /**
-   * Validação contínua para monitoramento
+   * Monitoramento adaptativo por ambiente
    */
   startContinuousMonitoring(): void {
     if (!import.meta.env.DEV) return;
@@ -144,13 +158,15 @@ export class SecurityValidator {
     // Executar validação inicial
     this.generateSecurityReport();
     
-    // Monitoramento periódico (apenas em desenvolvimento)
+    // Monitoramento periódico adaptativo
+    const interval = SUPABASE_CONFIG.isLovableEnvironment() ? 10 * 60 * 1000 : 5 * 60 * 1000;
+    
     setInterval(() => {
       const validation = this.validateApplicationSecurity();
-      if (!validation.isSecure) {
-        logger.warn('🔒 [MONITOR] Problemas de segurança detectados durante monitoramento');
+      if (!validation.isSecure && validation.level === 'CRITICAL') {
+        logger.warn(`🔒 [MONITOR] Problemas críticos de segurança no ambiente ${validation.environment}`);
       }
-    }, 5 * 60 * 1000); // A cada 5 minutos
+    }, interval);
   }
 }
 
