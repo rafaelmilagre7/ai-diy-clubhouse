@@ -8,6 +8,8 @@ import { SolutionsGridLoader } from "./SolutionsGridLoader";
 import { DashboardConnectionErrorState } from "./states/DashboardConnectionErrorState";
 import { NoSolutionsPlaceholder } from "./NoSolutionsPlaceholder";
 import { LazyComponentLoader } from "../common/LazyComponentLoader";
+import { VirtualizedSolutionsGrid } from "./VirtualizedSolutionsGrid";
+import { SolutionsGrid } from "./SolutionsGrid";
 import { 
   LazyActiveSolutions, 
   LazyCompletedSolutions, 
@@ -73,6 +75,34 @@ export const DashboardLayout: FC<DashboardLayoutProps> = memo(({
     </div>
   ), []);
 
+  // Componente otimizado para renderizar soluções com virtualização condicional
+  const OptimizedSolutionsRenderer = memo<{
+    solutions: Solution[];
+    onSolutionClick: (solution: Solution) => void;
+    title: string;
+  }>(({ solutions, onSolutionClick, title }) => {
+    if (solutions.length > 12) {
+      return (
+        <VirtualizedSolutionsGrid
+          solutions={solutions}
+          onSolutionClick={onSolutionClick}
+          itemsPerRow={3}
+          rowHeight={320}
+          gridHeight={600}
+        />
+      );
+    }
+    
+    return (
+      <SolutionsGrid 
+        solutions={solutions} 
+        onSolutionClick={onSolutionClick} 
+      />
+    );
+  });
+
+  OptimizedSolutionsRenderer.displayName = 'OptimizedSolutionsRenderer';
+
   if (!profile && !isLoading) {
     return <DashboardConnectionErrorState />;
   }
@@ -92,7 +122,9 @@ export const DashboardLayout: FC<DashboardLayoutProps> = memo(({
 
       {/* TRILHA DE IMPLEMENTAÇÃO COM LAZY LOADING */}
       <div className="grid gap-6">
-        <LazyComponentLoader Component={LazyImplementationTrailCard} />
+        <Suspense fallback={<SolutionsGridLoader title="Trilha de Implementação" count={1} />}>
+          <LazyComponentLoader Component={LazyImplementationTrailCard} />
+        </Suspense>
       </div>
 
       {/* CONTEÚDO PRINCIPAL */}
@@ -104,29 +136,53 @@ export const DashboardLayout: FC<DashboardLayoutProps> = memo(({
         <div className="space-y-10">
           {/* Soluções Ativas com Lazy Loading */}
           {safeActive.length > 0 && (
-            <LazyComponentLoader 
-              Component={LazyActiveSolutions}
-              solutions={safeActive}
-              onSolutionClick={onSolutionClick}
-            />
+            <Suspense fallback={<SolutionsGridLoader title="Em andamento" count={safeActive.length} />}>
+              <div className="mb-8 animate-fade-in" style={{ animationDelay: '0.1s' }}>
+                <h2 className="text-2xl font-bold mb-2 text-white">Projetos em andamento</h2>
+                <p className="text-neutral-400 mb-6">
+                  Continue implementando esses projetos em seu negócio
+                </p>
+                <OptimizedSolutionsRenderer
+                  solutions={safeActive}
+                  onSolutionClick={onSolutionClick}
+                  title="Ativas"
+                />
+              </div>
+            </Suspense>
           )}
 
           {/* Soluções Completadas com Lazy Loading */}
           {safeCompleted.length > 0 && (
-            <LazyComponentLoader 
-              Component={LazyCompletedSolutions}
-              solutions={safeCompleted}
-              onSolutionClick={onSolutionClick}
-            />
+            <Suspense fallback={<SolutionsGridLoader title="Concluídas" count={safeCompleted.length} />}>
+              <div className="mb-8 animate-fade-in" style={{ animationDelay: '0.2s' }}>
+                <h2 className="text-2xl font-bold mb-2 text-white">Implementações concluídas</h2>
+                <p className="text-neutral-400 mb-6">
+                  Projetos que você já implementou com sucesso
+                </p>
+                <OptimizedSolutionsRenderer
+                  solutions={safeCompleted}
+                  onSolutionClick={onSolutionClick}
+                  title="Completadas"
+                />
+              </div>
+            </Suspense>
           )}
 
           {/* Soluções Recomendadas com Lazy Loading */}
           {safeRecommended.length > 0 && (
-            <LazyComponentLoader 
-              Component={LazyRecommendedSolutions}
-              solutions={safeRecommended}
-              onSolutionClick={onSolutionClick}
-            />
+            <Suspense fallback={<SolutionsGridLoader title="Recomendadas" count={safeRecommended.length} />}>
+              <div className="mb-8">
+                <h2 className="text-2xl font-bold mb-4">Soluções recomendadas</h2>
+                <p className="text-muted-foreground mb-4">
+                  Soluções personalizadas para o seu negócio
+                </p>
+                <OptimizedSolutionsRenderer
+                  solutions={safeRecommended}
+                  onSolutionClick={onSolutionClick}
+                  title="Recomendadas"
+                />
+              </div>
+            </Suspense>
           )}
         </div>
       )}

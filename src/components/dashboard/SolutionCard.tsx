@@ -62,8 +62,26 @@ export const SolutionCard: React.FC<SolutionCardProps> = memo(({ solution, onCli
   const cardConfig = useMemo(() => ({
     categoryStyle: getCategoryStyle(solution.category),
     categoryIcon: getCategoryIcon(solution.category),
-    difficultyBadge: getDifficultyBadge(solution.difficulty)
-  }), [solution.category, solution.difficulty]);
+    difficultyBadge: getDifficultyBadge(solution.difficulty),
+    thumbnailFallback: solution.title.charAt(0)
+  }), [solution.category, solution.difficulty, solution.title]);
+
+  // Memoizar URL da imagem otimizada
+  const optimizedImageUrl = useMemo(() => {
+    if (!solution.thumbnail_url) return null;
+    
+    // Para Supabase, adicionar parâmetros de otimização
+    if (solution.thumbnail_url.includes('supabase') || solution.thumbnail_url.includes('lovable-uploads')) {
+      const url = new URL(solution.thumbnail_url);
+      url.searchParams.set('width', '400');
+      url.searchParams.set('height', '225');
+      url.searchParams.set('quality', '80');
+      url.searchParams.set('format', 'webp');
+      return url.toString();
+    }
+    
+    return solution.thumbnail_url;
+  }, [solution.thumbnail_url]);
 
   return (
     <Card 
@@ -74,17 +92,18 @@ export const SolutionCard: React.FC<SolutionCardProps> = memo(({ solution, onCli
       onClick={stableOnClick}
     >
       <div className="h-36 overflow-hidden relative">
-        {solution.thumbnail_url ? (
+        {optimizedImageUrl ? (
           <img 
-            src={solution.thumbnail_url}
+            src={optimizedImageUrl}
             alt={solution.title}
             className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500"
             loading="lazy"
+            decoding="async"
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center bg-[#1A1E2E]">
             <span className="text-4xl font-bold text-neutral-400">
-              {solution.title.charAt(0)}
+              {cardConfig.thumbnailFallback}
             </span>
           </div>
         )}
