@@ -33,7 +33,7 @@ export const useDashboardProgress = (solutions: Solution[] = []) => {
     return solutionsHash.current;
   }, [solutions]);
 
-  // Função de fetch otimizada e estável
+  // Função de fetch otimizada e estável - usando campos corretos
   const fetchProgress = useCallback(async () => {
     if (!user?.id) {
       throw new Error("Usuário não autenticado");
@@ -42,7 +42,7 @@ export const useDashboardProgress = (solutions: Solution[] = []) => {
     try {
       const { data, error } = await supabase
         .from("progress")
-        .select("*")
+        .select("solution_id, is_completed, current_module, completed_modules, updated_at")
         .eq("user_id", user.id);
         
       if (error) {
@@ -117,6 +117,7 @@ export const useDashboardProgress = (solutions: Solution[] = []) => {
         } else if (progress.is_completed) {
           acc.completed.push(solution);
         } else {
+          // Se tem progresso mas não está completo, está ativo
           acc.active.push(solution);
         }
         

@@ -20,14 +20,24 @@ export const useEnhancedDashboard = () => {
       return true;
     }
     
-    // Se otimizado não tem dados e não está loading, usar fallback
-    if (!optimized.hasData && !optimized.isLoading) {
-      logger.info('[ENHANCED] Usando fallback - sem dados otimizados', { hasData: optimized.hasData });
-      return true;
+    // Se otimizado não tem dados válidos e não está loading, considerar fallback
+    const hasValidOptimizedData = optimized.totals && optimized.totals.total > 0;
+    if (!hasValidOptimizedData && !optimized.isLoading) {
+      logger.info('[ENHANCED] Considerando fallback - dados otimizados insuficientes', { 
+        totals: optimized.totals,
+        hasData: optimized.hasData 
+      });
+      
+      // Só usar fallback se o fallback tiver dados válidos
+      const hasFallbackData = fallback.solutions && fallback.solutions.length > 0;
+      if (hasFallbackData) {
+        logger.info('[ENHANCED] Usando fallback - tem dados no fallback');
+        return true;
+      }
     }
     
     return false;
-  }, [optimized.error, optimized.isLoading, optimized.hasData]);
+  }, [optimized.error, optimized.isLoading, optimized.totals, optimized.hasData, fallback.solutions]);
 
   // Retornar dados apropriados
   return useMemo(() => {
@@ -35,32 +45,47 @@ export const useEnhancedDashboard = () => {
       // Converter dados do fallback para formato esperado
       const { solutions, loading, error } = fallback;
       
-      return {
-        active: solutions.filter(s => false), // Simplificado para fallback
-        completed: solutions.filter(s => false),
-        recommended: solutions,
+      // Para o fallback, assumir todas como recomendadas já que não temos dados de progresso
+      const fallbackResult = {
+        active: [],
+        completed: [],
+        recommended: solutions || [],
         isLoading: loading,
         error,
         totals: {
           active: 0,
           completed: 0,
-          recommended: solutions.length,
-          total: solutions.length
+          recommended: solutions ? solutions.length : 0,
+          total: solutions ? solutions.length : 0
         },
-        hasData: solutions.length > 0,
+        hasData: solutions ? solutions.length > 0 : false,
         performance: {
           optimized: false,
           fallback: true
         }
       };
+      
+      logger.info('[ENHANCED] Retornando dados do fallback:', {
+        totalSolutions: fallbackResult.totals.total,
+        hasError: !!error
+      });
+      
+      return fallbackResult;
     }
     
-    return {
+    const optimizedResult = {
       ...optimized,
       performance: {
         ...optimized.performance,
         fallback: false
       }
     };
+    
+    logger.info('[ENHANCED] Retornando dados otimizados:', {
+      totalSolutions: optimizedResult.totals?.total || 0,
+      hasError: !!optimizedResult.error
+    });
+    
+    return optimizedResult;
   }, [shouldUseFallback, optimized, fallback]);
 };

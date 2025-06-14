@@ -37,10 +37,10 @@ export const useOptimizedProgress = (solutions: Solution[] = []) => {
     }
 
     try {
-      // Query otimizada: apenas campos necessários + filtro por solution_ids
+      // Query otimizada: apenas campos que existem na tabela progress
       const { data, error: fetchError } = await supabase
         .from("progress")
-        .select("solution_id, is_completed, progress_percentage, updated_at")
+        .select("solution_id, is_completed, current_module, completed_modules, updated_at")
         .eq("user_id", user.id)
         .in("solution_id", solutionIds);
 
@@ -89,6 +89,7 @@ export const useOptimizedProgress = (solutions: Solution[] = []) => {
         } else if (progress.is_completed) {
           acc.completed.push(solution);
         } else {
+          // Se tem progresso mas não está completo, está ativo
           acc.active.push(solution);
         }
         
