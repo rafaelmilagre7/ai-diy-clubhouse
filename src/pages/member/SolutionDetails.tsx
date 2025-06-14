@@ -58,6 +58,20 @@ const SolutionDetails = () => {
     }
   }, [solution, location.pathname, log]);
   
+  // Log adicional para depuração da inconsistência
+  useEffect(() => {
+    if (solution && id) {
+      console.log("[SOLUTION_DETAILS] Estado completo:", {
+        solutionId: id,
+        solutionTitle: solution.title,
+        progress: progress,
+        hasProgress: !!progress,
+        isCompleted: progress?.is_completed,
+        progressFields: progress ? Object.keys(progress) : []
+      });
+    }
+  }, [solution, progress, id]);
+  
   if (loading) {
     return <LoadingScreen message="Carregando detalhes da solução..." />;
   }
@@ -71,7 +85,9 @@ const SolutionDetails = () => {
   log("Renderizando SolutionDetails com solução", { 
     solutionId: solution.id, 
     solutionTitle: solution.title,
-    progress
+    progress,
+    hasValidProgress: !!progress,
+    isCompleted: progress?.is_completed
   });
   
   return (

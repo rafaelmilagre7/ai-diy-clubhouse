@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { PlayCircle, CheckCircle, Award } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { SolutionCategory } from "@/lib/types/categoryTypes";
+import { useEffect } from "react";
 
 interface SolutionSidebarProps {
   solution: Solution;
@@ -22,15 +23,31 @@ export const SolutionSidebar = ({
 }: SolutionSidebarProps) => {
   const navigate = useNavigate();
   
+  // Log de depuração para identificar o problema
+  useEffect(() => {
+    console.log("[SOLUTION_SIDEBAR] Estado do progresso:", {
+      solutionId: solution.id,
+      progress: progress,
+      isCompleted: progress?.is_completed,
+      hasProgress: !!progress,
+      progressKeys: progress ? Object.keys(progress) : []
+    });
+  }, [progress, solution.id]);
+  
   // Handler para o botão de implementação
   const handleImplementation = () => {
+    console.log("[SOLUTION_SIDEBAR] Ação de implementação:", {
+      hasProgress: !!progress,
+      isCompleted: progress?.is_completed
+    });
+    
     if (progress?.is_completed) {
       navigate(`/implement/${solution.id}/0`);
     } else if (progress) {
-      console.log("Chamando continueImplementation");
+      console.log("[SOLUTION_SIDEBAR] Chamando continueImplementation");
       continueImplementation();
     } else {
-      console.log("Chamando startImplementation");
+      console.log("[SOLUTION_SIDEBAR] Chamando startImplementation");
       startImplementation();
     }
   };
@@ -62,7 +79,7 @@ export const SolutionSidebar = ({
           ) : (
             <div>
               <p className="text-sm text-neutral-400">
-                Implementação não concluída
+                Implementação em andamento
               </p>
             </div>
           )
@@ -99,7 +116,8 @@ export const SolutionSidebar = ({
             disabled={initializing}
           >
             <PlayCircle className="mr-2 h-5 w-5" />
-            {initializing ? 'Preparando...' : 'Implementar solução'}
+            {initializing ? 'Preparando...' : 
+             progress ? 'Continuar Implementação' : 'Implementar solução'}
           </Button>
         )}
       </div>

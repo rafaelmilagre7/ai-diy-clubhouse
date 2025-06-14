@@ -24,7 +24,7 @@ export const useSolutionData = (id: string | undefined) => {
       
       try {
         setLoading(true);
-        console.log(`Buscando solução com ID`, { id });
+        console.log(`[SOLUTION_DATA] Buscando solução com ID`, { id, userId: user?.id });
         
         let query = supabase
           .from("solutions")
@@ -39,7 +39,7 @@ export const useSolutionData = (id: string | undefined) => {
         const { data, error: fetchError } = await query.maybeSingle();
         
         if (fetchError) {
-          console.error("Erro ao buscar solução:", fetchError);
+          console.error("[SOLUTION_DATA] Erro ao buscar solução:", fetchError);
           
           // Se o erro for de registro não encontrado e o usuário não é admin,
           // provavelmente está tentando acessar uma solução não publicada
@@ -57,35 +57,49 @@ export const useSolutionData = (id: string | undefined) => {
         }
         
         if (data) {
-          console.log("Dados da solução encontrados:", { solution: data });
+          console.log("[SOLUTION_DATA] Dados da solução encontrados:", { solution: data });
           setSolution(data as Solution);
           
           // Fetch progress for this solution and user if user is authenticated
           if (user) {
             try {
+              console.log("[SOLUTION_DATA] Buscando progresso para usuário:", { solutionId: id, userId: user.id });
+              
               const { data: progressData, error: progressError } = await supabase
                 .from("progress")
-                .select("*")
+                .select("solution_id, is_completed, current_module, completed_modules, created_at, last_activity")
                 .eq("solution_id", id)
                 .eq("user_id", user.id)
-                .maybeSingle(); // Usando maybeSingle em vez de single para evitar erros
+                .maybeSingle();
                 
               if (progressError) {
-                console.error("Erro ao buscar progresso:", progressError);
+                console.error("[SOLUTION_DATA] Erro ao buscar progresso:", progressError);
+                // Não vamos fazer throw aqui pois não ter progresso não é um erro crítico
               } else if (progressData) {
+                console.log("[SOLUTION_DATA] Dados de progresso encontrados:", { 
+                  progress: progressData,
+                  isCompleted: progressData.is_completed,
+                  currentModule: progressData.current_module
+                });
                 setProgress(progressData);
-                console.log("Dados de progresso encontrados:", { progress: progressData });
               } else {
-                console.log("Nenhum progresso encontrado para esta solução", { solutionId: id, userId: user.id });
+                console.log("[SOLUTION_DATA] Nenhum progresso encontrado para esta solução - CORRETO", { 
+                  solutionId: id, 
+                  userId: user.id 
+                });
+                setProgress(null);
               }
             } catch (progressFetchError) {
-              console.error("Erro ao buscar progresso:", progressFetchError);
+              console.error("[SOLUTION_DATA] Erro ao buscar progresso:", progressFetchError);
+              setProgress(null);
             }
+          } else {
+            console.log("[SOLUTION_DATA] Usuário não autenticado, não buscando progresso");
+            setProgress(null);
           }
         } else {
-          console.log("Nenhuma solução encontrada com ID", { id });
+          console.log("[SOLUTION_DATA] Nenhuma solução encontrada com ID", { id });
           setError("Solução não encontrada");
-          // Não redirecionamos automaticamente para dar chance ao usuário de ver a mensagem
           toast({
             title: "Solução não encontrada",
             description: "Não foi possível encontrar a solução solicitada.",
@@ -93,7 +107,7 @@ export const useSolutionData = (id: string | undefined) => {
           });
         }
       } catch (error: any) {
-        console.error("Erro em useSolutionData:", error);
+        console.error("[SOLUTION_DATA] Erro em useSolutionData:", error);
         setError(error.message || "Erro ao buscar a solução");
         toast({
           title: "Erro ao carregar solução",
