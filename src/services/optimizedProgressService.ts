@@ -1,5 +1,6 @@
 
 import { supabase } from '@/lib/supabase';
+import { useAuth } from '@/contexts/auth';
 
 interface ProgressData {
   id: string;
@@ -119,15 +120,7 @@ export const preloadSolutionProgress = async (
   try {
     const { data } = await supabase
       .from("progress")
-      .select(`
-        id,
-        user_id,
-        solution_id,
-        is_completed,
-        progress_percentage,
-        created_at,
-        updated_at
-      `)
+      .select("solution_id, is_completed, progress_percentage")
       .eq("user_id", userId)
       .in("solution_id", solutionIds);
 

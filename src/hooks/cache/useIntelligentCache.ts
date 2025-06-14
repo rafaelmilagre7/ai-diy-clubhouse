@@ -50,8 +50,8 @@ export const useIntelligentCache = () => {
   ) => {
     const baseKey = [type, user?.id];
     
-    if (identifier !== undefined) {
-      baseKey.push(String(identifier)); // Converter para string aqui
+    if (identifier) {
+      baseKey.push(identifier);
     }
     
     if (context) {
@@ -100,8 +100,8 @@ export const useIntelligentCache = () => {
         solutions.slice(0, 5).forEach((solution: any) => {
           queryClient.prefetchQuery({
             queryKey: generateCacheKey('progress', solution.id),
-            queryFn: () => import('@/services/optimizedProgressService').then(m => 
-              m.fetchUserProgress(user?.id)
+            queryFn: () => import('@/hooks/useSolutionProgress').then(m => 
+              m.fetchSolutionProgress(solution.id, user?.id)
             ),
             ...getQueryConfig('progress')
           });
@@ -111,8 +111,8 @@ export const useIntelligentCache = () => {
         // Preload dados críticos do dashboard
         queryClient.prefetchQuery({
           queryKey: generateCacheKey('solutions'),
-          queryFn: () => import('@/services/optimizedSolutionsService').then(m => 
-            m.fetchOptimizedSolutions()
+          queryFn: () => import('@/hooks/useSolutionsData').then(m => 
+            m.fetchSolutionsData(user?.id)
           ),
           ...getQueryConfig('solutions')
         });

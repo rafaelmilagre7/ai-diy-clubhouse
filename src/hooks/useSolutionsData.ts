@@ -29,13 +29,11 @@ export const useSolutionsData = () => {
       cacheType: 'solutions',
       enablePreload: true,
       enabled: !!user,
-      onQuerySuccess: (data) => {
+      onSuccess: (data) => {
         // Preload das categorias mais comuns
         const categories = [...new Set(data.map(s => s.category))];
         categories.slice(0, 3).forEach(category => {
-          if (typeof category === 'string') {
-            preloadRelatedSolutions(category);
-          }
+          if (category) preloadRelatedSolutions(category);
         });
       }
     }

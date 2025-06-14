@@ -9,7 +9,6 @@ interface OptimizedQueryOptions<T> extends Omit<UseQueryOptions<T>, 'queryKey' |
   context?: Record<string, any>;
   selectFields?: string[];
   enablePreload?: boolean;
-  onQuerySuccess?: (data: T) => void; // Renomeado para evitar conflito
 }
 
 export const useOptimizedQuery = <T>(
@@ -28,7 +27,6 @@ export const useOptimizedQuery = <T>(
     context,
     selectFields,
     enablePreload = false,
-    onQuerySuccess,
     ...queryOptions
   } = options;
 
@@ -42,18 +40,13 @@ export const useOptimizedQuery = <T>(
   const optimizedQueryFn = useCallback(async () => {
     const result = await queryFn();
     
-    // Callback de sucesso personalizado
-    if (onQuerySuccess && result) {
-      onQuerySuccess(result);
-    }
-    
     // Preload dados relacionados se habilitado
     if (enablePreload && result) {
       preloadRelated(cacheType, result);
     }
     
     return result;
-  }, [queryFn, enablePreload, preloadRelated, cacheType, onQuerySuccess]);
+  }, [queryFn, enablePreload, preloadRelated, cacheType]);
 
   return useQuery({
     queryKey,
