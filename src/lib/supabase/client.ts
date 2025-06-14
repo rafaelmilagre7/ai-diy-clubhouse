@@ -17,7 +17,7 @@ let initializationPromise: Promise<ReturnType<typeof createClient<Database>>> | 
 // Função para inicializar o cliente Supabase
 async function initializeSupabaseClient(): Promise<ReturnType<typeof createClient<Database>>> {
   try {
-    logger.info('🔧 [SUPABASE CLIENT] Inicializando cliente...');
+    logger.info('🔧 [SUPABASE CLIENT] Inicializando cliente robusto...');
     
     // Obter credenciais de forma assíncrona
     const credentials = await SUPABASE_CONFIG.getCredentials();
@@ -26,7 +26,7 @@ async function initializeSupabaseClient(): Promise<ReturnType<typeof createClien
       throw new Error('Credenciais do Supabase não disponíveis');
     }
 
-    // Criar cliente Supabase com configurações de segurança
+    // Criar cliente Supabase com configurações robustas
     const client = createClient<Database>(credentials.url, credentials.anonKey, {
       auth: {
         autoRefreshToken: true,
@@ -51,7 +51,7 @@ async function initializeSupabaseClient(): Promise<ReturnType<typeof createClien
   }
 }
 
-// Função para obter o cliente Supabase (singleton assíncrono)
+// Função para obter o cliente Supabase (singleton assíncrono robusto)
 export async function getSupabaseClient(): Promise<ReturnType<typeof createClient<Database>>> {
   // Se já temos o cliente, retornar
   if (supabaseClient) {
@@ -70,16 +70,14 @@ export async function getSupabaseClient(): Promise<ReturnType<typeof createClien
   return supabaseClient;
 }
 
-// Cliente síncrono para compatibilidade (com warning)
-let fallbackClient: ReturnType<typeof createClient<Database>> | null = null;
+// Cliente síncrono temporário para compatibilidade
+let temporaryClient: ReturnType<typeof createClient<Database>> | null = null;
 
-// Tentar criar cliente com variáveis de ambiente para fallback
-try {
-  const envUrl = import.meta.env.VITE_SUPABASE_URL;
-  const envKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-  
-  if (envUrl && envKey) {
-    fallbackClient = createClient<Database>(envUrl, envKey, {
+// Criar cliente temporário para evitar objeto vazio
+async function createTemporaryClient() {
+  try {
+    const credentials = await SUPABASE_CONFIG.getCredentials();
+    temporaryClient = createClient<Database>(credentials.url, credentials.anonKey, {
       auth: {
         autoRefreshToken: true,
         persistSession: true,
@@ -88,28 +86,49 @@ try {
       },
       global: {
         headers: {
-          'X-Client-Info': 'viverdeia-app-fallback',
+          'X-Client-Info': 'viverdeia-app-temp',
           'X-Security-Level': 'medium'
         }
       }
     });
-    
-    if (import.meta.env.DEV) {
-      logger.warn('⚠️ [SUPABASE CLIENT] Usando cliente fallback com variáveis de ambiente');
-    }
+    logger.info('✅ [SUPABASE CLIENT] Cliente temporário criado');
+  } catch (error) {
+    logger.error('❌ [SUPABASE CLIENT] Erro ao criar cliente temporário:', error);
   }
-} catch (error) {
-  logger.error('❌ [SUPABASE CLIENT] Erro ao criar cliente fallback:', error);
 }
 
-// Exportação síncrona para compatibilidade (DEPRECATED)
-export const supabase = fallbackClient || ({} as ReturnType<typeof createClient<Database>>);
+// Inicializar cliente temporário imediatamente
+createTemporaryClient();
 
-// Inicializar cliente assíncrono automaticamente
+// Exportação que nunca será um objeto vazio
+export const supabase = new Proxy({} as ReturnType<typeof createClient<Database>>, {
+  get(target, prop) {
+    if (temporaryClient && typeof temporaryClient[prop as keyof typeof temporaryClient] === 'function') {
+      return temporaryClient[prop as keyof typeof temporaryClient].bind(temporaryClient);
+    }
+    if (temporaryClient && prop in temporaryClient) {
+      return temporaryClient[prop as keyof typeof temporaryClient];
+    }
+    
+    // Fallback para métodos comuns
+    if (prop === 'auth') {
+      return temporaryClient?.auth || {};
+    }
+    if (prop === 'from') {
+      return temporaryClient?.from.bind(temporaryClient) || (() => ({ select: () => ({ data: null, error: new Error('Cliente não inicializado') }) }));
+    }
+    
+    logger.warn(`[SUPABASE CLIENT] Propriedade ${String(prop)} acessada antes da inicialização`);
+    return undefined;
+  }
+});
+
+// Inicializar cliente correto e substituir o temporário
 getSupabaseClient().then(client => {
-  // Substituir o cliente fallback pelo cliente correto
+  // Substituir todas as propriedades do proxy
+  Object.setPrototypeOf(supabase, client);
   Object.assign(supabase, client);
-  logger.info('🔄 [SUPABASE CLIENT] Cliente fallback substituído pelo cliente seguro');
+  logger.info('🔄 [SUPABASE CLIENT] Cliente temporário substituído pelo cliente robusto');
 }).catch(error => {
   logger.error('❌ [SUPABASE CLIENT] Erro na inicialização automática:', error);
 });

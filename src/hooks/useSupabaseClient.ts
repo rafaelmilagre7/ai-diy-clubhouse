@@ -25,12 +25,30 @@ export const useSupabaseClient = (): UseSupabaseClientReturn => {
         setIsLoading(true);
         setError(null);
         
-        logger.info('🔧 [HOOK] Inicializando cliente Supabase...');
+        logger.info('🔧 [HOOK] Inicializando cliente Supabase robusto...');
         
-        const supabaseClient = await getSupabaseClient();
-        setClient(supabaseClient);
+        // CORREÇÃO: Usar retry para garantir obtenção do cliente
+        let retryCount = 0;
+        const maxRetries = 3;
         
-        logger.info('✅ [HOOK] Cliente Supabase pronto');
+        while (retryCount < maxRetries) {
+          try {
+            const supabaseClient = await getSupabaseClient();
+            setClient(supabaseClient);
+            
+            logger.info('✅ [HOOK] Cliente Supabase pronto');
+            return;
+            
+          } catch (attemptError) {
+            retryCount++;
+            if (retryCount >= maxRetries) {
+              throw attemptError;
+            }
+            
+            logger.warn(`⚠️ [HOOK] Tentativa ${retryCount} falhou, tentando novamente...`);
+            await new Promise(resolve => setTimeout(resolve, 1000 * retryCount));
+          }
+        }
         
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : 'Erro desconhecido';
