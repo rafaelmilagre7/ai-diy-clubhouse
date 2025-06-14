@@ -1,6 +1,6 @@
 
 import React from "react";
-import DOMPurify from "dompurify";
+import { SafeHtmlRenderer } from "@/components/security/SafeHtmlRenderer";
 
 interface ContentRendererProps {
   content: any;
@@ -11,11 +11,8 @@ export const ContentRenderer = ({ content }: ContentRendererProps) => {
   const processSafeHTML = (htmlContent: string) => {
     if (!htmlContent) return "";
     
-    // Limpa o HTML para evitar XSS
-    let cleanHtml = DOMPurify.sanitize(htmlContent);
-    
     // Adiciona classes Tailwind para melhorar contraste no tema escuro - cores mais claras
-    cleanHtml = cleanHtml
+    let processedHtml = htmlContent
       .replace(/<h1/g, '<h1 class="text-neutral-100 text-2xl font-semibold mb-4"')
       .replace(/<h2/g, '<h2 class="text-neutral-100 text-xl font-semibold mb-3"')
       .replace(/<h3/g, '<h3 class="text-neutral-100 text-lg font-semibold mb-2"')
@@ -31,18 +28,18 @@ export const ContentRenderer = ({ content }: ContentRendererProps) => {
       .replace(/<pre/g, '<pre class="bg-[#0F111A] p-4 rounded-md overflow-auto text-neutral-200 my-4"')
       .replace(/<code/g, '<code class="font-mono text-neutral-200 bg-[#1A1E2E] px-1 rounded"');
     
-    return cleanHtml;
+    return processedHtml;
   };
 
   // Renderiza conteúdo baseado no tipo
   const renderContent = () => {
     try {
       if (typeof content === "string") {
-        return <div dangerouslySetInnerHTML={{ __html: processSafeHTML(content) }} />;
+        return <SafeHtmlRenderer html={processSafeHTML(content)} />;
       }
       
       if (content?.html) {
-        return <div dangerouslySetInnerHTML={{ __html: processSafeHTML(content.html) }} />;
+        return <SafeHtmlRenderer html={processSafeHTML(content.html)} />;
       }
       
       if (content?.text) {
@@ -50,7 +47,7 @@ export const ContentRenderer = ({ content }: ContentRendererProps) => {
       }
       
       if (content?.overview) {
-        return <div dangerouslySetInnerHTML={{ __html: processSafeHTML(content.overview) }} />;
+        return <SafeHtmlRenderer html={processSafeHTML(content.overview)} />;
       }
 
       return <p className="text-neutral-200">Conteúdo não disponível.</p>;

@@ -5,6 +5,7 @@ import { CheckCircle } from "lucide-react";
 import { Post } from "@/types/forumTypes";
 import { ModerationActions } from "./ModerationActions";
 import { useReporting } from "@/hooks/community/useReporting";
+import { SafeHtmlRenderer } from "@/components/security/SafeHtmlRenderer";
 
 interface PostItemProps {
   post: Post;
@@ -88,11 +89,11 @@ export const PostItem = ({ post, showTopicContext = false }: PostItemProps) => {
               )}
             </div>
 
-            {/* Conteúdo do post - Agora renderiza HTML do Markdown */}
+            {/* Conteúdo do post - Agora com proteção XSS */}
             <div className="prose prose-sm max-w-none text-foreground">
-              <div 
+              <SafeHtmlRenderer 
+                html={convertMarkdownToHtml(post.content)}
                 className="break-words"
-                dangerouslySetInnerHTML={{ __html: convertMarkdownToHtml(post.content) }}
               />
             </div>
           </div>
