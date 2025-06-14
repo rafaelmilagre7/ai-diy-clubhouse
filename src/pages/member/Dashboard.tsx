@@ -2,40 +2,41 @@
 import { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { Solution } from "@/lib/supabase";
-import { PerformanceOptimizedDashboard } from "@/components/dashboard/PerformanceOptimizedDashboard";
-import { useOptimizedDashboard } from "@/hooks/dashboard/useOptimizedDashboard";
+import { OptimizedDashboardLayout } from "@/components/dashboard/OptimizedDashboardLayout";
+import { useEnhancedDashboard } from "@/hooks/dashboard/useEnhancedDashboard";
 import { useStableCallback } from "@/hooks/performance/useStableCallback";
 
 const Dashboard = () => {
   const navigate = useNavigate();
-  const [category, setCategory] = useState("all");
   
-  // Hook otimizado que integra todos os dados e preload
+  // Hook híbrido com otimização + fallback automático
   const {
     active,
     completed,
     recommended,
-    isLoading
-  } = useOptimizedDashboard();
+    isLoading,
+    error,
+    performance
+  } = useEnhancedDashboard();
 
-  // Callbacks estáveis para evitar re-renders
+  // Callback estável para navegação
   const handleSolutionClick = useStableCallback((solution: Solution) => {
     navigate(`/solution/${solution.id}`);
   });
 
-  const handleCategoryChange = useCallback((newCategory: string) => {
-    setCategory(newCategory);
-  }, []);
+  // Log de erro se houver (para monitoramento)
+  if (error) {
+    console.warn('[DASHBOARD] Erro detectado:', error);
+  }
 
   return (
-    <PerformanceOptimizedDashboard
+    <OptimizedDashboardLayout
       active={active}
       completed={completed}
       recommended={recommended}
-      category={category}
-      onCategoryChange={handleCategoryChange}
       onSolutionClick={handleSolutionClick}
       isLoading={isLoading}
+      performance={performance}
     />
   );
 };

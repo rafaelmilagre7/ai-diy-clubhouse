@@ -1,35 +1,37 @@
 
 import { useMemo } from "react";
-import { useDashboardProgress } from "./useDashboardProgress";
-import { useDashboardData } from "./useDashboardData";
-import { useAdvancedLazyLoading } from "../performance/useAdvancedLazyLoading";
-import { Solution } from "@/lib/supabase";
+import { useOptimizedSolutions } from "@/hooks/optimized/useOptimizedSolutions";
+import { useOptimizedProgress } from "@/hooks/optimized/useOptimizedProgress";
+import { logger } from "@/utils/logger";
 
 export const useOptimizedDashboard = () => {
-  // Buscar dados base
-  const { solutions, loading: dataLoading } = useDashboardData();
+  // Usar hooks otimizados com fallback automático
+  const { 
+    solutions, 
+    loading: solutionsLoading, 
+    error: solutionsError,
+    cacheStatus: solutionsCacheStatus
+  } = useOptimizedSolutions();
   
-  // Processar progresso com otimizações
   const {
     active,
     completed,
     recommended,
-    loading: progressLoading
-  } = useDashboardProgress(solutions);
+    loading: progressLoading,
+    error: progressError
+  } = useOptimizedProgress(solutions);
 
-  // Ativar preload inteligente de rotas críticas
-  useAdvancedLazyLoading({
-    preloadRoutes: ['/solutions', '/tools', '/implementation'],
-    preloadDelay: 2000,
-    priority: 'normal'
-  });
-
-  // Calcular estado de loading consolidado
+  // Estado consolidado de loading
   const isLoading = useMemo(() => 
-    dataLoading || progressLoading
-  , [dataLoading, progressLoading]);
+    solutionsLoading || progressLoading
+  , [solutionsLoading, progressLoading]);
 
-  // Memoizar totais para evitar recálculos
+  // Consolidar erros
+  const error = useMemo(() => 
+    solutionsError || progressError
+  , [solutionsError, progressError]);
+
+  // Totais memoizados
   const totals = useMemo(() => ({
     active: active.length,
     completed: completed.length,
@@ -37,12 +39,33 @@ export const useOptimizedDashboard = () => {
     total: active.length + completed.length + recommended.length
   }), [active.length, completed.length, recommended.length]);
 
+  // Log de performance para monitoramento
+  useMemo(() => {
+    if (!isLoading && totals.total > 0) {
+      logger.info('[OPTIMIZED DASHBOARD] Performance stats:', {
+        totalSolutions: totals.total,
+        active: totals.active,
+        completed: totals.completed,
+        recommended: totals.recommended,
+        cacheHit: solutionsCacheStatus.isCached,
+        cacheAge: solutionsCacheStatus.cacheAge
+      });
+    }
+  }, [isLoading, totals, solutionsCacheStatus]);
+
   return {
     active,
-    completed, 
+    completed,
     recommended,
     isLoading,
+    error,
     totals,
-    hasData: totals.total > 0
+    hasData: totals.total > 0,
+    // Informações para debug
+    performance: {
+      cacheStatus: solutionsCacheStatus,
+      totalQueries: 2, // solutions + progress
+      optimized: true
+    }
   };
 };
