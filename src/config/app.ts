@@ -70,8 +70,8 @@ class SupabaseConfig {
     const envKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
     // CORREÇÃO TEMPORÁRIA: Credenciais hardcoded para teste
-    const tempUrl = 'https://bkbfvwcnwdqchrwwdqfa.supabase.co';
-    const tempKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJrYmZ2d2Nud2RxY2hyd3dkcWZhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzEzMzA5ODYsImV4cCI6MjA0NjkwNjk4Nn0.6v_PiF2PmhEcjfJ5Zs7qD_Yp0IXEQ7b3rXvpFCLGpnI';
+    const tempUrl = 'https://zotzvtepvpnkcoobdubt.supabase.co';
+    const tempKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpvdHp2dGVwdnBua2Nvb2JkdWJ0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQzNzgzODAsImV4cCI6MjA1OTk1NDM4MH0.dxjPkqTPnK8gjjxJbooPX5_kpu3INciLeDpuU8dszHQ';
 
     if (envUrl && envKey) {
       logger.info('✅ [CONFIG] Usando credenciais das variáveis de ambiente');
@@ -196,3 +196,39 @@ class SupabaseConfig {
 
 // Exportar instância singleton
 export const SUPABASE_CONFIG = SupabaseConfig.getInstance();
+
+// CORREÇÃO: Adicionar APP_CONFIG que está sendo esperado pelos outros arquivos
+class AppConfig {
+  private static instance: AppConfig;
+  
+  private constructor() {}
+  
+  static getInstance(): AppConfig {
+    if (!AppConfig.instance) {
+      AppConfig.instance = new AppConfig();
+    }
+    return AppConfig.instance;
+  }
+
+  getAppDomain(): string {
+    return 'https://zotzvtepvpnkcoobdubt.supabase.co';
+  }
+
+  getAppUrl(path: string = ''): string {
+    const baseUrl = import.meta.env.PROD 
+      ? 'https://app.viverdeia.ai' 
+      : window.location.origin;
+    return `${baseUrl}${path}`;
+  }
+
+  isDevelopment(): boolean {
+    return !import.meta.env.PROD;
+  }
+
+  isProduction(): boolean {
+    return import.meta.env.PROD;
+  }
+}
+
+// Exportar APP_CONFIG
+export const APP_CONFIG = AppConfig.getInstance();

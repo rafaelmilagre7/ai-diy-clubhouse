@@ -1,3 +1,4 @@
+
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types/database.types';
 import { SUPABASE_CONFIG } from '@/config/app';
@@ -103,11 +104,13 @@ createTemporaryClient();
 // Exportação que nunca será um objeto vazio
 export const supabase = new Proxy({} as ReturnType<typeof createClient<Database>>, {
   get(target, prop) {
-    if (temporaryClient && typeof temporaryClient[prop as keyof typeof temporaryClient] === 'function') {
-      return temporaryClient[prop as keyof typeof temporaryClient].bind(temporaryClient);
-    }
     if (temporaryClient && prop in temporaryClient) {
-      return temporaryClient[prop as keyof typeof temporaryClient];
+      const value = temporaryClient[prop as keyof typeof temporaryClient];
+      // CORREÇÃO: Verificar se é função antes de fazer bind
+      if (typeof value === 'function') {
+        return value.bind(temporaryClient);
+      }
+      return value;
     }
     
     // Fallback para métodos comuns
@@ -115,7 +118,7 @@ export const supabase = new Proxy({} as ReturnType<typeof createClient<Database>
       return temporaryClient?.auth || {};
     }
     if (prop === 'from') {
-      return temporaryClient?.from.bind(temporaryClient) || (() => ({ select: () => ({ data: null, error: new Error('Cliente não inicializado') }) }));
+      return temporaryClient?.from?.bind(temporaryClient) || (() => ({ select: () => ({ data: null, error: new Error('Cliente não inicializado') }) }));
     }
     
     logger.warn(`[SUPABASE CLIENT] Propriedade ${String(prop)} acessada antes da inicialização`);
