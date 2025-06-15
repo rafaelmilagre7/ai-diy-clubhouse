@@ -92,30 +92,24 @@ export const isFormacaoRole = (profile: UserProfile | null): boolean => {
   return roleName === 'formacao';
 };
 
-// Interface para Solution (sem dependência de tabela inexistente)
+// CORREÇÃO: Interface Solution unificada baseada no schema REAL do banco
 export interface Solution {
   id: string;
   title: string;
   description: string;
-  difficulty: string;
-  category: 'Receita' | 'Operacional' | 'Estratégia';
-  image_url?: string;
+  slug: string;
   thumbnail_url?: string;
-  author_id?: string;
+  published: boolean;
   created_at: string;
   updated_at: string;
-  published: boolean;
-  slug: string;
-  status?: string;
-  completion_percentage?: number;
-  overview?: string;
-  estimated_time?: number;
-  success_rate?: number;
+  // Campos que existem no banco conforme schema
+  category: 'Receita' | 'Operacional' | 'Estratégia';
+  difficulty: string;
   tags?: string[];
-  videos?: any[];
-  checklist?: any[];
-  module_order?: number;
   related_solutions?: string[];
+  implementation_steps?: any[];
+  checklist_items?: any[];
+  completion_requirements?: any;
 }
 
 export interface Module {

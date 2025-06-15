@@ -1,7 +1,7 @@
 
 import { useState, useEffect, useMemo, useRef } from "react";
 import { supabase } from "@/lib/supabase";
-import { Solution } from "@/lib/supabase";
+import { Solution } from "@/lib/supabase/types";
 import { useAuth } from "@/contexts/auth";
 import { logger } from "@/utils/logger";
 
@@ -21,19 +21,16 @@ export const useOptimizedSolutions = () => {
   const cacheKey = `solutions_all_${user?.id}_${isAdmin ? 'admin' : 'user'}`;
   const cacheTTL = isAdmin ? ADMIN_TTL : DEFAULT_TTL;
 
-  // CORREÇÃO: Campos simplificados - apenas campos que existem na tabela
+  // CORREÇÃO: Campos apenas os que existem na tabela real
   const queryFields = useMemo(() => {
     const baseFields = [
       'id', 'title', 'description', 'category', 'difficulty', 
-      'published', 'created_at', 'thumbnail_url', 'tags'
+      'published', 'created_at', 'updated_at', 'thumbnail_url', 'tags', 'slug',
+      'related_solutions', 'implementation_steps', 'checklist_items', 'completion_requirements'
     ];
     
-    if (isAdmin) {
-      return [...baseFields, 'created_by'].join(', ');
-    }
-    
     return baseFields.join(', ');
-  }, [isAdmin]);
+  }, []);
 
   const fetchOptimizedSolutions = useMemo(() => async (): Promise<Solution[]> => {
     if (!user) return [];
@@ -50,7 +47,7 @@ export const useOptimizedSolutions = () => {
     try {
       logger.info('[OPTIMIZED] Buscando soluções otimizadas', { isAdmin, userId: user.id });
 
-      // CORREÇÃO: Query simplificada - buscar soluções baseado no progresso do usuário
+      // CORREÇÃO: Query com campos que existem no banco
       let query = supabase
         .from("solutions")
         .select(queryFields)

@@ -2,7 +2,7 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { useAuth } from "@/contexts/auth";
 import { supabase } from "@/lib/supabase";
-import { Solution } from "@/lib/supabase";
+import { Solution } from "@/lib/supabase/types";
 import { logger } from "@/utils/logger";
 
 // Cache otimizado para progresso - TTL aumentado para melhor performance
@@ -33,7 +33,7 @@ export const useOptimizedProgress = (solutions: Solution[] = []) => {
     try {
       logger.info('[OPTIMIZED] Buscando progressos do usuário', { userId: user.id });
       
-      // CORREÇÃO: Query simples sem campos inexistentes (removed updated_at)
+      // CORREÇÃO: Query com campos que existem nas tabelas reais
       const { data, error: fetchError } = await supabase
         .from("progress")
         .select(`
@@ -41,7 +41,15 @@ export const useOptimizedProgress = (solutions: Solution[] = []) => {
           is_completed, 
           current_module, 
           completed_modules,
-          solutions!inner(id, title, published)
+          solutions!inner(
+            id, 
+            title, 
+            published, 
+            category, 
+            difficulty, 
+            thumbnail_url,
+            slug
+          )
         `)
         .eq("user_id", user.id);
 
@@ -101,7 +109,14 @@ export const useOptimizedProgress = (solutions: Solution[] = []) => {
             id: progress.solutions.id,
             title: progress.solutions.title,
             published: progress.solutions.published,
-            // Manter outros campos necessários da solução
+            category: progress.solutions.category,
+            difficulty: progress.solutions.difficulty,
+            thumbnail_url: progress.solutions.thumbnail_url,
+            slug: progress.solutions.slug,
+            // Campos obrigatórios para compatibilidade
+            description: '',
+            created_at: '',
+            updated_at: ''
           } as Solution;
 
           if (progress.is_completed) {

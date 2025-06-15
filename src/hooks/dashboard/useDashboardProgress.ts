@@ -2,7 +2,7 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useAuth } from "@/contexts/auth";
 import { supabase } from "@/lib/supabase";
-import { Solution } from "@/lib/supabase";
+import { Solution } from "@/lib/supabase/types";
 import { useQuery } from '@tanstack/react-query';
 
 // Cache otimizado com WeakMap para melhor performance
@@ -33,14 +33,14 @@ export const useDashboardProgress = (solutions: Solution[] = []) => {
     return solutionsHash.current;
   }, [solutions]);
 
-  // FASE 1: Função de fetch otimizada e estável - removendo campos inexistentes
+  // FASE 1: Função de fetch otimizada e estável - usando apenas campos existentes
   const fetchProgress = useCallback(async () => {
     if (!user?.id) {
       throw new Error("Usuário não autenticado");
     }
     
     try {
-      // CORREÇÃO CRÍTICA: Removido updated_at que não existe na tabela
+      // CORREÇÃO CRÍTICA: Campos que existem na tabela progress
       const { data, error } = await supabase
         .from("progress")
         .select("solution_id, is_completed, current_module, completed_modules")
