@@ -143,19 +143,21 @@ export const SolutionSidebar = ({
               </span>
             </div>
           )}
-          {solution.estimated_time && solution.estimated_time > 0 && (
+          {/* estimated_time removido da interface Solution, só mostrar com fallback se existir */}
+          {"estimated_time" in solution && typeof (solution as any).estimated_time === "number" && (solution as any).estimated_time > 0 && (
             <div className="flex justify-between text-sm">
               <span className="text-neutral-400">Tempo estimado:</span>
               <span className="font-medium text-neutral-200">
-                {solution.estimated_time} minutos
+                {(solution as any).estimated_time} minutos
               </span>
             </div>
           )}
-          {typeof solution.success_rate === "number" && solution.success_rate > 0 && (
+          {/* success_rate também removido */}
+          {"success_rate" in solution && typeof (solution as any).success_rate === "number" && (solution as any).success_rate > 0 && (
             <div className="flex justify-between text-sm">
               <span className="text-neutral-400">Taxa de sucesso:</span>
               <span className="font-medium text-neutral-200">
-                {solution.success_rate}%
+                {(solution as any).success_rate}%
               </span>
             </div>
           )}

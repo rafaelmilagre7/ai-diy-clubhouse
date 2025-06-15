@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Solution } from '@/lib/supabase';
@@ -54,7 +53,6 @@ export const SolutionCard: React.FC<SolutionCardProps> = ({ solution }) => {
         };
     }
   };
-
   return (
     <Link to={`/solution/${solution.id}`} className="block">
       <Card className="h-full overflow-hidden transition-shadow hover:shadow-md bg-[#151823] border-neutral-700">
@@ -108,11 +106,7 @@ export const SolutionCard: React.FC<SolutionCardProps> = ({ solution }) => {
               ? "Avançado"
               : solution.difficulty}
           </Badge>
-          {typeof solution.success_rate === "number" && solution.success_rate > 0 && (
-            <Badge variant="outline" className="bg-blue-900/40 text-blue-300 border-blue-700">
-              {solution.success_rate}% sucesso
-            </Badge>
-          )}
+          {/* Campo success_rate não existe mais na Solution. Se necessário restaurar, adicionar no schema */}
         </CardFooter>
       </Card>
     </Link>

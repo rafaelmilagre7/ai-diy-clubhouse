@@ -1,4 +1,3 @@
-
 import { Solution } from "@/lib/supabase";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -65,11 +64,11 @@ export const SolutionHeaderSection = ({ solution }: SolutionHeaderSectionProps) 
            solution.difficulty === "advanced" ? "Avançado" : solution.difficulty}
         </Badge>
         
-        {/* Só mostra tempo estimado se existir e for maior que zero */}
-        {solution.estimated_time && solution.estimated_time > 0 && (
+        {/* Só mostra tempo estimado se realmente existir e for número */}
+        {"estimated_time" in solution && typeof (solution as any).estimated_time === "number" && (solution as any).estimated_time > 0 && (
           <Badge variant="outline" className="px-3 py-1 flex items-center bg-neutral-800 text-blue-400 border-blue-900/30">
             <Clock className="h-4 w-4 mr-1.5" />
-            {solution.estimated_time} min
+            {(solution as any).estimated_time} min
           </Badge>
         )}
       </div>

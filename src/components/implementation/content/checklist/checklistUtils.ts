@@ -10,26 +10,31 @@ export interface ChecklistItem {
 }
 
 /**
- * Extract checklist items from a solution
+ * Extrai checklist de uma solução.
+ * Agora retorna vazio se não há checklist.
  */
 export const extractChecklistFromSolution = (solution: Solution): ChecklistItem[] => {
-  // Check if checklist property exists and is an array
-  if (solution.checklist && Array.isArray(solution.checklist)) {
-    // Transform items to ensure they have the required properties
-    return solution.checklist.map((item: any, index: number) => ({
+  // Suporte legado: caso o checklist venha dentro de implementation_steps/checklist_items
+  if ((solution as any).checklist && Array.isArray((solution as any).checklist)) {
+    // legacy, não existe mais oficialmente
+    return (solution as any).checklist.map((item: any, index: number) => ({
       id: item.id || `checklist-${index}`,
       title: item.title || item.text || "Item sem título",
       description: item.description,
       checked: false
     }));
   }
-  
+  if ((solution as any).checklist_items && Array.isArray((solution as any).checklist_items)) {
+    return (solution as any).checklist_items.map((item: any, index: number) => ({
+      id: item.id || `checklist-${index}`,
+      title: item.title || item.text || "Item sem título",
+      description: item.description,
+      checked: false
+    }));
+  }
   return [];
 };
 
-/**
- * Initialize user checklist state based on solution checklist
- */
 export const initializeUserChecklist = (checklist: ChecklistItem[]): Record<string, boolean> => {
   const initialUserChecklist: Record<string, boolean> = {};
   checklist.forEach(item => {
@@ -38,9 +43,6 @@ export const initializeUserChecklist = (checklist: ChecklistItem[]): Record<stri
   return initialUserChecklist;
 };
 
-/**
- * Update user checklist with saved progress
- */
 export const applyUserProgress = (
   initialChecklist: Record<string, boolean>,
   userProgress: UserChecklist | null
@@ -48,21 +50,15 @@ export const applyUserProgress = (
   if (!userProgress || !userProgress.checked_items) {
     return initialChecklist;
   }
-  
   const updatedChecklist = { ...initialChecklist };
-  
   Object.keys(userProgress.checked_items).forEach(itemId => {
     if (updatedChecklist.hasOwnProperty(itemId)) {
       updatedChecklist[itemId] = userProgress.checked_items[itemId];
     }
   });
-  
   return updatedChecklist;
 };
 
-/**
- * Handle errors in checklist operations
- */
 export const handleChecklistError = (error: any, logError: (message: string, data: any) => void): void => {
   logError("Error in checklist operation:", error);
   toast.error("Erro ao processar checklist");
