@@ -21,7 +21,7 @@ export const useSecurityStatus = () => {
       setIsLoading(true);
       setError(null);
       
-      console.log('🔍 [SECURITY] Verificando status de segurança RLS após correções...');
+      console.log('🔍 [SECURITY] Verificando status final após correção definitiva...');
       
       const { data, error } = await supabase.rpc('check_rls_status');
       
@@ -32,31 +32,55 @@ export const useSecurityStatus = () => {
         throw error;
       }
       
-      console.log('✅ [SECURITY] Status verificado após correções:', data);
+      console.log('✅ [SECURITY] Status final verificado:', data);
       setSecurityData(data || []);
       
-      // Contar problemas restantes
-      const insecureTables = data?.filter(row => 
-        row.security_status.includes('SEM PROTEÇÃO') || 
+      // Análise detalhada dos resultados
+      const totalTables = data?.length || 0;
+      const secureTables = data?.filter(row => 
+        row.security_status.includes('SEGURO')
+      ) || [];
+      const rlsDisabledTables = data?.filter(row => 
         row.security_status.includes('RLS DESABILITADO')
-      );
+      ) || [];
+      const unprotectedTables = data?.filter(row => 
+        row.security_status.includes('SEM PROTEÇÃO')
+      ) || [];
       
-      if (insecureTables && insecureTables.length > 0) {
-        toast.warning(
-          `⚠️ Ainda existem ${insecureTables.length} tabelas com problemas de segurança`
+      console.log('📊 [SECURITY] Análise final:', {
+        total: totalTables,
+        seguras: secureTables.length,
+        rlsDesabilitado: rlsDisabledTables.length,
+        semProtecao: unprotectedTables.length
+      });
+      
+      if (unprotectedTables.length > 0) {
+        toast.error(
+          `🔴 CRÍTICO: ${unprotectedTables.length} tabelas ainda sem proteção: ${unprotectedTables.map(t => t.table_name).join(', ')}`
         );
-        console.log('🔧 [SECURITY] Tabelas que ainda precisam de atenção:', 
-          insecureTables.map(t => t.table_name));
+      } else if (rlsDisabledTables.length > 0) {
+        toast.warning(
+          `⚠️ ${rlsDisabledTables.length} tabelas com RLS desabilitado (mas com políticas)`
+        );
       } else {
-        toast.success('🔒 Excelente! Todas as tabelas estão protegidas com RLS');
-        console.log('🎉 [SECURITY] Sistema completamente seguro!');
+        toast.success('🎉 EXCELENTE! Todas as tabelas estão completamente seguras com RLS!');
+      }
+      
+      // Log detalhado das tabelas problemáticas
+      if (rlsDisabledTables.length > 0) {
+        console.log('⚠️ [SECURITY] Tabelas com RLS desabilitado:', 
+          rlsDisabledTables.map(t => t.table_name));
+      }
+      if (unprotectedTables.length > 0) {
+        console.log('🔴 [SECURITY] Tabelas sem proteção:', 
+          unprotectedTables.map(t => t.table_name));
       }
       
       return data || [];
     } catch (error: any) {
-      console.error('❌ [SECURITY] Erro ao verificar segurança:', error);
+      console.error('❌ [SECURITY] Erro na verificação final:', error);
       setError(error.message || 'Erro desconhecido');
-      toast.error('Erro ao verificar status de segurança');
+      toast.error('Erro ao verificar status final de segurança');
       throw error;
     } finally {
       setIsLoading(false);
