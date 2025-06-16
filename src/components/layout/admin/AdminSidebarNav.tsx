@@ -1,10 +1,8 @@
-
 import { useLocation, Link } from "react-router-dom";
 import { 
   BarChart3, 
   Users, 
   Wrench, 
-  Gift, 
   FileText, 
   Calendar, 
   UserCheck, 
@@ -32,11 +30,6 @@ const navigationItems = [
     title: "Ferramentas",
     href: "/admin/tools",
     icon: Wrench,
-  },
-  {
-    title: "Benefícios",
-    href: "/admin/benefits",
-    icon: Gift,
   },
   {
     title: "Soluções",
