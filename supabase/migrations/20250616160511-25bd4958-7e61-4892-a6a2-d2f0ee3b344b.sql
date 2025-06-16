@@ -1,4 +1,5 @@
 
+
 -- Criar função para verificar status de RLS em todas as tabelas
 CREATE OR REPLACE FUNCTION public.check_rls_status()
 RETURNS TABLE(
@@ -39,3 +40,4 @@ $$;
 -- Adicionar comentário de documentação
 COMMENT ON FUNCTION public.check_rls_status() IS 
 'Função para monitorar o status de segurança RLS em todas as tabelas públicas';
+
