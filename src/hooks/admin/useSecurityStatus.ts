@@ -14,10 +14,12 @@ interface SecurityStatusRow {
 export const useSecurityStatus = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [securityData, setSecurityData] = useState<SecurityStatusRow[]>([]);
+  const [error, setError] = useState<string | null>(null);
 
   const checkSecurityStatus = useCallback(async () => {
     try {
       setIsLoading(true);
+      setError(null);
       
       console.log('🔍 [SECURITY] Verificando status de segurança RLS...');
       
@@ -25,6 +27,8 @@ export const useSecurityStatus = () => {
       
       if (error) {
         console.error('❌ [SECURITY] Erro ao verificar status:', error);
+        setError(error.message);
+        toast.error(`Erro ao verificar segurança: ${error.message}`);
         throw error;
       }
       
@@ -45,8 +49,9 @@ export const useSecurityStatus = () => {
       }
       
       return data || [];
-    } catch (error) {
+    } catch (error: any) {
       console.error('❌ [SECURITY] Erro ao verificar segurança:', error);
+      setError(error.message || 'Erro desconhecido');
       toast.error('Erro ao verificar status de segurança');
       throw error;
     } finally {
@@ -57,6 +62,7 @@ export const useSecurityStatus = () => {
   return {
     isLoading,
     securityData,
+    error,
     checkSecurityStatus
   };
 };

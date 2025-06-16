@@ -1,14 +1,13 @@
-
 import React, { useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Shield, RefreshCw, AlertCircle } from 'lucide-react';
+import { Shield, RefreshCw, AlertCircle, AlertTriangle } from 'lucide-react';
 import { useSecurityStatus } from '@/hooks/admin/useSecurityStatus';
 import { SecurityStatusTable } from '@/components/admin/SecurityStatusTable';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
 const AdminSecurity: React.FC = () => {
-  const { isLoading, securityData, checkSecurityStatus } = useSecurityStatus();
+  const { isLoading, securityData, error, checkSecurityStatus } = useSecurityStatus();
 
   useEffect(() => {
     checkSecurityStatus();
@@ -41,7 +40,16 @@ const AdminSecurity: React.FC = () => {
         </Button>
       </div>
 
-      {securityPercentage < 100 && (
+      {error && (
+        <Alert variant="destructive">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertDescription>
+            <strong>Erro:</strong> {error}
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {!error && securityPercentage < 100 && (
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
           <AlertDescription>
@@ -51,7 +59,7 @@ const AdminSecurity: React.FC = () => {
         </Alert>
       )}
 
-      {securityPercentage === 100 && (
+      {!error && securityPercentage === 100 && (
         <Alert>
           <Shield className="h-4 w-4" />
           <AlertDescription>
@@ -72,6 +80,14 @@ const AdminSecurity: React.FC = () => {
             <div className="flex items-center justify-center p-8">
               <RefreshCw className="h-6 w-6 animate-spin mr-2" />
               <p>Verificando status de segurança...</p>
+            </div>
+          ) : error ? (
+            <div className="text-center p-8">
+              <AlertTriangle className="h-12 w-12 mx-auto mb-4 text-red-500" />
+              <p className="text-muted-foreground mb-4">Erro ao carregar dados de segurança</p>
+              <Button onClick={handleRefresh} variant="outline">
+                Tentar novamente
+              </Button>
             </div>
           ) : securityData.length > 0 ? (
             <SecurityStatusTable data={securityData} />

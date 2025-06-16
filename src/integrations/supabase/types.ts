@@ -5981,6 +5981,16 @@ export type Database = {
         Args: { p_token: string }
         Returns: Json
       }
+      check_rls_status: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          table_name: string
+          rls_enabled: boolean
+          has_policies: boolean
+          policy_count: number
+          security_status: string
+        }[]
+      }
       check_solution_certificate_eligibility: {
         Args: { p_user_id: string; p_solution_id: string }
         Returns: boolean
