@@ -7,8 +7,16 @@ import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 import { Eye, EyeOff, Mail, Lock, User } from 'lucide-react';
 
-export const RegisterForm = () => {
-  const [email, setEmail] = useState('');
+interface RegisterFormProps {
+  inviteToken?: string;
+  prefilledEmail?: string;
+}
+
+export const RegisterForm: React.FC<RegisterFormProps> = ({ 
+  inviteToken, 
+  prefilledEmail 
+}) => {
+  const [email, setEmail] = useState(prefilledEmail || '');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [name, setName] = useState('');
@@ -41,7 +49,7 @@ export const RegisterForm = () => {
 
       const redirectUrl = `${window.location.origin}/`;
 
-      const { data, error } = await supabase.auth.signUp({
+      const signUpOptions: any = {
         email: email.trim(),
         password,
         options: {
@@ -51,14 +59,29 @@ export const RegisterForm = () => {
             full_name: name.trim(),
           }
         }
-      });
+      };
+
+      // Se há um token de convite, incluir nos metadados
+      if (inviteToken) {
+        signUpOptions.options.data.invite_token = inviteToken;
+      }
+
+      const { data, error } = await supabase.auth.signUp(signUpOptions);
 
       if (error) {
         throw error;
       }
 
       if (data.user) {
-        toast.success('Conta criada com sucesso! Verifique seu email para confirmar.');
+        if (inviteToken) {
+          toast.success('Conta criada com sucesso! Você será redirecionado em breve.');
+          // Para convites, redirecionar automaticamente após sucesso
+          setTimeout(() => {
+            window.location.href = '/dashboard';
+          }, 2000);
+        } else {
+          toast.success('Conta criada com sucesso! Verifique seu email para confirmar.');
+        }
       }
     } catch (error: any) {
       console.error('Erro no registro:', error);
@@ -110,7 +133,8 @@ export const RegisterForm = () => {
             className="pl-10 bg-gray-700 border-gray-600 text-white placeholder-gray-400"
             placeholder="seu@email.com"
             required
-            disabled={isLoading}
+            disabled={isLoading || !!prefilledEmail}
+            readOnly={!!prefilledEmail}
           />
         </div>
       </div>
