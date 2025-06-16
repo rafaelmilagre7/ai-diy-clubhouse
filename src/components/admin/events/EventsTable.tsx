@@ -38,6 +38,14 @@ export const EventsTable = () => {
     }
   };
 
+  // Função para formatar data considerando timezone de Brasília
+  const formatEventDate = (dateString: string) => {
+    const utcDate = new Date(dateString);
+    // Subtrair 3 horas para mostrar no horário de Brasília
+    const brasiliaDate = new Date(utcDate.getTime() - (3 * 60 * 60 * 1000));
+    return format(brasiliaDate, "dd/MM/yyyy 'às' HH:mm", { locale: ptBR });
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-8">
@@ -93,10 +101,10 @@ export const EventsTable = () => {
               <TableRow key={event.id}>
                 <TableCell className="font-medium">{event.title}</TableCell>
                 <TableCell>
-                  {format(new Date(event.start_time), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
+                  {formatEventDate(event.start_time)}
                 </TableCell>
                 <TableCell>
-                  {format(new Date(event.end_time), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
+                  {formatEventDate(event.end_time)}
                 </TableCell>
                 <TableCell>
                   {event.is_recurring ? (

@@ -21,6 +21,15 @@ export const EventDateTime = ({ form }: EventDateTimeProps) => {
         <h3 className="font-medium text-sm">Data e Horário</h3>
       </div>
 
+      <Alert variant="default" className="bg-blue-50 text-blue-800 border-blue-200">
+        <AlertDescription className="flex items-center gap-2 text-xs">
+          <Info size={14} />
+          <span>
+            Todos os horários são salvos e exibidos no fuso horário de Brasília (UTC-3).
+          </span>
+        </AlertDescription>
+      </Alert>
+
       <RecurrenceToggle form={form} />
 
       {!isRecurring ? (

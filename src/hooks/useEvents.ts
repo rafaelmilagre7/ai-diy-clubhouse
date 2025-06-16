@@ -8,30 +8,99 @@ export const useEvents = () => {
     queryKey: ['events'],
     queryFn: async (): Promise<Event[]> => {
       try {
-        // Primeiro, tentar buscar eventos usando a função RPC se disponível
-        const { data: rpcData, error: rpcError } = await supabase
-          .rpc('get_visible_events_for_user', { 
-            user_id: (await supabase.auth.getUser()).data.user?.id 
-          });
-
-        if (!rpcError && rpcData) {
-          return rpcData as Event[];
-        }
-
-        // Fallback: buscar eventos diretamente
-        console.log("RPC não disponível, usando query direta");
+        const { data: user } = await supabase.auth.getUser();
         
-        const { data: events, error } = await supabase
-          .from('events')
-          .select('*')
-          .order('start_time', { ascending: true });
-
-        if (error) {
-          console.error("Erro ao buscar eventos:", error);
-          throw error;
+        if (!user.user) {
+          console.log("Usuário não autenticado");
+          return [];
         }
 
-        return events as Event[];
+        // Primeiro, tentar buscar eventos usando a função RPC se disponível
+        try {
+          const { data: rpcData, error: rpcError } = await supabase
+            .rpc('get_visible_events_for_user', { 
+              user_id: user.user.id 
+            });
+
+          if (!rpcError && rpcData) {
+            console.log("Eventos obtidos via RPC:", rpcData.length);
+            return rpcData as Event[];
+          }
+        } catch (rpcError) {
+          console.log("RPC get_visible_events_for_user não disponível, usando fallback");
+        }
+
+        // Fallback: buscar eventos diretamente com lógica de visibilidade
+        console.log("Usando query direta com fallback");
+        
+        // Verificar se o usuário é admin
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', user.user.id)
+          .single();
+
+        const isAdmin = profile?.role === 'admin';
+
+        if (isAdmin) {
+          // Admins veem todos os eventos
+          const { data: events, error } = await supabase
+            .from('events')
+            .select('*')
+            .order('start_time', { ascending: true });
+
+          if (error) {
+            console.error("Erro ao buscar eventos para admin:", error);
+            throw error;
+          }
+
+          console.log("Eventos para admin:", events?.length || 0);
+          return events as Event[];
+        } else {
+          // Membros veem eventos públicos ou com acesso específico para seu role
+          const { data: userProfile } = await supabase
+            .from('profiles')
+            .select('role_id')
+            .eq('id', user.user.id)
+            .single();
+
+          const userRoleId = userProfile?.role_id;
+
+          // Buscar eventos que são públicos (sem controle de acesso) 
+          // ou que têm controle de acesso específico para o role do usuário
+          const { data: events, error } = await supabase
+            .from('events')
+            .select(`
+              *,
+              event_access_control!left(role_id)
+            `)
+            .order('start_time', { ascending: true });
+
+          if (error) {
+            console.error("Erro ao buscar eventos para membro:", error);
+            throw error;
+          }
+
+          // Filtrar eventos baseado na lógica de visibilidade
+          const visibleEvents = events?.filter(event => {
+            const accessControls = (event as any).event_access_control || [];
+            
+            // Se não há controle de acesso, o evento é público
+            if (accessControls.length === 0) {
+              return true;
+            }
+            
+            // Se há controle de acesso, verificar se o role do usuário está incluído
+            if (userRoleId) {
+              return accessControls.some((ac: any) => ac.role_id === userRoleId);
+            }
+            
+            return false;
+          }) || [];
+
+          console.log("Eventos visíveis para membro:", visibleEvents.length);
+          return visibleEvents as Event[];
+        }
 
       } catch (error) {
         console.error("Erro na busca de eventos:", error);

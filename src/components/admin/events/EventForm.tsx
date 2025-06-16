@@ -12,9 +12,11 @@ import { EventDateTime } from "./form/EventDateTime";
 import { EventLocation } from "./form/EventLocation";
 import { EventCoverImage } from "./form/EventCoverImage";
 import { EventRecurrence } from "./form/EventRecurrence";
+import { EventRoleAccess } from "./form/EventRoleAccess";
 import { eventSchema, type EventFormData } from "./form/EventFormSchema";
 import { type Event } from "@/types/events";
-import { formatDateTimeLocal } from "@/utils/timezoneUtils";
+import { convertUTCToLocal, convertLocalToUTC } from "@/utils/timezoneUtils";
+import { useEventAccessControl } from "@/hooks/useEventAccessControl";
 
 interface EventFormProps {
   event?: Event;
@@ -24,14 +26,17 @@ interface EventFormProps {
 export const EventForm = ({ event, onSuccess }: EventFormProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const queryClient = useQueryClient();
+  const { selectedRoles, updateSelectedRoles, saveAccessControl } = useEventAccessControl({ 
+    eventId: event?.id 
+  });
 
   const form = useForm<EventFormData>({
     resolver: zodResolver(eventSchema),
     defaultValues: {
       title: event?.title || "",
       description: event?.description || "",
-      start_time: event?.start_time ? formatDateTimeLocal(new Date(event.start_time)) : "",
-      end_time: event?.end_time ? formatDateTimeLocal(new Date(event.end_time)) : "",
+      start_time: event?.start_time ? convertUTCToLocal(event.start_time) : "",
+      end_time: event?.end_time ? convertUTCToLocal(event.end_time) : "",
       location_link: event?.location_link || "",
       physical_location: event?.physical_location || "",
       cover_image_url: event?.cover_image_url || "",
@@ -51,8 +56,8 @@ export const EventForm = ({ event, onSuccess }: EventFormProps) => {
       const eventData = {
         title: data.title,
         description: data.description || null,
-        start_time: data.start_time,
-        end_time: data.end_time,
+        start_time: convertLocalToUTC(data.start_time),
+        end_time: convertLocalToUTC(data.end_time),
         location_link: data.location_link || null,
         physical_location: data.physical_location || null,
         cover_image_url: data.cover_image_url || null,
@@ -94,10 +99,24 @@ export const EventForm = ({ event, onSuccess }: EventFormProps) => {
         throw result.error;
       }
 
+      const savedEvent = result.data;
+
+      // Salvar controle de acesso
+      if (savedEvent?.id) {
+        try {
+          await saveAccessControl(savedEvent.id);
+        } catch (accessError) {
+          console.error("Erro ao salvar controle de acesso:", accessError);
+          // Não falhar a criação do evento por causa do controle de acesso
+          toast.error("Evento salvo, mas houve erro no controle de acesso. Verifique as permissões.");
+        }
+      }
+
       toast.success(event ? "Evento atualizado com sucesso!" : "Evento criado com sucesso!");
       
       // Invalidar queries para atualizar a lista
       queryClient.invalidateQueries({ queryKey: ["events"] });
+      queryClient.invalidateQueries({ queryKey: ["event-access-control"] });
       
       if (onSuccess) {
         onSuccess();
@@ -119,6 +138,10 @@ export const EventForm = ({ event, onSuccess }: EventFormProps) => {
         <EventLocation form={form} />
         <EventCoverImage form={form} />
         <EventRecurrence form={form} />
+        <EventRoleAccess 
+          selectedRoles={selectedRoles}
+          onChange={updateSelectedRoles}
+        />
 
         <div className="flex justify-end gap-3 pt-6 border-t">
           <Button
