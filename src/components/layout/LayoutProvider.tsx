@@ -1,6 +1,6 @@
 
 import { useNavigate, useLocation } from "react-router-dom";
-import { useEffect, useState, useRef, ReactNode, memo, useMemo } from "react";
+import { useEffect, useState, ReactNode, memo, useMemo } from "react";
 import { useAuth } from "@/contexts/auth";
 import LoadingScreen from "@/components/common/LoadingScreen";
 import MemberLayout from "./MemberLayout";
@@ -8,8 +8,7 @@ import FormacaoLayout from "./formacao/FormacaoLayout";
 import { PageTransitionWithFallback } from "@/components/transitions/PageTransitionWithFallback";
 
 /**
- * LayoutProvider gerencia autenticação e roteamento baseado em papéis
- * antes de renderizar o componente de layout apropriado
+ * CORREÇÃO: LayoutProvider simplificado sem timeouts complexos
  */
 const LayoutProvider = memo(({ children }: { children: ReactNode }) => {
   const {
@@ -22,9 +21,8 @@ const LayoutProvider = memo(({ children }: { children: ReactNode }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const [layoutReady, setLayoutReady] = useState(false);
-  const timeoutRef = useRef<number | null>(null);
 
-  // Memoizar as verificações de rota para evitar recálculos desnecessários
+  // CORREÇÃO: Verificações de rota mais simples
   const routeChecks = useMemo(() => ({
     isLearningRoute: location.pathname.startsWith('/learning'),
     isPathAdmin: location.pathname.startsWith('/admin'),
@@ -32,20 +30,8 @@ const LayoutProvider = memo(({ children }: { children: ReactNode }) => {
     isFormacaoRoute: location.pathname.startsWith('/formacao')
   }), [location.pathname]);
 
-  // Memoizar a mensagem de loading baseada no estado
-  const loadingMessage = useMemo(() => {
-    if (isLoading) return "Preparando seu dashboard...";
-    if (!user) return "Verificando autenticação...";
-    return "Carregando layout...";
-  }, [isLoading, user]);
-
-  // Verificar autenticação assim que o estado estiver pronto
+  // CORREÇÃO: Verificação de autenticação simplificada
   useEffect(() => {
-    // Limpar qualquer timeout existente
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
-    }
-    
     // Se não estiver carregando, verificar autenticação
     if (!isLoading) {
       if (!user) {
@@ -56,33 +42,28 @@ const LayoutProvider = memo(({ children }: { children: ReactNode }) => {
       // Se temos usuário, marcar layout como pronto
       setLayoutReady(true);
       
-      // Verificar papel do usuário e rota atual
+      // CORREÇÃO: Redirecionamento mais simples
       if (user && profile) {
         const { isLearningRoute, isPathAdmin, isPathFormacao } = routeChecks;
         
-        // Redirecionar apenas se estiver na rota errada
         if (isAdmin && !isPathAdmin && !isPathFormacao && !isLearningRoute) {
-          navigate('/admin', { replace: true });
+          // Admin pode ir para dashboard membro também
         } 
         else if (isFormacao && !isAdmin && !isPathFormacao && !isLearningRoute) {
           navigate('/formacao', { replace: true });
         }
       }
     } else {
-      // Configurar timeout para não ficar preso em carregamento infinito
-      timeoutRef.current = window.setTimeout(() => {
+      // CORREÇÃO: Timeout simplificado de 3 segundos
+      const timeout = setTimeout(() => {
         setLayoutReady(true);
-      }, 2000);
+      }, 3000);
+      
+      return () => clearTimeout(timeout);
     }
-    
-    return () => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
-    };
   }, [user, profile, isAdmin, isFormacao, isLoading, navigate, routeChecks]);
 
-  // Renderizar com base na rota e permissões
+  // CORREÇÃO: Renderização mais direta
   if (layoutReady && user) {
     const { isFormacaoRoute, isLearningRoute } = routeChecks;
     
@@ -92,7 +73,7 @@ const LayoutProvider = memo(({ children }: { children: ReactNode }) => {
           <FormacaoLayout>{children}</FormacaoLayout>
         </PageTransitionWithFallback>
       );
-    } else if (isLearningRoute || !isFormacao || isAdmin) {
+    } else {
       return (
         <PageTransitionWithFallback isVisible={true}>
           <MemberLayout>{children}</MemberLayout>
@@ -101,10 +82,10 @@ const LayoutProvider = memo(({ children }: { children: ReactNode }) => {
     }
   }
 
-  // Mostrar loading enquanto o layout não está pronto
+  // CORREÇÃO: Loading mais simples
   return (
     <PageTransitionWithFallback isVisible={true}>
-      <LoadingScreen message={loadingMessage} />
+      <LoadingScreen message="Carregando seu dashboard..." />
     </PageTransitionWithFallback>
   );
 });

@@ -23,47 +23,41 @@ export const useAuthStateManager = ({
   const { setLoading: setGlobalLoading, circuitBreakerActive } = useGlobalLoading();
 
   const setupAuthSession = useCallback(async () => {
-    logger.info('[AUTH-STATE] Iniciando setup - timeout otimizado de 2s');
+    logger.info('[AUTH-STATE] Iniciando setup simplificado');
     
     try {
       setIsLoading(true);
       setGlobalLoading('auth', true);
 
-      // OTIMIZAÇÃO 1: Verificação de circuit breaker mais rápida
+      // CORREÇÃO: Verificação de circuit breaker simples
       if (circuitBreakerActive) {
-        logger.warn('[AUTH-STATE] Circuit breaker ativo - setup simplificado');
+        logger.warn('[AUTH-STATE] Circuit breaker ativo');
         setIsLoading(false);
         setGlobalLoading('auth', false);
         return;
       }
 
-      // OTIMIZAÇÃO 2: Timeout reduzido para 2 segundos
+      // CORREÇÃO: Timeout único de 3 segundos
       const sessionPromise = validateUserSession();
       const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error("Auth session timeout")), 2000) // Reduzido de 4s para 2s
+        setTimeout(() => reject(new Error("Auth timeout")), 3000)
       );
 
       let sessionResult;
       try {
         sessionResult = await Promise.race([sessionPromise, timeoutPromise]) as { session: Session | null; user: User | null };
       } catch (timeoutError) {
-        logger.warn('[AUTH-STATE] Timeout na validação - tentativa final sem timeout');
-        try {
-          sessionResult = await validateUserSession();
-        } catch (finalError) {
-          logger.error('[AUTH-STATE] Falha final na validação:', finalError);
-          setSession(null);
-          setUser(null);
-          setProfile(null);
-          clearProfileCache();
-          return;
-        }
+        logger.warn('[AUTH-STATE] Timeout - continuando sem erro');
+        setSession(null);
+        setUser(null);
+        setProfile(null);
+        return;
       }
 
       const { session, user } = sessionResult;
       
       if (!session || !user) {
-        logger.info('[AUTH-STATE] Nenhuma sessão válida - estado limpo');
+        logger.info('[AUTH-STATE] Nenhuma sessão válida');
         setSession(null);
         setUser(null);
         setProfile(null);
@@ -76,29 +70,19 @@ export const useAuthStateManager = ({
       setSession(session);
       setUser(user);
 
-      // CORREÇÃO DE SEGURANÇA: Removida verificação por email hardcodado
-      // Agora usa APENAS o sistema de roles do banco de dados
-
-      // OTIMIZAÇÃO 4: Verificar cache antes de buscar perfil
+      // CORREÇÃO: Verificar cache primeiro
       const cachedNavigation = navigationCache.get(user.id);
       if (cachedNavigation?.userProfile) {
-        logger.info('[AUTH-STATE] Perfil em cache - usando dados salvos');
+        logger.info('[AUTH-STATE] Perfil em cache');
         setProfile(cachedNavigation.userProfile);
-        
-        logger.info('[AUTH-STATE] ✅ Setup completo via cache', {
-          userId: user.id.substring(0, 8) + '***',
-          hasProfile: true,
-          cached: true
-        });
-        
         return;
       }
 
-      // OTIMIZAÇÃO 5: Buscar perfil com timeout reduzido para 1 segundo
+      // CORREÇÃO: Buscar perfil com timeout de 2 segundos
       try {
         const profilePromise = fetchUserProfileSecurely(user.id);
         const profileTimeoutPromise = new Promise((_, reject) => 
-          setTimeout(() => reject(new Error("Profile timeout")), 1000) // Reduzido de 2s para 1s
+          setTimeout(() => reject(new Error("Profile timeout")), 2000)
         );
 
         let profile;
@@ -109,15 +93,10 @@ export const useAuthStateManager = ({
           profile = null;
         }
         
-        if (profile) {
-          if (profile.id !== user.id) {
-            logger.error('[AUTH-STATE] VIOLAÇÃO DE SEGURANÇA: ID do perfil incorreto');
-            throw new Error('Violação de segurança detectada');
-          }
-
+        if (profile && profile.id === user.id) {
           setProfile(profile);
           
-          // OTIMIZAÇÃO 6: Atualizar cache de navegação baseado APENAS no role do banco
+          // Atualizar cache
           const roleName = profile.user_roles?.name;
           if (roleName === 'admin') {
             navigationCache.set(user.id, profile, 'admin');
@@ -125,47 +104,31 @@ export const useAuthStateManager = ({
             navigationCache.set(user.id, profile, 'formacao');
           }
           
-          logger.info('[AUTH-STATE] ✅ Setup completo', {
-            userId: user.id.substring(0, 8) + '***',
-            hasProfile: true,
-            roleName: profile.user_roles?.name || 'sem role',
-            cached: false
-          });
+          logger.info('[AUTH-STATE] ✅ Setup completo com perfil');
         } else {
-          logger.warn('[AUTH-STATE] Sem perfil disponível');
+          logger.warn('[AUTH-STATE] Sem perfil válido');
           setProfile(null);
         }
         
       } catch (profileError) {
         logger.error('[AUTH-STATE] Erro no perfil:', profileError);
         setProfile(null);
-        
-        if (profileError instanceof Error && profileError.message.includes('segurança')) {
-          logger.warn('[AUTH-STATE] Logout por violação de segurança');
-          setSession(null);
-          setUser(null);
-          clearProfileCache();
-          navigationCache.clear();
-        }
       }
 
     } catch (error) {
       logger.error('[AUTH-STATE] Erro crítico:', error);
       
-      if (error instanceof Error && error.message.includes('timeout')) {
-        logger.warn('[AUTH-STATE] Erro de timeout - mantendo sessão básica');
-      } else {
-        setSession(null);
-        setUser(null);
-        setProfile(null);
-        clearProfileCache();
-        navigationCache.clear();
-      }
+      // CORREÇÃO: Em caso de erro, limpar estado mas não falhar
+      setSession(null);
+      setUser(null);
+      setProfile(null);
+      clearProfileCache();
+      navigationCache.clear();
       
     } finally {
       setIsLoading(false);
       setGlobalLoading('auth', false);
-      logger.info('[AUTH-STATE] ✅ Setup finalizado (otimizado)');
+      logger.info('[AUTH-STATE] ✅ Setup finalizado');
     }
   }, [setSession, setUser, setProfile, setIsLoading, setGlobalLoading, circuitBreakerActive]);
 
