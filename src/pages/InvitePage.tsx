@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -7,7 +6,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2, CheckCircle, XCircle, AlertTriangle } from 'lucide-react';
 import { useAuth } from '@/contexts/auth';
 import { useInviteValidation } from '@/hooks/admin/invites/useInviteValidation';
-import RegisterForm from '@/components/auth/RegisterForm';
+import { RegisterForm } from '@/components/auth/RegisterForm';
 
 const InvitePage = () => {
   const { token } = useParams<{ token: string }>();
