@@ -10,8 +10,19 @@ interface PreferencesSectionProps {
 }
 
 export const PreferencesSection = ({ data }: PreferencesSectionProps) => {
-  const getContentPreferenceDisplay = (preferences: string[] | undefined) => {
-    if (!preferences || preferences.length === 0) return null;
+  const getContentPreferenceDisplay = (preferences: string[] | string | undefined) => {
+    // Garantir que preferences seja um array
+    let preferencesArray: string[] = [];
+    
+    if (Array.isArray(preferences)) {
+      preferencesArray = preferences;
+    } else if (typeof preferences === 'string') {
+      preferencesArray = [preferences];
+    } else {
+      return null; // Se não é array nem string, retornar null
+    }
+    
+    if (preferencesArray.length === 0) return null;
     
     const preferenceMap: Record<string, { label: string; color: string }> = {
       'theoretical': { label: 'Mais Teórico', color: 'bg-blue-500/20 text-blue-400' },
@@ -21,7 +32,7 @@ export const PreferencesSection = ({ data }: PreferencesSectionProps) => {
       'interactive': { label: 'Conteúdo Interativo', color: 'bg-cyan-500/20 text-cyan-400' },
     };
     
-    return preferences.map(pref => preferenceMap[pref] || { label: pref, color: 'bg-gray-500/20 text-gray-400' });
+    return preferencesArray.map(pref => preferenceMap[pref] || { label: pref, color: 'bg-gray-500/20 text-gray-400' });
   };
 
   const contentPreferences = getContentPreferenceDisplay(data.contentPreference);
