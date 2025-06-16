@@ -5905,6 +5905,47 @@ export type Database = {
           },
         ]
       }
+      user_progress: {
+        Row: {
+          created_at: string | null
+          current_lesson_id: string | null
+          id: string | null
+          is_completed: boolean | null
+          progress_percentage: number | null
+          solution_id: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          current_lesson_id?: string | null
+          id?: string | null
+          is_completed?: never
+          progress_percentage?: number | null
+          solution_id?: never
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          current_lesson_id?: string | null
+          id?: string | null
+          is_completed?: never
+          progress_percentage?: number | null
+          solution_id?: never
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "learning_progress_lesson_id_fkey"
+            columns: ["current_lesson_id"]
+            isOneToOne: false
+            referencedRelation: "learning_lessons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       users_with_roles: {
         Row: {
           avatar_url: string | null
@@ -6311,6 +6352,10 @@ export type Database = {
         Returns: Json
       }
       setup_learning_storage_buckets: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
+      simple_health_check: {
         Args: Record<PropertyKey, never>
         Returns: Json
       }

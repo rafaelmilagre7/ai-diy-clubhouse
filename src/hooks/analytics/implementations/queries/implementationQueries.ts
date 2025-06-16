@@ -9,7 +9,7 @@ const logWarning = (message: string, data: any = {}) => {
 };
 
 /**
- * Busca dados sobre conclusões de implementações
+ * Busca dados sobre conclusões de implementações - CORRIGIDO para usar tabela 'progress'
  */
 export const fetchCompletionData = async (startDate: string | null) => {
   let completionQuery = supabase
@@ -33,7 +33,7 @@ export const fetchCompletionData = async (startDate: string | null) => {
 };
 
 /**
- * Busca implementações por dificuldade
+ * Busca implementações por dificuldade - CORRIGIDO para usar tabela 'progress'
  */
 export const fetchDifficultyData = async (startDate: string | null) => {
   let difficultyQuery = supabase
@@ -62,7 +62,7 @@ export const fetchDifficultyData = async (startDate: string | null) => {
 };
 
 /**
- * Busca tempo médio de implementação
+ * Busca tempo médio de implementação - CORRIGIDO para usar tabela 'progress'
  */
 export const fetchTimeCompletionData = async (startDate: string | null) => {
   let timeQuery = supabase
@@ -122,7 +122,7 @@ export const fetchModuleData = async () => {
 };
 
 /**
- * Busca implementações recentes
+ * Busca implementações recentes - CORRIGIDO para usar tabela 'progress'
  */
 export const fetchRecentImplementations = async (startDate: string | null) => {
   let recentQuery = supabase
