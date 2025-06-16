@@ -1,9 +1,11 @@
+
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { uploadFileToStorage } from "@/components/ui/file/uploadUtils";
 import { useImageURL } from "@/hooks/useImageURL";
-import { ImagePlus, Trash2, Loader2 } from "lucide-react";
+import { ImagePlus, Trash2, Loader2, AlertCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface ImageUploadProps {
   value: string | undefined;
@@ -11,6 +13,7 @@ interface ImageUploadProps {
   bucketName: string;
   folderPath: string;
   enableOptimization?: boolean;
+  maxSizeMB?: number;
 }
 
 export const ImageUpload = ({ 
@@ -18,11 +21,13 @@ export const ImageUpload = ({
   onChange, 
   bucketName, 
   folderPath,
-  enableOptimization = true 
+  enableOptimization = true,
+  maxSizeMB = 10
 }: ImageUploadProps) => {
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState(0);
   const [optimizedUrl, setOptimizedUrl] = useState<string>(value || '');
+  const [error, setError] = useState<string | null>(null);
   const { optimizeImageURL } = useImageURL();
   const { toast } = useToast();
 
@@ -46,6 +51,30 @@ export const ImageUpload = ({
     const file = e.target.files?.[0];
     if (!file) return;
 
+    // Validar tipo de arquivo
+    if (!file.type.startsWith('image/')) {
+      setError("Por favor, selecione apenas arquivos de imagem");
+      toast({
+        title: "Tipo de arquivo inválido",
+        description: "Por favor, selecione apenas arquivos de imagem.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validar tamanho do arquivo
+    const maxSize = maxSizeMB * 1024 * 1024;
+    if (file.size > maxSize) {
+      setError(`A imagem é muito grande (${(file.size / (1024 * 1024)).toFixed(2)}MB). O tamanho máximo é ${maxSizeMB}MB.`);
+      toast({
+        title: "Arquivo muito grande",
+        description: `A imagem excede o tamanho máximo de ${maxSizeMB}MB.`,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setError(null);
     setUploading(true);
     setProgress(0);
 
@@ -63,7 +92,6 @@ export const ImageUpload = ({
 
       console.log("Upload bem-sucedido:", result);
       
-      // Chamar onChange com a URL original (não otimizada ainda)
       onChange(result.publicUrl);
       
       toast({
@@ -71,11 +99,13 @@ export const ImageUpload = ({
         description: "A imagem foi enviada com sucesso.",
         variant: "default",
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error("Erro ao fazer upload:", error);
+      const errorMessage = error.message || "Não foi possível enviar a imagem. Tente novamente.";
+      setError(errorMessage);
       toast({
         title: "Falha no upload",
-        description: "Não foi possível enviar a imagem. Tente novamente.",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
@@ -86,10 +116,18 @@ export const ImageUpload = ({
   const handleRemoveImage = () => {
     onChange("");
     setOptimizedUrl("");
+    setError(null);
   };
 
   return (
     <div className="space-y-4">
+      {error && (
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
+      
       {optimizedUrl ? (
         <div className="relative aspect-video w-full overflow-hidden rounded-md border">
           <img
@@ -98,11 +136,11 @@ export const ImageUpload = ({
             className="h-full w-full object-cover"
             onError={(e) => {
               const target = e.target as HTMLImageElement;
-              // Fallback para URL original se a otimizada falhar
               if (optimizedUrl !== value && value) {
                 target.src = value;
               } else {
                 target.src = "https://placehold.co/600x400?text=Imagem+não+encontrada";
+                setError("Não foi possível carregar a imagem.");
               }
               console.error("Erro ao carregar imagem:", optimizedUrl);
             }}
@@ -131,6 +169,9 @@ export const ImageUpload = ({
               <ImagePlus className="h-8 w-8 text-muted-foreground" />
               <span className="text-sm text-muted-foreground">
                 Clique para adicionar uma imagem de capa
+              </span>
+              <span className="text-xs text-muted-foreground">
+                Tamanho máximo: {maxSizeMB}MB
               </span>
             </div>
           )}
