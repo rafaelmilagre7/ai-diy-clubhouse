@@ -6,6 +6,10 @@ export const STORAGE_BUCKETS = {
   COURSE_IMAGES: 'course_images',
   LEARNING_VIDEOS: 'learning_videos',
   SOLUTION_FILES: 'solution_files',
+  LESSON_IMAGES: 'lesson_images', // Novo bucket para imagens de aulas
+  
+  // Buckets para eventos
+  EVENT_IMAGES: 'event_images',
   
   // Bucket de fallback para emergências
   FALLBACK: 'general_storage'
