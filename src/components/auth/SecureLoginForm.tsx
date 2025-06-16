@@ -1,244 +1,116 @@
 
-import React, { useState, useCallback } from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { SecureInput } from '@/components/security/SecureInput';
-import { loginRateLimiter, createSecureIdentifier } from '@/utils/secureRateLimiting';
-import { emailSchema } from '@/utils/validation';
-import { environmentSecurity, canShowTestFeatures } from '@/utils/environmentSecurity';
-import { auditLogger } from '@/utils/auditLogger';
-import { logger } from '@/utils/logger';
-import { useAuth } from '@/contexts/auth';
-import { Loader2, Shield, AlertTriangle } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
+import { Eye, EyeOff, Mail, Lock } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
-export const SecureLoginForm: React.FC = () => {
-  const { signIn } = useAuth();
+export const SecureLoginForm = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [rateLimitInfo, setRateLimitInfo] = useState<{
-    remaining?: number;
-    waitTime?: number;
-  }>({});
-
-  // Validar email
-  const validateEmail = useCallback((email: string) => {
-    try {
-      emailSchema.parse(email);
-      return { isValid: true };
-    } catch (error) {
-      return { 
-        isValid: false, 
-        error: 'Email inválido'
-      };
-    }
-  }, []);
-
-  // Validar password
-  const validatePassword = useCallback((password: string) => {
-    if (password.length < 6) {
-      return { 
-        isValid: false, 
-        error: 'Senha deve ter pelo menos 6 caracteres'
-      };
-    }
-    if (password.length > 128) {
-      return { 
-        isValid: false, 
-        error: 'Senha muito longa'
-      };
-    }
-    return { isValid: true };
-  }, []);
+  const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (isLoading) return;
-    
-    setError(null);
-    
-    // Validações básicas
-    if (!email.trim() || !password.trim()) {
-      setError('Email e senha são obrigatórios');
-      return;
-    }
-
-    // Validar formato do email
-    const emailValidation = validateEmail(email);
-    if (!emailValidation.isValid) {
-      setError(emailValidation.error || 'Email inválido');
-      return;
-    }
-
-    // Validar password
-    const passwordValidation = validatePassword(password);
-    if (!passwordValidation.isValid) {
-      setError(passwordValidation.error || 'Senha inválida');
-      return;
-    }
-
-    // Verificar rate limiting
-    const identifier = createSecureIdentifier(email, 'login');
-    const rateLimitCheck = await loginRateLimiter.canAttempt(identifier, 'login_form');
-    
-    if (!rateLimitCheck.allowed) {
-      setError(rateLimitCheck.reason || 'Muitas tentativas. Tente novamente mais tarde.');
-      setRateLimitInfo({ waitTime: rateLimitCheck.waitTime });
-      
-      await auditLogger.logSecurityEvent('login_rate_limited', 'medium', {
-        email: email.substring(0, 3) + '***',
-        waitTime: rateLimitCheck.waitTime,
-        identifier: identifier.substring(0, 10) + '***'
-      });
-      
-      return;
-    }
-    
-    setRateLimitInfo({ remaining: rateLimitCheck.remaining });
     setIsLoading(true);
 
     try {
-      logger.info("Tentativa de login iniciada", {
-        component: 'SECURE_LOGIN_FORM',
-        email: email.substring(0, 3) + '***',
-        environment: environmentSecurity.isProduction() ? 'production' : 'development'
+      // Limpeza de estado antes do login
+      try {
+        await supabase.auth.signOut({ scope: 'global' });
+      } catch (err) {
+        // Continuar mesmo se falhar
+      }
+
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: email.trim(),
+        password,
       });
 
-      const result = await signIn(email, password);
-      
-      if (result.error) {
-        throw result.error;
+      if (error) {
+        throw error;
       }
-      
-      // Login bem-sucedido
-      loginRateLimiter.reportSuccess(identifier);
-      
-      await auditLogger.logAuthEvent('login_success', {
-        email: email.substring(0, 3) + '***',
-        method: 'email_password'
-      });
-      
-      toast.success('Login realizado com sucesso!');
-      
+
+      if (data.user) {
+        toast.success('Login realizado com sucesso!');
+        // Forçar refresh para garantir estado limpo
+        window.location.href = '/';
+      }
     } catch (error: any) {
-      logger.warn("Falha no login", {
-        component: 'SECURE_LOGIN_FORM',
-        email: email.substring(0, 3) + '***',
-        error: error.message
-      });
+      console.error('Erro no login:', error);
       
-      await auditLogger.logAuthEvent('login_failure', {
-        email: email.substring(0, 3) + '***',
-        error: error.message,
-        method: 'email_password'
-      });
+      let errorMessage = 'Erro ao fazer login. Tente novamente.';
       
-      // Mensagens de erro seguras (não vazar informações)
       if (error.message?.includes('Invalid login credentials')) {
-        setError('Email ou senha incorretos');
+        errorMessage = 'Email ou senha incorretos.';
       } else if (error.message?.includes('Email not confirmed')) {
-        setError('Confirme seu email antes de fazer login');
+        errorMessage = 'Por favor, confirme seu email antes de fazer login.';
       } else if (error.message?.includes('Too many requests')) {
-        setError('Muitas tentativas. Aguarde alguns minutos antes de tentar novamente.');
-      } else {
-        setError('Erro ao fazer login. Tente novamente.');
+        errorMessage = 'Muitas tentativas. Tente novamente em alguns minutos.';
       }
       
+      toast.error(errorMessage);
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <Card className="w-full max-w-md mx-auto">
-      <CardHeader className="space-y-1">
-        <div className="flex items-center justify-center space-x-2">
-          <Shield className="h-6 w-6 text-blue-600" />
-          <CardTitle className="text-2xl font-bold">Login Seguro</CardTitle>
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="space-y-2">
+        <Label htmlFor="email" className="text-gray-200">Email</Label>
+        <div className="relative">
+          <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+          <Input
+            id="email"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="pl-10 bg-gray-700 border-gray-600 text-white placeholder-gray-400"
+            placeholder="seu@email.com"
+            required
+            disabled={isLoading}
+          />
         </div>
-        <CardDescription className="text-center">
-          Entre com suas credenciais para acessar sua conta
-        </CardDescription>
-      </CardHeader>
-      
-      <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {error && (
-            <Alert variant="destructive">
-              <AlertTriangle className="h-4 w-4" />
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          )}
-          
-          {rateLimitInfo.waitTime && (
-            <Alert>
-              <AlertTriangle className="h-4 w-4" />
-              <AlertDescription>
-                Aguarde {rateLimitInfo.waitTime} segundos antes de tentar novamente
-              </AlertDescription>
-            </Alert>
-          )}
-          
-          <div className="space-y-2">
-            <label htmlFor="email" className="text-sm font-medium">
-              Email
-            </label>
-            <SecureInput
-              type="email"
-              name="email"
-              value={email}
-              onChange={setEmail}
-              placeholder="seu@email.com"
-              required
-              autoComplete="email"
-              validateInput={validateEmail}
-              maxLength={255}
-            />
-          </div>
-          
-          <div className="space-y-2">
-            <label htmlFor="password" className="text-sm font-medium">
-              Senha
-            </label>
-            <SecureInput
-              type="password"
-              name="password"
-              value={password}
-              onChange={setPassword}
-              placeholder="Digite sua senha"
-              required
-              autoComplete="current-password"
-              validateInput={validatePassword}
-              maxLength={128}
-            />
-          </div>
-          
-          {rateLimitInfo.remaining !== undefined && rateLimitInfo.remaining <= 2 && (
-            <div className="text-sm text-amber-600">
-              Atenção: {rateLimitInfo.remaining} tentativa(s) restante(s)
-            </div>
-          )}
-          
-          <Button 
-            type="submit" 
-            className="w-full" 
-            disabled={isLoading || !!rateLimitInfo.waitTime}
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="password" className="text-gray-200">Senha</Label>
+        <div className="relative">
+          <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+          <Input
+            id="password"
+            type={showPassword ? 'text' : 'password'}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="pl-10 pr-10 bg-gray-700 border-gray-600 text-white placeholder-gray-400"
+            placeholder="Sua senha"
+            required
+            disabled={isLoading}
+          />
+          <button
+            type="button"
+            onClick={() => setShowPassword(!showPassword)}
+            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-300"
+            disabled={isLoading}
           >
-            {isLoading ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Entrando...
-              </>
-            ) : (
-              'Entrar'
-            )}
-          </Button>
-        </form>
-      </CardContent>
-    </Card>
+            {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+          </button>
+        </div>
+      </div>
+
+      <Button
+        type="submit"
+        className="w-full bg-viverblue hover:bg-viverblue/90"
+        disabled={isLoading}
+      >
+        {isLoading ? 'Entrando...' : 'Entrar'}
+      </Button>
+    </form>
   );
 };

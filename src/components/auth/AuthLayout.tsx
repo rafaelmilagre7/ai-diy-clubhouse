@@ -1,187 +1,13 @@
 
-import { useState, useCallback } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Eye, EyeOff, Loader2 } from "lucide-react";
-import { supabase } from "@/lib/supabase";
-import { toast } from "@/hooks/use-toast";
+import React, { useState } from 'react';
 import { motion } from "framer-motion";
-import { useNavigate } from "react-router-dom";
-import { useAuth } from "@/contexts/auth";
-import { useEffect, useRef } from "react";
+import { SecureLoginForm } from './SecureLoginForm';
+import { RegisterForm } from './RegisterForm';
+import { ArrowLeft } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const AuthLayout = () => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const navigate = useNavigate();
-  const { user, profile, isAdmin } = useAuth();
-  
-  // OTIMIZAÇÃO: Debounce para formulário
-  const submitTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const lastSubmitTime = useRef<number>(0);
-
-  // OTIMIZAÇÃO: Cleanup de estado de autenticação
-  const cleanupAuthState = useCallback(() => {
-    try {
-      // Limpar tokens do localStorage
-      Object.keys(localStorage).forEach((key) => {
-        if (key.startsWith('supabase.auth.') || key.includes('sb-')) {
-          localStorage.removeItem(key);
-        }
-      });
-      
-      // Limpar sessionStorage se existir
-      if (typeof sessionStorage !== 'undefined') {
-        Object.keys(sessionStorage).forEach((key) => {
-          if (key.startsWith('supabase.auth.') || key.includes('sb-')) {
-            sessionStorage.removeItem(key);
-          }
-        });
-      }
-    } catch (error) {
-      console.warn("[AUTH-LAYOUT] Erro ao limpar estado:", error);
-    }
-  }, []);
-
-  // CORREÇÃO: Aguardar verificação de onboarding antes de redirecionar
-  useEffect(() => {
-    if (user && profile) {
-      console.log("[AUTH-LAYOUT] Usuário já autenticado detectado, verificando onboarding...", {
-        email: user.email,
-        isAdmin,
-        profileRole: profile.role_id,
-        fromInvite: user.user_metadata?.from_invite
-      });
-      
-      // MUDANÇA CRÍTICA: Em vez de redirecionar diretamente, ir para raiz
-      // para que RootRedirect possa verificar se precisa de onboarding
-      console.log("[AUTH-LAYOUT] Redirecionando para / para verificação de onboarding");
-      navigate('/', { replace: true });
-    }
-  }, [user, profile, isAdmin, navigate]);
-
-  // OTIMIZAÇÃO: Debounced submit para prevenir múltiplos submits
-  const debouncedSubmit = useCallback(async (email: string, password: string) => {
-    const now = Date.now();
-    if (now - lastSubmitTime.current < 1000) {
-      console.log("[AUTH-LAYOUT] Submit muito rápido - ignorando");
-      return;
-    }
-    lastSubmitTime.current = now;
-
-    if (!email || !password) {
-      toast({
-        title: "Campos obrigatórios",
-        description: "Por favor, preencha email e senha.",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    try {
-      setIsLoading(true);
-      console.log("[AUTH-LAYOUT] Iniciando processo de login otimizado");
-      
-      // OTIMIZAÇÃO: Cleanup antes do login para evitar conflitos
-      cleanupAuthState();
-      
-      // Tentar logout global primeiro
-      try {
-        await supabase.auth.signOut({ scope: 'global' });
-      } catch (signOutError) {
-        console.warn("[AUTH-LAYOUT] Erro no logout preventivo (continuando):", signOutError);
-      }
-      
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password
-      });
-      
-      if (error) {
-        console.error("[AUTH-LAYOUT] Erro de autenticação:", error);
-        throw error;
-      }
-      
-      if (data.user) {
-        console.log("[AUTH-LAYOUT] Login bem-sucedido:", data.user.email);
-        toast({
-          title: "Login realizado com sucesso",
-          description: "Redirecionando...",
-        });
-        
-        // CORREÇÃO: Usar window.location.href para refresh completo
-        console.log("[AUTH-LAYOUT] Redirecionamento com refresh completo");
-        window.location.href = '/';
-      }
-      
-    } catch (error: any) {
-      console.error("[AUTH-LAYOUT] Erro no processo de login:", error);
-      
-      // Tratar diferentes tipos de erro
-      if (error.message?.includes('Invalid login credentials')) {
-        toast({
-          title: "Credenciais inválidas",
-          description: "Email ou senha incorretos. Verifique e tente novamente.",
-          variant: "destructive",
-        });
-      } else if (error.message?.includes('Email not confirmed')) {
-        toast({
-          title: "Email não confirmado",
-          description: "Verifique sua caixa de entrada e confirme seu email.",
-          variant: "destructive",
-        });
-      } else if (error.message?.includes('Too many requests')) {
-        toast({
-          title: "Muitas tentativas",
-          description: "Aguarde alguns minutos antes de tentar novamente.",
-          variant: "destructive",
-        });
-      } else {
-        toast({
-          title: "Erro de autenticação",
-          description: error.message || "Não foi possível fazer login. Tente novamente.",
-          variant: "destructive",
-        });
-      }
-    } finally {
-      // CORREÇÃO: Timeout otimizado
-      setTimeout(() => {
-        setIsLoading(false);
-        console.log("[AUTH-LAYOUT] Loading finalizado");
-      }, 500); // Reduzido de 1000ms para 500ms
-    }
-  }, [cleanupAuthState]);
-
-  const handleSubmit = useCallback((e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (isLoading) {
-      console.log("[AUTH-LAYOUT] Já processando - ignorando submit");
-      return;
-    }
-
-    // Limpar timeout anterior se existir
-    if (submitTimeoutRef.current) {
-      clearTimeout(submitTimeoutRef.current);
-    }
-
-    // OTIMIZAÇÃO: Debounce de 300ms
-    submitTimeoutRef.current = setTimeout(() => {
-      debouncedSubmit(email, password);
-    }, 300);
-  }, [email, password, isLoading, debouncedSubmit]);
-
-  // Cleanup timeout no unmount
-  useEffect(() => {
-    return () => {
-      if (submitTimeoutRef.current) {
-        clearTimeout(submitTimeoutRef.current);
-      }
-    };
-  }, []);
+  const [isLogin, setIsLogin] = useState(true);
 
   return (
     <div className="min-h-screen w-full flex items-center justify-center bg-gradient-to-b from-gray-900 to-black p-4">
@@ -189,125 +15,42 @@ const AuthLayout = () => {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: -20 }}
-        transition={{ duration: 0.3 }} // Reduzido de 0.5s para 0.3s
+        transition={{ duration: 0.5 }}
         className="w-full max-w-md"
       >
-        {/* Logo */}
         <div className="mb-8 text-center">
           <img
             src="https://milagredigital.com/wp-content/uploads/2025/04/viverdeiaclub.avif"
             alt="VIVER DE IA Club"
             className="mx-auto h-20 w-auto"
           />
+          <h2 className="mt-4 text-2xl font-extrabold text-white">
+            {isLogin ? 'Faça seu login' : 'Criar conta'}
+          </h2>
         </div>
 
-        {/* Título Principal */}
-        <div className="mb-8 text-center">
-          <h1 className="text-3xl font-bold text-white mb-2">
-            Potencialize com IA
-          </h1>
-          <p className="text-gray-300 text-lg">
-            Transforme seu negócio com inteligência artificial
-          </p>
-        </div>
-
-        {/* Card de Login */}
-        <div className="bg-gray-800 border border-gray-700 rounded-lg shadow-xl p-6 mb-8">
-          <div className="text-center pb-4">
-            <h2 className="text-2xl text-white mb-2">
-              Acesse sua conta
-            </h2>
-            <p className="text-gray-300">
-              Entre para acessar suas soluções de IA exclusivas
-            </p>
+        <div className="bg-gray-800 border border-gray-700 rounded-lg shadow-xl p-6">
+          {isLogin ? <SecureLoginForm /> : <RegisterForm />}
+          
+          <div className="mt-6 text-center">
+            <button
+              onClick={() => setIsLogin(!isLogin)}
+              className="text-viverblue hover:text-viverblue/80 text-sm"
+            >
+              {isLogin 
+                ? 'Não tem conta? Criar uma nova conta' 
+                : 'Já tem conta? Fazer login'
+              }
+            </button>
           </div>
           
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="email" className="text-gray-200">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="seu@email.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                disabled={isLoading}
-                required
-                autoComplete="email"
-                className="bg-gray-700 border-gray-600 text-white placeholder-gray-400 focus:ring-blue-500 focus:border-blue-500"
-              />
+          {isLogin && (
+            <div className="mt-4 text-center">
+              <Link to="/reset-password" className="text-viverblue hover:text-viverblue/80 text-sm">
+                Esqueceu sua senha?
+              </Link>
             </div>
-            
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="password" className="text-gray-200">Senha</Label>
-                <Button
-                  type="button"
-                  variant="link"
-                  onClick={() => console.log("[AUTH-LAYOUT] Reset password clicked")}
-                  className="text-xs text-blue-400 hover:text-blue-300 p-0 h-auto"
-                >
-                  Esqueceu a senha?
-                </Button>
-              </div>
-              <div className="relative">
-                <Input
-                  id="password"
-                  type={showPassword ? "text" : "password"}
-                  placeholder="********"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  disabled={isLoading}
-                  required
-                  autoComplete="current-password"
-                  className="bg-gray-700 border-gray-600 text-white placeholder-gray-400 focus:ring-blue-500 focus:border-blue-500"
-                />
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent text-gray-400 hover:text-gray-300"
-                  onClick={() => setShowPassword(!showPassword)}
-                  disabled={isLoading}
-                >
-                  {showPassword ? (
-                    <EyeOff className="h-4 w-4" />
-                  ) : (
-                    <Eye className="h-4 w-4" />
-                  )}
-                </Button>
-              </div>
-            </div>
-
-            <Button 
-              type="submit" 
-              className="w-full bg-cyan-500 hover:bg-cyan-600 text-white font-semibold uppercase tracking-wide" 
-              disabled={isLoading}
-            >
-              {isLoading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Entrando...
-                </>
-              ) : (
-                "ENTRAR"
-              )}
-            </Button>
-          </form>
-        </div>
-
-        {/* Seção Inferior - Acesso Exclusivo */}
-        <div className="text-center bg-gray-800/50 border border-gray-700/50 rounded-lg p-4">
-          <div className="flex items-center justify-center gap-2 mb-2">
-            <span className="text-xl">🔒</span>
-            <span className="text-white font-semibold">
-              Acesso exclusivo para membros convidados
-            </span>
-          </div>
-          <p className="text-gray-400 text-sm">
-            Esta plataforma é restrita apenas para membros que receberam um convite oficial. 
-            Entre em contato conosco se precisar de acesso.
-          </p>
+          )}
         </div>
       </motion.div>
     </div>

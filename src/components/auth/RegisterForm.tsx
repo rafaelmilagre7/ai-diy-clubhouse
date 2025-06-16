@@ -1,194 +1,178 @@
 
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Mail, Lock, User, Eye, EyeOff } from "lucide-react";
-import { supabase } from "@/lib/supabase";
-import { toast } from "@/hooks/use-toast";
+import React, { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { supabase } from '@/lib/supabase';
+import { toast } from 'sonner';
+import { Eye, EyeOff, Mail, Lock, User } from 'lucide-react';
 
-interface RegisterFormProps {
-  inviteToken?: string;
-  prefilledEmail?: string;
-}
-
-const RegisterForm = ({ inviteToken, prefilledEmail }: RegisterFormProps = {}) => {
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState(prefilledEmail || "");
-  const [password, setPassword] = useState("");
+export const RegisterForm = () => {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [name, setName] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!name || !email || !password) {
-      toast({
-        title: "Campos obrigatórios",
-        description: "Por favor, preencha todos os campos.",
-        variant: "destructive",
-      });
+    if (password !== confirmPassword) {
+      toast.error('As senhas não coincidem.');
       return;
     }
-    
+
     if (password.length < 6) {
-      toast({
-        title: "Senha muito curta",
-        description: "A senha deve ter pelo menos 6 caracteres.",
-        variant: "destructive",
-      });
+      toast.error('A senha deve ter pelo menos 6 caracteres.');
       return;
     }
-    
+
+    setIsLoading(true);
+
     try {
-      setIsLoading(true);
-      
-      // Show immediate feedback toast
-      toast({
-        title: "Criando conta...",
-        description: "Estamos processando seu cadastro.",
-      });
-      
-      // CORREÇÃO: Redirecionar para raiz para acionar RootRedirect
+      // Limpeza de estado antes do registro
+      try {
+        await supabase.auth.signOut({ scope: 'global' });
+      } catch (err) {
+        // Continuar mesmo se falhar
+      }
+
+      const redirectUrl = `${window.location.origin}/`;
+
       const { data, error } = await supabase.auth.signUp({
-        email,
+        email: email.trim(),
         password,
         options: {
+          emailRedirectTo: redirectUrl,
           data: {
-            name,
-            invite_token: inviteToken,
-            from_invite: !!inviteToken, // Flag especial para indicar origem do convite
-          },
-          // CORREÇÃO CRÍTICA: Redirecionar para raiz em vez de /auth
-          emailRedirectTo: window.location.origin.includes('localhost') 
-            ? 'http://localhost:3000/' 
-            : 'https://app.viverdeia.ai/'
-        },
-      });
-      
-      if (error) throw error;
-      
-      // Se há um token de convite, marcar como usado após o cadastro bem-sucedido
-      if (inviteToken && data.user) {
-        try {
-          await supabase
-            .from('invites')
-            .update({ 
-              used_at: new Date().toISOString(),
-              used_by: data.user.id 
-            })
-            .eq('token', inviteToken);
-        } catch (inviteError) {
-          console.warn('Erro ao marcar convite como usado:', inviteError);
-          // Não bloquear o fluxo se falhar ao marcar o convite
+            name: name.trim(),
+            full_name: name.trim(),
+          }
         }
-      }
-      
-      toast({
-        title: "Cadastro realizado",
-        description: "Sua conta foi criada com sucesso! Redirecionando...",
       });
-      
-      // CORREÇÃO: Redirecionar para raiz para acionar verificação de onboarding
+
+      if (error) {
+        throw error;
+      }
+
       if (data.user) {
-        console.log("[REGISTER-FORM] Cadastro via convite concluído, redirecionando para /");
-        window.location.href = '/';
+        toast.success('Conta criada com sucesso! Verifique seu email para confirmar.');
+      }
+    } catch (error: any) {
+      console.error('Erro no registro:', error);
+      
+      let errorMessage = 'Erro ao criar conta. Tente novamente.';
+      
+      if (error.message?.includes('User already registered')) {
+        errorMessage = 'Este email já está cadastrado.';
+      } else if (error.message?.includes('Password should be at least')) {
+        errorMessage = 'A senha deve ter pelo menos 6 caracteres.';
+      } else if (error.message?.includes('Invalid email')) {
+        errorMessage = 'Email inválido.';
       }
       
-    } catch (error: any) {
-      console.error("Erro ao criar conta:", error);
-      toast({
-        title: "Erro no cadastro",
-        description: error.message || "Não foi possível criar sua conta. Tente novamente.",
-        variant: "destructive",
-      });
+      toast.error(errorMessage);
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="space-y-4">
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="space-y-2">
-          <Label htmlFor="name" className="text-white">
-            Nome completo
-          </Label>
-          <div className="relative">
-            <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-              <User className="h-5 w-5 text-gray-400" />
-            </div>
-            <Input
-              id="name"
-              type="text"
-              placeholder="Seu nome completo"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="pl-10 bg-gray-800 border-gray-700 text-white"
-            />
-          </div>
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="space-y-2">
+        <Label htmlFor="name" className="text-gray-200">Nome completo</Label>
+        <div className="relative">
+          <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+          <Input
+            id="name"
+            type="text"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            className="pl-10 bg-gray-700 border-gray-600 text-white placeholder-gray-400"
+            placeholder="Seu nome completo"
+            required
+            disabled={isLoading}
+          />
         </div>
+      </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="register-email" className="text-white">
-            Email
-          </Label>
-          <div className="relative">
-            <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-              <Mail className="h-5 w-5 text-gray-400" />
-            </div>
-            <Input
-              id="register-email"
-              type="email"
-              placeholder="seu@email.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              disabled={!!prefilledEmail} // Desabilitar edição se email vem do convite
-              className="pl-10 bg-gray-800 border-gray-700 text-white disabled:opacity-50"
-            />
-          </div>
+      <div className="space-y-2">
+        <Label htmlFor="email" className="text-gray-200">Email</Label>
+        <div className="relative">
+          <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+          <Input
+            id="email"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="pl-10 bg-gray-700 border-gray-600 text-white placeholder-gray-400"
+            placeholder="seu@email.com"
+            required
+            disabled={isLoading}
+          />
         </div>
+      </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="register-password" className="text-white">
-            Senha
-          </Label>
-          <div className="relative">
-            <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-              <Lock className="h-5 w-5 text-gray-400" />
-            </div>
-            <Input
-              id="register-password"
-              type={showPassword ? "text" : "password"}
-              placeholder="Crie uma senha forte"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="pl-10 pr-10 bg-gray-800 border-gray-700 text-white"
-            />
-            <button
-              type="button"
-              onClick={() => setShowPassword(!showPassword)}
-              className="absolute inset-y-0 right-0 flex items-center pr-3"
-            >
-              {showPassword ? (
-                <EyeOff className="h-5 w-5 text-gray-400" />
-              ) : (
-                <Eye className="h-5 w-5 text-gray-400" />
-              )}
-            </button>
-          </div>
+      <div className="space-y-2">
+        <Label htmlFor="password" className="text-gray-200">Senha</Label>
+        <div className="relative">
+          <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+          <Input
+            id="password"
+            type={showPassword ? 'text' : 'password'}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="pl-10 pr-10 bg-gray-700 border-gray-600 text-white placeholder-gray-400"
+            placeholder="Mínimo 6 caracteres"
+            required
+            disabled={isLoading}
+            minLength={6}
+          />
+          <button
+            type="button"
+            onClick={() => setShowPassword(!showPassword)}
+            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-300"
+            disabled={isLoading}
+          >
+            {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+          </button>
         </div>
+      </div>
 
-        <Button
-          type="submit"
-          className="w-full bg-viverblue hover:bg-viverblue/90"
-          disabled={isLoading}
-        >
-          {isLoading ? "Criando conta..." : "Criar conta"}
-        </Button>
-      </form>
-    </div>
+      <div className="space-y-2">
+        <Label htmlFor="confirmPassword" className="text-gray-200">Confirmar senha</Label>
+        <div className="relative">
+          <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+          <Input
+            id="confirmPassword"
+            type={showConfirmPassword ? 'text' : 'password'}
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            className="pl-10 pr-10 bg-gray-700 border-gray-600 text-white placeholder-gray-400"
+            placeholder="Repita sua senha"
+            required
+            disabled={isLoading}
+          />
+          <button
+            type="button"
+            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-300"
+            disabled={isLoading}
+          >
+            {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+          </button>
+        </div>
+      </div>
+
+      <Button
+        type="submit"
+        className="w-full bg-viverblue hover:bg-viverblue/90"
+        disabled={isLoading}
+      >
+        {isLoading ? 'Criando conta...' : 'Criar conta'}
+      </Button>
+    </form>
   );
 };
-
-export default RegisterForm;
