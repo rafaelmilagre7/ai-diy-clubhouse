@@ -21,7 +21,7 @@ export const useSecurityStatus = () => {
       setIsLoading(true);
       setError(null);
       
-      console.log('🔍 [SECURITY] Verificando status de segurança RLS...');
+      console.log('🔍 [SECURITY] Verificando status de segurança RLS após correções...');
       
       const { data, error } = await supabase.rpc('check_rls_status');
       
@@ -32,9 +32,10 @@ export const useSecurityStatus = () => {
         throw error;
       }
       
-      console.log('✅ [SECURITY] Status verificado:', data);
+      console.log('✅ [SECURITY] Status verificado após correções:', data);
       setSecurityData(data || []);
       
+      // Contar problemas restantes
       const insecureTables = data?.filter(row => 
         row.security_status.includes('SEM PROTEÇÃO') || 
         row.security_status.includes('RLS DESABILITADO')
@@ -42,10 +43,13 @@ export const useSecurityStatus = () => {
       
       if (insecureTables && insecureTables.length > 0) {
         toast.warning(
-          `⚠️ Encontradas ${insecureTables.length} tabelas com problemas de segurança`
+          `⚠️ Ainda existem ${insecureTables.length} tabelas com problemas de segurança`
         );
+        console.log('🔧 [SECURITY] Tabelas que ainda precisam de atenção:', 
+          insecureTables.map(t => t.table_name));
       } else {
-        toast.success('✅ Todas as tabelas estão protegidas com RLS');
+        toast.success('🔒 Excelente! Todas as tabelas estão protegidas com RLS');
+        console.log('🎉 [SECURITY] Sistema completamente seguro!');
       }
       
       return data || [];
