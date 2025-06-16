@@ -260,9 +260,9 @@ export const MemberSidebarNavItems: React.FC<MemberSidebarNavItemsProps> = ({ si
         {/* Espaço visual reduzido */}
         <div className="h-2"></div>
         
-        {/* Grupo de Recursos */}
+        {/* Grupo de Recursos - CORRIGIDO: incluir Eventos (slice até 10) */}
         <div className="space-y-1">
-          {navigationItems.slice(5, 9).map(item => renderNavButton(item))}
+          {navigationItems.slice(5, 10).map(item => renderNavButton(item))}
         </div>
       </div>
       
