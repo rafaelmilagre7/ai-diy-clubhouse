@@ -19,13 +19,13 @@ export const useAulaStorage = () => {
     const checkStorageConfig = async () => {
       try {
         setStorageChecking(true);
-        console.log("[AulaStorage] Verificando buckets essenciais...");
+        console.log("[Storage] Verificando buckets essenciais...");
         
         // Verificar se o bucket lesson_images existe
         const { data: buckets, error } = await supabase.storage.listBuckets();
         
         if (error) {
-          console.error("[AulaStorage] Erro ao listar buckets:", error);
+          console.error("[Storage] Erro ao listar buckets:", error);
           setStorageError(`Erro ao verificar buckets: ${error.message}`);
           setStorageReady(false);
           return;
@@ -34,20 +34,21 @@ export const useAulaStorage = () => {
         const lessonImagesBucket = buckets?.find(bucket => bucket.name === 'lesson_images');
         
         if (!lessonImagesBucket) {
-          console.warn("[AulaStorage] Bucket lesson_images não encontrado");
-          setStorageError("Bucket lesson_images não configurado. Execute a migration SQL primeiro.");
+          console.warn("[Storage] Bucket lesson_images não encontrado");
+          setStorageError("Bucket lesson_images não configurado");
           setStorageReady(false);
           return;
         }
         
-        console.log("[AulaStorage] Bucket lesson_images encontrado e configurado");
+        console.log("[Storage] Bucket lesson_images encontrado e configurado");
         setStorageReady(true);
         setStorageError(null);
         
       } catch (error: any) {
-        console.error("[AulaStorage] Erro ao verificar armazenamento:", error);
+        console.error("[Storage] Erro ao verificar armazenamento:", error);
         setStorageError("Erro ao verificar armazenamento");
         setStorageReady(false);
+        toast.error("Erro ao verificar armazenamento. Alguns recursos podem não funcionar.");
       } finally {
         setStorageChecking(false);
       }
@@ -61,30 +62,25 @@ export const useAulaStorage = () => {
       setStorageChecking(true);
       setStorageError(null);
       
-      console.log("[AulaStorage] Tentando reconfigurar buckets...");
-      
-      // Verificar novamente os buckets
-      const { data: buckets, error } = await supabase.storage.listBuckets();
+      // Chamar a função RPC para configurar buckets
+      const { data, error } = await supabase.rpc('setup_learning_storage_buckets');
       
       if (error) {
-        setStorageError(`Erro ao verificar buckets: ${error.message}`);
-        toast.error(`Erro: ${error.message}`);
-        return;
-      }
-      
-      const lessonImagesBucket = buckets?.find(bucket => bucket.name === 'lesson_images');
-      
-      if (lessonImagesBucket) {
+        console.error("[Storage] Erro na configuração via RPC:", error);
+        setStorageError(`Erro na configuração: ${error.message}`);
+        setStorageReady(false);
+        toast.error(`Falha na configuração: ${error.message}`);
+      } else {
+        console.log("[Storage] Configuração via RPC concluída:", data);
         setStorageReady(true);
         setStorageError(null);
-        toast.success("Configuração de armazenamento verificada com sucesso!");
-      } else {
-        setStorageError("Bucket lesson_images ainda não existe. Execute a migration SQL.");
-        toast.error("Execute a migration SQL para criar os buckets necessários.");
+        toast.success("Configuração de armazenamento concluída com sucesso!");
       }
     } catch (error: any) {
+      console.error("[Storage] Erro ao configurar:", error);
       setStorageError(error.message || "Erro desconhecido");
-      toast.error("Erro ao verificar armazenamento");
+      setStorageReady(false);
+      toast.error("Erro ao configurar armazenamento");
     } finally {
       setStorageChecking(false);
     }

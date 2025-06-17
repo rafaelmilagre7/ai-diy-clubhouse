@@ -55,7 +55,7 @@ const EtapaMidia: React.FC<EtapaMidiaProps> = ({
                     bucketName="lesson_images"
                     folderPath="covers"
                     maxSizeMB={5}
-                    enableOptimization={true}
+                    enableOptimization={false}
                   />
                 </FormControl>
                 <FormMessage />

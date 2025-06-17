@@ -1,11 +1,11 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { uploadFileToStorage } from "@/components/ui/file/uploadUtils";
-import { useImageURL } from "@/hooks/useImageURL";
+import { supabase } from "@/lib/supabase";
 import { ImagePlus, Trash2, Loader2, AlertCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { v4 as uuidv4 } from 'uuid';
 
 interface ImageUploadProps {
   value: string | undefined;
@@ -26,26 +26,8 @@ export const ImageUpload = ({
 }: ImageUploadProps) => {
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState(0);
-  const [optimizedUrl, setOptimizedUrl] = useState<string>(value || '');
   const [error, setError] = useState<string | null>(null);
-  const { optimizeImageURL } = useImageURL();
   const { toast } = useToast();
-
-  // Otimizar URL quando value mudar
-  useEffect(() => {
-    if (enableOptimization && value) {
-      optimizeImageURL(value, { priority: 'normal' })
-        .then(url => {
-          setOptimizedUrl(url);
-        })
-        .catch(error => {
-          console.warn('[ImageUpload] Erro na otimização:', error);
-          setOptimizedUrl(value);
-        });
-    } else {
-      setOptimizedUrl(value || '');
-    }
-  }, [value, enableOptimization, optimizeImageURL]);
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -79,20 +61,44 @@ export const ImageUpload = ({
     setProgress(0);
 
     try {
-      console.log(`Iniciando upload para bucket: ${bucketName}, pasta: ${folderPath}`);
+      console.log(`[ImageUpload] Iniciando upload para bucket: ${bucketName}, pasta: ${folderPath}`);
       
-      const result = await uploadFileToStorage(
-        file,
-        bucketName,
-        folderPath,
-        (progress) => {
-          setProgress(Math.round(progress));
-        }
-      );
+      // Gerar nome único para o arquivo
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${uuidv4()}.${fileExt}`;
+      const filePath = folderPath ? `${folderPath}/${fileName}` : fileName;
+      
+      setProgress(25);
+      
+      // Upload direto para o Supabase Storage
+      const { data, error: uploadError } = await supabase.storage
+        .from(bucketName)
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: true,
+          contentType: file.type
+        });
 
-      console.log("Upload bem-sucedido:", result);
+      if (uploadError) {
+        console.error('[ImageUpload] Erro no upload:', uploadError);
+        throw new Error(`Erro no upload: ${uploadError.message}`);
+      }
+
+      setProgress(75);
       
-      onChange(result.publicUrl);
+      // Obter URL pública
+      const { data: urlData } = supabase.storage
+        .from(bucketName)
+        .getPublicUrl(data.path);
+
+      if (!urlData.publicUrl) {
+        throw new Error("Não foi possível obter URL pública do arquivo");
+      }
+
+      setProgress(100);
+      
+      console.log('[ImageUpload] Upload concluído:', urlData.publicUrl);
+      onChange(urlData.publicUrl);
       
       toast({
         title: "Upload concluído",
@@ -100,7 +106,7 @@ export const ImageUpload = ({
         variant: "default",
       });
     } catch (error: any) {
-      console.error("Erro ao fazer upload:", error);
+      console.error("[ImageUpload] Erro no upload:", error);
       const errorMessage = error.message || "Não foi possível enviar a imagem. Tente novamente.";
       setError(errorMessage);
       toast({
@@ -110,12 +116,12 @@ export const ImageUpload = ({
       });
     } finally {
       setUploading(false);
+      setProgress(0);
     }
   };
 
   const handleRemoveImage = () => {
     onChange("");
-    setOptimizedUrl("");
     setError(null);
   };
 
@@ -128,21 +134,17 @@ export const ImageUpload = ({
         </Alert>
       )}
       
-      {optimizedUrl ? (
+      {value ? (
         <div className="relative aspect-video w-full overflow-hidden rounded-md border">
           <img
-            src={optimizedUrl}
+            src={value}
             alt="Imagem de capa"
             className="h-full w-full object-cover"
             onError={(e) => {
               const target = e.target as HTMLImageElement;
-              if (optimizedUrl !== value && value) {
-                target.src = value;
-              } else {
-                target.src = "https://placehold.co/600x400?text=Imagem+não+encontrada";
-                setError("Não foi possível carregar a imagem.");
-              }
-              console.error("Erro ao carregar imagem:", optimizedUrl);
+              target.src = "https://placehold.co/600x400?text=Imagem+não+encontrada";
+              setError("Não foi possível carregar a imagem.");
+              console.error("Erro ao carregar imagem:", value);
             }}
           />
           <Button
@@ -185,7 +187,7 @@ export const ImageUpload = ({
         className="hidden"
         id="image-upload"
       />
-      {!optimizedUrl && (
+      {!value && (
         <Button
           type="button"
           variant="outline"
