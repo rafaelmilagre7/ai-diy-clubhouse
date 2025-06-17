@@ -6,19 +6,20 @@ import { getUserRoleName } from "@/lib/supabase/types";
 
 const RootRedirect = () => {
   const location = useLocation();
-  const { user, profile, isLoading } = useAuth();
+  const { user, profile, isLoading, isAdmin } = useAuth();
   
   console.log("[ROOT-REDIRECT] Estado atual:", {
     currentPath: location.pathname,
     hasUser: !!user,
     hasProfile: !!profile,
     isLoading,
+    isAdmin,
     userEmail: user?.email
   });
   
-  // Mostrar loading apenas enquanto verifica autenticação
+  // Mostrar loading apenas se realmente necessário
   if (isLoading) {
-    console.log("[ROOT-REDIRECT] Aguardando verificação de autenticação...");
+    console.log("[ROOT-REDIRECT] Aguardando autenticação...");
     return <LoadingScreen message="Verificando autenticação..." />;
   }
   
@@ -28,9 +29,14 @@ const RootRedirect = () => {
     return <Navigate to="/login" replace />;
   }
   
-  // Se há usuário mas não há perfil, ainda redirecionar para dashboard
-  // O sistema pode funcionar sem perfil carregado
+  // Se há usuário, decidir redirecionamento
   const roleName = getUserRoleName(profile);
+  
+  // Admin por email sempre vai para dashboard (mesmo sem perfil carregado)
+  if (isAdmin) {
+    console.log("[ROOT-REDIRECT] Admin detectado - redirecionando para dashboard");
+    return <Navigate to="/dashboard" replace />;
+  }
   
   // Se é formação, ir para área de formação
   if (roleName === 'formacao') {
@@ -38,7 +44,7 @@ const RootRedirect = () => {
     return <Navigate to="/formacao" replace />;
   }
   
-  // Caso padrão - dashboard para todos os outros usuários
+  // Caso padrão - dashboard
   console.log("[ROOT-REDIRECT] Redirecionando para dashboard");
   return <Navigate to="/dashboard" replace />;
 };

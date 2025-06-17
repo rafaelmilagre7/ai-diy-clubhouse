@@ -3,14 +3,6 @@ import { supabase } from '@/lib/supabase';
 import { UserProfile } from '@/lib/supabase';
 import { logger } from '@/utils/logger';
 
-// Cache para perfis de usuário
-const profileCache = new Map<string, { profile: UserProfile | null; timestamp: number }>();
-const CACHE_DURATION = 5 * 60 * 1000; // 5 minutos
-
-export const clearProfileCache = () => {
-  profileCache.clear();
-};
-
 /**
  * Valida a sessão do usuário de forma segura
  */
@@ -34,53 +26,55 @@ export const validateUserSession = async () => {
 };
 
 /**
- * CORREÇÃO: Busca o perfil do usuário usando query direta simples (sem RPC)
+ * CORREÇÃO: Busca o perfil do usuário de forma simples e direta
  */
 export const fetchUserProfileSecurely = async (userId: string): Promise<UserProfile | null> => {
   try {
-    // Verificar cache primeiro
-    const cached = profileCache.get(userId);
-    if (cached && (Date.now() - cached.timestamp) < CACHE_DURATION) {
-      logger.debug('[PROFILE-FETCH] Retornando perfil do cache');
-      return cached.profile;
-    }
-
-    logger.info('[PROFILE-FETCH] Buscando perfil usando query direta');
+    console.log('[PROFILE-FETCH] Buscando perfil para:', userId.substring(0, 8) + '***');
     
-    // CORREÇÃO: Query direta simples e segura
+    // Query simples e direta - sem JOINs complexos
     const { data: profile, error } = await supabase
       .from('profiles')
-      .select(`
-        *,
-        user_roles (
-          id,
-          name,
-          description,
-          permissions
-        )
-      `)
+      .select('*')
       .eq('id', userId)
-      .maybeSingle(); // CORREÇÃO: Usar maybeSingle() em vez de single()
+      .single();
     
     if (error) {
-      logger.error('[PROFILE-FETCH] Erro na query direta:', error);
+      console.error('[PROFILE-FETCH] Erro na query:', error);
       return null;
     }
     
-    if (profile) {
-      logger.info('[PROFILE-FETCH] Perfil carregado com sucesso:', {
-        userId: profile.id.substring(0, 8) + '***',
-        hasRole: !!profile.user_roles,
-        roleName: profile.user_roles?.name || 'sem role'
-      });
+    if (!profile) {
+      console.log('[PROFILE-FETCH] Perfil não encontrado');
+      return null;
+    }
+
+    // Buscar role separadamente se necessário
+    let userRole = null;
+    if (profile.role_id) {
+      const { data: role } = await supabase
+        .from('user_roles')
+        .select('*')
+        .eq('id', profile.role_id)
+        .single();
+      
+      userRole = role;
     }
     
-    // Cache o resultado
-    profileCache.set(userId, { profile: profile as UserProfile, timestamp: Date.now() });
-    return profile as UserProfile;
+    const fullProfile: UserProfile = {
+      ...profile,
+      user_roles: userRole
+    };
+    
+    console.log('[PROFILE-FETCH] Perfil carregado:', {
+      email: profile.email,
+      role: userRole?.name || 'sem role'
+    });
+    
+    return fullProfile;
     
   } catch (error) {
-    logger.error('[PROFILE-FETCH] Erro crítico:', error);
+    console.error('[PROFILE-FETCH] Erro crítico:', error);
     return null;
   }
 };
@@ -98,7 +92,7 @@ export const processUserProfile = async (
     
     // Se não há perfil, criar um básico
     if (!profile && userEmail) {
-      logger.info('[PROFILE-PROCESS] Criando perfil básico para usuário');
+      console.log('[PROFILE-PROCESS] Criando perfil básico para usuário');
       
       const { data: newProfile, error: createError } = await supabase
         .from('profiles')
@@ -108,32 +102,26 @@ export const processUserProfile = async (
           name: userName || userEmail.split('@')[0],
           created_at: new Date().toISOString()
         })
-        .select(`
-          *,
-          user_roles (
-            id,
-            name,
-            description,
-            permissions
-          )
-        `)
-        .maybeSingle(); // CORREÇÃO: Usar maybeSingle() em vez de single()
+        .select()
+        .single();
       
       if (createError) {
-        logger.error('[PROFILE-PROCESS] Erro ao criar perfil:', createError);
+        console.error('[PROFILE-PROCESS] Erro ao criar perfil:', createError);
         return null;
       }
       
       profile = newProfile as UserProfile;
-      
-      // Limpar cache após criação
-      profileCache.delete(userId);
     }
     
     return profile;
     
   } catch (error) {
-    logger.error('[PROFILE-PROCESS] Erro no processamento:', error);
+    console.error('[PROFILE-PROCESS] Erro no processamento:', error);
     return null;
   }
+};
+
+// Remover função de cache
+export const clearProfileCache = () => {
+  // Cache removido - não faz nada
 };

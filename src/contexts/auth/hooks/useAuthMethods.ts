@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
@@ -31,43 +32,6 @@ export const useAuthMethods = ({ setIsLoading }: AuthMethodsParams) => {
 
       if (data.user) {
         console.log('✅ [AUTH] Login realizado com sucesso:', data.user.email);
-        
-        // CORREÇÃO CRÍTICA: Buscar role do usuário e atualizar metadata imediatamente
-        try {
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select(`
-              role_id,
-              user_roles:role_id (
-                name
-              )
-            `)
-            .eq('id', data.user.id)
-            .single();
-
-          if (profile?.user_roles) {
-            // Correção de tipagem: garantir que user_roles seja tratado corretamente
-            let roleName: string | null = null;
-            
-            if (Array.isArray(profile.user_roles)) {
-              roleName = profile.user_roles[0]?.name || null;
-            } else if (profile.user_roles && typeof profile.user_roles === 'object' && 'name' in profile.user_roles) {
-              roleName = (profile.user_roles as { name: string }).name;
-            }
-
-            if (roleName) {
-              console.log(`🔄 [AUTH] Atualizando user_metadata no login: role=${roleName}`);
-              await supabase.auth.updateUser({
-                data: { role: roleName }
-              });
-              console.log(`✅ [AUTH] User_metadata atualizado no login: role=${roleName}`);
-            }
-          }
-        } catch (metadataError) {
-          console.warn('⚠️ [AUTH] Erro ao atualizar metadata no login:', metadataError);
-          // Não bloquear o login por erro de metadata
-        }
-
         toast.success('Login realizado com sucesso!');
       }
 

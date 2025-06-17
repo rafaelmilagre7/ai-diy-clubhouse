@@ -4,7 +4,7 @@ import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
 import { UserProfile, getUserRoleName, isAdminRole, isFormacaoRole } from '@/lib/supabase';
 import { useAuthMethods } from './hooks/useAuthMethods';
-import { fetchUserProfileSecurely, clearProfileCache } from '@/hooks/auth/utils/authSessionUtils';
+import { fetchUserProfileSecurely } from '@/hooks/auth/utils/authSessionUtils';
 import { AuthContextType } from './types';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -50,61 +50,20 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     return isFormacaoRole(profile);
   }, [profile]);
 
-  // Setup simplificado de sessão
-  const setupAuthSession = React.useCallback(async () => {
+  // Função simples para buscar perfil
+  const loadUserProfile = async (userId: string) => {
     try {
-      console.log('[AUTH] Verificando sessão atual');
-      
-      const { data: { session: currentSession }, error } = await supabase.auth.getSession();
-      
-      if (error) {
-        console.error('[AUTH] Erro ao obter sessão:', error);
-        setAuthError(error);
-        setSession(null);
-        setUser(null);
-        setProfile(null);
-        return;
-      }
-
-      if (!currentSession || !currentSession.user) {
-        console.log('[AUTH] Nenhuma sessão válida encontrada');
-        setSession(null);
-        setUser(null);
-        setProfile(null);
-        return;
-      }
-
-      console.log('[AUTH] Sessão válida encontrada:', currentSession.user.email);
-      
-      setSession(currentSession);
-      setUser(currentSession.user);
-
-      // Buscar perfil do usuário
-      try {
-        const userProfile = await fetchUserProfileSecurely(currentSession.user.id);
-        if (userProfile && userProfile.id === currentSession.user.id) {
-          setProfile(userProfile);
-          console.log('[AUTH] Perfil carregado:', userProfile.email);
-        } else {
-          console.log('[AUTH] Perfil não encontrado');
-          setProfile(null);
-        }
-      } catch (profileError) {
-        console.error('[AUTH] Erro ao buscar perfil:', profileError);
-        setProfile(null);
-      }
-
+      const userProfile = await fetchUserProfileSecurely(userId);
+      setProfile(userProfile);
+      return userProfile;
     } catch (error) {
-      console.error('[AUTH] Erro crítico no setup:', error);
-      setAuthError(error instanceof Error ? error : new Error('Erro na autenticação'));
-      setSession(null);
-      setUser(null);
+      console.error('[AUTH] Erro ao buscar perfil:', error);
       setProfile(null);
-      clearProfileCache();
+      return null;
     }
-  }, []);
+  };
 
-  // Inicialização única
+  // Inicialização única e simples
   useEffect(() => {
     if (isInitialized.current) return;
     
@@ -115,28 +74,19 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         // Configurar listener de mudanças de autenticação
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
           async (event, session) => {
-            console.log(`[AUTH] Evento de autenticação: ${event}`);
+            console.log(`[AUTH] Evento: ${event}`);
             
             if (event === 'SIGNED_IN' && session?.user) {
-              console.log(`[AUTH] Login realizado: ${session.user.email}`);
+              console.log(`[AUTH] Login: ${session.user.email}`);
               setSession(session);
               setUser(session.user);
               
               // Buscar perfil após login
-              try {
-                const userProfile = await fetchUserProfileSecurely(session.user.id);
-                if (userProfile) {
-                  setProfile(userProfile);
-                }
-              } catch (error) {
-                console.error('[AUTH] Erro ao buscar perfil pós-login:', error);
-              }
-              
+              await loadUserProfile(session.user.id);
               setIsLoading(false);
               
             } else if (event === 'SIGNED_OUT') {
-              console.log('[AUTH] Logout realizado');
-              clearProfileCache();
+              console.log('[AUTH] Logout');
               setUser(null);
               setProfile(null);
               setSession(null);
@@ -148,8 +98,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         
         authListenerRef.current = subscription;
         
-        // Setup inicial da sessão
-        await setupAuthSession();
+        // Verificar sessão atual
+        const { data: { session: currentSession } } = await supabase.auth.getSession();
+        
+        if (currentSession?.user) {
+          console.log('[AUTH] Sessão existente:', currentSession.user.email);
+          setSession(currentSession);
+          setUser(currentSession.user);
+          await loadUserProfile(currentSession.user.id);
+        }
         
         isInitialized.current = true;
         console.log('[AUTH] Inicialização concluída');
@@ -164,21 +121,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
     initializeAuth();
 
-    // Timeout de segurança mais simples
-    const timeout = setTimeout(() => {
-      if (isLoading) {
-        console.warn('[AUTH] Timeout de segurança atingido');
-        setIsLoading(false);
-      }
-    }, 5000);
-
     return () => {
       if (authListenerRef.current) {
         authListenerRef.current.unsubscribe();
       }
-      clearTimeout(timeout);
     };
-  }, [setupAuthSession, isLoading]);
+  }, []);
 
   const value: AuthContextType = {
     user,

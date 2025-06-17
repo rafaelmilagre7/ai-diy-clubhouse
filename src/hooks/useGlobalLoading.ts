@@ -10,10 +10,10 @@ interface LoadingState {
 
 export const useGlobalLoading = () => {
   const [loadingState, setLoadingState] = useState<LoadingState>({
-    auth: true,
+    auth: false,
     data: false,
     navigation: false,
-    global: true
+    global: false
   });
 
   const setLoading = useCallback((type: keyof LoadingState, value: boolean) => {
@@ -38,10 +38,10 @@ export const useGlobalLoading = () => {
   const reset = useCallback(() => {
     console.log('[GLOBAL-LOADING] Reset do sistema de loading');
     setLoadingState({
-      auth: true,
+      auth: false,
       data: false,
       navigation: false,
-      global: true
+      global: false
     });
   }, []);
 
