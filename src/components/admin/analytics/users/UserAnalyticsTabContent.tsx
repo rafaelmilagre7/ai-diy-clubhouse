@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { useUserAnalyticsData } from '@/hooks/analytics/useUserAnalyticsData';
+import { useTopActiveUsers } from '@/hooks/analytics/useTopActiveUsers';
 import { UserStatCards } from './UserStatCards';
 import { UserGrowthChart } from './UserGrowthChart';
 import { UserRoleDistributionChart } from './UserRoleDistributionChart';
@@ -16,7 +17,11 @@ interface UserAnalyticsTabContentProps {
 }
 
 export const UserAnalyticsTabContent = ({ timeRange, role }: UserAnalyticsTabContentProps) => {
-  const { data, loading, error } = useUserAnalyticsData({ timeRange, role });
+  const { data, loading: dataLoading, error: dataError } = useUserAnalyticsData({ timeRange, role });
+  const { users: activeUsers, loading: usersLoading, error: usersError } = useTopActiveUsers(10);
+
+  const loading = dataLoading || usersLoading;
+  const error = dataError || usersError;
 
   if (loading) {
     return <ModernLoadingState type="full" />;
@@ -35,40 +40,6 @@ export const UserAnalyticsTabContent = ({ timeRange, role }: UserAnalyticsTabCon
   const newUsersToday = data.usersByTime.length > 0 ? data.usersByTime[data.usersByTime.length - 1]?.novos || 0 : 0;
   const growthRate = data.usersByTime.length > 1 ? 
     ((data.usersByTime[data.usersByTime.length - 1]?.novos || 0) / Math.max(1, data.usersByTime[data.usersByTime.length - 2]?.novos || 1) - 1) * 100 : 0;
-
-  // Mock data for users - em um cenário real, viria dos dados da API
-  const mockUsers = [
-    {
-      id: '1',
-      name: 'João Silva',
-      email: 'joao@exemplo.com',
-      avatarUrl: '',
-      company: 'Tech Corp',
-      role: 'admin',
-      activityCount: 45,
-      lastSeen: new Date().toISOString()
-    },
-    {
-      id: '2',
-      name: 'Maria Santos',
-      email: 'maria@exemplo.com',
-      avatarUrl: '',
-      company: 'StartupXYZ',
-      role: 'formacao',
-      activityCount: 38,
-      lastSeen: new Date(Date.now() - 86400000).toISOString()
-    },
-    {
-      id: '3',
-      name: 'Pedro Costa',
-      email: 'pedro@exemplo.com',
-      avatarUrl: '',
-      company: 'Inovação Ltda',
-      role: 'member',
-      activityCount: 32,
-      lastSeen: new Date(Date.now() - 172800000).toISOString()
-    }
-  ];
 
   return (
     <div className="space-y-8">
@@ -92,7 +63,7 @@ export const UserAnalyticsTabContent = ({ timeRange, role }: UserAnalyticsTabCon
           <UserActivityByDayChart data={data.userActivityByDay} />
         </div>
         <div className="lg:col-span-2">
-          <TopActiveUsersTable users={mockUsers} />
+          <TopActiveUsersTable users={activeUsers} />
         </div>
       </div>
     </div>

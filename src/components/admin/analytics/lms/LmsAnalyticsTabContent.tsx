@@ -3,110 +3,154 @@ import React from 'react';
 import { Card, CardHeader, CardContent, CardTitle, CardDescription } from '@/components/ui/card';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { BookOpen, Users, Clock, TrendingUp } from 'lucide-react';
+import { useLmsAnalyticsData } from '@/hooks/analytics/useLmsAnalyticsData';
+import { ModernLoadingState } from '../ModernLoadingState';
 
 interface LmsAnalyticsTabContentProps {
   timeRange: string;
 }
 
 export const LmsAnalyticsTabContent = ({ timeRange }: LmsAnalyticsTabContentProps) => {
-  // Dados mock para demonstração do LMS
-  const mockLmsData = {
-    totalCourses: 12,
-    totalStudents: 156,
-    averageCompletionTime: 45,
-    completionRate: 78
-  };
+  const { data, loading, error } = useLmsAnalyticsData(timeRange);
+
+  if (loading) {
+    return <ModernLoadingState type="full" />;
+  }
+
+  if (error) {
+    return (
+      <Alert variant="destructive" className="border-red-800/50 bg-red-950/20 backdrop-blur-xl">
+        <BookOpen className="h-4 w-4" />
+        <AlertTitle className="text-red-400">Erro ao carregar dados do LMS</AlertTitle>
+        <AlertDescription className="text-red-300">{error}</AlertDescription>
+      </Alert>
+    );
+  }
 
   return (
     <div className="space-y-6">
       {/* Cards de estatísticas */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card className="border border-gray-200 dark:border-gray-800 shadow-sm">
+        <Card className="border-gray-800/50 bg-[#151823]/80 backdrop-blur-xl">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Total de Cursos</p>
-                <p className="text-2xl font-bold text-foreground">{mockLmsData.totalCourses}</p>
+                <p className="text-sm font-medium text-gray-400">Total de Cursos</p>
+                <p className="text-2xl font-bold text-white">{data.totalCourses}</p>
               </div>
-              <BookOpen className="h-8 w-8 text-primary" />
+              <BookOpen className="h-8 w-8 text-[#00EAD9]" />
             </div>
           </CardContent>
         </Card>
         
-        <Card className="border border-gray-200 dark:border-gray-800 shadow-sm">
+        <Card className="border-gray-800/50 bg-[#151823]/80 backdrop-blur-xl">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Estudantes Ativos</p>
-                <p className="text-2xl font-bold text-foreground">{mockLmsData.totalStudents}</p>
+                <p className="text-sm font-medium text-gray-400">Estudantes Ativos</p>
+                <p className="text-2xl font-bold text-white">{data.totalStudents}</p>
               </div>
-              <Users className="h-8 w-8 text-success" />
+              <Users className="h-8 w-8 text-green-500" />
             </div>
           </CardContent>
         </Card>
         
-        <Card className="border border-gray-200 dark:border-gray-800 shadow-sm">
+        <Card className="border-gray-800/50 bg-[#151823]/80 backdrop-blur-xl">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Tempo Médio (min)</p>
-                <p className="text-2xl font-bold text-foreground">{mockLmsData.averageCompletionTime}</p>
+                <p className="text-sm font-medium text-gray-400">Tempo Médio (min)</p>
+                <p className="text-2xl font-bold text-white">{data.averageCompletionTime}</p>
               </div>
-              <Clock className="h-8 w-8 text-info" />
+              <Clock className="h-8 w-8 text-blue-500" />
             </div>
           </CardContent>
         </Card>
         
-        <Card className="border border-gray-200 dark:border-gray-800 shadow-sm">
+        <Card className="border-gray-800/50 bg-[#151823]/80 backdrop-blur-xl">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Taxa de Conclusão</p>
-                <p className="text-2xl font-bold text-foreground">{mockLmsData.completionRate}%</p>
+                <p className="text-sm font-medium text-gray-400">Taxa de Conclusão</p>
+                <p className="text-2xl font-bold text-white">{data.completionRate}%</p>
               </div>
-              <TrendingUp className="h-8 w-8 text-warning" />
+              <TrendingUp className="h-8 w-8 text-orange-500" />
             </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Placeholder para funcionalidades futuras */}
-      <Alert className="bg-blue-50 dark:bg-blue-950 border-blue-200 dark:border-blue-800">
-        <BookOpen className="h-4 w-4 text-blue-600" />
-        <AlertTitle className="text-blue-800 dark:text-blue-200">Sistema LMS em Desenvolvimento</AlertTitle>
-        <AlertDescription className="text-blue-700 dark:text-blue-300">
-          As funcionalidades completas de analytics do LMS serão implementadas nas próximas versões. 
-          Os dados mostrados são exemplos do que estará disponível.
-        </AlertDescription>
-      </Alert>
-
-      {/* Cards informativos sobre funcionalidades futuras */}
+      {/* Gráficos e dados detalhados */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card className="border border-gray-200 dark:border-gray-800 shadow-sm">
+        <Card className="border-gray-800/50 bg-[#151823]/80 backdrop-blur-xl">
           <CardHeader>
-            <CardTitle className="text-lg">Analytics de Progresso</CardTitle>
-            <CardDescription>
-              Acompanhamento detalhado do progresso dos estudantes por curso e módulo
+            <CardTitle className="text-white">Progresso por Curso</CardTitle>
+            <CardDescription className="text-gray-400">
+              Acompanhamento de conclusões por curso
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="h-[200px] flex items-center justify-center bg-gray-50 dark:bg-gray-800 rounded-lg">
-              <p className="text-muted-foreground">Gráfico de progresso será implementado aqui</p>
-            </div>
+            {data.courseProgress.length > 0 ? (
+              <div className="space-y-4">
+                {data.courseProgress.map((course, index) => (
+                  <div key={index} className="space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-300">{course.name}</span>
+                      <span className="text-gray-400">
+                        {course.completed}/{course.total}
+                      </span>
+                    </div>
+                    <div className="w-full bg-gray-700 rounded-full h-2">
+                      <div 
+                        className="bg-[#00EAD9] h-2 rounded-full transition-all"
+                        style={{ 
+                          width: course.total > 0 ? `${(course.completed / course.total) * 100}%` : '0%' 
+                        }}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="flex items-center justify-center h-[200px] text-gray-500">
+                <p>Nenhum progresso de curso disponível</p>
+              </div>
+            )}
           </CardContent>
         </Card>
         
-        <Card className="border border-gray-200 dark:border-gray-800 shadow-sm">
+        <Card className="border-gray-800/50 bg-[#151823]/80 backdrop-blur-xl">
           <CardHeader>
-            <CardTitle className="text-lg">Avaliações e Feedback</CardTitle>
-            <CardDescription>
-              Análise de avaliações dos cursos e feedback dos estudantes
+            <CardTitle className="text-white">Scores NPS por Aula</CardTitle>
+            <CardDescription className="text-gray-400">
+              Avaliação de satisfação dos estudantes
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="h-[200px] flex items-center justify-center bg-gray-50 dark:bg-gray-800 rounded-lg">
-              <p className="text-muted-foreground">Gráfico de avaliações será implementado aqui</p>
-            </div>
+            {data.npsScores.length > 0 ? (
+              <div className="space-y-4">
+                {data.npsScores.slice(0, 5).map((nps, index) => (
+                  <div key={index} className="flex justify-between items-center p-3 bg-[#0F111A]/50 rounded-lg">
+                    <div>
+                      <p className="text-white text-sm font-medium">{nps.lesson}</p>
+                      <p className="text-gray-400 text-xs">{nps.responses} resposta{nps.responses !== 1 ? 's' : ''}</p>
+                    </div>
+                    <div className="text-right">
+                      <span className={`text-lg font-bold ${
+                        nps.score >= 8 ? 'text-green-500' : 
+                        nps.score >= 6 ? 'text-yellow-500' : 'text-red-500'
+                      }`}>
+                        {nps.score.toFixed(1)}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="flex items-center justify-center h-[200px] text-gray-500">
+                <p>Nenhuma avaliação NPS disponível</p>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
