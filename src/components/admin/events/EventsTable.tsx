@@ -1,8 +1,6 @@
 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
 import { Edit, Trash2, Repeat } from "lucide-react";
 import { useState } from "react";
 import { useEvents } from "@/hooks/useEvents";
@@ -12,6 +10,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import type { Event } from "@/types/events";
 import { Badge } from "@/components/ui/badge";
+import { formatBrazilianDateTime } from "@/utils/timezoneUtils";
 
 export const EventsTable = () => {
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
@@ -36,17 +35,6 @@ export const EventsTable = () => {
     } catch (error) {
       console.error("Erro ao excluir evento:", error);
       toast.error("Erro ao excluir evento");
-    }
-  };
-
-  // Função para formatar data/hora corretamente (sem conversão adicional)
-  const formatEventDate = (dateString: string) => {
-    try {
-      const date = new Date(dateString);
-      return format(date, "dd/MM/yyyy 'às' HH:mm", { locale: ptBR });
-    } catch (error) {
-      console.error("Erro ao formatar data:", error);
-      return dateString;
     }
   };
 
@@ -105,10 +93,10 @@ export const EventsTable = () => {
               <TableRow key={event.id}>
                 <TableCell className="font-medium">{event.title}</TableCell>
                 <TableCell>
-                  {formatEventDate(event.start_time)}
+                  {formatBrazilianDateTime(event.start_time)}
                 </TableCell>
                 <TableCell>
-                  {formatEventDate(event.end_time)}
+                  {formatBrazilianDateTime(event.end_time)}
                 </TableCell>
                 <TableCell>
                   {event.is_recurring ? (

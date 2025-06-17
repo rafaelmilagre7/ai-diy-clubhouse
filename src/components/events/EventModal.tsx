@@ -10,6 +10,7 @@ import { Event } from '@/types/events';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Calendar as CalendarIcon, Clock, MapPin, ExternalLink } from 'lucide-react';
+import { extractTimeFromDateString, extractDateFromDateString } from '@/utils/timezoneUtils';
 
 interface EventModalProps {
   event: Event;
@@ -23,13 +24,14 @@ export const EventModal = ({ event, onClose }: EventModalProps) => {
     return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(event.title)}&dates=${start}/${end}&details=${encodeURIComponent(event.description || '')}&location=${encodeURIComponent(event.location_link || '')}`;
   };
 
-  // Formatação direta sem conversões de timezone
-  const eventStartDate = new Date(event.start_time);
-  const eventEndDate = new Date(event.end_time);
+  // Extrair horários diretamente da string sem conversão de timezone
+  const startTime = extractTimeFromDateString(event.start_time);
+  const endTime = extractTimeFromDateString(event.end_time);
   
-  const formattedDate = format(eventStartDate, "EEEE, d 'de' MMMM", { locale: ptBR });
-  const startTime = format(eventStartDate, "HH:mm", { locale: ptBR });
-  const endTime = format(eventEndDate, "HH:mm", { locale: ptBR });
+  // Para a data, usar apenas a primeira ocorrência para criar o objeto Date para formatação
+  const dateOnlyString = event.start_time.split('T')[0] + 'T12:00:00'; // Meio-dia para evitar problemas de timezone
+  const eventDate = new Date(dateOnlyString);
+  const formattedDate = format(eventDate, "EEEE, d 'de' MMMM", { locale: ptBR });
 
   return (
     <Dialog open onOpenChange={() => onClose()}>
