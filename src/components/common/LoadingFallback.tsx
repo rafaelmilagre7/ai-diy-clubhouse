@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Loader2, AlertCircle, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -18,15 +18,19 @@ export const LoadingFallback: React.FC<LoadingFallbackProps> = ({
   onForceComplete,
   variant = 'full'
 }) => {
-  const { 
-    loadingState, 
-    circuitBreakerActive, 
-    retryCount, 
-    forceComplete, 
-    getLoadingDuration 
-  } = useGlobalLoading();
+  const { loadingState, forceComplete } = useGlobalLoading();
+  const [duration, setDuration] = useState(0);
+  const [startTime] = useState(Date.now());
 
-  const duration = getLoadingDuration();
+  // Calcular duração localmente
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setDuration(Date.now() - startTime);
+    }, 500);
+
+    return () => clearInterval(interval);
+  }, [startTime]);
+
   const isSlowLoading = duration > 3000;
   const isVerySlowLoading = duration > 6000;
 
@@ -39,10 +43,6 @@ export const LoadingFallback: React.FC<LoadingFallbackProps> = ({
   };
 
   const getLoadingMessage = () => {
-    if (circuitBreakerActive) {
-      return "Sistema demorou para responder. Tente recarregar a página.";
-    }
-    
     if (isVerySlowLoading) {
       return "Carregamento mais demorado que o esperado...";
     }
@@ -72,7 +72,7 @@ export const LoadingFallback: React.FC<LoadingFallbackProps> = ({
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
           <p className="text-sm text-muted-foreground">{getLoadingMessage()}</p>
           
-          {(isVerySlowLoading || circuitBreakerActive) && showForceButton && (
+          {isVerySlowLoading && showForceButton && (
             <Button 
               variant="outline" 
               size="sm" 
@@ -93,23 +93,11 @@ export const LoadingFallback: React.FC<LoadingFallbackProps> = ({
       <Card className="w-full max-w-md mx-4">
         <CardContent className="p-6">
           <div className="flex flex-col items-center space-y-4">
-            {circuitBreakerActive ? (
-              <AlertCircle className="h-12 w-12 text-yellow-500" />
-            ) : (
-              <Loader2 className="h-12 w-12 animate-spin text-primary" />
-            )}
+            <Loader2 className="h-12 w-12 animate-spin text-primary" />
             
             <div className="text-center space-y-2">
-              <h3 className="font-semibold text-lg">
-                {circuitBreakerActive ? 'Sistema Lento' : 'Carregando'}
-              </h3>
+              <h3 className="font-semibold text-lg">Carregando</h3>
               <p className="text-sm text-muted-foreground">{getLoadingMessage()}</p>
-              
-              {retryCount > 0 && !circuitBreakerActive && (
-                <p className="text-xs text-yellow-600">
-                  Tentativa {retryCount + 1}...
-                </p>
-              )}
               
               {duration > 2000 && (
                 <p className="text-xs text-muted-foreground">
@@ -131,7 +119,7 @@ export const LoadingFallback: React.FC<LoadingFallbackProps> = ({
               </div>
             )}
 
-            {(isVerySlowLoading || circuitBreakerActive) && showForceButton && (
+            {isVerySlowLoading && showForceButton && (
               <div className="flex flex-col space-y-2 w-full">
                 <Button 
                   variant="outline" 
