@@ -48,124 +48,126 @@ const AdminAnalytics = () => {
   ];
 
   return (
-    <div className="space-y-6 p-6">
-      <AnalyticsHeader 
-        timeRange={timeRange} 
-        setTimeRange={setTimeRange}
-        category={category}
-        setCategory={setCategory}
-        difficulty={difficulty}
-        setDifficulty={setDifficulty}
-      />
-      
-      <div className="flex flex-col lg:flex-row gap-6">
-        {/* Filtros principais */}
-        <div className="lg:w-80">
-          <AnalyticsFilters 
-            timeRange={timeRange}
-            setTimeRange={setTimeRange}
-            category={category}
-            setCategory={setCategory}
-            difficulty={difficulty}
-            setDifficulty={setDifficulty}
-          />
-        </div>
+    <div className="min-h-screen bg-[#0F111A] text-white">
+      <div className="space-y-6 p-6">
+        <AnalyticsHeader 
+          timeRange={timeRange} 
+          setTimeRange={setTimeRange}
+          category={category}
+          setCategory={setCategory}
+          difficulty={difficulty}
+          setDifficulty={setDifficulty}
+        />
+        
+        <div className="flex flex-col lg:flex-row gap-6">
+          {/* Filtros principais */}
+          <div className="lg:w-80">
+            <AnalyticsFilters 
+              timeRange={timeRange}
+              setTimeRange={setTimeRange}
+              category={category}
+              setCategory={setCategory}
+              difficulty={difficulty}
+              setDifficulty={setDifficulty}
+            />
+          </div>
 
-        {/* Conteúdo principal */}
-        <div className="flex-1">
-          <Card className="border-0 shadow-xl bg-white/80 backdrop-blur-sm">
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <div className="border-b border-gray-200/20 px-6 pt-6">
-                <TabsList className="grid w-full grid-cols-7 bg-gray-100/50 backdrop-blur-sm rounded-xl p-1">
-                  <TabsTrigger 
-                    value="overview" 
-                    className="data-[state=active]:bg-white data-[state=active]:shadow-md transition-all duration-200"
-                  >
-                    Visão Geral
-                  </TabsTrigger>
-                  <TabsTrigger 
-                    value="insights"
-                    className="data-[state=active]:bg-white data-[state=active]:shadow-md transition-all duration-200"
-                  >
-                    Insights
-                  </TabsTrigger>
-                  <TabsTrigger 
-                    value="automation"
-                    className="data-[state=active]:bg-white data-[state=active]:shadow-md transition-all duration-200"
-                  >
-                    Automação
-                  </TabsTrigger>
-                  <TabsTrigger 
-                    value="users"
-                    className="data-[state=active]:bg-white data-[state=active]:shadow-md transition-all duration-200"
-                  >
-                    Usuários
-                  </TabsTrigger>
-                  <TabsTrigger 
-                    value="solutions"
-                    className="data-[state=active]:bg-white data-[state=active]:shadow-md transition-all duration-200"
-                  >
-                    Soluções
-                  </TabsTrigger>
-                  <TabsTrigger 
-                    value="implementations"
-                    className="data-[state=active]:bg-white data-[state=active]:shadow-md transition-all duration-200"
-                  >
-                    Implementações
-                  </TabsTrigger>
-                  <TabsTrigger 
-                    value="lms"
-                    className="data-[state=active]:bg-white data-[state=active]:shadow-md transition-all duration-200"
-                  >
-                    LMS
-                  </TabsTrigger>
-                </TabsList>
-              </div>
+          {/* Conteúdo principal */}
+          <div className="flex-1">
+            <Card className="border-gray-800 bg-[#151823] shadow-xl">
+              <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+                <div className="border-b border-gray-800 px-6 pt-6">
+                  <TabsList className="grid w-full grid-cols-7 bg-gray-900/50 rounded-xl p-1">
+                    <TabsTrigger 
+                      value="overview" 
+                      className="data-[state=active]:bg-gray-800 data-[state=active]:text-white text-gray-400 transition-all duration-200"
+                    >
+                      Visão Geral
+                    </TabsTrigger>
+                    <TabsTrigger 
+                      value="insights"
+                      className="data-[state=active]:bg-gray-800 data-[state=active]:text-white text-gray-400 transition-all duration-200"
+                    >
+                      Insights
+                    </TabsTrigger>
+                    <TabsTrigger 
+                      value="automation"
+                      className="data-[state=active]:bg-gray-800 data-[state=active]:text-white text-gray-400 transition-all duration-200"
+                    >
+                      Automação
+                    </TabsTrigger>
+                    <TabsTrigger 
+                      value="users"
+                      className="data-[state=active]:bg-gray-800 data-[state=active]:text-white text-gray-400 transition-all duration-200"
+                    >
+                      Usuários
+                    </TabsTrigger>
+                    <TabsTrigger 
+                      value="solutions"
+                      className="data-[state=active]:bg-gray-800 data-[state=active]:text-white text-gray-400 transition-all duration-200"
+                    >
+                      Soluções
+                    </TabsTrigger>
+                    <TabsTrigger 
+                      value="implementations"
+                      className="data-[state=active]:bg-gray-800 data-[state=active]:text-white text-gray-400 transition-all duration-200"
+                    >
+                      Implementações
+                    </TabsTrigger>
+                    <TabsTrigger 
+                      value="lms"
+                      className="data-[state=active]:bg-gray-800 data-[state=active]:text-white text-gray-400 transition-all duration-200"
+                    >
+                      LMS
+                    </TabsTrigger>
+                  </TabsList>
+                </div>
 
-              <div className="p-6">
-                <TabsContent value="overview" className="mt-0">
-                  <OverviewTabContent timeRange={timeRange} />
-                </TabsContent>
+                <div className="p-6">
+                  <TabsContent value="overview" className="mt-0">
+                    <OverviewTabContent timeRange={timeRange} />
+                  </TabsContent>
 
-                <TabsContent value="insights" className="mt-0 space-y-6">
-                  <InsightsTabContent timeRange={timeRange} />
-                </TabsContent>
+                  <TabsContent value="insights" className="mt-0 space-y-6">
+                    <InsightsTabContent timeRange={timeRange} />
+                  </TabsContent>
 
-                <TabsContent value="automation" className="mt-0 space-y-6">
-                  <AutomationTabContent timeRange={timeRange} />
-                </TabsContent>
+                  <TabsContent value="automation" className="mt-0 space-y-6">
+                    <AutomationTabContent timeRange={timeRange} />
+                  </TabsContent>
 
-                <TabsContent value="users" className="mt-0 space-y-6">
-                  <UserAnalyticsTabContent 
-                    timeRange={timeRange}
-                    role="all"
-                  />
-                </TabsContent>
+                  <TabsContent value="users" className="mt-0 space-y-6">
+                    <UserAnalyticsTabContent 
+                      timeRange={timeRange}
+                      role="all"
+                    />
+                  </TabsContent>
 
-                <TabsContent value="solutions" className="mt-0 space-y-6">
-                  <SolutionsAnalyticsTabContent timeRange={timeRange} />
-                </TabsContent>
+                  <TabsContent value="solutions" className="mt-0 space-y-6">
+                    <SolutionsAnalyticsTabContent timeRange={timeRange} />
+                  </TabsContent>
 
-                <TabsContent value="implementations" className="mt-0 space-y-6">
-                  <ImplementationsAnalyticsTabContent timeRange={timeRange} />
-                </TabsContent>
+                  <TabsContent value="implementations" className="mt-0 space-y-6">
+                    <ImplementationsAnalyticsTabContent timeRange={timeRange} />
+                  </TabsContent>
 
-                <TabsContent value="lms" className="mt-0 space-y-6">
-                  <LmsAnalyticsTabContent timeRange={timeRange} />
-                </TabsContent>
-              </div>
-            </Tabs>
-          </Card>
-        </div>
+                  <TabsContent value="lms" className="mt-0 space-y-6">
+                    <LmsAnalyticsTabContent timeRange={timeRange} />
+                  </TabsContent>
+                </div>
+              </Tabs>
+            </Card>
+          </div>
 
-        {/* Comparação de período */}
-        <div className="lg:w-80">
-          <PeriodComparison
-            title="Comparação de Período"
-            currentPeriod="Últimos 30 dias"
-            previousPeriod="30 dias anteriores"
-            data={comparisonData}
-          />
+          {/* Comparação de período */}
+          <div className="lg:w-80">
+            <PeriodComparison
+              title="Comparação de Período"
+              currentPeriod="Últimos 30 dias"
+              previousPeriod="30 dias anteriores"
+              data={comparisonData}
+            />
+          </div>
         </div>
       </div>
     </div>
