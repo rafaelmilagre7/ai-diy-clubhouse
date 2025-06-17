@@ -25,47 +25,56 @@ export const MemberSidebarNavItems: React.FC<MemberSidebarNavItemsProps> = ({ si
     {
       to: '/dashboard',
       icon: LayoutDashboard,
-      label: 'Dashboard'
+      label: 'Dashboard',
+      adminOnly: false
     },
     {
       to: '/trilha-implementacao',
       icon: Route,
-      label: 'Trilha de Implementação'
+      label: 'Trilha de Implementação',
+      adminOnly: false
     },
     {
       to: '/solutions',
       icon: Lightbulb,
-      label: 'Soluções'
+      label: 'Soluções',
+      adminOnly: false
     },
     {
       to: '/tools',
       icon: Wrench,
-      label: 'Ferramentas'
+      label: 'Ferramentas',
+      adminOnly: false
     },
     {
       to: '/learning',
       icon: GraduationCap,
-      label: 'Aprendizado'
+      label: 'Aprendizado',
+      adminOnly: false
     },
     {
       to: '/comunidade',
       icon: MessageCircle,
-      label: 'Comunidade'
+      label: 'Comunidade',
+      adminOnly: false
     },
     {
       to: '/events',
       icon: Calendar,
-      label: 'Eventos'
+      label: 'Eventos',
+      adminOnly: false
     },
     {
       to: '/benefits',
       icon: Gift,
-      label: 'Benefícios'
+      label: 'Benefícios',
+      adminOnly: false
     },
     {
       to: '/profile',
       icon: User,
-      label: 'Perfil'
+      label: 'Perfil',
+      adminOnly: false
     }
   ];
 
