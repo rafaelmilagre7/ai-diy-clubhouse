@@ -1,7 +1,7 @@
 
 import { useNavigate, useLocation } from "react-router-dom";
 import { useEffect, useState, ReactNode, memo, useMemo } from "react";
-import { useAuth } from "@/contexts/auth";
+import { useAuth } from "@/contexts/auth/OptimizedAuthContext";
 import LoadingScreen from "@/components/common/LoadingScreen";
 import MemberLayout from "./MemberLayout";
 import FormacaoLayout from "./formacao/FormacaoLayout";
