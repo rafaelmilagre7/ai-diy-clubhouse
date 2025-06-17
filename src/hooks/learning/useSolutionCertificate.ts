@@ -16,6 +16,7 @@ interface SolutionCertificate {
   validation_code: string;
   template_id: string;
   implementation_date: string;
+  issued_at: string;
   profiles?: Profile;
   solutions?: {
     id: string;
@@ -132,7 +133,10 @@ export const useSolutionCertificate = (solutionId: string) => {
 
     try {
       // 1. Otimizar a URL do certificado
-      const optimizedUrl = await optimizeCertificateURL(certificate.certificate_url);
+      const optimizedUrl = await optimizeCertificateURL(certificate.certificate_url, {
+        priority: 'high',
+        maxRetries: 3
+      });
       console.log('URL otimizada:', optimizedUrl);
 
       // 2. Validar a URL otimizada
@@ -160,7 +164,10 @@ export const useSolutionCertificate = (solutionId: string) => {
 
     try {
       // 1. Otimizar a URL do certificado
-      const optimizedUrl = await optimizeCertificateURL(certificate.certificate_url);
+      const optimizedUrl = await optimizeCertificateURL(certificate.certificate_url, {
+        priority: 'high',
+        maxRetries: 3
+      });
       console.log('URL otimizada:', optimizedUrl);
 
       // 2. Validar a URL otimizada

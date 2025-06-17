@@ -1,4 +1,3 @@
-
 export interface Certificate {
   id: string;
   user_id: string;
@@ -24,6 +23,17 @@ export interface SolutionCertificate {
   issued_at: string;
   created_at: string;
   updated_at: string;
+  profiles?: {
+    name: string;
+    email: string;
+    avatar_url: string;
+  };
+  solutions?: {
+    id: string;
+    title: string;
+    category: string;
+    description: string;
+  };
 }
 
 export interface CertificateTemplate {
