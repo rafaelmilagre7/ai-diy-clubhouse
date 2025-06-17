@@ -6,25 +6,7 @@ import { useUser } from '@/hooks/useUser';
 import { useCertificateURL } from '@/hooks/useCertificateURL';
 import { toast } from 'sonner';
 import { Profile } from '@/types/forumTypes';
-
-interface SolutionCertificate {
-  id: string;
-  created_at: string;
-  user_id: string;
-  solution_id: string;
-  certificate_url: string;
-  validation_code: string;
-  template_id: string;
-  implementation_date: string;
-  issued_at: string;
-  profiles?: Profile;
-  solutions?: {
-    id: string;
-    title: string;
-    category: string;
-    description: string;
-  };
-}
+import { SolutionCertificate } from '@/types/learningTypes';
 
 export const useSolutionCertificate = (solutionId: string) => {
   const { user } = useAuth();
@@ -126,7 +108,7 @@ export const useSolutionCertificate = (solutionId: string) => {
 
   // Função para fazer download do certificado
   const downloadCertificate = async (certificate: SolutionCertificate, userProfile: Profile) => {
-    if (!certificate) {
+    if (!certificate || !certificate.solutions) {
       toast.error('Certificado não encontrado');
       return;
     }
@@ -157,7 +139,7 @@ export const useSolutionCertificate = (solutionId: string) => {
 
   // Função para abrir o certificado em nova aba
   const openCertificateInNewTab = async (certificate: SolutionCertificate, userProfile: Profile) => {
-    if (!certificate) {
+    if (!certificate || !certificate.solutions) {
       toast.error('Certificado não encontrado');
       return;
     }
