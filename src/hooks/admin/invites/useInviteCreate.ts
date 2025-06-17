@@ -4,10 +4,12 @@ import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/auth';
 import { toast } from 'sonner';
 import { generateInviteUrl } from '@/utils/inviteValidationUtils';
+import { useInviteEmailFallback } from './useInviteEmailFallback';
 
 export const useInviteCreate = () => {
   const { user } = useAuth();
   const [isCreating, setIsCreating] = useState(false);
+  const { sendInviteWithFallback } = useInviteEmailFallback();
 
   const createInvite = async (
     email: string,
@@ -64,28 +66,36 @@ export const useInviteCreate = () => {
         .eq('id', roleId)
         .single();
 
-      // Enviar convite via email/WhatsApp
-      const sendResult = await sendInviteNotification({
+      // NOVO: Usar sistema de fallback para envio
+      const sendResult = await sendInviteWithFallback({
         email,
-        phone,
         inviteUrl,
         roleName: roleData?.name || 'membro',
         expiresAt: data.expires_at,
         senderName: user.user_metadata?.name || user.email,
         notes,
-        inviteId: data.invite_id,
-        channelPreference
+        inviteId: data.invite_id
       });
 
-      if (!sendResult.success) {
-        console.warn("⚠️ [INVITE-CREATE] Problema no envio:", sendResult.error);
-        toast.warning('Convite criado, mas houve um problema no envio', {
-          description: sendResult.error || 'O sistema tentará reenviar automaticamente.'
-        });
+      // Feedback baseado no método usado
+      if (sendResult.success) {
+        let successMessage = 'Convite criado e enviado com sucesso!';
+        let description = '';
+        
+        switch (sendResult.method) {
+          case 'edge_function':
+            description = 'Enviado via sistema principal com design profissional';
+            break;
+          case 'supabase_auth':
+            description = 'Enviado via sistema de backup (email em inglês)';
+            break;
+        }
+        
+        toast.success(successMessage, { description });
       } else {
-        console.log("✅ [INVITE-CREATE] Envio bem-sucedido:", sendResult.method);
-        toast.success('Convite criado e enviado com sucesso', {
-          description: `Convite para ${email} foi enviado via ${sendResult.method}.`
+        console.warn("⚠️ [INVITE-CREATE] Problema no envio:", sendResult.error);
+        toast.warning('Convite criado, mas houve problema no envio', {
+          description: sendResult.error || 'O sistema tentará reenviar automaticamente.'
         });
       }
 
@@ -102,79 +112,4 @@ export const useInviteCreate = () => {
   };
 
   return { createInvite, isCreating };
-};
-
-// Função auxiliar para envio de notificações
-const sendInviteNotification = async ({
-  email,
-  phone,
-  inviteUrl,
-  roleName,
-  expiresAt,
-  senderName,
-  notes,
-  inviteId,
-  channelPreference
-}: {
-  email: string;
-  phone?: string;
-  inviteUrl: string;
-  roleName: string;
-  expiresAt: string;
-  senderName?: string;
-  notes?: string;
-  inviteId?: string;
-  channelPreference: 'email' | 'whatsapp' | 'both';
-}): Promise<{ success: boolean; error?: string; method?: string }> => {
-  try {
-    console.log("📬 [INVITE-SEND] Enviando convite:", {
-      email,
-      channelPreference,
-      hasPhone: !!phone,
-      inviteUrl: inviteUrl.substring(0, 50) + "..."
-    });
-
-    // Validar URL antes de enviar
-    if (!inviteUrl || !inviteUrl.includes('/convite/')) {
-      throw new Error('URL de convite inválida');
-    }
-
-    // Chamar a edge function de envio de email (principal)
-    const { data, error } = await supabase.functions.invoke('send-invite-email', {
-      body: {
-        email,
-        inviteUrl,
-        roleName,
-        expiresAt,
-        senderName,
-        notes,
-        inviteId,
-        phone,
-        channelPreference,
-        forceResend: true
-      }
-    });
-
-    if (error) {
-      console.error("❌ [INVITE-SEND] Erro na edge function:", error);
-      throw error;
-    }
-
-    console.log("✅ [INVITE-SEND] Resposta da edge function:", data);
-
-    if (!data.success) {
-      throw new Error(data.error || data.message || 'Erro no envio');
-    }
-
-    return {
-      success: true,
-      method: data.method || 'email'
-    };
-  } catch (err: any) {
-    console.error('❌ [INVITE-SEND] Erro no envio:', err);
-    return {
-      success: false,
-      error: err.message || 'Erro desconhecido no envio'
-    };
-  }
 };
