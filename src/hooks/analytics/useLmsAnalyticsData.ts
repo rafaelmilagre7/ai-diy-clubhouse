@@ -102,13 +102,13 @@ export const useLmsAnalyticsData = (timeRange: string) => {
           const courseProgressData = progressData?.filter(p => {
             // Corrigir o acesso às propriedades aninhadas
             const lessonData = p.learning_lessons;
-            if (!lessonData || !lessonData.learning_modules) return false;
+            if (!lessonData || !Array.isArray(lessonData.learning_modules)) return false;
             
-            const moduleData = lessonData.learning_modules;
-            if (!moduleData || !moduleData.learning_courses) return false;
+            const moduleData = lessonData.learning_modules[0];
+            if (!moduleData || !Array.isArray(moduleData.learning_courses)) return false;
             
-            const courseData = moduleData.learning_courses;
-            return courseData.id === course.id;
+            const courseData = moduleData.learning_courses[0];
+            return courseData && courseData.id === course.id;
           }) || [];
 
           const completed = courseProgressData.filter(p => p.progress_percentage === 100).length;
@@ -124,7 +124,9 @@ export const useLmsAnalyticsData = (timeRange: string) => {
         // Processar scores NPS
         const npsScores = npsData?.reduce((acc, nps) => {
           const lessonData = nps.learning_lessons;
-          const lessonTitle = lessonData?.title || 'Aula sem título';
+          const lessonTitle = Array.isArray(lessonData) && lessonData.length > 0 
+            ? lessonData[0].title 
+            : 'Aula sem título';
           
           const existing = acc.find(item => item.lesson === lessonTitle);
           if (existing) {
