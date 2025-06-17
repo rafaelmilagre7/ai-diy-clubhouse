@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { StatCard } from '@/components/admin/dashboard/StatCard';
+import { ModernStatsCard } from '../ModernStatsCard';
 import { BookOpen, FileCheck, Clock, Award } from 'lucide-react';
 
 interface SolutionStatCardsProps {
@@ -8,7 +8,7 @@ interface SolutionStatCardsProps {
   publishedSolutions: number;
   drafts: number;
   avgCompletionRate: number;
-  loading: boolean;
+  loading?: boolean;
 }
 
 export const SolutionStatCards: React.FC<SolutionStatCardsProps> = ({
@@ -16,64 +16,76 @@ export const SolutionStatCards: React.FC<SolutionStatCardsProps> = ({
   publishedSolutions,
   drafts,
   avgCompletionRate,
-  loading
+  loading = false
 }) => {
   if (loading) {
     return (
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <StatCard 
-          title="Total de Soluções" 
-          value="-" 
-          icon={<BookOpen className="h-6 w-6" />}
-          colorScheme="blue"
-        />
-        <StatCard 
-          title="Soluções Publicadas" 
-          value="-" 
-          icon={<FileCheck className="h-6 w-6" />}
-          colorScheme="green"
-        />
-        <StatCard 
-          title="Rascunhos" 
-          value="-" 
-          icon={<Clock className="h-6 w-6" />}
-          colorScheme="orange"
-        />
-        <StatCard 
-          title="Taxa Média de Conclusão" 
-          value="-" 
-          icon={<Award className="h-6 w-6" />}
-          colorScheme="blue"
-        />
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+        {Array(4).fill(0).map((_, i) => (
+          <ModernStatsCard
+            key={i}
+            title="Carregando..."
+            value="-"
+            icon={BookOpen}
+            colorScheme="blue"
+            loading={true}
+          />
+        ))}
       </div>
     );
   }
 
+  const publishRate = totalSolutions > 0 ? (publishedSolutions / totalSolutions) * 100 : 0;
+  const draftRate = totalSolutions > 0 ? (drafts / totalSolutions) * 100 : 0;
+
   return (
-    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-      <StatCard 
-        title="Total de Soluções" 
-        value={totalSolutions} 
-        icon={<BookOpen className="h-6 w-6" />}
+    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+      <ModernStatsCard
+        title="Total de Soluções"
+        value={totalSolutions}
+        icon={BookOpen}
         colorScheme="blue"
+        trend={{
+          value: totalSolutions,
+          label: "soluções criadas",
+          type: totalSolutions > 0 ? 'positive' : 'neutral'
+        }}
       />
-      <StatCard 
-        title="Soluções Publicadas" 
-        value={publishedSolutions} 
-        icon={<FileCheck className="h-6 w-6" />}
+      
+      <ModernStatsCard
+        title="Soluções Publicadas"
+        value={publishedSolutions}
+        icon={FileCheck}
         colorScheme="green"
+        trend={{
+          value: Math.round(publishRate),
+          label: "taxa de publicação",
+          type: publishRate > 80 ? 'positive' : publishRate > 50 ? 'neutral' : 'negative'
+        }}
       />
-      <StatCard 
-        title="Rascunhos" 
-        value={drafts} 
-        icon={<Clock className="h-6 w-6" />}
+      
+      <ModernStatsCard
+        title="Rascunhos"
+        value={drafts}
+        icon={Clock}
         colorScheme="orange"
+        trend={{
+          value: Math.round(draftRate),
+          label: "em desenvolvimento",
+          type: draftRate < 20 ? 'positive' : draftRate < 50 ? 'neutral' : 'negative'
+        }}
       />
-      <StatCard 
-        title="Taxa Média de Conclusão" 
-        value={`${avgCompletionRate}%`} 
-        icon={<Award className="h-6 w-6" />}
-        colorScheme="blue"
+      
+      <ModernStatsCard
+        title="Taxa Média de Conclusão"
+        value={`${avgCompletionRate}%`}
+        icon={Award}
+        colorScheme="purple"
+        trend={{
+          value: avgCompletionRate,
+          label: "média de conclusão",
+          type: avgCompletionRate > 70 ? 'positive' : avgCompletionRate > 40 ? 'neutral' : 'negative'
+        }}
       />
     </div>
   );
