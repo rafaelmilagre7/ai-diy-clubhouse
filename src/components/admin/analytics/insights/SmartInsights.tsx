@@ -1,10 +1,8 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Lightbulb, TrendingUp, Users, AlertTriangle, CheckCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
-
 interface Insight {
   id: string;
   type: 'opportunity' | 'warning' | 'success' | 'trend';
@@ -14,52 +12,46 @@ interface Insight {
   actionable: boolean;
   confidence: number;
 }
-
 interface SmartInsightsProps {
   timeRange: string;
 }
-
-export const SmartInsights: React.FC<SmartInsightsProps> = ({ timeRange }) => {
+export const SmartInsights: React.FC<SmartInsightsProps> = ({
+  timeRange
+}) => {
   // Mock insights baseados em análise de dados
-  const insights: Insight[] = [
-    {
-      id: '1',
-      type: 'trend',
-      title: 'Pico de Atividade às Quartas-feiras',
-      description: 'Usuários são 35% mais ativos às quartas-feiras. Considere agendar lançamentos e comunicações neste dia.',
-      impact: 'medium',
-      actionable: true,
-      confidence: 87
-    },
-    {
-      id: '2',
-      type: 'warning',
-      title: 'Taxa de Abandono em Soluções Avançadas',
-      description: 'Soluções marcadas como "Avançada" têm 23% menos implementações. Revisar complexidade ou fornecer mais suporte.',
-      impact: 'high',
-      actionable: true,
-      confidence: 92
-    },
-    {
-      id: '3',
-      type: 'opportunity',
-      title: 'Oportunidade em Automação Operacional',
-      description: 'Soluções de categoria "Operacional" mostram maior engajamento. Expandir conteúdo nesta área pode aumentar retenção.',
-      impact: 'high',
-      actionable: true,
-      confidence: 78
-    },
-    {
-      id: '4',
-      type: 'success',
-      title: 'Crescimento Consistente de Novos Usuários',
-      description: 'Crescimento de 12% ao mês se mantém estável há 3 meses consecutivos.',
-      impact: 'medium',
-      actionable: false,
-      confidence: 95
-    }
-  ];
-
+  const insights: Insight[] = [{
+    id: '1',
+    type: 'trend',
+    title: 'Pico de Atividade às Quartas-feiras',
+    description: 'Usuários são 35% mais ativos às quartas-feiras. Considere agendar lançamentos e comunicações neste dia.',
+    impact: 'medium',
+    actionable: true,
+    confidence: 87
+  }, {
+    id: '2',
+    type: 'warning',
+    title: 'Taxa de Abandono em Soluções Avançadas',
+    description: 'Soluções marcadas como "Avançada" têm 23% menos implementações. Revisar complexidade ou fornecer mais suporte.',
+    impact: 'high',
+    actionable: true,
+    confidence: 92
+  }, {
+    id: '3',
+    type: 'opportunity',
+    title: 'Oportunidade em Automação Operacional',
+    description: 'Soluções de categoria "Operacional" mostram maior engajamento. Expandir conteúdo nesta área pode aumentar retenção.',
+    impact: 'high',
+    actionable: true,
+    confidence: 78
+  }, {
+    id: '4',
+    type: 'success',
+    title: 'Crescimento Consistente de Novos Usuários',
+    description: 'Crescimento de 12% ao mês se mantém estável há 3 meses consecutivos.',
+    impact: 'medium',
+    actionable: false,
+    confidence: 95
+  }];
   const getInsightIcon = (type: Insight['type']) => {
     switch (type) {
       case 'opportunity':
@@ -74,7 +66,6 @@ export const SmartInsights: React.FC<SmartInsightsProps> = ({ timeRange }) => {
         return <Users className="h-5 w-5 text-gray-600" />;
     }
   };
-
   const getImpactColor = (impact: Insight['impact']) => {
     switch (impact) {
       case 'high':
@@ -85,7 +76,6 @@ export const SmartInsights: React.FC<SmartInsightsProps> = ({ timeRange }) => {
         return 'bg-gray-100 text-gray-800 border-gray-200';
     }
   };
-
   const getTypeColor = (type: Insight['type']) => {
     switch (type) {
       case 'opportunity':
@@ -98,9 +88,7 @@ export const SmartInsights: React.FC<SmartInsightsProps> = ({ timeRange }) => {
         return 'bg-purple-100 text-purple-800 border-purple-200';
     }
   };
-
-  return (
-    <Card className="border-0 shadow-xl bg-white/80 backdrop-blur-sm">
+  return <Card className="border-0 shadow-xl bg-white/80 backdrop-blur-sm">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Lightbulb className="h-6 w-6 text-yellow-500" />
@@ -111,15 +99,11 @@ export const SmartInsights: React.FC<SmartInsightsProps> = ({ timeRange }) => {
         </p>
       </CardHeader>
       <CardContent className="space-y-4">
-        {insights.map((insight) => (
-          <div
-            key={insight.id}
-            className="p-4 border border-gray-200 rounded-lg hover:shadow-md transition-shadow"
-          >
+        {insights.map(insight => <div key={insight.id} className="p-4 border border-gray-200 rounded-lg hover:shadow-md transition-shadow">
             <div className="flex items-start justify-between mb-3">
               <div className="flex items-center gap-2">
                 {getInsightIcon(insight.type)}
-                <h4 className="font-semibold text-gray-900">{insight.title}</h4>
+                <h4 className="font-semibold text-gray-50">{insight.title}</h4>
               </div>
               <div className="flex items-center gap-2">
                 <Badge className={cn("text-xs", getImpactColor(insight.impact))}>
@@ -131,17 +115,16 @@ export const SmartInsights: React.FC<SmartInsightsProps> = ({ timeRange }) => {
               </div>
             </div>
             
-            <p className="text-gray-700 mb-3">{insight.description}</p>
+            <p className="mb-3 text-gray-400">{insight.description}</p>
             
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <span className="text-sm text-gray-500">Confiança:</span>
+                <span className="text-sm text-gray-200">Confiança:</span>
                 <div className="flex items-center gap-1">
                   <div className="w-16 h-2 bg-gray-200 rounded-full overflow-hidden">
-                    <div 
-                      className="h-full bg-green-500 rounded-full transition-all"
-                      style={{ width: `${insight.confidence}%` }}
-                    />
+                    <div className="h-full bg-green-500 rounded-full transition-all" style={{
+                  width: `${insight.confidence}%`
+                }} />
                   </div>
                   <span className="text-sm font-medium text-gray-700">
                     {insight.confidence}%
@@ -149,15 +132,11 @@ export const SmartInsights: React.FC<SmartInsightsProps> = ({ timeRange }) => {
                 </div>
               </div>
               
-              {insight.actionable && (
-                <Badge variant="outline" className="text-xs">
+              {insight.actionable && <Badge variant="outline" className="text-xs">
                   📋 Ação Recomendada
-                </Badge>
-              )}
+                </Badge>}
             </div>
-          </div>
-        ))}
+          </div>)}
       </CardContent>
-    </Card>
-  );
+    </Card>;
 };
