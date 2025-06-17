@@ -49,13 +49,13 @@ export const useLmsAnalyticsData = (timeRange: string) => {
             progress_percentage,
             completed_at,
             started_at,
-            learning_lessons!inner(
+            learning_lessons(
               id,
               title,
-              learning_modules!inner(
+              learning_modules(
                 id,
                 course_id,
-                learning_courses!inner(
+                learning_courses(
                   id,
                   title
                 )
@@ -71,7 +71,7 @@ export const useLmsAnalyticsData = (timeRange: string) => {
           .select(`
             score,
             lesson_id,
-            learning_lessons!inner(
+            learning_lessons(
               title
             )
           `);
@@ -102,12 +102,12 @@ export const useLmsAnalyticsData = (timeRange: string) => {
           const courseProgressData = progressData?.filter(p => {
             // Corrigir o acesso às propriedades aninhadas
             const lessonData = p.learning_lessons;
-            if (!lessonData || !Array.isArray(lessonData.learning_modules)) return false;
+            if (!lessonData || !lessonData.learning_modules) return false;
             
-            const moduleData = lessonData.learning_modules[0];
-            if (!moduleData || !Array.isArray(moduleData.learning_courses)) return false;
+            const moduleData = lessonData.learning_modules;
+            if (!moduleData || !moduleData.learning_courses) return false;
             
-            const courseData = moduleData.learning_courses[0];
+            const courseData = moduleData.learning_courses;
             return courseData && courseData.id === course.id;
           }) || [];
 
@@ -124,9 +124,7 @@ export const useLmsAnalyticsData = (timeRange: string) => {
         // Processar scores NPS
         const npsScores = npsData?.reduce((acc, nps) => {
           const lessonData = nps.learning_lessons;
-          const lessonTitle = Array.isArray(lessonData) && lessonData.length > 0 
-            ? lessonData[0].title 
-            : 'Aula sem título';
+          const lessonTitle = lessonData?.title || 'Aula sem título';
           
           const existing = acc.find(item => item.lesson === lessonTitle);
           if (existing) {
