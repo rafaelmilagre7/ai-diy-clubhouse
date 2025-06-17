@@ -9,6 +9,7 @@ import { UserAnalyticsTabContent } from "@/components/admin/analytics/users/User
 import { SolutionsAnalyticsTabContent } from "@/components/admin/analytics/solutions/SolutionsAnalyticsTabContent";
 import { ImplementationsAnalyticsTabContent } from "@/components/admin/analytics/implementations/ImplementationsAnalyticsTabContent";
 import { LmsAnalyticsTabContent } from "@/components/admin/analytics/lms/LmsAnalyticsTabContent";
+import { InsightsTabContent } from "@/components/admin/analytics/insights/InsightsTabContent";
 import { PeriodComparison } from "@/components/admin/analytics/PeriodComparison";
 
 const AdminAnalytics = () => {
@@ -74,12 +75,18 @@ const AdminAnalytics = () => {
           <Card className="border-0 shadow-xl bg-white/80 backdrop-blur-sm">
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
               <div className="border-b border-gray-200/20 px-6 pt-6">
-                <TabsList className="grid w-full grid-cols-5 bg-gray-100/50 backdrop-blur-sm rounded-xl p-1">
+                <TabsList className="grid w-full grid-cols-6 bg-gray-100/50 backdrop-blur-sm rounded-xl p-1">
                   <TabsTrigger 
                     value="overview" 
                     className="data-[state=active]:bg-white data-[state=active]:shadow-md transition-all duration-200"
                   >
                     Visão Geral
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="insights"
+                    className="data-[state=active]:bg-white data-[state=active]:shadow-md transition-all duration-200"
+                  >
+                    Insights
                   </TabsTrigger>
                   <TabsTrigger 
                     value="users"
@@ -111,6 +118,10 @@ const AdminAnalytics = () => {
               <div className="p-6">
                 <TabsContent value="overview" className="mt-0">
                   <OverviewTabContent timeRange={timeRange} />
+                </TabsContent>
+
+                <TabsContent value="insights" className="mt-0 space-y-6">
+                  <InsightsTabContent timeRange={timeRange} />
                 </TabsContent>
 
                 <TabsContent value="users" className="mt-0 space-y-6">
