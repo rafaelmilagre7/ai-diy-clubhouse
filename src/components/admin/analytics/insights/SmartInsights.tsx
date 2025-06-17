@@ -5,23 +5,22 @@ import { Lightbulb, TrendingUp, Users, AlertTriangle, CheckCircle } from 'lucide
 import { cn } from '@/lib/utils';
 import { useSmartInsights } from '@/hooks/analytics/useSmartInsights';
 import { ModernLoadingState } from '../ModernLoadingState';
-
 interface SmartInsightsProps {
   timeRange: string;
 }
-
 export const SmartInsights: React.FC<SmartInsightsProps> = ({
   timeRange
 }) => {
-  const { insights, loading, error } = useSmartInsights(timeRange);
-
+  const {
+    insights,
+    loading,
+    error
+  } = useSmartInsights(timeRange);
   if (loading) {
     return <ModernLoadingState type="stats" />;
   }
-
   if (error) {
-    return (
-      <Card className="border-0 shadow-xl bg-white/80 backdrop-blur-sm">
+    return <Card className="border-0 shadow-xl bg-white/80 backdrop-blur-sm">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-red-600">
             <AlertTriangle className="h-6 w-6" />
@@ -31,11 +30,9 @@ export const SmartInsights: React.FC<SmartInsightsProps> = ({
         <CardContent>
           <p className="text-gray-600">{error}</p>
         </CardContent>
-      </Card>
-    );
+      </Card>;
   }
-
-  const getInsightIcon = (type: string)=> {
+  const getInsightIcon = (type: string) => {
     switch (type) {
       case 'opportunity':
         return <TrendingUp className="h-5 w-5 text-blue-600" />;
@@ -49,7 +46,6 @@ export const SmartInsights: React.FC<SmartInsightsProps> = ({
         return <Users className="h-5 w-5 text-gray-600" />;
     }
   };
-
   const getImpactColor = (impact: string) => {
     switch (impact) {
       case 'high':
@@ -62,7 +58,6 @@ export const SmartInsights: React.FC<SmartInsightsProps> = ({
         return 'bg-gray-100 text-gray-800 border-gray-200';
     }
   };
-
   const getTypeColor = (type: string) => {
     switch (type) {
       case 'opportunity':
@@ -77,9 +72,7 @@ export const SmartInsights: React.FC<SmartInsightsProps> = ({
         return 'bg-gray-100 text-gray-800 border-gray-200';
     }
   };
-
-  return (
-    <Card className="border-0 shadow-xl bg-white/80 backdrop-blur-sm">
+  return <Card className="border-0 shadow-xl bg-white/80 backdrop-blur-sm">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Lightbulb className="h-6 w-6 text-yellow-500" />
@@ -90,12 +83,11 @@ export const SmartInsights: React.FC<SmartInsightsProps> = ({
         </p>
       </CardHeader>
       <CardContent className="space-y-4">
-        {insights.map(insight => (
-          <div key={insight.id} className="p-4 border border-gray-200 rounded-lg hover:shadow-md transition-shadow">
+        {insights.map(insight => <div key={insight.id} className="p-4 border border-gray-200 rounded-lg hover:shadow-md transition-shadow">
             <div className="flex items-start justify-between mb-3">
               <div className="flex items-center gap-2">
                 {getInsightIcon(insight.type)}
-                <h4 className="font-semibold text-gray-900">{insight.title}</h4>
+                <h4 className="font-semibold text-gray-50">{insight.title}</h4>
               </div>
               <div className="flex items-center gap-2">
                 <Badge className={cn("text-xs", getImpactColor(insight.impact))}>
@@ -114,10 +106,9 @@ export const SmartInsights: React.FC<SmartInsightsProps> = ({
                 <span className="text-sm text-gray-500">Confiança:</span>
                 <div className="flex items-center gap-1">
                   <div className="w-16 h-2 bg-gray-200 rounded-full overflow-hidden">
-                    <div 
-                      className="h-full bg-green-500 rounded-full transition-all" 
-                      style={{ width: `${insight.confidence}%` }} 
-                    />
+                    <div className="h-full bg-green-500 rounded-full transition-all" style={{
+                  width: `${insight.confidence}%`
+                }} />
                   </div>
                   <span className="text-sm font-medium text-gray-700">
                     {insight.confidence}%
@@ -125,15 +116,11 @@ export const SmartInsights: React.FC<SmartInsightsProps> = ({
                 </div>
               </div>
               
-              {insight.actionable && (
-                <Badge variant="outline" className="text-xs">
+              {insight.actionable && <Badge variant="outline" className="text-xs">
                   📋 Ação Recomendada
-                </Badge>
-              )}
+                </Badge>}
             </div>
-          </div>
-        ))}
+          </div>)}
       </CardContent>
-    </Card>
-  );
+    </Card>;
 };

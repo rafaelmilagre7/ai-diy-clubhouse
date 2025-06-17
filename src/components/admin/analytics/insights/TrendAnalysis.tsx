@@ -1,13 +1,10 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { TrendingUp, TrendingDown, Minus, BarChart3 } from 'lucide-react';
 import { ModernLoadingState } from '../ModernLoadingState';
-
 interface TrendAnalysisProps {
   timeRange: string;
 }
-
 interface TrendData {
   metric: string;
   current: number;
@@ -16,57 +13,49 @@ interface TrendData {
   trend: 'up' | 'down' | 'stable';
   icon: React.ReactNode;
 }
-
-export const TrendAnalysis: React.FC<TrendAnalysisProps> = ({ timeRange }) => {
+export const TrendAnalysis: React.FC<TrendAnalysisProps> = ({
+  timeRange
+}) => {
   const [loading, setLoading] = React.useState(true);
   const [trends, setTrends] = React.useState<TrendData[]>([]);
-
   React.useEffect(() => {
     // Simular carregamento de dados reais
     const loadTrendData = async () => {
       setLoading(true);
-      
+
       // Aqui você conectaria com dados reais do Supabase
       // Por enquanto, usando dados mockados que parecem reais
-      const mockTrends: TrendData[] = [
-        {
-          metric: 'Usuários Ativos',
-          current: 142,
-          previous: 128,
-          change: 10.9,
-          trend: 'up',
-          icon: <TrendingUp className="h-4 w-4" />
-        },
-        {
-          metric: 'Implementações',
-          current: 23,
-          previous: 27,
-          change: -14.8,
-          trend: 'down',
-          icon: <BarChart3 className="h-4 w-4" />
-        },
-        {
-          metric: 'Taxa de Conclusão',
-          current: 76.5,
-          previous: 76.2,
-          change: 0.4,
-          trend: 'stable',
-          icon: <Minus className="h-4 w-4" />
-        }
-      ];
-      
+      const mockTrends: TrendData[] = [{
+        metric: 'Usuários Ativos',
+        current: 142,
+        previous: 128,
+        change: 10.9,
+        trend: 'up',
+        icon: <TrendingUp className="h-4 w-4" />
+      }, {
+        metric: 'Implementações',
+        current: 23,
+        previous: 27,
+        change: -14.8,
+        trend: 'down',
+        icon: <BarChart3 className="h-4 w-4" />
+      }, {
+        metric: 'Taxa de Conclusão',
+        current: 76.5,
+        previous: 76.2,
+        change: 0.4,
+        trend: 'stable',
+        icon: <Minus className="h-4 w-4" />
+      }];
       await new Promise(resolve => setTimeout(resolve, 1000));
       setTrends(mockTrends);
       setLoading(false);
     };
-
     loadTrendData();
   }, [timeRange]);
-
   if (loading) {
     return <ModernLoadingState type="chart" />;
   }
-
   const getTrendColor = (trend: string) => {
     switch (trend) {
       case 'up':
@@ -77,7 +66,6 @@ export const TrendAnalysis: React.FC<TrendAnalysisProps> = ({ timeRange }) => {
         return 'text-gray-600 bg-gray-50';
     }
   };
-
   const getTrendIcon = (trend: string) => {
     switch (trend) {
       case 'up':
@@ -88,9 +76,7 @@ export const TrendAnalysis: React.FC<TrendAnalysisProps> = ({ timeRange }) => {
         return <Minus className="h-4 w-4" />;
     }
   };
-
-  return (
-    <Card className="border-0 shadow-xl bg-white/80 backdrop-blur-sm">
+  return <Card className="border-0 shadow-xl bg-white/80 backdrop-blur-sm">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <BarChart3 className="h-6 w-6 text-blue-500" />
@@ -101,18 +87,15 @@ export const TrendAnalysis: React.FC<TrendAnalysisProps> = ({ timeRange }) => {
         </p>
       </CardHeader>
       <CardContent className="space-y-4">
-        {trends.map((trend, index) => (
-          <div key={index} className="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
+        {trends.map((trend, index) => <div key={index} className="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
             <div className="flex items-center gap-3">
               <div className="p-2 rounded-lg bg-gray-50">
                 {trend.icon}
               </div>
               <div>
-                <p className="font-medium text-gray-900">{trend.metric}</p>
+                <p className="font-medium text-zinc-50">{trend.metric}</p>
                 <p className="text-sm text-gray-600">
-                  Atual: {typeof trend.current === 'number' && trend.current % 1 !== 0 
-                    ? trend.current.toFixed(1) 
-                    : trend.current}
+                  Atual: {typeof trend.current === 'number' && trend.current % 1 !== 0 ? trend.current.toFixed(1) : trend.current}
                   {trend.metric.includes('Taxa') ? '%' : ''}
                 </p>
               </div>
@@ -123,9 +106,7 @@ export const TrendAnalysis: React.FC<TrendAnalysisProps> = ({ timeRange }) => {
                 {trend.change > 0 ? '+' : ''}{trend.change.toFixed(1)}%
               </span>
             </div>
-          </div>
-        ))}
+          </div>)}
       </CardContent>
-    </Card>
-  );
+    </Card>;
 };
