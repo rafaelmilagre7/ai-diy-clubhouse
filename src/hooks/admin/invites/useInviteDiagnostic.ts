@@ -59,19 +59,12 @@ export const useInviteDiagnostic = () => {
         diagnostic.recommendations.push('Edge Function com erro: ' + error.message);
       }
 
-      // 2. Verificar tentativas recentes (query corrigida)
+      // 2. Verificar tentativas recentes com query simples
       console.log("🔍 [DIAGNOSTIC] Verificando tentativas recentes...");
       try {
         const { data: attempts, error: attemptsError } = await supabase
           .from('invite_send_attempts')
-          .select(`
-            id,
-            invites!inner(email),
-            status,
-            method_attempted,
-            created_at,
-            error_message
-          `)
+          .select('*')
           .order('created_at', { ascending: false })
           .limit(10);
 
@@ -82,7 +75,7 @@ export const useInviteDiagnostic = () => {
         } else {
           diagnostic.recentAttempts = (attempts || []).map(attempt => ({
             id: attempt.id,
-            email: attempt.invites.email,
+            email: attempt.email,
             status: attempt.status,
             method_attempted: attempt.method_attempted,
             created_at: attempt.created_at,
