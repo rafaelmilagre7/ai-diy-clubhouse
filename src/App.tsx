@@ -1,45 +1,42 @@
 
-import React from 'react';
-import { BrowserRouter as Router } from 'react-router-dom';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
-import { Toaster } from 'sonner';
-import { AuthProvider } from '@/contexts/auth';
-import { LoggingProvider } from '@/contexts/logging';
-import { AppRoutes } from '@/routes';
-import { SEOWrapper } from '@/components/seo/SEOWrapper';
+import { BrowserRouter } from "react-router-dom";
+import { Toaster } from "@/components/ui/toaster";
+import { Toaster as Sonner } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { OptimizedAuthProvider } from "@/contexts/auth/OptimizedAuthContext";
+import AppRoutes from "@/routes/AppRoutes";
+import LayoutProvider from "@/components/layout/LayoutProvider";
 
+// OTIMIZAÇÃO: Query client com configurações otimizadas
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 5 * 60 * 1000,
-      retry: 2
-    }
-  }
+      staleTime: 5 * 60 * 1000, // 5 minutos
+      gcTime: 10 * 60 * 1000,   // 10 minutos
+      retry: 1,                 // Menos tentativas para carregamento mais rápido
+      refetchOnWindowFocus: false, // Não refetch ao focar janela
+    },
+    mutations: {
+      retry: 1,
+    },
+  },
 });
 
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <LoggingProvider>
-          <Router>
-            <SEOWrapper>
-              <div className="App">
-                <AppRoutes />
-                <Toaster 
-                  position="top-right"
-                  theme="dark"
-                  richColors
-                  expand
-                  visibleToasts={3}
-                />
-                <ReactQueryDevtools initialIsOpen={false} />
-              </div>
-            </SEOWrapper>
-          </Router>
-        </LoggingProvider>
-      </AuthProvider>
+      <BrowserRouter>
+        <OptimizedAuthProvider>
+          <TooltipProvider>
+            <LayoutProvider>
+              <AppRoutes />
+            </LayoutProvider>
+            <Toaster />
+            <Sonner />
+          </TooltipProvider>
+        </OptimizedAuthProvider>
+      </BrowserRouter>
     </QueryClientProvider>
   );
 }
