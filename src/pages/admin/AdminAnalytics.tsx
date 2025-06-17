@@ -13,16 +13,9 @@ import { PeriodComparison } from "@/components/admin/analytics/PeriodComparison"
 
 const AdminAnalytics = () => {
   const [activeTab, setActiveTab] = useState("overview");
-  const [filters, setFilters] = useState({
-    timeRange: "30d",
-    category: "all",
-    difficulty: "all",
-    role: "all"
-  });
-
-  const handleFilterChange = (newFilters: any) => {
-    setFilters(prev => ({ ...prev, ...newFilters }));
-  };
+  const [timeRange, setTimeRange] = useState("30d");
+  const [category, setCategory] = useState("all");
+  const [difficulty, setDifficulty] = useState("all");
 
   // Sample data for period comparison
   const comparisonData = [
@@ -54,12 +47,26 @@ const AdminAnalytics = () => {
 
   return (
     <div className="space-y-6 p-6">
-      <AnalyticsHeader />
+      <AnalyticsHeader 
+        timeRange={timeRange} 
+        setTimeRange={setTimeRange}
+        category={category}
+        setCategory={setCategory}
+        difficulty={difficulty}
+        setDifficulty={setDifficulty}
+      />
       
       <div className="flex flex-col lg:flex-row gap-6">
         {/* Filtros principais */}
         <div className="lg:w-80">
-          <AnalyticsFilters filters={filters} onFiltersChange={handleFilterChange} />
+          <AnalyticsFilters 
+            timeRange={timeRange}
+            setTimeRange={setTimeRange}
+            category={category}
+            setCategory={setCategory}
+            difficulty={difficulty}
+            setDifficulty={setDifficulty}
+          />
         </div>
 
         {/* Conteúdo principal */}
@@ -103,29 +110,26 @@ const AdminAnalytics = () => {
 
               <div className="p-6">
                 <TabsContent value="overview" className="mt-0">
-                  <OverviewTabContent timeRange={filters.timeRange} />
+                  <OverviewTabContent timeRange={timeRange} />
                 </TabsContent>
 
                 <TabsContent value="users" className="mt-0 space-y-6">
                   <UserAnalyticsTabContent 
-                    timeRange={filters.timeRange}
-                    role={filters.role}
+                    timeRange={timeRange}
+                    role="all"
                   />
                 </TabsContent>
 
                 <TabsContent value="solutions" className="mt-0 space-y-6">
-                  <SolutionsAnalyticsTabContent timeRange={filters.timeRange} />
+                  <SolutionsAnalyticsTabContent timeRange={timeRange} />
                 </TabsContent>
 
                 <TabsContent value="implementations" className="mt-0 space-y-6">
-                  <ImplementationsAnalyticsTabContent 
-                    timeRange={filters.timeRange}
-                    difficulty={filters.difficulty}
-                  />
+                  <ImplementationsAnalyticsTabContent timeRange={timeRange} />
                 </TabsContent>
 
                 <TabsContent value="lms" className="mt-0 space-y-6">
-                  <LmsAnalyticsTabContent timeRange={filters.timeRange} />
+                  <LmsAnalyticsTabContent timeRange={timeRange} />
                 </TabsContent>
               </div>
             </Tabs>
