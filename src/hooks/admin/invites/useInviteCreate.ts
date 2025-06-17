@@ -25,16 +25,15 @@ export const useInviteCreate = () => {
     try {
       setIsCreating(true);
       
-      console.log("🔥 [INVITE-CREATE] Iniciando criação de convite:", {
+      console.log("📧 [INVITE-CREATE] Criando convite:", {
         email,
         roleId,
         channelPreference,
-        hasPhone: !!phone,
-        user: user.id
+        hasPhone: !!phone
       });
 
-      // 1. Criar o convite usando a função híbrida
-      const { data: inviteData, error: inviteError } = await supabase.rpc('create_invite_hybrid', {
+      // Usar a função híbrida que suporta diferentes canais
+      const { data, error } = await supabase.rpc('create_invite_hybrid', {
         p_email: email,
         p_role_id: roleId,
         p_phone: phone,
@@ -43,154 +42,59 @@ export const useInviteCreate = () => {
         p_channel_preference: channelPreference
       });
 
-      if (inviteError) {
-        console.error("❌ [INVITE-CREATE] Erro ao criar convite:", inviteError);
-        throw inviteError;
+      if (error) {
+        console.error("❌ [INVITE-CREATE] Erro SQL:", error);
+        throw error;
       }
 
-      if (inviteData.status === 'error') {
-        console.error("❌ [INVITE-CREATE] Erro na função:", inviteData.message);
-        throw new Error(inviteData.message);
+      if (data.status === 'error') {
+        console.error("❌ [INVITE-CREATE] Erro na função:", data.message);
+        throw new Error(data.message);
       }
 
-      console.log("✅ [INVITE-CREATE] Convite criado com sucesso:", {
-        inviteId: inviteData.invite_id,
-        token: inviteData.token,
-        expiresAt: inviteData.expires_at
-      });
+      console.log("✅ [INVITE-CREATE] Convite criado:", data);
 
-      // 2. Gerar URL do convite
-      const inviteUrl = generateInviteUrl(inviteData.token);
-      console.log("🔗 [INVITE-CREATE] URL gerada:", inviteUrl);
+      // Gerar URL padronizada
+      const inviteUrl = generateInviteUrl(data.token);
       
-      // 3. Buscar nome do papel para o envio
-      const { data: roleData, error: roleError } = await supabase
+      // Buscar nome do papel para o envio
+      const { data: roleData } = await supabase
         .from('user_roles')
         .select('name')
         .eq('id', roleId)
         .single();
 
-      if (roleError) {
-        console.warn("⚠️ [INVITE-CREATE] Erro ao buscar papel:", roleError);
-      }
-
-      // 4. Registrar tentativa ANTES de chamar a Edge Function
-      console.log("📝 [INVITE-CREATE] Registrando tentativa de envio...");
-      const { error: attemptError } = await supabase.from('invite_send_attempts').insert({
-        invite_id: inviteData.invite_id,
+      // Enviar convite via email/WhatsApp
+      const sendResult = await sendInviteNotification({
         email,
-        method_attempted: 'edge_function_start',
-        status: 'pending'
+        phone,
+        inviteUrl,
+        roleName: roleData?.name || 'membro',
+        expiresAt: data.expires_at,
+        senderName: user.user_metadata?.name || user.email,
+        notes,
+        inviteId: data.invite_id,
+        channelPreference
       });
 
-      if (attemptError) {
-        console.error("❌ [INVITE-CREATE] Erro ao registrar tentativa:", attemptError);
-      }
-
-      // 5. Chamar Edge Function para envio do email
-      console.log("📧 [INVITE-CREATE] Chamando Edge Function para envio...");
-      
-      const { data: emailResult, error: emailError } = await supabase.functions.invoke('send-invite-email', {
-        body: {
-          email,
-          inviteUrl,
-          roleName: roleData?.name || 'membro',
-          expiresAt: inviteData.expires_at,
-          senderName: user.user_metadata?.name || user.email,
-          notes,
-          inviteId: inviteData.invite_id,
-          forceResend: true
-        }
-      });
-
-      console.log("📬 [INVITE-CREATE] Resultado da Edge Function:", { 
-        emailResult, 
-        emailError,
-        hasData: !!emailResult,
-        success: emailResult?.success
-      });
-
-      if (emailError) {
-        console.error("❌ [INVITE-CREATE] Erro na Edge Function:", emailError);
-        
-        // Atualizar tentativa como falhada
-        await supabase.from('invite_send_attempts')
-          .update({
-            error_message: emailError.message,
-            status: 'failed',
-            method_attempted: 'edge_function_error'
-          })
-          .eq('invite_id', inviteData.invite_id)
-          .eq('status', 'pending');
-
-        toast.warning('Convite criado, mas houve problema no envio', {
-          description: `Erro: ${emailError.message}`
-        });
-      } else if (emailResult?.success) {
-        console.log("✅ [INVITE-CREATE] Email enviado com sucesso");
-        
-        // Atualizar tentativa como bem-sucedida
-        await supabase.from('invite_send_attempts')
-          .update({
-            status: 'sent',
-            sent_at: new Date().toISOString(),
-            method_attempted: 'edge_function_success'
-          })
-          .eq('invite_id', inviteData.invite_id)
-          .eq('status', 'pending');
-
-        // Atualizar estatísticas do convite
-        await supabase.from('invites')
-          .update({
-            last_sent_at: new Date().toISOString(),
-            send_attempts: 1
-          })
-          .eq('id', inviteData.invite_id);
-
-        toast.success('Convite criado e enviado com sucesso!', {
-          description: emailResult.message || 'Email enviado para ' + email
+      if (!sendResult.success) {
+        console.warn("⚠️ [INVITE-CREATE] Problema no envio:", sendResult.error);
+        toast.warning('Convite criado, mas houve um problema no envio', {
+          description: sendResult.error || 'O sistema tentará reenviar automaticamente.'
         });
       } else {
-        console.error("❌ [INVITE-CREATE] Edge Function retornou resultado inválido:", emailResult);
-        
-        // Atualizar tentativa como falhada
-        await supabase.from('invite_send_attempts')
-          .update({
-            error_message: emailResult?.error || 'Resposta inválida da Edge Function',
-            status: 'failed',
-            method_attempted: 'edge_function_invalid_response'
-          })
-          .eq('invite_id', inviteData.invite_id)
-          .eq('status', 'pending');
-
-        toast.warning('Convite criado, mas houve problema no envio', {
-          description: emailResult?.error || 'Erro desconhecido no envio'
+        console.log("✅ [INVITE-CREATE] Envio bem-sucedido:", sendResult.method);
+        toast.success('Convite criado e enviado com sucesso', {
+          description: `Convite para ${email} foi enviado via ${sendResult.method}.`
         });
       }
 
-      return inviteData;
+      return data;
     } catch (err: any) {
       console.error('❌ [INVITE-CREATE] Erro crítico:', err);
-      
-      // Mensagens de erro mais específicas
-      let errorMessage = 'Erro ao criar convite';
-      let description = err.message || 'Não foi possível criar o convite.';
-      
-      if (err.message?.includes('já existe')) {
-        errorMessage = 'Convite já existe';
-        description = 'Este email já possui um convite pendente.';
-      } else if (err.message?.includes('role')) {
-        errorMessage = 'Papel inválido';
-        description = 'O papel selecionado não é válido.';
-      } else if (err.message?.includes('email')) {
-        errorMessage = 'Email inválido';
-        description = 'Verifique se o formato do email está correto.';
-      } else if (err.message?.includes('permission')) {
-        errorMessage = 'Sem permissão';
-        description = 'Você não tem permissão para criar convites.';
-      }
-      
-      toast.error(errorMessage, { description });
+      toast.error('Erro ao criar convite', {
+        description: err.message || 'Não foi possível criar o convite.'
+      });
       return null;
     } finally {
       setIsCreating(false);
@@ -198,4 +102,79 @@ export const useInviteCreate = () => {
   };
 
   return { createInvite, isCreating };
+};
+
+// Função auxiliar para envio de notificações
+const sendInviteNotification = async ({
+  email,
+  phone,
+  inviteUrl,
+  roleName,
+  expiresAt,
+  senderName,
+  notes,
+  inviteId,
+  channelPreference
+}: {
+  email: string;
+  phone?: string;
+  inviteUrl: string;
+  roleName: string;
+  expiresAt: string;
+  senderName?: string;
+  notes?: string;
+  inviteId?: string;
+  channelPreference: 'email' | 'whatsapp' | 'both';
+}): Promise<{ success: boolean; error?: string; method?: string }> => {
+  try {
+    console.log("📬 [INVITE-SEND] Enviando convite:", {
+      email,
+      channelPreference,
+      hasPhone: !!phone,
+      inviteUrl: inviteUrl.substring(0, 50) + "..."
+    });
+
+    // Validar URL antes de enviar
+    if (!inviteUrl || !inviteUrl.includes('/convite/')) {
+      throw new Error('URL de convite inválida');
+    }
+
+    // Chamar a edge function de envio de email (principal)
+    const { data, error } = await supabase.functions.invoke('send-invite-email', {
+      body: {
+        email,
+        inviteUrl,
+        roleName,
+        expiresAt,
+        senderName,
+        notes,
+        inviteId,
+        phone,
+        channelPreference,
+        forceResend: true
+      }
+    });
+
+    if (error) {
+      console.error("❌ [INVITE-SEND] Erro na edge function:", error);
+      throw error;
+    }
+
+    console.log("✅ [INVITE-SEND] Resposta da edge function:", data);
+
+    if (!data.success) {
+      throw new Error(data.error || data.message || 'Erro no envio');
+    }
+
+    return {
+      success: true,
+      method: data.method || 'email'
+    };
+  } catch (err: any) {
+    console.error('❌ [INVITE-SEND] Erro no envio:', err);
+    return {
+      success: false,
+      error: err.message || 'Erro desconhecido no envio'
+    };
+  }
 };

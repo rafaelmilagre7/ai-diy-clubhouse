@@ -1,38 +1,29 @@
 // Configuração centralizada da aplicação - 100% LIVRE DE CREDENCIAIS HARDCODED
 export const APP_CONFIG = {
-  name: 'Viver de IA Hub',
-  domain: 'app.viverdeia.ai',
-  supportEmail: 'suporte@viverdeia.ai',
+  // Domínio principal da aplicação
+  DOMAIN: import.meta.env.VITE_APP_DOMAIN || 'https://app.viverdeia.ai',
   
-  // URLs principais
-  getAppUrl: (path: string = ''): string => {
-    const isDev = import.meta.env.DEV;
-    const baseUrl = isDev ? 'http://localhost:5173' : 'https://app.viverdeia.ai';
-    return path ? `${baseUrl}${path.startsWith('/') ? '' : '/'}${path}` : baseUrl;
-  },
-
-  getAppDomain: (): string => {
-    const isDev = import.meta.env.DEV;
-    return isDev ? 'http://localhost:5173' : 'https://app.viverdeia.ai';
-  },
+  // Domínio de desenvolvimento para fallback
+  DEV_DOMAIN: 'http://localhost:3000',
   
-  // Configurações de convite
-  invite: {
-    defaultExpirationDays: 7,
-    maxAttemptsPerInvite: 3,
-    retryDelayMinutes: 5
-  },
+  // Verificar se estamos em desenvolvimento
+  isDevelopment: import.meta.env.DEV,
   
-  // Configurações de email
-  email: {
-    fromAddress: 'noreply@viverdeia.ai',
-    fromName: 'Viver de IA Hub',
-    templates: {
-      invite: {
-        subject: 'Você foi convidado para o Viver de IA Hub',
-        preheader: 'Aceite seu convite e comece sua jornada'
-      }
+  // Obter o domínio correto baseado no ambiente
+  getAppDomain(): string {
+    // Se estivermos em localhost, usar localhost
+    if (window.location.hostname === 'localhost') {
+      return this.DEV_DOMAIN;
     }
+    
+    // Caso contrário, sempre usar o domínio personalizado
+    return this.DOMAIN;
+  },
+  
+  // Gerar URL completa para uma rota
+  getAppUrl(path: string = ''): string {
+    const domain = this.getAppDomain();
+    return `${domain}${path.startsWith('/') ? path : `/${path}`}`;
   }
 };
 

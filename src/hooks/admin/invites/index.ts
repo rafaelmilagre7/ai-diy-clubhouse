@@ -6,5 +6,3 @@ export * from './useInviteDelete';
 export * from './useInviteResend';
 export * from './useInviteEmailService';
 export * from './useInviteChannelService';
-export * from './useInviteDiagnostic';
-export * from './useResendConfig';

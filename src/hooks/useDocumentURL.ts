@@ -32,7 +32,8 @@ export const useDocumentURL = () => {
       setLastOptimization(result);
 
       console.log(`[useDocumentURL] Otimização concluída:`, {
-        success: result.success,
+        source: result.source,
+        cached: result.cached,
         url: result.optimizedUrl.substring(0, 50) + '...'
       });
 
