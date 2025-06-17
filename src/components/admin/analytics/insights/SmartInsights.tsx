@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -17,7 +16,7 @@ export const SmartInsights: React.FC<SmartInsightsProps> = ({
   const { insights, loading, error } = useSmartInsights(timeRange);
 
   if (loading) {
-    return <ModernLoadingState type="card" />;
+    return <ModernLoadingState type="stats" />;
   }
 
   if (error) {
