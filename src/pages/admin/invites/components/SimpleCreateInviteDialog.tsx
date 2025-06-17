@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { Loader2, Plus, AlertCircle, RefreshCw } from "lucide-react";
+import { Loader2, Plus, AlertCircle, RefreshCw, Settings } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -24,6 +24,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useInviteCreate } from "@/hooks/admin/invites/useInviteCreate";
 import { useInviteEmailFallback } from "@/hooks/admin/invites/useInviteEmailFallback";
+import { ResendConfigDialog } from "@/components/admin/invites/ResendConfigDialog";
 
 interface SimpleCreateInviteDialogProps {
   roles: any[];
@@ -43,10 +44,24 @@ const SimpleCreateInviteDialog = ({ roles, onInviteCreated }: SimpleCreateInvite
     e.preventDefault();
     
     if (!email || !roleId) {
+      console.warn("📝 [CREATE-INVITE-UI] Dados obrigatórios não preenchidos:", { email, roleId });
       return;
     }
     
+    console.log("📝 [CREATE-INVITE-UI] Iniciando criação de convite pela UI:", {
+      email,
+      roleId,
+      notes,
+      expiration
+    });
+    
     const result = await createInvite(email, roleId, notes, expiration);
+    
+    console.log("📝 [CREATE-INVITE-UI] Resultado da criação:", { 
+      success: !!result,
+      inviteId: result?.invite_id 
+    });
+    
     if (result) {
       setEmail("");
       setRoleId("");
@@ -58,12 +73,15 @@ const SimpleCreateInviteDialog = ({ roles, onInviteCreated }: SimpleCreateInvite
   };
 
   const handleRetryFailed = async () => {
+    console.log("🔄 [CREATE-INVITE-UI] Tentando reenviar convites falhados...");
     await retryFailedInvites();
     onInviteCreated();
   };
 
   return (
     <div className="flex gap-2">
+      <ResendConfigDialog />
+      
       <Button
         variant="outline"
         size="sm"
@@ -91,7 +109,7 @@ const SimpleCreateInviteDialog = ({ roles, onInviteCreated }: SimpleCreateInvite
             <DialogHeader>
               <DialogTitle>Criar Novo Convite</DialogTitle>
               <DialogDescription>
-                Envie um convite para novos membros. O sistema possui fallback automático caso o email principal falhe.
+                Envie um convite para novos membros. Sistema com envio robusto via Edge Functions.
               </DialogDescription>
             </DialogHeader>
             
@@ -99,7 +117,7 @@ const SimpleCreateInviteDialog = ({ roles, onInviteCreated }: SimpleCreateInvite
               <Alert>
                 <AlertCircle className="h-4 w-4" />
                 <AlertDescription>
-                  Sistema com fallback: Se o email principal falhar, tentaremos via Supabase Auth automaticamente.
+                  O sistema criará o convite e enviará automaticamente via Edge Function com fallback integrado.
                 </AlertDescription>
               </Alert>
 
