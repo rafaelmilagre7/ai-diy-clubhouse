@@ -26,7 +26,7 @@ export const useGlobalLoading = () => {
   }, []);
 
   const forceComplete = useCallback(() => {
-    console.log('[GLOBAL-LOADING] Forçando finalização de todos os loadings');
+    console.log('[GLOBAL-LOADING] Finalizando todos os loadings');
     setLoadingState({
       auth: false,
       data: false,
@@ -50,9 +50,6 @@ export const useGlobalLoading = () => {
     setLoading,
     forceComplete,
     reset,
-    circuitBreakerActive: false, // Simplificado
-    retryCount: 0,
-    getLoadingDuration: () => 0,
     isAnyLoading: loadingState.global
   };
 };
