@@ -4,8 +4,7 @@ import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
 import { UserProfile, getUserRoleName, isAdminRole, isFormacaoRole } from '@/lib/supabase';
 import { useAuthMethods } from './hooks/useAuthMethods';
-import { useAuthStateManager } from '../../hooks/auth/useAuthStateManager';
-import { clearProfileCache } from '@/hooks/auth/utils/authSessionUtils';
+import { validateUserSession, fetchUserProfileSecurely, clearProfileCache } from '@/hooks/auth/utils/authSessionUtils';
 import { AuthContextType } from './types';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -32,35 +31,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const authListenerRef = useRef<any>(null);
   const isInitialized = useRef(false);
   const lastUserId = useRef<string | null>(null);
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
-
-  // Inicializar useAuthStateManager com os setters como parâmetros
-  const { setupAuthSession } = useAuthStateManager({
-    setSession,
-    setUser,
-    setProfile,
-    setIsLoading,
-  });
 
   const { signIn, signOut, signInAsMember, signInAsAdmin } = useAuthMethods({
     setIsLoading,
   });
-
-  // Circuit breaker - timeout de 5 segundos para inicialização
-  useEffect(() => {
-    timeoutRef.current = setTimeout(() => {
-      if (isLoading) {
-        console.warn("⚠️ [AUTH] Circuit breaker ativado - forçando fim do loading");
-        setIsLoading(false);
-      }
-    }, 5000);
-
-    return () => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
-    };
-  }, [isLoading]);
 
   // Verificação imediata de admin baseada em email
   const isAdminByEmail = user?.email && [
@@ -79,15 +53,55 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     return isFormacaoRole(profile);
   }, [profile]);
 
-  // Inicialização única otimizada
+  // Setup de sessão simplificado
+  const setupAuthSession = useCallback(async () => {
+    try {
+      const sessionResult = await validateUserSession();
+      const { session: validSession, user: validUser } = sessionResult;
+      
+      if (!validSession || !validUser) {
+        setSession(null);
+        setUser(null);
+        setProfile(null);
+        clearProfileCache();
+        return;
+      }
+
+      setSession(validSession);
+      setUser(validUser);
+
+      // Buscar perfil
+      try {
+        const userProfile = await fetchUserProfileSecurely(validUser.id);
+        if (userProfile && userProfile.id === validUser.id) {
+          setProfile(userProfile);
+        } else {
+          setProfile(null);
+        }
+      } catch (profileError) {
+        console.error('[AUTH] Erro ao buscar perfil:', profileError);
+        setProfile(null);
+      }
+
+    } catch (error) {
+      console.error('[AUTH] Erro no setup:', error);
+      setAuthError(error instanceof Error ? error : new Error('Erro na autenticação'));
+      setSession(null);
+      setUser(null);
+      setProfile(null);
+      clearProfileCache();
+    }
+  }, []);
+
+  // Inicialização única simplificada
   useEffect(() => {
     if (isInitialized.current) return;
     
     const initializeAuth = async () => {
-      console.log('🚀 [AUTH] Inicializando sistema de autenticação');
+      console.log('🚀 [AUTH] Inicializando autenticação');
       
       try {
-        // CORREÇÃO: Configurar listener ANTES de tentar setup
+        // Configurar listener
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
           async (event, session) => {
             console.log(`🔄 [AUTH] Evento: ${event}`);
@@ -102,18 +116,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             if (event === 'SIGNED_IN' && session?.user) {
               console.log(`🎉 [AUTH] Login: ${session.user.email}`);
               
-              // Defer a busca do perfil para evitar deadlock
-              setTimeout(async () => {
-                try {
-                  await setupAuthSession();
-                } catch (error) {
-                  console.error('❌ [AUTH] Erro no setup pós-login:', error);
-                  setAuthError(error instanceof Error ? error : new Error('Erro no setup'));
-                  setUser(session.user);
-                  setSession(session);
-                  setIsLoading(false);
-                }
-              }, 0);
+              // Setup imediato sem timeout
+              try {
+                await setupAuthSession();
+              } catch (error) {
+                console.error('❌ [AUTH] Erro no setup pós-login:', error);
+                setAuthError(error instanceof Error ? error : new Error('Erro no setup'));
+                setUser(session.user);
+                setSession(session);
+              } finally {
+                setIsLoading(false);
+              }
             } else if (event === 'SIGNED_OUT') {
               console.log('👋 [AUTH] Logout');
               clearProfileCache();
@@ -128,7 +141,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         
         authListenerRef.current = subscription;
         
-        // DEPOIS de configurar o listener, tentar setup inicial
+        // Setup inicial
         await setupAuthSession();
         
         isInitialized.current = true;
@@ -137,19 +150,26 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       } catch (error) {
         console.error('❌ [AUTH] Erro na inicialização:', error);
         setAuthError(error instanceof Error ? error : new Error('Erro na inicialização'));
+      } finally {
         setIsLoading(false);
       }
     };
 
     initializeAuth();
 
+    // Timeout de segurança simplificado
+    const timeout = setTimeout(() => {
+      if (isLoading) {
+        console.warn("⚠️ [AUTH] Timeout de segurança - finalizando loading");
+        setIsLoading(false);
+      }
+    }, 3000);
+
     return () => {
       if (authListenerRef.current) {
         authListenerRef.current.unsubscribe();
       }
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
+      clearTimeout(timeout);
     };
   }, []); // Sem dependências para evitar re-inicialização
 

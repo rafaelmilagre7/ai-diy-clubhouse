@@ -7,9 +7,6 @@ import MemberLayout from "./MemberLayout";
 import FormacaoLayout from "./formacao/FormacaoLayout";
 import { PageTransitionWithFallback } from "@/components/transitions/PageTransitionWithFallback";
 
-/**
- * CORREÇÃO: LayoutProvider simplificado sem timeouts complexos
- */
 const LayoutProvider = memo(({ children }: { children: ReactNode }) => {
   const {
     user,
@@ -22,7 +19,7 @@ const LayoutProvider = memo(({ children }: { children: ReactNode }) => {
   const location = useLocation();
   const [layoutReady, setLayoutReady] = useState(false);
 
-  // CORREÇÃO: Verificações de rota mais simples
+  // Verificações de rota simplificadas
   const routeChecks = useMemo(() => ({
     isLearningRoute: location.pathname.startsWith('/learning'),
     isPathAdmin: location.pathname.startsWith('/admin'),
@@ -30,9 +27,8 @@ const LayoutProvider = memo(({ children }: { children: ReactNode }) => {
     isFormacaoRoute: location.pathname.startsWith('/formacao')
   }), [location.pathname]);
 
-  // CORREÇÃO: Verificação de autenticação simplificada
+  // Verificação de autenticação simplificada
   useEffect(() => {
-    // Se não estiver carregando, verificar autenticação
     if (!isLoading) {
       if (!user) {
         navigate('/login', { replace: true });
@@ -42,30 +38,27 @@ const LayoutProvider = memo(({ children }: { children: ReactNode }) => {
       // Se temos usuário, marcar layout como pronto
       setLayoutReady(true);
       
-      // CORREÇÃO: Redirecionamento mais simples
+      // Redirecionamento simplificado
       if (user && profile) {
         const { isLearningRoute, isPathAdmin, isPathFormacao } = routeChecks;
         
-        if (isAdmin && !isPathAdmin && !isPathFormacao && !isLearningRoute) {
-          // Admin pode ir para dashboard membro também
-        } 
-        else if (isFormacao && !isAdmin && !isPathFormacao && !isLearningRoute) {
+        if (isFormacao && !isAdmin && !isPathFormacao && !isLearningRoute) {
           navigate('/formacao', { replace: true });
         }
       }
     } else {
-      // CORREÇÃO: Timeout simplificado de 3 segundos
+      // Timeout de segurança de 2 segundos
       const timeout = setTimeout(() => {
         setLayoutReady(true);
-      }, 3000);
+      }, 2000);
       
       return () => clearTimeout(timeout);
     }
   }, [user, profile, isAdmin, isFormacao, isLoading, navigate, routeChecks]);
 
-  // CORREÇÃO: Renderização mais direta
+  // Renderização simplificada
   if (layoutReady && user) {
-    const { isFormacaoRoute, isLearningRoute } = routeChecks;
+    const { isFormacaoRoute } = routeChecks;
     
     if (isFormacaoRoute && (isFormacao || isAdmin)) {
       return (
@@ -82,7 +75,7 @@ const LayoutProvider = memo(({ children }: { children: ReactNode }) => {
     }
   }
 
-  // CORREÇÃO: Loading mais simples
+  // Loading simples
   return (
     <PageTransitionWithFallback isVisible={true}>
       <LoadingScreen message="Carregando seu dashboard..." />
