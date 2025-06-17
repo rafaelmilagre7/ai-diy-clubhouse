@@ -36,6 +36,40 @@ export const UserAnalyticsTabContent = ({ timeRange, role }: UserAnalyticsTabCon
   const growthRate = data.usersByTime.length > 1 ? 
     ((data.usersByTime[data.usersByTime.length - 1]?.novos || 0) / Math.max(1, data.usersByTime[data.usersByTime.length - 2]?.novos || 1) - 1) * 100 : 0;
 
+  // Mock data for users - em um cenário real, viria dos dados da API
+  const mockUsers = [
+    {
+      id: '1',
+      name: 'João Silva',
+      email: 'joao@exemplo.com',
+      avatarUrl: '',
+      company: 'Tech Corp',
+      role: 'admin',
+      activityCount: 45,
+      lastSeen: new Date().toISOString()
+    },
+    {
+      id: '2',
+      name: 'Maria Santos',
+      email: 'maria@exemplo.com',
+      avatarUrl: '',
+      company: 'StartupXYZ',
+      role: 'formacao',
+      activityCount: 38,
+      lastSeen: new Date(Date.now() - 86400000).toISOString()
+    },
+    {
+      id: '3',
+      name: 'Pedro Costa',
+      email: 'pedro@exemplo.com',
+      avatarUrl: '',
+      company: 'Inovação Ltda',
+      role: 'member',
+      activityCount: 32,
+      lastSeen: new Date(Date.now() - 172800000).toISOString()
+    }
+  ];
+
   return (
     <div className="space-y-8">
       {/* Stats modernas */}
@@ -58,7 +92,7 @@ export const UserAnalyticsTabContent = ({ timeRange, role }: UserAnalyticsTabCon
           <UserActivityByDayChart data={data.userActivityByDay} />
         </div>
         <div className="lg:col-span-2">
-          <TopActiveUsersTable />
+          <TopActiveUsersTable users={mockUsers} />
         </div>
       </div>
     </div>
