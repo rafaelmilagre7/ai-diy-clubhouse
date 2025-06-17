@@ -4,7 +4,6 @@ import { Switch } from "@/components/ui/switch";
 import { UseFormReturn } from "react-hook-form";
 import { EventFormData } from "../EventFormSchema";
 import { CalendarClock } from "lucide-react";
-import { useCallback } from "react";
 
 interface RecurrenceToggleProps {
   form: UseFormReturn<EventFormData>;
@@ -17,34 +16,28 @@ export const RecurrenceToggle = ({ form }: RecurrenceToggleProps) => {
     <FormField
       control={form.control}
       name="is_recurring"
-      render={({ field }) => {
-        const handleCheckedChange = useCallback((checked: boolean) => {
-          field.onChange(checked);
-        }, [field.onChange]);
-
-        return (
-          <FormItem className="">
-            <div className="flex items-center space-x-3">
-              <CalendarClock 
-                className={`w-5 h-5 ${isRecurring ? 'text-viverblue' : 'text-muted-foreground'}`} 
-              />
-              <div className="space-y-0.5">
-                <FormLabel className="text-base">Evento Recorrente</FormLabel>
-                <p className="text-sm text-muted-foreground">
-                  Ative para configurar um evento que se repete regularmente
-                </p>
-              </div>
+      render={({ field }) => (
+        <FormItem className="">
+          <div className="flex items-center space-x-3">
+            <CalendarClock 
+              className={`w-5 h-5 ${isRecurring ? 'text-viverblue' : 'text-muted-foreground'}`} 
+            />
+            <div className="space-y-0.5">
+              <FormLabel className="text-base">Evento Recorrente</FormLabel>
+              <p className="text-sm text-muted-foreground">
+                Ative para configurar um evento que se repete regularmente
+              </p>
             </div>
-            <FormControl>
-              <Switch
-                checked={field.value || false}
-                onCheckedChange={handleCheckedChange}
-                className="data-[state=checked]:bg-viverblue"
-              />
-            </FormControl>
-          </FormItem>
-        );
-      }}
+          </div>
+          <FormControl>
+            <Switch
+              checked={field.value || false}
+              onCheckedChange={field.onChange}
+              className="data-[state=checked]:bg-viverblue"
+            />
+          </FormControl>
+        </FormItem>
+      )}
     />
   );
 };
