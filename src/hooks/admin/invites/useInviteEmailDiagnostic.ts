@@ -1,291 +1,462 @@
 
 import { useState, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
-import { toast } from 'sonner';
-import { useInviteEmailService } from './useInviteEmailService';
+import { useAuth } from '@/contexts/auth';
 
-interface DiagnosticResult {
-  component: string;
-  status: 'success' | 'warning' | 'error';
+export interface DiagnosticResult {
+  name: string;
+  success: boolean;
   message: string;
+  timestamp: Date;
   details?: any;
-  timestamp: string;
 }
 
-interface DiagnosticData {
-  systemHealth: 'healthy' | 'warning' | 'critical';
-  edgeFunctionExists: boolean;
-  edgeFunctionResponding: boolean;
-  recentInvites: any[];
-  failedInvites: any[];
-  testResults: {
+export interface DiagnosticData {
+  timestamp: Date;
+  systemHealth: {
     email: boolean;
     database: boolean;
     auth: boolean;
   };
+  // Status dos componentes principais do sistema
+  edgeFunctionExists: boolean; 
+  edgeFunctionResponding: boolean;
+  recentInvites: any[];
+  failedInvites: any[];
+  // Resultados dos testes específicos
+  testResults: {
+    edgeFunctionTest: {
+      success: boolean;
+      message: string;
+    };
+    resendTest: {
+      success: boolean;
+      message: string;
+    };
+    fallbackTest: {
+      success: boolean;
+      message: string;
+    };
+  };
+  // Recomendações baseadas na análise
   recommendations: string[];
-  lastUpdated: Date;
 }
 
 export function useInviteEmailDiagnostic() {
+  const { user } = useAuth();
   const [isRunning, setIsRunning] = useState(false);
   const [results, setResults] = useState<DiagnosticResult[]>([]);
   const [lastDiagnostic, setLastDiagnostic] = useState<DiagnosticData | null>(null);
-  const { sendInviteEmail } = useInviteEmailService();
 
+  // Método para testar o envio de email diretamente
   const testInviteEmail = useCallback(async (email: string) => {
-    setIsRunning(true);
-    
     try {
-      const result = await sendInviteEmail({
-        email,
-        inviteUrl: 'https://exemplo.com/convite/teste',
-        roleName: 'Teste',
-        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-        senderName: 'Sistema de Teste',
-        notes: 'Teste de envio de email',
-        inviteId: 'test-invite-' + Date.now(),
-        forceResend: true
+      setIsRunning(true);
+      
+      // Chamar a edge function diretamente para teste
+      const { data, error } = await supabase.functions.invoke('send-invite-email', {
+        body: {
+          email,
+          inviteUrl: `${window.location.origin}/teste-diagnostico`,
+          roleName: 'Teste Diagnóstico',
+          expiresAt: new Date(Date.now() + 86400000).toISOString(),
+          senderName: user?.user_metadata?.name || 'Sistema de Diagnóstico',
+          notes: 'Este é um email de teste do sistema de diagnóstico.',
+          inviteId: 'diagnostic-test',
+          forceResend: true,
+          isDiagnostic: true
+        }
       });
 
-      if (result.success) {
-        toast.success('Email de teste enviado com sucesso!');
-      } else {
-        toast.error('Falha no envio do email de teste');
+      if (error) {
+        throw error;
       }
 
-      return result;
-    } catch (error: any) {
-      console.error('Erro no teste de email:', error);
-      toast.error('Erro no teste de email: ' + error.message);
-      return { success: false, error: error.message };
+      return {
+        success: data.success,
+        message: data.message || 'Email de teste enviado com sucesso',
+        details: data
+      };
+    } catch (err: any) {
+      console.error('Erro no teste de email:', err);
+      return {
+        success: false,
+        message: err.message || 'Falha ao enviar email de teste',
+        error: err
+      };
     } finally {
       setIsRunning(false);
     }
-  }, [sendInviteEmail]);
+  }, [user]);
 
+  // Método principal para executar diagnóstico
   const runDiagnostic = useCallback(async () => {
-    setIsRunning(true);
-    setResults([]);
-
-    const diagnostics: DiagnosticResult[] = [];
-    let systemHealth: 'healthy' | 'warning' | 'critical' = 'healthy';
-    let edgeFunctionExists = false;
-    let edgeFunctionResponding = false;
-    let recentInvites: any[] = [];
-    let failedInvites: any[] = [];
-    const recommendations: string[] = [];
-
     try {
-      // 1. Verificar tabelas necessárias
-      console.log("🔍 Verificando estrutura do banco de dados...");
-      
-      const tablesCheck = await supabase
-        .from('information_schema.tables')
-        .select('table_name')
-        .in('table_name', ['invites', 'invite_send_attempts', 'user_roles']);
+      setIsRunning(true);
+      setResults([]);
 
-      if (tablesCheck.error) {
-        diagnostics.push({
-          component: 'Database Structure',
-          status: 'error',
-          message: 'Erro ao verificar tabelas: ' + tablesCheck.error.message,
-          timestamp: new Date().toISOString()
-        });
-        systemHealth = 'critical';
-      } else {
-        diagnostics.push({
-          component: 'Database Structure',
-          status: 'success',
-          message: `Tabelas encontradas: ${tablesCheck.data?.length || 0}`,
-          details: tablesCheck.data,
-          timestamp: new Date().toISOString()
-        });
-      }
-
-      // 2. Verificar Edge Function
-      console.log("🔍 Testando Edge Function...");
-      
-      try {
-        const edgeFunctionTest = await supabase.functions.invoke('send-invite-email', {
-          body: { test: true }
-        });
-        
-        edgeFunctionExists = true;
-        
-        if (edgeFunctionTest.error) {
-          edgeFunctionResponding = false;
-          diagnostics.push({
-            component: 'Edge Function',
-            status: 'warning',
-            message: 'Edge Function existe mas retornou erro: ' + edgeFunctionTest.error.message,
-            timestamp: new Date().toISOString()
-          });
-          if (systemHealth === 'healthy') systemHealth = 'warning';
-        } else {
-          edgeFunctionResponding = true;
-          diagnostics.push({
-            component: 'Edge Function',
-            status: 'success',
-            message: 'Edge Function respondendo corretamente',
-            timestamp: new Date().toISOString()
-          });
-        }
-      } catch (error: any) {
-        edgeFunctionExists = false;
-        edgeFunctionResponding = false;
-        diagnostics.push({
-          component: 'Edge Function',
-          status: 'error',
-          message: 'Edge Function não encontrada ou não responsiva: ' + error.message,
-          timestamp: new Date().toISOString()
-        });
-        systemHealth = 'critical';
-        recommendations.push('Verificar se a Edge Function send-invite-email foi deployada corretamente');
-      }
-
-      // 3. Verificar convites recentes
-      console.log("🔍 Verificando convites recentes...");
-      
-      const recentInvitesCheck = await supabase
-        .from('invites')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(10);
-
-      if (recentInvitesCheck.error) {
-        diagnostics.push({
-          component: 'Recent Invites',
-          status: 'error',
-          message: 'Erro ao buscar convites recentes: ' + recentInvitesCheck.error.message,
-          timestamp: new Date().toISOString()
-        });
-        if (systemHealth === 'healthy') systemHealth = 'warning';
-      } else {
-        recentInvites = recentInvitesCheck.data || [];
-        diagnostics.push({
-          component: 'Recent Invites',
-          status: 'success',
-          message: `${recentInvites.length} convites encontrados`,
-          details: recentInvites,
-          timestamp: new Date().toISOString()
-        });
-      }
-
-      // 4. Verificar convites com falha
-      console.log("🔍 Verificando convites com falha...");
-      
-      try {
-        const failedInvitesCheck = await supabase
-          .from('invite_send_attempts')
-          .select('*')
-          .eq('status', 'failed')
-          .order('created_at', { ascending: false })
-          .limit(5);
-
-        if (failedInvitesCheck.error) {
-          diagnostics.push({
-            component: 'Failed Invites',
-            status: 'warning',
-            message: 'Tabela invite_send_attempts não encontrada ou erro: ' + failedInvitesCheck.error.message,
-            timestamp: new Date().toISOString()
-          });
-          recommendations.push('Aplicar migração para criar tabela invite_send_attempts');
-        } else {
-          failedInvites = failedInvitesCheck.data || [];
-          diagnostics.push({
-            component: 'Failed Invites',
-            status: failedInvites.length > 0 ? 'warning' : 'success',
-            message: `${failedInvites.length} convites com falha encontrados`,
-            details: failedInvites,
-            timestamp: new Date().toISOString()
-          });
-          
-          if (failedInvites.length > 0 && systemHealth === 'healthy') {
-            systemHealth = 'warning';
-            recommendations.push('Investigar causas das falhas nos envios de convite');
-          }
-        }
-      } catch (error) {
-        diagnostics.push({
-          component: 'Failed Invites',
-          status: 'warning',
-          message: 'Não foi possível verificar convites com falha',
-          timestamp: new Date().toISOString()
-        });
-      }
-
-      // 5. Testar funcionalidades
-      console.log("🔍 Testando funcionalidades do sistema...");
-      
-      const testResults = {
-        email: edgeFunctionResponding,
-        database: diagnostics.filter(d => d.component.includes('Database')).every(d => d.status === 'success'),
-        auth: true // Assumindo que auth está funcionando se chegou até aqui
-      };
-
-      diagnostics.push({
-        component: 'System Tests',
-        status: Object.values(testResults).every(Boolean) ? 'success' : 'warning',
-        message: `Testes: Email ${testResults.email ? '✓' : '✗'}, DB ${testResults.database ? '✓' : '✗'}, Auth ${testResults.auth ? '✓' : '✗'}`,
-        details: testResults,
-        timestamp: new Date().toISOString()
-      });
-
-      // Compilar dados do diagnóstico
       const diagnosticData: DiagnosticData = {
-        systemHealth,
-        edgeFunctionExists,
-        edgeFunctionResponding,
-        recentInvites,
-        failedInvites,
-        testResults,
-        recommendations,
-        lastUpdated: new Date()
+        timestamp: new Date(),
+        systemHealth: {
+          email: false,
+          database: false,
+          auth: false
+        },
+        edgeFunctionExists: false,
+        edgeFunctionResponding: false,
+        recentInvites: [],
+        failedInvites: [],
+        testResults: {
+          edgeFunctionTest: {
+            success: false,
+            message: 'Ainda não testado'
+          },
+          resendTest: {
+            success: false,
+            message: 'Ainda não testado'
+          },
+          fallbackTest: {
+            success: false,
+            message: 'Ainda não testado'
+          }
+        },
+        recommendations: []
       };
 
-      setResults(diagnostics);
-      setLastDiagnostic(diagnosticData);
+      // Testar conexão com banco de dados
+      let result = await checkDatabase();
+      setResults(prev => [...prev, result]);
+      diagnosticData.systemHealth.database = result.success;
+      
+      // Verificar se função existe
+      result = await checkEdgeFunction();
+      setResults(prev => [...prev, result]);
+      diagnosticData.edgeFunctionExists = result.success;
 
-      // Mostrar resumo
-      const successCount = diagnostics.filter(d => d.status === 'success').length;
-      const warningCount = diagnostics.filter(d => d.status === 'warning').length;
-      const errorCount = diagnostics.filter(d => d.status === 'error').length;
+      // Testar resposta da edge function
+      if (diagnosticData.edgeFunctionExists) {
+        result = await testEdgeFunctionResponse();
+        setResults(prev => [...prev, result]);
+        diagnosticData.edgeFunctionResponding = result.success;
+        diagnosticData.testResults.edgeFunctionTest = {
+          success: result.success,
+          message: result.message
+        };
 
-      if (errorCount > 0) {
-        toast.error(`Diagnóstico concluído: ${errorCount} erros críticos encontrados`, {
-          description: `${successCount} sucessos, ${warningCount} avisos, ${errorCount} erros`
-        });
-      } else if (warningCount > 0) {
-        toast.warning(`Diagnóstico concluído: ${warningCount} avisos encontrados`, {
-          description: `${successCount} sucessos, ${warningCount} avisos`
-        });
-      } else {
-        toast.success('Diagnóstico concluído: Sistema funcionando perfeitamente!', {
-          description: `${successCount} componentes verificados com sucesso`
-        });
+        // Se edge function responde, testar Resend
+        if (diagnosticData.edgeFunctionResponding) {
+          result = await testResendIntegration();
+          setResults(prev => [...prev, result]);
+          diagnosticData.testResults.resendTest = {
+            success: result.success,
+            message: result.message
+          };
+
+          // Testar sistema de fallback
+          result = await testFallbackSystem();
+          setResults(prev => [...prev, result]);
+          diagnosticData.testResults.fallbackTest = {
+            success: result.success,
+            message: result.message
+          };
+        }
       }
 
+      // Verificar convites recentes
+      const invitesResult = await checkRecentInvites();
+      setResults(prev => [...prev, invitesResult.result]);
+      diagnosticData.recentInvites = invitesResult.invites || [];
+
+      // Verificar convites com erro
+      const failedResult = await checkFailedInvites();
+      setResults(prev => [...prev, failedResult.result]);
+      diagnosticData.failedInvites = failedResult.invites || [];
+
+      // Gerar recomendações
+      diagnosticData.recommendations = generateRecommendations(diagnosticData);
+      
+      // Sistema geral de email está funcional se pelo menos edge function responde ou Resend está ok
+      diagnosticData.systemHealth.email = 
+        diagnosticData.edgeFunctionResponding && 
+        (diagnosticData.testResults.resendTest.success || diagnosticData.testResults.fallbackTest.success);
+      
+      // Sistema de auth está funcional se DB está ok
+      diagnosticData.systemHealth.auth = diagnosticData.systemHealth.database;
+
+      // Salvar resultados
+      setLastDiagnostic(diagnosticData);
+      
+      return diagnosticData;
     } catch (error: any) {
-      console.error('Erro durante diagnóstico:', error);
-      diagnostics.push({
-        component: 'Diagnostic System',
-        status: 'error',
-        message: 'Erro durante execução do diagnóstico: ' + error.message,
-        timestamp: new Date().toISOString()
-      });
-      setResults(diagnostics);
-      toast.error('Erro durante diagnóstico: ' + error.message);
+      console.error('Erro ao executar diagnóstico:', error);
+      setResults(prev => [
+        ...prev, 
+        { 
+          name: 'Erro de diagnóstico', 
+          success: false, 
+          message: error.message || 'Ocorreu um erro durante o diagnóstico',
+          timestamp: new Date()
+        }
+      ]);
+      return null;
     } finally {
       setIsRunning(false);
     }
   }, []);
 
+  // Funções auxiliares de diagnóstico
+  const checkDatabase = async (): Promise<DiagnosticResult> => {
+    try {
+      // Verificar se consegue conectar ao banco fazendo uma query simples
+      const { count, error } = await supabase
+        .from('user_roles')
+        .select('*', { count: 'exact', head: true });
+      
+      if (error) throw error;
+      
+      return {
+        name: 'Conexão com banco de dados',
+        success: true,
+        message: 'Banco de dados respondendo normalmente',
+        timestamp: new Date()
+      };
+    } catch (err: any) {
+      return {
+        name: 'Conexão com banco de dados',
+        success: false,
+        message: `Erro na conexão: ${err.message}`,
+        timestamp: new Date()
+      };
+    }
+  };
+
+  const checkEdgeFunction = async (): Promise<DiagnosticResult> => {
+    try {
+      // Verificar se função existe chamando com um método OPTIONS
+      const response = await fetch(
+        `${process.env.SUPABASE_URL || import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-invite-email`,
+        { method: 'OPTIONS' }
+      );
+      
+      // Se a função não existe, geralmente recebemos 404
+      if (response.status === 404) {
+        throw new Error('Função não encontrada (404)');
+      }
+      
+      return {
+        name: 'Verificação da Edge Function',
+        success: true,
+        message: 'Edge Function existe',
+        timestamp: new Date()
+      };
+    } catch (err: any) {
+      return {
+        name: 'Verificação da Edge Function',
+        success: false,
+        message: `Edge Function não encontrada: ${err.message}`,
+        timestamp: new Date()
+      };
+    }
+  };
+  
+  const testEdgeFunctionResponse = async (): Promise<DiagnosticResult> => {
+    try {
+      // Chamar a edge function com parâmetro de diagnóstico
+      const { data, error } = await supabase.functions.invoke('send-invite-email', {
+        body: { 
+          diagnostic: true,
+          email: 'test@example.com'
+        }
+      });
+      
+      if (error) throw error;
+      if (!data) throw new Error('Função não retornou dados');
+      
+      return {
+        name: 'Resposta da Edge Function',
+        success: true,
+        message: 'Edge Function respondendo corretamente',
+        timestamp: new Date(),
+        details: data
+      };
+    } catch (err: any) {
+      return {
+        name: 'Resposta da Edge Function',
+        success: false,
+        message: `Erro ao chamar Edge Function: ${err.message}`,
+        timestamp: new Date()
+      };
+    }
+  };
+  
+  const testResendIntegration = async (): Promise<DiagnosticResult> => {
+    try {
+      // Testar integração com Resend via edge function
+      const { data, error } = await supabase.functions.invoke('send-invite-email', {
+        body: {
+          diagnostic: true,
+          testResend: true
+        }
+      });
+      
+      if (error) throw error;
+      
+      const resendConfigured = data?.resendConfigured === true;
+      
+      return {
+        name: 'Integração Resend',
+        success: resendConfigured,
+        message: resendConfigured 
+          ? 'Resend está configurado corretamente'
+          : 'Resend não está configurado ou chave API inválida',
+        timestamp: new Date(),
+        details: data
+      };
+    } catch (err: any) {
+      return {
+        name: 'Integração Resend',
+        success: false,
+        message: `Erro ao testar Resend: ${err.message}`,
+        timestamp: new Date()
+      };
+    }
+  };
+  
+  const testFallbackSystem = async (): Promise<DiagnosticResult> => {
+    try {
+      // Testar sistema de fallback
+      const { data, error } = await supabase.functions.invoke('send-invite-email', {
+        body: {
+          diagnostic: true,
+          testFallback: true
+        }
+      });
+      
+      if (error) throw error;
+      
+      const fallbackWorking = data?.fallbackWorking === true;
+      
+      return {
+        name: 'Sistema de Fallback',
+        success: fallbackWorking,
+        message: fallbackWorking 
+          ? 'Sistema de fallback operacional'
+          : 'Sistema de fallback não está funcionando corretamente',
+        timestamp: new Date(),
+        details: data
+      };
+    } catch (err: any) {
+      return {
+        name: 'Sistema de Fallback',
+        success: false,
+        message: `Erro ao testar fallback: ${err.message}`,
+        timestamp: new Date()
+      };
+    }
+  };
+  
+  const checkRecentInvites = async (): Promise<{result: DiagnosticResult, invites?: any[]}> => {
+    try {
+      // Buscar convites recentes
+      const { data, error } = await supabase
+        .from('invites')
+        .select('id, email, status, created_at')
+        .order('created_at', { ascending: false })
+        .limit(5);
+      
+      if (error) throw error;
+      
+      return {
+        result: {
+          name: 'Convites Recentes',
+          success: true,
+          message: `${data.length} convites recentes encontrados`,
+          timestamp: new Date()
+        },
+        invites: data
+      };
+    } catch (err: any) {
+      return {
+        result: {
+          name: 'Convites Recentes',
+          success: false,
+          message: `Erro ao verificar convites recentes: ${err.message}`,
+          timestamp: new Date()
+        },
+        invites: []
+      };
+    }
+  };
+  
+  const checkFailedInvites = async (): Promise<{result: DiagnosticResult, invites?: any[]}> => {
+    try {
+      // Buscar convites com erro
+      const { data, error } = await supabase
+        .from('invite_send_attempts')
+        .select('id, invite_id, email, method_attempted, status, error_message, created_at')
+        .eq('status', 'failed')
+        .order('created_at', { ascending: false })
+        .limit(5);
+      
+      if (error) throw error;
+      
+      return {
+        result: {
+          name: 'Convites com Erro',
+          success: true,
+          message: `${data.length} convites com erro encontrados`,
+          timestamp: new Date()
+        },
+        invites: data
+      };
+    } catch (err: any) {
+      return {
+        result: {
+          name: 'Convites com Erro',
+          success: false,
+          message: `Erro ao verificar convites com erro: ${err.message}`,
+          timestamp: new Date()
+        },
+        invites: []
+      };
+    }
+  };
+  
+  const generateRecommendations = (data: DiagnosticData): string[] => {
+    const recommendations: string[] = [];
+    
+    if (!data.edgeFunctionExists) {
+      recommendations.push('Deploy a Edge Function "send-invite-email" que está faltando.');
+    }
+    
+    if (data.edgeFunctionExists && !data.edgeFunctionResponding) {
+      recommendations.push('Verifique erros no código da Edge Function que não está respondendo corretamente.');
+    }
+    
+    if (!data.testResults.resendTest.success) {
+      recommendations.push('Configure a chave API do Resend nas variáveis de ambiente do projeto Supabase.');
+    }
+    
+    if (!data.testResults.fallbackTest.success && !data.testResults.resendTest.success) {
+      recommendations.push('Nenhum sistema de envio de email está funcionando. Configure pelo menos um método de envio.');
+    }
+    
+    if (data.failedInvites.length > 0) {
+      recommendations.push(`Existem ${data.failedInvites.length} convites com erro que precisam de atenção.`);
+    }
+    
+    if (recommendations.length === 0) {
+      recommendations.push('Sistema de convites funcionando corretamente! Nenhuma ação necessária.');
+    }
+    
+    return recommendations;
+  };
+
   return {
     runDiagnostic,
-    testInviteEmail,
     isRunning,
     results,
-    lastDiagnostic
+    lastDiagnostic,
+    testInviteEmail
   };
 }

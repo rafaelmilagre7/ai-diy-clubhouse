@@ -1,241 +1,283 @@
 
 import React, { useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Loader2, CheckCircle, AlertTriangle, XCircle, Play, Mail, RefreshCw, Zap, Activity } from 'lucide-react';
-import { useInviteEmailDiagnostic } from '@/hooks/admin/invites/useInviteEmailDiagnostic';
+import { DiagnosticData, useInviteEmailDiagnostic } from '@/hooks/admin/invites/useInviteEmailDiagnostic';
+import { Loader2, CheckCircle, XCircle, AlertTriangle, Mail, Database, Shield, RefreshCw } from 'lucide-react';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
-export const InviteSystemDiagnostic = () => {
+export const InviteSystemDiagnostic: React.FC = () => {
+  const { runDiagnostic, isRunning, results, lastDiagnostic, testInviteEmail } = useInviteEmailDiagnostic();
   const [testEmail, setTestEmail] = useState('');
-  const { runDiagnostic, testInviteEmail, isRunning, lastDiagnostic } = useInviteEmailDiagnostic();
-
-  const getHealthIcon = (health: string) => {
-    switch (health) {
-      case 'healthy': return <CheckCircle className="h-5 w-5 text-green-500" />;
-      case 'warning': return <AlertTriangle className="h-5 w-5 text-yellow-500" />;
-      case 'critical': return <XCircle className="h-5 w-5 text-red-500" />;
-      default: return <Activity className="h-5 w-5 text-gray-500" />;
-    }
+  
+  const handleRunTest = async () => {
+    await runDiagnostic();
   };
-
-  const getHealthColor = (health: string) => {
-    switch (health) {
-      case 'healthy': return 'bg-green-50 border-green-200';
-      case 'warning': return 'bg-yellow-50 border-yellow-200';
-      case 'critical': return 'bg-red-50 border-red-200';
-      default: return 'bg-gray-50 border-gray-200';
-    }
+  
+  const handleTestEmail = async () => {
+    if (!testEmail) return;
+    await testInviteEmail(testEmail);
+    setTestEmail('');
   };
-
-  const getHealthText = (health: string) => {
-    switch (health) {
-      case 'healthy': return 'Saudável ✅';
-      case 'warning': return 'Atenção ⚠️';
-      case 'critical': return 'Crítico 🚨';
-      default: return 'Desconhecido ❓';
-    }
-  };
-
+  
+  if (isRunning) {
+    return (
+      <Card className="border-blue-200 bg-blue-50/50 dark:bg-blue-900/10 dark:border-blue-800/30">
+        <CardHeader>
+          <CardTitle className="text-lg font-semibold text-blue-700 dark:text-blue-400 flex items-center">
+            <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+            Diagnóstico em Andamento
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex flex-col items-center justify-center p-6">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+            <p className="mt-4 text-blue-700 dark:text-blue-400 text-sm">
+              Verificando todos os componentes do sistema de convites...
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+  
   return (
     <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Activity className="h-5 w-5" />
-            Diagnóstico Completo do Sistema de Convites
-          </CardTitle>
-          <CardDescription>
-            Execute um diagnóstico completo para verificar todos os componentes do sistema
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex gap-2">
-            <Button 
-              onClick={runDiagnostic} 
-              disabled={isRunning}
-              className="flex items-center gap-2"
-            >
-              {isRunning ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <RefreshCw className="h-4 w-4" />
-              )}
-              {isRunning ? 'Executando Diagnóstico...' : 'Executar Diagnóstico Completo'}
-            </Button>
-          </div>
-
-          {lastDiagnostic && (
-            <div className="space-y-4">
-              <Alert className={getHealthColor(lastDiagnostic.systemHealth)}>
+      <div className="flex justify-between items-center">
+        <h2 className="text-lg font-semibold">Diagnóstico do Sistema de Convites</h2>
+        <Button onClick={handleRunTest} disabled={isRunning} variant="outline" size="sm">
+          <RefreshCw className="h-4 w-4 mr-2" />
+          Executar Diagnóstico
+        </Button>
+      </div>
+      
+      {lastDiagnostic && (
+        <div className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-sm font-medium flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  {getHealthIcon(lastDiagnostic.systemHealth)}
-                  <AlertDescription>
-                    <strong>Status do Sistema:</strong> {getHealthText(lastDiagnostic.systemHealth)}
-                  </AlertDescription>
+                  <span>Visão Geral do Sistema</span>
+                  {lastDiagnostic.systemHealth.email ? (
+                    <CheckCircle className="h-4 w-4 text-green-500" />
+                  ) : (
+                    <XCircle className="h-4 w-4 text-red-500" />
+                  )}
                 </div>
-              </Alert>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                <Card>
-                  <CardContent className="pt-4">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm font-medium">Edge Function</span>
-                      <Badge variant={lastDiagnostic.edgeFunctionExists ? 'default' : 'destructive'}>
-                        {lastDiagnostic.edgeFunctionExists ? '✅ Existe' : '❌ Não Encontrada'}
-                      </Badge>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardContent className="pt-4">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm font-medium">Respondendo</span>
-                      <Badge variant={lastDiagnostic.edgeFunctionResponding ? 'default' : 'destructive'}>
-                        {lastDiagnostic.edgeFunctionResponding ? '✅ OK' : '❌ Falha'}
-                      </Badge>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardContent className="pt-4">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm font-medium">Convites Recentes</span>
-                      <Badge variant="outline">
-                        {lastDiagnostic.recentInvites.length}
-                      </Badge>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardContent className="pt-4">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm font-medium">Falhas</span>
-                      <Badge variant={lastDiagnostic.failedInvites.length > 0 ? 'destructive' : 'default'}>
-                        {lastDiagnostic.failedInvites.length}
-                      </Badge>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-
-              {/* Resultados dos Testes */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg flex items-center gap-2">
-                    <Zap className="h-5 w-5" />
-                    Resultados dos Testes Automáticos
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div className="flex items-center justify-between p-3 border rounded-lg">
-                      <span className="text-sm font-medium">Edge Function</span>
-                      <Badge variant={lastDiagnostic.testResults.edgeFunctionTest ? 'default' : 'destructive'}>
-                        {lastDiagnostic.testResults.edgeFunctionTest ? '✅ OK' : '❌ Falha'}
-                      </Badge>
-                    </div>
-                    <div className="flex items-center justify-between p-3 border rounded-lg">
-                      <span className="text-sm font-medium">Resend API</span>
-                      <Badge variant={lastDiagnostic.testResults.resendTest ? 'default' : 'secondary'}>
-                        {lastDiagnostic.testResults.resendTest ? '✅ OK' : '🔄 Teste Manual'}
-                      </Badge>
-                    </div>
-                    <div className="flex items-center justify-between p-3 border rounded-lg">
-                      <span className="text-sm font-medium">Sistema Fallback</span>
-                      <Badge variant={lastDiagnostic.testResults.fallbackTest ? 'default' : 'secondary'}>
-                        {lastDiagnostic.testResults.fallbackTest ? '✅ OK' : '🔄 Teste Manual'}
-                      </Badge>
-                    </div>
+                <span className="text-xs text-muted-foreground">
+                  Atualizado {format(new Date(lastDiagnostic.timestamp), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
+                </span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className={`p-4 rounded-md ${lastDiagnostic.systemHealth.email ? 'bg-green-50 dark:bg-green-900/20' : 'bg-red-50 dark:bg-red-900/20'}`}>
+                  <div className="flex items-center">
+                    <Mail className={`h-5 w-5 mr-2 ${lastDiagnostic.systemHealth.email ? 'text-green-500' : 'text-red-500'}`} />
+                    <span className="font-medium">Sistema de Email</span>
                   </div>
-                </CardContent>
-              </Card>
-
-              {/* Recomendações */}
-              {lastDiagnostic.recommendations.length > 0 && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-lg">🔧 Recomendações de Correção</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <ul className="space-y-2">
-                      {lastDiagnostic.recommendations.map((rec, index) => (
-                        <li key={index} className="flex items-start gap-2">
-                          <span className="text-blue-500 mt-1">•</span>
-                          <span className="text-sm">{rec}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </CardContent>
-                </Card>
-              )}
-
-              {/* Detalhes dos Convites Recentes */}
-              {lastDiagnostic.recentInvites.length > 0 && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-lg">📊 Convites Recentes (últimos 7 dias)</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-2">
-                      {lastDiagnostic.recentInvites.slice(0, 5).map((invite, index) => (
-                        <div key={index} className="flex items-center justify-between p-2 border rounded">
-                          <span className="text-sm">{invite.email}</span>
-                          <div className="flex gap-2">
-                            <Badge variant={invite.used_at ? 'default' : 'secondary'}>
-                              {invite.used_at ? '✅ Usado' : '⏳ Pendente'}
-                            </Badge>
-                            <span className="text-xs text-muted-foreground">
-                              {new Date(invite.created_at).toLocaleDateString('pt-BR')}
-                            </span>
-                          </div>
-                        </div>
-                      ))}
+                  <p className="mt-1 text-sm">
+                    {lastDiagnostic.systemHealth.email ? 'Operacional' : 'Com problemas'}
+                  </p>
+                </div>
+                
+                <div className={`p-4 rounded-md ${lastDiagnostic.systemHealth.database ? 'bg-green-50 dark:bg-green-900/20' : 'bg-red-50 dark:bg-red-900/20'}`}>
+                  <div className="flex items-center">
+                    <Database className={`h-5 w-5 mr-2 ${lastDiagnostic.systemHealth.database ? 'text-green-500' : 'text-red-500'}`} />
+                    <span className="font-medium">Banco de Dados</span>
+                  </div>
+                  <p className="mt-1 text-sm">
+                    {lastDiagnostic.systemHealth.database ? 'Conectado' : 'Erro de conexão'}
+                  </p>
+                </div>
+                
+                <div className={`p-4 rounded-md ${lastDiagnostic.systemHealth.auth ? 'bg-green-50 dark:bg-green-900/20' : 'bg-red-50 dark:bg-red-900/20'}`}>
+                  <div className="flex items-center">
+                    <Shield className={`h-5 w-5 mr-2 ${lastDiagnostic.systemHealth.auth ? 'text-green-500' : 'text-red-500'}`} />
+                    <span className="font-medium">Autenticação</span>
+                  </div>
+                  <p className="mt-1 text-sm">
+                    {lastDiagnostic.systemHealth.auth ? 'Funcional' : 'Com problemas'}
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-sm font-medium flex items-center gap-2">
+                  Componentes do Sistema
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between p-3 rounded-md bg-gray-50 dark:bg-gray-800/50">
+                    <div className="flex items-center gap-2">
+                      {lastDiagnostic.edgeFunctionExists ? (
+                        <CheckCircle className="h-4 w-4 text-green-500" />
+                      ) : (
+                        <XCircle className="h-4 w-4 text-red-500" />
+                      )}
+                      <span className="font-medium text-sm">Edge Function</span>
                     </div>
-                  </CardContent>
-                </Card>
-              )}
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Mail className="h-5 w-5" />
-            Teste Manual de Envio
-          </CardTitle>
-          <CardDescription>
-            Envie um e-mail de teste para verificar se o sistema está funcionando
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex gap-2">
-            <Input
-              type="email"
-              placeholder="seu-email@exemplo.com"
-              value={testEmail}
-              onChange={(e) => setTestEmail(e.target.value)}
-              className="flex-1"
-            />
-            <Button 
-              onClick={() => testInviteEmail(testEmail)}
-              disabled={!testEmail || isRunning}
-            >
-              Enviar Teste
-            </Button>
+                    <span className="text-xs">
+                      {lastDiagnostic.edgeFunctionExists ? 'Encontrada' : 'Não encontrada'}
+                    </span>
+                  </div>
+                  
+                  <div className="flex items-center justify-between p-3 rounded-md bg-gray-50 dark:bg-gray-800/50">
+                    <div className="flex items-center gap-2">
+                      {lastDiagnostic.edgeFunctionResponding ? (
+                        <CheckCircle className="h-4 w-4 text-green-500" />
+                      ) : (
+                        <XCircle className="h-4 w-4 text-red-500" />
+                      )}
+                      <span className="font-medium text-sm">Resposta da Edge Function</span>
+                    </div>
+                    <span className="text-xs">
+                      {lastDiagnostic.edgeFunctionResponding ? 'Respondendo' : 'Sem resposta'}
+                    </span>
+                  </div>
+                  
+                  <div className="p-3 rounded-md bg-gray-50 dark:bg-gray-800/50">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Mail className="h-4 w-4 text-blue-500" />
+                      <span className="font-medium text-sm">Atividade de Convites</span>
+                    </div>
+                    <p className="text-xs mb-1">
+                      {lastDiagnostic.recentInvites.length > 0 ? (
+                        `${lastDiagnostic.recentInvites.length} convites enviados recentemente`
+                      ) : (
+                        'Nenhum convite recente encontrado'
+                      )}
+                    </p>
+                  </div>
+                  
+                  <div className="flex items-center justify-between p-3 rounded-md bg-gray-50 dark:bg-gray-800/50">
+                    <div className="flex items-center gap-2">
+                      {lastDiagnostic.failedInvites.length > 0 ? (
+                        <AlertTriangle className="h-4 w-4 text-amber-500" />
+                      ) : (
+                        <CheckCircle className="h-4 w-4 text-green-500" />
+                      )}
+                      <span className="font-medium text-sm">Convites com Problema</span>
+                    </div>
+                    <span className="text-xs">
+                      {lastDiagnostic.failedInvites.length > 0 ? (
+                        `${lastDiagnostic.failedInvites.length} falhas detectadas`
+                      ) : (
+                        'Nenhuma falha'
+                      )}
+                    </span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-sm font-medium">Resultados dos Testes</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center justify-between p-3 rounded-md bg-gray-50 dark:bg-gray-800/50">
+                  <div className="flex items-center gap-2">
+                    {lastDiagnostic.testResults.edgeFunctionTest.success ? (
+                      <CheckCircle className="h-4 w-4 text-green-500" />
+                    ) : (
+                      <XCircle className="h-4 w-4 text-red-500" />
+                    )}
+                    <span className="font-medium text-sm">Edge Function</span>
+                  </div>
+                  <span className="text-xs">
+                    {lastDiagnostic.testResults.edgeFunctionTest.success ? 'Funcionando' : 'Falha'}
+                  </span>
+                </div>
+                
+                <div className="flex items-center justify-between p-3 rounded-md bg-gray-50 dark:bg-gray-800/50">
+                  <div className="flex items-center gap-2">
+                    {lastDiagnostic.testResults.resendTest.success ? (
+                      <CheckCircle className="h-4 w-4 text-green-500" />
+                    ) : (
+                      <XCircle className="h-4 w-4 text-red-500" />
+                    )}
+                    <span className="font-medium text-sm">Serviço Resend</span>
+                  </div>
+                  <span className="text-xs">
+                    {lastDiagnostic.testResults.resendTest.success ? 'Configurado' : 'Não configurado'}
+                  </span>
+                </div>
+                
+                <div className="flex items-center justify-between p-3 rounded-md bg-gray-50 dark:bg-gray-800/50">
+                  <div className="flex items-center gap-2">
+                    {lastDiagnostic.testResults.fallbackTest.success ? (
+                      <CheckCircle className="h-4 w-4 text-green-500" />
+                    ) : (
+                      <XCircle className="h-4 w-4 text-red-500" />
+                    )}
+                    <span className="font-medium text-sm">Sistema de Fallback</span>
+                  </div>
+                  <span className="text-xs">
+                    {lastDiagnostic.testResults.fallbackTest.success ? 'Operacional' : 'Não funcional'}
+                  </span>
+                </div>
+              </CardContent>
+            </Card>
           </div>
-          <p className="text-sm text-muted-foreground">
-            ⚠️ Um convite de teste real será enviado para o e-mail informado
-          </p>
-        </CardContent>
-      </Card>
+          
+          {lastDiagnostic.recommendations.length > 0 && (
+            <Alert className={lastDiagnostic.recommendations.length === 1 && 
+                              lastDiagnostic.recommendations[0].includes('corretamente') ? 
+                              'bg-green-50 border-green-200 dark:bg-green-900/20 dark:border-green-800/30' : 
+                              'bg-amber-50 border-amber-200 dark:bg-amber-900/20 dark:border-amber-800/30'}>
+              <AlertTriangle className="h-4 w-4 text-amber-500" />
+              <AlertTitle>Recomendações</AlertTitle>
+              <AlertDescription>
+                <ul className="list-disc pl-5 mt-2 space-y-1">
+                  {lastDiagnostic.recommendations.map((recommendation, index) => (
+                    <li key={index} className="text-sm">
+                      {recommendation}
+                    </li>
+                  ))}
+                </ul>
+              </AlertDescription>
+            </Alert>
+          )}
+          
+          {lastDiagnostic.recentInvites.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-sm font-medium">Atividade Recente</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-xs">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b">
+                        <th className="text-left py-2">Email</th>
+                        <th className="text-left py-2">Status</th>
+                        <th className="text-left py-2">Data</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {lastDiagnostic.recentInvites.map((invite: any) => (
+                        <tr key={invite.id} className="border-b">
+                          <td className="py-2">{invite.email}</td>
+                          <td className="py-2">{invite.status}</td>
+                          <td className="py-2">{format(new Date(invite.created_at), "dd/MM/yyyy HH:mm", { locale: ptBR })}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </div>
+      )}
     </div>
   );
 };
