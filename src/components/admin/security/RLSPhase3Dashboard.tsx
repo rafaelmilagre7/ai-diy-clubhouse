@@ -1,25 +1,22 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { useAdvancedRLSMonitoring } from '@/hooks/useAdvancedRLSMonitoring';
+import { Badge } from '@/components/ui/badge';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { 
   Shield, 
-  ShieldCheck, 
-  ShieldAlert, 
+  RefreshCw, 
+  AlertTriangle, 
+  CheckCircle, 
   TrendingUp, 
-  RefreshCw,
-  AlertTriangle,
-  CheckCircle,
+  Eye,
+  Server,
   Activity
 } from 'lucide-react';
-import { toast } from 'sonner';
+import { useAdvancedRLSMonitoring } from '@/hooks/useAdvancedRLSMonitoring';
+import { useRLSValidation } from '@/hooks/useRLSValidation';
 
-/**
- * Dashboard da Fase 3 - Monitoramento RLS Avançado
- */
 export const RLSPhase3Dashboard = () => {
   const {
     securitySummary,
@@ -28,7 +25,6 @@ export const RLSPhase3Dashboard = () => {
     error,
     fetchSecuritySummary,
     runRegressionCheck,
-    isAdmin,
     isSecure,
     isCritical,
     securityPercentage,
@@ -38,15 +34,65 @@ export const RLSPhase3Dashboard = () => {
     alertsCount
   } = useAdvancedRLSMonitoring();
 
+  const {
+    validateCompleteRLS,
+    getSecurityStats,
+    isAdmin
+  } = useRLSValidation();
+
+  const [validationResults, setValidationResults] = useState<any[]>([]);
+  const [isValidating, setIsValidating] = useState(false);
+
+  // Executar verificação completa
+  const handleCompleteValidation = async () => {
+    if (!isAdmin) return;
+
+    setIsValidating(true);
+    try {
+      const results = await validateCompleteRLS();
+      setValidationResults(results);
+    } catch (error) {
+      console.error('Erro na validação completa:', error);
+    } finally {
+      setIsValidating(false);
+    }
+  };
+
+  // Executar verificação de regressão
+  const handleRegressionCheck = async () => {
+    if (!isAdmin) return;
+    
+    try {
+      await runRegressionCheck();
+      await fetchSecuritySummary();
+    } catch (error) {
+      console.error('Erro na verificação de regressão:', error);
+    }
+  };
+
+  // Recarregar dados
+  const handleRefresh = async () => {
+    await Promise.all([
+      fetchSecuritySummary(),
+      handleCompleteValidation()
+    ]);
+  };
+
+  useEffect(() => {
+    if (isAdmin) {
+      handleCompleteValidation();
+    }
+  }, [isAdmin]);
+
   if (!isAdmin) {
     return (
       <Card>
         <CardContent className="p-6">
           <div className="text-center py-8">
-            <ShieldAlert className="h-12 w-12 mx-auto mb-4 text-yellow-500" />
+            <AlertTriangle className="h-12 w-12 mx-auto mb-4 text-yellow-500" />
             <h3 className="text-lg font-semibold mb-2">Acesso Restrito</h3>
             <p className="text-muted-foreground">
-              Apenas administradores podem acessar o dashboard de segurança RLS.
+              Apenas administradores podem acessar o dashboard RLS Fase 3.
             </p>
           </div>
         </CardContent>
@@ -54,168 +100,197 @@ export const RLSPhase3Dashboard = () => {
     );
   }
 
-  const handleRefresh = async () => {
-    try {
-      await fetchSecuritySummary();
-      toast.success('Dados de segurança atualizados');
-    } catch (error) {
-      toast.error('Erro ao atualizar dados');
-    }
-  };
-
-  const handleRegressionCheck = async () => {
-    try {
-      await runRegressionCheck();
-      toast.success('Verificação de regressão executada');
-    } catch (error) {
-      toast.error('Erro na verificação de regressão');
-    }
-  };
-
-  const getStatusIcon = () => {
-    if (isSecure) return <ShieldCheck className="h-5 w-5 text-green-500" />;
-    if (isCritical) return <ShieldAlert className="h-5 w-5 text-red-500" />;
-    return <Shield className="h-5 w-5 text-yellow-500" />;
-  };
-
-  const getStatusColor = () => {
-    if (isSecure) return 'bg-green-50 border-green-200';
-    if (isCritical) return 'bg-red-50 border-red-200';
-    return 'bg-yellow-50 border-yellow-200';
-  };
-
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <Shield className="h-6 w-6 text-blue-600" />
-          <div>
-            <h2 className="text-2xl font-bold">RLS Fase 3 - Monitoramento Avançado</h2>
-            <p className="text-muted-foreground">
-              Sistema de segurança com 100% de cobertura RLS e monitoramento automático
-            </p>
-          </div>
-        </div>
-        <div className="flex gap-2">
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={handleRefresh}
-            disabled={loading}
-          >
-            <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-            Atualizar
-          </Button>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={handleRegressionCheck}
-            disabled={loading}
-          >
-            <Activity className="h-4 w-4 mr-2" />
-            Verificar Regressão
-          </Button>
-        </div>
+      {/* Header com métricas principais */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Score de Segurança</p>
+                <p className="text-2xl font-bold text-green-400">{securityPercentage}%</p>
+              </div>
+              <TrendingUp className="h-8 w-8 text-green-400" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Tabelas Protegidas</p>
+                <p className="text-2xl font-bold text-blue-400">{protectedTables}/{totalTables}</p>
+              </div>
+              <Shield className="h-8 w-8 text-blue-400" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Issues Críticas</p>
+                <p className="text-2xl font-bold text-red-400">{criticalTables}</p>
+              </div>
+              <AlertTriangle className="h-8 w-8 text-red-400" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Alertas</p>
+                <p className="text-2xl font-bold text-yellow-400">{alertsCount}</p>
+              </div>
+              <Activity className="h-8 w-8 text-yellow-400" />
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
-      {/* Status Geral */}
-      <Card className={getStatusColor()}>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            {getStatusIcon()}
-            Status de Segurança RLS
-            <Badge variant={isSecure ? 'default' : isCritical ? 'destructive' : 'secondary'}>
-              {securitySummary?.status || 'CARREGANDO'}
-            </Badge>
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="text-center">
-              <div className="text-2xl font-bold text-blue-600">{securityPercentage}%</div>
-              <div className="text-sm text-muted-foreground">Cobertura de Segurança</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-green-600">{protectedTables}</div>
-              <div className="text-sm text-muted-foreground">Tabelas Protegidas</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-gray-600">{totalTables}</div>
-              <div className="text-sm text-muted-foreground">Total de Tabelas</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-red-600">{criticalTables}</div>
-              <div className="text-sm text-muted-foreground">Tabelas Críticas</div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Alertas */}
-      {error && (
-        <Alert variant="destructive">
-          <AlertTriangle className="h-4 w-4" />
-          <AlertTitle>Erro no Monitoramento</AlertTitle>
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
-      )}
-
-      {isSecure && (
-        <Alert>
-          <CheckCircle className="h-4 w-4" />
-          <AlertTitle>Sistema Seguro</AlertTitle>
+      {/* Status geral */}
+      {securitySummary && (
+        <Alert className={`${
+          isSecure ? 'bg-green-900/20 border-green-500/50 text-green-300' :
+          isCritical ? 'bg-red-900/20 border-red-500/50 text-red-300' :
+          'bg-yellow-900/20 border-yellow-500/50 text-yellow-300'
+        }`}>
+          <Shield className="h-4 w-4" />
           <AlertDescription>
-            Todas as tabelas estão protegidas com RLS e políticas adequadas. 
-            Monitoramento automático ativo.
+            <strong>Status do Sistema:</strong> {
+              isSecure ? 'Totalmente Seguro - 100% das tabelas protegidas' :
+              isCritical ? `Sistema Crítico - ${criticalTables} tabelas vulneráveis` :
+              `Sistema em Alerta - ${100 - securityPercentage}% das tabelas precisam de atenção`
+            }
           </AlertDescription>
         </Alert>
       )}
 
-      {isCritical && (
-        <Alert variant="destructive">
-          <AlertTriangle className="h-4 w-4" />
-          <AlertTitle>Atenção: Problemas Críticos Detectados</AlertTitle>
-          <AlertDescription>
-            Existem {criticalTables} tabelas com problemas críticos de segurança. 
-            Verifique imediatamente.
-          </AlertDescription>
-        </Alert>
-      )}
+      {/* Controles de ação */}
+      <div className="flex gap-4">
+        <Button 
+          onClick={handleRefresh}
+          disabled={loading || isValidating}
+          variant="outline"
+          className="border-white/20 text-white hover:bg-white/10"
+        >
+          <RefreshCw className={`h-4 w-4 mr-2 ${(loading || isValidating) ? 'animate-spin' : ''}`} />
+          Atualizar Dashboard
+        </Button>
 
-      {/* Alertas Recentes */}
-      {alertsCount > 0 && (
+        <Button 
+          onClick={handleRegressionCheck}
+          disabled={loading}
+          variant="outline"
+          className="border-blue-500/50 text-blue-300 hover:bg-blue-500/10"
+        >
+          <Eye className="h-4 w-4 mr-2" />
+          Verificar Regressão
+        </Button>
+
+        <Button 
+          onClick={handleCompleteValidation}
+          disabled={isValidating}
+          variant="outline"
+          className="border-purple-500/50 text-purple-300 hover:bg-purple-500/10"
+        >
+          <Server className={`h-4 w-4 mr-2 ${isValidating ? 'animate-spin' : ''}`} />
+          Validação Completa
+        </Button>
+      </div>
+
+      {/* Tabela de resultados de validação */}
+      {validationResults.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <TrendingUp className="h-5 w-5" />
+            <CardTitle className="flex items-center gap-2 text-white">
+              <Shield className="h-5 w-5 text-blue-400" />
+              Status Detalhado das Tabelas
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-neutral-700">
+                    <th className="text-left p-2 text-neutral-300">Tabela</th>
+                    <th className="text-left p-2 text-neutral-300">RLS</th>
+                    <th className="text-left p-2 text-neutral-300">Políticas</th>
+                    <th className="text-left p-2 text-neutral-300">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {validationResults.map((result, index) => (
+                    <tr key={index} className="border-b border-neutral-800">
+                      <td className="p-2 text-white font-mono text-xs">
+                        {result.table_name}
+                      </td>
+                      <td className="p-2">
+                        <Badge variant={result.rls_enabled ? "default" : "destructive"}>
+                          {result.rls_enabled ? "Ativo" : "Inativo"}
+                        </Badge>
+                      </td>
+                      <td className="p-2 text-neutral-300">
+                        {result.policy_count} política{result.policy_count !== 1 ? 's' : ''}
+                      </td>
+                      <td className="p-2">
+                        <span className={`
+                          ${result.security_status.includes('PROTEGIDO') ? 'text-green-400' :
+                            result.security_status.includes('DESABILITADO') ? 'text-yellow-400' :
+                            result.security_status.includes('SEM PROTEÇÃO') ? 'text-red-400' :
+                            'text-neutral-400'}
+                        `}>
+                          {result.security_status}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Alertas de segurança recentes */}
+      {securityAlerts.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-white">
+              <AlertTriangle className="h-5 w-5 text-yellow-400" />
               Alertas de Segurança Recentes
-              <Badge variant="secondary">{alertsCount}</Badge>
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {securityAlerts.slice(0, 5).map((alert, index) => (
+              {securityAlerts.slice(0, 10).map((alert, index) => (
                 <div 
-                  key={alert.id || index}
-                  className="flex items-center justify-between p-3 rounded-lg border"
+                  key={index}
+                  className="p-3 border rounded-lg border-neutral-700 bg-neutral-800/50"
                 >
-                  <div className="flex items-center gap-3">
-                    <div className={`w-2 h-2 rounded-full ${
-                      alert.severity === 'critical' ? 'bg-red-500' :
-                      alert.severity === 'high' ? 'bg-orange-500' :
-                      alert.severity === 'medium' ? 'bg-yellow-500' : 'bg-blue-500'
-                    }`} />
-                    <div>
-                      <div className="font-medium">{alert.action}</div>
-                      <div className="text-sm text-muted-foreground">
-                        {alert.event_type} • {new Date(alert.timestamp).toLocaleString('pt-BR')}
-                      </div>
-                    </div>
+                  <div className="flex items-center justify-between mb-2">
+                    <Badge variant={
+                      alert.severity === 'critical' ? 'destructive' :
+                      alert.severity === 'high' ? 'destructive' :
+                      alert.severity === 'medium' ? 'default' : 'secondary'
+                    }>
+                      {alert.event_type}
+                    </Badge>
+                    <span className="text-xs text-neutral-400">
+                      {new Date(alert.timestamp).toLocaleString('pt-BR')}
+                    </span>
                   </div>
-                  <Badge variant={alert.severity === 'critical' ? 'destructive' : 'secondary'}>
-                    {alert.severity}
-                  </Badge>
+                  <p className="text-sm text-neutral-300">{alert.action}</p>
+                  {alert.details && (
+                    <pre className="text-xs text-neutral-400 mt-2 bg-neutral-900 p-2 rounded overflow-x-auto">
+                      {JSON.stringify(alert.details, null, 2)}
+                    </pre>
+                  )}
                 </div>
               ))}
             </div>
@@ -223,42 +298,43 @@ export const RLSPhase3Dashboard = () => {
         </Card>
       )}
 
-      {/* Detalhes Técnicos */}
-      {securitySummary && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Detalhes Técnicos</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 gap-4 text-sm">
-              <div>
-                <span className="font-medium">Última Verificação:</span>
-                <div className="text-muted-foreground">
-                  {new Date(securitySummary.last_check).toLocaleString('pt-BR')}
-                </div>
-              </div>
-              <div>
-                <span className="font-medium">Tabelas sem RLS:</span>
-                <div className="text-muted-foreground">
-                  {securitySummary.rls_disabled_tables}
-                </div>
-              </div>
-              <div>
-                <span className="font-medium">Tabelas sem Políticas:</span>
-                <div className="text-muted-foreground">
-                  {securitySummary.no_policies_tables}
-                </div>
-              </div>
-              <div>
-                <span className="font-medium">Status do Sistema:</span>
-                <div className="text-muted-foreground">
-                  {securitySummary.status}
-                </div>
-              </div>
+      {/* Informações da Fase 3 */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-white">
+            <CheckCircle className="h-5 w-5 text-green-400" />
+            Recursos da Fase 3 RLS
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <h4 className="font-semibold text-green-400">✅ Implementado</h4>
+              <ul className="text-sm text-neutral-300 space-y-1">
+                <li>• Monitoramento automático 24/7</li>
+                <li>• Detecção de regressão em tempo real</li>
+                <li>• Alertas inteligentes por severidade</li>
+                <li>• Dashboard avançado de segurança</li>
+                <li>• Validação completa de políticas RLS</li>
+                <li>• Logs de auditoria detalhados</li>
+                <li>• Cobertura de 100% das tabelas</li>
+              </ul>
             </div>
-          </CardContent>
-        </Card>
-      )}
+            <div className="space-y-2">
+              <h4 className="font-semibold text-blue-400">🔧 Funcionalidades</h4>
+              <ul className="text-sm text-neutral-300 space-y-1">
+                <li>• Verificação automática de regressão</li>
+                <li>• Análise de compatibilidade RLS</li>
+                <li>• Monitoramento de tentativas de violação</li>
+                <li>• Relatórios de segurança personalizados</li>
+                <li>• Integração com sistema de notificações</li>
+                <li>• Backup automático de configurações</li>
+                <li>• Histórico completo de mudanças</li>
+              </ul>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };

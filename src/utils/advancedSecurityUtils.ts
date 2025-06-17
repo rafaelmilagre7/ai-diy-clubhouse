@@ -1,497 +1,225 @@
 
 import { supabase } from '@/lib/supabase';
+import { logger } from '@/utils/logger';
 
-export interface SecurityContext {
+interface SecurityActivity {
   userId?: string;
-  sessionId?: string;
-  ipAddress?: string;
-  userAgent?: string;
-  timestamp: string;
   action: string;
   resource?: string;
+  timestamp: string;
+  ipAddress?: string;
+  userAgent?: string;
 }
 
-export interface SecurityAnalysis {
+interface SecurityAnalysis {
+  userId: string;
   riskScore: number;
+  behaviorPattern: 'normal' | 'suspicious' | 'critical';
   anomalies: string[];
   recommendations: string[];
-  behaviorPattern: 'normal' | 'suspicious' | 'critical';
-  confidence: number;
 }
 
-class AdvancedSecurityUtils {
-  private static instance: AdvancedSecurityUtils;
-  private activityBuffer: SecurityContext[] = [];
-  private readonly bufferSize = 100;
-  private readonly analysisInterval = 60000; // 1 minuto
-
-  private constructor() {
-    this.startPeriodicAnalysis();
-  }
-
-  static getInstance(): AdvancedSecurityUtils {
-    if (!AdvancedSecurityUtils.instance) {
-      AdvancedSecurityUtils.instance = new AdvancedSecurityUtils();
-    }
-    return AdvancedSecurityUtils.instance;
-  }
-
-  // Registrar atividade de segurança
-  async logSecurityActivity(context: SecurityContext): Promise<void> {
+/**
+ * Utilitários avançados de segurança para Fase 3 RLS
+ */
+export const advancedSecurityUtils = {
+  // Analisar comportamento do usuário
+  async analyzeUserBehavior(userId: string): Promise<SecurityAnalysis | null> {
     try {
-      // Adicionar ao buffer local
-      this.activityBuffer.push(context);
-      
-      // Manter apenas os últimos registros
-      if (this.activityBuffer.length > this.bufferSize) {
-        this.activityBuffer = this.activityBuffer.slice(-this.bufferSize);
-      }
-
-      // Enviar para o banco de dados
-      await this.persistSecurityLog(context);
-
-      // Análise em tempo real para ações críticas
-      if (this.isCriticalAction(context.action)) {
-        await this.performRealTimeAnalysis(context);
-      }
-
-    } catch (error) {
-      console.error('Erro ao registrar atividade de segurança:', error);
-    }
-  }
-
-  // Análise comportamental de usuário
-  async analyzeUserBehavior(userId: string, timeframe: number = 24): Promise<SecurityAnalysis> {
-    try {
-      const since = new Date(Date.now() - timeframe * 60 * 60 * 1000).toISOString();
-
-      const { data: logs, error } = await supabase
-        .from('security_logs')
+      const { data: activities, error } = await supabase
+        .from('audit_logs')
         .select('*')
         .eq('user_id', userId)
-        .gte('timestamp', since)
-        .order('timestamp', { ascending: false });
+        .gte('timestamp', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()) // últimas 24h
+        .order('timestamp', { ascending: false })
+        .limit(100);
 
-      if (error) throw error;
+      if (error) {
+        logger.error('[SECURITY-UTILS] Erro ao analisar comportamento:', error);
+        return null;
+      }
 
-      return this.performBehaviorAnalysis(logs || []);
-    } catch (error) {
-      console.error('Erro na análise comportamental:', error);
-      return this.getDefaultAnalysis();
-    }
-  }
-
-  // Detectar padrões de ataques conhecidos
-  async detectAttackPatterns(logs: any[]): Promise<string[]> {
-    const patterns: string[] = [];
-
-    // Padrão 1: Força bruta
-    const failedLogins = logs.filter(log => 
-      log.action.includes('login_failure') && 
-      this.isRecentActivity(log.timestamp, 60)
-    );
-    
-    if (failedLogins.length > 5) {
-      patterns.push('brute_force_attack');
-    }
-
-    // Padrão 2: Escalação de privilégios
-    const privilegeChanges = logs.filter(log => 
-      log.action.includes('role_change') || log.action.includes('permission_change')
-    );
-    
-    if (privilegeChanges.length > 2) {
-      patterns.push('privilege_escalation');
-    }
-
-    // Padrão 3: Acesso a dados sensíveis
-    const sensitiveAccess = logs.filter(log => 
-      log.resource_type === 'user_data' || 
-      log.resource_type === 'admin_data'
-    );
-    
-    if (sensitiveAccess.length > 20) {
-      patterns.push('data_harvesting');
-    }
-
-    // Padrão 4: Atividade fora do horário
-    const offHoursActivity = logs.filter(log => {
-      const hour = new Date(log.timestamp).getHours();
-      return hour < 6 || hour > 22;
-    });
-    
-    if (offHoursActivity.length > logs.length * 0.5) {
-      patterns.push('off_hours_activity');
-    }
-
-    return patterns;
-  }
-
-  // Análise de correlação de IPs
-  async analyzeIPCorrelation(ipAddress: string): Promise<{
-    riskLevel: 'low' | 'medium' | 'high' | 'critical';
-    associatedUsers: number;
-    recentActivity: number;
-    geolocation?: any;
-  }> {
-    try {
-      const { data: ipLogs, error } = await supabase
-        .from('security_logs')
-        .select('user_id, timestamp')
-        .eq('ip_address', ipAddress)
-        .gte('timestamp', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString());
-
-      if (error) throw error;
-
-      const uniqueUsers = new Set(ipLogs?.map(log => log.user_id).filter(Boolean)).size;
-      const recentActivity = ipLogs?.filter(log => 
-        this.isRecentActivity(log.timestamp, 24 * 60)
+      // Análise básica de padrões
+      const totalActivities = activities?.length || 0;
+      const securityViolations = activities?.filter(a => 
+        a.event_type === 'security_violation' || a.severity === 'high'
       ).length || 0;
 
-      let riskLevel: 'low' | 'medium' | 'high' | 'critical' = 'low';
+      const riskScore = Math.min(100, (securityViolations / Math.max(1, totalActivities)) * 100);
       
-      if (uniqueUsers > 10) riskLevel = 'critical';
-      else if (uniqueUsers > 5) riskLevel = 'high';
-      else if (uniqueUsers > 2) riskLevel = 'medium';
+      let behaviorPattern: 'normal' | 'suspicious' | 'critical' = 'normal';
+      const anomalies: string[] = [];
+      const recommendations: string[] = [];
+
+      if (securityViolations > 5) {
+        behaviorPattern = 'critical';
+        anomalies.push('Múltiplas violações de segurança detectadas');
+        recommendations.push('Revisar permissões do usuário imediatamente');
+      } else if (securityViolations > 2) {
+        behaviorPattern = 'suspicious';
+        anomalies.push('Atividade suspeita detectada');
+        recommendations.push('Monitorar atividades do usuário');
+      }
+
+      if (totalActivities > 50) {
+        anomalies.push('Alta frequência de atividades');
+        recommendations.push('Verificar se atividades são legítimas');
+      }
 
       return {
-        riskLevel,
-        associatedUsers: uniqueUsers,
-        recentActivity
+        userId,
+        riskScore,
+        behaviorPattern,
+        anomalies,
+        recommendations
       };
     } catch (error) {
-      console.error('Erro na análise de IP:', error);
-      return {
-        riskLevel: 'low',
-        associatedUsers: 0,
-        recentActivity: 0
-      };
+      logger.error('[SECURITY-UTILS] Erro na análise comportamental:', error);
+      return null;
     }
-  }
+  },
 
-  // Gerar relatório de segurança
-  async generateSecurityReport(timeframe: number = 24): Promise<{
-    summary: {
-      totalEvents: number;
-      criticalEvents: number;
-      uniqueUsers: number;
-      uniqueIPs: number;
-    };
-    topRisks: Array<{
-      type: string;
-      count: number;
-      severity: string;
-    }>;
-    recommendations: string[];
-    trends: any[];
-  }> {
+  // Detectar padrões anômalos
+  async detectAnomalies(): Promise<any[]> {
     try {
-      const since = new Date(Date.now() - timeframe * 60 * 60 * 1000).toISOString();
-
-      const { data: logs, error } = await supabase
-        .from('security_logs')
+      const { data: recentLogs, error } = await supabase
+        .from('audit_logs')
         .select('*')
-        .gte('timestamp', since);
+        .gte('timestamp', new Date(Date.now() - 60 * 60 * 1000).toISOString()) // última hora
+        .order('timestamp', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        logger.error('[SECURITY-UTILS] Erro ao detectar anomalias:', error);
+        return [];
+      }
 
-      const summary = {
-        totalEvents: logs?.length || 0,
-        criticalEvents: logs?.filter(log => log.severity === 'critical').length || 0,
-        uniqueUsers: new Set(logs?.map(log => log.user_id).filter(Boolean)).size,
-        uniqueIPs: new Set(logs?.map(log => log.ip_address).filter(Boolean)).size
-      };
+      const anomalies = [];
 
-      const eventTypes = logs?.reduce((acc, log) => {
-        acc[log.event_type] = (acc[log.event_type] || 0) + 1;
-        return acc;
-      }, {} as Record<string, number>) || {};
+      // Detectar picos de atividade
+      const activitiesPerMinute: { [key: string]: number } = {};
+      recentLogs?.forEach(log => {
+        const minute = new Date(log.timestamp).toISOString().slice(0, 16); // YYYY-MM-DDTHH:MM
+        activitiesPerMinute[minute] = (activitiesPerMinute[minute] || 0) + 1;
+      });
 
-      const topRisks = Object.entries(eventTypes)
-        .map(([type, count]) => ({
-          type,
-          count: Number(count),
-          severity: this.assessEventSeverity(type, Number(count))
-        }))
-        .sort((a, b) => b.count - a.count)
-        .slice(0, 5);
-
-      const recommendations = this.generateRecommendations(logs || [], topRisks);
-
-      return {
-        summary,
-        topRisks,
-        recommendations,
-        trends: this.analyzeSecurityTrends(logs || [])
-      };
-    } catch (error) {
-      console.error('Erro ao gerar relatório de segurança:', error);
-      return {
-        summary: { totalEvents: 0, criticalEvents: 0, uniqueUsers: 0, uniqueIPs: 0 },
-        topRisks: [],
-        recommendations: [],
-        trends: []
-      };
-    }
-  }
-
-  // Métodos privados
-  private async persistSecurityLog(context: SecurityContext): Promise<void> {
-    try {
-      await supabase.functions.invoke('security-log-processor', {
-        body: {
-          logs: [{
-            userId: context.userId,
-            eventType: this.determineEventType(context.action),
-            severity: this.determineSeverity(context.action),
-            action: context.action,
-            resourceType: context.resource,
-            ipAddress: context.ipAddress,
-            userAgent: context.userAgent,
-            details: {
-              sessionId: context.sessionId,
-              timestamp: context.timestamp
-            }
-          }]
+      const avgActivities = Object.values(activitiesPerMinute).reduce((a, b) => a + b, 0) / Object.keys(activitiesPerMinute).length;
+      
+      Object.entries(activitiesPerMinute).forEach(([minute, count]) => {
+        if (count > avgActivities * 3) {
+          anomalies.push({
+            type: 'activity_spike',
+            timestamp: minute,
+            value: count,
+            threshold: avgActivities * 3,
+            severity: 'medium'
+          });
         }
       });
+
+      return anomalies;
     } catch (error) {
-      console.error('Erro ao persistir log de segurança:', error);
+      logger.error('[SECURITY-UTILS] Erro na detecção de anomalias:', error);
+      return [];
+    }
+  },
+
+  // Validar integridade do sistema RLS
+  async validateRLSIntegrity(): Promise<{
+    isValid: boolean;
+    issues: string[];
+    recommendations: string[];
+  }> {
+    try {
+      const { data: summary, error } = await supabase.rpc('get_rls_security_summary');
+
+      if (error) {
+        logger.error('[SECURITY-UTILS] Erro na validação RLS:', error);
+        return {
+          isValid: false,
+          issues: ['Erro ao acessar dados de segurança'],
+          recommendations: ['Verificar conectividade com banco de dados']
+        };
+      }
+
+      const issues: string[] = [];
+      const recommendations: string[] = [];
+
+      if (summary.critical_tables > 0) {
+        issues.push(`${summary.critical_tables} tabelas sem proteção RLS`);
+        recommendations.push('Implementar políticas RLS nas tabelas vulneráveis');
+      }
+
+      if (summary.rls_disabled_tables > 0) {
+        issues.push(`${summary.rls_disabled_tables} tabelas com RLS desabilitado`);
+        recommendations.push('Habilitar RLS nas tabelas com políticas inativas');
+      }
+
+      if (summary.security_percentage < 100) {
+        issues.push('Cobertura RLS incompleta');
+        recommendations.push('Executar migração de correção RLS');
+      }
+
+      return {
+        isValid: summary.security_percentage === 100,
+        issues,
+        recommendations
+      };
+    } catch (error) {
+      logger.error('[SECURITY-UTILS] Erro na validação de integridade:', error);
+      return {
+        isValid: false,
+        issues: ['Erro interno na validação'],
+        recommendations: ['Verificar logs do sistema']
+      };
     }
   }
+};
 
-  private async performRealTimeAnalysis(context: SecurityContext): Promise<void> {
-    const recentActivity = this.activityBuffer.filter(activity =>
-      activity.userId === context.userId &&
-      this.isRecentActivity(activity.timestamp, 10) // Últimos 10 minutos
-    );
-
-    if (recentActivity.length > 20) {
-      await this.createSecurityIncident({
-        title: 'Atividade Suspeita Detectada',
-        description: `Usuário ${context.userId} com ${recentActivity.length} ações nos últimos 10 minutos`,
-        severity: 'high',
-        userId: context.userId,
-        context
-      });
-    }
-  }
-
-  private performBehaviorAnalysis(logs: any[]): SecurityAnalysis {
-    if (logs.length === 0) {
-      return this.getDefaultAnalysis();
-    }
-
-    let riskScore = 0;
-    const anomalies: string[] = [];
-    const recommendations: string[] = [];
-
-    // Análise de padrões temporais
-    const hourlyActivity = this.analyzeTemporalPatterns(logs);
-    if (hourlyActivity.offHoursRatio > 0.3) {
-      riskScore += 0.3;
-      anomalies.push('high_off_hours_activity');
-      recommendations.push('Revisar atividades fora do horário comercial');
-    }
-
-    // Análise de IPs
-    const uniqueIPs = new Set(logs.map(log => log.ip_address).filter(Boolean)).size;
-    if (uniqueIPs > 5) {
-      riskScore += 0.2;
-      anomalies.push('multiple_ip_addresses');
-      recommendations.push('Verificar uso de múltiplos IPs');
-    }
-
-    // Análise de padrões de acesso
-    const accessPatterns = this.analyzeAccessPatterns(logs);
-    if (accessPatterns.suspiciousCount > 5) {
-      riskScore += 0.4;
-      anomalies.push('suspicious_access_patterns');
-      recommendations.push('Investigar padrões de acesso anômalos');
-    }
-
-    const behaviorPattern = riskScore > 0.7 ? 'critical' : riskScore > 0.4 ? 'suspicious' : 'normal';
-    const confidence = Math.min(1, logs.length / 100); // Confiança baseada na quantidade de dados
-
-    return {
-      riskScore: Math.min(1, riskScore),
-      anomalies,
-      recommendations,
-      behaviorPattern,
-      confidence
-    };
-  }
-
-  private analyzeTemporalPatterns(logs: any[]): { offHoursRatio: number } {
-    const offHoursLogs = logs.filter(log => {
-      const hour = new Date(log.timestamp).getHours();
-      return hour < 8 || hour > 18;
+/**
+ * Registrar atividade de segurança
+ */
+export const logSecurityActivity = async (activity: SecurityActivity): Promise<void> => {
+  try {
+    await supabase.rpc('log_security_access', {
+      p_table_name: activity.resource || 'system',
+      p_operation: activity.action,
+      p_resource_id: activity.userId
     });
 
+    logger.info('[SECURITY-ACTIVITY] Atividade registrada:', {
+      action: activity.action,
+      resource: activity.resource,
+      timestamp: activity.timestamp
+    });
+  } catch (error) {
+    logger.error('[SECURITY-ACTIVITY] Erro ao registrar atividade:', error);
+  }
+};
+
+/**
+ * Gerar relatório de segurança
+ */
+export const generateSecurityReport = async (): Promise<{
+  summary: any;
+  anomalies: any[];
+  recommendations: string[];
+  timestamp: string;
+}> => {
+  try {
+    const [summary, anomalies, integrity] = await Promise.all([
+      supabase.rpc('get_rls_security_summary'),
+      advancedSecurityUtils.detectAnomalies(),
+      advancedSecurityUtils.validateRLSIntegrity()
+    ]);
+
     return {
-      offHoursRatio: logs.length > 0 ? offHoursLogs.length / logs.length : 0
+      summary: summary.data,
+      anomalies,
+      recommendations: integrity.recommendations,
+      timestamp: new Date().toISOString()
     };
+  } catch (error) {
+    logger.error('[SECURITY-REPORT] Erro ao gerar relatório:', error);
+    throw error;
   }
-
-  private analyzeAccessPatterns(logs: any[]): { suspiciousCount: number } {
-    const suspiciousActions = logs.filter(log =>
-      log.action.includes('admin') ||
-      log.action.includes('delete') ||
-      log.action.includes('export') ||
-      log.severity === 'high' ||
-      log.severity === 'critical'
-    );
-
-    return {
-      suspiciousCount: suspiciousActions.length
-    };
-  }
-
-  private async createSecurityIncident(incident: {
-    title: string;
-    description: string;
-    severity: string;
-    userId?: string;
-    context: SecurityContext;
-  }): Promise<void> {
-    try {
-      await supabase
-        .from('security_incidents')
-        .insert({
-          title: incident.title,
-          description: incident.description,
-          severity: incident.severity,
-          metadata: {
-            auto_generated: true,
-            user_id: incident.userId,
-            context: incident.context
-          }
-        });
-    } catch (error) {
-      console.error('Erro ao criar incidente de segurança:', error);
-    }
-  }
-
-  private startPeriodicAnalysis(): void {
-    setInterval(async () => {
-      if (this.activityBuffer.length > 10) {
-        await this.performBatchAnalysis();
-      }
-    }, this.analysisInterval);
-  }
-
-  private async performBatchAnalysis(): Promise<void> {
-    try {
-      const patterns = await this.detectAttackPatterns(this.activityBuffer);
-      
-      if (patterns.length > 0) {
-        await this.createSecurityIncident({
-          title: 'Padrões de Ataque Detectados',
-          description: `Padrões detectados: ${patterns.join(', ')}`,
-          severity: 'high',
-          context: this.activityBuffer[this.activityBuffer.length - 1]
-        });
-      }
-    } catch (error) {
-      console.error('Erro na análise em lote:', error);
-    }
-  }
-
-  private isCriticalAction(action: string): boolean {
-    const criticalActions = [
-      'admin_login',
-      'role_change',
-      'permission_change',
-      'user_delete',
-      'data_export',
-      'system_config_change'
-    ];
-    
-    return criticalActions.some(critical => action.includes(critical));
-  }
-
-  private isRecentActivity(timestamp: string, minutes: number): boolean {
-    const activityTime = new Date(timestamp).getTime();
-    const cutoff = Date.now() - (minutes * 60 * 1000);
-    return activityTime > cutoff;
-  }
-
-  private determineEventType(action: string): string {
-    if (action.includes('login') || action.includes('logout')) return 'auth';
-    if (action.includes('view') || action.includes('access')) return 'access';
-    if (action.includes('create') || action.includes('update') || action.includes('delete')) return 'data';
-    if (action.includes('admin') || action.includes('system')) return 'system';
-    return 'security';
-  }
-
-  private determineSeverity(action: string): string {
-    if (action.includes('delete') || action.includes('admin')) return 'high';
-    if (action.includes('create') || action.includes('update')) return 'medium';
-    return 'low';
-  }
-
-  private assessEventSeverity(eventType: string, count: number): string {
-    if (eventType === 'auth' && count > 100) return 'high';
-    if (eventType === 'system' && count > 10) return 'critical';
-    if (count > 50) return 'medium';
-    return 'low';
-  }
-
-  private generateRecommendations(logs: any[], topRisks: any[]): string[] {
-    const recommendations: string[] = [];
-
-    if (topRisks.some(risk => risk.type === 'auth' && risk.count > 50)) {
-      recommendations.push('Implementar autenticação multifator');
-    }
-
-    if (topRisks.some(risk => risk.severity === 'critical')) {
-      recommendations.push('Revisar imediatamente eventos críticos');
-    }
-
-    const uniqueIPs = new Set(logs.map(log => log.ip_address).filter(Boolean)).size;
-    if (uniqueIPs > logs.length * 0.1) {
-      recommendations.push('Configurar geofencing para IPs suspeitos');
-    }
-
-    return recommendations;
-  }
-
-  private analyzeSecurityTrends(logs: any[]): any[] {
-    const dailyActivity = logs.reduce((acc, log) => {
-      const day = new Date(log.timestamp).toDateString();
-      acc[day] = (acc[day] || 0) + 1;
-      return acc;
-    }, {} as Record<string, number>);
-
-    return Object.entries(dailyActivity).map(([date, count]) => ({
-      date,
-      count,
-      trend: 'stable' // Lógica mais complexa pode ser adicionada aqui
-    }));
-  }
-
-  private getDefaultAnalysis(): SecurityAnalysis {
-    return {
-      riskScore: 0,
-      anomalies: [],
-      recommendations: [],
-      behaviorPattern: 'normal',
-      confidence: 0
-    };
-  }
-}
-
-export const advancedSecurityUtils = AdvancedSecurityUtils.getInstance();
-
-// Funções de conveniência para uso direto
-export const logSecurityActivity = (context: SecurityContext) => 
-  advancedSecurityUtils.logSecurityActivity(context);
-
-export const analyzeUserBehavior = (userId: string, timeframe?: number) =>
-  advancedSecurityUtils.analyzeUserBehavior(userId, timeframe);
-
-export const generateSecurityReport = (timeframe?: number) =>
-  advancedSecurityUtils.generateSecurityReport(timeframe);
-
-export const analyzeIPCorrelation = (ipAddress: string) =>
-  advancedSecurityUtils.analyzeIPCorrelation(ipAddress);
+};
