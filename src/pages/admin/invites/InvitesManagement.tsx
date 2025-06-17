@@ -5,7 +5,7 @@ import { usePermissions } from "@/hooks/auth/usePermissions";
 import { useInvitesList } from "@/hooks/admin/invites/useInvitesList";
 import SimpleCreateInviteDialog from "./components/SimpleCreateInviteDialog";
 import SimpleInvitesTab from "./components/SimpleInvitesTab";
-import { InviteSystemDiagnostic } from "@/components/admin/invites/InviteSystemDiagnostic";
+import InviteSystemDiagnostic from "@/components/admin/invites/InviteSystemDiagnostic";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
