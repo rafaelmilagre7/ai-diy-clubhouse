@@ -50,11 +50,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     return isFormacaoRole(profile);
   }, [profile]);
 
-  // Função simples para buscar perfil
+  // CORREÇÃO: Função única para carregar perfil (evita duplicação)
   const loadUserProfile = async (userId: string) => {
     try {
+      console.log('[AUTH] Carregando perfil para usuário:', userId.substring(0, 8) + '***');
       const userProfile = await fetchUserProfileSecurely(userId);
       setProfile(userProfile);
+      console.log('[AUTH] Perfil carregado:', userProfile ? 'sucesso' : 'não encontrado');
       return userProfile;
     } catch (error) {
       console.error('[AUTH] Erro ao buscar perfil:', error);
@@ -63,30 +65,34 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  // Inicialização única e simples
+  // CORREÇÃO: Inicialização simplificada sem duplicação
   useEffect(() => {
     if (isInitialized.current) return;
     
     const initializeAuth = async () => {
-      console.log('[AUTH] Inicializando autenticação');
+      console.log('[AUTH] Inicializando autenticação - versão corrigida');
       
       try {
-        // Configurar listener de mudanças de autenticação
+        // CORREÇÃO: Configurar listener PRIMEIRO
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
-          async (event, session) => {
-            console.log(`[AUTH] Evento: ${event}`);
+          (event, session) => {
+            console.log(`[AUTH] Evento recebido: ${event}`);
             
             if (event === 'SIGNED_IN' && session?.user) {
-              console.log(`[AUTH] Login: ${session.user.email}`);
+              console.log(`[AUTH] Login detectado: ${session.user.email}`);
               setSession(session);
               setUser(session.user);
               
-              // Buscar perfil após login
-              await loadUserProfile(session.user.id);
-              setIsLoading(false);
+              // CORREÇÃO: Usar setTimeout(0) para evitar deadlock
+              setTimeout(() => {
+                loadUserProfile(session.user.id).finally(() => {
+                  setIsLoading(false);
+                  console.log('[AUTH] Loading finalizado após login');
+                });
+              }, 0);
               
             } else if (event === 'SIGNED_OUT') {
-              console.log('[AUTH] Logout');
+              console.log('[AUTH] Logout detectado');
               setUser(null);
               setProfile(null);
               setSession(null);
@@ -98,23 +104,32 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         
         authListenerRef.current = subscription;
         
-        // Verificar sessão atual
+        // CORREÇÃO: Verificar sessão atual sem carregar perfil (evita duplicação)
         const { data: { session: currentSession } } = await supabase.auth.getSession();
         
         if (currentSession?.user) {
-          console.log('[AUTH] Sessão existente:', currentSession.user.email);
+          console.log('[AUTH] Sessão existente encontrada:', currentSession.user.email);
           setSession(currentSession);
           setUser(currentSession.user);
-          await loadUserProfile(currentSession.user.id);
+          
+          // CORREÇÃO: Carregar perfil apenas aqui, com setTimeout para evitar conflitos
+          setTimeout(() => {
+            loadUserProfile(currentSession.user.id).finally(() => {
+              setIsLoading(false);
+              console.log('[AUTH] Loading finalizado para sessão existente');
+            });
+          }, 0);
+        } else {
+          console.log('[AUTH] Nenhuma sessão ativa encontrada');
+          setIsLoading(false);
         }
         
         isInitialized.current = true;
-        console.log('[AUTH] Inicialização concluída');
+        console.log('[AUTH] Inicialização completa');
         
       } catch (error) {
         console.error('[AUTH] Erro na inicialização:', error);
         setAuthError(error instanceof Error ? error : new Error('Erro na inicialização'));
-      } finally {
         setIsLoading(false);
       }
     };
