@@ -9,7 +9,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useAuth } from "@/contexts/auth";
+import { useAuth } from "@/contexts/auth/OptimizedAuthContext";
 import { LogOut, Settings, User, Sparkles } from "lucide-react";
 import { Link } from "react-router-dom";
 
