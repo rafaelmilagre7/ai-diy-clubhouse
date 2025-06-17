@@ -16,7 +16,7 @@ import { EventRecurrence } from "./form/EventRecurrence";
 import { EventRoleAccess } from "./form/EventRoleAccess";
 import { eventSchema, type EventFormData } from "./form/EventFormSchema";
 import { type Event } from "@/types/events";
-import { convertUTCToLocal, convertLocalToUTC } from "@/utils/timezoneUtils";
+import { convertUTCToDatetimeLocal } from "@/utils/timezoneUtils";
 import { useEventAccessControl } from "@/hooks/useEventAccessControl";
 
 interface EventFormProps {
@@ -43,8 +43,9 @@ export const EventForm = ({ event, onSuccess }: EventFormProps) => {
     defaultValues: {
       title: event?.title || "",
       description: event?.description || "",
-      start_time: event?.start_time ? convertUTCToLocal(event.start_time) : "",
-      end_time: event?.end_time ? convertUTCToLocal(event.end_time) : "",
+      // Usar conversão correta apenas para exibição em inputs
+      start_time: event?.start_time ? convertUTCToDatetimeLocal(event.start_time) : "",
+      end_time: event?.end_time ? convertUTCToDatetimeLocal(event.end_time) : "",
       location_link: event?.location_link || "",
       physical_location: event?.physical_location || "",
       cover_image_url: event?.cover_image_url || "",
@@ -61,11 +62,14 @@ export const EventForm = ({ event, onSuccess }: EventFormProps) => {
     try {
       setIsSubmitting(true);
 
+      // Os valores do datetime-local já estão no formato correto
+      // O navegador já converte automaticamente para UTC quando enviamos para o servidor
       const eventData = {
         title: data.title,
         description: data.description || null,
-        start_time: convertLocalToUTC(data.start_time),
-        end_time: convertLocalToUTC(data.end_time),
+        // Usar os valores diretos - o PostgreSQL entende datetime-local como local time
+        start_time: data.start_time,
+        end_time: data.end_time,
         location_link: data.location_link || null,
         physical_location: data.physical_location || null,
         cover_image_url: data.cover_image_url || null,
