@@ -3,7 +3,7 @@ import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { LucideIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useAuth } from '@/contexts/auth';
+import { useAuth } from '@/contexts/auth/OptimizedAuthContext';
 import { getUserRoleName } from '@/lib/supabase/types';
 
 interface MemberSidebarNavItemProps {
