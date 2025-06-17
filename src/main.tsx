@@ -4,12 +4,12 @@ import ReactDOM from 'react-dom/client';
 import App from './App.tsx';
 import './index.css';
 
-// OTIMIZAÇÃO: Validação de segurança apenas em DEV
-import { optimizedSecurityValidator } from './utils/OptimizedSecurityValidator';
+// Inicialização com validação de segurança
+import { securityValidator } from './utils/securityValidator';
 
-// OTIMIZAÇÃO: Executar validações apenas se necessário
+// Validar segurança antes de inicializar a aplicação
 if (import.meta.env.DEV) {
-  optimizedSecurityValidator.generateSecurityReport();
+  securityValidator.generateSecurityReport();
 }
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
