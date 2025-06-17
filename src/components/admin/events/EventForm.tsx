@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -109,6 +110,33 @@ export const EventForm = ({ event, onSuccess }: EventFormProps) => {
       const savedEvent = result.data;
       console.log("✅ [EVENT-FORM] Event saved successfully:", savedEvent.id);
 
+      // Se for evento recorrente, gerar instâncias
+      if (savedEvent?.id && savedEvent.is_recurring) {
+        try {
+          console.log("🔄 [EVENT-FORM] Generating recurring instances for event:", savedEvent.id);
+          
+          const { data: instancesResult, error: instancesError } = await supabase
+            .rpc('generate_recurring_event_instances', {
+              p_event_id: savedEvent.id,
+              p_max_instances: 12
+            });
+
+          if (instancesError) {
+            console.error("❌ [EVENT-FORM] Error generating instances:", instancesError);
+            toast.error("Evento salvo, mas houve erro ao gerar as ocorrências recorrentes.");
+          } else if (instancesResult?.success) {
+            console.log("✅ [EVENT-FORM] Instances generated successfully:", instancesResult);
+            toast.success(`Evento recorrente criado! ${instancesResult.instances_created} ocorrências geradas.`);
+          } else {
+            console.error("❌ [EVENT-FORM] Failed to generate instances:", instancesResult);
+            toast.error("Evento salvo, mas houve erro ao gerar as ocorrências recorrentes.");
+          }
+        } catch (instancesError) {
+          console.error("❌ [EVENT-FORM] Exception generating instances:", instancesError);
+          toast.error("Evento salvo, mas houve erro ao gerar as ocorrências recorrentes.");
+        }
+      }
+
       // Salvar controle de acesso
       if (savedEvent?.id) {
         try {
@@ -121,7 +149,10 @@ export const EventForm = ({ event, onSuccess }: EventFormProps) => {
         }
       }
 
-      toast.success(event ? "Evento atualizado com sucesso!" : "Evento criado com sucesso!");
+      // Toast de sucesso geral (se ainda não foi mostrado para eventos recorrentes)
+      if (!savedEvent.is_recurring) {
+        toast.success(event ? "Evento atualizado com sucesso!" : "Evento criado com sucesso!");
+      }
       
       // Invalidar queries para atualizar a lista
       queryClient.invalidateQueries({ queryKey: ["events"] });

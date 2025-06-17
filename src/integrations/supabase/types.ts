@@ -6152,6 +6152,10 @@ export type Database = {
         Args: { onboarding_data: Json }
         Returns: Json
       }
+      generate_recurring_event_instances: {
+        Args: { p_event_id: string; p_max_instances?: number }
+        Returns: Json
+      }
       generate_referral_token: {
         Args: Record<PropertyKey, never>
         Returns: string

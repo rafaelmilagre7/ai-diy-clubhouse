@@ -43,7 +43,7 @@ export const useEvents = () => {
         const isAdmin = profile?.role === 'admin';
 
         if (isAdmin) {
-          // Admins veem todos os eventos
+          // Admins veem todos os eventos (incluindo instâncias geradas)
           const { data: events, error } = await supabase
             .from('events')
             .select('*')
@@ -68,6 +68,7 @@ export const useEvents = () => {
 
           // Buscar eventos que são públicos (sem controle de acesso) 
           // ou que têm controle de acesso específico para o role do usuário
+          // Incluir tanto eventos pai quanto instâncias geradas
           const { data: events, error } = await supabase
             .from('events')
             .select(`
@@ -98,8 +99,17 @@ export const useEvents = () => {
             return false;
           }) || [];
 
-          console.log("Eventos visíveis para membro:", visibleEvents.length);
-          return visibleEvents as Event[];
+          // Para eventos recorrentes, buscar também as instâncias geradas (próximos 6 meses)
+          const sixMonthsFromNow = new Date();
+          sixMonthsFromNow.setMonth(sixMonthsFromNow.getMonth() + 6);
+          
+          const futureInstances = visibleEvents.filter(event => {
+            const eventDate = new Date(event.start_time);
+            return eventDate <= sixMonthsFromNow;
+          });
+
+          console.log("Eventos visíveis para membro:", futureInstances.length);
+          return futureInstances as Event[];
         }
 
       } catch (error) {
