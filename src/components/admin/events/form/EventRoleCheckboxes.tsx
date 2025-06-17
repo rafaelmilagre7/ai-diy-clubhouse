@@ -6,6 +6,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { Badge } from "@/components/ui/badge";
 import { Users } from "lucide-react";
+import { useCallback, useMemo } from "react";
 
 interface Role {
   id: string;
@@ -40,8 +41,8 @@ export const EventRoleCheckboxes = ({ selectedRoles, onChange }: EventRoleCheckb
     staleTime: 5 * 60 * 1000 // 5 minutos
   });
 
-  // Função para atualizar seleção de papéis
-  const handleCheckedChange = (checked: boolean, roleId: string) => {
+  // Função estabilizada para atualizar seleção de papéis
+  const handleCheckedChange = useCallback((checked: boolean, roleId: string) => {
     console.log("🔄 [ROLE-CHECKBOXES] Role selection changed:", { roleId, checked });
     
     let updatedSelection: string[];
@@ -54,7 +55,10 @@ export const EventRoleCheckboxes = ({ selectedRoles, onChange }: EventRoleCheckb
 
     console.log("🔄 [ROLE-CHECKBOXES] Updated selection:", updatedSelection);
     onChange(updatedSelection);
-  };
+  }, [selectedRoles, onChange]);
+
+  // Memoizar contagem de selecionados para evitar re-renders desnecessários
+  const selectedCount = useMemo(() => selectedRoles.length, [selectedRoles.length]);
 
   if (isLoading) {
     return (
@@ -87,8 +91,6 @@ export const EventRoleCheckboxes = ({ selectedRoles, onChange }: EventRoleCheckb
     );
   }
 
-  const selectedCount = selectedRoles.length;
-
   return (
     <div>
       <div className="flex items-center gap-2 mb-2">
@@ -111,12 +113,11 @@ export const EventRoleCheckboxes = ({ selectedRoles, onChange }: EventRoleCheckb
             return (
               <div 
                 key={role.id}
-                className={`flex items-start space-x-2 rounded-md p-2 transition-colors cursor-pointer ${
+                className={`flex items-start space-x-2 rounded-md p-2 transition-colors ${
                   isChecked 
                     ? "bg-viverblue/10 dark:bg-viverblue/20 border border-viverblue/30 dark:border-viverblue/40" 
                     : "hover:bg-muted/50 dark:hover:bg-muted/30 border border-transparent"
                 }`}
-                onClick={() => handleCheckedChange(!isChecked, role.id)}
               >
                 <Checkbox
                   id={`role-${role.id}`}

@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
@@ -10,7 +10,7 @@ interface UseEventAccessControlProps {
 
 export const useEventAccessControl = ({ eventId }: UseEventAccessControlProps) => {
   const [selectedRoles, setSelectedRoles] = useState<string[]>([]);
-  const [isInitialized, setIsInitialized] = useState(false);
+  const isInitializedRef = useRef(false);
   const queryClient = useQueryClient();
 
   console.log("🎯 [EVENT-ACCESS-CONTROL] Hook initialized", { eventId, selectedRoles });
@@ -45,14 +45,22 @@ export const useEventAccessControl = ({ eventId }: UseEventAccessControlProps) =
     staleTime: 30000
   });
 
-  // Sincronizar estado local com dados carregados
+  // Memoizar os dados para estabilizar a referência
+  const memoizedAccessControlData = useMemo(() => accessControlData, [accessControlData]);
+
+  // Sincronizar estado local com dados carregados - usando useRef para controlar inicialização
   useEffect(() => {
-    if (accessControlData && !isInitialized) {
-      console.log("🔄 [EVENT-ACCESS-CONTROL] Initializing selectedRoles with:", accessControlData);
-      setSelectedRoles(accessControlData);
-      setIsInitialized(true);
+    if (memoizedAccessControlData && !isInitializedRef.current) {
+      console.log("🔄 [EVENT-ACCESS-CONTROL] Initializing selectedRoles with:", memoizedAccessControlData);
+      setSelectedRoles(memoizedAccessControlData);
+      isInitializedRef.current = true;
     }
-  }, [accessControlData, isInitialized]);
+  }, [memoizedAccessControlData]);
+
+  // Reset initialization flag when eventId changes
+  useEffect(() => {
+    isInitializedRef.current = false;
+  }, [eventId]);
 
   // Mutation para salvar controle de acesso
   const saveAccessControlMutation = useMutation({
@@ -109,12 +117,13 @@ export const useEventAccessControl = ({ eventId }: UseEventAccessControlProps) =
     }
   });
 
-  const updateSelectedRoles = (roleIds: string[]) => {
+  // Usar useCallback para estabilizar as funções
+  const updateSelectedRoles = useCallback((roleIds: string[]) => {
     console.log("🔄 [EVENT-ACCESS-CONTROL] Updating selected roles:", roleIds);
     setSelectedRoles(roleIds);
-  };
+  }, []);
 
-  const saveAccessControl = async (eventId: string) => {
+  const saveAccessControl = useCallback(async (eventId: string) => {
     console.log("💾 [EVENT-ACCESS-CONTROL] Save requested for event:", eventId, "with roles:", selectedRoles);
     
     try {
@@ -124,7 +133,7 @@ export const useEventAccessControl = ({ eventId }: UseEventAccessControlProps) =
       console.error("❌ [EVENT-ACCESS-CONTROL] Save failed:", error);
       throw error;
     }
-  };
+  }, [selectedRoles, saveAccessControlMutation]);
 
   return {
     selectedRoles,
@@ -132,7 +141,7 @@ export const useEventAccessControl = ({ eventId }: UseEventAccessControlProps) =
     saveAccessControl,
     isLoading: isLoading && !!eventId,
     isSaving: saveAccessControlMutation.isPending,
-    isInitialized,
+    isInitialized: isInitializedRef.current,
     error: error || saveAccessControlMutation.error
   };
 };
