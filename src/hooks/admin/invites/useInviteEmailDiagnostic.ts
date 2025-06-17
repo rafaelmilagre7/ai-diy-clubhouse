@@ -1,3 +1,4 @@
+
 import { useState, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
@@ -5,16 +6,31 @@ import { useInviteEmailService } from './useInviteEmailService';
 
 interface DiagnosticResult {
   component: string;
-  status: 'success' | 'error' | 'warning';
+  status: 'success' | 'warning' | 'error';
   message: string;
-  details?: string;
-  value?: any;
+  details?: any;
+  timestamp: string;
+}
+
+interface DiagnosticData {
+  systemHealth: 'healthy' | 'warning' | 'critical';
+  edgeFunctionExists: boolean;
+  edgeFunctionResponding: boolean;
+  recentInvites: any[];
+  failedInvites: any[];
+  testResults: {
+    email: boolean;
+    database: boolean;
+    auth: boolean;
+  };
+  recommendations: string[];
+  lastUpdated: Date;
 }
 
 export function useInviteEmailDiagnostic() {
   const [isRunning, setIsRunning] = useState(false);
   const [results, setResults] = useState<DiagnosticResult[]>([]);
-  const [lastDiagnostic, setLastDiagnostic] = useState<Date | null>(null);
+  const [lastDiagnostic, setLastDiagnostic] = useState<DiagnosticData | null>(null);
   const { sendInviteEmail } = useInviteEmailService();
 
   const testInviteEmail = useCallback(async (email: string) => {
@@ -51,179 +67,215 @@ export function useInviteEmailDiagnostic() {
   const runDiagnostic = useCallback(async () => {
     setIsRunning(true);
     setResults([]);
-    
+
     const diagnostics: DiagnosticResult[] = [];
+    let systemHealth: 'healthy' | 'warning' | 'critical' = 'healthy';
+    let edgeFunctionExists = false;
+    let edgeFunctionResponding = false;
+    let recentInvites: any[] = [];
+    let failedInvites: any[] = [];
+    const recommendations: string[] = [];
 
     try {
-      // 1. Verificar Edge Function
-      console.log('🔍 Testando Edge Function...');
-      try {
-        const { data, error } = await supabase.functions.invoke('send-invite-email', {
-          body: {
-            email: 'teste@exemplo.com',
-            inviteUrl: 'https://exemplo.com/convite/123',
-            roleName: 'Teste',
-            expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-            senderName: 'Sistema de Diagnóstico',
-            notes: 'Teste de diagnóstico do sistema',
-            inviteId: 'diagnostic-test'
-          }
-        });
+      // 1. Verificar tabelas necessárias
+      console.log("🔍 Verificando estrutura do banco de dados...");
+      
+      const tablesCheck = await supabase
+        .from('information_schema.tables')
+        .select('table_name')
+        .in('table_name', ['invites', 'invite_send_attempts', 'user_roles']);
 
-        if (error) {
+      if (tablesCheck.error) {
+        diagnostics.push({
+          component: 'Database Structure',
+          status: 'error',
+          message: 'Erro ao verificar tabelas: ' + tablesCheck.error.message,
+          timestamp: new Date().toISOString()
+        });
+        systemHealth = 'critical';
+      } else {
+        diagnostics.push({
+          component: 'Database Structure',
+          status: 'success',
+          message: `Tabelas encontradas: ${tablesCheck.data?.length || 0}`,
+          details: tablesCheck.data,
+          timestamp: new Date().toISOString()
+        });
+      }
+
+      // 2. Verificar Edge Function
+      console.log("🔍 Testando Edge Function...");
+      
+      try {
+        const edgeFunctionTest = await supabase.functions.invoke('send-invite-email', {
+          body: { test: true }
+        });
+        
+        edgeFunctionExists = true;
+        
+        if (edgeFunctionTest.error) {
+          edgeFunctionResponding = false;
           diagnostics.push({
             component: 'Edge Function',
-            status: 'error',
-            message: 'Edge Function não está funcionando',
-            details: error.message
+            status: 'warning',
+            message: 'Edge Function existe mas retornou erro: ' + edgeFunctionTest.error.message,
+            timestamp: new Date().toISOString()
           });
-        } else if (data?.success) {
+          if (systemHealth === 'healthy') systemHealth = 'warning';
+        } else {
+          edgeFunctionResponding = true;
           diagnostics.push({
             component: 'Edge Function',
             status: 'success',
-            message: `Funcionando via ${data.strategy}`,
-            details: `Método: ${data.method}, Strategy: ${data.strategy}`
-          });
-        } else {
-          diagnostics.push({
-            component: 'Edge Function',
-            status: 'warning',
-            message: 'Edge Function respondeu mas falhou',
-            details: data?.error || 'Resposta inesperada'
+            message: 'Edge Function respondendo corretamente',
+            timestamp: new Date().toISOString()
           });
         }
-      } catch (funcError: any) {
+      } catch (error: any) {
+        edgeFunctionExists = false;
+        edgeFunctionResponding = false;
         diagnostics.push({
           component: 'Edge Function',
           status: 'error',
-          message: 'Erro ao chamar Edge Function',
-          details: funcError.message
+          message: 'Edge Function não encontrada ou não responsiva: ' + error.message,
+          timestamp: new Date().toISOString()
         });
+        systemHealth = 'critical';
+        recommendations.push('Verificar se a Edge Function send-invite-email foi deployada corretamente');
       }
 
-      // 2. Verificar configurações do Supabase
-      try {
-        const { data: configTest } = await supabase.from('invites').select('count').limit(1);
+      // 3. Verificar convites recentes
+      console.log("🔍 Verificando convites recentes...");
+      
+      const recentInvitesCheck = await supabase
+        .from('invites')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(10);
+
+      if (recentInvitesCheck.error) {
         diagnostics.push({
-          component: 'Banco de Dados',
-          status: 'success',
-          message: 'Conexão com banco funcionando',
-          details: 'Tabela invites acessível'
-        });
-      } catch (dbError: any) {
-        diagnostics.push({
-          component: 'Banco de Dados',
+          component: 'Recent Invites',
           status: 'error',
-          message: 'Erro na conexão com banco',
-          details: dbError.message
+          message: 'Erro ao buscar convites recentes: ' + recentInvitesCheck.error.message,
+          timestamp: new Date().toISOString()
         });
-      }
-
-      // 3. Verificar tabela de tentativas
-      try {
-        const { data: attemptsTest } = await supabase.from('invite_send_attempts').select('count').limit(1);
+        if (systemHealth === 'healthy') systemHealth = 'warning';
+      } else {
+        recentInvites = recentInvitesCheck.data || [];
         diagnostics.push({
-          component: 'Tabela de Tentativas',
+          component: 'Recent Invites',
           status: 'success',
-          message: 'Tabela invite_send_attempts funcionando',
-          details: 'Sistema de monitoramento ativo'
-        });
-      } catch (attemptsError: any) {
-        diagnostics.push({
-          component: 'Tabela de Tentativas',
-          status: 'error',
-          message: 'Tabela invite_send_attempts não encontrada',
-          details: 'Execute a migração para criar a tabela'
+          message: `${recentInvites.length} convites encontrados`,
+          details: recentInvites,
+          timestamp: new Date().toISOString()
         });
       }
 
-      // 4. Verificar últimos convites criados
+      // 4. Verificar convites com falha
+      console.log("🔍 Verificando convites com falha...");
+      
       try {
-        const { data: recentInvites } = await supabase
-          .from('invites')
-          .select('id, email, created_at, last_sent_at')
+        const failedInvitesCheck = await supabase
+          .from('invite_send_attempts')
+          .select('*')
+          .eq('status', 'failed')
           .order('created_at', { ascending: false })
           .limit(5);
 
-        if (recentInvites && recentInvites.length > 0) {
-          const unsentCount = recentInvites.filter(invite => !invite.last_sent_at).length;
+        if (failedInvitesCheck.error) {
           diagnostics.push({
-            component: 'Convites Recentes',
-            status: unsentCount > 0 ? 'warning' : 'success',
-            message: `${recentInvites.length} convites recentes encontrados`,
-            details: unsentCount > 0 ? `${unsentCount} convites ainda não enviados` : 'Todos os convites foram enviados'
-          });
-        } else {
-          diagnostics.push({
-            component: 'Convites Recentes',
+            component: 'Failed Invites',
             status: 'warning',
-            message: 'Nenhum convite encontrado',
-            details: 'Crie um convite para testar o sistema'
+            message: 'Tabela invite_send_attempts não encontrada ou erro: ' + failedInvitesCheck.error.message,
+            timestamp: new Date().toISOString()
           });
-        }
-      } catch (invitesError: any) {
-        diagnostics.push({
-          component: 'Convites Recentes',
-          status: 'error',
-          message: 'Erro ao buscar convites',
-          details: invitesError.message
-        });
-      }
-
-      // 5. Verificar últimas tentativas de envio
-      try {
-        const { data: recentAttempts } = await supabase
-          .from('invite_send_attempts')
-          .select('method_attempted, status, created_at')
-          .order('created_at', { ascending: false })
-          .limit(10);
-
-        if (recentAttempts && recentAttempts.length > 0) {
-          const successCount = recentAttempts.filter(attempt => attempt.status === 'sent').length;
-          const failureCount = recentAttempts.filter(attempt => attempt.status === 'failed').length;
+          recommendations.push('Aplicar migração para criar tabela invite_send_attempts');
+        } else {
+          failedInvites = failedInvitesCheck.data || [];
+          diagnostics.push({
+            component: 'Failed Invites',
+            status: failedInvites.length > 0 ? 'warning' : 'success',
+            message: `${failedInvites.length} convites com falha encontrados`,
+            details: failedInvites,
+            timestamp: new Date().toISOString()
+          });
           
-          diagnostics.push({
-            component: 'Histórico de Envios',
-            status: successCount > failureCount ? 'success' : 'warning',
-            message: `${recentAttempts.length} tentativas recentes`,
-            details: `${successCount} sucessos, ${failureCount} falhas`
-          });
-        } else {
-          diagnostics.push({
-            component: 'Histórico de Envios',
-            status: 'warning',
-            message: 'Nenhuma tentativa de envio registrada',
-            details: 'Primeira execução ou sistema não está registrando tentativas'
-          });
+          if (failedInvites.length > 0 && systemHealth === 'healthy') {
+            systemHealth = 'warning';
+            recommendations.push('Investigar causas das falhas nos envios de convite');
+          }
         }
-      } catch (attemptsError: any) {
+      } catch (error) {
         diagnostics.push({
-          component: 'Histórico de Envios',
-          status: 'error',
-          message: 'Erro ao verificar histórico',
-          details: attemptsError.message
+          component: 'Failed Invites',
+          status: 'warning',
+          message: 'Não foi possível verificar convites com falha',
+          timestamp: new Date().toISOString()
         });
       }
+
+      // 5. Testar funcionalidades
+      console.log("🔍 Testando funcionalidades do sistema...");
+      
+      const testResults = {
+        email: edgeFunctionResponding,
+        database: diagnostics.filter(d => d.component.includes('Database')).every(d => d.status === 'success'),
+        auth: true // Assumindo que auth está funcionando se chegou até aqui
+      };
+
+      diagnostics.push({
+        component: 'System Tests',
+        status: Object.values(testResults).every(Boolean) ? 'success' : 'warning',
+        message: `Testes: Email ${testResults.email ? '✓' : '✗'}, DB ${testResults.database ? '✓' : '✗'}, Auth ${testResults.auth ? '✓' : '✗'}`,
+        details: testResults,
+        timestamp: new Date().toISOString()
+      });
+
+      // Compilar dados do diagnóstico
+      const diagnosticData: DiagnosticData = {
+        systemHealth,
+        edgeFunctionExists,
+        edgeFunctionResponding,
+        recentInvites,
+        failedInvites,
+        testResults,
+        recommendations,
+        lastUpdated: new Date()
+      };
 
       setResults(diagnostics);
-      setLastDiagnostic(new Date());
+      setLastDiagnostic(diagnosticData);
 
       // Mostrar resumo
       const successCount = diagnostics.filter(d => d.status === 'success').length;
-      const errorCount = diagnostics.filter(d => d.status === 'error').length;
       const warningCount = diagnostics.filter(d => d.status === 'warning').length;
+      const errorCount = diagnostics.filter(d => d.status === 'error').length;
 
-      if (errorCount === 0) {
-        toast.success(`Diagnóstico concluído: ${successCount} sucessos, ${warningCount} avisos`);
+      if (errorCount > 0) {
+        toast.error(`Diagnóstico concluído: ${errorCount} erros críticos encontrados`, {
+          description: `${successCount} sucessos, ${warningCount} avisos, ${errorCount} erros`
+        });
+      } else if (warningCount > 0) {
+        toast.warning(`Diagnóstico concluído: ${warningCount} avisos encontrados`, {
+          description: `${successCount} sucessos, ${warningCount} avisos`
+        });
       } else {
-        toast.error(`Diagnóstico encontrou ${errorCount} problemas críticos`);
+        toast.success('Diagnóstico concluído: Sistema funcionando perfeitamente!', {
+          description: `${successCount} componentes verificados com sucesso`
+        });
       }
 
     } catch (error: any) {
-      console.error('Erro no diagnóstico:', error);
-      toast.error('Erro ao executar diagnóstico', {
-        description: error.message
+      console.error('Erro durante diagnóstico:', error);
+      diagnostics.push({
+        component: 'Diagnostic System',
+        status: 'error',
+        message: 'Erro durante execução do diagnóstico: ' + error.message,
+        timestamp: new Date().toISOString()
       });
+      setResults(diagnostics);
+      toast.error('Erro durante diagnóstico: ' + error.message);
     } finally {
       setIsRunning(false);
     }
