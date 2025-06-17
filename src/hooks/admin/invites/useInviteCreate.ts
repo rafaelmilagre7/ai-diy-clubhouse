@@ -4,12 +4,12 @@ import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/auth';
 import { toast } from 'sonner';
 import { generateInviteUrl } from '@/utils/inviteValidationUtils';
-import { useInviteEmailFallback } from './useInviteEmailFallback';
+import { useInviteEmailService } from './useInviteEmailService';
 
 export const useInviteCreate = () => {
   const { user } = useAuth();
   const [isCreating, setIsCreating] = useState(false);
-  const { sendInviteWithFallback } = useInviteEmailFallback();
+  const { sendInviteEmail } = useInviteEmailService();
 
   const createInvite = async (
     email: string,
@@ -66,45 +66,43 @@ export const useInviteCreate = () => {
         .eq('id', roleId)
         .single();
 
-      // NOVO: Usar sistema de fallback para envio
-      const sendResult = await sendInviteWithFallback({
+      // Usar sistema aprimorado de envio de email
+      const sendResult = await sendInviteEmail({
         email,
         inviteUrl,
         roleName: roleData?.name || 'membro',
         expiresAt: data.expires_at,
         senderName: user.user_metadata?.name || user.email,
         notes,
-        inviteId: data.invite_id
+        inviteId: data.invite_id,
+        forceResend: true
       });
 
-      // Feedback baseado no método usado
-      if (sendResult.success) {
-        let successMessage = 'Convite criado e enviado com sucesso!';
-        let description = '';
-        
-        switch (sendResult.method) {
-          case 'edge_function':
-            description = 'Enviado via sistema principal com design profissional';
-            break;
-          case 'supabase_auth':
-            description = 'Enviado via sistema de backup (email em inglês)';
-            break;
-        }
-        
-        toast.success(successMessage, { description });
-      } else {
+      // O hook de email já mostra o toast apropriado
+      if (!sendResult.success) {
         console.warn("⚠️ [INVITE-CREATE] Problema no envio:", sendResult.error);
-        toast.warning('Convite criado, mas houve problema no envio', {
-          description: sendResult.error || 'O sistema tentará reenviar automaticamente.'
-        });
       }
 
       return data;
     } catch (err: any) {
       console.error('❌ [INVITE-CREATE] Erro crítico:', err);
-      toast.error('Erro ao criar convite', {
-        description: err.message || 'Não foi possível criar o convite.'
-      });
+      
+      // Mensagens de erro mais específicas
+      let errorMessage = 'Erro ao criar convite';
+      let description = err.message || 'Não foi possível criar o convite.';
+      
+      if (err.message?.includes('já existe')) {
+        errorMessage = 'Convite já existe';
+        description = 'Este email já possui um convite pendente.';
+      } else if (err.message?.includes('role')) {
+        errorMessage = 'Papel inválido';
+        description = 'O papel selecionado não é válido.';
+      } else if (err.message?.includes('email')) {
+        errorMessage = 'Email inválido';
+        description = 'Verifique se o formato do email está correto.';
+      }
+      
+      toast.error(errorMessage, { description });
       return null;
     } finally {
       setIsCreating(false);

@@ -47,6 +47,9 @@ verify_jwt = false
 [functions.send-whatsapp-invite]
 verify_jwt = false
 
+[functions.send-invite-email]
+verify_jwt = false
+
 [functions.get-assistant-messages]
 verify_jwt = true
 
