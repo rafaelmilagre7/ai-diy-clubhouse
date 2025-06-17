@@ -1,4 +1,5 @@
 
+
 -- Função para gerar instâncias de eventos recorrentes (corrigida)
 CREATE OR REPLACE FUNCTION public.generate_recurring_event_instances(
   p_event_id uuid,
@@ -127,3 +128,4 @@ BEGIN
   );
 END;
 $$;
+
