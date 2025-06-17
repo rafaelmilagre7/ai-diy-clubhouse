@@ -16,7 +16,7 @@ export const extractLocalTime = (datetimeString: string): string => {
 export const convertUTCToLocal = (utcDateString: string): string => {
   try {
     const utcDate = new Date(utcDateString);
-    // Subtrair 3 horas para converter de UTC para horário de Brasília
+    // Brasília é UTC-3, então para converter de UTC para local, subtraímos 3 horas
     const brasiliaDate = new Date(utcDate.getTime() - (3 * 60 * 60 * 1000));
     return brasiliaDate.toISOString().slice(0, 16); // Formato datetime-local
   } catch (error) {
@@ -29,7 +29,7 @@ export const convertUTCToLocal = (utcDateString: string): string => {
 export const convertLocalToUTC = (localDateString: string): string => {
   try {
     const localDate = new Date(localDateString);
-    // Adicionar 3 horas para converter do horário de Brasília para UTC
+    // Brasília é UTC-3, então para converter de local para UTC, adicionamos 3 horas
     const utcDate = new Date(localDate.getTime() + (3 * 60 * 60 * 1000));
     return utcDate.toISOString();
   } catch (error) {

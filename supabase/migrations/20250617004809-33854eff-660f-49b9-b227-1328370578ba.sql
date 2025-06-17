@@ -12,8 +12,8 @@ DECLARE
   event_record events;
   instance_date timestamp with time zone;
   end_date timestamp with time zone;
-  start_time time;
-  end_time time;
+  event_start_time time;
+  event_end_time time;
   instances_created integer := 0;
   base_date timestamp with time zone;
   max_date timestamp with time zone;
@@ -27,9 +27,9 @@ BEGIN
     RETURN jsonb_build_object('success', false, 'message', 'Evento recorrente não encontrado');
   END IF;
   
-  -- Extrair horários
-  start_time := event_record.start_time::time;
-  end_time := event_record.end_time::time;
+  -- Extrair horários (renomeado para evitar conflito)
+  event_start_time := event_record.start_time::time;
+  event_end_time := event_record.end_time::time;
   
   -- Determinar data inicial (hoje se for passado, ou a data do evento)
   base_date := GREATEST(CURRENT_DATE::timestamp with time zone, DATE_TRUNC('day', event_record.start_time));
@@ -84,7 +84,7 @@ BEGIN
       EXIT;
     END IF;
     
-    -- Criar instância
+    -- Criar instância (usando as variáveis renomeadas)
     INSERT INTO events (
       title,
       description,
@@ -99,8 +99,8 @@ BEGIN
     ) VALUES (
       event_record.title,
       event_record.description,
-      instance_date::date + start_time,
-      instance_date::date + end_time,
+      instance_date::date + event_start_time,
+      instance_date::date + event_end_time,
       event_record.location_link,
       event_record.physical_location,
       event_record.cover_image_url,
@@ -112,8 +112,8 @@ BEGIN
     -- Adicionar aos dados de retorno
     instances_data := instances_data || jsonb_build_object(
       'date', instance_date::date,
-      'start_time', (instance_date::date + start_time)::text,
-      'end_time', (instance_date::date + end_time)::text
+      'start_time', (instance_date::date + event_start_time)::text,
+      'end_time', (instance_date::date + event_end_time)::text
     );
     
     instances_created := instances_created + 1;
