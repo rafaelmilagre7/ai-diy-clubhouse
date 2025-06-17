@@ -3,9 +3,15 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import type { Event } from '@/types/events';
 
-export const useEvents = () => {
+interface UseEventsOptions {
+  includeParentEvents?: boolean; // Para área administrativa
+}
+
+export const useEvents = (options: UseEventsOptions = {}) => {
+  const { includeParentEvents = false } = options;
+  
   return useQuery({
-    queryKey: ['events'],
+    queryKey: ['events', includeParentEvents],
     queryFn: async (): Promise<Event[]> => {
       try {
         const { data: user } = await supabase.auth.getUser();
@@ -24,7 +30,14 @@ export const useEvents = () => {
 
           if (!rpcError && rpcData) {
             console.log("Eventos obtidos via RPC:", rpcData.length);
-            return rpcData as Event[];
+            let filteredEvents = rpcData as Event[];
+            
+            // Filtrar eventos pai recorrentes se não estiver na administração
+            if (!includeParentEvents) {
+              filteredEvents = filteredEvents.filter(event => !event.is_recurring);
+            }
+            
+            return filteredEvents;
           }
         } catch (rpcError) {
           console.log("RPC get_visible_events_for_user não disponível, usando fallback");
@@ -43,11 +56,18 @@ export const useEvents = () => {
         const isAdmin = profile?.role === 'admin';
 
         if (isAdmin) {
-          // Admins veem todos os eventos (incluindo instâncias geradas)
-          const { data: events, error } = await supabase
+          // Admins veem todos os eventos
+          let query = supabase
             .from('events')
             .select('*')
             .order('start_time', { ascending: true });
+
+          // Se não incluir eventos pai, filtrar eventos recorrentes pai
+          if (!includeParentEvents) {
+            query = query.eq('is_recurring', false);
+          }
+
+          const { data: events, error } = await query;
 
           if (error) {
             console.error("Erro ao buscar eventos para admin:", error);
@@ -66,16 +86,19 @@ export const useEvents = () => {
 
           const userRoleId = userProfile?.role_id;
 
-          // Buscar eventos que são públicos (sem controle de acesso) 
-          // ou que têm controle de acesso específico para o role do usuário
-          // Incluir tanto eventos pai quanto instâncias geradas
-          const { data: events, error } = await supabase
+          // Buscar eventos que são públicos ou que têm controle de acesso específico
+          let query = supabase
             .from('events')
             .select(`
               *,
               event_access_control!left(role_id)
             `)
             .order('start_time', { ascending: true });
+
+          // Sempre filtrar eventos pai recorrentes para membros
+          query = query.eq('is_recurring', false);
+
+          const { data: events, error } = await query;
 
           if (error) {
             console.error("Erro ao buscar eventos para membro:", error);

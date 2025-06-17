@@ -15,7 +15,8 @@ import { Badge } from "@/components/ui/badge";
 
 export const EventsTable = () => {
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
-  const { data: events = [], isLoading, error } = useEvents();
+  // Incluir eventos pai na área administrativa
+  const { data: events = [], isLoading, error } = useEvents({ includeParentEvents: true });
   const queryClient = useQueryClient();
 
   const handleDelete = async (id: string) => {
