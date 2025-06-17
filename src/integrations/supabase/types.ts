@@ -6280,6 +6280,10 @@ export type Database = {
         }
         Returns: string
       }
+      log_rls_violation_attempt: {
+        Args: { p_table_name: string; p_operation: string; p_user_id?: string }
+        Returns: undefined
+      }
       log_security_access: {
         Args: {
           p_table_name: string
@@ -6386,6 +6390,16 @@ export type Database = {
       user_has_permission: {
         Args: { user_id: string; permission_code: string }
         Returns: boolean
+      }
+      validate_complete_rls_security: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          table_name: string
+          rls_enabled: boolean
+          policy_count: number
+          security_status: string
+          risk_level: string
+        }[]
       }
       validate_invite_token_enhanced: {
         Args: { p_token: string }

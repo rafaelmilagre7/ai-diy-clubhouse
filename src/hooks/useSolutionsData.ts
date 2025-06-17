@@ -3,7 +3,7 @@ import { useState, useEffect, useMemo, useRef } from "react";
 import { supabase } from "@/lib/supabase";
 import { Solution } from "@/lib/supabase";
 import { useAuth } from "@/contexts/auth";
-import { useSecurityEnforcement } from "@/hooks/auth/useSecurityEnforcement";
+import { useRLSSecurityManager } from "@/hooks/useRLSSecurityManager";
 import { logger } from "@/utils/logger";
 
 // Cache global para evitar requests desnecessários
@@ -12,7 +12,7 @@ const CACHE_TTL = 5 * 60 * 1000; // 5 minutos
 
 export const useSolutionsData = () => {
   const { user, profile } = useAuth();
-  const { logDataAccess } = useSecurityEnforcement();
+  const { logSecureAccess } = useRLSSecurityManager();
   const [solutions, setSolutions] = useState<Solution[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -76,14 +76,10 @@ export const useSolutionsData = () => {
         setLoading(true);
         setError(null);
 
-        // Log de acesso apenas uma vez
-        try {
-          await logDataAccess('solutions', 'fetch_list');
-        } catch (auditError) {
-          // Ignorar erros de auditoria silenciosamente
-        }
+        // Log de acesso seguro
+        await logSecureAccess('solutions', 'fetch_list');
 
-        // Query otimizada
+        // Query otimizada com RLS habilitado
         let query = supabase.from("solutions").select("*");
 
         // Se não for admin, mostrar apenas soluções publicadas
@@ -129,7 +125,7 @@ export const useSolutionsData = () => {
     };
 
     fetchSolutions();
-  }, [user, profile?.role, cacheKey, logDataAccess]); // Dependências mínimas
+  }, [user, profile?.role, cacheKey, logSecureAccess]); // Dependências mínimas
 
   // Implementar filtragem de soluções baseada na busca e categoria
   const filteredSolutions = useMemo(() => {

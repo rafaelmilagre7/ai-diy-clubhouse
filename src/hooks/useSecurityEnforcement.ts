@@ -6,7 +6,7 @@ import { logger } from '@/utils/logger';
 
 /**
  * Hook para forçar verificações de segurança e logs de auditoria
- * Atualizado para usar as novas funções seguras de RLS
+ * Atualizado para funcionar com RLS Fase 2
  */
 export const useSecurityEnforcement = () => {
   const { user, isLoading } = useAuth();
@@ -23,7 +23,7 @@ export const useSecurityEnforcement = () => {
     }
   }, [user, isLoading]);
 
-  // CORREÇÃO: Função para logar acessos usando nova função robusta
+  // Função para logar acessos usando novas funções RLS
   const logDataAccess = async (tableName: string, operation: string, resourceId?: string) => {
     if (!user) return;
 
@@ -39,7 +39,7 @@ export const useSecurityEnforcement = () => {
     }
   };
 
-  // Função para verificar permissões antes de operações críticas
+  // Função aprimorada para verificar permissões com RLS
   const enforceUserDataAccess = (dataUserId: string, operation: string = 'read') => {
     if (!user) {
       logger.error('[SECURITY] Tentativa de acesso a dados sem autenticação', {
@@ -61,9 +61,31 @@ export const useSecurityEnforcement = () => {
     }
   };
 
+  // Nova função para log de violações RLS
+  const logRLSViolation = async (tableName: string, operation: string, targetUserId?: string) => {
+    if (!user) return;
+
+    try {
+      await supabase.rpc('log_rls_violation_attempt', {
+        p_table_name: tableName,
+        p_operation: operation,
+        p_user_id: targetUserId
+      });
+      
+      logger.warn('[SECURITY] Violação RLS registrada', {
+        table: tableName,
+        operation,
+        userId: user.id.substring(0, 8) + '***'
+      });
+    } catch (error) {
+      logger.error('[SECURITY] Erro ao registrar violação RLS:', error);
+    }
+  };
+
   return {
     logDataAccess,
     enforceUserDataAccess,
+    logRLSViolation,
     isAuthenticated: !!user
   };
 };

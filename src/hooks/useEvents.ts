@@ -2,6 +2,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import type { Event } from '@/types/events';
+import { useRLSSecurityManager } from '@/hooks/useRLSSecurityManager';
 
 interface UseEventsOptions {
   includeParentEvents?: boolean; // Para área administrativa
@@ -9,6 +10,7 @@ interface UseEventsOptions {
 
 export const useEvents = (options: UseEventsOptions = {}) => {
   const { includeParentEvents = false } = options;
+  const { logSecureAccess } = useRLSSecurityManager();
   
   return useQuery({
     queryKey: ['events', includeParentEvents],
@@ -20,6 +22,9 @@ export const useEvents = (options: UseEventsOptions = {}) => {
           console.log("Usuário não autenticado");
           return [];
         }
+
+        // Log de acesso seguro
+        await logSecureAccess('events', 'fetch_list');
 
         // Primeiro, tentar buscar eventos usando a função RPC se disponível
         try {
