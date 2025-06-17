@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { useAuth } from '@/contexts/auth';
-import { OptimizedRealTimeSecurityDashboard } from './OptimizedRealTimeSecurityDashboard';
+import { RLSPhase3Dashboard } from './RLSPhase3Dashboard';
 import { Card, CardContent } from '@/components/ui/card';
 import { Shield, AlertTriangle } from 'lucide-react';
 
@@ -25,24 +25,26 @@ export const SecurityDashboard = () => {
     );
   }
 
-  // Se for admin, renderizar o dashboard otimizado
+  // Se for admin, renderizar o dashboard da Fase 3
   return (
     <div className="space-y-6">
-      {/* Banner de identificação */}
-      <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg p-4 text-white">
+      {/* Banner de identificação da Fase 3 */}
+      <div className="bg-gradient-to-r from-green-600 to-blue-600 rounded-lg p-4 text-white">
         <div className="flex items-center gap-3">
           <Shield className="h-6 w-6" />
           <div>
-            <h2 className="text-lg font-semibold">Sistema de Segurança Avançado - FASE 4 (OTIMIZADO)</h2>
+            <h2 className="text-lg font-semibold">
+              Sistema de Segurança RLS - FASE 3 COMPLETA ✅
+            </h2>
             <p className="text-sm opacity-90">
-              Monitoramento em tempo real com detecção de anomalias, alertas inteligentes e performance otimizada
+              100% de proteção RLS com monitoramento automático, detecção de regressão e alertas inteligentes
             </p>
           </div>
         </div>
       </div>
 
-      {/* Dashboard otimizado */}
-      <OptimizedRealTimeSecurityDashboard />
+      {/* Dashboard da Fase 3 */}
+      <RLSPhase3Dashboard />
     </div>
   );
 };

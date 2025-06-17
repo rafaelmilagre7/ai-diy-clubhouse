@@ -5,36 +5,42 @@ import { useAuth } from '@/contexts/auth';
 import { logger } from '@/utils/logger';
 
 /**
- * Hook para gerenciar segurança RLS aprimorada após Fase 2
+ * Hook para gerenciar segurança RLS - FASE 3 COMPLETA
+ * Integrado com monitoramento automático e validação avançada
  */
 export const useRLSSecurityManager = () => {
   const { user, profile } = useAuth();
 
-  // Validar status de segurança das tabelas
+  // Validar status de segurança das tabelas com nova função da Fase 3
   const validateRLSSecurity = useCallback(async () => {
     if (!user || !profile) return null;
 
     try {
-      const { data, error } = await supabase.rpc('validate_complete_rls_security');
+      // Usar a nova função get_rls_security_summary da Fase 3
+      const { data, error } = await supabase.rpc('get_rls_security_summary');
       
       if (error) {
         logger.error('[RLS-SECURITY] Erro ao validar segurança:', error);
         return null;
       }
 
-      const criticalIssues = data?.filter(table => table.risk_level === 'CRÍTICO') || [];
-      const highRiskIssues = data?.filter(table => table.risk_level === 'ALTO') || [];
-      
-      if (criticalIssues.length > 0) {
-        logger.warn('[RLS-SECURITY] Problemas críticos detectados:', criticalIssues);
+      // Log crítico se houver problemas
+      if (data?.critical_tables > 0) {
+        logger.warn('[RLS-SECURITY] Problemas críticos detectados:', {
+          critical: data.critical_tables,
+          status: data.status,
+          percentage: data.security_percentage
+        });
       }
 
       return {
-        totalTables: data?.length || 0,
-        protectedTables: data?.filter(table => table.security_status === '✅ PROTEGIDO').length || 0,
-        criticalIssues: criticalIssues.length,
-        highRiskIssues: highRiskIssues.length,
-        securityScore: Math.round(((data?.filter(table => table.security_status === '✅ PROTEGIDO').length || 0) / (data?.length || 1)) * 100)
+        totalTables: data?.total_tables || 0,
+        protectedTables: data?.protected_tables || 0,
+        criticalIssues: data?.critical_tables || 0,
+        highRiskIssues: data?.rls_disabled_tables || 0,
+        securityScore: data?.security_percentage || 0,
+        status: data?.status || 'UNKNOWN',
+        lastCheck: data?.last_check || new Date().toISOString()
       };
     } catch (error) {
       logger.error('[RLS-SECURITY] Erro na validação:', error);
@@ -42,7 +48,7 @@ export const useRLSSecurityManager = () => {
     }
   }, [user, profile]);
 
-  // Log de acesso seguro
+  // Log de acesso seguro aprimorado para Fase 3
   const logSecureAccess = useCallback(async (tableName: string, operation: string, resourceId?: string) => {
     if (!user) return;
 
@@ -52,13 +58,20 @@ export const useRLSSecurityManager = () => {
         p_operation: operation,
         p_resource_id: resourceId
       });
+      
+      logger.debug('[RLS-SECURITY] Acesso registrado:', {
+        table: tableName,
+        operation,
+        resourceId,
+        userId: user.id.substring(0, 8) + '***'
+      });
     } catch (error) {
       // Falhar silenciosamente para não quebrar a experiência
       logger.debug('[RLS-SECURITY] Log de acesso processado');
     }
   }, [user]);
 
-  // Verificar violações de RLS
+  // Verificar violações de RLS com integração da Fase 3
   const checkRLSViolation = useCallback(async (tableName: string, operation: string, userId?: string) => {
     if (!user) return false;
 
@@ -68,6 +81,13 @@ export const useRLSSecurityManager = () => {
         p_operation: operation,
         p_user_id: userId
       });
+      
+      logger.warn('[RLS-SECURITY] Violação registrada:', {
+        table: tableName,
+        operation,
+        targetUserId: userId?.substring(0, 8) + '***'
+      });
+      
       return true;
     } catch (error) {
       logger.error('[RLS-SECURITY] Erro ao registrar violação:', error);
@@ -75,27 +95,61 @@ export const useRLSSecurityManager = () => {
     }
   }, [user]);
 
-  // Monitoramento automático de segurança
+  // Executar verificação de regressão manual
+  const runRegressionCheck = useCallback(async () => {
+    if (!user || profile?.role !== 'admin') {
+      logger.warn('[RLS-SECURITY] Acesso negado para verificação de regressão');
+      return false;
+    }
+
+    try {
+      await supabase.rpc('check_rls_regression');
+      logger.info('[RLS-SECURITY] Verificação de regressão executada com sucesso');
+      return true;
+    } catch (error) {
+      logger.error('[RLS-SECURITY] Erro na verificação de regressão:', error);
+      return false;
+    }
+  }, [user, profile]);
+
+  // Monitoramento automático aprimorado para Fase 3
   useEffect(() => {
     if (!user || !profile) return;
 
     const runSecurityCheck = async () => {
       const securityStatus = await validateRLSSecurity();
       
-      if (securityStatus && securityStatus.criticalIssues > 0) {
-        logger.warn('[RLS-SECURITY] Sistema com problemas críticos de segurança:', {
+      if (securityStatus) {
+        // Log detalhado do status
+        logger.info('[RLS-SECURITY] Status do sistema:', {
           score: securityStatus.securityScore,
-          critical: securityStatus.criticalIssues
+          status: securityStatus.status,
+          critical: securityStatus.criticalIssues,
+          protected: securityStatus.protectedTables,
+          total: securityStatus.totalTables
         });
+
+        // Alerta para problemas críticos
+        if (securityStatus.criticalIssues > 0) {
+          logger.error('[RLS-SECURITY] ALERTA CRÍTICO:', {
+            score: securityStatus.securityScore,
+            critical: securityStatus.criticalIssues,
+            status: securityStatus.status
+          });
+        }
       }
     };
 
     // Executar verificação inicial
     runSecurityCheck();
 
-    // Verificação periódica (apenas para admins)
+    // Verificação periódica aprimorada
     if (profile.role === 'admin') {
-      const interval = setInterval(runSecurityCheck, 5 * 60 * 1000); // 5 minutos
+      const interval = setInterval(runSecurityCheck, 10 * 60 * 1000); // 10 minutos para admins
+      return () => clearInterval(interval);
+    } else {
+      // Verificação menos frequente para usuários normais
+      const interval = setInterval(runSecurityCheck, 30 * 60 * 1000); // 30 minutos
       return () => clearInterval(interval);
     }
   }, [user, profile, validateRLSSecurity]);
@@ -104,6 +158,8 @@ export const useRLSSecurityManager = () => {
     validateRLSSecurity,
     logSecureAccess,
     checkRLSViolation,
-    isSecurityActive: !!user
+    runRegressionCheck, // Nova função da Fase 3
+    isSecurityActive: !!user,
+    isAdmin: profile?.role === 'admin'
   };
 };
