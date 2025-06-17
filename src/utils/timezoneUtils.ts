@@ -12,32 +12,10 @@ export const extractLocalTime = (datetimeString: string): string => {
   return timePart.substring(0, 5);
 };
 
-// Função para converter UTC para horário local de Brasília para EXIBIÇÃO
-export const formatToLocalTime = (utcDateString: string): string => {
+// Função para converter datetime para formato datetime-local (para inputs)
+export const convertToDatetimeLocal = (dateString: string): string => {
   try {
-    const date = new Date(utcDateString);
-    // Usar toLocaleString com timezone de Brasília
-    return date.toLocaleString('pt-BR', {
-      timeZone: 'America/Sao_Paulo',
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: false
-    }).replace(/(\d{2})\/(\d{2})\/(\d{4}), (\d{2}:\d{2})/, '$3-$2-$1T$4');
-  } catch (error) {
-    console.error('Erro ao formatar horário local:', error);
-    return '';
-  }
-};
-
-// Função para converter UTC para datetime-local format (para inputs)
-export const convertUTCToDatetimeLocal = (utcDateString: string): string => {
-  try {
-    const date = new Date(utcDateString);
-    // O JavaScript já trata a conversão automática para o timezone local
-    // Precisamos apenas formatar para datetime-local
+    const date = new Date(dateString);
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const day = String(date.getDate()).padStart(2, '0');
@@ -46,7 +24,7 @@ export const convertUTCToDatetimeLocal = (utcDateString: string): string => {
     
     return `${year}-${month}-${day}T${hours}:${minutes}`;
   } catch (error) {
-    console.error('Erro ao converter UTC para datetime-local:', error);
+    console.error('Erro ao converter para datetime-local:', error);
     return '';
   }
 };

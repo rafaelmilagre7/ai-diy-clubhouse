@@ -6,23 +6,11 @@ import type { EventFormData } from "./EventFormSchema";
 import { RecurrenceToggle } from "./recurrence/RecurrenceToggle";
 import { Info } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { extractLocalTime } from "@/utils/timezoneUtils";
 
 interface EventDateTimeProps {
   form: UseFormReturn<EventFormData>;
 }
-
-// Função para extrair apenas o horário (HH:MM) de um datetime string
-const extractTimeFromDateTime = (datetimeString: string): string => {
-  if (!datetimeString || !datetimeString.includes('T')) {
-    return '';
-  }
-  
-  const timePart = datetimeString.split('T')[1];
-  if (!timePart) return '';
-  
-  // Retornar apenas HH:MM
-  return timePart.substring(0, 5);
-};
 
 export const EventDateTime = ({ form }: EventDateTimeProps) => {
   const isRecurring = form.watch("is_recurring");
@@ -136,7 +124,7 @@ export const EventDateTime = ({ form }: EventDateTimeProps) => {
               name="start_time"
               render={({ field }) => {
                 // Extrair apenas o horário se o campo já tiver algum valor
-                const timeValue = field.value ? extractTimeFromDateTime(field.value) : '';
+                const timeValue = field.value ? extractLocalTime(field.value) : '';
                 
                 return (
                   <FormItem>
@@ -164,7 +152,7 @@ export const EventDateTime = ({ form }: EventDateTimeProps) => {
               name="end_time"
               render={({ field }) => {
                 // Extrair apenas o horário se o campo já tiver algum valor
-                const timeValue = field.value ? extractTimeFromDateTime(field.value) : '';
+                const timeValue = field.value ? extractLocalTime(field.value) : '';
                 
                 return (
                   <FormItem>

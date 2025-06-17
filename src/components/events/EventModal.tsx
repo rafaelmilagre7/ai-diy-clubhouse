@@ -23,9 +23,13 @@ export const EventModal = ({ event, onClose }: EventModalProps) => {
     return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(event.title)}&dates=${start}/${end}&details=${encodeURIComponent(event.description || '')}&location=${encodeURIComponent(event.location_link || '')}`;
   };
 
-  const formattedDate = format(new Date(event.start_time), "EEEE, d 'de' MMMM", { locale: ptBR });
-  const startTime = format(new Date(event.start_time), "HH:mm", { locale: ptBR });
-  const endTime = format(new Date(event.end_time), "HH:mm", { locale: ptBR });
+  // Formatação direta sem conversões de timezone
+  const eventStartDate = new Date(event.start_time);
+  const eventEndDate = new Date(event.end_time);
+  
+  const formattedDate = format(eventStartDate, "EEEE, d 'de' MMMM", { locale: ptBR });
+  const startTime = format(eventStartDate, "HH:mm", { locale: ptBR });
+  const endTime = format(eventEndDate, "HH:mm", { locale: ptBR });
 
   return (
     <Dialog open onOpenChange={() => onClose()}>
@@ -84,7 +88,7 @@ export const EventModal = ({ event, onClose }: EventModalProps) => {
           {event.description && (
             <div className="pt-2">
               <h3 className="text-sm font-medium text-gray-700 mb-1">Descrição</h3>
-              <p className="text-sm text-white whitespace-pre-line">{event.description}</p>
+              <p className="text-sm text-gray-600 whitespace-pre-line">{event.description}</p>
             </div>
           )}
 
