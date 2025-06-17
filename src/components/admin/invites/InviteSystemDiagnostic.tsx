@@ -1,300 +1,221 @@
 
-import React, { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Separator } from '@/components/ui/separator';
-import { 
-  Play, 
-  CheckCircle, 
-  XCircle, 
-  AlertTriangle, 
-  Database, 
-  Mail, 
-  Shield, 
-  Server,
-  Clock,
-  Users,
-  AlertCircle,
-  Lightbulb
-} from 'lucide-react';
-import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
-import { useInviteEmailDiagnostic, type DiagnosticData } from '@/hooks/admin/invites/useInviteEmailDiagnostic';
+import { useState } from "react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { AlertCircle, CheckCircle, RefreshCw, XCircle, Zap } from "lucide-react";
+import { useInviteEmailDiagnostic } from "@/hooks/admin/invites/useInviteEmailDiagnostic";
+import { toast } from "sonner";
 
 const InviteSystemDiagnostic = () => {
   const { runDiagnostic, isRunning, lastDiagnostic } = useInviteEmailDiagnostic();
-  const [diagnosticData, setDiagnosticData] = useState<DiagnosticData | null>(null);
+  const [testResults, setTestResults] = useState<any>(null);
 
   const handleRunDiagnostic = async () => {
-    const result = await runDiagnostic();
-    setDiagnosticData(result);
+    try {
+      const results = await runDiagnostic();
+      setTestResults(results);
+      
+      if (results.systemHealth?.status === 'healthy') {
+        toast.success("Sistema funcionando normalmente");
+      } else if (results.systemHealth?.status === 'warning') {
+        toast.warning("Sistema com avisos - verifique os detalhes");
+      } else {
+        toast.error("Sistema com problemas críticos");
+      }
+    } catch (error) {
+      console.error("Erro no diagnóstico:", error);
+      toast.error("Erro ao executar diagnóstico");
+    }
   };
 
-  const getStatusIcon = (success: boolean) => {
-    return success ? (
-      <CheckCircle className="h-4 w-4 text-green-500" />
-    ) : (
-      <XCircle className="h-4 w-4 text-red-500" />
-    );
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'success':
+        return <CheckCircle className="h-4 w-4 text-green-500" />;
+      case 'warning':
+        return <AlertCircle className="h-4 w-4 text-yellow-500" />;
+      case 'error':
+        return <XCircle className="h-4 w-4 text-red-500" />;
+      default:
+        return <AlertCircle className="h-4 w-4 text-gray-500" />;
+    }
   };
 
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'healthy':
-      case 'success':
-        return <Badge variant="default" className="bg-green-100 text-green-800">Saudável</Badge>;
+        return <Badge variant="secondary" className="bg-green-50 text-green-700">Saudável</Badge>;
       case 'warning':
-        return <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">Atenção</Badge>;
+        return <Badge variant="secondary" className="bg-yellow-50 text-yellow-700">Atenção</Badge>;
       case 'critical':
-      case 'error':
         return <Badge variant="destructive">Crítico</Badge>;
       default:
         return <Badge variant="outline">Desconhecido</Badge>;
     }
   };
 
-  const currentData = diagnosticData || lastDiagnostic;
-
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold">Diagnóstico do Sistema de Convites</h2>
-          <p className="text-muted-foreground">
-            Verifique a saúde e o funcionamento do sistema de envio de convites
-          </p>
-        </div>
-        <Button 
-          onClick={handleRunDiagnostic}
-          disabled={isRunning}
-          className="min-w-[140px]"
-        >
-          {isRunning ? (
-            <>
-              <Clock className="mr-2 h-4 w-4 animate-spin" />
-              Executando...
-            </>
-          ) : (
-            <>
-              <Play className="mr-2 h-4 w-4" />
-              Executar Diagnóstico
-            </>
-          )}
-        </Button>
-      </div>
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Zap className="h-5 w-5" />
+            Diagnóstico do Sistema de Convites
+          </CardTitle>
+          <CardDescription>
+            Execute um diagnóstico completo para verificar o status do sistema de envio de convites
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <Button 
+            onClick={handleRunDiagnostic}
+            disabled={isRunning}
+            className="w-full"
+          >
+            {isRunning ? (
+              <>
+                <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                Executando Diagnóstico...
+              </>
+            ) : (
+              <>
+                <Zap className="h-4 w-4 mr-2" />
+                Executar Diagnóstico Completo
+              </>
+            )}
+          </Button>
 
-      {currentData && (
-        <>
-          {/* Última execução */}
-          <Alert>
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription>
-              Último diagnóstico executado em {format(new Date(), 'dd/MM/yyyy \'às\' HH:mm', { locale: ptBR })}
-            </AlertDescription>
-          </Alert>
+          {(lastDiagnostic || testResults) && (
+            <div className="mt-6 space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Status Geral do Sistema */}
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-sm flex items-center justify-between">
+                      Status Geral
+                      {getStatusBadge((lastDiagnostic || testResults)?.systemHealth?.status)}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-2">
+                    <div className="flex items-center justify-between text-sm">
+                      <span>Sistema de Email</span>
+                      {(lastDiagnostic || testResults)?.systemHealth?.email ? 
+                        <CheckCircle className="h-4 w-4 text-green-500" /> : 
+                        <XCircle className="h-4 w-4 text-red-500" />
+                      }
+                    </div>
+                    <div className="flex items-center justify-between text-sm">
+                      <span>Banco de Dados</span>
+                      {(lastDiagnostic || testResults)?.systemHealth?.database ? 
+                        <CheckCircle className="h-4 w-4 text-green-500" /> : 
+                        <XCircle className="h-4 w-4 text-red-500" />
+                      }
+                    </div>
+                    <div className="flex items-center justify-between text-sm">
+                      <span>Autenticação</span>
+                      {(lastDiagnostic || testResults)?.systemHealth?.auth ? 
+                        <CheckCircle className="h-4 w-4 text-green-500" /> : 
+                        <XCircle className="h-4 w-4 text-red-500" />
+                      }
+                    </div>
+                  </CardContent>
+                </Card>
 
-          {/* Status Geral do Sistema */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Server className="h-5 w-5" />
-                Status Geral do Sistema
-              </CardTitle>
-              <CardDescription>
-                Verificação dos componentes principais do sistema
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="flex items-center justify-between p-3 border rounded-lg">
-                  <div className="flex items-center gap-2">
-                    <Mail className="h-4 w-4 text-blue-500" />
-                    <span className="font-medium">Email</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    {getStatusIcon(currentData.systemHealth.email)}
-                    {currentData.systemHealth.status && getStatusBadge(currentData.systemHealth.status)}
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between p-3 border rounded-lg">
-                  <div className="flex items-center gap-2">
-                    <Database className="h-4 w-4 text-green-500" />
-                    <span className="font-medium">Database</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    {getStatusIcon(currentData.systemHealth.database)}
-                    {currentData.systemHealth.status && getStatusBadge(currentData.systemHealth.status)}
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between p-3 border rounded-lg">
-                  <div className="flex items-center gap-2">
-                    <Shield className="h-4 w-4 text-purple-500" />
-                    <span className="font-medium">Autenticação</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    {getStatusIcon(currentData.systemHealth.auth)}
-                    {currentData.systemHealth.status && getStatusBadge(currentData.systemHealth.status)}
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Verificações de Infraestrutura */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Infraestrutura</CardTitle>
-              <CardDescription>
-                Status das funções e serviços necessários
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center justify-between">
-                <span className="flex items-center gap-2">
-                  <Server className="h-4 w-4" />
-                  Edge Function Existe
-                </span>
-                {getStatusIcon(currentData.edgeFunctionExists)}
-              </div>
-              
-              <div className="flex items-center justify-between">
-                <span className="flex items-center gap-2">
-                  <Server className="h-4 w-4" />
-                  Edge Function Respondendo
-                </span>
-                {getStatusIcon(currentData.edgeFunctionResponding)}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Estatísticas */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Users className="h-5 w-5" />
-                  Convites Recentes
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">
-                  {currentData.recentInvites?.length || 0}
-                </div>
-                <p className="text-muted-foreground">últimos 10 convites</p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <AlertTriangle className="h-5 w-5" />
-                  Convites Falhados
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-red-600">
-                  {currentData.failedInvites?.length || 0}
-                </div>
-                <p className="text-muted-foreground">sem tentativas de envio</p>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Testes de Funcionalidade */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Testes de Funcionalidade</CardTitle>
-              <CardDescription>
-                Resultados dos testes automatizados do sistema
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center justify-between">
-                <span>Teste da Edge Function</span>
-                <div className="flex items-center gap-2">
-                  {getStatusIcon(currentData.testResults.edgeFunctionTest.success)}
-                  {getStatusBadge(currentData.testResults.edgeFunctionTest.status)}
-                </div>
+                {/* Edge Functions */}
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-sm">Edge Functions</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-2">
+                    <div className="flex items-center justify-between text-sm">
+                      <span>Função Existe</span>
+                      {(lastDiagnostic || testResults)?.edgeFunctionExists ? 
+                        <CheckCircle className="h-4 w-4 text-green-500" /> : 
+                        <XCircle className="h-4 w-4 text-red-500" />
+                      }
+                    </div>
+                    <div className="flex items-center justify-between text-sm">
+                      <span>Respondendo</span>
+                      {(lastDiagnostic || testResults)?.edgeFunctionResponding ? 
+                        <CheckCircle className="h-4 w-4 text-green-500" /> : 
+                        <XCircle className="h-4 w-4 text-red-500" />
+                      }
+                    </div>
+                  </CardContent>
+                </Card>
               </div>
 
-              <div className="flex items-center justify-between">
-                <span>Teste do Resend</span>
-                <div className="flex items-center gap-2">
-                  {getStatusIcon(currentData.testResults.resendTest.success)}
-                  {getStatusBadge(currentData.testResults.resendTest.status)}
-                </div>
-              </div>
-
-              <div className="flex items-center justify-between">
-                <span>Teste de Fallback</span>
-                <div className="flex items-center gap-2">
-                  {getStatusIcon(currentData.testResults.fallbackTest.success)}
-                  {getStatusBadge(currentData.testResults.fallbackTest.status)}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Recomendações */}
-          {currentData.recommendations && currentData.recommendations.length > 0 && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Lightbulb className="h-5 w-5" />
-                  Recomendações
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ul className="space-y-2">
-                  {currentData.recommendations.map((recommendation, index) => (
-                    <li key={index} className="flex items-start gap-2">
-                      <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0" />
-                      <span>{recommendation}</span>
-                    </li>
-                  ))}
-                </ul>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Lista de Convites Recentes */}
-          {currentData.recentInvites && currentData.recentInvites.length > 0 && (
-            <Card>
-              <CardHeader>
-                <CardTitle>Convites Recentes</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  {currentData.recentInvites.map((invite, index) => (
-                    <div key={index} className="flex items-center justify-between p-2 border rounded">
-                      <span className="font-medium">{invite.email}</span>
-                      <div className="text-sm text-muted-foreground">
-                        {format(new Date(invite.created_at), 'dd/MM/yyyy HH:mm', { locale: ptBR })}
+              {/* Resultados dos Testes */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-sm">Resultados dos Testes</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  {Object.entries((lastDiagnostic || testResults)?.testResults || {}).map(([key, result]: [string, any]) => (
+                    <div key={key} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                      <div className="flex items-center gap-2">
+                        {getStatusIcon(result.status)}
+                        <span className="font-medium text-sm capitalize">
+                          {key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
+                        </span>
                       </div>
+                      <span className="text-sm text-gray-600">{result.message}</span>
                     </div>
                   ))}
-                </div>
-              </CardContent>
-            </Card>
-          )}
-        </>
-      )}
+                </CardContent>
+              </Card>
 
-      {!currentData && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Nenhum Diagnóstico Executado</CardTitle>
-            <CardDescription>
-              Clique em "Executar Diagnóstico" para verificar o sistema
-            </CardDescription>
-          </CardHeader>
-        </Card>
-      )}
+              {/* Convites Recentes */}
+              {(lastDiagnostic || testResults)?.recentInvites?.length > 0 && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-sm">Convites Recentes</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-sm text-gray-600">
+                      {(lastDiagnostic || testResults).recentInvites.length} convites encontrados nos últimos registros
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Convites Falhados */}
+              {(lastDiagnostic || testResults)?.failedInvites?.length > 0 && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-sm text-red-600">Convites Falhados</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-sm text-red-600">
+                      {(lastDiagnostic || testResults).failedInvites.length} convites com falha de envio detectados
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Recomendações */}
+              {(lastDiagnostic || testResults)?.recommendations?.length > 0 && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-sm">Recomendações</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <ul className="space-y-1">
+                      {(lastDiagnostic || testResults).recommendations.map((rec: string, index: number) => (
+                        <li key={index} className="text-sm text-gray-600 flex items-start gap-2">
+                          <span className="text-blue-500 mt-1">•</span>
+                          {rec}
+                        </li>
+                      ))}
+                    </ul>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 };

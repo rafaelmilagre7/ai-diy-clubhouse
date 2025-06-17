@@ -27,14 +27,15 @@ export const useInviteCreate = () => {
     try {
       setIsCreating(true);
       
-      console.log("📧 [INVITE-CREATE] Criando convite:", {
+      console.log("🔥 [INVITE-CREATE] Iniciando criação de convite:", {
         email,
         roleId,
         channelPreference,
-        hasPhone: !!phone
+        hasPhone: !!phone,
+        user: user.id
       });
 
-      // Usar a função híbrida que suporta diferentes canais
+      // Usar a função híbrida corrigida
       const { data, error } = await supabase.rpc('create_invite_hybrid', {
         p_email: email,
         p_role_id: roleId,
@@ -54,19 +55,30 @@ export const useInviteCreate = () => {
         throw new Error(data.message);
       }
 
-      console.log("✅ [INVITE-CREATE] Convite criado:", data);
+      console.log("✅ [INVITE-CREATE] Convite criado com sucesso:", {
+        inviteId: data.invite_id,
+        token: data.token,
+        expiresAt: data.expires_at
+      });
 
       // Gerar URL padronizada
       const inviteUrl = generateInviteUrl(data.token);
+      console.log("🔗 [INVITE-CREATE] URL gerada:", inviteUrl);
       
       // Buscar nome do papel para o envio
-      const { data: roleData } = await supabase
+      const { data: roleData, error: roleError } = await supabase
         .from('user_roles')
         .select('name')
         .eq('id', roleId)
         .single();
 
-      // Usar sistema aprimorado de envio de email
+      if (roleError) {
+        console.warn("⚠️ [INVITE-CREATE] Erro ao buscar papel:", roleError);
+      }
+
+      console.log("📧 [INVITE-CREATE] Enviando email...");
+
+      // Usar sistema de envio de email
       const sendResult = await sendInviteEmail({
         email,
         inviteUrl,
@@ -78,9 +90,17 @@ export const useInviteCreate = () => {
         forceResend: true
       });
 
-      // O hook de email já mostra o toast apropriado
-      if (!sendResult.success) {
-        console.warn("⚠️ [INVITE-CREATE] Problema no envio:", sendResult.error);
+      console.log("📬 [INVITE-CREATE] Resultado do envio:", sendResult);
+
+      // Mostrar feedback apropriado
+      if (sendResult.success) {
+        toast.success('Convite criado e enviado com sucesso!', {
+          description: sendResult.message
+        });
+      } else {
+        toast.warning('Convite criado, mas houve problema no envio', {
+          description: sendResult.error || 'Verifique os logs para mais detalhes'
+        });
       }
 
       return data;
@@ -100,6 +120,9 @@ export const useInviteCreate = () => {
       } else if (err.message?.includes('email')) {
         errorMessage = 'Email inválido';
         description = 'Verifique se o formato do email está correto.';
+      } else if (err.message?.includes('permission')) {
+        errorMessage = 'Sem permissão';
+        description = 'Você não tem permissão para criar convites.';
       }
       
       toast.error(errorMessage, { description });

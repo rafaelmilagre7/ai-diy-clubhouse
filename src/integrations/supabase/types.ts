@@ -1239,6 +1239,56 @@ export type Database = {
         }
         Relationships: []
       }
+      invite_send_attempts: {
+        Row: {
+          created_at: string | null
+          email: string
+          email_id: string | null
+          error_message: string | null
+          id: string
+          invite_id: string | null
+          method_attempted: string
+          retry_after: string | null
+          sent_at: string | null
+          status: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          email: string
+          email_id?: string | null
+          error_message?: string | null
+          id?: string
+          invite_id?: string | null
+          method_attempted: string
+          retry_after?: string | null
+          sent_at?: string | null
+          status?: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          email?: string
+          email_id?: string | null
+          error_message?: string | null
+          id?: string
+          invite_id?: string | null
+          method_attempted?: string
+          retry_after?: string | null
+          sent_at?: string | null
+          status?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invite_send_attempts_invite_id_fkey"
+            columns: ["invite_id"]
+            isOneToOne: false
+            referencedRelation: "invites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       invites: {
         Row: {
           channel_preference: string | null
