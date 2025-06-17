@@ -4,12 +4,10 @@ import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/auth';
 import { toast } from 'sonner';
 import { generateInviteUrl } from '@/utils/inviteValidationUtils';
-import { useInviteEmailService } from './useInviteEmailService';
 
 export const useInviteCreate = () => {
   const { user } = useAuth();
   const [isCreating, setIsCreating] = useState(false);
-  const { sendInviteEmail } = useInviteEmailService();
 
   const createInvite = async (
     email: string,
@@ -76,30 +74,76 @@ export const useInviteCreate = () => {
         console.warn("⚠️ [INVITE-CREATE] Erro ao buscar papel:", roleError);
       }
 
-      console.log("📧 [INVITE-CREATE] Enviando email...");
-
-      // Usar sistema de envio de email
-      const sendResult = await sendInviteEmail({
-        email,
-        inviteUrl,
-        roleName: roleData?.name || 'membro',
-        expiresAt: data.expires_at,
-        senderName: user.user_metadata?.name || user.email,
-        notes,
-        inviteId: data.invite_id,
-        forceResend: true
+      // Chamar Edge Function diretamente com dados completos
+      console.log("📧 [INVITE-CREATE] Chamando Edge Function para envio...");
+      
+      const { data: emailResult, error: emailError } = await supabase.functions.invoke('send-invite-email', {
+        body: {
+          email,
+          inviteUrl,
+          roleName: roleData?.name || 'membro',
+          expiresAt: data.expires_at,
+          senderName: user.user_metadata?.name || user.email,
+          notes,
+          inviteId: data.invite_id,
+          forceResend: true
+        }
       });
 
-      console.log("📬 [INVITE-CREATE] Resultado do envio:", sendResult);
+      console.log("📬 [INVITE-CREATE] Resultado da Edge Function:", { emailResult, emailError });
 
-      // Mostrar feedback apropriado
-      if (sendResult.success) {
+      if (emailError) {
+        console.error("❌ [INVITE-CREATE] Erro na Edge Function:", emailError);
+        
+        // Registrar tentativa falhada
+        await supabase.from('invite_send_attempts').insert({
+          invite_id: data.invite_id,
+          email,
+          method_attempted: 'edge_function_failed',
+          error_message: emailError.message,
+          status: 'failed'
+        });
+
+        toast.warning('Convite criado, mas houve problema no envio', {
+          description: `Erro: ${emailError.message}`
+        });
+      } else if (emailResult?.success) {
+        console.log("✅ [INVITE-CREATE] Email enviado com sucesso");
+        
+        // Registrar tentativa bem-sucedida
+        await supabase.from('invite_send_attempts').insert({
+          invite_id: data.invite_id,
+          email,
+          method_attempted: 'edge_function_success',
+          status: 'sent',
+          sent_at: new Date().toISOString()
+        });
+
+        // Atualizar estatísticas do convite
+        await supabase.from('invites')
+          .update({
+            last_sent_at: new Date().toISOString(),
+            send_attempts: 1
+          })
+          .eq('id', data.invite_id);
+
         toast.success('Convite criado e enviado com sucesso!', {
-          description: sendResult.message
+          description: emailResult.message
         });
       } else {
+        console.error("❌ [INVITE-CREATE] Edge Function retornou erro:", emailResult);
+        
+        // Registrar tentativa falhada
+        await supabase.from('invite_send_attempts').insert({
+          invite_id: data.invite_id,
+          email,
+          method_attempted: 'edge_function_error',
+          error_message: emailResult?.error || 'Resposta inválida',
+          status: 'failed'
+        });
+
         toast.warning('Convite criado, mas houve problema no envio', {
-          description: sendResult.error || 'Verifique os logs para mais detalhes'
+          description: emailResult?.error || 'Erro desconhecido no envio'
         });
       }
 
