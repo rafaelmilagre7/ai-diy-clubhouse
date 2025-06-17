@@ -56,12 +56,32 @@ export function useInviteEmailDiagnostic(): InviteSystemDiagnostic {
 
       // 1. Verificar configurações
       console.log('🔧 [DIAGNOSTIC] Verificando configurações...');
-      const hasResendKey = !!process.env.REACT_APP_RESEND_API_KEY;
-      diagnosticData.details.resendApiKey = hasResendKey;
       
-      if (!hasResendKey) {
+      // Testar se a chave Resend está configurada fazendo uma chamada teste
+      try {
+        const { data: configTest, error: configError } = await supabase.functions.invoke('send-invite-email', {
+          body: { 
+            test: true, 
+            configCheck: true,
+            email: 'test@example.com',
+            inviteUrl: 'https://test.com',
+            roleName: 'teste',
+            expiresAt: new Date().toISOString(),
+            senderName: 'Sistema de Teste'
+          }
+        });
+        
+        if (configTest?.hasResendKey) {
+          diagnosticData.details.resendApiKey = true;
+          diagnosticData.configStatus = 'healthy';
+        } else {
+          diagnosticData.configStatus = 'critical';
+          diagnosticData.recommendations.push('Configure a chave RESEND_API_KEY no Supabase Edge Functions');
+        }
+      } catch (configErr) {
+        console.warn('⚠️ [DIAGNOSTIC] Erro ao verificar configuração:', configErr);
         diagnosticData.configStatus = 'critical';
-        diagnosticData.recommendations.push('Configure a chave RESEND_API_KEY nas variáveis de ambiente');
+        diagnosticData.recommendations.push('Erro ao verificar configurações da Edge Function');
       }
 
       // 2. Verificar Supabase
@@ -100,6 +120,13 @@ export function useInviteEmailDiagnostic(): InviteSystemDiagnostic {
           const successCount = attempts.filter(a => a.status === 'sent').length;
           diagnosticData.details.successRate = attempts.length > 0 ? 
             Math.round((successCount / attempts.length) * 100) : 0;
+
+          // Analisar tentativas para dar recomendações
+          if (attempts.length === 0) {
+            diagnosticData.recommendations.push('Nenhuma tentativa de envio registrada - possível problema na Edge Function');
+          } else if (diagnosticData.details.successRate < 50) {
+            diagnosticData.recommendations.push('Taxa de sucesso baixa - verificar configuração do Resend e validação de domínio');
+          }
         }
       } catch (err) {
         console.error('❌ [DIAGNOSTIC] Erro ao buscar tentativas:', err);
@@ -108,22 +135,48 @@ export function useInviteEmailDiagnostic(): InviteSystemDiagnostic {
       // 4. Testar Edge Function
       console.log('⚡ [DIAGNOSTIC] Testando Edge Function...');
       try {
+        const startTime = Date.now();
         const { data, error } = await Promise.race([
           supabase.functions.invoke('send-invite-email', {
-            body: { test: true }
+            body: { 
+              test: true,
+              healthCheck: true
+            }
           }),
           new Promise((_, reject) => 
-            setTimeout(() => reject(new Error('Timeout')), 3000)
+            setTimeout(() => reject(new Error('Timeout after 5 seconds')), 5000)
           )
         ]) as any;
 
-        if (error || data?.error) {
+        const responseTime = Date.now() - startTime;
+        
+        if (error) {
+          diagnosticData.edgeFunctionStatus = 'critical';
+          diagnosticData.recommendations.push(`Edge Function com erro: ${error.message}`);
+        } else if (data?.error) {
+          diagnosticData.edgeFunctionStatus = 'critical';
+          diagnosticData.recommendations.push(`Edge Function retornou erro: ${data.error}`);
+        } else if (responseTime > 3000) {
           diagnosticData.edgeFunctionStatus = 'warning';
-          diagnosticData.recommendations.push('Edge Function não está respondendo adequadamente');
+          diagnosticData.recommendations.push('Edge Function respondendo lentamente (>3s)');
+        } else {
+          diagnosticData.edgeFunctionStatus = 'healthy';
         }
-      } catch (err) {
+
+        // Atualizar versão se disponível
+        if (data?.version) {
+          diagnosticData.details.edgeFunctionVersion = data.version;
+        }
+
+      } catch (err: any) {
+        console.error('❌ [DIAGNOSTIC] Erro na Edge Function:', err);
         diagnosticData.edgeFunctionStatus = 'critical';
-        diagnosticData.recommendations.push('Edge Function indisponível ou com timeout');
+        
+        if (err.message.includes('Timeout')) {
+          diagnosticData.recommendations.push('Edge Function com timeout - pode estar travada ou sobrecarregada');
+        } else {
+          diagnosticData.recommendations.push('Edge Function indisponível: ' + err.message);
+        }
       }
 
       // 5. Determinar status geral do sistema
@@ -142,9 +195,9 @@ export function useInviteEmailDiagnostic(): InviteSystemDiagnostic {
       }
 
       // 6. Determinar status do Resend
-      if (!hasResendKey) {
+      if (!diagnosticData.details.resendApiKey) {
         diagnosticData.resendStatus = 'critical';
-      } else if (diagnosticData.details.successRate < 50) {
+      } else if (diagnosticData.details.successRate < 70) {
         diagnosticData.resendStatus = 'warning';
       } else {
         diagnosticData.resendStatus = 'healthy';
@@ -152,6 +205,15 @@ export function useInviteEmailDiagnostic(): InviteSystemDiagnostic {
 
       console.log('✅ [DIAGNOSTIC] Diagnóstico concluído:', diagnosticData);
       setLastDiagnostic(diagnosticData);
+      
+      // Toast com resultado
+      if (diagnosticData.systemStatus === 'healthy') {
+        toast.success('Sistema funcionando normalmente');
+      } else if (diagnosticData.systemStatus === 'warning') {
+        toast.warning('Sistema com problemas menores detectados');
+      } else {
+        toast.error('Sistema com problemas críticos detectados');
+      }
       
       return diagnosticData;
     } catch (error: any) {
@@ -176,6 +238,7 @@ export function useInviteEmailDiagnostic(): InviteSystemDiagnostic {
       };
       
       setLastDiagnostic(errorDiagnostic);
+      toast.error('Falha no diagnóstico do sistema');
       return errorDiagnostic;
     } finally {
       setIsRunning(false);
@@ -191,14 +254,16 @@ export function useInviteEmailDiagnostic(): InviteSystemDiagnostic {
         body: {
           email,
           test: true,
-          inviteUrl: 'https://test.com',
-          roleName: 'teste',
+          inviteUrl: 'https://test.com/invite/TEST123',
+          roleName: 'Teste de Sistema',
           expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
-          senderName: 'Sistema de Teste'
+          senderName: 'Sistema de Diagnóstico',
+          subject: '🔧 Teste do Sistema de Convites'
         }
       });
 
       if (error) {
+        console.error('❌ [TEST] Erro:', error);
         return {
           success: false,
           message: 'Teste falhou',
@@ -206,12 +271,24 @@ export function useInviteEmailDiagnostic(): InviteSystemDiagnostic {
         };
       }
 
+      if (data?.error) {
+        console.error('❌ [TEST] Erro nos dados:', data.error);
+        return {
+          success: false,
+          message: 'Teste falhou',
+          error: data.error
+        };
+      }
+
+      console.log('✅ [TEST] Sucesso:', data);
       return {
         success: true,
-        message: 'Email de teste enviado com sucesso',
-        method: 'edge_function'
+        message: 'Email de teste enviado com sucesso!',
+        method: data?.method || 'edge_function',
+        emailId: data?.emailId
       };
     } catch (err: any) {
+      console.error('❌ [TEST] Erro crítico:', err);
       return {
         success: false,
         message: 'Erro no teste de email',

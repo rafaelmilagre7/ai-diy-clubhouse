@@ -1,18 +1,117 @@
 
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
-import { AlertTriangle, CheckCircle, RefreshCw, Mail, Zap, Settings, Play } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { 
+  CheckCircle, 
+  XCircle, 
+  AlertTriangle, 
+  RefreshCw, 
+  Settings, 
+  Mail,
+  Database,
+  Zap,
+  Clock
+} from 'lucide-react';
 import { useInviteEmailDiagnostic } from '@/hooks/admin/invites/useInviteEmailDiagnostic';
-import { toast } from 'sonner';
+import { DiagnosticData } from '@/hooks/admin/invites/types';
 
-const InviteSystemDiagnostic = () => {
-  const {
-    runDiagnostic,
-    isRunning,
-    lastDiagnostic,
+const StatusIcon = ({ status }: { status: 'healthy' | 'warning' | 'critical' }) => {
+  switch (status) {
+    case 'healthy':
+      return <CheckCircle className="h-4 w-4 text-green-500" />;
+    case 'warning':
+      return <AlertTriangle className="h-4 w-4 text-yellow-500" />;
+    case 'critical':
+      return <XCircle className="h-4 w-4 text-red-500" />;
+  }
+};
+
+const StatusBadge = ({ status }: { status: 'healthy' | 'warning' | 'critical' }) => {
+  const variants = {
+    healthy: 'success' as const,
+    warning: 'warning' as const,
+    critical: 'destructive' as const,
+  };
+
+  const labels = {
+    healthy: 'Saudável',
+    warning: 'Atenção',
+    critical: 'Crítico',
+  };
+
+  return (
+    <Badge variant={variants[status]}>
+      <StatusIcon status={status} />
+      <span className="ml-1">{labels[status]}</span>
+    </Badge>
+  );
+};
+
+const DiagnosticCard = ({ 
+  title, 
+  status, 
+  icon: Icon, 
+  children 
+}: { 
+  title: string;
+  status: 'healthy' | 'warning' | 'critical';
+  icon: React.ComponentType<any>;
+  children: React.ReactNode;
+}) => (
+  <Card className="relative">
+    <CardHeader className="pb-3">
+      <CardTitle className="flex items-center justify-between text-base">
+        <div className="flex items-center gap-2">
+          <Icon className="h-4 w-4" />
+          {title}
+        </div>
+        <StatusBadge status={status} />
+      </CardTitle>
+    </CardHeader>
+    <CardContent>
+      {children}
+    </CardContent>
+  </Card>
+);
+
+const RecentAttemptItem = ({ attempt }: { 
+  attempt: {
+    id: string;
+    email: string;
+    status: string;
+    method_attempted: string;
+    created_at: string;
+    error_message?: string;
+  }
+}) => (
+  <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+    <div className="flex-1">
+      <div className="flex items-center gap-2 mb-1">
+        <span className="font-medium text-sm">{attempt.email}</span>
+        <Badge variant={attempt.status === 'sent' ? 'success' : 'destructive'}>
+          {attempt.status}
+        </Badge>
+      </div>
+      <div className="text-xs text-gray-500">
+        Método: {attempt.method_attempted} • {new Date(attempt.created_at).toLocaleString('pt-BR')}
+      </div>
+      {attempt.error_message && (
+        <div className="text-xs text-red-600 mt-1">
+          Erro: {attempt.error_message}
+        </div>
+      )}
+    </div>
+  </div>
+);
+
+export default function InviteSystemDiagnostic() {
+  const { 
+    runDiagnostic, 
+    isRunning, 
+    lastDiagnostic, 
     systemStatus,
     testEmailSend,
     recentAttempts,
@@ -20,257 +119,236 @@ const InviteSystemDiagnostic = () => {
   } = useInviteEmailDiagnostic();
 
   const [testEmail, setTestEmail] = useState('');
+  const [testResult, setTestResult] = useState<any>(null);
 
-  useEffect(() => {
-    // Executar diagnóstico inicial
-    runDiagnostic();
-  }, [runDiagnostic]);
-
-  const getStatusIcon = (status: 'healthy' | 'warning' | 'critical') => {
-    switch (status) {
-      case 'healthy':
-        return <CheckCircle className="h-4 w-4 text-green-500" />;
-      case 'warning':
-        return <AlertTriangle className="h-4 w-4 text-yellow-500" />;
-      case 'critical':
-        return <AlertTriangle className="h-4 w-4 text-red-500" />;
-    }
-  };
-
-  const getStatusBadge = (status: 'healthy' | 'warning' | 'critical') => {
-    switch (status) {
-      case 'healthy':
-        return <Badge variant="default" className="bg-green-100 text-green-800">Saudável</Badge>;
-      case 'warning':
-        return <Badge variant="destructive" className="bg-yellow-100 text-yellow-800">Atenção</Badge>;
-      case 'critical':
-        return <Badge variant="destructive">Crítico</Badge>;
+  const handleRunDiagnostic = async () => {
+    try {
+      await runDiagnostic();
+    } catch (error) {
+      console.error('Erro ao executar diagnóstico:', error);
     }
   };
 
   const handleTestEmail = async () => {
-    if (!testEmail) {
-      toast.error('Digite um email para teste');
-      return;
-    }
-
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(testEmail)) {
-      toast.error('Digite um email válido');
-      return;
-    }
-
-    await testEmailSend(testEmail);
+    if (!testEmail) return;
+    
+    const result = await testEmailSend(testEmail);
+    setTestResult(result);
   };
 
   return (
     <div className="space-y-6">
-      {/* Status Geral */}
+      {/* Header */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            {getStatusIcon(systemStatus)}
-            Status do Sistema de Convites
-            <Button
-              onClick={runDiagnostic}
-              disabled={isRunning}
-              size="sm"
-              variant="outline"
-              className="ml-auto"
-            >
-              {isRunning ? (
-                <RefreshCw className="h-4 w-4 animate-spin" />
-              ) : (
-                <RefreshCw className="h-4 w-4" />
-              )}
-              {isRunning ? 'Diagnosticando...' : 'Atualizar'}
-            </Button>
+          <CardTitle className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Settings className="h-5 w-5" />
+              Diagnóstico do Sistema de Convites
+            </div>
+            <div className="flex items-center gap-2">
+              <StatusBadge status={systemStatus} />
+              <Button 
+                onClick={handleRunDiagnostic}
+                disabled={isRunning}
+                variant="outline"
+                size="sm"
+              >
+                {isRunning ? (
+                  <>
+                    <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                    Executando...
+                  </>
+                ) : (
+                  <>
+                    <RefreshCw className="h-4 w-4 mr-2" />
+                    Executar Diagnóstico
+                  </>
+                )}
+              </Button>
+            </div>
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex items-center justify-between">
-            <span className="font-medium">Status Geral</span>
-            {getStatusBadge(systemStatus)}
-          </div>
-          
-          <div className="text-sm text-muted-foreground">
+        <CardContent>
+          <div className="text-sm text-gray-600">
             Última verificação: {new Date(lastDiagnostic.timestamp).toLocaleString('pt-BR')}
           </div>
+          {lastDiagnostic.recommendations.length > 0 && (
+            <Alert className="mt-4">
+              <AlertTriangle className="h-4 w-4" />
+              <AlertDescription>
+                <div className="space-y-1">
+                  <strong>Recomendações:</strong>
+                  <ul className="list-disc pl-4 space-y-1">
+                    {lastDiagnostic.recommendations.map((rec, idx) => (
+                      <li key={idx} className="text-sm">{rec}</li>
+                    ))}
+                  </ul>
+                </div>
+              </AlertDescription>
+            </Alert>
+          )}
         </CardContent>
       </Card>
 
-      {/* Componentes do Sistema */}
+      {/* Status Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card>
-          <CardContent className="p-4">
+        <DiagnosticCard
+          title="Configurações"
+          status={lastDiagnostic.configStatus}
+          icon={Settings}
+        >
+          <div className="space-y-2 text-sm">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Mail className="h-4 w-4" />
-                <span className="text-sm font-medium">Resend</span>
-              </div>
-              {getStatusIcon(lastDiagnostic.resendStatus)}
-            </div>
-            <div className="mt-2">
-              {getStatusBadge(lastDiagnostic.resendStatus)}
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Zap className="h-4 w-4" />
-                <span className="text-sm font-medium">Edge Function</span>
-              </div>
-              {getStatusIcon(lastDiagnostic.edgeFunctionStatus)}
-            </div>
-            <div className="mt-2">
-              {getStatusBadge(lastDiagnostic.edgeFunctionStatus)}
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Settings className="h-4 w-4" />
-                <span className="text-sm font-medium">Configuração</span>
-              </div>
-              {getStatusIcon(lastDiagnostic.configStatus)}
-            </div>
-            <div className="mt-2">
-              {getStatusBadge(lastDiagnostic.configStatus)}
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <CheckCircle className="h-4 w-4" />
-                <span className="text-sm font-medium">Supabase</span>
-              </div>
-              {getStatusIcon(lastDiagnostic.supabaseStatus)}
-            </div>
-            <div className="mt-2">
-              {getStatusBadge(lastDiagnostic.supabaseStatus)}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Estatísticas */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Estatísticas</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="text-center">
-              <div className="text-2xl font-bold text-blue-600">
-                {lastDiagnostic.details.totalAttempts}
-              </div>
-              <div className="text-sm text-muted-foreground">Tentativas Recentes</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-green-600">
-                {lastDiagnostic.details.successRate.toFixed(1)}%
-              </div>
-              <div className="text-sm text-muted-foreground">Taxa de Sucesso</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-purple-600">
-                {lastDiagnostic.details.edgeFunctionVersion}
-              </div>
-              <div className="text-sm text-muted-foreground">Versão Edge Function</div>
+              <span>Chave Resend</span>
+              <Badge variant={lastDiagnostic.details.resendApiKey ? 'success' : 'destructive'}>
+                {lastDiagnostic.details.resendApiKey ? 'OK' : 'Faltando'}
+              </Badge>
             </div>
           </div>
-        </CardContent>
-      </Card>
+        </DiagnosticCard>
 
-      {/* Teste de Email */}
+        <DiagnosticCard
+          title="Banco de Dados"
+          status={lastDiagnostic.supabaseStatus}
+          icon={Database}
+        >
+          <div className="space-y-2 text-sm">
+            <div className="flex items-center justify-between">
+              <span>Conexão</span>
+              <Badge variant={lastDiagnostic.supabaseStatus === 'healthy' ? 'success' : 'destructive'}>
+                {lastDiagnostic.supabaseStatus === 'healthy' ? 'Conectado' : 'Erro'}
+              </Badge>
+            </div>
+            <div className="flex items-center justify-between">
+              <span>Tentativas</span>
+              <span className="font-medium">{lastDiagnostic.details.totalAttempts}</span>
+            </div>
+          </div>
+        </DiagnosticCard>
+
+        <DiagnosticCard
+          title="Edge Function"
+          status={lastDiagnostic.edgeFunctionStatus}
+          icon={Zap}
+        >
+          <div className="space-y-2 text-sm">
+            <div className="flex items-center justify-between">
+              <span>Status</span>
+              <Badge variant={lastDiagnostic.edgeFunctionStatus === 'healthy' ? 'success' : 'destructive'}>
+                {lastDiagnostic.edgeFunctionStatus === 'healthy' ? 'Online' : 'Problema'}
+              </Badge>
+            </div>
+            <div className="flex items-center justify-between">
+              <span>Versão</span>
+              <span className="text-xs text-gray-500">{lastDiagnostic.details.edgeFunctionVersion}</span>
+            </div>
+          </div>
+        </DiagnosticCard>
+
+        <DiagnosticCard
+          title="Serviço Resend"
+          status={lastDiagnostic.resendStatus}
+          icon={Mail}
+        >
+          <div className="space-y-2 text-sm">
+            <div className="flex items-center justify-between">
+              <span>Taxa de Sucesso</span>
+              <span className="font-medium">{lastDiagnostic.details.successRate}%</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span>Status</span>
+              <Badge variant={lastDiagnostic.resendStatus === 'healthy' ? 'success' : 'destructive'}>
+                {lastDiagnostic.resendStatus === 'healthy' ? 'OK' : 'Problema'}
+              </Badge>
+            </div>
+          </div>
+        </DiagnosticCard>
+      </div>
+
+      {/* Test Email Section */}
       <Card>
         <CardHeader>
-          <CardTitle>Teste de Envio de Email</CardTitle>
+          <CardTitle className="text-base">Teste de Envio de Email</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex gap-2">
-            <Input
+            <input
               type="email"
               placeholder="Digite um email para teste"
               value={testEmail}
               onChange={(e) => setTestEmail(e.target.value)}
-              className="flex-1"
+              className="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm"
             />
-            <Button
+            <Button 
               onClick={handleTestEmail}
-              disabled={isLoading}
+              disabled={!testEmail || isLoading}
+              size="sm"
             >
               {isLoading ? (
-                <RefreshCw className="h-4 w-4 animate-spin mr-2" />
+                <>
+                  <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                  Enviando...
+                </>
               ) : (
-                <Play className="h-4 w-4 mr-2" />
+                'Testar Envio'
               )}
-              Testar
             </Button>
           </div>
-          <p className="text-sm text-muted-foreground">
-            Envie um email de teste para verificar se o sistema está funcionando corretamente.
-          </p>
+          
+          {testResult && (
+            <Alert className={testResult.success ? 'border-green-200 bg-green-50' : 'border-red-200 bg-red-50'}>
+              <AlertDescription>
+                <div className="flex items-center gap-2">
+                  {testResult.success ? (
+                    <CheckCircle className="h-4 w-4 text-green-600" />
+                  ) : (
+                    <XCircle className="h-4 w-4 text-red-600" />
+                  )}
+                  <span className={testResult.success ? 'text-green-800' : 'text-red-800'}>
+                    {testResult.message}
+                  </span>
+                </div>
+                {testResult.error && (
+                  <div className="mt-2 text-sm text-red-700">
+                    <strong>Erro:</strong> {testResult.error}
+                  </div>
+                )}
+                {testResult.method && (
+                  <div className="mt-2 text-sm text-gray-600">
+                    <strong>Método:</strong> {testResult.method}
+                  </div>
+                )}
+              </AlertDescription>
+            </Alert>
+          )}
         </CardContent>
       </Card>
 
-      {/* Recomendações */}
-      {lastDiagnostic.recommendations.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Recomendações</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ul className="space-y-2">
-              {lastDiagnostic.recommendations.map((recommendation, index) => (
-                <li key={index} className="flex items-start gap-2">
-                  <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0" />
-                  <span className="text-sm">{recommendation}</span>
-                </li>
-              ))}
-            </ul>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Tentativas Recentes */}
-      {recentAttempts.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Tentativas Recentes</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              {recentAttempts.slice(0, 5).map((attempt) => (
-                <div key={attempt.id} className="flex items-center justify-between p-2 border rounded">
-                  <div className="flex items-center gap-2">
-                    {attempt.status === 'sent' ? (
-                      <CheckCircle className="h-4 w-4 text-green-500" />
-                    ) : (
-                      <AlertTriangle className="h-4 w-4 text-red-500" />
-                    )}
-                    <span className="text-sm font-medium">{attempt.email}</span>
-                  </div>
-                  <div className="text-xs text-muted-foreground">
-                    {new Date(attempt.created_at).toLocaleString('pt-BR')}
-                  </div>
-                </div>
+      {/* Recent Attempts */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Clock className="h-4 w-4" />
+            Tentativas Recentes
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {recentAttempts.length === 0 ? (
+            <div className="text-center py-8 text-gray-500">
+              <Mail className="h-8 w-8 mx-auto mb-2 opacity-50" />
+              <p>Nenhuma tentativa de envio registrada</p>
+              <p className="text-sm mt-1">Execute um diagnóstico para verificar o sistema</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {recentAttempts.map((attempt) => (
+                <RecentAttemptItem key={attempt.id} attempt={attempt} />
               ))}
             </div>
-          </CardContent>
-        </Card>
-      )}
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
-};
-
-export default InviteSystemDiagnostic;
+}
