@@ -1,6 +1,6 @@
 
 import React, { memo, useMemo, useCallback } from "react";
-import { useAuth } from "@/contexts/auth";
+import { useAuth } from "@/contexts/auth/OptimizedAuthContext";
 import BaseLayout from "./BaseLayout";
 import { MemberSidebar } from "./member/MemberSidebar";
 import { MemberContent } from "./member/MemberContent";
