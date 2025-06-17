@@ -3,7 +3,6 @@ import { useCallback, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 import { SendInviteResponse } from './types';
-import { APP_CONFIG } from '@/config/app';
 
 interface SendInviteEmailParams {
   email: string;
@@ -34,7 +33,7 @@ export function useInviteEmailService() {
       setIsSending(true);
       setSendError(null);
 
-      console.log("🚀 Enviando convite via sistema profissional:", { email, roleName, forceResend });
+      console.log("🚀 Enviando convite via sistema corrigido:", { email, roleName, forceResend });
 
       // Validações básicas
       if (!email?.includes('@')) {
@@ -45,9 +44,9 @@ export function useInviteEmailService() {
         throw new Error('URL do convite não fornecida');
       }
 
-      console.log("📧 Chamando sistema híbrido com template profissional...");
+      console.log("📧 Chamando edge function corrigida...");
 
-      // Chamar edge function com sistema melhorado
+      // Chamar edge function corrigida
       const { data, error } = await supabase.functions.invoke('send-invite-email', {
         body: {
           email,
@@ -140,7 +139,6 @@ export function useInviteEmailService() {
         action: {
           label: 'Tentar Novamente',
           onClick: () => {
-            // Re-trigger do envio seria implementado aqui
             console.log('Retentativa solicitada pelo usuário');
           },
         },
@@ -157,30 +155,9 @@ export function useInviteEmailService() {
     }
   }, []);
 
-  const getInviteLink = useCallback((token: string) => {
-    if (!token?.trim()) {
-      console.error("❌ Token vazio");
-      return "";
-    }
-
-    const cleanToken = token.trim();
-    
-    // 🎯 CORREÇÃO: Usar o domínio configurado em vez do window.location.origin
-    const baseUrl = APP_CONFIG.getAppUrl(`/convite/${encodeURIComponent(cleanToken)}`);
-    
-    console.log("🔗 Link gerado com domínio correto:", baseUrl);
-    return baseUrl;
-  }, []);
-
   return {
     sendInviteEmail,
-    getInviteLink,
     isSending,
-    sendError,
-    // Compatibilidade com versões antigas
-    pendingEmails: 0,
-    retryAllPendingEmails: () => {},
-    clearEmailQueue: () => {},
-    emailQueue: []
+    sendError
   };
 }
