@@ -1,18 +1,19 @@
 // Configuração centralizada da aplicação - 100% LIVRE DE CREDENCIAIS HARDCODED
 export const APP_CONFIG = {
-  name: 'Viver de IA',
-  domain: 'viverdeia.ai',
-  supportEmail: 'rafael@viverdeia.ai',
+  name: 'Viver de IA Hub',
+  domain: 'app.viverdeia.ai',
+  supportEmail: 'suporte@viverdeia.ai',
   
   // URLs principais
-  getAppUrl: (path: string = '') => {
-    // Em desenvolvimento, usar localhost
-    if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
-      return `http://localhost:3000${path}`;
-    }
-    
-    // Em produção, usar domínio correto
-    return `https://viverdeia.ai${path}`;
+  getAppUrl: (path: string = ''): string => {
+    const isDev = import.meta.env.DEV;
+    const baseUrl = isDev ? 'http://localhost:5173' : 'https://app.viverdeia.ai';
+    return path ? `${baseUrl}${path.startsWith('/') ? '' : '/'}${path}` : baseUrl;
+  },
+
+  getAppDomain: (): string => {
+    const isDev = import.meta.env.DEV;
+    return isDev ? 'http://localhost:5173' : 'https://app.viverdeia.ai';
   },
   
   // Configurações de convite
@@ -24,9 +25,14 @@ export const APP_CONFIG = {
   
   // Configurações de email
   email: {
-    fromName: 'Viver de IA',
-    fromEmail: 'convites@viverdeia.ai',
-    replyTo: 'rafael@viverdeia.ai'
+    fromAddress: 'noreply@viverdeia.ai',
+    fromName: 'Viver de IA Hub',
+    templates: {
+      invite: {
+        subject: 'Você foi convidado para o Viver de IA Hub',
+        preheader: 'Aceite seu convite e comece sua jornada'
+      }
+    }
   }
 };
 
