@@ -1,257 +1,274 @@
 
-import React, { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import React, { useEffect, useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { AlertTriangle, CheckCircle, Clock, RefreshCw, Send, Settings, Zap } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { AlertTriangle, CheckCircle, RefreshCw, Mail, Zap, Settings, Play } from 'lucide-react';
 import { useInviteEmailDiagnostic } from '@/hooks/admin/invites/useInviteEmailDiagnostic';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { toast } from 'sonner';
 
-export const InviteSystemDiagnostic = () => {
-  const [isRunningDiagnostic, setIsRunningDiagnostic] = useState(false);
-  const { 
-    systemStatus, 
-    runDiagnostic, 
+const InviteSystemDiagnostic = () => {
+  const {
+    runDiagnostic,
+    isRunning,
+    lastDiagnostic,
+    systemStatus,
     testEmailSend,
     recentAttempts,
-    isLoading 
+    isLoading
   } = useInviteEmailDiagnostic();
 
-  const handleRunDiagnostic = async () => {
-    setIsRunningDiagnostic(true);
-    try {
-      await runDiagnostic();
-    } finally {
-      setIsRunningDiagnostic(false);
+  const [testEmail, setTestEmail] = useState('');
+
+  useEffect(() => {
+    // Executar diagnóstico inicial
+    runDiagnostic();
+  }, [runDiagnostic]);
+
+  const getStatusIcon = (status: 'healthy' | 'warning' | 'critical') => {
+    switch (status) {
+      case 'healthy':
+        return <CheckCircle className="h-4 w-4 text-green-500" />;
+      case 'warning':
+        return <AlertTriangle className="h-4 w-4 text-yellow-500" />;
+      case 'critical':
+        return <AlertTriangle className="h-4 w-4 text-red-500" />;
     }
   };
 
-  const getStatusIcon = (status: string) => {
+  const getStatusBadge = (status: 'healthy' | 'warning' | 'critical') => {
     switch (status) {
-      case 'healthy': return <CheckCircle className="h-4 w-4 text-green-500" />;
-      case 'warning': return <AlertTriangle className="h-4 w-4 text-yellow-500" />;
-      case 'error': return <AlertTriangle className="h-4 w-4 text-red-500" />;
-      default: return <Clock className="h-4 w-4 text-gray-500" />;
+      case 'healthy':
+        return <Badge variant="default" className="bg-green-100 text-green-800">Saudável</Badge>;
+      case 'warning':
+        return <Badge variant="destructive" className="bg-yellow-100 text-yellow-800">Atenção</Badge>;
+      case 'critical':
+        return <Badge variant="destructive">Crítico</Badge>;
     }
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'healthy': return 'bg-green-100 text-green-800 border-green-200';
-      case 'warning': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      case 'error': return 'bg-red-100 text-red-800 border-red-200';
-      default: return 'bg-gray-100 text-gray-800 border-gray-200';
+  const handleTestEmail = async () => {
+    if (!testEmail) {
+      toast.error('Digite um email para teste');
+      return;
     }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(testEmail)) {
+      toast.error('Digite um email válido');
+      return;
+    }
+
+    await testEmailSend(testEmail);
   };
 
   return (
     <div className="space-y-6">
+      {/* Status Geral */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Settings className="h-5 w-5" />
-            Diagnóstico do Sistema de Convites
-          </CardTitle>
-          <CardDescription>
-            Monitore a saúde do sistema e identifique problemas
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex gap-2 mb-6">
-            <Button 
-              onClick={handleRunDiagnostic}
-              disabled={isRunningDiagnostic || isLoading}
-              className="flex items-center gap-2"
+            {getStatusIcon(systemStatus)}
+            Status do Sistema de Convites
+            <Button
+              onClick={runDiagnostic}
+              disabled={isRunning}
+              size="sm"
+              variant="outline"
+              className="ml-auto"
             >
-              {isRunningDiagnostic ? (
+              {isRunning ? (
                 <RefreshCw className="h-4 w-4 animate-spin" />
               ) : (
-                <Zap className="h-4 w-4" />
+                <RefreshCw className="h-4 w-4" />
               )}
-              {isRunningDiagnostic ? 'Executando...' : 'Executar Diagnóstico'}
+              {isRunning ? 'Diagnosticando...' : 'Atualizar'}
             </Button>
-            <Button 
-              variant="outline"
-              onClick={() => testEmailSend('teste@exemplo.com')}
-              disabled={isLoading}
-              className="flex items-center gap-2"
-            >
-              <Send className="h-4 w-4" />
-              Testar Envio
-            </Button>
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center justify-between">
+            <span className="font-medium">Status Geral</span>
+            {getStatusBadge(systemStatus)}
           </div>
-
-          <Tabs defaultValue="status" className="w-full">
-            <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="status">Status Geral</TabsTrigger>
-              <TabsTrigger value="attempts">Tentativas Recentes</TabsTrigger>
-              <TabsTrigger value="config">Configuração</TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="status" className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <Card>
-                  <CardContent className="pt-6">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm text-muted-foreground">Edge Function</p>
-                        <div className="flex items-center gap-2 mt-1">
-                          {getStatusIcon(systemStatus?.edgeFunction?.status || 'unknown')}
-                          <Badge className={getStatusColor(systemStatus?.edgeFunction?.status || 'unknown')}>
-                            {systemStatus?.edgeFunction?.status || 'Desconhecido'}
-                          </Badge>
-                        </div>
-                      </div>
-                    </div>
-                    {systemStatus?.edgeFunction?.message && (
-                      <p className="text-xs text-muted-foreground mt-2">
-                        {systemStatus.edgeFunction.message}
-                      </p>
-                    )}
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardContent className="pt-6">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm text-muted-foreground">Resend API</p>
-                        <div className="flex items-center gap-2 mt-1">
-                          {getStatusIcon(systemStatus?.resendApi?.status || 'unknown')}
-                          <Badge className={getStatusColor(systemStatus?.resendApi?.status || 'unknown')}>
-                            {systemStatus?.resendApi?.status || 'Desconhecido'}
-                          </Badge>
-                        </div>
-                      </div>
-                    </div>
-                    {systemStatus?.resendApi?.message && (
-                      <p className="text-xs text-muted-foreground mt-2">
-                        {systemStatus.resendApi.message}
-                      </p>
-                    )}
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardContent className="pt-6">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm text-muted-foreground">Database</p>
-                        <div className="flex items-center gap-2 mt-1">
-                          {getStatusIcon(systemStatus?.database?.status || 'unknown')}
-                          <Badge className={getStatusColor(systemStatus?.database?.status || 'unknown')}>
-                            {systemStatus?.database?.status || 'Desconhecido'}
-                          </Badge>
-                        </div>
-                      </div>
-                    </div>
-                    {systemStatus?.database?.message && (
-                      <p className="text-xs text-muted-foreground mt-2">
-                        {systemStatus.database.message}
-                      </p>
-                    )}
-                  </CardContent>
-                </Card>
-              </div>
-
-              {systemStatus?.overallStatus && (
-                <Alert className={`border-l-4 ${
-                  systemStatus.overallStatus === 'healthy' ? 'border-green-500 bg-green-50' :
-                  systemStatus.overallStatus === 'warning' ? 'border-yellow-500 bg-yellow-50' :
-                  'border-red-500 bg-red-50'
-                }`}>
-                  <AlertDescription>
-                    <strong>Status Geral: </strong>
-                    {systemStatus.overallStatus === 'healthy' && 'Sistema funcionando normalmente'}
-                    {systemStatus.overallStatus === 'warning' && 'Sistema com alguns problemas menores'}
-                    {systemStatus.overallStatus === 'error' && 'Sistema com problemas críticos'}
-                  </AlertDescription>
-                </Alert>
-              )}
-            </TabsContent>
-
-            <TabsContent value="attempts" className="space-y-4">
-              <div className="space-y-3">
-                {recentAttempts && recentAttempts.length > 0 ? (
-                  recentAttempts.map((attempt, index) => (
-                    <Card key={index}>
-                      <CardContent className="pt-4">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <p className="font-medium">{attempt.email}</p>
-                            <p className="text-sm text-muted-foreground">
-                              Método: {attempt.method_attempted} | Status: {attempt.status}
-                            </p>
-                            <p className="text-xs text-muted-foreground">
-                              {new Date(attempt.created_at).toLocaleString('pt-BR')}
-                            </p>
-                          </div>
-                          <Badge className={getStatusColor(attempt.status === 'sent' ? 'healthy' : 'error')}>
-                            {attempt.status}
-                          </Badge>
-                        </div>
-                        {attempt.error_message && (
-                          <Alert className="mt-2">
-                            <AlertTriangle className="h-4 w-4" />
-                            <AlertDescription>{attempt.error_message}</AlertDescription>
-                          </Alert>
-                        )}
-                      </CardContent>
-                    </Card>
-                  ))
-                ) : (
-                  <Card>
-                    <CardContent className="pt-6 text-center">
-                      <p className="text-muted-foreground">Nenhuma tentativa recente encontrada</p>
-                    </CardContent>
-                  </Card>
-                )}
-              </div>
-            </TabsContent>
-
-            <TabsContent value="config" className="space-y-4">
-              <Card>
-                <CardContent className="pt-6">
-                  <div className="space-y-4">
-                    <div>
-                      <h4 className="font-medium">Configurações da Edge Function</h4>
-                      <div className="mt-2 space-y-2 text-sm">
-                        <div className="flex justify-between">
-                          <span>Timeout:</span>
-                          <span>30 segundos</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span>Retry automático:</span>
-                          <span>3 tentativas</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span>Fallback strategies:</span>
-                          <span>Resend → Supabase Recovery → Supabase Auth</span>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <div>
-                      <h4 className="font-medium">Configurações do Frontend</h4>
-                      <div className="mt-2 space-y-2 text-sm">
-                        <div className="flex justify-between">
-                          <span>Timeout da requisição:</span>
-                          <span>45 segundos</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span>Retry em falha de rede:</span>
-                          <span>2 tentativas</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-          </Tabs>
+          
+          <div className="text-sm text-muted-foreground">
+            Última verificação: {new Date(lastDiagnostic.timestamp).toLocaleString('pt-BR')}
+          </div>
         </CardContent>
       </Card>
+
+      {/* Componentes do Sistema */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Mail className="h-4 w-4" />
+                <span className="text-sm font-medium">Resend</span>
+              </div>
+              {getStatusIcon(lastDiagnostic.resendStatus)}
+            </div>
+            <div className="mt-2">
+              {getStatusBadge(lastDiagnostic.resendStatus)}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Zap className="h-4 w-4" />
+                <span className="text-sm font-medium">Edge Function</span>
+              </div>
+              {getStatusIcon(lastDiagnostic.edgeFunctionStatus)}
+            </div>
+            <div className="mt-2">
+              {getStatusBadge(lastDiagnostic.edgeFunctionStatus)}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Settings className="h-4 w-4" />
+                <span className="text-sm font-medium">Configuração</span>
+              </div>
+              {getStatusIcon(lastDiagnostic.configStatus)}
+            </div>
+            <div className="mt-2">
+              {getStatusBadge(lastDiagnostic.configStatus)}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <CheckCircle className="h-4 w-4" />
+                <span className="text-sm font-medium">Supabase</span>
+              </div>
+              {getStatusIcon(lastDiagnostic.supabaseStatus)}
+            </div>
+            <div className="mt-2">
+              {getStatusBadge(lastDiagnostic.supabaseStatus)}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Estatísticas */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Estatísticas</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="text-center">
+              <div className="text-2xl font-bold text-blue-600">
+                {lastDiagnostic.details.totalAttempts}
+              </div>
+              <div className="text-sm text-muted-foreground">Tentativas Recentes</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-green-600">
+                {lastDiagnostic.details.successRate.toFixed(1)}%
+              </div>
+              <div className="text-sm text-muted-foreground">Taxa de Sucesso</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-purple-600">
+                {lastDiagnostic.details.edgeFunctionVersion}
+              </div>
+              <div className="text-sm text-muted-foreground">Versão Edge Function</div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Teste de Email */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Teste de Envio de Email</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex gap-2">
+            <Input
+              type="email"
+              placeholder="Digite um email para teste"
+              value={testEmail}
+              onChange={(e) => setTestEmail(e.target.value)}
+              className="flex-1"
+            />
+            <Button
+              onClick={handleTestEmail}
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <RefreshCw className="h-4 w-4 animate-spin mr-2" />
+              ) : (
+                <Play className="h-4 w-4 mr-2" />
+              )}
+              Testar
+            </Button>
+          </div>
+          <p className="text-sm text-muted-foreground">
+            Envie um email de teste para verificar se o sistema está funcionando corretamente.
+          </p>
+        </CardContent>
+      </Card>
+
+      {/* Recomendações */}
+      {lastDiagnostic.recommendations.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Recomendações</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ul className="space-y-2">
+              {lastDiagnostic.recommendations.map((recommendation, index) => (
+                <li key={index} className="flex items-start gap-2">
+                  <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0" />
+                  <span className="text-sm">{recommendation}</span>
+                </li>
+              ))}
+            </ul>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Tentativas Recentes */}
+      {recentAttempts.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Tentativas Recentes</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              {recentAttempts.slice(0, 5).map((attempt) => (
+                <div key={attempt.id} className="flex items-center justify-between p-2 border rounded">
+                  <div className="flex items-center gap-2">
+                    {attempt.status === 'sent' ? (
+                      <CheckCircle className="h-4 w-4 text-green-500" />
+                    ) : (
+                      <AlertTriangle className="h-4 w-4 text-red-500" />
+                    )}
+                    <span className="text-sm font-medium">{attempt.email}</span>
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    {new Date(attempt.created_at).toLocaleString('pt-BR')}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 };
