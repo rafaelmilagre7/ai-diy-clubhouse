@@ -13,7 +13,7 @@ export const useEventAccessControl = ({ eventId }: UseEventAccessControlProps) =
   const isInitializedRef = useRef(false);
   const queryClient = useQueryClient();
 
-  console.log("🎯 [EVENT-ACCESS-CONTROL] Hook initialized", { eventId, selectedRoles });
+  console.log("🎯 [EVENT-ACCESS-CONTROL] Hook initialized", { eventId, selectedRoles: selectedRoles.length });
 
   // Carregar papéis de acesso existentes
   const { data: accessControlData, isLoading, error } = useQuery({
@@ -46,20 +46,24 @@ export const useEventAccessControl = ({ eventId }: UseEventAccessControlProps) =
   });
 
   // Memoizar os dados para estabilizar a referência
-  const memoizedAccessControlData = useMemo(() => accessControlData, [accessControlData]);
+  const memoizedAccessControlData = useMemo(() => {
+    return accessControlData || [];
+  }, [accessControlData]);
 
   // Sincronizar estado local com dados carregados - usando useRef para controlar inicialização
   useEffect(() => {
-    if (memoizedAccessControlData && !isInitializedRef.current) {
+    if (!isLoading && memoizedAccessControlData && !isInitializedRef.current) {
       console.log("🔄 [EVENT-ACCESS-CONTROL] Initializing selectedRoles with:", memoizedAccessControlData);
       setSelectedRoles(memoizedAccessControlData);
       isInitializedRef.current = true;
     }
-  }, [memoizedAccessControlData]);
+  }, [memoizedAccessControlData, isLoading]);
 
   // Reset initialization flag when eventId changes
   useEffect(() => {
+    console.log("🔄 [EVENT-ACCESS-CONTROL] EventId changed, resetting initialization");
     isInitializedRef.current = false;
+    setSelectedRoles([]);
   }, [eventId]);
 
   // Mutation para salvar controle de acesso

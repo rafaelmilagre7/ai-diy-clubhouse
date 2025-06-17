@@ -38,26 +38,22 @@ export const EventRoleCheckboxes = ({ selectedRoles, onChange }: EventRoleCheckb
       return data as Role[];
     },
     retry: 2,
-    staleTime: 5 * 60 * 1000 // 5 minutos
+    staleTime: 5 * 60 * 1000
   });
 
   // Função estabilizada para atualizar seleção de papéis
   const handleCheckedChange = useCallback((checked: boolean, roleId: string) => {
     console.log("🔄 [ROLE-CHECKBOXES] Role selection changed:", { roleId, checked });
     
-    let updatedSelection: string[];
-
-    if (checked) {
-      updatedSelection = [...selectedRoles, roleId];
-    } else {
-      updatedSelection = selectedRoles.filter(id => id !== roleId);
-    }
+    const updatedSelection = checked 
+      ? [...selectedRoles, roleId]
+      : selectedRoles.filter(id => id !== roleId);
 
     console.log("🔄 [ROLE-CHECKBOXES] Updated selection:", updatedSelection);
     onChange(updatedSelection);
   }, [selectedRoles, onChange]);
 
-  // Memoizar contagem de selecionados para evitar re-renders desnecessários
+  // Memoizar contagem de selecionados
   const selectedCount = useMemo(() => selectedRoles.length, [selectedRoles.length]);
 
   if (isLoading) {
