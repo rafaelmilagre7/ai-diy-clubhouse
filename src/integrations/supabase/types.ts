@@ -6246,7 +6246,7 @@ export type Database = {
         Returns: Json
       }
       is_admin: {
-        Args: Record<PropertyKey, never> | { check_user_id?: string }
+        Args: { check_user_id?: string }
         Returns: boolean
       }
       is_admin_user: {
