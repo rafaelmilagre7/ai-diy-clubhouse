@@ -1,361 +1,298 @@
-import { urlManager, URLTransformResult } from '@/services/urlManager';
-import { analyticsService } from '@/services/analyticsService';
+
+import { urlManager } from '@/services/urlManager';
+
+export type StorageURLType = 'image' | 'document' | 'certificate' | 'storage';
 
 export interface StorageURLOptions {
   enableTracking?: boolean;
-  priority?: 'high' | 'normal' | 'low';
-  retryAttempts?: number;
-  cacheStrategy?: 'aggressive' | 'balanced' | 'conservative';
+  priority?: 'low' | 'normal' | 'high';
+  maxRetries?: number;
 }
 
-export interface StorageURLResult extends URLTransformResult {
-  type: 'image' | 'document' | 'storage' | 'certificate';
-  originalUrl: string;
+export interface StorageURLResult {
   optimizedUrl: string;
+  success: boolean;
+  error?: string;
 }
 
-/**
- * Serviço especializado para otimização de URLs de storage
- * Agora usa o proxy real via Edge Function do Supabase
- */
-export class StorageURLManager {
+export interface StorageURLBatchItem {
+  url: string;
+  type: StorageURLType;
+}
+
+class StorageURLManager {
+  private static instance: StorageURLManager;
+  private cache = new Map<string, StorageURLResult>();
+  private stats = {
+    total: 0,
+    cached: 0,
+    optimized: 0,
+    failed: 0
+  };
+
+  private constructor() {}
+
+  public static getInstance(): StorageURLManager {
+    if (!StorageURLManager.instance) {
+      StorageURLManager.instance = new StorageURLManager();
+    }
+    return StorageURLManager.instance;
+  }
+
   /**
-   * Otimiza URL de certificado usando o proxy real
+   * Otimiza URL de imagem usando o domínio personalizado
    */
-  async optimizeCertificateURL(
-    originalUrl: string, 
+  public async optimizeImageURL(
+    originalUrl: string,
     options: StorageURLOptions = {}
   ): Promise<StorageURLResult> {
-    const {
-      enableTracking = true,
-      priority = 'high'
-    } = options;
-
-    if (!originalUrl) {
-      throw new Error('URL do certificado é obrigatória');
+    const cacheKey = `image_${originalUrl}`;
+    
+    if (this.cache.has(cacheKey)) {
+      this.stats.cached++;
+      return this.cache.get(cacheKey)!;
     }
 
     try {
-      console.log(`[StorageURLManager] Otimizando URL de certificado (prioridade: ${priority}):`, originalUrl);
-
-      const result = await urlManager.transformURL(originalUrl, 'certificate');
+      // Usar URLManager para transformar a URL
+      const optimizedUrl = this.transformSupabaseUrl(originalUrl);
       
-      if (enableTracking && result.analytics) {
-        this.trackCertificateURLUsage(result, originalUrl);
-      }
-
-      return {
-        ...result,
-        type: 'certificate',
-        originalUrl,
-        optimizedUrl: result.url
+      const result: StorageURLResult = {
+        optimizedUrl,
+        success: true
       };
-
+      
+      this.cache.set(cacheKey, result);
+      this.stats.optimized++;
+      this.stats.total++;
+      
+      return result;
     } catch (error) {
-      console.error('[StorageURLManager] Erro ao otimizar URL de certificado:', error);
-      
-      return {
-        url: originalUrl,
-        source: 'fallback',
-        cached: false,
-        type: 'certificate',
-        originalUrl,
-        optimizedUrl: originalUrl
+      const result: StorageURLResult = {
+        optimizedUrl: originalUrl,
+        success: false,
+        error: error instanceof Error ? error.message : 'Erro desconhecido'
       };
+      
+      this.stats.failed++;
+      this.stats.total++;
+      
+      return result;
     }
   }
 
   /**
-   * Otimiza URL de imagem usando o proxy real
+   * Otimiza URL de documento
    */
-  async optimizeImageURL(
-    originalUrl: string, 
+  public async optimizeDocumentURL(
+    originalUrl: string,
     options: StorageURLOptions = {}
   ): Promise<StorageURLResult> {
-    const {
-      enableTracking = true,
-      priority = 'normal'
-    } = options;
-
-    if (!originalUrl) {
-      throw new Error('URL da imagem é obrigatória');
+    const cacheKey = `document_${originalUrl}`;
+    
+    if (this.cache.has(cacheKey)) {
+      this.stats.cached++;
+      return this.cache.get(cacheKey)!;
     }
 
     try {
-      console.log(`[StorageURLManager] Otimizando URL de imagem (prioridade: ${priority}):`, originalUrl);
-
-      const result = await urlManager.transformURL(originalUrl, 'image');
+      const optimizedUrl = this.transformSupabaseUrl(originalUrl);
       
-      if (enableTracking && result.analytics) {
-        this.trackImageURLUsage(result, originalUrl);
-      }
-
-      return {
-        ...result,
-        type: 'image',
-        originalUrl,
-        optimizedUrl: result.url
+      const result: StorageURLResult = {
+        optimizedUrl,
+        success: true
       };
-
+      
+      this.cache.set(cacheKey, result);
+      this.stats.optimized++;
+      this.stats.total++;
+      
+      return result;
     } catch (error) {
-      console.error('[StorageURLManager] Erro ao otimizar URL de imagem:', error);
-      
-      return {
-        url: originalUrl,
-        source: 'fallback',
-        cached: false,
-        type: 'image',
-        originalUrl,
-        optimizedUrl: originalUrl
+      const result: StorageURLResult = {
+        optimizedUrl: originalUrl,
+        success: false,
+        error: error instanceof Error ? error.message : 'Erro desconhecido'
       };
+      
+      this.stats.failed++;
+      this.stats.total++;
+      
+      return result;
     }
   }
 
   /**
-   * Otimiza URL de documento usando o proxy real
+   * Otimiza URL de certificado
    */
-  async optimizeDocumentURL(
-    originalUrl: string, 
+  public async optimizeCertificateURL(
+    originalUrl: string,
     options: StorageURLOptions = {}
   ): Promise<StorageURLResult> {
-    const {
-      enableTracking = true,
-      priority = 'normal'
-    } = options;
-
-    if (!originalUrl) {
-      throw new Error('URL do documento é obrigatória');
+    const cacheKey = `certificate_${originalUrl}`;
+    
+    if (this.cache.has(cacheKey)) {
+      this.stats.cached++;
+      return this.cache.get(cacheKey)!;
     }
 
     try {
-      console.log(`[StorageURLManager] Otimizando URL de documento (prioridade: ${priority}):`, originalUrl);
-
-      const result = await urlManager.transformURL(originalUrl, 'document');
+      const optimizedUrl = this.transformSupabaseUrl(originalUrl);
       
-      if (enableTracking && result.analytics) {
-        this.trackDocumentURLUsage(result, originalUrl);
-      }
-
-      return {
-        ...result,
-        type: 'document',
-        originalUrl,
-        optimizedUrl: result.url
+      const result: StorageURLResult = {
+        optimizedUrl,
+        success: true
       };
-
+      
+      this.cache.set(cacheKey, result);
+      this.stats.optimized++;
+      this.stats.total++;
+      
+      return result;
     } catch (error) {
-      console.error('[StorageURLManager] Erro ao otimizar URL de documento:', error);
-      
-      return {
-        url: originalUrl,
-        source: 'fallback',
-        cached: false,
-        type: 'document',
-        originalUrl,
-        optimizedUrl: originalUrl
+      const result: StorageURLResult = {
+        optimizedUrl: originalUrl,
+        success: false,
+        error: error instanceof Error ? error.message : 'Erro desconhecido'
       };
+      
+      this.stats.failed++;
+      this.stats.total++;
+      
+      return result;
     }
   }
 
   /**
-   * Otimiza URL de storage geral usando o proxy real
+   * Otimiza URL de storage genérica
    */
-  async optimizeStorageURL(
-    originalUrl: string, 
+  public async optimizeStorageURL(
+    originalUrl: string,
     options: StorageURLOptions = {}
   ): Promise<StorageURLResult> {
-    const {
-      enableTracking = true,
-      priority = 'normal'
-    } = options;
-
-    if (!originalUrl) {
-      throw new Error('URL de storage é obrigatória');
+    const cacheKey = `storage_${originalUrl}`;
+    
+    if (this.cache.has(cacheKey)) {
+      this.stats.cached++;
+      return this.cache.get(cacheKey)!;
     }
 
     try {
-      console.log(`[StorageURLManager] Otimizando URL de storage (prioridade: ${priority}):`, originalUrl);
-
-      const result = await urlManager.transformURL(originalUrl, 'storage');
+      const optimizedUrl = this.transformSupabaseUrl(originalUrl);
       
-      if (enableTracking && result.analytics) {
-        this.trackStorageURLUsage(result, originalUrl);
-      }
-
-      return {
-        ...result,
-        type: 'storage',
-        originalUrl,
-        optimizedUrl: result.url
+      const result: StorageURLResult = {
+        optimizedUrl,
+        success: true
       };
-
+      
+      this.cache.set(cacheKey, result);
+      this.stats.optimized++;
+      this.stats.total++;
+      
+      return result;
     } catch (error) {
-      console.error('[StorageURLManager] Erro ao otimizar URL de storage:', error);
-      
-      return {
-        url: originalUrl,
-        source: 'fallback',
-        cached: false,
-        type: 'storage',
-        originalUrl,
-        optimizedUrl: originalUrl
+      const result: StorageURLResult = {
+        optimizedUrl: originalUrl,
+        success: false,
+        error: error instanceof Error ? error.message : 'Erro desconhecido'
       };
+      
+      this.stats.failed++;
+      this.stats.total++;
+      
+      return result;
     }
   }
 
   /**
-   * Otimiza múltiplas URLs em batch de forma eficiente
+   * Otimiza múltiplas URLs em batch
    */
-  async optimizeBatchURLs(
-    urls: { url: string; type: 'image' | 'document' | 'storage' | 'certificate' }[],
+  public async optimizeBatchURLs(
+    items: StorageURLBatchItem[],
     options: StorageURLOptions = {}
   ): Promise<Record<string, StorageURLResult>> {
-    console.log(`[StorageURLManager] Otimizando ${urls.length} URLs em batch`);
-    
     const results: Record<string, StorageURLResult> = {};
     
-    const chunkSize = 3;
-    for (let i = 0; i < urls.length; i += chunkSize) {
-      const chunk = urls.slice(i, i + chunkSize);
-      
-      const chunkPromises = chunk.map(async ({ url, type }) => {
-        try {
-          let result: StorageURLResult;
-          
-          switch (type) {
-            case 'certificate':
-              result = await this.optimizeCertificateURL(url, { ...options, priority: 'high' });
-              break;
-            case 'image':
-              result = await this.optimizeImageURL(url, { ...options, priority: 'normal' });
-              break;
-            case 'document':
-              result = await this.optimizeDocumentURL(url, { ...options, priority: 'normal' });
-              break;
-            case 'storage':
-              result = await this.optimizeStorageURL(url, { ...options, priority: 'normal' });
-              break;
-            default:
-              throw new Error(`Tipo de URL não suportado: ${type}`);
-          }
-          
-          return { original: url, result };
-        } catch (error) {
-          console.error(`[StorageURLManager] Erro ao otimizar URL em batch: ${url}`, error);
-          return { 
-            original: url, 
-            result: {
-              url,
-              source: 'fallback' as const,
-              cached: false,
-              type,
-              originalUrl: url,
-              optimizedUrl: url
-            }
-          };
-        }
-      });
-      
-      const chunkResults = await Promise.all(chunkPromises);
-      
-      chunkResults.forEach(({ original, result }) => {
-        results[original] = result;
-      });
+    for (const item of items) {
+      switch (item.type) {
+        case 'image':
+          results[item.url] = await this.optimizeImageURL(item.url, options);
+          break;
+        case 'document':
+          results[item.url] = await this.optimizeDocumentURL(item.url, options);
+          break;
+        case 'certificate':
+          results[item.url] = await this.optimizeCertificateURL(item.url, options);
+          break;
+        case 'storage':
+        default:
+          results[item.url] = await this.optimizeStorageURL(item.url, options);
+          break;
+      }
     }
     
-    console.log(`[StorageURLManager] Batch concluído: ${Object.keys(results).length} URLs processadas`);
     return results;
   }
 
   /**
-   * Analytics para URLs de certificados
+   * Transforma URL do Supabase para usar domínio personalizado
    */
-  private trackCertificateURLUsage(result: URLTransformResult, originalUrl: string): void {
-    try {
-      const trackingData = {
-        type: 'certificate',
-        source: result.source,
-        cached: result.cached,
-        timestamp: new Date().toISOString(),
-        original: originalUrl.substring(0, 50) + '...',
-        transformed: result.url.substring(0, 50) + '...'
-      };
-
-      analyticsService.trackURLTransformation(trackingData);
-    } catch (error) {
-      console.warn('[StorageURLManager] Erro ao registrar analytics de certificado:', error);
+  private transformSupabaseUrl(originalUrl: string): string {
+    if (!originalUrl || !originalUrl.includes('supabase')) {
+      return originalUrl;
     }
-  }
 
-  private trackImageURLUsage(result: URLTransformResult, originalUrl: string): void {
     try {
-      const trackingData = {
-        type: 'image',
-        source: result.source,
-        cached: result.cached,
-        timestamp: new Date().toISOString(),
-        original: originalUrl.substring(0, 50) + '...',
-        transformed: result.url.substring(0, 50) + '...'
-      };
-
-      analyticsService.trackURLTransformation(trackingData);
-    } catch (error) {
-      console.warn('[StorageURLManager] Erro ao registrar analytics de imagem:', error);
-    }
-  }
-
-  private trackDocumentURLUsage(result: URLTransformResult, originalUrl: string): void {
-    try {
-      const trackingData = {
-        type: 'document',
-        source: result.source,
-        cached: result.cached,
-        timestamp: new Date().toISOString(),
-        original: originalUrl.substring(0, 50) + '...',
-        transformed: result.url.substring(0, 50) + '...'
-      };
-
-      analyticsService.trackURLTransformation(trackingData);
-    } catch (error) {
-      console.warn('[StorageURLManager] Erro ao registrar analytics de documento:', error);
-    }
-  }
-
-  private trackStorageURLUsage(result: URLTransformResult, originalUrl: string): void {
-    try {
-      const trackingData = {
-        type: 'storage',
-        source: result.source,
-        cached: result.cached,
-        timestamp: new Date().toISOString(),
-        original: originalUrl.substring(0, 50) + '...',
-        transformed: result.url.substring(0, 50) + '...'
-      };
-
-      analyticsService.trackURLTransformation(trackingData);
-    } catch (error) {
-      console.warn('[StorageURLManager] Erro ao registrar analytics de storage:', error);
+      const url = new URL(originalUrl);
+      
+      // Se for URL do Supabase Storage, usar domínio personalizado
+      if (url.hostname.includes('supabase.co') && url.pathname.includes('/storage/')) {
+        const baseUrl = urlManager.getCanonicalUrl('');
+        const storagePath = url.pathname.replace('/storage/v1/object/public/', '/storage/');
+        return `${baseUrl}${storagePath}${url.search}`;
+      }
+      
+      return originalUrl;
+    } catch {
+      return originalUrl;
     }
   }
 
   /**
-   * Limpa cache para tipo específico de storage
+   * Limpa cache por tipo
    */
-  clearCacheForType(type: 'image' | 'document' | 'storage' | 'certificate'): void {
-    urlManager.clearCache();
-    console.log(`[StorageURLManager] Cache limpo para tipo: ${type}`);
+  public clearCacheForType(type: StorageURLType): void {
+    const keysToDelete: string[] = [];
+    
+    for (const key of this.cache.keys()) {
+      if (key.startsWith(`${type}_`)) {
+        keysToDelete.push(key);
+      }
+    }
+    
+    keysToDelete.forEach(key => this.cache.delete(key));
   }
 
   /**
-   * Estatísticas de uso por tipo
+   * Obtém estatísticas por tipo
    */
-  getStatsByType() {
-    return {
-      cache: urlManager.getCacheStats(),
-      timestamp: new Date().toISOString()
+  public getStatsByType(): Record<string, number> {
+    return { ...this.stats };
+  }
+
+  /**
+   * Limpa todo o cache
+   */
+  public clearAllCache(): void {
+    this.cache.clear();
+    this.stats = {
+      total: 0,
+      cached: 0,
+      optimized: 0,
+      failed: 0
     };
   }
 }
 
-// Instância singleton
-export const storageUrlManager = new StorageURLManager();
+// Instância singleton para uso global
+export const storageUrlManager = StorageURLManager.getInstance();

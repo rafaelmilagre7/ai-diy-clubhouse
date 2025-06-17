@@ -32,8 +32,7 @@ export const useCertificateURL = () => {
       setLastOptimization(result);
 
       console.log(`[useCertificateURL] Otimização concluída:`, {
-        source: result.source,
-        cached: result.cached,
+        success: result.success,
         url: result.optimizedUrl.substring(0, 50) + '...'
       });
 
