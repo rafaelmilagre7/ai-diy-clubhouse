@@ -19,6 +19,11 @@ export function useInviteEmailService() {
   const [isSending, setIsSending] = useState(false);
   const [sendError, setSendError] = useState<Error | null>(null);
 
+  const getInviteLink = useCallback((token: string) => {
+    const baseUrl = window.location.origin;
+    return `${baseUrl}/convite/${token}`;
+  }, []);
+
   const sendInviteEmail = useCallback(async ({
     email,
     inviteUrl,
@@ -157,6 +162,7 @@ export function useInviteEmailService() {
 
   return {
     sendInviteEmail,
+    getInviteLink,
     isSending,
     sendError
   };

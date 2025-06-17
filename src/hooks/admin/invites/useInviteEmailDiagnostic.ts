@@ -1,7 +1,7 @@
-
 import { useState, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
+import { useInviteEmailService } from './useInviteEmailService';
 
 interface DiagnosticResult {
   component: string;
@@ -14,6 +14,39 @@ interface DiagnosticResult {
 export function useInviteEmailDiagnostic() {
   const [isRunning, setIsRunning] = useState(false);
   const [results, setResults] = useState<DiagnosticResult[]>([]);
+  const [lastDiagnostic, setLastDiagnostic] = useState<Date | null>(null);
+  const { sendInviteEmail } = useInviteEmailService();
+
+  const testInviteEmail = useCallback(async (email: string) => {
+    setIsRunning(true);
+    
+    try {
+      const result = await sendInviteEmail({
+        email,
+        inviteUrl: 'https://exemplo.com/convite/teste',
+        roleName: 'Teste',
+        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+        senderName: 'Sistema de Teste',
+        notes: 'Teste de envio de email',
+        inviteId: 'test-invite-' + Date.now(),
+        forceResend: true
+      });
+
+      if (result.success) {
+        toast.success('Email de teste enviado com sucesso!');
+      } else {
+        toast.error('Falha no envio do email de teste');
+      }
+
+      return result;
+    } catch (error: any) {
+      console.error('Erro no teste de email:', error);
+      toast.error('Erro no teste de email: ' + error.message);
+      return { success: false, error: error.message };
+    } finally {
+      setIsRunning(false);
+    }
+  }, [sendInviteEmail]);
 
   const runDiagnostic = useCallback(async () => {
     setIsRunning(true);
@@ -173,6 +206,7 @@ export function useInviteEmailDiagnostic() {
       }
 
       setResults(diagnostics);
+      setLastDiagnostic(new Date());
 
       // Mostrar resumo
       const successCount = diagnostics.filter(d => d.status === 'success').length;
@@ -197,7 +231,9 @@ export function useInviteEmailDiagnostic() {
 
   return {
     runDiagnostic,
+    testInviteEmail,
     isRunning,
-    results
+    results,
+    lastDiagnostic
   };
 }
