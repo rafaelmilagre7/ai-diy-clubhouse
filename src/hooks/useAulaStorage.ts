@@ -62,14 +62,33 @@ export const useAulaStorage = () => {
       setStorageChecking(true);
       setStorageError(null);
       
-      // Chamar a função RPC para configurar buckets
+      // Tentar usar a função RPC para criar buckets se disponível
+      console.log("[Storage] Tentando configurar buckets via RPC...");
+      
       const { data, error } = await supabase.rpc('setup_learning_storage_buckets');
       
       if (error) {
-        console.error("[Storage] Erro na configuração via RPC:", error);
-        setStorageError(`Erro na configuração: ${error.message}`);
-        setStorageReady(false);
-        toast.error(`Falha na configuração: ${error.message}`);
+        console.warn("[Storage] RPC não disponível, verificando buckets manualmente:", error);
+        
+        // Fallback: verificar buckets diretamente
+        const { data: buckets, error: listError } = await supabase.storage.listBuckets();
+        
+        if (listError) {
+          setStorageError(`Erro ao verificar buckets: ${listError.message}`);
+          toast.error(`Erro: ${listError.message}`);
+          return;
+        }
+        
+        const lessonImagesBucket = buckets?.find(bucket => bucket.name === 'lesson_images');
+        
+        if (lessonImagesBucket) {
+          setStorageReady(true);
+          setStorageError(null);
+          toast.success("Configuração de armazenamento verificada com sucesso!");
+        } else {
+          setStorageError("Bucket lesson_images ainda não existe. Execute a migration SQL.");
+          toast.error("Execute a migration SQL para criar os buckets necessários.");
+        }
       } else {
         console.log("[Storage] Configuração via RPC concluída:", data);
         setStorageReady(true);
@@ -77,9 +96,7 @@ export const useAulaStorage = () => {
         toast.success("Configuração de armazenamento concluída com sucesso!");
       }
     } catch (error: any) {
-      console.error("[Storage] Erro ao configurar:", error);
       setStorageError(error.message || "Erro desconhecido");
-      setStorageReady(false);
       toast.error("Erro ao configurar armazenamento");
     } finally {
       setStorageChecking(false);
