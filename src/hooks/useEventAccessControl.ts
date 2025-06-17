@@ -10,20 +10,21 @@ interface UseEventAccessControlProps {
 
 export const useEventAccessControl = ({ eventId }: UseEventAccessControlProps) => {
   const [selectedRoles, setSelectedRoles] = useState<string[]>([]);
+  const [isInitialized, setIsInitialized] = useState(false);
   const queryClient = useQueryClient();
 
-  console.log("useEventAccessControl - Hook initialized with eventId:", eventId);
+  console.log("🎯 [EVENT-ACCESS-CONTROL] Hook initialized", { eventId, selectedRoles });
 
-  // Carregar papéis de acesso existentes para o evento
+  // Carregar papéis de acesso existentes
   const { data: accessControlData, isLoading, error } = useQuery({
     queryKey: ['event-access-control', eventId],
     queryFn: async () => {
       if (!eventId) {
-        console.log("useEventAccessControl - No eventId provided, returning empty array");
+        console.log("🎯 [EVENT-ACCESS-CONTROL] No eventId provided");
         return [];
       }
       
-      console.log("useEventAccessControl - Fetching access control data for event:", eventId);
+      console.log("🎯 [EVENT-ACCESS-CONTROL] Fetching access control for event:", eventId);
       
       const { data, error } = await supabase
         .from('event_access_control')
@@ -31,105 +32,97 @@ export const useEventAccessControl = ({ eventId }: UseEventAccessControlProps) =
         .eq('event_id', eventId);
       
       if (error) {
-        console.error("useEventAccessControl - Error fetching access control data:", error);
-        // Não lançar erro para evitar bloquear a interface
-        return [];
+        console.error("❌ [EVENT-ACCESS-CONTROL] Error fetching data:", error);
+        throw error;
       }
       
       const roleIds = data?.map(item => item.role_id) || [];
-      console.log("useEventAccessControl - Fetched role IDs:", roleIds);
+      console.log("✅ [EVENT-ACCESS-CONTROL] Fetched role IDs:", roleIds);
       return roleIds;
     },
     enabled: !!eventId,
     retry: 1,
-    staleTime: 30000 // 30 seconds
+    staleTime: 30000
   });
 
-  // Atualizar estado local quando os dados carregarem
+  // Sincronizar estado local com dados carregados
   useEffect(() => {
-    if (accessControlData) {
-      console.log("useEventAccessControl - Updating selectedRoles with:", accessControlData);
+    if (accessControlData && !isInitialized) {
+      console.log("🔄 [EVENT-ACCESS-CONTROL] Initializing selectedRoles with:", accessControlData);
       setSelectedRoles(accessControlData);
-    } else if (!isLoading && !error) {
-      // Se não há dados mas também não há erro nem loading, significa que é um evento público
-      console.log("useEventAccessControl - No access control data, event is public");
-      setSelectedRoles([]);
+      setIsInitialized(true);
     }
-  }, [accessControlData, isLoading, error]);
+  }, [accessControlData, isInitialized]);
 
   // Mutation para salvar controle de acesso
   const saveAccessControlMutation = useMutation({
     mutationFn: async ({ eventId, roleIds }: { eventId: string; roleIds: string[] }) => {
-      console.log("useEventAccessControl - Saving access control:", {
-        eventId,
-        roleIds,
-        roleCount: roleIds.length
-      });
+      console.log("💾 [EVENT-ACCESS-CONTROL] Starting save operation", { eventId, roleIds });
 
-      try {
-        // Primeiro, deletar registros existentes
-        console.log("useEventAccessControl - Deleting existing access control records");
-        const { error: deleteError } = await supabase
-          .from('event_access_control')
-          .delete()
-          .eq('event_id', eventId);
-        
-        if (deleteError) {
-          console.error("useEventAccessControl - Error deleting existing records:", deleteError);
-          throw deleteError;
-        }
-
-        // Se houver papéis selecionados, inserir novos registros
-        if (roleIds.length > 0) {
-          const insertData = roleIds.map(roleId => ({
-            event_id: eventId,
-            role_id: roleId
-          }));
-
-          console.log("useEventAccessControl - Inserting new access control records:", insertData);
-
-          const { error: insertError } = await supabase
-            .from('event_access_control')
-            .insert(insertData);
-            
-          if (insertError) {
-            console.error("useEventAccessControl - Error inserting new records:", insertError);
-            throw insertError;
-          }
-
-          console.log("useEventAccessControl - Successfully inserted", insertData.length, "records");
-        } else {
-          console.log("useEventAccessControl - No roles selected, event will be public");
-        }
-      } catch (error) {
-        console.error("useEventAccessControl - Error in mutation function:", error);
-        throw error;
+      // Primeiro, deletar registros existentes
+      const { error: deleteError } = await supabase
+        .from('event_access_control')
+        .delete()
+        .eq('event_id', eventId);
+      
+      if (deleteError) {
+        console.error("❌ [EVENT-ACCESS-CONTROL] Delete error:", deleteError);
+        throw deleteError;
       }
+
+      console.log("🗑️ [EVENT-ACCESS-CONTROL] Existing records deleted");
+
+      // Se houver papéis selecionados, inserir novos registros
+      if (roleIds.length > 0) {
+        const insertData = roleIds.map(roleId => ({
+          event_id: eventId,
+          role_id: roleId
+        }));
+
+        console.log("📝 [EVENT-ACCESS-CONTROL] Inserting new records:", insertData);
+
+        const { error: insertError } = await supabase
+          .from('event_access_control')
+          .insert(insertData);
+          
+        if (insertError) {
+          console.error("❌ [EVENT-ACCESS-CONTROL] Insert error:", insertError);
+          throw insertError;
+        }
+
+        console.log("✅ [EVENT-ACCESS-CONTROL] Successfully inserted records");
+      } else {
+        console.log("🌐 [EVENT-ACCESS-CONTROL] No roles selected - event will be public");
+      }
+
+      return { eventId, roleIds };
     },
-    onSuccess: () => {
-      console.log("useEventAccessControl - Access control saved successfully");
+    onSuccess: (data) => {
+      console.log("🎉 [EVENT-ACCESS-CONTROL] Save successful:", data);
       queryClient.invalidateQueries({ queryKey: ['event-access-control'] });
       queryClient.invalidateQueries({ queryKey: ['events'] });
+      toast.success("Controle de acesso salvo com sucesso!");
     },
     onError: (error) => {
-      console.error("useEventAccessControl - Error saving access control:", error);
+      console.error("💥 [EVENT-ACCESS-CONTROL] Save failed:", error);
       toast.error("Erro ao salvar controle de acesso do evento");
     }
   });
 
   const updateSelectedRoles = (roleIds: string[]) => {
-    console.log("useEventAccessControl - Updating selected roles:", roleIds);
+    console.log("🔄 [EVENT-ACCESS-CONTROL] Updating selected roles:", roleIds);
     setSelectedRoles(roleIds);
   };
 
   const saveAccessControl = async (eventId: string) => {
-    console.log("useEventAccessControl - Starting save access control for event:", eventId, "with roles:", selectedRoles);
+    console.log("💾 [EVENT-ACCESS-CONTROL] Save requested for event:", eventId, "with roles:", selectedRoles);
+    
     try {
       await saveAccessControlMutation.mutateAsync({ eventId, roleIds: selectedRoles });
-      console.log("useEventAccessControl - Access control save completed");
+      console.log("✅ [EVENT-ACCESS-CONTROL] Save completed successfully");
     } catch (error) {
-      console.error("useEventAccessControl - Error in saveAccessControl:", error);
-      throw error; // Re-throw para que o EventForm possa capturar
+      console.error("❌ [EVENT-ACCESS-CONTROL] Save failed:", error);
+      throw error;
     }
   };
 
@@ -137,7 +130,9 @@ export const useEventAccessControl = ({ eventId }: UseEventAccessControlProps) =
     selectedRoles,
     updateSelectedRoles,
     saveAccessControl,
-    isLoading: isLoading && !!eventId, // Só mostrar loading se realmente está carregando dados existentes
-    isSaving: saveAccessControlMutation.isPending
+    isLoading: isLoading && !!eventId,
+    isSaving: saveAccessControlMutation.isPending,
+    isInitialized,
+    error: error || saveAccessControlMutation.error
   };
 };

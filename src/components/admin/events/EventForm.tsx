@@ -26,7 +26,14 @@ interface EventFormProps {
 export const EventForm = ({ event, onSuccess }: EventFormProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const queryClient = useQueryClient();
-  const { selectedRoles, updateSelectedRoles, saveAccessControl } = useEventAccessControl({ 
+  const { 
+    selectedRoles, 
+    updateSelectedRoles, 
+    saveAccessControl, 
+    isLoading: accessControlLoading,
+    isSaving: accessControlSaving,
+    error: accessControlError
+  } = useEventAccessControl({ 
     eventId: event?.id 
   });
 
@@ -100,14 +107,16 @@ export const EventForm = ({ event, onSuccess }: EventFormProps) => {
       }
 
       const savedEvent = result.data;
+      console.log("✅ [EVENT-FORM] Event saved successfully:", savedEvent.id);
 
       // Salvar controle de acesso
       if (savedEvent?.id) {
         try {
+          console.log("💾 [EVENT-FORM] Saving access control for event:", savedEvent.id);
           await saveAccessControl(savedEvent.id);
+          console.log("✅ [EVENT-FORM] Access control saved successfully");
         } catch (accessError) {
-          console.error("Erro ao salvar controle de acesso:", accessError);
-          // Não falhar a criação do evento por causa do controle de acesso
+          console.error("❌ [EVENT-FORM] Access control error:", accessError);
           toast.error("Evento salvo, mas houve erro no controle de acesso. Verifique as permissões.");
         }
       }
@@ -123,7 +132,7 @@ export const EventForm = ({ event, onSuccess }: EventFormProps) => {
       }
 
     } catch (error) {
-      console.error("Erro ao salvar evento:", error);
+      console.error("❌ [EVENT-FORM] Error saving event:", error);
       toast.error("Erro ao salvar evento. Tente novamente.");
     } finally {
       setIsSubmitting(false);
@@ -141,15 +150,25 @@ export const EventForm = ({ event, onSuccess }: EventFormProps) => {
         <EventRoleAccess 
           selectedRoles={selectedRoles}
           onChange={updateSelectedRoles}
+          isLoading={accessControlLoading}
+          isSaving={accessControlSaving}
+          error={accessControlError}
         />
 
         <div className="flex justify-end gap-3 pt-6 border-t">
           <Button
             type="submit"
-            disabled={isSubmitting}
+            disabled={isSubmitting || accessControlSaving}
             className="min-w-[100px]"
           >
-            {isSubmitting ? "Salvando..." : event ? "Atualizar" : "Criar"}
+            {isSubmitting || accessControlSaving ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                {isSubmitting ? "Salvando..." : "Salvando Acesso..."}
+              </>
+            ) : (
+              event ? "Atualizar" : "Criar"
+            )}
           </Button>
         </div>
       </form>

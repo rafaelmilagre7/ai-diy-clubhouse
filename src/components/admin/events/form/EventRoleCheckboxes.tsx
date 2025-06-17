@@ -19,30 +19,40 @@ interface EventRoleCheckboxesProps {
 }
 
 export const EventRoleCheckboxes = ({ selectedRoles, onChange }: EventRoleCheckboxesProps) => {
-  const { data: roles, isLoading } = useQuery({
+  const { data: roles, isLoading, error } = useQuery({
     queryKey: ['roles'],
     queryFn: async () => {
+      console.log("🔍 [ROLE-CHECKBOXES] Fetching roles...");
       const { data, error } = await supabase
         .from('user_roles')
-        .select('id, name, description');
+        .select('id, name, description')
+        .order('name');
       
-      if (error) throw error;
+      if (error) {
+        console.error("❌ [ROLE-CHECKBOXES] Error fetching roles:", error);
+        throw error;
+      }
+      
+      console.log("✅ [ROLE-CHECKBOXES] Roles fetched:", data?.length || 0);
       return data as Role[];
-    }
+    },
+    retry: 2,
+    staleTime: 5 * 60 * 1000 // 5 minutos
   });
 
-  // Função para atualizar seleção de papéis quando um checkbox é alterado
+  // Função para atualizar seleção de papéis
   const handleCheckedChange = (checked: boolean, roleId: string) => {
+    console.log("🔄 [ROLE-CHECKBOXES] Role selection changed:", { roleId, checked });
+    
     let updatedSelection: string[];
 
     if (checked) {
-      // Adicionar à seleção
       updatedSelection = [...selectedRoles, roleId];
     } else {
-      // Remover da seleção
       updatedSelection = selectedRoles.filter(id => id !== roleId);
     }
 
+    console.log("🔄 [ROLE-CHECKBOXES] Updated selection:", updatedSelection);
     onChange(updatedSelection);
   };
 
@@ -59,8 +69,22 @@ export const EventRoleCheckboxes = ({ selectedRoles, onChange }: EventRoleCheckb
     );
   }
 
+  if (error) {
+    return (
+      <div className="p-4 border border-red-200 rounded-md bg-red-50">
+        <p className="text-sm text-red-600">
+          Erro ao carregar papéis de usuário: {error.message}
+        </p>
+      </div>
+    );
+  }
+
   if (!roles?.length) {
-    return <p className="text-sm text-muted-foreground">Nenhum papel de usuário encontrado</p>;
+    return (
+      <div className="p-4 border border-gray-200 rounded-md bg-gray-50">
+        <p className="text-sm text-muted-foreground">Nenhum papel de usuário encontrado</p>
+      </div>
+    );
   }
 
   const selectedCount = selectedRoles.length;
@@ -76,7 +100,7 @@ export const EventRoleCheckboxes = ({ selectedRoles, onChange }: EventRoleCheckb
         ) : (
           <Badge variant="outline" className="border-muted-foreground/30 text-muted-foreground">
             <Users className="w-3 h-3 mr-1" />
-            Nenhum papel selecionado
+            Nenhum papel selecionado (evento público)
           </Badge>
         )}
       </div>
