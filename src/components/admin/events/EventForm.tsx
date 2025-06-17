@@ -16,13 +16,27 @@ import { EventRecurrence } from "./form/EventRecurrence";
 import { EventRoleAccess } from "./form/EventRoleAccess";
 import { eventSchema, type EventFormData } from "./form/EventFormSchema";
 import { type Event } from "@/types/events";
-import { convertUTCToDatetimeLocal } from "@/utils/timezoneUtils";
 import { useEventAccessControl } from "@/hooks/useEventAccessControl";
 
 interface EventFormProps {
   event?: Event;
   onSuccess?: () => void;
 }
+
+// Função para converter UTC para datetime-local format (apenas para inputs)
+const formatDateTimeForInput = (utcDateString: string): string => {
+  if (!utcDateString) return "";
+  
+  try {
+    const date = new Date(utcDateString);
+    // Usar toISOString e cortar para o formato datetime-local
+    const isoString = date.toISOString();
+    return isoString.slice(0, 16); // Remove os segundos e timezone
+  } catch (error) {
+    console.error('Erro ao formatar datetime para input:', error);
+    return "";
+  }
+};
 
 export const EventForm = ({ event, onSuccess }: EventFormProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -43,9 +57,9 @@ export const EventForm = ({ event, onSuccess }: EventFormProps) => {
     defaultValues: {
       title: event?.title || "",
       description: event?.description || "",
-      // Usar conversão correta apenas para exibição em inputs
-      start_time: event?.start_time ? convertUTCToDatetimeLocal(event.start_time) : "",
-      end_time: event?.end_time ? convertUTCToDatetimeLocal(event.end_time) : "",
+      // Usar formatação correta apenas para inputs datetime-local
+      start_time: event?.start_time ? formatDateTimeForInput(event.start_time) : "",
+      end_time: event?.end_time ? formatDateTimeForInput(event.end_time) : "",
       location_link: event?.location_link || "",
       physical_location: event?.physical_location || "",
       cover_image_url: event?.cover_image_url || "",
@@ -67,7 +81,7 @@ export const EventForm = ({ event, onSuccess }: EventFormProps) => {
       const eventData = {
         title: data.title,
         description: data.description || null,
-        // Usar os valores diretos - o PostgreSQL entende datetime-local como local time
+        // Usar os valores diretos - o PostgreSQL entende datetime-local corretamente
         start_time: data.start_time,
         end_time: data.end_time,
         location_link: data.location_link || null,

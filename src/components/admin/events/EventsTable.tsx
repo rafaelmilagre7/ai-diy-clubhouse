@@ -38,12 +38,15 @@ export const EventsTable = () => {
     }
   };
 
-  // Função para formatar data considerando timezone de Brasília
+  // Função para formatar data/hora corretamente (sem conversão adicional)
   const formatEventDate = (dateString: string) => {
-    const utcDate = new Date(dateString);
-    // Subtrair 3 horas para mostrar no horário de Brasília
-    const brasiliaDate = new Date(utcDate.getTime() - (3 * 60 * 60 * 1000));
-    return format(brasiliaDate, "dd/MM/yyyy 'às' HH:mm", { locale: ptBR });
+    try {
+      const date = new Date(dateString);
+      return format(date, "dd/MM/yyyy 'às' HH:mm", { locale: ptBR });
+    } catch (error) {
+      console.error("Erro ao formatar data:", error);
+      return dateString;
+    }
   };
 
   if (isLoading) {
