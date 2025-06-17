@@ -1,4 +1,5 @@
 
+import React from "react";
 import { BrowserRouter } from "react-router-dom";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
