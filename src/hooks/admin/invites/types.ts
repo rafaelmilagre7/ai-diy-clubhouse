@@ -24,13 +24,11 @@ export interface Invite {
 export interface SendInviteResponse {
   success: boolean;
   message: string;
-  error?: string;
   emailId?: string;
-  whatsappId?: string;
-  strategy?: string;
+  strategy?: 'resend_primary' | 'supabase_recovery' | 'supabase_auth';
   method?: string;
+  error?: string;
   suggestion?: string;
-  channel?: 'email' | 'whatsapp' | 'both';
 }
 
 export interface CreateInviteResponse {

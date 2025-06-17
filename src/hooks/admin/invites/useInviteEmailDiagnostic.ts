@@ -26,6 +26,7 @@ export interface DiagnosticData {
     fallbackTest: DiagnosticResult;
   };
   recommendations: string[];
+  checkedAt: Date;
 }
 
 export function useInviteEmailDiagnostic() {
@@ -36,28 +37,83 @@ export function useInviteEmailDiagnostic() {
     setIsRunning(true);
     
     try {
-      console.log("🔍 Iniciando diagnóstico do sistema de convites...");
+      console.log("🔍 [DIAGNOSTIC] Iniciando diagnóstico completo do sistema...");
 
-      // Verificar saúde do sistema básico
-      const systemHealth = {
-        email: true,
-        database: true,
-        auth: true,
-        status: 'healthy' as const
+      let systemHealth = {
+        email: false,
+        database: false,
+        auth: false,
+        status: 'critical' as const
       };
 
-      // Verificar se a edge function existe
-      const edgeFunctionExists = true;
-      const edgeFunctionResponding = true;
+      let edgeFunctionExists = false;
+      let edgeFunctionResponding = false;
 
-      // Buscar convites recentes
+      // Test 1: Database connectivity
+      console.log("🔍 [DIAGNOSTIC] Testando conectividade do banco...");
+      try {
+        const { data: dbTest, error: dbError } = await supabase
+          .from('invites')
+          .select('count')
+          .limit(1);
+        
+        systemHealth.database = !dbError;
+        console.log(`${systemHealth.database ? '✅' : '❌'} [DIAGNOSTIC] Banco de dados:`, systemHealth.database ? 'Conectado' : dbError?.message);
+      } catch (error) {
+        console.error("❌ [DIAGNOSTIC] Erro no teste do banco:", error);
+      }
+
+      // Test 2: Auth system
+      console.log("🔍 [DIAGNOSTIC] Testando sistema de autenticação...");
+      try {
+        const { data: { user }, error: authError } = await supabase.auth.getUser();
+        systemHealth.auth = !authError;
+        console.log(`${systemHealth.auth ? '✅' : '❌'} [DIAGNOSTIC] Sistema Auth:`, systemHealth.auth ? 'Funcionando' : authError?.message);
+      } catch (error) {
+        console.error("❌ [DIAGNOSTIC] Erro no teste de auth:", error);
+      }
+
+      // Test 3: Edge Function availability
+      console.log("🔍 [DIAGNOSTIC] Testando Edge Function...");
+      try {
+        const testStartTime = Date.now();
+        const { data, error } = await supabase.functions.invoke('send-invite-email', {
+          body: {
+            email: 'test@example.com',
+            inviteUrl: 'https://test.com',
+            roleName: 'test',
+            expiresAt: new Date().toISOString(),
+            test: true // Add test flag to prevent actual email sending
+          }
+        });
+
+        const testDuration = Date.now() - testStartTime;
+        
+        // Even if the function returns an error for test data, it means it's responding
+        edgeFunctionExists = true;
+        edgeFunctionResponding = testDuration < 10000; // Less than 10 seconds
+        
+        console.log(`✅ [DIAGNOSTIC] Edge Function: Existe=${edgeFunctionExists}, Responde=${edgeFunctionResponding} (${testDuration}ms)`);
+      } catch (error) {
+        console.error("❌ [DIAGNOSTIC] Edge Function indisponível:", error);
+      }
+
+      // Test 4: Email system (inferred from Edge Function test)
+      systemHealth.email = edgeFunctionResponding;
+
+      // Fetch recent invites
+      console.log("🔍 [DIAGNOSTIC] Buscando convites recentes...");
       const { data: recentInvites } = await supabase
         .from('invites')
-        .select('*')
+        .select(`
+          *,
+          role:role_id(name)
+        `)
         .order('created_at', { ascending: false })
         .limit(10);
 
-      // Buscar convites falhados
+      // Fetch failed invites (no send attempts)
+      console.log("🔍 [DIAGNOSTIC] Buscando convites falhados...");
       const { data: failedInvites } = await supabase
         .from('invites')
         .select('*')
@@ -65,33 +121,73 @@ export function useInviteEmailDiagnostic() {
         .order('created_at', { ascending: false })
         .limit(5);
 
-      // Executar testes
+      // Generate test results
       const testResults = {
         edgeFunctionTest: {
-          success: true,
-          message: "Edge function respondendo corretamente",
-          status: 'success' as const,
-          test: 'edge-function'
+          success: edgeFunctionResponding,
+          message: edgeFunctionResponding 
+            ? "Edge Function está respondendo normalmente" 
+            : "Edge Function não está respondendo ou está lenta",
+          status: edgeFunctionResponding ? 'success' as const : 'error' as const,
+          test: 'send-invite-email'
         },
         resendTest: {
-          success: true,
-          message: "Configuração do Resend está funcionando",
-          status: 'success' as const,
-          test: 'resend'
+          success: systemHealth.email,
+          message: systemHealth.email 
+            ? "Sistema de email está operacional" 
+            : "Sistema de email com problemas",
+          status: systemHealth.email ? 'success' as const : 'warning' as const,
+          test: 'email-connectivity'
         },
         fallbackTest: {
-          success: true,
-          message: "Sistema de fallback operacional",
-          status: 'success' as const,
-          test: 'fallback'
+          success: systemHealth.database && systemHealth.auth,
+          message: (systemHealth.database && systemHealth.auth) 
+            ? "Sistemas de fallback operacionais" 
+            : "Alguns sistemas de fallback indisponíveis",
+          status: (systemHealth.database && systemHealth.auth) ? 'success' as const : 'warning' as const,
+          test: 'fallback-systems'
         }
       };
 
-      // Gerar recomendações
-      const recommendations = [
-        "Sistema funcionando normalmente",
-        "Nenhuma ação necessária no momento"
-      ];
+      // Determine overall system health
+      const healthyComponents = [
+        systemHealth.database,
+        systemHealth.auth,
+        systemHealth.email
+      ].filter(Boolean).length;
+
+      if (healthyComponents === 3) {
+        systemHealth.status = 'healthy';
+      } else if (healthyComponents >= 2) {
+        systemHealth.status = 'warning';
+      } else {
+        systemHealth.status = 'critical';
+      }
+
+      // Generate recommendations
+      const recommendations: string[] = [];
+      
+      if (systemHealth.status === 'healthy') {
+        recommendations.push("✅ Sistema funcionando perfeitamente!");
+        recommendations.push("📊 Continue monitorando regularmente");
+      } else {
+        if (!systemHealth.database) {
+          recommendations.push("🔧 Verificar conexão com banco de dados");
+        }
+        if (!systemHealth.auth) {
+          recommendations.push("🔐 Verificar configurações de autenticação");
+        }
+        if (!systemHealth.email) {
+          recommendations.push("📧 Verificar configuração RESEND_API_KEY e domínio validado");
+        }
+        if (!edgeFunctionResponding) {
+          recommendations.push("⚡ Reimplantar Edge Function send-invite-email");
+        }
+      }
+
+      if (failedInvites && failedInvites.length > 0) {
+        recommendations.push(`🔄 ${failedInvites.length} convite(s) precisam ser reenviados`);
+      }
 
       const diagnostic: DiagnosticData = {
         systemHealth,
@@ -100,15 +196,22 @@ export function useInviteEmailDiagnostic() {
         recentInvites: recentInvites || [],
         failedInvites: failedInvites || [],
         testResults,
-        recommendations
+        recommendations,
+        checkedAt: new Date()
       };
 
       setLastDiagnostic(diagnostic);
-      console.log("✅ Diagnóstico concluído:", diagnostic);
+      console.log("✅ [DIAGNOSTIC] Diagnóstico concluído:", {
+        status: systemHealth.status,
+        healthyComponents: healthyComponents,
+        edgeFunction: edgeFunctionResponding,
+        recentInvites: recentInvites?.length || 0,
+        failedInvites: failedInvites?.length || 0
+      });
       
       return diagnostic;
     } catch (error) {
-      console.error("❌ Erro no diagnóstico:", error);
+      console.error("❌ [DIAGNOSTIC] Erro crítico no diagnóstico:", error);
       
       const errorDiagnostic: DiagnosticData = {
         systemHealth: {
@@ -124,27 +227,31 @@ export function useInviteEmailDiagnostic() {
         testResults: {
           edgeFunctionTest: {
             success: false,
-            message: "Falha na comunicação",
+            message: "Falha na comunicação com Edge Function",
             status: 'error',
-            test: 'edge-function'
+            test: 'send-invite-email'
           },
           resendTest: {
             success: false,
-            message: "Erro na configuração",
+            message: "Não foi possível testar sistema de email",
             status: 'error',
-            test: 'resend'
+            test: 'email-connectivity'
           },
           fallbackTest: {
             success: false,
-            message: "Sistema indisponível",
+            message: "Sistemas de fallback indisponíveis",
             status: 'error',
-            test: 'fallback'
+            test: 'fallback-systems'
           }
         },
         recommendations: [
-          "Verificar configurações do sistema",
-          "Contactar suporte técnico"
-        ]
+          "🚨 Sistema crítico - requer atenção imediata",
+          "🔧 Verificar configurações do Supabase",
+          "📧 Configurar chave RESEND_API_KEY",
+          "⚡ Reimplantar Edge Functions",
+          "💬 Contactar suporte técnico se problemas persistirem"
+        ],
+        checkedAt: new Date()
       };
       
       setLastDiagnostic(errorDiagnostic);
