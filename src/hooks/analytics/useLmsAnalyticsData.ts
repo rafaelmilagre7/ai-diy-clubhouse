@@ -12,6 +12,36 @@ interface LmsAnalyticsData {
   npsScores: Array<{ lesson: string; score: number; responses: number }>;
 }
 
+// Definir tipos mais específicos para os dados do Supabase
+interface ProgressDataItem {
+  id: string;
+  user_id: string;
+  lesson_id: string;
+  progress_percentage: number;
+  completed_at: string | null;
+  started_at: string | null;
+  learning_lessons: {
+    id: string;
+    title: string;
+    learning_modules: {
+      id: string;
+      course_id: string;
+      learning_courses: {
+        id: string;
+        title: string;
+      };
+    };
+  } | null;
+}
+
+interface NpsDataItem {
+  score: number;
+  lesson_id: string;
+  learning_lessons: {
+    title: string;
+  } | null;
+}
+
 export const useLmsAnalyticsData = (timeRange: string) => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
@@ -61,7 +91,7 @@ export const useLmsAnalyticsData = (timeRange: string) => {
                 )
               )
             )
-          `);
+          `) as { data: ProgressDataItem[] | null; error: any };
 
         if (progressError) throw progressError;
 
@@ -74,7 +104,7 @@ export const useLmsAnalyticsData = (timeRange: string) => {
             learning_lessons(
               title
             )
-          `);
+          `) as { data: NpsDataItem[] | null; error: any };
 
         if (npsError) throw npsError;
 
@@ -86,7 +116,7 @@ export const useLmsAnalyticsData = (timeRange: string) => {
         const completedProgress = progressData?.filter(p => p.completed_at && p.started_at) || [];
         const averageCompletionTime = completedProgress.length > 0 
           ? completedProgress.reduce((acc, p) => {
-              const startTime = new Date(p.started_at).getTime();
+              const startTime = new Date(p.started_at!).getTime();
               const endTime = new Date(p.completed_at!).getTime();
               return acc + (endTime - startTime) / (1000 * 60); // em minutos
             }, 0) / completedProgress.length
@@ -102,10 +132,10 @@ export const useLmsAnalyticsData = (timeRange: string) => {
           const courseProgressData = progressData?.filter(p => {
             // Corrigir o acesso às propriedades aninhadas
             const lessonData = p.learning_lessons;
-            if (!lessonData || !lessonData.learning_modules) return false;
+            if (!lessonData?.learning_modules) return false;
             
             const moduleData = lessonData.learning_modules;
-            if (!moduleData || !moduleData.learning_courses) return false;
+            if (!moduleData?.learning_courses) return false;
             
             const courseData = moduleData.learning_courses;
             return courseData && courseData.id === course.id;
