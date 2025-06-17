@@ -1,3 +1,4 @@
+
 export interface Certificate {
   id: string;
   user_id: string;
@@ -28,7 +29,7 @@ export interface SolutionCertificate {
     email: string;
     avatar_url: string;
   };
-  solutions?: {
+  solutions: {
     id: string;
     title: string;
     category: string;
