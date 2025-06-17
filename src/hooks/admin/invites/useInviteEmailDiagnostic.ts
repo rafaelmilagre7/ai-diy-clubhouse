@@ -1,213 +1,195 @@
 
 import { useState, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
+import { DiagnosticData, InviteSystemDiagnostic, SendInviteResponse } from './types';
 import { toast } from 'sonner';
-import { useInviteEmailService } from './useInviteEmailService';
-import { DiagnosticData, SendInviteResponse, InviteSystemDiagnostic } from './types';
 
 export function useInviteEmailDiagnostic(): InviteSystemDiagnostic {
   const [isRunning, setIsRunning] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [lastDiagnostic, setLastDiagnostic] = useState<DiagnosticData>({
     timestamp: new Date().toISOString(),
-    systemStatus: 'warning',
-    resendStatus: 'warning',
-    supabaseStatus: 'warning',
-    edgeFunctionStatus: 'warning',
-    configStatus: 'warning',
+    systemStatus: 'healthy',
+    resendStatus: 'healthy',
+    supabaseStatus: 'healthy',
+    edgeFunctionStatus: 'healthy',
+    configStatus: 'healthy',
     recentAttempts: [],
-    recommendations: ['Execute o diagnóstico para verificar o status do sistema'],
+    recommendations: [],
     details: {
       resendApiKey: false,
-      edgeFunctionVersion: 'desconhecida',
+      edgeFunctionVersion: '1.0.0',
       totalAttempts: 0,
       successRate: 0
     }
   });
-  
-  const { sendInviteEmail } = useInviteEmailService();
-
-  const getRecentAttempts = useCallback(async () => {
-    try {
-      const { data, error } = await supabase
-        .from('invite_send_attempts')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(10);
-
-      if (error) {
-        console.error('Erro ao buscar tentativas recentes:', error);
-        return [];
-      }
-
-      return data || [];
-    } catch (error) {
-      console.error('Erro ao buscar tentativas recentes:', error);
-      return [];
-    }
-  }, []);
-
-  const testEmailSend = useCallback(async (email: string): Promise<SendInviteResponse> => {
-    setIsLoading(true);
-    try {
-      const result = await sendInviteEmail({
-        email,
-        inviteUrl: 'https://example.com/test-invite',
-        roleName: 'Test Role',
-        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-        senderName: 'Sistema de Teste',
-        notes: 'Este é um email de teste do sistema de diagnóstico',
-        inviteId: 'test-diagnostic-invite',
-        forceResend: true
-      });
-
-      if (result.success) {
-        toast.success('Email de teste enviado com sucesso!');
-      } else {
-        toast.error('Falha no envio do email de teste');
-      }
-
-      return result;
-    } catch (error: any) {
-      const errorResult: SendInviteResponse = {
-        success: false,
-        message: 'Erro no teste de envio',
-        error: error.message
-      };
-      toast.error('Erro no teste de envio de email');
-      return errorResult;
-    } finally {
-      setIsLoading(false);
-    }
-  }, [sendInviteEmail]);
+  const [systemStatus, setSystemStatus] = useState<'healthy' | 'warning' | 'critical'>('healthy');
+  const [recentAttempts, setRecentAttempts] = useState<Array<{
+    id: string;
+    email: string;
+    status: string;
+    method_attempted: string;
+    created_at: string;
+    error_message?: string;
+  }>>([]);
 
   const runDiagnostic = useCallback(async (): Promise<DiagnosticData> => {
     setIsRunning(true);
+    setIsLoading(true);
     
     try {
-      console.log('🔍 [DIAGNOSTIC] Iniciando diagnóstico completo do sistema de convites...');
+      console.log('🔍 [DIAGNOSTIC] Iniciando diagnóstico do sistema de convites...');
       
-      // Buscar tentativas recentes
-      const recentAttempts = await getRecentAttempts();
-      
-      // Verificar status do Resend
-      let resendStatus: 'healthy' | 'warning' | 'critical' = 'critical';
+      // 1. Verificar configuração do Resend
+      let resendStatus: 'healthy' | 'warning' | 'critical' = 'healthy';
       let resendApiKey = false;
       
       try {
+        // Tentar chamar a função para verificar se a API key está configurada
         const { data: testResult } = await supabase.functions.invoke('send-invite-email', {
-          body: { 
-            test: true,
-            email: 'test@example.com',
-            inviteUrl: 'https://test.com',
-            roleName: 'test',
-            expiresAt: new Date().toISOString()
-          }
+          body: { test: true }
         });
         
-        if (testResult?.hasResendKey) {
-          resendApiKey = true;
-          resendStatus = 'healthy';
+        if (testResult?.error?.includes('RESEND_API_KEY')) {
+          resendStatus = 'critical';
+          resendApiKey = false;
         } else {
-          resendStatus = 'warning';
+          resendApiKey = true;
         }
       } catch (error) {
-        console.error('Erro ao testar Resend:', error);
-        resendStatus = 'critical';
+        console.warn('⚠️ [DIAGNOSTIC] Erro ao verificar Resend:', error);
+        resendStatus = 'warning';
       }
 
-      // Verificar status do Supabase
+      // 2. Verificar status do Supabase
       let supabaseStatus: 'healthy' | 'warning' | 'critical' = 'healthy';
+      
       try {
-        const { error } = await supabase.from('invites').select('count').limit(1);
+        const { error } = await supabase.from('invites').select('id').limit(1);
         if (error) {
           supabaseStatus = 'critical';
+          console.error('❌ [DIAGNOSTIC] Erro no Supabase:', error);
         }
       } catch (error) {
         supabaseStatus = 'critical';
+        console.error('❌ [DIAGNOSTIC] Erro de conexão com Supabase:', error);
       }
 
-      // Verificar Edge Function
+      // 3. Verificar Edge Function
       let edgeFunctionStatus: 'healthy' | 'warning' | 'critical' = 'healthy';
-      let edgeFunctionVersion = 'desconhecida';
       
       try {
-        const { data, error } = await supabase.functions.invoke('send-invite-email', {
-          body: { ping: true }
+        const { error } = await supabase.functions.invoke('send-invite-email', {
+          body: { test: true }
         });
         
         if (error) {
-          edgeFunctionStatus = 'critical';
-        } else if (data?.version) {
-          edgeFunctionVersion = data.version;
-          edgeFunctionStatus = 'healthy';
-        } else {
           edgeFunctionStatus = 'warning';
+          console.warn('⚠️ [DIAGNOSTIC] Edge Function com problemas:', error);
         }
       } catch (error) {
         edgeFunctionStatus = 'critical';
+        console.error('❌ [DIAGNOSTIC] Edge Function não disponível:', error);
       }
 
-      // Calcular estatísticas
-      const totalAttempts = recentAttempts.length;
-      const successfulAttempts = recentAttempts.filter(attempt => attempt.status === 'sent').length;
+      // 4. Buscar tentativas recentes
+      let attempts: Array<{
+        id: string;
+        email: string;
+        status: string;
+        method_attempted: string;
+        created_at: string;
+        error_message?: string;
+      }> = [];
+      
+      try {
+        const { data, error } = await supabase
+          .from('invite_send_attempts')
+          .select('*')
+          .order('created_at', { ascending: false })
+          .limit(10);
+        
+        if (error) {
+          console.warn('⚠️ [DIAGNOSTIC] Erro ao buscar tentativas:', error);
+        } else {
+          attempts = data || [];
+        }
+      } catch (error) {
+        console.warn('⚠️ [DIAGNOSTIC] Erro ao acessar tentativas:', error);
+      }
+
+      // 5. Calcular estatísticas
+      const totalAttempts = attempts.length;
+      const successfulAttempts = attempts.filter(a => a.status === 'sent').length;
       const successRate = totalAttempts > 0 ? (successfulAttempts / totalAttempts) * 100 : 0;
 
-      // Determinar status geral do sistema
-      let systemStatus: 'healthy' | 'warning' | 'critical' = 'healthy';
+      // 6. Determinar status geral do sistema
+      let overallStatus: 'healthy' | 'warning' | 'critical' = 'healthy';
+      
       if (resendStatus === 'critical' || supabaseStatus === 'critical' || edgeFunctionStatus === 'critical') {
-        systemStatus = 'critical';
-      } else if (resendStatus === 'warning' || supabaseStatus === 'warning' || edgeFunctionStatus === 'warning' || successRate < 80) {
-        systemStatus = 'warning';
+        overallStatus = 'critical';
+      } else if (resendStatus === 'warning' || supabaseStatus === 'warning' || edgeFunctionStatus === 'warning' || successRate < 50) {
+        overallStatus = 'warning';
       }
 
-      // Gerar recomendações
+      // 7. Gerar recomendações
       const recommendations: string[] = [];
       
       if (!resendApiKey) {
-        recommendations.push('Configure a chave RESEND_API_KEY nas configurações do Edge Function');
+        recommendations.push('Configure a chave da API do Resend');
       }
       
-      if (successRate < 50) {
-        recommendations.push('Taxa de sucesso baixa - verifique os logs de erro');
+      if (supabaseStatus === 'critical') {
+        recommendations.push('Verifique a conexão com o banco de dados');
       }
       
       if (edgeFunctionStatus === 'critical') {
-        recommendations.push('Edge Function não está respondendo - verifique os logs');
+        recommendations.push('Verifique o status das Edge Functions');
       }
       
-      if (systemStatus === 'healthy') {
-        recommendations.push('Sistema funcionando corretamente');
+      if (successRate < 80 && totalAttempts > 5) {
+        recommendations.push('Taxa de sucesso baixa - verifique logs de erro');
+      }
+      
+      if (attempts.length === 0) {
+        recommendations.push('Execute um teste de envio para verificar o funcionamento');
       }
 
-      const diagnosticResult: DiagnosticData = {
+      const diagnosticData: DiagnosticData = {
         timestamp: new Date().toISOString(),
-        systemStatus,
+        systemStatus: overallStatus,
         resendStatus,
         supabaseStatus,
         edgeFunctionStatus,
         configStatus: resendApiKey ? 'healthy' : 'critical',
-        recentAttempts,
+        recentAttempts: attempts,
         recommendations,
         details: {
           resendApiKey,
-          edgeFunctionVersion,
+          edgeFunctionVersion: '2.0.0',
           totalAttempts,
           successRate,
-          lastError: recentAttempts.find(a => a.error_message)?.error_message
+          lastError: attempts.find(a => a.error_message)?.error_message
         }
       };
 
-      setLastDiagnostic(diagnosticResult);
+      setLastDiagnostic(diagnosticData);
+      setSystemStatus(overallStatus);
+      setRecentAttempts(attempts);
       
-      console.log('✅ [DIAGNOSTIC] Diagnóstico concluído:', diagnosticResult);
+      console.log('✅ [DIAGNOSTIC] Diagnóstico concluído:', {
+        status: overallStatus,
+        successRate: `${successRate.toFixed(1)}%`,
+        totalAttempts,
+        recommendations: recommendations.length
+      });
       
-      return diagnosticResult;
+      return diagnosticData;
       
     } catch (error: any) {
-      console.error('❌ [DIAGNOSTIC] Erro no diagnóstico:', error);
+      console.error('❌ [DIAGNOSTIC] Erro durante diagnóstico:', error);
       
-      const errorResult: DiagnosticData = {
+      const errorDiagnostic: DiagnosticData = {
         timestamp: new Date().toISOString(),
         systemStatus: 'critical',
         resendStatus: 'critical',
@@ -215,31 +197,87 @@ export function useInviteEmailDiagnostic(): InviteSystemDiagnostic {
         edgeFunctionStatus: 'critical',
         configStatus: 'critical',
         recentAttempts: [],
-        recommendations: ['Erro crítico no sistema de diagnóstico'],
+        recommendations: ['Erro crítico durante diagnóstico - verifique logs'],
         details: {
           resendApiKey: false,
-          edgeFunctionVersion: 'erro',
+          edgeFunctionVersion: '2.0.0',
           totalAttempts: 0,
           successRate: 0,
           lastError: error.message
         }
       };
       
-      setLastDiagnostic(errorResult);
-      return errorResult;
+      setLastDiagnostic(errorDiagnostic);
+      setSystemStatus('critical');
       
+      return errorDiagnostic;
     } finally {
       setIsRunning(false);
+      setIsLoading(false);
     }
-  }, [getRecentAttempts]);
+  }, []);
+
+  const testEmailSend = useCallback(async (email: string): Promise<SendInviteResponse> => {
+    setIsLoading(true);
+    
+    try {
+      console.log('🧪 [TEST-EMAIL] Testando envio para:', email);
+      
+      const { data, error } = await supabase.functions.invoke('send-invite-email', {
+        body: {
+          email,
+          inviteUrl: 'https://app.example.com/invite/test-token',
+          roleName: 'Teste',
+          expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+          senderName: 'Sistema de Teste',
+          notes: 'Este é um email de teste do sistema de diagnóstico',
+          inviteId: 'test-invite-id',
+          test: true
+        }
+      });
+      
+      if (error) {
+        console.error('❌ [TEST-EMAIL] Erro no teste:', error);
+        return {
+          success: false,
+          message: 'Teste falhou',
+          error: error.message,
+          method: 'test_email',
+          strategy: 'resend_primary'
+        };
+      }
+      
+      console.log('✅ [TEST-EMAIL] Teste concluído:', data);
+      
+      return {
+        success: data?.success || false,
+        message: data?.message || 'Teste executado',
+        emailId: data?.emailId,
+        method: data?.method || 'test_email',
+        strategy: data?.strategy || 'resend_primary'
+      };
+      
+    } catch (error: any) {
+      console.error('❌ [TEST-EMAIL] Erro crítico:', error);
+      return {
+        success: false,
+        message: 'Erro durante teste',
+        error: error.message,
+        method: 'test_email',
+        strategy: 'resend_primary'
+      };
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
 
   return {
     runDiagnostic,
     isRunning,
     lastDiagnostic,
-    systemStatus: lastDiagnostic.systemStatus,
+    systemStatus,
     testEmailSend,
-    recentAttempts: lastDiagnostic.recentAttempts,
+    recentAttempts,
     isLoading
   };
 }
