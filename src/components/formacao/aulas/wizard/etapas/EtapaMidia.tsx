@@ -1,12 +1,18 @@
 
 import React from "react";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+  FormDescription
+} from "@/components/ui/form";
 import { UseFormReturn } from "react-hook-form";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import { SimpleFileUpload } from "@/components/ui/file/SimpleFileUpload";
 import { AulaFormValues } from "../schemas/aulaFormSchema";
+import { Button } from "@/components/ui/button";
+import { ImageUpload } from "@/components/common/ImageUpload";
 
 interface EtapaMidiaProps {
   form: UseFormReturn<AulaFormValues>;
@@ -21,80 +27,73 @@ const EtapaMidia: React.FC<EtapaMidiaProps> = ({
   onPrevious,
   isSaving
 }) => {
-  const { watch, setValue } = form;
-  const imagemCapa = watch("imagemCapa");
-
-  const handleImageUpload = (url: string, fileName: string, fileSize: number) => {
-    console.log('Imagem de capa carregada:', { url, fileName, fileSize });
-    setValue("imagemCapa", url);
-  };
-
-  const handleRemoveImage = () => {
-    setValue("imagemCapa", "");
+  const handleContinue = async () => {
+    // Validar apenas os campos desta etapa
+    const result = await form.trigger(['coverImageUrl']);
+    if (result) {
+      onNext();
+    }
   };
 
   return (
-    <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>Mídia e Aparência</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <div>
-            <Label htmlFor="imagemCapa">Imagem de Capa</Label>
-            <p className="text-sm text-muted-foreground mb-4">
-              Adicione uma imagem que represente visualmente o conteúdo da aula.
-            </p>
-            
-            <SimpleFileUpload
-              bucketName="learning_materials"
-              folderPath="lesson-covers"
-              onUploadComplete={handleImageUpload}
-              acceptedTypes="image/*"
-              maxSizeMB={10}
-              value={imagemCapa}
-              onRemove={handleRemoveImage}
-            />
+    <Form {...form}>
+      <div className="space-y-6 py-4">
+        <div className="space-y-4">
+          <FormField
+            control={form.control}
+            name="coverImageUrl"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Imagem de Capa</FormLabel>
+                <FormDescription className="mb-2">
+                  Escolha uma imagem atrativa que represente o conteúdo da aula
+                </FormDescription>
+                <FormControl>
+                  <ImageUpload
+                    value={field.value || ""}
+                    onChange={field.onChange}
+                    bucketName="lesson_images"
+                    folderPath="covers"
+                    maxSizeMB={5}
+                    enableOptimization={false}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          
+          <div className="mt-6 text-sm text-muted-foreground">
+            <h4 className="font-medium mb-1">Dicas para uma boa imagem de capa:</h4>
+            <ul className="list-disc pl-5 space-y-1">
+              <li>Use imagens de alta qualidade e boa resolução</li>
+              <li>Escolha imagens relacionadas ao tema da aula</li>
+              <li>Evite imagens com muito texto</li>
+              <li>Dimensões recomendadas: 1280x720 pixels (16:9)</li>
+              <li>Tamanho máximo: 5MB</li>
+            </ul>
           </div>
-
-          {imagemCapa && (
-            <div className="mt-4">
-              <Label>Preview da Imagem</Label>
-              <div className="mt-2 border rounded-lg overflow-hidden">
-                <img
-                  src={imagemCapa}
-                  alt="Preview da capa"
-                  className="w-full h-48 object-cover"
-                  onError={(e) => {
-                    console.error('Erro ao carregar preview da imagem:', imagemCapa);
-                    const target = e.target as HTMLImageElement;
-                    target.style.display = 'none';
-                  }}
-                />
-              </div>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      <div className="flex justify-between pt-4 border-t">
-        <Button
-          type="button"
-          variant="outline"
-          onClick={onPrevious}
-          disabled={isSaving}
-        >
-          Voltar
-        </Button>
-        <Button
-          type="button"
-          onClick={onNext}
-          disabled={isSaving}
-        >
-          Avançar
-        </Button>
+        </div>
+        
+        <div className="flex justify-between pt-4">
+          <Button 
+            type="button" 
+            variant="outline" 
+            onClick={onPrevious}
+            disabled={isSaving}
+          >
+            Voltar
+          </Button>
+          <Button 
+            type="button" 
+            onClick={handleContinue}
+            disabled={isSaving}
+          >
+            Continuar
+          </Button>
+        </div>
       </div>
-    </div>
+    </Form>
   );
 };
 
