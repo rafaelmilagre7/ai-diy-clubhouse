@@ -9,7 +9,7 @@ import { toast } from 'sonner';
  * Removido em produção para segurança
  */
 export const TestLoginButtons = () => {
-  const { signInWithEmail } = useAuth();
+  const { signIn } = useAuth();
 
   // Não renderizar em produção
   if (process.env.NODE_ENV === 'production') {
@@ -18,7 +18,7 @@ export const TestLoginButtons = () => {
 
   const handleTestLogin = async (email: string, password: string) => {
     try {
-      await signInWithEmail(email, password);
+      await signIn(email, password);
       toast.success(`Login realizado como ${email}`);
     } catch (error) {
       console.error('Erro no login de teste:', error);

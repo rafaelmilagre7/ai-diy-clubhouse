@@ -1,8 +1,10 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { uploadFileToStorage } from "@/components/ui/file/uploadUtils";
+import { uploadFileWithFallback } from "@/lib/supabase/storage";
 import { ImagePlus, Trash2, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { v4 as uuidv4 } from 'uuid';
 
 interface ImageUploadProps {
   value: string | undefined;
@@ -26,17 +28,33 @@ export const ImageUpload = ({ value, onChange, bucketName, folderPath }: ImageUp
     try {
       console.log(`Iniciando upload para bucket: ${bucketName}, pasta: ${folderPath}`);
       
-      const result = await uploadFileToStorage(
+      // Gerar nome único para o arquivo
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${uuidv4()}.${fileExt}`;
+      const filePath = folderPath ? `${folderPath}/${fileName}` : fileName;
+      
+      setProgress(25);
+      
+      // Upload usando a função corrigida com 3 argumentos
+      const { data, error: uploadError } = await uploadFileWithFallback(
         file,
         bucketName,
-        folderPath,
-        (progress) => {
-          setProgress(Math.round(progress));
-        }
+        filePath
       );
 
-      console.log("Upload bem-sucedido:", result);
-      onChange(result.publicUrl);
+      if (uploadError) {
+        throw uploadError;
+      }
+
+      setProgress(75);
+      
+      // Construir URL pública
+      const publicUrl = `${process.env.VITE_SUPABASE_URL}/storage/v1/object/public/${bucketName}/${filePath}`;
+
+      setProgress(100);
+      
+      console.log("Upload bem-sucedido:", publicUrl);
+      onChange(publicUrl);
       
       toast({
         title: "Upload concluído",

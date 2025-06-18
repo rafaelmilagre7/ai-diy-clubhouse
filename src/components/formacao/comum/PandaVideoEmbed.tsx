@@ -27,17 +27,20 @@ export const PandaVideoEmbed: React.FC<PandaVideoEmbedProps> = ({
     
     const videoInfo = extractPandaVideoInfo(embedCode);
     
-    if (!videoInfo.videoId || !videoInfo.url) {
+    if (!videoInfo || !videoInfo.videoId || !videoInfo.embedUrl) {
       setError('O código de incorporação parece ser inválido. Certifique-se de que é um iframe do Panda Video.');
       return;
     }
     
     setError(null);
+    // Usar embedUrl como URL principal e gerar thumbnail padrão
+    const thumbnailUrl = `https://player.pandavideo.com.br/thumbnail/${videoInfo.videoId}.jpg`;
+    
     onChange(
       embedCode,
       videoInfo.videoId,
-      videoInfo.url,
-      videoInfo.thumbnailUrl || ''
+      videoInfo.embedUrl,
+      thumbnailUrl
     );
   };
   

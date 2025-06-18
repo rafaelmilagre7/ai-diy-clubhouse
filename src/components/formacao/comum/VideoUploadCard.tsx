@@ -36,8 +36,8 @@ export const VideoUploadCard = ({ value, onChange, videoType = 'youtube' }: Vide
         const result = await setupLearningStorageBuckets();
         
         if (!result.success) {
-          console.warn('Buckets de armazenamento não configurados:', result.error);
-          setError(`Os buckets de armazenamento não estão configurados corretamente: ${result.error}`);
+          console.warn('Buckets de armazenamento não configurados:', result.message);
+          setError(`Os buckets de armazenamento não estão configurados corretamente: ${result.message}`);
           setStorageReady(false);
         } else {
           setStorageReady(true);

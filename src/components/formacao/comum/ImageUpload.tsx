@@ -4,15 +4,15 @@ import { Button } from "@/components/ui/button";
 import { uploadFileWithFallback } from "@/lib/supabase/storage";
 import { ImagePlus, Trash2, Loader2, AlertCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { STORAGE_BUCKETS, MAX_UPLOAD_SIZES } from "@/lib/supabase/config";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { v4 as uuidv4 } from 'uuid';
 
 interface ImageUploadProps {
   value: string | undefined;
   onChange: (url: string) => void;
   bucketName: string;
   folderPath: string;
-  maxSizeMB?: number; // Tamanho máximo em MB (opcional)
+  maxSizeMB?: number;
   disabled?: boolean;
 }
 
@@ -21,7 +21,7 @@ export const ImageUpload = ({
   onChange, 
   bucketName, 
   folderPath,
-  maxSizeMB = 5, // 5MB padrão para imagens
+  maxSizeMB = 5,
   disabled = false
 }: ImageUploadProps) => {
   const [uploading, setUploading] = useState(false);
@@ -45,13 +45,13 @@ export const ImageUpload = ({
       return;
     }
 
-    // Validar tamanho do arquivo (usando o limite especificado nos props)
-    const maxSize = maxSizeMB * 1024 * 1024; // Converter para bytes
+    // Validar tamanho do arquivo
+    const maxSize = maxSizeMB * 1024 * 1024;
     if (file.size > maxSize) {
       setError(`A imagem é muito grande (${(file.size / (1024 * 1024)).toFixed(2)}MB). O tamanho máximo é ${maxSizeMB}MB.`);
       toast({
         title: "Arquivo muito grande",
-        description: `A imagem excede o tamanho máximo de ${maxSizeMB}MB. Por favor, selecione uma imagem menor.`,
+        description: `A imagem excede o tamanho máximo de ${maxSizeMB}MB.`,
         variant: "destructive",
       });
       return;
@@ -64,26 +64,34 @@ export const ImageUpload = ({
     try {
       console.log(`Iniciando upload para bucket: ${bucketName}, pasta: ${folderPath}`);
       
-      const uploadResult = await uploadFileWithFallback(
+      // Gerar nome único para o arquivo
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${uuidv4()}.${fileExt}`;
+      const filePath = folderPath ? `${folderPath}/${fileName}` : fileName;
+      
+      setProgress(25);
+      
+      // Upload usando a função corrigida com 3 argumentos
+      const { data, error: uploadError } = await uploadFileWithFallback(
         file,
         bucketName,
-        folderPath,
-        (progress) => {
-          setProgress(Math.round(progress));
-        },
-        STORAGE_BUCKETS.FALLBACK // Usando o bucket de fallback definido nas constantes
+        filePath
       );
 
-      // Verificação de tipo adequada com abordagem explícita
-      if ('error' in uploadResult) {
-        // Caso de erro
-        throw uploadResult.error;
+      if (uploadError) {
+        console.error('Erro no upload:', uploadError);
+        throw new Error(`Erro no upload: ${uploadError.message}`);
       }
+
+      setProgress(75);
       
-      // Caso de sucesso - usando uma variável com tipagem explícita
-      const successResult = uploadResult as { publicUrl: string; path: string; error: null };
-      console.log("Upload bem-sucedido:", successResult);
-      onChange(successResult.publicUrl);
+      // Construir URL pública
+      const publicUrl = `${process.env.VITE_SUPABASE_URL}/storage/v1/object/public/${bucketName}/${filePath}`;
+
+      setProgress(100);
+      
+      console.log('Upload concluído:', publicUrl);
+      onChange(publicUrl);
       
       toast({
         title: "Upload concluído",
@@ -91,15 +99,17 @@ export const ImageUpload = ({
         variant: "default",
       });
     } catch (error: any) {
-      console.error("Erro ao fazer upload:", error);
-      setError(error.message || "Não foi possível enviar a imagem. Tente novamente.");
+      console.error("Erro no upload:", error);
+      const errorMessage = error.message || "Não foi possível enviar a imagem. Tente novamente.";
+      setError(errorMessage);
       toast({
         title: "Falha no upload",
-        description: error.message || "Não foi possível enviar a imagem. Tente novamente.",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
       setUploading(false);
+      setProgress(0);
     }
   };
 
@@ -126,8 +136,8 @@ export const ImageUpload = ({
             onError={(e) => {
               const target = e.target as HTMLImageElement;
               target.src = "https://placehold.co/600x400?text=Imagem+não+encontrada";
+              setError("Não foi possível carregar a imagem.");
               console.error("Erro ao carregar imagem:", value);
-              setError("Não foi possível carregar a imagem. O arquivo pode não existir mais.");
             }}
           />
           <Button
