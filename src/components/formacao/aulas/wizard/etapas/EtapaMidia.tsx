@@ -4,7 +4,6 @@ import { UseFormReturn } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
 import { SimpleFileUpload } from "@/components/ui/file/SimpleFileUpload";
 import { AulaFormValues } from "../schemas/aulaFormSchema";
 
@@ -22,15 +21,15 @@ const EtapaMidia: React.FC<EtapaMidiaProps> = ({
   isSaving
 }) => {
   const { watch, setValue } = form;
-  const imagemCapa = watch("imagemCapa");
+  const coverImageUrl = watch("coverImageUrl");
 
   const handleImageUpload = (url: string, fileName: string, fileSize: number) => {
     console.log('Imagem de capa carregada:', { url, fileName, fileSize });
-    setValue("imagemCapa", url);
+    setValue("coverImageUrl", url);
   };
 
   const handleRemoveImage = () => {
-    setValue("imagemCapa", "");
+    setValue("coverImageUrl", "");
   };
 
   return (
@@ -41,7 +40,7 @@ const EtapaMidia: React.FC<EtapaMidiaProps> = ({
         </CardHeader>
         <CardContent className="space-y-6">
           <div>
-            <Label htmlFor="imagemCapa">Imagem de Capa</Label>
+            <Label htmlFor="coverImageUrl">Imagem de Capa</Label>
             <p className="text-sm text-muted-foreground mb-4">
               Adicione uma imagem que represente visualmente o conteúdo da aula.
             </p>
@@ -52,21 +51,21 @@ const EtapaMidia: React.FC<EtapaMidiaProps> = ({
               onUploadComplete={handleImageUpload}
               acceptedTypes="image/*"
               maxSizeMB={10}
-              value={imagemCapa}
+              value={coverImageUrl}
               onRemove={handleRemoveImage}
             />
           </div>
 
-          {imagemCapa && (
+          {coverImageUrl && (
             <div className="mt-4">
               <Label>Preview da Imagem</Label>
               <div className="mt-2 border rounded-lg overflow-hidden">
                 <img
-                  src={imagemCapa}
+                  src={coverImageUrl}
                   alt="Preview da capa"
                   className="w-full h-48 object-cover"
                   onError={(e) => {
-                    console.error('Erro ao carregar preview da imagem:', imagemCapa);
+                    console.error('Erro ao carregar preview da imagem:', coverImageUrl);
                     const target = e.target as HTMLImageElement;
                     target.style.display = 'none';
                   }}
