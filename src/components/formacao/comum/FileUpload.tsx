@@ -10,10 +10,11 @@ import { v4 as uuidv4 } from 'uuid';
 
 interface FileUploadProps {
   value: string;
-  onChange: (value: string, fileType: string | undefined, fileSize: number | undefined) => void;
+  onChange: (value: string, fileType?: string | undefined, fileSize?: number | undefined) => void;
   bucketName: string;
   folderPath?: string;
   acceptedFileTypes?: string;
+  disabled?: boolean;
 }
 
 export const FileUpload = ({ 
@@ -21,7 +22,8 @@ export const FileUpload = ({
   onChange, 
   bucketName, 
   folderPath = "",
-  acceptedFileTypes = "*/*"
+  acceptedFileTypes = "*/*",
+  disabled = false
 }: FileUploadProps) => {
   const [uploading, setUploading] = useState(false);
   const [fileName, setFileName] = useState<string | null>(null);
@@ -114,7 +116,8 @@ export const FileUpload = ({
             className={cn(
               "flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer",
               "bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600",
-              "border-gray-300 dark:border-gray-600"
+              "border-gray-300 dark:border-gray-600",
+              disabled && "opacity-50 cursor-not-allowed"
             )}
           >
             <div className="flex flex-col items-center justify-center pt-5 pb-6">
@@ -142,7 +145,7 @@ export const FileUpload = ({
               type="file"
               className="hidden"
               onChange={handleFileChange}
-              disabled={uploading}
+              disabled={uploading || disabled}
               accept={acceptedFileTypes}
             />
           </label>
@@ -162,7 +165,7 @@ export const FileUpload = ({
             size="sm"
             variant="ghost"
             onClick={handleRemoveFile}
-            disabled={uploading}
+            disabled={uploading || disabled}
             className="flex-shrink-0"
           >
             <X className="h-4 w-4" />

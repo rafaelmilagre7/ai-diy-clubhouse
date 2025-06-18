@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
@@ -8,7 +9,15 @@ import { v4 as uuidv4 } from 'uuid';
 
 interface VideoUploadProps {
   value: string | undefined;
-  onChange: (url: string) => void;
+  onChange: (
+    url: string, 
+    videoType: string, 
+    fileName?: string, 
+    filePath?: string, 
+    fileSize?: number,
+    duration?: number,
+    thumbnailUrl?: string
+  ) => void;
   bucketName: string;
   folderPath: string;
   maxSizeMB?: number;
@@ -98,7 +107,15 @@ export const VideoUpload = ({
       setProgress(100);
       
       console.log('Upload concluído:', urlData.publicUrl);
-      onChange(urlData.publicUrl);
+      onChange(
+        urlData.publicUrl, 
+        'file', 
+        file.name, 
+        data.path, 
+        file.size, 
+        undefined, 
+        undefined
+      );
       
       toast({
         title: "Upload concluído",
@@ -119,7 +136,7 @@ export const VideoUpload = ({
   };
 
   const handleRemoveVideo = () => {
-    onChange("");
+    onChange("", "file", undefined, undefined, undefined, undefined, undefined);
     setError(null);
   };
 
