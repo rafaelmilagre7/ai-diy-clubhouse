@@ -15,33 +15,26 @@ export const useAuthMethods = ({ setIsLoading }: AuthMethodsParams) => {
       setIsLoading(true);
       setIsSigningIn(true);
       
-      console.log('🔄 [AUTH] Iniciando login:', email);
-      
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password
       });
 
       if (error) {
-        console.error('❌ [AUTH] Erro no login:', error);
-        toast.error('Erro no login', {
-          description: error.message
-        });
+        console.error('Erro no login:', error);
+        toast.error('Erro no login: ' + error.message);
         return { error };
       }
 
       if (data.user) {
-        console.log('✅ [AUTH] Login realizado com sucesso:', data.user.email);
+        console.log('Login realizado:', data.user.email);
         toast.success('Login realizado com sucesso!');
       }
 
       return { error: null };
     } catch (err) {
-      console.error('❌ [AUTH] Erro inesperado no login:', err);
       const error = err instanceof Error ? err : new Error('Erro inesperado');
-      toast.error('Erro inesperado', {
-        description: error.message
-      });
+      toast.error('Erro inesperado: ' + error.message);
       return { error };
     } finally {
       setIsSigningIn(false);
@@ -52,23 +45,19 @@ export const useAuthMethods = ({ setIsLoading }: AuthMethodsParams) => {
   const signOut = async () => {
     try {
       setIsLoading(true);
-      console.log('🔄 [AUTH] Iniciando logout');
       
       const { error } = await supabase.auth.signOut();
       
       if (error) {
-        console.error('❌ [AUTH] Erro no logout:', error);
-        toast.error('Erro ao fazer logout', {
-          description: error.message
-        });
+        console.error('Erro no logout:', error);
+        toast.error('Erro ao fazer logout: ' + error.message);
         return { success: false, error };
       }
 
-      console.log('✅ [AUTH] Logout realizado com sucesso');
+      console.log('Logout realizado');
       toast.success('Logout realizado com sucesso!');
       return { success: true, error: null };
     } catch (err) {
-      console.error('❌ [AUTH] Erro inesperado no logout:', err);
       const error = err instanceof Error ? err : new Error('Erro inesperado');
       return { success: false, error };
     } finally {
@@ -76,21 +65,12 @@ export const useAuthMethods = ({ setIsLoading }: AuthMethodsParams) => {
     }
   };
 
-  // Métodos específicos para diferentes tipos de usuário
   const signInAsMember = async (email: string, password: string) => {
-    const result = await signIn(email, password);
-    if (!result.error) {
-      console.log('👤 [AUTH] Login como membro realizado');
-    }
-    return result;
+    return await signIn(email, password);
   };
 
   const signInAsAdmin = async (email: string, password: string) => {
-    const result = await signIn(email, password);
-    if (!result.error) {
-      console.log('🔑 [AUTH] Login como admin realizado');
-    }
-    return result;
+    return await signIn(email, password);
   };
 
   return {

@@ -1,13 +1,27 @@
 
-import React, { createContext, useContext, useEffect, useState, useRef } from 'react';
+import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
 import { UserProfile, getUserRoleName, isAdminRole, isFormacaoRole } from '@/lib/supabase';
 import { useAuthMethods } from './hooks/useAuthMethods';
-import { fetchUserProfileSecurely } from '@/hooks/auth/utils/authSessionUtils';
-import { AuthContextType } from './types';
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+const AuthContext = createContext<{
+  user: User | null;
+  session: Session | null;
+  profile: UserProfile | null;
+  isAdmin: boolean;
+  isFormacao: boolean;
+  isLoading: boolean;
+  authError: Error | null;
+  signIn: (email: string, password: string) => Promise<{ error: any }>;
+  signOut: () => Promise<{ success: boolean; error: any }>;
+  signInAsMember: (email: string, password: string) => Promise<{ error: any }>;
+  signInAsAdmin: (email: string, password: string) => Promise<{ error: any }>;
+  setUser: (user: User | null) => void;
+  setSession: (session: Session | null) => void;
+  setProfile: (profile: UserProfile | null) => void;
+  setIsLoading: (loading: boolean) => void;
+} | undefined>(undefined);
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
@@ -27,123 +41,86 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [authError, setAuthError] = useState<Error | null>(null);
-  
-  const authListenerRef = useRef<any>(null);
-  const isInitialized = useRef(false);
 
   const { signIn, signOut, signInAsMember, signInAsAdmin } = useAuthMethods({
     setIsLoading,
   });
 
-  // Verificação de admin baseada em email e perfil
+  // Verificação de admin simples
   const isAdminByEmail = user?.email && [
     'rafael@viverdeia.ai',
     'admin@viverdeia.ai',
     'admin@teste.com'
   ].includes(user.email.toLowerCase());
 
-  const isAdmin = React.useMemo(() => {
-    return isAdminRole(profile) || isAdminByEmail;
-  }, [profile, isAdminByEmail]);
+  const isAdmin = isAdminRole(profile) || isAdminByEmail;
+  const isFormacao = isFormacaoRole(profile);
 
-  const isFormacao = React.useMemo(() => {
-    return isFormacaoRole(profile);
-  }, [profile]);
-
-  // CORREÇÃO: Função única para carregar perfil (evita duplicação)
-  const loadUserProfile = async (userId: string) => {
+  // Função simples para carregar perfil
+  const loadProfile = async (userId: string) => {
     try {
-      console.log('[AUTH] Carregando perfil para usuário:', userId.substring(0, 8) + '***');
-      const userProfile = await fetchUserProfileSecurely(userId);
-      setProfile(userProfile);
-      console.log('[AUTH] Perfil carregado:', userProfile ? 'sucesso' : 'não encontrado');
-      return userProfile;
+      const { data, error } = await supabase
+        .from('profiles')
+        .select(`
+          *,
+          user_roles (*)
+        `)
+        .eq('id', userId)
+        .single();
+
+      if (error) {
+        console.error('[AUTH] Erro ao buscar perfil:', error);
+        setProfile(null);
+        return;
+      }
+
+      setProfile(data);
+      console.log('[AUTH] Perfil carregado:', data?.email);
     } catch (error) {
-      console.error('[AUTH] Erro ao buscar perfil:', error);
+      console.error('[AUTH] Erro ao carregar perfil:', error);
       setProfile(null);
-      return null;
     }
   };
 
-  // CORREÇÃO: Inicialização simplificada sem duplicação
+  // Inicialização simplificada
   useEffect(() => {
-    if (isInitialized.current) return;
-    
-    const initializeAuth = async () => {
-      console.log('[AUTH] Inicializando autenticação - versão corrigida');
-      
-      try {
-        // CORREÇÃO: Configurar listener PRIMEIRO
-        const { data: { subscription } } = supabase.auth.onAuthStateChange(
-          (event, session) => {
-            console.log(`[AUTH] Evento recebido: ${event}`);
-            
-            if (event === 'SIGNED_IN' && session?.user) {
-              console.log(`[AUTH] Login detectado: ${session.user.email}`);
-              setSession(session);
-              setUser(session.user);
-              
-              // CORREÇÃO: Usar setTimeout(0) para evitar deadlock
-              setTimeout(() => {
-                loadUserProfile(session.user.id).finally(() => {
-                  setIsLoading(false);
-                  console.log('[AUTH] Loading finalizado após login');
-                });
-              }, 0);
-              
-            } else if (event === 'SIGNED_OUT') {
-              console.log('[AUTH] Logout detectado');
-              setUser(null);
-              setProfile(null);
-              setSession(null);
-              setAuthError(null);
-              setIsLoading(false);
-            }
-          }
-        );
+    console.log('[AUTH] Inicializando autenticação');
+
+    // Configurar listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        console.log(`[AUTH] Evento: ${event}`);
         
-        authListenerRef.current = subscription;
+        setSession(session);
+        setUser(session?.user || null);
         
-        // CORREÇÃO: Verificar sessão atual sem carregar perfil (evita duplicação)
-        const { data: { session: currentSession } } = await supabase.auth.getSession();
-        
-        if (currentSession?.user) {
-          console.log('[AUTH] Sessão existente encontrada:', currentSession.user.email);
-          setSession(currentSession);
-          setUser(currentSession.user);
-          
-          // CORREÇÃO: Carregar perfil apenas aqui, com setTimeout para evitar conflitos
-          setTimeout(() => {
-            loadUserProfile(currentSession.user.id).finally(() => {
-              setIsLoading(false);
-              console.log('[AUTH] Loading finalizado para sessão existente');
-            });
-          }, 0);
-        } else {
-          console.log('[AUTH] Nenhuma sessão ativa encontrada');
-          setIsLoading(false);
+        if (event === 'SIGNED_IN' && session?.user) {
+          await loadProfile(session.user.id);
+        } else if (event === 'SIGNED_OUT') {
+          setProfile(null);
+          setAuthError(null);
         }
         
-        isInitialized.current = true;
-        console.log('[AUTH] Inicialização completa');
-        
-      } catch (error) {
-        console.error('[AUTH] Erro na inicialização:', error);
-        setAuthError(error instanceof Error ? error : new Error('Erro na inicialização'));
         setIsLoading(false);
       }
-    };
+    );
 
-    initializeAuth();
-
-    return () => {
-      if (authListenerRef.current) {
-        authListenerRef.current.unsubscribe();
+    // Verificar sessão atual
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setUser(session?.user || null);
+      
+      if (session?.user) {
+        loadProfile(session.user.id).finally(() => setIsLoading(false));
+      } else {
+        setIsLoading(false);
       }
-    };
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
-  const value: AuthContextType = {
+  const value = {
     user,
     session,
     profile,
