@@ -5,8 +5,7 @@ import { supabase } from '@/lib/supabase';
 import { logger } from '@/utils/logger';
 
 /**
- * Hook para forçar verificações de segurança e logs de auditoria
- * Atualizado para funcionar com RLS Fase 2
+ * Hook para forçar verificações de segurança e logs de auditoria - versão corrigida
  */
 export const useSecurityEnforcement = () => {
   const { user, isLoading } = useAuth();
@@ -23,7 +22,7 @@ export const useSecurityEnforcement = () => {
     }
   }, [user, isLoading]);
 
-  // Função para logar acessos usando novas funções RLS
+  // Função para logar acessos usando funções corrigidas
   const logDataAccess = async (tableName: string, operation: string, resourceId?: string) => {
     if (!user) return;
 
@@ -34,12 +33,12 @@ export const useSecurityEnforcement = () => {
         p_resource_id: resourceId
       });
     } catch (error) {
-      // A nova função já trata erros silenciosamente
+      // A função já trata erros silenciosamente
       logger.debug('[SECURITY] Log de auditoria processado:', { tableName, operation });
     }
   };
 
-  // Função aprimorada para verificar permissões com RLS
+  // Função para verificar permissões
   const enforceUserDataAccess = (dataUserId: string, operation: string = 'read') => {
     if (!user) {
       logger.error('[SECURITY] Tentativa de acesso a dados sem autenticação', {
@@ -61,7 +60,7 @@ export const useSecurityEnforcement = () => {
     }
   };
 
-  // Nova função para log de violações RLS
+  // Função para log de violações RLS
   const logRLSViolation = async (tableName: string, operation: string, targetUserId?: string) => {
     if (!user) return;
 

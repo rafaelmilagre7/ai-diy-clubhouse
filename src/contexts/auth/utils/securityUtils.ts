@@ -1,8 +1,9 @@
+
 import { supabase } from '@/lib/supabase';
 import { logger } from '@/utils/logger';
 
 /**
- * Utilitários de segurança centralizados com melhorias para trabalhar com as novas políticas RLS
+ * Utilitários de segurança centralizados com correções para trabalhar com as novas políticas RLS
  */
 
 // Cache de verificações admin com TTL curto para segurança
@@ -11,8 +12,7 @@ const ADMIN_CACHE_TTL = 5 * 60 * 1000; // 5 minutos
 const MAX_VERIFICATION_ATTEMPTS = 5;
 
 /**
- * Verificação robusta de status de admin APENAS via banco de dados
- * Adaptada para trabalhar com as novas políticas RLS
+ * Verificação robusta de status de admin usando a função is_admin() do banco
  */
 export const verifyAdminStatus = async (userId: string): Promise<boolean> => {
   if (!userId || typeof userId !== 'string') {
@@ -46,8 +46,8 @@ export const verifyAdminStatus = async (userId: string): Promise<boolean> => {
       attempts: currentAttempts 
     });
 
-    // CORREÇÃO DE SEGURANÇA: Usar APENAS função is_admin() implementada no banco
-    const { data, error } = await supabase.rpc('is_admin');
+    // Usar função is_admin() corrigida do banco
+    const { data, error } = await supabase.rpc('is_admin', { user_id: userId });
     
     if (error) {
       logger.error('[SECURITY] Admin verification error:', error, { userId });
@@ -81,7 +81,6 @@ const PERMISSION_CACHE_TTL = 3 * 60 * 1000; // 3 minutos
 
 /**
  * Busca permissões do usuário com cache seguro
- * Adaptada para trabalhar com as novas políticas RLS
  */
 export const getUserPermissions = async (userId: string): Promise<string[]> => {
   if (!userId || typeof userId !== 'string') {
@@ -126,7 +125,7 @@ export const getUserPermissions = async (userId: string): Promise<string[]> => {
     
     let permissions: string[] = [];
     
-    // CORREÇÃO: Acesso correto ao campo permissions
+    // Acesso correto ao campo permissions
     if (data?.user_roles) {
       try {
         // user_roles pode ser um objeto único ou array, verificar ambos os casos

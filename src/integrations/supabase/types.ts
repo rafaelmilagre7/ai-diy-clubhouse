@@ -4392,9 +4392,6 @@ export type Database = {
     Views: {
       suggestions_with_profiles: {
         Row: {
-          author_avatar_url: string | null
-          author_company: string | null
-          author_name: string | null
           category_id: string | null
           comment_count: number | null
           created_at: string | null
@@ -4409,7 +4406,9 @@ export type Database = {
           title: string | null
           updated_at: string | null
           upvotes: number | null
+          user_avatar: string | null
           user_id: string | null
+          user_name: string | null
         }
         Relationships: [
           {
@@ -4437,23 +4436,14 @@ export type Database = {
       }
       user_progress: {
         Row: {
-          completed_at: string | null
-          completed_modules: number[] | null
-          completion_data: Json | null
           created_at: string | null
-          current_module: number | null
-          id: string | null
-          implementation_status: string | null
           is_completed: boolean | null
-          last_activity: string | null
           solution_category:
             | Database["public"]["Enums"]["solution_category"]
             | null
           solution_id: string | null
           solution_title: string | null
-          user_email: string | null
           user_id: string | null
-          user_name: string | null
         }
         Relationships: [
           {
@@ -4467,39 +4457,17 @@ export type Database = {
       }
       users_with_roles: {
         Row: {
-          available_for_networking: boolean | null
           avatar_url: string | null
           company_name: string | null
           created_at: string | null
-          current_position: string | null
           email: string | null
           id: string | null
           industry: string | null
-          last_active: string | null
-          linkedin_url: string | null
           name: string | null
-          onboarding_completed: boolean | null
-          onboarding_completed_at: string | null
-          professional_bio: string | null
-          referrals_count: number | null
-          role: string | null
           role_description: string | null
-          role_id: string | null
           role_name: string | null
-          role_permissions: Json | null
-          skills: string[] | null
-          successful_referrals_count: number | null
-          whatsapp_number: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "profiles_role_id_fkey"
-            columns: ["role_id"]
-            isOneToOne: false
-            referencedRelation: "user_roles"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
     }
     Functions: {
@@ -4646,6 +4614,10 @@ export type Database = {
       current_user_is_admin: {
         Args: Record<PropertyKey, never>
         Returns: boolean
+      }
+      debug_tool_permissions: {
+        Args: { user_id?: string }
+        Returns: Json
       }
       decrement: {
         Args: { row_id: string; table_name: string; column_name: string }
