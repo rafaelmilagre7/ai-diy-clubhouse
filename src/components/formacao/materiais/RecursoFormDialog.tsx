@@ -157,7 +157,7 @@ export const RecursoFormDialog: React.FC<RecursoFormDialogProps> = ({
               onChange={handleFileUpload}
               bucketName="lesson_materials"
               folder="resources"
-              acceptedFileTypes="*"
+              accept="*"
               disabled={isLoading}
             />
           </div>
