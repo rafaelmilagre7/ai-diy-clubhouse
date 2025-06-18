@@ -1,16 +1,23 @@
 
-import React, { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { FileUpload } from "@/components/formacao/comum/FileUpload";
-import { Plus, Trash2, FileText, CheckCircle, Clock } from "lucide-react";
-import { UseFormReturn } from "react-hook-form";
-import { AulaFormValues } from "../schemas/aulaFormSchema";
-import { STORAGE_BUCKETS, ACCEPTED_FILE_TYPES } from "@/lib/supabase/config";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import React, { useState, useEffect } from 'react';
+import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Plus, FileText, Trash2, Upload } from 'lucide-react';
+import { UseFormReturn } from 'react-hook-form';
+import { AulaFormValues } from '../schemas/aulaFormSchema';
+import { FileUpload } from '@/components/formacao/comum/FileUpload';
+import { toast } from 'sonner';
+
+interface Material {
+  id?: string;
+  title?: string;
+  description?: string;
+  url?: string;
+  type?: string;
+  fileName?: string;
+  fileSize?: number;
+}
 
 interface EtapaMateriaisProps {
   form: UseFormReturn<AulaFormValues>;
@@ -19,263 +26,191 @@ interface EtapaMateriaisProps {
   isSaving: boolean;
 }
 
-interface Material {
-  id: string;
-  title: string;
-  description: string;
-  url: string;
-  fileName?: string;
-  fileSize?: number;
-  type: string;
-}
-
 const EtapaMateriais: React.FC<EtapaMateriaisProps> = ({
   form,
   onNext,
   onPrevious,
-  isSaving,
+  isSaving
 }) => {
   const [materials, setMaterials] = useState<Material[]>([]);
-  const [recentUploads, setRecentUploads] = useState<Set<string>>(new Set());
 
-  // Carregar materiais existentes do formulário
+  // Sincronizar com o formulário
   useEffect(() => {
-    const existingMaterials = form.getValues('materials') || [];
-    if (existingMaterials.length > 0) {
-      console.log('📚 Carregando materiais existentes:', existingMaterials);
-      setMaterials(existingMaterials);
+    const formResources = form.getValues('resources');
+    if (formResources && formResources.length > 0) {
+      setMaterials(formResources);
     }
   }, [form]);
 
-  // Sincronizar materiais com o formulário
+  // Atualizar formulário quando materials mudar
   useEffect(() => {
-    console.log('🔄 Sincronizando materiais com formulário:', materials);
-    form.setValue('materials', materials);
+    form.setValue('resources', materials);
   }, [materials, form]);
 
   const addMaterial = () => {
     const newMaterial: Material = {
-      id: Date.now().toString(),
+      id: `temp-${Date.now()}`,
       title: '',
       description: '',
       url: '',
-      type: 'document'
+      type: 'document',
+      fileName: '',
+      fileSize: 0
     };
-
-    console.log('➕ Adicionando novo material:', newMaterial.id);
     setMaterials(prev => [...prev, newMaterial]);
   };
 
-  const removeMaterial = (id: string) => {
-    console.log('🗑️ Removendo material:', id);
-    setMaterials(prev => prev.filter(material => material.id !== id));
-    setRecentUploads(prev => {
-      const newSet = new Set(prev);
-      newSet.delete(id);
-      return newSet;
-    });
+  const removeMaterial = (index: number) => {
+    setMaterials(prev => prev.filter((_, i) => i !== index));
+    toast.success('Material removido com sucesso');
   };
 
-  const updateMaterial = (id: string, field: keyof Material, value: any) => {
-    console.log('✏️ Atualizando material:', id, field, value);
-    
-    setMaterials(prev => prev.map(material => {
-      if (material.id === id) {
-        const updated = { ...material, [field]: value };
-        console.log('📝 Material atualizado:', updated);
-        return updated;
-      }
-      return material;
-    }));
+  const updateMaterial = (index: number, field: keyof Material, value: any) => {
+    setMaterials(prev => prev.map((material, i) => 
+      i === index ? { ...material, [field]: value } : material
+    ));
   };
 
-  const handleFileUpload = (id: string) => (url: string, fileName?: string, fileSize?: number) => {
-    console.log('📁 Upload de arquivo concluído para material:', id, { url, fileName, fileSize });
+  const handleFileUpload = (index: number) => (url: string, fileName?: string, fileSize?: number) => {
+    console.log('📁 Arquivo carregado para material:', { index, url, fileName, fileSize });
     
-    // Marcar como upload recente
-    setRecentUploads(prev => new Set(prev).add(id));
+    // Atualizar o material com os dados do arquivo
+    setMaterials(prev => prev.map((material, i) => 
+      i === index ? { 
+        ...material, 
+        url,
+        fileName: fileName || material.fileName || 'Arquivo carregado',
+        title: material.title || fileName || 'Material de Apoio',
+        fileSize: fileSize || material.fileSize,
+        type: 'document'
+      } : material
+    ));
     
-    // Atualizar material
-    setMaterials(prev => prev.map(material => {
-      if (material.id === id) {
-        const updated = {
-          ...material,
-          url,
-          fileName,
-          fileSize,
-          // Se título estiver vazio, usar nome do arquivo
-          title: material.title || fileName || 'Material de apoio'
-        };
-        console.log('✅ Material com upload:', updated);
-        return updated;
-      }
-      return material;
-    }));
-
-    // Remover indicador de upload recente após alguns segundos
-    setTimeout(() => {
-      setRecentUploads(prev => {
-        const newSet = new Set(prev);
-        newSet.delete(id);
-        return newSet;
-      });
-    }, 3000);
-  };
-
-  const canProceed = () => {
-    // Pode prosseguir se não há materiais ou se todos os materiais têm título e URL
-    const incompleteMaterials = materials.filter(m => !m.title || !m.url);
-    return incompleteMaterials.length === 0;
+    toast.success('Arquivo carregado com sucesso!');
   };
 
   return (
     <div className="space-y-6">
       <div>
-        <h3 className="text-lg font-semibold mb-2">Materiais de Apoio</h3>
-        <p className="text-sm text-muted-foreground mb-4">
-          Adicione PDFs, documentos e outros materiais para complementar o aprendizado dos alunos.
+        <h3 className="text-lg font-semibold">Materiais de Apoio</h3>
+        <p className="text-sm text-muted-foreground mt-1">
+          Adicione materiais complementares como PDFs, documentos, planilhas, etc.
         </p>
       </div>
 
-      {/* Validação antes de prosseguir */}
-      {materials.length > 0 && !canProceed() && (
-        <Alert className="border-amber-200 bg-amber-50">
-          <Clock className="h-4 w-4 text-amber-600" />
-          <AlertDescription className="text-amber-800">
-            Complete o título e faça upload dos arquivos para todos os materiais antes de prosseguir.
-          </AlertDescription>
-        </Alert>
-      )}
+      <div className="space-y-4">
+        {materials.map((material, index) => (
+          <Card key={material.id || index} className="p-4">
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-base flex items-center gap-2">
+                  <FileText className="h-4 w-4" />
+                  Material {index + 1}
+                </CardTitle>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => removeMaterial(index)}
+                  className="text-red-600 hover:text-red-700"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
+            </CardHeader>
+            
+            <CardContent className="space-y-4">
+              <div>
+                <Label htmlFor={`material-title-${index}`}>Título</Label>
+                <input
+                  id={`material-title-${index}`}
+                  type="text"
+                  value={material.title || ''}
+                  onChange={(e) => updateMaterial(index, 'title', e.target.value)}
+                  placeholder="Nome do material"
+                  className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                />
+              </div>
 
-      {materials.length === 0 ? (
-        <Card className="border-dashed">
-          <CardContent className="p-6 text-center">
-            <FileText className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-            <p className="text-muted-foreground mb-4">
-              Nenhum material adicionado ainda.
-            </p>
-            <Button onClick={addMaterial} variant="outline">
-              <Plus className="h-4 w-4 mr-2" />
-              Adicionar Primeiro Material
-            </Button>
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="space-y-4">
-          {materials.map((material, index) => (
-            <Card key={material.id} className="relative">
-              <CardHeader className="pb-3">
-                <div className="flex items-center justify-between">
-                  <h4 className="font-medium">Material {index + 1}</h4>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => removeMaterial(material.id)}
-                    className="text-destructive hover:text-destructive"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              </CardHeader>
-              
-              <CardContent className="space-y-4">
-                {/* Indicador de upload recente */}
-                {recentUploads.has(material.id) && (
-                  <Alert className="border-green-200 bg-green-50">
-                    <CheckCircle className="h-4 w-4 text-green-600" />
-                    <AlertDescription className="text-green-800">
-                      <strong>Upload realizado com sucesso!</strong>
-                      {material.fileName && (
-                        <span className="block mt-1">Arquivo: {material.fileName}</span>
-                      )}
-                    </AlertDescription>
-                  </Alert>
-                )}
+              <div>
+                <Label htmlFor={`material-description-${index}`}>Descrição (opcional)</Label>
+                <textarea
+                  id={`material-description-${index}`}
+                  value={material.description || ''}
+                  onChange={(e) => updateMaterial(index, 'description', e.target.value)}
+                  placeholder="Descrição do material"
+                  rows={2}
+                  className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary resize-none"
+                />
+              </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor={`material-title-${material.id}`}>
-                      Título *
-                    </Label>
-                    <Input
-                      id={`material-title-${material.id}`}
-                      value={material.title}
-                      onChange={(e) => updateMaterial(material.id, 'title', e.target.value)}
-                      placeholder="Nome do material"
-                      className={!material.title ? 'border-amber-300' : ''}
-                    />
-                  </div>
+              <div>
+                <Label>Upload do Arquivo</Label>
+                <FileUpload
+                  value={material.url || ''}
+                  onChange={handleFileUpload(index)}
+                  bucketName="lesson_materials"
+                  folder="documents"
+                  accept="application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation,text/plain,image/*"
+                  maxSize={25}
+                  label="Selecionar arquivo"
+                  description="Formatos aceitos: PDF, DOC, DOCX, XLS, XLSX, PPT, PPTX, TXT, imagens"
+                />
+              </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor={`material-description-${material.id}`}>
-                      Descrição
-                    </Label>
-                    <Textarea
-                      id={`material-description-${material.id}`}
-                      value={material.description}
-                      onChange={(e) => updateMaterial(material.id, 'description', e.target.value)}
-                      placeholder="Descrição opcional do material"
-                      rows={2}
-                    />
+              {material.url && (
+                <div className="p-3 bg-green-50 border border-green-200 rounded-md">
+                  <div className="flex items-center gap-2 text-sm text-green-800">
+                    <Upload className="h-4 w-4" />
+                    <span>Arquivo carregado: {material.fileName || 'Material disponível'}</span>
                   </div>
                 </div>
+              )}
+            </CardContent>
+          </Card>
+        ))}
 
-                <div>
-                  <FileUpload
-                    value={material.url}
-                    onChange={handleFileUpload(material.id)}
-                    bucketName={STORAGE_BUCKETS.LEARNING_MATERIALS}
-                    folder="lesson-materials"
-                    accept={ACCEPTED_FILE_TYPES.DOCUMENTS}
-                    maxSize={25}
-                    label="Arquivo do Material"
-                    description="PDF, DOC, DOCX ou outros documentos (máx. 25MB)"
-                  />
-                </div>
+        {materials.length === 0 && (
+          <Card className="p-8 text-center border-dashed">
+            <div className="flex flex-col items-center gap-3">
+              <FileText className="h-12 w-12 text-muted-foreground" />
+              <div>
+                <h4 className="font-medium">Nenhum material adicionado</h4>
+                <p className="text-sm text-muted-foreground">
+                  Clique no botão abaixo para adicionar materiais de apoio
+                </p>
+              </div>
+            </div>
+          </Card>
+        )}
 
-                {/* Status do material */}
-                {material.url && material.title && (
-                  <div className="flex items-center gap-2 p-3 bg-green-50 border border-green-200 rounded-md">
-                    <CheckCircle className="h-4 w-4 text-green-600" />
-                    <div className="flex-1">
-                      <p className="text-sm font-medium text-green-800">
-                        Material "{material.title}" está pronto!
-                      </p>
-                      {material.fileSize && material.fileSize > 0 && (
-                        <p className="text-xs text-green-600">
-                          Tamanho: {(material.fileSize / (1024 * 1024)).toFixed(2)} MB
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          ))}
+        <Button
+          type="button"
+          variant="outline"
+          onClick={addMaterial}
+          className="w-full"
+          disabled={isSaving}
+        >
+          <Plus className="h-4 w-4 mr-2" />
+          Adicionar Material
+        </Button>
+      </div>
 
-          <Button
-            type="button"
-            onClick={addMaterial}
-            variant="outline"
-            className="w-full"
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Adicionar Outro Material
-          </Button>
-        </div>
-      )}
-
-      <div className="flex justify-between pt-4 border-t">
-        <Button type="button" variant="outline" onClick={onPrevious} disabled={isSaving}>
+      <div className="flex justify-between pt-6 border-t">
+        <Button 
+          type="button" 
+          variant="outline" 
+          onClick={onPrevious}
+          disabled={isSaving}
+        >
           Voltar
         </Button>
         <Button 
           type="button" 
-          onClick={onNext} 
-          disabled={isSaving || !canProceed()}
+          onClick={onNext}
+          disabled={isSaving}
         >
-          {isSaving ? "Salvando..." : "Finalizar"}
+          Finalizar
         </Button>
       </div>
     </div>
