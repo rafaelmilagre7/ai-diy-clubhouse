@@ -29,6 +29,7 @@ interface RecursoFormDialogProps {
   onSuccess: () => void;
   material?: Material;
   recurso?: any; // Adicionar suporte para a propriedade recurso também
+  lessonId?: string; // Adicionar suporte para lessonId
 }
 
 export const RecursoFormDialog: React.FC<RecursoFormDialogProps> = ({
@@ -36,7 +37,8 @@ export const RecursoFormDialog: React.FC<RecursoFormDialogProps> = ({
   onOpenChange,
   onSuccess,
   material,
-  recurso
+  recurso,
+  lessonId
 }) => {
   // Usar recurso se material não estiver disponível (para compatibilidade)
   const editingItem = material || recurso;
@@ -72,7 +74,8 @@ export const RecursoFormDialog: React.FC<RecursoFormDialogProps> = ({
         file_url: formData.file_url,
         file_type: formData.file_type || 'document',
         file_size_bytes: formData.file_size_bytes || null,
-        created_at: new Date().toISOString()
+        created_at: new Date().toISOString(),
+        ...(lessonId && { lesson_id: lessonId }) // Adicionar lesson_id se fornecido
       };
 
       if (editingItem?.id) {
