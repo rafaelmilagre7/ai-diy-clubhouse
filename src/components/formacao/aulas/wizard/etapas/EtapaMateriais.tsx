@@ -26,7 +26,7 @@ const EtapaMateriais: React.FC<EtapaMateriaisProps> = ({
   isSaving,
 }) => {
   const { watch, setValue, formState: { errors } } = form;
-  const materials = watch("materials") || [];
+  const materials = watch("resources") || [];
 
   const addMaterial = () => {
     const newMaterial = {
@@ -37,12 +37,12 @@ const EtapaMateriais: React.FC<EtapaMateriaisProps> = ({
       fileName: "",
       fileSize: 0,
     };
-    setValue("materials", [...materials, newMaterial]);
+    setValue("resources", [...materials, newMaterial]);
   };
 
   const removeMaterial = (index: number) => {
     const updatedMaterials = materials.filter((_, i) => i !== index);
-    setValue("materials", updatedMaterials);
+    setValue("resources", updatedMaterials);
   };
 
   const updateMaterial = (index: number, field: string, value: any) => {
@@ -51,7 +51,7 @@ const EtapaMateriais: React.FC<EtapaMateriaisProps> = ({
       ...updatedMaterials[index],
       [field]: value,
     };
-    setValue("materials", updatedMaterials);
+    setValue("resources", updatedMaterials);
   };
 
   const handleFileUpload = (
@@ -131,9 +131,9 @@ const EtapaMateriais: React.FC<EtapaMateriaisProps> = ({
                       disabled={isSaving}
                       required
                     />
-                    {errors?.materials?.[index]?.title && (
+                    {errors?.resources?.[index]?.title && (
                       <p className="text-sm text-destructive mt-1">
-                        {errors.materials[index]?.title?.message}
+                        {errors.resources[index]?.title?.message}
                       </p>
                     )}
                   </div>
@@ -166,9 +166,9 @@ const EtapaMateriais: React.FC<EtapaMateriaisProps> = ({
                     folderPath="materials"
                     acceptedFileTypes={ACCEPTED_FILE_TYPES.DOCUMENTS}
                   />
-                  {errors?.materials?.[index]?.url && (
+                  {errors?.resources?.[index]?.url && (
                     <p className="text-sm text-destructive mt-1">
-                      {errors.materials[index]?.url?.message}
+                      {errors.resources[index]?.url?.message}
                     </p>
                   )}
                 </div>
