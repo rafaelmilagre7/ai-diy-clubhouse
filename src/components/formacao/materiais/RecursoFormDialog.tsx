@@ -28,20 +28,25 @@ interface RecursoFormDialogProps {
   onOpenChange: (open: boolean) => void;
   onSuccess: () => void;
   material?: Material;
+  recurso?: any; // Adicionar suporte para a propriedade recurso também
 }
 
 export const RecursoFormDialog: React.FC<RecursoFormDialogProps> = ({
   open,
   onOpenChange,
   onSuccess,
-  material
+  material,
+  recurso
 }) => {
+  // Usar recurso se material não estiver disponível (para compatibilidade)
+  const editingItem = material || recurso;
+  
   const [formData, setFormData] = useState({
-    name: material?.name || '',
-    description: material?.description || '',
-    file_url: material?.file_url || '',
-    file_type: material?.file_type || '',
-    file_size_bytes: material?.file_size_bytes || 0
+    name: editingItem?.name || '',
+    description: editingItem?.description || '',
+    file_url: editingItem?.file_url || '',
+    file_type: editingItem?.file_type || '',
+    file_size_bytes: editingItem?.file_size_bytes || 0
   });
   const [isLoading, setIsLoading] = useState(false);
 
@@ -70,12 +75,12 @@ export const RecursoFormDialog: React.FC<RecursoFormDialogProps> = ({
         created_at: new Date().toISOString()
       };
 
-      if (material?.id) {
+      if (editingItem?.id) {
         // Atualizar material existente
         const { error } = await supabase
           .from('learning_resources')
           .update(materialData)
-          .eq('id', material.id);
+          .eq('id', editingItem.id);
 
         if (error) throw error;
         toast.success('Material atualizado com sucesso!');
@@ -123,7 +128,7 @@ export const RecursoFormDialog: React.FC<RecursoFormDialogProps> = ({
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>
-            {material ? 'Editar Material' : 'Novo Material'}
+            {editingItem ? 'Editar Material' : 'Novo Material'}
           </DialogTitle>
         </DialogHeader>
 
@@ -158,7 +163,6 @@ export const RecursoFormDialog: React.FC<RecursoFormDialogProps> = ({
               bucketName="lesson_materials"
               folder="resources"
               accept="*"
-              disabled={isLoading}
             />
           </div>
 
@@ -172,7 +176,7 @@ export const RecursoFormDialog: React.FC<RecursoFormDialogProps> = ({
               Cancelar
             </Button>
             <Button type="submit" disabled={isLoading}>
-              {isLoading ? 'Salvando...' : material ? 'Atualizar' : 'Criar'}
+              {isLoading ? 'Salvando...' : editingItem ? 'Atualizar' : 'Criar'}
             </Button>
           </div>
         </form>
