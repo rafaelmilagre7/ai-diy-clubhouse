@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
@@ -22,6 +21,7 @@ interface VideoUploadProps {
   folderPath: string;
   maxSizeMB?: number;
   disabled?: boolean;
+  videoType?: string; // Adicionando a propriedade videoType
 }
 
 export const VideoUpload = ({ 
@@ -30,7 +30,8 @@ export const VideoUpload = ({
   bucketName, 
   folderPath,
   maxSizeMB = 300,
-  disabled = false
+  disabled = false,
+  videoType = 'file' // Valor padrão
 }: VideoUploadProps) => {
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState(0);
