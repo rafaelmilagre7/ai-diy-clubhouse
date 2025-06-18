@@ -1,24 +1,31 @@
 
-// Definição dos buckets de armazenamento
+// Configuração centralizada dos buckets do Supabase Storage
 export const STORAGE_BUCKETS = {
-  // Buckets para o LMS
+  // Materiais de apoio para aulas e cursos
   LEARNING_MATERIALS: 'learning_materials',
-  COURSE_IMAGES: 'course_images',
-  LEARNING_VIDEOS: 'learning_videos',
+  
+  // Arquivos de soluções (admin)
   SOLUTION_FILES: 'solution_files',
-  LESSON_IMAGES: 'lesson_images', // Novo bucket para imagens de aulas
   
-  // Buckets para eventos
-  EVENT_IMAGES: 'event_images',
+  // Vídeos de aulas
+  LEARNING_VIDEOS: 'learning_videos',
   
-  // Bucket de fallback para emergências
-  FALLBACK: 'general_storage'
-};
+  // Imagens de cursos
+  COURSE_IMAGES: 'course_images'
+} as const;
 
-// Limites de tamanho de upload (em MB)
+// Limites de tamanho por tipo de arquivo (em MB)
 export const MAX_UPLOAD_SIZES = {
-  IMAGE: 5,       // 5MB para imagens
-  DOCUMENT: 25,   // 25MB para documentos
-  VIDEO: 200,     // 200MB para vídeos
-  AVATAR: 2       // 2MB para avatares
-};
+  IMAGE: 10,
+  DOCUMENT: 50,
+  VIDEO: 300,
+  GENERAL: 100
+} as const;
+
+// Tipos de arquivo aceitos por categoria
+export const ACCEPTED_FILE_TYPES = {
+  IMAGES: 'image/*',
+  DOCUMENTS: '.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt',
+  VIDEOS: 'video/*',
+  ALL: '*/*'
+} as const;
