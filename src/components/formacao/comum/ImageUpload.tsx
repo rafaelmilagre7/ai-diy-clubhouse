@@ -1,11 +1,11 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { uploadFileWithFallback } from "@/lib/supabase/storage";
+import { supabase } from "@/lib/supabase";
 import { ImagePlus, Trash2, Loader2, AlertCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { STORAGE_BUCKETS, MAX_UPLOAD_SIZES } from "@/lib/supabase/config";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { v4 as uuidv4 } from 'uuid';
 
 interface ImageUploadProps {
   value: string | undefined;
@@ -64,26 +64,42 @@ export const ImageUpload = ({
     try {
       console.log(`Iniciando upload para bucket: ${bucketName}, pasta: ${folderPath}`);
       
-      const uploadResult = await uploadFileWithFallback(
-        file,
-        bucketName,
-        folderPath,
-        (progress) => {
-          setProgress(Math.round(progress));
-        },
-        STORAGE_BUCKETS.FALLBACK // Usando o bucket de fallback definido nas constantes
-      );
-
-      // Verificação de tipo adequada com abordagem explícita
-      if ('error' in uploadResult) {
-        // Caso de erro
-        throw uploadResult.error;
-      }
+      // Gerar nome único para o arquivo
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${uuidv4()}.${fileExt}`;
+      const filePath = folderPath ? `${folderPath}/${fileName}` : fileName;
       
-      // Caso de sucesso - usando uma variável com tipagem explícita
-      const successResult = uploadResult as { publicUrl: string; path: string; error: null };
-      console.log("Upload bem-sucedido:", successResult);
-      onChange(successResult.publicUrl);
+      setProgress(25);
+      
+      // Upload direto para o Supabase Storage
+      const { data, error: uploadError } = await supabase.storage
+        .from(bucketName)
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: true,
+          contentType: file.type
+        });
+
+      if (uploadError) {
+        console.error('Erro no upload:', uploadError);
+        throw new Error(`Erro no upload: ${uploadError.message}`);
+      }
+
+      setProgress(75);
+      
+      // Obter URL pública
+      const { data: urlData } = supabase.storage
+        .from(bucketName)
+        .getPublicUrl(data.path);
+
+      if (!urlData.publicUrl) {
+        throw new Error("Não foi possível obter URL pública do arquivo");
+      }
+
+      setProgress(100);
+      
+      console.log('Upload concluído:', urlData.publicUrl);
+      onChange(urlData.publicUrl);
       
       toast({
         title: "Upload concluído",
