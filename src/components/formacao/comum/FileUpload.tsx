@@ -89,6 +89,12 @@ export const FileUpload = ({
       setUploadProgress(0);
       setError(null);
       
+      // Validar tamanho do arquivo
+      const maxSize = MAX_UPLOAD_SIZES.DOCUMENT * 1024 * 1024; // 25MB
+      if (file.size > maxSize) {
+        throw new Error(`Arquivo muito grande. Tamanho máximo: ${MAX_UPLOAD_SIZES.DOCUMENT}MB`);
+      }
+      
       // Primeiro, verificamos se o bucket existe e está acessível
       const bucketExists = await ensureBucketExists(bucketName);
       if (!bucketExists) {
@@ -106,18 +112,17 @@ export const FileUpload = ({
           setUploadProgress(progress);
           console.log(`Upload progresso: ${progress}%`);
         },
-        STORAGE_BUCKETS.FALLBACK // Usar bucket de fallback
+        STORAGE_BUCKETS.FALLBACK
       );
       
-      // Verificação adequada de tipos para result com uma abordagem explícita
+      // Verificação adequada de tipos
       if ('error' in uploadResult) {
-        // Caso de erro
         throw uploadResult.error;
       } 
       
-      // Caso de sucesso - definindo uma variável com o tipo explícito
       const successResult = uploadResult as { publicUrl: string; path: string; error: null };
       console.log("Upload concluído com sucesso:", successResult);
+      
       setFileName(file.name);
       onChange(successResult.publicUrl, file.type, file.size);
       
@@ -144,6 +149,7 @@ export const FileUpload = ({
   const handleRemoveFile = () => {
     onChange("", undefined, undefined);
     setFileName(null);
+    setError(null);
   };
 
   return (
@@ -180,7 +186,7 @@ export const FileUpload = ({
                     <span className="font-semibold">Clique para upload</span> ou arraste o arquivo
                   </p>
                   <p className="text-xs text-gray-500 dark:text-gray-400">
-                    Tamanho máximo recomendado: {MAX_UPLOAD_SIZES.DOCUMENT}MB
+                    Tamanho máximo: {MAX_UPLOAD_SIZES.DOCUMENT}MB
                   </p>
                 </>
               )}
