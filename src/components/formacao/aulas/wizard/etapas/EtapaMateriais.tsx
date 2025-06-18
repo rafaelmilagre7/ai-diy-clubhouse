@@ -1,31 +1,22 @@
 
-import React, { useEffect } from "react";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormDescription,
-  FormMessage
-} from "@/components/ui/form";
+import React from "react";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { FileUpload } from "@/components/formacao/common/FileUpload";
+import { Plus, Trash2, FileText, AlertCircle } from "lucide-react";
 import { UseFormReturn } from "react-hook-form";
 import { AulaFormValues } from "../schemas/aulaFormSchema";
-import { FileUpload } from "@/components/formacao/comum/FileUpload";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { File, Trash, Plus, Loader2 } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
-import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/lib/supabase";
+import { STORAGE_BUCKETS, ACCEPTED_FILE_TYPES } from "@/lib/supabase/config";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface EtapaMateriaisProps {
   form: UseFormReturn<AulaFormValues>;
   onNext: () => void;
   onPrevious: () => void;
   isSaving: boolean;
-  aulaId?: string; // ID da aula sendo editada, se for uma edição
 }
 
 const EtapaMateriais: React.FC<EtapaMateriaisProps> = ({
@@ -33,222 +24,191 @@ const EtapaMateriais: React.FC<EtapaMateriaisProps> = ({
   onNext,
   onPrevious,
   isSaving,
-  aulaId
 }) => {
-  const { toast } = useToast();
-  const [savingMaterial, setSavingMaterial] = React.useState<number | null>(null);
+  const { watch, setValue, formState: { errors } } = form;
+  const materials = watch("materials") || [];
 
-  const handleContinue = async () => {
-    const result = await form.trigger(['resources']);
-    if (result) {
-      onNext();
-    }
+  const addMaterial = () => {
+    const newMaterial = {
+      title: "",
+      description: "",
+      url: "",
+      type: "document",
+      fileName: "",
+      fileSize: 0,
+    };
+    setValue("materials", [...materials, newMaterial]);
   };
 
-  const handleAddMaterial = () => {
-    const currentResources = form.getValues().resources || [];
-    form.setValue("resources", [
-      ...currentResources, 
-      { title: "", description: "", url: "", type: "document" }
-    ]);
+  const removeMaterial = (index: number) => {
+    const updatedMaterials = materials.filter((_, i) => i !== index);
+    setValue("materials", updatedMaterials);
   };
 
-  const handleRemoveMaterial = (index: number) => {
-    const resources = form.getValues().resources || [];
-    const newResources = [...resources];
-    newResources.splice(index, 1);
-    form.setValue("resources", newResources);
+  const updateMaterial = (index: number, field: string, value: any) => {
+    const updatedMaterials = [...materials];
+    updatedMaterials[index] = {
+      ...updatedMaterials[index],
+      [field]: value,
+    };
+    setValue("materials", updatedMaterials);
   };
 
-  const handleMaterialChange = (index: number, field: string, value: any) => {
-    const newResources = [...form.getValues().resources];
-    newResources[index] = { ...newResources[index], [field]: value };
-    form.setValue("resources", newResources);
+  const handleFileUpload = (
+    index: number,
+    url: string,
+    fileType: string | undefined,
+    fileSize: number | undefined
+  ) => {
+    updateMaterial(index, "url", url);
+    updateMaterial(index, "type", fileType || "document");
+    updateMaterial(index, "fileSize", fileSize || 0);
   };
-
-  // Função para salvar o material no banco de dados quando o upload for concluído
-  const saveResourceToDatabase = async (index: number) => {
-    try {
-      setSavingMaterial(index);
-      const resources = form.getValues().resources || [];
-      const resource = resources[index];
-      
-      if (!resource?.url || !resource?.title) {
-        toast({
-          title: "Erro ao salvar material",
-          description: "URL e título são obrigatórios.",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      // Se estamos editando uma aula, salvar diretamente no banco
-      if (aulaId) {
-        console.log("Salvando material para a aula:", aulaId);
-        
-        const { data, error } = await supabase
-          .from("learning_resources")
-          .insert({
-            lesson_id: aulaId,
-            name: resource.title,
-            description: resource.description || "",
-            file_url: resource.url,
-            file_type: resource.type,
-            file_size_bytes: resource.fileSize,
-            order_index: index
-          })
-          .select("*")
-          .single();
-          
-        if (error) {
-          console.error("Erro ao salvar material no banco:", error);
-          throw error;
-        }
-
-        console.log("Material salvo com sucesso:", data);
-        
-        toast({
-          title: "Material adicionado",
-          description: "O material foi salvo com sucesso.",
-        });
-      }
-      
-    } catch (error: any) {
-      console.error("Erro ao salvar material:", error);
-      toast({
-        title: "Erro ao salvar material",
-        description: error.message || "Ocorreu um erro ao tentar salvar o material.",
-        variant: "destructive",
-      });
-    } finally {
-      setSavingMaterial(null);
-    }
-  };
-
-  const handleFileUpload = async (index: number, url: string, fileType: string | undefined, fileSize: number | undefined) => {
-    handleMaterialChange(index, "url", url);
-    handleMaterialChange(index, "type", fileType || "document");
-    handleMaterialChange(index, "fileSize", fileSize);
-    
-    // Se temos um aulaId, salvar material diretamente no banco
-    if (aulaId) {
-      await saveResourceToDatabase(index);
-    }
-  };
-
-  const resources = form.watch('resources') || [];
 
   return (
-    <Form {...form}>
-      <div className="space-y-6 py-4">
-        <div>
-          <div className="flex items-center justify-between mb-4">
-            <FormLabel className="text-base">Materiais de Apoio</FormLabel>
-            <Button
-              type="button"
-              size="sm"
-              onClick={handleAddMaterial}
-            >
-              <Plus className="w-4 h-4 mr-1" /> Adicionar Material
-            </Button>
-          </div>
-          
-          <FormDescription className="mb-6">
-            Adicione arquivos como PDFs, documentos ou planilhas que serão disponibilizados aos alunos.
-          </FormDescription>
-          
-          {resources.length === 0 ? (
-            <div className="p-8 border-2 border-dashed rounded-md text-center">
-              <p className="text-muted-foreground">
-                Nenhum material adicionado. Clique em "Adicionar Material" para começar.
-              </p>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {resources.map((resource, index) => (
-                <Card key={index} className="overflow-hidden">
-                  <CardContent className="p-4">
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="flex items-center">
-                        <File className="h-5 w-5 mr-2 text-primary" />
-                        <span className="font-medium">Material {index + 1}</span>
-                      </div>
-                      <Button 
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleRemoveMaterial(index)}
-                        disabled={savingMaterial === index}
-                      >
-                        <Trash className="h-4 w-4 mr-1" />
-                        Remover
-                      </Button>
-                    </div>
-                    
-                    <div className="space-y-4">
-                      <Input
-                        placeholder="Título do material"
-                        value={resource.title || ''}
-                        onChange={(e) => handleMaterialChange(index, "title", e.target.value)}
-                        disabled={savingMaterial === index}
-                      />
-                      
-                      <Textarea
-                        placeholder="Descrição do material"
-                        value={resource.description || ''}
-                        onChange={(e) => handleMaterialChange(index, "description", e.target.value)}
-                        className="resize-none h-20"
-                        disabled={savingMaterial === index}
-                      />
-                      
-                      <FileUpload
-                        value={resource.url || ''}
-                        onChange={(url, fileType, fileSize) => handleFileUpload(index, url, fileType, fileSize)}
-                        bucketName="solution_files"
-                        folderPath="learning_materials"
-                        acceptedFileTypes="application/pdf, application/msword, application/vnd.openxmlformats-officedocument.wordprocessingml.document, application/vnd.ms-excel, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/zip, image/jpeg, image/png"
-                        disabled={savingMaterial === index}
-                      />
-                      
-                      {savingMaterial === index && (
-                        <div className="flex items-center justify-center p-2 bg-muted rounded">
-                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                          <span className="text-sm">Salvando material...</span>
-                        </div>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          )}
-        </div>
+    <div className="space-y-6">
+      <div>
+        <h3 className="text-lg font-semibold mb-2">Materiais de Apoio</h3>
+        <p className="text-sm text-muted-foreground mb-4">
+          Adicione PDFs, documentos e outros materiais para complementar a aula.
+        </p>
         
-        <div className="flex justify-between pt-4 border-t">
-          <Button 
-            type="button" 
-            variant="outline" 
-            onClick={onPrevious}
-          >
-            Voltar
-          </Button>
-          <Button 
-            type="button" 
-            onClick={handleContinue}
+        <Alert className="mb-4">
+          <FileText className="h-4 w-4" />
+          <AlertDescription>
+            Os materiais serão armazenados no Supabase Storage e ficarão disponíveis para download pelos alunos.
+          </AlertDescription>
+        </Alert>
+      </div>
+
+      {materials.length === 0 ? (
+        <Card className="border-dashed">
+          <CardContent className="flex flex-col items-center justify-center py-12">
+            <FileText className="h-12 w-12 text-muted-foreground mb-4" />
+            <p className="text-lg font-medium mb-2">Nenhum material adicionado</p>
+            <p className="text-sm text-muted-foreground mb-4 text-center">
+              Adicione materiais de apoio como PDFs, documentos ou outros arquivos úteis para os alunos.
+            </p>
+            <Button onClick={addMaterial} variant="outline">
+              <Plus className="h-4 w-4 mr-2" />
+              Adicionar Primeiro Material
+            </Button>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="space-y-4">
+          {materials.map((material, index) => (
+            <Card key={index}>
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-base">
+                    Material {index + 1}
+                  </CardTitle>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => removeMaterial(index)}
+                    disabled={isSaving}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor={`material-title-${index}`}>
+                      Título do Material *
+                    </Label>
+                    <Input
+                      id={`material-title-${index}`}
+                      value={material.title}
+                      onChange={(e) =>
+                        updateMaterial(index, "title", e.target.value)
+                      }
+                      placeholder="Ex: Apostila de Introdução"
+                      disabled={isSaving}
+                      required
+                    />
+                    {errors?.materials?.[index]?.title && (
+                      <p className="text-sm text-destructive mt-1">
+                        {errors.materials[index]?.title?.message}
+                      </p>
+                    )}
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor={`material-description-${index}`}>
+                      Descrição
+                    </Label>
+                    <Textarea
+                      id={`material-description-${index}`}
+                      value={material.description}
+                      onChange={(e) =>
+                        updateMaterial(index, "description", e.target.value)
+                      }
+                      placeholder="Descrição opcional do material"
+                      disabled={isSaving}
+                      rows={2}
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <Label>Upload do Arquivo</Label>
+                  <FileUpload
+                    value={material.url}
+                    onChange={(url, fileType, fileSize) =>
+                      handleFileUpload(index, url, fileType, fileSize)
+                    }
+                    bucketName={STORAGE_BUCKETS.LEARNING_MATERIALS}
+                    folderPath="materials"
+                    acceptedFileTypes={ACCEPTED_FILE_TYPES.DOCUMENTS}
+                  />
+                  {errors?.materials?.[index]?.url && (
+                    <p className="text-sm text-destructive mt-1">
+                      {errors.materials[index]?.url?.message}
+                    </p>
+                  )}
+                </div>
+
+                {material.fileSize && material.fileSize > 0 && (
+                  <div className="text-sm text-muted-foreground">
+                    Tamanho: {(material.fileSize / (1024 * 1024)).toFixed(2)} MB
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          ))}
+
+          <Button
+            type="button"
+            variant="outline"
+            onClick={addMaterial}
             disabled={isSaving}
+            className="w-full"
           >
-            {isSaving ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Salvando...
-              </>
-            ) : (
-              'Continuar'
-            )}
+            <Plus className="h-4 w-4 mr-2" />
+            Adicionar Mais Material
           </Button>
         </div>
+      )}
+
+      <div className="flex justify-between pt-4 border-t">
+        <Button
+          type="button"
+          variant="outline"
+          onClick={onPrevious}
+          disabled={isSaving}
+        >
+          Voltar
+        </Button>
+        <Button type="button" onClick={onNext} disabled={isSaving}>
+          Continuar para Publicação
+        </Button>
       </div>
-    </Form>
+    </div>
   );
 };
 

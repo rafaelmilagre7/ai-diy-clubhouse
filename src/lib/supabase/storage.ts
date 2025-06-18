@@ -1,10 +1,11 @@
-
 import { supabase } from './client';
 import { v4 as uuidv4 } from 'uuid';
 
-// Função para verificar se um bucket existe
+// Função para verificar se um bucket existe e criá-lo se necessário
 export const ensureBucketExists = async (bucketName: string): Promise<boolean> => {
   try {
+    console.log(`Verificando bucket: ${bucketName}`);
+    
     const { data: buckets, error } = await supabase.storage.listBuckets();
     
     if (error) {
@@ -24,7 +25,24 @@ export const ensureBucketExists = async (bucketName: string): Promise<boolean> =
       
       if (createError) {
         console.error(`Erro ao criar bucket ${bucketName}:`, createError);
-        return false;
+        
+        // Tentar via RPC como fallback
+        try {
+          const { error: rpcError } = await supabase.rpc('create_storage_public_policy', {
+            bucket_name: bucketName
+          });
+          
+          if (rpcError) {
+            console.error(`Erro ao criar bucket via RPC: ${rpcError.message}`);
+            return false;
+          }
+          
+          console.log(`Bucket ${bucketName} criado via RPC com sucesso`);
+          return true;
+        } catch (rpcError) {
+          console.error(`Falha na criação via RPC:`, rpcError);
+          return false;
+        }
       }
       
       console.log(`Bucket ${bucketName} criado com sucesso`);
@@ -37,7 +55,7 @@ export const ensureBucketExists = async (bucketName: string): Promise<boolean> =
   }
 };
 
-// Função de upload com fallback
+// Função de upload com fallback melhorado
 export const uploadFileWithFallback = async (
   file: File,
   bucketName: string,
@@ -50,10 +68,24 @@ export const uploadFileWithFallback = async (
     
     // Gerar nome único para o arquivo
     const fileExt = file.name.split('.').pop();
-    const fileName = `${uuidv4()}.${fileExt}`;
+    const timestamp = Date.now();
+    const sanitizedName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+    const fileName = `${timestamp}_${sanitizedName}`;
     const filePath = folderPath ? `${folderPath}/${fileName}` : fileName;
     
+    console.log(`Iniciando upload: ${file.name} -> ${bucketName}/${filePath}`);
+    
     if (onProgress) onProgress(25);
+    
+    // Verificar se o bucket principal existe
+    const bucketReady = await ensureBucketExists(bucketName);
+    if (!bucketReady && fallbackBucket) {
+      console.log(`Bucket principal ${bucketName} não disponível, usando fallback ${fallbackBucket}`);
+      bucketName = fallbackBucket;
+      await ensureBucketExists(bucketName);
+    }
+    
+    if (onProgress) onProgress(40);
     
     // Tentar upload no bucket principal
     let uploadResult = await supabase.storage
@@ -65,8 +97,10 @@ export const uploadFileWithFallback = async (
       });
     
     // Se falhar e tiver fallback, tentar no fallback
-    if (uploadResult.error && fallbackBucket) {
+    if (uploadResult.error && fallbackBucket && bucketName !== fallbackBucket) {
       console.log(`Upload falhou no bucket ${bucketName}, tentando fallback ${fallbackBucket}`);
+      
+      await ensureBucketExists(fallbackBucket);
       
       uploadResult = await supabase.storage
         .from(fallbackBucket)
@@ -79,10 +113,12 @@ export const uploadFileWithFallback = async (
       // Atualizar bucketName para o fallback se deu certo
       if (!uploadResult.error) {
         bucketName = fallbackBucket;
+        console.log(`Upload bem-sucedido no bucket fallback ${fallbackBucket}`);
       }
     }
     
     if (uploadResult.error) {
+      console.error(`Falha final no upload:`, uploadResult.error);
       throw new Error(`Falha no upload: ${uploadResult.error.message}`);
     }
     
@@ -96,6 +132,8 @@ export const uploadFileWithFallback = async (
     if (!urlData.publicUrl) {
       throw new Error('Falha ao obter URL pública');
     }
+    
+    console.log(`Upload concluído com sucesso: ${urlData.publicUrl}`);
     
     if (onProgress) onProgress(100);
     
@@ -126,15 +164,51 @@ export const setupLearningStorageBuckets = async (): Promise<{ success: boolean;
   ];
   
   try {
+    console.log('Configurando buckets de armazenamento...');
+    
+    let successCount = 0;
+    const errors: string[] = [];
+    
     for (const bucket of buckets) {
-      const success = await ensureBucketExists(bucket);
-      if (!success) {
-        return { success: false, error: `Falha ao configurar bucket ${bucket}` };
+      try {
+        const success = await ensureBucketExists(bucket);
+        if (success) {
+          successCount++;
+          console.log(`✓ Bucket ${bucket} configurado`);
+        } else {
+          errors.push(`Falha ao configurar bucket ${bucket}`);
+          console.error(`✗ Falha ao configurar bucket ${bucket}`);
+        }
+      } catch (error: any) {
+        const errorMsg = `Erro ao configurar bucket ${bucket}: ${error.message}`;
+        errors.push(errorMsg);
+        console.error(`✗ ${errorMsg}`);
       }
     }
+    
+    if (successCount === 0) {
+      return { 
+        success: false, 
+        error: `Nenhum bucket pôde ser configurado. Erros: ${errors.join(', ')}` 
+      };
+    }
+    
+    if (errors.length > 0) {
+      return { 
+        success: true, 
+        error: `${successCount}/${buckets.length} buckets configurados. Problemas: ${errors.join(', ')}` 
+      };
+    }
+    
+    console.log(`✓ Todos os ${successCount} buckets configurados com sucesso`);
     return { success: true };
+    
   } catch (error: any) {
-    return { success: false, error: error.message || 'Erro ao configurar buckets' };
+    console.error('Erro geral na configuração de buckets:', error);
+    return { 
+      success: false, 
+      error: error.message || 'Erro ao configurar buckets' 
+    };
   }
 };
 
