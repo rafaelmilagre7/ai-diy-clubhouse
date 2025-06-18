@@ -1,11 +1,13 @@
-import React, { useState } from "react";
+
+import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
+import { uploadFileWithFallback, ensureBucketExists } from "@/lib/supabase/storage";
 import { Upload, Loader2, File, X } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { v4 as uuidv4 } from 'uuid';
+import { STORAGE_BUCKETS } from "@/lib/supabase/config";
 
 interface FileUploadProps {
   value: string;
@@ -25,6 +27,25 @@ export const FileUpload = ({
   const [uploading, setUploading] = useState(false);
   const [fileName, setFileName] = useState<string | null>(null);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [bucketReady, setBucketReady] = useState(false);
+
+  // Verificar status do bucket ao montar o componente
+  useEffect(() => {
+    const checkBucket = async () => {
+      try {
+        const isReady = await ensureBucketExists(bucketName);
+        setBucketReady(isReady);
+        
+        if (!isReady) {
+          console.warn(`Bucket ${bucketName} não está pronto. Algumas funcionalidades podem não estar disponíveis.`);
+        }
+      } catch (error) {
+        console.error("Erro ao verificar bucket:", error);
+      }
+    };
+    
+    checkBucket();
+  }, [bucketName]);
 
   // Extract filename from URL for display
   const getFileNameFromUrl = (url: string): string => {
@@ -39,7 +60,7 @@ export const FileUpload = ({
   };
 
   // Set initial filename if URL exists
-  React.useEffect(() => {
+  useEffect(() => {
     if (value) {
       setFileName(getFileNameFromUrl(value));
     }
@@ -50,36 +71,25 @@ export const FileUpload = ({
       setUploading(true);
       setUploadProgress(0);
       
-      // Gerar nome único para o arquivo
-      const fileExt = file.name.split('.').pop();
-      const uniqueName = `${uuidv4()}.${fileExt}`;
-      const filePath = folderPath ? `${folderPath}/${uniqueName}` : uniqueName;
-
-      console.log(`Fazendo upload para: ${bucketName}/${filePath}`);
-
-      // Upload direto para o Supabase Storage
-      const { data, error } = await supabase.storage
-        .from(bucketName)
-        .upload(filePath, file, {
-          cacheControl: '3600',
-          upsert: false
-        });
-
-      if (error) {
-        console.error('Erro no upload:', error);
-        throw new Error(`Falha no upload: ${error.message}`);
+      // Upload com mecanismo de fallback
+      const result = await uploadFileWithFallback(
+        file,
+        bucketName,
+        folderPath,
+        (progress) => setUploadProgress(progress),
+        STORAGE_BUCKETS.FALLBACK // Usar bucket de fallback
+      );
+      
+      // Verificar se há erro e tratar corretamente
+      if ('error' in result) {
+        throw result.error;
       }
-
-      // Obter URL pública
-      const { data: urlData } = supabase.storage
-        .from(bucketName)
-        .getPublicUrl(data.path);
-
-      const publicUrl = urlData.publicUrl;
-      console.log('Upload concluído:', publicUrl);
+      
+      // Caso de sucesso - definindo uma variável com tipo explícito
+      const successResult = result as { publicUrl: string; path: string; error: null };
       
       setFileName(file.name);
-      onChange(publicUrl, file.type, file.size);
+      onChange(successResult.publicUrl, file.type, file.size);
       
       toast.success("Upload realizado com sucesso!");
       

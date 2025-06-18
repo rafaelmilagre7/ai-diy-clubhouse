@@ -24,12 +24,12 @@ const EtapaMateriais: React.FC<EtapaMateriaisProps> = ({
   onPrevious,
   isSaving
 }) => {
-  const { watch, setValue } = form;
-  const resources = watch("resources") || [];
+  const { watch, setValue, getValues } = form;
+  const materiais = watch("materiais") || [];
 
   const adicionarMaterial = () => {
-    const novosRecursos = [
-      ...resources,
+    const novosMateriais = [
+      ...materiais,
       {
         title: "",
         description: "",
@@ -37,49 +37,49 @@ const EtapaMateriais: React.FC<EtapaMateriaisProps> = ({
         type: "document"
       }
     ];
-    setValue("resources", novosRecursos);
+    setValue("materiais", novosMateriais);
   };
 
   const removerMaterial = (index: number) => {
-    const novosRecursos = resources.filter((_, i) => i !== index);
-    setValue("resources", novosRecursos);
+    const novosMateriais = materiais.filter((_, i) => i !== index);
+    setValue("materiais", novosMateriais);
   };
 
   const atualizarMaterial = (index: number, campo: string, valor: string) => {
-    const novosRecursos = [...resources];
-    novosRecursos[index] = {
-      ...novosRecursos[index],
+    const novosMateriais = [...materiais];
+    novosMateriais[index] = {
+      ...novosMateriais[index],
       [campo]: valor
     };
-    setValue("resources", novosRecursos);
+    setValue("materiais", novosMateriais);
   };
 
   const handleUploadComplete = (index: number) => (url: string, fileName: string, fileSize: number) => {
     console.log('Upload concluído:', { url, fileName, fileSize });
     
     // Atualizar o material com a URL e informações do arquivo
-    const novosRecursos = [...resources];
-    novosRecursos[index] = {
-      ...novosRecursos[index],
+    const novosMateriais = [...materiais];
+    novosMateriais[index] = {
+      ...novosMateriais[index],
       url: url,
-      title: novosRecursos[index].title || fileName,
+      title: novosMateriais[index].title || fileName,
       fileName: fileName,
       fileSize: fileSize
     };
-    setValue("resources", novosRecursos);
+    setValue("materiais", novosMateriais);
     
     toast.success("Material adicionado com sucesso!");
   };
 
   const handleRemoveFile = (index: number) => {
-    const novosRecursos = [...resources];
-    novosRecursos[index] = {
-      ...novosRecursos[index],
+    const novosMateriais = [...materiais];
+    novosMateriais[index] = {
+      ...novosMateriais[index],
       url: "",
       fileName: undefined,
       fileSize: undefined
     };
-    setValue("resources", novosRecursos);
+    setValue("materiais", novosMateriais);
   };
 
   return (
@@ -93,7 +93,7 @@ const EtapaMateriais: React.FC<EtapaMateriaisProps> = ({
             Adicione documentos, links e outros materiais que complementem a aula.
           </p>
 
-          {resources.map((material, index) => (
+          {materiais.map((material, index) => (
             <Card key={index} className="p-4 border-dashed">
               <div className="space-y-4">
                 <div className="flex justify-between items-center">

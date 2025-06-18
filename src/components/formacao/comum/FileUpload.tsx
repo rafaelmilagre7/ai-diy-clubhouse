@@ -1,16 +1,17 @@
 
-import React, { useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { Upload, Loader2, File, X } from "lucide-react";
+import { uploadFileWithFallback, ensureBucketExists } from "@/lib/supabase/storage";
+import { Upload, Loader2, File, X, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { v4 as uuidv4 } from 'uuid';
+import { STORAGE_BUCKETS, MAX_UPLOAD_SIZES } from "@/lib/supabase/config";
 
 interface FileUploadProps {
   value: string;
-  onChange: (value: string, fileType?: string | undefined, fileSize?: number | undefined) => void;
+  onChange: (value: string, fileType: string | undefined, fileSize: number | undefined) => void;
   bucketName: string;
   folderPath?: string;
   acceptedFileTypes?: string;
@@ -28,6 +29,40 @@ export const FileUpload = ({
   const [uploading, setUploading] = useState(false);
   const [fileName, setFileName] = useState<string | null>(null);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [bucketReady, setBucketReady] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // Verificar status do bucket ao montar o componente
+  useEffect(() => {
+    const checkBucket = async () => {
+      try {
+        console.log(`Verificando bucket: ${bucketName}`);
+        const isReady = await ensureBucketExists(bucketName);
+        setBucketReady(isReady);
+        
+        if (!isReady) {
+          console.warn(`Bucket ${bucketName} não está pronto. Tentando criar...`);
+          // Tentativa de criar o bucket via RPC
+          const { data, error } = await supabase.rpc('create_storage_public_policy', {
+            bucket_name: bucketName
+          });
+          
+          if (error) {
+            console.error("Erro ao criar bucket via RPC:", error);
+            setError(`Não foi possível inicializar o bucket de armazenamento: ${error.message}`);
+          } else {
+            console.log("Bucket criado com sucesso via RPC:", data);
+            setBucketReady(true);
+          }
+        }
+      } catch (error) {
+        console.error("Erro ao verificar bucket:", error);
+        setError("Erro ao verificar o bucket de armazenamento. Por favor, tente novamente.");
+      }
+    };
+    
+    checkBucket();
+  }, [bucketName]);
 
   // Extract filename from URL for display
   const getFileNameFromUrl = (url: string): string => {
@@ -42,7 +77,7 @@ export const FileUpload = ({
   };
 
   // Set initial filename if URL exists
-  React.useEffect(() => {
+  useEffect(() => {
     if (value) {
       setFileName(getFileNameFromUrl(value));
     }
@@ -52,43 +87,46 @@ export const FileUpload = ({
     try {
       setUploading(true);
       setUploadProgress(0);
+      setError(null);
       
-      // Gerar nome único para o arquivo
-      const fileExt = file.name.split('.').pop();
-      const uniqueName = `${uuidv4()}.${fileExt}`;
-      const filePath = folderPath ? `${folderPath}/${uniqueName}` : uniqueName;
-
-      console.log(`Fazendo upload para: ${bucketName}/${filePath}`);
-
-      // Upload direto para o Supabase Storage
-      const { data, error } = await supabase.storage
-        .from(bucketName)
-        .upload(filePath, file, {
-          cacheControl: '3600',
-          upsert: false
-        });
-
-      if (error) {
-        console.error('Erro no upload:', error);
-        throw new Error(`Falha no upload: ${error.message}`);
+      // Primeiro, verificamos se o bucket existe e está acessível
+      const bucketExists = await ensureBucketExists(bucketName);
+      if (!bucketExists) {
+        console.warn(`Bucket ${bucketName} não encontrado, usando fallback: ${STORAGE_BUCKETS.FALLBACK}`);
+        toast.warning("Usando armazenamento alternativo. O upload pode demorar um pouco mais.");
       }
-
-      // Obter URL pública
-      const { data: urlData } = supabase.storage
-        .from(bucketName)
-        .getPublicUrl(data.path);
-
-      const publicUrl = urlData.publicUrl;
-      console.log('Upload concluído:', publicUrl);
       
+      // Upload com mecanismo de fallback aprimorado
+      console.log(`Iniciando upload para bucket: ${bucketName}, pasta: ${folderPath}`);
+      const uploadResult = await uploadFileWithFallback(
+        file,
+        bucketName,
+        folderPath,
+        (progress) => {
+          setUploadProgress(progress);
+          console.log(`Upload progresso: ${progress}%`);
+        },
+        STORAGE_BUCKETS.FALLBACK // Usar bucket de fallback
+      );
+      
+      // Verificação adequada de tipos para result com uma abordagem explícita
+      if ('error' in uploadResult) {
+        // Caso de erro
+        throw uploadResult.error;
+      } 
+      
+      // Caso de sucesso - definindo uma variável com o tipo explícito
+      const successResult = uploadResult as { publicUrl: string; path: string; error: null };
+      console.log("Upload concluído com sucesso:", successResult);
       setFileName(file.name);
-      onChange(publicUrl, file.type, file.size);
+      onChange(successResult.publicUrl, file.type, file.size);
       
       toast.success("Upload realizado com sucesso!");
       
     } catch (error: any) {
       console.error("Erro no upload de arquivo:", error);
-      toast.error("Erro ao fazer upload do arquivo. Tente novamente.");
+      setError(error.message || "Erro ao fazer upload do arquivo");
+      toast.error(error.message || "Erro ao fazer upload do arquivo. Tente novamente.");
     } finally {
       setUploading(false);
     }
@@ -110,6 +148,13 @@ export const FileUpload = ({
 
   return (
     <div className="space-y-4">
+      {error && (
+        <div className="bg-destructive/10 text-destructive p-3 rounded-md flex items-center space-x-2 text-sm">
+          <AlertCircle className="h-4 w-4 flex-shrink-0" />
+          <span>{error}</span>
+        </div>
+      )}
+
       {!value || !fileName ? (
         <div className="flex items-center justify-center w-full">
           <label
@@ -135,7 +180,7 @@ export const FileUpload = ({
                     <span className="font-semibold">Clique para upload</span> ou arraste o arquivo
                   </p>
                   <p className="text-xs text-gray-500 dark:text-gray-400">
-                    Tamanho máximo recomendado: 10MB
+                    Tamanho máximo recomendado: {MAX_UPLOAD_SIZES.DOCUMENT}MB
                   </p>
                 </>
               )}
@@ -145,7 +190,7 @@ export const FileUpload = ({
               type="file"
               className="hidden"
               onChange={handleFileChange}
-              disabled={uploading || disabled}
+              disabled={uploading || disabled || !bucketReady}
               accept={acceptedFileTypes}
             />
           </label>
