@@ -6,11 +6,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { FileUpload } from "@/components/formacao/common/FileUpload";
-import { Plus, Trash2, FileText, AlertCircle } from "lucide-react";
+import { Plus, Trash2, FileText, CheckCircle } from "lucide-react";
 import { UseFormReturn } from "react-hook-form";
 import { AulaFormValues } from "../schemas/aulaFormSchema";
 import { STORAGE_BUCKETS, ACCEPTED_FILE_TYPES } from "@/lib/supabase/config";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface EtapaMateriaisProps {
   form: UseFormReturn<AulaFormValues>;
@@ -70,15 +69,8 @@ const EtapaMateriais: React.FC<EtapaMateriaisProps> = ({
       <div>
         <h3 className="text-lg font-semibold mb-2">Materiais de Apoio</h3>
         <p className="text-sm text-muted-foreground mb-4">
-          Adicione PDFs, documentos e outros materiais para complementar a aula.
+          Adicione PDFs, documentos e outros materiais para complementar o aprendizado dos alunos.
         </p>
-        
-        <Alert className="mb-4">
-          <FileText className="h-4 w-4" />
-          <AlertDescription>
-            Os materiais serão armazenados no Supabase Storage e ficarão disponíveis para download pelos alunos.
-          </AlertDescription>
-        </Alert>
       </div>
 
       {materials.length === 0 ? (
@@ -173,9 +165,27 @@ const EtapaMateriais: React.FC<EtapaMateriaisProps> = ({
                   )}
                 </div>
 
-                {material.fileSize && material.fileSize > 0 && (
+                {/* Indicador de sucesso do upload */}
+                {material.url && material.title && (
+                  <div className="flex items-center gap-2 p-3 bg-green-50 border border-green-200 rounded-md">
+                    <CheckCircle className="h-4 w-4 text-green-600" />
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-green-800">
+                        Material "{material.title}" carregado com sucesso!
+                      </p>
+                      {material.fileSize && material.fileSize > 0 && (
+                        <p className="text-xs text-green-600">
+                          Tamanho: {(material.fileSize / (1024 * 1024)).toFixed(2)} MB
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Mostrar apenas tamanho se não tiver título ainda */}
+                {material.fileSize && material.fileSize > 0 && !material.title && (
                   <div className="text-sm text-muted-foreground">
-                    Tamanho: {(material.fileSize / (1024 * 1024)).toFixed(2)} MB
+                    Arquivo carregado • Tamanho: {(material.fileSize / (1024 * 1024)).toFixed(2)} MB
                   </div>
                 )}
               </CardContent>
