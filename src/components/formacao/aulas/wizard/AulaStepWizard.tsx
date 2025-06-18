@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -7,7 +8,6 @@ import { Loader2 } from "lucide-react";
 
 // Serviços e hooks
 import { useAulaForm } from "./hooks/useAulaForm";
-import { useAulaStorage } from "./hooks/useAulaStorage";
 import { saveLesson } from "./services/lessonService";
 import { AulaFormValues } from "./schemas/aulaFormSchema";
 import { DifficultyLevel } from "./types/aulaTypes";
@@ -40,7 +40,7 @@ const AulaStepWizard: React.FC<AulaStepWizardProps> = ({
   onSuccess,
   onClose,
 }) => {
-  // Usar os hooks personalizados
+  // Usar o hook de formulário personalizado
   const {
     form,
     isSaving,
@@ -51,13 +51,6 @@ const AulaStepWizard: React.FC<AulaStepWizardProps> = ({
     initialLoading,
     defaultValues
   } = useAulaForm(aula, moduleId, onSuccess);
-  
-  const {
-    storageReady,
-    storageChecking,
-    storageError,
-    retryStorageSetup
-  } = useAulaStorage();
   
   // Usar o hook de etapas
   const { 
@@ -131,44 +124,6 @@ const AulaStepWizard: React.FC<AulaStepWizardProps> = ({
     if (onClose) onClose();
   };
 
-  // Exibir aviso se houver problemas de armazenamento
-  const renderStorageWarning = () => {
-    if (storageChecking) {
-      return (
-        <div className="bg-blue-50 border border-blue-300 p-3 rounded-md mt-2 mb-4">
-          <p className="text-blue-800 text-sm flex items-center">
-            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-            Verificando configuração de armazenamento...
-          </p>
-        </div>
-      );
-    }
-    
-    if (!storageReady) {
-      return (
-        <div className="bg-amber-50 border border-amber-300 p-3 rounded-md mt-2 mb-4">
-          <div className="flex flex-col space-y-2">
-            <p className="text-amber-800 text-sm">
-              <strong>Atenção:</strong> A configuração de armazenamento pode não estar completa. 
-              Alguns recursos como upload de imagens e vídeos podem não funcionar corretamente.
-            </p>
-            <div>
-              <Button 
-                size="sm" 
-                variant="outline" 
-                onClick={retryStorageSetup} 
-                className="text-xs"
-              >
-                Tentar configurar novamente
-              </Button>
-            </div>
-          </div>
-        </div>
-      );
-    }
-    return null;
-  };
-
   if (initialLoading) {
     return (
       <Dialog open={open} onOpenChange={onOpenChange}>
@@ -194,8 +149,6 @@ const AulaStepWizard: React.FC<AulaStepWizardProps> = ({
             onStepClick={goToStep}
           />
         </DialogHeader>
-        
-        {renderStorageWarning()}
         
         {isSaving && (
           <div className="bg-blue-50 border border-blue-200 p-4 rounded-md mb-4 flex items-center space-x-3">
