@@ -1,229 +1,227 @@
 
-import { useState, useEffect } from "react";
-import { supabase } from "@/lib/supabase";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { toast } from "sonner";
-import { uploadFileWithFallback, ensureBucketExists } from "@/lib/supabase/storage";
-import { Upload, Loader2, File, X, AlertCircle } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { STORAGE_BUCKETS, MAX_UPLOAD_SIZES } from "@/lib/supabase/config";
+import React, { useState, useRef } from 'react';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { useFileUpload } from '@/hooks/useFileUpload';
+import { Upload, FileIcon, X, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface FileUploadProps {
-  value: string;
-  onChange: (value: string, fileType: string | undefined, fileSize: number | undefined) => void;
+  value?: string;
+  onChange: (url: string, fileName?: string, fileSize?: number) => void;
   bucketName: string;
-  folderPath?: string;
-  acceptedFileTypes?: string;
-  disabled?: boolean;
+  folder?: string;
+  accept?: string;
+  maxSize?: number;
+  label?: string;
+  description?: string;
 }
 
-export const FileUpload = ({ 
-  value, 
-  onChange, 
-  bucketName, 
-  folderPath = "",
-  acceptedFileTypes = "*/*",
-  disabled = false
-}: FileUploadProps) => {
-  const [uploading, setUploading] = useState(false);
-  const [fileName, setFileName] = useState<string | null>(null);
+export const FileUpload: React.FC<FileUploadProps> = ({
+  value = '',
+  onChange,
+  bucketName,
+  folder = '',
+  accept = '*/*',
+  maxSize = 25,
+  label = 'Upload de Arquivo',
+  description = 'Selecione um arquivo para enviar'
+}) => {
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [uploadSuccess, setUploadSuccess] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
-  const [bucketReady, setBucketReady] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Verificar status do bucket ao montar o componente
-  useEffect(() => {
-    const checkBucket = async () => {
-      try {
-        console.log(`Verificando bucket: ${bucketName}`);
-        const isReady = await ensureBucketExists(bucketName);
-        setBucketReady(isReady);
-        
-        if (!isReady) {
-          console.warn(`Bucket ${bucketName} não está pronto. Tentando criar...`);
-          // Tentativa de criar o bucket via RPC
-          const { data, error } = await supabase.rpc('create_storage_public_policy', {
-            bucket_name: bucketName
-          });
-          
-          if (error) {
-            console.error("Erro ao criar bucket via RPC:", error);
-            setError(`Não foi possível inicializar o bucket de armazenamento: ${error.message}`);
-          } else {
-            console.log("Bucket criado com sucesso via RPC:", data);
-            setBucketReady(true);
-          }
-        }
-      } catch (error) {
-        console.error("Erro ao verificar bucket:", error);
-        setError("Erro ao verificar o bucket de armazenamento. Por favor, tente novamente.");
-      }
-    };
+  const handleUploadComplete = (url: string, fileName?: string, fileSize?: number) => {
+    console.log('📁 Upload completo:', { url, fileName, fileSize });
     
-    checkBucket();
-  }, [bucketName]);
-
-  // Extract filename from URL for display
-  const getFileNameFromUrl = (url: string): string => {
-    if (!url) return "";
-    try {
-      const pathParts = url.split("/");
-      return decodeURIComponent(pathParts[pathParts.length - 1]);
-    } catch (e) {
-      console.error("Error parsing filename from URL:", e);
-      return "Arquivo";
-    }
-  };
-
-  // Set initial filename if URL exists
-  useEffect(() => {
-    if (value) {
-      setFileName(getFileNameFromUrl(value));
-    }
-  }, [value]);
-
-  const uploadFile = async (file: File) => {
-    try {
-      setUploading(true);
+    // Atualizar estado de sucesso
+    setUploadSuccess(true);
+    setUploadProgress(100);
+    
+    // Chamar onChange com delay para garantir que UI seja atualizada
+    setTimeout(() => {
+      onChange(url, fileName, fileSize);
+      console.log('✅ onChange chamado com:', { url, fileName, fileSize });
+    }, 100);
+    
+    // Reset do estado após um tempo
+    setTimeout(() => {
+      setUploadSuccess(false);
       setUploadProgress(0);
-      setError(null);
-      
-      // Validar tamanho do arquivo
-      const maxSize = MAX_UPLOAD_SIZES.DOCUMENT * 1024 * 1024; // 25MB
-      if (file.size > maxSize) {
-        throw new Error(`Arquivo muito grande. Tamanho máximo: ${MAX_UPLOAD_SIZES.DOCUMENT}MB`);
+      setSelectedFile(null);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
       }
-      
-      // Primeiro, verificamos se o bucket existe e está acessível
-      const bucketExists = await ensureBucketExists(bucketName);
-      if (!bucketExists) {
-        console.warn(`Bucket ${bucketName} não encontrado, usando fallback: ${STORAGE_BUCKETS.FALLBACK}`);
-        toast.warning("Usando armazenamento alternativo. O upload pode demorar um pouco mais.");
-      }
-      
-      // Upload com mecanismo de fallback aprimorado
-      console.log(`Iniciando upload para bucket: ${bucketName}, pasta: ${folderPath}`);
-      const uploadResult = await uploadFileWithFallback(
-        file,
-        bucketName,
-        folderPath,
-        (progress) => {
-          setUploadProgress(progress);
-          console.log(`Upload progresso: ${progress}%`);
-        },
-        STORAGE_BUCKETS.FALLBACK
-      );
-      
-      // Verificação adequada de tipos
-      if ('error' in uploadResult) {
-        throw uploadResult.error;
-      } 
-      
-      const successResult = uploadResult as { publicUrl: string; path: string; error: null };
-      console.log("Upload concluído com sucesso:", successResult);
-      
-      setFileName(file.name);
-      onChange(successResult.publicUrl, file.type, file.size);
-      
-      toast.success("Upload realizado com sucesso!");
-      
-    } catch (error: any) {
-      console.error("Erro no upload de arquivo:", error);
-      setError(error.message || "Erro ao fazer upload do arquivo");
-      toast.error(error.message || "Erro ao fazer upload do arquivo. Tente novamente.");
-    } finally {
-      setUploading(false);
+    }, 3000);
+  };
+
+  const {
+    uploading,
+    uploadedFileUrl,
+    fileName: uploadedFileName,
+    error,
+    handleFileUpload,
+    setUploadedFileUrl
+  } = useFileUpload({
+    bucketName,
+    folder,
+    onUploadComplete: handleUploadComplete,
+    maxSize
+  });
+
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      console.log('📎 Arquivo selecionado:', file.name, 'Tamanho:', file.size);
+      setSelectedFile(file);
+      setUploadSuccess(false);
+      setUploadProgress(0);
     }
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!e.target.files || e.target.files.length === 0) {
-      return;
+  const handleUpload = async () => {
+    if (selectedFile) {
+      console.log('🚀 Iniciando upload:', selectedFile.name);
+      setUploadProgress(10);
+      
+      // Simular progresso durante upload
+      const progressInterval = setInterval(() => {
+        setUploadProgress(prev => {
+          if (prev >= 90) {
+            clearInterval(progressInterval);
+            return 90;
+          }
+          return prev + 10;
+        });
+      }, 200);
+      
+      await handleFileUpload(selectedFile);
+      clearInterval(progressInterval);
     }
-    
-    const file = e.target.files[0];
-    uploadFile(file);
   };
 
-  const handleRemoveFile = () => {
-    onChange("", undefined, undefined);
-    setFileName(null);
-    setError(null);
+  const handleClearFile = () => {
+    setSelectedFile(null);
+    setUploadSuccess(false);
+    setUploadProgress(0);
+    setUploadedFileUrl(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
   };
 
   return (
-    <div className="space-y-4">
-      {error && (
-        <div className="bg-destructive/10 text-destructive p-3 rounded-md flex items-center space-x-2 text-sm">
-          <AlertCircle className="h-4 w-4 flex-shrink-0" />
-          <span>{error}</span>
+    <Card>
+      <CardContent className="p-4 space-y-4">
+        <div>
+          <Label className="text-sm font-medium">{label}</Label>
+          {description && (
+            <p className="text-sm text-muted-foreground mt-1">{description}</p>
+          )}
         </div>
-      )}
 
-      {!value || !fileName ? (
-        <div className="flex items-center justify-center w-full">
-          <label
-            className={cn(
-              "flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer",
-              "bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600",
-              "border-gray-300 dark:border-gray-600",
-              disabled && "opacity-50 cursor-not-allowed"
-            )}
-          >
-            <div className="flex flex-col items-center justify-center pt-5 pb-6">
-              {uploading ? (
-                <>
-                  <Loader2 className="w-8 h-8 mb-3 text-gray-500 animate-spin" />
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
-                    Fazendo upload... {uploadProgress}%
-                  </p>
-                </>
-              ) : (
-                <>
-                  <Upload className="w-8 h-8 mb-3 text-gray-500" />
-                  <p className="mb-2 text-sm text-gray-500 dark:text-gray-400">
-                    <span className="font-semibold">Clique para upload</span> ou arraste o arquivo
-                  </p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">
-                    Tamanho máximo: {MAX_UPLOAD_SIZES.DOCUMENT}MB
-                  </p>
-                </>
+        {/* Feedback de sucesso */}
+        {uploadSuccess && (
+          <Alert className="border-green-200 bg-green-50">
+            <CheckCircle className="h-4 w-4 text-green-600" />
+            <AlertDescription className="text-green-800">
+              <strong>Upload concluído com sucesso!</strong>
+              {uploadedFileName && (
+                <span className="block mt-1">Arquivo: {uploadedFileName}</span>
+              )}
+            </AlertDescription>
+          </Alert>
+        )}
+
+        {/* Feedback de erro */}
+        {error && (
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )}
+
+        {/* Seleção de arquivo */}
+        <div className="space-y-3">
+          <Input
+            ref={fileInputRef}
+            type="file"
+            accept={accept}
+            onChange={handleFileSelect}
+            disabled={uploading}
+            className="file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-primary file:text-primary-foreground hover:file:bg-primary/90"
+          />
+
+          {/* Arquivo selecionado */}
+          {selectedFile && (
+            <div className="flex items-center gap-3 p-3 bg-muted rounded-md">
+              <FileIcon className="h-4 w-4 text-primary" />
+              <div className="flex-1">
+                <p className="text-sm font-medium">{selectedFile.name}</p>
+                <p className="text-xs text-muted-foreground">
+                  {(selectedFile.size / (1024 * 1024)).toFixed(2)} MB
+                </p>
+              </div>
+              {!uploading && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleClearFile}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
               )}
             </div>
-            <Input
-              id="dropzone-file"
-              type="file"
-              className="hidden"
-              onChange={handleFileChange}
-              disabled={uploading || disabled || !bucketReady}
-              accept={acceptedFileTypes}
-            />
-          </label>
+          )}
+
+          {/* Progresso do upload */}
+          {uploading && (
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                <span className="text-sm">Enviando arquivo... {uploadProgress}%</span>
+              </div>
+              <div className="w-full bg-muted rounded-full h-2">
+                <div 
+                  className="bg-primary h-2 rounded-full transition-all duration-300 ease-out"
+                  style={{ width: `${uploadProgress}%` }}
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Botão de upload */}
+          {selectedFile && !uploading && !uploadSuccess && (
+            <Button 
+              type="button"
+              onClick={handleUpload}
+              className="w-full"
+            >
+              <Upload className="h-4 w-4 mr-2" />
+              Enviar Arquivo
+            </Button>
+          )}
+
+          {/* Informações do arquivo atual */}
+          {value && !selectedFile && !uploading && (
+            <div className="flex items-center gap-3 p-3 bg-green-50 border border-green-200 rounded-md">
+              <CheckCircle className="h-4 w-4 text-green-600" />
+              <div className="flex-1">
+                <p className="text-sm font-medium text-green-800">
+                  Arquivo carregado
+                </p>
+                <p className="text-xs text-green-600">
+                  {uploadedFileName || 'Arquivo disponível'}
+                </p>
+              </div>
+            </div>
+          )}
         </div>
-      ) : (
-        <div className="flex items-center p-4 space-x-4 border rounded-lg bg-gray-50 dark:bg-gray-700">
-          <File className="h-10 w-10 flex-shrink-0 text-blue-600" />
-          <div className="flex-1 min-w-0">
-            <p className="font-medium text-gray-900 truncate dark:text-white">
-              {fileName}
-            </p>
-            <p className="text-sm text-gray-500 truncate dark:text-gray-400">
-              Arquivo carregado com sucesso
-            </p>
-          </div>
-          <Button
-            size="sm"
-            variant="ghost"
-            onClick={handleRemoveFile}
-            disabled={uploading || disabled}
-            className="flex-shrink-0"
-          >
-            <X className="h-4 w-4" />
-            <span className="sr-only">Remover arquivo</span>
-          </Button>
-        </div>
-      )}
-    </div>
+      </CardContent>
+    </Card>
   );
 };
