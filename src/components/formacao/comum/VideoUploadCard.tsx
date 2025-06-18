@@ -1,13 +1,11 @@
 
 import { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
 import { VideoUpload } from './VideoUpload';
 import { setupLearningStorageBuckets } from '@/lib/supabase/storage';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { VideoIcon, AlertTriangle, RefreshCcw } from 'lucide-react';
+import { AlertTriangle, RefreshCcw } from 'lucide-react';
 
 interface VideoUploadCardProps {
   value: string;
@@ -69,13 +67,13 @@ export const VideoUploadCard = ({ value, onChange, videoType = 'youtube' }: Vide
             </Alert>
           )}
           {!storageReady && storageChecking && (
-            <Alert variant="info">
+            <Alert>
               <RefreshCcw className="mr-2 h-4 w-4 animate-spin" />
               <AlertDescription>Verificando configuração de armazenamento...</AlertDescription>
             </Alert>
           )}
           {!storageReady && !storageChecking && !error && (
-            <Alert variant="warning">
+            <Alert>
               <AlertTriangle className="h-4 w-4" />
               <AlertDescription>
                 O sistema de armazenamento não está pronto. Alguns recursos podem não funcionar corretamente.

@@ -114,7 +114,7 @@ export const uploadFileWithFallback = async (
 };
 
 // Configurar buckets de armazenamento
-export const setupLearningStorageBuckets = async () => {
+export const setupLearningStorageBuckets = async (): Promise<{ success: boolean; error?: string }> => {
   const buckets = [
     'learning_materials',
     'course_images', 
@@ -125,8 +125,16 @@ export const setupLearningStorageBuckets = async () => {
     'general_storage'
   ];
   
-  for (const bucket of buckets) {
-    await ensureBucketExists(bucket);
+  try {
+    for (const bucket of buckets) {
+      const success = await ensureBucketExists(bucket);
+      if (!success) {
+        return { success: false, error: `Falha ao configurar bucket ${bucket}` };
+      }
+    }
+    return { success: true };
+  } catch (error: any) {
+    return { success: false, error: error.message || 'Erro ao configurar buckets' };
   }
 };
 
@@ -150,10 +158,30 @@ export const formatVideoDuration = (seconds: number): string => {
 };
 
 // Função para extrair informações de vídeo Panda
-export const extractPandaVideoInfo = (url: string) => {
-  // Implementação específica para Panda Video se necessário
-  return {
-    videoId: null,
-    thumbnailUrl: null
-  };
+export const extractPandaVideoInfo = (embedCode: string) => {
+  try {
+    // Extrair src do iframe
+    const srcMatch = embedCode.match(/src=["']([^"']+)["']/);
+    if (!srcMatch) {
+      return { videoId: null, url: null, thumbnailUrl: null };
+    }
+    
+    const url = srcMatch[1];
+    
+    // Extrair ID do vídeo da URL do Panda Video
+    const videoIdMatch = url.match(/[?&]v=([^&]+)/);
+    const videoId = videoIdMatch ? videoIdMatch[1] : null;
+    
+    // Gerar URL de thumbnail (se o Panda Video suportar)
+    const thumbnailUrl = videoId ? `https://player-vz-d6ebf577-797.tv.pandavideo.com.br/thumbnail/${videoId}.jpg` : null;
+    
+    return {
+      videoId,
+      url,
+      thumbnailUrl
+    };
+  } catch (error) {
+    console.error('Erro ao extrair informações do vídeo Panda:', error);
+    return { videoId: null, url: null, thumbnailUrl: null };
+  }
 };
