@@ -2,7 +2,6 @@
 import { Navigate } from "react-router-dom";
 import { useAuth } from "@/contexts/auth";
 import LoadingScreen from "@/components/common/LoadingScreen";
-import { getUserRoleName } from "@/lib/supabase/types";
 
 const RootRedirect = () => {
   const { user, profile, isLoading, isAdmin } = useAuth();
@@ -15,13 +14,21 @@ const RootRedirect = () => {
     userEmail: user?.email
   });
   
+  // Aguardar o carregamento completo
   if (isLoading) {
     return <LoadingScreen message="Verificando autenticação..." />;
   }
   
+  // Se não há usuário, ir para login
   if (!user) {
-    console.log("[ROOT-REDIRECT] Redirecionando para login");
+    console.log("[ROOT-REDIRECT] Sem usuário -> login");
     return <Navigate to="/login" replace />;
+  }
+  
+  // Se há usuário mas ainda não carregou perfil, aguardar um pouco mais
+  if (user && !profile) {
+    console.log("[ROOT-REDIRECT] Usuário sem perfil, aguardando...");
+    return <LoadingScreen message="Carregando perfil..." />;
   }
   
   // Admin sempre vai para dashboard
@@ -30,15 +37,14 @@ const RootRedirect = () => {
     return <Navigate to="/dashboard" replace />;
   }
   
-  // Formação vai para área de formação
-  const roleName = getUserRoleName(profile);
-  if (roleName === 'formacao') {
+  // Usuários de formação
+  if (profile?.user_roles?.name === 'formacao') {
     console.log("[ROOT-REDIRECT] Formação -> /formacao");
     return <Navigate to="/formacao" replace />;
   }
   
   // Padrão -> dashboard
-  console.log("[ROOT-REDIRECT] Padrão -> dashboard");
+  console.log("[ROOT-REDIRECT] Usuário padrão -> dashboard");
   return <Navigate to="/dashboard" replace />;
 };
 

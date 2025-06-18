@@ -2,7 +2,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
-import { UserProfile, getUserRoleName, isAdminRole, isFormacaoRole } from '@/lib/supabase';
+import { UserProfile } from '@/lib/supabase';
 import { useAuthMethods } from './hooks/useAuthMethods';
 
 const AuthContext = createContext<{
@@ -46,19 +46,21 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setIsLoading,
   });
 
-  // Verificação de admin simples
-  const isAdminByEmail = user?.email && [
+  // Verificação simplificada de admin apenas por email
+  const adminEmails = [
     'rafael@viverdeia.ai',
     'admin@viverdeia.ai',
     'admin@teste.com'
-  ].includes(user.email.toLowerCase());
+  ];
 
-  const isAdmin = isAdminRole(profile) || isAdminByEmail;
-  const isFormacao = isFormacaoRole(profile);
+  const isAdmin = user?.email ? adminEmails.includes(user.email.toLowerCase()) : false;
+  const isFormacao = profile?.user_roles?.name === 'formacao';
 
-  // Função simples para carregar perfil
-  const loadProfile = async (userId: string) => {
+  // Função para carregar perfil de forma simplificada
+  const loadUserProfile = async (userId: string) => {
     try {
+      console.log('[AUTH] Carregando perfil para:', userId);
+      
       const { data, error } = await supabase
         .from('profiles')
         .select(`
@@ -74,10 +76,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         return;
       }
 
-      setProfile(data);
       console.log('[AUTH] Perfil carregado:', data?.email);
+      setProfile(data);
     } catch (error) {
-      console.error('[AUTH] Erro ao carregar perfil:', error);
+      console.error('[AUTH] Erro inesperado ao carregar perfil:', error);
       setProfile(null);
     }
   };
@@ -85,39 +87,74 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   // Inicialização simplificada
   useEffect(() => {
     console.log('[AUTH] Inicializando autenticação');
+    
+    let mounted = true;
 
-    // Configurar listener
+    const initializeAuth = async () => {
+      try {
+        // 1. Buscar sessão atual
+        const { data: { session }, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          console.error('[AUTH] Erro ao buscar sessão:', error);
+          setAuthError(error);
+        }
+
+        if (!mounted) return;
+
+        // 2. Atualizar estados da sessão
+        setSession(session);
+        setUser(session?.user || null);
+
+        // 3. Se há usuário, carregar perfil
+        if (session?.user) {
+          await loadUserProfile(session.user.id);
+        }
+
+        // 4. Marcar como carregado apenas no final
+        if (mounted) {
+          setIsLoading(false);
+        }
+      } catch (error) {
+        console.error('[AUTH] Erro na inicialização:', error);
+        if (mounted) {
+          setAuthError(error as Error);
+          setIsLoading(false);
+        }
+      }
+    };
+
+    // Configurar listener de mudanças de auth
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         console.log(`[AUTH] Evento: ${event}`);
         
+        if (!mounted) return;
+
         setSession(session);
         setUser(session?.user || null);
         
         if (event === 'SIGNED_IN' && session?.user) {
-          await loadProfile(session.user.id);
+          // Defer para evitar deadlocks
+          setTimeout(() => {
+            if (mounted) {
+              loadUserProfile(session.user.id);
+            }
+          }, 0);
         } else if (event === 'SIGNED_OUT') {
           setProfile(null);
           setAuthError(null);
         }
-        
-        setIsLoading(false);
       }
     );
 
-    // Verificar sessão atual
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user || null);
-      
-      if (session?.user) {
-        loadProfile(session.user.id).finally(() => setIsLoading(false));
-      } else {
-        setIsLoading(false);
-      }
-    });
+    // Inicializar
+    initializeAuth();
 
-    return () => subscription.unsubscribe();
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   const value = {

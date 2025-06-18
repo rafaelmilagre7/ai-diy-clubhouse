@@ -52,7 +52,10 @@ export const processUserProfile = async (
   try {
     let profile = await fetchUserProfileSecurely(userId);
     
+    // Se não há perfil, criar um básico
     if (!profile && userEmail) {
+      console.log('Criando perfil para novo usuário:', userEmail);
+      
       const { data: newProfile, error: createError } = await supabase
         .from('profiles')
         .insert({
@@ -61,7 +64,10 @@ export const processUserProfile = async (
           name: userName || userEmail.split('@')[0],
           created_at: new Date().toISOString()
         })
-        .select()
+        .select(`
+          *,
+          user_roles (*)
+        `)
         .single();
       
       if (createError) {

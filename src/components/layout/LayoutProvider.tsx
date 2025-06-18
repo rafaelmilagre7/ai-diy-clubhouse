@@ -22,14 +22,16 @@ const LayoutProvider = memo(({ children }: { children: ReactNode }) => {
     isFormacaoRoute
   });
 
+  // Aguardar carregamento completo
   if (isLoading) {
     return (
       <PageTransitionWithFallback isVisible={true}>
-        <LoadingScreen message="Carregando..." />
+        <LoadingScreen message="Preparando interface..." />
       </PageTransitionWithFallback>
     );
   }
 
+  // Se não há usuário, mostrar loading (deve redirecionar via ProtectedRoutes)
   if (!user) {
     return (
       <PageTransitionWithFallback isVisible={true}>
@@ -38,20 +40,21 @@ const LayoutProvider = memo(({ children }: { children: ReactNode }) => {
     );
   }
 
-  // Escolher layout baseado na rota
+  // Escolher layout baseado na rota atual
   if (isFormacaoRoute && (isFormacao || isAdmin)) {
     return (
       <PageTransitionWithFallback isVisible={true}>
         <FormacaoLayout>{children}</FormacaoLayout>
       </PageTransitionWithFallback>
     );
-  } else {
-    return (
-      <PageTransitionWithFallback isVisible={true}>
-        <MemberLayout>{children}</MemberLayout>
-      </PageTransitionWithFallback>
-    );
   }
+
+  // Layout padrão para membros
+  return (
+    <PageTransitionWithFallback isVisible={true}>
+      <MemberLayout>{children}</MemberLayout>
+    </PageTransitionWithFallback>
+  );
 });
 
 LayoutProvider.displayName = 'LayoutProvider';
