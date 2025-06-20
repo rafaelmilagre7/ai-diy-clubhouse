@@ -8,10 +8,122 @@ const corsHeaders = {
 };
 
 interface ConfigCheckRequest {
-  action: 'check_config' | 'get_business_profile' | 'list_templates' | 'send_test_message';
-  phone?: string;
-  message?: string;
+  action: 'check_config' | 'test_connection';
 }
+
+const checkConfiguration = () => {
+  const token = Deno.env.get("WHATSAPP_API_TOKEN");
+  const phoneId = Deno.env.get("WHATSAPP_PHONE_NUMBER_ID");
+  const businessId = Deno.env.get("WHATSAPP_BUSINESS_ID");
+  const webhookToken = Deno.env.get("WHATSAPP_WEBHOOK_TOKEN");
+
+  const hasToken = !!token && token.length > 10;
+  const hasPhoneId = !!phoneId && phoneId.length > 5;
+  const hasBusinessId = !!businessId && businessId.length > 5;
+  const hasWebhookToken = !!webhookToken && webhookToken.length > 5;
+
+  return {
+    hasToken,
+    hasPhoneId,
+    hasBusinessId,
+    hasWebhookToken,
+    isValid: hasToken && hasPhoneId && hasBusinessId && hasWebhookToken,
+    details: {
+      tokenLength: token ? token.length : 0,
+      phoneIdLength: phoneId ? phoneId.length : 0,
+      businessIdLength: businessId ? businessId.length : 0,
+      webhookTokenLength: webhookToken ? webhookToken.length : 0
+    }
+  };
+};
+
+const testConnection = async () => {
+  const token = Deno.env.get("WHATSAPP_API_TOKEN");
+  const phoneId = Deno.env.get("WHATSAPP_PHONE_NUMBER_ID");
+
+  if (!token || !phoneId) {
+    return {
+      success: false,
+      message: "Credenciais não configuradas",
+      details: { missingToken: !token, missingPhoneId: !phoneId }
+    };
+  }
+
+  try {
+    // Teste simples: verificar se conseguimos acessar informações do número de telefone
+    const apiUrl = `https://graph.facebook.com/v18.0/${phoneId}?fields=display_phone_number,verified_name`;
+    
+    console.log(`🔧 Testando conexão com: ${apiUrl}`);
+
+    const response = await fetch(apiUrl, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      }
+    });
+
+    const responseText = await response.text();
+    console.log(`📱 Resposta da API (${response.status}):`, responseText);
+
+    let responseData;
+    try {
+      responseData = JSON.parse(responseText);
+    } catch (e) {
+      responseData = { raw: responseText };
+    }
+
+    if (!response.ok) {
+      let errorMessage = 'Erro desconhecido na API';
+      
+      if (responseData.error) {
+        errorMessage = responseData.error.message || responseData.error.error_user_msg || 'Erro da API do WhatsApp';
+        
+        // Mapear erros comuns
+        if (errorMessage.includes('Invalid access token')) {
+          errorMessage = 'Token de acesso inválido. Verifique o WHATSAPP_API_TOKEN';
+        } else if (errorMessage.includes('Unsupported request')) {
+          errorMessage = 'ID do número de telefone inválido. Verifique o WHATSAPP_PHONE_NUMBER_ID';
+        } else if (errorMessage.includes('Application does not have the permission')) {
+          errorMessage = 'App não tem permissões necessárias. Verifique as permissões no Meta Developers';
+        }
+      }
+
+      return {
+        success: false,
+        message: errorMessage,
+        details: {
+          status: response.status,
+          response: responseData,
+          url: apiUrl.replace(token, 'TOKEN_HIDDEN')
+        }
+      };
+    }
+
+    return {
+      success: true,
+      message: "Conexão com WhatsApp API bem-sucedida",
+      details: {
+        phoneNumber: responseData.display_phone_number,
+        verifiedName: responseData.verified_name,
+        phoneId: phoneId,
+        apiVersion: 'v18.0'
+      }
+    };
+
+  } catch (error: any) {
+    console.error(`❌ Erro na conexão:`, error);
+    
+    return {
+      success: false,
+      message: `Erro de conexão: ${error.message}`,
+      details: {
+        errorType: error.name,
+        errorMessage: error.message
+      }
+    };
+  }
+};
 
 const handler = async (req: Request): Promise<Response> => {
   console.log(`🔧 [WHATSAPP-CONFIG-CHECK] Nova requisição: ${req.method}`);
@@ -28,286 +140,43 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const { action, phone, message }: ConfigCheckRequest = await req.json();
-    console.log(`🔧 [WHATSAPP-CONFIG-CHECK] Ação: ${action}`);
+    const { action }: ConfigCheckRequest = await req.json();
+    
+    console.log(`🔧 Ação solicitada: ${action}`);
 
-    // Verificar variáveis de ambiente
-    const whatsappToken = Deno.env.get("WHATSAPP_API_TOKEN");
-    const phoneNumberId = Deno.env.get("WHATSAPP_PHONE_NUMBER_ID");
-    const businessId = Deno.env.get("WHATSAPP_BUSINESS_ID");
-    const webhookToken = Deno.env.get("WHATSAPP_WEBHOOK_TOKEN");
+    let result;
 
-    const configStatus = {
-      hasToken: !!whatsappToken,
-      hasPhoneId: !!phoneNumberId,
-      hasBusinessId: !!businessId,
-      hasWebhookToken: !!webhookToken,
-      isConfigured: !!(whatsappToken && phoneNumberId && businessId && webhookToken)
-    };
-
-    console.log(`🔧 [WHATSAPP-CONFIG-CHECK] Status da configuração:`, configStatus);
-
-    if (action === 'check_config') {
-      let phoneNumber, businessName;
-
-      // Se tiver configuração básica, tentar obter informações do negócio
-      if (configStatus.hasToken && configStatus.hasPhoneId) {
-        try {
-          const profileResponse = await fetch(
-            `https://graph.facebook.com/v18.0/${phoneNumberId}?fields=display_phone_number,verified_name`,
-            {
-              headers: {
-                'Authorization': `Bearer ${whatsappToken}`,
-              }
-            }
-          );
-
-          if (profileResponse.ok) {
-            const profileData = await profileResponse.json();
-            phoneNumber = profileData.display_phone_number;
-            businessName = profileData.verified_name;
-            console.log(`✅ [WHATSAPP-CONFIG-CHECK] Perfil obtido:`, { phoneNumber, businessName });
-          }
-        } catch (error) {
-          console.warn(`⚠️ [WHATSAPP-CONFIG-CHECK] Não foi possível obter perfil:`, error);
-        }
-      }
-
-      return new Response(
-        JSON.stringify({
-          ...configStatus,
-          phoneNumber,
-          businessName
-        }),
-        {
-          status: 200,
-          headers: { "Content-Type": "application/json", ...corsHeaders },
-        }
-      );
-    }
-
-    // Para outras ações, verificar se está configurado
-    if (!configStatus.isConfigured) {
-      return new Response(
-        JSON.stringify({
-          success: false,
-          error: "WhatsApp não está completamente configurado",
-          configStatus
-        }),
-        {
-          status: 400,
-          headers: { "Content-Type": "application/json", ...corsHeaders },
-        }
-      );
-    }
-
-    // Obter perfil do negócio
-    if (action === 'get_business_profile') {
-      try {
-        const response = await fetch(
-          `https://graph.facebook.com/v18.0/${phoneNumberId}?fields=display_phone_number,verified_name,status,quality_rating`,
-          {
-            headers: {
-              'Authorization': `Bearer ${whatsappToken}`,
-            }
-          }
-        );
-
-        const responseText = await response.text();
-        console.log(`🔧 [WHATSAPP-CONFIG-CHECK] Resposta do perfil:`, responseText);
-
-        if (!response.ok) {
-          const errorData = JSON.parse(responseText);
-          throw new Error(errorData.error?.message || 'Erro ao obter perfil');
-        }
-
-        const data = JSON.parse(responseText);
-        return new Response(
-          JSON.stringify({
-            success: true,
-            data,
-            message: "Perfil do negócio obtido com sucesso"
-          }),
-          {
-            status: 200,
-            headers: { "Content-Type": "application/json", ...corsHeaders },
-          }
-        );
-
-      } catch (error: any) {
-        console.error(`❌ [WHATSAPP-CONFIG-CHECK] Erro ao obter perfil:`, error);
-        return new Response(
-          JSON.stringify({
-            success: false,
-            error: error.message || "Erro ao obter perfil do negócio"
-          }),
-          {
-            status: 500,
-            headers: { "Content-Type": "application/json", ...corsHeaders },
-          }
-        );
-      }
-    }
-
-    // Listar templates
-    if (action === 'list_templates') {
-      try {
-        const response = await fetch(
-          `https://graph.facebook.com/v18.0/${businessId}/message_templates?fields=name,status,language,category`,
-          {
-            headers: {
-              'Authorization': `Bearer ${whatsappToken}`,
-            }
-          }
-        );
-
-        const responseText = await response.text();
-        console.log(`🔧 [WHATSAPP-CONFIG-CHECK] Resposta dos templates:`, responseText);
-
-        if (!response.ok) {
-          const errorData = JSON.parse(responseText);
-          throw new Error(errorData.error?.message || 'Erro ao listar templates');
-        }
-
-        const data = JSON.parse(responseText);
-        return new Response(
-          JSON.stringify({
-            success: true,
-            data,
-            message: `${data.data?.length || 0} templates encontrados`
-          }),
-          {
-            status: 200,
-            headers: { "Content-Type": "application/json", ...corsHeaders },
-          }
-        );
-
-      } catch (error: any) {
-        console.error(`❌ [WHATSAPP-CONFIG-CHECK] Erro ao listar templates:`, error);
-        return new Response(
-          JSON.stringify({
-            success: false,
-            error: error.message || "Erro ao listar templates"
-          }),
-          {
-            status: 500,
-            headers: { "Content-Type": "application/json", ...corsHeaders },
-          }
-        );
-      }
-    }
-
-    // Enviar mensagem de teste
-    if (action === 'send_test_message') {
-      if (!phone || !message) {
-        return new Response(
-          JSON.stringify({
-            success: false,
-            error: "Número de telefone e mensagem são obrigatórios"
-          }),
-          {
-            status: 400,
-            headers: { "Content-Type": "application/json", ...corsHeaders },
-          }
-        );
-      }
-
-      try {
-        // Formatar número (remover caracteres especiais e garantir formato internacional)
-        const cleanPhone = phone.replace(/\D/g, '');
-        const formattedPhone = cleanPhone.startsWith('55') ? cleanPhone : `55${cleanPhone}`;
-
-        console.log(`🔧 [WHATSAPP-CONFIG-CHECK] Enviando teste para: ${formattedPhone}`);
-
-        const response = await fetch(
-          `https://graph.facebook.com/v18.0/${phoneNumberId}/messages`,
-          {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${whatsappToken}`,
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              messaging_product: "whatsapp",
-              to: formattedPhone,
-              type: "text",
-              text: {
-                body: `🧪 TESTE DE CONECTIVIDADE\n\n${message}\n\n✅ WhatsApp Business API está funcionando!\n\nViver de IA - ${new Date().toLocaleString('pt-BR')}`
-              }
-            })
-          }
-        );
-
-        const responseText = await response.text();
-        console.log(`🔧 [WHATSAPP-CONFIG-CHECK] Resposta do envio:`, responseText);
-
-        if (!response.ok) {
-          const errorData = JSON.parse(responseText);
-          let errorMessage = errorData.error?.message || 'Erro desconhecido';
-          
-          if (errorMessage.includes('Invalid phone number')) {
-            errorMessage = `Número de telefone inválido: ${phone}`;
-          } else if (errorMessage.includes('Unsupported request')) {
-            errorMessage = 'Configuração da API do WhatsApp inválida';
-          } else if (errorMessage.includes('Invalid access token')) {
-            errorMessage = 'Token de acesso do WhatsApp inválido ou expirado';
-          }
-          
-          throw new Error(errorMessage);
-        }
-
-        const data = JSON.parse(responseText);
-        const messageId = data.messages?.[0]?.id;
-
-        return new Response(
-          JSON.stringify({
-            success: true,
-            data: {
-              messageId,
-              phone: formattedPhone,
-              originalPhone: phone
-            },
-            message: "Mensagem de teste enviada com sucesso"
-          }),
-          {
-            status: 200,
-            headers: { "Content-Type": "application/json", ...corsHeaders },
-          }
-        );
-
-      } catch (error: any) {
-        console.error(`❌ [WHATSAPP-CONFIG-CHECK] Erro ao enviar teste:`, error);
-        return new Response(
-          JSON.stringify({
-            success: false,
-            error: error.message || "Erro ao enviar mensagem de teste"
-          }),
-          {
-            status: 500,
-            headers: { "Content-Type": "application/json", ...corsHeaders },
-          }
-        );
-      }
+    switch (action) {
+      case 'check_config':
+        result = checkConfiguration();
+        console.log(`✅ Verificação de configuração:`, result);
+        break;
+        
+      case 'test_connection':
+        result = await testConnection();
+        console.log(`✅ Teste de conexão:`, result);
+        break;
+        
+      default:
+        throw new Error(`Ação não suportada: ${action}`);
     }
 
     return new Response(
-      JSON.stringify({
-        success: false,
-        error: "Ação não reconhecida"
-      }),
+      JSON.stringify(result),
       {
-        status: 400,
+        status: 200,
         headers: { "Content-Type": "application/json", ...corsHeaders },
       }
     );
 
   } catch (error: any) {
-    console.error(`❌ [WHATSAPP-CONFIG-CHECK] Erro crítico:`, error);
+    console.error(`❌ [WHATSAPP-CONFIG-CHECK] Erro:`, error);
     
     return new Response(
       JSON.stringify({
         success: false,
-        error: error.message || "Erro interno do servidor"
+        message: error.message || "Erro interno do servidor",
+        details: error.stack ? error.stack.split('\n').slice(0, 3) : undefined
       }),
       {
         status: 500,
