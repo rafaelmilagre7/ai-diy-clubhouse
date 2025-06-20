@@ -36,7 +36,7 @@ export const useCommunications = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      return data as AdminCommunication[];
+      return (data as any) as AdminCommunication[];
     },
   });
 
@@ -49,7 +49,7 @@ export const useCommunications = () => {
         .order('name');
 
       if (error) throw error;
-      return data as Role[];
+      return (data as any) as Role[];
     },
   });
 

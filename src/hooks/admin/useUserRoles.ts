@@ -37,5 +37,47 @@ export const useUserRoles = () => {
     }
   };
 
-  return { updateUserRole, isUpdating };
+  const assignRoleToUser = async (userId: string, roleId: string) => {
+    return await updateUserRole(userId, roleId);
+  };
+
+  const getUserRole = async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select(`
+          role_id,
+          user_roles (
+            id,
+            name,
+            description
+          )
+        `)
+        .eq('id', userId as any)
+        .single();
+
+      if (error) throw error;
+
+      const profile = data as any;
+      return {
+        roleId: profile.role_id,
+        roleName: profile.user_roles?.name || null,
+        roleDescription: profile.user_roles?.description || null
+      };
+    } catch (error: any) {
+      console.error('Erro ao buscar papel do usuário:', error);
+      return {
+        roleId: null,
+        roleName: null,
+        roleDescription: null
+      };
+    }
+  };
+
+  return { 
+    updateUserRole, 
+    assignRoleToUser, 
+    getUserRole, 
+    isUpdating 
+  };
 };

@@ -3,7 +3,7 @@ import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
 
-interface Role {
+export interface Role {
   id: string;
   name: string;
   description: string;
@@ -16,6 +16,9 @@ interface Role {
 export const useRoles = () => {
   const [roles, setRoles] = useState<Role[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isCreating, setIsCreating] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const { toast } = useToast();
 
   const fetchRoles = useCallback(async () => {
@@ -45,9 +48,13 @@ export const useRoles = () => {
 
   const createRole = async (roleData: Omit<Role, 'id' | 'created_at' | 'updated_at'>) => {
     try {
+      setIsCreating(true);
       const { data, error } = await supabase
         .from('user_roles')
-        .insert(roleData as any)
+        .insert({
+          ...roleData,
+          permissions: roleData.permissions || {}
+        } as any)
         .select()
         .single();
 
@@ -68,11 +75,14 @@ export const useRoles = () => {
         variant: "destructive",
       });
       throw error;
+    } finally {
+      setIsCreating(false);
     }
   };
 
   const updateRole = async (roleId: string, updates: Partial<Role>) => {
     try {
+      setIsUpdating(true);
       const { data, error } = await supabase
         .from('user_roles')
         .update(updates as any)
@@ -97,11 +107,14 @@ export const useRoles = () => {
         variant: "destructive",
       });
       throw error;
+    } finally {
+      setIsUpdating(false);
     }
   };
 
   const deleteRole = async (roleId: string) => {
     try {
+      setIsDeleting(true);
       const { error } = await supabase
         .from('user_roles')
         .delete()
@@ -123,6 +136,8 @@ export const useRoles = () => {
         variant: "destructive",
       });
       throw error;
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -133,6 +148,9 @@ export const useRoles = () => {
   return {
     roles,
     loading,
+    isCreating,
+    isUpdating,
+    isDeleting,
     fetchRoles,
     createRole,
     updateRole,
