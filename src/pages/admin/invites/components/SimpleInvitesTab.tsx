@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { Mail, Copy, Trash2, RefreshCw } from "lucide-react";
+import { Mail, Copy, Trash2, RefreshCw, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -24,7 +24,7 @@ import {
 import { toast } from "sonner";
 import { Invite } from "@/hooks/admin/invites/types";
 import { useInviteDelete } from "@/hooks/admin/invites/useInviteDelete";
-import { useInviteResend } from "@/hooks/admin/invites/useInviteResend";
+import ResendInviteDialog from "./ResendInviteDialog";
 
 interface SimpleInvitesTabProps {
   invites: Invite[];
@@ -34,10 +34,10 @@ interface SimpleInvitesTabProps {
 
 const SimpleInvitesTab = ({ invites, loading, onInvitesChange }: SimpleInvitesTabProps) => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [resendDialogOpen, setResendDialogOpen] = useState(false);
   const [selectedInvite, setSelectedInvite] = useState<Invite | null>(null);
   
   const { deleteInvite, isDeleting } = useInviteDelete();
-  const { resendInvite, isSending } = useInviteResend();
 
   const getStatusBadge = (invite: Invite) => {
     if (invite.used_at) {
@@ -51,19 +51,48 @@ const SimpleInvitesTab = ({ invites, loading, onInvitesChange }: SimpleInvitesTa
     return <Badge variant="secondary">Pendente</Badge>;
   };
 
+  const getChannelBadges = (invite: Invite) => {
+    const channels = [];
+    
+    if (invite.preferred_channel === 'email' || invite.preferred_channel === 'both') {
+      channels.push(
+        <Badge key="email" variant="outline" className="text-xs">
+          <Mail className="h-3 w-3 mr-1" />
+          Email
+        </Badge>
+      );
+    }
+    
+    if (invite.preferred_channel === 'whatsapp' || invite.preferred_channel === 'both') {
+      channels.push(
+        <Badge key="whatsapp" variant="outline" className="text-xs">
+          <MessageCircle className="h-3 w-3 mr-1" />
+          WhatsApp
+        </Badge>
+      );
+    }
+    
+    if (channels.length === 0) {
+      channels.push(
+        <Badge key="email-default" variant="outline" className="text-xs">
+          <Mail className="h-3 w-3 mr-1" />
+          Email
+        </Badge>
+      );
+    }
+    
+    return <div className="flex gap-1">{channels}</div>;
+  };
+
   const copyInviteLink = (token: string) => {
     const link = `${window.location.origin}/convite/${token}`;
     navigator.clipboard.writeText(link);
     toast.success("Link copiado!");
   };
 
-  const handleResend = async (invite: Invite) => {
-    try {
-      await resendInvite(invite);
-      onInvitesChange();
-    } catch (error) {
-      // Erro já tratado no hook
-    }
+  const handleResend = (invite: Invite) => {
+    setSelectedInvite(invite);
+    setResendDialogOpen(true);
   };
 
   const handleDelete = (invite: Invite) => {
@@ -98,6 +127,7 @@ const SimpleInvitesTab = ({ invites, loading, onInvitesChange }: SimpleInvitesTa
           <TableRow>
             <TableHead>Email</TableHead>
             <TableHead>Papel</TableHead>
+            <TableHead>Canais</TableHead>
             <TableHead>Status</TableHead>
             <TableHead>Criado em</TableHead>
             <TableHead>Expira em</TableHead>
@@ -110,6 +140,7 @@ const SimpleInvitesTab = ({ invites, loading, onInvitesChange }: SimpleInvitesTa
               <TableRow key={invite.id}>
                 <TableCell className="font-medium">{invite.email}</TableCell>
                 <TableCell>{invite.role?.name || 'N/A'}</TableCell>
+                <TableCell>{getChannelBadges(invite)}</TableCell>
                 <TableCell>{getStatusBadge(invite)}</TableCell>
                 <TableCell>
                   {new Date(invite.created_at).toLocaleDateString('pt-BR')}
@@ -132,13 +163,8 @@ const SimpleInvitesTab = ({ invites, loading, onInvitesChange }: SimpleInvitesTa
                         variant="outline"
                         size="sm"
                         onClick={() => handleResend(invite)}
-                        disabled={isSending}
                       >
-                        {isSending ? (
-                          <RefreshCw className="h-4 w-4 animate-spin" />
-                        ) : (
-                          <Mail className="h-4 w-4" />
-                        )}
+                        <RefreshCw className="h-4 w-4" />
                       </Button>
                     )}
                     
@@ -155,13 +181,20 @@ const SimpleInvitesTab = ({ invites, loading, onInvitesChange }: SimpleInvitesTa
             ))
           ) : (
             <TableRow>
-              <TableCell colSpan={6} className="text-center py-10 text-muted-foreground">
+              <TableCell colSpan={7} className="text-center py-10 text-muted-foreground">
                 Nenhum convite encontrado.
               </TableCell>
             </TableRow>
           )}
         </TableBody>
       </Table>
+
+      <ResendInviteDialog
+        invite={selectedInvite}
+        open={resendDialogOpen}
+        onOpenChange={setResendDialogOpen}
+        onSuccess={onInvitesChange}
+      />
 
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
