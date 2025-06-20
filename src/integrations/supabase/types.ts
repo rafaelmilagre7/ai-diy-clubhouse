@@ -4463,10 +4463,6 @@ export type Database = {
         Args: { user_id_param: string }
         Returns: Json
       }
-      check_invite_token: {
-        Args: { invite_token: string }
-        Returns: Json
-      }
       check_onboarding_integrity: {
         Args: { p_user_id: string }
         Returns: Json
@@ -4860,22 +4856,6 @@ export type Database = {
           policy_count: number
           security_status: string
           risk_level: string
-        }[]
-      }
-      validate_invite_token_enhanced: {
-        Args: { p_token: string }
-        Returns: {
-          created_at: string
-          created_by: string
-          email: string
-          expires_at: string
-          id: string
-          last_sent_at: string | null
-          notes: string | null
-          role_id: string
-          send_attempts: number | null
-          token: string
-          used_at: string | null
         }[]
       }
       validate_password_strength: {
