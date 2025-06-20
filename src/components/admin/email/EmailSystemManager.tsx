@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -8,30 +7,22 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useResendHealthCheck } from '@/hooks/supabase/useResendHealthCheck';
-import { 
-  Mail, 
-  CheckCircle, 
-  XCircle, 
-  AlertTriangle, 
-  RefreshCw, 
-  Send,
-  ExternalLink,
-  Settings,
-  Info
-} from 'lucide-react';
+import { Mail, CheckCircle, XCircle, AlertTriangle, RefreshCw, Send, ExternalLink, Settings, Info } from 'lucide-react';
 import { toast } from 'sonner';
-
 export const EmailSystemManager = () => {
-  const { healthStatus, isChecking, performHealthCheck, sendTestEmail } = useResendHealthCheck();
+  const {
+    healthStatus,
+    isChecking,
+    performHealthCheck,
+    sendTestEmail
+  } = useResendHealthCheck();
   const [testEmail, setTestEmail] = useState('');
   const [isSendingTest, setIsSendingTest] = useState(false);
-
   const handleSendTestEmail = async () => {
     if (!testEmail.includes('@')) {
       toast.error('Digite um email válido');
       return;
     }
-
     setIsSendingTest(true);
     try {
       await sendTestEmail(testEmail);
@@ -40,7 +31,6 @@ export const EmailSystemManager = () => {
       setIsSendingTest(false);
     }
   };
-
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'valid':
@@ -61,7 +51,6 @@ export const EmailSystemManager = () => {
         return <AlertTriangle className="h-4 w-4 text-gray-500" />;
     }
   };
-
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'valid':
@@ -82,9 +71,7 @@ export const EmailSystemManager = () => {
         return 'bg-gray-100 text-gray-800 border-gray-200';
     }
   };
-
-  return (
-    <div className="space-y-6">
+  return <div className="space-y-6">
       {/* Status Geral */}
       <Card>
         <CardHeader>
@@ -93,17 +80,8 @@ export const EmailSystemManager = () => {
               <Mail className="h-5 w-5" />
               <CardTitle>Status do Sistema de Email</CardTitle>
             </div>
-            <Button
-              onClick={performHealthCheck}
-              disabled={isChecking}
-              variant="outline"
-              size="sm"
-            >
-              {isChecking ? (
-                <RefreshCw className="h-4 w-4 animate-spin" />
-              ) : (
-                <RefreshCw className="h-4 w-4" />
-              )}
+            <Button onClick={performHealthCheck} disabled={isChecking} variant="outline" size="sm">
+              {isChecking ? <RefreshCw className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
               Verificar
             </Button>
           </div>
@@ -114,11 +92,7 @@ export const EmailSystemManager = () => {
         <CardContent className="space-y-4">
           {/* Status Principal */}
           <div className="flex items-center gap-2">
-            {healthStatus.isHealthy ? (
-              <CheckCircle className="h-5 w-5 text-green-500" />
-            ) : (
-              <XCircle className="h-5 w-5 text-red-500" />
-            )}
+            {healthStatus.isHealthy ? <CheckCircle className="h-5 w-5 text-green-500" /> : <XCircle className="h-5 w-5 text-red-500" />}
             <span className={`font-medium ${healthStatus.isHealthy ? 'text-green-700' : 'text-red-700'}`}>
               {healthStatus.isHealthy ? 'Sistema Operacional' : 'Sistema com Problemas'}
             </span>
@@ -135,9 +109,7 @@ export const EmailSystemManager = () => {
                 <span className="font-medium">API Key</span>
               </div>
               <Badge className={getStatusColor(healthStatus.apiKeyStatus)}>
-                {healthStatus.apiKeyStatus === 'valid' ? 'Válida' :
-                 healthStatus.apiKeyStatus === 'invalid' ? 'Inválida' :
-                 healthStatus.apiKeyStatus === 'missing' ? 'Ausente' : 'Erro'}
+                {healthStatus.apiKeyStatus === 'valid' ? 'Válida' : healthStatus.apiKeyStatus === 'invalid' ? 'Inválida' : healthStatus.apiKeyStatus === 'missing' ? 'Ausente' : 'Erro'}
               </Badge>
             </div>
 
@@ -147,9 +119,7 @@ export const EmailSystemManager = () => {
                 <span className="font-medium">Domínio</span>
               </div>
               <Badge className={getStatusColor(healthStatus.domainStatus)}>
-                {healthStatus.domainStatus === 'verified' ? 'Verificado' :
-                 healthStatus.domainStatus === 'pending' ? 'Pendente' :
-                 healthStatus.domainStatus === 'failed' ? 'Falhou' : 'Desconhecido'}
+                {healthStatus.domainStatus === 'verified' ? 'Verificado' : healthStatus.domainStatus === 'pending' ? 'Pendente' : healthStatus.domainStatus === 'failed' ? 'Falhou' : 'Desconhecido'}
               </Badge>
             </div>
 
@@ -159,57 +129,47 @@ export const EmailSystemManager = () => {
                 <span className="font-medium">Capacidade</span>
               </div>
               <Badge className={getStatusColor(healthStatus.emailCapability)}>
-                {healthStatus.emailCapability === 'operational' ? 'Normal' :
-                 healthStatus.emailCapability === 'limited' ? 'Limitada' : 'Erro'}
+                {healthStatus.emailCapability === 'operational' ? 'Normal' : healthStatus.emailCapability === 'limited' ? 'Limitada' : 'Erro'}
               </Badge>
             </div>
           </div>
 
           {/* Edge Function Status */}
-          <div className="flex items-center justify-between p-3 border rounded-lg bg-gray-50">
+          <div className="flex items-center justify-between p-3 border rounded-lg bg-slate-900">
             <div className="flex items-center gap-2">
               {getStatusIcon(healthStatus.edgeFunctionStatus)}
               <span className="font-medium">Edge Function</span>
             </div>
             <Badge className={getStatusColor(healthStatus.edgeFunctionStatus)}>
-              {healthStatus.edgeFunctionStatus === 'working' ? 'Funcionando' :
-               healthStatus.edgeFunctionStatus === 'failed' ? 'Falhou' : 'Desconhecido'}
+              {healthStatus.edgeFunctionStatus === 'working' ? 'Funcionando' : healthStatus.edgeFunctionStatus === 'failed' ? 'Falhou' : 'Desconhecido'}
             </Badge>
           </div>
 
           {/* Problemas Detectados */}
-          {healthStatus.issues.length > 0 && (
-            <Alert>
+          {healthStatus.issues.length > 0 && <Alert>
               <AlertTriangle className="h-4 w-4" />
               <AlertDescription>
                 <div className="space-y-1">
                   <strong>Problemas detectados:</strong>
                   <ul className="list-disc list-inside space-y-1 text-sm">
-                    {healthStatus.issues.map((issue, index) => (
-                      <li key={index}>{issue}</li>
-                    ))}
+                    {healthStatus.issues.map((issue, index) => <li key={index}>{issue}</li>)}
                   </ul>
                 </div>
               </AlertDescription>
-            </Alert>
-          )}
+            </Alert>}
 
           {/* Recomendações */}
-          {healthStatus.recommendations.length > 0 && (
-            <Alert>
+          {healthStatus.recommendations.length > 0 && <Alert>
               <Info className="h-4 w-4" />
               <AlertDescription>
                 <div className="space-y-1">
                   <strong>Recomendações:</strong>
                   <ul className="list-disc list-inside space-y-1 text-sm">
-                    {healthStatus.recommendations.map((rec, index) => (
-                      <li key={index}>{rec}</li>
-                    ))}
+                    {healthStatus.recommendations.map((rec, index) => <li key={index}>{rec}</li>)}
                   </ul>
                 </div>
               </AlertDescription>
-            </Alert>
-          )}
+            </Alert>}
 
           {/* Última Verificação */}
           <div className="text-xs text-gray-500">
@@ -233,40 +193,23 @@ export const EmailSystemManager = () => {
           <div className="flex gap-2">
             <div className="flex-1">
               <Label htmlFor="test-email">Email de destino</Label>
-              <Input
-                id="test-email"
-                type="email"
-                placeholder="seu@email.com"
-                value={testEmail}
-                onChange={(e) => setTestEmail(e.target.value)}
-                disabled={isSendingTest}
-              />
+              <Input id="test-email" type="email" placeholder="seu@email.com" value={testEmail} onChange={e => setTestEmail(e.target.value)} disabled={isSendingTest} />
             </div>
             <div className="flex items-end">
-              <Button
-                onClick={handleSendTestEmail}
-                disabled={!testEmail || isSendingTest || !healthStatus.isHealthy}
-                className="whitespace-nowrap"
-              >
-                {isSendingTest ? (
-                  <RefreshCw className="h-4 w-4 animate-spin mr-2" />
-                ) : (
-                  <Send className="h-4 w-4 mr-2" />
-                )}
+              <Button onClick={handleSendTestEmail} disabled={!testEmail || isSendingTest || !healthStatus.isHealthy} className="whitespace-nowrap">
+                {isSendingTest ? <RefreshCw className="h-4 w-4 animate-spin mr-2" /> : <Send className="h-4 w-4 mr-2" />}
                 Enviar Teste
               </Button>
             </div>
           </div>
           
-          {!healthStatus.isHealthy && (
-            <Alert>
+          {!healthStatus.isHealthy && <Alert>
               <AlertTriangle className="h-4 w-4" />
               <AlertDescription>
                 O sistema precisa estar operacional para enviar emails de teste.
                 Resolva os problemas detectados primeiro.
               </AlertDescription>
-            </Alert>
-          )}
+            </Alert>}
         </CardContent>
       </Card>
 
@@ -281,48 +224,28 @@ export const EmailSystemManager = () => {
         <CardContent className="space-y-3">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <Button variant="outline" asChild>
-              <a
-                href="https://resend.com/api-keys"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center justify-center gap-2"
-              >
+              <a href="https://resend.com/api-keys" target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2">
                 <ExternalLink className="h-4 w-4" />
                 Gerenciar API Keys
               </a>
             </Button>
             
             <Button variant="outline" asChild>
-              <a
-                href="https://resend.com/domains"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center justify-center gap-2"
-              >
+              <a href="https://resend.com/domains" target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2">
                 <ExternalLink className="h-4 w-4" />
                 Configurar Domínios
               </a>
             </Button>
             
             <Button variant="outline" asChild>
-              <a
-                href="https://resend.com/logs"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center justify-center gap-2"
-              >
+              <a href="https://resend.com/logs" target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2">
                 <ExternalLink className="h-4 w-4" />
                 Ver Logs do Resend
               </a>
             </Button>
             
             <Button variant="outline" asChild>
-              <a
-                href="https://supabase.com/dashboard/project/_/logs/edge-functions"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center justify-center gap-2"
-              >
+              <a href="https://supabase.com/dashboard/project/_/logs/edge-functions" target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2">
                 <ExternalLink className="h-4 w-4" />
                 Logs Edge Functions
               </a>
@@ -330,6 +253,5 @@ export const EmailSystemManager = () => {
           </div>
         </CardContent>
       </Card>
-    </div>
-  );
+    </div>;
 };
