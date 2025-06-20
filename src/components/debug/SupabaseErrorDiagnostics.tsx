@@ -1,209 +1,222 @@
 
-import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import React, { useState } from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { 
-  AlertTriangle, 
-  CheckCircle, 
-  Database, 
-  Wifi, 
-  Shield,
-  Activity,
-  Server,
-  Clock
-} from 'lucide-react';
 import { useSupabaseHealthCheck } from '@/hooks/supabase/useSupabaseHealthCheck';
-import { RoleSyncPanel } from '@/components/admin/roles/RoleSyncPanel';
+import { ResendDiagnostics } from './ResendDiagnostics';
+import { 
+  Database, 
+  Shield, 
+  Wifi, 
+  Storage, 
+  CheckCircle, 
+  XCircle, 
+  AlertTriangle,
+  RefreshCw,
+  Mail
+} from 'lucide-react';
 
-export const SupabaseErrorDiagnostics: React.FC = () => {
+export const SupabaseErrorDiagnostics = () => {
   const { healthStatus, isChecking, performHealthCheck } = useSupabaseHealthCheck();
+  const [activeTab, setActiveTab] = useState("overview");
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'operational':
       case 'connected':
       case 'authenticated':
+      case 'operational':
         return <CheckCircle className="h-4 w-4 text-green-500" />;
       case 'slow':
-        return <Clock className="h-4 w-4 text-yellow-500" />;
-      case 'error':
+        return <AlertTriangle className="h-4 w-4 text-yellow-500" />;
       case 'disconnected':
       case 'unauthenticated':
-        return <AlertTriangle className="h-4 w-4 text-red-500" />;
+      case 'error':
+        return <XCircle className="h-4 w-4 text-red-500" />;
       default:
-        return <Activity className="h-4 w-4 text-gray-500" />;
+        return <AlertTriangle className="h-4 w-4 text-gray-500" />;
     }
   };
 
-  const getStatusColor = (status: string) => {
+  const getStatusVariant = (status: string) => {
     switch (status) {
-      case 'operational':
       case 'connected':
       case 'authenticated':
-        return 'bg-green-500/10 text-green-700 border-green-500/20';
+      case 'operational':
+        return 'default';
       case 'slow':
-        return 'bg-yellow-500/10 text-yellow-700 border-yellow-500/20';
-      case 'error':
+        return 'secondary';
       case 'disconnected':
       case 'unauthenticated':
-        return 'bg-red-500/10 text-red-700 border-red-500/20';
+      case 'error':
+        return 'destructive';
       default:
-        return 'bg-gray-500/10 text-gray-700 border-gray-500/20';
+        return 'outline';
     }
   };
 
   return (
     <div className="space-y-6">
-      {/* Status Geral */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle className="flex items-center gap-2">
-                <Server className="h-5 w-5" />
-                Status do Sistema Supabase
-              </CardTitle>
-              <CardDescription>
-                Monitoramento em tempo real da saúde do sistema
-              </CardDescription>
-            </div>
-            <Badge
-              className={healthStatus.isHealthy 
-                ? getStatusColor('operational') 
-                : getStatusColor('error')
-              }
-            >
-              {healthStatus.isHealthy ? 'Saudável' : 'Problemas Detectados'}
-            </Badge>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {/* Status da Conexão */}
-            <div className="flex items-center gap-3 p-3 border rounded-lg">
-              <Wifi className="h-6 w-6 text-blue-600" />
-              <div>
-                <div className="flex items-center gap-2">
-                  {getStatusIcon(healthStatus.connectionStatus)}
-                  <span className="font-medium">Conexão</span>
-                </div>
-                <p className="text-sm text-muted-foreground capitalize">
-                  {healthStatus.connectionStatus}
-                </p>
-              </div>
-            </div>
-
-            {/* Status da Autenticação */}
-            <div className="flex items-center gap-3 p-3 border rounded-lg">
-              <Shield className="h-6 w-6 text-purple-600" />
-              <div>
-                <div className="flex items-center gap-2">
-                  {getStatusIcon(healthStatus.authStatus)}
-                  <span className="font-medium">Autenticação</span>
-                </div>
-                <p className="text-sm text-muted-foreground capitalize">
-                  {healthStatus.authStatus}
-                </p>
-              </div>
-            </div>
-
-            {/* Status do Banco */}
-            <div className="flex items-center gap-3 p-3 border rounded-lg">
-              <Database className="h-6 w-6 text-green-600" />
-              <div>
-                <div className="flex items-center gap-2">
-                  {getStatusIcon(healthStatus.databaseStatus)}
-                  <span className="font-medium">Banco de Dados</span>
-                </div>
-                <p className="text-sm text-muted-foreground capitalize">
-                  {healthStatus.databaseStatus}
-                </p>
-              </div>
-            </div>
-
-            {/* Status do Storage */}
-            <div className="flex items-center gap-3 p-3 border rounded-lg">
-              <Server className="h-6 w-6 text-orange-600" />
-              <div>
-                <div className="flex items-center gap-2">
-                  {getStatusIcon(healthStatus.storageStatus)}
-                  <span className="font-medium">Storage</span>
-                </div>
-                <p className="text-sm text-muted-foreground capitalize">
-                  {healthStatus.storageStatus}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* Problemas Detectados */}
-          {healthStatus.issues.length > 0 && (
-            <div className="mt-6">
-              <h4 className="font-medium mb-3">Problemas Detectados:</h4>
-              <div className="space-y-2">
-                {healthStatus.issues.map((issue, index) => (
-                  <Alert key={index} className="border-red-200">
-                    <AlertTriangle className="h-4 w-4" />
-                    <AlertDescription>{issue}</AlertDescription>
-                  </Alert>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Última Verificação */}
-          <div className="mt-4 pt-4 border-t text-sm text-muted-foreground">
-            Última verificação: {healthStatus.checkedAt.toLocaleString('pt-BR')}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Abas de Diagnóstico */}
-      <Tabs defaultValue="system" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="system">Sistema & Performance</TabsTrigger>
-          <TabsTrigger value="roles">Roles & Permissões</TabsTrigger>
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList className="grid w-full grid-cols-4">
+          <TabsTrigger value="overview">Visão Geral</TabsTrigger>
+          <TabsTrigger value="database">Banco de Dados</TabsTrigger>
+          <TabsTrigger value="storage">Armazenamento</TabsTrigger>
+          <TabsTrigger value="email">Sistema de Email</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="system" className="space-y-6">
+        <TabsContent value="overview" className="space-y-4">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle>Status Geral do Sistema</CardTitle>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={performHealthCheck}
+                disabled={isChecking}
+              >
+                {isChecking ? (
+                  <RefreshCw className="h-4 w-4 animate-spin mr-2" />
+                ) : (
+                  <RefreshCw className="h-4 w-4 mr-2" />
+                )}
+                Verificar
+              </Button>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="flex items-center space-x-2">
+                  <Wifi className="h-4 w-4" />
+                  <div className="space-y-1">
+                    <p className="text-sm font-medium leading-none">Conexão</p>
+                    <div className="flex items-center gap-2">
+                      {getStatusIcon(healthStatus.connectionStatus)}
+                      <Badge variant={getStatusVariant(healthStatus.connectionStatus)}>
+                        {healthStatus.connectionStatus}
+                      </Badge>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex items-center space-x-2">
+                  <Shield className="h-4 w-4" />
+                  <div className="space-y-1">
+                    <p className="text-sm font-medium leading-none">Autenticação</p>
+                    <div className="flex items-center gap-2">
+                      {getStatusIcon(healthStatus.authStatus)}
+                      <Badge variant={getStatusVariant(healthStatus.authStatus)}>
+                        {healthStatus.authStatus}
+                      </Badge>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex items-center space-x-2">
+                  <Database className="h-4 w-4" />
+                  <div className="space-y-1">
+                    <p className="text-sm font-medium leading-none">Banco</p>
+                    <div className="flex items-center gap-2">
+                      {getStatusIcon(healthStatus.databaseStatus)}
+                      <Badge variant={getStatusVariant(healthStatus.databaseStatus)}>
+                        {healthStatus.databaseStatus}
+                      </Badge>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex items-center space-x-2">
+                  <Storage className="h-4 w-4" />
+                  <div className="space-y-1">
+                    <p className="text-sm font-medium leading-none">Storage</p>
+                    <div className="flex items-center gap-2">
+                      {getStatusIcon(healthStatus.storageStatus)}
+                      <Badge variant={getStatusVariant(healthStatus.storageStatus)}>
+                        {healthStatus.storageStatus}
+                      </Badge>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-4 text-sm text-muted-foreground">
+                Última verificação: {healthStatus.checkedAt.toLocaleString('pt-BR')}
+              </div>
+            </CardContent>
+          </Card>
+
+          {healthStatus.issues.length > 0 && (
+            <Alert variant="destructive">
+              <AlertTriangle className="h-4 w-4" />
+              <AlertDescription>
+                <div className="font-medium mb-2">Problemas Detectados:</div>
+                <ul className="list-disc list-inside space-y-1">
+                  {healthStatus.issues.map((issue, index) => (
+                    <li key={index} className="text-sm">{issue}</li>
+                  ))}
+                </ul>
+              </AlertDescription>
+            </Alert>
+          )}
+        </TabsContent>
+
+        <TabsContent value="database" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Diagnóstico do Sistema</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <Database className="h-5 w-5" />
+                Diagnóstico do Banco de Dados
+              </CardTitle>
               <CardDescription>
-                Análise detalhada de performance e conectividade
+                Status detalhado das operações de banco de dados
               </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                <div className="flex items-center justify-between p-4 border rounded-lg">
-                  <span>Status da API</span>
-                  <Badge className={getStatusColor(healthStatus.databaseStatus)}>
+                <div className="flex items-center justify-between">
+                  <span>Status da Conexão</span>
+                  <Badge variant={getStatusVariant(healthStatus.databaseStatus)}>
                     {healthStatus.databaseStatus}
                   </Badge>
                 </div>
-                
-                <div className="flex items-center justify-between p-4 border rounded-lg">
-                  <span>Latência da Conexão</span>
-                  <Badge className={getStatusColor(healthStatus.connectionStatus)}>
-                    {healthStatus.connectionStatus === 'slow' ? 'Alta' : 'Normal'}
-                  </Badge>
-                </div>
-
-                <div className="flex items-center justify-between p-4 border rounded-lg">
-                  <span>Políticas RLS</span>
-                  <Badge className={getStatusColor('operational')}>
-                    Ativas
-                  </Badge>
+                <div className="text-sm text-muted-foreground">
+                  Detalhes adicionais sobre performance e queries em desenvolvimento.
                 </div>
               </div>
             </CardContent>
           </Card>
         </TabsContent>
 
-        <TabsContent value="roles" className="space-y-6">
-          <RoleSyncPanel />
+        <TabsContent value="storage" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Storage className="h-5 w-5" />
+                Diagnóstico do Armazenamento
+              </CardTitle>
+              <CardDescription>
+                Status dos buckets e operações de storage
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <span>Status do Storage</span>
+                  <Badge variant={getStatusVariant(healthStatus.storageStatus)}>
+                    {healthStatus.storageStatus}
+                  </Badge>
+                </div>
+                <div className="text-sm text-muted-foreground">
+                  Informações detalhadas sobre buckets e uploads em desenvolvimento.
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="email" className="space-y-4">
+          <ResendDiagnostics />
         </TabsContent>
       </Tabs>
     </div>
