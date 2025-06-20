@@ -34,12 +34,12 @@ export const useInviteCreate = () => {
         channelPreference
       });
 
-      // Usar função híbrida robusta do banco
+      // Usar função híbrida robusta do banco - removido ::interval
       const { data, error } = await supabase.rpc('create_invite_hybrid', {
         p_email: email,
         p_phone: phone || null,
         p_role_id: roleId,
-        p_expires_in: `${expiresIn}::interval`,
+        p_expires_in: expiresIn, // Enviando apenas a string, sem ::interval
         p_notes: notes || null,
         p_channel_preference: channelPreference
       });
@@ -104,6 +104,8 @@ export const useInviteCreate = () => {
           errorMessage = "Telefone é obrigatório para envio via WhatsApp";
         } else if (error.message.includes('canal') || error.message.includes('channel')) {
           errorMessage = "Preferência de canal inválida";
+        } else if (error.message.includes('interval')) {
+          errorMessage = "Período de expiração inválido";
         } else {
           errorMessage = error.message;
         }
