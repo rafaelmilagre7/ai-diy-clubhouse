@@ -30,7 +30,7 @@ export const fetchUserProfile = async (userId: string): Promise<UserProfile | nu
           is_system
         )
       `)
-      .eq('id', userId)
+      .eq('id', userId as any)
       .single();
 
     if (error) {
@@ -50,17 +50,17 @@ export const fetchUserProfile = async (userId: string): Promise<UserProfile | nu
     
     // Mapear corretamente o resultado da query
     const profile: UserProfile = {
-      id: data.id,
-      email: data.email,
-      name: data.name,
-      role_id: data.role_id,
-      avatar_url: data.avatar_url,
-      company_name: data.company_name,
-      industry: data.industry,
-      created_at: data.created_at,
-      onboarding_completed: data.onboarding_completed,
-      onboarding_completed_at: data.onboarding_completed_at,
-      user_roles: data.user_roles as any
+      id: (data as any).id,
+      email: (data as any).email,
+      name: (data as any).name,
+      role_id: (data as any).role_id,
+      avatar_url: (data as any).avatar_url,
+      company_name: (data as any).company_name,
+      industry: (data as any).industry,
+      created_at: (data as any).created_at,
+      onboarding_completed: (data as any).onboarding_completed,
+      onboarding_completed_at: (data as any).onboarding_completed_at,
+      user_roles: (data as any).user_roles as any
     };
     
     console.log('Perfil encontrado:', profile);
@@ -105,7 +105,7 @@ export const createUserProfileIfNeeded = async (
         industry: null,
         onboarding_completed: false,
         onboarding_completed_at: null
-      })
+      } as any)
       .select(`
         id,
         email,
@@ -140,17 +140,17 @@ export const createUserProfileIfNeeded = async (
     
     // Mapear corretamente o resultado da query
     const profile: UserProfile = {
-      id: newProfile.id,
-      email: newProfile.email,
-      name: newProfile.name,
-      role_id: newProfile.role_id,
-      avatar_url: newProfile.avatar_url,
-      company_name: newProfile.company_name,
-      industry: newProfile.industry,
-      created_at: newProfile.created_at,
-      onboarding_completed: newProfile.onboarding_completed,
-      onboarding_completed_at: newProfile.onboarding_completed_at,
-      user_roles: newProfile.user_roles as any
+      id: (newProfile as any).id,
+      email: (newProfile as any).email,
+      name: (newProfile as any).name,
+      role_id: (newProfile as any).role_id,
+      avatar_url: (newProfile as any).avatar_url,
+      company_name: (newProfile as any).company_name,
+      industry: (newProfile as any).industry,
+      created_at: (newProfile as any).created_at,
+      onboarding_completed: (newProfile as any).onboarding_completed,
+      onboarding_completed_at: (newProfile as any).onboarding_completed_at,
+      user_roles: (newProfile as any).user_roles as any
     };
     
     console.log('Perfil criado com sucesso:', profile);
