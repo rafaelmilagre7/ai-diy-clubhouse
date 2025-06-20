@@ -1,232 +1,247 @@
 
-import React, { useState } from 'react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Separator } from '@/components/ui/separator';
+import { Progress } from '@/components/ui/progress';
+import { 
+  Database, 
+  Shield, 
+  CheckCircle, 
+  XCircle, 
+  AlertTriangle, 
+  RefreshCw,
+  Activity,
+  Mail,
+  Clock
+} from 'lucide-react';
 import { useSupabaseHealthCheck } from '@/hooks/supabase/useSupabaseHealthCheck';
 import { useResendHealthCheck } from '@/hooks/supabase/useResendHealthCheck';
-import { Database, Shield, Activity, Mail, AlertTriangle, CheckCircle, XCircle, Clock, RefreshCw } from 'lucide-react';
 import { ResendDiagnostics } from './ResendDiagnostics';
 
-export const SupabaseErrorDiagnostics = () => {
-  const { 
-    healthStatus: supabaseHealth, 
-    isChecking: isCheckingSupabase, 
-    performHealthCheck: checkSupabaseHealth 
-  } = useSupabaseHealthCheck();
-  
-  const { 
-    healthStatus: resendHealth, 
-    isChecking: isCheckingResend, 
-    performHealthCheck: checkResendHealth 
-  } = useResendHealthCheck();
+export const SupabaseErrorDiagnostics: React.FC = () => {
+  const { healthStatus, isChecking, performHealthCheck } = useSupabaseHealthCheck();
+  const { healthStatus: resendHealth, isChecking: isCheckingResend } = useResendHealthCheck();
 
   const getStatusColor = (status: string) => {
-    switch (status.toLowerCase()) {
-      case 'healthy':
+    switch (status) {
+      case 'connected':
+      case 'authenticated':  
       case 'operational':
-        return 'text-green-600 bg-green-100';
-      case 'degraded':
-      case 'limited':
-        return 'text-yellow-600 bg-yellow-100';
+        return 'bg-green-500';
+      case 'slow':
+        return 'bg-yellow-500';
+      case 'disconnected':
+      case 'unauthenticated':
       case 'error':
-      case 'down':
-        return 'text-red-600 bg-red-100';
+        return 'bg-red-500';
       default:
-        return 'text-gray-600 bg-gray-100';
+        return 'bg-gray-500';
     }
   };
 
   const getStatusIcon = (status: string) => {
-    switch (status.toLowerCase()) {
-      case 'healthy':
+    switch (status) {
+      case 'connected':
+      case 'authenticated':
       case 'operational':
-        return <CheckCircle className="h-4 w-4" />;
-      case 'degraded':
-      case 'limited':
-        return <Clock className="h-4 w-4" />;
+        return <CheckCircle className="h-4 w-4 text-green-600" />;
+      case 'slow':
+        return <AlertTriangle className="h-4 w-4 text-yellow-600" />;
+      case 'disconnected':
+      case 'unauthenticated':
       case 'error':
-      case 'down':
-        return <XCircle className="h-4 w-4" />;
+        return <XCircle className="h-4 w-4 text-red-600" />;
       default:
-        return <AlertTriangle className="h-4 w-4" />;
+        return <AlertTriangle className="h-4 w-4 text-gray-600" />;
     }
   };
 
+  const getStatusText = (status: string) => {
+    switch (status) {
+      case 'connected': return 'Conectado';
+      case 'disconnected': return 'Desconectado';
+      case 'slow': return 'Lento';
+      case 'authenticated': return 'Autenticado';
+      case 'unauthenticated': return 'Não Autenticado';
+      case 'operational': return 'Operacional';
+      case 'error': return 'Erro';
+      default: return 'Desconhecido';
+    }
+  };
+
+  const formatDate = (date: Date) => {
+    return new Intl.DateTimeFormat('pt-BR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit'
+    }).format(date);
+  };
+
   return (
-    <div className="space-y-6">
+    <div className="container mx-auto py-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-semibold tracking-tight">Diagnóstico do Sistema</h2>
+          <h1 className="text-3xl font-bold tracking-tight">Diagnóstico do Sistema</h1>
           <p className="text-muted-foreground">
-            Monitoramento em tempo real da saúde dos serviços
+            Monitoramento da saúde dos serviços essenciais
           </p>
         </div>
         <div className="flex gap-2">
           <Button 
-            onClick={checkSupabaseHealth} 
-            disabled={isCheckingSupabase}
+            onClick={performHealthCheck} 
+            disabled={isChecking}
             variant="outline"
             size="sm"
           >
-            {isCheckingSupabase ? (
-              <RefreshCw className="h-4 w-4 animate-spin mr-2" />
-            ) : (
-              <Database className="h-4 w-4 mr-2" />
-            )}
-            Verificar Supabase
-          </Button>
-          <Button 
-            onClick={checkResendHealth} 
-            disabled={isCheckingResend}
-            variant="outline"
-            size="sm"
-          >
-            {isCheckingResend ? (
-              <RefreshCw className="h-4 w-4 animate-spin mr-2" />
-            ) : (
-              <Mail className="h-4 w-4 mr-2" />
-            )}
-            Verificar Email
+            <RefreshCw className={`h-4 w-4 mr-2 ${isChecking ? 'animate-spin' : ''}`} />
+            {isChecking ? 'Verificando...' : 'Atualizar'}
           </Button>
         </div>
       </div>
 
       <Tabs defaultValue="supabase" className="space-y-4">
-        <TabsList className="grid grid-cols-3 w-full max-w-md">
+        <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="supabase" className="flex items-center gap-2">
             <Database className="h-4 w-4" />
             Supabase
           </TabsTrigger>
-          <TabsTrigger value="email" className="flex items-center gap-2">
+          <TabsTrigger value="resend" className="flex items-center gap-2">
             <Mail className="h-4 w-4" />
             Sistema de Email
-          </TabsTrigger>
-          <TabsTrigger value="security" className="flex items-center gap-2">
-            <Shield className="h-4 w-4" />
-            Segurança
           </TabsTrigger>
         </TabsList>
 
         <TabsContent value="supabase" className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {/* Status Geral */}
+          {/* Status Geral */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Activity className="h-5 w-5" />
+                Status Geral do Sistema
+              </CardTitle>
+              <CardDescription>
+                Última verificação: {formatDate(healthStatus.checkedAt)}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center gap-4 mb-4">
+                <div className={`w-3 h-3 rounded-full ${healthStatus.isHealthy ? 'bg-green-500' : 'bg-red-500'}`} />
+                <span className="font-medium">
+                  {healthStatus.isHealthy ? 'Sistema Saudável' : 'Problemas Detectados'}
+                </span>
+              </div>
+              
+              {healthStatus.issues.length > 0 && (
+                <Alert variant="destructive">
+                  <AlertTriangle className="h-4 w-4" />
+                  <AlertDescription>
+                    <div className="space-y-2">
+                      <p className="font-medium">Problemas identificados:</p>
+                      <ul className="list-disc list-inside space-y-1">
+                        {healthStatus.issues.map((issue, index) => (
+                          <li key={index} className="text-sm">{issue}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  </AlertDescription>
+                </Alert>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Métricas Detalhadas */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* Conexão */}
             <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Status Geral</CardTitle>
-                {getStatusIcon(supabaseHealth.status)}
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base flex items-center gap-2">
+                  {getStatusIcon(healthStatus.connectionStatus)}
+                  Conexão
+                </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">
-                  <Badge className={getStatusColor(supabaseHealth.status)}>
-                    {supabaseHealth.status}
+                <div className="space-y-2">
+                  <Badge variant="secondary" className={`${getStatusColor(healthStatus.connectionStatus)} text-white`}>
+                    {getStatusText(healthStatus.connectionStatus)}
                   </Badge>
+                  <p className="text-sm text-muted-foreground">
+                    Conectividade com o servidor
+                  </p>
                 </div>
-                <p className="text-xs text-muted-foreground">
-                  Última verificação: {new Date(supabaseHealth.checkedAt).toLocaleTimeString('pt-BR')}
-                </p>
               </CardContent>
             </Card>
 
-            {/* Conexão com Banco */}
+            {/* Banco de Dados */}
             <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Banco de Dados</CardTitle>
-                <Database className="h-4 w-4 text-muted-foreground" />
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base flex items-center gap-2">
+                  {getStatusIcon(healthStatus.databaseStatus)}
+                  Banco de Dados
+                </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">
-                  <Badge className={getStatusColor(supabaseHealth.database.status)}>
-                    {supabaseHealth.database.status}
+                <div className="space-y-2">
+                  <Badge variant="secondary" className={`${getStatusColor(healthStatus.databaseStatus)} text-white`}>
+                    {getStatusText(healthStatus.databaseStatus)}
                   </Badge>
+                  <p className="text-sm text-muted-foreground">
+                    Operações de banco de dados
+                  </p>
                 </div>
-                <p className="text-xs text-muted-foreground">
-                  Latência: {supabaseHealth.database.responseTime}ms
-                </p>
               </CardContent>
             </Card>
 
             {/* Autenticação */}
             <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Autenticação</CardTitle>
-                <Shield className="h-4 w-4 text-muted-foreground" />
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base flex items-center gap-2">
+                  {getStatusIcon(healthStatus.authStatus)}
+                  Autenticação
+                </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">
-                  <Badge className={getStatusColor(supabaseHealth.auth.status)}>
-                    {supabaseHealth.auth.status}
+                <div className="space-y-2">
+                  <Badge variant="secondary" className={`${getStatusColor(healthStatus.authStatus)} text-white`}>
+                    {getStatusText(healthStatus.authStatus)}
                   </Badge>
+                  <p className="text-sm text-muted-foreground">
+                    Sistema de autenticação
+                  </p>
                 </div>
-                <p className="text-xs text-muted-foreground">
-                  Usuários ativos: {supabaseHealth.auth.activeUsers}
-                </p>
+              </CardContent>
+            </Card>
+
+            {/* Storage */}
+            <Card className="md:col-span-3">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base flex items-center gap-2">
+                  {getStatusIcon(healthStatus.storageStatus)}
+                  Armazenamento
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  <Badge variant="secondary" className={`${getStatusColor(healthStatus.storageStatus)} text-white`}>
+                    {getStatusText(healthStatus.storageStatus)}
+                  </Badge>
+                  <p className="text-sm text-muted-foreground">
+                    Sistema de armazenamento de arquivos
+                  </p>
+                </div>
               </CardContent>
             </Card>
           </div>
-
-          {/* Problemas Detectados */}
-          {supabaseHealth.issues.length > 0 && (
-            <Alert>
-              <AlertTriangle className="h-4 w-4" />
-              <AlertDescription>
-                <div className="space-y-1">
-                  <div className="font-medium">Problemas detectados:</div>
-                  <ul className="list-disc list-inside space-y-1">
-                    {supabaseHealth.issues.map((issue, index) => (
-                      <li key={index} className="text-sm">{issue}</li>
-                    ))}
-                  </ul>
-                </div>
-              </AlertDescription>
-            </Alert>
-          )}
-
-          {/* Recomendações */}
-          {supabaseHealth.recommendations.length > 0 && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Recomendações</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ul className="space-y-2">
-                  {supabaseHealth.recommendations.map((recommendation, index) => (
-                    <li key={index} className="flex items-start gap-2">
-                      <Activity className="h-4 w-4 text-blue-500 mt-0.5 flex-shrink-0" />
-                      <span className="text-sm">{recommendation}</span>
-                    </li>
-                  ))}
-                </ul>
-              </CardContent>
-            </Card>
-          )}
         </TabsContent>
 
-        <TabsContent value="email" className="space-y-4">
+        <TabsContent value="resend" className="space-y-4">
           <ResendDiagnostics />
-        </TabsContent>
-
-        <TabsContent value="security" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Auditoria de Segurança</CardTitle>
-              <CardDescription>
-                Verificação automática de configurações de segurança
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="text-center py-8">
-                <Shield className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <p className="text-muted-foreground">
-                  Sistema de auditoria de segurança será implementado em breve
-                </p>
-              </div>
-            </CardContent>
-          </Card>
         </TabsContent>
       </Tabs>
     </div>
