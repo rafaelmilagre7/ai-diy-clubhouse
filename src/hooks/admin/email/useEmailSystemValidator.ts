@@ -5,7 +5,7 @@ import { resendTestService } from '@/services/resendTestService';
 
 interface ValidationStep {
   step: string;
-  status: 'pending' | 'success' | 'error';
+  status: 'pending' | 'success' | 'error' | 'warning';
   message: string;
   details?: any;
 }
