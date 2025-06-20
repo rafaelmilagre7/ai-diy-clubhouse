@@ -28,8 +28,8 @@ interface RecursoFormDialogProps {
   onOpenChange: (open: boolean) => void;
   onSuccess: () => void;
   material?: Material;
-  recurso?: any; // Adicionar suporte para a propriedade recurso também
-  lessonId?: string; // Adicionar suporte para lessonId
+  recurso?: any;
+  lessonId?: string;
 }
 
 export const RecursoFormDialog: React.FC<RecursoFormDialogProps> = ({
@@ -40,7 +40,6 @@ export const RecursoFormDialog: React.FC<RecursoFormDialogProps> = ({
   recurso,
   lessonId
 }) => {
-  // Usar recurso se material não estiver disponível (para compatibilidade)
   const editingItem = material || recurso;
   
   const [formData, setFormData] = useState({
@@ -75,15 +74,15 @@ export const RecursoFormDialog: React.FC<RecursoFormDialogProps> = ({
         file_type: formData.file_type || 'document',
         file_size_bytes: formData.file_size_bytes || null,
         created_at: new Date().toISOString(),
-        ...(lessonId && { lesson_id: lessonId }) // Adicionar lesson_id se fornecido
+        ...(lessonId && { lesson_id: lessonId })
       };
 
       if (editingItem?.id) {
         // Atualizar material existente
         const { error } = await supabase
           .from('learning_resources')
-          .update(materialData)
-          .eq('id', editingItem.id);
+          .update(materialData as any)
+          .eq('id', editingItem.id as any);
 
         if (error) throw error;
         toast.success('Material atualizado com sucesso!');
@@ -91,7 +90,7 @@ export const RecursoFormDialog: React.FC<RecursoFormDialogProps> = ({
         // Criar novo material
         const { error } = await supabase
           .from('learning_resources')
-          .insert([materialData]);
+          .insert([materialData] as any);
 
         if (error) throw error;
         toast.success('Material criado com sucesso!');

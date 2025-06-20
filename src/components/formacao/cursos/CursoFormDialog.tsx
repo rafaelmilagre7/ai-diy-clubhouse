@@ -1,252 +1,208 @@
 
-import { useState, useEffect } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import { supabase } from "@/lib/supabase";
-import { LearningCourse } from "@/lib/supabase";
-import { toast } from "sonner";
+import React, { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Button } from "@/components/ui/button";
-import { Switch } from "@/components/ui/switch";
-import { ImageUpload } from "@/components/formacao/common/ImageUpload";
-import { slugify } from "@/lib/utils";
-import { Loader2 } from "lucide-react";
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Switch } from '@/components/ui/switch';
+import { supabase } from '@/lib/supabase';
+import { toast } from 'sonner';
+import { ImageUpload } from '@/components/formacao/comum/ImageUpload';
+
+interface Curso {
+  id?: string;
+  title: string;
+  description?: string;
+  cover_image_url?: string;
+  published?: boolean;
+}
 
 interface CursoFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  curso: LearningCourse | null;
   onSuccess: () => void;
-  userId: string;
+  curso?: Curso;
 }
 
-const cursoFormSchema = z.object({
-  title: z.string().min(3, { message: "O título precisa ter pelo menos 3 caracteres" }),
-  description: z.string().optional(),
-  cover_image_url: z.string().optional(),
-  published: z.boolean().default(false),
-});
-
-type CursoFormValues = z.infer<typeof cursoFormSchema>;
-
-export const CursoFormDialog = ({
+export const CursoFormDialog: React.FC<CursoFormDialogProps> = ({
   open,
   onOpenChange,
-  curso,
   onSuccess,
-  userId
-}: CursoFormDialogProps) => {
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const isEditing = !!curso;
-  
-  const form = useForm<CursoFormValues>({
-    resolver: zodResolver(cursoFormSchema),
-    defaultValues: {
-      title: curso?.title || "",
-      description: curso?.description || "",
-      cover_image_url: curso?.cover_image_url || "",
-      published: curso?.published || false,
-    },
+  curso
+}) => {
+  const [formData, setFormData] = useState({
+    title: curso?.title || '',
+    description: curso?.description || '',
+    cover_image_url: curso?.cover_image_url || '',
+    published: curso?.published || false
   });
-  
-  // Atualizar formulário quando o curso mudar
+  const [isLoading, setIsLoading] = useState(false);
+
   useEffect(() => {
     if (curso) {
-      form.reset({
-        title: curso.title || "",
-        description: curso.description || "",
-        cover_image_url: curso.cover_image_url || "",
-        published: curso.published || false,
+      setFormData({
+        title: curso.title || '',
+        description: curso.description || '',
+        cover_image_url: curso.cover_image_url || '',
+        published: curso.published || false
+      });
+    } else {
+      setFormData({
+        title: '',
+        description: '',
+        cover_image_url: '',
+        published: false
       });
     }
-  }, [curso, form]);
+  }, [curso]);
 
-  const onSubmit = async (values: CursoFormValues) => {
-    setIsSubmitting(true);
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     
+    if (!formData.title.trim()) {
+      toast.error('Título é obrigatório');
+      return;
+    }
+
     try {
-      if (isEditing) {
-        // Atualizando curso existente
+      setIsLoading(true);
+      
+      if (curso?.id) {
+        // Atualizar curso existente
         const { error } = await supabase
           .from('learning_courses')
           .update({
-            title: values.title,
-            description: values.description,
-            cover_image_url: values.cover_image_url,
-            published: values.published,
-            updated_at: new Date().toISOString(),
-          })
-          .eq('id', curso.id);
-          
+            title: formData.title.trim(),
+            description: formData.description?.trim() || null,
+            cover_image_url: formData.cover_image_url || null,
+            published: formData.published,
+            updated_at: new Date().toISOString()
+          } as any)
+          .eq('id', curso.id as any);
+
         if (error) throw error;
-        toast.success("Curso atualizado com sucesso!");
+        toast.success('Curso atualizado com sucesso!');
       } else {
-        // Criando novo curso
-        const slug = slugify(values.title);
-        
+        // Criar novo curso
+        const slug = formData.title.toLowerCase()
+          .normalize('NFD')
+          .replace(/[\u0300-\u036f]/g, '')
+          .replace(/[^a-z0-9\s]/g, '')
+          .replace(/\s+/g, '-')
+          .trim();
+
         const { error } = await supabase
           .from('learning_courses')
-          .insert({
-            title: values.title,
-            description: values.description,
-            cover_image_url: values.cover_image_url,
-            published: values.published,
+          .insert([{
+            title: formData.title.trim(),
+            description: formData.description?.trim() || null,
+            cover_image_url: formData.cover_image_url || null,
+            published: formData.published,
             slug: slug,
-            created_by: userId,
-          });
-          
+            created_by: (await supabase.auth.getUser()).data.user?.id || ''
+          }] as any);
+
         if (error) throw error;
-        toast.success("Curso criado com sucesso!");
+        toast.success('Curso criado com sucesso!');
       }
-      
+
       onSuccess();
-      form.reset();
-    } catch (error) {
-      console.error("Erro ao salvar curso:", error);
-      toast.error("Ocorreu um erro ao salvar o curso. Tente novamente.");
+      onOpenChange(false);
+      
+      // Reset form
+      setFormData({
+        title: '',
+        description: '',
+        cover_image_url: '',
+        published: false
+      });
+      
+    } catch (error: any) {
+      console.error('Erro ao salvar curso:', error);
+      toast.error(error.message || 'Erro ao salvar curso');
     } finally {
-      setIsSubmitting(false);
+      setIsLoading(false);
     }
   };
 
-  const handleOpenChange = (open: boolean) => {
-    if (!open) {
-      form.reset();
-    }
-    onOpenChange(open);
+  const handleImageUpload = (url: string) => {
+    setFormData(prev => ({ ...prev, cover_image_url: url }));
   };
 
   return (
-    <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-[650px] max-h-[90vh] overflow-y-auto">
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>{isEditing ? "Editar Curso" : "Criar Novo Curso"}</DialogTitle>
-          <DialogDescription>
-            {isEditing 
-              ? "Atualize as informações do curso existente." 
-              : "Preencha as informações para criar um novo curso."}
-          </DialogDescription>
+          <DialogTitle>
+            {curso ? 'Editar Curso' : 'Novo Curso'}
+          </DialogTitle>
         </DialogHeader>
-        
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            <FormField
-              control={form.control}
-              name="title"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Título do Curso</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Digite o título do curso" {...field} />
-                  </FormControl>
-                  <FormDescription>Este será o nome exibido para os alunos.</FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="description"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Descrição</FormLabel>
-                  <FormControl>
-                    <Textarea 
-                      placeholder="Digite uma breve descrição do curso" 
-                      rows={4}
-                      {...field} 
-                      value={field.value || ''} 
-                    />
-                  </FormControl>
-                  <FormDescription>
-                    Uma descrição clara ajudará os alunos a entenderem o conteúdo do curso.
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
 
-            <FormField
-              control={form.control}
-              name="cover_image_url"
-              render={({ field }) => (
-                <FormItem className="space-y-3">
-                  <FormLabel>Imagem de Capa</FormLabel>
-                  <FormControl>
-                    <ImageUpload
-                      value={field.value}
-                      onChange={field.onChange}
-                      bucketName="learning_covers"
-                      folderPath="cursos"
-                    />
-                  </FormControl>
-                  <FormDescription>
-                    A imagem será exibida como capa do curso.
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="title">Título *</Label>
+            <Input
+              id="title"
+              value={formData.title}
+              onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+              placeholder="Nome do curso"
+              required
             />
+          </div>
 
-            <FormField
-              control={form.control}
-              name="published"
-              render={({ field }) => (
-                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                  <div className="space-y-0.5">
-                    <FormLabel className="text-base">Publicar curso</FormLabel>
-                    <FormDescription>
-                      Quando ativado, o curso será visível para os alunos.
-                    </FormDescription>
-                  </div>
-                  <FormControl>
-                    <Switch
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                    />
-                  </FormControl>
-                </FormItem>
-              )}
+          <div className="space-y-2">
+            <Label htmlFor="description">Descrição</Label>
+            <Textarea
+              id="description"
+              value={formData.description}
+              onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+              placeholder="Descrição do curso (opcional)"
+              rows={3}
             />
+          </div>
 
-            <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => handleOpenChange(false)}>
-                Cancelar
-              </Button>
-              <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Salvando...
-                  </>
-                ) : (
-                  isEditing ? "Atualizar Curso" : "Criar Curso"
-                )}
-              </Button>
-            </DialogFooter>
-          </form>
-        </Form>
+          <div className="space-y-2">
+            <Label>Imagem de Capa</Label>
+            <ImageUpload
+              value={formData.cover_image_url}
+              onChange={handleImageUpload}
+              bucketName="course_images"
+              folder="covers"
+            />
+          </div>
+
+          <div className="flex items-center space-x-2">
+            <Switch
+              id="published"
+              checked={formData.published}
+              onCheckedChange={(checked) => setFormData(prev => ({ ...prev, published: checked }))}
+            />
+            <Label htmlFor="published">Publicado</Label>
+          </div>
+
+          <div className="flex justify-end gap-2 pt-4">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+              disabled={isLoading}
+            >
+              Cancelar
+            </Button>
+            <Button type="submit" disabled={isLoading}>
+              {isLoading ? 'Salvando...' : curso ? 'Atualizar' : 'Criar'}
+            </Button>
+          </div>
+        </form>
       </DialogContent>
     </Dialog>
   );
 };
+
+export default CursoFormDialog;

@@ -33,17 +33,16 @@ export const useSecurityStatus = () => {
       }
       
       console.log('✅ [SECURITY] Status verificado após correção:', data);
-      setSecurityData(data || []);
+      setSecurityData((data as any) || []);
       
-      // Análise dos resultados após correção
-      const totalTables = data?.length || 0;
-      const secureTables = data?.filter(row => 
+      const totalTables = (data as any)?.length || 0;
+      const secureTables = (data as any)?.filter((row: any) => 
         row.security_status.includes('SEGURO')
       ) || [];
-      const rlsDisabledTables = data?.filter(row => 
+      const rlsDisabledTables = (data as any)?.filter((row: any) => 
         row.security_status.includes('RLS DESABILITADO')
       ) || [];
-      const unprotectedTables = data?.filter(row => 
+      const unprotectedTables = (data as any)?.filter((row: any) => 
         row.security_status.includes('SEM PROTEÇÃO')
       ) || [];
       
@@ -63,7 +62,7 @@ export const useSecurityStatus = () => {
         toast.error(`🔴 Ainda restam ${unprotectedTables.length} tabelas críticas sem proteção`);
       }
       
-      return data || [];
+      return (data as any) || [];
     } catch (error: any) {
       console.error('❌ [SECURITY] Erro na verificação pós-correção:', error);
       setError(error.message || 'Erro desconhecido');

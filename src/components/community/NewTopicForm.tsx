@@ -60,7 +60,6 @@ export const NewTopicForm = ({ categoryId, categorySlug }: NewTopicFormProps) =>
     try {
       setIsSubmitting(true);
       
-      // Inserir o novo tópico com conteúdo em markdown
       const { data: topicData, error: topicError } = await supabase
         .from("forum_topics")
         .insert({
