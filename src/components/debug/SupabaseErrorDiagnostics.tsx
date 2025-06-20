@@ -1,52 +1,49 @@
 
-import React, { useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useSupabaseHealthCheck } from "@/hooks/supabase/useSupabaseHealthCheck";
-import { useSecurityCache } from "@/hooks/performance/useSecurityCache";
-import { Database, Shield, RefreshCw, Mail, AlertTriangle } from "lucide-react";
-import { EmailSystemManager } from "@/components/admin/email/EmailSystemManager";
+import React from 'react';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { AlertTriangle, CheckCircle, XCircle, Clock, RefreshCw } from 'lucide-react';
+import { useSupabaseHealthCheck } from '@/hooks/supabase/useSupabaseHealthCheck';
+import { useResendHealthCheck } from '@/hooks/supabase/useResendHealthCheck';
+import { EmailSystemManager } from '@/components/admin/email/EmailSystemManager';
 
 export const SupabaseErrorDiagnostics = () => {
-  const { status, performHealthCheck, isChecking } = useSupabaseHealthCheck();
-  const securityMetrics = useSecurityCache({ ttl: 300000 });
-  const [activeTab, setActiveTab] = useState("system");
+  const { healthStatus, isChecking, performHealthCheck } = useSupabaseHealthCheck();
+  const resendHealth = useResendHealthCheck();
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "healthy":
-      case "connected":
-      case "operational":
-        return "bg-green-100 text-green-800 border-green-200";
-      case "warning":
-      case "degraded":
-        return "bg-yellow-100 text-yellow-800 border-yellow-200";
-      case "error":
-      case "disconnected":
-      case "down":
-        return "bg-red-100 text-red-800 border-red-200";
+      case 'connected':
+      case 'authenticated':
+      case 'operational':
+        return 'bg-green-100 text-green-800 border-green-300';
+      case 'slow':
+        return 'bg-yellow-100 text-yellow-800 border-yellow-300';
+      case 'disconnected':
+      case 'unauthenticated':
+      case 'error':
+        return 'bg-red-100 text-red-800 border-red-300';
       default:
-        return "bg-gray-100 text-gray-800 border-gray-200";
+        return 'bg-gray-100 text-gray-800 border-gray-300';
     }
   };
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case "healthy":
-      case "connected":
-      case "operational":
-        return "🟢";
-      case "warning":
-      case "degraded":
-        return "🟡";
-      case "error":
-      case "disconnected":
-      case "down":
-        return "🔴";
+      case 'connected':
+      case 'authenticated':
+      case 'operational':
+        return <CheckCircle className="h-4 w-4" />;
+      case 'slow':
+        return <Clock className="h-4 w-4" />;
+      case 'disconnected':
+      case 'unauthenticated':
+      case 'error':
+        return <XCircle className="h-4 w-4" />;
       default:
-        return "⚪";
+        return <AlertTriangle className="h-4 w-4" />;
     }
   };
 
@@ -56,96 +53,138 @@ export const SupabaseErrorDiagnostics = () => {
         <div>
           <h2 className="text-2xl font-bold tracking-tight">Diagnóstico do Sistema</h2>
           <p className="text-muted-foreground">
-            Monitoramento em tempo real da saúde dos sistemas
+            Monitoramento da saúde dos sistemas Supabase e Resend
           </p>
         </div>
-        <Button
-          onClick={performHealthCheck}
+        <Button 
+          onClick={performHealthCheck} 
           disabled={isChecking}
           variant="outline"
         >
           {isChecking ? (
-            <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+            <RefreshCw className="h-4 w-4 animate-spin mr-2" />
           ) : (
-            <RefreshCw className="mr-2 h-4 w-4" />
+            <RefreshCw className="h-4 w-4 mr-2" />
           )}
-          Verificar Tudo
+          Verificar Novamente
         </Button>
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="system" className="flex items-center gap-2">
-            <Database className="h-4 w-4" />
-            Sistema
-          </TabsTrigger>
-          <TabsTrigger value="email" className="flex items-center gap-2">
-            <Mail className="h-4 w-4" />
-            Email
-          </TabsTrigger>
-          <TabsTrigger value="security" className="flex items-center gap-2">
-            <Shield className="h-4 w-4" />
-            Segurança
-          </TabsTrigger>
+      <Tabs defaultValue="supabase" className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="supabase">Supabase</TabsTrigger>
+          <TabsTrigger value="email">Email (Resend)</TabsTrigger>
         </TabsList>
-
-        <TabsContent value="system" className="space-y-4">
-          {/* Status Geral do Sistema */}
+        
+        <TabsContent value="supabase" className="space-y-4">
+          {/* Status Geral */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Database className="h-5 w-5" />
-                Status do Supabase
+                {healthStatus.isHealthy ? (
+                  <CheckCircle className="h-5 w-5 text-green-600" />
+                ) : (
+                  <XCircle className="h-5 w-5 text-red-600" />
+                )}
+                Status Geral do Sistema
               </CardTitle>
-              <CardDescription>
-                Conectividade e saúde dos serviços do Supabase
-              </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div className="flex items-center justify-between p-4 border rounded-lg">
-                  <div className="flex items-center gap-2">
-                    <span className="text-lg">{getStatusIcon(status.connectionStatus)}</span>
-                    <span className="font-medium">Conexão</span>
-                  </div>
-                  <Badge className={getStatusColor(status.connectionStatus)}>
-                    {status.connectionStatus}
+                {/* Conexão */}
+                <div className="flex flex-col space-y-2">
+                  <span className="text-sm font-medium text-gray-600">Conexão</span>
+                  <Badge 
+                    variant="outline" 
+                    className={`${getStatusColor(healthStatus.connectionStatus)} justify-center`}
+                  >
+                    {getStatusIcon(healthStatus.connectionStatus)}
+                    <span className="ml-1 capitalize">{healthStatus.connectionStatus}</span>
                   </Badge>
                 </div>
 
-                <div className="flex items-center justify-between p-4 border rounded-lg">
-                  <div className="flex items-center gap-2">
-                    <span className="text-lg">{getStatusIcon(status.authStatus)}</span>
-                    <span className="font-medium">Auth</span>
-                  </div>
-                  <Badge className={getStatusColor(status.authStatus)}>
-                    {status.authStatus}
+                {/* Banco de Dados */}
+                <div className="flex flex-col space-y-2">
+                  <span className="text-sm font-medium text-gray-600">Banco de Dados</span>
+                  <Badge 
+                    variant="outline" 
+                    className={`${getStatusColor(healthStatus.databaseStatus)} justify-center`}
+                  >
+                    {getStatusIcon(healthStatus.databaseStatus)}
+                    <span className="ml-1 capitalize">{healthStatus.databaseStatus}</span>
                   </Badge>
                 </div>
 
-                <div className="flex items-center justify-between p-4 border rounded-lg">
-                  <div className="flex items-center gap-2">
-                    <span className="text-lg">{getStatusIcon(status.databaseStatus)}</span>
-                    <span className="font-medium">Database</span>
-                  </div>
-                  <Badge className={getStatusColor(status.databaseStatus)}>
-                    {status.databaseStatus}
+                {/* Autenticação */}
+                <div className="flex flex-col space-y-2">
+                  <span className="text-sm font-medium text-gray-600">Autenticação</span>
+                  <Badge 
+                    variant="outline" 
+                    className={`${getStatusColor(healthStatus.authStatus)} justify-center`}
+                  >
+                    {getStatusIcon(healthStatus.authStatus)}
+                    <span className="ml-1 capitalize">{healthStatus.authStatus}</span>
                   </Badge>
                 </div>
 
-                <div className="flex items-center justify-between p-4 border rounded-lg">
-                  <div className="flex items-center gap-2">
-                    <span className="text-lg">{getStatusIcon(status.storageStatus)}</span>
-                    <span className="font-medium">Storage</span>
-                  </div>
-                  <Badge className={getStatusColor(status.storageStatus)}>
-                    {status.storageStatus}
+                {/* Storage */}
+                <div className="flex flex-col space-y-2">
+                  <span className="text-sm font-medium text-gray-600">Storage</span>
+                  <Badge 
+                    variant="outline" 
+                    className={`${getStatusColor(healthStatus.storageStatus)} justify-center`}
+                  >
+                    {getStatusIcon(healthStatus.storageStatus)}
+                    <span className="ml-1 capitalize">{healthStatus.storageStatus}</span>
                   </Badge>
                 </div>
               </div>
+            </CardContent>
+          </Card>
 
-              <div className="text-sm text-muted-foreground">
-                Última verificação: {status.lastChecked.toLocaleString('pt-BR')}
+          {/* Issues */}
+          {healthStatus.issues.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-red-600">
+                  <XCircle className="h-5 w-5" />
+                  Problemas Detectados
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ul className="space-y-2">
+                  {healthStatus.issues.map((issue, index) => (
+                    <li key={index} className="flex items-start gap-2">
+                      <XCircle className="h-4 w-4 text-red-500 mt-0.5 flex-shrink-0" />
+                      <span className="text-sm text-red-700">{issue}</span>
+                    </li>
+                  ))}
+                </ul>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Informações do Sistema */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Informações do Sistema</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                <div>
+                  <span className="font-medium text-gray-600">Última Verificação:</span>
+                  <p className="mt-1">{healthStatus.checkedAt.toLocaleString('pt-BR')}</p>
+                </div>
+                <div>
+                  <span className="font-medium text-gray-600">Status Geral:</span>
+                  <p className="mt-1">
+                    {healthStatus.isHealthy ? (
+                      <span className="text-green-600 font-medium">Sistema Operacional</span>
+                    ) : (
+                      <span className="text-red-600 font-medium">Problemas Detectados</span>
+                    )}
+                  </p>
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -153,74 +192,6 @@ export const SupabaseErrorDiagnostics = () => {
 
         <TabsContent value="email">
           <EmailSystemManager />
-        </TabsContent>
-
-        <TabsContent value="security" className="space-y-4">
-          {/* Métricas de Segurança */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Shield className="h-5 w-5" />
-                Métricas de Segurança
-              </CardTitle>
-              <CardDescription>
-                Cache e performance de segurança
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div className="p-4 border rounded-lg">
-                  <div className="text-sm text-muted-foreground">Hit Ratio</div>
-                  <div className="text-2xl font-bold">
-                    {(securityMetrics.hitRatio * 100).toFixed(1)}%
-                  </div>
-                </div>
-
-                <div className="p-4 border rounded-lg">
-                  <div className="text-sm text-muted-foreground">Total Requests</div>
-                  <div className="text-2xl font-bold">
-                    {securityMetrics.totalRequests.toLocaleString()}
-                  </div>
-                </div>
-
-                <div className="p-4 border rounded-lg">
-                  <div className="text-sm text-muted-foreground">Cache Hits</div>
-                  <div className="text-2xl font-bold text-green-600">
-                    {securityMetrics.hits.toLocaleString()}
-                  </div>
-                </div>
-
-                <div className="p-4 border rounded-lg">
-                  <div className="text-sm text-muted-foreground">Cache Misses</div>
-                  <div className="text-2xl font-bold text-orange-600">
-                    {securityMetrics.misses.toLocaleString()}
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Alertas de Segurança */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <AlertTriangle className="h-5 w-5" />
-                Status de Segurança
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                <div className="flex items-center gap-2">
-                  <Badge className="bg-green-100 text-green-800 border-green-200">
-                    Sistema Seguro
-                  </Badge>
-                  <span className="text-sm text-muted-foreground">
-                    Nenhuma ameaça detectada
-                  </span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
         </TabsContent>
       </Tabs>
     </div>
