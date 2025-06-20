@@ -100,43 +100,62 @@ const handler = async (req: Request): Promise<Response> => {
       minute: '2-digit'
     });
 
-    const emailSubject = `Convite para acessar a plataforma - ${roleName}`;
+    const emailSubject = `🚀 Convite para Viver de IA - ${roleName}`;
     
     const emailHtml = `
       <!DOCTYPE html>
       <html>
       <head>
         <meta charset="utf-8">
-        <title>Convite para a Plataforma</title>
+        <title>Convite para Viver de IA</title>
+        <style>
+          body { font-family: 'Segoe UI', Arial, sans-serif; line-height: 1.6; color: #333; }
+          .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+          .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
+          .content { background: white; padding: 30px; border: 1px solid #e0e0e0; }
+          .button { background: #667eea; color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; display: inline-block; font-weight: bold; margin: 20px 0; }
+          .footer { background: #f8f9fa; padding: 20px; text-align: center; border-radius: 0 0 10px 10px; font-size: 12px; color: #666; }
+          .token-box { background: #f8f9fa; border: 2px dashed #667eea; padding: 15px; margin: 20px 0; text-align: center; border-radius: 8px; }
+        </style>
       </head>
-      <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
-        <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
-          <h1 style="color: #2563eb;">Você foi convidado!</h1>
-          
-          <p>Olá!</p>
-          
-          <p><strong>${senderName}</strong> convidou você para acessar nossa plataforma com o papel de <strong>${roleName}</strong>.</p>
-          
-          ${notes ? `<p><em>Observações: ${notes}</em></p>` : ''}
-          
-          <div style="text-align: center; margin: 30px 0;">
-            <a href="${inviteUrl}" 
-               style="background-color: #2563eb; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block;">
-              ACEITAR CONVITE
-            </a>
+      <body>
+        <div class="container">
+          <div class="header">
+            <h1>🎯 Você foi convidado para Viver de IA!</h1>
           </div>
           
-          <p><strong>⏰ Este convite expira em: ${expirationDate}</strong></p>
+          <div class="content">
+            <p>Olá!</p>
+            
+            <p><strong>${senderName}</strong> convidou você para acessar a plataforma <strong>Viver de IA</strong> com o papel de <strong>${roleName}</strong>.</p>
+            
+            ${notes ? `<div style="background: #e3f2fd; padding: 15px; border-left: 4px solid #2196f3; margin: 20px 0; border-radius: 4px;"><strong>📝 Observações:</strong><br>${notes}</div>` : ''}
+            
+            <div style="text-align: center; margin: 30px 0;">
+              <a href="${inviteUrl}" class="button">
+                🚀 ACEITAR CONVITE
+              </a>
+            </div>
+            
+            <p><strong>⏰ Este convite expira em: ${expirationDate}</strong></p>
+            
+            <div class="token-box">
+              <p><strong>🔑 Link do convite:</strong></p>
+              <p style="word-break: break-all; font-family: monospace; color: #667eea; font-weight: bold;">
+                ${inviteUrl}
+              </p>
+            </div>
+            
+            <p style="font-size: 14px; color: #666;">
+              Se você não conseguir clicar no botão, copie e cole o link acima no seu navegador.
+            </p>
+          </div>
           
-          <p>Se você não conseguir clicar no botão, copie e cole este link no seu navegador:</p>
-          <p style="word-break: break-all; background-color: #f5f5f5; padding: 10px; border-radius: 3px;">
-            ${inviteUrl}
-          </p>
-          
-          <hr style="margin: 30px 0; border: none; border-top: 1px solid #eee;">
-          <p style="font-size: 12px; color: #666;">
-            Este é um email automático do sistema de convites. Se você não esperava este convite, pode ignorar este email.
-          </p>
+          <div class="footer">
+            <p>Este é um email automático do sistema Viver de IA.</p>
+            <p>Se você não esperava este convite, pode ignorar este email com segurança.</p>
+            <p>© 2024 Viver de IA - Plataforma de Inteligência Artificial</p>
+          </div>
         </div>
       </body>
       </html>
@@ -153,7 +172,7 @@ const handler = async (req: Request): Promise<Response> => {
         console.log(`📤 [EDGE-${requestId}] Tentativa ${attempt}/3...`);
         
         emailResponse = await resend.emails.send({
-          from: "Sistema de Convites <noreply@resend.dev>",
+          from: "Viver de IA <convites@viverdeia.ai>",
           to: [email],
           subject: emailSubject,
           html: emailHtml

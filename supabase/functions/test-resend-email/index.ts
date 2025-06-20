@@ -78,37 +78,42 @@ const handler = async (req: Request): Promise<Response> => {
     const resend = new Resend(apiKey);
     
     const emailResponse = await resend.emails.send({
-      from: "Sistema Viver de IA <sistema@viverdeia.ai>",
+      from: "Viver de IA <sistema@viverdeia.ai>",
       to: [email],
-      subject: "🔧 Teste de Diagnóstico - Sistema Corrigido",
+      subject: "🔧 Teste de Diagnóstico - Sistema Viver de IA",
       html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h1 style="color: #2563eb;">✅ Sistema de Email Operacional</h1>
-          <p>Este é um email de teste para verificar se o sistema de envio está funcionando corretamente.</p>
+        <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+          <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
+            <h1>✅ Sistema de Email Operacional</h1>
+          </div>
           
-          <div style="background: #f3f4f6; padding: 16px; border-radius: 8px; margin: 16px 0;">
-            <h3 style="margin: 0; color: #374151;">📊 Detalhes do Teste:</h3>
-            <ul style="margin: 8px 0;">
-              <li><strong>Timestamp:</strong> ${new Date().toISOString()}</li>
-              <li><strong>Request ID:</strong> ${requestId}</li>
-              <li><strong>Sistema:</strong> Resend API</li>
-              <li><strong>Status:</strong> Funcionando corretamente</li>
+          <div style="background: white; padding: 30px; border: 1px solid #e0e0e0;">
+            <p>Este é um email de teste para verificar se o sistema de envio está funcionando corretamente.</p>
+            
+            <div style="background: #f3f4f6; padding: 16px; border-radius: 8px; margin: 16px 0;">
+              <h3 style="margin: 0; color: #374151;">📊 Detalhes do Teste:</h3>
+              <ul style="margin: 8px 0;">
+                <li><strong>Timestamp:</strong> ${new Date().toISOString()}</li>
+                <li><strong>Request ID:</strong> ${requestId}</li>
+                <li><strong>Sistema:</strong> Resend API + viverdeia.ai</li>
+                <li><strong>Status:</strong> Funcionando corretamente ✅</li>
+              </ul>
+            </div>
+
+            <p>Se você recebeu este email, significa que:</p>
+            <ul>
+              <li>✅ A API key do Resend está configurada corretamente</li>
+              <li>✅ O domínio viverdeia.ai está validado</li>
+              <li>✅ A Edge Function está operacional</li>
+              <li>✅ O sistema de convites deve funcionar normalmente</li>
             </ul>
           </div>
 
-          <p>Se você recebeu este email, significa que:</p>
-          <ul>
-            <li>✅ A API key do Resend está configurada corretamente</li>
-            <li>✅ O domínio viverdeia.ai está validado</li>
-            <li>✅ A Edge Function está operacional</li>
-            <li>✅ O sistema de convites deve funcionar normalmente</li>
-          </ul>
-
-          <hr style="margin: 24px 0; border: none; border-top: 1px solid #e5e7eb;">
-          <p style="color: #6b7280; font-size: 14px;">
-            Este é um email automático de teste do sistema Viver de IA.<br>
-            Não é necessário responder a este email.
-          </p>
+          <div style="background: #f8f9fa; padding: 20px; text-align: center; border-radius: 0 0 10px 10px; font-size: 12px; color: #666;">
+            <p>Este é um email automático de teste do sistema Viver de IA.<br>
+            Não é necessário responder a este email.</p>
+            <p>© 2024 Viver de IA - Plataforma de Inteligência Artificial</p>
+          </div>
         </div>
       `,
     });
