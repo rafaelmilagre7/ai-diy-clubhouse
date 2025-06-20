@@ -31,7 +31,7 @@ export const useLessonComments = (lessonId: string) => {
             )
           `)
           .eq('lesson_id', lessonId as any)
-          .eq('is_hidden', false)
+          .eq('is_hidden', false as any)
           .order('created_at', { ascending: true });
         
         if (error) throw error;
@@ -49,36 +49,36 @@ export const useLessonComments = (lessonId: string) => {
           }
         }
         
-        const likedCommentIds = new Set(userLikes.map(like => like.comment_id));
+        const likedCommentIds = new Set(userLikes.map(like => (like as any).comment_id));
         
         // Verificar se o comentário pertence ao usuário atual ou se o usuário é admin/formacao
         const canDelete = (comment: any) => {
           if (!user) return false;
-          return comment.user_id === user.id || 
+          return (comment as any).user_id === user.id || 
             (user && ['admin', 'formacao'].includes(user?.role || ''));
         };
         
         // Processar comentários com informações adicionais
-        return (data as any || []).map((comment: any) => {
+        return ((data as any) || []).map((comment: any) => {
           // Buscar respostas para este comentário
-          const replies = (data as any || [])
-            .filter((c: any) => c.parent_id === comment.id)
+          const replies = ((data as any) || [])
+            .filter((c: any) => (c as any).parent_id === (comment as any).id)
             .map((reply: any) => ({
               ...reply,
-              profiles: reply.profiles,
-              user_has_liked: likedCommentIds.has(reply.id),
+              profiles: (reply as any).profiles,
+              user_has_liked: likedCommentIds.has((reply as any).id),
               can_delete: canDelete(reply),
               replies: [] // Respostas não têm sub-respostas
             }));
             
           return {
             ...comment,
-            profiles: comment.profiles,
+            profiles: (comment as any).profiles,
             replies,
-            user_has_liked: likedCommentIds.has(comment.id),
+            user_has_liked: likedCommentIds.has((comment as any).id),
             can_delete: canDelete(comment)
           };
-        }).filter((comment: any) => !comment.parent_id); // Retornar apenas comentários principais
+        }).filter((comment: any) => !(comment as any).parent_id); // Retornar apenas comentários principais
         
       } catch (error) {
         console.error('Erro ao buscar comentários:', error);

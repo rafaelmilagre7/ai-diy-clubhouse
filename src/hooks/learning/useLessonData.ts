@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/auth";
-import { LearningLesson } from "@/types/learningTypes";
+import { LearningLesson } from "@/lib/supabase/types";
 
 interface UseLessonDataProps {
   lessonId?: string;
