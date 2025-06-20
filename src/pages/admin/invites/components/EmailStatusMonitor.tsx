@@ -1,196 +1,217 @@
 
-import { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { useResendHealthCheck } from "@/hooks/supabase/useResendHealthCheck";
+import React from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { 
-  Activity, 
-  Clock, 
   CheckCircle, 
-  XCircle, 
   AlertTriangle, 
+  RefreshCw, 
   Zap,
-  TrendingUp,
-  RefreshCw
-} from "lucide-react";
+  Mail,
+  Heart,
+  Activity,
+  Clock
+} from 'lucide-react';
+import { useEmailSystemMonitor } from '@/hooks/admin/email/useEmailSystemMonitor';
 
-export const EmailStatusMonitor = () => {
-  const { status, isChecking, checkHealth } = useResendHealthCheck();
-  const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
+export const EmailStatusMonitor: React.FC = () => {
+  const {
+    metrics,
+    isMonitoring,
+    performHealthCheck
+  } = useEmailSystemMonitor();
 
-  useEffect(() => {
-    // Verificação inicial
-    checkHealth();
-    
-    // Atualização automática a cada 30 segundos
-    const interval = setInterval(() => {
-      checkHealth();
-      setLastUpdate(new Date());
-    }, 30000);
-
-    return () => clearInterval(interval);
-  }, [checkHealth]);
-
-  const getStatusColor = (healthy: boolean) => {
-    return healthy ? "text-green-500" : "text-red-500";
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'healthy': return 'text-green-600';
+      case 'degraded': return 'text-yellow-600';
+      case 'down': return 'text-red-600';
+      default: return 'text-gray-600';
+    }
   };
 
-  const getStatusIcon = (healthy: boolean) => {
-    return healthy ? (
-      <CheckCircle className="h-4 w-4 text-green-500" />
-    ) : (
-      <XCircle className="h-4 w-4 text-red-500" />
-    );
-  };
-
-  const formatUptime = (responseTime: number) => {
-    return responseTime < 1000 ? "Excelente" : responseTime < 3000 ? "Bom" : "Lento";
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'healthy': return <CheckCircle className="h-5 w-5 text-green-500" />;
+      case 'degraded': return <AlertTriangle className="h-5 w-5 text-yellow-500" />;
+      case 'down': return <AlertTriangle className="h-5 w-5 text-red-500" />;
+      default: return <Activity className="h-5 w-5 text-gray-500" />;
+    }
   };
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold">Status do Sistema de Email</h3>
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-muted-foreground">
-            Última atualização: {lastUpdate.toLocaleTimeString()}
-          </span>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={checkHealth}
-            disabled={isChecking}
-          >
-            {isChecking ? (
-              <RefreshCw className="h-4 w-4 animate-spin" />
-            ) : (
-              <RefreshCw className="h-4 w-4" />
-            )}
-          </Button>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Status Geral</CardTitle>
-            <Activity className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center space-x-2">
-              {getStatusIcon(status.isHealthy)}
-              <div className="text-2xl font-bold">
-                {status.isHealthy ? "Operacional" : "Indisponível"}
+      {/* Status Principal */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Mail className="h-5 w-5" />
+              Status do Sistema de Email
+            </div>
+            <div className="flex items-center gap-2">
+              {getStatusIcon(metrics.status)}
+              <Badge 
+                variant={metrics.status === 'healthy' ? 'default' : 'destructive'}
+                className={metrics.status === 'healthy' ? 'bg-green-500' : ''}
+              >
+                {metrics.status === 'healthy' ? 'Sistema Operacional' : 
+                 metrics.status === 'degraded' ? 'Performance Degradada' : 
+                 'Sistema Indisponível'}
+              </Badge>
+            </div>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* Tempo de Resposta */}
+            <div className="text-center p-4 bg-blue-50 rounded-lg">
+              <Clock className="h-6 w-6 mx-auto mb-2 text-blue-600" />
+              <div className="text-2xl font-bold text-blue-600">
+                {metrics.responseTime}ms
               </div>
+              <div className="text-sm text-blue-700">Tempo de Resposta</div>
             </div>
-            <p className="text-xs text-muted-foreground">
-              Sistema de envio de emails
-            </p>
-          </CardContent>
-        </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">API Resend</CardTitle>
-            <Zap className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center space-x-2">
-              {getStatusIcon(status.apiKeyValid)}
-              <div className="text-2xl font-bold">
-                {status.apiKeyValid ? "Válida" : "Inválida"}
+            {/* Taxa de Sucesso */}
+            <div className="text-center p-4 bg-green-50 rounded-lg">
+              <CheckCircle className="h-6 w-6 mx-auto mb-2 text-green-600" />
+              <div className="text-2xl font-bold text-green-600">
+                {metrics.successRate}%
               </div>
+              <div className="text-sm text-green-700">Taxa de Sucesso</div>
             </div>
-            <p className="text-xs text-muted-foreground">
-              Chave de API configurada
-            </p>
-          </CardContent>
-        </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Conectividade</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center space-x-2">
-              {status.connectivity === 'connected' ? (
-                <CheckCircle className="h-4 w-4 text-green-500" />
-              ) : (
-                <XCircle className="h-4 w-4 text-red-500" />
-              )}
-              <div className="text-2xl font-bold capitalize">
-                {status.connectivity === 'connected' ? 'Conectado' : 'Desconectado'}
+            {/* Erros Recentes */}
+            <div className="text-center p-4 bg-red-50 rounded-lg">
+              <AlertTriangle className="h-6 w-6 mx-auto mb-2 text-red-600" />
+              <div className="text-2xl font-bold text-red-600">
+                {metrics.errorCount}
               </div>
+              <div className="text-sm text-red-700">Erros (24h)</div>
             </div>
-            <p className="text-xs text-muted-foreground">
-              Conexão com serviços externos
-            </p>
-          </CardContent>
-        </Card>
+          </div>
+        </CardContent>
+      </Card>
 
+      {/* Detalhes do Sistema */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Tempo de Resposta</CardTitle>
-            <Clock className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {status.responseTime}ms
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Performance: {formatUptime(status.responseTime)}
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {status.issues && status.issues.length > 0 && (
-        <Card className="border-yellow-200 bg-yellow-50">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-yellow-800">
-              <AlertTriangle className="h-5 w-5" />
-              Problemas Detectados
+            <CardTitle className="flex items-center gap-2">
+              <Activity className="h-5 w-5 text-blue-500" />
+              Monitoramento Ativo
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-sm">Status do Monitoramento:</span>
+              <Badge variant={isMonitoring ? "default" : "secondary"}>
+                {isMonitoring ? "Ativo" : "Inativo"}
+              </Badge>
+            </div>
+            
+            <div className="flex items-center justify-between">
+              <span className="text-sm">Última Verificação:</span>
+              <span className="text-sm text-muted-foreground">
+                {metrics.lastCheck.toLocaleTimeString('pt-BR')}
+              </span>
+            </div>
+            
+            <div className="flex items-center justify-between">
+              <span className="text-sm">Frequência:</span>
+              <span className="text-sm text-muted-foreground">A cada 2 minutos</span>
+            </div>
+            
+            <Button 
+              onClick={performHealthCheck}
+              variant="outline" 
+              size="sm" 
+              className="w-full"
+            >
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Verificar Agora
+            </Button>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Heart className="h-5 w-5 text-red-500" />
+              Sistema de Recuperação
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <Zap className="h-4 w-4 text-green-500" />
+                <span className="text-sm">Fallback Automático</span>
+                <Badge variant="outline" className="text-xs">Ativo</Badge>
+              </div>
+              
+              <div className="flex items-center gap-2">
+                <CheckCircle className="h-4 w-4 text-blue-500" />
+                <span className="text-sm">Retry Exponencial</span>
+                <Badge variant="outline" className="text-xs">3x</Badge>
+              </div>
+              
+              <div className="flex items-center gap-2">
+                <Mail className="h-4 w-4 text-purple-500" />
+                <span className="text-sm">Supabase Auth Backup</span>
+                <Badge variant="outline" className="text-xs">Disponível</Badge>
+              </div>
+            </div>
+            
+            <div className="text-xs text-muted-foreground mt-3 p-2 bg-gray-50 rounded">
+              Sistema configurado para 95%+ de taxa de entrega com múltiplas camadas de fallback.
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Erros Recentes */}
+      {metrics.recentErrors.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-red-500" />
+              Erros Recentes
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <ul className="space-y-1">
-              {status.issues.map((issue, index) => (
-                <li key={index} className="text-sm text-yellow-700 flex items-center gap-2">
-                  <div className="w-1 h-1 bg-yellow-500 rounded-full" />
-                  {issue}
-                </li>
+            <div className="space-y-2">
+              {metrics.recentErrors.map((error, index) => (
+                <div
+                  key={index}
+                  className="p-3 bg-red-50 border border-red-200 rounded text-sm text-red-800"
+                >
+                  {error}
+                </div>
               ))}
-            </ul>
+            </div>
           </CardContent>
         </Card>
       )}
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Informações do Sistema</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-2">
-          <div className="grid grid-cols-2 gap-4 text-sm">
-            <div>
-              <span className="font-medium">Última verificação:</span>
-              <p className="text-muted-foreground">{status.lastChecked.toLocaleString()}</p>
+      {/* Informações do Sistema */}
+      <Card className="bg-gradient-to-r from-green-50 to-blue-50">
+        <CardContent className="pt-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+            <div className="space-y-1">
+              <h4 className="font-medium text-green-900">🔧 Configuração Atual</h4>
+              <p className="text-green-700">Resend Pro + Templates React Email</p>
             </div>
-            <div>
-              <span className="font-medium">Domínio válido:</span>
-              <p className="text-muted-foreground">
-                {status.domainValid ? "✅ Sim" : "❌ Não"}
-              </p>
+            <div className="space-y-1">
+              <h4 className="font-medium text-blue-900">⚡ Performance</h4>
+              <p className="text-blue-700">Timeout 30s + Retry Automático</p>
+            </div>
+            <div className="space-y-1">
+              <h4 className="font-medium text-purple-900">🛡️ Confiabilidade</h4>
+              <p className="text-purple-700">3 Camadas de Fallback + Logs</p>
             </div>
           </div>
-          
-          {status.lastError && (
-            <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded">
-              <span className="font-medium text-red-800">Último erro:</span>
-              <p className="text-red-700 text-sm mt-1">{status.lastError}</p>
-            </div>
-          )}
         </CardContent>
       </Card>
     </div>

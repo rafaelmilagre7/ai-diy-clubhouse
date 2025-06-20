@@ -9,13 +9,13 @@ export function useInviteChannelService() {
 
   const getInviteLink = useCallback((token: string) => {
     if (!token) {
-      console.error("Erro: Token vazio ao gerar link de convite");
+      console.error("❌ Token vazio ao gerar link de convite");
       return "";
     }
     
     const cleanToken = token.trim().replace(/\s+/g, '');
     const baseUrl = `${window.location.origin}/convite/${cleanToken}`;
-    console.log("URL do convite gerado:", baseUrl);
+    console.log("🔗 URL do convite gerado:", baseUrl);
     
     return baseUrl;
   }, []);
@@ -39,8 +39,25 @@ export function useInviteChannelService() {
     inviteId?: string;
     forceResend?: boolean;
   }): Promise<SendInviteResponse> => {
+    const requestId = crypto.randomUUID().substring(0, 8);
+    
     try {
-      console.log("📧 Enviando email para:", email);
+      console.log(`📧 [${requestId}] Iniciando envio de email para:`, email);
+      console.log(`📧 [${requestId}] Configuração:`, { 
+        inviteUrl: inviteUrl.substring(0, 50), 
+        roleName, 
+        forceResend, 
+        inviteId 
+      });
+
+      // Timeout de 30 segundos
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => {
+        controller.abort();
+        console.error(`⏰ [${requestId}] Timeout após 30s`);
+      }, 30000);
+
+      console.log(`🔄 [${requestId}] Chamando Edge Function send-invite-email...`);
       
       const { data, error } = await supabase.functions.invoke('send-invite-email', {
         body: {
@@ -51,12 +68,34 @@ export function useInviteChannelService() {
           senderName,
           notes,
           inviteId,
-          forceResend
+          forceResend,
+          requestId
         }
       });
+
+      clearTimeout(timeoutId);
+
+      console.log(`📧 [${requestId}] Resposta da Edge Function:`, { 
+        data: data || 'null', 
+        error: error || 'null' 
+      });
       
-      if (error) throw error;
-      if (!data.success) throw new Error(data.message || data.error);
+      if (error) {
+        console.error(`❌ [${requestId}] Erro da Edge Function:`, error);
+        throw new Error(`Edge Function Error: ${error.message || JSON.stringify(error)}`);
+      }
+      
+      if (!data) {
+        console.error(`❌ [${requestId}] Dados vazios da Edge Function`);
+        throw new Error('Edge Function retornou dados vazios');
+      }
+
+      if (!data.success) {
+        console.error(`❌ [${requestId}] Edge Function retornou falha:`, data);
+        throw new Error(data.message || data.error || 'Falha não especificada');
+      }
+      
+      console.log(`✅ [${requestId}] Email enviado com sucesso via ${data.strategy || 'unknown'}`);
       
       return {
         success: true,
@@ -67,11 +106,35 @@ export function useInviteChannelService() {
         channel: 'email'
       };
     } catch (err: any) {
-      console.error('❌ Erro ao enviar email:', err);
+      console.error(`❌ [${requestId}] Erro ao enviar email:`, err);
+      
+      // Verificar se é erro de timeout
+      if (err.name === 'AbortError') {
+        return {
+          success: false,
+          message: 'Timeout ao enviar email (30s)',
+          error: 'Conexão com servidor demorou mais que 30 segundos',
+          suggestion: 'Verifique sua conexão e tente novamente',
+          channel: 'email'
+        };
+      }
+
+      // Verificar se é erro de conectividade
+      if (err.message?.includes('network') || err.message?.includes('fetch')) {
+        return {
+          success: false,
+          message: 'Erro de conectividade',
+          error: 'Falha na conexão com o servidor',
+          suggestion: 'Verifique sua conexão de internet e tente novamente',
+          channel: 'email'
+        };
+      }
+      
       return {
         success: false,
         message: 'Erro ao enviar email',
-        error: err.message,
+        error: err.message || 'Erro desconhecido',
+        suggestion: 'Verifique as configurações e tente novamente',
         channel: 'email'
       };
     }
@@ -123,141 +186,10 @@ export function useInviteChannelService() {
     }
   }, []);
 
-  const sendHybridInvite = useCallback(async ({
-    email,
-    phone,
-    inviteUrl,
-    roleName,
-    expiresAt,
-    senderName,
-    notes,
-    inviteId,
-    channelPreference = 'email'
-  }: {
-    email: string;
-    phone?: string;
-    inviteUrl: string;
-    roleName: string;
-    expiresAt: string;
-    senderName?: string;
-    notes?: string;
-    inviteId?: string;
-    channelPreference?: 'email' | 'whatsapp' | 'both';
-  }): Promise<SendInviteResponse> => {
-    const channelKey = `${inviteId}-${channelPreference}`;
-    setSendingChannels(prev => new Set(prev).add(channelKey));
-
-    try {
-      console.log("🔄 Enviando convite híbrido - Canal:", channelPreference);
-
-      let emailResult: SendInviteResponse | null = null;
-      let whatsappResult: SendInviteResponse | null = null;
-      let hasError = false;
-      let errors: string[] = [];
-
-      // Determinar quais canais enviar
-      const shouldSendEmail = channelPreference === 'email' || channelPreference === 'both';
-      const shouldSendWhatsApp = (channelPreference === 'whatsapp' || channelPreference === 'both') && phone;
-
-      // Enviar por email
-      if (shouldSendEmail) {
-        emailResult = await sendEmailInvite({
-          email,
-          inviteUrl,
-          roleName,
-          expiresAt,
-          senderName,
-          notes,
-          inviteId,
-          forceResend: true
-        });
-
-        if (!emailResult.success) {
-          hasError = true;
-          errors.push(`Email: ${emailResult.error}`);
-        }
-      }
-
-      // Enviar por WhatsApp
-      if (shouldSendWhatsApp) {
-        whatsappResult = await sendWhatsAppInvite({
-          phone: phone!,
-          inviteUrl,
-          roleName,
-          expiresAt,
-          senderName,
-          notes,
-          inviteId
-        });
-
-        if (!whatsappResult.success) {
-          hasError = true;
-          errors.push(`WhatsApp: ${whatsappResult.error}`);
-        }
-      }
-
-      // Determinar resultado final
-      const emailSuccess = emailResult?.success ?? false;
-      const whatsappSuccess = whatsappResult?.success ?? false;
-      const anySuccess = emailSuccess || whatsappSuccess;
-
-      if (!anySuccess && hasError) {
-        return {
-          success: false,
-          message: 'Falha ao enviar por todos os canais',
-          error: errors.join(', '),
-          channel: channelPreference
-        };
-      }
-
-      // Construir mensagem de sucesso
-      let successMessage = '';
-      const sentChannels: string[] = [];
-
-      if (emailSuccess) sentChannels.push('email');
-      if (whatsappSuccess) sentChannels.push('WhatsApp');
-
-      if (sentChannels.length === 2) {
-        successMessage = 'Convite enviado via email e WhatsApp';
-      } else if (sentChannels.length === 1) {
-        successMessage = `Convite enviado via ${sentChannels[0]}`;
-        if (hasError) {
-          successMessage += ` (${sentChannels[0] === 'email' ? 'WhatsApp' : 'email'} falhou)`;
-        }
-      }
-
-      return {
-        success: true,
-        message: successMessage,
-        emailId: emailResult?.emailId,
-        whatsappId: whatsappResult?.whatsappId,
-        strategy: 'hybrid',
-        method: sentChannels.join('+'),
-        channel: channelPreference
-      };
-
-    } catch (error: any) {
-      console.error('❌ Erro no envio híbrido:', error);
-      return {
-        success: false,
-        message: 'Erro no sistema híbrido de envio',
-        error: error.message,
-        channel: channelPreference
-      };
-    } finally {
-      setSendingChannels(prev => {
-        const newSet = new Set(prev);
-        newSet.delete(channelKey);
-        return newSet;
-      });
-    }
-  }, [sendEmailInvite, sendWhatsAppInvite]);
-
   return {
     getInviteLink,
     sendEmailInvite,
     sendWhatsAppInvite,
-    sendHybridInvite,
     sendingChannels
   };
 }

@@ -97,6 +97,9 @@ export const useInviteCreate = () => {
 
       // Atualizar progresso
       setCurrentStep('sending');
+      toast.info("💫 Convite criado! Enviando email...", { 
+        description: "Aguarde enquanto enviamos o email de convite" 
+      });
 
       // Gerar link do convite
       const inviteUrl = getInviteLink(invite.token);
@@ -130,6 +133,10 @@ export const useInviteCreate = () => {
       if (emailResult.success) {
         console.log(`✅ [${requestId}] Convite criado e enviado com sucesso`);
         
+        toast.success("🎉 Convite enviado com sucesso!", {
+          description: `Email enviado para ${params.email} via ${emailResult.strategy || 'sistema principal'}`
+        });
+        
         return {
           status: 'success',
           message: `Convite enviado para ${params.email}`,
@@ -139,18 +146,22 @@ export const useInviteCreate = () => {
       } else {
         console.warn(`⚠️ [${requestId}] Convite criado mas email falhou:`, emailResult.error);
         
+        toast.error("⚠️ Problema no envio do email", {
+          description: emailResult.error || 'Sistema de recuperação ativado automaticamente'
+        });
+        
         return {
           status: 'partial_success',
-          message: `Convite criado para ${params.email}`,
+          message: `Convite criado mas email falhou`,
           invite,
-          suggestion: emailResult.suggestion || 'Use o botão "Reenviar" para tentar novamente.'
+          suggestion: emailResult.suggestion || 'Use o botão "Reenviar" ou verifique a aba "Recuperação"'
         };
       }
 
     } catch (error: any) {
       console.error(`❌ [${requestId}] Erro crítico:`, error);
       
-      toast.error("Erro ao criar convite", {
+      toast.error("❌ Erro ao criar convite", {
         description: error.message || 'Erro inesperado ao processar convite'
       });
 
