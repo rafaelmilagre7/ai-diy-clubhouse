@@ -1,160 +1,116 @@
 
-import { useState, useEffect, useCallback, useMemo, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/auth";
 import { supabase } from "@/lib/supabase";
-import { Solution } from "@/lib/supabase/types";
-import { useQuery } from '@tanstack/react-query';
+import { Solution } from "@/lib/supabase";
 
-// Cache otimizado com WeakMap para melhor performance
-const progressCache = new WeakMap<object, any>();
+export interface UserProgress {
+  solution_id: string;
+  is_completed: boolean;
+  current_module?: number;
+  completed_modules?: number[];
+  completion_percentage?: number;
+  started_at?: string;
+  completed_at?: string;
+}
 
-export const useDashboardProgress = (solutions: Solution[] = []) => {
+export interface Dashboard {
+  user_id: string;
+  active: Solution[];
+  completed: Solution[];
+  recommended: Solution[];
+}
+
+export const useDashboardProgress = () => {
   const { user } = useAuth();
-  
-  // Estabilizar dependências usando refs para evitar loops infinitos
-  const stableSolutions = useRef<Solution[]>([]);
-  const solutionsHash = useRef<string>('');
-  
-  // Memoizar hash das soluções para evitar recálculos - DEPENDÊNCIA ESTÁVEL
-  const currentHash = useMemo(() => {
-    if (!solutions || !Array.isArray(solutions) || solutions.length === 0) {
-      return 'empty';
-    }
-    
-    const ids = solutions.map(s => s.id).sort().join(',');
-    const hash = `${ids}_${solutions.length}`;
-    
-    // Só atualizar se realmente mudou
-    if (hash !== solutionsHash.current) {
-      solutionsHash.current = hash;
-      stableSolutions.current = solutions;
-    }
-    
-    return solutionsHash.current;
-  }, [solutions]);
+  const [loading, setLoading] = useState(true);
+  const [progress, setProgress] = useState<UserProgress[]>([]);
+  const [solutions, setSolutions] = useState<Solution[]>([]);
+  const [error, setError] = useState<string | null>(null);
 
-  // FASE 1: Função de fetch otimizada e estável - usando apenas campos existentes
-  const fetchProgress = useCallback(async () => {
-    if (!user?.id) {
-      throw new Error("Usuário não autenticado");
-    }
-    
-    try {
-      // CORREÇÃO CRÍTICA: Campos que existem na tabela progress
-      const { data, error } = await supabase
-        .from("progress")
-        .select("solution_id, is_completed, current_module, completed_modules")
-        .eq("user_id", user.id);
-        
-      if (error) {
-        throw error;
+  useEffect(() => {
+    const fetchData = async () => {
+      if (!user) {
+        setLoading(false);
+        return;
       }
+
+      try {
+        setLoading(true);
+        setError(null);
+
+        // Buscar todas as soluções publicadas
+        const { data: solutionsData, error: solutionsError } = await supabase
+          .from("solutions")
+          .select("*")
+          .eq("published", true as any);
+
+        if (solutionsError) throw solutionsError;
+
+        // Buscar progresso do usuário
+        const { data: progressData, error: progressError } = await supabase
+          .from("progress")
+          .select("*")
+          .eq("user_id", user.id as any);
+
+        if (progressError) throw progressError;
+
+        setSolutions(solutionsData as any || []);
+        setProgress(progressData as any || []);
+
+      } catch (error: any) {
+        console.error("Erro ao buscar dados do dashboard:", error);
+        setError(error.message || "Erro ao carregar dados");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [user]);
+
+  // Processar dados para o dashboard
+  const getDashboardData = (): Dashboard => {
+    if (!user) {
+      return {
+        user_id: '',
+        active: [],
+        completed: [],
+        recommended: []
+      };
+    }
+
+    const active: Solution[] = [];
+    const completed: Solution[] = [];
+    const recommended: Solution[] = [];
+
+    solutions.forEach((solution: Solution) => {
+      const userProgress = progress.find((p: any) => (p as any).solution_id === solution.id);
       
-      return data || [];
-    } catch (error) {
-      console.error("Erro ao buscar progresso:", error);
-      throw error;
-    }
-  }, [user?.id]); // DEPENDÊNCIA ESTÁVEL
-  
-  // FASE 2: Query otimizada com configurações de performance máxima e timeouts maiores
-  const { 
-    data: progressData,
-    isLoading,
-    error
-  } = useQuery({
-    queryKey: ['dashboard-progress', user?.id, currentHash],
-    queryFn: fetchProgress,
-    staleTime: 15 * 60 * 1000, // FASE 2: 15 minutos de cache para melhor performance
-    gcTime: 45 * 60 * 1000, // FASE 2: 45 minutos no cache
-    enabled: !!(user?.id && currentHash !== 'empty'),
-    refetchOnWindowFocus: false,
-    refetchOnMount: false,
-    retry: 2, // FASE 2: Mais tentativas para conexões instáveis
-    // Cache inteligente com deduplicação
-    structuralSharing: true,
-  });
-
-  // Processar dados com memoização inteligente e cache
-  const processedData = useMemo(() => {
-    const currentSolutions = stableSolutions.current;
-    
-    if (!currentSolutions || !Array.isArray(currentSolutions) || currentSolutions.length === 0) {
-      return { 
-        active: [], 
-        completed: [], 
-        recommended: [],
-        isEmpty: true
-      };
-    }
-
-    if (!progressData || !Array.isArray(progressData)) {
-      return { 
-        active: [], 
-        completed: [], 
-        recommended: currentSolutions,
-        isEmpty: false
-      };
-    }
-
-    try {
-      // Cache no WeakMap para performance máxima
-      const cacheKey = { solutions: currentSolutions, progress: progressData };
-      if (progressCache.has(cacheKey)) {
-        return progressCache.get(cacheKey);
-      }
-
-      // Usar Map para performance O(1) na busca
-      const progressMap = new Map(
-        progressData.map(progress => [progress.solution_id, progress])
-      );
-
-      // Categorizar soluções de forma eficiente
-      const categorizedSolutions = currentSolutions.reduce((acc, solution) => {
-        const progress = progressMap.get(solution.id);
-        
-        if (!progress) {
-          acc.recommended.push(solution);
-        } else if (progress.is_completed) {
-          acc.completed.push(solution);
+      if (userProgress) {
+        if ((userProgress as any).is_completed) {
+          completed.push(solution);
         } else {
-          // Se tem progresso mas não está completo, está ativo
-          acc.active.push(solution);
+          active.push(solution);
         }
-        
-        return acc;
-      }, {
-        active: [] as Solution[],
-        completed: [] as Solution[],
-        recommended: [] as Solution[]
-      });
+      } else {
+        recommended.push(solution);
+      }
+    });
 
-      const result = {
-        ...categorizedSolutions,
-        isEmpty: false
-      };
-
-      // Armazenar no cache
-      progressCache.set(cacheKey, result);
-      
-      return result;
-    } catch (err) {
-      console.error("Erro ao processar dados:", err);
-      return { 
-        active: [], 
-        completed: [], 
-        recommended: currentSolutions,
-        isEmpty: false
-      };
-    }
-  }, [progressData]); // DEPENDÊNCIA ESTÁVEL
+    return {
+      user_id: user.id,
+      active: active.slice(0, 3), // Limitar a 3 soluções ativas
+      completed: completed.slice(0, 5), // Limitar a 5 soluções completadas
+      recommended: recommended.slice(0, 4) // Limitar a 4 recomendações
+    };
+  };
 
   return {
-    active: processedData.active,
-    completed: processedData.completed,
-    recommended: processedData.recommended,
-    loading: isLoading,
+    loading,
     error,
-    isEmpty: processedData.isEmpty
+    progress,
+    solutions,
+    getDashboardData
   };
 };

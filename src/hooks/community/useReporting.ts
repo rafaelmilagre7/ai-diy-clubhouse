@@ -31,6 +31,24 @@ interface CommunityReport {
 export const useReporting = () => {
   const { user } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
+  const [currentReportData, setCurrentReportData] = useState<ReportData | null>(null);
+
+  const openReportModal = (type: ReportType, targetId: string, reportedUserId: string) => {
+    setCurrentReportData({
+      type,
+      targetId,
+      reportedUserId,
+      reason: '',
+      description: ''
+    });
+    setIsReportModalOpen(true);
+  };
+
+  const closeReportModal = () => {
+    setIsReportModalOpen(false);
+    setCurrentReportData(null);
+  };
 
   const submitReport = async (data: ReportData) => {
     if (!user) {
@@ -57,6 +75,7 @@ export const useReporting = () => {
       if (error) throw error;
 
       toast.success('Denúncia enviada com sucesso. Nossa equipe irá analisar o conteúdo.');
+      closeReportModal();
     } catch (error: any) {
       console.error('Erro ao enviar denúncia:', error);
       toast.error('Erro ao enviar denúncia. Tente novamente.');
@@ -67,6 +86,10 @@ export const useReporting = () => {
 
   return {
     submitReport,
-    isSubmitting
+    isSubmitting,
+    openReportModal,
+    closeReportModal,
+    isReportModalOpen,
+    currentReportData
   };
 };

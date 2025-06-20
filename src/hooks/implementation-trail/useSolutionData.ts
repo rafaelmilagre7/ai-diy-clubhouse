@@ -28,13 +28,13 @@ export const useSolutionData = (solutionIds: string[]) => {
         const { data, error } = await supabase
           .from('solutions')
           .select('id, title, description, thumbnail_url, category, difficulty')
-          .in('id', solutionIds);
+          .in('id', solutionIds as any);
 
         if (error) {
           throw error;
         }
 
-        const solutionsMap = data?.reduce((acc, solution) => {
+        const solutionsMap = (data as any)?.reduce((acc: any, solution: any) => {
           acc[solution.id] = solution;
           return acc;
         }, {} as Record<string, SolutionData>) || {};

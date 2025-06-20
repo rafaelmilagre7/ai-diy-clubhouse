@@ -25,7 +25,7 @@ export const useDashboardData = () => {
         // Fetch solutions - filtrar apenas publicadas se não for admin
         let query = supabase.from("solutions").select("*");
         if (!isAdmin) {
-          query = query.eq("published", true);
+          query = query.eq("published", true as any);
         }
         
         const { data: solutionsData, error: solutionsError } = await query;
@@ -35,7 +35,7 @@ export const useDashboardData = () => {
         }
         
         // Ensure solutions array is type-safe
-        setSolutions(solutionsData as Solution[]);
+        setSolutions(solutionsData as any);
         
         // Fetch all progress data
         const { data: progress, error: progressError } = await supabase
