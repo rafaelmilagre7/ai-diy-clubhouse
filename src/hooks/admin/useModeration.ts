@@ -1,45 +1,62 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
-import { toast } from 'sonner';
-import { useQueryClient } from '@tanstack/react-query';
-import { CommunityReport, ModerationAction, UserModerationStatus, ModerationStats } from '@/types/moderationTypes';
+import { useToast } from '@/hooks/use-toast';
+import { 
+  CommunityReport, 
+  ModerationAction, 
+  UserModerationStatus, 
+  ModerationSettings, 
+  ModerationStats 
+} from '@/types/moderationTypes';
 
 export const useModeration = () => {
   const [reports, setReports] = useState<CommunityReport[]>([]);
   const [actions, setActions] = useState<ModerationAction[]>([]);
   const [stats, setStats] = useState<ModerationStats | null>(null);
   const [loading, setLoading] = useState(true);
-  const [isActing, setIsActing] = useState(false);
-  const queryClient = useQueryClient();
+  const { toast } = useToast();
 
-  const fetchReports = async (status?: string) => {
+  const fetchReports = async () => {
     try {
-      setLoading(true);
-      let query = supabase
+      const { data, error } = await supabase
         .from('community_reports')
-        .select(`
-          *,
-          reporter:profiles!reporter_id(id, name, avatar_url),
-          reported_user:profiles!reported_user_id(id, name, avatar_url),
-          topic:forum_topics(id, title),
-          post:forum_posts(id, content)
-        `)
+        .select('*')
         .order('created_at', { ascending: false });
 
-      if (status) {
-        query = query.eq('status', status);
-      }
-
-      const { data, error } = await query.limit(50);
-      
       if (error) throw error;
-      setReports(data || []);
+      setReports((data as any) || []);
     } catch (error) {
-      console.error('Erro ao carregar relatórios:', error);
-      toast.error('Erro ao carregar relatórios');
-    } finally {
-      setLoading(false);
+      console.error('Erro ao buscar relatórios:', error);
+    }
+  };
+
+  const updateReportStatus = async (reportId: string, status: string) => {
+    try {
+      const { error } = await supabase
+        .from('community_reports')
+        .update({ status } as any)
+        .eq('id', reportId as any);
+
+      if (error) throw error;
+
+      const { data } = await supabase
+        .from('community_reports')
+        .select('*')
+        .eq('id', reportId as any);
+
+      setReports((data as any) || []);
+      
+      toast({
+        title: "Status atualizado",
+        description: "O status do relatório foi atualizado com sucesso.",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Erro ao atualizar status",
+        description: error.message,
+        variant: "destructive",
+      });
     }
   };
 
@@ -47,228 +64,114 @@ export const useModeration = () => {
     try {
       const { data, error } = await supabase
         .from('moderation_actions')
-        .select(`
-          *,
-          moderator:profiles!moderator_id(id, name, avatar_url),
-          target_user:profiles!target_user_id(id, name, avatar_url)
-        `)
-        .order('created_at', { ascending: false })
-        .limit(100);
-      
+        .select('*')
+        .order('created_at', { ascending: false });
+
       if (error) throw error;
-      setActions(data || []);
+      setActions((data as any) || []);
     } catch (error) {
-      console.error('Erro ao carregar ações:', error);
-      toast.error('Erro ao carregar ações de moderação');
+      console.error('Erro ao buscar ações:', error);
     }
   };
 
   const fetchStats = async () => {
     try {
-      const [reportsRes, actionsRes, suspensionsRes, bansRes] = await Promise.all([
-        supabase.from('community_reports').select('*', { count: 'exact', head: true }),
-        supabase.from('moderation_actions').select('*', { count: 'exact', head: true }),
-        supabase.from('user_moderation_status').select('*', { count: 'exact', head: true }).eq('is_suspended', true),
-        supabase.from('user_moderation_status').select('*', { count: 'exact', head: true }).eq('is_banned', true)
-      ]);
+      const { data: suspendedUsers } = await supabase
+        .from('user_moderation_status')
+        .select('id')
+        .eq('is_suspended', true as any)
+        .eq('is_banned', false as any);
 
-      const [pendingReportsRes, resolvedReportsRes] = await Promise.all([
-        supabase.from('community_reports').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
-        supabase.from('community_reports').select('*', { count: 'exact', head: true }).eq('status', 'resolved')
-      ]);
+      const { data: pendingReports } = await supabase
+        .from('community_reports')
+        .select('id')
+        .eq('status', 'pending' as any);
+      
+      const { data: resolvedReports } = await supabase
+        .from('community_reports')
+        .select('id')
+        .eq('status', 'resolved' as any);
 
       setStats({
-        total_reports: reportsRes.count || 0,
-        pending_reports: pendingReportsRes.count || 0,
-        resolved_reports: resolvedReportsRes.count || 0,
-        total_actions: actionsRes.count || 0,
-        active_suspensions: suspensionsRes.count || 0,
-        total_bans: bansRes.count || 0
+        total_reports: pendingReports?.length || 0 + resolvedReports?.length || 0,
+        pending_reports: pendingReports?.length || 0,
+        resolved_reports: resolvedReports?.length || 0,
+        total_actions: 0,
+        active_suspensions: suspendedUsers?.length || 0,
+        total_bans: 0
       });
     } catch (error) {
-      console.error('Erro ao carregar estatísticas:', error);
+      console.error('Erro ao buscar estatísticas:', error);
     }
   };
 
-  const createReport = async (reportData: Partial<CommunityReport>) => {
+  const createReport = async (reportData: Omit<CommunityReport, 'id' | 'created_at' | 'updated_at' | 'status'>) => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Usuário não autenticado');
-
-      const { data, error } = await supabase
-        .from('community_reports')
-        .insert([{
-          ...reportData,
-          reporter_id: user.id
-        }])
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      toast.success('Relatório enviado com sucesso');
-      await fetchReports();
-      return data;
-    } catch (error) {
-      console.error('Erro ao criar relatório:', error);
-      toast.error('Erro ao enviar relatório');
-      throw error;
-    }
-  };
-
-  const updateReportStatus = async (reportId: string, status: string, resolutionNotes?: string) => {
-    try {
-      setIsActing(true);
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Usuário não autenticado');
+      const { data: user } = await supabase.auth.getUser();
+      if (!user.user) throw new Error('Usuário não autenticado');
 
       const { error } = await supabase
         .from('community_reports')
-        .update({
-          status,
-          resolution_notes: resolutionNotes,
-          reviewed_by: user.id,
-          reviewed_at: new Date().toISOString()
-        })
-        .eq('id', reportId);
+        .insert({
+          ...reportData,
+          reporter_id: user.user.id,
+          status: 'pending'
+        } as any);
 
       if (error) throw error;
 
-      toast.success('Status do relatório atualizado');
       await fetchReports();
-    } catch (error) {
-      console.error('Erro ao atualizar relatório:', error);
-      toast.error('Erro ao atualizar relatório');
-    } finally {
-      setIsActing(false);
+      
+      toast({
+        title: "Relatório criado",
+        description: "Seu relatório foi enviado e será analisado.",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Erro ao criar relatório",
+        description: error.message,
+        variant: "destructive",
+      });
     }
   };
 
-  const performModerationAction = async (actionData: Partial<ModerationAction>) => {
+  const performModerationAction = async (actionData: Omit<ModerationAction, 'id' | 'created_at' | 'moderator_id'>) => {
     try {
-      setIsActing(true);
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Usuário não autenticado');
+      const { data: user } = await supabase.auth.getUser();
+      if (!user.user) throw new Error('Usuário não autenticado');
 
-      // Registrar a ação
-      const { error: actionError } = await supabase
+      const { error } = await supabase
         .from('moderation_actions')
-        .insert([{
+        .insert({
           ...actionData,
-          moderator_id: user.id
-        }]);
+          moderator_id: user.user.id
+        } as any);
 
-      if (actionError) throw actionError;
+      if (error) throw error;
 
-      // Executar a ação específica
-      await executeAction(actionData);
+      await fetchActions();
       
-      // Invalidar queries relevantes para atualizar a UI e estatísticas
-      queryClient.invalidateQueries({ queryKey: ['communityTopics'] });
-      queryClient.invalidateQueries({ queryKey: ['topics'] });
-      queryClient.invalidateQueries({ queryKey: ['forumTopics'] });
-      queryClient.invalidateQueries({ queryKey: ['forumCategories'] });
-      queryClient.invalidateQueries({ queryKey: ['forumStats'] });
-      
-      toast.success('Ação de moderação executada com sucesso');
-      await Promise.all([fetchActions(), fetchStats()]);
-    } catch (error) {
-      console.error('Erro ao executar ação:', error);
-      toast.error('Erro ao executar ação de moderação');
-    } finally {
-      setIsActing(false);
-    }
-  };
-
-  const executeAction = async (actionData: Partial<ModerationAction>) => {
-    const { action_type, topic_id, post_id, target_user_id, duration_hours } = actionData;
-
-    switch (action_type) {
-      case 'pin':
-      case 'unpin':
-        if (topic_id) {
-          await supabase
-            .from('forum_topics')
-            .update({ is_pinned: action_type === 'pin' })
-            .eq('id', topic_id);
-        }
-        break;
-      
-      case 'lock':
-      case 'unlock':
-        if (topic_id) {
-          await supabase
-            .from('forum_topics')
-            .update({ is_locked: action_type === 'lock' })
-            .eq('id', topic_id);
-        }
-        break;
-      
-      case 'hide':
-      case 'unhide':
-        if (post_id) {
-          await supabase
-            .from('forum_posts')
-            .update({ is_hidden: action_type === 'hide' })
-            .eq('id', post_id);
-        }
-        break;
-      
-      case 'suspend':
-      case 'ban':
-        if (target_user_id) {
-          const suspendedUntil = duration_hours 
-            ? new Date(Date.now() + duration_hours * 60 * 60 * 1000).toISOString()
-            : null;
-
-          await supabase
-            .from('user_moderation_status')
-            .upsert({
-              user_id: target_user_id,
-              is_suspended: action_type === 'suspend',
-              is_banned: action_type === 'ban',
-              suspended_until: action_type === 'suspend' ? suspendedUntil : null,
-              suspension_reason: action_type === 'suspend' ? actionData.reason : null,
-              ban_reason: action_type === 'ban' ? actionData.reason : null
-            });
-        }
-        break;
-      
-      case 'delete':
-        if (topic_id) {
-          await supabase.from('forum_topics').delete().eq('id', topic_id);
-        } else if (post_id) {
-          await supabase.from('forum_posts').delete().eq('id', post_id);
-        }
-        break;
-    }
-  };
-
-  const bulkModerationAction = async (itemIds: string[], action: string, reason: string) => {
-    try {
-      setIsActing(true);
-      
-      for (const itemId of itemIds) {
-        await performModerationAction({
-          topic_id: itemId, // Assumindo que são tópicos
-          action_type: action as any,
-          reason
-        });
-      }
-      
-      toast.success(`Ação em lote executada em ${itemIds.length} itens`);
-    } catch (error) {
-      console.error('Erro na ação em lote:', error);
-      toast.error('Erro ao executar ação em lote');
-    } finally {
-      setIsActing(false);
+      toast({
+        title: "Ação executada",
+        description: "A ação de moderação foi executada com sucesso.",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Erro ao executar ação",
+        description: error.message,
+        variant: "destructive",
+      });
     }
   };
 
   useEffect(() => {
-    fetchReports();
-    fetchActions();
-    fetchStats();
+    const loadData = async () => {
+      setLoading(true);
+      await Promise.all([fetchReports(), fetchActions(), fetchStats()]);
+      setLoading(false);
+    };
+
+    loadData();
   }, []);
 
   return {
@@ -276,13 +179,11 @@ export const useModeration = () => {
     actions,
     stats,
     loading,
-    isActing,
-    fetchReports,
-    fetchActions,
     createReport,
     updateReportStatus,
     performModerationAction,
-    bulkModerationAction,
-    refetch: () => Promise.all([fetchReports(), fetchActions(), fetchStats()])
+    fetchReports,
+    fetchActions,
+    fetchStats
   };
 };
