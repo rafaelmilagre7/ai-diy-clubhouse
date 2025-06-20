@@ -1,139 +1,137 @@
 
-import React from 'react';
+import React, { useState } from 'react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { AlertCircle, CheckCircle, RefreshCw, Mail } from 'lucide-react';
-import { useResendHealthCheck } from '@/hooks/supabase/useResendHealthCheck';
+import { ResendConfigValidator } from './ResendConfigValidator';
+import { EmailMonitoringDashboard } from './EmailMonitoringDashboard';
+import { SystemValidationPanel } from './SystemValidationPanel';
+import { EmailStatusMonitor } from '@/pages/admin/invites/components/EmailStatusMonitor';
+import { 
+  Settings, 
+  Activity, 
+  Shield, 
+  Mail,
+  Zap,
+  CheckCircle,
+  TestTube
+} from 'lucide-react';
 
 export const EmailSystemManager: React.FC = () => {
-  const { status, isChecking, checkHealth } = useResendHealthCheck();
-
-  const getStatusIcon = () => {
-    if (isChecking) return <RefreshCw className="h-4 w-4 animate-spin" />;
-    return status.isHealthy ? 
-      <CheckCircle className="h-4 w-4 text-green-500" /> : 
-      <AlertCircle className="h-4 w-4 text-red-500" />;
-  };
-
-  const getStatusBadge = () => {
-    if (isChecking) return <Badge variant="secondary">Verificando...</Badge>;
-    return status.isHealthy ? 
-      <Badge variant="default" className="bg-green-500">Operacional</Badge> : 
-      <Badge variant="destructive">Com Problemas</Badge>;
-  };
-
-  const handleForceCheck = () => {
-    checkHealth();
-  };
+  const [activeTab, setActiveTab] = useState('monitor');
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight">Sistema de Email</h2>
+          <h2 className="text-2xl font-bold flex items-center gap-2">
+            <Mail className="h-6 w-6" />
+            Sistema de Email Profissional
+          </h2>
           <p className="text-muted-foreground">
-            Monitoramento e diagnóstico do sistema de envio de emails
+            Gerencie e monitore o sistema de convites por email da plataforma
           </p>
         </div>
+        
         <div className="flex items-center gap-2">
-          {getStatusIcon()}
-          {getStatusBadge()}
+          <div className="flex items-center gap-1 px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm">
+            <CheckCircle className="h-3 w-3" />
+            Sistema Ativo
+          </div>
+          <div className="flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">
+            <Zap className="h-3 w-3" />
+            Resend Pro
+          </div>
         </div>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Mail className="h-5 w-5" />
-              Status do Resend
-            </CardTitle>
-            <CardDescription>
-              Verificação da conectividade e configuração do Resend
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center justify-between">
-              <span>API Key</span>
-              <Badge variant={status.apiKeyValid ? "default" : "destructive"}>
-                {status.apiKeyValid ? "Válida" : "Inválida"}
-              </Badge>
-            </div>
-            
-            <div className="flex items-center justify-between">
-              <span>Conectividade</span>
-              <Badge variant={status.connectivity === 'connected' ? "default" : "destructive"}>
-                {status.connectivity === 'connected' ? "Conectado" : "Desconectado"}
-              </Badge>
-            </div>
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+        <TabsList className="grid w-full grid-cols-4">
+          <TabsTrigger value="monitor" className="flex items-center gap-2">
+            <Activity className="h-4 w-4" />
+            Monitoramento
+          </TabsTrigger>
+          <TabsTrigger value="validation" className="flex items-center gap-2">
+            <TestTube className="h-4 w-4" />
+            Validação
+          </TabsTrigger>
+          <TabsTrigger value="config" className="flex items-center gap-2">
+            <Settings className="h-4 w-4" />
+            Configuração
+          </TabsTrigger>
+          <TabsTrigger value="status" className="flex items-center gap-2">
+            <Shield className="h-4 w-4" />
+            Status
+          </TabsTrigger>
+        </TabsList>
 
-            <div className="flex items-center justify-between">
-              <span>Domínio</span>
-              <Badge variant={status.domainValid ? "default" : "destructive"}>
-                {status.domainValid ? "Verificado" : "Pendente"}
-              </Badge>
+        <TabsContent value="monitor" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Dashboard de Monitoramento</CardTitle>
+              <CardDescription>
+                Acompanhe estatísticas em tempo real do sistema de emails
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <EmailMonitoringDashboard />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="validation" className="space-y-4">
+          <SystemValidationPanel />
+        </TabsContent>
+
+        <TabsContent value="config" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Validação e Configuração</CardTitle>
+              <CardDescription>
+                Teste e valide a configuração do sistema Resend
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ResendConfigValidator />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="status" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Status do Sistema</CardTitle>
+              <CardDescription>
+                Visualize o status atual do sistema de emails profissional
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <EmailStatusMonitor />
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+
+      {/* Informações do Sistema */}
+      <Card className="bg-gradient-to-r from-blue-50 to-green-50 border-blue-200">
+        <CardContent className="pt-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+            <div className="space-y-1">
+              <h4 className="font-medium text-blue-900">✨ Sistema Profissional</h4>
+              <p className="text-blue-700">Template React Email com design da Viver de IA</p>
             </div>
-
-            {status.lastError && (
-              <div className="p-3 rounded-md bg-red-50 border border-red-200">
-                <p className="text-sm text-red-800">
-                  <strong>Último erro:</strong> {status.lastError}
-                </p>
-              </div>
-            )}
-
-            <div className="flex gap-2">
-              <Button 
-                onClick={handleForceCheck}
-                disabled={isChecking}
-                variant="outline"
-                size="sm"
-              >
-                {isChecking ? (
-                  <>
-                    <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                    Verificando...
-                  </>
-                ) : (
-                  'Forçar Verificação'
-                )}
-              </Button>
+            <div className="space-y-1">
+              <h4 className="font-medium text-green-900">🚀 Alta Performance</h4>
+              <p className="text-green-700">Resend Premium com fallback automático</p>
             </div>
-
-            {status.lastChecked && (
-              <p className="text-xs text-muted-foreground">
-                Última verificação: {status.lastChecked.toLocaleString('pt-BR')}
-              </p>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Estatísticas de Email</CardTitle>
-            <CardDescription>
-              Métricas de envio e entrega de emails
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="text-center p-3 rounded-md bg-blue-50">
-                <div className="text-2xl font-bold text-blue-600">--</div>
-                <div className="text-sm text-blue-800">Enviados Hoje</div>
-              </div>
-              <div className="text-center p-3 rounded-md bg-green-50">
-                <div className="text-2xl font-bold text-green-600">--</div>
-                <div className="text-sm text-green-800">Taxa de Entrega</div>
-              </div>
+            <div className="space-y-1">
+              <h4 className="font-medium text-purple-900">📊 Monitoramento</h4>
+              <p className="text-purple-700">Logs detalhados e estatísticas em tempo real</p>
             </div>
-
-            <div className="text-center text-sm text-muted-foreground">
-              Estatísticas detalhadas em breve
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };
+
+export default EmailSystemManager;
