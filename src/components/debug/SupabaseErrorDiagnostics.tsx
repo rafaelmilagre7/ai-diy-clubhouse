@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -6,44 +5,29 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { 
-  AlertCircle, 
-  CheckCircle, 
-  RefreshCw, 
-  Database, 
-  Mail, 
-  Shield, 
-  ChevronDown,
-  Send,
-  TestTube
-} from 'lucide-react';
+import { AlertCircle, CheckCircle, RefreshCw, Database, Mail, Shield, ChevronDown, Send, TestTube } from 'lucide-react';
 import { useSupabaseHealthCheck } from '@/hooks/supabase/useSupabaseHealthCheck';
 import { useResendHealthCheck } from '@/hooks/supabase/useResendHealthCheck';
-
 export const SupabaseErrorDiagnostics: React.FC = () => {
-  const { 
-    healthStatus: supabaseHealth, 
-    isChecking: isCheckingSupabase, 
-    performHealthCheck: checkSupabase 
+  const {
+    healthStatus: supabaseHealth,
+    isChecking: isCheckingSupabase,
+    performHealthCheck: checkSupabase
   } = useSupabaseHealthCheck();
-  
-  const { 
-    healthStatus: resendHealth, 
-    isChecking: isCheckingResend, 
+  const {
+    healthStatus: resendHealth,
+    isChecking: isCheckingResend,
     performHealthCheck: checkResend,
     sendTestEmail,
     debugInfo: resendDebugInfo
   } = useResendHealthCheck();
-
   const [testEmail, setTestEmail] = useState('');
   const [showSupabaseDebug, setShowSupabaseDebug] = useState(false);
   const [showResendDebug, setShowResendDebug] = useState(false);
-
   const getStatusColor = (status: string | boolean) => {
     if (typeof status === 'boolean') {
       return status ? 'text-green-500' : 'text-red-500';
     }
-    
     switch (status) {
       case 'operational':
       case 'connected':
@@ -59,27 +43,19 @@ export const SupabaseErrorDiagnostics: React.FC = () => {
         return 'text-gray-500';
     }
   };
-
   const getStatusBadge = (status: string | boolean, trueLabel = 'OK', falseLabel = 'Erro') => {
-    const isOk = typeof status === 'boolean' ? status : 
-      status === 'operational' || status === 'connected' || status === 'authenticated';
-    
-    return (
-      <Badge variant={isOk ? "default" : "destructive"} className={isOk ? "bg-green-500" : ""}>
+    const isOk = typeof status === 'boolean' ? status : status === 'operational' || status === 'connected' || status === 'authenticated';
+    return <Badge variant={isOk ? "default" : "destructive"} className={isOk ? "bg-green-500" : ""}>
         {isOk ? trueLabel : falseLabel}
-      </Badge>
-    );
+      </Badge>;
   };
-
   const handleSendTestEmail = async () => {
     if (!testEmail || !testEmail.includes('@')) {
       return;
     }
     await sendTestEmail(testEmail);
   };
-
-  return (
-    <div className="space-y-6">
+  return <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Diagnóstico Completo do Sistema</h1>
@@ -116,16 +92,8 @@ export const SupabaseErrorDiagnostics: React.FC = () => {
               </CardHeader>
               <CardContent>
                 <div className="flex items-center gap-2">
-                  {supabaseHealth.isHealthy && resendHealth.isHealthy ? (
-                    <CheckCircle className="h-4 w-4 text-green-500" />
-                  ) : (
-                    <AlertCircle className="h-4 w-4 text-red-500" />
-                  )}
-                  {getStatusBadge(
-                    supabaseHealth.isHealthy && resendHealth.isHealthy,
-                    'Operacional',
-                    'Com Problemas'
-                  )}
+                  {supabaseHealth.isHealthy && resendHealth.isHealthy ? <CheckCircle className="h-4 w-4 text-green-500" /> : <AlertCircle className="h-4 w-4 text-red-500" />}
+                  {getStatusBadge(supabaseHealth.isHealthy && resendHealth.isHealthy, 'Operacional', 'Com Problemas')}
                 </div>
               </CardContent>
             </Card>
@@ -137,11 +105,7 @@ export const SupabaseErrorDiagnostics: React.FC = () => {
               </CardHeader>
               <CardContent>
                 <div className="flex items-center gap-2">
-                  {supabaseHealth.databaseStatus === 'operational' ? (
-                    <CheckCircle className="h-4 w-4 text-green-500" />
-                  ) : (
-                    <AlertCircle className="h-4 w-4 text-red-500" />
-                  )}
+                  {supabaseHealth.databaseStatus === 'operational' ? <CheckCircle className="h-4 w-4 text-green-500" /> : <AlertCircle className="h-4 w-4 text-red-500" />}
                   {getStatusBadge(supabaseHealth.databaseStatus, 'Conectado', 'Erro')}
                 </div>
               </CardContent>
@@ -154,11 +118,7 @@ export const SupabaseErrorDiagnostics: React.FC = () => {
               </CardHeader>
               <CardContent>
                 <div className="flex items-center gap-2">
-                  {resendHealth.isHealthy ? (
-                    <CheckCircle className="h-4 w-4 text-green-500" />
-                  ) : (
-                    <AlertCircle className="h-4 w-4 text-red-500" />
-                  )}
+                  {resendHealth.isHealthy ? <CheckCircle className="h-4 w-4 text-green-500" /> : <AlertCircle className="h-4 w-4 text-red-500" />}
                   {getStatusBadge(resendHealth.isHealthy, 'Operacional', 'Com Problemas')}
                 </div>
               </CardContent>
@@ -171,11 +131,7 @@ export const SupabaseErrorDiagnostics: React.FC = () => {
               </CardHeader>
               <CardContent>
                 <div className="flex items-center gap-2">
-                  {supabaseHealth.authStatus === 'authenticated' ? (
-                    <CheckCircle className="h-4 w-4 text-green-500" />
-                  ) : (
-                    <AlertCircle className="h-4 w-4 text-orange-500" />
-                  )}
+                  {supabaseHealth.authStatus === 'authenticated' ? <CheckCircle className="h-4 w-4 text-green-500" /> : <AlertCircle className="h-4 w-4 text-orange-500" />}
                   {getStatusBadge(supabaseHealth.authStatus, 'Autenticado', 'Não Auth')}
                 </div>
               </CardContent>
@@ -183,8 +139,7 @@ export const SupabaseErrorDiagnostics: React.FC = () => {
           </div>
 
           {/* Resumo de Problemas */}
-          {(supabaseHealth.issues.length > 0 || resendHealth.issues.length > 0) && (
-            <Card>
+          {(supabaseHealth.issues.length > 0 || resendHealth.issues.length > 0) && <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <AlertCircle className="h-5 w-5 text-red-500" />
@@ -192,19 +147,14 @@ export const SupabaseErrorDiagnostics: React.FC = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-2">
-                {supabaseHealth.issues.map((issue, index) => (
-                  <div key={`supabase-${index}`} className="p-3 rounded-md bg-red-50 border border-red-200">
+                {supabaseHealth.issues.map((issue, index) => <div key={`supabase-${index}`} className="p-3 rounded-md bg-red-50 border border-red-200">
                     <p className="text-sm text-red-800"><strong>[Supabase]</strong> {issue}</p>
-                  </div>
-                ))}
-                {resendHealth.issues.map((issue, index) => (
-                  <div key={`resend-${index}`} className="p-3 rounded-md bg-orange-50 border border-orange-200">
+                  </div>)}
+                {resendHealth.issues.map((issue, index) => <div key={`resend-${index}`} className="p-3 rounded-md bg-orange-50 border border-orange-200">
                     <p className="text-sm text-orange-800"><strong>[Email]</strong> {issue}</p>
-                  </div>
-                ))}
+                  </div>)}
               </CardContent>
-            </Card>
-          )}
+            </Card>}
         </TabsContent>
 
         <TabsContent value="supabase" className="space-y-4">
@@ -219,13 +169,7 @@ export const SupabaseErrorDiagnostics: React.FC = () => {
                   <CardDescription>Verificação detalhada do banco de dados e serviços</CardDescription>
                 </div>
                 <div className="flex items-center gap-2">
-                  {isCheckingSupabase ? (
-                    <RefreshCw className="h-4 w-4 animate-spin text-blue-500" />
-                  ) : supabaseHealth.isHealthy ? (
-                    <CheckCircle className="h-4 w-4 text-green-500" />
-                  ) : (
-                    <AlertCircle className="h-4 w-4 text-red-500" />
-                  )}
+                  {isCheckingSupabase ? <RefreshCw className="h-4 w-4 animate-spin text-blue-500" /> : supabaseHealth.isHealthy ? <CheckCircle className="h-4 w-4 text-green-500" /> : <AlertCircle className="h-4 w-4 text-red-500" />}
                   {getStatusBadge(supabaseHealth.isHealthy, 'Sistema OK', 'Com Problemas')}
                 </div>
               </div>
@@ -266,26 +210,14 @@ export const SupabaseErrorDiagnostics: React.FC = () => {
               </div>
 
               <div className="flex gap-2">
-                <Button 
-                  onClick={checkSupabase}
-                  disabled={isCheckingSupabase}
-                  variant="outline"
-                >
-                  {isCheckingSupabase ? (
-                    <>
+                <Button onClick={checkSupabase} disabled={isCheckingSupabase} variant="outline">
+                  {isCheckingSupabase ? <>
                       <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
                       Verificando...
-                    </>
-                  ) : (
-                    'Verificar Status'
-                  )}
+                    </> : 'Verificar Status'}
                 </Button>
 
-                <Button 
-                  onClick={() => setShowSupabaseDebug(!showSupabaseDebug)}
-                  variant="ghost"
-                  size="sm"
-                >
+                <Button onClick={() => setShowSupabaseDebug(!showSupabaseDebug)} variant="ghost" size="sm">
                   <ChevronDown className={`h-4 w-4 mr-2 transition-transform ${showSupabaseDebug ? 'rotate-180' : ''}`} />
                   Debug Info
                 </Button>
@@ -308,16 +240,12 @@ export const SupabaseErrorDiagnostics: React.FC = () => {
               </Collapsible>
 
               {/* Erros Supabase */}
-              {supabaseHealth.issues.length > 0 && (
-                <div className="space-y-2">
+              {supabaseHealth.issues.length > 0 && <div className="space-y-2">
                   <h4 className="font-medium text-red-600">Problemas do Supabase:</h4>
-                  {supabaseHealth.issues.map((issue, index) => (
-                    <div key={index} className="p-3 rounded-md bg-red-50 border border-red-200">
+                  {supabaseHealth.issues.map((issue, index) => <div key={index} className="p-3 rounded-md bg-red-50 border border-red-200">
                       <p className="text-sm text-red-800">{issue}</p>
-                    </div>
-                  ))}
-                </div>
-              )}
+                    </div>)}
+                </div>}
             </CardContent>
           </Card>
         </TabsContent>
@@ -334,13 +262,7 @@ export const SupabaseErrorDiagnostics: React.FC = () => {
                   <CardDescription>Diagnóstico completo do sistema de envio de emails</CardDescription>
                 </div>
                 <div className="flex items-center gap-2">
-                  {isCheckingResend ? (
-                    <RefreshCw className="h-4 w-4 animate-spin text-blue-500" />
-                  ) : resendHealth.isHealthy ? (
-                    <CheckCircle className="h-4 w-4 text-green-500" />
-                  ) : (
-                    <AlertCircle className="h-4 w-4 text-red-500" />
-                  )}
+                  {isCheckingResend ? <RefreshCw className="h-4 w-4 animate-spin text-blue-500" /> : resendHealth.isHealthy ? <CheckCircle className="h-4 w-4 text-green-500" /> : <AlertCircle className="h-4 w-4 text-red-500" />}
                   {getStatusBadge(resendHealth.isHealthy, 'Sistema OK', 'Com Problemas')}
                 </div>
               </div>
@@ -385,77 +307,53 @@ export const SupabaseErrorDiagnostics: React.FC = () => {
 
               {/* Ações */}
               <div className="flex gap-2">
-                <Button 
-                  onClick={() => checkResend(true)}
-                  disabled={isCheckingResend}
-                  variant="outline"
-                >
-                  {isCheckingResend ? (
-                    <>
+                <Button onClick={() => checkResend(true)} disabled={isCheckingResend} variant="outline">
+                  {isCheckingResend ? <>
                       <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
                       Verificando...
-                    </>
-                  ) : (
-                    'Forçar Verificação'
-                  )}
+                    </> : 'Forçar Verificação'}
                 </Button>
 
-                <Button 
-                  onClick={() => setShowResendDebug(!showResendDebug)}
-                  variant="ghost"
-                  size="sm"
-                >
+                <Button onClick={() => setShowResendDebug(!showResendDebug)} variant="ghost" size="sm">
                   <ChevronDown className={`h-4 w-4 mr-2 transition-transform ${showResendDebug ? 'rotate-180' : ''}`} />
                   Debug Info
                 </Button>
               </div>
 
               {/* Erros Email */}
-              {resendHealth.issues.length > 0 && (
-                <div className="space-y-2">
+              {resendHealth.issues.length > 0 && <div className="space-y-2">
                   <h4 className="font-medium text-red-600">Problemas do Sistema de Email:</h4>
-                  {resendHealth.issues.map((issue, index) => (
-                    <div key={index} className="p-3 rounded-md bg-red-50 border border-red-200">
+                  {resendHealth.issues.map((issue, index) => <div key={index} className="p-3 rounded-md bg-red-50 border border-red-200">
                       <p className="text-sm text-red-800">{issue}</p>
-                    </div>
-                  ))}
-                </div>
-              )}
+                    </div>)}
+                </div>}
 
               {/* Debug Info Resend */}
               <Collapsible open={showResendDebug} onOpenChange={setShowResendDebug}>
                 <CollapsibleContent className="space-y-4">
-                  {resendDebugInfo && (
-                    <div className="p-4 rounded-lg bg-gray-50 border">
+                  {resendDebugInfo && <div className="p-4 rounded-lg border bg-gray-800">
                       <h4 className="font-medium mb-3">Informações de Debug - Resend:</h4>
                       <div className="space-y-2 text-sm font-mono">
                         <div><strong>Timestamp:</strong> {resendDebugInfo.timestamp}</div>
                         <div><strong>Tentativas:</strong> {resendDebugInfo.attempts}</div>
                         <div><strong>Método:</strong> {resendDebugInfo.method}</div>
                         <div><strong>Status Response:</strong> {resendDebugInfo.responseStatus || 'N/A'}</div>
-                        {resendDebugInfo.errorDetails && (
-                          <div><strong>Detalhes do Erro:</strong> {resendDebugInfo.errorDetails}</div>
-                        )}
-                        {resendDebugInfo.headers && (
-                          <div>
+                        {resendDebugInfo.errorDetails && <div><strong>Detalhes do Erro:</strong> {resendDebugInfo.errorDetails}</div>}
+                        {resendDebugInfo.headers && <div>
                             <strong>Headers:</strong>
                             <pre className="mt-1 text-xs bg-white p-2 rounded border overflow-auto">
                               {JSON.stringify(resendDebugInfo.headers, null, 2)}
                             </pre>
-                          </div>
-                        )}
+                          </div>}
                       </div>
-                    </div>
-                  )}
+                    </div>}
                 </CollapsibleContent>
               </Collapsible>
 
               {/* Timestamp */}
-              {resendHealth.lastChecked && (
-                <p className="text-xs text-muted-foreground">
+              {resendHealth.lastChecked && <p className="text-xs text-muted-foreground">
                   Última verificação: {resendHealth.lastChecked.toLocaleString('pt-BR')}
-                </p>
-              )}
+                </p>}
             </CardContent>
           </Card>
         </TabsContent>
@@ -476,22 +374,9 @@ export const SupabaseErrorDiagnostics: React.FC = () => {
                 <div>
                   <label className="text-sm font-medium">Teste de Envio de Email</label>
                   <div className="flex gap-2 mt-2">
-                    <Input
-                      type="email"
-                      placeholder="Digite um email para teste"
-                      value={testEmail}
-                      onChange={(e) => setTestEmail(e.target.value)}
-                      className="flex-1"
-                    />
-                    <Button 
-                      onClick={handleSendTestEmail}
-                      disabled={isCheckingResend || !testEmail}
-                    >
-                      {isCheckingResend ? (
-                        <RefreshCw className="h-4 w-4 animate-spin" />
-                      ) : (
-                        <Send className="h-4 w-4" />
-                      )}
+                    <Input type="email" placeholder="Digite um email para teste" value={testEmail} onChange={e => setTestEmail(e.target.value)} className="flex-1" />
+                    <Button onClick={handleSendTestEmail} disabled={isCheckingResend || !testEmail}>
+                      {isCheckingResend ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
                       Enviar Teste
                     </Button>
                   </div>
@@ -504,6 +389,5 @@ export const SupabaseErrorDiagnostics: React.FC = () => {
           </Card>
         </TabsContent>
       </Tabs>
-    </div>
-  );
+    </div>;
 };
