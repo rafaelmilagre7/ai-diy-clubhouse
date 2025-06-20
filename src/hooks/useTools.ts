@@ -24,7 +24,7 @@ export const useTools = (options?: {
       const { data, error } = await supabase
         .from('tools')
         .select('*')
-        .eq('status', true)
+        .eq('status', true as any)
         .order('name');
 
       if (error) {
@@ -33,14 +33,14 @@ export const useTools = (options?: {
       }
 
       // Filtrar por categoria, se especificado
-      let filteredData = data;
+      let filteredData = data as any;
       if (opts.categoryFilter) {
-        filteredData = data.filter(tool => tool.category === opts.categoryFilter);
+        filteredData = (data as any).filter((tool: any) => tool.category === opts.categoryFilter);
       }
 
       // Filtrar apenas benefícios, se solicitado
       if (opts.benefitsOnly) {
-        filteredData = filteredData.filter(tool => tool.has_member_benefit);
+        filteredData = filteredData.filter((tool: any) => tool.has_member_benefit);
       }
 
       // Verificar restrições de acesso para benefícios, se autenticado e solicitado
@@ -51,14 +51,14 @@ export const useTools = (options?: {
           .select('tool_id')
           .order('tool_id');
 
-        const restrictedTools = new Set(restrictedToolsData?.map(rt => rt.tool_id) || []);
+        const restrictedTools = new Set((restrictedToolsData as any)?.map((rt: any) => rt.tool_id) || []);
 
         // Para cada ferramenta com restrições, verificar acesso
         if (restrictedTools.size > 0) {
           // Array para armazenar promessas de verificação de acesso
           const accessChecks = filteredData
-            .filter(tool => tool.has_member_benefit && restrictedTools.has(tool.id))
-            .map(async tool => {
+            .filter((tool: any) => tool.has_member_benefit && restrictedTools.has(tool.id))
+            .map(async (tool: any) => {
               const { data: hasAccess } = await supabase.rpc('can_access_benefit', {
                 user_id: user.id,
                 tool_id: tool.id
@@ -75,14 +75,14 @@ export const useTools = (options?: {
           const accessMap = new Map(accessResults.map(r => [r.toolId, r.hasAccess]));
 
           // Adicionar flag de acesso restrito para cada ferramenta
-          filteredData = filteredData.map(tool => ({
+          filteredData = filteredData.map((tool: any) => ({
             ...tool,
             is_access_restricted: restrictedTools.has(tool.id),
             has_access: !restrictedTools.has(tool.id) || accessMap.get(tool.id) || false
           }));
         } else {
           // Se não houver restrições, todos têm acesso
-          filteredData = filteredData.map(tool => ({
+          filteredData = filteredData.map((tool: any) => ({
             ...tool,
             is_access_restricted: false,
             has_access: true
@@ -90,15 +90,15 @@ export const useTools = (options?: {
         }
       }
 
-      const toolsWithLogosInfo = filteredData.map(tool => ({
+      const toolsWithLogosInfo = filteredData.map((tool: any) => ({
         ...tool,
         has_valid_logo: !!tool.logo_url
       }));
 
       console.log('Ferramentas encontradas:', { 
         total: filteredData.length,
-        comLogo: toolsWithLogosInfo.filter(t => t.has_valid_logo).length,
-        semLogo: toolsWithLogosInfo.filter(t => !t.has_valid_logo).length
+        comLogo: toolsWithLogosInfo.filter((t: any) => t.has_valid_logo).length,
+        semLogo: toolsWithLogosInfo.filter((t: any) => !t.has_valid_logo).length
       });
 
       return toolsWithLogosInfo as Tool[];

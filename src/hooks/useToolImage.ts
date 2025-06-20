@@ -28,9 +28,9 @@ export const useToolImage = ({ toolName, toolId }: UseToolImageOptions) => {
         let query = supabase.from('tools').select('name, logo_url');
 
         if (toolId) {
-          query = query.eq('id', toolId);
+          query = query.eq('id', toolId as any);
         } else if (toolName) {
-          query = query.ilike('name', toolName);
+          query = query.ilike('name', toolName as any);
         }
 
         const { data, error } = await query.limit(1);
@@ -39,12 +39,12 @@ export const useToolImage = ({ toolName, toolId }: UseToolImageOptions) => {
           throw error;
         }
 
-        if (data && data.length > 0 && data[0].logo_url) {
+        if (data && data.length > 0 && (data[0] as any).logo_url) {
           log('Logo da ferramenta encontrado', { 
-            tool: data[0].name, 
-            logoUrl: data[0].logo_url 
+            tool: (data[0] as any).name, 
+            logoUrl: (data[0] as any).logo_url 
           });
-          setLogoUrl(data[0].logo_url);
+          setLogoUrl((data[0] as any).logo_url);
         } else {
           log('Nenhum logo encontrado para a ferramenta', { 
             toolName, 

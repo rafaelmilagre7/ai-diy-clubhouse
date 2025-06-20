@@ -1,56 +1,40 @@
 
-import { useState, useEffect } from "react";
-import { supabase } from "@/lib/supabase";
-import { useLogging } from "@/hooks/useLogging";
+import { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabase';
+import { Tool } from '@/types/toolTypes';
 
 export const useToolsData = () => {
+  const [tools, setTools] = useState<Tool[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const { log, logError } = useLogging();
 
   useEffect(() => {
-    const fetchToolsData = async () => {
+    const fetchTools = async () => {
       try {
         setIsLoading(true);
-        await checkToolLogosBucket();
-      } catch (error) {
-        // Capturar o erro, mas não bloquear a renderização
-        console.error("Erro ao inicializar dados de ferramentas:", error);
+        setError(null);
+
+        const { data, error: fetchError } = await supabase
+          .from('tools')
+          .select('*')
+          .eq('status', true as any)
+          .order('name');
+
+        if (fetchError) {
+          throw fetchError;
+        }
+
+        setTools((data as any) || []);
+      } catch (err: any) {
+        setError(err.message || 'Erro ao carregar ferramentas');
+        console.error('Erro ao buscar ferramentas:', err);
       } finally {
         setIsLoading(false);
       }
     };
 
-    fetchToolsData();
+    fetchTools();
   }, []);
 
-  // Função para verificar e criar o bucket de logos se necessário
-  const checkToolLogosBucket = async () => {
-    try {
-      log("Verificando bucket para logos de ferramentas...", {});
-      
-      // Consultar informações sobre o bucket sem tentar criá-lo
-      const { data: buckets, error: bucketsError } = await supabase
-        .storage
-        .listBuckets();
-      
-      if (bucketsError) {
-        // Apenas registrar o erro e continuar
-        logError("Erro ao listar buckets", bucketsError);
-        return;
-      }
-      
-      const bucketExists = buckets?.find(bucket => bucket.name === 'tool_logos');
-      
-      if (!bucketExists) {
-        log("Bucket tool_logos não encontrado, mas será criado pelo administrador", {});
-        // Não tentamos criar o bucket aqui para evitar erros de RLS
-      }
-    } catch (err) {
-      // Capturar o erro, mas não bloquear a funcionalidade principal
-      logError("Erro ao verificar bucket de logos", err);
-    }
-  };
-
-  return { isLoading, error };
+  return { tools, isLoading, error };
 };
