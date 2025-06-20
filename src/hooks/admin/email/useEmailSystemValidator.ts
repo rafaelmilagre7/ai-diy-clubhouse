@@ -1,274 +1,347 @@
 
 import { useState, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
+import { resendTestService } from '@/services/resendTestService';
 import { toast } from 'sonner';
 
 interface ValidationStep {
   step: string;
-  status: 'success' | 'error' | 'pending' | 'warning';
+  status: 'pending' | 'success' | 'error' | 'warning';
   message: string;
   details?: any;
 }
 
 interface ValidationReport {
-  overall: 'success' | 'error' | 'warning' | 'pending';
-  results: ValidationStep[];
   timestamp: string;
   duration: number;
+  overall: 'success' | 'warning' | 'error';
+  results: ValidationStep[];
 }
 
 export const useEmailSystemValidator = () => {
   const [isValidating, setIsValidating] = useState(false);
   const [validationReport, setValidationReport] = useState<ValidationReport | null>(null);
 
-  const runCompleteValidation = useCallback(async () => {
-    setIsValidating(true);
-    const startTime = Date.now();
-    const validationId = crypto.randomUUID().substring(0, 8);
-    
-    console.log(`🔍 [${validationId}] Iniciando validação completa do sistema`);
-    
-    const results: ValidationStep[] = [];
-    
+  const validateEdgeFunctionConnectivity = useCallback(async (): Promise<ValidationStep> => {
     try {
-      // 1. Teste de configuração do Resend
-      console.log(`🔍 [${validationId}] Testando configuração do Resend...`);
-      results.push({
+      console.log('🔍 Testando conectividade das Edge Functions...');
+      
+      // Teste 1: Health check básico
+      const healthResult = await resendTestService.testHealthWithDirectFetch(1, true);
+      
+      if (healthResult.healthy) {
+        return {
+          step: 'Conectividade Edge Functions',
+          status: 'success',
+          message: `Conectado (${healthResult.responseTime}ms)`,
+          details: healthResult
+        };
+      } else {
+        return {
+          step: 'Conectividade Edge Functions',
+          status: 'error', 
+          message: `Falha: ${healthResult.issues?.join(', ') || 'Erro desconhecido'}`,
+          details: healthResult
+        };
+      }
+    } catch (error: any) {
+      console.error('❌ Erro no teste de conectividade:', error);
+      return {
+        step: 'Conectividade Edge Functions',
+        status: 'error',
+        message: `Erro crítico: ${error.message}`,
+        details: { error: error.message }
+      };
+    }
+  }, []);
+
+  const validateResendConfiguration = useCallback(async (): Promise<ValidationStep> => {
+    try {
+      console.log('🔑 Validando configuração do Resend...');
+      
+      // Teste direto com a API do Resend (bypass Edge Function)
+      const directTest = await resendTestService.testResendApiDirect();
+      
+      if (directTest.connected) {
+        return {
+          step: 'Configuração Resend',
+          status: 'success',
+          message: 'API Key válida e conectada',
+          details: directTest
+        };
+      } else {
+        return {
+          step: 'Configuração Resend',
+          status: 'error',
+          message: `Erro na API: ${directTest.error}`,
+          details: directTest
+        };
+      }
+    } catch (error: any) {
+      return {
         step: 'Configuração Resend',
-        status: 'pending',
-        message: 'Verificando...'
-      });
+        status: 'error',
+        message: `Falha na validação: ${error.message}`,
+        details: { error: error.message }
+      };
+    }
+  }, []);
 
-      const { data: resendTest, error: resendError } = await supabase.functions.invoke('test-resend-health', {
-        body: { testType: 'config_check', validationId }
-      });
-
-      if (resendError || !resendTest?.success) {
-        results[results.length - 1] = {
-          step: 'Configuração Resend',
-          status: 'error',
-          message: resendError?.message || 'Falha na configuração',
-          details: resendTest
-        };
-      } else {
-        results[results.length - 1] = {
-          step: 'Configuração Resend',
-          status: 'success',
-          message: 'Configuração OK',
-          details: resendTest
-        };
-      }
-
-      // 2. Teste de geração de link
-      console.log(`🔍 [${validationId}] Testando geração de links...`);
-      results.push({
+  const validateInviteLinkGeneration = useCallback(async (): Promise<ValidationStep> => {
+    try {
+      console.log('🔗 Testando geração de links...');
+      
+      const testToken = 'TEST-TOKEN-' + Date.now();
+      const baseUrl = window.location.origin;
+      const testLink = `${baseUrl}/convite/${testToken}`;
+      
+      // Verificar se o domínio é válido
+      const isCustomDomain = !baseUrl.includes('lovable.app') && !baseUrl.includes('localhost');
+      
+      return {
         step: 'Geração de Links',
-        status: 'pending',
-        message: 'Verificando...'
-      });
-
-      try {
-        const testToken = crypto.randomUUID();
-        const baseUrl = window.location.origin;
-        const inviteUrl = `${baseUrl}/convite/${testToken}`;
-        
-        if (inviteUrl.includes('localhost') || inviteUrl.includes('lovable.app')) {
-          results[results.length - 1] = {
-            step: 'Geração de Links',
-            status: 'success',
-            message: 'Links gerados corretamente',
-            details: { testUrl: inviteUrl }
-          };
-        } else {
-          results[results.length - 1] = {
-            step: 'Geração de Links',
-            status: 'warning',
-            message: 'URL de domínio customizado detectada',
-            details: { testUrl: inviteUrl }
-          };
+        status: isCustomDomain ? 'success' : 'warning',
+        message: isCustomDomain 
+          ? 'URL de domínio customizado detectada' 
+          : 'Usando domínio de desenvolvimento',
+        details: { 
+          baseUrl, 
+          testLink, 
+          isCustomDomain,
+          domain: new URL(baseUrl).hostname
         }
-      } catch (error: any) {
-        results[results.length - 1] = {
-          step: 'Geração de Links',
-          status: 'error',
-          message: `Erro na geração: ${error.message}`,
-          details: error
-        };
-      }
+      };
+    } catch (error: any) {
+      return {
+        step: 'Geração de Links',
+        status: 'error',
+        message: `Erro ao gerar links: ${error.message}`,
+        details: { error: error.message }
+      };
+    }
+  }, []);
 
-      // 3. Teste de template
-      console.log(`🔍 [${validationId}] Testando template de email...`);
-      results.push({
-        step: 'Template de Email',
-        status: 'pending',
-        message: 'Verificando...'
-      });
-
-      const { data: templateTest, error: templateError } = await supabase.functions.invoke('send-invite-email', {
-        body: {
-          email: 'test@validation.com',
-          inviteUrl: 'https://test.com/invite/123',
-          roleName: 'Teste',
-          expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-          validationMode: true,
-          validationId
-        }
-      });
-
-      if (templateError || !templateTest?.success) {
-        results[results.length - 1] = {
-          step: 'Template de Email',
-          status: 'error',
-          message: templateError?.message || 'Falha no template',
-          details: templateTest && 'details' in templateTest ? templateTest.details : undefined
-        };
-      } else {
-        results[results.length - 1] = {
+  const validateEmailTemplate = useCallback(async (): Promise<ValidationStep> => {
+    try {
+      console.log('📧 Testando template de email...');
+      
+      // Teste do template através da Edge Function
+      const testEmail = 'test@viverdeia.ai';
+      const emailResult = await resendTestService.sendTestEmailDirect(testEmail);
+      
+      if (emailResult.success) {
+        return {
           step: 'Template de Email',
           status: 'success',
-          message: 'Template renderizado com sucesso',
-          details: templateTest && 'details' in templateTest ? templateTest.details : undefined
+          message: `Template funcionando (ID: ${emailResult.emailId})`,
+          details: emailResult
+        };
+      } else {
+        return {
+          step: 'Template de Email',
+          status: 'error',
+          message: `Falha no template: ${emailResult.error}`,
+          details: emailResult
         };
       }
+    } catch (error: any) {
+      return {
+        step: 'Template de Email',
+        status: 'error',
+        message: `Erro no teste: ${error.message}`,
+        details: { error: error.message }
+      };
+    }
+  }, []);
 
-      // 4. Teste de fallback
-      console.log(`🔍 [${validationId}] Testando sistema de fallback...`);
-      results.push({
-        step: 'Sistema de Fallback',
-        status: 'pending',
-        message: 'Verificando...'
-      });
-
-      const { data: fallbackTest, error: fallbackError } = await supabase.functions.invoke('send-fallback-notification', {
+  const validateFallbackSystem = useCallback(async (): Promise<ValidationStep> => {
+    try {
+      console.log('🆘 Testando sistema de fallback...');
+      
+      // Simular falha e testar fallback
+      const { data, error } = await supabase.functions.invoke('send-fallback-notification', {
         body: {
-          email: 'test@validation.com',
-          inviteUrl: 'https://test.com/invite/123',
-          roleName: 'Teste',
-          type: 'validation_test',
-          validationMode: true,
-          validationId
+          email: 'test@viverdeia.ai',
+          inviteUrl: 'https://test.com/invite',
+          roleName: 'Test',
+          type: 'system_test',
+          requestId: 'validation-test-' + Date.now()
         }
       });
 
-      if (fallbackError || !fallbackTest?.success) {
-        results[results.length - 1] = {
+      if (!error && data?.success) {
+        return {
+          step: 'Sistema de Fallback',
+          status: 'success',
+          message: 'Sistema de recuperação operacional',
+          details: data
+        };
+      } else {
+        return {
           step: 'Sistema de Fallback',
           status: 'warning',
           message: 'Fallback com problemas (não crítico)',
-          details: fallbackTest
-        };
-      } else {
-        results[results.length - 1] = {
-          step: 'Sistema de Fallback',
-          status: 'success',
-          message: 'Fallback funcionando',
-          details: fallbackTest
+          details: { error: error?.message, data }
         };
       }
+    } catch (error: any) {
+      return {
+        step: 'Sistema de Fallback',
+        status: 'warning',
+        message: `Fallback indisponível: ${error.message}`,
+        details: { error: error.message }
+      };
+    }
+  }, []);
 
-      // 5. Teste de performance
-      console.log(`🔍 [${validationId}] Testando performance...`);
-      results.push({
-        step: 'Performance',
-        status: 'pending',
-        message: 'Verificando...'
-      });
-
-      const perfStart = Date.now();
-      const { error: perfError } = await supabase.functions.invoke('test-resend-health', {
-        body: { testType: 'performance_check', validationId }
-      });
-      const perfDuration = Date.now() - perfStart;
-
-      if (perfError) {
-        results[results.length - 1] = {
-          step: 'Performance',
-          status: 'error',
-          message: `Erro no teste: ${perfError.message}`,
-          details: { duration: perfDuration }
-        };
-      } else if (perfDuration > 10000) {
-        results[results.length - 1] = {
-          step: 'Performance',
-          status: 'warning',
-          message: `Lentidão detectada: ${perfDuration}ms`,
-          details: { duration: perfDuration }
-        };
-      } else {
-        results[results.length - 1] = {
-          step: 'Performance',
-          status: 'success',
-          message: `Performance OK: ${perfDuration}ms`,
-          details: { duration: perfDuration }
-        };
-      }
-
-      // Determinar status geral
-      const hasErrors = results.some(r => r.status === 'error');
-      const hasWarnings = results.some(r => r.status === 'warning');
+  const validatePerformance = useCallback(async (): Promise<ValidationStep> => {
+    try {
+      console.log('⚡ Testando performance...');
       
-      let overall: 'success' | 'error' | 'warning' | 'pending';
-      if (hasErrors) {
+      const startTime = Date.now();
+      
+      // Teste de performance com múltiplas chamadas
+      const healthTest = await resendTestService.testHealthWithDirectFetch(1);
+      const responseTime = Date.now() - startTime;
+      
+      let status: 'success' | 'warning' | 'error' = 'success';
+      let message = '';
+      
+      if (responseTime < 1000) {
+        status = 'success';
+        message = `Excelente (${responseTime}ms)`;
+      } else if (responseTime < 3000) {
+        status = 'warning';
+        message = `Aceitável (${responseTime}ms)`;
+      } else {
+        status = 'error';
+        message = `Lento (${responseTime}ms)`;
+      }
+      
+      return {
+        step: 'Performance',
+        status,
+        message,
+        details: { responseTime, healthTest }
+      };
+    } catch (error: any) {
+      return {
+        step: 'Performance',
+        status: 'error',
+        message: `Erro no teste: ${error.message}`,
+        details: { error: error.message }
+      };
+    }
+  }, []);
+
+  const runCompleteValidation = useCallback(async () => {
+    setIsValidating(true);
+    const startTime = Date.now();
+    
+    try {
+      console.log('🚀 Iniciando validação completa do sistema...');
+      toast.info('🔍 Executando validação completa...', { 
+        description: 'Isso pode levar alguns segundos' 
+      });
+
+      const results: ValidationStep[] = [];
+      
+      // Executar todas as validações em paralelo para melhor performance
+      const [
+        edgeFunctionResult,
+        resendResult,
+        linkResult,
+        templateResult,
+        fallbackResult,
+        performanceResult
+      ] = await Promise.allSettled([
+        validateEdgeFunctionConnectivity(),
+        validateResendConfiguration(), 
+        validateInviteLinkGeneration(),
+        validateEmailTemplate(),
+        validateFallbackSystem(),
+        validatePerformance()
+      ]);
+
+      // Processar resultados
+      [
+        edgeFunctionResult,
+        resendResult, 
+        linkResult,
+        templateResult,
+        fallbackResult,
+        performanceResult
+      ].forEach((result) => {
+        if (result.status === 'fulfilled') {
+          results.push(result.value);
+        } else {
+          results.push({
+            step: 'Teste com erro',
+            status: 'error',
+            message: `Falha: ${result.reason?.message || 'Erro desconhecido'}`,
+            details: { error: result.reason }
+          });
+        }
+      });
+
+      const duration = Date.now() - startTime;
+      const errorCount = results.filter(r => r.status === 'error').length;
+      const warningCount = results.filter(r => r.status === 'warning').length;
+      
+      let overall: 'success' | 'warning' | 'error';
+      if (errorCount > 0) {
         overall = 'error';
-      } else if (hasWarnings) {
+      } else if (warningCount > 0) {
         overall = 'warning';
       } else {
         overall = 'success';
       }
 
       const report: ValidationReport = {
-        overall,
-        results,
         timestamp: new Date().toISOString(),
-        duration: Date.now() - startTime
+        duration,
+        overall,
+        results
       };
 
       setValidationReport(report);
-
-      // Toast com resultado
+      
+      // Notificações baseadas no resultado
       if (overall === 'success') {
-        toast.success('✅ Sistema totalmente operacional');
+        toast.success('✅ Sistema totalmente operacional!', {
+          description: `Todos os testes passaram em ${duration}ms`
+        });
       } else if (overall === 'warning') {
-        toast.warning('⚠️ Sistema operacional com avisos');
+        toast.warning('⚠️ Sistema funcionando com ressalvas', {
+          description: `${warningCount} aviso(s) detectado(s)`
+        });
       } else {
-        toast.error('❌ Problemas críticos detectados');
+        toast.error('❌ Problemas críticos detectados', {
+          description: `${errorCount} erro(s) que precisam de atenção`
+        });
       }
 
-      console.log(`✅ [${validationId}] Validação concluída:`, {
-        overall,
-        duration: Date.now() - startTime,
-        errors: results.filter(r => r.status === 'error').length,
-        warnings: results.filter(r => r.status === 'warning').length
-      });
-
-    } catch (error: any) {
-      console.error(`❌ [${validationId}] Erro crítico na validação:`, error);
+      console.log('📊 Validação completa finalizada:', report);
       
-      const errorReport: ValidationReport = {
-        overall: 'error',
-        results: [
-          ...results,
-          {
-            step: 'Validação Crítica',
-            status: 'error',
-            message: `Erro crítico: ${error.message}`,
-            details: error
-          }
-        ],
-        timestamp: new Date().toISOString(),
-        duration: Date.now() - startTime
-      };
-
-      setValidationReport(errorReport);
-      toast.error('❌ Erro crítico na validação do sistema');
+    } catch (error: any) {
+      console.error('❌ Erro crítico na validação:', error);
+      toast.error('❌ Falha na validação', {
+        description: 'Erro inesperado durante os testes'
+      });
     } finally {
       setIsValidating(false);
     }
-  }, []);
+  }, [
+    validateEdgeFunctionConnectivity,
+    validateResendConfiguration,
+    validateInviteLinkGeneration,
+    validateEmailTemplate,
+    validateFallbackSystem,
+    validatePerformance
+  ]);
 
   const clearReport = useCallback(() => {
     setValidationReport(null);
-    toast.info('Relatório de validação limpo');
   }, []);
 
   return {
