@@ -1,96 +1,81 @@
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useAuth } from '@/contexts/auth';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 
 export const useSyncProfileData = () => {
-  const { user, profile } = useAuth();
-  const [isLoading, setIsLoading] = useState(false);
-  const [lastSyncAt, setLastSyncAt] = useState<Date | null>(null);
+  const { user } = useAuth();
+  const [syncing, setSyncing] = useState(false);
 
   const syncProfileData = async () => {
-    if (!user?.id || !profile) {
-      console.log('❌ Usuário ou perfil não disponível para sincronização');
+    if (!user?.id) {
+      toast.error('Usuário não autenticado');
       return false;
     }
 
     try {
-      setIsLoading(true);
-      console.log('🔄 Iniciando sincronização de dados do perfil...');
+      setSyncing(true);
 
-      // Buscar dados de implementation_profiles
-      const { data: implementationProfile, error: implementationError } = await supabase
+      // Buscar dados do implementation_profiles
+      const { data: implProfile, error: implError } = await supabase
         .from('implementation_profiles')
         .select('*')
-        .eq('user_id', user.id)
-        .maybeSingle();
+        .eq('user_id', user.id as any)
+        .single();
 
-      if (implementationError && implementationError.code !== 'PGRST116') {
-        throw implementationError;
+      if (implError && implError.code !== 'PGRST116') {
+        console.error('Erro ao buscar implementation_profiles:', implError);
+        throw implError;
       }
 
-      // Preparar dados para atualização do perfil principal
+      // Preparar dados para sincronização
       const updateData: any = {};
-      let hasChanges = false;
-
-      if (implementationProfile) {
-        // Sincronizar dados básicos se estiverem vazios no perfil principal
-        if (!profile.company_name && implementationProfile.company_name) {
-          updateData.company_name = implementationProfile.company_name;
-          hasChanges = true;
+      
+      if (implProfile) {
+        // Sincronizar company_name
+        if ((implProfile as any).company_name && (implProfile as any).company_name.trim()) {
+          updateData.company_name = (implProfile as any).company_name;
         }
 
-        if (!profile.industry && implementationProfile.company_sector) {
-          updateData.industry = implementationProfile.company_sector;
-          hasChanges = true;
+        // Sincronizar company_sector -> industry
+        if ((implProfile as any).company_sector && (implProfile as any).company_sector.trim()) {
+          updateData.industry = (implProfile as any).company_sector;
         }
-
-        console.log('📊 Dados de implementação encontrados:', {
-          company_name: implementationProfile.company_name,
-          company_sector: implementationProfile.company_sector
-        });
       }
 
-      // Atualizar perfil principal se houver mudanças
-      if (hasChanges) {
+      // Só atualizar se há dados para sincronizar
+      if (Object.keys(updateData).length > 0) {
+        updateData.company_name = updateData.company_name || (implProfile as any)?.company_name || '';
+        updateData.industry = updateData.industry || (implProfile as any)?.company_sector || '';
+
         const { error: updateError } = await supabase
           .from('profiles')
           .update(updateData)
-          .eq('id', user.id);
+          .eq('id', user.id as any);
 
         if (updateError) {
+          console.error('Erro ao atualizar profiles:', updateError);
           throw updateError;
         }
 
-        console.log('✅ Perfil atualizado com dados sincronizados:', updateData);
         toast.success('Dados do perfil sincronizados com sucesso!');
+        return true;
       } else {
-        console.log('ℹ️ Nenhuma atualização necessária - perfil já está atualizado');
+        toast.info('Nenhum dado novo para sincronizar');
+        return false;
       }
-
-      setLastSyncAt(new Date());
-      return true;
-
-    } catch (error) {
-      console.error('❌ Erro na sincronização do perfil:', error);
-      toast.error('Erro ao sincronizar dados do perfil');
+    } catch (error: any) {
+      console.error('Erro na sincronização:', error);
+      toast.error(`Erro ao sincronizar dados: ${error.message}`);
       return false;
     } finally {
-      setIsLoading(false);
+      setSyncing(false);
     }
   };
 
-  // Sincronização automática ao montar o componente
-  useEffect(() => {
-    if (user?.id && profile && !lastSyncAt) {
-      syncProfileData();
-    }
-  }, [user?.id, profile, lastSyncAt]);
-
   return {
     syncProfileData,
-    isLoading,
-    lastSyncAt
+    syncing
   };
 };

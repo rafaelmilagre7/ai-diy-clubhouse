@@ -1,125 +1,126 @@
 
-import { useState, useEffect, useMemo, useRef } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
+import { useAuth } from "@/contexts/auth";
 import { supabase } from "@/lib/supabase";
 import { Solution } from "@/lib/supabase/types";
-import { useAuth } from "@/contexts/auth";
 import { logger } from "@/utils/logger";
 
-// Cache global otimizado com TTL reduzido para debug
-const optimizedCache = new Map<string, { data: Solution[], timestamp: number, ttl: number }>();
-const DEFAULT_TTL = 60 * 1000; // Aumentado para 60 segundos (mais estável)
-const ADMIN_TTL = 30 * 1000; // 30 segundos para admins
+// Cache otimizado para soluções - TTL aumentado para melhor performance
+const solutionsCache = new Map<string, { data: Solution[], timestamp: number }>();
+const SOLUTIONS_TTL = 5 * 60 * 1000; // 5 minutos para soluções
 
 export const useOptimizedSolutions = () => {
   const { user, profile } = useAuth();
   const [solutions, setSolutions] = useState<Solution[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const lastFetchRef = useRef<number>(0);
-  
+
+  // Status do cache para monitoramento
+  const [cacheStatus, setCacheStatus] = useState({
+    isCached: false,
+    cacheAge: 0,
+    lastUpdate: new Date()
+  });
+
   const isAdmin = profile?.role === 'admin';
-  const cacheKey = `solutions_all_${user?.id}_${isAdmin ? 'admin' : 'user'}`;
-  const cacheTTL = isAdmin ? ADMIN_TTL : DEFAULT_TTL;
 
-  // CORREÇÃO: Campos apenas os que existem na tabela real
-  const queryFields = useMemo(() => {
-    const baseFields = [
-      'id', 'title', 'description', 'category', 'difficulty', 
-      'published', 'created_at', 'updated_at', 'thumbnail_url', 'tags', 'slug',
-      'related_solutions', 'implementation_steps', 'checklist_items', 'completion_requirements'
-    ];
-    
-    return baseFields.join(', ');
-  }, []);
-
-  const fetchOptimizedSolutions = useMemo(() => async (): Promise<Solution[]> => {
-    if (!user) return [];
-
+  // CORREÇÃO: Query otimizada sem JOINs desnecessários
+  const fetchOptimizedSolutions = useCallback(async () => {
     const now = Date.now();
+    const cacheKey = `solutions_${isAdmin ? 'admin' : 'user'}`;
+    const cached = solutionsCache.get(cacheKey);
     
-    // Verificar cache válido primeiro
-    const cached = optimizedCache.get(cacheKey);
-    if (cached && (now - cached.timestamp) < cached.ttl) {
-      logger.info('[OPTIMIZED] Usando cache de soluções', { count: cached.data.length });
+    if (cached && (now - cached.timestamp) < SOLUTIONS_TTL) {
+      logger.info('[OPTIMIZED] Usando cache de soluções', { 
+        count: cached.data.length,
+        isAdmin,
+        cacheAge: Math.round((now - cached.timestamp) / 1000)
+      });
+      
+      setCacheStatus({
+        isCached: true,
+        cacheAge: Math.round((now - cached.timestamp) / 1000),
+        lastUpdate: new Date(cached.timestamp)
+      });
+      
       return cached.data;
     }
 
+    setCacheStatus(prev => ({ ...prev, isCached: false }));
+
     try {
-      logger.info('[OPTIMIZED] Buscando soluções otimizadas', { isAdmin, userId: user.id });
+      logger.info('[OPTIMIZED] Buscando soluções otimizadas', { isAdmin });
 
-      // CORREÇÃO: Query com campos que existem no banco
-      let query = supabase
-        .from("solutions")
-        .select(queryFields)
-        .order("created_at", { ascending: false });
-
-      // CORREÇÃO: Incluir soluções não publicadas se o usuário tem progresso nelas
-      if (!isAdmin) {
-        // Buscar IDs das soluções que o usuário tem progresso
-        const { data: userProgress } = await supabase
+      // Buscar progresso do usuário para otimizar a query
+      let userProgressSolutions: string[] = [];
+      if (user?.id) {
+        const { data: progressData } = await supabase
           .from("progress")
           .select("solution_id")
-          .eq("user_id", user.id);
+          .eq("user_id", user.id as any);
+        
+        userProgressSolutions = (progressData || []).map((p: any) => p.solution_id).filter(Boolean);
+        
+        logger.info('[OPTIMIZED] Progresso do usuário encontrado:', {
+          solutionsWithProgress: userProgressSolutions.length
+        });
+      }
 
-        const userSolutionIds = userProgress?.map(p => p.solution_id) || [];
+      // Query principal para soluções
+      let query = supabase
+        .from("solutions")
+        .select("*")
+        .order("created_at", { ascending: false });
 
-        if (userSolutionIds.length > 0) {
-          // Buscar soluções publicadas OU soluções que o usuário tem progresso
-          query = query.or(`published.eq.true,id.in.(${userSolutionIds.join(',')})`);
-        } else {
-          // Se não tem progresso, só soluções publicadas
-          query = query.eq("published", true);
-        }
+      // Filtrar por publicadas se não for admin
+      if (!isAdmin) {
+        query = query.eq("published", true as any);
       }
 
       const { data, error: fetchError } = await query;
 
       if (fetchError) {
-        logger.error('[OPTIMIZED] Erro ao buscar soluções', { error: fetchError });
+        logger.error('[OPTIMIZED] Erro ao buscar soluções:', fetchError);
         throw fetchError;
       }
 
-      const validSolutions = ((data as any[]) || []).filter(item => {
-        return item && 
-               typeof item === 'object' && 
-               typeof item.id === 'string' &&
-               typeof item.title === 'string';
-      }) as Solution[];
-
-      logger.info('[OPTIMIZED] Soluções carregadas:', {
+      const validSolutions = (data || []) as Solution[];
+      
+      logger.info('[OPTIMIZED] Soluções encontradas:', {
         total: validSolutions.length,
         published: validSolutions.filter(s => s.published).length,
-        unpublished: validSolutions.filter(s => !s.published).length
+        drafts: validSolutions.filter(s => !s.published).length,
+        isAdmin
       });
 
-      // Atualizar cache com TTL específico
-      optimizedCache.set(cacheKey, {
+      // Atualizar cache
+      solutionsCache.set(cacheKey, {
         data: validSolutions,
-        timestamp: now,
-        ttl: cacheTTL
+        timestamp: now
+      });
+
+      setCacheStatus({
+        isCached: false,
+        cacheAge: 0,
+        lastUpdate: new Date()
       });
 
       return validSolutions;
     } catch (error: any) {
-      logger.error('[OPTIMIZED] Erro na query otimizada', { error });
+      logger.error('[OPTIMIZED] Erro na query de soluções:', error);
       throw error;
     }
-  }, [user, queryFields, isAdmin, cacheKey, cacheTTL]);
+  }, [user?.id, isAdmin]);
+
+  // Invalidar cache quando necessário
+  const invalidateCache = useCallback(() => {
+    logger.info('[OPTIMIZED] Invalidando cache de soluções');
+    solutionsCache.clear();
+    setCacheStatus(prev => ({ ...prev, isCached: false }));
+  }, []);
 
   useEffect(() => {
     const loadSolutions = async () => {
-      if (!user) {
-        setLoading(false);
-        return;
-      }
-
-      // Debounce para evitar múltiplas chamadas
-      const now = Date.now();
-      if (now - lastFetchRef.current < 1000) {
-        return;
-      }
-      lastFetchRef.current = now;
-
       try {
         setLoading(true);
         setError(null);
@@ -127,14 +128,13 @@ export const useOptimizedSolutions = () => {
         const data = await fetchOptimizedSolutions();
         setSolutions(data);
         
-        logger.info('[OPTIMIZED] Soluções carregadas com sucesso', {
+        logger.info('[OPTIMIZED] Soluções carregadas com sucesso:', {
           count: data.length,
-          isAdmin,
-          cached: optimizedCache.has(cacheKey)
+          cached: cacheStatus.isCached
         });
         
       } catch (error: any) {
-        logger.error('[OPTIMIZED] Erro ao carregar soluções', { error: error.message || "Erro desconhecido" });
+        logger.error('[OPTIMIZED] Erro ao carregar soluções:', error);
         setError(error.message || "Erro ao carregar soluções");
       } finally {
         setLoading(false);
@@ -142,26 +142,13 @@ export const useOptimizedSolutions = () => {
     };
 
     loadSolutions();
-  }, [user, isAdmin, fetchOptimizedSolutions, cacheKey]);
-
-  // Função para invalidar cache
-  const invalidateCache = useMemo(() => () => {
-    optimizedCache.clear();
-    logger.info('[OPTIMIZED] Cache completamente limpo');
-  }, []);
+  }, [fetchOptimizedSolutions, cacheStatus.isCached]);
 
   return {
     solutions,
     loading,
     error,
-    invalidateCache,
-    // Informações para debug/monitoramento
-    cacheStatus: {
-      isCached: optimizedCache.has(cacheKey),
-      cacheAge: optimizedCache.has(cacheKey) 
-        ? Date.now() - optimizedCache.get(cacheKey)!.timestamp 
-        : 0,
-      ttl: cacheTTL
-    }
+    cacheStatus,
+    invalidateCache
   };
 };

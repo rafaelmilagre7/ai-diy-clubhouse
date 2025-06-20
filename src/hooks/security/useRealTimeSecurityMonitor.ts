@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/auth';
@@ -117,7 +118,7 @@ export const useRealTimeSecurityMonitor = () => {
       const { data: incidentsData, error: incidentsError } = await supabase
         .from('security_incidents')
         .select('*')
-        .in('status', ['open', 'investigating'])
+        .in('status', ['open' as any, 'investigating' as any])
         .order('created_at', { ascending: false });
 
       // Se houver erros (tabelas não existem), usar dados mock
@@ -131,14 +132,14 @@ export const useRealTimeSecurityMonitor = () => {
       }
 
       // Usar dados reais se disponíveis
-      const realEvents = eventsData || [];
-      const realIncidents = incidentsData || [];
+      const realEvents = (eventsData as any) || [];
+      const realIncidents = (incidentsData as any) || [];
 
       setEvents(realEvents);
       setIncidents(realIncidents);
       setMetrics({
         totalEvents: realEvents.length,
-        criticalEvents: realEvents.filter(e => e.severity === 'critical').length,
+        criticalEvents: realEvents.filter((e: any) => e.severity === 'critical').length,
         activeIncidents: realIncidents.length,
         anomaliesDetected: Math.floor(Math.random() * 10), // Simulado
         lastUpdate: new Date()
