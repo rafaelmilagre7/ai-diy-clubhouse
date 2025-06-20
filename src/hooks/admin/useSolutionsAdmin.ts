@@ -25,7 +25,7 @@ export const useSolutionsAdmin = () => {
 
       if (error) throw error;
 
-      setSolutions(data || []);
+      setSolutions((data as any) || []);
     } catch (error: any) {
       console.error('Erro ao buscar soluções:', error.message);
       toast({
@@ -45,7 +45,7 @@ export const useSolutionsAdmin = () => {
       const { error } = await supabase
         .from('solutions')
         .delete()
-        .eq('id', solutionToDelete);
+        .eq('id', solutionToDelete as any);
 
       if (error) throw error;
 

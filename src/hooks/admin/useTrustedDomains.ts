@@ -42,7 +42,7 @@ export function useTrustedDomains() {
       
       if (error) throw error;
       
-      setDomains(data || []);
+      setDomains((data as any) || []);
     } catch (err: any) {
       console.error('Erro ao buscar domínios confiáveis:', err);
       setError(err);
@@ -69,7 +69,7 @@ export function useTrustedDomains() {
           description,
           created_by: user.id,
           is_active: true
-        })
+        } as any)
         .select('*')
         .single();
       
@@ -100,7 +100,7 @@ export function useTrustedDomains() {
       const { error } = await supabase
         .from('trusted_domains')
         .delete()
-        .eq('id', domainId);
+        .eq('id', domainId as any);
       
       if (error) throw error;
       
@@ -124,8 +124,8 @@ export function useTrustedDomains() {
       
       const { error } = await supabase
         .from('trusted_domains')
-        .update({ is_active: !currentStatus })
-        .eq('id', domainId);
+        .update({ is_active: !currentStatus } as any)
+        .eq('id', domainId as any);
       
       if (error) throw error;
       

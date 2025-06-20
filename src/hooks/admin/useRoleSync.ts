@@ -46,16 +46,16 @@ export const useRoleSync = () => {
       }
       
       console.log('Resultado da validação:', data);
-      setIssues(data || []);
+      setIssues((data as any) || []);
       
-      const issueCount = data?.length || 0;
+      const issueCount = (data as any)?.length || 0;
       if (issueCount === 0) {
         toast.success('✅ Validação concluída: Nenhuma inconsistência encontrada!');
       } else {
         toast.warning(`⚠️ Validação concluída: ${issueCount} inconsistência(s) encontrada(s)`);
       }
       
-      return data || [];
+      return (data as any) || [];
     } catch (error) {
       console.error('Erro ao validar roles:', error);
       toast.error('Erro ao validar roles do sistema');
@@ -79,8 +79,8 @@ export const useRoleSync = () => {
       
       console.log('Resultado da auditoria:', data);
       
-      if (data && data.length > 0) {
-        const auditResult = data[0];
+      if (data && (data as any).length > 0) {
+        const auditResult = (data as any)[0];
         setAuditData(auditResult);
         toast.success('📊 Auditoria de roles concluída com sucesso');
         return auditResult;
@@ -112,7 +112,7 @@ export const useRoleSync = () => {
       console.log('Resultado da sincronização:', data);
       
       if (data) {
-        toast.success(`🔄 ${data.message}`);
+        toast.success(`🔄 ${(data as any).message}`);
         
         // Revalidar após sincronização para atualizar dados
         console.log('Revalidando após sincronização...');
@@ -140,11 +140,11 @@ export const useRoleSync = () => {
         validateRoles()
       ]);
       
-      const hasIssues = validationResult.length > 0;
+      const hasIssues = (validationResult as any).length > 0;
       
       if (hasIssues) {
         toast.warning(
-          `⚠️ Diagnóstico concluído: ${validationResult.length} inconsistência(s) detectada(s)`
+          `⚠️ Diagnóstico concluído: ${(validationResult as any).length} inconsistência(s) detectada(s)`
         );
       } else {
         toast.success('✅ Diagnóstico concluído: Sistema de roles está íntegro!');

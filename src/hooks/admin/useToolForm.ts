@@ -47,14 +47,14 @@ export const useToolForm = (toolId: string) => {
 
         response = await supabase
           .from('tools')
-          .insert(newToolData)
+          .insert(newToolData as any)
           .select();
       } else {
         // Atualização de ferramenta existente
         response = await supabase
           .from('tools')
-          .update(toolData)
-          .eq('id', toolId)
+          .update(toolData as any)
+          .eq('id', toolId as any)
           .select();
       }
 
