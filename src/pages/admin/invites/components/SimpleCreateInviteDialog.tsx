@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { Loader2, Plus } from "lucide-react";
+import { Loader2, Plus, Clock, Mail, CheckCircle } from "lucide-react";
 import { toast } from "sonner";
 import {
   Dialog,
@@ -34,7 +34,7 @@ const SimpleCreateInviteDialog = ({ roles, onInviteCreated }: SimpleCreateInvite
   const [roleId, setRoleId] = useState("");
   const [notes, setNotes] = useState("");
   const [open, setOpen] = useState(false);
-  const { createInvite, loading } = useInviteCreate();
+  const { createInvite, loading, currentStep, isCreating, isSending } = useInviteCreate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -57,12 +57,37 @@ const SimpleCreateInviteDialog = ({ roles, onInviteCreated }: SimpleCreateInvite
         setNotes("");
         setOpen(false);
         onInviteCreated();
-        toast.success(`Convite enviado para ${email} com sucesso!`);
+        
+        if (result.status === 'success') {
+          toast.success(`Convite enviado para ${email} com sucesso!`);
+        } else if (result.status === 'partial_success') {
+          toast.warning(`Convite criado para ${email}, mas email não foi enviado. Tente reenviar manualmente.`);
+        }
       }
     } catch (error) {
       console.error('Erro ao criar convite:', error);
-      toast.error("Erro ao criar convite");
+      // O toast de erro já é mostrado pelo hook
     }
+  };
+
+  const getStepIcon = () => {
+    switch (currentStep) {
+      case 'creating':
+        return <Clock className="mr-2 h-4 w-4 animate-pulse text-blue-500" />;
+      case 'sending':
+        return <Mail className="mr-2 h-4 w-4 animate-pulse text-orange-500" />;
+      case 'complete':
+        return <CheckCircle className="mr-2 h-4 w-4 text-green-500" />;
+      default:
+        return <Plus className="mr-2 h-4 w-4" />;
+    }
+  };
+
+  const getButtonText = () => {
+    if (isCreating) return "Criando convite...";
+    if (isSending) return "Enviando email...";
+    if (loading) return "Processando...";
+    return "Criar Convite";
   };
 
   return (
@@ -81,6 +106,20 @@ const SimpleCreateInviteDialog = ({ roles, onInviteCreated }: SimpleCreateInvite
               Envie um convite para novos membros acessarem a plataforma.
             </DialogDescription>
           </DialogHeader>
+          
+          {/* Status do processo */}
+          {loading && (
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
+              <div className="flex items-center text-sm text-blue-800">
+                {getStepIcon()}
+                <span>
+                  {isCreating && "Criando convite no sistema..."}
+                  {isSending && "Enviando email de convite..."}
+                </span>
+              </div>
+            </div>
+          )}
+          
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
               <Label htmlFor="email">Email</Label>
@@ -91,11 +130,12 @@ const SimpleCreateInviteDialog = ({ roles, onInviteCreated }: SimpleCreateInvite
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
+                disabled={loading}
               />
             </div>
             <div className="grid gap-2">
               <Label htmlFor="role">Papel</Label>
-              <Select value={roleId} onValueChange={setRoleId} required>
+              <Select value={roleId} onValueChange={setRoleId} required disabled={loading}>
                 <SelectTrigger id="role">
                   <SelectValue placeholder="Selecione um papel" />
                 </SelectTrigger>
@@ -115,18 +155,19 @@ const SimpleCreateInviteDialog = ({ roles, onInviteCreated }: SimpleCreateInvite
                 placeholder="Informações adicionais sobre o convite"
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
+                disabled={loading}
               />
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" type="button" onClick={() => setOpen(false)}>
+            <Button variant="outline" type="button" onClick={() => setOpen(false)} disabled={loading}>
               Cancelar
             </Button>
             <Button type="submit" disabled={loading}>
               {loading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Enviando...
+                  {getButtonText()}
                 </>
               ) : (
                 "Criar Convite"
