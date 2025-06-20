@@ -75,10 +75,14 @@ const InvitesManagement = () => {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-6">
           <TabsTrigger value="invites" className="flex items-center gap-2">
             <Users className="h-4 w-4" />
             Convites
+          </TabsTrigger>
+          <TabsTrigger value="diagnostics" className="flex items-center gap-2">
+            <TestTube className="h-4 w-4" />
+            Diagnóstico
           </TabsTrigger>
           <TabsTrigger value="monitor" className="flex items-center gap-2">
             <Activity className="h-4 w-4" />
@@ -112,6 +116,20 @@ const InvitesManagement = () => {
                 loading={invitesLoading}
                 onInvitesChange={handleInvitesChange}
               />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="diagnostics" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Diagnóstico Crítico do Sistema</CardTitle>
+              <CardDescription>
+                Execute testes para garantir 100% de funcionamento do email
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <SystemDiagnosticsPanel />
             </CardContent>
           </Card>
         </TabsContent>
@@ -163,21 +181,21 @@ const InvitesManagement = () => {
         </TabsContent>
       </Tabs>
 
-      {/* Sistema de Informações */}
+      {/* Sistema de Informações Atualizadas */}
       <Card className="bg-gradient-to-r from-green-50 to-blue-50 border-green-200">
         <CardContent className="pt-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
             <div className="space-y-1">
-              <h4 className="font-medium text-green-900">🔥 Sistema Completo</h4>
-              <p className="text-green-700">Diagnóstico automático e recuperação inteligente</p>
+              <h4 className="font-medium text-green-900">🚀 Sistema Otimizado</h4>
+              <p className="text-green-700">Diagnóstico completo e correção automática</p>
             </div>
             <div className="space-y-1">
-              <h4 className="font-medium text-blue-900">⚡ Performance</h4>
-              <p className="text-blue-700">Monitoramento em tempo real com alertas</p>
+              <h4 className="font-medium text-blue-900">🔧 Testes Diretos</h4>
+              <p className="text-blue-700">Edge Function dedicada para teste de conectividade</p>
             </div>
             <div className="space-y-1">
-              <h4 className="font-medium text-purple-900">🛡️ Robustez</h4>
-              <p className="text-purple-700">Sistema de fallback e recuperação automática</p>
+              <h4 className="font-medium text-purple-900">✅ Correção de Órfãos</h4>
+              <p className="text-purple-700">Sistema automático para reprocessar convites</p>
             </div>
           </div>
         </CardContent>
