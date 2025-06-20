@@ -25,13 +25,19 @@ export const useInvitesList = () => {
           last_sent_at,
           send_attempts,
           notes,
-          role:role_id(id, name, description)
+          role:role_id!inner(id, name, description)
         `)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
 
-      setInvites(data || []);
+      // Mapear os dados para garantir que role seja um objeto
+      const mappedInvites = data?.map(invite => ({
+        ...invite,
+        role: Array.isArray(invite.role) ? invite.role[0] : invite.role
+      })) || [];
+
+      setInvites(mappedInvites);
     } catch (error) {
       console.error('Erro ao buscar convites:', error);
       setInvites([]);
