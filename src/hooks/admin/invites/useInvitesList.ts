@@ -25,7 +25,7 @@ export const useInvitesList = () => {
           last_sent_at,
           send_attempts,
           notes,
-          role:role_id!inner(id, name, description)
+          user_roles:role_id!inner(id, name, description)
         `)
         .order('created_at', { ascending: false });
 
@@ -34,7 +34,7 @@ export const useInvitesList = () => {
       // Mapear os dados para garantir que role seja um objeto
       const mappedInvites = data?.map(invite => ({
         ...invite,
-        role: Array.isArray(invite.role) ? invite.role[0] : invite.role
+        role: Array.isArray(invite.user_roles) ? invite.user_roles[0] : invite.user_roles
       })) || [];
 
       setInvites(mappedInvites);
