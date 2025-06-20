@@ -24,7 +24,6 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useInviteCreate } from "@/hooks/admin/invites/useInviteCreate";
-import { useInviteValidation } from "@/hooks/admin/invites/useInviteValidation";
 
 interface CreateInviteDialogProps {
   roles: any[];
@@ -37,26 +36,33 @@ const CreateInviteDialog = ({ roles, onInviteCreated }: CreateInviteDialogProps)
   const [notes, setNotes] = useState("");
   const [expiration, setExpiration] = useState("7 days");
   const [open, setOpen] = useState(false);
+  const [validationErrors, setValidationErrors] = useState<string[]>([]);
+  
   const { createInvite, loading } = useInviteCreate();
-  const { validationState, validateInviteData } = useInviteValidation();
+
+  const validateForm = () => {
+    const errors: string[] = [];
+    
+    if (!email?.includes('@')) {
+      errors.push('Email inválido');
+    }
+    
+    if (!roleId) {
+      errors.push('Selecione um papel');
+    }
+    
+    setValidationErrors(errors);
+    return errors.length === 0;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Validar dados antes de enviar
-    const validation = validateInviteData(email, roleId);
-    if (!validation.isValid) {
+    if (!validateForm()) {
       toast.error("Dados inválidos", {
-        description: validation.errors.join(', ')
+        description: validationErrors.join(', ')
       });
       return;
-    }
-
-    // Mostrar avisos se houver
-    if (validation.warnings.length > 0) {
-      validation.warnings.forEach(warning => {
-        toast.warning("Atenção", { description: warning });
-      });
     }
     
     const result = await createInvite({ 
@@ -65,11 +71,13 @@ const CreateInviteDialog = ({ roles, onInviteCreated }: CreateInviteDialogProps)
       notes, 
       expiresIn: expiration 
     });
+    
     if (result) {
       setEmail("");
       setRoleId("");
       setNotes("");
       setExpiration("7 days");
+      setValidationErrors([]);
       setOpen(false);
       onInviteCreated();
     }
@@ -94,21 +102,11 @@ const CreateInviteDialog = ({ roles, onInviteCreated }: CreateInviteDialogProps)
           
           <div className="grid gap-4 py-4">
             {/* Mostrar erros de validação */}
-            {validationState.errors.length > 0 && (
+            {validationErrors.length > 0 && (
               <Alert variant="destructive">
                 <AlertCircle className="h-4 w-4" />
                 <AlertDescription>
-                  {validationState.errors.join(', ')}
-                </AlertDescription>
-              </Alert>
-            )}
-
-            {/* Mostrar avisos de validação */}
-            {validationState.warnings.length > 0 && (
-              <Alert>
-                <AlertCircle className="h-4 w-4" />
-                <AlertDescription>
-                  {validationState.warnings.join(', ')}
+                  {validationErrors.join(', ')}
                 </AlertDescription>
               </Alert>
             )}
@@ -172,7 +170,7 @@ const CreateInviteDialog = ({ roles, onInviteCreated }: CreateInviteDialogProps)
             <Button variant="outline" type="button" onClick={() => setOpen(false)}>
               Cancelar
             </Button>
-            <Button type="submit" disabled={loading || !validationState.isValid}>
+            <Button type="submit" disabled={loading || validationErrors.length > 0}>
               {loading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />

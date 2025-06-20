@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -5,15 +6,15 @@ import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2, CheckCircle, XCircle, AlertTriangle } from 'lucide-react';
 import { useAuth } from '@/contexts/auth';
-import { useInviteValidation } from '@/hooks/admin/invites/useInviteValidation';
 import { RegisterForm } from '@/components/auth/RegisterForm';
+import { supabase } from '@/integrations/supabase/client';
 
 const InvitePage = () => {
   const { token } = useParams<{ token: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { validationState, validateToken } = useInviteValidation();
   
+  const [isValidating, setIsValidating] = useState(true);
   const [validationResult, setValidationResult] = useState<any>(null);
   const [showRegisterForm, setShowRegisterForm] = useState(false);
 
@@ -24,26 +25,69 @@ const InvitePage = () => {
   }, [token]);
 
   const handleValidateToken = async () => {
-    if (!token) return;
-    
+    setIsValidating(true);
     try {
-      const result = await validateToken(token, user?.email);
-      setValidationResult(result);
-      
-      if (result.isValid && !user) {
+      console.log('🔍 [INVITE-PAGE] Validando token:', token);
+
+      const { data: invite, error } = await supabase
+        .from('invites')
+        .select('*')
+        .eq('token', token)
+        .single();
+
+      if (error || !invite) {
+        console.error('❌ [INVITE-PAGE] Token não encontrado:', error);
+        setValidationResult({
+          isValid: false,
+          error: 'Token de convite não encontrado ou inválido'
+        });
+        setIsValidating(false);
+        return;
+      }
+
+      // Verificar se já foi usado
+      if (invite.used_at) {
+        setValidationResult({
+          isValid: false,
+          error: 'Este convite já foi utilizado'
+        });
+        setIsValidating(false);
+        return;
+      }
+
+      // Verificar se expirou
+      if (new Date(invite.expires_at) < new Date()) {
+        setValidationResult({
+          isValid: false,
+          error: 'Este convite expirou'
+        });
+        setIsValidating(false);
+        return;
+      }
+
+      console.log('✅ [INVITE-PAGE] Token válido:', invite);
+      setValidationResult({
+        isValid: true,
+        invite: invite
+      });
+
+      // Se não está logado, mostrar formulário de registro
+      if (!user) {
         setShowRegisterForm(true);
       }
-    } catch (error) {
-      console.error('Erro na validação:', error);
+
+    } catch (error: any) {
+      console.error('❌ [INVITE-PAGE] Erro na validação:', error);
+      setValidationResult({
+        isValid: false,
+        error: 'Erro ao validar convite'
+      });
+    } finally {
+      setIsValidating(false);
     }
   };
 
-  const handleLogout = () => {
-    // Implementar logout se necessário
-    window.location.href = '/auth';
-  };
-
-  if (validationState.isValidating) {
+  if (isValidating) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
         <Card className="w-full max-w-md">
@@ -92,26 +136,6 @@ const InvitePage = () => {
                 {validationResult.error}
               </AlertDescription>
             </Alert>
-            
-            {validationResult.needsLogout && (
-              <Button onClick={handleLogout} variant="outline" className="w-full">
-                Fazer Logout e Tentar Novamente
-              </Button>
-            )}
-            
-            {validationResult.suggestions && validationResult.suggestions.length > 0 && (
-              <div className="space-y-2">
-                <h4 className="font-medium text-gray-900">Sugestões:</h4>
-                <ul className="text-sm text-gray-600 space-y-1">
-                  {validationResult.suggestions.map((suggestion: string, index: number) => (
-                    <li key={index} className="flex items-start gap-2">
-                      <span className="text-gray-400">•</span>
-                      {suggestion}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
             
             <Button onClick={() => navigate('/auth')} className="w-full">
               Voltar ao Login

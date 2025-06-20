@@ -26,53 +26,18 @@ export interface CreateInviteParams {
   email: string;
   roleId: string;
   notes?: string;
-  expiresIn?: string; // Valores como '7 days', '14 days', etc.
-  phone?: string; // Para funcionalidade futura de WhatsApp
-  channelPreference?: 'email' | 'whatsapp' | 'both'; // Preparado para múltiplos canais
+  expiresIn?: string;
+  phone?: string;
+  channelPreference?: 'email' | 'whatsapp' | 'both';
 }
 
-export interface CreateInviteResponse {
+// Interface simples para resultado da criação
+export interface CreateInviteResult {
   status: 'success' | 'partial_success' | 'error';
   message: string;
-  invite?: Invite;
-  emailResult?: SendInviteResponse;
-  suggestion?: string;
-}
-
-export interface SendInviteResponse {
-  success: boolean;
-  message: string;
-  error?: string;
-  emailId?: string;
-  whatsappId?: string;
-  strategy?: string;
-  method?: string;
-  suggestion?: string;
-  channel?: 'email' | 'whatsapp' | 'both';
-}
-
-export interface WhatsAppInviteData {
-  phone: string;
-  inviteUrl: string;
-  roleName: string;
-  expiresAt: string;
-  senderName?: string;
-  notes?: string;
   inviteId?: string;
-}
-
-// Nova interface para validação de convites
-export interface InviteValidationResult {
-  isValid: boolean;
-  errors: string[];
-  warnings: string[];
-  suggestions?: string[];
-}
-
-// Interface para configurações de convite (futuras funcionalidades)
-export interface InviteConfig {
-  defaultExpiresIn: string;
-  maxAttemptsPerDay: number;
-  enabledChannels: ('email' | 'whatsapp')[];
-  requirePhoneForWhatsApp: boolean;
+  emailResult?: {
+    success: boolean;
+    message: string;
+  };
 }
