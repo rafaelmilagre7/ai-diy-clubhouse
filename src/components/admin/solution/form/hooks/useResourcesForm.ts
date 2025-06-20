@@ -45,8 +45,8 @@ export function useResourcesForm(solutionId: string | null) {
       const { data, error } = await supabase
         .from('solution_resources')
         .select('*')
-        .eq('solution_id', solutionId)
-        .eq('type', 'resources')
+        .eq('solution_id', solutionId as any)
+        .eq('type', 'resources' as any)
         .single();
       
       if (error && error.code !== 'PGRST116') {
@@ -55,7 +55,7 @@ export function useResourcesForm(solutionId: string | null) {
       
       if (data) {
         try {
-          const resourceData = JSON.parse(data.url);
+          const resourceData = JSON.parse((data as any).url);
           form.reset({
             overview: resourceData.overview || '',
             materials: resourceData.materials ? JSON.stringify(resourceData.materials, null, 2) : TEMPLATES.materials,
@@ -89,7 +89,7 @@ export function useResourcesForm(solutionId: string | null) {
       const { data, error } = await supabase
         .from('modules')
         .select('*')
-        .eq('solution_id', solutionId)
+        .eq('solution_id', solutionId as any)
         .order('module_order', { ascending: true });
       
       if (error) {
@@ -104,10 +104,10 @@ export function useResourcesForm(solutionId: string | null) {
           // Safely parse content regardless of its current format
           let parsedContent: ModuleContent;
           
-          if (typeof module.content === 'string') {
-            parsedContent = JSON.parse(module.content);
+          if (typeof (module as any).content === 'string') {
+            parsedContent = JSON.parse((module as any).content);
           } else {
-            parsedContent = module.content as ModuleContent;
+            parsedContent = (module as any).content as ModuleContent;
           }
           
           // Check if it has blocks array and it's not empty

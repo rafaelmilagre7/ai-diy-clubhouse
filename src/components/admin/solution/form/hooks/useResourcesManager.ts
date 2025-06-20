@@ -29,9 +29,9 @@ export function useResourcesManager(solutionId: string | null) {
       const { data, error } = await supabase
         .from("solution_resources")
         .select("*")
-        .eq("solution_id", solutionId)
+        .eq("solution_id", solutionId as any)
         .is("module_id", null)
-        .neq("type", "video");
+        .neq("type", "video" as any);
         
       if (error) throw error;
       
@@ -90,7 +90,7 @@ export function useResourcesManager(solutionId: string | null) {
       // Save to Supabase
       const { data, error } = await supabase
         .from("solution_resources")
-        .insert(newResource)
+        .insert(newResource as any)
         .select()
         .single();
         
@@ -99,17 +99,17 @@ export function useResourcesManager(solutionId: string | null) {
       if (data) {
         // Map to Resource object and add to state
         const resource: Resource = {
-          id: data.id,
-          name: data.name,
-          url: data.url,
+          id: (data as any).id,
+          name: (data as any).name,
+          url: (data as any).url,
           type: fileType,
-          format: data.format,
-          solution_id: data.solution_id,
+          format: (data as any).format,
+          solution_id: (data as any).solution_id,
           metadata: metadata,
-          created_at: data.created_at,
-          updated_at: data.updated_at,
-          module_id: data.module_id,
-          size: data.size
+          created_at: (data as any).created_at,
+          updated_at: (data as any).updated_at,
+          module_id: (data as any).module_id,
+          size: (data as any).size
         };
         
         setResources(prev => [...prev, resource]);
@@ -139,7 +139,7 @@ export function useResourcesManager(solutionId: string | null) {
       const { error } = await supabase
         .from("solution_resources")
         .delete()
-        .eq("id", id);
+        .eq("id", id as any);
         
       if (error) throw error;
       
