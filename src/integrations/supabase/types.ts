@@ -4794,7 +4794,7 @@ export type Database = {
         Returns: Json
       }
       is_admin: {
-        Args: { check_user_id?: string }
+        Args: Record<PropertyKey, never>
         Returns: boolean
       }
       is_admin_user: {
@@ -4802,7 +4802,7 @@ export type Database = {
         Returns: boolean
       }
       is_user_admin: {
-        Args: { user_id: string }
+        Args: { user_id?: string }
         Returns: boolean
       }
       log_invite_delivery: {
