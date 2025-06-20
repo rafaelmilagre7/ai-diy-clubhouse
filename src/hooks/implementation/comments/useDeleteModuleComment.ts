@@ -36,7 +36,7 @@ export const useDeleteModuleComment = (solutionId: string, moduleId: string) => 
       const { error } = await supabase
         .from('tool_comments')
         .delete()
-        .eq('id', comment.id);
+        .eq('id', comment.id as any);
         
       if (error) throw error;
       

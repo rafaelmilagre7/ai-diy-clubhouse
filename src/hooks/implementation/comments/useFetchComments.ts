@@ -31,7 +31,7 @@ export const useFetchComments = (solutionId: string, moduleId: string) => {
             *,
             profiles:user_id(name, avatar_url, role)
           `)
-          .eq('tool_id', solutionId)
+          .eq('tool_id', solutionId as any)
           .is('parent_id', null)
           .order('created_at', { ascending: false });
 
@@ -44,7 +44,7 @@ export const useFetchComments = (solutionId: string, moduleId: string) => {
             *,
             profiles:user_id(name, avatar_url, role)
           `)
-          .eq('tool_id', solutionId)
+          .eq('tool_id', solutionId as any)
           .not('parent_id', 'is', null)
           .order('created_at', { ascending: true });
 
@@ -57,21 +57,21 @@ export const useFetchComments = (solutionId: string, moduleId: string) => {
           const { data: userLikes } = await supabase
             .from(`${tableName.replace('comments', 'comment')}_likes`)
             .select('comment_id')
-            .eq('user_id', user.id);
+            .eq('user_id', user.id as any);
 
-          likesMap = (userLikes || []).reduce((acc: Record<string, boolean>, like) => {
-            acc[like.comment_id] = true;
+          likesMap = (userLikes || []).reduce((acc: Record<string, boolean>, like: any) => {
+            acc[(like as any).comment_id] = true;
             return acc;
           }, {});
         }
 
         // Organizar comentários com respostas
-        const organizedComments = parentComments.map((comment: Comment) => ({
+        const organizedComments = (parentComments as any).map((comment: any) => ({
           ...comment,
           user_has_liked: !!likesMap[comment.id],
-          replies: replies
-            .filter((reply: Comment) => reply.parent_id === comment.id)
-            .map((reply: Comment) => ({
+          replies: (replies as any)
+            .filter((reply: any) => (reply as any).parent_id === comment.id)
+            .map((reply: any) => ({
               ...reply,
               user_has_liked: !!likesMap[reply.id]
             }))
