@@ -57,7 +57,7 @@ export const useRealAnalyticsData = (params: {
         const { data: solutionsData, error: solutionsError } = await supabase
           .from('solutions')
           .select('id, title, category, difficulty, published')
-          .eq('published', true);
+          .eq('published', true as any);
 
         if (solutionsError) throw solutionsError;
 
@@ -80,16 +80,16 @@ export const useRealAnalyticsData = (params: {
         if (activityError) console.warn('Analytics table might not exist:', activityError);
 
         // Processar dados
-        const totalUsers = usersData?.length || 0;
-        const activeUsers = new Set(recentActivity?.map(a => a.user_id) || []).size;
-        const totalSolutions = solutionsData?.length || 0;
-        const totalImplementations = progressData?.length || 0;
+        const totalUsers = (usersData as any)?.length || 0;
+        const activeUsers = new Set((recentActivity as any)?.map((a: any) => a.user_id) || []).size;
+        const totalSolutions = (solutionsData as any)?.length || 0;
+        const totalImplementations = (progressData as any)?.length || 0;
 
         // Distribuição por roles
-        const roleDistribution = usersData?.reduce((acc, user) => {
-          const userRoleData = Array.isArray(user.user_roles) ? user.user_roles[0] : user.user_roles;
-          const roleName = userRoleData?.name || user.role || 'member';
-          const existing = acc.find(r => r.name === roleName);
+        const roleDistribution = (usersData as any)?.reduce((acc: any, user: any) => {
+          const userRoleData = Array.isArray((user as any).user_roles) ? (user as any).user_roles[0] : (user as any).user_roles;
+          const roleName = userRoleData?.name || (user as any).role || 'member';
+          const existing = acc.find((r: any) => r.name === roleName);
           if (existing) {
             existing.value++;
           } else {
@@ -99,26 +99,26 @@ export const useRealAnalyticsData = (params: {
         }, [] as Array<{ name: string; value: number }>) || [];
 
         // Popularidade das soluções
-        const solutionStats = solutionsData?.map(solution => {
-          const implementations = progressData?.filter(p => p.solution_id === solution.id).length || 0;
-          return { name: solution.title, value: implementations };
-        }).sort((a, b) => b.value - a.value).slice(0, 5) || [];
+        const solutionStats = (solutionsData as any)?.map((solution: any) => {
+          const implementations = (progressData as any)?.filter((p: any) => (p as any).solution_id === (solution as any).id).length || 0;
+          return { name: (solution as any).title, value: implementations };
+        }).sort((a: any, b: any) => b.value - a.value).slice(0, 5) || [];
 
         // Implementações por categoria
-        const categoryStats = solutionsData?.reduce((acc, solution) => {
-          const implementations = progressData?.filter(p => p.solution_id === solution.id).length || 0;
-          const existing = acc.find(c => c.name === solution.category);
+        const categoryStats = (solutionsData as any)?.reduce((acc: any, solution: any) => {
+          const implementations = (progressData as any)?.filter((p: any) => (p as any).solution_id === (solution as any).id).length || 0;
+          const existing = acc.find((c: any) => c.name === (solution as any).category);
           if (existing) {
             existing.value += implementations;
           } else {
-            acc.push({ name: solution.category, value: implementations });
+            acc.push({ name: (solution as any).category, value: implementations });
           }
           return acc;
         }, [] as Array<{ name: string; value: number }>) || [];
 
         // Taxa de conclusão
-        const completedCount = progressData?.filter(p => p.is_completed).length || 0;
-        const inProgressCount = (progressData?.length || 0) - completedCount;
+        const completedCount = (progressData as any)?.filter((p: any) => (p as any).is_completed).length || 0;
+        const inProgressCount = ((progressData as any)?.length || 0) - completedCount;
         const completionRate = [
           { name: 'Concluídas', value: completedCount },
           { name: 'Em andamento', value: inProgressCount }
@@ -130,14 +130,14 @@ export const useRealAnalyticsData = (params: {
         for (let i = 5; i >= 0; i--) {
           const monthDate = new Date(now.getFullYear(), now.getMonth() - i, 1);
           const monthName = monthDate.toLocaleDateString('pt-BR', { month: 'short' });
-          const monthUsers = usersData?.filter(u => {
-            const userDate = new Date(u.created_at);
+          const monthUsers = (usersData as any)?.filter((u: any) => {
+            const userDate = new Date((u as any).created_at);
             return userDate.getMonth() === monthDate.getMonth() && 
                    userDate.getFullYear() === monthDate.getFullYear();
           }).length || 0;
           
-          const totalUpToMonth = usersData?.filter(u => {
-            const userDate = new Date(u.created_at);
+          const totalUpToMonth = (usersData as any)?.filter((u: any) => {
+            const userDate = new Date((u as any).created_at);
             return userDate <= monthDate;
           }).length || 0;
 
@@ -151,8 +151,8 @@ export const useRealAnalyticsData = (params: {
         // Atividade por dia da semana
         const dayActivity = Array.from({ length: 7 }, (_, i) => {
           const dayName = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'][i];
-          const dayCount = recentActivity?.filter(a => {
-            const activityDate = new Date(a.created_at);
+          const dayCount = (recentActivity as any)?.filter((a: any) => {
+            const activityDate = new Date((a as any).created_at);
             return activityDate.getDay() === i;
           }).length || 0;
           return { day: dayName, atividade: dayCount };

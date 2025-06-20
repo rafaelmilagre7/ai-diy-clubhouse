@@ -65,7 +65,7 @@ export const useLmsAnalyticsData = (timeRange: string) => {
         const { data: coursesData, error: coursesError } = await supabase
           .from('learning_courses')
           .select('id, title')
-          .eq('published', true);
+          .eq('published', true as any);
 
         if (coursesError) throw coursesError;
 
@@ -109,13 +109,13 @@ export const useLmsAnalyticsData = (timeRange: string) => {
         if (npsError) throw npsError;
 
         // Calcular métricas
-        const totalCourses = coursesData?.length || 0;
-        const uniqueStudents = new Set(progressData?.map(p => p.user_id)).size;
+        const totalCourses = (coursesData as any)?.length || 0;
+        const uniqueStudents = new Set((progressData as any)?.map((p: any) => p.user_id)).size;
         
         // Calcular tempo médio de conclusão
-        const completedProgress = progressData?.filter(p => p.completed_at && p.started_at) || [];
+        const completedProgress = (progressData as any)?.filter((p: any) => p.completed_at && p.started_at) || [];
         const averageCompletionTime = completedProgress.length > 0 
-          ? completedProgress.reduce((acc, p) => {
+          ? completedProgress.reduce((acc: number, p: any) => {
               const startTime = new Date(p.started_at!).getTime();
               const endTime = new Date(p.completed_at!).getTime();
               return acc + (endTime - startTime) / (1000 * 60); // em minutos
@@ -123,13 +123,13 @@ export const useLmsAnalyticsData = (timeRange: string) => {
           : 0;
 
         // Calcular taxa de conclusão
-        const totalProgress = progressData?.length || 0;
-        const completedCount = progressData?.filter(p => p.progress_percentage === 100).length || 0;
+        const totalProgress = (progressData as any)?.length || 0;
+        const completedCount = (progressData as any)?.filter((p: any) => p.progress_percentage === 100).length || 0;
         const completionRate = totalProgress > 0 ? (completedCount / totalProgress) * 100 : 0;
 
         // Processar progresso por curso
-        const courseProgress = coursesData?.map(course => {
-          const courseProgressData = progressData?.filter(p => {
+        const courseProgress = (coursesData as any)?.map((course: any) => {
+          const courseProgressData = (progressData as any)?.filter((p: any) => {
             // Corrigir o acesso às propriedades aninhadas
             const lessonData = p.learning_lessons;
             if (!lessonData?.learning_modules) return false;
@@ -138,25 +138,25 @@ export const useLmsAnalyticsData = (timeRange: string) => {
             if (!moduleData?.learning_courses) return false;
             
             const courseData = moduleData.learning_courses;
-            return courseData && courseData.id === course.id;
+            return courseData && (courseData as any).id === (course as any).id;
           }) || [];
 
-          const completed = courseProgressData.filter(p => p.progress_percentage === 100).length;
+          const completed = courseProgressData.filter((p: any) => p.progress_percentage === 100).length;
           const total = courseProgressData.length;
 
           return {
-            name: course.title,
+            name: (course as any).title,
             completed,
             total
           };
         }) || [];
 
         // Processar scores NPS
-        const npsScores = npsData?.reduce((acc, nps) => {
+        const npsScores = (npsData as any)?.reduce((acc: any, nps: any) => {
           const lessonData = nps.learning_lessons;
           const lessonTitle = lessonData?.title || 'Aula sem título';
           
-          const existing = acc.find(item => item.lesson === lessonTitle);
+          const existing = acc.find((item: any) => item.lesson === lessonTitle);
           if (existing) {
             existing.score = (existing.score * existing.responses + nps.score) / (existing.responses + 1);
             existing.responses++;

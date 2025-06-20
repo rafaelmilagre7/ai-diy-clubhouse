@@ -29,7 +29,7 @@ export const fetchCompletionData = async (startDate: string | null) => {
     });
   }
 
-  return data || [];
+  return (data as any) || [];
 };
 
 /**
@@ -58,7 +58,7 @@ export const fetchDifficultyData = async (startDate: string | null) => {
     });
   }
 
-  return data || [];
+  return (data as any) || [];
 };
 
 /**
@@ -76,7 +76,7 @@ export const fetchTimeCompletionData = async (startDate: string | null) => {
         title
       )
     `)
-    .eq('is_completed', true);
+    .eq('is_completed', true as any);
 
   if (startDate) {
     timeQuery = timeQuery.gte('created_at', startDate);
@@ -91,7 +91,7 @@ export const fetchTimeCompletionData = async (startDate: string | null) => {
     });
   }
 
-  return data || [];
+  return (data as any) || [];
 };
 
 /**
@@ -118,7 +118,7 @@ export const fetchModuleData = async () => {
     });
   }
 
-  return data || [];
+  return (data as any) || [];
 };
 
 /**
@@ -159,5 +159,5 @@ export const fetchRecentImplementations = async (startDate: string | null) => {
     });
   }
 
-  return data || [];
+  return (data as any) || [];
 };

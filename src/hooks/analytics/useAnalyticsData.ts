@@ -90,10 +90,10 @@ export const useAnalyticsData = (filters: AnalyticsFilters) => {
           .then(result => {
             let query = supabase.from('solutions').select('id, title, category, difficulty');
             if (filters.category !== 'all') {
-              query = query.eq('category', filters.category);
+              query = query.eq('category', filters.category as any);
             }
             if (filters.difficulty !== 'all') {
-              query = query.eq('difficulty', filters.difficulty);
+              query = query.eq('difficulty', filters.difficulty as any);
             }
             return filters.category === 'all' && filters.difficulty === 'all' ? result : query;
           }),
@@ -109,9 +109,9 @@ export const useAnalyticsData = (filters: AnalyticsFilters) => {
       ]);
 
       // Processar resultados
-      const usersData = usersResult.status === 'fulfilled' ? usersResult.value.data || [] : [];
-      const solutionsData = solutionsResult.status === 'fulfilled' ? solutionsResult.value.data || [] : [];
-      const progressData = progressResult.status === 'fulfilled' ? progressResult.value.data || [] : [];
+      const usersData = usersResult.status === 'fulfilled' ? (usersResult.value.data as any) || [] : [];
+      const solutionsData = solutionsResult.status === 'fulfilled' ? (solutionsResult.value.data as any) || [] : [];
+      const progressData = progressResult.status === 'fulfilled' ? (progressResult.value.data as any) || [] : [];
 
       // Log warnings para erros não críticos
       if (usersResult.status === 'rejected') {

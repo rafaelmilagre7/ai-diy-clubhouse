@@ -39,7 +39,7 @@ export const useStatsData = (startDate: string | null, npsScore: number) => {
         const { count: totalLessons, error: lessonsError } = await supabase
           .from('learning_lessons')
           .select('id', { count: 'exact', head: true })
-          .eq('published', true);
+          .eq('published', true as any);
 
         if (lessonsError) {
           logWarning('Erro ao buscar total de aulas:', { 
@@ -72,9 +72,9 @@ export const useStatsData = (startDate: string | null, npsScore: number) => {
 
         // Calcular média de conclusão
         let completionRate = 0;
-        if (progressData && progressData.length > 0) {
-          const totalProgress = progressData.reduce((sum, item) => sum + (item.progress_percentage || 0), 0);
-          completionRate = Math.round(totalProgress / progressData.length);
+        if (progressData && (progressData as any).length > 0) {
+          const totalProgress = (progressData as any).reduce((sum: number, item: any) => sum + ((item as any).progress_percentage || 0), 0);
+          completionRate = Math.round(totalProgress / (progressData as any).length);
         }
 
         // Se não houver dados reais, usar dados simulados para demonstração
