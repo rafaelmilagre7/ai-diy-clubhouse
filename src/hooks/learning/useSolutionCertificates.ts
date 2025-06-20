@@ -1,10 +1,10 @@
 
-import { useState, useEffect } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/lib/supabase';
-import { useAuth } from '@/contexts/auth';
-import { toast } from 'sonner';
-import { SolutionCertificate } from '@/types/learningTypes';
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/lib/supabase";
+import { useAuth } from "@/contexts/auth";
+import { toast } from "sonner";
+import { SolutionCertificate } from "@/types/learningTypes";
 
 export const useSolutionCertificates = (solutionId?: string) => {
   const { user } = useAuth();
@@ -27,11 +27,11 @@ export const useSolutionCertificates = (solutionId?: string) => {
             description
           )
         `)
-        .eq('user_id', user.id)
+        .eq('user_id', user.id as any)
         .order('issued_at', { ascending: false });
 
       if (solutionId) {
-        query = query.eq('solution_id', solutionId);
+        query = query.eq('solution_id', solutionId as any);
       }
 
       const { data, error } = await query;
@@ -53,7 +53,7 @@ export const useSolutionCertificates = (solutionId?: string) => {
       });
 
       if (error) throw error;
-      return data;
+      return data as boolean;
     } catch (error) {
       console.error('Erro ao verificar elegibilidade:', error);
       return false;
@@ -124,7 +124,7 @@ const generateCertificatePDF = async (certificate: any) => {
     const { data: template, error } = await supabase
       .from('solution_certificate_templates')
       .select('*')
-      .eq('id', certificate.template_id)
+      .eq('id', certificate.template_id as any)
       .single();
 
     if (error || !template) {
@@ -139,7 +139,7 @@ const generateCertificatePDF = async (certificate: any) => {
     tempDiv.style.width = '800px';
     
     // Substituir placeholders no template
-    let htmlContent = template.html_template
+    let htmlContent = (template as any).html_template
       .replace(/{{USER_NAME}}/g, certificate.profiles?.name || 'Usuário')
       .replace(/{{SOLUTION_TITLE}}/g, certificate.solutions?.title || 'Solução')
       .replace(/{{SOLUTION_CATEGORY}}/g, certificate.solutions?.category || 'Categoria')
@@ -150,7 +150,7 @@ const generateCertificatePDF = async (certificate: any) => {
     
     // Adicionar estilos
     const styleSheet = document.createElement('style');
-    styleSheet.textContent = template.css_styles || '';
+    styleSheet.textContent = (template as any).css_styles || '';
     tempDiv.appendChild(styleSheet);
     
     document.body.appendChild(tempDiv);

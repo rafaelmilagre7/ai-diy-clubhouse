@@ -25,7 +25,7 @@ export const useUserProgress = () => {
             )
           )
         `)
-        .eq("user_id", user.id);
+        .eq("user_id", user.id as any);
         
       if (error) {
         console.error("Erro ao buscar progresso do usuário:", error);
