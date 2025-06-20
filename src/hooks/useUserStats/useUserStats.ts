@@ -61,11 +61,16 @@ export const useUserStats = () => {
           .map(p => new Date(p.last_activity).toLocaleDateString())
       )].length;
 
-      // Update stats state
+      // Update stats state with all required properties
       setStats({
         totalSolutions,
         completedSolutions,
         inProgressSolutions,
+        currentlyWorking: inProgressSolutions,
+        totalLessonsCompleted: 0, // Placeholder - would need to fetch from learning_progress
+        certificates: 0, // Placeholder - would need to fetch from certificates table
+        forumPosts: 0, // Placeholder - would need to fetch from forum_posts table
+        joinedDate: new Date().toISOString(), // Placeholder - would need user creation date
         completionRate,
         averageCompletionTime: avgTimePerSolution,
         activeDays,
