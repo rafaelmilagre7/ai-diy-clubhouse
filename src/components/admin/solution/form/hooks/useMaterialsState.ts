@@ -19,7 +19,7 @@ export const useMaterialsState = (solutionId: string | null) => {
       const { data, error } = await supabase
         .from("solution_resources")
         .select("*")
-        .eq("solution_id", solutionId);
+        .eq("solution_id", solutionId as any);
         
       if (error) throw error;
       

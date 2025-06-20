@@ -30,7 +30,7 @@ export function useMaterialsTab(solutionId: string | null,
       const { data, error } = await supabase
         .from("solution_resources")
         .select("*")
-        .eq("solution_id", solutionId);
+        .eq("solution_id", solutionId as any);
         
       if (error) throw error;
       
@@ -96,7 +96,7 @@ export function useMaterialsTab(solutionId: string | null,
       
       const { data, error } = await supabase
         .from("solution_resources")
-        .insert(newResource)
+        .insert(newResource as any)
         .select()
         .single();
         
@@ -150,7 +150,7 @@ export function useMaterialsTab(solutionId: string | null,
       const { error } = await supabase
         .from("solution_resources")
         .delete()
-        .eq("id", id);
+        .eq("id", id as any);
         
       if (error) throw error;
       

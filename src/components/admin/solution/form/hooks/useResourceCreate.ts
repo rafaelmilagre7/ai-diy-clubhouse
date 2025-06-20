@@ -34,7 +34,7 @@ export function useResourceCreate(
       
       const { data, error } = await supabase
         .from("solution_resources")
-        .insert(resourceData)
+        .insert(resourceData as any)
         .select()
         .single();
         
@@ -42,17 +42,17 @@ export function useResourceCreate(
       
       if (data) {
         const resource: Resource = {
-          id: data.id,
-          name: data.name,
-          url: data.url,
+          id: (data as any).id,
+          name: (data as any).name,
+          url: (data as any).url,
           type: newResource.type,
-          format: data.format,
-          solution_id: data.solution_id,
+          format: (data as any).format,
+          solution_id: (data as any).solution_id,
           metadata: newResource,
-          created_at: data.created_at,
-          updated_at: data.updated_at,
-          module_id: data.module_id,
-          size: data.size
+          created_at: (data as any).created_at,
+          updated_at: (data as any).updated_at,
+          module_id: (data as any).module_id,
+          size: (data as any).size
         };
         
         setResources(prev => [...prev, resource]);

@@ -27,7 +27,7 @@ export function useResourceRemove(
       const { error } = await supabase
         .from("solution_resources")
         .delete()
-        .eq("id", id);
+        .eq("id", id as any);
         
       if (error) throw error;
       

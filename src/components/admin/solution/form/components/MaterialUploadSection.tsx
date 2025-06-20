@@ -76,7 +76,7 @@ const MaterialUploadSection: React.FC<MaterialUploadSectionProps> = ({
           type: "video",
           format: "YouTube",
           metadata: JSON.stringify(metadata)
-        })
+        } as any)
         .select()
         .single();
 
