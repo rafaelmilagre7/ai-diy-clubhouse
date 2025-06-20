@@ -33,22 +33,23 @@ export const InviteValidationDebugPanel = () => {
         throw inviteError;
       }
       
+      // Verificar se inviteData existe e tem as propriedades necessárias
       const validation = {
         tokenExists: !!inviteData,
-        isExpired: inviteData ? new Date(inviteData.expires_at as any) < new Date() : false,
-        isUsed: inviteData ? !!inviteData.used_at : false,
-        isValid: inviteData ? new Date(inviteData.expires_at as any) > new Date() && !inviteData.used_at : false,
+        isExpired: inviteData && inviteData.expires_at ? new Date(inviteData.expires_at) < new Date() : false,
+        isUsed: inviteData && inviteData.used_at ? !!inviteData.used_at : false,
+        isValid: inviteData && inviteData.expires_at ? new Date(inviteData.expires_at) > new Date() && !inviteData.used_at : false,
         rawData: inviteData
       };
       
       console.log('✅ Resultado da validação:', validation);
       
-      // Log no audit_logs
+      // Log no audit_logs com casting para any
       try {
         await supabase
           .from('audit_logs')
           .insert({
-            event_type: 'token_validation' as any,
+            event_type: 'token_validation',
             action: 'validate_invite_token',
             details: {
               token: token.substring(0, 4) + '****',

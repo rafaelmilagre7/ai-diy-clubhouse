@@ -1,200 +1,201 @@
 
-import { useEffect, useState } from "react";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Role } from "@/hooks/admin/useRoles";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { usePermissions, Permission } from "@/hooks/auth/usePermissions";
-import { Loader2 } from "lucide-react";
-import { toast } from "sonner";
-import { supabase } from "@/lib/supabase";
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
+import { supabase } from '@/lib/supabase';
+import { useToast } from '@/hooks/use-toast';
+import { Badge } from '@/components/ui/badge';
+
+interface Permission {
+  id: string;
+  name: string;
+  code: string;
+  description?: string;
+  category: string;
+}
 
 interface RolePermissionsProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  role: Role | null;
+  role: { id: string; name: string } | null;
 }
 
-interface PermissionsByCategory {
-  [category: string]: Permission[];
-}
+export const RolePermissions = ({ open, onOpenChange, role }: RolePermissionsProps) => {
+  const [permissions, setPermissions] = useState<Permission[]>([]);
+  const [selectedPermissions, setSelectedPermissions] = useState<string[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const { toast } = useToast();
 
-export function RolePermissions({ open, onOpenChange, role }: RolePermissionsProps) {
-  const { permissions, loading } = usePermissions();
-  const [rolePermissions, setRolePermissions] = useState<string[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
-
-  // Agrupar permissões por categoria
-  const permissionsByCategory: PermissionsByCategory = permissions.reduce(
-    (acc: PermissionsByCategory, permission) => {
-      if (!acc[permission.category]) {
-        acc[permission.category] = [];
-      }
-      acc[permission.category].push(permission);
-      return acc;
-    },
-    {}
-  );
-
-  // Buscar permissões do papel
   useEffect(() => {
-    if (role && open) {
+    if (open && role) {
+      fetchPermissions();
       fetchRolePermissions();
     }
-  }, [role, open]);
+  }, [open, role]);
+
+  const fetchPermissions = async () => {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('permission_definitions')
+        .select('*')
+        .order('category, name');
+
+      if (error) throw error;
+      
+      setPermissions(data as any || []);
+    } catch (error) {
+      console.error('Erro ao buscar permissões:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível carregar as permissões.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const fetchRolePermissions = async () => {
     if (!role) return;
-
+    
     try {
-      setIsLoading(true);
       const { data, error } = await supabase
-        .from("role_permissions")
-        .select("permission_id, permission_definitions(code)")
-        .eq("role_id", role.id);
+        .from('role_permissions')
+        .select('permission_id')
+        .eq('role_id', role.id as any);
 
       if (error) throw error;
-
-      // Corrigindo o acesso à propriedade code
-      const permissionCodes = data.map(
-        (item: any) => item.permission_definitions?.code
-      ).filter(Boolean);
       
-      setRolePermissions(permissionCodes);
-    } catch (err) {
-      console.error("Erro ao buscar permissões do papel:", err);
-      toast.error("Erro ao carregar permissões do papel");
-    } finally {
-      setIsLoading(false);
+      const permissionIds = Array.isArray(data) 
+        ? data.map((item: any) => item?.permission_id).filter(Boolean)
+        : [];
+      
+      setSelectedPermissions(permissionIds);
+    } catch (error) {
+      console.error('Erro ao buscar permissões da role:', error);
     }
   };
 
-  const handlePermissionChange = async (permission: Permission, checked: boolean) => {
+  const handlePermissionToggle = async (permissionId: string, checked: boolean) => {
     if (!role) return;
 
     try {
-      setIsSaving(true);
-      
       if (checked) {
         // Adicionar permissão
         const { error } = await supabase
-          .from("role_permissions")
+          .from('role_permissions')
           .insert({
             role_id: role.id,
-            permission_id: permission.id
-          });
-          
+            permission_id: permissionId
+          } as any);
+
         if (error) throw error;
         
-        setRolePermissions(prev => [...prev, permission.code]);
-        toast.success(`Permissão "${permission.name}" adicionada ao papel`);
+        setSelectedPermissions(prev => [...prev, permissionId]);
       } else {
         // Remover permissão
         const { error } = await supabase
-          .from("role_permissions")
+          .from('role_permissions')
           .delete()
-          .eq("role_id", role.id)
-          .eq("permission_id", permission.id);
-          
+          .eq('role_id', role.id as any)
+          .eq('permission_id', permissionId as any);
+
         if (error) throw error;
         
-        setRolePermissions(prev => 
-          prev.filter(code => code !== permission.code)
-        );
-        toast.success(`Permissão "${permission.name}" removida do papel`);
+        setSelectedPermissions(prev => prev.filter(id => id !== permissionId));
       }
-    } catch (err) {
-      console.error("Erro ao atualizar permissão:", err);
-      toast.error("Erro ao atualizar permissão");
-    } finally {
-      setIsSaving(false);
+
+      toast({
+        title: "Sucesso",
+        description: `Permissão ${checked ? 'adicionada' : 'removida'} com sucesso.`,
+      });
+    } catch (error) {
+      console.error('Erro ao alterar permissão:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao alterar a permissão.",
+        variant: "destructive",
+      });
     }
   };
 
+  // Agrupar permissões por categoria
+  const groupedPermissions = permissions.reduce((acc, permission) => {
+    if (!acc[permission.category]) {
+      acc[permission.category] = [];
+    }
+    acc[permission.category].push(permission);
+    return acc;
+  }, {} as Record<string, Permission[]>);
+
+  if (!open || !role) return null;
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>Gerenciar Permissões</DialogTitle>
-          <DialogDescription>
-            {role ? `Configure as permissões para o papel ${role.name}` : ""}
-          </DialogDescription>
-        </DialogHeader>
-
-        {(loading || isLoading) ? (
-          <div className="flex justify-center py-8">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            <span className="ml-2">Carregando permissões...</span>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            <Accordion type="multiple" className="w-full">
-              {Object.entries(permissionsByCategory).map(([category, perms]) => (
-                <AccordionItem 
-                  value={category} 
-                  key={category}
-                  className="border rounded-md px-4"
-                >
-                  <AccordionTrigger className="text-lg font-medium capitalize">
-                    {category}
-                  </AccordionTrigger>
-                  <AccordionContent>
-                    <div className="space-y-2">
-                      {perms.map((permission) => (
-                        <div
-                          key={permission.id}
-                          className="flex items-center space-x-2 p-2 rounded hover:bg-muted"
-                        >
-                          <Checkbox
-                            id={permission.id}
-                            checked={rolePermissions.includes(permission.code)}
-                            onCheckedChange={(checked) => 
-                              handlePermissionChange(
-                                permission, 
-                                checked === true
-                              )
-                            }
-                            disabled={isSaving}
-                          />
-                          <div className="grid gap-1">
-                            <label
-                              htmlFor={permission.id}
-                              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                            >
-                              {permission.name}
-                            </label>
-                            <p className="text-xs text-muted-foreground">
-                              {permission.description || "Sem descrição"}
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+      <Card className="w-full max-w-2xl max-h-[80vh] overflow-hidden">
+        <CardHeader>
+          <CardTitle className="flex items-center justify-between">
+            Permissões - {role.name}
+            <Button variant="outline" onClick={() => onOpenChange(false)}>
+              Fechar
+            </Button>
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="overflow-y-auto">
+          {loading ? (
+            <div className="text-center py-4">Carregando permissões...</div>
+          ) : (
+            <div className="space-y-6">
+              {Object.entries(groupedPermissions).map(([category, categoryPermissions]) => (
+                <div key={category} className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <Badge variant="outline">{category}</Badge>
+                  </div>
+                  <div className="space-y-2 pl-4">
+                    {categoryPermissions.map((permission) => (
+                      <div key={permission.id} className="flex items-start space-x-3">
+                        <Checkbox
+                          id={`permission-${permission.id}`}
+                          checked={selectedPermissions.includes(permission.id)}
+                          onCheckedChange={(checked) => 
+                            handlePermissionToggle(permission.id, checked as boolean)
+                          }
+                          disabled={saving}
+                        />
+                        <div className="flex-1">
+                          <label 
+                            htmlFor={`permission-${permission.id}`}
+                            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                          >
+                            {permission.name}
+                          </label>
+                          {permission.description && (
+                            <p className="text-xs text-muted-foreground mt-1">
+                              {permission.description}
                             </p>
-                            <p className="text-xs text-gray-400">
-                              Código: {permission.code}
-                            </p>
-                          </div>
+                          )}
+                          <p className="text-xs text-blue-600 mt-1">
+                            {permission.code}
+                          </p>
                         </div>
-                      ))}
-                    </div>
-                  </AccordionContent>
-                </AccordionItem>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               ))}
-            </Accordion>
-
-            <DialogFooter>
-              <Button onClick={() => onOpenChange(false)}>
-                Fechar
-              </Button>
-            </DialogFooter>
-          </div>
-        )}
-      </DialogContent>
-    </Dialog>
+              
+              {permissions.length === 0 && (
+                <div className="text-center py-4 text-muted-foreground">
+                  Nenhuma permissão encontrada.
+                </div>
+              )}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
   );
-}
+};

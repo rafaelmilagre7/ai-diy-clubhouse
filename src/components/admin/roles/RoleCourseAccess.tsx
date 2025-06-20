@@ -29,12 +29,12 @@ export const RoleCourseAccess = ({ roleId, roleName }: RoleCourseAccessProps) =>
       const { data, error } = await supabase
         .from('learning_courses')
         .select('*')
-        .eq('published', true)
+        .eq('published', true as any)
         .order('title');
 
       if (error) throw error;
       
-      // Usar 'unknown' primeiro para evitar erro de conversão direta
+      // Cast para contornar o problema de tipos
       setCourses((data as unknown) as LearningCourse[]);
     } catch (error) {
       console.error('Erro ao buscar cursos:', error);

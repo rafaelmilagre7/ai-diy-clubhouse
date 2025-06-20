@@ -4,225 +4,194 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
-import { RefreshCw, Users, AlertTriangle, CheckCircle } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
-import { toast } from 'sonner';
+import { useToast } from '@/hooks/use-toast';
+import { RefreshCw, CheckCircle, AlertTriangle, XCircle } from 'lucide-react';
 
-interface RoleAuditData {
-  user_count_by_role: Record<string, number>;
-  inconsistencies_count: number;
-  total_users: number;
-  roles_without_users: string[];
-  users_without_roles: number;
-}
+export const RoleSyncPanel = () => {
+  const [loading, setLoading] = useState(false);
+  const [results, setResults] = useState<any>(null);
+  const { toast } = useToast();
 
-export const RoleSyncPanel: React.FC = () => {
-  const [auditData, setAuditData] = useState<RoleAuditData | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const runRoleAudit = async () => {
-    setIsLoading(true);
-    setError(null);
-    
+  const runAudit = async () => {
+    setLoading(true);
     try {
-      console.log('🔍 [ROLE-SYNC] Executando auditoria de roles...');
-      
-      // Usar a função corrigida
+      // Chama a função RPC do banco para auditoria
       const { data, error } = await supabase.rpc('audit_role_assignments');
       
-      if (error) {
-        console.error('❌ [ROLE-SYNC] Erro na auditoria:', error);
-        setError(error.message);
-        toast.error(`Erro na auditoria: ${error.message}`);
-        return;
-      }
+      if (error) throw error;
       
-      if (data && data.length > 0) {
-        const result = data[0];
-        setAuditData({
-          user_count_by_role: result.user_count_by_role || {},
-          inconsistencies_count: result.inconsistencies_count || 0,
-          total_users: result.total_users || 0,
-          roles_without_users: result.roles_without_users || [],
-          users_without_roles: result.users_without_roles || 0
-        });
-        
-        console.log('✅ [ROLE-SYNC] Auditoria concluída:', result);
-        
-        if (result.inconsistencies_count > 0) {
-          toast.warning(`Encontradas ${result.inconsistencies_count} inconsistências`);
-        } else {
-          toast.success('Sistema de roles está consistente');
-        }
-      }
+      // Cast para contornar problema de tipos
+      const auditResults = data as any;
       
-    } catch (err: any) {
-      console.error('❌ [ROLE-SYNC] Erro na execução:', err);
-      setError(err.message || 'Erro desconhecido');
-      toast.error('Erro ao executar auditoria');
+      setResults({
+        success: true,
+        data: auditResults,
+        totalChecked: Array.isArray(auditResults) ? auditResults.length : 0,
+        timestamp: new Date().toISOString()
+      });
+      
+      toast({
+        title: "Auditoria concluída",
+        description: `Verificação de ${Array.isArray(auditResults) ? auditResults.length : 0} registros realizada com sucesso.`,
+      });
+    } catch (error: any) {
+      console.error('Erro na auditoria:', error);
+      setResults({
+        success: false,
+        error: error.message,
+        timestamp: new Date().toISOString()
+      });
+      
+      toast({
+        title: "Erro na auditoria",
+        description: error.message,
+        variant: "destructive",
+      });
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
-  const hasIssues = auditData && (
-    auditData.inconsistencies_count > 0 || 
-    auditData.users_without_roles > 0 || 
-    auditData.roles_without_users.length > 0
-  );
+  const fixIssues = async () => {
+    if (!results?.data) return;
+    
+    setLoading(true);
+    try {
+      // Implementar correções automáticas baseadas nos resultados
+      let fixedCount = 0;
+      
+      for (const issue of results.data) {
+        try {
+          // Exemplo de correção: atualizar perfis com role_id null
+          if (issue.issue_type === 'missing_role_id') {
+            await supabase
+              .from('profiles')
+              .update({ role_id: issue.suggested_role_id })
+              .eq('id', issue.user_id as any);
+            fixedCount++;
+          }
+        } catch (fixError) {
+          console.error(`Erro ao corrigir ${issue.id}:`, fixError);
+        }
+      }
+      
+      toast({
+        title: "Correções aplicadas",
+        description: `${fixedCount} problemas foram corrigidos automaticamente.`,
+      });
+      
+      // Executar auditoria novamente para verificar
+      await runAudit();
+    } catch (error: any) {
+      console.error('Erro nas correções:', error);
+      toast({
+        title: "Erro nas correções",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <Card>
       <CardHeader>
-        <div className="flex items-center justify-between">
-          <CardTitle className="flex items-center gap-2">
-            <Users className="h-5 w-5 text-viverblue" />
-            Auditoria de Roles e Permissões
-          </CardTitle>
-          <Button 
-            onClick={runRoleAudit} 
-            disabled={isLoading}
-            variant="outline"
-            className="border-white/20 text-white hover:bg-white/10"
-          >
-            <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
-            {isLoading ? 'Auditando...' : 'Executar Auditoria'}
-          </Button>
-        </div>
+        <CardTitle className="flex items-center gap-2">
+          <RefreshCw className="h-5 w-5" />
+          Correção Sistêmica de Papéis
+        </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-6">
-        {error && (
-          <Alert variant="destructive" className="bg-red-900/20 border-red-500/50 text-red-300">
-            <AlertTriangle className="h-4 w-4" />
-            <AlertDescription>
-              <strong>Erro:</strong> {error}
-            </AlertDescription>
-          </Alert>
-        )}
+      <CardContent className="space-y-4">
+        <Alert>
+          <AlertTriangle className="h-4 w-4" />
+          <AlertDescription>
+            Esta ferramenta verifica e corrige inconsistências no sistema de papéis e permissões.
+            Execute a auditoria primeiro para identificar problemas.
+          </AlertDescription>
+        </Alert>
 
-        {auditData && (
-          <>
-            {/* Status Geral */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="bg-neutral-800/50 border border-neutral-700 p-4 rounded-lg">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-neutral-300">Total de Usuários</p>
-                    <p className="text-2xl font-bold text-white">{auditData.total_users}</p>
-                  </div>
-                  <Users className="h-8 w-8 text-viverblue" />
-                </div>
-              </div>
-              
-              <div className={`border p-4 rounded-lg ${
-                auditData.inconsistencies_count > 0 
-                  ? 'bg-red-900/20 border-red-500/30' 
-                  : 'bg-green-900/20 border-green-500/30'
-              }`}>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className={`text-sm font-medium ${
-                      auditData.inconsistencies_count > 0 ? 'text-red-400' : 'text-green-400'
-                    }`}>
-                      Inconsistências
-                    </p>
-                    <p className={`text-2xl font-bold ${
-                      auditData.inconsistencies_count > 0 ? 'text-red-300' : 'text-green-300'
-                    }`}>
-                      {auditData.inconsistencies_count}
-                    </p>
-                  </div>
-                  {auditData.inconsistencies_count > 0 ? (
-                    <AlertTriangle className="h-8 w-8 text-red-400" />
-                  ) : (
-                    <CheckCircle className="h-8 w-8 text-green-400" />
-                  )}
-                </div>
-              </div>
-              
-              <div className={`border p-4 rounded-lg ${
-                auditData.users_without_roles > 0 
-                  ? 'bg-yellow-900/20 border-yellow-500/30' 
-                  : 'bg-green-900/20 border-green-500/30'
-              }`}>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className={`text-sm font-medium ${
-                      auditData.users_without_roles > 0 ? 'text-yellow-400' : 'text-green-400'
-                    }`}>
-                      Usuários sem Role
-                    </p>
-                    <p className={`text-2xl font-bold ${
-                      auditData.users_without_roles > 0 ? 'text-yellow-300' : 'text-green-300'
-                    }`}>
-                      {auditData.users_without_roles}
-                    </p>
-                  </div>
-                  {auditData.users_without_roles > 0 ? (
-                    <AlertTriangle className="h-8 w-8 text-yellow-400" />
-                  ) : (
-                    <CheckCircle className="h-8 w-8 text-green-400" />
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Distribuição por Roles */}
-            <div className="space-y-4">
-              <h4 className="font-semibold text-white">Distribuição de Usuários por Role</h4>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                {Object.entries(auditData.user_count_by_role).map(([role, count]) => (
-                  <div key={role} className="flex items-center justify-between p-3 bg-neutral-800/30 border border-neutral-700 rounded-lg">
-                    <div>
-                      <p className="font-medium text-white capitalize">{role.replace('_', ' ')}</p>
-                      <p className="text-sm text-neutral-400">{count} usuários</p>
-                    </div>
-                    <Badge variant="outline" className="border-viverblue text-viverblue">
-                      {count}
-                    </Badge>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Roles não utilizadas */}
-            {auditData.roles_without_users.length > 0 && (
-              <div className="space-y-3">
-                <h4 className="font-semibold text-white">Roles sem Usuários</h4>
-                <div className="flex flex-wrap gap-2">
-                  {auditData.roles_without_users.map((role) => (
-                    <Badge key={role} variant="outline" className="border-yellow-500 text-yellow-400">
-                      {role}
-                    </Badge>
-                  ))}
-                </div>
-              </div>
+        <div className="flex gap-2">
+          <Button 
+            onClick={runAudit} 
+            disabled={loading}
+            className="flex-1"
+          >
+            {loading ? (
+              <>
+                <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                Executando Auditoria...
+              </>
+            ) : (
+              <>
+                <RefreshCw className="mr-2 h-4 w-4" />
+                Executar Auditoria
+              </>
             )}
-
-            {/* Status final */}
-            {!hasIssues && (
-              <Alert className="bg-green-900/20 border-green-500/50 text-green-300">
-                <CheckCircle className="h-4 w-4" />
-                <AlertDescription>
-                  <strong>Sistema Consistente:</strong> Não foram encontradas inconsistências no sistema de roles.
-                </AlertDescription>
-              </Alert>
-            )}
-          </>
-        )}
-
-        {!auditData && !isLoading && (
-          <div className="text-center py-8">
-            <Users className="h-12 w-12 mx-auto mb-4 text-neutral-500" />
-            <p className="text-neutral-300 mb-4">Execute uma auditoria para verificar o status do sistema de roles</p>
+          </Button>
+          
+          {results?.data?.length > 0 && (
             <Button 
-              onClick={runRoleAudit} 
-              variant="outline"
-              className="border-white/20 text-white hover:bg-white/10"
+              onClick={fixIssues} 
+              disabled={loading}
+              variant="destructive"
             >
-              Iniciar Auditoria
+              Corrigir Problemas
             </Button>
+          )}
+        </div>
+
+        {results && (
+          <div className="space-y-4">
+            <div className="flex items-center gap-2">
+              {results.success ? (
+                <CheckCircle className="h-5 w-5 text-green-500" />
+              ) : (
+                <XCircle className="h-5 w-5 text-red-500" />
+              )}
+              <span className="font-medium">
+                {results.success ? 'Auditoria Concluída' : 'Erro na Auditoria'}
+              </span>
+              <Badge variant="outline">
+                {new Date(results.timestamp).toLocaleString('pt-BR')}
+              </Badge>
+            </div>
+
+            {results.success && (
+              <div className="space-y-2">
+                <div className="text-sm">
+                  <strong>Registros verificados:</strong> {results.totalChecked}
+                </div>
+                
+                {Array.isArray(results.data) && results.data.length > 0 ? (
+                  <div className="space-y-2">
+                    <div className="text-sm font-medium text-red-600">
+                      Problemas encontrados: {results.data.length}
+                    </div>
+                    <div className="max-h-40 overflow-y-auto space-y-1">
+                      {results.data.map((issue: any, index: number) => (
+                        <div key={index} className="text-xs p-2 bg-red-50 border border-red-200 rounded">
+                          <div><strong>Tipo:</strong> {issue.issue_type}</div>
+                          <div><strong>Usuário:</strong> {issue.user_email}</div>
+                          <div><strong>Descrição:</strong> {issue.description}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-sm text-green-600">
+                    ✅ Nenhum problema encontrado! O sistema está íntegro.
+                  </div>
+                )}
+              </div>
+            )}
+
+            {!results.success && (
+              <div className="text-sm text-red-600 bg-red-50 p-2 rounded">
+                {results.error}
+              </div>
+            )}
           </div>
         )}
       </CardContent>
