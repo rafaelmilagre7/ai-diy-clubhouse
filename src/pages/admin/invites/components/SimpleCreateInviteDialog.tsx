@@ -67,7 +67,7 @@ const SimpleCreateInviteDialog = ({ roles, onInviteCreated }: SimpleCreateInvite
     setLastResult(result);
 
     if (result) {
-      // Resetar formulário apenas se teve sucesso
+      // Resetar formulário apenas se teve sucesso completo
       if (result.status === 'success') {
         setEmail("");
         setRoleId("");
@@ -105,7 +105,7 @@ const SimpleCreateInviteDialog = ({ roles, onInviteCreated }: SimpleCreateInvite
           <DialogHeader>
             <DialogTitle>Criar Novo Convite</DialogTitle>
             <DialogDescription>
-              Sistema corrigido - Criação e envio automático de convites
+              Sistema simplificado - Criação e envio direto de convites
             </DialogDescription>
           </DialogHeader>
           
@@ -120,11 +120,6 @@ const SimpleCreateInviteDialog = ({ roles, onInviteCreated }: SimpleCreateInvite
                 )}
                 <AlertDescription className={lastResult.status === 'success' ? 'text-green-700' : 'text-yellow-700'}>
                   {lastResult.message}
-                  {lastResult.emailResult && !lastResult.emailResult.success && (
-                    <div className="text-xs mt-1">
-                      Email: {lastResult.emailResult.message}
-                    </div>
-                  )}
                 </AlertDescription>
               </Alert>
             )}
@@ -193,7 +188,7 @@ const SimpleCreateInviteDialog = ({ roles, onInviteCreated }: SimpleCreateInvite
               {loading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Processando...
+                  Enviando...
                 </>
               ) : (
                 "Criar e Enviar"

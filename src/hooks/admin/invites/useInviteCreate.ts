@@ -1,221 +1,89 @@
 
-import { useState, useCallback } from 'react';
-import { supabase } from '@/lib/supabase';
+import { useState } from 'react';
 import { toast } from 'sonner';
-import { CreateInviteParams, CreateInviteResponse } from './types';
+import { supabase } from '@/integrations/supabase/client';
+import type { CreateInviteParams, CreateInviteResult } from './types';
 
 export function useInviteCreate() {
   const [loading, setLoading] = useState(false);
 
-  const createInvite = useCallback(async (params: CreateInviteParams): Promise<CreateInviteResponse | null> => {
+  const createInvite = async (params: CreateInviteParams): Promise<CreateInviteResult | null> => {
     setLoading(true);
-    const requestId = crypto.randomUUID().substring(0, 8);
-    
     try {
-      console.log(`🎯 [${requestId}] INICIANDO CRIAÇÃO DE CONVITE:`, params);
+      console.log('🎯 [CREATE-INVITE] Criando convite:', params);
 
-      // ETAPA 1: Criar convite usando função do banco
-      console.log(`📝 [${requestId}] Chamando create_invite...`);
-      const { data: createResult, error: createError } = await supabase.rpc('create_invite', {
+      // Primeiro, criar o convite no banco
+      const { data: dbResult, error: dbError } = await supabase.rpc('create_invite', {
         p_email: params.email,
         p_role_id: params.roleId,
         p_expires_in: `${params.expiresIn || '7 days'}`,
-        p_notes: params.notes || null
+        p_notes: params.notes
       });
 
-      if (createError) {
-        console.error(`❌ [${requestId}] Erro na função create_invite:`, createError);
-        throw new Error(`Erro ao criar convite: ${createError.message}`);
+      if (dbError) {
+        console.error('❌ [CREATE-INVITE] Erro no banco:', dbError);
+        toast.error(`Erro ao criar convite: ${dbError.message}`);
+        return null;
       }
 
-      if (!createResult || createResult.status !== 'success') {
-        console.error(`❌ [${requestId}] Função retornou falha:`, createResult);
-        throw new Error(createResult?.message || 'Falha ao criar convite');
+      const dbResponse = dbResult as any;
+      console.log('✅ [CREATE-INVITE] Convite criado no banco:', dbResponse);
+
+      if (dbResponse.status !== 'success') {
+        toast.error(dbResponse.message);
+        return null;
       }
 
-      console.log(`✅ [${requestId}] Convite criado no banco:`, createResult);
-
-      // ETAPA 2: Buscar dados do convite - Query mais simples
-      console.log(`🔍 [${requestId}] Buscando dados do convite...`);
-      const { data: inviteData, error: fetchError } = await supabase
-        .from('invites')
-        .select(`
-          id, email, token, role_id, expires_at, used_at, created_by, created_at, notes,
-          send_attempts, last_sent_at
-        `)
-        .eq('id', createResult.invite_id)
-        .single();
-
-      if (fetchError || !inviteData) {
-        console.error(`❌ [${requestId}] Erro ao buscar convite:`, fetchError);
-        console.log(`🔄 [${requestId}] Usando dados de fallback...`);
-        
-        // FALLBACK: Usar dados básicos com todas as propriedades necessárias
-        const fallbackInvite = {
-          id: createResult.invite_id,
-          email: params.email,
-          token: createResult.token,
-          role_id: params.roleId,
-          expires_at: createResult.expires_at,
-          used_at: null,
-          created_by: null, // Será preenchido pelo contexto de auth
-          created_at: new Date().toISOString(),
-          notes: params.notes || null,
-          send_attempts: 0,
-          last_sent_at: null,
-          role: { name: 'Usuário' },
-          creator: { name: 'Administrador' }
-        };
-        
-        console.log(`🔄 [${requestId}] Dados de fallback criados:`, fallbackInvite);
-        
-        // Prosseguir com envio de email usando fallback
-        const inviteUrl = `${window.location.origin}/accept-invite/${createResult.token}`;
-        
-        const emailResult = await sendEmailWithTimeout(requestId, {
-          email: params.email,
-          inviteUrl,
-          roleName: 'Usuário',
-          expiresAt: createResult.expires_at,
-          senderName: 'Administrador',
-          notes: params.notes,
-          inviteId: createResult.invite_id,
-          token: createResult.token
+      // Agora tentar enviar o email
+      try {
+        const { data: emailResult, error: emailError } = await supabase.functions.invoke('send-invite', {
+          body: {
+            email: params.email,
+            token: dbResponse.token,
+            roleId: params.roleId
+          }
         });
+
+        if (emailError) {
+          console.warn('⚠️ [CREATE-INVITE] Erro no envio de email:', emailError);
+          toast.warning('Convite criado, mas houve problema no envio do email');
+          
+          return {
+            status: 'partial_success',
+            message: 'Convite criado com sucesso, mas email não foi enviado',
+            inviteId: dbResponse.invite_id,
+            emailResult: { success: false, message: emailError.message }
+          };
+        }
+
+        console.log('✅ [CREATE-INVITE] Email enviado:', emailResult);
+        toast.success('Convite criado e enviado com sucesso!');
 
         return {
-          status: emailResult.success ? 'success' : 'partial_success',
-          message: emailResult.success ? 'Convite criado e enviado' : 'Convite criado, verificar email',
-          invite: fallbackInvite,
-          emailResult
+          status: 'success',
+          message: 'Convite criado e enviado com sucesso',
+          inviteId: dbResponse.invite_id,
+          emailResult: { success: true, message: 'Email enviado' }
+        };
+
+      } catch (emailError: any) {
+        console.warn('⚠️ [CREATE-INVITE] Falha no envio de email:', emailError);
+        toast.warning('Convite criado, mas houve problema no envio do email');
+        
+        return {
+          status: 'partial_success',
+          message: 'Convite criado com sucesso, mas email não foi enviado',
+          inviteId: dbResponse.invite_id,
+          emailResult: { success: false, message: emailError.message }
         };
       }
 
-      console.log(`✅ [${requestId}] Dados do convite encontrados:`, inviteData);
-
-      // ETAPA 3: Enviar email com timeout melhorado
-      const inviteUrl = `${window.location.origin}/accept-invite/${inviteData.token}`;
-      console.log(`📧 [${requestId}] Enviando email para:`, params.email);
-
-      const emailResult = await sendEmailWithTimeout(requestId, {
-        email: params.email,
-        inviteUrl,
-        roleName: 'Usuário', // Simplificado por enquanto
-        expiresAt: inviteData.expires_at,
-        senderName: 'Administrador',
-        notes: params.notes,
-        inviteId: inviteData.id,
-        token: inviteData.token
-      });
-
-      // ETAPA 4: Atualizar estatísticas
-      await supabase.rpc('update_invite_send_attempt', { invite_id: inviteData.id });
-
-      const finalStatus = emailResult.success ? 'success' : 'partial_success';
-      
-      if (emailResult.success) {
-        console.log(`🎉 [${requestId}] SUCESSO COMPLETO!`);
-        toast.success('Convite enviado com sucesso!', {
-          description: `Email enviado para ${params.email}`
-        });
-      } else {
-        console.warn(`⚠️ [${requestId}] Convite criado mas email falhou`);
-        toast.warning('Convite criado', {
-          description: 'Email pode ter falhado, use a recuperação se necessário'
-        });
-      }
-
-      return {
-        status: finalStatus,
-        message: emailResult.success ? 'Convite criado e enviado' : 'Convite criado, verificar email',
-        invite: inviteData,
-        emailResult
-      };
-
     } catch (error: any) {
-      console.error(`💥 [${requestId}] ERRO CRÍTICO:`, error);
-      
-      toast.error('Erro ao criar convite', {
-        description: error.message || 'Erro desconhecido'
-      });
-
+      console.error('❌ [CREATE-INVITE] Erro geral:', error);
+      toast.error(`Erro ao criar convite: ${error.message}`);
       return null;
     } finally {
       setLoading(false);
-    }
-  }, []);
-
-  // Método auxiliar para envio de email com timeout melhorado
-  const sendEmailWithTimeout = async (requestId: string, emailData: any) => {
-    try {
-      console.log(`📧 [${requestId}] Chamando Edge Function com timeout de 30s...`);
-      
-      // Criar uma Promise com timeout de 30 segundos
-      const timeoutPromise = new Promise((_, reject) => {
-        setTimeout(() => reject(new Error('Timeout de 30 segundos')), 30000);
-      });
-
-      const emailPromise = supabase.functions.invoke('send-invite-email', {
-        body: {
-          ...emailData,
-          requestId,
-          forceResend: false
-        }
-      });
-
-      const { data: emailResult, error: emailError } = await Promise.race([
-        emailPromise,
-        timeoutPromise
-      ]) as any;
-
-      if (emailError) {
-        console.error(`❌ [${requestId}] Erro na Edge Function:`, emailError);
-        return {
-          success: false,
-          message: 'Erro na Edge Function',
-          error: emailError.message,
-          channel: 'email' as const
-        };
-      }
-
-      if (!emailResult?.success) {
-        console.error(`❌ [${requestId}] Edge Function retornou falha:`, emailResult);
-        return {
-          success: false,
-          message: 'Edge Function falhou',
-          error: emailResult?.error || 'Falha não especificada',
-          channel: 'email' as const
-        };
-      }
-
-      console.log(`✅ [${requestId}] Email enviado com sucesso!`);
-      return {
-        success: true,
-        message: 'Email enviado com sucesso',
-        emailId: emailResult.emailId,
-        strategy: emailResult.strategy,
-        method: emailResult.method,
-        channel: 'email' as const
-      };
-
-    } catch (error: any) {
-      console.error(`💥 [${requestId}] Erro no envio de email:`, error);
-      
-      if (error.message.includes('Timeout')) {
-        return {
-          success: false,
-          message: 'Timeout no envio de email',
-          error: 'A requisição demorou mais de 30 segundos',
-          channel: 'email' as const
-        };
-      }
-      
-      return {
-        success: false,
-        message: 'Erro crítico no envio',
-        error: error.message,
-        channel: 'email' as const
-      };
     }
   };
 
