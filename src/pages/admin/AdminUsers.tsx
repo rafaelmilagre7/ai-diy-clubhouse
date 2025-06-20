@@ -5,7 +5,6 @@ import { UsersHeader } from "@/components/admin/users/UsersHeader";
 import { UsersTable } from "@/components/admin/users/UsersTable";
 import { UserRoleManager } from "@/components/admin/users/UserRoleManager";
 import { UserResetDialog } from "@/components/admin/users/UserResetDialog";
-import { UserProfile } from "@/lib/supabase";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle, RefreshCw } from "lucide-react";
 import { DeleteUserDialog } from "@/components/admin/users/DeleteUserDialog";
@@ -13,6 +12,25 @@ import { ResetPasswordDialog } from "@/components/admin/users/ResetPasswordDialo
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/auth";
 import { Button } from "@/components/ui/button";
+
+interface UserProfile {
+  id: string;
+  email: string;
+  name: string;
+  avatar_url: string;
+  role: string;
+  role_id: string;
+  user_roles: {
+    id: string;
+    name: string;
+    description: string;
+  } | null;
+  company_name: string;
+  industry: string;
+  created_at: string;
+  onboarding_completed?: boolean;
+  onboarding_completed_at?: string;
+}
 
 const AdminUsers = () => {
   const {
@@ -128,6 +146,13 @@ const AdminUsers = () => {
     );
   }
 
+  // Converter users para UserProfile
+  const userProfiles: UserProfile[] = users.map(user => ({
+    ...user,
+    onboarding_completed: false,
+    onboarding_completed_at: undefined
+  }));
+
   return (
     <div className="space-y-6">
       <UsersHeader 
@@ -139,7 +164,7 @@ const AdminUsers = () => {
       
       <div className="border rounded-lg">
         <UsersTable 
-          users={users}
+          users={userProfiles}
           loading={loading}
           canEditRoles={canAssignRoles}
           canDeleteUsers={canDeleteUsers}

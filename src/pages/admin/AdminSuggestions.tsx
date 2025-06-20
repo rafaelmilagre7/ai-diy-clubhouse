@@ -1,42 +1,52 @@
-import React, { useState, useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/lib/supabase';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Input } from '@/components/ui/input';
-import { Search, Plus, MoreVertical, Eye } from 'lucide-react';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { useAdminSuggestions } from '@/hooks/suggestions/useAdminSuggestions';
-import { toast } from 'sonner';
-import { useNavigate } from 'react-router-dom';
-import { useToast } from '@/hooks/useToast';
+
+import { useState, useEffect } from "react";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/lib/supabase";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Trash2, Eye, MessageSquare, ThumbsUp, ThumbsDown } from "lucide-react";
+import { useAuth } from "@/contexts/auth";
+
+interface Suggestion {
+  id: string;
+  title: string;
+  description: string;
+  status: string;
+  upvotes: number;
+  downvotes: number;
+  user_id: string;
+  created_at: string;
+  profiles?: {
+    name: string;
+    email: string;
+  };
+}
 
 const AdminSuggestions = () => {
-  const navigate = useNavigate();
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
-  const [selectedStatus, setSelectedStatus] = useState<string>("pending");
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState("");
+  const [adminActionLoading, setAdminActionLoading] = useState(false);
   const { toast } = useToast();
-
-  useEffect(() => {
-    fetchSuggestions();
-  }, [selectedStatus]);
+  const { isAdmin } = useAuth();
 
   const fetchSuggestions = async () => {
     try {
       setLoading(true);
-      
       const { data, error } = await supabase
         .from('suggestions_with_profiles')
         .select('*')
-        .eq('status', selectedStatus as any)
+        .neq('status', 'pending' as any)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-
       setSuggestions((data as any) || []);
     } catch (error: any) {
       console.error('Erro ao buscar sugestões:', error);
@@ -50,180 +60,190 @@ const AdminSuggestions = () => {
     }
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'new':
-        return 'bg-blue-100 text-blue-800';
-      case 'in_development':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'implemented':
-        return 'bg-green-100 text-green-800';
-      case 'rejected':
-        return 'bg-red-100 text-red-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
+  useEffect(() => {
+    fetchSuggestions();
+  }, []);
+
+  const updateSuggestionStatus = async (id: string, status: string) => {
+    setAdminActionLoading(true);
+    try {
+      const { error } = await supabase
+        .from('suggestions')
+        .update({ status } as any)
+        .eq('id', id as any);
+
+      if (error) throw error;
+
+      toast({
+        title: "Status atualizado",
+        description: "O status da sugestão foi atualizado com sucesso.",
+      });
+      
+      fetchSuggestions();
+    } catch (error: any) {
+      toast({
+        title: "Erro ao atualizar status",
+        description: "Não foi possível atualizar o status da sugestão.",
+        variant: "destructive",
+      });
+    } finally {
+      setAdminActionLoading(false);
     }
   };
 
-  const getStatusLabel = (status: string) => {
-    switch (status) {
-      case 'new':
-        return 'Nova';
-      case 'in_development':
-        return 'Em Desenvolvimento';
-      case 'implemented':
-        return 'Implementada';
-      case 'rejected':
-        return 'Recusada';
-      default:
-        return status;
+  const removeSuggestion = async (id: string) => {
+    setAdminActionLoading(true);
+    try {
+      const { error } = await supabase
+        .from('suggestions')
+        .delete()
+        .eq('id', id as any);
+
+      if (error) throw error;
+
+      toast({
+        title: "Sugestão removida",
+        description: "A sugestão foi removida com sucesso.",
+      });
+      
+      fetchSuggestions();
+    } catch (error: any) {
+      toast({
+        title: "Erro ao remover sugestão",
+        description: "Não foi possível remover a sugestão.",
+        variant: "destructive",
+      });
+    } finally {
+      setAdminActionLoading(false);
     }
   };
 
-  const handleStatusUpdate = async (suggestionId: string, newStatus: string) => {
-    const success = await updateSuggestionStatus(suggestionId, newStatus);
-    if (success) {
-      refetch();
-    }
-  };
-
-  const handleRemoveSuggestion = async (suggestionId: string) => {
-    const success = await removeSuggestion(suggestionId);
-    if (success) {
-      refetch();
-    }
-  };
-
-  const handleViewSuggestion = (suggestionId: string) => {
-    navigate(`/admin/suggestions/${suggestionId}`);
-  };
-
-  if (loading) {
+  if (!isAdmin) {
     return (
-      <div className="container py-6">
-        <div className="text-center">Carregando sugestões...</div>
+      <div className="flex items-center justify-center h-64">
+        <p className="text-muted-foreground">Acesso negado. Você não tem permissão para visualizar esta página.</p>
       </div>
     );
   }
 
-  return (
-    <div className="container py-6 space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold">Gerenciar Sugestões</h1>
-      </div>
-
-      {/* Filtros */}
-      <div className="flex gap-4 items-center">
-        <div className="relative flex-1 max-w-sm">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-          <Input
-            placeholder="Buscar sugestões..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10"
-          />
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+          <p className="mt-2 text-muted-foreground">Carregando sugestões...</p>
         </div>
-        
-        <Select value={selectedStatus} onValueChange={setSelectedStatus}>
-          <SelectTrigger className="w-48">
-            <SelectValue placeholder="Filtrar por status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="pending">Todos os Status</SelectItem>
-            <SelectItem value="new">Nova</SelectItem>
-            <SelectItem value="in_development">Em Desenvolvimento</SelectItem>
-            <SelectItem value="implemented">Implementada</SelectItem>
-            <SelectItem value="rejected">Recusada</SelectItem>
-          </SelectContent>
-        </Select>
+      </div>
+    );
+  }
+
+  const getStatusBadge = (status: string) => {
+    const variants: Record<string, 'default' | 'secondary' | 'destructive' | 'outline'> = {
+      pending: 'default',
+      approved: 'secondary',
+      rejected: 'destructive',
+      implemented: 'outline'
+    };
+    
+    const labels: Record<string, string> = {
+      pending: 'Pendente',
+      approved: 'Aprovada',
+      rejected: 'Rejeitada',
+      implemented: 'Implementada'
+    };
+
+    return (
+      <Badge variant={variants[status] || 'default'}>
+        {labels[status] || status}
+      </Badge>
+    );
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">Gerenciar Sugestões</h1>
+          <p className="text-muted-foreground">
+            Visualize e gerencie todas as sugestões da comunidade
+          </p>
+        </div>
       </div>
 
-      {/* Lista de Sugestões */}
       <div className="grid gap-4">
         {suggestions.map((suggestion) => (
           <Card key={suggestion.id}>
             <CardHeader>
-              <div className="flex justify-between items-start">
-                <div className="space-y-2">
+              <div className="flex items-start justify-between">
+                <div className="space-y-1">
                   <CardTitle className="text-lg">{suggestion.title}</CardTitle>
-                  <div className="flex items-center gap-2">
-                    <Badge className={getStatusColor(suggestion.status)}>
-                      {getStatusLabel(suggestion.status)}
-                    </Badge>
-                    <span className="text-sm text-gray-500">
-                      por {suggestion.user_name || 'Usuário Anônimo'}
-                    </span>
-                    <span className="text-sm text-gray-500">
-                      • {new Date(suggestion.created_at).toLocaleDateString('pt-BR')}
-                    </span>
-                  </div>
+                  <CardDescription>
+                    Por {suggestion.profiles?.name || 'Usuário anônimo'} •{' '}
+                    {new Date(suggestion.created_at).toLocaleDateString('pt-BR')}
+                  </CardDescription>
                 </div>
-                
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="sm">
-                      <MoreVertical className="h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={() => handleViewSuggestion(suggestion.id)}>
-                      <Eye className="mr-2 h-4 w-4" />
-                      Ver Detalhes
-                    </DropdownMenuItem>
-                    <DropdownMenuItem 
-                      onClick={() => handleStatusUpdate(suggestion.id, 'in_development')}
-                      disabled={adminActionLoading || suggestion.status === 'in_development'}
-                    >
-                      Marcar como Em Desenvolvimento
-                    </DropdownMenuItem>
-                    <DropdownMenuItem 
-                      onClick={() => handleStatusUpdate(suggestion.id, 'implemented')}
-                      disabled={adminActionLoading || suggestion.status === 'implemented'}
-                    >
-                      Marcar como Implementada
-                    </DropdownMenuItem>
-                    <DropdownMenuItem 
-                      onClick={() => handleStatusUpdate(suggestion.id, 'rejected')}
-                      disabled={adminActionLoading || suggestion.status === 'rejected'}
-                    >
-                      Marcar como Recusada
-                    </DropdownMenuItem>
-                    <DropdownMenuItem 
-                      onClick={() => handleStatusUpdate(suggestion.id, 'new')}
-                      disabled={adminActionLoading || suggestion.status === 'new'}
-                    >
-                      Marcar como Nova
-                    </DropdownMenuItem>
-                    <DropdownMenuItem 
-                      onClick={() => handleRemoveSuggestion(suggestion.id)}
-                      className="text-destructive focus:text-destructive"
-                      disabled={adminActionLoading}
-                    >
-                      Remover Sugestão
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                {getStatusBadge(suggestion.status)}
               </div>
             </CardHeader>
-            
             <CardContent>
-              <p className="text-gray-600 mb-4">{suggestion.description}</p>
-              <div className="flex items-center justify-between text-sm text-gray-500">
-                <div className="flex items-center gap-4">
-                  <span>👍 {suggestion.upvotes || 0}</span>
-                  <span>👎 {suggestion.downvotes || 0}</span>
+              <p className="text-sm text-muted-foreground mb-4">
+                {suggestion.description}
+              </p>
+              
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                  <div className="flex items-center gap-1">
+                    <ThumbsUp className="h-4 w-4" />
+                    {suggestion.upvotes}
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <ThumbsDown className="h-4 w-4" />
+                    {suggestion.downvotes}
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <Select
+                    value={suggestion.status}
+                    onValueChange={(value) => updateSuggestionStatus(suggestion.id, value)}
+                    disabled={adminActionLoading}
+                  >
+                    <SelectTrigger className="w-[130px]">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="pending">Pendente</SelectItem>
+                      <SelectItem value="approved">Aprovada</SelectItem>
+                      <SelectItem value="rejected">Rejeitada</SelectItem>
+                      <SelectItem value="implemented">Implementada</SelectItem>
+                    </SelectContent>
+                  </Select>
+
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => removeSuggestion(suggestion.id)}
+                    disabled={adminActionLoading}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
                 </div>
               </div>
             </CardContent>
           </Card>
         ))}
-      </div>
 
-      {suggestions.length === 0 && (
-        <div className="text-center py-12">
-          <p className="text-gray-500">Nenhuma sugestão encontrada com os filtros aplicados.</p>
-        </div>
-      )}
+        {suggestions.length === 0 && (
+          <Card>
+            <CardContent className="py-8">
+              <div className="text-center text-muted-foreground">
+                <MessageSquare className="h-8 w-8 mx-auto mb-2" />
+                <p>Nenhuma sugestão encontrada.</p>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+      </div>
     </div>
   );
 };

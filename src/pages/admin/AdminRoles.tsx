@@ -8,7 +8,6 @@ import { RolesList } from '@/components/admin/roles/RolesList';
 import { RoleForm } from '@/components/admin/roles/RoleForm';
 import { DeleteRoleDialog } from '@/components/admin/roles/DeleteRoleDialog';
 import { RolePermissions } from '@/components/admin/roles/RolePermissions';
-import { RoleCourseAccess } from '@/components/admin/roles/RoleCourseAccess';
 import { RoleSyncPanel } from '@/components/admin/roles/RoleSyncPanel';
 import { useRoles, Role } from '@/hooks/admin/useRoles';
 
@@ -19,7 +18,6 @@ const AdminRoles: React.FC = () => {
   const [selectedRole, setSelectedRole] = useState<Role | undefined>();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [permissionsDialogOpen, setPermissionsDialogOpen] = useState(false);
-  const [courseAccessDialogOpen, setCourseAccessDialogOpen] = useState(false);
 
   const handleCreateRole = () => {
     setSelectedRole(undefined);
@@ -41,11 +39,6 @@ const AdminRoles: React.FC = () => {
   const handleManagePermissions = (role: Role) => {
     setSelectedRole(role);
     setPermissionsDialogOpen(true);
-  };
-
-  const handleManageCourseAccess = (role: Role) => {
-    setSelectedRole(role);
-    setCourseAccessDialogOpen(true);
   };
 
   const confirmDelete = async () => {
@@ -89,7 +82,7 @@ const AdminRoles: React.FC = () => {
                 onEditRole={handleEditRole}
                 onDeleteRole={handleDeleteRole}
                 onManagePermissions={handleManagePermissions}
-                onManageCourseAccess={handleManageCourseAccess}
+                onManageCourseAccess={() => {}}
               />
             </CardContent>
           </Card>
@@ -118,12 +111,6 @@ const AdminRoles: React.FC = () => {
       <RolePermissions
         open={permissionsDialogOpen}
         onOpenChange={setPermissionsDialogOpen}
-        role={selectedRole || null}
-      />
-
-      <RoleCourseAccess
-        open={courseAccessDialogOpen}
-        onOpenChange={setCourseAccessDialogOpen}
         role={selectedRole || null}
       />
     </div>
