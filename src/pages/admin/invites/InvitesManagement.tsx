@@ -1,33 +1,31 @@
+
 import { useState, useEffect } from "react";
 import { useDocumentTitle } from "@/hooks/use-document-title";
 import { usePermissions } from "@/hooks/auth/usePermissions";
-import { useInvitesList } from "@/hooks/admin/invites/useInvitesList";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useInvites } from "@/hooks/admin/useInvites";
+import SimpleCreateInviteDialog from "./invites/components/SimpleCreateInviteDialog";
+import SimpleInvitesTab from "./invites/components/SimpleInvitesTab";
+import { EmailDiagnosticsPanel } from "./invites/components/EmailDiagnosticsPanel";
+import { SystemDiagnosticsPanel } from "@/components/admin/email/SystemDiagnosticsPanel";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import SimpleCreateInviteDialog from "./components/SimpleCreateInviteDialog";
-import SimpleInvitesTab from "./components/SimpleInvitesTab";
-import { EmailMonitoringDashboard } from "@/components/admin/email/EmailMonitoringDashboard";
-import { SystemValidationPanel } from "@/components/admin/email/SystemValidationPanel";
-import { ResendConfigValidator } from "@/components/admin/email/ResendConfigValidator";
-import { EmailStatusMonitor } from "./components/EmailStatusMonitor";
-import { 
-  Mail, 
-  Users, 
-  Activity, 
-  TestTube, 
-  Settings, 
-  Shield,
-  CheckCircle,
-  Zap
-} from "lucide-react";
 
 const InvitesManagement = () => {
-  useDocumentTitle("Sistema de Convites e Email | Admin");
+  useDocumentTitle("Gerenciar Convites | Admin");
   
   const { roles, loading: rolesLoading } = usePermissions();
-  const { invites, loading: invitesLoading, fetchInvites } = useInvitesList();
-  const [activeTab, setActiveTab] = useState('invites');
+  const { 
+    invites, 
+    loading: invitesLoading, 
+    fetchInvites,
+    createInvite,
+    deleteInvite,
+    resendInvite,
+    isCreating,
+    isDeleting,
+    isSending
+  } = useInvites();
 
   useEffect(() => {
     fetchInvites();
@@ -35,6 +33,14 @@ const InvitesManagement = () => {
 
   const handleInvitesChange = () => {
     fetchInvites();
+  };
+
+  // Calcular estatísticas dos convites
+  const inviteStats = {
+    total: invites.length,
+    pending: invites.filter(i => !i.used_at && new Date(i.expires_at) > new Date()).length,
+    used: invites.filter(i => i.used_at).length,
+    expired: invites.filter(i => !i.used_at && new Date(i.expires_at) <= new Date()).length
   };
 
   if (rolesLoading) {
@@ -50,62 +56,40 @@ const InvitesManagement = () => {
 
   return (
     <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex justify-between items-start">
         <div>
-          <h1 className="text-3xl font-bold flex items-center gap-2">
-            <Mail className="h-8 w-8" />
-            Sistema de Convites e Email
-          </h1>
+          <h1 className="text-3xl font-bold">Gerenciar Convites</h1>
           <p className="text-muted-foreground mt-1">
-            Gerencie convites e monitore o sistema de email profissional
+            Convide novos usuários e monitore o sistema de email
           </p>
+          <div className="flex gap-2 mt-3">
+            <Badge variant="outline">{inviteStats.total} Total</Badge>
+            <Badge variant="default">{inviteStats.pending} Pendentes</Badge>
+            <Badge variant="secondary">{inviteStats.used} Utilizados</Badge>
+            {inviteStats.expired > 0 && (
+              <Badge variant="destructive">{inviteStats.expired} Expirados</Badge>
+            )}
+          </div>
         </div>
-        
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-1 px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm">
-            <CheckCircle className="h-3 w-3" />
-            Sistema Ativo
-          </div>
-          <div className="flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">
-            <Zap className="h-3 w-3" />
-            Resend Pro
-          </div>
-          <SimpleCreateInviteDialog roles={roles} onInviteCreated={handleInvitesChange} />
+        <div className="flex gap-2">
+          <SimpleCreateInviteDialog 
+            roles={roles} 
+            onInviteCreated={handleInvitesChange}
+          />
         </div>
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList className="grid w-full grid-cols-6">
-          <TabsTrigger value="invites" className="flex items-center gap-2">
-            <Users className="h-4 w-4" />
-            Convites
-          </TabsTrigger>
-          <TabsTrigger value="diagnostics" className="flex items-center gap-2">
-            <TestTube className="h-4 w-4" />
-            Diagnóstico
-          </TabsTrigger>
-          <TabsTrigger value="monitor" className="flex items-center gap-2">
-            <Activity className="h-4 w-4" />
-            Monitoramento
-          </TabsTrigger>
-          <TabsTrigger value="validation" className="flex items-center gap-2">
-            <TestTube className="h-4 w-4" />
-            Validação
-          </TabsTrigger>
-          <TabsTrigger value="config" className="flex items-center gap-2">
-            <Settings className="h-4 w-4" />
-            Configuração
-          </TabsTrigger>
-          <TabsTrigger value="status" className="flex items-center gap-2">
-            <Shield className="h-4 w-4" />
-            Status
-          </TabsTrigger>
+      <Tabs defaultValue="invites" className="space-y-6">
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="invites">Lista de Convites</TabsTrigger>
+          <TabsTrigger value="diagnostics">Diagnóstico do Sistema</TabsTrigger>
+          <TabsTrigger value="recovery">Recuperação Avançada</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="invites" className="space-y-4">
+        <TabsContent value="invites" className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Gerenciar Convites</CardTitle>
+              <CardTitle>Convites Enviados</CardTitle>
               <CardDescription>
                 Gerencie todos os convites enviados para novos usuários
               </CardDescription>
@@ -120,12 +104,26 @@ const InvitesManagement = () => {
           </Card>
         </TabsContent>
 
-        <TabsContent value="diagnostics" className="space-y-4">
+        <TabsContent value="diagnostics" className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Diagnóstico Crítico do Sistema</CardTitle>
+              <CardTitle>Sistema de Email</CardTitle>
               <CardDescription>
-                Execute testes para garantir 100% de funcionamento do email
+                Monitore a saúde e performance do sistema de envio de emails
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <EmailDiagnosticsPanel />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="recovery" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Diagnóstico e Recuperação Avançada</CardTitle>
+              <CardDescription>
+                Sistema completo de diagnóstico e recuperação de emails
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -133,73 +131,7 @@ const InvitesManagement = () => {
             </CardContent>
           </Card>
         </TabsContent>
-
-        <TabsContent value="monitor" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Monitoramento em Tempo Real</CardTitle>
-              <CardDescription>
-                Acompanhe métricas e performance do sistema de emails
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <EmailMonitoringDashboard />
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="validation" className="space-y-4">
-          <SystemValidationPanel />
-        </TabsContent>
-
-        <TabsContent value="config" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Configuração e Testes</CardTitle>
-              <CardDescription>
-                Valide e teste a configuração do sistema Resend
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ResendConfigValidator />
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="status" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Status do Sistema</CardTitle>
-              <CardDescription>
-                Visualize o status detalhado do sistema de emails
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <EmailStatusMonitor />
-            </CardContent>
-          </Card>
-        </TabsContent>
       </Tabs>
-
-      {/* Sistema de Informações Atualizadas */}
-      <Card className="bg-gradient-to-r from-green-50 to-blue-50 border-green-200">
-        <CardContent className="pt-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-            <div className="space-y-1">
-              <h4 className="font-medium text-green-900">🚀 Sistema Otimizado</h4>
-              <p className="text-green-700">Diagnóstico completo e correção automática</p>
-            </div>
-            <div className="space-y-1">
-              <h4 className="font-medium text-blue-900">🔧 Testes Diretos</h4>
-              <p className="text-blue-700">Edge Function dedicada para teste de conectividade</p>
-            </div>
-            <div className="space-y-1">
-              <h4 className="font-medium text-purple-900">✅ Correção de Órfãos</h4>
-              <p className="text-purple-700">Sistema automático para reprocessar convites</p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
     </div>
   );
 };
