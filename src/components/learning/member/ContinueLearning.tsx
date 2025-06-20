@@ -36,7 +36,7 @@ export const ContinueLearning = ({ className }: ContinueLearningProps) => {
             )
           )
         `)
-        .eq("user_id", userData.user.id)
+        .eq("user_id", userData.user.id as any)
         .order("updated_at", { ascending: false })
         .limit(1);
         
@@ -50,14 +50,14 @@ export const ContinueLearning = ({ className }: ContinueLearningProps) => {
   
   // Processar os dados quando o progresso for carregado
   useEffect(() => {
-    if (userProgress && userProgress.lesson) {
+    if (userProgress && (userProgress as any).lesson) {
       setLastLesson({
-        id: userProgress.lesson.id,
-        title: userProgress.lesson.title,
-        course_id: userProgress.lesson.module?.course_id,
-        course_title: userProgress.lesson.module?.course?.title,
-        cover_image: userProgress.lesson.cover_image_url || userProgress.lesson.module?.course?.cover_image_url,
-        progress: userProgress.progress_percentage,
+        id: (userProgress as any).lesson.id,
+        title: (userProgress as any).lesson.title,
+        course_id: (userProgress as any).lesson.module?.course_id,
+        course_title: (userProgress as any).lesson.module?.course?.title,
+        cover_image: (userProgress as any).lesson.cover_image_url || (userProgress as any).lesson.module?.course?.cover_image_url,
+        progress: (userProgress as any).progress_percentage,
       });
     }
   }, [userProgress]);

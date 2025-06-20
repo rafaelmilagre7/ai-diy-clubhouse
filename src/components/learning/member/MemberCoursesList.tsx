@@ -26,25 +26,25 @@ export const MemberCoursesList = ({ courses, userProgress }: MemberCoursesListPr
       const { data: modules } = await supabase
         .from("learning_modules")
         .select("id, course_id")
-        .in("course_id", courseIds)
-        .eq("published", true);
+        .in("course_id", courseIds as any)
+        .eq("published", true as any);
       
       if (!modules?.length) return {};
       
       // Obter todas as aulas dos módulos
-      const moduleIds = modules.map(m => m.id);
+      const moduleIds = (modules as any).map((m: any) => m.id);
       const { data: lessons } = await supabase
         .from("learning_lessons")
         .select("id, module_id")
-        .in("module_id", moduleIds)
-        .eq("published", true);
+        .in("module_id", moduleIds as any)
+        .eq("published", true as any);
       
       // Obter todos os vídeos das aulas
-      const lessonIds = lessons?.map(l => l.id) || [];
+      const lessonIds = (lessons as any)?.map((l: any) => l.id) || [];
       const { data: videos } = await supabase
         .from("learning_lesson_videos")
         .select("lesson_id, duration_seconds")
-        .in("lesson_id", lessonIds);
+        .in("lesson_id", lessonIds as any);
       
       // Calcular estatísticas por curso
       const stats: Record<string, { lessonCount: number, videoCount: number, totalMinutes: number }> = {};
@@ -55,7 +55,7 @@ export const MemberCoursesList = ({ courses, userProgress }: MemberCoursesListPr
       
       // Agrupar módulos por curso
       const modulesByCourse: Record<string, string[]> = {};
-      modules?.forEach(module => {
+      (modules as any)?.forEach((module: any) => {
         if (!modulesByCourse[module.course_id]) {
           modulesByCourse[module.course_id] = [];
         }
@@ -63,7 +63,7 @@ export const MemberCoursesList = ({ courses, userProgress }: MemberCoursesListPr
       });
       
       // Contar aulas por módulo
-      lessons?.forEach(lesson => {
+      (lessons as any)?.forEach((lesson: any) => {
         const courseId = Object.entries(modulesByCourse).find(
           ([, moduleIds]) => moduleIds.includes(lesson.module_id)
         )?.[0];
@@ -74,8 +74,8 @@ export const MemberCoursesList = ({ courses, userProgress }: MemberCoursesListPr
       });
       
       // Contar vídeos e duração
-      videos?.forEach(video => {
-        const lesson = lessons?.find(l => l.id === video.lesson_id);
+      (videos as any)?.forEach((video: any) => {
+        const lesson = (lessons as any)?.find((l: any) => l.id === video.lesson_id);
         if (lesson) {
           const courseId = Object.entries(modulesByCourse).find(
             ([, moduleIds]) => moduleIds.includes(lesson.module_id)

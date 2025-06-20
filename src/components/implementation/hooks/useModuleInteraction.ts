@@ -34,7 +34,7 @@ export const useModuleInteraction = (module: Module, onComplete: () => void) => 
             interaction_type: "content_viewed",
             timestamp: new Date().toISOString()
           }
-        }).then(({ error }) => {
+        } as any).then(({ error }) => {
           if (error) {
             console.error("Error logging interaction:", error);
           }
