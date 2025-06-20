@@ -1,50 +1,90 @@
 
-import { useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import React, { useState } from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { 
+  BarChart, 
+  Bar, 
+  XAxis, 
+  YAxis, 
+  CartesianGrid, 
+  Tooltip, 
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+  LineChart,
+  Line
+} from 'recharts';
 import { 
   Mail, 
   MessageCircle, 
-  BarChart3, 
   TrendingUp, 
   Users, 
-  Clock,
+  Clock, 
   CheckCircle,
   XCircle,
-  RefreshCw
-} from "lucide-react";
-import { useInviteAnalytics } from "@/hooks/admin/invites/useInviteAnalytics";
-import { Progress } from "@/components/ui/progress";
+  RefreshCw,
+  Calendar
+} from 'lucide-react';
+import { useInviteAnalytics } from '@/hooks/admin/invites/useInviteAnalytics';
+
+const COLORS = ['#8884d8', '#82ca9d', '#ffc658', '#ff7300'];
 
 const InviteAnalyticsDashboard = () => {
   const [timeRange, setTimeRange] = useState('30d');
   const { analytics, loading, fetchAnalytics } = useInviteAnalytics(timeRange);
 
+  const channelData = [
+    { name: 'Email', value: analytics.sentByChannel.email, color: '#8884d8' },
+    { name: 'WhatsApp', value: analytics.sentByChannel.whatsapp, color: '#82ca9d' },
+    { name: 'Ambos', value: analytics.sentByChannel.both, color: '#ffc658' }
+  ];
+
+  const performanceData = [
+    {
+      channel: 'Email',
+      envio: analytics.channelPerformance.email.sentRate,
+      entrega: analytics.channelPerformance.email.deliveryRate,
+      abertura: analytics.channelPerformance.email.openRate,
+      clique: analytics.channelPerformance.email.clickRate
+    },
+    {
+      channel: 'WhatsApp',
+      envio: analytics.channelPerformance.whatsapp.sentRate,
+      entrega: analytics.channelPerformance.whatsapp.deliveryRate,
+      abertura: analytics.channelPerformance.whatsapp.openRate,
+      clique: analytics.channelPerformance.whatsapp.clickRate
+    }
+  ];
+
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'sent':
       case 'delivered':
-        return <CheckCircle className="h-4 w-4 text-green-500" />;
       case 'opened':
       case 'clicked':
-        return <TrendingUp className="h-4 w-4 text-blue-500" />;
+        return <CheckCircle className="h-4 w-4 text-green-500" />;
       case 'failed':
         return <XCircle className="h-4 w-4 text-red-500" />;
       default:
-        return <Clock className="h-4 w-4 text-gray-500" />;
+        return <Clock className="h-4 w-4 text-yellow-500" />;
     }
   };
 
-  const getStatusColor = (status: string) => {
+  const getStatusBadgeVariant = (status: string) => {
     switch (status) {
       case 'sent':
+        return 'secondary';
       case 'delivered':
         return 'default';
       case 'opened':
+        return 'default';
       case 'clicked':
-        return 'secondary';
+        return 'default';
       case 'failed':
         return 'destructive';
       default:
@@ -52,25 +92,31 @@ const InviteAnalyticsDashboard = () => {
     }
   };
 
+  const formatPercentage = (value: number) => `${value.toFixed(1)}%`;
+
   if (loading) {
     return (
-      <div className="flex justify-center py-10">
-        <RefreshCw className="h-8 w-8 animate-spin text-muted-foreground" />
-      </div>
+      <Card>
+        <CardContent className="flex items-center justify-center py-8">
+          <RefreshCw className="h-6 w-6 animate-spin mr-2" />
+          <span>Carregando analytics...</span>
+        </CardContent>
+      </Card>
     );
   }
 
   return (
     <div className="space-y-6">
-      {/* Header com controles */}
-      <div className="flex justify-between items-center">
+      {/* Controles */}
+      <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold">Analytics de Convites</h2>
+          <h2 className="text-2xl font-bold tracking-tight">Analytics de Convites</h2>
           <p className="text-muted-foreground">
-            Acompanhe o desempenho dos convites por canal de comunicação
+            Métricas de desempenho dos convites por canal de comunicação
           </p>
         </div>
-        <div className="flex gap-2">
+        
+        <div className="flex items-center gap-2">
           <Select value={timeRange} onValueChange={setTimeRange}>
             <SelectTrigger className="w-32">
               <SelectValue />
@@ -81,15 +127,16 @@ const InviteAnalyticsDashboard = () => {
               <SelectItem value="90d">90 dias</SelectItem>
             </SelectContent>
           </Select>
-          <Button variant="outline" onClick={fetchAnalytics}>
+          
+          <Button variant="outline" size="sm" onClick={fetchAnalytics}>
             <RefreshCw className="h-4 w-4 mr-2" />
             Atualizar
           </Button>
         </div>
       </div>
 
-      {/* Cards de estatísticas gerais */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      {/* Cards de Métricas */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total de Convites</CardTitle>
@@ -97,6 +144,27 @@ const InviteAnalyticsDashboard = () => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{analytics.totalInvites}</div>
+            <p className="text-xs text-muted-foreground">
+              Nos últimos {timeRange === '7d' ? '7 dias' : timeRange === '30d' ? '30 dias' : '90 dias'}
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Taxa de Entrega</CardTitle>
+            <CheckCircle className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {analytics.deliveryStats.total > 0 
+                ? formatPercentage((analytics.deliveryStats.delivered / analytics.deliveryStats.total) * 100)
+                : '0%'
+              }
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {analytics.deliveryStats.delivered} de {analytics.deliveryStats.total} enviados
+            </p>
           </CardContent>
         </Card>
 
@@ -108,9 +176,7 @@ const InviteAnalyticsDashboard = () => {
           <CardContent>
             <div className="text-2xl font-bold">{analytics.sentByChannel.email}</div>
             <p className="text-xs text-muted-foreground">
-              {analytics.totalInvites > 0 
-                ? Math.round((analytics.sentByChannel.email / analytics.totalInvites) * 100)
-                : 0}% do total
+              Taxa: {formatPercentage(analytics.channelPerformance.email.deliveryRate)}
             </p>
           </CardContent>
         </Card>
@@ -123,190 +189,142 @@ const InviteAnalyticsDashboard = () => {
           <CardContent>
             <div className="text-2xl font-bold">{analytics.sentByChannel.whatsapp}</div>
             <p className="text-xs text-muted-foreground">
-              {analytics.totalInvites > 0 
-                ? Math.round((analytics.sentByChannel.whatsapp / analytics.totalInvites) * 100)
-                : 0}% do total
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Ambos os Canais</CardTitle>
-            <BarChart3 className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{analytics.sentByChannel.both}</div>
-            <p className="text-xs text-muted-foreground">
-              {analytics.totalInvites > 0 
-                ? Math.round((analytics.sentByChannel.both / analytics.totalInvites) * 100)
-                : 0}% do total
+              Taxa: {formatPercentage(analytics.channelPerformance.whatsapp.deliveryRate)}
             </p>
           </CardContent>
         </Card>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Performance por canal */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Performance por Canal</CardTitle>
-            <CardDescription>
-              Taxas de entrega e engajamento
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            {/* Email */}
-            <div className="space-y-3">
-              <div className="flex items-center gap-2">
-                <Mail className="h-4 w-4" />
-                <span className="font-medium">Email</span>
-              </div>
-              <div className="space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span>Taxa de Envio</span>
-                  <span>{analytics.channelPerformance.email.sentRate.toFixed(1)}%</span>
-                </div>
-                <Progress value={analytics.channelPerformance.email.sentRate} />
-                
-                <div className="flex justify-between text-sm">
-                  <span>Taxa de Entrega</span>
-                  <span>{analytics.channelPerformance.email.deliveryRate.toFixed(1)}%</span>
-                </div>
-                <Progress value={analytics.channelPerformance.email.deliveryRate} />
-                
-                <div className="flex justify-between text-sm">
-                  <span>Taxa de Abertura</span>
-                  <span>{analytics.channelPerformance.email.openRate.toFixed(1)}%</span>
-                </div>
-                <Progress value={analytics.channelPerformance.email.openRate} />
-              </div>
-            </div>
+      {/* Tabs com Gráficos */}
+      <Tabs defaultValue="overview" className="w-full">
+        <TabsList>
+          <TabsTrigger value="overview">Visão Geral</TabsTrigger>
+          <TabsTrigger value="channels">Por Canal</TabsTrigger>
+          <TabsTrigger value="activity">Atividade Recente</TabsTrigger>
+        </TabsList>
 
-            {/* WhatsApp */}
-            <div className="space-y-3">
-              <div className="flex items-center gap-2">
-                <MessageCircle className="h-4 w-4" />
-                <span className="font-medium">WhatsApp</span>
-              </div>
-              <div className="space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span>Taxa de Envio</span>
-                  <span>{analytics.channelPerformance.whatsapp.sentRate.toFixed(1)}%</span>
-                </div>
-                <Progress value={analytics.channelPerformance.whatsapp.sentRate} />
-                
-                <div className="flex justify-between text-sm">
-                  <span>Taxa de Entrega</span>
-                  <span>{analytics.channelPerformance.whatsapp.deliveryRate.toFixed(1)}%</span>
-                </div>
-                <Progress value={analytics.channelPerformance.whatsapp.deliveryRate} />
-                
-                <div className="flex justify-between text-sm">
-                  <span>Taxa de Visualização</span>
-                  <span>{analytics.channelPerformance.whatsapp.openRate.toFixed(1)}%</span>
-                </div>
-                <Progress value={analytics.channelPerformance.whatsapp.openRate} />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        <TabsContent value="overview" className="space-y-4">
+          <div className="grid md:grid-cols-2 gap-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Distribuição por Canal</CardTitle>
+                <CardDescription>Como os convites foram enviados</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ResponsiveContainer width="100%" height={200}>
+                  <PieChart>
+                    <Pie
+                      data={channelData}
+                      cx="50%"
+                      cy="50%"
+                      outerRadius={60}
+                      fill="#8884d8"
+                      dataKey="value"
+                      label={({ name, value }) => value > 0 ? `${name}: ${value}` : ''}
+                    >
+                      {channelData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                  </PieChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
 
-        {/* Atividade recente */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Atividade Recente</CardTitle>
-            <CardDescription>
-              Últimas entregas de convites
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
+            <Card>
+              <CardHeader>
+                <CardTitle>Status de Entrega</CardTitle>
+                <CardDescription>Estado atual das mensagens</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm">Enviados</span>
+                    <Badge variant="secondary">{analytics.deliveryStats.sent}</Badge>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm">Entregues</span>
+                    <Badge variant="default">{analytics.deliveryStats.delivered}</Badge>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm">Abertos</span>
+                    <Badge variant="default">{analytics.deliveryStats.opened}</Badge>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm">Clicados</span>
+                    <Badge variant="default">{analytics.deliveryStats.clicked}</Badge>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm">Falharam</span>
+                    <Badge variant="destructive">{analytics.deliveryStats.failed}</Badge>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="channels" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Performance por Canal</CardTitle>
+              <CardDescription>Comparação de métricas entre email e WhatsApp</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={performanceData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="channel" />
+                  <YAxis />
+                  <Tooltip formatter={(value) => [formatPercentage(Number(value)), '']} />
+                  <Bar dataKey="envio" fill="#8884d8" name="Taxa de Envio" />
+                  <Bar dataKey="entrega" fill="#82ca9d" name="Taxa de Entrega" />
+                  <Bar dataKey="abertura" fill="#ffc658" name="Taxa de Abertura" />
+                  <Bar dataKey="clique" fill="#ff7300" name="Taxa de Clique" />
+                </BarChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="activity" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Atividade Recente</CardTitle>
+              <CardDescription>Últimas 50 entregas de convites</CardDescription>
+            </CardHeader>
+            <CardContent>
               {analytics.recentActivity.length > 0 ? (
-                analytics.recentActivity.slice(0, 10).map((activity) => (
-                  <div key={activity.id} className="flex items-center justify-between py-2 border-b last:border-0">
-                    <div className="flex items-center gap-3">
-                      {activity.channel === 'email' ? (
-                        <Mail className="h-4 w-4 text-blue-500" />
-                      ) : (
-                        <MessageCircle className="h-4 w-4 text-green-500" />
-                      )}
-                      <div>
-                        <p className="text-sm font-medium">
-                          {activity.email || 'N/A'}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          {new Date(activity.created_at).toLocaleString('pt-BR')}
-                        </p>
+                <div className="space-y-2 max-h-96 overflow-y-auto">
+                  {analytics.recentActivity.map((activity) => (
+                    <div key={activity.id} className="flex items-center justify-between p-3 border rounded-lg">
+                      <div className="flex items-center gap-3">
+                        {getStatusIcon(activity.status)}
+                        <div>
+                          <div className="font-medium">{activity.email}</div>
+                          <div className="text-sm text-muted-foreground">
+                            {activity.channel === 'email' ? 'Email' : 'WhatsApp'} • {' '}
+                            {new Date(activity.created_at).toLocaleString('pt-BR')}
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      {getStatusIcon(activity.status)}
-                      <Badge variant={getStatusColor(activity.status) as any}>
+                      <Badge variant={getStatusBadgeVariant(activity.status)}>
                         {activity.status}
                       </Badge>
                     </div>
-                  </div>
-                ))
+                  ))}
+                </div>
               ) : (
-                <p className="text-center text-muted-foreground py-4">
-                  Nenhuma atividade recente
-                </p>
+                <div className="text-center py-8 text-muted-foreground">
+                  <Calendar className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                  <p>Nenhuma atividade recente encontrada</p>
+                </div>
               )}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Estatísticas de entrega detalhadas */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Estatísticas de Entrega</CardTitle>
-          <CardDescription>
-            Detalhamento dos status de entrega
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
-            <div className="text-center">
-              <div className="text-2xl font-bold text-blue-600">
-                {analytics.deliveryStats.total}
-              </div>
-              <div className="text-sm text-muted-foreground">Total</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-green-600">
-                {analytics.deliveryStats.sent}
-              </div>
-              <div className="text-sm text-muted-foreground">Enviados</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-emerald-600">
-                {analytics.deliveryStats.delivered}
-              </div>
-              <div className="text-sm text-muted-foreground">Entregues</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-blue-600">
-                {analytics.deliveryStats.opened}
-              </div>
-              <div className="text-sm text-muted-foreground">Abertos</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-purple-600">
-                {analytics.deliveryStats.clicked}
-              </div>
-              <div className="text-sm text-muted-foreground">Clicados</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-red-600">
-                {analytics.deliveryStats.failed}
-              </div>
-              <div className="text-sm text-muted-foreground">Falharam</div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
