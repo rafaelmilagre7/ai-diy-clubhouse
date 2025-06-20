@@ -14,6 +14,7 @@ interface ResendHealthStatus {
   checkedAt: Date;
   edgeFunctionStatus: 'working' | 'failed' | 'unknown';
   connectionError?: string;
+  debugInfo?: any;
 }
 
 export const useResendHealthCheck = () => {
@@ -30,31 +31,53 @@ export const useResendHealthCheck = () => {
   });
   const [isChecking, setIsChecking] = useState(false);
 
-  const performHealthCheck = useCallback(async () => {
+  const performHealthCheck = useCallback(async (forceRefresh: boolean = false) => {
     setIsChecking(true);
     const issues: string[] = [];
     const recommendations: string[] = [];
 
     try {
-      console.log('🔍 [RESEND-HEALTH] Iniciando verificação do sistema de email...');
+      console.log('🔍 [RESEND-HEALTH] Iniciando verificação do sistema de email...', {
+        forceRefresh,
+        timestamp: new Date().toISOString()
+      });
       
-      // Testar conectividade com timeout
+      // Timeout aumentado para 30 segundos
+      const timeoutDuration = 30000;
       const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Timeout na Edge Function')), 10000)
+        setTimeout(() => reject(new Error(`Timeout de ${timeoutDuration/1000}s na Edge Function`)), timeoutDuration)
       );
 
-      const healthCheckPromise = supabase.functions.invoke('test-resend-health');
+      const healthCheckPromise = supabase.functions.invoke('test-resend-health', {
+        body: { force_refresh: forceRefresh }
+      });
+      
+      console.log('⏱️ [RESEND-HEALTH] Aguardando resposta da Edge Function...');
+      const startTime = Date.now();
       
       const { data, error } = await Promise.race([
         healthCheckPromise,
         timeoutPromise
       ]) as any;
       
+      const duration = Date.now() - startTime;
+      console.log(`⚡ [RESEND-HEALTH] Edge Function respondeu em ${duration}ms`);
+      
       if (error) {
         console.error('❌ [RESEND-HEALTH] Erro na Edge Function:', error);
         issues.push(`Falha na Edge Function: ${error.message}`);
-        recommendations.push('Verificar logs da Edge Function no Supabase');
-        recommendations.push('Verificar se o projeto está conectado ao Supabase');
+        
+        // Recomendações específicas baseadas no tipo de erro
+        if (error.message?.includes('timeout') || error.message?.includes('Timeout')) {
+          recommendations.push('A Edge Function está demorando muito para responder');
+          recommendations.push('Tente forçar uma atualização usando o botão "Forçar Verificação"');
+        } else if (error.message?.includes('not found') || error.message?.includes('404')) {
+          recommendations.push('A Edge Function test-resend-health não foi encontrada');
+          recommendations.push('Verificar se a função foi deployada corretamente');
+        } else {
+          recommendations.push('Verificar logs da Edge Function no Supabase');
+          recommendations.push('Verificar se o projeto está conectado ao Supabase');
+        }
         
         setHealthStatus({
           isHealthy: false,
@@ -71,22 +94,29 @@ export const useResendHealthCheck = () => {
         return;
       }
 
-      console.log('✅ [RESEND-HEALTH] Edge Function respondeu:', data);
+      console.log('✅ [RESEND-HEALTH] Edge Function respondeu com sucesso:', data);
       
       const result = data?.health || {};
       
-      // Analisar status da API key
+      // Analisar status da API key com mais detalhes
       let apiKeyStatus: ResendHealthStatus['apiKeyStatus'] = 'valid';
       if (result.apiKeyMissing) {
         apiKeyStatus = 'missing';
         issues.push('API key do Resend não está configurada');
-        recommendations.push('Configurar RESEND_API_KEY nas secrets do Supabase');
-        recommendations.push('Obter API key em https://resend.com/api-keys');
+        recommendations.push('1. Acesse https://resend.com/api-keys');
+        recommendations.push('2. Crie uma nova API key se necessário');
+        recommendations.push('3. Configure RESEND_API_KEY nas secrets do Supabase');
       } else if (!result.apiKeyValid) {
         apiKeyStatus = 'invalid';
-        issues.push('API key do Resend é inválida');
-        recommendations.push('Verificar se a API key está correta');
-        recommendations.push('Regenerar API key no painel do Resend');
+        issues.push('API key do Resend é inválida ou expirada');
+        
+        if (result.debug?.api_key_info?.format_valid === false) {
+          recommendations.push('API key deve começar com "re_"');
+        }
+        
+        recommendations.push('Verificar se a API key está correta no Supabase');
+        recommendations.push('Regenerar API key no painel do Resend se necessário');
+        recommendations.push('Aguardar 5-10 minutos após configurar nova key');
       }
 
       // Analisar status do domínio
@@ -94,8 +124,9 @@ export const useResendHealthCheck = () => {
       if (!result.domainVerified) {
         domainStatus = 'failed';
         issues.push('Domínio viverdeia.ai não está verificado no Resend');
-        recommendations.push('Verificar configurações DNS em https://resend.com/domains');
-        recommendations.push('Adicionar registros DNS necessários para verificação');
+        recommendations.push('1. Acessar https://resend.com/domains');
+        recommendations.push('2. Verificar configurações DNS do domínio');
+        recommendations.push('3. Adicionar registros DNS necessários');
       }
 
       // Analisar capacidade de envio
@@ -103,7 +134,8 @@ export const useResendHealthCheck = () => {
       if (result.quotaExceeded) {
         emailCapability = 'limited';
         issues.push('Quota de emails do Resend foi atingida');
-        recommendations.push('Upgradar plano do Resend ou aguardar reset da quota');
+        recommendations.push('Verificar uso na dashboard do Resend');
+        recommendations.push('Upgradar plano ou aguardar reset da quota');
       }
 
       // Determinar saúde geral
@@ -118,10 +150,19 @@ export const useResendHealthCheck = () => {
         issues,
         recommendations,
         checkedAt: new Date(),
-        edgeFunctionStatus: 'working'
+        edgeFunctionStatus: 'working',
+        debugInfo: result.debug
       });
 
-      console.log(`✅ [RESEND-HEALTH] Verificação concluída - Status: ${isHealthy ? 'Saudável' : 'Com problemas'}`);
+      console.log(`✅ [RESEND-HEALTH] Verificação concluída em ${duration}ms - Status: ${isHealthy ? 'Saudável' : 'Com problemas'}`);
+
+      // Toast de sucesso para verificações forçadas
+      if (forceRefresh && isHealthy) {
+        toast.success('Verificação forçada concluída', {
+          description: 'Sistema de email está funcionando normalmente',
+          duration: 3000
+        });
+      }
 
     } catch (error: any) {
       console.error('❌ [RESEND-HEALTH] Erro na verificação:', error);
@@ -130,13 +171,18 @@ export const useResendHealthCheck = () => {
       let connectionError = error.message;
       
       if (error.message?.includes('Timeout')) {
-        errorMessage = 'Edge Function não respondeu (timeout)';
+        errorMessage = 'Edge Function não respondeu (timeout de 30s)';
+        recommendations.push('A verificação está demorando muito');
         recommendations.push('Verificar se as Edge Functions estão funcionando');
-        recommendations.push('Tentar novamente em alguns minutos');
+        recommendations.push('Tentar "Forçar Verificação" novamente');
       } else if (error.message?.includes('network') || error.message?.includes('fetch')) {
         errorMessage = 'Erro de conectividade';
         recommendations.push('Verificar conexão com a internet');
         recommendations.push('Verificar status do Supabase');
+      } else if (error.message?.includes('401') || error.message?.includes('Unauthorized')) {
+        errorMessage = 'Erro de autenticação';
+        recommendations.push('Fazer login novamente');
+        recommendations.push('Verificar permissões do usuário');
       }
       
       setHealthStatus({
@@ -150,6 +196,12 @@ export const useResendHealthCheck = () => {
         checkedAt: new Date(),
         edgeFunctionStatus: 'failed',
         connectionError
+      });
+
+      // Toast de erro
+      toast.error('Falha na verificação', {
+        description: errorMessage,
+        duration: 5000
       });
     } finally {
       setIsChecking(false);
@@ -165,9 +217,19 @@ export const useResendHealthCheck = () => {
     try {
       console.log('📧 [RESEND-HEALTH] Enviando email de teste para:', email);
       
-      const { data, error } = await supabase.functions.invoke('test-resend-email', {
+      // Timeout de 30s para envio de email também
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Timeout no envio de email')), 30000)
+      );
+
+      const emailPromise = supabase.functions.invoke('test-resend-email', {
         body: { email }
       });
+
+      const { data, error } = await Promise.race([
+        emailPromise,
+        timeoutPromise
+      ]) as any;
 
       if (error) {
         console.error('❌ [RESEND-HEALTH] Erro no envio:', error);
@@ -182,7 +244,7 @@ export const useResendHealthCheck = () => {
       });
       
       // Atualizar status após teste bem-sucedido
-      performHealthCheck();
+      await performHealthCheck();
       
       return { success: true, emailId: data?.emailId };
     } catch (error: any) {
@@ -193,6 +255,8 @@ export const useResendHealthCheck = () => {
         errorMessage = 'API key do Resend inválida';
       } else if (error.message?.includes('domain')) {
         errorMessage = 'Problema com o domínio';
+      } else if (error.message?.includes('Timeout')) {
+        errorMessage = 'Timeout no envio (30s)';
       }
       
       toast.error(errorMessage, {
@@ -204,11 +268,21 @@ export const useResendHealthCheck = () => {
     }
   }, [performHealthCheck]);
 
+  // Forçar verificação
+  const forceHealthCheck = useCallback(() => {
+    console.log('🔄 [RESEND-HEALTH] Forçando nova verificação...');
+    toast.info('Forçando nova verificação...', {
+      description: 'Aguarde, isso pode levar até 30 segundos',
+      duration: 3000
+    });
+    return performHealthCheck(true);
+  }, [performHealthCheck]);
+
   useEffect(() => {
     performHealthCheck();
     
-    // Verificar a cada 5 minutos em vez de 10
-    const interval = setInterval(performHealthCheck, 5 * 60 * 1000);
+    // Verificar a cada 10 minutos (mais espaçado)
+    const interval = setInterval(() => performHealthCheck(), 10 * 60 * 1000);
     
     return () => clearInterval(interval);
   }, [performHealthCheck]);
@@ -217,6 +291,7 @@ export const useResendHealthCheck = () => {
     healthStatus,
     isChecking,
     performHealthCheck,
+    forceHealthCheck,
     sendTestEmail
   };
 };
