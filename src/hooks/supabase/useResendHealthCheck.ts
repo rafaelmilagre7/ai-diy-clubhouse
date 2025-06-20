@@ -85,7 +85,13 @@ export const useResendHealthCheck = () => {
     },
     debugInfo: {
       lastCheck: status.lastChecked,
-      attempts: status.attempt || 0
+      attempts: status.attempt || 0,
+      timestamp: status.lastChecked.toISOString(),
+      method: 'simulation',
+      responseStatus: status.isHealthy ? 200 : 500,
+      testType: 'health_check',
+      fallbackUsed: false,
+      errorDetails: status.lastError ? { message: status.lastError } : null
     }
   };
 };

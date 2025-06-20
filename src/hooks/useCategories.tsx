@@ -11,7 +11,7 @@ export interface Category {
 }
 
 export const useCategories = () => {
-  const { data: categories, isLoading } = useQuery({
+  const { data: categories, isLoading, error } = useQuery({
     queryKey: ['categories'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -27,6 +27,7 @@ export const useCategories = () => {
 
   return {
     categories: categories || [],
-    isLoading
+    isLoading,
+    error
   };
 };

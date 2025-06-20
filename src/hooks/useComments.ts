@@ -24,7 +24,7 @@ export const useComments = (suggestionId: string) => {
           profiles:user_id(name, avatar_url)
         `)
         .eq('suggestion_id', suggestionId as any)
-        .eq('is_hidden', false)
+        .eq('is_hidden', false as any)
         .order('created_at', { ascending: true });
 
       if (error) {

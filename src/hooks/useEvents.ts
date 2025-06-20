@@ -1,151 +1,164 @@
 
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
+import { useAuth } from '@/contexts/auth';
 import type { Event } from '@/types/events';
-import { useRLSSecurityManager } from '@/hooks/useRLSSecurityManager';
 
 interface UseEventsOptions {
-  includeParentEvents?: boolean; // Para área administrativa
+  includeParentEvents?: boolean;
 }
 
 export const useEvents = (options: UseEventsOptions = {}) => {
-  const { includeParentEvents = false } = options;
-  const { logSecureAccess } = useRLSSecurityManager();
-  
-  return useQuery({
-    queryKey: ['events', includeParentEvents],
-    queryFn: async (): Promise<Event[]> => {
+  const { user } = useAuth();
+  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
+
+  const {
+    data: events = [],
+    isLoading,
+    error,
+    refetch
+  } = useQuery({
+    queryKey: ['events', options.includeParentEvents],
+    queryFn: async () => {
+      if (!user) {
+        console.warn('Usuário não autenticado');
+        return [];
+      }
+
       try {
-        const { data: user } = await supabase.auth.getUser();
-        
-        if (!user.user) {
-          console.log("Usuário não autenticado");
+        // Para admins ou quando incluindo eventos pai, usar consulta direta
+        if (options.includeParentEvents) {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('role')
+            .eq('id', user.id as any)
+            .single();
+
+          const isAdmin = (profile as any)?.role === 'admin';
+
+          if (isAdmin) {
+            // Admins veem todos os eventos
+            const { data, error } = await supabase
+              .from('events')
+              .select('*')
+              .eq('is_recurring', false as any)
+              .order('start_time', { ascending: true });
+
+            if (error) {
+              console.error('Erro ao buscar eventos (admin):', error);
+              throw error;
+            }
+
+            return (data as unknown as Event[]) || [];
+          }
+        }
+
+        // Para usuários normais, usar função específica
+        const { data: userProfile } = await supabase
+          .from('profiles')
+          .select('role_id')
+          .eq('id', user.id as any)
+          .single();
+
+        const userRoleId = (userProfile as any)?.role_id;
+
+        if (!userRoleId) {
+          console.warn('Role do usuário não encontrada');
           return [];
         }
 
-        // Log de acesso seguro
-        await logSecureAccess('events', 'fetch_list');
+        // Buscar eventos sem recorrência primeiro
+        const { data: regularEvents, error: regularError } = await supabase
+          .from('events')
+          .select('*')
+          .eq('is_recurring', false as any)
+          .order('start_time', { ascending: true });
 
-        // Primeiro, tentar buscar eventos usando a função RPC se disponível
-        try {
-          const { data: rpcData, error: rpcError } = await supabase
-            .rpc('get_visible_events_for_user', { 
-              user_id: user.user.id 
-            });
-
-          if (!rpcError && rpcData) {
-            console.log("Eventos obtidos via RPC:", rpcData.length);
-            let filteredEvents = rpcData as Event[];
-            
-            // Filtrar eventos pai recorrentes se não estiver na administração
-            if (!includeParentEvents) {
-              filteredEvents = filteredEvents.filter(event => !event.is_recurring);
-            }
-            
-            return filteredEvents;
-          }
-        } catch (rpcError) {
-          console.log("RPC get_visible_events_for_user não disponível, usando fallback");
+        if (regularError) {
+          console.error('Erro ao buscar eventos regulares:', regularError);
+          throw regularError;
         }
 
-        // Fallback: buscar eventos diretamente com lógica de visibilidade
-        console.log("Usando query direta com fallback");
+        // Buscar eventos recorrentes e expandir
+        const { data: recurringEvents, error: recurringError } = await supabase
+          .from('events')
+          .select('*')
+          .eq('is_recurring', true as any)
+          .is('parent_event_id', null);
+
+        if (recurringError) {
+          console.error('Erro ao buscar eventos recorrentes:', recurringError);
+          throw recurringError;
+        }
+
+        const expandedEvents: Event[] = [];
         
-        // Verificar se o usuário é admin
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('role')
-          .eq('id', user.user.id)
-          .single();
+        if (recurringEvents) {
+          for (const event of recurringEvents) {
+            const eventData = event as any;
+            const startDate = new Date(eventData.start_time);
+            const endDate = new Date(eventData.end_time);
+            const duration = endDate.getTime() - startDate.getTime();
 
-        const isAdmin = profile?.role === 'admin';
+            // Gerar instâncias para os próximos 3 meses
+            const now = new Date();
+            const threeMonthsFromNow = new Date(now.getTime() + 90 * 24 * 60 * 60 * 1000);
 
-        if (isAdmin) {
-          // Admins veem todos os eventos
-          let query = supabase
-            .from('events')
-            .select('*')
-            .order('start_time', { ascending: true });
+            let currentDate = new Date(startDate);
+            let instanceCount = 0;
 
-          // Se não incluir eventos pai, filtrar eventos recorrentes pai
-          if (!includeParentEvents) {
-            query = query.eq('is_recurring', false);
-          }
+            while (currentDate <= threeMonthsFromNow && instanceCount < 50) {
+              if (currentDate >= now) {
+                const instanceStart = new Date(currentDate);
+                const instanceEnd = new Date(instanceStart.getTime() + duration);
 
-          const { data: events, error } = await query;
+                expandedEvents.push({
+                  ...eventData,
+                  id: `${eventData.id}-${instanceStart.toISOString()}`,
+                  start_time: instanceStart.toISOString(),
+                  end_time: instanceEnd.toISOString(),
+                  parent_event_id: eventData.id
+                } as Event);
+              }
 
-          if (error) {
-            console.error("Erro ao buscar eventos para admin:", error);
-            throw error;
-          }
+              // Calcular próxima ocorrência baseada no padrão
+              switch (eventData.recurrence_pattern) {
+                case 'daily':
+                  currentDate.setDate(currentDate.getDate() + (eventData.recurrence_interval || 1));
+                  break;
+                case 'weekly':
+                  currentDate.setDate(currentDate.getDate() + 7 * (eventData.recurrence_interval || 1));
+                  break;
+                case 'monthly':
+                  currentDate.setMonth(currentDate.getMonth() + (eventData.recurrence_interval || 1));
+                  break;
+                default:
+                  break;
+              }
 
-          console.log("Eventos para admin:", events?.length || 0);
-          return events as Event[];
-        } else {
-          // Membros veem eventos públicos ou com acesso específico para seu role
-          const { data: userProfile } = await supabase
-            .from('profiles')
-            .select('role_id')
-            .eq('id', user.user.id)
-            .single();
-
-          const userRoleId = userProfile?.role_id;
-
-          // Buscar eventos que são públicos ou que têm controle de acesso específico
-          let query = supabase
-            .from('events')
-            .select(`
-              *,
-              event_access_control!left(role_id)
-            `)
-            .order('start_time', { ascending: true });
-
-          // Sempre filtrar eventos pai recorrentes para membros
-          query = query.eq('is_recurring', false);
-
-          const { data: events, error } = await query;
-
-          if (error) {
-            console.error("Erro ao buscar eventos para membro:", error);
-            throw error;
-          }
-
-          // Filtrar eventos baseado na lógica de visibilidade
-          const visibleEvents = events?.filter(event => {
-            const accessControls = (event as any).event_access_control || [];
-            
-            // Se não há controle de acesso, o evento é público
-            if (accessControls.length === 0) {
-              return true;
+              instanceCount++;
             }
-            
-            // Se há controle de acesso, verificar se o role do usuário está incluído
-            if (userRoleId) {
-              return accessControls.some((ac: any) => ac.role_id === userRoleId);
-            }
-            
-            return false;
-          }) || [];
-
-          // Para eventos recorrentes, buscar também as instâncias geradas (próximos 6 meses)
-          const sixMonthsFromNow = new Date();
-          sixMonthsFromNow.setMonth(sixMonthsFromNow.getMonth() + 6);
-          
-          const futureInstances = visibleEvents.filter(event => {
-            const eventDate = new Date(event.start_time);
-            return eventDate <= sixMonthsFromNow;
-          });
-
-          console.log("Eventos visíveis para membro:", futureInstances.length);
-          return futureInstances as Event[];
+          }
         }
+
+        const allEvents = [...(regularEvents as unknown as Event[]), ...expandedEvents];
+        return allEvents.sort((a, b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime());
 
       } catch (error) {
-        console.error("Erro na busca de eventos:", error);
+        console.error('Erro ao buscar eventos:', error);
         throw error;
       }
     },
-    retry: 2,
-    staleTime: 5 * 60 * 1000, // 5 minutos
+    enabled: !!user
   });
+
+  return {
+    data: events,
+    isLoading,
+    error,
+    refetch,
+    selectedEvent,
+    setSelectedEvent
+  };
 };

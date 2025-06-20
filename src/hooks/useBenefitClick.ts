@@ -29,6 +29,8 @@ export const useBenefitClick = () => {
   });
 
   return {
-    trackBenefitClick: trackBenefitClick.mutateAsync
+    trackBenefitClick: trackBenefitClick.mutateAsync,
+    registerBenefitClick: trackBenefitClick.mutateAsync, // Alias para compatibilidade
+    isProcessing: trackBenefitClick.isPending
   };
 };
