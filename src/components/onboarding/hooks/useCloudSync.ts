@@ -61,7 +61,7 @@ export const useCloudSync = () => {
 
         const { error } = await supabase
           .from('onboarding_sync')
-          .upsert(syncData, { onConflict: 'user_id' });
+          .upsert(syncData as any, { onConflict: 'user_id' });
 
         if (error) throw error;
       };
@@ -102,7 +102,7 @@ export const useCloudSync = () => {
         const { data, error } = await supabase
           .from('onboarding_sync')
           .select('data, updated_at')
-          .eq('user_id', user.id)
+          .eq('user_id', user.id as any)
           .maybeSingle();
 
         if (error) throw error;
@@ -132,7 +132,7 @@ export const useCloudSync = () => {
         const { error } = await supabase
           .from('onboarding_sync')
           .delete()
-          .eq('user_id', user.id);
+          .eq('user_id', user.id as any);
 
         if (error) throw error;
       };

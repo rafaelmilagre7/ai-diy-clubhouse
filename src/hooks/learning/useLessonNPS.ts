@@ -28,8 +28,8 @@ export const useLessonNPS = ({ lessonId }: LessonNPSOptions) => {
       const { data, error } = await supabase
         .from('learning_lesson_nps')
         .select('*')
-        .eq('lesson_id', lessonId)
-        .eq('user_id', user.id)
+        .eq('lesson_id', lessonId as any)
+        .eq('user_id', user.id as any)
         .maybeSingle();
 
       if (error) {
@@ -58,8 +58,8 @@ export const useLessonNPS = ({ lessonId }: LessonNPSOptions) => {
               score, 
               feedback: feedback || null,
               updated_at: new Date().toISOString()
-            })
-            .eq('id', existingNPS.id)
+            } as any)
+            .eq('id', (existingNPS as any).id as any)
             .select()
             .single();
             
@@ -75,7 +75,7 @@ export const useLessonNPS = ({ lessonId }: LessonNPSOptions) => {
               user_id: user.id,
               score,
               feedback: feedback || null
-            })
+            } as any)
             .select()
             .single();
             

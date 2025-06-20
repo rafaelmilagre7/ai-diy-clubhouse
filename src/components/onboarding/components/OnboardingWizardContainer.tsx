@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, ReactNode, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useOnboardingStorage } from '../hooks/useOnboardingStorage';
@@ -130,7 +131,7 @@ export const OnboardingWizardContainer: React.FC<OnboardingWizardContainerProps>
 
       const { error: saveError } = await supabase
         .from('user_onboarding')
-        .upsert(onboardingRecord, { 
+        .upsert(onboardingRecord as any, { 
           onConflict: 'user_id',
           ignoreDuplicates: false 
         });

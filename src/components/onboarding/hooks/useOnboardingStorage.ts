@@ -1,124 +1,62 @@
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { OnboardingData } from '../types/onboardingTypes';
 import { useCloudSync } from './useCloudSync';
 import { useAuth } from '@/contexts/auth';
-import { supabase } from '@/lib/supabase';
 
 const STORAGE_KEY = 'viver-ia-onboarding-data';
+const AUTO_SAVE_DELAY = 2000; // 2 segundos
 
 export const useOnboardingStorage = () => {
   const { user } = useAuth();
-  const { saveToCloud, loadFromCloud, clearCloudData, syncStatus } = useCloudSync();
-  const [data, setData] = useState<OnboardingData>({});
-  const [isLoading, setIsLoading] = useState(true);
-  const [lastSaved, setLastSaved] = useState<Date | null>(null);
-  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const { saveToCloud, loadFromCloud } = useCloudSync();
   
-  // Usar ref para evitar updates desnecessários
-  const updateTimeoutRef = useRef<NodeJS.Timeout>();
-  const lastDataRef = useRef<OnboardingData>({});
+  const [data, setData] = useState<OnboardingData>({
+    memberType: 'club',
+    startedAt: new Date().toISOString()
+  });
+  
+  const [isLoading, setIsLoading] = useState(true);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [lastSaved, setLastSaved] = useState<Date | null>(null);
+  const [autoSaveTimeout, setAutoSaveTimeout] = useState<NodeJS.Timeout | null>(null);
 
-  // Função para salvar dados no localStorage e tentar sync na nuvem
-  const saveDataToStorage = useCallback(async (dataToSave: OnboardingData) => {
-    try {
-      // Sempre salvar no localStorage primeiro (prioridade)
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(dataToSave));
-      console.log('[OnboardingStorage] Dados salvos no localStorage');
-      
-      // Se há foto de perfil, atualizar avatar do usuário
-      if (dataToSave.profilePicture && user?.id) {
-        try {
-          await supabase
-            .from('profiles')
-            .update({ avatar_url: dataToSave.profilePicture })
-            .eq('id', user.id);
-          console.log('[OnboardingStorage] Avatar atualizado no perfil');
-        } catch (avatarError) {
-          console.warn('[OnboardingStorage] Falha ao atualizar avatar (não crítico):', avatarError);
-        }
-      }
-      
-      // Tentar sincronizar na nuvem (não crítico se falhar)
-      if (user?.id) {
-        try {
-          await saveToCloud(dataToSave);
-          console.log('[OnboardingStorage] Dados sincronizados na nuvem');
-        } catch (cloudError) {
-          console.warn('[OnboardingStorage] Falha na sincronização (não crítico):', cloudError);
-          // Não falhar se a nuvem não funcionar - localStorage é suficiente
-        }
-      }
-    } catch (error) {
-      console.error('[OnboardingStorage] Erro ao salvar dados:', error);
-      throw error;
-    }
-  }, [saveToCloud, user?.id]);
-
-  // Carregar dados na inicialização
+  // Carregar dados iniciais
   useEffect(() => {
     const loadInitialData = async () => {
       try {
         setIsLoading(true);
-        
-        // SEMPRE priorizar localStorage primeiro
-        const localData = localStorage.getItem(STORAGE_KEY);
-        if (localData) {
-          try {
-            const parsedLocalData = JSON.parse(localData);
-            setData(parsedLocalData);
-            lastDataRef.current = parsedLocalData;
-            console.log('[OnboardingStorage] Dados recuperados do localStorage');
-            
-            // Se há dados locais, usar eles imediatamente
-            // Tentar sync na nuvem em background (não crítico)
-            if (user?.id) {
-              try {
-                const cloudData = await loadFromCloud();
-                // Só usar dados da nuvem se foram atualizados mais recentemente
-                if (cloudData && cloudData.updatedAt && parsedLocalData.updatedAt) {
-                  const cloudTime = new Date(cloudData.updatedAt).getTime();
-                  const localTime = new Date(parsedLocalData.updatedAt).getTime();
-                  
-                  if (cloudTime > localTime) {
-                    setData(cloudData);
-                    lastDataRef.current = cloudData;
-                    localStorage.setItem(STORAGE_KEY, JSON.stringify(cloudData));
-                    console.log('[OnboardingStorage] Dados da nuvem mais recentes aplicados');
-                  }
-                }
-              } catch (cloudError) {
-                console.warn('[OnboardingStorage] Falha ao carregar da nuvem (usando localStorage):', cloudError);
-                // Continuar com dados locais se nuvem falhar
-              }
-            }
-            
-            return; // Dados encontrados localmente
-          } catch (parseError) {
-            console.error('[OnboardingStorage] Erro ao parsear dados locais:', parseError);
-            localStorage.removeItem(STORAGE_KEY); // Limpar dados corrompidos
+
+        // Se houver usuário logado, tentar carregar da nuvem primeiro
+        if (user?.id) {
+          const cloudData = await loadFromCloud();
+          if (cloudData) {
+            setData(cloudData);
+            setLastSaved(cloudData.updatedAt ? new Date(cloudData.updatedAt) : new Date());
+            setIsLoading(false);
+            return;
           }
         }
 
-        // Se não há dados locais, tentar carregar da nuvem
-        if (user?.id) {
-          try {
-            const cloudData = await loadFromCloud();
-            if (cloudData) {
-              setData(cloudData);
-              lastDataRef.current = cloudData;
-              localStorage.setItem(STORAGE_KEY, JSON.stringify(cloudData));
-              console.log('[OnboardingStorage] Dados carregados da nuvem');
-              return;
-            }
-          } catch (cloudError) {
-            console.warn('[OnboardingStorage] Erro ao carregar da nuvem:', cloudError);
-          }
+        // Fallback para localStorage
+        const localData = localStorage.getItem(STORAGE_KEY);
+        if (localData) {
+          const parsedData = JSON.parse(localData);
+          setData(parsedData);
+          setLastSaved(parsedData.updatedAt ? new Date(parsedData.updatedAt) : new Date());
         }
-        
-        // Se chegou aqui, não há dados salvos
-        console.log('[OnboardingStorage] Nenhum dado encontrado - iniciando onboarding novo');
-        
+
+        // Se o usuário estiver logado, atualizar o avatar se necessário
+        if (user?.id && user.email) {
+          const profileUpdate = {
+            avatar_url: `https://ui-avatars.com/api/?name=${encodeURIComponent(user.email)}&background=0D8ABC&color=fff`
+          };
+
+          await supabase
+            .from('profiles')
+            .update(profileUpdate as any)
+            .eq('id', user.id as any);
+        }
       } catch (error) {
         console.error('[OnboardingStorage] Erro ao carregar dados:', error);
       } finally {
@@ -129,97 +67,102 @@ export const useOnboardingStorage = () => {
     loadInitialData();
   }, [user?.id, loadFromCloud]);
 
-  // Atualizar dados com debounce para evitar re-renders excessivos
-  const updateData = useCallback((newData: Partial<OnboardingData>) => {
-    const updatedData = { 
-      ...lastDataRef.current, 
-      ...newData, 
-      updatedAt: new Date().toISOString() 
-    };
-    
-    // Verificar se realmente houve mudança para evitar updates desnecessários
-    const hasRealChange = JSON.stringify(updatedData) !== JSON.stringify(lastDataRef.current);
-    
-    if (hasRealChange) {
-      setData(updatedData);
-      lastDataRef.current = updatedData;
-      setHasUnsavedChanges(true);
-      
-      console.log('[OnboardingStorage] Dados atualizados:', Object.keys(newData));
-      
-      // Debounce para auto-save (opcional, pode ser removido se causar problemas)
-      if (updateTimeoutRef.current) {
-        clearTimeout(updateTimeoutRef.current);
+  // Auto-save com debounce
+  const scheduleSave = useCallback((newData: OnboardingData) => {
+    if (autoSaveTimeout) {
+      clearTimeout(autoSaveTimeout);
+    }
+
+    const timeout = setTimeout(async () => {
+      try {
+        // Salvar localmente
+        const dataWithTimestamp = {
+          ...newData,
+          updatedAt: new Date().toISOString()
+        };
+        
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(dataWithTimestamp));
+        
+        // Salvar na nuvem se o usuário estiver logado
+        if (user?.id) {
+          await saveToCloud(dataWithTimestamp);
+        }
+        
+        setLastSaved(new Date());
+        setHasUnsavedChanges(false);
+      } catch (error) {
+        console.error('[OnboardingStorage] Erro ao salvar:', error);
       }
-    }
-  }, []);
+    }, AUTO_SAVE_DELAY);
 
-  // Salvamento manual forçado (usado nas mudanças de etapas)
+    setAutoSaveTimeout(timeout);
+  }, [autoSaveTimeout, user?.id, saveToCloud]);
+
+  // Atualizar dados
+  const updateData = useCallback((newData: Partial<OnboardingData>) => {
+    setData(prevData => {
+      const updatedData = { ...prevData, ...newData };
+      setHasUnsavedChanges(true);
+      scheduleSave(updatedData);
+      return updatedData;
+    });
+  }, [scheduleSave]);
+
+  // Forçar salvamento imediato
   const forceSave = useCallback(async () => {
-    try {
-      await saveDataToStorage(lastDataRef.current);
-      setHasUnsavedChanges(false);
-      setLastSaved(new Date());
-      console.log('[OnboardingStorage] Salvamento manual concluído');
-    } catch (error) {
-      console.error('[OnboardingStorage] Erro no salvamento manual:', error);
-      throw error;
+    if (autoSaveTimeout) {
+      clearTimeout(autoSaveTimeout);
+      setAutoSaveTimeout(null);
     }
-  }, [saveDataToStorage]);
 
-  // Limpar dados
-  const clearData = useCallback(async () => {
-    const emptyData = {};
-    setData(emptyData);
-    lastDataRef.current = emptyData;
-    setHasUnsavedChanges(false);
-    setLastSaved(null);
-    
     try {
-      localStorage.removeItem(STORAGE_KEY);
+      const dataWithTimestamp = {
+        ...data,
+        updatedAt: new Date().toISOString()
+      };
+      
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(dataWithTimestamp));
       
       if (user?.id) {
-        await clearCloudData();
+        await saveToCloud(dataWithTimestamp);
       }
-      console.log('[OnboardingStorage] Dados limpos');
+      
+      setLastSaved(new Date());
+      setHasUnsavedChanges(false);
     } catch (error) {
-      console.error('[OnboardingStorage] Erro ao limpar dados:', error);
+      console.error('[OnboardingStorage] Erro ao forçar salvamento:', error);
+      throw error;
     }
-  }, [clearCloudData, user?.id]);
+  }, [data, user?.id, saveToCloud, autoSaveTimeout]);
 
-  // Verificar se onboarding foi completado
-  const isCompleted = useCallback(() => {
-    return !!lastDataRef.current.completedAt;
+  // Limpar dados
+  const clearData = useCallback(() => {
+    const initialData: OnboardingData = {
+      memberType: 'club',
+      startedAt: new Date().toISOString()
+    };
+    
+    setData(initialData);
+    localStorage.removeItem(STORAGE_KEY);
+    setHasUnsavedChanges(false);
+    setLastSaved(null);
   }, []);
 
-  // Recuperar dados perdidos (função de emergência)
-  const recoverData = useCallback(() => {
-    try {
-      const localData = localStorage.getItem(STORAGE_KEY);
-      if (localData) {
-        const parsedData = JSON.parse(localData);
-        setData(parsedData);
-        lastDataRef.current = parsedData;
-        setHasUnsavedChanges(false); // Dados recuperados estão salvos
-        console.log('[OnboardingStorage] Dados recuperados do localStorage');
-        return true;
+  // Limpar timeout ao desmontar
+  useEffect(() => {
+    return () => {
+      if (autoSaveTimeout) {
+        clearTimeout(autoSaveTimeout);
       }
-      return false;
-    } catch (error) {
-      console.error('[OnboardingStorage] Erro ao recuperar dados:', error);
-      return false;
-    }
-  }, []);
+    };
+  }, [autoSaveTimeout]);
 
   return {
     data,
     updateData,
     forceSave,
     clearData,
-    recoverData,
-    isCompleted,
     isLoading,
-    syncStatus,
     hasUnsavedChanges,
     lastSaved
   };

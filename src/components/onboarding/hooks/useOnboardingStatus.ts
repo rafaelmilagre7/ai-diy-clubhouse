@@ -39,7 +39,7 @@ export const useOnboardingStatus = () => {
         const { data: onboardingData, error } = await supabase
           .from('user_onboarding')
           .select('completed_at, user_id')
-          .eq('user_id', user.id)
+          .eq('user_id', user.id as any)
           .maybeSingle();
 
         if (error && error.code !== 'PGRST116') {
@@ -47,7 +47,7 @@ export const useOnboardingStatus = () => {
           setIsRequired(true);
           setHasCompleted(false);
         } else {
-          const completed = !!onboardingData?.completed_at;
+          const completed = !!(onboardingData as any)?.completed_at;
           console.log('[OnboardingStatus] Dados do onboarding encontrados:', !!onboardingData, 'Completado:', completed);
           
           setHasCompleted(completed);

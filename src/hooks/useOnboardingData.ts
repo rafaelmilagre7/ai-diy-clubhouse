@@ -31,7 +31,7 @@ export const useOnboardingData = (): OnboardingDataResponse => {
         const { data: onboardingData, error: onboardingError } = await supabase
           .from('user_onboarding')
           .select('*')
-          .eq('user_id', user.id)
+          .eq('user_id', user.id as any)
           .maybeSingle();
 
         if (onboardingError) {
@@ -41,39 +41,39 @@ export const useOnboardingData = (): OnboardingDataResponse => {
         if (onboardingData) {
           // Mapear dados da tabela para o formato OnboardingData
           const mappedData: OnboardingData = {
-            name: onboardingData.name,
-            email: onboardingData.email,
-            phone: onboardingData.phone,
-            instagram: onboardingData.instagram,
-            linkedin: onboardingData.linkedin,
-            state: onboardingData.state,
-            city: onboardingData.city,
-            birthDate: onboardingData.birth_date,
-            curiosity: onboardingData.curiosity,
-            companyName: onboardingData.company_name,
-            companyWebsite: onboardingData.company_website,
-            businessSector: onboardingData.business_sector,
-            companySize: onboardingData.company_size,
-            annualRevenue: onboardingData.annual_revenue,
-            position: onboardingData.position,
-            hasImplementedAI: onboardingData.has_implemented_ai,
-            aiToolsUsed: onboardingData.ai_tools_used,
-            aiKnowledgeLevel: onboardingData.ai_knowledge_level,
-            dailyTools: onboardingData.daily_tools,
-            whoWillImplement: onboardingData.who_will_implement,
-            mainObjective: onboardingData.main_objective,
-            areaToImpact: onboardingData.area_to_impact,
-            expectedResult90Days: onboardingData.expected_result_90_days,
-            aiImplementationBudget: onboardingData.ai_implementation_budget,
-            weeklyLearningTime: onboardingData.weekly_learning_time,
-            contentPreference: onboardingData.content_preference,
-            wantsNetworking: onboardingData.wants_networking,
-            bestDays: onboardingData.best_days,
-            bestPeriods: onboardingData.best_periods,
-            acceptsCaseStudy: onboardingData.accepts_case_study,
-            memberType: onboardingData.member_type,
-            completedAt: onboardingData.completed_at,
-            startedAt: onboardingData.started_at
+            name: (onboardingData as any).name,
+            email: (onboardingData as any).email,
+            phone: (onboardingData as any).phone,
+            instagram: (onboardingData as any).instagram,
+            linkedin: (onboardingData as any).linkedin,
+            state: (onboardingData as any).state,
+            city: (onboardingData as any).city,
+            birthDate: (onboardingData as any).birth_date,
+            curiosity: (onboardingData as any).curiosity,
+            companyName: (onboardingData as any).company_name,
+            companyWebsite: (onboardingData as any).company_website,
+            businessSector: (onboardingData as any).business_sector,
+            companySize: (onboardingData as any).company_size,
+            annualRevenue: (onboardingData as any).annual_revenue,
+            position: (onboardingData as any).position,
+            hasImplementedAI: (onboardingData as any).has_implemented_ai,
+            aiToolsUsed: (onboardingData as any).ai_tools_used,
+            aiKnowledgeLevel: (onboardingData as any).ai_knowledge_level,
+            dailyTools: (onboardingData as any).daily_tools,
+            whoWillImplement: (onboardingData as any).who_will_implement,
+            mainObjective: (onboardingData as any).main_objective,
+            areaToImpact: (onboardingData as any).area_to_impact,
+            expectedResult90Days: (onboardingData as any).expected_result_90_days,
+            aiImplementationBudget: (onboardingData as any).ai_implementation_budget,
+            weeklyLearningTime: (onboardingData as any).weekly_learning_time,
+            contentPreference: (onboardingData as any).content_preference,
+            wantsNetworking: (onboardingData as any).wants_networking,
+            bestDays: (onboardingData as any).best_days,
+            bestPeriods: (onboardingData as any).best_periods,
+            acceptsCaseStudy: (onboardingData as any).accepts_case_study,
+            memberType: (onboardingData as any).member_type,
+            completedAt: (onboardingData as any).completed_at,
+            startedAt: (onboardingData as any).started_at
           };
 
           setData(mappedData);
