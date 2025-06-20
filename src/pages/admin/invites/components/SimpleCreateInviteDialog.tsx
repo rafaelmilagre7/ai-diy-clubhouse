@@ -41,7 +41,7 @@ const SimpleCreateInviteDialog = ({ roles, onInviteCreated }: SimpleCreateInvite
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Validação básica
+    // Validação básica simplificada
     if (!email?.includes('@')) {
       toast.error("Email inválido");
       return;
