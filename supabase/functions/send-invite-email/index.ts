@@ -1,12 +1,11 @@
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.4';
 import { Resend } from "npm:resend@2.0.0";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-  "Access-Control-Allow-Methods": "POST, OPTIONS"
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-function-timeout",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
 interface InviteEmailRequest {
@@ -17,231 +16,201 @@ interface InviteEmailRequest {
   senderName?: string;
   notes?: string;
   inviteId?: string;
-  forceResend?: boolean;
-  requestId?: string;
   token?: string;
+  requestId?: string;
+  forceResend?: boolean;
+  test?: boolean;
 }
 
 const handler = async (req: Request): Promise<Response> => {
-  // Handle CORS
+  const requestId = crypto.randomUUID().substring(0, 8);
+  console.log(`📧 [INVITE-EMAIL-${requestId}] Nova requisição: ${req.method}`);
+  
+  // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
+    console.log(`🔄 [INVITE-EMAIL-${requestId}] CORS Preflight - respondendo`);
+    return new Response(null, { 
+      headers: corsHeaders,
+      status: 200 
+    });
   }
 
-  const requestId = crypto.randomUUID().substring(0, 8);
-  
+  if (req.method !== "POST") {
+    console.log(`❌ [INVITE-EMAIL-${requestId}] Método não permitido: ${req.method}`);
+    return new Response(
+      JSON.stringify({ error: "Método não permitido" }), 
+      { 
+        status: 405, 
+        headers: { "Content-Type": "application/json", ...corsHeaders } 
+      }
+    );
+  }
+
+  const startTime = Date.now();
+
   try {
-    console.log(`🔥 [EDGE-${requestId}] === SEND INVITE EMAIL INICIADO ===`);
+    console.log(`📨 [INVITE-EMAIL-${requestId}] Processando requisição POST...`);
     
-    const requestBody: InviteEmailRequest = await req.json();
-    console.log(`📨 [EDGE-${requestId}] Request recebido:`, {
-      email: requestBody.email,
-      inviteUrl: requestBody.inviteUrl?.substring(0, 50) + '...',
-      roleName: requestBody.roleName,
-      senderName: requestBody.senderName,
-      requestId: requestBody.requestId,
-      token: requestBody.token?.substring(0, 8) + '...'
+    const body: InviteEmailRequest = await req.json();
+    console.log(`📝 [INVITE-EMAIL-${requestId}] Dados recebidos:`, {
+      email: body.email,
+      hasInviteUrl: !!body.inviteUrl,
+      roleName: body.roleName,
+      test: body.test
     });
 
-    const {
-      email,
-      inviteUrl,
-      roleName,
-      expiresAt,
-      senderName = 'Administrador',
-      notes,
-      inviteId,
-      forceResend = false,
-      token
-    } = requestBody;
+    // Handle test requests
+    if (body.test) {
+      console.log(`🧪 [INVITE-EMAIL-${requestId}] Requisição de teste detectada`);
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          error: "Email e URL do convite são obrigatórios" 
+        }),
+        {
+          status: 400,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        }
+      );
+    }
 
-    // Validações básicas
+    const { email, inviteUrl, roleName, expiresAt, senderName, notes } = body;
+    
     if (!email || !inviteUrl) {
-      console.error(`❌ [EDGE-${requestId}] Dados obrigatórios faltando`);
+      console.log(`❌ [INVITE-EMAIL-${requestId}] Dados obrigatórios ausentes`);
       return new Response(
-        JSON.stringify({
-          success: false,
-          message: 'Email e URL do convite são obrigatórios',
-          error: 'missing_required_fields'
+        JSON.stringify({ 
+          success: false, 
+          error: "Email e URL do convite são obrigatórios" 
         }),
-        { 
-          status: 400, 
-          headers: { "Content-Type": "application/json", ...corsHeaders } 
+        {
+          status: 400,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
         }
       );
     }
 
-    // Verificar se RESEND_API_KEY existe
-    const resendApiKey = Deno.env.get("RESEND_API_KEY");
-    if (!resendApiKey) {
-      console.error(`❌ [EDGE-${requestId}] RESEND_API_KEY não configurada`);
-      return new Response(
-        JSON.stringify({
-          success: false,
-          message: 'Serviço de email não configurado',
-          error: 'missing_api_key'
-        }),
-        { 
-          status: 500, 
-          headers: { "Content-Type": "application/json", ...corsHeaders } 
-        }
-      );
-    }
-
-    console.log(`📧 [EDGE-${requestId}] Inicializando Resend...`);
-    const resend = new Resend(resendApiKey);
-
-    // Preparar conteúdo do email
-    const expirationDate = new Date(expiresAt).toLocaleDateString('pt-BR', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-
-    const emailSubject = `🚀 Convite para Viver de IA - ${roleName}`;
+    console.log(`🔑 [INVITE-EMAIL-${requestId}] Verificando configurações...`);
     
-    const emailHtml = `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <meta charset="utf-8">
-        <title>Convite para Viver de IA</title>
-        <style>
-          body { font-family: 'Segoe UI', Arial, sans-serif; line-height: 1.6; color: #333; }
-          .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-          .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
-          .content { background: white; padding: 30px; border: 1px solid #e0e0e0; }
-          .button { background: #667eea; color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; display: inline-block; font-weight: bold; margin: 20px 0; }
-          .footer { background: #f8f9fa; padding: 20px; text-align: center; border-radius: 0 0 10px 10px; font-size: 12px; color: #666; }
-          .token-box { background: #f8f9fa; border: 2px dashed #667eea; padding: 15px; margin: 20px 0; text-align: center; border-radius: 8px; }
-        </style>
-      </head>
-      <body>
-        <div class="container">
-          <div class="header">
-            <h1>🎯 Você foi convidado para Viver de IA!</h1>
+    const apiKey = Deno.env.get("RESEND_API_KEY");
+    if (!apiKey) {
+      console.error(`❌ [INVITE-EMAIL-${requestId}] API key não configurada`);
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: "RESEND_API_KEY não configurada nos secrets"
+        }),
+        {
+          status: 500,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        }
+      );
+    }
+
+    console.log(`✅ [INVITE-EMAIL-${requestId}] API key encontrada, enviando email...`);
+
+    const resend = new Resend(apiKey);
+    
+    const emailResponse = await resend.emails.send({
+      from: "Viver de IA <sistema@viverdeia.ai>",
+      to: [email],
+      subject: `🎯 Convite para ${roleName} - Viver de IA`,
+      html: `
+        <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+          <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
+            <h1>🎯 Você foi convidado!</h1>
+            <p style="font-size: 18px; margin: 10px 0;">Junte-se à nossa plataforma de IA</p>
           </div>
           
-          <div class="content">
+          <div style="background: white; padding: 30px; border: 1px solid #e0e0e0;">
             <p>Olá!</p>
+            <p>Você recebeu um convite para se cadastrar na plataforma <strong>Viver de IA</strong> como <strong>${roleName}</strong>.</p>
             
-            <p><strong>${senderName}</strong> convidou você para acessar a plataforma <strong>Viver de IA</strong> com o papel de <strong>${roleName}</strong>.</p>
-            
-            ${notes ? `<div style="background: #e3f2fd; padding: 15px; border-left: 4px solid #2196f3; margin: 20px 0; border-radius: 4px;"><strong>📝 Observações:</strong><br>${notes}</div>` : ''}
-            
+            ${notes ? `
+            <div style="background: #f3f4f6; padding: 16px; border-radius: 8px; margin: 16px 0;">
+              <h3 style="margin: 0; color: #374151;">📝 Mensagem do convite:</h3>
+              <p style="margin: 8px 0; color: #6b7280;">${notes}</p>
+            </div>
+            ` : ''}
+
             <div style="text-align: center; margin: 30px 0;">
-              <a href="${inviteUrl}" class="button">
-                🚀 ACEITAR CONVITE
+              <a href="${inviteUrl}" 
+                 style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+                        color: white; 
+                        padding: 15px 30px; 
+                        text-decoration: none; 
+                        border-radius: 8px; 
+                        font-weight: bold; 
+                        display: inline-block;
+                        font-size: 16px;">
+                🚀 Aceitar Convite
               </a>
             </div>
-            
-            <p><strong>⏰ Este convite expira em: ${expirationDate}</strong></p>
-            
-            <div class="token-box">
-              <p><strong>🔑 Link do convite:</strong></p>
-              <p style="word-break: break-all; font-family: monospace; color: #667eea; font-weight: bold;">
-                ${inviteUrl}
+
+            <div style="background: #fef3c7; padding: 16px; border-radius: 8px; margin: 16px 0;">
+              <p style="margin: 0; color: #92400e;">
+                ⏰ <strong>Importante:</strong> Este convite expira em ${new Date(expiresAt).toLocaleDateString('pt-BR')} às ${new Date(expiresAt).toLocaleTimeString('pt-BR')}.
               </p>
             </div>
-            
-            <p style="font-size: 14px; color: #666;">
-              Se você não conseguir clicar no botão, copie e cole o link acima no seu navegador.
+
+            <p>Se você não conseguir clicar no botão, copie e cole este link no seu navegador:</p>
+            <p style="word-break: break-all; background: #f9f9f9; padding: 10px; border-radius: 4px; font-family: monospace;">
+              ${inviteUrl}
             </p>
           </div>
-          
-          <div class="footer">
-            <p>Este é um email automático do sistema Viver de IA.</p>
-            <p>Se você não esperava este convite, pode ignorar este email com segurança.</p>
+
+          <div style="background: #f8f9fa; padding: 20px; text-align: center; border-radius: 0 0 10px 10px; font-size: 12px; color: #666;">
+            <p>Este convite foi enviado por ${senderName || 'Administrador'}<br>
+            Se você não esperava este convite, pode ignorar este email.</p>
             <p>© 2024 Viver de IA - Plataforma de Inteligência Artificial</p>
           </div>
         </div>
-      </body>
-      </html>
-    `;
+      `,
+    });
 
-    console.log(`📮 [EDGE-${requestId}] Enviando email via Resend...`);
-    
-    // Enviar email com retry
-    let emailResponse;
-    let lastError;
-    
-    for (let attempt = 1; attempt <= 3; attempt++) {
-      try {
-        console.log(`📤 [EDGE-${requestId}] Tentativa ${attempt}/3...`);
-        
-        emailResponse = await resend.emails.send({
-          from: "Viver de IA <convites@viverdeia.ai>",
-          to: [email],
-          subject: emailSubject,
-          html: emailHtml
-        });
+    const responseTime = Date.now() - startTime;
+    console.log(`✅ [INVITE-EMAIL-${requestId}] Email enviado com sucesso:`, {
+      emailId: emailResponse.data?.id,
+      responseTime
+    });
 
-        if (emailResponse.id) {
-          console.log(`✅ [EDGE-${requestId}] Email enviado com sucesso! ID:`, emailResponse.id);
-          break;
-        }
-      } catch (error) {
-        lastError = error;
-        console.warn(`⚠️ [EDGE-${requestId}] Tentativa ${attempt} falhou:`, error);
-        
-        if (attempt < 3) {
-          await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
-        }
-      }
-    }
-
-    if (!emailResponse?.id) {
-      console.error(`💥 [EDGE-${requestId}] Todas as tentativas falharam:`, lastError);
-      return new Response(
-        JSON.stringify({
-          success: false,
-          message: 'Falha no envio após múltiplas tentativas',
-          error: lastError?.message || 'unknown_error',
-          strategy: 'resend',
-          method: 'email'
-        }),
-        { 
-          status: 500, 
-          headers: { "Content-Type": "application/json", ...corsHeaders } 
-        }
-      );
-    }
-
-    console.log(`🎉 [EDGE-${requestId}] === SUCESSO COMPLETO ===`);
-    
     return new Response(
       JSON.stringify({
         success: true,
-        message: 'Email enviado com sucesso',
-        emailId: emailResponse.id,
-        strategy: 'resend',
-        method: 'email'
+        message: "Convite enviado com sucesso",
+        emailId: emailResponse.data?.id,
+        responseTime,
+        requestId
       }),
-      { 
-        status: 200, 
-        headers: { "Content-Type": "application/json", ...corsHeaders } 
+      {
+        status: 200,
+        headers: { "Content-Type": "application/json", ...corsHeaders },
       }
     );
 
   } catch (error: any) {
-    console.error(`💥 [EDGE-${requestId}] ERRO CRÍTICO:`, error);
+    console.error(`❌ [INVITE-EMAIL-${requestId}] Erro crítico:`, {
+      message: error.message,
+      stack: error.stack?.substring(0, 500),
+      type: error.constructor.name
+    });
+    
+    const responseTime = Date.now() - startTime;
     
     return new Response(
       JSON.stringify({
         success: false,
-        message: 'Erro interno do servidor',
-        error: error.message,
-        strategy: 'resend',
-        method: 'email'
+        error: error.message || "Erro interno do servidor",
+        responseTime,
+        requestId
       }),
-      { 
-        status: 500, 
-        headers: { "Content-Type": "application/json", ...corsHeaders } 
+      {
+        status: 500,
+        headers: { "Content-Type": "application/json", ...corsHeaders },
       }
     );
   }
 };
 
+console.log("📧 [INVITE-EMAIL] Edge Function carregada e pronta!");
 serve(handler);

@@ -72,7 +72,7 @@ export function useInviteCreate() {
         // Prosseguir com envio de email usando fallback
         const inviteUrl = `${window.location.origin}/accept-invite/${createResult.token}`;
         
-        const emailResult = await sendEmailWithFallback(requestId, {
+        const emailResult = await sendEmailWithTimeout(requestId, {
           email: params.email,
           inviteUrl,
           roleName: 'Usuário',
@@ -93,11 +93,11 @@ export function useInviteCreate() {
 
       console.log(`✅ [${requestId}] Dados do convite encontrados:`, inviteData);
 
-      // ETAPA 3: Enviar email
+      // ETAPA 3: Enviar email com timeout melhorado
       const inviteUrl = `${window.location.origin}/accept-invite/${inviteData.token}`;
       console.log(`📧 [${requestId}] Enviando email para:`, params.email);
 
-      const emailResult = await sendEmailWithFallback(requestId, {
+      const emailResult = await sendEmailWithTimeout(requestId, {
         email: params.email,
         inviteUrl,
         roleName: 'Usuário', // Simplificado por enquanto
@@ -145,18 +145,28 @@ export function useInviteCreate() {
     }
   }, []);
 
-  // Método auxiliar para envio de email com fallback
-  const sendEmailWithFallback = async (requestId: string, emailData: any) => {
+  // Método auxiliar para envio de email com timeout melhorado
+  const sendEmailWithTimeout = async (requestId: string, emailData: any) => {
     try {
-      console.log(`📧 [${requestId}] Chamando Edge Function...`);
+      console.log(`📧 [${requestId}] Chamando Edge Function com timeout de 30s...`);
       
-      const { data: emailResult, error: emailError } = await supabase.functions.invoke('send-invite-email', {
+      // Criar uma Promise com timeout de 30 segundos
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('Timeout de 30 segundos')), 30000);
+      });
+
+      const emailPromise = supabase.functions.invoke('send-invite-email', {
         body: {
           ...emailData,
           requestId,
           forceResend: false
         }
       });
+
+      const { data: emailResult, error: emailError } = await Promise.race([
+        emailPromise,
+        timeoutPromise
+      ]) as any;
 
       if (emailError) {
         console.error(`❌ [${requestId}] Erro na Edge Function:`, emailError);
@@ -173,7 +183,7 @@ export function useInviteCreate() {
         return {
           success: false,
           message: 'Edge Function falhou',
-          error: emailResult?.message || 'Falha não especificada',
+          error: emailResult?.error || 'Falha não especificada',
           channel: 'email' as const
         };
       }
@@ -190,6 +200,16 @@ export function useInviteCreate() {
 
     } catch (error: any) {
       console.error(`💥 [${requestId}] Erro no envio de email:`, error);
+      
+      if (error.message.includes('Timeout')) {
+        return {
+          success: false,
+          message: 'Timeout no envio de email',
+          error: 'A requisição demorou mais de 30 segundos',
+          channel: 'email' as const
+        };
+      }
+      
       return {
         success: false,
         message: 'Erro crítico no envio',

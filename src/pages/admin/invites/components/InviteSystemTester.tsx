@@ -1,255 +1,288 @@
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Label } from '@/components/ui/label';
 import { 
-  TestTube, 
+  Play, 
   CheckCircle, 
   AlertTriangle, 
-  Loader2,
+  RefreshCw,
   Mail,
-  Send
+  Settings,
+  Zap
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
-import { useRoles } from '@/hooks/admin/useRoles';
+import { toast } from 'sonner';
 
 export default function InviteSystemTester() {
-  const [isRunning, setIsRunning] = useState(false);
-  const [testEmail, setTestEmail] = useState('teste@exemplo.com');
-  const [selectedRoleId, setSelectedRoleId] = useState<string>('');
-  const [testResult, setTestResult] = useState<{
-    status: 'success' | 'error' | 'warning';
-    message: string;
-    details?: any;
-  } | null>(null);
+  const [testEmail, setTestEmail] = useState('');
+  const [isTestingEmail, setIsTestingEmail] = useState(false);
+  const [isTestingEdgeFunction, setIsTestingEdgeFunction] = useState(false);
+  const [testResults, setTestResults] = useState<{
+    email?: { success: boolean; message: string; details?: any };
+    edgeFunction?: { success: boolean; message: string; details?: any };
+  }>({});
 
-  const { roles, loading: rolesLoading } = useRoles();
-
-  // Auto-selecionar primeiro papel válido
-  useEffect(() => {
-    if (roles.length > 0 && !selectedRoleId) {
-      const adminRole = roles.find(role => role.name.toLowerCase().includes('admin'));
-      const firstRole = adminRole || roles[0];
-      setSelectedRoleId(firstRole.id);
-    }
-  }, [roles, selectedRoleId]);
-
-  const runSystemTest = async () => {
-    if (!selectedRoleId) {
-      setTestResult({
-        status: 'error',
-        message: 'Selecione um papel para o teste'
-      });
+  const testEmailFunction = async () => {
+    if (!testEmail || !testEmail.includes('@')) {
+      toast.error('Por favor, insira um email válido');
       return;
     }
 
-    setIsRunning(true);
-    const testId = crypto.randomUUID().substring(0, 8);
+    setIsTestingEmail(true);
+    const requestId = crypto.randomUUID().substring(0, 8);
     
     try {
-      console.log(`🧪 [TEST-${testId}] === INICIANDO TESTE COMPLETO ===`);
-      console.log(`📧 Email: ${testEmail}`);
-      console.log(`👤 Papel: ${selectedRoleId}`);
+      console.log(`🧪 [TEST-${requestId}] Testando envio de email para:`, testEmail);
 
-      // ETAPA 1: Criar convite de teste
-      console.log(`🔍 [TEST-${testId}] Criando convite de teste...`);
-      const { data: createResult, error: createError } = await supabase.rpc('create_invite', {
-        p_email: testEmail,
-        p_role_id: selectedRoleId,
-        p_expires_in: '1 hour',
-        p_notes: `Teste automático do sistema - ${testId}`
+      const { data, error } = await supabase.functions.invoke('test-resend-email', {
+        body: { email: testEmail }
       });
 
-      if (createError) {
-        throw new Error(`Falha ao criar convite: ${createError.message}`);
+      if (error) {
+        console.error(`❌ [TEST-${requestId}] Erro na Edge Function:`, error);
+        setTestResults(prev => ({
+          ...prev,
+          email: {
+            success: false,
+            message: 'Erro na Edge Function',
+            details: error
+          }
+        }));
+        toast.error('Falha no teste de email', {
+          description: error.message
+        });
+        return;
       }
 
-      if (!createResult || createResult.status !== 'success') {
-        throw new Error(`Função create_invite falhou: ${createResult?.message || 'Erro desconhecido'}`);
+      if (data?.success) {
+        console.log(`✅ [TEST-${requestId}] Email de teste enviado com sucesso!`);
+        setTestResults(prev => ({
+          ...prev,
+          email: {
+            success: true,
+            message: 'Email de teste enviado com sucesso!',
+            details: data
+          }
+        }));
+        toast.success('Email de teste enviado!', {
+          description: `Verifique sua caixa de entrada em ${testEmail}`
+        });
+      } else {
+        console.error(`❌ [TEST-${requestId}] Falha no envio:`, data);
+        setTestResults(prev => ({
+          ...prev,
+          email: {
+            success: false,
+            message: data?.error || 'Falha no envio do email',
+            details: data
+          }
+        }));
+        toast.error('Falha no envio do email', {
+          description: data?.error || 'Erro desconhecido'
+        });
       }
-
-      console.log(`✅ [TEST-${testId}] Convite criado:`, createResult);
-
-      // ETAPA 2: Buscar dados do convite
-      console.log(`🔍 [TEST-${testId}] Verificando dados do convite...`);
-      const { data: inviteData, error: fetchError } = await supabase
-        .from('invites')
-        .select('id, email, token, role_id, expires_at')
-        .eq('id', createResult.invite_id)
-        .single();
-
-      if (fetchError || !inviteData) {
-        throw new Error(`Falha ao buscar convite: ${fetchError?.message || 'Convite não encontrado'}`);
-      }
-
-      console.log(`✅ [TEST-${testId}] Dados do convite verificados`);
-
-      // ETAPA 3: Testar envio de email
-      console.log(`📧 [TEST-${testId}] Testando envio de email...`);
-      const inviteUrl = `${window.location.origin}/accept-invite/${inviteData.token}`;
-      
-      const { data: emailResult, error: emailError } = await supabase.functions.invoke('send-invite-email', {
-        body: {
-          email: testEmail,
-          inviteUrl,
-          roleName: roles.find(r => r.id === selectedRoleId)?.name || 'Usuário',
-          expiresAt: inviteData.expires_at,
-          senderName: 'Sistema de Teste',
-          notes: `Teste automático - ${testId}`,
-          inviteId: inviteData.id,
-          token: inviteData.token,
-          requestId: testId
-        }
-      });
-
-      if (emailError) {
-        throw new Error(`Edge Function error: ${emailError.message}`);
-      }
-
-      if (!emailResult?.success) {
-        throw new Error(`Email falhou: ${emailResult?.message || 'Erro desconhecido'}`);
-      }
-
-      console.log(`✅ [TEST-${testId}] Email enviado com sucesso!`);
-
-      // ETAPA 4: Limpar dados de teste
-      console.log(`🧹 [TEST-${testId}] Limpando dados de teste...`);
-      await supabase
-        .from('invites')
-        .delete()
-        .eq('id', createResult.invite_id);
-
-      console.log(`🎉 [TEST-${testId}] === TESTE CONCLUÍDO COM SUCESSO ===`);
-
-      setTestResult({
-        status: 'success',
-        message: 'Sistema funcionando perfeitamente!',
-        details: {
-          inviteId: createResult.invite_id,
-          emailId: emailResult.emailId,
-          strategy: emailResult.strategy,
-          testId
-        }
-      });
 
     } catch (error: any) {
-      console.error(`💥 [TEST-${testId}] TESTE FALHOU:`, error);
-      
-      setTestResult({
-        status: 'error',
-        message: 'Sistema com problemas',
-        details: {
-          error: error.message,
-          testId
+      console.error(`💥 [TEST-${requestId}] Erro crítico:`, error);
+      setTestResults(prev => ({
+        ...prev,
+        email: {
+          success: false,
+          message: 'Erro crítico no teste',
+          details: { error: error.message }
         }
+      }));
+      toast.error('Erro crítico', {
+        description: error.message
       });
     } finally {
-      setIsRunning(false);
+      setIsTestingEmail(false);
     }
+  };
+
+  const testEdgeFunctionConnectivity = async () => {
+    setIsTestingEdgeFunction(true);
+    const requestId = crypto.randomUUID().substring(0, 8);
+    
+    try {
+      console.log(`🔍 [EDGE-TEST-${requestId}] Testando conectividade da Edge Function...`);
+
+      // Teste 1: Verificar se a função responde
+      const { data, error } = await supabase.functions.invoke('send-invite-email', {
+        body: { test: true }
+      });
+
+      if (error) {
+        console.error(`❌ [EDGE-TEST-${requestId}] Erro na Edge Function:`, error);
+        setTestResults(prev => ({
+          ...prev,
+          edgeFunction: {
+            success: false,
+            message: 'Edge Function não acessível',
+            details: error
+          }
+        }));
+        return;
+      }
+
+      if (data && !data.success && data.error?.includes('obrigatórios')) {
+        console.log(`✅ [EDGE-TEST-${requestId}] Edge Function responde corretamente!`);
+        setTestResults(prev => ({
+          ...prev,
+          edgeFunction: {
+            success: true,
+            message: 'Edge Function operacional e respondendo corretamente',
+            details: data
+          }
+        }));
+        toast.success('Edge Function OK!', {
+          description: 'A função está respondendo corretamente'
+        });
+      } else {
+        console.warn(`⚠️ [EDGE-TEST-${requestId}] Resposta inesperada:`, data);
+        setTestResults(prev => ({
+          ...prev,
+          edgeFunction: {
+            success: false,
+            message: 'Resposta inesperada da Edge Function',
+            details: data
+          }
+        }));
+      }
+
+    } catch (error: any) {
+      console.error(`💥 [EDGE-TEST-${requestId}] Erro crítico:`, error);
+      setTestResults(prev => ({
+        ...prev,
+        edgeFunction: {
+          success: false,
+          message: 'Erro crítico no teste da Edge Function',
+          details: { error: error.message }
+        }
+      }));
+      toast.error('Erro no teste da Edge Function', {
+        description: error.message
+      });
+    } finally {
+      setIsTestingEdgeFunction(false);
+    }
+  };
+
+  const getResultBadge = (result?: { success: boolean; message: string }) => {
+    if (!result) return <Badge variant="secondary">Não testado</Badge>;
+    
+    return result.success ? (
+      <Badge variant="default" className="bg-green-100 text-green-800 border-green-200">
+        <CheckCircle className="h-3 w-3 mr-1" />
+        Sucesso
+      </Badge>
+    ) : (
+      <Badge variant="destructive">
+        <AlertTriangle className="h-3 w-3 mr-1" />
+        Falha
+      </Badge>
+    );
   };
 
   return (
     <Card>
       <CardHeader>
-        <div className="flex items-center gap-2">
-          <TestTube className="h-5 w-5" />
-          <CardTitle>Teste do Sistema</CardTitle>
-        </div>
+        <CardTitle className="flex items-center gap-2">
+          <Settings className="h-5 w-5" />
+          Teste do Sistema de Convites
+        </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="test-email">Email de Teste</Label>
-            <input
-              id="test-email"
+      <CardContent className="space-y-6">
+        {/* Teste de Email */}
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <h3 className="font-medium flex items-center gap-2">
+              <Mail className="h-4 w-4" />
+              Teste de Email (Resend)
+            </h3>
+            {getResultBadge(testResults.email)}
+          </div>
+          
+          <div className="flex gap-2">
+            <Input
               type="email"
+              placeholder="seu-email@exemplo.com"
               value={testEmail}
               onChange={(e) => setTestEmail(e.target.value)}
-              className="w-full px-3 py-2 border rounded-md"
-              placeholder="teste@exemplo.com"
+              className="flex-1"
             />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="role-select">Papel para Teste</Label>
-            <Select value={selectedRoleId} onValueChange={setSelectedRoleId} disabled={rolesLoading}>
-              <SelectTrigger>
-                <SelectValue placeholder={rolesLoading ? "Carregando..." : "Selecione um papel"} />
-              </SelectTrigger>
-              <SelectContent>
-                {roles.map((role) => (
-                  <SelectItem key={role.id} value={role.id}>
-                    {role.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-
-        <Button 
-          onClick={runSystemTest} 
-          disabled={isRunning || !selectedRoleId || !testEmail}
-          className="w-full"
-        >
-          {isRunning ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Executando Teste...
-            </>
-          ) : (
-            <>
-              <Send className="mr-2 h-4 w-4" />
-              Testar Sistema Completo
-            </>
-          )}
-        </Button>
-
-        {testResult && (
-          <Alert className={
-            testResult.status === 'success' ? 'border-green-200 bg-green-50' :
-            testResult.status === 'error' ? 'border-red-200 bg-red-50' :
-            'border-yellow-200 bg-yellow-50'
-          }>
-            {testResult.status === 'success' ? (
-              <CheckCircle className="h-4 w-4 text-green-600" />
-            ) : (
-              <AlertTriangle className="h-4 w-4 text-red-600" />
-            )}
-            <AlertDescription className={
-              testResult.status === 'success' ? 'text-green-700' :
-              testResult.status === 'error' ? 'text-red-700' :
-              'text-yellow-700'
-            }>
-              <div className="font-medium">{testResult.message}</div>
-              {testResult.details && (
-                <div className="text-xs mt-2 opacity-75">
-                  {testResult.status === 'success' ? (
-                    <div>
-                      ✅ Convite: {testResult.details.inviteId?.substring(0, 8)}...<br/>
-                      ✅ Email: {testResult.details.emailId}<br/>
-                      ✅ Teste: {testResult.details.testId}
-                    </div>
-                  ) : (
-                    <div>
-                      ❌ Erro: {testResult.details.error}<br/>
-                      🔍 Teste: {testResult.details.testId}
-                    </div>
-                  )}
-                </div>
+            <Button
+              onClick={testEmailFunction}
+              disabled={isTestingEmail || !testEmail}
+              size="sm"
+            >
+              {isTestingEmail ? (
+                <RefreshCw className="h-4 w-4 animate-spin" />
+              ) : (
+                <Play className="h-4 w-4" />
               )}
-            </AlertDescription>
-          </Alert>
-        )}
+              Testar
+            </Button>
+          </div>
 
-        <div className="text-xs text-muted-foreground">
-          <Mail className="h-3 w-3 inline mr-1" />
-          O teste criará um convite temporário e tentará enviá-lo. Os dados são automaticamente limpos.
+          {testResults.email && (
+            <Alert className={testResults.email.success ? 'border-green-200 bg-green-50' : ''}>
+              <AlertDescription>
+                {testResults.email.message}
+              </AlertDescription>
+            </Alert>
+          )}
         </div>
+
+        {/* Teste da Edge Function */}
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <h3 className="font-medium flex items-center gap-2">
+              <Zap className="h-4 w-4" />
+              Teste da Edge Function
+            </h3>
+            {getResultBadge(testResults.edgeFunction)}
+          </div>
+          
+          <Button
+            onClick={testEdgeFunctionConnectivity}
+            disabled={isTestingEdgeFunction}
+            variant="outline"
+            size="sm"
+          >
+            {isTestingEdgeFunction ? (
+              <RefreshCw className="h-4 w-4 animate-spin" />
+            ) : (
+              <Play className="h-4 w-4" />
+            )}
+            Testar Conectividade
+          </Button>
+
+          {testResults.edgeFunction && (
+            <Alert className={testResults.edgeFunction.success ? 'border-green-200 bg-green-50' : ''}>
+              <AlertDescription>
+                {testResults.edgeFunction.message}
+              </AlertDescription>
+            </Alert>
+          )}
+        </div>
+
+        {/* Instruções */}
+        <Alert>
+          <AlertDescription>
+            <strong>Como usar:</strong>
+            <br />
+            1. Primeiro teste a conectividade da Edge Function
+            <br />
+            2. Depois teste o envio de email com seu próprio email
+            <br />
+            3. Se ambos passarem, o sistema de convites deve funcionar normalmente
+          </AlertDescription>
+        </Alert>
       </CardContent>
     </Card>
   );
