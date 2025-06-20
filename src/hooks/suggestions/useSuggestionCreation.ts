@@ -38,7 +38,7 @@ export const useSuggestionCreation = () => {
             upvotes: 1,
             downvotes: 0,
             is_hidden: false
-          })
+          } as any)
           .select();
 
         if (error) {
@@ -56,7 +56,7 @@ export const useSuggestionCreation = () => {
               suggestion_id: data[0].id,
               user_id: user.id,
               vote_type: 'upvote'
-            });
+            } as any);
             
           if (voteError) {
             console.error("Erro ao registrar voto do criador:", voteError);

@@ -24,7 +24,7 @@ export const useNotifications = () => {
           comment:comment_id(content),
           profiles:user_id(name, avatar_url)
         `)
-        .eq('user_id', user.id)
+        .eq('user_id', user.id as any)
         .order('created_at', { ascending: false });
 
       if (error) {
@@ -41,8 +41,8 @@ export const useNotifications = () => {
     try {
       const { error } = await supabase
         .from('suggestion_notifications')
-        .update({ is_read: true })
-        .eq('id', notificationId);
+        .update({ is_read: true } as any)
+        .eq('id', notificationId as any);
 
       if (error) throw error;
 
@@ -59,9 +59,9 @@ export const useNotifications = () => {
     try {
       const { error } = await supabase
         .from('suggestion_notifications')
-        .update({ is_read: true })
-        .eq('user_id', user.id)
-        .eq('is_read', false);
+        .update({ is_read: true } as any)
+        .eq('user_id', user.id as any)
+        .eq('is_read', false as any);
 
       if (error) throw error;
 

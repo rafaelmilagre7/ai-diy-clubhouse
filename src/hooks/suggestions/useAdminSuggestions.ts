@@ -29,7 +29,7 @@ export const useAdminSuggestions = () => {
       const { error } = await supabase
         .from('suggestions')
         .delete()
-        .eq('id', suggestionId);
+        .eq('id', suggestionId as any);
       
       if (error) {
         console.error('Erro ao remover sugestão:', error);
@@ -54,8 +54,8 @@ export const useAdminSuggestions = () => {
       
       const { error } = await supabase
         .from('suggestions')
-        .update({ status })
-        .eq('id', suggestionId);
+        .update({ status } as any)
+        .eq('id', suggestionId as any);
       
       if (error) {
         console.error('Erro ao atualizar status da sugestão:', error);

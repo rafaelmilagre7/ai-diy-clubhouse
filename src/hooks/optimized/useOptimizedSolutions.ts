@@ -84,7 +84,7 @@ export const useOptimizedSolutions = () => {
         throw fetchError;
       }
 
-      const validSolutions = (data || []) as Solution[];
+      const validSolutions = (data as any) as Solution[];
       
       logger.info('[OPTIMIZED] Soluções encontradas:', {
         total: validSolutions.length,
