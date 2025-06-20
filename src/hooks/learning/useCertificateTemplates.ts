@@ -24,7 +24,7 @@ export const useCertificateTemplates = (courseId?: string) => {
           .select(`*`);
           
         if (courseId) {
-          query = query.eq('course_id', courseId).order('is_default', { ascending: false });
+          query = query.eq('course_id', courseId as any).order('is_default', { ascending: false });
         } else {
           query = query.is('course_id', null).order('is_default', { ascending: false });
         }
@@ -33,7 +33,7 @@ export const useCertificateTemplates = (courseId?: string) => {
         
         if (error) throw error;
         
-        return data as CertificateTemplate[];
+        return data as unknown as CertificateTemplate[];
       } catch (error) {
         console.error("Erro ao buscar templates de certificados:", error);
         return [];
@@ -61,13 +61,13 @@ export const useCertificateTemplates = (courseId?: string) => {
             course_id: templateData.course_id,
             metadata: templateData.metadata || {},
             updated_at: new Date().toISOString()
-          })
-          .eq('id', templateData.id)
+          } as any)
+          .eq('id', templateData.id as any)
           .select();
           
         if (error) throw error;
         
-        return data?.[0] as CertificateTemplate;
+        return data?.[0] as unknown as CertificateTemplate;
       } else {
         const { data, error } = await supabase
           .from('learning_certificate_templates')
@@ -79,12 +79,12 @@ export const useCertificateTemplates = (courseId?: string) => {
             course_id: templateData.course_id,
             created_by: user.id,
             metadata: templateData.metadata || {}
-          })
+          } as any)
           .select();
           
         if (error) throw error;
         
-        return data?.[0] as CertificateTemplate;
+        return data?.[0] as unknown as CertificateTemplate;
       }
     },
     onSuccess: (data, variables) => {
@@ -102,7 +102,7 @@ export const useCertificateTemplates = (courseId?: string) => {
       const { error } = await supabase
         .from('learning_certificate_templates')
         .delete()
-        .eq('id', templateId);
+        .eq('id', templateId as any);
         
       if (error) throw error;
       

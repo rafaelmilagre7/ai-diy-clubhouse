@@ -29,14 +29,14 @@ export const useCertificates = (courseId?: string) => {
           `);
           
         if (courseId) {
-          query = query.eq('course_id', courseId);
+          query = query.eq('course_id', courseId as any);
         }
         
-        const { data, error } = await query.eq('user_id', user.id);
+        const { data, error } = await query.eq('user_id', user.id as any);
         
         if (error) throw error;
         
-        return data as Certificate[];
+        return data as unknown as Certificate[];
       } catch (error) {
         console.error("Erro ao buscar certificados:", error);
         return [];
@@ -68,14 +68,14 @@ export const useCertificates = (courseId?: string) => {
             )
           )
         `)
-        .eq('user_id', user.id)
-        .eq('learning_lessons.learning_modules.course_id', courseId);
+        .eq('user_id', user.id as any)
+        .eq('learning_lessons.learning_modules.course_id', courseId as any);
       
       if (error) throw error;
       
       // Verificar se todas as aulas foram completadas (100%)
       const allCompleted = progress && progress.length > 0 && 
-        progress.every(p => p.progress_percentage === 100 && p.completed_at);
+        progress.every(p => (p as any).progress_percentage === 100 && (p as any).completed_at);
       
       return allCompleted;
     } catch (error: any) {
@@ -109,7 +109,7 @@ export const useCertificates = (courseId?: string) => {
           course_id: courseId,
           validation_code: validationCode.data,
           issued_at: new Date().toISOString()
-        })
+        } as any)
         .select()
         .single();
       
@@ -179,9 +179,9 @@ const generateCertificatePDF = async (certificate: any) => {
         <div class="certificate">
           <h1>CERTIFICADO DE CONCLUSÃO</h1>
           <p>Este certifica que</p>
-          <p class="student-name">${certificate.profiles?.name || 'Usuário'}</p>
+          <p class="student-name">${(certificate as any).profiles?.name || 'Usuário'}</p>
           <p>concluiu com sucesso o curso</p>
-          <p class="course-name">${certificate.learning_courses?.title || 'Curso'}</p>
+          <p class="course-name">${(certificate as any).learning_courses?.title || 'Curso'}</p>
           <p>Emitido em: ${new Date(certificate.issued_at).toLocaleDateString('pt-BR')}</p>
           <p>Código: ${certificate.validation_code}</p>
         </div>
@@ -208,7 +208,7 @@ const generateCertificatePDF = async (certificate: any) => {
     const imgHeight = (canvas.height * imgWidth) / canvas.width;
     
     pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
-    pdf.save(`certificado-${certificate.learning_courses?.title || 'curso'}-${certificate.validation_code}.pdf`);
+    pdf.save(`certificado-${(certificate as any).learning_courses?.title || 'curso'}-${certificate.validation_code}.pdf`);
     
     document.body.removeChild(tempDiv);
     toast.success('Certificado baixado com sucesso!');
