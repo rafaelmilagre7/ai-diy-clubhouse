@@ -14,7 +14,7 @@ export const useForumCategories = () => {
         const { data, error } = await supabase
           .from('forum_categories')
           .select('*')
-          .eq('is_active', true)
+          .eq('is_active', true as any)
           .order('order_index', { ascending: true });
         
         if (error) {
@@ -23,7 +23,7 @@ export const useForumCategories = () => {
         }
         
         console.log('Categorias carregadas:', data?.length || 0);
-        return data || [];
+        return (data as any) || [];
       } catch (error: any) {
         console.error("Erro ao buscar categorias:", error.message);
         toast.error("Não foi possível carregar as categorias. Por favor, tente novamente.");

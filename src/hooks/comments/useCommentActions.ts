@@ -21,8 +21,8 @@ export const useCommentActions = (onSuccess: () => void) => {
         const { error } = await supabase
           .from('tool_comment_likes')
           .delete()
-          .eq('comment_id', comment.id)
-          .eq('user_id', user.id);
+          .eq('comment_id', comment.id as any)
+          .eq('user_id', user.id as any);
           
         if (error) throw error;
         
@@ -41,7 +41,7 @@ export const useCommentActions = (onSuccess: () => void) => {
           .insert({
             comment_id: comment.id,
             user_id: user.id
-          });
+          } as any);
           
         if (error) throw error;
         
@@ -74,7 +74,7 @@ export const useCommentActions = (onSuccess: () => void) => {
       const { error } = await supabase
         .from('tool_comments')
         .delete()
-        .eq('id', comment.id);
+        .eq('id', comment.id as any);
         
       if (error) throw error;
       

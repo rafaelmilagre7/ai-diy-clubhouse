@@ -51,7 +51,7 @@ export const useForumTopics = ({
         if (activeTab !== "todos") {
           const category = categories?.find(c => c.slug === activeTab);
           if (category) {
-            query = query.eq('category_id', category.id);
+            query = query.eq('category_id', category.id as any);
           }
         }
         
@@ -64,11 +64,11 @@ export const useForumTopics = ({
             query = query.order('view_count', { ascending: false });
             break;
           case "sem-respostas":
-            query = query.eq('reply_count', 0).order('created_at', { ascending: false });
+            query = query.eq('reply_count', 0 as any).order('created_at', { ascending: false });
             break;
           case "resolvidos":
             // Filtrar apenas tópicos marcados como resolvidos
-            query = query.eq('is_solved', true).order('last_activity_at', { ascending: false });
+            query = query.eq('is_solved', true as any).order('last_activity_at', { ascending: false });
             break;
         }
         
@@ -97,7 +97,7 @@ export const useForumTopics = ({
         const { data: profilesData, error: profilesError } = await supabase
           .from('profiles')
           .select('id, name, avatar_url, role_id, user_roles:role_id(name)')
-          .in('id', userIds);
+          .in('id', userIds as any);
           
         if (profilesError) {
           console.warn("Erro ao buscar perfis:", profilesError.message);
@@ -108,7 +108,7 @@ export const useForumTopics = ({
         const { data: categoriesData, error: categoriesError } = await supabase
           .from('forum_categories')
           .select('id, name, slug')
-          .in('id', categoryIds);
+          .in('id', categoryIds as any);
           
         if (categoriesError) {
           console.warn("Erro ao buscar categorias:", categoriesError.message);
@@ -116,8 +116,8 @@ export const useForumTopics = ({
         
         // Mapear os perfis e categorias para os tópicos
         const formattedTopics: Topic[] = topicsData.map(topic => {
-          const userProfile = profilesData?.find(profile => profile.id === topic.user_id);
-          const topicCategory = categoriesData?.find(cat => cat.id === topic.category_id);
+          const userProfile = (profilesData as any)?.find((profile: any) => profile.id === topic.user_id);
+          const topicCategory = (categoriesData as any)?.find((cat: any) => cat.id === topic.category_id);
           
           // CORREÇÃO: Usar getUserRoleName() para obter role de forma consistente
           let userRole = '';

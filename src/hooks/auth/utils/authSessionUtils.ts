@@ -75,7 +75,7 @@ export const processUserProfile = async (
         return null;
       }
       
-      profile = newProfile as UserProfile;
+      profile = newProfile as unknown as UserProfile;
     }
     
     return profile;

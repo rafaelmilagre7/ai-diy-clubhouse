@@ -26,7 +26,7 @@ export const useCommentsData = (toolId: string) => {
         const { data: parentComments, error: parentError } = await supabase
           .from('tool_comments')
           .select('*')
-          .eq('tool_id', toolId)
+          .eq('tool_id', toolId as any)
           .is('parent_id', null)
           .order('created_at', { ascending: false });
 
@@ -40,7 +40,7 @@ export const useCommentsData = (toolId: string) => {
         const { data: userProfiles, error: profilesError } = await supabase
           .from('profiles')
           .select('id, name, avatar_url, role')
-          .in('id', userIds);
+          .in('id', userIds as any);
           
         if (profilesError) {
           logError('Erro ao buscar perfis dos usuários', profilesError);
@@ -56,7 +56,7 @@ export const useCommentsData = (toolId: string) => {
         const { data: replies, error: repliesError } = await supabase
           .from('tool_comments')
           .select('*')
-          .eq('tool_id', toolId)
+          .eq('tool_id', toolId as any)
           .not('parent_id', 'is', null)
           .order('created_at', { ascending: true });
 
@@ -74,7 +74,7 @@ export const useCommentsData = (toolId: string) => {
           const { data: additionalProfiles } = await supabase
             .from('profiles')
             .select('id, name, avatar_url, role')
-            .in('id', missingUserIds);
+            .in('id', missingUserIds as any);
             
           if (additionalProfiles) {
             additionalProfiles.forEach((profile: any) => {
@@ -93,7 +93,7 @@ export const useCommentsData = (toolId: string) => {
           const { data: userLikes } = await supabase
             .from('tool_comment_likes')
             .select('comment_id')
-            .eq('user_id', user.id);
+            .eq('user_id', user.id as any);
 
           likesMap = (userLikes || []).reduce((acc: Record<string, boolean>, like: any) => {
             acc[like.comment_id] = true;
