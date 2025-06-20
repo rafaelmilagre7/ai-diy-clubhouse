@@ -1,13 +1,17 @@
 
-import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { Resend } from "npm:resend@2.0.0";
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3'
+import { Resend } from 'npm:resend@2.0.0'
 
+console.log('📧 [INVITE-EMAIL] Edge Function carregada e pronta!');
+
+// Configuração de CORS
 const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-};
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+}
+
+// Inicializar Resend
+const resend = new Resend(Deno.env.get('RESEND_API_KEY'))
 
 interface InviteEmailRequest {
   email: string;
@@ -18,272 +22,224 @@ interface InviteEmailRequest {
   notes?: string;
   inviteId?: string;
   forceResend?: boolean;
+  requestId?: string;
 }
 
-const handler = async (req: Request): Promise<Response> => {
-  const requestId = crypto.randomUUID().substring(0, 8);
-  console.log(`📧 [INVITE-${requestId}] Nova requisição de convite por email`);
-  
-  if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
-  }
+function generateEmailHTML(data: InviteEmailRequest): string {
+  const expirationDate = new Date(data.expiresAt).toLocaleDateString('pt-BR', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
 
-  const startTime = Date.now();
+  return `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Convite para Plataforma</title>
+    </head>
+    <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+      <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
+        <h1 style="color: white; margin: 0; font-size: 28px;">🎉 Você foi convidado!</h1>
+      </div>
+      
+      <div style="background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; border: 1px solid #e0e0e0;">
+        <p style="font-size: 18px; margin-bottom: 20px;">Olá!</p>
+        
+        <p style="font-size: 16px; margin-bottom: 20px;">
+          <strong>${data.senderName || 'Administrador'}</strong> convidou você para acessar nossa plataforma com o papel de <strong>${data.roleName}</strong>.
+        </p>
+        
+        ${data.notes ? `
+          <div style="background: #e3f2fd; padding: 15px; border-radius: 5px; margin: 20px 0; border-left: 4px solid #2196f3;">
+            <p style="margin: 0; font-style: italic;">"${data.notes}"</p>
+          </div>
+        ` : ''}
+        
+        <div style="text-align: center; margin: 30px 0;">
+          <a href="${data.inviteUrl}" 
+             style="display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px 30px; text-decoration: none; border-radius: 25px; font-weight: bold; font-size: 16px; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);">
+            🚀 Aceitar Convite
+          </a>
+        </div>
+        
+        <div style="background: #fff3cd; padding: 15px; border-radius: 5px; margin: 20px 0; border: 1px solid #ffeaa7;">
+          <p style="margin: 0; font-size: 14px; color: #856404;">
+            ⏰ <strong>Importante:</strong> Este convite expira em <strong>${expirationDate}</strong>
+          </p>
+        </div>
+        
+        <hr style="border: none; border-top: 1px solid #e0e0e0; margin: 30px 0;">
+        
+        <p style="font-size: 14px; color: #666; margin-bottom: 10px;">
+          Se o botão não funcionar, copie e cole este link no seu navegador:
+        </p>
+        <p style="font-size: 12px; color: #888; word-break: break-all; background: #f5f5f5; padding: 10px; border-radius: 5px;">
+          ${data.inviteUrl}
+        </p>
+        
+        <p style="font-size: 12px; color: #999; margin-top: 30px; text-align: center;">
+          Se você não estava esperando este convite, pode ignorar este email.
+        </p>
+      </div>
+    </body>
+    </html>
+  `;
+}
+
+// Função principal
+Deno.serve(async (req) => {
+  // Lidar com requisição OPTIONS para CORS
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders })
+  }
 
   try {
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    );
+    const requestId = crypto.randomUUID().substring(0, 8);
+    console.log(`📧 [INVITE-${requestId}] Nova requisição de convite por email`);
 
-    const apiKey = Deno.env.get("RESEND_API_KEY");
-    if (!apiKey) {
-      throw new Error("RESEND_API_KEY não configurada");
-    }
-
-    const resend = new Resend(apiKey);
-
-    const {
-      email,
-      inviteUrl,
-      roleName,
-      expiresAt,
-      senderName = "Equipe Viver de IA",
-      notes,
-      inviteId,
-      forceResend = false
-    }: InviteEmailRequest = await req.json();
-
-    // Rate limiting simples
-    if (!forceResend) {
-      const { data: recentAttempts } = await supabase
-        .from('invite_send_attempts')
-        .select('*')
-        .eq('email', email)
-        .gte('created_at', new Date(Date.now() - 5 * 60 * 1000).toISOString());
-
-      if (recentAttempts && recentAttempts.length >= 3) {
-        throw new Error('Muitas tentativas recentes para este email. Aguarde 5 minutos.');
-      }
-    }
-
-    console.log(`📨 [INVITE-${requestId}] Enviando convite para: ${email}`);
-
-    // Template profissional do email
-    const htmlTemplate = `
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Convite para Viver de IA</title>
-</head>
-<body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f8fafc;">
-    <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
-        <!-- Header -->
-        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 40px 30px; text-align: center;">
-            <h1 style="color: #ffffff; margin: 0; font-size: 28px; font-weight: 700;">
-                Você foi convidado!
-            </h1>
-            <p style="color: #e2e8f0; margin: 10px 0 0 0; font-size: 16px;">
-                Junte-se à comunidade Viver de IA
-            </p>
-        </div>
-        
-        <!-- Content -->
-        <div style="padding: 40px 30px;">
-            <p style="color: #334155; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
-                Olá! 👋
-            </p>
-            
-            <p style="color: #334155; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
-                ${senderName} convidou você para se juntar à <strong>Viver de IA</strong> como <strong>${roleName}</strong>.
-            </p>
-            
-            ${notes ? `
-            <div style="background-color: #f1f5f9; border-left: 4px solid #667eea; padding: 20px; margin: 20px 0; border-radius: 0 8px 8px 0;">
-                <p style="color: #475569; font-size: 14px; margin: 0; font-style: italic;">
-                    "${notes}"
-                </p>
-            </div>
-            ` : ''}
-            
-            <p style="color: #334155; font-size: 16px; line-height: 1.6; margin: 0 0 30px 0;">
-                A Viver de IA é uma comunidade exclusiva focada em Inteligência Artificial para negócios, 
-                onde você encontrará soluções práticas, networking qualificado e muito conhecimento.
-            </p>
-            
-            <!-- CTA Button -->
-            <div style="text-align: center; margin: 30px 0;">
-                <a href="${inviteUrl}" 
-                   style="display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
-                          color: #ffffff; text-decoration: none; padding: 16px 32px; 
-                          border-radius: 8px; font-weight: 600; font-size: 16px; 
-                          box-shadow: 0 4px 14px rgba(102, 126, 234, 0.3);">
-                    Aceitar Convite
-                </a>
-            </div>
-            
-            <!-- Features -->
-            <div style="margin: 30px 0;">
-                <h3 style="color: #1e293b; font-size: 18px; margin: 0 0 20px 0;">
-                    O que você encontrará:
-                </h3>
-                <ul style="color: #475569; line-height: 1.8; padding-left: 20px;">
-                    <li>🚀 Soluções práticas de IA para seu negócio</li>
-                    <li>🎯 Implementações passo a passo</li>
-                    <li>🤝 Networking com outros profissionais</li>
-                    <li>📚 Formação completa em IA</li>
-                    <li>💬 Suporte da comunidade</li>
-                </ul>
-            </div>
-            
-            <!-- Urgency -->
-            <div style="background-color: #fef3c7; border: 1px solid #fbbf24; padding: 20px; border-radius: 8px; margin: 20px 0;">
-                <p style="color: #92400e; font-size: 14px; margin: 0; text-align: center;">
-                    ⏰ <strong>Este convite expira em:</strong> ${new Date(expiresAt).toLocaleDateString('pt-BR', {
-                      year: 'numeric',
-                      month: 'long', 
-                      day: 'numeric',
-                      hour: '2-digit',
-                      minute: '2-digit'
-                    })}
-                </p>
-            </div>
-        </div>
-        
-        <!-- Footer -->
-        <div style="background-color: #f8fafc; padding: 30px; text-align: center; border-top: 1px solid #e2e8f0;">
-            <p style="color: #64748b; font-size: 14px; margin: 0 0 10px 0;">
-                Este é um convite exclusivo da Viver de IA
-            </p>
-            <p style="color: #94a3b8; font-size: 12px; margin: 0;">
-                Se você não esperava este convite, pode ignorar este email.
-            </p>
-        </div>
-    </div>
-</body>
-</html>`;
-
-    // Registrar tentativa
-    const attemptData = {
-      email,
-      invite_id: inviteId || null,
-      method_attempted: 'resend_api',
-      status: 'attempting'
-    };
-
-    const { data: attemptRecord } = await supabase
-      .from('invite_send_attempts')
-      .insert(attemptData)
-      .select()
-      .single();
-
-    try {
-      // Enviar email via Resend
-      const emailResponse = await resend.emails.send({
-        from: "Viver de IA <convites@viverdeia.ai>",
-        to: [email],
-        subject: `🚀 Você foi convidado para a Viver de IA - ${roleName}`,
-        html: htmlTemplate,
-        tags: [
-          { name: 'type', value: 'invite' },
-          { name: 'role', value: roleName },
-          { name: 'requestId', value: requestId },
-        ],
-      });
-
-      // Atualizar tentativa como sucesso
-      if (attemptRecord) {
-        await supabase
-          .from('invite_send_attempts')
-          .update({
-            status: 'success',
-            sent_at: new Date().toISOString(),
-            email_id: emailResponse.data?.id
-          })
-          .eq('id', attemptRecord.id);
-      }
-
-      // Atualizar convite se tiver ID
-      if (inviteId) {
-        await supabase.rpc('update_invite_send_attempt', {
-          invite_id: inviteId
-        });
-      }
-
-      const responseTime = Date.now() - startTime;
-      
-      console.log(`✅ [INVITE-${requestId}] Email enviado com sucesso:`, {
-        emailId: emailResponse.data?.id,
-        responseTime,
-        email
-      });
-
+    // Verificar se é POST
+    if (req.method !== 'POST') {
+      console.error(`❌ [INVITE-${requestId}] Método não permitido: ${req.method}`);
       return new Response(
-        JSON.stringify({
-          success: true,
-          message: "Convite enviado com sucesso",
-          emailId: emailResponse.data?.id,
-          responseTime,
-          requestId
+        JSON.stringify({ 
+          success: false, 
+          message: 'Método não permitido' 
         }),
-        {
-          status: 200,
-          headers: { "Content-Type": "application/json", ...corsHeaders },
+        { 
+          status: 405, 
+          headers: { 'Content-Type': 'application/json', ...corsHeaders } 
         }
-      );
-
-    } catch (emailError: any) {
-      // Atualizar tentativa como falha
-      if (attemptRecord) {
-        await supabase
-          .from('invite_send_attempts')
-          .update({
-            status: 'failed',
-            error_message: emailError.message
-          })
-          .eq('id', attemptRecord.id);
-      }
-
-      // Adicionar à fila para retry
-      try {
-        await supabase.from('email_queue').insert({
-          email,
-          subject: `🚀 Você foi convidado para a Viver de IA - ${roleName}`,
-          html_content: htmlTemplate,
-          invite_id: inviteId || null,
-          priority: 1, // Alta prioridade para convites
-          status: 'pending'
-        });
-        
-        console.log(`📝 [INVITE-${requestId}] Email adicionado à fila para retry`);
-      } catch (queueError) {
-        console.error(`❌ [INVITE-${requestId}] Erro ao adicionar à fila:`, queueError);
-      }
-
-      throw emailError;
+      )
     }
+
+    // Verificar variáveis de ambiente
+    const resendApiKey = Deno.env.get('RESEND_API_KEY')
+    if (!resendApiKey) {
+      console.error(`❌ [INVITE-${requestId}] RESEND_API_KEY não configurada`);
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          message: 'Configuração de email não encontrada' 
+        }),
+        { 
+          status: 500, 
+          headers: { 'Content-Type': 'application/json', ...corsHeaders } 
+        }
+      )
+    }
+
+    // Obter dados da requisição
+    const requestData: InviteEmailRequest = await req.json()
+    console.log(`📧 [INVITE-${requestId}] Dados recebidos:`, {
+      email: requestData.email,
+      roleName: requestData.roleName,
+      hasInviteUrl: !!requestData.inviteUrl,
+      urlPreview: requestData.inviteUrl?.substring(0, 50) + '...',
+      inviteId: requestData.inviteId
+    });
+
+    // Validar dados obrigatórios
+    if (!requestData.email || !requestData.inviteUrl || !requestData.roleName) {
+      console.error(`❌ [INVITE-${requestId}] Dados obrigatórios faltando`);
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          message: 'Dados obrigatórios faltando (email, inviteUrl, roleName)' 
+        }),
+        { 
+          status: 400, 
+          headers: { 'Content-Type': 'application/json', ...corsHeaders } 
+        }
+      )
+    }
+
+    // Configurar Supabase para atualizar estatísticas
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
+    let supabase = null;
+    
+    if (supabaseUrl && supabaseServiceKey) {
+      supabase = createClient(supabaseUrl, supabaseServiceKey)
+    }
+
+    // Enviar email via Resend
+    console.log(`📧 [INVITE-${requestId}] Enviando email via Resend...`);
+    
+    const emailResponse = await resend.emails.send({
+      from: 'Plataforma <noreply@resend.dev>', // Substitua pelo seu domínio verificado
+      to: [requestData.email],
+      subject: `🎉 Você foi convidado! Acesso como ${requestData.roleName}`,
+      html: generateEmailHTML(requestData),
+    })
+
+    if (emailResponse.error) {
+      console.error(`❌ [INVITE-${requestId}] Erro do Resend:`, emailResponse.error);
+      
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          message: 'Falha no envio do email',
+          error: emailResponse.error.message,
+          strategy: 'resend'
+        }),
+        { 
+          status: 500, 
+          headers: { 'Content-Type': 'application/json', ...corsHeaders } 
+        }
+      )
+    }
+
+    console.log(`✅ [INVITE-${requestId}] Email enviado com sucesso!`, {
+      emailId: emailResponse.data?.id,
+      to: requestData.email
+    });
+
+    // Atualizar estatísticas do convite se possível
+    if (supabase && requestData.inviteId) {
+      try {
+        await supabase.rpc('update_invite_send_attempt', { 
+          invite_id: requestData.inviteId 
+        });
+        console.log(`📊 [INVITE-${requestId}] Estatísticas atualizadas`);
+      } catch (statError) {
+        console.warn(`⚠️ [INVITE-${requestId}] Erro ao atualizar estatísticas:`, statError);
+        // Não falhar por causa disso
+      }
+    }
+
+    // Retornar sucesso
+    return new Response(
+      JSON.stringify({ 
+        success: true, 
+        message: 'Email de convite enviado com sucesso',
+        emailId: emailResponse.data?.id,
+        strategy: 'resend',
+        method: 'primary'
+      }),
+      { 
+        headers: { 'Content-Type': 'application/json', ...corsHeaders } 
+      }
+    )
 
   } catch (error: any) {
-    console.error(`❌ [INVITE-${requestId}] Erro crítico:`, error);
-    
-    const responseTime = Date.now() - startTime;
+    const requestId = 'unknown';
+    console.error(`💥 [INVITE-${requestId}] Erro crítico:`, error);
     
     return new Response(
-      JSON.stringify({
-        success: false,
-        error: error.message,
-        responseTime,
-        requestId
+      JSON.stringify({ 
+        success: false, 
+        message: 'Erro interno do servidor',
+        error: error.message 
       }),
-      {
-        status: 500,
-        headers: { "Content-Type": "application/json", ...corsHeaders },
+      { 
+        status: 500, 
+        headers: { 'Content-Type': 'application/json', ...corsHeaders } 
       }
-    );
+    )
   }
-};
-
-console.log("📧 [INVITE-EMAIL] Edge Function carregada e pronta!");
-serve(handler);
+})

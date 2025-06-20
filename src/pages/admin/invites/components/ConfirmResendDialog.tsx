@@ -1,13 +1,15 @@
 
-import { Loader2 } from "lucide-react";
+import { Mail, AlertTriangle } from "lucide-react";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Invite } from "@/hooks/admin/invites/types";
 
@@ -20,46 +22,67 @@ interface ConfirmResendDialogProps {
 }
 
 const ConfirmResendDialog = ({ 
-  invite,
-  onConfirm,
-  isOpen,
-  onOpenChange,
-  isSending
+  invite, 
+  onConfirm, 
+  isOpen, 
+  onOpenChange, 
+  isSending 
 }: ConfirmResendDialogProps) => {
   if (!invite) return null;
-  
+
+  const inviteUrl = `${window.location.origin}/accept-invite/${invite.token}`;
+
   return (
-    <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
-        <DialogHeader>
-          <DialogTitle>Reenviar convite</DialogTitle>
-          <DialogDescription>
-            Você está prestes a reenviar o convite para <strong>{invite.email}</strong>.
-          </DialogDescription>
-        </DialogHeader>
-        <div className="py-4">
-          <p>Um novo email será enviado com o link de convite.</p>
-          <p className="text-sm text-muted-foreground mt-2">
-            O email será enviado com os dados do convite original.
-          </p>
-        </div>
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancelar
-          </Button>
-          <Button onClick={onConfirm} disabled={isSending}>
-            {isSending ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Enviando...
-              </>
-            ) : (
-              "Reenviar"
+    <AlertDialog open={isOpen} onOpenChange={onOpenChange}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle className="flex items-center gap-2">
+            <Mail className="h-5 w-5" />
+            Reenviar Convite
+          </AlertDialogTitle>
+          <AlertDialogDescription className="space-y-3">
+            <p>
+              Deseja reenviar o convite para <strong>{invite.email}</strong>?
+            </p>
+            
+            <div className="bg-blue-50 p-3 rounded-md">
+              <p className="text-sm text-blue-800">
+                <strong>Papel:</strong> {invite.role?.name || 'Desconhecido'}
+              </p>
+              <p className="text-sm text-blue-800">
+                <strong>Expira em:</strong> {new Date(invite.expires_at).toLocaleDateString('pt-BR')}
+              </p>
+            </div>
+
+            <div className="bg-gray-50 p-3 rounded-md">
+              <p className="text-xs text-gray-600 mb-1">Link do convite:</p>
+              <p className="text-xs font-mono bg-white p-2 rounded border break-all">
+                {inviteUrl}
+              </p>
+            </div>
+
+            {invite.send_attempts && invite.send_attempts > 0 && (
+              <div className="flex items-center gap-2 text-orange-600">
+                <AlertTriangle className="h-4 w-4" />
+                <span className="text-sm">
+                  Este convite já foi enviado {invite.send_attempts} vez(es)
+                </span>
+              </div>
             )}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel disabled={isSending}>
+            Cancelar
+          </AlertDialogCancel>
+          <AlertDialogAction asChild>
+            <Button onClick={onConfirm} disabled={isSending}>
+              {isSending ? "Enviando..." : "Reenviar Email"}
+            </Button>
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   );
 };
 

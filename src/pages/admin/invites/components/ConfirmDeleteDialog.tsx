@@ -1,13 +1,15 @@
 
-import { Loader2 } from "lucide-react";
+import { Trash2 } from "lucide-react";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Invite } from "@/hooks/admin/invites/types";
 
@@ -20,48 +22,67 @@ interface ConfirmDeleteDialogProps {
 }
 
 const ConfirmDeleteDialog = ({ 
-  invite,
-  onConfirm,
-  isOpen,
-  onOpenChange,
-  isDeleting
+  invite, 
+  onConfirm, 
+  isOpen, 
+  onOpenChange, 
+  isDeleting 
 }: ConfirmDeleteDialogProps) => {
   if (!invite) return null;
-  
+
+  const isUsed = !!invite.used_at;
+  const isExpired = new Date(invite.expires_at) < new Date();
+
   return (
-    <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
-        <DialogHeader>
-          <DialogTitle>Excluir convite</DialogTitle>
-          <DialogDescription>
-            Você está prestes a excluir o convite para <strong>{invite.email}</strong>.
-          </DialogDescription>
-        </DialogHeader>
-        <div className="py-4">
-          <p>Esta ação não pode ser desfeita. O convite será permanentemente removido do sistema.</p>
-          {!invite.used_at && new Date(invite.expires_at) >= new Date() && (
-            <p className="text-sm text-amber-500 mt-2">
-              Atenção: este convite ainda está ativo e não foi utilizado.
+    <AlertDialog open={isOpen} onOpenChange={onOpenChange}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle className="flex items-center gap-2 text-destructive">
+            <Trash2 className="h-5 w-5" />
+            Excluir Convite
+          </AlertDialogTitle>
+          <AlertDialogDescription className="space-y-3">
+            <p>
+              Tem certeza que deseja excluir o convite para <strong>{invite.email}</strong>?
             </p>
-          )}
-        </div>
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            
+            <div className="bg-red-50 p-3 rounded-md">
+              <p className="text-sm text-red-800">
+                <strong>Status:</strong> {
+                  isUsed ? 'Já utilizado' : 
+                  isExpired ? 'Expirado' : 
+                  'Ativo'
+                }
+              </p>
+              <p className="text-sm text-red-800">
+                <strong>Papel:</strong> {invite.role?.name || 'Desconhecido'}
+              </p>
+              <p className="text-sm text-red-800">
+                <strong>Criado em:</strong> {new Date(invite.created_at).toLocaleDateString('pt-BR')}
+              </p>
+            </div>
+
+            <p className="text-sm text-muted-foreground">
+              Esta ação não pode ser desfeita. O convite será removido permanentemente.
+            </p>
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel disabled={isDeleting}>
             Cancelar
-          </Button>
-          <Button variant="destructive" onClick={onConfirm} disabled={isDeleting}>
-            {isDeleting ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Excluindo...
-              </>
-            ) : (
-              "Excluir"
-            )}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+          </AlertDialogCancel>
+          <AlertDialogAction asChild>
+            <Button 
+              variant="destructive" 
+              onClick={onConfirm} 
+              disabled={isDeleting}
+            >
+              {isDeleting ? "Excluindo..." : "Excluir Convite"}
+            </Button>
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   );
 };
 

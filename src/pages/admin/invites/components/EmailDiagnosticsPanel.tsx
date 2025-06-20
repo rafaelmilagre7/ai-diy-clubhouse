@@ -1,152 +1,179 @@
 
-import React from 'react';
+import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { SystemMonitoringDashboard } from '@/components/admin/email/SystemMonitoringDashboard';
-import { EmergencyRecoveryPanel } from '@/components/admin/email/EmergencyRecoveryPanel';
-import { SystemValidationPanel } from '@/components/admin/email/SystemValidationPanel';
-import { EdgeFunctionDiagnostics } from '@/components/admin/email/EdgeFunctionDiagnostics';
+import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { 
-  Activity, 
-  Heart, 
-  Shield, 
-  Zap,
-  CheckCircle,
+  CheckCircle, 
+  XCircle, 
+  Clock, 
+  RefreshCw,
   AlertTriangle,
-  Server,
-  TestTube2
+  Mail,
+  Zap
 } from 'lucide-react';
+import { useEmailSystemValidator } from '@/hooks/admin/email/useEmailSystemValidator';
 
-export const EmailDiagnosticsPanel: React.FC = () => {
+export const EmailDiagnosticsPanel = () => {
+  const { 
+    isValidating, 
+    validationReport, 
+    runCompleteValidation, 
+    clearReport 
+  } = useEmailSystemValidator();
+
+  const getStatusIcon = (status: 'pending' | 'success' | 'error' | 'warning') => {
+    switch (status) {
+      case 'success':
+        return <CheckCircle className="h-4 w-4 text-green-600" />;
+      case 'error':
+        return <XCircle className="h-4 w-4 text-red-600" />;
+      case 'warning':
+        return <AlertTriangle className="h-4 w-4 text-orange-600" />;
+      default:
+        return <Clock className="h-4 w-4 text-gray-600" />;
+    }
+  };
+
+  const getStatusColor = (status: 'pending' | 'success' | 'error' | 'warning') => {
+    switch (status) {
+      case 'success':
+        return 'text-green-600';
+      case 'error':
+        return 'text-red-600';
+      case 'warning':
+        return 'text-orange-600';
+      default:
+        return 'text-gray-600';
+    }
+  };
+
+  const getOverallBadge = () => {
+    if (!validationReport) return null;
+    
+    switch (validationReport.overall) {
+      case 'success':
+        return <Badge className="bg-green-100 text-green-800">✅ Sistema Saudável</Badge>;
+      case 'warning':
+        return <Badge className="bg-orange-100 text-orange-800">⚠️ Atenção Necessária</Badge>;
+      case 'error':
+        return <Badge className="bg-red-100 text-red-800">❌ Problemas Críticos</Badge>;
+      default:
+        return null;
+    }
+  };
+
   return (
-    <div className="space-y-6">
-      {/* Status Geral do Sistema */}
-      <Card className="bg-gradient-to-r from-blue-50 to-green-50 border-blue-200">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Shield className="h-5 w-5 text-blue-600" />
-            Sistema de Email Profissional com Recuperação Robusta
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div className="flex items-center gap-2">
-              <CheckCircle className="h-4 w-4 text-green-500" />
-              <div>
-                <p className="font-medium text-sm">Sistema Principal</p>
-                <Badge className="bg-green-500">Resend Pro</Badge>
+    <Card>
+      <CardHeader>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Mail className="h-5 w-5" />
+            <CardTitle>Diagnóstico do Sistema de Email</CardTitle>
+          </div>
+          <div className="flex items-center gap-2">
+            {validationReport && getOverallBadge()}
+            <Button
+              onClick={runCompleteValidation}
+              disabled={isValidating}
+              size="sm"
+            >
+              {isValidating ? (
+                <>
+                  <RefreshCw className="h-4 w-4 animate-spin mr-2" />
+                  Validando...
+                </>
+              ) : (
+                <>
+                  <Zap className="h-4 w-4 mr-2" />
+                  Executar Diagnóstico
+                </>
+              )}
+            </Button>
+            {validationReport && (
+              <Button
+                onClick={clearReport}
+                variant="outline"
+                size="sm"
+              >
+                Limpar
+              </Button>
+            )}
+          </div>
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {!validationReport && !isValidating && (
+          <Alert>
+            <AlertTriangle className="h-4 w-4" />
+            <AlertDescription>
+              Execute o diagnóstico para verificar a saúde do sistema de email.
+            </AlertDescription>
+          </Alert>
+        )}
+
+        {isValidating && (
+          <Alert>
+            <RefreshCw className="h-4 w-4 animate-spin" />
+            <AlertDescription>
+              Executando validação completa do sistema de email...
+            </AlertDescription>
+          </Alert>
+        )}
+
+        {validationReport && (
+          <div className="space-y-4">
+            {/* Resumo Geral */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <div className="text-sm text-gray-600">Status Geral</div>
+                <div className="font-semibold">
+                  {validationReport.overall === 'success' ? '✅ Funcionando' :
+                   validationReport.overall === 'warning' ? '⚠️ Com Avisos' : 
+                   '❌ Com Problemas'}
+                </div>
+              </div>
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <div className="text-sm text-gray-600">Duração</div>
+                <div className="font-semibold">{validationReport.duration}ms</div>
+              </div>
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <div className="text-sm text-gray-600">Timestamp</div>
+                <div className="font-semibold text-xs">
+                  {new Date(validationReport.timestamp).toLocaleString('pt-BR')}
+                </div>
               </div>
             </div>
-            
-            <div className="flex items-center gap-2">
-              <Heart className="h-4 w-4 text-red-500" />
-              <div>
-                <p className="font-medium text-sm">Recuperação</p>
-                <Badge variant="outline">4 Camadas</Badge>
-              </div>
-            </div>
-            
-            <div className="flex items-center gap-2">
-              <Activity className="h-4 w-4 text-blue-500" />
-              <div>
-                <p className="font-medium text-sm">Monitoramento</p>
-                <Badge variant="secondary">Tempo Real</Badge>
-              </div>
-            </div>
-            
-            <div className="flex items-center gap-2">
-              <Zap className="h-4 w-4 text-yellow-500" />
-              <div>
-                <p className="font-medium text-sm">Fallback</p>
-                <Badge variant="outline">Automático</Badge>
-              </div>
+
+            {/* Resultados Detalhados */}
+            <div className="space-y-3">
+              <h4 className="font-semibold">Resultados da Validação</h4>
+              {validationReport.results.map((result, index) => (
+                <div key={index} className="flex items-start gap-3 p-3 border rounded-lg">
+                  {getStatusIcon(result.status)}
+                  <div className="flex-1">
+                    <div className="font-medium">{result.step}</div>
+                    <div className={`text-sm ${getStatusColor(result.status)}`}>
+                      {result.message}
+                    </div>
+                    {result.details && (
+                      <details className="mt-2">
+                        <summary className="text-xs text-gray-500 cursor-pointer">
+                          Ver detalhes
+                        </summary>
+                        <pre className="text-xs bg-gray-100 p-2 rounded mt-1 overflow-auto">
+                          {JSON.stringify(result.details, null, 2)}
+                        </pre>
+                      </details>
+                    )}
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
-        </CardContent>
-      </Card>
-
-      {/* Tabs de Diagnóstico */}
-      <Tabs defaultValue="monitoring" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="monitoring" className="flex items-center gap-2">
-            <Activity className="h-4 w-4" />
-            Monitoramento
-          </TabsTrigger>
-          <TabsTrigger value="validation" className="flex items-center gap-2">
-            <TestTube2 className="h-4 w-4" />
-            Validação
-          </TabsTrigger>
-          <TabsTrigger value="functions" className="flex items-center gap-2">
-            <Server className="h-4 w-4" />
-            Edge Functions
-          </TabsTrigger>
-          <TabsTrigger value="recovery" className="flex items-center gap-2">
-            <Heart className="h-4 w-4" />
-            Recuperação
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="monitoring">
-          <SystemMonitoringDashboard />
-        </TabsContent>
-
-        <TabsContent value="validation">
-          <SystemValidationPanel />
-        </TabsContent>
-
-        <TabsContent value="functions">
-          <EdgeFunctionDiagnostics />
-        </TabsContent>
-
-        <TabsContent value="recovery">
-          <EmergencyRecoveryPanel />
-        </TabsContent>
-      </Tabs>
-
-      {/* Instruções de Uso Atualizadas */}
-      <Card className="bg-gray-50">
-        <CardHeader>
-          <CardTitle className="text-lg">🚀 Sistema de Email Robusto e Resiliente</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-            <div className="space-y-2">
-              <h4 className="font-medium text-green-900">✅ Recursos Ativos:</h4>
-              <ul className="space-y-1 text-green-800">
-                <li>• Template React Email profissional</li>
-                <li>• Retry com backoff exponencial</li>
-                <li>• Timeout otimizado (15s) para não travar UI</li>
-                <li>• Logs detalhados para debugging</li>
-                <li>• Fallback via Supabase Auth</li>
-                <li>• Fila de recuperação manual</li>
-                <li>• Sistema independente de Edge Functions</li>
-              </ul>
-            </div>
-            
-            <div className="space-y-2">
-              <h4 className="font-medium text-blue-900">🔧 Melhorias Implementadas:</h4>
-              <ul className="space-y-1 text-blue-800">
-                <li>• Diagnóstico avançado de Edge Functions</li>
-                <li>• Validação completa com múltiplos testes</li>
-                <li>• Convites sempre salvos (independente do email)</li>
-                <li>• Interface não trava por falhas de conectividade</li>
-                <li>• Dashboard de status das functions</li>
-                <li>• Recuperação automática em 4 camadas</li>
-              </ul>
-            </div>
-          </div>
-          
-          <div className="bg-green-50 p-3 rounded border border-green-200">
-            <p className="text-sm text-green-800">
-              <CheckCircle className="h-4 w-4 inline mr-1" />
-              <strong>Sistema Corrigido:</strong> Agora o sistema funciona mesmo com problemas nas Edge Functions. 
-              Os convites são sempre criados e salvos, com sistema de recuperação robusto para reenvio posterior.
-              Use as abas acima para monitorar, validar e gerenciar o sistema de email.
-            </p>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
+        )}
+      </CardContent>
+    </Card>
   );
 };

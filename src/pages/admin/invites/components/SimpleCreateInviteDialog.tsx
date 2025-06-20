@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { Loader2, Plus, AlertCircle, CheckCircle, Clock } from "lucide-react";
+import { Loader2, Plus, AlertCircle, CheckCircle } from "lucide-react";
 import { toast } from "sonner";
 import {
   Dialog,
@@ -23,7 +23,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Progress } from "@/components/ui/progress";
 import { useInviteCreate } from "@/hooks/admin/invites/useInviteCreate";
 
 interface SimpleCreateInviteDialogProps {
@@ -37,75 +36,97 @@ const SimpleCreateInviteDialog = ({ roles, onInviteCreated }: SimpleCreateInvite
   const [notes, setNotes] = useState("");
   const [expiration, setExpiration] = useState("7 days");
   const [open, setOpen] = useState(false);
+  const [lastResult, setLastResult] = useState<any>(null);
   
-  const { createInvite, loading, currentStep, isCreating, isSending } = useInviteCreate();
-
-  const getStepProgress = () => {
-    switch (currentStep) {
-      case 'idle': return 0;
-      case 'creating': return 25;
-      case 'sending': return 75;
-      case 'complete': return 100;
-      default: return 0;
-    }
-  };
-
-  const getStepMessage = () => {
-    switch (currentStep) {
-      case 'creating': return 'Criando convite no banco de dados...';
-      case 'sending': return 'Enviando email via sistema robusto...';
-      case 'retrying': return 'Tentando novamente via sistema de recuperação...';
-      case 'complete': return 'Convite criado e enviado com sucesso!';
-      default: return '';
-    }
-  };
-
-  const getStepIcon = () => {
-    switch (currentStep) {
-      case 'creating': return <Clock className="h-4 w-4 text-blue-500" />;
-      case 'sending': return <Loader2 className="h-4 w-4 animate-spin text-blue-500" />;
-      case 'retrying': return <Loader2 className="h-4 w-4 animate-spin text-yellow-500" />;
-      case 'complete': return <CheckCircle className="h-4 w-4 text-green-500" />;
-      default: return null;
-    }
-  };
+  const { createInvite, loading } = useInviteCreate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!email || !roleId) {
-      toast.error("Preencha todos os campos obrigatórios");
+    // Validações básicas
+    if (!email.trim()) {
+      toast.error("Email é obrigatório");
       return;
     }
     
-    console.log("🎯 Iniciando criação de convite via interface:", { email, roleId, expiration });
-    
-    const result = await createInvite({ 
-      email, 
-      roleId, 
-      notes, 
-      expiresIn: expiration 
-    });
-    
-    if (result) {
-      // Resetar formulário
-      setEmail("");
-      setRoleId("");
-      setNotes("");
-      setExpiration("7 days");
-      setOpen(false);
-      onInviteCreated();
-      
-      console.log("✅ Convite processado via interface:", result);
+    if (!roleId) {
+      toast.error("Papel é obrigatório");
+      return;
     }
+
+    if (!email.includes('@')) {
+      toast.error("Email inválido");
+      return;
+    }
+    
+    try {
+      console.log("🎯 Criando convite:", { email, roleId, expiration, notes });
+      
+      const result = await createInvite({ 
+        email: email.trim(), 
+        roleId, 
+        notes: notes.trim() || undefined, 
+        expiresIn: expiration 
+      });
+      
+      setLastResult(result);
+      
+      if (result && result.status === 'success') {
+        // Sucesso completo
+        setEmail("");
+        setRoleId("");
+        setNotes("");
+        setExpiration("7 days");
+        setOpen(false);
+        onInviteCreated();
+      } else if (result && result.status === 'partial_success') {
+        // Convite criado mas email falhou - manter dialog aberto para mostrar status
+        onInviteCreated(); // Atualizar lista mesmo assim
+      }
+      // Se result for null, o erro já foi mostrado no hook
+      
+    } catch (error: any) {
+      console.error("Erro no formulário:", error);
+      toast.error("Erro inesperado", {
+        description: error.message
+      });
+    }
+  };
+
+  const getResultIcon = () => {
+    if (!lastResult) return null;
+    
+    if (lastResult.status === 'success') {
+      return <CheckCircle className="h-4 w-4 text-green-600" />;
+    } else {
+      return <AlertCircle className="h-4 w-4 text-orange-600" />;
+    }
+  };
+
+  const getResultMessage = () => {
+    if (!lastResult) return null;
+    
+    if (lastResult.status === 'success') {
+      return {
+        title: "Convite enviado com sucesso!",
+        description: `Email enviado para ${lastResult.invite?.email}`
+      };
+    } else if (lastResult.status === 'partial_success') {
+      return {
+        title: "Convite criado, mas email falhou",
+        description: "O convite foi salvo e pode ser reenviado manualmente"
+      };
+    }
+    
+    return null;
   };
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button className="bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700">
+        <Button>
           <Plus className="mr-2 h-4 w-4" />
-          Criar Convite
+          Novo Convite
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[500px]">
@@ -113,21 +134,21 @@ const SimpleCreateInviteDialog = ({ roles, onInviteCreated }: SimpleCreateInvite
           <DialogHeader>
             <DialogTitle>Criar Novo Convite</DialogTitle>
             <DialogDescription>
-              Envie um convite profissional com sistema robusto de entrega de email.
+              Envie um convite para novos membros acessarem a plataforma.
             </DialogDescription>
           </DialogHeader>
           
           <div className="grid gap-4 py-4">
-            {/* Progresso do Envio */}
-            {loading && (
-              <Alert>
-                <div className="flex items-center gap-2">
-                  {getStepIcon()}
-                  <AlertDescription className="flex-1">
-                    {getStepMessage()}
-                  </AlertDescription>
-                </div>
-                <Progress value={getStepProgress()} className="mt-2" />
+            {/* Mostrar resultado do último envio */}
+            {lastResult && (
+              <Alert variant={lastResult.status === 'success' ? 'default' : 'destructive'}>
+                {getResultIcon()}
+                <AlertDescription>
+                  <div className="space-y-1">
+                    <p className="font-medium">{getResultMessage()?.title}</p>
+                    <p className="text-sm">{getResultMessage()?.description}</p>
+                  </div>
+                </AlertDescription>
               </Alert>
             )}
 
@@ -139,14 +160,14 @@ const SimpleCreateInviteDialog = ({ roles, onInviteCreated }: SimpleCreateInvite
                 placeholder="usuario@exemplo.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                disabled={loading}
                 required
+                disabled={loading}
               />
             </div>
             
             <div className="grid gap-2">
               <Label htmlFor="role">Papel *</Label>
-              <Select value={roleId} onValueChange={setRoleId} disabled={loading} required>
+              <Select value={roleId} onValueChange={setRoleId} required disabled={loading}>
                 <SelectTrigger id="role">
                   <SelectValue placeholder="Selecione um papel" />
                 </SelectTrigger>
@@ -186,44 +207,28 @@ const SimpleCreateInviteDialog = ({ roles, onInviteCreated }: SimpleCreateInvite
                 disabled={loading}
               />
             </div>
-
-            {/* Sistema de Email Info */}
-            <div className="bg-blue-50 p-3 rounded border border-blue-200">
-              <div className="space-y-1 text-sm">
-                <h4 className="font-medium text-blue-900 flex items-center gap-1">
-                  <CheckCircle className="h-3 w-3" />
-                  Sistema de Email Profissional
-                </h4>
-                <ul className="space-y-0.5 text-blue-800 text-xs">
-                  <li>• Template React Email personalizado</li>
-                  <li>• Timeout de 30s + Retry automático</li>
-                  <li>• Fallback via Supabase Auth</li>
-                  <li>• Taxa de entrega 95%+</li>
-                </ul>
-              </div>
-            </div>
           </div>
           
           <DialogFooter>
             <Button 
               variant="outline" 
               type="button" 
-              onClick={() => setOpen(false)}
+              onClick={() => {
+                setOpen(false);
+                setLastResult(null);
+              }}
               disabled={loading}
             >
-              Cancelar
+              {lastResult ? 'Fechar' : 'Cancelar'}
             </Button>
-            <Button type="submit" disabled={loading || !email || !roleId}>
+            <Button type="submit" disabled={loading}>
               {loading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  {isCreating ? 'Criando...' : isSending ? 'Enviando...' : 'Processando...'}
+                  Criando...
                 </>
               ) : (
-                <>
-                  <Plus className="mr-2 h-4 w-4" />
-                  Criar e Enviar
-                </>
+                "Criar e Enviar"
               )}
             </Button>
           </DialogFooter>

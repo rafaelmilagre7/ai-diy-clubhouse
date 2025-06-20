@@ -1,86 +1,75 @@
 
-import { useState } from 'react';
-import { useToast } from '@/hooks/use-toast';
-import { useInviteEmailService } from './useInviteEmailService';
+import { useState, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
-import type { Invite } from './types';
+import { toast } from 'sonner';
+import { Invite } from './types';
 
-export const useInviteResend = () => {
+export function useInviteResend() {
   const [isSending, setIsSending] = useState(false);
-  const { toast } = useToast();
-  const { sendInviteEmail, getInviteLink } = useInviteEmailService();
 
-  const resendInvite = async (invite: Invite) => {
+  const resendInvite = useCallback(async (invite: Invite): Promise<void> => {
+    setIsSending(true);
+    const requestId = crypto.randomUUID().substring(0, 8);
+    
     try {
-      setIsSending(true);
+      console.log(`🔄 [${requestId}] Reenviando convite:`, invite.email);
 
-      console.log("🔄 Reenviando convite:", {
-        inviteId: invite.id,
-        email: invite.email,
-        token: invite.token
+      // Gerar URL correta do convite
+      const inviteUrl = `${window.location.origin}/accept-invite/${invite.token}`;
+      
+      // Buscar dados do criador
+      const { data: creator } = await supabase
+        .from('profiles')
+        .select('name, email')
+        .eq('id', invite.created_by)
+        .single();
+
+      // Enviar email
+      const { data: emailResult, error: emailError } = await supabase.functions.invoke('send-invite-email', {
+        body: {
+          email: invite.email,
+          inviteUrl,
+          roleName: invite.role?.name || 'Usuário',
+          expiresAt: invite.expires_at,
+          senderName: creator?.name || 'Administrador',
+          notes: invite.notes,
+          inviteId: invite.id,
+          forceResend: true,
+          requestId
+        }
       });
 
-      const inviteUrl = getInviteLink(invite.token);
-      const roleName = invite.role?.name || 'Membro';
-
-      toast({
-        title: "Reenviando convite...",
-        description: `Preparando reenvio para ${invite.email}`,
-      });
-
-      const emailResult = await sendInviteEmail({
-        email: invite.email,
-        inviteUrl,
-        roleName,
-        expiresAt: invite.expires_at,
-        notes: invite.notes || undefined,
-        inviteId: invite.id,
-        forceResend: true
-      });
-
-      if (!emailResult.success) {
-        console.error('❌ Falha no reenvio:', emailResult.error);
-        
-        toast({
-          title: "Falha no reenvio",
-          description: emailResult.error || 'Não foi possível reenviar o convite',
-          variant: "destructive",
-        });
-
-        throw new Error(emailResult.error || 'Falha no reenvio');
+      if (emailError) {
+        console.error(`❌ [${requestId}] Erro na Edge Function:`, emailError);
+        throw new Error(`Erro no envio: ${emailError.message}`);
       }
 
-      // Atualizar registro de envio
-      await supabase.rpc('update_invite_send_attempt', {
-        invite_id: invite.id
-      });
+      if (!emailResult?.success) {
+        console.error(`❌ [${requestId}] Falha no reenvio:`, emailResult);
+        throw new Error(emailResult?.message || 'Falha no reenvio do email');
+      }
 
-      toast({
-        title: "Convite reenviado! ✅",
-        description: `Email enviado para ${invite.email}. Método: ${emailResult.strategy || 'Sistema principal'}`,
-        duration: 5000,
-      });
-
-      console.log("✅ Reenvio concluído:", {
-        inviteId: invite.id,
-        emailStrategy: emailResult.strategy,
-        emailId: emailResult.emailId
+      console.log(`✅ [${requestId}] Convite reenviado com sucesso!`);
+      
+      toast.success('Convite reenviado!', {
+        description: `Email enviado novamente para ${invite.email}`
       });
 
     } catch (error: any) {
-      console.error('❌ Erro no reenvio:', error);
+      console.error(`❌ [${requestId}] Erro ao reenviar:`, error);
       
-      toast({
-        title: "Erro no reenvio",
-        description: error.message || 'Erro inesperado ao reenviar convite',
-        variant: "destructive",
+      toast.error('Erro ao reenviar convite', {
+        description: error.message || 'Erro desconhecido'
       });
-
+      
       throw error;
     } finally {
       setIsSending(false);
     }
-  };
+  }, []);
 
-  return { resendInvite, isSending };
-};
+  return {
+    resendInvite,
+    isSending
+  };
+}

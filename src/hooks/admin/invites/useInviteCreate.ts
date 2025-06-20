@@ -1,226 +1,159 @@
 
-import { useState } from 'react';
-import { useToast } from '@/hooks/use-toast';
-import { useInviteEmailService } from './useInviteEmailService';
-import { useInviteValidation } from './useInviteValidation';
+import { useState, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
-import type { CreateInviteParams, CreateInviteResponse } from './types';
+import { CreateInviteParams, CreateInviteResponse } from './types';
 
-type CurrentStep = 'idle' | 'creating' | 'sending' | 'retrying' | 'complete';
-
-export const useInviteCreate = () => {
+export function useInviteCreate() {
   const [loading, setLoading] = useState(false);
-  const [currentStep, setCurrentStep] = useState<CurrentStep>('idle');
-  const { toast: uiToast } = useToast();
-  const { sendInviteEmail, getInviteLink } = useInviteEmailService();
-  const { validateInviteData } = useInviteValidation();
 
-  const createInviteWithFallback = async (params: CreateInviteParams): Promise<CreateInviteResponse | null> => {
+  const createInvite = useCallback(async (params: CreateInviteParams): Promise<CreateInviteResponse | null> => {
+    setLoading(true);
     const requestId = crypto.randomUUID().substring(0, 8);
     
     try {
-      setLoading(true);
-      setCurrentStep('creating');
+      console.log(`🎯 [${requestId}] Iniciando criação de convite:`, params);
 
-      console.log(`🎯 [${requestId}] Iniciando criação robusta de convite:`, {
-        email: params.email,
-        roleId: params.roleId,
-        channelPreference: params.channelPreference
+      // 1. Criar convite no banco usando a função híbrida
+      const { data: inviteData, error: inviteError } = await supabase.rpc('create_invite_hybrid', {
+        p_email: params.email,
+        p_phone: params.phone || null,
+        p_role_id: params.roleId,
+        p_expires_in: `${params.expiresIn || '7 days'}`,
+        p_notes: params.notes || null,
+        p_channel_preference: params.channelPreference || 'email'
       });
 
-      // Validação dos dados
-      const validation = validateInviteData(params.email, params.roleId, {
-        phone: params.phone,
-        channelPreference: params.channelPreference,
-        expiresIn: params.expiresIn
-      });
-
-      if (!validation.isValid) {
-        const errorMsg = validation.errors.join(', ');
-        console.error(`❌ [${requestId}] Validação falhou:`, errorMsg);
-        toast.error("Dados inválidos", { description: errorMsg });
-        return null;
+      if (inviteError) {
+        console.error(`❌ [${requestId}] Erro ao criar convite:`, inviteError);
+        throw new Error(`Erro ao criar convite: ${inviteError.message}`);
       }
 
-      // Mostrar avisos se houver
-      if (validation.warnings.length > 0) {
-        validation.warnings.forEach(warning => {
-          toast.warning("Atenção", { description: warning });
-        });
+      if (!inviteData.success) {
+        console.error(`❌ [${requestId}] Convite não criado:`, inviteData);
+        throw new Error(inviteData.message || 'Falha ao criar convite');
       }
 
-      // Calcular data de expiração
-      const expiresAt = new Date();
-      const daysToAdd = {
-        '1 day': 1,
-        '3 days': 3, 
-        '7 days': 7,
-        '14 days': 14,
-        '30 days': 30
-      }[params.expiresIn || '7 days'] || 7;
-      
-      expiresAt.setDate(expiresAt.getDate() + daysToAdd);
+      console.log(`✅ [${requestId}] Convite criado com sucesso:`, inviteData);
 
-      console.log(`📅 [${requestId}] Data de expiração:`, expiresAt.toISOString());
-
-      // FASE 1: Criar convite no banco SEMPRE (independente do email)
-      const { data: invite, error: createError } = await supabase
+      // 2. Buscar dados completos do convite para o envio
+      const { data: invite, error: fetchError } = await supabase
         .from('invites')
-        .insert({
-          email: params.email,
-          phone: params.phone,
-          role_id: params.roleId,
-          token: crypto.randomUUID(),
-          expires_at: expiresAt.toISOString(),
-          notes: params.notes,
-          channel_preference: params.channelPreference || 'email',
-          created_by: (await supabase.auth.getUser()).data.user?.id,
-          // Campos de controle para recuperação
-          send_attempts: 0,
-          email_provider: 'pending',
-          last_sent_at: null
-        })
         .select(`
           *,
-          role:role_id(name)
+          role:user_roles(name),
+          creator:profiles!created_by(name, email)
         `)
+        .eq('id', inviteData.invite_id)
         .single();
 
-      if (createError || !invite) {
-        console.error(`❌ [${requestId}] Erro ao criar convite:`, createError);
-        throw new Error(createError?.message || 'Falha ao criar convite');
+      if (fetchError || !invite) {
+        console.error(`❌ [${requestId}] Erro ao buscar convite criado:`, fetchError);
+        throw new Error('Convite criado mas não foi possível buscar os dados');
       }
 
-      console.log(`✅ [${requestId}] Convite criado com sucesso:`, {
-        id: invite.id,
-        token: invite.token
-      });
+      // 3. Gerar URL correta do convite
+      const inviteUrl = `${window.location.origin}/accept-invite/${invite.token}`;
+      console.log(`🔗 [${requestId}] URL do convite:`, inviteUrl);
 
-      // FASE 2: Tentar enviar email (com sistema robusto de fallback)
-      setCurrentStep('sending');
-      toast.info("💫 Convite criado! Tentando enviar email...", { 
-        description: "O convite já está salvo e pode ser reenviado se necessário" 
-      });
-
-      const inviteUrl = getInviteLink(invite.token);
-      const roleName = invite.role?.name || 'Membro';
-
-      let emailResult;
-      try {
-        // Tentativa de envio com timeout reduzido
-        const emailPromise = sendInviteEmail({
+      // 4. Enviar email automaticamente
+      console.log(`📧 [${requestId}] Iniciando envio de email...`);
+      
+      const { data: emailResult, error: emailError } = await supabase.functions.invoke('send-invite-email', {
+        body: {
           email: params.email,
           inviteUrl,
-          roleName,
+          roleName: invite.role?.name || 'Usuário',
           expiresAt: invite.expires_at,
+          senderName: invite.creator?.name || 'Administrador',
           notes: params.notes,
-          inviteId: invite.id
+          inviteId: invite.id,
+          requestId
+        }
+      });
+
+      if (emailError) {
+        console.error(`❌ [${requestId}] Erro na Edge Function:`, emailError);
+        
+        // Atualizar estatísticas mesmo com erro
+        await supabase.rpc('update_invite_send_attempt', { invite_id: invite.id });
+        
+        toast.warning('Convite criado, mas falha no envio de email', {
+          description: 'O convite foi salvo e pode ser reenviado manualmente.'
         });
 
-        // Timeout de 10 segundos para não travar a interface
-        const timeoutPromise = new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Timeout no envio de email')), 10000)
-        );
-
-        emailResult = await Promise.race([emailPromise, timeoutPromise]) as any;
-      } catch (emailError: any) {
-        console.warn(`⚠️ [${requestId}] Falha no envio imediato:`, emailError.message);
-        
-        // Registrar tentativa falhada mas continuar
-        await supabase
-          .from('invites')
-          .update({
-            send_attempts: 1,
-            email_provider: 'failed_immediate',
-            last_sent_at: new Date().toISOString(),
-            notes: (params.notes || '') + ` [Falha automática: ${emailError.message}]`
-          })
-          .eq('id', invite.id);
-
-        // Criar resultado de fallback
-        emailResult = {
-          success: false,
-          error: emailError.message,
-          suggestion: 'Sistema de recuperação ativado. Use "Reenviar" ou vá para aba "Recuperação"'
-        };
-      }
-
-      // FASE 3: Atualizar status baseado no resultado do email
-      if (emailResult?.success) {
-        await supabase
-          .from('invites')
-          .update({
-            last_sent_at: new Date().toISOString(),
-            send_attempts: 1,
-            email_provider: emailResult.strategy || 'unknown',
-            email_id: emailResult.emailId
-          })
-          .eq('id', invite.id);
-      }
-
-      setCurrentStep('complete');
-
-      // FASE 4: Retornar resultado baseado no sucesso do email
-      if (emailResult?.success) {
-        console.log(`✅ [${requestId}] Convite criado e enviado com sucesso`);
-        
-        toast.success("🎉 Convite criado e enviado!", {
-          description: `Email enviado para ${params.email} via ${emailResult.strategy || 'sistema principal'}`
-        });
-        
-        return {
-          status: 'success',
-          message: `Convite enviado para ${params.email}`,
-          invite,
-          emailResult
-        };
-      } else {
-        console.warn(`⚠️ [${requestId}] Convite criado mas email falhou:`, emailResult?.error);
-        
-        toast.warning("✅ Convite criado com ressalvas", {
-          description: `Convite salvo mas email falhou: ${emailResult?.error || 'Erro desconhecido'}`,
-          action: {
-            label: "Ver Recuperação",
-            onClick: () => {
-              // Navegar para aba de recuperação seria ideal aqui
-              console.log('Navegar para aba de recuperação');
-            }
-          }
-        });
-        
         return {
           status: 'partial_success',
-          message: `Convite criado mas email falhou`,
+          message: 'Convite criado, mas email não foi enviado',
           invite,
-          suggestion: emailResult?.suggestion || 'Use o botão "Reenviar" ou acesse a aba "Recuperação" para tentar novamente'
+          emailResult: {
+            success: false,
+            message: emailError.message,
+            error: emailError.message,
+            channel: 'email'
+          }
         };
       }
+
+      if (!emailResult?.success) {
+        console.error(`❌ [${requestId}] Falha no envio:`, emailResult);
+        
+        // Atualizar estatísticas mesmo com erro
+        await supabase.rpc('update_invite_send_attempt', { invite_id: invite.id });
+        
+        toast.warning('Convite criado, mas email falhou', {
+          description: emailResult?.message || 'Erro desconhecido no envio'
+        });
+
+        return {
+          status: 'partial_success',
+          message: 'Convite criado, mas email não foi enviado',
+          invite,
+          emailResult: {
+            success: false,
+            message: emailResult?.message || 'Falha no envio',
+            error: emailResult?.error,
+            channel: 'email'
+          }
+        };
+      }
+
+      // 5. Sucesso completo
+      console.log(`🎉 [${requestId}] Convite criado e email enviado com sucesso!`);
+      
+      toast.success('Convite enviado com sucesso!', {
+        description: `Email enviado para ${params.email}`
+      });
+
+      return {
+        status: 'success',
+        message: 'Convite criado e enviado com sucesso',
+        invite,
+        emailResult: {
+          success: true,
+          message: 'Email enviado com sucesso',
+          emailId: emailResult.emailId,
+          strategy: emailResult.strategy,
+          method: emailResult.method,
+          channel: 'email'
+        }
+      };
 
     } catch (error: any) {
       console.error(`❌ [${requestId}] Erro crítico:`, error);
       
-      toast.error("❌ Erro ao criar convite", {
-        description: error.message || 'Erro inesperado ao processar convite'
+      toast.error('Erro ao criar convite', {
+        description: error.message || 'Erro desconhecido'
       });
 
       return null;
     } finally {
       setLoading(false);
-      setCurrentStep('idle');
     }
-  };
-
-  const isCreating = currentStep === 'creating';
-  const isSending = currentStep === 'sending';
-  const isRetrying = currentStep === 'retrying';
+  }, []);
 
   return {
-    createInvite: createInviteWithFallback,
-    loading,
-    currentStep,
-    isCreating,
-    isSending,
-    isRetrying
+    createInvite,
+    loading
   };
-};
+}
