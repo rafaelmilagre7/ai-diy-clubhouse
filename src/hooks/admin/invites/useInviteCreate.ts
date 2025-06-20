@@ -26,16 +26,49 @@ export const useInviteCreate = () => {
         throw error;
       }
 
-      console.log("✅ Resposta da função:", data);
+      console.log("✅ Convite criado:", data);
 
       if (data?.status === 'success') {
-        toast.success("Convite criado e enviado com sucesso!");
-        return {
-          status: 'success',
-          message: data.message,
-          invite_id: data.invite_id,
-          token: data.token
-        };
+        // Agora enviar via orquestrador
+        const orchestratorResponse = await supabase.functions.invoke('invite-orchestrator', {
+          body: {
+            inviteId: data.invite_id,
+            email: params.email,
+            whatsappNumber: params.whatsappNumber,
+            roleId: params.roleId,
+            token: data.token,
+            channels: params.channels || ['email'],
+            isResend: false,
+            notes: params.notes
+          }
+        });
+
+        if (orchestratorResponse.error) {
+          console.error("❌ Erro no orquestrador:", orchestratorResponse.error);
+          toast.error("Convite criado mas falha no envio: " + orchestratorResponse.error.message);
+          return {
+            status: 'error',
+            message: "Convite criado mas falha no envio: " + orchestratorResponse.error.message
+          };
+        }
+
+        const orchestratorData = orchestratorResponse.data;
+        
+        if (orchestratorData?.success) {
+          toast.success("Convite criado e enviado com sucesso!");
+          return {
+            status: 'success',
+            message: orchestratorData.message,
+            invite_id: data.invite_id,
+            token: data.token
+          };
+        } else {
+          toast.error(orchestratorData?.message || "Erro ao enviar convite");
+          return {
+            status: 'error',
+            message: orchestratorData?.message || "Erro ao enviar convite"
+          };
+        }
       } else {
         toast.error(data?.message || "Erro ao criar convite");
         return {
