@@ -26,7 +26,7 @@ export const useCourseAccess = () => {
           course_id,
           learning_courses (*)
         `)
-        .eq('role_id', roleId);
+        .eq('role_id', roleId as any);
 
       if (error) {
         console.error('❌ Erro ao buscar cursos por papel:', error);
@@ -54,7 +54,7 @@ export const useCourseAccess = () => {
           role_id,
           user_roles (*)
         `)
-        .eq('course_id', courseId);
+        .eq('course_id', courseId as any);
 
       if (error) {
         console.error('❌ Erro ao buscar papéis por curso:', error);
@@ -81,14 +81,14 @@ export const useCourseAccess = () => {
         const { data: existing } = await supabase
           .from('course_access_control')
           .select('id')
-          .eq('course_id', courseId)
-          .eq('role_id', roleId)
+          .eq('course_id', courseId as any)
+          .eq('role_id', roleId as any)
           .maybeSingle();
 
         if (!existing) {
           const { error } = await supabase
             .from('course_access_control')
-            .insert({ course_id: courseId, role_id: roleId });
+            .insert({ course_id: courseId, role_id: roleId } as any);
           
           if (error) throw error;
           console.log('✅ Acesso concedido para:', courseId, roleId);
@@ -100,8 +100,8 @@ export const useCourseAccess = () => {
         const { error } = await supabase
           .from('course_access_control')
           .delete()
-          .eq('course_id', courseId)
-          .eq('role_id', roleId);
+          .eq('course_id', courseId as any)
+          .eq('role_id', roleId as any);
         
         if (error) throw error;
         console.log('✅ Acesso removido para:', courseId, roleId);

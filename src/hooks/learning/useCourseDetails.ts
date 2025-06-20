@@ -1,212 +1,162 @@
 
-import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/lib/supabase";
-import { toast } from "sonner";
-import { sortLessonsByNumber } from "@/components/learning/member/course-modules/CourseModulesHelpers";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useCourseAccess } from "./useCourseAccess";
 import { useAuth } from "@/contexts/auth";
+import { supabase } from "@/lib/supabase";
+import { useCourseAccess } from "./useCourseAccess";
+import { toast } from "sonner";
 
-export function useCourseDetails(courseId?: string) {
-  const navigate = useNavigate();
+export const useCourseDetails = (courseId?: string) => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const { checkCourseAccess } = useCourseAccess();
+  
+  const [course, setCourse] = useState<any>(null);
+  const [modules, setModules] = useState<any[]>([]);
+  const [allLessons, setAllLessons] = useState<any[]>([]);
+  const [userProgress, setUserProgress] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [accessDenied, setAccessDenied] = useState(false);
-  
-  // Verificar acesso ao curso - com fallback para permitir acesso se houver erro
-  const { 
-    data: hasAccess,
-    isLoading: isCheckingAccess,
-    isError: isAccessError
-  } = useQuery({
-    queryKey: ["learning-course-access", user?.id, courseId],
-    queryFn: async () => {
-      if (!courseId || !user?.id) return true; // Se não tiver curso ou usuário, permitir acesso
-      
+
+  useEffect(() => {
+    const fetchCourseData = async () => {
+      if (!courseId || !user) {
+        setIsLoading(false);
+        return;
+      }
+
       try {
-        const result = await checkCourseAccess(courseId, user.id);
-        console.log(`Verificação de acesso ao curso ${courseId} para usuário ${user.id}:`, result);
-        return result;
+        setIsLoading(true);
+        console.log("🔍 Carregando dados do curso:", courseId);
+
+        // 1. Verificar acesso ao curso
+        const hasAccess = await checkCourseAccess(courseId, user.id);
+        console.log("🔐 Resultado verificação de acesso:", hasAccess);
+
+        if (!hasAccess) {
+          console.log("❌ Acesso negado ao curso");
+          setAccessDenied(true);
+          setIsLoading(false);
+          return;
+        }
+
+        // 2. Buscar dados do curso
+        const { data: courseData, error: courseError } = await supabase
+          .from("learning_courses")
+          .select("*")
+          .eq("id", courseId as any)
+          .eq("published", true as any)
+          .single();
+
+        if (courseError) {
+          console.error("❌ Erro ao carregar curso:", courseError);
+          if (courseError.code === 'PGRST116') {
+            console.log("Course not found, redirecting to courses list");
+            toast.error("Curso não encontrado");
+            navigate("/learning");
+            return;
+          }
+          throw courseError;
+        }
+
+        if (!courseData || !(courseData as any).title) {
+          console.log("Course not found or not published, redirecting to courses list");
+          toast.error("Curso não encontrado ou não publicado");
+          navigate("/learning");
+          return;
+        }
+
+        setCourse(courseData);
+        console.log("✅ Curso carregado:", (courseData as any).title);
+
+        // 3. Buscar módulos do curso
+        const { data: modulesData, error: modulesError } = await supabase
+          .from("learning_modules")
+          .select("*")
+          .eq("course_id", courseId as any)
+          .eq("published", true as any)
+          .order("order_index", { ascending: true });
+
+        if (modulesError) {
+          console.error("❌ Erro ao carregar módulos:", modulesError);
+          throw modulesError;
+        }
+
+        const processedModules = (modulesData || []).map((module: any) => ({
+          id: (module as any).id,
+          title: (module as any).title,
+          published: (module as any).published,
+          order_index: (module as any).order_index,
+          course_id: courseId
+        }));
+
+        setModules(processedModules);
+        console.log("✅ Módulos carregados:", processedModules.length);
+
+        // 4. Buscar todas as aulas dos módulos
+        if (processedModules.length > 0) {
+          const moduleIds = processedModules.map((m: any) => (m as any).id);
+          
+          const { data: lessonsData, error: lessonsError } = await supabase
+            .from("learning_lessons")
+            .select("*")
+            .in("module_id", moduleIds)
+            .eq("published", true as any)
+            .order("order_index", { ascending: true });
+
+          if (lessonsError) {
+            console.error("❌ Erro ao carregar aulas:", lessonsError);
+            throw lessonsError;
+          }
+
+          const processedLessons = (lessonsData || []).map((lesson: any) => ({
+            id: (lesson as any).id,
+            title: (lesson as any).title,
+            module_id: (lesson as any).module_id,
+            order_index: (lesson as any).order_index,
+            published: (lesson as any).published
+          }));
+
+          setAllLessons(processedLessons);
+          console.log("✅ Aulas carregadas:", processedLessons.length);
+
+          // 5. Buscar progresso do usuário
+          if (processedLessons.length > 0) {
+            const lessonIds = processedLessons.map((l: any) => (l as any).id);
+            
+            const { data: progressData, error: progressError } = await supabase
+              .from("learning_progress")
+              .select("*")
+              .eq("user_id", user.id as any)
+              .in("lesson_id", lessonIds);
+
+            if (progressError) {
+              console.error("❌ Erro ao carregar progresso:", progressError);
+            } else {
+              setUserProgress(progressData || []);
+              console.log("✅ Progresso carregado:", (progressData || []).length);
+            }
+          }
+        }
+
       } catch (error) {
-        console.error("Erro na verificação de acesso ao curso:", error);
-        // Se houver erro na verificação, permitir acesso para evitar bloqueios
-        return true;
+        console.error("❌ Erro ao carregar dados do curso:", error);
+        toast.error("Erro ao carregar dados do curso");
+        navigate("/learning");
+      } finally {
+        setIsLoading(false);
       }
-    },
-    enabled: !!user?.id && !!courseId,
-    // Em caso de erro, permitir acesso
-    retry: 1
-  });
-  
-  // Buscar detalhes do curso - sempre buscar se não há negação explícita de acesso
-  const { 
-    data: course, 
-    isLoading: isLoadingCourse, 
-    error: courseError 
-  } = useQuery({
-    queryKey: ["learning-course", courseId],
-    queryFn: async () => {
-      console.log(`Carregando curso ${courseId}...`);
-      
-      const { data, error } = await supabase
-        .from("learning_courses")
-        .select("*")
-        .eq("id", courseId)
-        .eq("published", true)
-        .single();
-        
-      if (error) {
-        console.error("Erro ao carregar curso:", error);
-        throw new Error("Não foi possível carregar os detalhes do curso");
-      }
-      
-      console.log(`Curso ${courseId} carregado:`, data?.title);
-      return data;
-    },
-    enabled: !!courseId && (hasAccess !== false || isAccessError) && !accessDenied
-  });
-  
-  // Buscar módulos do curso - sempre buscar se temos o curso
-  const { 
-    data: modules, 
-    isLoading: isLoadingModules 
-  } = useQuery({
-    queryKey: ["learning-modules", courseId],
-    queryFn: async () => {
-      console.log(`Carregando módulos do curso ${courseId}...`);
-      
-      const { data, error } = await supabase
-        .from("learning_modules")
-        .select("*")
-        .eq("course_id", courseId)
-        .eq("published", true)
-        .order("order_index", { ascending: true });
-        
-      if (error) {
-        console.error("Erro ao carregar módulos:", error);
-        return [];
-      }
-      
-      console.log(`${data?.length || 0} módulos carregados para o curso ${courseId}:`, 
-        data?.map(m => ({ id: m.id, title: m.title, published: m.published })) || []);
-      
-      return data;
-    },
-    enabled: !!course && (hasAccess !== false || isAccessError) && !accessDenied
-  });
-  
-  // Buscar todas as aulas do curso para estatísticas - incluir aulas não publicadas para debug
-  const { 
-    data: allLessons, 
-    isLoading: isLoadingLessons 
-  } = useQuery({
-    queryKey: ["learning-course-lessons", courseId],
-    queryFn: async () => {
-      if (!modules?.length) {
-        console.log("Nenhum módulo encontrado para carregar aulas");
-        return [];
-      }
-      
-      const moduleIds = modules.map(m => m.id);
-      console.log(`Carregando aulas dos módulos: ${moduleIds.join(", ")}`);
-      
-      // Buscar TODAS as aulas (incluindo não publicadas) para debug
-      const { data: allLessonsData, error } = await supabase
-        .from("learning_lessons")
-        .select("*, learning_lesson_videos(*)")
-        .in("module_id", moduleIds);
-        
-      if (error) {
-        console.error("Erro ao carregar aulas:", error);
-        return [];
-      }
-      
-      console.log(`Total de aulas encontradas (incluindo não publicadas): ${allLessonsData?.length || 0}`);
-      console.log("Status das aulas por módulo:", 
-        modules.map(module => {
-          const moduleLessons = allLessonsData?.filter(lesson => lesson.module_id === module.id) || [];
-          const publishedLessons = moduleLessons.filter(lesson => lesson.published);
-          return {
-            moduleId: module.id,
-            moduleTitle: module.title,
-            totalLessons: moduleLessons.length,
-            publishedLessons: publishedLessons.length,
-            lessons: moduleLessons.map(l => ({ id: l.id, title: l.title, published: l.published }))
-          };
-        })
-      );
-      
-      // Filtrar apenas aulas publicadas para o resultado final
-      const publishedLessons = allLessonsData?.filter(lesson => lesson.published) || [];
-      const sortedLessons = sortLessonsByNumber(publishedLessons);
-      
-      console.log(`${sortedLessons.length} aulas publicadas carregadas para o curso ${courseId}:`,
-        sortedLessons.map(l => ({ id: l.id, title: l.title, module_id: l.module_id })));
-      
-      return sortedLessons;
-    },
-    enabled: !!modules?.length && (hasAccess !== false || isAccessError) && !accessDenied
-  });
-  
-  // Buscar progresso do usuário para este curso
-  const { data: userProgress } = useQuery({
-    queryKey: ["learning-progress", courseId],
-    queryFn: async () => {
-      const { data: userData, error: userError } = await supabase.auth.getUser();
-      if (userError) throw new Error("Erro ao obter usuário");
-      
-      const { data, error } = await supabase
-        .from("learning_progress")
-        .select("*")
-        .eq("user_id", userData.user?.id || "");
-        
-      if (error) {
-        console.error("Erro ao carregar progresso:", error);
-        return [];
-      }
-      
-      console.log(`Progresso carregado para o usuário: ${data?.length || 0} entradas`);
-      return data;
-    },
-    enabled: !!course && (hasAccess !== false || isAccessError) && !accessDenied
-  });
+    };
 
-  // Verificar erro do curso e redirecionar se necessário
-  if (courseError) {
-    console.error("Erro no curso - redirecionando:", courseError);
-    toast.error("Curso não encontrado ou indisponível");
-    navigate("/learning");
-    return { course: null, modules: [], allLessons: [], userProgress: [], isLoading: false, accessDenied: false };
-  }
-  
-  // Verificar acesso negado apenas se a verificação foi bem-sucedida e retornou false
-  if (hasAccess === false && !accessDenied && !isCheckingAccess && !isAccessError) {
-    console.log("Acesso negado ao curso:", courseId);
-    setAccessDenied(true);
-    toast.error("Você não tem acesso a este curso");
-  }
+    fetchCourseData();
+  }, [courseId, user, navigate, checkCourseAccess]);
 
-  const isLoading = isLoadingCourse || isLoadingModules || isLoadingLessons || isCheckingAccess;
-  
-  console.log("Estado do useCourseDetails:", {
-    courseId,
-    hasAccess,
-    accessDenied,
-    isCheckingAccess,
-    isAccessError,
-    courseLoaded: !!course,
-    modulesCount: modules?.length || 0,
-    lessonsCount: allLessons?.length || 0,
-    isLoading
-  });
-  
   return {
     course,
     modules,
     allLessons,
     userProgress,
     isLoading,
-    accessDenied: hasAccess === false || accessDenied
+    accessDenied
   };
-}
+};
