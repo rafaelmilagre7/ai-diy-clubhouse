@@ -29,7 +29,7 @@ export const fetchUserProfileSecurely = async (userId: string): Promise<UserProf
         *,
         user_roles (*)
       `)
-      .eq('id', userId)
+      .eq('id', userId as any)
       .single();
     
     if (error) {
@@ -37,7 +37,7 @@ export const fetchUserProfileSecurely = async (userId: string): Promise<UserProf
       return null;
     }
     
-    return profile;
+    return profile as any;
   } catch (error) {
     console.error('Erro crítico ao buscar perfil:', error);
     return null;
@@ -63,7 +63,7 @@ export const processUserProfile = async (
           email: userEmail,
           name: userName || userEmail.split('@')[0],
           created_at: new Date().toISOString()
-        })
+        } as any)
         .select(`
           *,
           user_roles (*)

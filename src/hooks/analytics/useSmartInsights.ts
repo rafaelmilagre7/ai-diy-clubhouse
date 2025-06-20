@@ -35,7 +35,7 @@ export const useSmartInsights = (timeRange: string) => {
 
         if (analyticsData && analyticsData.length > 0) {
           const dayActivity = (analyticsData as any).reduce((acc: any, record: any) => {
-            const day = new Date(record.created_at).getDay();
+            const day = new Date((record as any).created_at).getDay();
             acc[day] = (acc[day] || 0) + 1;
             return acc;
           }, {} as Record<number, number>);
@@ -45,7 +45,7 @@ export const useSmartInsights = (timeRange: string) => {
           const dayNames = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
           
           if (maxDay && maxActivity > 0) {
-            const avgActivity = Object.values(dayActivity).reduce((a, b) => a + b, 0) / 7;
+            const avgActivity = Object.values(dayActivity).reduce((a: number, b: number) => a + b, 0) / 7;
             const increasePercent = Math.round(((maxActivity - avgActivity) / avgActivity) * 100);
             
             if (increasePercent > 20) {
@@ -68,7 +68,7 @@ export const useSmartInsights = (timeRange: string) => {
           .select('is_completed, created_at');
 
         if (progressData && progressData.length > 0) {
-          const completionRate = ((progressData as any).filter((p: any) => p.is_completed).length / progressData.length) * 100;
+          const completionRate = ((progressData as any).filter((p: any) => (p as any).is_completed).length / progressData.length) * 100;
           
           if (completionRate < 60) {
             insights.push({
@@ -104,9 +104,9 @@ export const useSmartInsights = (timeRange: string) => {
           const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
           const twoMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 2, 1);
           
-          const currentMonthUsers = (usersData as any).filter((u: any) => new Date(u.created_at) >= lastMonth).length;
+          const currentMonthUsers = (usersData as any).filter((u: any) => new Date((u as any).created_at) >= lastMonth).length;
           const previousMonthUsers = (usersData as any).filter((u: any) => {
-            const date = new Date(u.created_at);
+            const date = new Date((u as any).created_at);
             return date >= twoMonthsAgo && date < lastMonth;
           }).length;
           

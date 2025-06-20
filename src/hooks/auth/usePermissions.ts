@@ -45,7 +45,7 @@ export const usePermissions = () => {
         .order('category, name');
 
       if (error) throw error;
-      setPermissions(data || []);
+      setPermissions((data as any) || []);
     } catch (error) {
       console.error('Erro ao carregar permissões:', error);
     }
@@ -59,7 +59,7 @@ export const usePermissions = () => {
         .order('name');
 
       if (error) throw error;
-      setRoles(data || []);
+      setRoles((data as any) || []);
     } catch (error) {
       console.error('Erro ao carregar papéis:', error);
     }
@@ -74,7 +74,7 @@ export const usePermissions = () => {
       });
 
       if (error) throw error;
-      setUserPermissions(data || []);
+      setUserPermissions((data as any) || []);
     } catch (error) {
       console.error('Erro ao buscar permissões do usuário:', error);
       setUserPermissions([]);
