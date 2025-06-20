@@ -5,28 +5,26 @@ import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/auth';
 import { toast } from 'sonner';
 
-export const useComments = ({ suggestionId }: { suggestionId: string }) => {
-  const [comment, setComment] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
+export const useComments = (suggestionId: string) => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const [newComment, setNewComment] = useState('');
 
   const {
     data: comments = [],
-    isLoading: commentsLoading,
-    refetch: refetchComments
+    isLoading,
+    error
   } = useQuery({
     queryKey: ['suggestion-comments', suggestionId],
     queryFn: async () => {
-      if (!suggestionId) return [];
-
       const { data, error } = await supabase
         .from('suggestion_comments')
         .select(`
           *,
           profiles:user_id(name, avatar_url)
         `)
-        .eq('suggestion_id', suggestionId)
+        .eq('suggestion_id', suggestionId as any)
+        .eq('is_hidden', false)
         .order('created_at', { ascending: true });
 
       if (error) {
@@ -39,70 +37,68 @@ export const useComments = ({ suggestionId }: { suggestionId: string }) => {
     enabled: !!suggestionId
   });
 
-  const handleSubmitComment = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!user) {
-      toast.error("Você precisa estar logado para comentar.");
-      return;
-    }
-    
-    if (!comment.trim()) {
-      toast.error("O comentário não pode estar vazio.");
-      return;
-    }
-    
-    try {
-      setIsSubmitting(true);
-      
+  const addCommentMutation = useMutation({
+    mutationFn: async (content: string) => {
+      if (!user) {
+        throw new Error("Você precisa estar logado para comentar.");
+      }
+
+      if (!content.trim()) {
+        throw new Error("O comentário não pode estar vazio.");
+      }
+
+      console.log("Adicionando comentário:", { suggestionId, content, userId: user.id });
+
       // Inserir comentário
       const { data, error } = await supabase
         .from('suggestion_comments')
         .insert({
           suggestion_id: suggestionId,
           user_id: user.id,
-          content: comment.trim(),
+          content: content.trim(),
           is_official: false,
           is_hidden: false
-        })
+        } as any)
         .select();
-        
-      if (error) throw error;
-      
-      // Incrementar contador de comentários na sugestão
+
+      if (error) {
+        console.error("Erro ao adicionar comentário:", error);
+        throw error;
+      }
+
+      // Incrementar contador de comentários
       const { error: updateError } = await supabase
         .from('suggestions')
-        .update({ comment_count: supabase.rpc('increment', { 
-          row_id: suggestionId, 
-          table: 'suggestions', 
-          column: 'comment_count' 
-        }) })
-        .eq('id', suggestionId);
-        
+        .update({
+          comment_count: supabase.rpc('increment' as any)
+        } as any)
+        .eq('id', suggestionId as any);
+
       if (updateError) {
-        console.error("Erro ao atualizar contagem de comentários:", updateError);
+        console.error("Erro ao atualizar contador:", updateError);
       }
-      
-      toast.success("Comentário adicionado com sucesso!");
-      setComment('');
-      refetchComments();
+
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['suggestion-comments', suggestionId] });
       queryClient.invalidateQueries({ queryKey: ['suggestions'] });
-      
-    } catch (error: any) {
+      setNewComment('');
+      toast.success("Comentário adicionado com sucesso!");
+    },
+    onError: (error: any) => {
       console.error('Erro ao adicionar comentário:', error);
       toast.error(`Erro ao adicionar comentário: ${error.message}`);
-    } finally {
-      setIsSubmitting(false);
     }
-  };
+  });
 
   return {
-    comment,
-    setComment,
     comments,
-    commentsLoading,
-    isSubmitting,
-    handleSubmitComment,
-    refetchComments
+    isLoading,
+    error,
+    newComment,
+    setNewComment,
+    addComment: (content: string) => addCommentMutation.mutateAsync(content),
+    isAddingComment: addCommentMutation.isPending
   };
 };

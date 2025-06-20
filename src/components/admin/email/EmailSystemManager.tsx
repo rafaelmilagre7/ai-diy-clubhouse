@@ -7,20 +7,24 @@ import { AlertCircle, CheckCircle, RefreshCw, Mail } from 'lucide-react';
 import { useResendHealthCheck } from '@/hooks/supabase/useResendHealthCheck';
 
 export const EmailSystemManager: React.FC = () => {
-  const { healthStatus, isChecking, performHealthCheck } = useResendHealthCheck();
+  const { status, isChecking, checkHealth } = useResendHealthCheck();
 
   const getStatusIcon = () => {
     if (isChecking) return <RefreshCw className="h-4 w-4 animate-spin" />;
-    return healthStatus.isHealthy ? 
+    return status.isHealthy ? 
       <CheckCircle className="h-4 w-4 text-green-500" /> : 
       <AlertCircle className="h-4 w-4 text-red-500" />;
   };
 
   const getStatusBadge = () => {
     if (isChecking) return <Badge variant="secondary">Verificando...</Badge>;
-    return healthStatus.isHealthy ? 
+    return status.isHealthy ? 
       <Badge variant="default" className="bg-green-500">Operacional</Badge> : 
       <Badge variant="destructive">Com Problemas</Badge>;
+  };
+
+  const handleForceCheck = () => {
+    checkHealth();
   };
 
   return (
@@ -52,36 +56,36 @@ export const EmailSystemManager: React.FC = () => {
           <CardContent className="space-y-4">
             <div className="flex items-center justify-between">
               <span>API Key</span>
-              <Badge variant={healthStatus.apiKeyValid ? "default" : "destructive"}>
-                {healthStatus.apiKeyValid ? "Válida" : "Inválida"}
+              <Badge variant={status.apiKeyValid ? "default" : "destructive"}>
+                {status.apiKeyValid ? "Válida" : "Inválida"}
               </Badge>
             </div>
             
             <div className="flex items-center justify-between">
               <span>Conectividade</span>
-              <Badge variant={healthStatus.connectivity === 'connected' ? "default" : "destructive"}>
-                {healthStatus.connectivity === 'connected' ? "Conectado" : "Desconectado"}
+              <Badge variant={status.connectivity === 'connected' ? "default" : "destructive"}>
+                {status.connectivity === 'connected' ? "Conectado" : "Desconectado"}
               </Badge>
             </div>
 
             <div className="flex items-center justify-between">
               <span>Domínio</span>
-              <Badge variant={healthStatus.domainValid ? "default" : "destructive"}>
-                {healthStatus.domainValid ? "Verificado" : "Pendente"}
+              <Badge variant={status.domainValid ? "default" : "destructive"}>
+                {status.domainValid ? "Verificado" : "Pendente"}
               </Badge>
             </div>
 
-            {healthStatus.lastError && (
+            {status.lastError && (
               <div className="p-3 rounded-md bg-red-50 border border-red-200">
                 <p className="text-sm text-red-800">
-                  <strong>Último erro:</strong> {healthStatus.lastError}
+                  <strong>Último erro:</strong> {status.lastError}
                 </p>
               </div>
             )}
 
             <div className="flex gap-2">
               <Button 
-                onClick={() => performHealthCheck(true)}
+                onClick={handleForceCheck}
                 disabled={isChecking}
                 variant="outline"
                 size="sm"
@@ -97,9 +101,9 @@ export const EmailSystemManager: React.FC = () => {
               </Button>
             </div>
 
-            {healthStatus.lastChecked && (
+            {status.lastChecked && (
               <p className="text-xs text-muted-foreground">
-                Última verificação: {healthStatus.lastChecked.toLocaleString('pt-BR')}
+                Última verificação: {status.lastChecked.toLocaleString('pt-BR')}
               </p>
             )}
           </CardContent>
