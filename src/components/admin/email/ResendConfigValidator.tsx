@@ -39,10 +39,13 @@ export const ResendConfigValidator: React.FC = () => {
       
       const healthResult = await resendTestService.testHealthWithDirectFetch(1, true);
       
+      // Mapear 'error' para 'unknown' para compatibilidade de tipos
+      const mappedConnectivity = healthResult.connectivity === 'error' ? 'unknown' : healthResult.connectivity;
+      
       setConfigStatus({
         apiKeyValid: healthResult.apiKeyValid,
         domainValid: healthResult.domainValid,
-        connectivity: healthResult.connectivity,
+        connectivity: mappedConnectivity,
         lastChecked: new Date(),
         issues: healthResult.issues || []
       });
@@ -203,7 +206,7 @@ export const ResendConfigValidator: React.FC = () => {
                 <div className="flex items-center gap-2">
                   {getStatusIcon(configStatus.connectivity)}
                   <Badge variant={configStatus.connectivity === 'connected' ? "default" : "destructive"}>
-                    {configStatus.connectivity === 'connected' ? "Conectado" : "Desconectado"}
+                    {configStatus.connectivity === 'connected' ? "Conectado" : configStatus.connectivity === 'disconnected' ? "Desconectado" : "Desconhecido"}
                   </Badge>
                 </div>
               </div>
