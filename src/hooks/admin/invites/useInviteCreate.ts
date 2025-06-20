@@ -27,19 +27,19 @@ export const useInviteCreate = () => {
     try {
       setLoading(true);
 
-      console.log("🚀 Criando convite com função híbrida:", {
+      console.log("🚀 Criando convite com função híbrida modernizada:", {
         email,
         roleId,
         expiresIn,
         channelPreference
       });
 
-      // Usar função híbrida do banco que já existe e é robusta
+      // Usar função híbrida robusta do banco
       const { data, error } = await supabase.rpc('create_invite_hybrid', {
         p_email: email,
         p_phone: phone || null,
         p_role_id: roleId,
-        p_expires_in: `${expiresIn}::interval`, // Conversão para tipo interval
+        p_expires_in: `${expiresIn}::interval`,
         p_notes: notes || null,
         p_channel_preference: channelPreference
       });
@@ -49,19 +49,18 @@ export const useInviteCreate = () => {
         throw new Error(error.message || 'Erro ao criar convite');
       }
 
-      // A função retorna um JSON, então acessamos diretamente
       const result = data as any;
       
       console.log("📋 Resposta da função híbrida:", result);
 
-      // Verificar se houve erro na função
+      // Verificar se houve erro na função híbrida
       if (result?.status === 'error') {
         const errorMessage = result.message || 'Erro desconhecido ao criar convite';
         console.error('❌ Erro retornado pela função:', errorMessage);
         throw new Error(errorMessage);
       }
 
-      // Verificar se temos os dados esperados
+      // Validar resposta da função
       if (!result?.invite_id || !result?.token) {
         console.error('❌ Resposta inválida da função:', result);
         throw new Error('Resposta inválida do servidor');
@@ -69,13 +68,14 @@ export const useInviteCreate = () => {
 
       toast({
         title: "Convite criado com sucesso!",
-        description: `Convite para ${email} foi criado e está pronto para ser enviado.`,
+        description: `Convite para ${email} foi criado usando o sistema híbrido.`,
       });
 
-      console.log("✅ Convite criado com sucesso:", {
+      console.log("✅ Convite criado com arquitetura híbrida:", {
         inviteId: result.invite_id,
         token: result.token,
-        expiresAt: result.expires_at
+        expiresAt: result.expires_at,
+        channel: channelPreference
       });
 
       return {
@@ -83,13 +83,14 @@ export const useInviteCreate = () => {
         token: result.token,
         expires_at: result.expires_at,
         status: 'success' as const,
-        message: result.message || 'Convite criado com sucesso'
+        message: result.message || 'Convite criado com sucesso',
+        channel_used: channelPreference
       };
 
     } catch (error: any) {
       console.error('❌ Erro completo ao criar convite:', error);
       
-      // Tratamento de erros mais específico
+      // Tratamento de erros melhorado e específico
       let errorMessage = "Ocorreu um erro inesperado";
       
       if (error.message) {
@@ -99,6 +100,10 @@ export const useInviteCreate = () => {
           errorMessage = "Email inválido ou já convidado";
         } else if (error.message.includes('role')) {
           errorMessage = "Papel de usuário inválido";
+        } else if (error.message.includes('telefone') || error.message.includes('phone')) {
+          errorMessage = "Telefone é obrigatório para envio via WhatsApp";
+        } else if (error.message.includes('canal') || error.message.includes('channel')) {
+          errorMessage = "Preferência de canal inválida";
         } else {
           errorMessage = error.message;
         }

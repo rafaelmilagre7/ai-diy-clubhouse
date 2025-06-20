@@ -29,15 +29,18 @@ export const useInvites = () => {
         email,
         roleId,
         notes,
-        expiresIn: options?.expiresIn,
+        expiresIn: options?.expiresIn || '7 days',
         phone: options?.phone,
-        channelPreference: options?.channelPreference
+        channelPreference: options?.channelPreference || 'email'
       };
+
+      console.log("🎯 Criando convite com parâmetros híbridos:", params);
 
       const result = await createInvite(params);
       await fetchInvites();
       return result;
     } catch (error) {
+      console.error("❌ Erro ao criar convite:", error);
       throw error;
     }
   };
