@@ -1,38 +1,39 @@
 
-import { useState, useCallback } from 'react';
-import { supabase } from '@/lib/supabase';
-import { toast } from 'sonner';
+import { useState } from "react";
+import { supabase } from "@/lib/supabase";
+import { useToast } from "@/hooks/use-toast";
 
-export function useInviteDelete() {
+export const useInviteDelete = () => {
   const [isDeleting, setIsDeleting] = useState(false);
+  const { toast } = useToast();
 
-  // Excluir convite
-  const deleteInvite = useCallback(async (inviteId: string) => {
+  const deleteInvite = async (inviteId: string) => {
     try {
       setIsDeleting(true);
-      
-      const { error } = await supabase
+
+      const { error } = await (supabase as any)
         .from('invites')
         .delete()
-        .eq('id', inviteId);
-      
+        .eq('id', inviteId as any);
+
       if (error) throw error;
-      
-      toast.success('Convite removido com sucesso');
-      return true;
-    } catch (err: any) {
-      console.error('Erro ao excluir convite:', err);
-      toast.error('Erro ao remover convite', {
-        description: err.message || 'Não foi possível remover o convite.'
+
+      toast({
+        title: "Convite excluído",
+        description: "O convite foi removido com sucesso.",
       });
-      return false;
+    } catch (error: any) {
+      console.error('Erro ao excluir convite:', error);
+      toast({
+        title: "Erro ao excluir convite",
+        description: error.message || "Ocorreu um erro inesperado",
+        variant: "destructive",
+      });
+      throw error;
     } finally {
       setIsDeleting(false);
     }
-  }, []);
-
-  return {
-    isDeleting,
-    deleteInvite
   };
-}
+
+  return { deleteInvite, isDeleting };
+};

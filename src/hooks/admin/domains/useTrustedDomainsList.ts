@@ -1,46 +1,43 @@
 
-import { useState, useCallback } from 'react';
-import { supabase } from '@/lib/supabase';
-import { toast } from 'sonner';
-import { TrustedDomain } from './types';
+import { useState, useEffect, useCallback } from "react";
+import { supabase } from "@/lib/supabase";
+import { TrustedDomain } from "./types";
 
-export function useTrustedDomainsList() {
+export const useTrustedDomainsList = () => {
   const [domains, setDomains] = useState<TrustedDomain[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<Error | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  // Buscar todos os domínios confiáveis
   const fetchDomains = useCallback(async () => {
     try {
       setLoading(true);
-      setError(null);
-      
+
       const { data, error } = await supabase
         .from('trusted_domains')
         .select(`
-          *,
-          role:role_id(name)
+          id,
+          domain,
+          role_id,
+          description,
+          is_active,
+          created_at,
+          role:user_roles(id, name, description)
         `)
-        .order('domain', { ascending: true });
-      
+        .order('created_at', { ascending: false });
+
       if (error) throw error;
-      
-      setDomains(data || []);
-    } catch (err: any) {
-      console.error('Erro ao buscar domínios confiáveis:', err);
-      setError(err);
-      toast.error('Erro ao carregar domínios confiáveis', {
-        description: err.message || 'Não foi possível carregar a lista de domínios confiáveis.'
-      });
+
+      setDomains((data as any) || []);
+    } catch (error) {
+      console.error('Erro ao buscar domínios:', error);
+      setDomains([]);
     } finally {
       setLoading(false);
     }
   }, []);
 
-  return {
-    domains,
-    loading,
-    error,
-    fetchDomains
-  };
-}
+  useEffect(() => {
+    fetchDomains();
+  }, [fetchDomains]);
+
+  return { domains, loading, fetchDomains };
+};

@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/lib/supabase";
@@ -69,7 +70,7 @@ export const useRealSystemActivity = (timeRange: string) => {
         }
         
         // Buscar informações dos usuários para as atividades
-        const userIds = analytics?.map(a => a.user_id).filter(Boolean) || [];
+        const userIds = (analytics as any)?.map((a: any) => a.user_id).filter(Boolean) || [];
         const uniqueUserIds = [...new Set(userIds)];
         
         let userProfiles: any[] = [];
@@ -77,13 +78,13 @@ export const useRealSystemActivity = (timeRange: string) => {
           const { data: profiles } = await supabase
             .from('profiles')
             .select('id, name')
-            .in('id', uniqueUserIds);
+            .in('id', uniqueUserIds as any);
           
-          userProfiles = profiles || [];
+          userProfiles = (profiles as any) || [];
         }
         
         // Processar atividades com nomes de usuários
-        const userActivities: SystemActivity[] = (analytics || []).map(activity => {
+        const userActivities: SystemActivity[] = ((analytics as any) || []).map((activity: any) => {
           const userProfile = userProfiles.find(p => p.id === activity.user_id);
           return {
             id: activity.id,

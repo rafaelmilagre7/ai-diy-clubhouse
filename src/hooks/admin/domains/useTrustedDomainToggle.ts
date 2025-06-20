@@ -1,40 +1,39 @@
 
-import { useState, useCallback } from 'react';
-import { supabase } from '@/lib/supabase';
-import { toast } from 'sonner';
+import { useState } from "react";
+import { supabase } from "@/lib/supabase";
+import { useToast } from "@/hooks/use-toast";
 
-export function useTrustedDomainToggle() {
-  const [isUpdating, setIsUpdating] = useState(false);
+export const useTrustedDomainToggle = () => {
+  const [loading, setLoading] = useState(false);
+  const { toast } = useToast();
 
-  // Ativar/desativar domínio
-  const toggleDomainStatus = useCallback(async (domainId: string, currentStatus: boolean) => {
+  const toggleDomainStatus = async (id: string, currentStatus: boolean) => {
     try {
-      setIsUpdating(true);
-      
-      const { error } = await supabase
-        .from('trusted_domains')
-        .update({ is_active: !currentStatus })
-        .eq('id', domainId);
-      
-      if (error) throw error;
-      
-      const statusMessage = currentStatus ? 'desativado' : 'ativado';
-      toast.success(`Domínio ${statusMessage} com sucesso`);
-      
-      return true;
-    } catch (err: any) {
-      console.error('Erro ao atualizar status do domínio:', err);
-      toast.error('Erro ao atualizar domínio', {
-        description: err.message || 'Não foi possível atualizar o status do domínio.'
-      });
-      return false;
-    } finally {
-      setIsUpdating(false);
-    }
-  }, []);
+      setLoading(true);
 
-  return {
-    isUpdating,
-    toggleDomainStatus
+      const { error } = await (supabase as any)
+        .from('trusted_domains')
+        .update({ is_active: !currentStatus } as any)
+        .eq('id', id as any);
+
+      if (error) throw error;
+
+      toast({
+        title: "Sucesso",
+        description: `Domínio ${!currentStatus ? 'ativado' : 'desativado'} com sucesso!`,
+      });
+    } catch (error: any) {
+      console.error('Erro ao alterar status do domínio:', error);
+      toast({
+        title: "Erro",
+        description: error.message || "Erro ao alterar status do domínio",
+        variant: "destructive",
+      });
+      throw error;
+    } finally {
+      setLoading(false);
+    }
   };
-}
+
+  return { toggleDomainStatus, loading };
+};

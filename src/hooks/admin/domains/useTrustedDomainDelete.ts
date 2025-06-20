@@ -1,38 +1,39 @@
 
-import { useState, useCallback } from 'react';
-import { supabase } from '@/lib/supabase';
-import { toast } from 'sonner';
+import { useState } from "react";
+import { supabase } from "@/lib/supabase";
+import { useToast } from "@/hooks/use-toast";
 
-export function useTrustedDomainDelete() {
-  const [isDeleting, setIsDeleting] = useState(false);
+export const useTrustedDomainDelete = () => {
+  const [loading, setLoading] = useState(false);
+  const { toast } = useToast();
 
-  // Excluir domínio confiável
-  const deleteDomain = useCallback(async (domainId: string) => {
+  const deleteDomain = async (id: string) => {
     try {
-      setIsDeleting(true);
-      
-      const { error } = await supabase
+      setLoading(true);
+
+      const { error } = await (supabase as any)
         .from('trusted_domains')
         .delete()
-        .eq('id', domainId);
-      
-      if (error) throw error;
-      
-      toast.success('Domínio confiável removido com sucesso');
-      return true;
-    } catch (err: any) {
-      console.error('Erro ao excluir domínio confiável:', err);
-      toast.error('Erro ao remover domínio', {
-        description: err.message || 'Não foi possível remover o domínio confiável.'
-      });
-      return false;
-    } finally {
-      setIsDeleting(false);
-    }
-  }, []);
+        .eq('id', id as any);
 
-  return {
-    isDeleting,
-    deleteDomain
+      if (error) throw error;
+
+      toast({
+        title: "Sucesso",
+        description: "Domínio removido com sucesso!",
+      });
+    } catch (error: any) {
+      console.error('Erro ao excluir domínio:', error);
+      toast({
+        title: "Erro",
+        description: error.message || "Erro ao excluir domínio",
+        variant: "destructive",
+      });
+      throw error;
+    } finally {
+      setLoading(false);
+    }
   };
-}
+
+  return { deleteDomain, loading };
+};

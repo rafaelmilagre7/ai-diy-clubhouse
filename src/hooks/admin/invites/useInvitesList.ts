@@ -1,77 +1,48 @@
 
-import { useState, useCallback } from 'react';
-import { supabase } from '@/lib/supabase';
-import { toast } from 'sonner';
-import { Invite } from './types';
+import { useState, useEffect, useCallback } from "react";
+import { supabase } from "@/lib/supabase";
+import { Invite } from "./types";
 
-export function useInvitesList() {
+export const useInvitesList = () => {
   const [invites, setInvites] = useState<Invite[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<Error | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  // Buscar todos os convites com duas queries otimizadas
   const fetchInvites = useCallback(async () => {
     try {
       setLoading(true);
-      setError(null);
-      
-      // Query 1: Buscar convites com roles
-      const { data: invitesData, error: invitesError } = await supabase
+
+      const { data, error } = await supabase
         .from('invites')
         .select(`
-          *,
-          role:role_id(name)
+          id,
+          email,
+          role_id,
+          token,
+          expires_at,
+          used_at,
+          created_at,
+          created_by,
+          last_sent_at,
+          send_attempts,
+          notes,
+          user_roles:role_id(id, name, description)
         `)
         .order('created_at', { ascending: false });
-      
-      if (invitesError) throw invitesError;
-      
-      // Se não há convites, retornar lista vazia
-      if (!invitesData || invitesData.length === 0) {
-        setInvites([]);
-        return;
-      }
-      
-      // Query 2: Buscar perfis dos criadores usando .in() para otimização
-      const creatorIds = [...new Set(invitesData.map(invite => invite.created_by))];
-      const { data: creatorsData, error: creatorsError } = await supabase
-        .from('profiles')
-        .select('id, name, email')
-        .in('id', creatorIds);
-        
-      if (creatorsError) {
-        console.error('Erro ao buscar perfis dos criadores:', creatorsError);
-      }
-      
-      // Criar mapa de criadores para lookup O(1)
-      const creatorsMap = (creatorsData || []).reduce((acc, profile) => {
-        acc[profile.id] = { name: profile.name, email: profile.email };
-        return acc;
-      }, {} as Record<string, { name?: string, email?: string }>);
-      
-      // Mapear dados finais com informações do criador
-      const enrichedInvites = invitesData.map(invite => ({
-        ...invite,
-        creator_name: creatorsMap[invite.created_by]?.name || 'Usuário desconhecido',
-        creator_email: creatorsMap[invite.created_by]?.email
-      }));
-      
-      setInvites(enrichedInvites);
-    } catch (err: any) {
-      console.error('Erro ao buscar convites:', err);
-      setError(err);
-      toast.error('Erro ao carregar convites', {
-        description: err.message || 'Não foi possível carregar a lista de convites.'
-      });
+
+      if (error) throw error;
+
+      setInvites((data as any) || []);
+    } catch (error) {
+      console.error('Erro ao buscar convites:', error);
+      setInvites([]);
     } finally {
       setLoading(false);
     }
   }, []);
 
-  return {
-    invites,
-    loading,
-    error,
-    fetchInvites
-  };
-}
+  useEffect(() => {
+    fetchInvites();
+  }, [fetchInvites]);
+
+  return { invites, loading, fetchInvites };
+};

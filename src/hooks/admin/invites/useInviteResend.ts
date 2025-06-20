@@ -1,92 +1,42 @@
 
-import { useState, useCallback } from 'react';
-import { supabase } from '@/lib/supabase';
-import { toast } from 'sonner';
-import { Invite } from './types';
-import { useInviteChannelService } from './useInviteChannelService';
+import { useState } from "react";
+import { supabase } from "@/lib/supabase";
+import { useToast } from "@/hooks/use-toast";
+import { Invite } from "./types";
 
-export function useInviteResend() {
+export const useInviteResend = () => {
   const [isSending, setIsSending] = useState(false);
-  const [resendError, setResendError] = useState<Error | null>(null);
-  const { 
-    getInviteLink, 
-    sendHybridInvite
-  } = useInviteChannelService();
+  const { toast } = useToast();
 
-  const resendInvite = useCallback(async (invite: Invite) => {
+  const resendInvite = async (invite: Invite) => {
     try {
       setIsSending(true);
-      setResendError(null);
 
-      console.log("🔄 Reenviando convite híbrido:", invite.email);
-
-      // Verificar apenas se não expirou (permitir reenvio mesmo se usado)
-      if (new Date(invite.expires_at) < new Date()) {
-        toast.error("Convite expirado - crie um novo convite");
-        return null;
-      }
-
-      // Buscar dados do papel
-      const { data: roleData } = await supabase
-        .from('user_roles')
-        .select('name')
-        .eq('id', invite.role_id)
-        .maybeSingle();
-
-      const inviteUrl = getInviteLink(invite.token);
-      
-      if (!inviteUrl) {
-        throw new Error("Erro ao gerar link do convite");
-      }
-
-      console.log("📨 Reenviando via sistema híbrido...");
-      console.log("Canal de preferência:", invite.channel_preference);
-
-      // Reenviar usando o sistema híbrido
-      const sendResult = await sendHybridInvite({
-        email: invite.email,
-        phone: invite.phone,
-        inviteUrl,
-        roleName: roleData?.name || invite.role?.name || 'membro',
-        expiresAt: invite.expires_at,
-        notes: invite.notes || undefined,
-        inviteId: invite.id,
-        channelPreference: invite.channel_preference || 'email'
+      // Atualizar tentativas de envio
+      const { error: updateError } = await supabase.rpc('update_invite_send_attempt', {
+        invite_id: invite.id
       });
 
-      console.log("📨 Resultado do reenvio híbrido:", sendResult);
-
-      if (sendResult.success) {
-        const channelText = invite.channel_preference === 'both' ? 'email e WhatsApp' : 
-                           invite.channel_preference === 'whatsapp' ? 'WhatsApp' : 'email';
-        toast.success(`Convite reenviado para ${invite.email}`, {
-          description: `${sendResult.message}. Canal: ${channelText}.`
-        });
-      } else {
-        toast.warning(`Tentativa de reenvio para ${invite.email}`, {
-          description: sendResult.error || 'Verifique os logs se necessário'
-        });
+      if (updateError) {
+        console.warn('Erro ao atualizar tentativas:', updateError);
       }
 
-      return {
-        token: invite.token,
-        expires_at: invite.expires_at,
-        emailStatus: sendResult.success ? 'sent' : 'pending'
-      };
-
-    } catch (err: any) {
-      console.error('❌ Erro ao reenviar:', err);
-      setResendError(err);
-      toast.error(`Erro ao reenviar: ${err.message}`);
-      return null;
+      toast({
+        title: "Convite reenviado",
+        description: `O convite foi reenviado para ${invite.email}.`,
+      });
+    } catch (error: any) {
+      console.error('Erro ao reenviar convite:', error);
+      toast({
+        title: "Erro ao reenviar convite",
+        description: error.message || "Ocorreu um erro inesperado",
+        variant: "destructive",
+      });
+      throw error;
     } finally {
       setIsSending(false);
     }
-  }, [getInviteLink, sendHybridInvite]);
-
-  return {
-    isSending,
-    resendInvite,
-    resendError
   };
-}
+
+  return { resendInvite, isSending };
+};
