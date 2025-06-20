@@ -39,7 +39,7 @@ export const useTopActiveUsers = (limit: number = 10) => {
         if (analyticsError) throw analyticsError;
 
         // Contar atividades por usuário
-        const userActivityCount = analyticsData?.reduce((acc, activity) => {
+        const userActivityCount = (analyticsData as any)?.reduce((acc: any, activity: any) => {
           const userId = activity.user_id;
           if (!acc[userId]) {
             acc[userId] = {
@@ -57,7 +57,7 @@ export const useTopActiveUsers = (limit: number = 10) => {
 
         // Buscar dados dos usuários mais ativos
         const topUserIds = Object.entries(userActivityCount)
-          .sort(([, a], [, b]) => b.count - a.count)
+          .sort(([, a], [, b]) => (b as any).count - (a as any).count)
           .slice(0, limit)
           .map(([userId]) => userId);
 
@@ -77,12 +77,12 @@ export const useTopActiveUsers = (limit: number = 10) => {
             role,
             user_roles!inner(name)
           `)
-          .in('id', topUserIds);
+          .in('id', topUserIds as any);
 
         if (usersError) throw usersError;
 
         // Combinar dados dos usuários com contadores de atividade
-        const activeUsers: ActiveUser[] = usersData?.map(user => {
+        const activeUsers: ActiveUser[] = (usersData as any)?.map((user: any) => {
           const userRoleData = Array.isArray(user.user_roles) ? user.user_roles[0] : user.user_roles;
           const activity = userActivityCount[user.id];
           
@@ -96,7 +96,7 @@ export const useTopActiveUsers = (limit: number = 10) => {
             activityCount: activity.count,
             lastSeen: activity.lastSeen
           };
-        }).sort((a, b) => b.activityCount - a.activityCount) || [];
+        }).sort((a: any, b: any) => b.activityCount - a.activityCount) || [];
 
         setUsers(activeUsers);
 

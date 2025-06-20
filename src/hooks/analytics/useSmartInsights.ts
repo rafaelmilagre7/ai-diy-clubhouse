@@ -34,7 +34,7 @@ export const useSmartInsights = (timeRange: string) => {
           .gte('created_at', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString());
 
         if (analyticsData && analyticsData.length > 0) {
-          const dayActivity = analyticsData.reduce((acc, record) => {
+          const dayActivity = (analyticsData as any).reduce((acc: any, record: any) => {
             const day = new Date(record.created_at).getDay();
             acc[day] = (acc[day] || 0) + 1;
             return acc;
@@ -68,7 +68,7 @@ export const useSmartInsights = (timeRange: string) => {
           .select('is_completed, created_at');
 
         if (progressData && progressData.length > 0) {
-          const completionRate = (progressData.filter(p => p.is_completed).length / progressData.length) * 100;
+          const completionRate = ((progressData as any).filter((p: any) => p.is_completed).length / progressData.length) * 100;
           
           if (completionRate < 60) {
             insights.push({
@@ -104,8 +104,8 @@ export const useSmartInsights = (timeRange: string) => {
           const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
           const twoMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 2, 1);
           
-          const currentMonthUsers = usersData.filter(u => new Date(u.created_at) >= lastMonth).length;
-          const previousMonthUsers = usersData.filter(u => {
+          const currentMonthUsers = (usersData as any).filter((u: any) => new Date(u.created_at) >= lastMonth).length;
+          const previousMonthUsers = (usersData as any).filter((u: any) => {
             const date = new Date(u.created_at);
             return date >= twoMonthsAgo && date < lastMonth;
           }).length;

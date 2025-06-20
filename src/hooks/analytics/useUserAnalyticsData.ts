@@ -55,9 +55,9 @@ export const useUserAnalyticsData = (params: { timeRange: string; role: string }
         if (activityError) console.warn('Analytics table might not exist:', activityError);
 
         // Filtrar por role se especificado
-        let filteredUsers = usersData || [];
+        let filteredUsers = (usersData as any) || [];
         if (params.role !== 'all') {
-          filteredUsers = usersData?.filter(user => {
+          filteredUsers = (usersData as any)?.filter((user: any) => {
             const userRoleData = Array.isArray(user.user_roles) ? user.user_roles[0] : user.user_roles;
             return userRoleData?.name === params.role || user.role === params.role;
           }) || [];
@@ -65,16 +65,16 @@ export const useUserAnalyticsData = (params: { timeRange: string; role: string }
 
         const totalUsers = filteredUsers.length;
         const activeUsers = new Set(
-          recentActivity?.filter(a => 
-            filteredUsers.some(u => u.id === a.user_id)
-          ).map(a => a.user_id) || []
+          (recentActivity as any)?.filter((a: any) => 
+            filteredUsers.some((u: any) => u.id === a.user_id)
+          ).map((a: any) => a.user_id) || []
         ).size;
 
         // Distribuição por roles
-        const roleDistribution = filteredUsers.reduce((acc, user) => {
+        const roleDistribution = filteredUsers.reduce((acc: any, user: any) => {
           const userRoleData = Array.isArray(user.user_roles) ? user.user_roles[0] : user.user_roles;
           const roleName = userRoleData?.name || user.role || 'member';
-          const existing = acc.find(r => r.name === roleName);
+          const existing = acc.find((r: any) => r.name === roleName);
           if (existing) {
             existing.value++;
           } else {
@@ -89,13 +89,13 @@ export const useUserAnalyticsData = (params: { timeRange: string; role: string }
         for (let i = 5; i >= 0; i--) {
           const monthDate = new Date(now.getFullYear(), now.getMonth() - i, 1);
           const monthName = monthDate.toLocaleDateString('pt-BR', { month: 'short' });
-          const monthUsers = filteredUsers.filter(u => {
+          const monthUsers = filteredUsers.filter((u: any) => {
             const userDate = new Date(u.created_at);
             return userDate.getMonth() === monthDate.getMonth() && 
                    userDate.getFullYear() === monthDate.getFullYear();
           }).length;
           
-          const totalUpToMonth = filteredUsers.filter(u => {
+          const totalUpToMonth = filteredUsers.filter((u: any) => {
             const userDate = new Date(u.created_at);
             return userDate <= monthDate;
           }).length;
@@ -110,10 +110,10 @@ export const useUserAnalyticsData = (params: { timeRange: string; role: string }
         // Atividade por dia da semana
         const userActivityByDay = Array.from({ length: 7 }, (_, i) => {
           const dayName = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'][i];
-          const dayCount = recentActivity?.filter(a => {
+          const dayCount = (recentActivity as any)?.filter((a: any) => {
             const activityDate = new Date(a.created_at);
             return activityDate.getDay() === i && 
-                   filteredUsers.some(u => u.id === a.user_id);
+                   filteredUsers.some((u: any) => u.id === a.user_id);
           }).length || 0;
           return { day: dayName, users: dayCount };
         });
