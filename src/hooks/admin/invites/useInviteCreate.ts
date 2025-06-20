@@ -1,255 +1,206 @@
 
-import { useState } from "react";
-import { supabase } from "@/lib/supabase";
-import { useToast } from "@/hooks/use-toast";
-import { useInviteEmailService } from "./useInviteEmailService";
+import { useState } from 'react';
+import { useToast } from '@/hooks/use-toast';
+import { useInviteEmailService } from './useInviteEmailService';
+import { useInviteValidation } from './useInviteValidation';
+import { supabase } from '@/lib/supabase';
+import { toast } from 'sonner';
+import type { CreateInviteParams, CreateInviteResponse } from './types';
 
-interface CreateInviteParams {
-  email: string;
-  roleId: string;
-  notes?: string;
-  expiresIn?: string;
-  phone?: string;
-  channelPreference?: 'email' | 'whatsapp' | 'both';
-}
+type CurrentStep = 'idle' | 'creating' | 'sending' | 'retrying' | 'complete';
 
 export const useInviteCreate = () => {
   const [loading, setLoading] = useState(false);
-  const [currentStep, setCurrentStep] = useState<'idle' | 'creating' | 'sending' | 'retrying' | 'complete'>('idle');
-  const { toast } = useToast();
+  const [currentStep, setCurrentStep] = useState<CurrentStep>('idle');
+  const { toast: uiToast } = useToast();
   const { sendInviteEmail, getInviteLink } = useInviteEmailService();
+  const { validateInviteData } = useInviteValidation();
 
-  const createInvite = async ({ 
-    email, 
-    roleId, 
-    notes, 
-    expiresIn = '7 days',
-    phone,
-    channelPreference = 'email' 
-  }: CreateInviteParams) => {
+  const createInvite = async (params: CreateInviteParams): Promise<CreateInviteResponse | null> => {
     try {
       setLoading(true);
       setCurrentStep('creating');
 
-      console.log("🚀 Iniciando processo melhorado de convite:", {
-        email,
-        roleId,
-        expiresIn,
-        channelPreference
+      console.log("🎯 Iniciando criação de convite com parâmetros:", {
+        email: params.email,
+        roleId: params.roleId,
+        expiresIn: params.expiresIn,
+        channelPreference: params.channelPreference
       });
 
-      // ETAPA 1: Criar convite no banco de dados
-      toast({
-        title: "Criando convite...",
-        description: "Gerando convite no sistema",
+      // Validação dos dados
+      const validation = validateInviteData(params.email, params.roleId, {
+        phone: params.phone,
+        channelPreference: params.channelPreference,
+        expiresIn: params.expiresIn
       });
 
-      const { data, error } = await supabase.rpc('create_invite_hybrid', {
-        p_email: email,
-        p_phone: phone || null,
-        p_role_id: roleId,
-        p_expires_in: expiresIn,
-        p_notes: notes || null,
-        p_channel_preference: channelPreference
-      });
-
-      if (error) {
-        console.error('❌ Erro na criação do convite:', error);
-        throw new Error(error.message || 'Erro ao criar convite');
+      if (!validation.isValid) {
+        const errorMsg = validation.errors.join(', ');
+        toast.error("Dados inválidos", { description: errorMsg });
+        return null;
       }
 
-      const result = data as any;
+      // Mostrar avisos se houver
+      if (validation.warnings.length > 0) {
+        validation.warnings.forEach(warning => {
+          toast.warning("Atenção", { description: warning });
+        });
+      }
+
+      // Calcular data de expiração
+      const expiresAt = new Date();
+      const daysToAdd = {
+        '1 day': 1,
+        '3 days': 3, 
+        '7 days': 7,
+        '14 days': 14,
+        '30 days': 30
+      }[params.expiresIn || '7 days'] || 7;
       
-      if (result?.status === 'error') {
-        const errorMessage = result.message || 'Erro desconhecido ao criar convite';
-        console.error('❌ Erro retornado pela função:', errorMessage);
-        throw new Error(errorMessage);
-      }
+      expiresAt.setDate(expiresAt.getDate() + daysToAdd);
 
-      if (!result?.invite_id || !result?.token) {
-        console.error('❌ Resposta inválida da função:', result);
-        throw new Error('Resposta inválida do servidor');
-      }
+      console.log("📅 Data de expiração calculada:", expiresAt.toISOString());
 
-      console.log("✅ Convite criado com sucesso:", {
-        inviteId: result.invite_id,
-        token: result.token,
-        expiresAt: result.expires_at
-      });
-
-      // ETAPA 2: Preparar dados do email
-      setCurrentStep('sending');
-      
-      toast({
-        title: "Enviando email...",
-        description: "Preparando e enviando convite por email",
-      });
-
-      const { data: roleData, error: roleError } = await supabase
-        .from('user_roles')
-        .select('name')
-        .eq('id', roleId)
+      // Criar convite no banco
+      const { data: invite, error: createError } = await supabase
+        .from('invites')
+        .insert({
+          email: params.email,
+          phone: params.phone,
+          role_id: params.roleId,
+          token: crypto.randomUUID(),
+          expires_at: expiresAt.toISOString(),
+          notes: params.notes,
+          channel_preference: params.channelPreference || 'email',
+          created_by: (await supabase.auth.getUser()).data.user?.id
+        })
+        .select(`
+          *,
+          role:role_id(name)
+        `)
         .single();
 
-      if (roleError) {
-        console.warn('⚠️ Não foi possível buscar nome do papel:', roleError);
+      if (createError || !invite) {
+        console.error("❌ Erro ao criar convite:", createError);
+        throw new Error(createError?.message || 'Falha ao criar convite');
       }
 
-      const roleName = roleData?.name || 'Membro';
-      const inviteUrl = getInviteLink(result.token);
-
-      console.log("📧 Tentando enviar email:", {
-        email,
-        inviteUrl,
-        roleName,
-        expiresAt: result.expires_at
+      console.log("✅ Convite criado no banco:", {
+        id: invite.id,
+        token: invite.token,
+        expiresAt: invite.expires_at
       });
 
-      // ETAPA 3: Enviar email com retry automático
-      let emailResult = await sendInviteEmail({
-        email,
-        inviteUrl,
-        roleName,
-        expiresAt: result.expires_at,
-        notes,
-        inviteId: result.invite_id,
-        forceResend: true
-      });
+      // Atualizar progresso
+      setCurrentStep('sending');
 
-      // Se falhou na primeira tentativa, tentar novamente após 2 segundos
-      if (!emailResult.success && !emailResult.error?.includes('invalid') && !emailResult.error?.includes('domain')) {
-        console.log("⚠️ Primeira tentativa falhou, tentando novamente...");
-        setCurrentStep('retrying');
-        
-        toast({
-          title: "Tentando novamente...",
-          description: "Primeira tentativa falhou, reenviando email",
-        });
+      // Gerar link do convite
+      const inviteUrl = getInviteLink(invite.token);
+      const roleName = invite.role?.name || 'Membro';
 
-        await new Promise(resolve => setTimeout(resolve, 2000));
-        
-        emailResult = await sendInviteEmail({
-          email,
-          inviteUrl,
-          roleName,
-          expiresAt: result.expires_at,
-          notes,
-          inviteId: result.invite_id,
-          forceResend: true
-        });
-      }
+      console.log("🔗 Link do convite gerado:", inviteUrl);
 
-      // Registrar tentativa de envio independente do resultado
-      await supabase.rpc('update_invite_send_attempt', {
-        invite_id: result.invite_id
-      });
+      // Tentar enviar email
+      let emailResult;
+      let maxRetries = 2;
+      let currentRetry = 0;
 
-      if (!emailResult.success) {
-        console.error('❌ Falha definitiva no envio do email:', emailResult.error);
-        
-        const errorMsg = emailResult.error || 'Erro desconhecido no envio';
-        let suggestion = 'Tente reenviar manualmente.';
-        
-        if (errorMsg.includes('domain')) {
-          suggestion = 'Verifique se o domínio viverdeia.ai está validado no Resend.';
-        } else if (errorMsg.includes('API')) {
-          suggestion = 'Verifique a configuração da API key do Resend.';
-        } else if (errorMsg.includes('timeout')) {
-          suggestion = 'Problema de conectividade. Tente novamente em alguns minutos.';
+      while (currentRetry < maxRetries) {
+        try {
+          if (currentRetry > 0) {
+            setCurrentStep('retrying');
+            console.log(`🔄 Tentativa ${currentRetry + 1} de ${maxRetries}...`);
+            
+            // Aguardar um pouco antes de tentar novamente
+            await new Promise(resolve => setTimeout(resolve, 1000 * currentRetry));
+          }
+
+          emailResult = await sendInviteEmail({
+            email: params.email,
+            inviteUrl,
+            roleName,
+            expiresAt: invite.expires_at,
+            notes: params.notes,
+            inviteId: invite.id,
+            forceResend: currentRetry > 0
+          });
+
+          if (emailResult.success) {
+            console.log("✅ Email enviado com sucesso!");
+            break;
+          } else {
+            console.log(`⚠️ Tentativa ${currentRetry + 1} falhou:`, emailResult.error);
+            currentRetry++;
+          }
+        } catch (error: any) {
+          console.error(`❌ Erro na tentativa ${currentRetry + 1}:`, error);
+          currentRetry++;
         }
+      }
 
-        toast({
-          title: "Convite criado, mas email falhou",
-          description: `${errorMsg}. ${suggestion}`,
-          variant: "destructive",
-          duration: 8000,
-        });
+      // Atualizar convite com informações do envio
+      if (emailResult?.success) {
+        await supabase
+          .from('invites')
+          .update({
+            last_sent_at: new Date().toISOString(),
+            send_attempts: currentRetry + 1,
+            email_provider: 'resend',
+            email_id: emailResult.emailId
+          })
+          .eq('id', invite.id);
+
+        setCurrentStep('complete');
 
         return {
-          invite_id: result.invite_id,
-          token: result.token,
-          expires_at: result.expires_at,
-          status: 'partial_success' as const,
-          message: 'Convite criado mas email não foi enviado',
-          email_sent: false,
-          email_error: errorMsg,
-          suggestion
+          status: 'success',
+          message: `Convite enviado para ${params.email}`,
+          invite,
+          emailResult
+        };
+      } else {
+        // Email falhou, mas convite foi criado
+        await supabase
+          .from('invites')
+          .update({
+            send_attempts: maxRetries,
+            last_sent_at: new Date().toISOString()
+          })
+          .eq('id', invite.id);
+
+        return {
+          status: 'partial_success',
+          message: `Convite criado para ${params.email}`,
+          invite,
+          suggestion: 'Email não foi enviado automaticamente. Use o botão "Reenviar" para tentar novamente.'
         };
       }
 
-      setCurrentStep('complete');
-
-      toast({
-        title: "Convite enviado com sucesso! ✅",
-        description: `Convite para ${email} foi criado e enviado. Método: ${emailResult.strategy || 'Sistema principal'}`,
-        duration: 6000,
-      });
-
-      console.log("🎉 Processo completo finalizado com sucesso:", {
-        inviteId: result.invite_id,
-        emailSent: true,
-        emailStrategy: emailResult.strategy,
-        emailId: emailResult.emailId
-      });
-
-      return {
-        invite_id: result.invite_id,
-        token: result.token,
-        expires_at: result.expires_at,
-        status: 'success' as const,
-        message: 'Convite criado e enviado com sucesso',
-        email_sent: true,
-        email_strategy: emailResult.strategy,
-        email_id: emailResult.emailId
-      };
-
     } catch (error: any) {
-      console.error('❌ Erro completo no processo de convite:', error);
+      console.error('❌ Erro crítico ao criar convite:', error);
       
-      let errorMessage = "Ocorreu um erro inesperado";
-      let isCreationError = true;
-      
-      if (error.message) {
-        if (error.message.includes('permissão')) {
-          errorMessage = "Você não tem permissão para criar convites";
-        } else if (error.message.includes('email')) {
-          errorMessage = "Email inválido ou já convidado";
-        } else if (error.message.includes('role')) {
-          errorMessage = "Papel de usuário inválido";
-        } else if (error.message.includes('telefone') || error.message.includes('phone')) {
-          errorMessage = "Telefone é obrigatório para envio via WhatsApp";
-        } else if (error.message.includes('canal') || error.message.includes('channel')) {
-          errorMessage = "Preferência de canal inválida";
-        } else if (error.message.includes('interval')) {
-          errorMessage = "Período de expiração inválido";
-        } else if (error.message.includes('Email') || error.message.includes('smtp')) {
-          errorMessage = `Erro no envio do email: ${error.message}`;
-          isCreationError = false;
-        } else {
-          errorMessage = error.message;
-        }
-      }
-
-      toast({
-        title: isCreationError ? "Erro ao criar convite" : "Erro no envio do email",
-        description: errorMessage,
-        variant: "destructive",
-        duration: 8000,
+      toast.error("Erro ao criar convite", {
+        description: error.message || 'Erro inesperado ao processar convite'
       });
-      
-      throw error;
+
+      return null;
     } finally {
       setLoading(false);
       setCurrentStep('idle');
     }
   };
 
-  return { 
-    createInvite, 
+  const isCreating = currentStep === 'creating';
+  const isSending = currentStep === 'sending';
+  const isRetrying = currentStep === 'retrying';
+
+  return {
+    createInvite,
     loading,
     currentStep,
-    isCreating: currentStep === 'creating',
-    isSending: currentStep === 'sending',
-    isRetrying: currentStep === 'retrying'
+    isCreating,
+    isSending,
+    isRetrying
   };
 };

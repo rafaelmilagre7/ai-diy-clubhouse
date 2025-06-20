@@ -1,97 +1,127 @@
 
 import { useState, useCallback } from 'react';
+import { supabase } from '@/lib/supabase';
 
-interface ResendHealthStatus {
+interface HealthCheckStatus {
   isHealthy: boolean;
-  healthy: boolean;
   apiKeyValid: boolean;
-  connectivity: 'connected' | 'disconnected' | 'error';
+  connectivity: 'connected' | 'disconnected' | 'unknown';
   domainValid: boolean;
   responseTime: number;
   lastChecked: Date;
-  issues: string[];
   lastError?: string;
-  timestamp?: string;
-  attempt?: number;
+  issues: string[];
 }
 
 export const useResendHealthCheck = () => {
-  const [status, setStatus] = useState<ResendHealthStatus>({
-    isHealthy: true,
-    healthy: true,
-    apiKeyValid: true,
-    connectivity: 'connected',
-    domainValid: true,
+  const [status, setStatus] = useState<HealthCheckStatus>({
+    isHealthy: false,
+    apiKeyValid: false,
+    connectivity: 'unknown',
+    domainValid: false,
     responseTime: 0,
     lastChecked: new Date(),
     issues: []
   });
+  
   const [isChecking, setIsChecking] = useState(false);
 
   const checkHealth = useCallback(async () => {
-    setIsChecking(true);
-    
     try {
+      setIsChecking(true);
+      
+      console.log("🔍 Iniciando verificação de saúde do sistema Resend...");
+      
       const startTime = Date.now();
       
-      // Simular verificação de saúde
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
+      const { data, error } = await supabase.functions.invoke('test-resend-health', {
+        body: {
+          forceRefresh: true,
+          attempt: 1,
+          timestamp: new Date().toISOString(),
+          testType: 'direct_fetch',
+          requestId: crypto.randomUUID().substring(0, 8),
+          userAgent: navigator.userAgent.substring(0, 100),
+          clientInfo: 'viverdeia-direct-test'
+        }
+      });
+
       const responseTime = Date.now() - startTime;
+
+      if (error) {
+        console.error("❌ Erro na verificação de saúde:", error);
+        
+        setStatus({
+          isHealthy: false,
+          apiKeyValid: false,
+          connectivity: 'disconnected',
+          domainValid: false,
+          responseTime,
+          lastChecked: new Date(),
+          lastError: error.message,
+          issues: [
+            'Falha na comunicação com sistema de email',
+            'Verifique configurações do Resend',
+            error.message
+          ]
+        });
+        return;
+      }
+
+      if (!data?.success) {
+        console.error("❌ Sistema reportou falha:", data);
+        
+        setStatus({
+          isHealthy: false,
+          apiKeyValid: data?.apiKeyValid || false,
+          connectivity: data?.connectivity || 'disconnected',
+          domainValid: data?.domainValid || false,
+          responseTime,
+          lastChecked: new Date(),
+          lastError: data?.error || 'Sistema indisponível',
+          issues: data?.issues || ['Sistema de email indisponível']
+        });
+        return;
+      }
+
+      // Sucesso
+      console.log("✅ Verificação de saúde concluída com sucesso:", data);
       
-      const healthStatus = {
+      setStatus({
         isHealthy: true,
-        healthy: true,
         apiKeyValid: true,
-        connectivity: 'connected' as const,
+        connectivity: 'connected',
         domainValid: true,
         responseTime,
         lastChecked: new Date(),
         issues: []
-      };
-      
-      setStatus(healthStatus);
-      
+      });
+
     } catch (error: any) {
-      const healthStatus = {
+      console.error("❌ Erro crítico na verificação:", error);
+      
+      setStatus({
         isHealthy: false,
-        healthy: false,
         apiKeyValid: false,
-        connectivity: 'error' as const,
+        connectivity: 'disconnected',
         domainValid: false,
         responseTime: 0,
         lastChecked: new Date(),
-        issues: [error.message],
-        lastError: error.message
-      };
-      
-      setStatus(healthStatus);
+        lastError: error.message,
+        issues: [
+          'Erro crítico no sistema de verificação',
+          'Sistema pode estar indisponível',
+          error.message
+        ]
+      });
     } finally {
       setIsChecking(false);
     }
   }, []);
 
-  // Retornar com as propriedades corretas para compatibilidade
   return {
     status,
-    healthStatus: status, // Alias para compatibilidade
     isChecking,
-    checkHealth,
-    performHealthCheck: checkHealth, // Alias para compatibilidade
-    forceHealthCheck: checkHealth, // Alias para compatibilidade
-    sendTestEmail: async (email: string) => {
-      console.log('Test email function called with:', email);
-      return { success: true };
-    },
-    debugInfo: {
-      lastCheck: status.lastChecked,
-      attempts: status.attempt || 0,
-      timestamp: status.lastChecked.toISOString(),
-      method: 'simulation',
-      responseStatus: status.isHealthy ? 200 : 500,
-      testType: 'health_check',
-      fallbackUsed: false,
-      errorDetails: status.lastError ? { message: status.lastError } : null
-    }
+    checkHealth
   };
 };
