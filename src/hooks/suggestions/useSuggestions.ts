@@ -25,7 +25,7 @@ export const useSuggestions = () => {
         let query = supabase
           .from('suggestions_with_profiles')
           .select('*')
-          .eq('is_hidden', false); // Apenas sugestões não ocultas
+          .eq('is_hidden', false as any); // Apenas sugestões não ocultas
 
         // Filtragem por termo de busca
         if (searchQuery) {
@@ -34,11 +34,11 @@ export const useSuggestions = () => {
 
         // Filtragem por status
         if (filter === 'new') {
-          query = query.eq('status', 'new');
+          query = query.eq('status', 'new' as any);
         } else if (filter === 'in_development') {
-          query = query.eq('status', 'in_development');
+          query = query.eq('status', 'in_development' as any);
         } else if (filter === 'implemented') {
-          query = query.eq('status', 'implemented');
+          query = query.eq('status', 'implemented' as any);
         }
 
         // Ordenação
@@ -59,7 +59,7 @@ export const useSuggestions = () => {
         // Ordenar por votos líquidos no frontend para garantir precisão
         let sortedData = data || [];
         if (filter === 'popular' || filter === 'new' || filter === 'in_development' || filter === 'implemented') {
-          sortedData = sortedData.sort((a, b) => {
+          sortedData = sortedData.sort((a: any, b: any) => {
             const aNetVotes = (a.upvotes || 0) - (a.downvotes || 0);
             const bNetVotes = (b.upvotes || 0) - (b.downvotes || 0);
             return bNetVotes - aNetVotes; // Ordem decrescente

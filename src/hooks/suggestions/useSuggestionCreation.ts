@@ -53,7 +53,7 @@ export const useSuggestionCreation = () => {
           const { error: voteError } = await supabase
             .from('suggestion_votes')
             .insert({
-              suggestion_id: data[0].id,
+              suggestion_id: (data[0] as any).id,
               user_id: user.id,
               vote_type: 'upvote'
             } as any);

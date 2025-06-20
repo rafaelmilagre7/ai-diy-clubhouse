@@ -25,7 +25,7 @@ export const useSuggestionDetails = () => {
       const { data, error } = await supabase
         .from('suggestions_with_profiles')
         .select('*')
-        .eq('id', id)
+        .eq('id', id as any)
         .single();
       
       if (error) {
@@ -34,15 +34,15 @@ export const useSuggestionDetails = () => {
         return;
       }
       
-      setSuggestion(data as Suggestion);
+      setSuggestion(data as any as Suggestion);
       
       // Buscar o voto do usuário atual, se estiver autenticado
       if (user) {
         const { data: voteData, error: voteError } = await supabase
           .from('suggestion_votes')
           .select('id, vote_type')
-          .eq('suggestion_id', id)
-          .eq('user_id', user.id)
+          .eq('suggestion_id', id as any)
+          .eq('user_id', user.id as any)
           .single();
         
         if (!voteError && voteData) {
@@ -73,8 +73,8 @@ export const useSuggestionDetails = () => {
         const { error } = await supabase
           .from('suggestion_votes')
           .delete()
-          .eq('suggestion_id', suggestion.id)
-          .eq('user_id', user.id);
+          .eq('suggestion_id', suggestion.id as any)
+          .eq('user_id', user.id as any);
         
         if (error) throw error;
         
@@ -96,9 +96,9 @@ export const useSuggestionDetails = () => {
         if (userVote) {
           const { data, error } = await supabase
             .from('suggestion_votes')
-            .update({ vote_type: voteType })
-            .eq('suggestion_id', suggestion.id)
-            .eq('user_id', user.id)
+            .update({ vote_type: voteType } as any)
+            .eq('suggestion_id', suggestion.id as any)
+            .eq('user_id', user.id as any)
             .select('id, vote_type')
             .single();
           
@@ -125,7 +125,7 @@ export const useSuggestionDetails = () => {
               suggestion_id: suggestion.id,
               user_id: user.id,
               vote_type: voteType
-            })
+            } as any)
             .select('id, vote_type')
             .single();
           
