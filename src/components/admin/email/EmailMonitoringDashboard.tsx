@@ -1,42 +1,27 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { 
-  Mail, 
-  CheckCircle, 
-  Clock, 
-  AlertTriangle,
-  TrendingUp,
-  Users,
-  Send,
-  Target
-} from 'lucide-react';
+import { Mail, CheckCircle, Clock, AlertTriangle, TrendingUp, Users, Send, Target } from 'lucide-react';
 import { useInvites } from '@/hooks/admin/useInvites';
-
 export const EmailMonitoringDashboard: React.FC = () => {
-  const { invites, loading } = useInvites();
-
+  const {
+    invites,
+    loading
+  } = useInvites();
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-48">
+    return <div className="flex items-center justify-center h-48">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-      </div>
-    );
+      </div>;
   }
 
   // Calcular estatísticas baseadas nas propriedades reais do tipo Invite
   const totalInvites = invites.length;
   const usedInvites = invites.filter(invite => invite.used_at !== null).length;
-  const expiredInvites = invites.filter(invite => 
-    new Date(invite.expires_at) < new Date() && invite.used_at === null
-  ).length;
-  const pendingInvites = invites.filter(invite => 
-    invite.used_at === null && new Date(invite.expires_at) >= new Date()
-  ).length;
+  const expiredInvites = invites.filter(invite => new Date(invite.expires_at) < new Date() && invite.used_at === null).length;
+  const pendingInvites = invites.filter(invite => invite.used_at === null && new Date(invite.expires_at) >= new Date()).length;
 
   // Calcular taxa de sucesso
-  const successRate = totalInvites > 0 ? Math.round((usedInvites / totalInvites) * 100) : 0;
+  const successRate = totalInvites > 0 ? Math.round(usedInvites / totalInvites * 100) : 0;
 
   // Calcular convites enviados recentemente (últimas 24h)
   const recentInvites = invites.filter(invite => {
@@ -45,46 +30,37 @@ export const EmailMonitoringDashboard: React.FC = () => {
     yesterday.setDate(yesterday.getDate() - 1);
     return createdAt >= yesterday;
   }).length;
-
-  const stats = [
-    {
-      title: 'Total de Convites',
-      value: totalInvites,
-      icon: Mail,
-      color: 'text-blue-600',
-      bgColor: 'bg-blue-100'
-    },
-    {
-      title: 'Convites Aceitos',
-      value: usedInvites,
-      icon: CheckCircle,
-      color: 'text-green-600',
-      bgColor: 'bg-green-100'
-    },
-    {
-      title: 'Convites Pendentes',
-      value: pendingInvites,
-      icon: Clock,
-      color: 'text-yellow-600',
-      bgColor: 'bg-yellow-100'
-    },
-    {
-      title: 'Convites Expirados',
-      value: expiredInvites,
-      icon: AlertTriangle,
-      color: 'text-red-600',
-      bgColor: 'bg-red-100'
-    }
-  ];
-
-  return (
-    <div className="space-y-6">
+  const stats = [{
+    title: 'Total de Convites',
+    value: totalInvites,
+    icon: Mail,
+    color: 'text-blue-600',
+    bgColor: 'bg-blue-100'
+  }, {
+    title: 'Convites Aceitos',
+    value: usedInvites,
+    icon: CheckCircle,
+    color: 'text-green-600',
+    bgColor: 'bg-green-100'
+  }, {
+    title: 'Convites Pendentes',
+    value: pendingInvites,
+    icon: Clock,
+    color: 'text-yellow-600',
+    bgColor: 'bg-yellow-100'
+  }, {
+    title: 'Convites Expirados',
+    value: expiredInvites,
+    icon: AlertTriangle,
+    color: 'text-red-600',
+    bgColor: 'bg-red-100'
+  }];
+  return <div className="space-y-6">
       {/* Estatísticas Principais */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {stats.map((stat, index) => {
-          const Icon = stat.icon;
-          return (
-            <Card key={index}>
+        const Icon = stat.icon;
+        return <Card key={index}>
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div>
@@ -98,9 +74,8 @@ export const EmailMonitoringDashboard: React.FC = () => {
                   </div>
                 </div>
               </CardContent>
-            </Card>
-          );
-        })}
+            </Card>;
+      })}
       </div>
 
       {/* Métricas de Performance */}
@@ -174,8 +149,7 @@ export const EmailMonitoringDashboard: React.FC = () => {
         </CardHeader>
         <CardContent>
           <div className="space-y-2">
-            {invites.slice(0, 5).map((invite) => (
-              <div key={invite.id} className="flex items-center justify-between p-2 bg-gray-50 rounded">
+            {invites.slice(0, 5).map(invite => <div key={invite.id} className="flex items-center justify-between p-2 rounded bg-gray-800">
                 <div className="flex items-center gap-3">
                   <div className="flex-1">
                     <p className="font-medium text-sm">{invite.email}</p>
@@ -184,34 +158,17 @@ export const EmailMonitoringDashboard: React.FC = () => {
                     </p>
                   </div>
                 </div>
-                <Badge 
-                  variant={
-                    invite.used_at 
-                      ? "default" 
-                      : new Date(invite.expires_at) < new Date() 
-                        ? "destructive" 
-                        : "secondary"
-                  }
-                >
-                  {invite.used_at 
-                    ? "Aceito" 
-                    : new Date(invite.expires_at) < new Date() 
-                      ? "Expirado" 
-                      : "Pendente"
-                  }
+                <Badge variant={invite.used_at ? "default" : new Date(invite.expires_at) < new Date() ? "destructive" : "secondary"}>
+                  {invite.used_at ? "Aceito" : new Date(invite.expires_at) < new Date() ? "Expirado" : "Pendente"}
                 </Badge>
-              </div>
-            ))}
+              </div>)}
             
-            {invites.length === 0 && (
-              <div className="text-center py-4 text-muted-foreground">
+            {invites.length === 0 && <div className="text-center py-4 text-muted-foreground">
                 <Mail className="h-8 w-8 mx-auto mb-2 opacity-50" />
                 <p>Nenhum convite encontrado</p>
-              </div>
-            )}
+              </div>}
           </div>
         </CardContent>
       </Card>
-    </div>
-  );
+    </div>;
 };
