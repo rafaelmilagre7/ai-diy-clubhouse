@@ -1,14 +1,12 @@
 
 import { useState, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
-import { toast } from 'sonner';
 
 interface ValidationResult {
   step: string;
-  status: 'success' | 'error' | 'pending' | 'warning';
+  status: 'success' | 'error' | 'pending';
   message: string;
   duration?: number;
-  details?: any;
 }
 
 interface ValidationReport {
@@ -22,291 +20,222 @@ export const useEmailSystemValidator = () => {
   const [isValidating, setIsValidating] = useState(false);
   const [validationReport, setValidationReport] = useState<ValidationReport | null>(null);
 
-  const validateStep = async (
-    stepName: string,
-    validationFn: () => Promise<{ success: boolean; message: string; details?: any }>
-  ): Promise<ValidationResult> => {
-    const startTime = Date.now();
-    
-    try {
-      console.log(`🔍 Validando: ${stepName}`);
-      
-      const result = await Promise.race([
-        validationFn(),
-        new Promise<{ success: boolean; message: string }>((_, reject) => 
-          setTimeout(() => reject(new Error('Timeout')), 10000)
-        )
-      ]);
-      
-      const duration = Date.now() - startTime;
-      
-      return {
-        step: stepName,
-        status: result.success ? 'success' : 'error',
-        message: result.message,
-        duration,
-        details: result.details
-      };
-    } catch (error: any) {
-      const duration = Date.now() - startTime;
-      console.error(`❌ Erro em ${stepName}:`, error);
-      
-      return {
-        step: stepName,
-        status: 'error',
-        message: error.message === 'Timeout' ? 'Timeout após 10s' : error.message,
-        duration,
-        details: { error: error.message }
-      };
-    }
-  };
-
-  const validateResendConnectivity = async () => {
-    try {
-      const { data, error } = await supabase.functions.invoke('test-resend-health', {
-        body: {
-          testType: 'connectivity_check',
-          timestamp: new Date().toISOString(),
-          requestId: crypto.randomUUID().substring(0, 8)
-        }
-      });
-
-      if (error) {
-        return {
-          success: false,
-          message: `Erro de conectividade: ${error.message}`,
-          details: { error: error.message }
-        };
-      }
-
-      if (!data?.success) {
-        return {
-          success: false,
-          message: data?.error || 'Falha na validação do Resend',
-          details: data
-        };
-      }
-
-      return {
-        success: true,
-        message: 'Conectividade com Resend OK',
-        details: data
-      };
-    } catch (error: any) {
-      return {
-        success: false,
-        message: `Erro crítico: ${error.message}`,
-        details: { error: error.message }
-      };
-    }
-  };
-
-  const validateInviteGeneration = async () => {
-    try {
-      const testToken = crypto.randomUUID();
-      const baseUrl = window.location.origin;
-      const inviteUrl = `${baseUrl}/convite/${testToken}`;
-      
-      // Validar se a URL está bem formada
-      try {
-        new URL(inviteUrl);
-      } catch {
-        return {
-          success: false,
-          message: 'URL de convite mal formada',
-          details: { url: inviteUrl }
-        };
-      }
-
-      return {
-        success: true,
-        message: 'Geração de links funcionando',
-        details: { sampleUrl: inviteUrl }
-      };
-    } catch (error: any) {
-      return {
-        success: false,
-        message: `Erro na geração: ${error.message}`,
-        details: { error: error.message }
-      };
-    }
-  };
-
-  const validateEmailTemplate = async () => {
-    try {
-      // Testar se conseguimos chamar a edge function de email
-      const { error } = await supabase.functions.invoke('send-invite-email', {
-        body: {
-          email: 'test@example.com',
-          inviteUrl: 'https://example.com/test',
-          roleName: 'Test',
-          expiresAt: new Date().toISOString(),
-          testMode: true // Sinalizar que é apenas um teste
-        }
-      });
-
-      if (error) {
-        // Se o erro for de validação por ser teste, isso é esperado
-        if (error.message?.includes('test') || error.message?.includes('Test')) {
-          return {
-            success: true,
-            message: 'Template reativo (modo teste)',
-            details: { testResponse: error.message }
-          };
-        }
-        
-        return {
-          success: false,
-          message: `Template com problemas: ${error.message}`,
-          details: { error: error.message }
-        };
-      }
-
-      return {
-        success: true,
-        message: 'Template funcionando',
-        details: { status: 'ok' }
-      };
-    } catch (error: any) {
-      return {
-        success: false,
-        message: `Erro no template: ${error.message}`,
-        details: { error: error.message }
-      };
-    }
-  };
-
-  const validateFallbackSystem = async () => {
-    try {
-      // Testar o sistema de fallback
-      const { data, error } = await supabase.functions.invoke('send-fallback-notification', {
-        body: {
-          email: 'test@example.com',
-          inviteUrl: 'https://example.com/test',
-          roleName: 'Test',
-          type: 'system_test',
-          requestId: crypto.randomUUID().substring(0, 8)
-        }
-      });
-
-      if (error) {
-        return {
-          success: false,
-          message: `Fallback indisponível: ${error.message}`,
-          details: { error: error.message }
-        };
-      }
-
-      if (!data?.success) {
-        return {
-          success: false,
-          message: 'Fallback não responsivo',
-          details: data
-        };
-      }
-
-      return {
-        success: true,
-        message: 'Sistema de fallback ativo',
-        details: data
-      };
-    } catch (error: any) {
-      return {
-        success: false,
-        message: `Erro no fallback: ${error.message}`,
-        details: { error: error.message }
-      };
-    }
-  };
-
   const runCompleteValidation = useCallback(async () => {
     setIsValidating(true);
-    
     const startTime = Date.now();
-    const requestId = crypto.randomUUID().substring(0, 8);
-    
-    console.log(`🚀 [${requestId}] Iniciando validação completa do sistema de email`);
-    
+    const results: ValidationResult[] = [];
+
     try {
-      const results: ValidationResult[] = [];
+      console.log('🔍 [VALIDATOR] Iniciando validação completa do sistema...');
 
-      // Executar validações em paralelo para melhor performance
-      const validations = [
-        validateStep('Conectividade Resend', validateResendConnectivity),
-        validateStep('Geração de Links', validateInviteGeneration),
-        validateStep('Template de Email', validateEmailTemplate),
-        validateStep('Sistema Fallback', validateFallbackSystem)
-      ];
+      // 1. Teste de conectividade com Resend
+      const connectivityStart = Date.now();
+      try {
+        const { data: resendTest, error: resendError } = await supabase.functions.invoke('test-resend-health', {
+          body: { testType: 'connectivity' }
+        });
 
-      const validationResults = await Promise.allSettled(validations);
-      
-      validationResults.forEach((result, index) => {
-        if (result.status === 'fulfilled') {
-          results.push(result.value);
+        const connectivityDuration = Date.now() - connectivityStart;
+
+        if (resendError || !resendTest?.success) {
+          results.push({
+            step: 'Conectividade Resend',
+            status: 'error',
+            message: resendError?.message || resendTest?.message || 'Falha na conectividade',
+            duration: connectivityDuration
+          });
         } else {
           results.push({
-            step: `Validação ${index + 1}`,
-            status: 'error',
-            message: `Falha crítica: ${result.reason?.message || 'Erro desconhecido'}`,
-            duration: 0
+            step: 'Conectividade Resend',
+            status: 'success',
+            message: 'Conectividade OK',
+            duration: connectivityDuration
           });
         }
-      });
+      } catch (error: any) {
+        results.push({
+          step: 'Conectividade Resend',
+          status: 'error',
+          message: `Erro de conectividade: ${error.message}`,
+          duration: Date.now() - connectivityStart
+        });
+      }
 
-      // Determinar status geral
+      // 2. Teste de geração de links
+      const linkStart = Date.now();
+      try {
+        const testToken = crypto.randomUUID();
+        const inviteUrl = `${window.location.origin}/invite/${testToken}`;
+        
+        if (inviteUrl.includes('undefined') || !inviteUrl.startsWith('http')) {
+          results.push({
+            step: 'Geração de Links',
+            status: 'error',
+            message: 'URL de convite inválida',
+            duration: Date.now() - linkStart
+          });
+        } else {
+          results.push({
+            step: 'Geração de Links',
+            status: 'success',
+            message: 'Links gerados corretamente',
+            duration: Date.now() - linkStart
+          });
+        }
+      } catch (error: any) {
+        results.push({
+          step: 'Geração de Links',
+          status: 'error',
+          message: `Erro na geração de links: ${error.message}`,
+          duration: Date.now() - linkStart
+        });
+      }
+
+      // 3. Teste de template React Email
+      const templateStart = Date.now();
+      try {
+        const { data: templateTest, error: templateError } = await supabase.functions.invoke('send-invite-email', {
+          body: {
+            email: 'test@example.com',
+            inviteUrl: 'https://example.com/invite/test',
+            roleName: 'Test Role',
+            expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+            testMode: true
+          }
+        });
+
+        const templateDuration = Date.now() - templateStart;
+
+        // Verificar se a resposta tem detalhes ou não
+        const hasDetails = templateTest && typeof templateTest === 'object' && 'details' in templateTest;
+        const details = hasDetails ? templateTest.details : undefined;
+
+        if (templateError || !templateTest?.success) {
+          results.push({
+            step: 'Template React Email',
+            status: 'error',
+            message: templateError?.message || templateTest?.message || 'Falha no template',
+            duration: templateDuration
+          });
+        } else {
+          results.push({
+            step: 'Template React Email',
+            status: 'success',
+            message: details ? `Template OK: ${details}` : 'Template processado com sucesso',
+            duration: templateDuration
+          });
+        }
+      } catch (error: any) {
+        results.push({
+          step: 'Template React Email',
+          status: 'error',
+          message: `Erro no template: ${error.message}`,
+          duration: Date.now() - templateStart
+        });
+      }
+
+      // 4. Teste de fallback
+      const fallbackStart = Date.now();
+      try {
+        const { data: fallbackTest, error: fallbackError } = await supabase.functions.invoke('send-fallback-notification', {
+          body: {
+            email: 'test@example.com',
+            inviteUrl: 'https://example.com/invite/test',
+            roleName: 'Test Role',
+            type: 'invite_fallback',
+            testMode: true
+          }
+        });
+
+        const fallbackDuration = Date.now() - fallbackStart;
+
+        if (fallbackError || !fallbackTest?.success) {
+          results.push({
+            step: 'Sistema de Fallback',
+            status: 'error',
+            message: fallbackError?.message || fallbackTest?.message || 'Falha no fallback',
+            duration: fallbackDuration
+          });
+        } else {
+          results.push({
+            step: 'Sistema de Fallback',
+            status: 'success',
+            message: 'Fallback funcional',
+            duration: fallbackDuration
+          });
+        }
+      } catch (error: any) {
+        results.push({
+          step: 'Sistema de Fallback',
+          status: 'error',
+          message: `Erro no fallback: ${error.message}`,
+          duration: Date.now() - fallbackStart
+        });
+      }
+
+      // 5. Teste de performance
+      const performanceStart = Date.now();
+      const avgResponseTime = results
+        .filter(r => r.duration)
+        .reduce((sum, r) => sum + (r.duration || 0), 0) / results.length;
+
+      if (avgResponseTime > 10000) {
+        results.push({
+          step: 'Performance',
+          status: 'error',
+          message: `Tempo de resposta muito alto: ${avgResponseTime}ms`,
+          duration: Date.now() - performanceStart
+        });
+      } else if (avgResponseTime > 5000) {
+        results.push({
+          step: 'Performance',
+          status: 'error',
+          message: `Tempo de resposta elevado: ${avgResponseTime}ms`,
+          duration: Date.now() - performanceStart
+        });
+      } else {
+        results.push({
+          step: 'Performance',
+          status: 'success',
+          message: `Performance adequada: ${avgResponseTime.toFixed(0)}ms`,
+          duration: Date.now() - performanceStart
+        });
+      }
+
+      // Calcular status geral
       const hasErrors = results.some(r => r.status === 'error');
       const hasWarnings = results.some(r => r.status === 'warning');
       
-      let overall: ValidationReport['overall'] = 'success';
-      if (hasErrors) {
-        overall = 'error';
-      } else if (hasWarnings) {
-        overall = 'warning';
-      }
+      let overall: 'success' | 'warning' | 'error' = 'success';
+      if (hasErrors) overall = 'error';
+      else if (hasWarnings) overall = 'warning';
 
-      const duration = Date.now() - startTime;
-      
       const report: ValidationReport = {
         overall,
         timestamp: new Date().toISOString(),
-        duration,
+        duration: Date.now() - startTime,
         results
       };
 
       setValidationReport(report);
-      
-      console.log(`✅ [${requestId}] Validação concluída:`, {
-        overall,
-        duration: `${duration}ms`,
-        errors: results.filter(r => r.status === 'error').length,
-        warnings: results.filter(r => r.status === 'warning').length
-      });
-
-      // Mostrar notificação baseada no resultado
-      if (overall === 'success') {
-        toast.success('✅ Sistema de email validado com sucesso!');
-      } else if (overall === 'warning') {
-        toast.warning('⚠️ Sistema funcionando com alertas');
-      } else {
-        toast.error('❌ Problemas detectados no sistema');
-      }
+      console.log('✅ [VALIDATOR] Validação completa finalizada:', report);
 
     } catch (error: any) {
-      console.error(`❌ [${requestId}] Erro crítico na validação:`, error);
+      console.error('❌ [VALIDATOR] Erro crítico na validação:', error);
       
-      setValidationReport({
+      const errorReport: ValidationReport = {
         overall: 'error',
         timestamp: new Date().toISOString(),
         duration: Date.now() - startTime,
         results: [{
-          step: 'Sistema Geral',
+          step: 'Validação Geral',
           status: 'error',
-          message: `Falha crítica: ${error.message}`,
-          duration: 0
+          message: `Erro crítico: ${error.message}`,
+          duration: Date.now() - startTime
         }]
-      });
-
-      toast.error('❌ Falha crítica na validação do sistema');
+      };
+      
+      setValidationReport(errorReport);
     } finally {
       setIsValidating(false);
     }
