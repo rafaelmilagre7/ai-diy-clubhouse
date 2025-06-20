@@ -3,280 +3,293 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { AlertCircle, CheckCircle, RefreshCw, ChevronDown, Mail, Key, Globe, Clock, Bug } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { AlertCircle, CheckCircle, RefreshCw, Mail, Activity, Zap, TestTube, Send } from 'lucide-react';
 import { useResendHealthCheck } from '@/hooks/supabase/useResendHealthCheck';
+import { resendTestService } from '@/services/resendTestService';
+import { toast } from 'sonner';
 
 export const ResendDiagnostics: React.FC = () => {
-  const { healthStatus, isChecking, performHealthCheck, debugInfo } = useResendHealthCheck();
-  const [showDebug, setShowDebug] = useState(false);
-  const [showAdvanced, setShowAdvanced] = useState(false);
+  const { healthStatus, isChecking, performHealthCheck, forceHealthCheck, sendTestEmail, debugInfo } = useResendHealthCheck();
+  const [testEmail, setTestEmail] = useState('');
+  const [isTestingDirect, setIsTestingDirect] = useState(false);
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'operational':
-      case 'connected':
-      case 'valid':
-        return 'text-green-500';
-      case 'error':
-      case 'disconnected':
-      case 'invalid':
-        return 'text-red-500';
-      case 'slow':
-      case 'pending':
-        return 'text-yellow-500';
-      default:
-        return 'text-gray-500';
+  const getStatusIcon = () => {
+    if (isChecking) return <RefreshCw className="h-4 w-4 animate-spin text-blue-500" />;
+    return healthStatus.isHealthy ? 
+      <CheckCircle className="h-4 w-4 text-green-500" /> : 
+      <AlertCircle className="h-4 w-4 text-red-500" />;
+  };
+
+  const getStatusBadge = () => {
+    if (isChecking) return <Badge variant="secondary" className="bg-blue-100 text-blue-800">
+      <Activity className="h-3 w-3 mr-1" />
+      Verificando...
+    </Badge>;
+    return healthStatus.isHealthy ? 
+      <Badge variant="default" className="bg-green-100 text-green-800">
+        <CheckCircle className="h-3 w-3 mr-1" />
+        Operacional
+      </Badge> : 
+      <Badge variant="destructive">
+        <AlertCircle className="h-3 w-3 mr-1" />
+        Com Problemas
+      </Badge>;
+  };
+
+  const handleTestDirectApi = async () => {
+    setIsTestingDirect(true);
+    try {
+      const result = await resendTestService.testResendApiDirect();
+      if (result.connected) {
+        toast.success('Conectividade direta com Resend confirmada');
+      } else {
+        toast.error(`Falha na conectividade direta: ${result.error}`);
+      }
+    } catch (error: any) {
+      toast.error(`Erro no teste direto: ${error.message}`);
+    } finally {
+      setIsTestingDirect(false);
     }
   };
 
-  const getStatusBadge = (status: boolean | string, trueLabel = 'OK', falseLabel = 'Erro') => {
-    const isOk = typeof status === 'boolean' ? status : status === 'operational' || status === 'connected';
-    return (
-      <Badge variant={isOk ? "default" : "destructive"} className={isOk ? "bg-green-500" : ""}>
-        {isOk ? trueLabel : falseLabel}
-      </Badge>
-    );
-  };
-
-  const getDiagnosticLevel = () => {
-    if (healthStatus.isHealthy) return 'success';
-    if (healthStatus.apiKeyValid) return 'warning';
-    return 'error';
-  };
-
-  const getDiagnosticMessage = () => {
-    if (healthStatus.isHealthy) {
-      return 'Sistema de email totalmente operacional';
+  const handleSendTestEmail = async () => {
+    if (!testEmail || !testEmail.includes('@')) {
+      toast.error('Por favor, insira um email válido');
+      return;
     }
-    if (healthStatus.apiKeyValid) {
-      return 'API key válida, mas há problemas de conectividade';
-    }
-    return 'Problemas críticos detectados no sistema de email';
+    await sendTestEmail(testEmail);
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <div>
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-bold tracking-tight flex items-center gap-2">
+            <Mail className="h-6 w-6" />
+            Diagnóstico do Sistema de Email
+          </h2>
+          <p className="text-muted-foreground">
+            Monitoramento avançado e diagnóstico do Resend
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          {getStatusIcon()}
+          {getStatusBadge()}
+        </div>
+      </div>
+
+      <div className="grid gap-6 md:grid-cols-2">
+        {/* Status Principal */}
+        <Card>
+          <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Mail className="h-5 w-5" />
-              Diagnóstico do Resend
+              <Zap className="h-5 w-5 text-blue-500" />
+              Status do Sistema
             </CardTitle>
             <CardDescription>
-              Verificação detalhada do sistema de email
+              Verificação otimizada com fallback automático
             </CardDescription>
-          </div>
-          <div className="flex items-center gap-2">
-            {isChecking ? (
-              <RefreshCw className="h-4 w-4 animate-spin text-blue-500" />
-            ) : healthStatus.isHealthy ? (
-              <CheckCircle className="h-4 w-4 text-green-500" />
-            ) : (
-              <AlertCircle className="h-4 w-4 text-red-500" />
-            )}
-            {getStatusBadge(healthStatus.isHealthy, 'Sistema OK', 'Com Problemas')}
-          </div>
-        </div>
-      </CardHeader>
-      <CardContent className="space-y-6">
-        {/* Status Geral */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <div className="flex items-center gap-3 p-3 rounded-lg border">
-            <Key className={`h-5 w-5 ${getStatusColor(healthStatus.apiKeyValid ? 'valid' : 'invalid')}`} />
-            <div>
-              <div className="font-medium">API Key</div>
-              {getStatusBadge(healthStatus.apiKeyValid, 'Válida', 'Inválida')}
-            </div>
-          </div>
-
-          <div className="flex items-center gap-3 p-3 rounded-lg border">
-            <Globe className={`h-5 w-5 ${getStatusColor(healthStatus.connectivity)}`} />
-            <div>
-              <div className="font-medium">Conectividade</div>
-              {getStatusBadge(healthStatus.connectivity === 'connected', 'Conectado', 'Erro')}
-            </div>
-          </div>
-
-          <div className="flex items-center gap-3 p-3 rounded-lg border">
-            <Mail className={`h-5 w-5 ${getStatusColor(healthStatus.domainValid ? 'valid' : 'invalid')}`} />
-            <div>
-              <div className="font-medium">Domínio</div>
-              {getStatusBadge(healthStatus.domainValid, 'Verificado', 'Pendente')}
-            </div>
-          </div>
-
-          <div className="flex items-center gap-3 p-3 rounded-lg border">
-            <Clock className="h-5 w-5 text-blue-500" />
-            <div>
-              <div className="font-medium">Latência</div>
-              <Badge variant="outline">
-                {healthStatus.responseTime ? `${healthStatus.responseTime}ms` : '--'}
-              </Badge>
-            </div>
-          </div>
-        </div>
-
-        {/* Diagnóstico Geral */}
-        <div className={`p-4 rounded-lg border-l-4 ${
-          getDiagnosticLevel() === 'success' ? 'bg-green-50 border-green-400' :
-          getDiagnosticLevel() === 'warning' ? 'bg-yellow-50 border-yellow-400' :
-          'bg-red-50 border-red-400'
-        }`}>
-          <div className="flex items-center gap-2">
-            {getDiagnosticLevel() === 'success' ? (
-              <CheckCircle className="h-5 w-5 text-green-600" />
-            ) : getDiagnosticLevel() === 'warning' ? (
-              <AlertCircle className="h-5 w-5 text-yellow-600" />
-            ) : (
-              <AlertCircle className="h-5 w-5 text-red-600" />
-            )}
-            <span className={`font-medium ${
-              getDiagnosticLevel() === 'success' ? 'text-green-800' :
-              getDiagnosticLevel() === 'warning' ? 'text-yellow-800' :
-              'text-red-800'
-            }`}>
-              {getDiagnosticMessage()}
-            </span>
-          </div>
-        </div>
-
-        {/* Ações */}
-        <div className="flex gap-2 flex-wrap">
-          <Button 
-            onClick={() => performHealthCheck(true)}
-            disabled={isChecking}
-            variant="outline"
-          >
-            {isChecking ? (
-              <>
-                <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                Verificando...
-              </>
-            ) : (
-              'Forçar Verificação'
-            )}
-          </Button>
-
-          <Button 
-            onClick={() => setShowDebug(!showDebug)}
-            variant="ghost"
-            size="sm"
-          >
-            <Bug className={`h-4 w-4 mr-2`} />
-            Debug Info
-          </Button>
-
-          <Button 
-            onClick={() => setShowAdvanced(!showAdvanced)}
-            variant="ghost"
-            size="sm"
-          >
-            <ChevronDown className={`h-4 w-4 mr-2 transition-transform ${showAdvanced ? 'rotate-180' : ''}`} />
-            Diagnóstico Avançado
-          </Button>
-        </div>
-
-        {/* Erros */}
-        {healthStatus.issues?.length > 0 && (
-          <div className="space-y-2">
-            <h4 className="font-medium text-red-600">Problemas Detectados:</h4>
-            {healthStatus.issues.map((issue, index) => (
-              <div key={index} className="p-3 rounded-md bg-red-50 border border-red-200">
-                <p className="text-sm text-red-800">{issue}</p>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="flex items-center justify-between p-3 rounded-lg bg-gray-50">
+                <span className="text-sm font-medium">API Key</span>
+                <Badge variant={healthStatus.apiKeyValid ? "default" : "destructive"} className="text-xs">
+                  {healthStatus.apiKeyValid ? "Válida" : "Inválida"}
+                </Badge>
               </div>
-            ))}
-          </div>
-        )}
+              
+              <div className="flex items-center justify-between p-3 rounded-lg bg-gray-50">
+                <span className="text-sm font-medium">Conectividade</span>
+                <Badge variant={healthStatus.connectivity === 'connected' ? "default" : "destructive"} className="text-xs">
+                  {healthStatus.connectivity === 'connected' ? "Conectado" : "Erro"}
+                </Badge>
+              </div>
 
-        {/* Informações de Debug */}
-        <Collapsible open={showDebug} onOpenChange={setShowDebug}>
-          <CollapsibleContent className="space-y-4">
-            {debugInfo && (
-              <div className="p-4 rounded-lg bg-gray-50 border">
-                <h4 className="font-medium mb-3 flex items-center gap-2">
-                  <Bug className="h-4 w-4" />
-                  Informações de Debug:
-                </h4>
-                <div className="space-y-2 text-sm font-mono">
-                  <div><strong>Timestamp:</strong> {debugInfo.timestamp}</div>
-                  <div><strong>Tentativas:</strong> {debugInfo.attempts}</div>
-                  <div><strong>Método:</strong> {debugInfo.method}</div>
-                  <div><strong>Status Response:</strong> 
-                    <Badge variant={debugInfo.responseStatus === 200 ? "default" : "destructive"} className="ml-2">
-                      {debugInfo.responseStatus}
-                    </Badge>
-                  </div>
-                  {debugInfo.errorDetails && (
-                    <div className="bg-red-50 p-2 rounded border-l-4 border-red-400">
-                      <strong>Detalhes do Erro:</strong> {debugInfo.errorDetails}
-                    </div>
+              <div className="flex items-center justify-between p-3 rounded-lg bg-gray-50">
+                <span className="text-sm font-medium">Domínio</span>
+                <Badge variant={healthStatus.domainValid ? "default" : "secondary"} className="text-xs">
+                  {healthStatus.domainValid ? "Verificado" : "Pendente"}
+                </Badge>
+              </div>
+
+              <div className="flex items-center justify-between p-3 rounded-lg bg-gray-50">
+                <span className="text-sm font-medium">Tempo Resposta</span>
+                <span className="text-xs font-mono text-gray-600">
+                  {healthStatus.responseTime ? `${healthStatus.responseTime}ms` : '--'}
+                </span>
+              </div>
+            </div>
+
+            {healthStatus.issues.length > 0 && (
+              <div className="p-3 rounded-md bg-red-50 border border-red-200">
+                <h4 className="text-sm font-medium text-red-800 mb-2">Problemas Detectados:</h4>
+                <ul className="text-sm text-red-700 space-y-1">
+                  {healthStatus.issues.map((issue, index) => (
+                    <li key={index} className="flex items-start gap-2">
+                      <AlertCircle className="h-3 w-3 mt-0.5 flex-shrink-0" />
+                      {issue}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            <div className="flex gap-2">
+              <Button 
+                onClick={() => performHealthCheck(false)}
+                disabled={isChecking}
+                variant="outline"
+                size="sm"
+                className="flex-1"
+              >
+                {isChecking ? (
+                  <>
+                    <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                    Verificando...
+                  </>
+                ) : (
+                  <>
+                    <Activity className="h-4 w-4 mr-2" />
+                    Verificar Agora
+                  </>
+                )}
+              </Button>
+
+              <Button 
+                onClick={forceHealthCheck}
+                disabled={isChecking}
+                variant="outline"
+                size="sm"
+                className="flex-1"
+              >
+                <Zap className="h-4 w-4 mr-2" />
+                Forçar Check
+              </Button>
+            </div>
+
+            {healthStatus.lastChecked && (
+              <p className="text-xs text-muted-foreground">
+                Última verificação: {healthStatus.lastChecked.toLocaleString('pt-BR')}
+              </p>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Testes Avançados */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <TestTube className="h-5 w-5 text-purple-500" />
+              Testes Avançados
+            </CardTitle>
+            <CardDescription>
+              Diagnósticos diretos e testes de email
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-3">
+              <Button
+                onClick={handleTestDirectApi}
+                disabled={isTestingDirect}
+                variant="outline"
+                className="w-full"
+              >
+                {isTestingDirect ? (
+                  <>
+                    <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                    Testando API...
+                  </>
+                ) : (
+                  <>
+                    <Activity className="h-4 w-4 mr-2" />
+                    Teste Direto Resend API
+                  </>
+                )}
+              </Button>
+
+              <div className="space-y-2">
+                <Input
+                  type="email"
+                  placeholder="email@exemplo.com"
+                  value={testEmail}
+                  onChange={(e) => setTestEmail(e.target.value)}
+                  className="w-full"
+                />
+                <Button
+                  onClick={handleSendTestEmail}
+                  disabled={isChecking || !testEmail}
+                  className="w-full"
+                >
+                  {isChecking ? (
+                    <>
+                      <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                      Enviando...
+                    </>
+                  ) : (
+                    <>
+                      <Send className="h-4 w-4 mr-2" />
+                      Enviar Email de Teste
+                    </>
                   )}
-                  {debugInfo.headers && (
-                    <div>
-                      <strong>Headers:</strong>
-                      <pre className="mt-1 text-xs bg-white p-2 rounded border overflow-auto">
-                        {JSON.stringify(debugInfo.headers, null, 2)}
-                      </pre>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-          </CollapsibleContent>
-        </Collapsible>
-
-        {/* Diagnóstico Avançado */}
-        <Collapsible open={showAdvanced} onOpenChange={setShowAdvanced}>
-          <CollapsibleContent className="space-y-4">
-            <div className="p-4 rounded-lg bg-blue-50 border">
-              <h4 className="font-medium mb-3">Diagnóstico Avançado:</h4>
-              <div className="space-y-2 text-sm">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <strong>Status da Edge Function:</strong>
-                    <Badge variant={debugInfo?.responseStatus === 200 ? "default" : "destructive"} className="ml-2">
-                      {debugInfo?.responseStatus === 200 ? 'OK' : 'Erro'}
-                    </Badge>
-                  </div>
-                  <div>
-                    <strong>Tentativas realizadas:</strong>
-                    <Badge variant="outline" className="ml-2">
-                      {debugInfo?.attempts || 0}
-                    </Badge>
-                  </div>
-                </div>
-                
-                <div className="mt-4">
-                  <strong>Recomendações:</strong>
-                  <ul className="list-disc list-inside mt-2 space-y-1">
-                    {!healthStatus.apiKeyValid && (
-                      <li>Verificar se a RESEND_API_KEY está configurada corretamente</li>
-                    )}
-                    {healthStatus.apiKeyValid && !healthStatus.isHealthy && (
-                      <li>Verificar conectividade de rede e status da API do Resend</li>
-                    )}
-                    {healthStatus.responseTime && healthStatus.responseTime > 10000 && (
-                      <li>Latência alta detectada - verificar conexão de rede</li>
-                    )}
-                    {healthStatus.issues.some(issue => issue.includes('timeout')) && (
-                      <li>Problemas de timeout - considerar aumentar timeout ou verificar rede</li>
-                    )}
-                  </ul>
-                </div>
+                </Button>
               </div>
             </div>
-          </CollapsibleContent>
-        </Collapsible>
+          </CardContent>
+        </Card>
+      </div>
 
-        {/* Timestamp da última verificação */}
-        {healthStatus.lastChecked && (
-          <p className="text-xs text-muted-foreground">
-            Última verificação: {healthStatus.lastChecked.toLocaleString('pt-BR')}
-          </p>
-        )}
-      </CardContent>
-    </Card>
+      {/* Debug Information */}
+      {debugInfo && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">Informações de Debug - Resend</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
+              <div>
+                <span className="font-medium">Timestamp:</span>
+                <p className="text-muted-foreground font-mono">{debugInfo.timestamp}</p>
+              </div>
+              <div>
+                <span className="font-medium">Tentativas:</span>
+                <p className="text-muted-foreground">{debugInfo.attempts}</p>
+              </div>
+              <div>
+                <span className="font-medium">Método:</span>
+                <p className="text-muted-foreground">{debugInfo.method}</p>
+              </div>
+              <div>
+                <span className="font-medium">Status Response:</span>
+                <p className="text-muted-foreground">{debugInfo.responseStatus || 'N/A'}</p>
+              </div>
+              <div>
+                <span className="font-medium">Tipo de Teste:</span>
+                <p className="text-muted-foreground">{debugInfo.testType || 'N/A'}</p>
+              </div>
+              <div>
+                <span className="font-medium">Fallback Usado:</span>
+                <p className="text-muted-foreground">{debugInfo.fallbackUsed ? 'Sim' : 'Não'}</p>
+              </div>
+              {debugInfo.errorDetails && (
+                <div className="col-span-full">
+                  <span className="font-medium">Detalhes do Erro:</span>
+                  <p className="text-muted-foreground font-mono text-xs bg-gray-100 p-2 rounded mt-1">
+                    {debugInfo.errorDetails}
+                  </p>
+                </div>
+              )}
+            </div>
+            {healthStatus.lastChecked && (
+              <div className="mt-4 pt-4 border-t border-gray-200">
+                <span className="font-medium">Última verificação:</span>
+                <p className="text-muted-foreground">{healthStatus.lastChecked.toLocaleString('pt-BR')}</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+    </div>
   );
 };

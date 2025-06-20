@@ -1,7 +1,9 @@
 
 import { useState, useEffect, useCallback } from 'react';
-import { supabase } from '@/lib/supabase';
+import { supabase, supabaseWithExtendedTimeout } from '@/lib/supabase';
+import { resendTestService } from '@/services/resendTestService';
 import { toast } from 'sonner';
+import { logger } from '@/utils/logger';
 
 interface ResendHealthStatus {
   isHealthy: boolean;
@@ -20,7 +22,8 @@ interface DebugInfo {
   method: string;
   responseStatus?: number;
   errorDetails?: string;
-  headers?: Record<string, any>;
+  testType?: string;
+  fallbackUsed?: boolean;
 }
 
 export const useResendHealthCheck = () => {
@@ -36,92 +39,109 @@ export const useResendHealthCheck = () => {
   const [debugInfo, setDebugInfo] = useState<DebugInfo | null>(null);
 
   const performHealthCheck = useCallback(async (forceRefresh = false) => {
-    console.log('🔍 [RESEND-HEALTH] Iniciando verificação de saúde do Resend...');
+    logger.info('🔍 [RESEND-HEALTH] Iniciando verificação otimizada');
     setIsChecking(true);
     
     const startTime = Date.now();
-    const maxAttempts = forceRefresh ? 3 : 1;
+    const maxAttempts = forceRefresh ? 3 : 2;
     
     try {
       for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-        console.log(`🔄 [RESEND-HEALTH] Tentativa ${attempt}/${maxAttempts}`);
+        logger.info(`🔄 [RESEND-HEALTH] Tentativa ${attempt}/${maxAttempts}`);
         
         try {
-          // Configurar timeout mais longo e headers explícitos
-          const { data, error } = await supabase.functions.invoke('test-resend-health', {
-            body: { 
-              forceRefresh,
-              attempt,
-              timestamp: new Date().toISOString()
-            },
-            headers: {
-              'Content-Type': 'application/json',
-            }
-          });
-
-          const responseTime = Date.now() - startTime;
-
-          setDebugInfo({
-            timestamp: new Date().toISOString(),
-            attempts: attempt,
-            method: 'POST',
-            responseStatus: error ? 500 : 200,
-            errorDetails: error?.message,
-            headers: data?.headers
-          });
-
-          if (!error && data) {
-            console.log('✅ [RESEND-HEALTH] Verificação bem-sucedida:', data);
+          // Primeira tentativa: Cliente Supabase com timeout estendido
+          if (attempt === 1) {
+            logger.info('🔧 [RESEND-HEALTH] Usando cliente Supabase otimizado');
             
-            setHealthStatus({
-              isHealthy: data.healthy || false,
-              apiKeyValid: data.apiKeyValid || false,
-              connectivity: data.connectivity || 'disconnected',
-              domainValid: data.domainValid || false,
-              responseTime,
-              issues: data.issues || [],
-              lastError: data.lastError,
-              lastChecked: new Date(),
-            });
-            
-            if (data.healthy) {
-              toast.success('Sistema de email operacional');
-              return; // Success, exit retry loop
-            } else if (attempt === maxAttempts) {
-              toast.warning('Sistema com problemas detectados');
-            }
-          } else {
-            console.error(`❌ [RESEND-HEALTH] Erro na tentativa ${attempt}:`, error);
-            
-            // Se é timeout ou erro de rede, tentar novamente
-            if (error?.message?.includes('timeout') || 
-                error?.message?.includes('network') ||
-                error?.message?.includes('Failed to send')) {
-              
-              if (attempt < maxAttempts) {
-                console.log(`⏳ [RESEND-HEALTH] Aguardando antes da próxima tentativa...`);
-                await new Promise(resolve => setTimeout(resolve, 2000 * attempt)); // Backoff exponencial
-                continue;
+            const { data, error } = await supabaseWithExtendedTimeout.functions.invoke('test-resend-health', {
+              body: { 
+                forceRefresh,
+                attempt,
+                timestamp: new Date().toISOString(),
+                testType: 'supabase_extended'
+              },
+              headers: {
+                'Content-Type': 'application/json',
+                'X-Function-Timeout': '60000'
               }
-            }
-            
-            if (attempt === maxAttempts) {
+            });
+
+            const responseTime = Date.now() - startTime;
+
+            setDebugInfo({
+              timestamp: new Date().toISOString(),
+              attempts: attempt,
+              method: 'POST',
+              responseStatus: error ? 500 : 200,
+              errorDetails: error?.message,
+              testType: 'supabase_extended',
+              fallbackUsed: false
+            });
+
+            if (!error && data) {
+              logger.info('✅ [RESEND-HEALTH] Sucesso com cliente otimizado');
+              
               setHealthStatus({
-                isHealthy: false,
-                apiKeyValid: false,
-                connectivity: 'error',
-                domainValid: false,
+                isHealthy: data.healthy || false,
+                apiKeyValid: data.apiKeyValid || false,
+                connectivity: data.connectivity || 'disconnected',
+                domainValid: data.domainValid || false,
                 responseTime,
-                issues: [`Erro na comunicação: ${error?.message || 'Desconhecido'}`],
-                lastError: error?.message,
+                issues: data.issues || [],
+                lastError: data.lastError,
                 lastChecked: new Date(),
               });
               
-              toast.error('Falha na verificação do sistema de email');
+              if (data.healthy) {
+                toast.success('Sistema de email operacional');
+                return;
+              }
+            } else {
+              logger.warn(`⚠️ [RESEND-HEALTH] Cliente Supabase falhou: ${error?.message}`);
             }
           }
-        } catch (invokeError: any) {
-          console.error(`❌ [RESEND-HEALTH] Erro de invocação na tentativa ${attempt}:`, invokeError);
+
+          // Segunda tentativa: Fallback para fetch direto
+          if (attempt === 2 || (attempt === 1 && forceRefresh)) {
+            logger.info('🔄 [RESEND-HEALTH] Usando fallback direto');
+            
+            const directResult = await resendTestService.testHealthWithDirectFetch(attempt, forceRefresh);
+            const responseTime = Date.now() - startTime;
+
+            setDebugInfo({
+              timestamp: new Date().toISOString(),
+              attempts: attempt,
+              method: 'POST',
+              responseStatus: directResult.healthy ? 200 : 500,
+              errorDetails: directResult.lastError,
+              testType: 'direct_fetch',
+              fallbackUsed: true
+            });
+
+            setHealthStatus({
+              ...directResult,
+              responseTime,
+              lastChecked: new Date(),
+            });
+
+            if (directResult.healthy) {
+              toast.success('Sistema operacional (via fallback)');
+              return;
+            } else {
+              logger.warn(`⚠️ [RESEND-HEALTH] Fallback falhou: ${directResult.lastError}`);
+            }
+          }
+
+          // Aguardar antes da próxima tentativa
+          if (attempt < maxAttempts) {
+            const delay = Math.min(2000 * attempt, 5000);
+            logger.info(`⏳ [RESEND-HEALTH] Aguardando ${delay}ms antes da próxima tentativa`);
+            await new Promise(resolve => setTimeout(resolve, delay));
+          }
+
+        } catch (attemptError: any) {
+          logger.error(`❌ [RESEND-HEALTH] Erro na tentativa ${attempt}:`, attemptError);
           
           if (attempt === maxAttempts) {
             setHealthStatus({
@@ -130,27 +150,27 @@ export const useResendHealthCheck = () => {
               connectivity: 'error',
               domainValid: false,
               responseTime: Date.now() - startTime,
-              issues: [`Erro de comunicação: ${invokeError.message}`],
-              lastError: invokeError.message,
+              issues: [`Erro após ${maxAttempts} tentativas: ${attemptError.message}`],
+              lastError: attemptError.message,
               lastChecked: new Date(),
             });
-            
+
             setDebugInfo({
               timestamp: new Date().toISOString(),
               attempts: attempt,
               method: 'POST',
-              errorDetails: invokeError.message
+              errorDetails: attemptError.message,
+              testType: 'failed_all'
             });
-            
-            toast.error('Erro crítico na verificação');
-          } else {
-            // Aguardar antes da próxima tentativa
-            await new Promise(resolve => setTimeout(resolve, 2000 * attempt));
           }
         }
       }
+
+      // Se chegou aqui, todas as tentativas falharam
+      toast.error('Sistema com problemas - todas as tentativas falharam');
+
     } catch (err: any) {
-      console.error('❌ [RESEND-HEALTH] Erro geral:', err);
+      logger.error('❌ [RESEND-HEALTH] Erro crítico:', err);
       
       setHealthStatus({
         isHealthy: false,
@@ -167,7 +187,8 @@ export const useResendHealthCheck = () => {
         timestamp: new Date().toISOString(),
         attempts: 1,
         method: 'POST',
-        errorDetails: err.message
+        errorDetails: err.message,
+        testType: 'critical_error'
       });
       
       toast.error('Erro crítico na verificação');
@@ -179,28 +200,43 @@ export const useResendHealthCheck = () => {
   const forceHealthCheck = useCallback(() => performHealthCheck(true), [performHealthCheck]);
 
   const sendTestEmail = useCallback(async (email: string) => {
-    console.log('📧 [RESEND-TEST] Enviando email de teste para:', email);
+    logger.info('📧 [RESEND-TEST] Enviando email com fallback automático');
     setIsChecking(true);
     
     try {
-      const { data, error } = await supabase.functions.invoke('test-resend-email', {
-        body: { email },
-        headers: {
-          'Content-Type': 'application/json',
-        }
-      });
+      // Primeira tentativa: Cliente Supabase
+      try {
+        const { data, error } = await supabase.functions.invoke('test-resend-email', {
+          body: { email },
+          headers: {
+            'Content-Type': 'application/json',
+          }
+        });
 
-      if (error) {
-        console.error('❌ [RESEND-TEST] Erro:', error);
-        toast.error(`Erro ao enviar email: ${error.message}`);
-        return { success: false, error: error.message };
+        if (!error && data) {
+          logger.info('✅ [RESEND-TEST] Email enviado via Supabase');
+          toast.success(`Email de teste enviado para ${email}`);
+          return { success: true, data };
+        } else {
+          logger.warn('⚠️ [RESEND-TEST] Supabase falhou, tentando fallback');
+        }
+      } catch (supabaseError) {
+        logger.warn('⚠️ [RESEND-TEST] Erro Supabase, usando fallback:', supabaseError);
       }
 
-      console.log('✅ [RESEND-TEST] Email enviado:', data);
-      toast.success(`Email de teste enviado para ${email}`);
-      return { success: true, data };
+      // Fallback: Fetch direto
+      const directResult = await resendTestService.sendTestEmailDirect(email);
+      
+      if (directResult.success) {
+        toast.success(`Email enviado para ${email} (via fallback)`);
+        return directResult;
+      } else {
+        toast.error(`Erro ao enviar email: ${directResult.error}`);
+        return directResult;
+      }
+
     } catch (err: any) {
-      console.error('❌ [RESEND-TEST] Erro crítico:', err);
+      logger.error('❌ [RESEND-TEST] Erro crítico:', err);
       toast.error(`Erro crítico: ${err.message}`);
       return { success: false, error: err.message };
     } finally {
@@ -208,11 +244,11 @@ export const useResendHealthCheck = () => {
     }
   }, []);
 
-  // Verificação inicial com delay para evitar problemas de inicialização
+  // Verificação inicial otimizada
   useEffect(() => {
     const timer = setTimeout(() => {
       performHealthCheck();
-    }, 1000);
+    }, 500); // Reduzido para 500ms
 
     return () => clearTimeout(timer);
   }, [performHealthCheck]);

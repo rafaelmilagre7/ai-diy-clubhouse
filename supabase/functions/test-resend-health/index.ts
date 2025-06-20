@@ -4,7 +4,7 @@ import { Resend } from "npm:resend@2.0.0";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-function-timeout",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
@@ -12,14 +12,16 @@ interface HealthCheckRequest {
   forceRefresh?: boolean;
   attempt?: number;
   timestamp?: string;
+  testType?: string;
 }
 
 const handler = async (req: Request): Promise<Response> => {
-  console.log("🔄 [HEALTH-CHECK] Recebendo requisição:", req.method);
+  const requestId = crypto.randomUUID().substring(0, 8);
+  console.log(`🔄 [HEALTH-${requestId}] Nova requisição: ${req.method}`);
   
   // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
-    console.log("🔄 [HEALTH-CHECK] Recebendo requisição OPTIONS - CORS Preflight");
+    console.log(`🔄 [HEALTH-${requestId}] CORS Preflight - respondendo`);
     return new Response(null, { 
       headers: corsHeaders,
       status: 200 
@@ -27,7 +29,7 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   if (req.method !== "POST") {
-    console.log("❌ [HEALTH-CHECK] Método não permitido:", req.method);
+    console.log(`❌ [HEALTH-${requestId}] Método não permitido: ${req.method}`);
     return new Response(
       JSON.stringify({ error: "Método não permitido" }), 
       { 
@@ -41,7 +43,9 @@ const handler = async (req: Request): Promise<Response> => {
   let requestData: HealthCheckRequest;
 
   try {
-    // Parse request body with timeout
+    console.log(`📨 [HEALTH-${requestId}] Processando requisição POST...`);
+    
+    // Parse request body com timeout
     const timeoutPromise = new Promise((_, reject) => 
       setTimeout(() => reject(new Error("Timeout parsing request")), 5000)
     );
@@ -49,27 +53,33 @@ const handler = async (req: Request): Promise<Response> => {
     const parsePromise = req.json().catch(() => ({}));
     requestData = await Promise.race([parsePromise, timeoutPromise]) as HealthCheckRequest;
     
-    console.log("📨 [HEALTH-CHECK] Dados da requisição:", requestData);
+    console.log(`📊 [HEALTH-${requestId}] Dados recebidos:`, {
+      ...requestData,
+      requestId,
+      userAgent: req.headers.get('user-agent')?.substring(0, 100),
+      clientInfo: req.headers.get('x-client-info')
+    });
   } catch (parseError) {
-    console.error("❌ [HEALTH-CHECK] Erro ao parsear requisição:", parseError);
+    console.error(`❌ [HEALTH-${requestId}] Erro ao parsear:`, parseError);
     requestData = {};
   }
 
   try {
-    console.log("🔑 [HEALTH-CHECK] Verificando API key...");
+    console.log(`🔑 [HEALTH-${requestId}] Verificando configurações...`);
     
     const apiKey = Deno.env.get("RESEND_API_KEY");
     if (!apiKey) {
-      console.error("❌ [HEALTH-CHECK] API key não encontrada");
+      console.error(`❌ [HEALTH-${requestId}] API key não configurada`);
       return new Response(
         JSON.stringify({
           healthy: false,
           apiKeyValid: false,
           connectivity: "error",
           domainValid: false,
-          issues: ["API key do Resend não configurada"],
+          issues: ["RESEND_API_KEY não configurada nos secrets"],
           lastError: "API key não encontrada",
-          responseTime: Date.now() - startTime
+          responseTime: Date.now() - startTime,
+          requestId
         }),
         {
           status: 200,
@@ -78,22 +88,29 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    console.log("✅ [HEALTH-CHECK] API key encontrada, testando conectividade...");
+    console.log(`✅ [HEALTH-${requestId}] API key encontrada, testando conectividade...`);
 
-    // Test Resend connectivity with timeout
+    // Test Resend connectivity com timeout estendido
     const resend = new Resend(apiKey);
     
     const connectivityTest = async () => {
       try {
-        // Simple API call to test connectivity
+        console.log(`🔍 [HEALTH-${requestId}] Chamando Resend API...`);
         const testResponse = await resend.domains.list();
-        console.log("✅ [HEALTH-CHECK] Teste de conectividade bem-sucedido");
+        console.log(`✅ [HEALTH-${requestId}] Resend respondeu:`, {
+          domainsCount: testResponse.data?.length || 0,
+          hasData: !!testResponse.data
+        });
         return {
           success: true,
           domains: testResponse.data || []
         };
       } catch (error: any) {
-        console.error("❌ [HEALTH-CHECK] Erro na conectividade:", error.message);
+        console.error(`❌ [HEALTH-${requestId}] Erro Resend:`, {
+          message: error.message,
+          status: error.status,
+          code: error.code
+        });
         return {
           success: false,
           error: error.message
@@ -101,20 +118,22 @@ const handler = async (req: Request): Promise<Response> => {
       }
     };
 
-    // Add timeout to connectivity test
+    // Timeout de 30 segundos para o teste
     const timeoutPromise = new Promise((_, reject) => 
-      setTimeout(() => reject(new Error("Timeout na verificação de conectividade")), 15000)
+      setTimeout(() => reject(new Error("Timeout na verificação de conectividade (30s)")), 30000)
     );
 
+    console.log(`⏳ [HEALTH-${requestId}] Executando teste com timeout de 30s...`);
     const connectivityResult = await Promise.race([
       connectivityTest(),
       timeoutPromise
     ]) as any;
 
     const responseTime = Date.now() - startTime;
+    console.log(`⏱️ [HEALTH-${requestId}] Tempo total: ${responseTime}ms`);
     
     if (connectivityResult.success) {
-      console.log("✅ [HEALTH-CHECK] Sistema operacional");
+      console.log(`✅ [HEALTH-${requestId}] Sistema operacional!`);
       return new Response(
         JSON.stringify({
           healthy: true,
@@ -124,7 +143,9 @@ const handler = async (req: Request): Promise<Response> => {
           issues: [],
           responseTime,
           timestamp: new Date().toISOString(),
-          attempt: requestData.attempt || 1
+          attempt: requestData.attempt || 1,
+          requestId,
+          domains: connectivityResult.domains?.length || 0
         }),
         {
           status: 200,
@@ -132,18 +153,19 @@ const handler = async (req: Request): Promise<Response> => {
         }
       );
     } else {
-      console.log("⚠️ [HEALTH-CHECK] Problemas detectados");
+      console.log(`⚠️ [HEALTH-${requestId}] Problemas detectados:`, connectivityResult.error);
       return new Response(
         JSON.stringify({
           healthy: false,
-          apiKeyValid: true, // API key exists but connectivity failed
+          apiKeyValid: true,
           connectivity: "error",
           domainValid: false,
           issues: [`Erro de conectividade: ${connectivityResult.error}`],
           lastError: connectivityResult.error,
           responseTime,
           timestamp: new Date().toISOString(),
-          attempt: requestData.attempt || 1
+          attempt: requestData.attempt || 1,
+          requestId
         }),
         {
           status: 200,
@@ -153,7 +175,11 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
   } catch (error: any) {
-    console.error("❌ [HEALTH-CHECK] Erro crítico:", error);
+    console.error(`❌ [HEALTH-${requestId}] Erro crítico:`, {
+      message: error.message,
+      stack: error.stack?.substring(0, 500),
+      type: error.constructor.name
+    });
     
     const responseTime = Date.now() - startTime;
     
@@ -167,14 +193,16 @@ const handler = async (req: Request): Promise<Response> => {
         lastError: error.message,
         responseTime,
         timestamp: new Date().toISOString(),
-        attempt: requestData.attempt || 1
+        attempt: requestData.attempt || 1,
+        requestId
       }),
       {
-        status: 200, // Always return 200 for successful Edge Function execution
+        status: 200,
         headers: { "Content-Type": "application/json", ...corsHeaders },
       }
     );
   }
 };
 
+console.log("🚀 [HEALTH-CHECK] Edge Function carregada e pronta!");
 serve(handler);

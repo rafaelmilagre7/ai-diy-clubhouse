@@ -30,7 +30,7 @@ ${SUPABASE_CONFIG.isLovableEnvironment()
   throw new Error(errorMessage);
 }
 
-// Criação do cliente Supabase com configurações de segurança
+// Criação do cliente Supabase com configurações otimizadas para Edge Functions
 export const supabase = createClient<Database>(credentials.url, credentials.anonKey, {
   auth: {
     autoRefreshToken: true,
@@ -42,6 +42,31 @@ export const supabase = createClient<Database>(credentials.url, credentials.anon
     headers: {
       'X-Client-Info': 'viverdeia-app',
       'X-Security-Level': 'high'
+    }
+  },
+  // Configurações específicas para Edge Functions
+  functions: {
+    region: 'us-east-1' // Região padrão para melhor performance
+  },
+  // Timeout estendido para Edge Functions
+  db: {
+    schema: 'public'
+  }
+});
+
+// Cliente especializado para Edge Functions com timeout estendido
+export const supabaseWithExtendedTimeout = createClient<Database>(credentials.url, credentials.anonKey, {
+  auth: {
+    autoRefreshToken: true,
+    persistSession: true,
+    detectSessionInUrl: true,
+    storage: typeof window !== 'undefined' ? window.localStorage : undefined
+  },
+  global: {
+    headers: {
+      'X-Client-Info': 'viverdeia-app-extended',
+      'X-Security-Level': 'high',
+      'X-Function-Timeout': '60000' // 60 segundos
     }
   }
 });
