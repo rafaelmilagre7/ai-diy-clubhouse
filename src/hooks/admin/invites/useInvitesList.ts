@@ -16,6 +16,7 @@ export const useInvitesList = () => {
         .select(`
           id,
           email,
+          phone,
           role_id,
           token,
           expires_at,
@@ -25,7 +26,10 @@ export const useInvitesList = () => {
           last_sent_at,
           send_attempts,
           notes,
-          user_roles:role_id(id, name, description)
+          channel_preference,
+          email_provider,
+          email_id,
+          role:role_id(id, name, description)
         `)
         .order('created_at', { ascending: false });
 
