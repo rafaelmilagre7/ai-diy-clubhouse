@@ -32,12 +32,11 @@ export interface CreateInviteParams {
 }
 
 export interface CreateInviteResponse {
-  invite_id: string;
-  token: string;
-  expires_at: string;
-  status: 'success' | 'error';
-  message?: string;
-  channel_used?: 'email' | 'whatsapp' | 'both'; // Canal utilizado para envio
+  status: 'success' | 'partial_success' | 'error';
+  message: string;
+  invite?: Invite;
+  emailResult?: SendInviteResponse;
+  suggestion?: string;
 }
 
 export interface SendInviteResponse {
