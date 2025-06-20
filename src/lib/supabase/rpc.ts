@@ -53,7 +53,7 @@ export async function deleteForumTopic(topicId: string): Promise<{ success: bool
     const { error: postsError } = await supabase
       .from('forum_posts')
       .delete()
-      .eq('topic_id', topicId);
+      .eq('topic_id', topicId as any);
       
     if (postsError) {
       console.error("Erro ao excluir posts do tópico:", postsError);
@@ -64,7 +64,7 @@ export async function deleteForumTopic(topicId: string): Promise<{ success: bool
     const { error: topicError } = await supabase
       .from('forum_topics')
       .delete()
-      .eq('id', topicId);
+      .eq('id', topicId as any);
       
     if (topicError) {
       console.error("Erro ao excluir tópico:", topicError);
@@ -87,40 +87,40 @@ export async function deleteForumPost(postId: string): Promise<{ success: boolea
     const { data: postData } = await supabase
       .from('forum_posts')
       .select('topic_id, is_solution')
-      .eq('id', postId)
+      .eq('id', postId as any)
       .single();
       
     // Excluir o post
     const { error } = await supabase
       .from('forum_posts')
       .delete()
-      .eq('id', postId);
+      .eq('id', postId as any);
       
     if (error) {
       return { success: false, error: error.message };
     }
     
     // Se o post era uma solução, atualizar o tópico
-    if (postData?.is_solution) {
+    if ((postData as any)?.is_solution) {
       await supabase
         .from('forum_topics')
-        .update({ is_solved: false })
-        .eq('id', postData.topic_id);
+        .update({ is_solved: false } as any)
+        .eq('id', (postData as any).topic_id as any);
     }
     
     // Decrementar contagem de respostas no tópico
-    if (postData?.topic_id) {
+    if ((postData as any)?.topic_id) {
       const { data } = await supabase
         .from('forum_topics')
         .select('reply_count')
-        .eq('id', postData.topic_id)
+        .eq('id', (postData as any).topic_id as any)
         .single();
         
-      if (data && data.reply_count > 0) {
+      if ((data as any) && (data as any).reply_count > 0) {
         await supabase
           .from('forum_topics')
-          .update({ reply_count: data.reply_count - 1 })
-          .eq('id', postData.topic_id);
+          .update({ reply_count: (data as any).reply_count - 1 } as any)
+          .eq('id', (postData as any).topic_id as any);
       }
     }
     

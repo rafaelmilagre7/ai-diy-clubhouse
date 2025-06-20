@@ -1,117 +1,165 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/lib/supabase';
-import { slugify } from '@/utils/slugify';
-import BasicInfoForm from '@/components/admin/solution/form/BasicInfoForm';
-import { SolutionFormValues } from '@/components/admin/solution/form/solutionFormSchema';
-import { FileText } from 'lucide-react';
-import SolutionCreateWizardSteps from "@/components/admin/solution/SolutionCreateWizardSteps";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/lib/supabase";
+
+interface Solution {
+  id: string;
+  title: string;
+  description: string;
+  category: 'Receita' | 'Operacional' | 'Estratégia';
+  difficulty: 'easy' | 'medium' | 'advanced';
+  slug: string;
+  thumbnail_url: string;
+  published: boolean;
+  created_at: string;
+  updated_at: string;
+}
 
 const AdminSolutionCreate = () => {
-  const [saving, setSaving] = useState(false);
-  const { toast } = useToast();
+  const [title, setTitle] = useState('');
+  const [description, setDescription] = useState('');
+  const [category, setCategory] = useState<'Receita' | 'Operacional' | 'Estratégia'>('Receita');
+  const [difficulty, setDifficulty] = useState<'easy' | 'medium' | 'advanced'>('medium');
+  const [isCreating, setIsCreating] = useState(false);
   const navigate = useNavigate();
+  const { toast } = useToast();
 
-  console.log("Renderizando AdminSolutionCreate");
-
-  // Valores padrão para o formulário
-  const defaultValues: SolutionFormValues = {
-    title: "",
-    description: "",
-    category: "Receita",
-    difficulty: "medium",
-    thumbnail_url: "",
-    published: false,
-    slug: "",
+  const generateSlug = (title: string) => {
+    return title
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9\s]/g, '')
+      .replace(/\s+/g, '-')
+      .replace(/^-+|-+$/g, '');
   };
 
-  const handleSubmit = async (values: SolutionFormValues) => {
+  const handleCreate = async () => {
+    if (!title.trim() || !description.trim()) {
+      toast({
+        title: "Campos obrigatórios",
+        description: "Por favor, preencha o título e a descrição da solução.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsCreating(true);
+    
     try {
-      setSaving(true);
-
-      // Gerar um slug único a partir do título
-      const slug = slugify(values.title, true);
-
-      // Preparar dados para salvar
-      const newSolution = {
-        title: values.title,
-        description: values.description,
-        category: values.category,
-        difficulty: values.difficulty,
-        slug: slug,
-        thumbnail_url: values.thumbnail_url || null,
-        published: false,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      };
-
-      // Criar nova solução
+      const slug = generateSlug(title);
+      const now = new Date().toISOString();
+      
       const { data, error } = await supabase
-        .from("solutions")
-        .insert(newSolution)
-        .select();
+        .from('solutions')
+        .insert({
+          title: title.trim(),
+          description: description.trim(),
+          category,
+          difficulty,
+          slug,
+          thumbnail_url: '',
+          published: false,
+          created_at: now,
+          updated_at: now,
+        } as any)
+        .select()
+        .single();
 
       if (error) {
         throw error;
       }
 
-      if (data && data.length > 0) {
+      const solutionId = (data as any)?.id;
+      
+      if (solutionId) {
         toast({
           title: "Solução criada",
-          description: "A nova solução foi criada com sucesso.",
+          description: "A solução foi criada com sucesso!",
         });
-        navigate(`/admin/solutions/${data[0].id}`);
+        
+        navigate(`/admin/solutions/${solutionId}/edit`);
       }
     } catch (error: any) {
-      console.error("Erro ao criar solução:", error);
+      console.error('Erro ao criar solução:', error);
       toast({
         title: "Erro ao criar solução",
-        description: error.message || "Ocorreu um erro ao tentar criar a solução.",
+        description: error.message || "Ocorreu um erro inesperado.",
         variant: "destructive",
       });
     } finally {
-      setSaving(false);
+      setIsCreating(false);
     }
   };
 
   return (
-    <div className="space-y-6 max-w-5xl mx-auto">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">Nova Solução</h1>
-        <p className="text-muted-foreground">
-          Crie uma nova solução para a plataforma VIVER DE IA Club.
-        </p>
-      </div>
-      
-      {/* Wizard visual de etapas do cadastro */}
-      <SolutionCreateWizardSteps currentStep={0} />
-
+    <div className="container mx-auto py-10">
       <Card>
-        <CardContent className="p-6">
-          <div className="mb-6 flex items-center gap-2 text-muted-foreground">
-            <FileText className="h-5 w-5" />
-            <span>Preencha as informações básicas para começar</span>
+        <CardHeader>
+          <CardTitle>Criar Nova Solução</CardTitle>
+          <CardDescription>Preencha os campos abaixo para criar uma nova solução.</CardDescription>
+        </CardHeader>
+        <CardContent className="grid gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="title">Título</Label>
+              <Input
+                type="text"
+                id="title"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+              />
+            </div>
+            <div>
+              <Label htmlFor="category">Categoria</Label>
+              <Select onValueChange={(value) => setCategory(value as 'Receita' | 'Operacional' | 'Estratégia')}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione a categoria" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Receita">Receita</SelectItem>
+                  <SelectItem value="Operacional">Operacional</SelectItem>
+                  <SelectItem value="Estratégia">Estratégia</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
-          <BasicInfoForm
-            defaultValues={defaultValues}
-            onSubmit={handleSubmit}
-            saving={saving}
-          />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="difficulty">Dificuldade</Label>
+              <Select onValueChange={(value) => setDifficulty(value as 'easy' | 'medium' | 'advanced')}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione a dificuldade" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="easy">Fácil</SelectItem>
+                  <SelectItem value="medium">Médio</SelectItem>
+                  <SelectItem value="advanced">Avançado</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <div>
+            <Label htmlFor="description">Descrição</Label>
+            <Textarea
+              id="description"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              className="resize-none"
+            />
+          </div>
+          <Button onClick={handleCreate} disabled={isCreating}>
+            {isCreating ? "Criando..." : "Criar Solução"}
+          </Button>
         </CardContent>
       </Card>
-      
-      <div className="flex justify-end">
-        <Button
-          variant="link"
-          onClick={() => navigate("/admin/solutions")}
-          className="text-muted-foreground"
-        >
-          Voltar para lista de soluções
-        </Button>
-      </div>
     </div>
   );
 };

@@ -198,6 +198,17 @@ export const useTopicList = ({ categoryId, categorySlug, itemsPerPage = 10 }: Us
     setCurrentPage(page);
   };
 
+  // Funções adicionais necessárias para TopicList.tsx
+  const handleRetry = () => {
+    query.refetch();
+  };
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
+  const hasTopics = (query.data?.pinnedTopics.length || 0) + (query.data?.regularTopics.length || 0) > 0;
+
   return {
     // Dados
     pinnedTopics: query.data?.pinnedTopics || [],
@@ -214,6 +225,11 @@ export const useTopicList = ({ categoryId, categorySlug, itemsPerPage = 10 }: Us
     totalPages: query.data ? Math.ceil(query.data.totalCount / itemsPerPage) : 0,
     hasNextPage: query.data ? currentPage < Math.ceil(query.data.totalCount / itemsPerPage) - 1 : false,
     hasPreviousPage: currentPage > 0,
+    
+    // Propriedades adicionais
+    hasTopics,
+    handleRetry,
+    handlePageChange,
     
     // Ações
     nextPage,

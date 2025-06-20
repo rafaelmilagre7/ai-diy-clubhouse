@@ -1,4 +1,3 @@
-
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types/database.types';
 import { SUPABASE_CONFIG } from '@/config/app';
@@ -30,7 +29,7 @@ ${SUPABASE_CONFIG.isLovableEnvironment()
   throw new Error(errorMessage);
 }
 
-// Criação do cliente Supabase com configurações otimizadas para Edge Functions
+// Criação do cliente Supabase com configurações otimizadas
 export const supabase = createClient<Database>(credentials.url, credentials.anonKey, {
   auth: {
     autoRefreshToken: true,
@@ -44,11 +43,7 @@ export const supabase = createClient<Database>(credentials.url, credentials.anon
       'X-Security-Level': 'high'
     }
   },
-  // Configurações específicas para Edge Functions
-  functions: {
-    region: 'us-east-1' // Região padrão para melhor performance
-  },
-  // Timeout estendido para Edge Functions
+  // Configurações do banco de dados
   db: {
     schema: 'public'
   }

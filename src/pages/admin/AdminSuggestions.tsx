@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -12,34 +11,44 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { useAdminSuggestions } from '@/hooks/suggestions/useAdminSuggestions';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
+import { useToast } from '@/hooks/useToast';
 
 const AdminSuggestions = () => {
   const navigate = useNavigate();
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
-  const { removeSuggestion, updateSuggestionStatus, loading: adminActionLoading } = useAdminSuggestions();
+  const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
+  const [selectedStatus, setSelectedStatus] = useState<string>("pending");
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
+  const { toast } = useToast();
 
-  const { data: suggestions = [], isLoading, refetch } = useQuery({
-    queryKey: ['admin-suggestions', searchTerm, statusFilter],
-    queryFn: async () => {
-      let query = supabase
+  useEffect(() => {
+    fetchSuggestions();
+  }, [selectedStatus]);
+
+  const fetchSuggestions = async () => {
+    try {
+      setLoading(true);
+      
+      const { data, error } = await supabase
         .from('suggestions_with_profiles')
         .select('*')
+        .eq('status', selectedStatus as any)
         .order('created_at', { ascending: false });
 
-      if (searchTerm) {
-        query = query.or(`title.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%`);
-      }
-
-      if (statusFilter !== 'all') {
-        query = query.eq('status', statusFilter);
-      }
-
-      const { data, error } = await query;
       if (error) throw error;
-      return data || [];
+
+      setSuggestions((data as any) || []);
+    } catch (error: any) {
+      console.error('Erro ao buscar sugestões:', error);
+      toast({
+        title: "Erro ao carregar sugestões",
+        description: "Não foi possível carregar as sugestões.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
     }
-  });
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -89,7 +98,7 @@ const AdminSuggestions = () => {
     navigate(`/admin/suggestions/${suggestionId}`);
   };
 
-  if (isLoading) {
+  if (loading) {
     return (
       <div className="container py-6">
         <div className="text-center">Carregando sugestões...</div>
@@ -115,12 +124,12 @@ const AdminSuggestions = () => {
           />
         </div>
         
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
+        <Select value={selectedStatus} onValueChange={setSelectedStatus}>
           <SelectTrigger className="w-48">
             <SelectValue placeholder="Filtrar por status" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">Todos os Status</SelectItem>
+            <SelectItem value="pending">Todos os Status</SelectItem>
             <SelectItem value="new">Nova</SelectItem>
             <SelectItem value="in_development">Em Desenvolvimento</SelectItem>
             <SelectItem value="implemented">Implementada</SelectItem>
