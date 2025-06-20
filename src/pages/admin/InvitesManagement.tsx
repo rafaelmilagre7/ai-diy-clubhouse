@@ -5,7 +5,10 @@ import { usePermissions } from "@/hooks/auth/usePermissions";
 import { useInvites } from "@/hooks/admin/useInvites";
 import SimpleCreateInviteDialog from "./invites/components/SimpleCreateInviteDialog";
 import SimpleInvitesTab from "./invites/components/SimpleInvitesTab";
+import { EmailDiagnosticsPanel } from "./invites/components/EmailDiagnosticsPanel";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
 
 const InvitesManagement = () => {
   useDocumentTitle("Gerenciar Convites | Admin");
@@ -31,31 +34,12 @@ const InvitesManagement = () => {
     fetchInvites();
   };
 
-  const handleCreateInvite = async (email: string, roleId: string, notes?: string) => {
-    try {
-      await createInvite(email, roleId, notes);
-      handleInvitesChange();
-    } catch (error) {
-      throw error;
-    }
-  };
-
-  const handleDeleteInvite = async (inviteId: string) => {
-    try {
-      await deleteInvite(inviteId);
-      handleInvitesChange();
-    } catch (error) {
-      throw error;
-    }
-  };
-
-  const handleResendInvite = async (invite: any) => {
-    try {
-      await resendInvite(invite);
-      handleInvitesChange();
-    } catch (error) {
-      throw error;
-    }
+  // Calcular estatísticas dos convites
+  const inviteStats = {
+    total: invites.length,
+    pending: invites.filter(i => !i.used_at && new Date(i.expires_at) > new Date()).length,
+    used: invites.filter(i => i.used_at).length,
+    expired: invites.filter(i => !i.used_at && new Date(i.expires_at) <= new Date()).length
   };
 
   if (rolesLoading) {
@@ -75,8 +59,16 @@ const InvitesManagement = () => {
         <div>
           <h1 className="text-3xl font-bold">Gerenciar Convites</h1>
           <p className="text-muted-foreground mt-1">
-            Convide novos usuários para acessar a plataforma
+            Convide novos usuários e monitore o sistema de email
           </p>
+          <div className="flex gap-2 mt-3">
+            <Badge variant="outline">{inviteStats.total} Total</Badge>
+            <Badge variant="default">{inviteStats.pending} Pendentes</Badge>
+            <Badge variant="secondary">{inviteStats.used} Utilizados</Badge>
+            {inviteStats.expired > 0 && (
+              <Badge variant="destructive">{inviteStats.expired} Expirados</Badge>
+            )}
+          </div>
         </div>
         <div className="flex gap-2">
           <SimpleCreateInviteDialog 
@@ -86,21 +78,44 @@ const InvitesManagement = () => {
         </div>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Lista de Convites</CardTitle>
-          <CardDescription>
-            Gerencie todos os convites enviados para novos usuários
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <SimpleInvitesTab
-            invites={invites}
-            loading={invitesLoading}
-            onInvitesChange={handleInvitesChange}
-          />
-        </CardContent>
-      </Card>
+      <Tabs defaultValue="invites" className="space-y-6">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="invites">Lista de Convites</TabsTrigger>
+          <TabsTrigger value="diagnostics">Diagnóstico do Sistema</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="invites" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Convites Enviados</CardTitle>
+              <CardDescription>
+                Gerencie todos os convites enviados para novos usuários
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <SimpleInvitesTab
+                invites={invites}
+                loading={invitesLoading}
+                onInvitesChange={handleInvitesChange}
+              />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="diagnostics" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Sistema de Email</CardTitle>
+              <CardDescription>
+                Monitore a saúde e performance do sistema de envio de emails
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <EmailDiagnosticsPanel />
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };

@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { Loader2, Plus, Clock, Mail, CheckCircle, RefreshCw } from "lucide-react";
+import { Loader2, Plus, Clock, Mail, CheckCircle, RefreshCw, AlertTriangle, Zap } from "lucide-react";
 import { toast } from "sonner";
 import {
   Dialog,
@@ -22,6 +22,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { useInviteCreate } from "@/hooks/admin/invites/useInviteCreate";
 
 interface SimpleCreateInviteDialogProps {
@@ -35,6 +37,12 @@ const SimpleCreateInviteDialog = ({ roles, onInviteCreated }: SimpleCreateInvite
   const [notes, setNotes] = useState("");
   const [open, setOpen] = useState(false);
   const { createInvite, loading, currentStep, isCreating, isSending, isRetrying } = useInviteCreate();
+  const [processDetails, setProcessDetails] = useState<{
+    strategy?: string;
+    attempts?: number;
+    responseTime?: number;
+    fallbackUsed?: boolean;
+  }>({});
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,6 +52,8 @@ const SimpleCreateInviteDialog = ({ roles, onInviteCreated }: SimpleCreateInvite
       return;
     }
     
+    setProcessDetails({});
+    
     try {
       const result = await createInvite({
         email,
@@ -52,6 +62,15 @@ const SimpleCreateInviteDialog = ({ roles, onInviteCreated }: SimpleCreateInvite
       });
       
       if (result) {
+        // Capturar detalhes do processo
+        if (result.emailResult) {
+          setProcessDetails({
+            strategy: result.emailResult.strategy,
+            attempts: 1,
+            fallbackUsed: result.emailResult.strategy !== 'resend_primary'
+          });
+        }
+
         setEmail("");
         setRoleId("");
         setNotes("");
@@ -59,14 +78,19 @@ const SimpleCreateInviteDialog = ({ roles, onInviteCreated }: SimpleCreateInvite
         onInviteCreated();
         
         if (result.status === 'success') {
-          toast.success(`Convite enviado para ${email} com sucesso!`);
+          toast.success(`Convite enviado para ${email} com sucesso!`, {
+            description: `Método: ${result.emailResult?.strategy || 'Sistema principal'}`
+          });
         } else if (result.status === 'partial_success') {
-          toast.warning(`Convite criado para ${email}, mas email não foi enviado. ${result.suggestion || 'Tente reenviar manualmente.'}`);
+          toast.warning(`Convite criado para ${email}, mas email não foi enviado automaticamente.`, {
+            description: result.suggestion || 'Use o botão "Reenviar" para tentar novamente.',
+            duration: 8000
+          });
         }
       }
     } catch (error) {
       console.error('Erro ao criar convite:', error);
-      // O toast de erro já é mostrado pelo hook
+      setProcessDetails({ fallbackUsed: true });
     }
   };
 
@@ -88,7 +112,7 @@ const SimpleCreateInviteDialog = ({ roles, onInviteCreated }: SimpleCreateInvite
   const getButtonText = () => {
     if (isCreating) return "Criando convite...";
     if (isSending) return "Enviando email...";
-    if (isRetrying) return "Tentando novamente...";
+    if (isRetrying) return "Tentando sistema alternativo...";
     if (loading) return "Processando...";
     return "Criar Convite";
   };
@@ -96,16 +120,34 @@ const SimpleCreateInviteDialog = ({ roles, onInviteCreated }: SimpleCreateInvite
   const getStepDescription = () => {
     switch (currentStep) {
       case 'creating':
-        return "Criando convite no sistema...";
+        return "Criando convite no banco de dados...";
       case 'sending':
-        return "Enviando email de convite...";
+        return "Enviando email via sistema principal (Resend)...";
       case 'retrying':
-        return "Primeira tentativa falhou, reenviando...";
+        return "Sistema principal falhou. Tentando métodos alternativos...";
       case 'complete':
         return "Convite criado e enviado com sucesso!";
       default:
         return "";
     }
+  };
+
+  const getProcessBadge = () => {
+    if (!processDetails.strategy) return null;
+
+    const strategyLabels = {
+      'resend_primary': { label: 'Sistema Principal', color: 'default' },
+      'supabase_auth': { label: 'Sistema Alternativo', color: 'secondary' },
+      'fallback_recovery': { label: 'Recuperação', color: 'destructive' }
+    };
+
+    const strategy = strategyLabels[processDetails.strategy] || { label: 'Desconhecido', color: 'outline' };
+
+    return (
+      <Badge variant={strategy.color as any} className="ml-2">
+        {strategy.label}
+      </Badge>
+    );
   };
 
   return (
@@ -125,19 +167,31 @@ const SimpleCreateInviteDialog = ({ roles, onInviteCreated }: SimpleCreateInvite
             </DialogDescription>
           </DialogHeader>
           
-          {/* Status do processo */}
+          {/* Status detalhado do processo */}
           {loading && (
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
-              <div className="flex items-center text-sm text-blue-800">
-                {getStepIcon()}
-                <span>{getStepDescription()}</span>
-              </div>
-              {isRetrying && (
-                <div className="mt-2 text-xs text-yellow-700">
-                  ⚠️ Sistema implementando retry automático para garantir entrega
+            <Card className="bg-blue-50 border border-blue-200 mb-4">
+              <CardContent className="p-3">
+                <div className="flex items-center text-sm text-blue-800">
+                  {getStepIcon()}
+                  <span className="flex-1">{getStepDescription()}</span>
+                  {processDetails.strategy && getProcessBadge()}
                 </div>
-              )}
-            </div>
+                
+                {isRetrying && (
+                  <div className="mt-2 flex items-center gap-2 text-xs text-yellow-700">
+                    <AlertTriangle className="h-3 w-3" />
+                    <span>Sistema implementando fallback automático para garantir entrega</span>
+                  </div>
+                )}
+
+                {processDetails.fallbackUsed && (
+                  <div className="mt-2 flex items-center gap-2 text-xs text-orange-700">
+                    <Zap className="h-3 w-3" />
+                    <span>Sistema de backup ativado automaticamente</span>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
           )}
           
           <div className="grid gap-4 py-4">
@@ -176,9 +230,11 @@ const SimpleCreateInviteDialog = ({ roles, onInviteCreated }: SimpleCreateInvite
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 disabled={loading}
+                rows={3}
               />
             </div>
           </div>
+          
           <DialogFooter>
             <Button variant="outline" type="button" onClick={() => setOpen(false)} disabled={loading}>
               Cancelar
