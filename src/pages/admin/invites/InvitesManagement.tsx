@@ -3,15 +3,32 @@ import { useState, useEffect } from "react";
 import { useDocumentTitle } from "@/hooks/use-document-title";
 import { usePermissions } from "@/hooks/auth/usePermissions";
 import { useInvitesList } from "@/hooks/admin/invites/useInvitesList";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import SimpleCreateInviteDialog from "./components/SimpleCreateInviteDialog";
 import SimpleInvitesTab from "./components/SimpleInvitesTab";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { EmailMonitoringDashboard } from "@/components/admin/email/EmailMonitoringDashboard";
+import { SystemValidationPanel } from "@/components/admin/email/SystemValidationPanel";
+import { ResendConfigValidator } from "@/components/admin/email/ResendConfigValidator";
+import { EmailStatusMonitor } from "./components/EmailStatusMonitor";
+import { 
+  Mail, 
+  Users, 
+  Activity, 
+  TestTube, 
+  Settings, 
+  Shield,
+  CheckCircle,
+  Zap
+} from "lucide-react";
 
 const InvitesManagement = () => {
-  useDocumentTitle("Gerenciar Convites | Admin");
+  useDocumentTitle("Sistema de Convites e Email | Admin");
   
   const { roles, loading: rolesLoading } = usePermissions();
   const { invites, loading: invitesLoading, fetchInvites } = useInvitesList();
+  const [activeTab, setActiveTab] = useState('invites');
 
   useEffect(() => {
     fetchInvites();
@@ -34,31 +51,136 @@ const InvitesManagement = () => {
 
   return (
     <div className="p-6 space-y-6">
-      <div className="flex justify-between items-start">
+      <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Gerenciar Convites</h1>
+          <h1 className="text-3xl font-bold flex items-center gap-2">
+            <Mail className="h-8 w-8" />
+            Sistema de Convites e Email
+          </h1>
           <p className="text-muted-foreground mt-1">
-            Convide novos usuários para acessar a plataforma
+            Gerencie convites e monitore o sistema de email profissional
           </p>
         </div>
-        <div className="flex gap-2">
+        
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-1 px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm">
+            <CheckCircle className="h-3 w-3" />
+            Sistema Ativo
+          </div>
+          <div className="flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">
+            <Zap className="h-3 w-3" />
+            Resend Pro
+          </div>
           <SimpleCreateInviteDialog roles={roles} onInviteCreated={handleInvitesChange} />
         </div>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Lista de Convites</CardTitle>
-          <CardDescription>
-            Gerencie todos os convites enviados para novos usuários
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <SimpleInvitesTab
-            invites={invites}
-            loading={invitesLoading}
-            onInvitesChange={handleInvitesChange}
-          />
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+        <TabsList className="grid w-full grid-cols-5">
+          <TabsTrigger value="invites" className="flex items-center gap-2">
+            <Users className="h-4 w-4" />
+            Convites
+          </TabsTrigger>
+          <TabsTrigger value="monitor" className="flex items-center gap-2">
+            <Activity className="h-4 w-4" />
+            Monitoramento
+          </TabsTrigger>
+          <TabsTrigger value="validation" className="flex items-center gap-2">
+            <TestTube className="h-4 w-4" />
+            Validação
+          </TabsTrigger>
+          <TabsTrigger value="config" className="flex items-center gap-2">
+            <Settings className="h-4 w-4" />
+            Configuração
+          </TabsTrigger>
+          <TabsTrigger value="status" className="flex items-center gap-2">
+            <Shield className="h-4 w-4" />
+            Status
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="invites" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Gerenciar Convites</CardTitle>
+              <CardDescription>
+                Gerencie todos os convites enviados para novos usuários
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <SimpleInvitesTab
+                invites={invites}
+                loading={invitesLoading}
+                onInvitesChange={handleInvitesChange}
+              />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="monitor" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Dashboard de Monitoramento</CardTitle>
+              <CardDescription>
+                Acompanhe estatísticas em tempo real do sistema de emails
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <EmailMonitoringDashboard />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="validation" className="space-y-4">
+          <SystemValidationPanel />
+        </TabsContent>
+
+        <TabsContent value="config" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Validação e Configuração</CardTitle>
+              <CardDescription>
+                Teste e valide a configuração do sistema Resend
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ResendConfigValidator />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="status" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Status do Sistema</CardTitle>
+              <CardDescription>
+                Visualize o status atual do sistema de emails profissional
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <EmailStatusMonitor />
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+
+      {/* Informações do Sistema */}
+      <Card className="bg-gradient-to-r from-blue-50 to-green-50 border-blue-200">
+        <CardContent className="pt-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+            <div className="space-y-1">
+              <h4 className="font-medium text-blue-900">✨ Sistema Profissional</h4>
+              <p className="text-blue-700">Template React Email com design da Viver de IA</p>
+            </div>
+            <div className="space-y-1">
+              <h4 className="font-medium text-green-900">🚀 Alta Performance</h4>
+              <p className="text-green-700">Resend Premium com fallback automático</p>
+            </div>
+            <div className="space-y-1">
+              <h4 className="font-medium text-purple-900">📊 Monitoramento</h4>
+              <p className="text-purple-700">Logs detalhados e estatísticas em tempo real</p>
+            </div>
+          </div>
         </CardContent>
       </Card>
     </div>
