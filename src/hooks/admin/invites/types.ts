@@ -1,5 +1,5 @@
 
-// Tipos simplificados para o sistema de convites
+// Tipos simplificados para o sistema de convites 100% simples
 export interface Invite {
   id: string;
   email: string;

@@ -1303,51 +1303,39 @@ export type Database = {
       }
       invites: {
         Row: {
-          channel_preference: string | null
           created_at: string
           created_by: string
           email: string
-          email_id: string | null
-          email_provider: string | null
           expires_at: string
           id: string
           last_sent_at: string | null
           notes: string | null
-          phone: string | null
           role_id: string
           send_attempts: number | null
           token: string
           used_at: string | null
         }
         Insert: {
-          channel_preference?: string | null
           created_at?: string
           created_by: string
           email: string
-          email_id?: string | null
-          email_provider?: string | null
           expires_at: string
           id?: string
           last_sent_at?: string | null
           notes?: string | null
-          phone?: string | null
           role_id: string
           send_attempts?: number | null
           token: string
           used_at?: string | null
         }
         Update: {
-          channel_preference?: string | null
           created_at?: string
           created_by?: string
           email?: string
-          email_id?: string | null
-          email_provider?: string | null
           expires_at?: string
           id?: string
           last_sent_at?: string | null
           notes?: string | null
-          phone?: string | null
           role_id?: string
           send_attempts?: number | null
           token?: string
@@ -4877,17 +4865,13 @@ export type Database = {
       validate_invite_token_enhanced: {
         Args: { p_token: string }
         Returns: {
-          channel_preference: string | null
           created_at: string
           created_by: string
           email: string
-          email_id: string | null
-          email_provider: string | null
           expires_at: string
           id: string
           last_sent_at: string | null
           notes: string | null
-          phone: string | null
           role_id: string
           send_attempts: number | null
           token: string
