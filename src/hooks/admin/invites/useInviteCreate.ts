@@ -35,28 +35,39 @@ export function useInviteCreate() {
 
       console.log(`✅ [${requestId}] Convite criado no banco:`, createResult);
 
-      // ETAPA 2: Buscar dados do convite com query simples
+      // ETAPA 2: Buscar dados do convite - Query mais simples
       console.log(`🔍 [${requestId}] Buscando dados do convite...`);
       const { data: inviteData, error: fetchError } = await supabase
         .from('invites')
-        .select('*')
+        .select(`
+          id, email, token, role_id, expires_at, used_at, created_by, created_at, notes,
+          send_attempts, last_sent_at
+        `)
         .eq('id', createResult.invite_id)
         .single();
 
       if (fetchError || !inviteData) {
         console.error(`❌ [${requestId}] Erro ao buscar convite:`, fetchError);
+        console.log(`🔄 [${requestId}] Usando dados de fallback...`);
         
-        // FALLBACK: Usar dados básicos do create_invite
+        // FALLBACK: Usar dados básicos com todas as propriedades necessárias
         const fallbackInvite = {
           id: createResult.invite_id,
           email: params.email,
           token: createResult.token,
+          role_id: params.roleId,
           expires_at: createResult.expires_at,
+          used_at: null,
+          created_by: null, // Será preenchido pelo contexto de auth
+          created_at: new Date().toISOString(),
+          notes: params.notes || null,
+          send_attempts: 0,
+          last_sent_at: null,
           role: { name: 'Usuário' },
           creator: { name: 'Administrador' }
         };
         
-        console.log(`🔄 [${requestId}] Usando dados de fallback:`, fallbackInvite);
+        console.log(`🔄 [${requestId}] Dados de fallback criados:`, fallbackInvite);
         
         // Prosseguir com envio de email usando fallback
         const inviteUrl = `${window.location.origin}/accept-invite/${createResult.token}`;
