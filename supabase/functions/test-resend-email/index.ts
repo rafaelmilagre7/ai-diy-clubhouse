@@ -4,7 +4,8 @@ import { Resend } from "npm:resend@2.0.0";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-function-timeout",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
 interface TestEmailRequest {
@@ -12,126 +13,119 @@ interface TestEmailRequest {
 }
 
 const handler = async (req: Request): Promise<Response> => {
+  const requestId = crypto.randomUUID().substring(0, 8);
+  console.log(`📧 [TEST-EMAIL-${requestId}] Nova requisição: ${req.method}`);
+  
+  // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
+    console.log(`🔄 [TEST-EMAIL-${requestId}] CORS Preflight - respondendo`);
+    return new Response(null, { 
+      headers: corsHeaders,
+      status: 200 
+    });
   }
 
+  if (req.method !== "POST") {
+    console.log(`❌ [TEST-EMAIL-${requestId}] Método não permitido: ${req.method}`);
+    return new Response(
+      JSON.stringify({ error: "Método não permitido" }), 
+      { 
+        status: 405, 
+        headers: { "Content-Type": "application/json", ...corsHeaders } 
+      }
+    );
+  }
+
+  const startTime = Date.now();
+
   try {
-    console.log("📧 [TEST-EMAIL] Iniciando envio de email de teste...");
+    console.log(`📨 [TEST-EMAIL-${requestId}] Processando requisição POST...`);
     
     const { email }: TestEmailRequest = await req.json();
-
-    // Validação básica do email
+    
     if (!email || !email.includes('@')) {
-      console.error("❌ [TEST-EMAIL] Email inválido fornecido:", email);
-      throw new Error('Email inválido');
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          error: "Email inválido" 
+        }),
+        {
+          status: 400,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        }
+      );
     }
 
-    // Validação mais robusta do email
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      console.error("❌ [TEST-EMAIL] Formato de email inválido:", email);
-      throw new Error('Formato de email inválido');
-    }
-
-    console.log("✅ [TEST-EMAIL] Email válido:", email);
-
+    console.log(`🔑 [TEST-EMAIL-${requestId}] Verificando configurações...`);
+    
     const apiKey = Deno.env.get("RESEND_API_KEY");
     if (!apiKey) {
-      console.error("❌ [TEST-EMAIL] API key do Resend não configurada");
-      throw new Error('API key do Resend não configurada');
+      console.error(`❌ [TEST-EMAIL-${requestId}] API key não configurada`);
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: "RESEND_API_KEY não configurada nos secrets"
+        }),
+        {
+          status: 500,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        }
+      );
     }
 
-    console.log("🔑 [TEST-EMAIL] API key encontrada, inicializando Resend...");
+    console.log(`✅ [TEST-EMAIL-${requestId}] API key encontrada, enviando email...`);
 
-    let resend;
-    try {
-      resend = new Resend(apiKey);
-    } catch (initError) {
-      console.error("❌ [TEST-EMAIL] Erro ao inicializar Resend:", initError);
-      throw new Error('Erro na inicialização do Resend');
-    }
-
-    console.log("📤 [TEST-EMAIL] Enviando email para:", email);
-
+    const resend = new Resend(apiKey);
+    
     const emailResponse = await resend.emails.send({
-      from: "Diagnóstico <diagnostico@viverdeia.ai>",
+      from: "Sistema Viver de IA <sistema@viverdeia.ai>",
       to: [email],
       subject: "🔧 Teste de Diagnóstico - Sistema Corrigido",
       html: `
-        <!DOCTYPE html>
-        <html>
-          <head>
-            <meta charset="utf-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>Teste de Diagnóstico</title>
-          </head>
-          <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 20px; background-color: #f5f5f5;">
-            <div style="max-width: 600px; margin: 0 auto; background-color: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
-              <div style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); padding: 20px; text-align: center;">
-                <h1 style="color: white; margin: 0; font-size: 24px;">✅ Sistema Corrigido com Sucesso!</h1>
-                <p style="color: rgba(255,255,255,0.9); margin: 10px 0 0 0; font-size: 14px;">Diagnóstico de Email - Viver de IA</p>
-              </div>
-              
-              <div style="padding: 30px 20px;">
-                <h2 style="color: #333; margin-top: 0;">🎉 Todas as Correções Implementadas!</h2>
-                <p>Este email confirma que todas as correções foram aplicadas com sucesso no sistema de email da plataforma Viver de IA.</p>
-                
-                <div style="background-color: #f0fdf4; border-left: 4px solid #10b981; padding: 15px; margin: 20px 0;">
-                  <h3 style="margin-top: 0; color: #065f46;">📋 Correções Implementadas:</h3>
-                  <ul style="margin-bottom: 0; color: #047857;">
-                    <li><strong>✅ Validação robusta da API key</strong></li>
-                    <li><strong>✅ Verificação de domínio aprimorada</strong></li>
-                    <li><strong>✅ Logs detalhados para debugging</strong></li>
-                    <li><strong>✅ Tratamento de erros melhorado</strong></li>
-                    <li><strong>✅ Timeouts e fallbacks implementados</strong></li>
-                    <li><strong>✅ Interface administrativa aprimorada</strong></li>
-                  </ul>
-                </div>
-                
-                <div style="background-color: #f8f9fa; padding: 15px; border-radius: 6px; margin: 20px 0;">
-                  <h3 style="margin-top: 0; color: #495057;">📊 Detalhes do Teste:</h3>
-                  <ul style="margin-bottom: 0;">
-                    <li><strong>Data/Hora:</strong> ${new Date().toLocaleString('pt-BR')}</li>
-                    <li><strong>Email de Destino:</strong> ${email}</li>
-                    <li><strong>Provedor:</strong> Resend (Corrigido)</li>
-                    <li><strong>Domínio:</strong> viverdeia.ai</li>
-                    <li><strong>Status:</strong> Sistema Operacional</li>
-                  </ul>
-                </div>
-                
-                <p style="color: #6c757d; font-size: 14px; margin-bottom: 0;">
-                  Este email confirma que o sistema de diagnósticos foi corrigido e está funcionando perfeitamente! 
-                  Todas as melhorias foram implementadas com sucesso. 🚀
-                </p>
-              </div>
-              
-              <div style="background-color: #f8f9fa; padding: 20px; text-align: center; border-top: 1px solid #e9ecef;">
-                <p style="margin: 0; font-size: 12px; color: #6c757d;">
-                  Viver de IA - Plataforma de Automação e Inteligência Artificial
-                </p>
-                <p style="margin: 5px 0 0 0; font-size: 12px; color: #10b981; font-weight: bold;">
-                  ✅ Sistema de Email Totalmente Operacional
-                </p>
-              </div>
-            </div>
-          </body>
-        </html>
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h1 style="color: #2563eb;">✅ Sistema de Email Operacional</h1>
+          <p>Este é um email de teste para verificar se o sistema de envio está funcionando corretamente.</p>
+          
+          <div style="background: #f3f4f6; padding: 16px; border-radius: 8px; margin: 16px 0;">
+            <h3 style="margin: 0; color: #374151;">📊 Detalhes do Teste:</h3>
+            <ul style="margin: 8px 0;">
+              <li><strong>Timestamp:</strong> ${new Date().toISOString()}</li>
+              <li><strong>Request ID:</strong> ${requestId}</li>
+              <li><strong>Sistema:</strong> Resend API</li>
+              <li><strong>Status:</strong> Funcionando corretamente</li>
+            </ul>
+          </div>
+
+          <p>Se você recebeu este email, significa que:</p>
+          <ul>
+            <li>✅ A API key do Resend está configurada corretamente</li>
+            <li>✅ O domínio viverdeia.ai está validado</li>
+            <li>✅ A Edge Function está operacional</li>
+            <li>✅ O sistema de convites deve funcionar normalmente</li>
+          </ul>
+
+          <hr style="margin: 24px 0; border: none; border-top: 1px solid #e5e7eb;">
+          <p style="color: #6b7280; font-size: 14px;">
+            Este é um email automático de teste do sistema Viver de IA.<br>
+            Não é necessário responder a este email.
+          </p>
+        </div>
       `,
     });
 
-    console.log("✅ [TEST-EMAIL] Email enviado com sucesso:", {
-      id: emailResponse.data?.id,
-      to: email
+    const responseTime = Date.now() - startTime;
+    console.log(`✅ [TEST-EMAIL-${requestId}] Email enviado com sucesso:`, {
+      emailId: emailResponse.data?.id,
+      responseTime
     });
 
     return new Response(
-      JSON.stringify({ 
-        success: true, 
-        emailId: emailResponse.data?.id,
+      JSON.stringify({
+        success: true,
         message: "Email de teste enviado com sucesso",
-        timestamp: new Date().toISOString(),
-        recipient: email
+        emailId: emailResponse.data?.id,
+        responseTime,
+        requestId
       }),
       {
         status: 200,
@@ -140,33 +134,20 @@ const handler = async (req: Request): Promise<Response> => {
     );
 
   } catch (error: any) {
-    console.error("❌ [TEST-EMAIL] Erro no envio:", error);
+    console.error(`❌ [TEST-EMAIL-${requestId}] Erro crítico:`, {
+      message: error.message,
+      stack: error.stack?.substring(0, 500),
+      type: error.constructor.name
+    });
     
-    // Categorizar os erros para melhor feedback
-    let errorCategory = "unknown";
-    let userMessage = error.message;
-    
-    if (error.message?.includes('API key')) {
-      errorCategory = "api_key";
-      userMessage = "Problema com a API key do Resend";
-    } else if (error.message?.includes('domain')) {
-      errorCategory = "domain";
-      userMessage = "Problema com o domínio de envio";
-    } else if (error.message?.includes('quota') || error.message?.includes('limit')) {
-      errorCategory = "quota";
-      userMessage = "Limite de envio atingido";
-    } else if (error.message?.includes('email') && error.message?.includes('invalid')) {
-      errorCategory = "email_format";
-      userMessage = "Formato de email inválido";
-    }
+    const responseTime = Date.now() - startTime;
     
     return new Response(
-      JSON.stringify({ 
+      JSON.stringify({
         success: false,
-        error: userMessage,
-        category: errorCategory,
-        timestamp: new Date().toISOString(),
-        details: error.message
+        error: error.message || "Erro interno do servidor",
+        responseTime,
+        requestId
       }),
       {
         status: 500,
@@ -176,4 +157,5 @@ const handler = async (req: Request): Promise<Response> => {
   }
 };
 
+console.log("📧 [TEST-EMAIL] Edge Function carregada e pronta!");
 serve(handler);

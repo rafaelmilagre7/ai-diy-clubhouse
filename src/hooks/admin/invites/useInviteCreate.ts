@@ -15,7 +15,7 @@ interface CreateInviteParams {
 
 export const useInviteCreate = () => {
   const [loading, setLoading] = useState(false);
-  const [currentStep, setCurrentStep] = useState<'idle' | 'creating' | 'sending' | 'complete'>('idle');
+  const [currentStep, setCurrentStep] = useState<'idle' | 'creating' | 'sending' | 'retrying' | 'complete'>('idle');
   const { toast } = useToast();
   const { sendInviteEmail, getInviteLink } = useInviteEmailService();
 
@@ -31,7 +31,7 @@ export const useInviteCreate = () => {
       setLoading(true);
       setCurrentStep('creating');
 
-      console.log("🚀 Iniciando processo completo de convite:", {
+      console.log("🚀 Iniciando processo melhorado de convite:", {
         email,
         roleId,
         expiresIn,
@@ -77,7 +77,7 @@ export const useInviteCreate = () => {
         expiresAt: result.expires_at
       });
 
-      // ETAPA 2: Buscar informações do papel para o email
+      // ETAPA 2: Preparar dados do email
       setCurrentStep('sending');
       
       toast({
@@ -98,15 +98,15 @@ export const useInviteCreate = () => {
       const roleName = roleData?.name || 'Membro';
       const inviteUrl = getInviteLink(result.token);
 
-      console.log("📧 Enviando email com dados:", {
+      console.log("📧 Tentando enviar email:", {
         email,
         inviteUrl,
         roleName,
         expiresAt: result.expires_at
       });
 
-      // ETAPA 3: Enviar email
-      const emailResult = await sendInviteEmail({
+      // ETAPA 3: Enviar email com retry automático
+      let emailResult = await sendInviteEmail({
         email,
         inviteUrl,
         roleName,
@@ -116,21 +116,55 @@ export const useInviteCreate = () => {
         forceResend: true
       });
 
-      if (!emailResult.success) {
-        console.error('❌ Falha no envio do email:', emailResult.error);
+      // Se falhou na primeira tentativa, tentar novamente após 2 segundos
+      if (!emailResult.success && !emailResult.error?.includes('invalid') && !emailResult.error?.includes('domain')) {
+        console.log("⚠️ Primeira tentativa falhou, tentando novamente...");
+        setCurrentStep('retrying');
         
-        // Marcar tentativa de envio mesmo se falhou
-        await supabase.rpc('update_invite_send_attempt', {
-          invite_id: result.invite_id
+        toast({
+          title: "Tentando novamente...",
+          description: "Primeira tentativa falhou, reenviando email",
         });
+
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        
+        emailResult = await sendInviteEmail({
+          email,
+          inviteUrl,
+          roleName,
+          expiresAt: result.expires_at,
+          notes,
+          inviteId: result.invite_id,
+          forceResend: true
+        });
+      }
+
+      // Registrar tentativa de envio independente do resultado
+      await supabase.rpc('update_invite_send_attempt', {
+        invite_id: result.invite_id
+      });
+
+      if (!emailResult.success) {
+        console.error('❌ Falha definitiva no envio do email:', emailResult.error);
+        
+        const errorMsg = emailResult.error || 'Erro desconhecido no envio';
+        let suggestion = 'Tente reenviar manualmente.';
+        
+        if (errorMsg.includes('domain')) {
+          suggestion = 'Verifique se o domínio viverdeia.ai está validado no Resend.';
+        } else if (errorMsg.includes('API')) {
+          suggestion = 'Verifique a configuração da API key do Resend.';
+        } else if (errorMsg.includes('timeout')) {
+          suggestion = 'Problema de conectividade. Tente novamente em alguns minutos.';
+        }
 
         toast({
           title: "Convite criado, mas email falhou",
-          description: `Convite foi criado mas não foi possível enviar o email. ${emailResult.suggestion || 'Tente reenviar manualmente.'}`,
+          description: `${errorMsg}. ${suggestion}`,
           variant: "destructive",
+          duration: 8000,
         });
 
-        // Retornar sucesso parcial para permitir reenvio
         return {
           invite_id: result.invite_id,
           token: result.token,
@@ -138,14 +172,10 @@ export const useInviteCreate = () => {
           status: 'partial_success' as const,
           message: 'Convite criado mas email não foi enviado',
           email_sent: false,
-          email_error: emailResult.error
+          email_error: errorMsg,
+          suggestion
         };
       }
-
-      // ETAPA 4: Atualizar registro de envio bem-sucedido
-      await supabase.rpc('update_invite_send_attempt', {
-        invite_id: result.invite_id
-      });
 
       setCurrentStep('complete');
 
@@ -155,7 +185,7 @@ export const useInviteCreate = () => {
         duration: 6000,
       });
 
-      console.log("🎉 Processo completo finalizado:", {
+      console.log("🎉 Processo completo finalizado com sucesso:", {
         inviteId: result.invite_id,
         emailSent: true,
         emailStrategy: emailResult.strategy,
@@ -204,6 +234,7 @@ export const useInviteCreate = () => {
         title: isCreationError ? "Erro ao criar convite" : "Erro no envio do email",
         description: errorMessage,
         variant: "destructive",
+        duration: 8000,
       });
       
       throw error;
@@ -218,6 +249,7 @@ export const useInviteCreate = () => {
     loading,
     currentStep,
     isCreating: currentStep === 'creating',
-    isSending: currentStep === 'sending'
+    isSending: currentStep === 'sending',
+    isRetrying: currentStep === 'retrying'
   };
 };

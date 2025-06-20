@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { Loader2, Plus, Clock, Mail, CheckCircle } from "lucide-react";
+import { Loader2, Plus, Clock, Mail, CheckCircle, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import {
   Dialog,
@@ -34,7 +34,7 @@ const SimpleCreateInviteDialog = ({ roles, onInviteCreated }: SimpleCreateInvite
   const [roleId, setRoleId] = useState("");
   const [notes, setNotes] = useState("");
   const [open, setOpen] = useState(false);
-  const { createInvite, loading, currentStep, isCreating, isSending } = useInviteCreate();
+  const { createInvite, loading, currentStep, isCreating, isSending, isRetrying } = useInviteCreate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -61,7 +61,7 @@ const SimpleCreateInviteDialog = ({ roles, onInviteCreated }: SimpleCreateInvite
         if (result.status === 'success') {
           toast.success(`Convite enviado para ${email} com sucesso!`);
         } else if (result.status === 'partial_success') {
-          toast.warning(`Convite criado para ${email}, mas email não foi enviado. Tente reenviar manualmente.`);
+          toast.warning(`Convite criado para ${email}, mas email não foi enviado. ${result.suggestion || 'Tente reenviar manualmente.'}`);
         }
       }
     } catch (error) {
@@ -76,6 +76,8 @@ const SimpleCreateInviteDialog = ({ roles, onInviteCreated }: SimpleCreateInvite
         return <Clock className="mr-2 h-4 w-4 animate-pulse text-blue-500" />;
       case 'sending':
         return <Mail className="mr-2 h-4 w-4 animate-pulse text-orange-500" />;
+      case 'retrying':
+        return <RefreshCw className="mr-2 h-4 w-4 animate-spin text-yellow-500" />;
       case 'complete':
         return <CheckCircle className="mr-2 h-4 w-4 text-green-500" />;
       default:
@@ -86,8 +88,24 @@ const SimpleCreateInviteDialog = ({ roles, onInviteCreated }: SimpleCreateInvite
   const getButtonText = () => {
     if (isCreating) return "Criando convite...";
     if (isSending) return "Enviando email...";
+    if (isRetrying) return "Tentando novamente...";
     if (loading) return "Processando...";
     return "Criar Convite";
+  };
+
+  const getStepDescription = () => {
+    switch (currentStep) {
+      case 'creating':
+        return "Criando convite no sistema...";
+      case 'sending':
+        return "Enviando email de convite...";
+      case 'retrying':
+        return "Primeira tentativa falhou, reenviando...";
+      case 'complete':
+        return "Convite criado e enviado com sucesso!";
+      default:
+        return "";
+    }
   };
 
   return (
@@ -112,11 +130,13 @@ const SimpleCreateInviteDialog = ({ roles, onInviteCreated }: SimpleCreateInvite
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
               <div className="flex items-center text-sm text-blue-800">
                 {getStepIcon()}
-                <span>
-                  {isCreating && "Criando convite no sistema..."}
-                  {isSending && "Enviando email de convite..."}
-                </span>
+                <span>{getStepDescription()}</span>
               </div>
+              {isRetrying && (
+                <div className="mt-2 text-xs text-yellow-700">
+                  ⚠️ Sistema implementando retry automático para garantir entrega
+                </div>
+              )}
             </div>
           )}
           
