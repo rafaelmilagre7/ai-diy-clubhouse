@@ -72,9 +72,18 @@ const handler = async (req: Request): Promise<Response> => {
     
     console.log(`📱 [SEND-INVITE-WHATSAPP] Enviando para: ${whatsappNumber}, Token: ${token}, Reenvio: ${isResend}`);
 
+    // Validar configurações necessárias
     const whatsappToken = Deno.env.get("WHATSAPP_API_TOKEN");
+    const phoneNumberId = Deno.env.get("WHATSAPP_PHONE_NUMBER_ID");
+    
     if (!whatsappToken) {
-      throw new Error("WHATSAPP_API_TOKEN não configurado");
+      console.error("❌ [SEND-INVITE-WHATSAPP] WHATSAPP_API_TOKEN não configurado");
+      throw new Error("WHATSAPP_API_TOKEN não configurado no Supabase");
+    }
+
+    if (!phoneNumberId) {
+      console.error("❌ [SEND-INVITE-WHATSAPP] WHATSAPP_PHONE_NUMBER_ID não configurado");
+      throw new Error("WHATSAPP_PHONE_NUMBER_ID não configurado no Supabase");
     }
 
     // Formatar número do WhatsApp
@@ -84,8 +93,12 @@ const handler = async (req: Request): Promise<Response> => {
     // Preparar mensagem
     const message = getWhatsAppMessage(token, isResend, notes);
     
+    // Construir URL da API
+    const apiUrl = `https://graph.facebook.com/v18.0/${phoneNumberId}/messages`;
+    console.log(`📱 [SEND-INVITE-WHATSAPP] URL da API: ${apiUrl}`);
+    
     // Enviar mensagem via WhatsApp Business API
-    const whatsappResponse = await fetch(`https://graph.facebook.com/v18.0/YOUR_PHONE_NUMBER_ID/messages`, {
+    const whatsappResponse = await fetch(apiUrl, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${whatsappToken}`,
@@ -101,22 +114,52 @@ const handler = async (req: Request): Promise<Response> => {
       })
     });
 
+    const responseText = await whatsappResponse.text();
+    console.log(`📱 [SEND-INVITE-WHATSAPP] Resposta raw da API:`, responseText);
+
     if (!whatsappResponse.ok) {
-      const errorData = await whatsappResponse.json();
-      console.error(`❌ [SEND-INVITE-WHATSAPP] Erro da API:`, errorData);
-      throw new Error(`WhatsApp API Error: ${errorData.error?.message || 'Erro desconhecido'}`);
+      let errorData;
+      try {
+        errorData = JSON.parse(responseText);
+      } catch (e) {
+        errorData = { error: { message: responseText } };
+      }
+      
+      console.error(`❌ [SEND-INVITE-WHATSAPP] Erro da API (${whatsappResponse.status}):`, errorData);
+      
+      // Mapear erros comuns para mensagens mais amigáveis
+      let errorMessage = errorData.error?.message || 'Erro desconhecido da API do WhatsApp';
+      
+      if (errorMessage.includes('Invalid phone number')) {
+        errorMessage = `Número de telefone inválido: ${whatsappNumber}`;
+      } else if (errorMessage.includes('Unsupported request')) {
+        errorMessage = 'Configuração da API do WhatsApp inválida';
+      } else if (errorMessage.includes('Invalid access token')) {
+        errorMessage = 'Token de acesso do WhatsApp inválido ou expirado';
+      }
+      
+      throw new Error(`WhatsApp API Error: ${errorMessage}`);
     }
 
-    const responseData = await whatsappResponse.json();
-    console.log(`✅ [SEND-INVITE-WHATSAPP] Mensagem enviada:`, responseData.messages?.[0]?.id);
+    let responseData;
+    try {
+      responseData = JSON.parse(responseText);
+    } catch (e) {
+      console.error(`❌ [SEND-INVITE-WHATSAPP] Erro ao parsear resposta:`, e);
+      throw new Error('Resposta inválida da API do WhatsApp');
+    }
+
+    const messageId = responseData.messages?.[0]?.id;
+    console.log(`✅ [SEND-INVITE-WHATSAPP] Mensagem enviada com sucesso. ID: ${messageId}`);
 
     return new Response(
       JSON.stringify({
         success: true,
         message: "Mensagem de convite enviada por WhatsApp com sucesso",
-        messageId: responseData.messages?.[0]?.id,
+        messageId: messageId,
         whatsappNumber: formattedNumber,
-        inviteId
+        inviteId,
+        apiResponse: responseData
       }),
       {
         status: 200,
@@ -131,7 +174,8 @@ const handler = async (req: Request): Promise<Response> => {
       JSON.stringify({
         success: false,
         error: error.message || "Erro interno do servidor",
-        message: "Falha ao enviar mensagem de convite por WhatsApp"
+        message: "Falha ao enviar mensagem de convite por WhatsApp",
+        details: error.stack ? error.stack.split('\n').slice(0, 3) : undefined
       }),
       {
         status: 500,
@@ -141,5 +185,5 @@ const handler = async (req: Request): Promise<Response> => {
   }
 };
 
-console.log("📱 [SEND-INVITE-WHATSAPP] Edge Function carregada!");
+console.log("📱 [SEND-INVITE-WHATSAPP] Edge Function carregada com melhorias!");
 serve(handler);
