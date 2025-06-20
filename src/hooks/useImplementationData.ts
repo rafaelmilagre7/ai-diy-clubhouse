@@ -32,11 +32,11 @@ export const useImplementationData = () => {
         let query = supabase
           .from("solutions")
           .select("*")
-          .eq("id", id);
+          .eq("id", id as any);
           
         // Se não for admin, filtra apenas soluções publicadas
         if (!isAdmin) {
-          query = query.eq("published", true);
+          query = query.eq("published", true as any);
         }
         
         const { data: solutionData, error: solutionError } = await query.maybeSingle();
@@ -67,13 +67,13 @@ export const useImplementationData = () => {
           return;
         }
         
-        setSolution(solutionData as Solution);
+        setSolution(solutionData as unknown as Solution);
         
         // Fetch modules for this solution
         const { data: modulesData, error: modulesError } = await supabase
           .from("modules")
           .select("*")
-          .eq("solution_id", id)
+          .eq("solution_id", id as any)
           .order("module_order", { ascending: true });
         
         if (modulesError) {
@@ -82,13 +82,13 @@ export const useImplementationData = () => {
         }
         
         if (modulesData && modulesData.length > 0) {
-          setModules(modulesData as Module[]);
+          setModules(modulesData as unknown as Module[]);
         } else {
           // Create placeholder module for implementation screen
           const placeholderModule = {
             id: `placeholder-module`,
             solution_id: id,
-            title: solutionData?.title || "Implementação",
+            title: (solutionData as any)?.title || "Implementação",
             content: {},
             type: "implementation",
             module_order: 0,
@@ -96,7 +96,7 @@ export const useImplementationData = () => {
             updated_at: new Date().toISOString(),
           };
           
-          setModules([placeholderModule as Module]);
+          setModules([placeholderModule as unknown as Module]);
         }
         
         // Fetch user progress
@@ -105,20 +105,20 @@ export const useImplementationData = () => {
             const { data: progressData, error: progressError } = await supabase
               .from("progress")
               .select("*")
-              .eq("user_id", user.id)
-              .eq("solution_id", id)
+              .eq("user_id", user.id as any)
+              .eq("solution_id", id as any)
               .maybeSingle();
             
             if (progressError) {
               logError("Erro ao buscar progresso:", progressError);
             } else if (progressData) {
               // Cast to Progress type - now with completed_at instead of completion_date
-              setProgress(progressData as Progress);
+              setProgress(progressData as unknown as Progress);
               
               // Parse completed modules from progress data
               // Handle the case where completed_modules might not exist in the database
-              if (progressData.completed_modules && Array.isArray(progressData.completed_modules)) {
-                setCompletedModules(progressData.completed_modules);
+              if ((progressData as any).completed_modules && Array.isArray((progressData as any).completed_modules)) {
+                setCompletedModules((progressData as any).completed_modules);
               } else {
                 log("No completed_modules found in progress data, initializing as empty array");
                 setCompletedModules([]);
@@ -134,14 +134,14 @@ export const useImplementationData = () => {
                   is_completed: false,
                   completed_modules: [], // Initialize as empty array
                   last_activity: new Date().toISOString(),
-                })
+                } as any)
                 .select()
                 .single();
               
               if (createError) {
                 logError("Erro ao criar progresso:", createError);
               } else if (newProgress) {
-                setProgress(newProgress as Progress);
+                setProgress(newProgress as unknown as Progress);
                 setCompletedModules([]);
               }
             }

@@ -94,11 +94,7 @@ export const ToolSidebar = ({ tool }: ToolSidebarProps) => {
             )}
             
             <div className="pt-2">
-              <MemberBenefitModal
-                tool={tool}
-                variant="default"
-                size="default"
-              />
+              <MemberBenefitModal tool={tool} />
             </div>
           </CardContent>
         </Card>

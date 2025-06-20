@@ -64,7 +64,7 @@ export const useForumStats = () => {
         const { count: solvedCount, error: solvedError } = await supabase
           .from('forum_topics')
           .select('*', { count: 'exact', head: true })
-          .eq('is_solved', true);
+          .eq('is_solved', true as any);
           
         if (solvedError) {
           console.error("Erro ao buscar tópicos resolvidos:", solvedError.message);
@@ -73,8 +73,8 @@ export const useForumStats = () => {
         
         // Combinar e obter usuários únicos
         const allUserIds = [
-          ...(activeUsers?.map(u => u.user_id) || []), 
-          ...(activePosterUsers?.map(u => u.user_id) || [])
+          ...((activeUsers as any)?.map((u: any) => (u as any).user_id) || []), 
+          ...((activePosterUsers as any)?.map((u: any) => (u as any).user_id) || [])
         ];
         const uniqueUserIds = [...new Set(allUserIds)];
         
