@@ -40,73 +40,113 @@ export const useResendHealthCheck = () => {
     setIsChecking(true);
     
     const startTime = Date.now();
-    const attempts = forceRefresh ? 3 : 1;
+    const maxAttempts = forceRefresh ? 3 : 1;
     
     try {
-      for (let attempt = 1; attempt <= attempts; attempt++) {
-        console.log(`🔄 [RESEND-HEALTH] Tentativa ${attempt}/${attempts}`);
+      for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+        console.log(`🔄 [RESEND-HEALTH] Tentativa ${attempt}/${maxAttempts}`);
         
-        const { data, error } = await supabase.functions.invoke('test-resend-health', {
-          body: { 
-            forceRefresh,
-            attempt,
-            timestamp: new Date().toISOString()
-          }
-        });
-
-        const responseTime = Date.now() - startTime;
-
-        setDebugInfo({
-          timestamp: new Date().toISOString(),
-          attempts: attempt,
-          method: 'POST',
-          responseStatus: error ? 500 : 200,
-          errorDetails: error?.message,
-          headers: data?.headers
-        });
-
-        if (!error && data) {
-          console.log('✅ [RESEND-HEALTH] Verificação bem-sucedida:', data);
-          
-          setHealthStatus({
-            isHealthy: data.healthy || false,
-            apiKeyValid: data.apiKeyValid || false,
-            connectivity: data.connectivity || 'disconnected',
-            domainValid: data.domainValid || false,
-            responseTime,
-            issues: data.issues || [],
-            lastError: data.lastError,
-            lastChecked: new Date(),
+        try {
+          // Configurar timeout mais longo e headers explícitos
+          const { data, error } = await supabase.functions.invoke('test-resend-health', {
+            body: { 
+              forceRefresh,
+              attempt,
+              timestamp: new Date().toISOString()
+            },
+            headers: {
+              'Content-Type': 'application/json',
+            }
           });
-          
-          if (data.healthy) {
-            toast.success('Sistema de email operacional');
-            break;
-          } else if (attempt === attempts) {
-            toast.warning('Sistema com problemas detectados');
+
+          const responseTime = Date.now() - startTime;
+
+          setDebugInfo({
+            timestamp: new Date().toISOString(),
+            attempts: attempt,
+            method: 'POST',
+            responseStatus: error ? 500 : 200,
+            errorDetails: error?.message,
+            headers: data?.headers
+          });
+
+          if (!error && data) {
+            console.log('✅ [RESEND-HEALTH] Verificação bem-sucedida:', data);
+            
+            setHealthStatus({
+              isHealthy: data.healthy || false,
+              apiKeyValid: data.apiKeyValid || false,
+              connectivity: data.connectivity || 'disconnected',
+              domainValid: data.domainValid || false,
+              responseTime,
+              issues: data.issues || [],
+              lastError: data.lastError,
+              lastChecked: new Date(),
+            });
+            
+            if (data.healthy) {
+              toast.success('Sistema de email operacional');
+              return; // Success, exit retry loop
+            } else if (attempt === maxAttempts) {
+              toast.warning('Sistema com problemas detectados');
+            }
+          } else {
+            console.error(`❌ [RESEND-HEALTH] Erro na tentativa ${attempt}:`, error);
+            
+            // Se é timeout ou erro de rede, tentar novamente
+            if (error?.message?.includes('timeout') || 
+                error?.message?.includes('network') ||
+                error?.message?.includes('Failed to send')) {
+              
+              if (attempt < maxAttempts) {
+                console.log(`⏳ [RESEND-HEALTH] Aguardando antes da próxima tentativa...`);
+                await new Promise(resolve => setTimeout(resolve, 2000 * attempt)); // Backoff exponencial
+                continue;
+              }
+            }
+            
+            if (attempt === maxAttempts) {
+              setHealthStatus({
+                isHealthy: false,
+                apiKeyValid: false,
+                connectivity: 'error',
+                domainValid: false,
+                responseTime,
+                issues: [`Erro na comunicação: ${error?.message || 'Desconhecido'}`],
+                lastError: error?.message,
+                lastChecked: new Date(),
+              });
+              
+              toast.error('Falha na verificação do sistema de email');
+            }
           }
-        } else {
-          console.error(`❌ [RESEND-HEALTH] Erro na tentativa ${attempt}:`, error);
+        } catch (invokeError: any) {
+          console.error(`❌ [RESEND-HEALTH] Erro de invocação na tentativa ${attempt}:`, invokeError);
           
-          if (attempt === attempts) {
+          if (attempt === maxAttempts) {
             setHealthStatus({
               isHealthy: false,
               apiKeyValid: false,
               connectivity: 'error',
               domainValid: false,
-              responseTime,
-              issues: [`Erro na comunicação: ${error?.message || 'Desconhecido'}`],
-              lastError: error?.message,
+              responseTime: Date.now() - startTime,
+              issues: [`Erro de comunicação: ${invokeError.message}`],
+              lastError: invokeError.message,
               lastChecked: new Date(),
             });
             
-            toast.error('Falha na verificação do sistema de email');
+            setDebugInfo({
+              timestamp: new Date().toISOString(),
+              attempts: attempt,
+              method: 'POST',
+              errorDetails: invokeError.message
+            });
+            
+            toast.error('Erro crítico na verificação');
+          } else {
+            // Aguardar antes da próxima tentativa
+            await new Promise(resolve => setTimeout(resolve, 2000 * attempt));
           }
-        }
-        
-        // Aguardar antes da próxima tentativa
-        if (attempt < attempts) {
-          await new Promise(resolve => setTimeout(resolve, 2000));
         }
       }
     } catch (err: any) {
@@ -144,7 +184,10 @@ export const useResendHealthCheck = () => {
     
     try {
       const { data, error } = await supabase.functions.invoke('test-resend-email', {
-        body: { email }
+        body: { email },
+        headers: {
+          'Content-Type': 'application/json',
+        }
       });
 
       if (error) {
@@ -165,9 +208,13 @@ export const useResendHealthCheck = () => {
     }
   }, []);
 
-  // Verificação inicial
+  // Verificação inicial com delay para evitar problemas de inicialização
   useEffect(() => {
-    performHealthCheck();
+    const timer = setTimeout(() => {
+      performHealthCheck();
+    }, 1000);
+
+    return () => clearTimeout(timer);
   }, [performHealthCheck]);
 
   return {

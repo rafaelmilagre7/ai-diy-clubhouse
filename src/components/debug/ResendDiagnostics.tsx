@@ -4,12 +4,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { AlertCircle, CheckCircle, RefreshCw, ChevronDown, Mail, Key, Globe, Clock } from 'lucide-react';
+import { AlertCircle, CheckCircle, RefreshCw, ChevronDown, Mail, Key, Globe, Clock, Bug } from 'lucide-react';
 import { useResendHealthCheck } from '@/hooks/supabase/useResendHealthCheck';
 
 export const ResendDiagnostics: React.FC = () => {
   const { healthStatus, isChecking, performHealthCheck, debugInfo } = useResendHealthCheck();
   const [showDebug, setShowDebug] = useState(false);
+  const [showAdvanced, setShowAdvanced] = useState(false);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -36,6 +37,22 @@ export const ResendDiagnostics: React.FC = () => {
         {isOk ? trueLabel : falseLabel}
       </Badge>
     );
+  };
+
+  const getDiagnosticLevel = () => {
+    if (healthStatus.isHealthy) return 'success';
+    if (healthStatus.apiKeyValid) return 'warning';
+    return 'error';
+  };
+
+  const getDiagnosticMessage = () => {
+    if (healthStatus.isHealthy) {
+      return 'Sistema de email totalmente operacional';
+    }
+    if (healthStatus.apiKeyValid) {
+      return 'API key válida, mas há problemas de conectividade';
+    }
+    return 'Problemas críticos detectados no sistema de email';
   };
 
   return (
@@ -101,8 +118,32 @@ export const ResendDiagnostics: React.FC = () => {
           </div>
         </div>
 
+        {/* Diagnóstico Geral */}
+        <div className={`p-4 rounded-lg border-l-4 ${
+          getDiagnosticLevel() === 'success' ? 'bg-green-50 border-green-400' :
+          getDiagnosticLevel() === 'warning' ? 'bg-yellow-50 border-yellow-400' :
+          'bg-red-50 border-red-400'
+        }`}>
+          <div className="flex items-center gap-2">
+            {getDiagnosticLevel() === 'success' ? (
+              <CheckCircle className="h-5 w-5 text-green-600" />
+            ) : getDiagnosticLevel() === 'warning' ? (
+              <AlertCircle className="h-5 w-5 text-yellow-600" />
+            ) : (
+              <AlertCircle className="h-5 w-5 text-red-600" />
+            )}
+            <span className={`font-medium ${
+              getDiagnosticLevel() === 'success' ? 'text-green-800' :
+              getDiagnosticLevel() === 'warning' ? 'text-yellow-800' :
+              'text-red-800'
+            }`}>
+              {getDiagnosticMessage()}
+            </span>
+          </div>
+        </div>
+
         {/* Ações */}
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
           <Button 
             onClick={() => performHealthCheck(true)}
             disabled={isChecking}
@@ -123,8 +164,17 @@ export const ResendDiagnostics: React.FC = () => {
             variant="ghost"
             size="sm"
           >
-            <ChevronDown className={`h-4 w-4 mr-2 transition-transform ${showDebug ? 'rotate-180' : ''}`} />
+            <Bug className={`h-4 w-4 mr-2`} />
             Debug Info
+          </Button>
+
+          <Button 
+            onClick={() => setShowAdvanced(!showAdvanced)}
+            variant="ghost"
+            size="sm"
+          >
+            <ChevronDown className={`h-4 w-4 mr-2 transition-transform ${showAdvanced ? 'rotate-180' : ''}`} />
+            Diagnóstico Avançado
           </Button>
         </div>
 
@@ -145,14 +195,23 @@ export const ResendDiagnostics: React.FC = () => {
           <CollapsibleContent className="space-y-4">
             {debugInfo && (
               <div className="p-4 rounded-lg bg-gray-50 border">
-                <h4 className="font-medium mb-3">Informações de Debug:</h4>
+                <h4 className="font-medium mb-3 flex items-center gap-2">
+                  <Bug className="h-4 w-4" />
+                  Informações de Debug:
+                </h4>
                 <div className="space-y-2 text-sm font-mono">
                   <div><strong>Timestamp:</strong> {debugInfo.timestamp}</div>
                   <div><strong>Tentativas:</strong> {debugInfo.attempts}</div>
                   <div><strong>Método:</strong> {debugInfo.method}</div>
-                  <div><strong>Status Response:</strong> {debugInfo.responseStatus}</div>
+                  <div><strong>Status Response:</strong> 
+                    <Badge variant={debugInfo.responseStatus === 200 ? "default" : "destructive"} className="ml-2">
+                      {debugInfo.responseStatus}
+                    </Badge>
+                  </div>
                   {debugInfo.errorDetails && (
-                    <div><strong>Detalhes do Erro:</strong> {debugInfo.errorDetails}</div>
+                    <div className="bg-red-50 p-2 rounded border-l-4 border-red-400">
+                      <strong>Detalhes do Erro:</strong> {debugInfo.errorDetails}
+                    </div>
                   )}
                   {debugInfo.headers && (
                     <div>
@@ -165,6 +224,49 @@ export const ResendDiagnostics: React.FC = () => {
                 </div>
               </div>
             )}
+          </CollapsibleContent>
+        </Collapsible>
+
+        {/* Diagnóstico Avançado */}
+        <Collapsible open={showAdvanced} onOpenChange={setShowAdvanced}>
+          <CollapsibleContent className="space-y-4">
+            <div className="p-4 rounded-lg bg-blue-50 border">
+              <h4 className="font-medium mb-3">Diagnóstico Avançado:</h4>
+              <div className="space-y-2 text-sm">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <strong>Status da Edge Function:</strong>
+                    <Badge variant={debugInfo?.responseStatus === 200 ? "default" : "destructive"} className="ml-2">
+                      {debugInfo?.responseStatus === 200 ? 'OK' : 'Erro'}
+                    </Badge>
+                  </div>
+                  <div>
+                    <strong>Tentativas realizadas:</strong>
+                    <Badge variant="outline" className="ml-2">
+                      {debugInfo?.attempts || 0}
+                    </Badge>
+                  </div>
+                </div>
+                
+                <div className="mt-4">
+                  <strong>Recomendações:</strong>
+                  <ul className="list-disc list-inside mt-2 space-y-1">
+                    {!healthStatus.apiKeyValid && (
+                      <li>Verificar se a RESEND_API_KEY está configurada corretamente</li>
+                    )}
+                    {healthStatus.apiKeyValid && !healthStatus.isHealthy && (
+                      <li>Verificar conectividade de rede e status da API do Resend</li>
+                    )}
+                    {healthStatus.responseTime && healthStatus.responseTime > 10000 && (
+                      <li>Latência alta detectada - verificar conexão de rede</li>
+                    )}
+                    {healthStatus.issues.some(issue => issue.includes('timeout')) && (
+                      <li>Problemas de timeout - considerar aumentar timeout ou verificar rede</li>
+                    )}
+                  </ul>
+                </div>
+              </div>
+            </div>
           </CollapsibleContent>
         </Collapsible>
 

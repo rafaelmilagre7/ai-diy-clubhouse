@@ -62,6 +62,12 @@ verify_jwt = true
 [functions.auth-rate-limiter]
 verify_jwt = false
 
+[functions.test-resend-health]
+verify_jwt = false
+
+[functions.test-resend-email]
+verify_jwt = false
+
 [auth]
 enabled = true
 port = 54324
