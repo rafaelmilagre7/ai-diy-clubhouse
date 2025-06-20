@@ -1,3 +1,4 @@
+
 export interface Invite {
   id: string;
   email: string;
@@ -21,6 +22,24 @@ export interface Invite {
   send_attempts?: number;
 }
 
+export interface CreateInviteParams {
+  email: string;
+  roleId: string;
+  notes?: string;
+  expiresIn?: string; // Valores como '7 days', '14 days', etc.
+  phone?: string; // Para funcionalidade futura
+  channelPreference?: 'email' | 'whatsapp' | 'both'; // Para funcionalidade futura
+}
+
+export interface CreateInviteResponse {
+  invite_id: string;
+  token: string;
+  expires_at: string;
+  status: 'success' | 'error';
+  message?: string;
+  channel_used?: 'email' | 'whatsapp' | 'both';
+}
+
 export interface SendInviteResponse {
   success: boolean;
   message: string;
@@ -31,15 +50,6 @@ export interface SendInviteResponse {
   method?: string;
   suggestion?: string;
   channel?: 'email' | 'whatsapp' | 'both';
-}
-
-export interface CreateInviteResponse {
-  invite_id: string;
-  token: string;
-  expires_at: string;
-  status: 'success' | 'error';
-  message?: string;
-  channel_used?: 'email' | 'whatsapp' | 'both';
 }
 
 export interface WhatsAppInviteData {

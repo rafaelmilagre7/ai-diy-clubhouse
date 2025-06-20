@@ -4,7 +4,7 @@ import { useInviteCreate } from "./invites/useInviteCreate";
 import { useInviteDelete } from "./invites/useInviteDelete";
 import { useInviteResend } from "./invites/useInviteResend";
 import { useInvitesList } from "./invites/useInvitesList";
-import type { Invite } from "./invites/types";
+import type { Invite, CreateInviteParams } from "./invites/types";
 
 export type { Invite };
 
@@ -14,9 +14,27 @@ export const useInvites = () => {
   const { deleteInvite, isDeleting } = useInviteDelete();
   const { resendInvite, isSending } = useInviteResend();
 
-  const handleCreateInvite = async (email: string, roleId: string, notes?: string) => {
+  const handleCreateInvite = async (
+    email: string, 
+    roleId: string, 
+    notes?: string,
+    options?: {
+      expiresIn?: string;
+      phone?: string;
+      channelPreference?: 'email' | 'whatsapp' | 'both';
+    }
+  ) => {
     try {
-      const result = await createInvite({ email, roleId, notes });
+      const params: CreateInviteParams = {
+        email,
+        roleId,
+        notes,
+        expiresIn: options?.expiresIn,
+        phone: options?.phone,
+        channelPreference: options?.channelPreference
+      };
+
+      const result = await createInvite(params);
       await fetchInvites();
       return result;
     } catch (error) {

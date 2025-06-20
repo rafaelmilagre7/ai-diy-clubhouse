@@ -1,82 +1,50 @@
 
-import { useState } from "react";
+import { useState, useEffect } from 'react';
 
 interface ValidationState {
   isValid: boolean;
   errors: string[];
   warnings: string[];
-  isValidating: boolean;
 }
 
 export const useInviteValidation = () => {
   const [validationState, setValidationState] = useState<ValidationState>({
     isValid: false,
     errors: [],
-    warnings: [],
-    isValidating: false
+    warnings: []
   });
 
-  const validateInviteData = (email: string, roleId: string) => {
+  const validateInviteData = (email: string, roleId: string): ValidationState => {
     const errors: string[] = [];
     const warnings: string[] = [];
 
     // Validar email
-    if (!email) {
-      errors.push("Email é obrigatório");
+    if (!email || email.trim() === '') {
+      errors.push('Email é obrigatório');
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      errors.push("Formato de email inválido");
+      errors.push('Email deve ter um formato válido');
     }
 
     // Validar role
-    if (!roleId) {
-      errors.push("Papel é obrigatório");
+    if (!roleId || roleId.trim() === '') {
+      errors.push('Papel do usuário é obrigatório');
+    }
+
+    // Avisos
+    if (email && email.includes('+')) {
+      warnings.push('Emails com "+" podem ter problemas de entrega');
     }
 
     const isValid = errors.length === 0;
 
-    const newState = {
-      isValid,
-      errors,
-      warnings,
-      isValidating: false
-    };
-
-    setValidationState(newState);
-    return newState;
-  };
-
-  const validateToken = async (token: string, userEmail?: string) => {
-    setValidationState(prev => ({ ...prev, isValidating: true }));
+    const result = { isValid, errors, warnings };
+    setValidationState(result);
     
-    try {
-      // Simular validação de token
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Mock de resultado de validação
-      const result = {
-        isValid: true,
-        invite: {
-          email: userEmail || "test@example.com",
-          role: "member"
-        }
-      };
-      
-      setValidationState(prev => ({ ...prev, isValidating: false }));
-      return result;
-    } catch (error) {
-      setValidationState(prev => ({ 
-        ...prev, 
-        isValidating: false,
-        isValid: false,
-        errors: ["Erro ao validar token"]
-      }));
-      throw error;
-    }
+    return result;
   };
 
   return {
     validationState,
-    validateInviteData,
-    validateToken
+    validateInviteData
   };
 };
