@@ -9,7 +9,7 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
-interface SendInviteEmailRequest {
+interface InviteEmailRequest {
   email: string;
   inviteUrl: string;
   roleName: string;
@@ -18,17 +18,39 @@ interface SendInviteEmailRequest {
   notes?: string;
   inviteId?: string;
   forceResend?: boolean;
+  requestId?: string;
+}
+
+// Rate limiting em memória (simplificado)
+const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
+
+function checkRateLimit(email: string, maxAttempts = 5, windowMinutes = 15): boolean {
+  const now = Date.now();
+  const windowMs = windowMinutes * 60 * 1000;
+  const key = email.toLowerCase();
+  
+  const current = rateLimitMap.get(key);
+  
+  if (!current || now > current.resetTime) {
+    rateLimitMap.set(key, { count: 1, resetTime: now + windowMs });
+    return true;
+  }
+  
+  if (current.count >= maxAttempts) {
+    return false;
+  }
+  
+  current.count++;
+  return true;
 }
 
 const handler = async (req: Request): Promise<Response> => {
   const requestId = crypto.randomUUID().substring(0, 8);
-  const startTime = Date.now();
-  
-  console.log(`📧 [INVITE-${requestId}] Iniciando processamento de convite: ${req.method}`);
+  console.log(`📧 [INVITE-EMAIL-${requestId}] Nova requisição: ${req.method}`);
   
   // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
-    console.log(`🔄 [INVITE-${requestId}] CORS Preflight - respondendo`);
+    console.log(`🔄 [INVITE-EMAIL-${requestId}] CORS Preflight - respondendo`);
     return new Response(null, { 
       headers: corsHeaders,
       status: 200 
@@ -36,7 +58,7 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   if (req.method !== "POST") {
-    console.log(`❌ [INVITE-${requestId}] Método não permitido: ${req.method}`);
+    console.log(`❌ [INVITE-EMAIL-${requestId}] Método não permitido: ${req.method}`);
     return new Response(
       JSON.stringify({ error: "Método não permitido" }), 
       { 
@@ -46,40 +68,35 @@ const handler = async (req: Request): Promise<Response> => {
     );
   }
 
+  const startTime = Date.now();
+
   try {
-    console.log(`📨 [INVITE-${requestId}] Processando requisição POST...`);
+    console.log(`📨 [INVITE-EMAIL-${requestId}] Processando requisição POST...`);
     
-    // ETAPA 1: Validação de dados
-    console.log(`🔍 [INVITE-${requestId}] ETAPA 1: Validando dados recebidos...`);
+    const requestData: InviteEmailRequest = await req.json();
+    const { 
+      email, 
+      inviteUrl, 
+      roleName, 
+      expiresAt, 
+      senderName, 
+      notes, 
+      forceResend = false 
+    } = requestData;
     
-    const timeoutPromise = new Promise((_, reject) => 
-      setTimeout(() => reject(new Error("Timeout na leitura de dados")), 5000)
-    );
-    
-    const data = await Promise.race([
-      req.json(),
-      timeoutPromise
-    ]) as SendInviteEmailRequest;
-    
-    const { email, inviteUrl, roleName, expiresAt, senderName, notes, inviteId, forceResend } = data;
-    
-    console.log(`📋 [INVITE-${requestId}] Dados recebidos:`, {
-      email: email?.substring(0, 20) + "...",
+    console.log(`📋 [INVITE-EMAIL-${requestId}] Dados recebidos:`, {
+      email: email?.substring(0, 20) + '...',
       roleName,
-      hasInviteUrl: !!inviteUrl,
-      hasInviteId: !!inviteId,
       forceResend,
-      urlLength: inviteUrl?.length
+      hasNotes: !!notes
     });
 
     // Validações básicas
     if (!email || !email.includes('@')) {
-      console.log(`❌ [INVITE-${requestId}] Email inválido: ${email}`);
       return new Response(
         JSON.stringify({ 
           success: false, 
-          error: "Email inválido",
-          strategy: "validation_failed"
+          error: "Email inválido" 
         }),
         {
           status: 400,
@@ -88,32 +105,31 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    if (!inviteUrl || inviteUrl.length < 10) {
-      console.log(`❌ [INVITE-${requestId}] URL do convite inválida: ${inviteUrl}`);
-      return new Response(
-        JSON.stringify({ 
-          success: false, 
-          error: "URL do convite inválida",
-          strategy: "validation_failed"
-        }),
-        {
-          status: 400,
-          headers: { "Content-Type": "application/json", ...corsHeaders },
-        }
-      );
-    }
-
-    // ETAPA 2: Configuração do Resend
-    console.log(`🔑 [INVITE-${requestId}] ETAPA 2: Configurando Resend...`);
-    
-    const apiKey = Deno.env.get("RESEND_API_KEY");
-    if (!apiKey) {
-      console.error(`❌ [INVITE-${requestId}] API key não configurada`);
+    // Rate limiting (exceto para reenvios forçados)
+    if (!forceResend && !checkRateLimit(email)) {
+      console.warn(`⚠️ [INVITE-EMAIL-${requestId}] Rate limit excedido para: ${email}`);
       return new Response(
         JSON.stringify({
           success: false,
-          error: "RESEND_API_KEY não configurada nos secrets",
-          strategy: "config_error"
+          error: "Muitas tentativas de envio. Tente novamente em 15 minutos.",
+          rateLimited: true
+        }),
+        {
+          status: 429,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        }
+      );
+    }
+
+    console.log(`🔑 [INVITE-EMAIL-${requestId}] Verificando configurações...`);
+    
+    const apiKey = Deno.env.get("RESEND_API_KEY");
+    if (!apiKey) {
+      console.error(`❌ [INVITE-EMAIL-${requestId}] API key não configurada`);
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: "RESEND_API_KEY não configurada nos secrets"
         }),
         {
           status: 500,
@@ -122,141 +138,119 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    console.log(`✅ [INVITE-${requestId}] API key encontrada (${apiKey.substring(0, 8)}...)`);
+    console.log(`✅ [INVITE-EMAIL-${requestId}] API key encontrada, enviando convite...`);
 
-    // ETAPA 3: Preparação do email com template simplificado
-    console.log(`📝 [INVITE-${requestId}] ETAPA 3: Preparando template de email...`);
-    
-    const expirationDate = new Date(expiresAt);
-    const formattedExpiration = expirationDate.toLocaleDateString('pt-BR', {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+    const resend = new Resend(apiKey);
 
-    // Template HTML simplificado para evitar problemas de renderização
-    const htmlContent = `
-      <!DOCTYPE html>
-      <html lang="pt-BR">
-      <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Convite - Viver de IA</title>
-        <style>
-          body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background-color: #f5f5f5; }
-          .container { max-width: 600px; margin: 0 auto; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-          .header { background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); color: white; padding: 40px 30px; text-align: center; }
-          .header h1 { margin: 0; font-size: 28px; font-weight: 600; }
-          .content { padding: 40px 30px; }
-          .role-badge { display: inline-block; background: #f0f9ff; color: #0369a1; padding: 8px 16px; border-radius: 20px; font-weight: 500; margin: 20px 0; }
-          .cta-button { display: inline-block; background: #2563eb; color: white; padding: 16px 32px; text-decoration: none; border-radius: 8px; font-weight: 600; margin: 30px 0; transition: all 0.3s; }
-          .cta-button:hover { background: #1d4ed8; transform: translateY(-2px); }
-          .details { background: #f8fafc; padding: 20px; border-radius: 8px; margin: 20px 0; }
-          .footer { background: #f1f5f9; padding: 30px; text-align: center; color: #64748b; font-size: 14px; }
-          .expiration { color: #ef4444; font-weight: 500; }
-        </style>
-      </head>
-      <body>
-        <div class="container">
-          <div class="header">
-            <h1>🚀 Bem-vindo à Viver de IA!</h1>
-            <p style="margin: 10px 0 0 0; opacity: 0.9;">Você foi convidado para fazer parte da nossa comunidade</p>
-          </div>
-          
-          <div class="content">
-            <p>Olá! 👋</p>
-            
-            <p>Você recebeu um convite especial para acessar a plataforma <strong>Viver de IA</strong> - sua jornada para dominar a Inteligência Artificial começa aqui!</p>
-            
-            <div class="role-badge">
-              🎯 Papel: ${roleName}
-            </div>
-            
-            <div class="details">
-              <h3 style="margin-top: 0; color: #374151;">📋 Detalhes do Convite</h3>
-              <ul style="margin: 0; padding-left: 20px; line-height: 1.6;">
-                <li><strong>Email:</strong> ${email}</li>
-                <li><strong>Papel:</strong> ${roleName}</li>
-                <li class="expiration"><strong>⏰ Expira em:</strong> ${formattedExpiration}</li>
-                ${notes ? `<li><strong>Observações:</strong> ${notes}</li>` : ''}
-              </ul>
-            </div>
-            
-            <div style="text-align: center;">
-              <a href="${inviteUrl}" class="cta-button">
-                ✨ Aceitar Convite e Começar
-              </a>
-            </div>
-            
-            <div style="background: #fef3c7; border: 1px solid #f59e0b; border-radius: 8px; padding: 16px; margin: 30px 0;">
-              <p style="margin: 0; color: #92400e;"><strong>⚠️ Importante:</strong> Este convite é pessoal e intransferível. Clique no botão acima para criar sua conta e começar sua jornada de aprendizado em IA.</p>
-            </div>
-            
-            <p style="color: #6b7280; font-size: 14px;">
-              Se você não conseguir clicar no botão, copie e cole este link no seu navegador:<br>
-              <code style="background: #f3f4f6; padding: 4px 8px; border-radius: 4px; word-break: break-all;">${inviteUrl}</code>
-            </p>
-          </div>
-          
-          <div class="footer">
-            <p><strong>Viver de IA</strong> - Transformando pessoas em especialistas em Inteligência Artificial</p>
-            <p>Este é um email automático. Não é necessário responder.</p>
-            <p style="margin-top: 20px; font-size: 12px;">ID do Convite: ${inviteId || requestId}</p>
-          </div>
+    // Template profissional do email de convite
+    const emailHtml = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; border-radius: 12px 12px 0 0; text-align: center;">
+          <h1 style="color: white; margin: 0; font-size: 28px;">🎯 Convite Especial</h1>
+          <p style="color: rgba(255,255,255,0.9); margin: 10px 0 0 0; font-size: 16px;">Viver de IA - Transforme seu negócio</p>
         </div>
-      </body>
-      </html>
+        
+        <div style="background: white; padding: 30px; border-radius: 0 0 12px 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1);">
+          <h2 style="color: #333; margin: 0 0 20px 0;">Você foi convidado!</h2>
+          
+          <p style="color: #555; line-height: 1.6; margin-bottom: 20px;">
+            ${senderName ? `<strong>${senderName}</strong> convidou você para` : 'Você foi convidado a'} 
+            fazer parte da nossa plataforma como <strong style="color: #667eea;">${roleName}</strong>.
+          </p>
+          
+          ${notes ? `
+            <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #667eea;">
+              <h4 style="margin: 0 0 8px 0; color: #333;">💌 Mensagem do convite:</h4>
+              <p style="margin: 0; color: #555; font-style: italic;">"${notes}"</p>
+            </div>
+          ` : ''}
+          
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="${inviteUrl}" 
+               style="display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+                      color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; 
+                      font-weight: bold; font-size: 16px; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);">
+              🚀 Aceitar Convite
+            </a>
+          </div>
+          
+          <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
+            <h4 style="margin: 0 0 10px 0; color: #333;">ℹ️ Informações importantes:</h4>
+            <ul style="margin: 0; padding-left: 20px; color: #555;">
+              <li><strong>Papel:</strong> ${roleName}</li>
+              <li><strong>Válido até:</strong> ${new Date(expiresAt).toLocaleDateString('pt-BR', {
+                day: '2-digit',
+                month: 'long',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+              })}</li>
+              <li><strong>Email:</strong> ${email}</li>
+            </ul>
+          </div>
+          
+          <p style="color: #888; font-size: 14px; text-align: center; margin-top: 30px;">
+            Este convite é pessoal e intransferível. Se você não esperava receber este email, 
+            pode ignorá-lo com segurança.
+          </p>
+        </div>
+        
+        <div style="text-align: center; margin-top: 20px; color: #888; font-size: 12px;">
+          © ${new Date().getFullYear()} Viver de IA - Transformando negócios com inteligência artificial
+        </div>
+      </div>
     `;
 
-    console.log(`📧 [INVITE-${requestId}] Template HTML preparado (${htmlContent.length} chars)`);
+    // Retry com backoff exponencial
+    let emailResponse;
+    let lastError;
+    const maxRetries = 3;
+    
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        console.log(`📤 [INVITE-EMAIL-${requestId}] Tentativa ${attempt}/${maxRetries}...`);
+        
+        emailResponse = await resend.emails.send({
+          from: "Viver de IA <convites@viverdeia.ai>",
+          to: [email],
+          subject: `🎯 Convite para ${roleName} - Viver de IA`,
+          html: emailHtml,
+        });
 
-    // ETAPA 4: Envio do email com timeout
-    console.log(`🚀 [INVITE-${requestId}] ETAPA 4: Enviando email via Resend...`);
-    
-    const resend = new Resend(apiKey);
-    
-    const emailTimeoutPromise = new Promise((_, reject) => 
-      setTimeout(() => reject(new Error("Timeout no envio do email")), 25000)
-    );
-    
-    const emailPromise = resend.emails.send({
-      from: "Viver de IA <sistema@viverdeia.ai>",
-      to: [email],
-      subject: `🚀 Convite Especial - Viver de IA (${roleName})`,
-      html: htmlContent,
-      headers: {
-        'X-Entity-Ref-ID': inviteId || requestId,
-        'X-Invite-Type': 'member-invitation',
-        'X-Platform': 'viverdeia-ai'
+        if (emailResponse.data?.id) {
+          console.log(`✅ [INVITE-EMAIL-${requestId}] Email enviado com sucesso na tentativa ${attempt}`);
+          break;
+        }
+      } catch (error: any) {
+        lastError = error;
+        console.error(`❌ [INVITE-EMAIL-${requestId}] Tentativa ${attempt} falhou:`, error.message);
+        
+        if (attempt < maxRetries) {
+          const backoffTime = Math.pow(2, attempt) * 1000; // 2s, 4s, 8s
+          console.log(`⏳ [INVITE-EMAIL-${requestId}] Aguardando ${backoffTime}ms antes da próxima tentativa...`);
+          await new Promise(resolve => setTimeout(resolve, backoffTime));
+        }
       }
-    });
+    }
 
-    const emailResponse = await Promise.race([
-      emailPromise,
-      emailTimeoutPromise
-    ]);
+    if (!emailResponse?.data?.id) {
+      throw lastError || new Error("Falha em todas as tentativas de envio");
+    }
 
     const responseTime = Date.now() - startTime;
-    
-    console.log(`✅ [INVITE-${requestId}] Email enviado com sucesso!`, {
-      emailId: emailResponse.data?.id,
+    console.log(`✅ [INVITE-EMAIL-${requestId}] Convite enviado com sucesso:`, {
+      emailId: emailResponse.data.id,
       responseTime,
-      to: email,
-      strategy: 'resend_primary'
+      email: email.substring(0, 20) + '...'
     });
 
-    // ETAPA 5: Sucesso
     return new Response(
       JSON.stringify({
         success: true,
         message: "Convite enviado com sucesso",
-        emailId: emailResponse.data?.id,
-        email: email,
+        emailId: emailResponse.data.id,
         strategy: "resend_primary",
-        method: "html_template",
+        method: "email",
         responseTime,
         requestId
       }),
@@ -267,79 +261,21 @@ const handler = async (req: Request): Promise<Response> => {
     );
 
   } catch (error: any) {
-    const responseTime = Date.now() - startTime;
-    
-    console.error(`❌ [INVITE-${requestId}] Erro crítico na ETAPA atual:`, {
+    console.error(`❌ [INVITE-EMAIL-${requestId}] Erro crítico:`, {
       message: error.message,
       stack: error.stack?.substring(0, 500),
-      type: error.constructor.name,
-      responseTime
+      type: error.constructor.name
     });
     
-    // SISTEMA DE FALLBACK: Tentativa com Supabase Auth
-    console.log(`🔄 [INVITE-${requestId}] Iniciando FALLBACK com Supabase Auth...`);
+    const responseTime = Date.now() - startTime;
     
-    try {
-      const supabaseUrl = Deno.env.get("SUPABASE_URL");
-      const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-      
-      if (supabaseUrl && supabaseServiceKey) {
-        console.log(`📱 [INVITE-${requestId}] Tentando envio via Supabase Auth...`);
-        
-        const supabase = createClient(supabaseUrl, supabaseServiceKey);
-        
-        const { data: authData, error: authError } = await supabase.auth.admin.inviteUserByEmail(
-          email,
-          {
-            data: {
-              role: roleName,
-              invited_by: 'sistema',
-              invite_id: inviteId
-            },
-            redirectTo: inviteUrl
-          }
-        );
-
-        if (!authError && authData) {
-          console.log(`✅ [INVITE-${requestId}] Fallback bem-sucedido via Supabase Auth`);
-          
-          return new Response(
-            JSON.stringify({
-              success: true,
-              message: "Convite enviado via sistema alternativo",
-              emailId: authData.user?.id,
-              email: email,
-              strategy: "supabase_fallback",
-              method: "auth_invite",
-              responseTime,
-              requestId,
-              fallback_reason: error.message
-            }),
-            {
-              status: 200,
-              headers: { "Content-Type": "application/json", ...corsHeaders },
-            }
-          );
-        }
-        
-        console.log(`❌ [INVITE-${requestId}] Fallback também falhou:`, authError?.message);
-      }
-    } catch (fallbackError: any) {
-      console.error(`❌ [INVITE-${requestId}] Erro no fallback:`, fallbackError.message);
-    }
-    
-    // Falha completa
     return new Response(
       JSON.stringify({
         success: false,
         error: error.message || "Erro interno do servidor",
-        strategy: "all_failed",
+        strategy: "failed",
         responseTime,
-        requestId,
-        details: {
-          primary_error: error.message,
-          fallback_attempted: true
-        }
+        requestId
       }),
       {
         status: 500,
@@ -349,5 +285,5 @@ const handler = async (req: Request): Promise<Response> => {
   }
 };
 
-console.log("📧 [INVITE-EMAIL] Edge Function carregada com logs detalhados e fallback!");
+console.log("📧 [INVITE-EMAIL] Edge Function carregada com melhorias!");
 serve(handler);
