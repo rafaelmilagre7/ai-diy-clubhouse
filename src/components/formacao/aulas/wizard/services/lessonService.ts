@@ -43,8 +43,8 @@ export async function saveLesson(
       
       const { error: updateError } = await supabase
         .from('learning_lessons')
-        .update(completeLessonData)
-        .eq('id', lessonId);
+        .update(completeLessonData as any)
+        .eq('id', lessonId as any);
         
       if (updateError) {
         throw updateError;
@@ -73,7 +73,7 @@ export async function saveLesson(
       
       const { data, error } = await supabase
         .from('learning_lessons')
-        .insert([completeLessonData])
+        .insert([completeLessonData as any])
         .select('*')
         .single();
         
@@ -81,7 +81,7 @@ export async function saveLesson(
         throw error;
       }
       
-      resultId = data.id;
+      resultId = (data as any).id;
     }
     
     // Salvar vídeos da aula

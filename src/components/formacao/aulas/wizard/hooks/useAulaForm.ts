@@ -55,7 +55,7 @@ export const useAulaForm = (
           return;
         }
 
-        setModules(data || []);
+        setModules((data as any) || []);
       } catch (error) {
         console.error("Erro ao buscar módulos:", error);
         toast.error("Falha ao carregar a lista de módulos.");

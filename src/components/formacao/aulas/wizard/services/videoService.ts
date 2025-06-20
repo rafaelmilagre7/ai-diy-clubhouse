@@ -7,7 +7,7 @@ export async function fetchLessonVideos(lessonId: string): Promise<VideoFormValu
     const { data, error } = await supabase
       .from("learning_lesson_videos")
       .select("*")
-      .eq("lesson_id", lessonId)
+      .eq("lesson_id", lessonId as any)
       .order("order_index", { ascending: true });
       
     if (error) {
@@ -19,7 +19,7 @@ export async function fetchLessonVideos(lessonId: string): Promise<VideoFormValu
       return [];
     }
     
-    return data.map(video => ({
+    return data.map((video: any) => ({
       id: video.id,
       title: video.title,
       description: video.description || "",
@@ -51,7 +51,7 @@ export async function saveVideosForLesson(lessonId: string, videos: VideoFormVal
     const { error: deleteError } = await supabase
       .from('learning_lesson_videos')
       .delete()
-      .eq('lesson_id', lessonId);
+      .eq('lesson_id', lessonId as any);
     
     if (deleteError) {
       console.error("Erro ao remover vídeos existentes:", deleteError);
@@ -86,7 +86,7 @@ export async function saveVideosForLesson(lessonId: string, videos: VideoFormVal
       // Inserir novo vídeo
       const { error } = await supabase
         .from('learning_lesson_videos')
-        .insert([videoData]);
+        .insert([videoData as any]);
         
       if (error) {
         console.error(`Erro ao criar vídeo ${i + 1}:`, error);
