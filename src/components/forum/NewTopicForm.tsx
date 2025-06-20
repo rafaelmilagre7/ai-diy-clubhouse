@@ -49,14 +49,14 @@ export const NewTopicForm = ({ categoryId, categorySlug }: NewTopicFormProps) =>
           content: content.trim(),
           category_id: categoryId,
           user_id: user.id
-        })
+        } as any)
         .select("id")
         .single();
         
       if (topicError) throw topicError;
       
       toast.success("Tópico criado com sucesso!");
-      navigate(`/forum/topic/${topicData.id}`);
+      navigate(`/forum/topic/${(topicData as any).id}`);
       
     } catch (error) {
       console.error("Erro ao criar tópico:", error);

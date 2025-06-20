@@ -72,8 +72,8 @@ export const PostItem = ({
         const { error } = await supabase
           .from('forum_reactions')
           .delete()
-          .eq('post_id', post.id)
-          .eq('user_id', user?.id);
+          .eq('post_id', post.id as any)
+          .eq('user_id', user?.id as any);
           
         if (error) throw error;
         setHasReacted(false);
@@ -87,7 +87,7 @@ export const PostItem = ({
             post_id: post.id,
             user_id: user?.id,
             reaction_type: 'like'
-          });
+          } as any);
           
         if (error) throw error;
         setHasReacted(true);
@@ -111,8 +111,8 @@ export const PostItem = ({
       // Marca o post como solução
       const { error } = await supabase
         .from('forum_posts')
-        .update({ is_solution: true })
-        .eq('id', post.id);
+        .update({ is_solution: true } as any)
+        .eq('id', post.id as any);
         
       if (error) throw error;
       

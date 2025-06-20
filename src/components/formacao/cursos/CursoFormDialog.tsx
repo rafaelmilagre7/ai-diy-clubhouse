@@ -173,7 +173,7 @@ export const CursoFormDialog: React.FC<CursoFormDialogProps> = ({
               value={formData.cover_image_url}
               onChange={handleImageUpload}
               bucketName="course_images"
-              folder="covers"
+              folderPath="covers"
             />
           </div>
 

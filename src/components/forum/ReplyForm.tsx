@@ -42,7 +42,7 @@ export const ReplyForm = ({ topicId, parentId, onSuccess }: ReplyFormProps) => {
           user_id: user.id,
           content: content.trim(),
           ...(parentId && { parent_id: parentId })
-        });
+        } as any);
         
       if (error) throw error;
       
@@ -52,8 +52,8 @@ export const ReplyForm = ({ topicId, parentId, onSuccess }: ReplyFormProps) => {
       // Atualiza a data de última atividade
       await supabase
         .from("forum_topics")
-        .update({ last_activity_at: new Date().toISOString() })
-        .eq("id", topicId);
+        .update({ last_activity_at: new Date().toISOString() } as any)
+        .eq("id", topicId as any);
       
       setContent("");
       toast.success("Resposta enviada com sucesso!");

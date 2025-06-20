@@ -181,7 +181,7 @@ export const ModuloFormDialog: React.FC<ModuloFormDialogProps> = ({
               value={formData.cover_image_url}
               onChange={handleImageUpload}
               bucketName="course_images"
-              folder="modules"
+              folderPath="modules"
             />
           </div>
 

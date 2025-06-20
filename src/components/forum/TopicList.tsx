@@ -1,6 +1,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { supabase } from "@/lib/supabase";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -41,12 +42,12 @@ export const TopicList = ({ categoryId, categorySlug }: TopicListProps) => {
       const { data, error } = await supabase
         .from('forum_topics')
         .select('*, profiles:user_id(*)')
-        .eq('category_id', categoryId)
+        .eq('category_id', categoryId as any)
         .order('is_pinned', { ascending: false })
         .order('last_activity_at', { ascending: false });
       
       if (error) throw error;
-      return data as ForumTopic[];
+      return data as any as ForumTopic[];
     }
   });
 
