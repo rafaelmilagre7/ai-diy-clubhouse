@@ -1,179 +1,111 @@
+
 import { useState, useEffect } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/auth';
 import { toast } from 'sonner';
-import { CERTIFICATE_LOGO_URL } from '@/lib/supabase/uploadCertificateLogo';
-import { 
-  convertImageToBase64, 
-  generateCertificateHTML, 
-  generateCertificateFileName,
-  uploadCertificateToStorage,
-  updateCertificateRecord
-} from '@/utils/certificateUtils';
-import { useCertificateURL } from '@/hooks/useCertificateURL';
 
 export const useSolutionCertificate = (solutionId: string) => {
   const { user } = useAuth();
-  const queryClient = useQueryClient();
-  const { optimizeCertificateURL } = useCertificateURL();
+  const [certificate, setCertificate] = useState<any>(null);
+  const [isEligible, setIsEligible] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isGenerating, setIsGenerating] = useState(false);
 
-  // Buscar certificado existente e verificar elegibilidade
-  const { data, isLoading, error } = useQuery({
-    queryKey: ['solution-certificate', user?.id, solutionId],
-    queryFn: async () => {
-      if (!user?.id) return { certificate: null, isEligible: false, progress: null };
-      
-      console.log('Buscando certificado para solução:', solutionId);
-      
-      // Primeiro, verificar se já existe um certificado
-      const { data: existingCert, error: certError } = await supabase
-        .from('solution_certificates')
-        .select(`
-          *,
-          solutions (
-            id,
-            title,
-            category,
-            description
-          )
-        `)
-        .eq('user_id', user.id)
-        .eq('solution_id', solutionId)
-        .maybeSingle();
-
-      if (certError) {
-        console.error('Erro ao buscar certificado:', certError);
+  useEffect(() => {
+    const loadCertificateData = async () => {
+      if (!user?.id || !solutionId) {
+        setIsLoading(false);
+        return;
       }
 
-      // Verificar se o usuário completou a solução
-      const { data: progress, error: progressError } = await supabase
-        .from('progress')
-        .select(`
-          *,
-          solutions (
-            id,
-            title,
-            category,
-            description
-          )
-        `)
-        .eq('user_id', user.id)
-        .eq('solution_id', solutionId)
-        .maybeSingle();
+      try {
+        setIsLoading(true);
 
-      if (progressError) {
-        console.error('Erro ao buscar progresso:', progressError);
-      }
+        // Buscar certificado existente
+        const { data: existingCert, error: certError } = await supabase
+          .from('solution_certificates')
+          .select('*')
+          .eq('user_id', user.id as any)
+          .eq('solution_id', solutionId as any)
+          .single();
 
-      const isEligible = progress?.is_completed === true;
-      
-      console.log('Dados encontrados:', {
-        existingCert: !!existingCert,
-        progress: !!progress,
-        isCompleted: progress?.is_completed,
-        isEligible
-      });
-
-      // Se é elegível mas não tem certificado, gerar automaticamente
-      if (isEligible && !existingCert && progress?.solutions) {
-        console.log('Gerando certificado automaticamente...');
-        
-        // Gerar código de validação
-        const validationCode = Array.from({ length: 12 }, () => 
-          'ABCDEFGHJKMNPQRSTUVWXYZ0123456789'[Math.floor(Math.random() * 34)]
-        ).join('');
-
-        try {
-          // Usar fallback seguro para a data de implementação
-          const implementationDate = progress.completed_at || progress.created_at || new Date().toISOString();
-          
-          const { data: newCert, error: createError } = await supabase
-            .from('solution_certificates')
-            .insert({
-              user_id: user.id,
-              solution_id: solutionId,
-              implementation_date: implementationDate,
-              validation_code: validationCode,
-              issued_at: new Date().toISOString()
-            })
-            .select(`
-              *,
-              solutions (
-                id,
-                title,
-                category,
-                description
-              )
-            `)
-            .single();
-
-          if (createError) {
-            console.error('Erro ao criar certificado:', createError);
-            throw createError;
-          }
-
-          console.log('Certificado criado:', newCert);
-          return {
-            certificate: newCert,
-            isEligible: true,
-            progress
-          };
-        } catch (error) {
-          console.error('Falha ao gerar certificado:', error);
-          return {
-            certificate: null,
-            isEligible: true,
-            progress
-          };
+        if (certError && certError.code !== 'PGRST116') {
+          console.error('Erro ao buscar certificado:', certError);
+        } else if (existingCert) {
+          setCertificate(existingCert);
+          setIsEligible(true);
+          setIsLoading(false);
+          return;
         }
+
+        // Verificar elegibilidade
+        const { data: progressData, error: progressError } = await supabase
+          .from('progress')
+          .select('*, solutions(*)')
+          .eq('user_id', user.id as any)
+          .eq('solution_id', solutionId as any)
+          .single();
+
+        if (progressError && progressError.code !== 'PGRST116') {
+          console.error('Erro ao verificar progresso:', progressError);
+          setIsEligible(false);
+        } else if (progressData && (progressData as any).is_completed) {
+          setIsEligible(true);
+        } else {
+          setIsEligible(false);
+        }
+
+      } catch (error) {
+        console.error('Erro ao carregar dados do certificado:', error);
+        setIsEligible(false);
+      } finally {
+        setIsLoading(false);
       }
+    };
 
-      return {
-        certificate: existingCert,
-        isEligible,
-        progress
-      };
-    },
-    enabled: !!user?.id && !!solutionId
-  });
+    loadCertificateData();
+  }, [user?.id, solutionId]);
 
-  // Gerar certificado manualmente
-  const generateCertificate = useMutation({
-    mutationFn: async () => {
-      if (!user?.id) throw new Error('Usuário não autenticado');
+  const generateCertificate = async () => {
+    if (!user?.id || !solutionId || isGenerating) return;
 
-      // Verificar se é elegível
-      const { data: progress, error: progressError } = await supabase
-        .from('progress')
-        .select(`
-          *,
-          solutions (
-            id,
-            title,
-            category,
-            description
-          )
-        `)
-        .eq('user_id', user.id)
-        .eq('solution_id', solutionId)
-        .eq('is_completed', true)
+    try {
+      setIsGenerating(true);
+
+      // Verificar se já existe certificado
+      const { data: existingCert } = await supabase
+        .from('solution_certificates')
+        .select('*')
+        .eq('user_id', user.id as any)
+        .eq('solution_id', solutionId as any)
         .single();
 
-      if (progressError || !progress) {
-        throw new Error('Você precisa completar a implementação da solução primeiro');
+      if (existingCert) {
+        toast.info('Você já possui um certificado para esta solução.');
+        setCertificate(existingCert);
+        return;
+      }
+
+      // Buscar dados do progresso para usar como data de implementação
+      const { data: progressData, error: progressError } = await supabase
+        .from('progress')
+        .select('*, solutions(*)')
+        .eq('user_id', user.id as any)
+        .eq('solution_id', solutionId as any)
+        .eq('is_completed', true as any)
+        .single();
+
+      if (progressError || !progressData) {
+        toast.error('Você precisa completar a implementação antes de gerar o certificado.');
+        return;
       }
 
       // Gerar código de validação
-      const validationCode = Array.from({ length: 12 }, () => 
-        'ABCDEFGHJKMNPQRSTUVWXYZ0123456789'[Math.floor(Math.random() * 34)]
-      ).join('');
-
-      // Usar fallback seguro para a data de implementação
-      const implementationDate = progress.completed_at || progress.created_at || new Date().toISOString();
+      const validationCode = generateValidationCode();
+      const implementationDate = (progressData as any).completed_at || (progressData as any).created_at;
 
       // Criar certificado
-      const { data: certificate, error: createError } = await supabase
+      const { data: newCert, error: insertError } = await supabase
         .from('solution_certificates')
         .insert({
           user_id: user.id,
@@ -181,255 +113,202 @@ export const useSolutionCertificate = (solutionId: string) => {
           implementation_date: implementationDate,
           validation_code: validationCode,
           issued_at: new Date().toISOString()
-        })
-        .select(`
-          *,
-          solutions (
-            id,
-            title,
-            category,
-            description
-          )
-        `)
+        } as any)
+        .select()
         .single();
 
-      if (createError) throw createError;
-      return certificate;
-    },
-    onSuccess: () => {
+      if (insertError) {
+        console.error('Erro ao criar certificado:', insertError);
+        toast.error('Erro ao gerar certificado. Tente novamente.');
+        return;
+      }
+
+      setCertificate(newCert);
       toast.success('Certificado gerado com sucesso!');
-      queryClient.invalidateQueries({ queryKey: ['solution-certificate'] });
-    },
-    onError: (error: any) => {
+
+    } catch (error) {
       console.error('Erro ao gerar certificado:', error);
-      toast.error(error.message || 'Erro ao gerar certificado. Tente novamente.');
-    }
-  });
-
-  // Função para gerar PDF e fazer cache
-  const generateAndCachePDF = async (certificate: any, userProfile: any) => {
-    try {
-      console.log('Iniciando geração e cache do PDF com URLs otimizadas...');
-      
-      const [html2canvas, jsPDF] = await Promise.all([
-        import('html2canvas').then(module => module.default),
-        import('jspdf').then(module => module.default)
-      ]);
-
-      const logoBase64 = await convertImageToBase64(CERTIFICATE_LOGO_URL);
-      
-      const issuedDate = certificate.issued_at || certificate.implementation_date;
-      const formattedDate = new Date(issuedDate).toLocaleDateString('pt-BR', {
-        day: 'numeric',
-        month: 'long',
-        year: 'numeric'
-      });
-
-      const htmlContent = generateCertificateHTML(certificate, userProfile, formattedDate, logoBase64);
-
-      const tempDiv = document.createElement('div');
-      tempDiv.style.position = 'absolute';
-      tempDiv.style.left = '-9999px';
-      tempDiv.style.top = '0';
-      tempDiv.innerHTML = htmlContent;
-      
-      document.body.appendChild(tempDiv);
-      await new Promise(resolve => setTimeout(resolve, 3000));
-
-      const canvas = await html2canvas(tempDiv.querySelector('.certificate-container') as HTMLElement, {
-        scale: 1,
-        useCORS: true,
-        allowTaint: true,
-        backgroundColor: '#000000',
-        logging: false,
-        width: 1123,
-        height: 794
-      });
-
-      const pdf = new jsPDF({
-        orientation: 'landscape',
-        unit: 'mm',
-        format: 'a4'
-      });
-
-      const imgData = canvas.toDataURL('image/png', 1.0);
-      pdf.addImage(imgData, 'PNG', 0, 0, 297, 210);
-      
-      const pdfBlob = pdf.output('blob');
-      
-      // Gerar nome personalizado
-      const fileName = generateCertificateFileName(userProfile.name, certificate.solutions.title);
-      
-      // Fazer upload para o storage
-      const certificateUrl = await uploadCertificateToStorage(pdfBlob, fileName, certificate.id);
-      
-      // NOVO: Otimizar URL do certificado usando o sistema de proxy
-      let optimizedUrl = certificateUrl;
-      try {
-        optimizedUrl = await optimizeCertificateURL(certificateUrl, {
-          enableTracking: true,
-          priority: 'high',
-          retryAttempts: 3
-        });
-        console.log('URL do certificado otimizada:', optimizedUrl);
-      } catch (error) {
-        console.warn('Erro ao otimizar URL, usando URL original:', error);
-        // Continua com a URL original se a otimização falhar
-      }
-      
-      // Atualizar registro com a URL otimizada
-      await updateCertificateRecord(certificate.id, optimizedUrl, fileName);
-      
-      document.body.removeChild(tempDiv);
-      
-      console.log('PDF gerado e armazenado com sucesso com URL otimizada');
-      
-      return { pdfBlob, certificateUrl: optimizedUrl, fileName };
-    } catch (error) {
-      console.error('Erro ao gerar e cachear PDF:', error);
-      throw error;
+      toast.error('Erro inesperado ao gerar certificado.');
+    } finally {
+      setIsGenerating(false);
     }
   };
 
-  // Download do certificado como PDF
-  const downloadCertificate = async (certificate: any, userProfile: any) => {
+  const checkEligibility = async () => {
+    if (!user?.id || !solutionId) return false;
+
     try {
-      toast.loading('Preparando download do certificado...', { id: 'download-loading' });
-      
-      console.log('Iniciando download do certificado com URLs otimizadas...');
-      
-      // Verificar se já existe cache
-      if (certificate.certificate_url && certificate.certificate_filename) {
-        console.log('Usando certificado do cache:', certificate.certificate_url);
-        
-        try {
-          // NOVO: Otimizar URL antes de fazer o download
-          let optimizedUrl = certificate.certificate_url;
-          try {
-            optimizedUrl = await optimizeCertificateURL(certificate.certificate_url, {
-              enableTracking: true,
-              priority: 'high'
-            });
-          } catch (urlError) {
-            console.warn('Erro ao otimizar URL para download, usando original:', urlError);
-          }
-          
-          // Tentar baixar do cache (URL otimizada)
-          const response = await fetch(optimizedUrl);
-          if (response.ok) {
-            const blob = await response.blob();
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = certificate.certificate_filename;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-            
-            toast.success('Certificado baixado com sucesso!', { id: 'download-loading' });
-            return;
-          }
-        } catch (cacheError) {
-          console.warn('Cache não disponível, gerando novo PDF:', cacheError);
-        }
+      const { data: progressData, error } = await supabase
+        .from('progress')
+        .select('*')
+        .eq('user_id', user.id as any)
+        .eq('solution_id', solutionId as any)
+        .eq('is_completed', true as any)
+        .single();
+
+      if (error && error.code !== 'PGRST116') {
+        console.error('Erro ao verificar elegibilidade:', error);
+        return false;
       }
-      
-      // Se não tem cache ou cache falhou, gerar novo PDF
-      console.log('Gerando novo PDF para download...');
-      const { pdfBlob, fileName } = await generateAndCachePDF(certificate, userProfile);
-      
-      // Download do PDF
-      const url = URL.createObjectURL(pdfBlob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = fileName;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-      
-      // Invalidar query para atualizar dados do certificado
-      queryClient.invalidateQueries({ queryKey: ['solution-certificate'] });
-      
-      toast.success('Certificado baixado com sucesso!', { id: 'download-loading' });
-      console.log('Download concluído com sucesso');
+
+      return !!progressData;
     } catch (error) {
-      console.error('Erro ao fazer download:', error);
-      toast.error(`Erro ao fazer download do certificado: ${error.message}`, { id: 'download-loading' });
+      console.error('Erro ao verificar elegibilidade:', error);
+      return false;
     }
   };
 
-  // Abrir certificado em nova guia
-  const openCertificateInNewTab = async (certificate: any, userProfile: any) => {
+  const generateNewCertificate = async () => {
+    if (!user?.id || !solutionId) return;
+
     try {
-      toast.loading('Preparando certificado...', { id: 'pdf-loading' });
-      
-      console.log('Abrindo certificado em nova guia com URLs otimizadas...');
-      
-      // Verificar se já existe cache
-      if (certificate.certificate_url) {
-        console.log('Usando certificado do cache:', certificate.certificate_url);
-        
-        try {
-          // NOVO: Otimizar URL antes de abrir
-          let optimizedUrl = certificate.certificate_url;
-          try {
-            optimizedUrl = await optimizeCertificateURL(certificate.certificate_url, {
-              enableTracking: true,
-              priority: 'high'
-            });
-          } catch (urlError) {
-            console.warn('Erro ao otimizar URL para abertura, usando original:', urlError);
-          }
-          
-          // Tentar abrir do cache (URL otimizada)
-          const response = await fetch(optimizedUrl);
-          if (response.ok) {
-            const newWindow = window.open(optimizedUrl, '_blank');
-            if (!newWindow) {
-              throw new Error('Pop-ups bloqueados. Permita pop-ups para abrir o certificado.');
-            }
-            
-            toast.success('Certificado aberto em nova guia!', { id: 'pdf-loading' });
-            return;
-          }
-        } catch (cacheError) {
-          console.warn('Cache não disponível, gerando novo PDF:', cacheError);
-        }
-      }
-      
-      // Se não tem cache ou cache falhou, gerar novo PDF
-      console.log('Gerando novo PDF para abrir em nova guia...');
-      const { pdfBlob } = await generateAndCachePDF(certificate, userProfile);
-      
-      // Abrir PDF em nova guia
-      const pdfUrl = URL.createObjectURL(pdfBlob);
-      const newWindow = window.open(pdfUrl, '_blank');
-      if (!newWindow) {
-        throw new Error('Pop-ups bloqueados. Permita pop-ups para abrir o certificado.');
+      setIsGenerating(true);
+
+      // Buscar dados do progresso
+      const { data: progressData, error: progressError } = await supabase
+        .from('progress')
+        .select('*, solutions(*)')
+        .eq('user_id', user.id as any)
+        .eq('solution_id', solutionId as any)
+        .eq('is_completed', true as any)
+        .single();
+
+      if (progressError || !progressData) {
+        toast.error('Progresso não encontrado ou solução não completada.');
+        return;
       }
 
-      toast.success('Certificado aberto em nova guia!', { id: 'pdf-loading' });
-      
-      // Invalidar query para atualizar dados do certificado
-      queryClient.invalidateQueries({ queryKey: ['solution-certificate'] });
-      
-      setTimeout(() => URL.revokeObjectURL(pdfUrl), 10000);
-      
+      const validationCode = generateValidationCode();
+      const implementationDate = (progressData as any).completed_at || (progressData as any).created_at;
+
+      const { data: newCert, error: insertError } = await supabase
+        .from('solution_certificates')
+        .insert({
+          user_id: user.id,
+          solution_id: solutionId,
+          implementation_date: implementationDate,
+          validation_code: validationCode,
+          issued_at: new Date().toISOString()
+        } as any)
+        .select('*, solutions(*)')
+        .single();
+
+      if (insertError) {
+        console.error('Erro ao criar certificado:', insertError);
+        toast.error('Erro ao gerar novo certificado.');
+        return;
+      }
+
+      setCertificate(newCert);
+      toast.success('Novo certificado gerado com sucesso!');
+
     } catch (error) {
-      console.error('Erro ao abrir certificado em nova guia:', error);
-      toast.error(`Erro ao abrir certificado: ${error.message}`, { id: 'pdf-loading' });
+      console.error('Erro ao gerar novo certificado:', error);
+      toast.error('Erro inesperado.');
+    } finally {
+      setIsGenerating(false);
     }
+  };
+
+  const downloadCertificate = (certificate: any, userProfile: any) => {
+    if (!certificate || !userProfile) {
+      toast.error('Dados do certificado não disponíveis.');
+      return;
+    }
+
+    try {
+      // Criar um elemento temporário para download
+      const element = document.createElement('a');
+      const certificateText = `
+CERTIFICADO DE IMPLEMENTAÇÃO
+
+Este certificado atesta que ${userProfile.name || 'Usuário'} 
+implementou com sucesso a solução: ${certificate.solutions?.title || 'Solução'}
+
+Data de Implementação: ${new Date(certificate.implementation_date).toLocaleDateString('pt-BR')}
+Código de Validação: ${certificate.validation_code}
+Data de Emissão: ${new Date(certificate.issued_at).toLocaleDateString('pt-BR')}
+
+VIVER DE IA Club
+      `;
+
+      const file = new Blob([certificateText], { type: 'text/plain' });
+      element.href = URL.createObjectURL(file);
+      element.download = `certificado-${certificate.validation_code}.txt`;
+      document.body.appendChild(element);
+      element.click();
+      document.body.removeChild(element);
+
+      toast.success('Certificado baixado com sucesso!');
+    } catch (error) {
+      console.error('Erro ao baixar certificado:', error);
+      toast.error('Erro ao baixar certificado.');
+    }
+  };
+
+  const openCertificateInNewTab = (certificate: any, userProfile: any) => {
+    if (!certificate || !userProfile) {
+      toast.error('Dados do certificado não disponíveis.');
+      return;
+    }
+
+    try {
+      const certificateContent = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>Certificado de Implementação</title>
+          <style>
+            body { font-family: Arial, sans-serif; padding: 40px; text-align: center; }
+            .certificate { border: 3px solid #2563eb; padding: 40px; margin: 20px; }
+            .title { font-size: 24px; font-weight: bold; color: #2563eb; margin-bottom: 20px; }
+            .content { font-size: 16px; line-height: 1.6; }
+            .signature { margin-top: 40px; }
+          </style>
+        </head>
+        <body>
+          <div class="certificate">
+            <div class="title">CERTIFICADO DE IMPLEMENTAÇÃO</div>
+            <div class="content">
+              <p>Este certificado atesta que <strong>${userProfile.name || 'Usuário'}</strong></p>
+              <p>implementou com sucesso a solução:</p>
+              <p><strong>${certificate.solutions?.title || 'Solução'}</strong></p>
+              <br>
+              <p>Data de Implementação: ${new Date(certificate.implementation_date).toLocaleDateString('pt-BR')}</p>
+              <p>Código de Validação: ${certificate.validation_code}</p>
+              <p>Data de Emissão: ${new Date(certificate.issued_at).toLocaleDateString('pt-BR')}</p>
+            </div>
+            <div class="signature">
+              <p><strong>VIVER DE IA Club</strong></p>
+            </div>
+          </div>
+        </body>
+        </html>
+      `;
+
+      const newWindow = window.open('', '_blank');
+      if (newWindow) {
+        newWindow.document.write(certificateContent);
+        newWindow.document.close();
+      }
+    } catch (error) {
+      console.error('Erro ao abrir certificado:', error);
+      toast.error('Erro ao abrir certificado.');
+    }
+  };
+
+  const generateValidationCode = () => {
+    return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
   };
 
   return {
-    certificate: data?.certificate,
-    isEligible: data?.isEligible || false,
+    certificate,
+    isEligible,
     isLoading,
-    error,
-    generateCertificate: generateCertificate.mutate,
-    isGenerating: generateCertificate.isPending,
+    isGenerating,
+    generateCertificate,
+    checkEligibility,
+    generateNewCertificate,
     downloadCertificate,
     openCertificateInNewTab
   };
