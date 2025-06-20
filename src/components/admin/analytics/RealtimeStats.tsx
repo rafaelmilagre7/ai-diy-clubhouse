@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Activity, Clock, Users, Award } from 'lucide-react';
@@ -33,7 +32,7 @@ export const RealtimeStats = () => {
         // Contar usuários únicos - verificar se data existe e não é erro
         const uniqueUsers = new Set(
           Array.isArray(activeUsersData) 
-            ? activeUsersData.map(p => p.user_id).filter(Boolean)
+            ? activeUsersData.map((p: any) => p?.user_id).filter(Boolean)
             : []
         );
         
@@ -41,7 +40,7 @@ export const RealtimeStats = () => {
         const { data: completedData, error: completedError } = await supabase
           .from('progress')
           .select('created_at, completed_at')
-          .eq('is_completed', true)
+          .eq('is_completed', true as any)
           .not('completed_at', 'is', null);
           
         if (completedError) throw completedError;
@@ -51,7 +50,7 @@ export const RealtimeStats = () => {
         let completedCount = 0;
         
         if (Array.isArray(completedData) && completedData.length > 0) {
-          completedData.forEach(item => {
+          completedData.forEach((item: any) => {
             if (item && typeof item === 'object' && 'created_at' in item && 'completed_at' in item) {
               if (item.created_at && item.completed_at) {
                 const start = new Date(item.created_at);
@@ -72,7 +71,7 @@ export const RealtimeStats = () => {
         const { count: totalCompletions, error: completionsError } = await supabase
           .from('progress')
           .select('id', { count: 'exact', head: true })
-          .eq('is_completed', true);
+          .eq('is_completed', true as any);
           
         if (completionsError) throw completionsError;
         

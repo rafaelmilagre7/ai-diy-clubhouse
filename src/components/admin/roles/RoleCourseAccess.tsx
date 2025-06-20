@@ -1,25 +1,11 @@
 
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Checkbox } from '@/components/ui/checkbox';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Loader2, Save, BookOpen, Eye, EyeOff } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
 import { supabase } from '@/lib/supabase';
-import { toast } from 'sonner';
-
-interface LearningCourse {
-  id: string;
-  title: string;
-  description: string;
-  cover_image_url: string;
-  slug: string;
-  published: boolean;
-  order_index: number;
-  created_at: string;
-  updated_at: string;
-  created_by: string;
-}
+import { useToast } from '@/hooks/use-toast';
+import { LearningCourse } from '@/lib/supabase/types';
 
 interface RoleCourseAccessProps {
   roleId: string;
@@ -29,123 +15,115 @@ interface RoleCourseAccessProps {
 export const RoleCourseAccess = ({ roleId, roleName }: RoleCourseAccessProps) => {
   const [courses, setCourses] = useState<LearningCourse[]>([]);
   const [selectedCourses, setSelectedCourses] = useState<string[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isSaving, setIsSaving] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const { toast } = useToast();
 
   useEffect(() => {
-    loadCourses();
-    loadRoleCourseAccess();
+    fetchCourses();
+    fetchRoleAccess();
   }, [roleId]);
 
-  const loadCourses = async () => {
+  const fetchCourses = async () => {
     try {
       const { data, error } = await supabase
         .from('learning_courses')
         .select('*')
-        .order('order_index', { ascending: true });
+        .eq('published', true)
+        .order('title');
 
       if (error) throw error;
-
-      // Garantir que data seja um array e fazer cast seguro
-      const coursesData = Array.isArray(data) ? data as LearningCourse[] : [];
-      setCourses(coursesData);
+      
+      // Usar 'unknown' primeiro para evitar erro de conversão direta
+      setCourses((data as unknown) as LearningCourse[]);
     } catch (error) {
-      console.error('Erro ao carregar cursos:', error);
-      toast.error('Erro ao carregar cursos');
-      setCourses([]);
+      console.error('Erro ao buscar cursos:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível carregar os cursos.",
+        variant: "destructive",
+      });
     }
   };
 
-  const loadRoleCourseAccess = async () => {
+  const fetchRoleAccess = async () => {
     try {
       const { data, error } = await supabase
         .from('course_access_control')
         .select('course_id')
-        .eq('role_id', roleId);
+        .eq('role_id', roleId as any);
 
       if (error) throw error;
-
-      const courseIds = (data || []).map(item => item.course_id).filter(Boolean);
+      
+      const courseIds = Array.isArray(data) 
+        ? data.map((item: any) => item?.course_id).filter(Boolean)
+        : [];
+      
       setSelectedCourses(courseIds);
     } catch (error) {
-      console.error('Erro ao carregar acesso do papel:', error);
-      toast.error('Erro ao carregar permissões de acesso');
+      console.error('Erro ao buscar acessos:', error);
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
   const handleCourseToggle = (courseId: string, checked: boolean) => {
-    setSelectedCourses(prev =>
-      checked
+    setSelectedCourses(prev => 
+      checked 
         ? [...prev, courseId]
         : prev.filter(id => id !== courseId)
     );
   };
 
-  const saveRoleCourseAccess = async () => {
-    setIsSaving(true);
+  const saveChanges = async () => {
+    setSaving(true);
     try {
-      // Remover todas as permissões existentes para este papel
-      await supabase
+      // Remover acessos existentes
+      const { error: deleteError } = await supabase
         .from('course_access_control')
         .delete()
-        .eq('role_id', roleId);
+        .eq('role_id', roleId as any);
 
-      // Adicionar novas permissões
+      if (deleteError) throw deleteError;
+
+      // Adicionar novos acessos
       if (selectedCourses.length > 0) {
         const accessRecords = selectedCourses.map(courseId => ({
           role_id: roleId,
           course_id: courseId
         }));
 
-        const { error } = await supabase
+        const { error: insertError } = await supabase
           .from('course_access_control')
-          .insert(accessRecords);
+          .insert(accessRecords as any);
 
-        if (error) throw error;
+        if (insertError) throw insertError;
       }
 
-      toast.success('Permissões de acesso salvas com sucesso!');
+      toast({
+        title: "Sucesso",
+        description: "Permissões de acesso atualizadas com sucesso.",
+      });
     } catch (error) {
-      console.error('Erro ao salvar permissões:', error);
-      toast.error('Erro ao salvar permissões de acesso');
+      console.error('Erro ao salvar:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao atualizar as permissões.",
+        variant: "destructive",
+      });
     } finally {
-      setIsSaving(false);
+      setSaving(false);
     }
   };
 
-  const getAccessBadge = (courseId: string) => {
-    const hasAccess = selectedCourses.includes(courseId);
-    return hasAccess ? (
-      <Badge className="bg-green-100 text-green-800 border-green-200">
-        <Eye className="w-3 h-3 mr-1" />
-        Com Acesso
-      </Badge>
-    ) : (
-      <Badge variant="outline" className="border-gray-300 text-gray-600">
-        <EyeOff className="w-3 h-3 mr-1" />
-        Sem Acesso
-      </Badge>
-    );
-  };
-
-  if (isLoading) {
+  if (loading) {
     return (
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <BookOpen className="w-5 h-5" />
-            Controle de Acesso a Cursos
-          </CardTitle>
-          <CardDescription>
-            Carregando cursos disponíveis...
-          </CardDescription>
+          <CardTitle>Acesso a Cursos - {roleName}</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex items-center justify-center py-8">
-            <Loader2 className="w-6 h-6 animate-spin" />
-          </div>
+          <div className="text-center py-4">Carregando...</div>
         </CardContent>
       </Card>
     );
@@ -154,93 +132,41 @@ export const RoleCourseAccess = ({ roleId, roleName }: RoleCourseAccessProps) =>
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <BookOpen className="w-5 h-5" />
-          Controle de Acesso a Cursos
-        </CardTitle>
-        <CardDescription>
-          Configure quais cursos o papel "{roleName}" pode acessar. 
-          Se nenhum curso for selecionado, todos serão acessíveis.
-        </CardDescription>
+        <CardTitle>Acesso a Cursos - {roleName}</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        {courses.length === 0 ? (
-          <div className="text-center py-8 text-muted-foreground">
-            Nenhum curso encontrado
-          </div>
-        ) : (
-          <>
-            <div className="space-y-3">
-              {courses.map((course) => (
-                <div key={course.id} className="flex items-center justify-between p-3 border rounded-lg">
-                  <div className="flex items-center space-x-3">
-                    <Checkbox
-                      id={`course-${course.id}`}
-                      checked={selectedCourses.includes(course.id)}
-                      onCheckedChange={(checked) =>
-                        handleCourseToggle(course.id, checked === true)
-                      }
-                    />
-                    <div className="flex-1">
-                      <label
-                        htmlFor={`course-${course.id}`}
-                        className="text-sm font-medium cursor-pointer"
-                      >
-                        {course.title}
-                      </label>
-                      {course.description && (
-                        <p className="text-xs text-muted-foreground mt-1">
-                          {course.description}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    {getAccessBadge(course.id)}
-                    {course.published ? (
-                      <Badge variant="outline" className="bg-blue-50 text-blue-700">
-                        Publicado
-                      </Badge>
-                    ) : (
-                      <Badge variant="outline" className="bg-yellow-50 text-yellow-700">
-                        Rascunho
-                      </Badge>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            <div className="flex justify-between items-center pt-4 border-t">
-              <div className="text-sm text-muted-foreground">
-                {selectedCourses.length === 0 
-                  ? 'Acesso público (todos os usuários podem acessar)'
-                  : `${selectedCourses.length} curso(s) restritos a este papel`
+        <div className="space-y-3">
+          {courses.map((course) => (
+            <div key={course.id} className="flex items-center space-x-3">
+              <Checkbox
+                id={`course-${course.id}`}
+                checked={selectedCourses.includes(course.id)}
+                onCheckedChange={(checked) => 
+                  handleCourseToggle(course.id, checked as boolean)
                 }
-              </div>
-              <Button
-                onClick={saveRoleCourseAccess}
-                disabled={isSaving}
-                className="min-w-[120px]"
+              />
+              <label 
+                htmlFor={`course-${course.id}`}
+                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
               >
-                {isSaving ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Salvando...
-                  </>
-                ) : (
-                  <>
-                    <Save className="w-4 h-4 mr-2" />
-                    Salvar
-                  </>
-                )}
-              </Button>
+                {course.title}
+              </label>
             </div>
-          </>
+          ))}
+        </div>
+
+        {courses.length === 0 && (
+          <div className="text-center py-4 text-muted-foreground">
+            Nenhum curso publicado encontrado.
+          </div>
         )}
+
+        <div className="flex justify-end pt-4">
+          <Button onClick={saveChanges} disabled={saving}>
+            {saving ? 'Salvando...' : 'Salvar Alterações'}
+          </Button>
+        </div>
       </CardContent>
     </Card>
   );
 };
-
-export default RoleCourseAccess;
