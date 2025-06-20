@@ -1,393 +1,577 @@
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
+import { supabase } from '@/lib/supabase';
+import { AlertTriangle, CheckCircle, RefreshCw, ExternalLink, Copy, Database, Shield, Zap } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { AlertCircle, CheckCircle, RefreshCw, Database, Mail, Shield, ChevronDown, Send, TestTube } from 'lucide-react';
-import { useSupabaseHealthCheck } from '@/hooks/supabase/useSupabaseHealthCheck';
-import { useResendHealthCheck } from '@/hooks/supabase/useResendHealthCheck';
+import { toast } from 'sonner';
+
+interface TestResult {
+  name: string;
+  status: 'success' | 'error' | 'warning';
+  message: string;
+  details?: string;
+  timestamp: Date;
+}
+
+interface DebugInfo {
+  supabaseUrl: string;
+  supabaseKey: string;
+  isConnected: boolean;
+  error?: string;
+  timestamp: Date;
+}
+
 export const SupabaseErrorDiagnostics: React.FC = () => {
-  const {
-    healthStatus: supabaseHealth,
-    isChecking: isCheckingSupabase,
-    performHealthCheck: checkSupabase
-  } = useSupabaseHealthCheck();
-  const {
-    healthStatus: resendHealth,
-    isChecking: isCheckingResend,
-    performHealthCheck: checkResend,
-    sendTestEmail,
-    debugInfo: resendDebugInfo
-  } = useResendHealthCheck();
-  const [testEmail, setTestEmail] = useState('');
-  const [showSupabaseDebug, setShowSupabaseDebug] = useState(false);
-  const [showResendDebug, setShowResendDebug] = useState(false);
-  const getStatusColor = (status: string | boolean) => {
-    if (typeof status === 'boolean') {
-      return status ? 'text-green-500' : 'text-red-500';
+  const [tests, setTests] = useState<TestResult[]>([]);
+  const [isRunning, setIsRunning] = useState(false);
+  const [debugInfo, setDebugInfo] = useState<DebugInfo | null>(null);
+  const [lastRun, setLastRun] = useState<Date | null>(null);
+
+  const runDiagnostics = async () => {
+    setIsRunning(true);
+    const results: TestResult[] = [];
+    
+    try {
+      // Test 1: Check Supabase Connection
+      try {
+        const { data, error } = await supabase.from('profiles').select('count').limit(1);
+        
+        if (error) {
+          results.push({
+            name: 'Conexão Supabase',
+            status: 'error',
+            message: 'Falha na conexão com o Supabase',
+            details: error.message,
+            timestamp: new Date()
+          });
+        } else {
+          results.push({
+            name: 'Conexão Supabase',
+            status: 'success',
+            message: 'Conexão estabelecida com sucesso',
+            timestamp: new Date()
+          });
+        }
+      } catch (err: any) {
+        results.push({
+          name: 'Conexão Supabase',
+          status: 'error',
+          message: 'Erro crítico de conexão',
+          details: err.message,
+          timestamp: new Date()
+        });
+      }
+
+      // Test 2: Authentication Status
+      try {
+        const { data: { user }, error } = await supabase.auth.getUser();
+        
+        if (error) {
+          results.push({
+            name: 'Status de Autenticação',
+            status: 'warning',
+            message: 'Erro ao verificar usuário',
+            details: error.message,
+            timestamp: new Date()
+          });
+        } else if (user) {
+          results.push({
+            name: 'Status de Autenticação',
+            status: 'success',
+            message: `Usuário autenticado: ${user.email}`,
+            timestamp: new Date()
+          });
+        } else {
+          results.push({
+            name: 'Status de Autenticação',
+            status: 'warning',
+            message: 'Nenhum usuário autenticado',
+            timestamp: new Date()
+          });
+        }
+      } catch (err: any) {
+        results.push({
+          name: 'Status de Autenticação',
+          status: 'error',
+          message: 'Erro ao verificar autenticação',
+          details: err.message,
+          timestamp: new Date()
+        });
+      }
+
+      // Test 3: RLS Policies Check
+      try {
+        const { data, error } = await supabase.rpc('check_rls_status');
+        
+        if (error) {
+          results.push({
+            name: 'Políticas RLS',
+            status: 'warning',
+            message: 'Não foi possível verificar RLS',
+            details: error.message,
+            timestamp: new Date()
+          });
+        } else if (data) {
+          const unsecuredTables = data.filter((table: any) => table.security_status === '🔴 SEM PROTEÇÃO');
+          
+          if (unsecuredTables.length > 0) {
+            results.push({
+              name: 'Políticas RLS',
+              status: 'warning',
+              message: `${unsecuredTables.length} tabela(s) sem proteção RLS`,
+              details: `Tabelas: ${unsecuredTables.map((t: any) => t.table_name).join(', ')}`,
+              timestamp: new Date()
+            });
+          } else {
+            results.push({
+              name: 'Políticas RLS',
+              status: 'success',
+              message: 'Todas as tabelas estão protegidas',
+              timestamp: new Date()
+            });
+          }
+        }
+      } catch (err: any) {
+        results.push({
+          name: 'Políticas RLS',
+          status: 'error',
+          message: 'Erro ao verificar políticas RLS',
+          details: err.message,
+          timestamp: new Date()
+        });
+      }
+
+      // Test 4: Database Functions
+      try {
+        const { data, error } = await supabase.rpc('get_current_user_role');
+        
+        if (error) {
+          results.push({
+            name: 'Funções do Banco',
+            status: 'error',
+            message: 'Erro ao executar função de teste',
+            details: error.message,
+            timestamp: new Date()
+          });
+        } else {
+          results.push({
+            name: 'Funções do Banco',
+            status: 'success',
+            message: 'Funções funcionando corretamente',
+            details: `Papel atual: ${data || 'não definido'}`,
+            timestamp: new Date()
+          });
+        }
+      } catch (err: any) {
+        results.push({
+          name: 'Funções do Banco',
+          status: 'error',
+          message: 'Erro crítico nas funções',
+          details: err.message,
+          timestamp: new Date()
+        });
+      }
+
+      // Test 5: Storage Access
+      try {
+        const { data, error } = await supabase.storage.listBuckets();
+        
+        if (error) {
+          results.push({
+            name: 'Acesso ao Storage',
+            status: 'error',
+            message: 'Erro ao acessar storage',
+            details: error.message,
+            timestamp: new Date()
+          });
+        } else {
+          results.push({
+            name: 'Acesso ao Storage',
+            status: 'success',
+            message: `${data.length} bucket(s) acessível(is)`,
+            details: data.map(b => b.name).join(', '),
+            timestamp: new Date()
+          });
+        }
+      } catch (err: any) {
+        results.push({
+          name: 'Acesso ao Storage',
+          status: 'error',
+          message: 'Erro crítico no storage',
+          details: err.message,
+          timestamp: new Date()
+        });
+      }
+
+      setTests(results);
+      setLastRun(new Date());
+
+      // Update debug info
+      setDebugInfo({
+        supabaseUrl: supabase.supabaseUrl,
+        supabaseKey: supabase.supabaseKey.substring(0, 20) + '...',
+        isConnected: results.some(r => r.name === 'Conexão Supabase' && r.status === 'success'),
+        timestamp: new Date()
+      });
+
+    } catch (error: any) {
+      console.error('Erro durante diagnósticos:', error);
+      results.push({
+        name: 'Erro Geral',
+        status: 'error',
+        message: 'Erro durante execução dos testes',
+        details: error.message,
+        timestamp: new Date()
+      });
+      setTests(results);
+    } finally {
+      setIsRunning(false);
     }
+  };
+
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text);
+    toast.success('Copiado para a área de transferência');
+  };
+
+  const exportDiagnostics = () => {
+    const report = {
+      timestamp: new Date().toISOString(),
+      tests: tests,
+      debugInfo: debugInfo,
+      environment: {
+        userAgent: navigator.userAgent,
+        url: window.location.href,
+        timestamp: new Date().toISOString()
+      }
+    };
+    
+    const blob = new Blob([JSON.stringify(report, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `supabase-diagnostics-${Date.now()}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    
+    toast.success('Relatório exportado com sucesso');
+  };
+
+  useEffect(() => {
+    runDiagnostics();
+  }, []);
+
+  const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'operational':
-      case 'connected':
-      case 'authenticated':
-        return 'text-green-500';
+      case 'success':
+        return <CheckCircle className="h-4 w-4 text-green-500" />;
+      case 'warning':
+        return <AlertTriangle className="h-4 w-4 text-yellow-500" />;
       case 'error':
-      case 'disconnected':
-      case 'unauthenticated':
-        return 'text-red-500';
-      case 'slow':
-        return 'text-yellow-500';
+        return <AlertTriangle className="h-4 w-4 text-red-500" />;
       default:
-        return 'text-gray-500';
+        return <AlertTriangle className="h-4 w-4 text-gray-500" />;
     }
   };
-  const getStatusBadge = (status: string | boolean, trueLabel = 'OK', falseLabel = 'Erro') => {
-    const isOk = typeof status === 'boolean' ? status : status === 'operational' || status === 'connected' || status === 'authenticated';
-    return <Badge variant={isOk ? "default" : "destructive"} className={isOk ? "bg-green-500" : ""}>
-        {isOk ? trueLabel : falseLabel}
-      </Badge>;
-  };
-  const handleSendTestEmail = async () => {
-    if (!testEmail || !testEmail.includes('@')) {
-      return;
+
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'success':
+        return <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">Sucesso</Badge>;
+      case 'warning':
+        return <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">Aviso</Badge>;
+      case 'error':
+        return <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">Erro</Badge>;
+      default:
+        return <Badge variant="outline">Desconhecido</Badge>;
     }
-    await sendTestEmail(testEmail);
   };
-  return <div className="space-y-6">
-      <div className="flex items-center justify-between">
+
+  return (
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Diagnóstico Completo do Sistema</h1>
+          <h2 className="text-2xl font-bold">Diagnóstico do Supabase</h2>
           <p className="text-muted-foreground">
-            Monitoramento de saúde do Supabase e sistemas integrados
+            Verificação da saúde e conectividade do sistema
           </p>
         </div>
         <div className="flex gap-2">
-          <Button onClick={checkSupabase} disabled={isCheckingSupabase} variant="outline">
-            {isCheckingSupabase ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Database className="h-4 w-4" />}
-            Verificar Supabase
+          <Button 
+            onClick={runDiagnostics} 
+            disabled={isRunning}
+            variant="outline"
+          >
+            <RefreshCw className={`h-4 w-4 mr-2 ${isRunning ? 'animate-spin' : ''}`} />
+            {isRunning ? 'Executando...' : 'Executar Testes'}
           </Button>
-          <Button onClick={() => checkResend(true)} disabled={isCheckingResend} variant="outline">
-            {isCheckingResend ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Mail className="h-4 w-4" />}
-            Verificar Email
+          <Button 
+            onClick={exportDiagnostics}
+            disabled={tests.length === 0}
+            variant="outline"
+          >
+            <ExternalLink className="h-4 w-4 mr-2" />
+            Exportar
           </Button>
         </div>
       </div>
 
-      <Tabs defaultValue="overview" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="overview">Visão Geral</TabsTrigger>
-          <TabsTrigger value="supabase">Supabase</TabsTrigger>
-          <TabsTrigger value="email">Sistema de Email</TabsTrigger>
-          <TabsTrigger value="test">Testes</TabsTrigger>
+      {lastRun && (
+        <Alert>
+          <AlertTriangle className="h-4 w-4" />
+          <AlertDescription>
+            Última execução: {lastRun.toLocaleString('pt-BR')}
+          </AlertDescription>
+        </Alert>
+      )}
+
+      <Tabs defaultValue="results" className="w-full">
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="results">
+            <Shield className="h-4 w-4 mr-2" />
+            Resultados
+          </TabsTrigger>
+          <TabsTrigger value="info">
+            <Database className="h-4 w-4 mr-2" />
+            Informações
+          </TabsTrigger>
+          <TabsTrigger value="quick">
+            <Zap className="h-4 w-4 mr-2" />
+            Ações Rápidas
+          </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="overview" className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <TabsContent value="results" className="space-y-4">
+          {tests.length === 0 ? (
             <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Status Geral</CardTitle>
-                <Database className="h-4 w-4 text-muted-foreground" />
+              <CardContent className="flex items-center justify-center py-8">
+                <div className="text-center">
+                  <Database className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                  <p className="text-muted-foreground">Nenhum teste executado ainda</p>
+                  <Button 
+                    onClick={runDiagnostics} 
+                    className="mt-4"
+                    disabled={isRunning}
+                  >
+                    {isRunning ? 'Executando...' : 'Executar Diagnósticos'}
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="grid gap-4">
+              {tests.map((test, index) => (
+                <Card key={index}>
+                  <CardHeader className="pb-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        {getStatusIcon(test.status)}
+                        <CardTitle className="text-base">{test.name}</CardTitle>
+                      </div>
+                      {getStatusBadge(test.status)}
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-sm mb-2">{test.message}</p>
+                    {test.details && (
+                      <div className="bg-muted p-3 rounded-md">
+                        <p className="text-xs text-muted-foreground font-mono">
+                          {test.details}
+                        </p>
+                      </div>
+                    )}
+                    <p className="text-xs text-muted-foreground mt-2">
+                      {test.timestamp.toLocaleString('pt-BR')}
+                    </p>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+        </TabsContent>
+
+        <TabsContent value="info" className="space-y-4">
+          {debugInfo ? (
+            <Card>
+              <CardHeader>
+                <CardTitle>Informações da Conexão</CardTitle>
+                <CardDescription>
+                  Detalhes da configuração atual do Supabase
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-medium">URL do Supabase</label>
+                    <div className="flex items-center gap-2 mt-1">
+                      <code className="text-xs bg-muted p-2 rounded flex-1">
+                        {debugInfo.supabaseUrl}
+                      </code>
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        onClick={() => copyToClipboard(debugInfo.supabaseUrl)}
+                      >
+                        <Copy className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <label className="text-sm font-medium">Chave Anônima</label>
+                    <div className="flex items-center gap-2 mt-1">
+                      <code className="text-xs bg-muted p-2 rounded flex-1">
+                        {debugInfo.supabaseKey}
+                      </code>
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        onClick={() => copyToClipboard(debugInfo.supabaseKey)}
+                      >
+                        <Copy className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <label className="text-sm font-medium">Status da Conexão</label>
+                    <div className="flex items-center gap-2 mt-1">
+                      {debugInfo.isConnected ? (
+                        <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                          Conectado
+                        </Badge>
+                      ) : (
+                        <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">
+                          Desconectado
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <label className="text-sm font-medium">Última Verificação</label>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      {debugInfo.timestamp.toLocaleString('pt-BR')}
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ) : (
+            <Card>
+              <CardContent className="flex items-center justify-center py-8">
+                <p className="text-muted-foreground">Execute os diagnósticos para ver as informações</p>
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
+
+        <TabsContent value="quick" className="space-y-4">
+          <div className="grid gap-4 md:grid-cols-2">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">Limpar Cache do Auth</CardTitle>
+                <CardDescription>
+                  Remove dados de autenticação em cache
+                </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="flex items-center gap-2">
-                  {supabaseHealth.isHealthy && resendHealth.isHealthy ? <CheckCircle className="h-4 w-4 text-green-500" /> : <AlertCircle className="h-4 w-4 text-red-500" />}
-                  {getStatusBadge(supabaseHealth.isHealthy && resendHealth.isHealthy, 'Operacional', 'Com Problemas')}
-                </div>
+                <Button 
+                  variant="outline" 
+                  className="w-full"
+                  onClick={() => {
+                    localStorage.clear();
+                    sessionStorage.clear();
+                    toast.success('Cache limpo com sucesso');
+                  }}
+                >
+                  Limpar Cache
+                </Button>
               </CardContent>
             </Card>
 
             <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Banco de Dados</CardTitle>
-                <Database className="h-4 w-4 text-muted-foreground" />
+              <CardHeader>
+                <CardTitle className="text-base">Forçar Logout</CardTitle>
+                <CardDescription>
+                  Desconecta o usuário atual
+                </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="flex items-center gap-2">
-                  {supabaseHealth.databaseStatus === 'operational' ? <CheckCircle className="h-4 w-4 text-green-500" /> : <AlertCircle className="h-4 w-4 text-red-500" />}
-                  {getStatusBadge(supabaseHealth.databaseStatus, 'Conectado', 'Erro')}
-                </div>
+                <Button 
+                  variant="outline" 
+                  className="w-full"
+                  onClick={async () => {
+                    await supabase.auth.signOut();
+                    toast.success('Logout realizado');
+                    window.location.reload();
+                  }}
+                >
+                  Fazer Logout
+                </Button>
               </CardContent>
             </Card>
 
             <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Sistema de Email</CardTitle>
-                <Mail className="h-4 w-4 text-muted-foreground" />
+              <CardHeader>
+                <CardTitle className="text-base">Verificar Conexão</CardTitle>
+                <CardDescription>
+                  Testa conectividade básica
+                </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="flex items-center gap-2">
-                  {resendHealth.isHealthy ? <CheckCircle className="h-4 w-4 text-green-500" /> : <AlertCircle className="h-4 w-4 text-red-500" />}
-                  {getStatusBadge(resendHealth.isHealthy, 'Operacional', 'Com Problemas')}
-                </div>
+                <Button 
+                  variant="outline" 
+                  className="w-full"
+                  onClick={async () => {
+                    try {
+                      const { error } = await supabase.from('profiles').select('count').limit(1);
+                      if (error) throw error;
+                      toast.success('Conexão OK');
+                    } catch (err) {
+                      toast.error('Erro na conexão');
+                    }
+                  }}
+                >
+                  Testar Conexão
+                </Button>
               </CardContent>
             </Card>
 
             <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Autenticação</CardTitle>
-                <Shield className="h-4 w-4 text-muted-foreground" />
+              <CardHeader>
+                <CardTitle className="text-base">Configurar Storage</CardTitle>
+                <CardDescription>
+                  Configura buckets de storage
+                </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="flex items-center gap-2">
-                  {supabaseHealth.authStatus === 'authenticated' ? <CheckCircle className="h-4 w-4 text-green-500" /> : <AlertCircle className="h-4 w-4 text-orange-500" />}
-                  {getStatusBadge(supabaseHealth.authStatus, 'Autenticado', 'Não Auth')}
-                </div>
+                <Button 
+                  variant="outline" 
+                  className="w-full"
+                  onClick={async () => {
+                    try {
+                      const { data, error } = await supabase.rpc('setup_learning_storage_buckets');
+                      if (error) throw error;
+                      toast.success('Storage configurado');
+                    } catch (err) {
+                      toast.error('Erro ao configurar storage');
+                    }
+                  }}
+                >
+                  Configurar Storage
+                </Button>
               </CardContent>
             </Card>
           </div>
-
-          {/* Resumo de Problemas */}
-          {(supabaseHealth.issues.length > 0 || resendHealth.issues.length > 0) && <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <AlertCircle className="h-5 w-5 text-red-500" />
-                  Problemas Detectados
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                {supabaseHealth.issues.map((issue, index) => <div key={`supabase-${index}`} className="p-3 rounded-md bg-red-50 border border-red-200">
-                    <p className="text-sm text-red-800"><strong>[Supabase]</strong> {issue}</p>
-                  </div>)}
-                {resendHealth.issues.map((issue, index) => <div key={`resend-${index}`} className="p-3 rounded-md bg-orange-50 border border-orange-200">
-                    <p className="text-sm text-orange-800"><strong>[Email]</strong> {issue}</p>
-                  </div>)}
-              </CardContent>
-            </Card>}
-        </TabsContent>
-
-        <TabsContent value="supabase" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle className="flex items-center gap-2">
-                    <Database className="h-5 w-5" />
-                    Status do Supabase
-                  </CardTitle>
-                  <CardDescription>Verificação detalhada do banco de dados e serviços</CardDescription>
-                </div>
-                <div className="flex items-center gap-2">
-                  {isCheckingSupabase ? <RefreshCw className="h-4 w-4 animate-spin text-blue-500" /> : supabaseHealth.isHealthy ? <CheckCircle className="h-4 w-4 text-green-500" /> : <AlertCircle className="h-4 w-4 text-red-500" />}
-                  {getStatusBadge(supabaseHealth.isHealthy, 'Sistema OK', 'Com Problemas')}
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                <div className="flex items-center gap-3 p-3 rounded-lg border">
-                  <Database className={`h-5 w-5 ${getStatusColor(supabaseHealth.connectionStatus)}`} />
-                  <div>
-                    <div className="font-medium">Conexão</div>
-                    {getStatusBadge(supabaseHealth.connectionStatus, 'Conectado', 'Erro')}
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-3 p-3 rounded-lg border">
-                  <Shield className={`h-5 w-5 ${getStatusColor(supabaseHealth.authStatus)}`} />
-                  <div>
-                    <div className="font-medium">Autenticação</div>
-                    {getStatusBadge(supabaseHealth.authStatus, 'OK', 'Erro')}
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-3 p-3 rounded-lg border">
-                  <Database className={`h-5 w-5 ${getStatusColor(supabaseHealth.databaseStatus)}`} />
-                  <div>
-                    <div className="font-medium">Banco</div>
-                    {getStatusBadge(supabaseHealth.databaseStatus, 'OK', 'Erro')}
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-3 p-3 rounded-lg border">
-                  <Database className={`h-5 w-5 ${getStatusColor(supabaseHealth.storageStatus)}`} />
-                  <div>
-                    <div className="font-medium">Storage</div>
-                    {getStatusBadge(supabaseHealth.storageStatus, 'OK', 'Erro')}
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex gap-2">
-                <Button onClick={checkSupabase} disabled={isCheckingSupabase} variant="outline">
-                  {isCheckingSupabase ? <>
-                      <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                      Verificando...
-                    </> : 'Verificar Status'}
-                </Button>
-
-                <Button onClick={() => setShowSupabaseDebug(!showSupabaseDebug)} variant="ghost" size="sm">
-                  <ChevronDown className={`h-4 w-4 mr-2 transition-transform ${showSupabaseDebug ? 'rotate-180' : ''}`} />
-                  Debug Info
-                </Button>
-              </div>
-
-              {/* Debug Info Supabase */}
-              <Collapsible open={showSupabaseDebug} onOpenChange={setShowSupabaseDebug}>
-                <CollapsibleContent className="space-y-4">
-                  <div className="p-4 rounded-lg bg-gray-50 border">
-                    <h4 className="font-medium mb-3">Informações de Debug - Supabase:</h4>
-                    <div className="space-y-2 text-sm font-mono">
-                      <div><strong>Última Verificação:</strong> {supabaseHealth.checkedAt.toLocaleString('pt-BR')}</div>
-                      <div><strong>Status da Conexão:</strong> {supabaseHealth.connectionStatus}</div>
-                      <div><strong>Status de Auth:</strong> {supabaseHealth.authStatus}</div>
-                      <div><strong>Status do DB:</strong> {supabaseHealth.databaseStatus}</div>
-                      <div><strong>Problemas:</strong> {supabaseHealth.issues.length}</div>
-                    </div>
-                  </div>
-                </CollapsibleContent>
-              </Collapsible>
-
-              {/* Erros Supabase */}
-              {supabaseHealth.issues.length > 0 && <div className="space-y-2">
-                  <h4 className="font-medium text-red-600">Problemas do Supabase:</h4>
-                  {supabaseHealth.issues.map((issue, index) => <div key={index} className="p-3 rounded-md bg-red-50 border border-red-200">
-                      <p className="text-sm text-red-800">{issue}</p>
-                    </div>)}
-                </div>}
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="email" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle className="flex items-center gap-2">
-                    <Mail className="h-5 w-5" />
-                    Sistema de Email (Resend)
-                  </CardTitle>
-                  <CardDescription>Diagnóstico completo do sistema de envio de emails</CardDescription>
-                </div>
-                <div className="flex items-center gap-2">
-                  {isCheckingResend ? <RefreshCw className="h-4 w-4 animate-spin text-blue-500" /> : resendHealth.isHealthy ? <CheckCircle className="h-4 w-4 text-green-500" /> : <AlertCircle className="h-4 w-4 text-red-500" />}
-                  {getStatusBadge(resendHealth.isHealthy, 'Sistema OK', 'Com Problemas')}
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {/* Status Cards */}
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                <div className="flex items-center gap-3 p-3 rounded-lg border">
-                  <Mail className={`h-5 w-5 ${getStatusColor(resendHealth.apiKeyValid)}`} />
-                  <div>
-                    <div className="font-medium">API Key</div>
-                    {getStatusBadge(resendHealth.apiKeyValid, 'Válida', 'Inválida')}
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-3 p-3 rounded-lg border">
-                  <Database className={`h-5 w-5 ${getStatusColor(resendHealth.connectivity)}`} />
-                  <div>
-                    <div className="font-medium">Conectividade</div>
-                    {getStatusBadge(resendHealth.connectivity === 'connected', 'Conectado', 'Erro')}
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-3 p-3 rounded-lg border">
-                  <Shield className={`h-5 w-5 ${getStatusColor(resendHealth.domainValid)}`} />
-                  <div>
-                    <div className="font-medium">Domínio</div>
-                    {getStatusBadge(resendHealth.domainValid, 'Verificado', 'Pendente')}
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-3 p-3 rounded-lg border">
-                  <RefreshCw className="h-5 w-5 text-blue-500" />
-                  <div>
-                    <div className="font-medium">Latência</div>
-                    <Badge variant="outline">
-                      {resendHealth.responseTime ? `${resendHealth.responseTime}ms` : '--'}
-                    </Badge>
-                  </div>
-                </div>
-              </div>
-
-              {/* Ações */}
-              <div className="flex gap-2">
-                <Button onClick={() => checkResend(true)} disabled={isCheckingResend} variant="outline">
-                  {isCheckingResend ? <>
-                      <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                      Verificando...
-                    </> : 'Forçar Verificação'}
-                </Button>
-
-                <Button onClick={() => setShowResendDebug(!showResendDebug)} variant="ghost" size="sm">
-                  <ChevronDown className={`h-4 w-4 mr-2 transition-transform ${showResendDebug ? 'rotate-180' : ''}`} />
-                  Debug Info
-                </Button>
-              </div>
-
-              {/* Erros Email */}
-              {resendHealth.issues.length > 0 && <div className="space-y-2">
-                  <h4 className="font-medium text-red-600">Problemas do Sistema de Email:</h4>
-                  {resendHealth.issues.map((issue, index) => <div key={index} className="p-3 rounded-md bg-red-50 border border-red-200">
-                      <p className="text-sm text-red-800">{issue}</p>
-                    </div>)}
-                </div>}
-
-              {/* Debug Info Resend */}
-              <Collapsible open={showResendDebug} onOpenChange={setShowResendDebug}>
-                <CollapsibleContent className="space-y-4">
-                  {resendDebugInfo && <div className="p-4 rounded-lg border bg-gray-800">
-                      <h4 className="font-medium mb-3">Informações de Debug - Resend:</h4>
-                      <div className="space-y-2 text-sm font-mono">
-                        <div><strong>Timestamp:</strong> {resendDebugInfo.timestamp}</div>
-                        <div><strong>Tentativas:</strong> {resendDebugInfo.attempts}</div>
-                        <div><strong>Método:</strong> {resendDebugInfo.method}</div>
-                        <div><strong>Status Response:</strong> {resendDebugInfo.responseStatus || 'N/A'}</div>
-                        {resendDebugInfo.errorDetails && <div><strong>Detalhes do Erro:</strong> {resendDebugInfo.errorDetails}</div>}
-                        {resendDebugInfo.headers && <div>
-                            <strong>Headers:</strong>
-                            <pre className="mt-1 text-xs bg-white p-2 rounded border overflow-auto">
-                              {JSON.stringify(resendDebugInfo.headers, null, 2)}
-                            </pre>
-                          </div>}
-                      </div>
-                    </div>}
-                </CollapsibleContent>
-              </Collapsible>
-
-              {/* Timestamp */}
-              {resendHealth.lastChecked && <p className="text-xs text-muted-foreground">
-                  Última verificação: {resendHealth.lastChecked.toLocaleString('pt-BR')}
-                </p>}
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="test" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <TestTube className="h-5 w-5" />
-                Testes do Sistema
-              </CardTitle>
-              <CardDescription>
-                Execute testes específicos para verificar a funcionalidade
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-4">
-                <div>
-                  <label className="text-sm font-medium">Teste de Envio de Email</label>
-                  <div className="flex gap-2 mt-2">
-                    <Input type="email" placeholder="Digite um email para teste" value={testEmail} onChange={e => setTestEmail(e.target.value)} className="flex-1" />
-                    <Button onClick={handleSendTestEmail} disabled={isCheckingResend || !testEmail}>
-                      {isCheckingResend ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-                      Enviar Teste
-                    </Button>
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Este teste enviará um email real para o endereço informado
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
         </TabsContent>
       </Tabs>
-    </div>;
+    </div>
+  );
 };

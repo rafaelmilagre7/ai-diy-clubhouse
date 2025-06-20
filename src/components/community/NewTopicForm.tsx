@@ -73,14 +73,14 @@ export const NewTopicForm = ({ categoryId, categorySlug }: NewTopicFormProps) =>
           is_pinned: false,
           is_locked: false,
           last_activity_at: new Date().toISOString()
-        })
+        } as any)
         .select("id")
         .single();
         
       if (topicError) throw topicError;
       
       toast.success("Tópico criado com sucesso!");
-      navigate(`/comunidade/topico/${topicData.id}`);
+      navigate(`/comunidade/topico/${(topicData as any).id}`);
       
     } catch (error: any) {
       console.error("Erro ao criar tópico:", error);
