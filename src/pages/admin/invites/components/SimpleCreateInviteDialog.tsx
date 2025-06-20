@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { Loader2, Plus, AlertCircle } from "lucide-react";
+import { Loader2, Plus, AlertCircle, CheckCircle } from "lucide-react";
 import { toast } from "sonner";
 import {
   Dialog,
@@ -36,28 +36,26 @@ const SimpleCreateInviteDialog = ({ roles, onInviteCreated }: SimpleCreateInvite
   const [notes, setNotes] = useState("");
   const [expiration, setExpiration] = useState("7 days");
   const [open, setOpen] = useState(false);
+  const [lastResult, setLastResult] = useState<any>(null);
+  
   const { createInvite, loading } = useInviteCreate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    console.log('🎯 [DIALOG] Iniciando criação de convite...');
+    
     // Validação básica
-    if (!email || !email.includes('@')) {
-      toast.error("Email inválido", {
-        description: "Por favor, insira um email válido"
-      });
+    if (!email?.includes('@')) {
+      toast.error("Email inválido");
       return;
     }
 
     if (!roleId) {
-      toast.error("Papel obrigatório", {
-        description: "Por favor, selecione um papel para o convite"
-      });
+      toast.error("Selecione um papel");
       return;
     }
 
-    console.log('🎯 Criando convite com dados:', { email, roleId, notes, expiration });
-    
     const result = await createInvite({ 
       email, 
       roleId, 
@@ -65,32 +63,37 @@ const SimpleCreateInviteDialog = ({ roles, onInviteCreated }: SimpleCreateInvite
       expiresIn: expiration 
     });
 
+    console.log('📝 [DIALOG] Resultado da criação:', result);
+    setLastResult(result);
+
     if (result) {
-      console.log('✅ Convite criado com sucesso:', result);
-      
-      // Resetar formulário
-      setEmail("");
-      setRoleId("");
-      setNotes("");
-      setExpiration("7 days");
-      setOpen(false);
+      // Resetar formulário apenas se teve sucesso
+      if (result.status === 'success') {
+        setEmail("");
+        setRoleId("");
+        setNotes("");
+        setExpiration("7 days");
+        setOpen(false);
+      }
       
       // Atualizar lista
       onInviteCreated();
-      
-      // Feedback adicional baseado no status
-      if (result.status === 'partial_success') {
-        toast.warning("Atenção", {
-          description: "Convite criado mas verifique se o email foi enviado corretamente."
-        });
-      }
-    } else {
-      console.error('❌ Falha ao criar convite');
     }
   };
 
+  const resetForm = () => {
+    setEmail("");
+    setRoleId("");
+    setNotes("");
+    setExpiration("7 days");
+    setLastResult(null);
+  };
+
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={(newOpen) => {
+      setOpen(newOpen);
+      if (!newOpen) resetForm();
+    }}>
       <DialogTrigger asChild>
         <Button>
           <Plus className="mr-2 h-4 w-4" />
@@ -102,17 +105,29 @@ const SimpleCreateInviteDialog = ({ roles, onInviteCreated }: SimpleCreateInvite
           <DialogHeader>
             <DialogTitle>Criar Novo Convite</DialogTitle>
             <DialogDescription>
-              Envie um convite para novos membros acessarem a plataforma.
+              Sistema corrigido - Criação e envio automático de convites
             </DialogDescription>
           </DialogHeader>
           
           <div className="grid gap-4 py-4">
-            <Alert>
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>
-                O sistema foi refatorado. Agora usa a função create_invite do banco e envia emails automaticamente.
-              </AlertDescription>
-            </Alert>
+            {/* Status do último resultado */}
+            {lastResult && (
+              <Alert className={lastResult.status === 'success' ? 'border-green-200 bg-green-50' : 'border-yellow-200 bg-yellow-50'}>
+                {lastResult.status === 'success' ? (
+                  <CheckCircle className="h-4 w-4 text-green-600" />
+                ) : (
+                  <AlertCircle className="h-4 w-4 text-yellow-600" />
+                )}
+                <AlertDescription className={lastResult.status === 'success' ? 'text-green-700' : 'text-yellow-700'}>
+                  {lastResult.message}
+                  {lastResult.emailResult && !lastResult.emailResult.success && (
+                    <div className="text-xs mt-1">
+                      Email: {lastResult.emailResult.message}
+                    </div>
+                  )}
+                </AlertDescription>
+              </Alert>
+            )}
 
             <div className="grid gap-2">
               <Label htmlFor="email">Email *</Label>
@@ -124,9 +139,6 @@ const SimpleCreateInviteDialog = ({ roles, onInviteCreated }: SimpleCreateInvite
                 onChange={(e) => setEmail(e.target.value)}
                 required
               />
-              <p className="text-xs text-muted-foreground">
-                Aceita formatos como: user+alias@domain.com
-              </p>
             </div>
             
             <div className="grid gap-2">
@@ -149,7 +161,7 @@ const SimpleCreateInviteDialog = ({ roles, onInviteCreated }: SimpleCreateInvite
               <Label htmlFor="expiration">Expira em</Label>
               <Select value={expiration} onValueChange={setExpiration}>
                 <SelectTrigger id="expiration">
-                  <SelectValue placeholder="Período de expiração" />
+                  <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="1 day">1 dia</SelectItem>
@@ -162,13 +174,13 @@ const SimpleCreateInviteDialog = ({ roles, onInviteCreated }: SimpleCreateInvite
             </div>
             
             <div className="grid gap-2">
-              <Label htmlFor="notes">Observações (opcional)</Label>
+              <Label htmlFor="notes">Observações</Label>
               <Textarea
                 id="notes"
-                placeholder="Informações adicionais sobre o convite"
+                placeholder="Informações adicionais (opcional)"
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
-                rows={3}
+                rows={2}
               />
             </div>
           </div>
@@ -181,10 +193,10 @@ const SimpleCreateInviteDialog = ({ roles, onInviteCreated }: SimpleCreateInvite
               {loading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Criando e Enviando...
+                  Processando...
                 </>
               ) : (
-                "Criar e Enviar Convite"
+                "Criar e Enviar"
               )}
             </Button>
           </DialogFooter>
