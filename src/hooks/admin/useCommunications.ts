@@ -63,7 +63,7 @@ export const useCommunications = () => {
         .insert({
           ...communication,
           created_by: user.id,
-        })
+        } as any)
         .select()
         .single();
 
@@ -83,8 +83,8 @@ export const useCommunications = () => {
     mutationFn: async ({ id, ...updates }: Partial<AdminCommunication> & { id: string }) => {
       const { data, error } = await supabase
         .from('admin_communications')
-        .update(updates)
-        .eq('id', id)
+        .update(updates as any)
+        .eq('id', id as any)
         .select()
         .single();
 
@@ -105,7 +105,7 @@ export const useCommunications = () => {
       const { error } = await supabase
         .from('admin_communications')
         .delete()
-        .eq('id', communicationId);
+        .eq('id', communicationId as any);
 
       if (error) throw error;
     },
@@ -140,13 +140,13 @@ export const useCommunications = () => {
     const { data, error } = await supabase
       .from('communication_deliveries')
       .select('delivery_channel, status')
-      .eq('communication_id', communicationId);
+      .eq('communication_id', communicationId as any);
 
     if (error) throw error;
 
     const stats: Record<string, any> = {};
     
-    data.forEach((delivery) => {
+    (data as any).forEach((delivery: any) => {
       const channel = delivery.delivery_channel;
       if (!stats[channel]) {
         stats[channel] = { total: 0, delivered: 0, pending: 0, failed: 0 };

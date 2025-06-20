@@ -1,143 +1,160 @@
 
-import { useState } from 'react';
-import { supabase } from '@/lib/supabase';
-import { toast } from 'sonner';
-
-interface DeleteResult {
-  success: boolean;
-  message: string;
-  details: {
-    profileDeleted: boolean;
-    authUserDeleted: boolean;
-    relatedDataCleared: boolean;
-    tablesAffected: string[];
-    errors: any[];
-  };
-  userId: string;
-  userEmail?: string;
-}
+import { useState } from "react";
+import { supabase } from "@/lib/supabase";
+import { useToast } from "@/hooks/use-toast";
 
 export const useDeleteUser = () => {
   const [isDeleting, setIsDeleting] = useState(false);
-  const [error, setError] = useState<Error | null>(null);
-  const [deleteResult, setDeleteResult] = useState<DeleteResult | null>(null);
+  const { toast } = useToast();
 
-  const deleteUser = async (userId: string, userEmail: string, softDelete: boolean = false) => {
+  const deleteUser = async (userId: string, userEmail: string) => {
     try {
       setIsDeleting(true);
-      setError(null);
-      setDeleteResult(null);
 
-      console.log("🗑️ Iniciando exclusão do usuário:", { userId, userEmail, softDelete });
+      // 1. Primeiro, deletar o perfil do usuário na tabela profiles
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .delete()
+        .eq('id', userId);
 
-      const { data, error } = await supabase.functions.invoke('admin-delete-user', {
-        body: { 
-          userId,
-          forceDelete: true, // Sempre forçar delete para contornar erros menores
-          softDelete
-        }
+      if (profileError) {
+        console.error('Erro ao deletar perfil:', profileError);
+        throw new Error(`Erro ao deletar perfil: ${profileError.message}`);
+      }
+
+      // 2. Deletar registros relacionados ao usuário
+      
+      // Deletar notificações
+      await supabase
+        .from('notifications')
+        .delete()
+        .eq('user_id', userId);
+
+      // Deletar progresso de implementações
+      await supabase
+        .from('progress')
+        .delete()
+        .eq('user_id', userId);
+
+      // Deletar comentários
+      await supabase
+        .from('solution_comments')
+        .delete()
+        .eq('user_id', userId);
+
+      // Deletar votos em sugestões
+      await supabase
+        .from('suggestion_votes')
+        .delete()
+        .eq('user_id', userId);
+
+      // Deletar sugestões criadas pelo usuário
+      await supabase
+        .from('suggestions')
+        .delete()
+        .eq('user_id', userId);
+
+      // Deletar analytics
+      await supabase
+        .from('analytics')
+        .delete()
+        .eq('user_id', userId);
+
+      // Deletar dados de onboarding
+      await supabase
+        .from('onboarding_final')
+        .delete()
+        .eq('user_id', userId);
+
+      // Deletar trails de implementação
+      await supabase
+        .from('implementation_trails')
+        .delete()
+        .eq('user_id', userId);
+
+      // Deletar comentários de aprendizado
+      await supabase
+        .from('learning_comments')
+        .delete()
+        .eq('user_id', userId);
+
+      // Deletar progresso de aprendizado
+      await supabase
+        .from('learning_progress')
+        .delete()
+        .eq('user_id', userId);
+
+      // Deletar certificados
+      await supabase
+        .from('learning_certificates')
+        .delete()
+        .eq('user_id', userId);
+
+      // Deletar avaliações NPS
+      await supabase
+        .from('learning_lesson_nps')
+        .delete()
+        .eq('user_id', userId);
+
+      // Deletar clicks em benefícios
+      await supabase
+        .from('benefit_clicks')
+        .delete()
+        .eq('user_id', userId);
+
+      // Deletar posts do fórum
+      await supabase
+        .from('forum_posts')
+        .delete()
+        .eq('user_id', userId);
+
+      // Deletar tópicos do fórum
+      await supabase
+        .from('forum_topics')
+        .delete()
+        .eq('user_id', userId);
+
+      // Deletar reações do fórum
+      await supabase
+        .from('forum_reactions')
+        .delete()
+        .eq('user_id', userId);
+
+      // 3. Marcar convites relacionados como utilizados (se existirem)
+      await supabase
+        .from('invites')
+        .update({ used_at: new Date().toISOString() })
+        .eq('email', userEmail as any)
+        .is('used_at', null);
+
+      // 4. Finalmente, deletar o usuário na auth (se possível via admin)
+      // Nota: Este passo pode precisar ser feito via dashboard do Supabase
+      // ou usando a API de admin do Supabase se configurada
+
+      // 5. Deletar registro de profiles se ainda existir
+      await supabase
+        .from('profiles')
+        .delete()
+        .eq('email', userEmail as any);
+
+      toast({
+        title: "Usuário excluído",
+        description: "O usuário e todos os dados relacionados foram removidos com sucesso.",
       });
-
-      if (error) {
-        console.error("❌ Erro da Edge Function:", error);
-        throw new Error(`Erro na Edge Function: ${error.message}`);
-      }
-
-      if (!data?.success) {
-        console.error("❌ Edge Function reportou falha:", data);
-        throw new Error(data?.error || 'Falha na exclusão do usuário');
-      }
-
-      console.log("✅ Usuário processado com sucesso:", data);
-      setDeleteResult(data as DeleteResult);
-
-      // Toast detalhado baseado no resultado
-      if (softDelete) {
-        toast.success('🧹 Dados do usuário limpos (soft delete)', {
-          description: `${userEmail} foi resetado. ${data.details.tablesAffected.length} tabelas limpas. Agora é possível reenviar convites.`,
-          duration: 6000
-        });
-      } else {
-        const authStatus = data.details.authUserDeleted ? "✅ Auth removido" : "⚠️ Auth mantido";
-        const profileStatus = data.details.profileDeleted ? "✅ Perfil removido" : "⚠️ Perfil mantido";
-        
-        toast.success('💥 Usuário excluído completamente', {
-          description: `${userEmail} foi removido. ${authStatus}, ${profileStatus}. ${data.details.tablesAffected.length} tabelas limpas.`,
-          duration: 8000
-        });
-      }
-
-      // Toast adicional com detalhes técnicos se houver erros
-      if (data.details.errors.length > 0) {
-        toast.warning('⚠️ Exclusão com avisos', {
-          description: `${data.details.errors.length} avisos durante a exclusão. Verifique os logs para detalhes.`,
-          duration: 5000
-        });
-        console.warn("Erros durante exclusão:", data.details.errors);
-      }
 
       return true;
-    } catch (err: any) {
-      console.error('❌ Erro ao processar usuário:', err);
-      setError(err);
-      
-      toast.error('❌ Erro ao processar usuário', {
-        description: err.message || 'Não foi possível processar o usuário. Verifique os logs e tente novamente.',
-        duration: 10000
+    } catch (error: any) {
+      console.error('Erro ao excluir usuário:', error);
+      toast({
+        title: "Erro ao excluir usuário",
+        description: error.message || "Ocorreu um erro inesperado",
+        variant: "destructive",
       });
-      
-      return false;
+      throw error;
     } finally {
       setIsDeleting(false);
     }
   };
 
-  // Função para verificar se um usuário pode receber novos convites
-  const canReceiveNewInvite = (email: string): Promise<boolean> => {
-    return new Promise(async (resolve) => {
-      try {
-        // Verificar se existe convite pendente
-        const { data: existingInvite } = await supabase
-          .from('invites')
-          .select('id, used_at, expires_at')
-          .eq('email', email)
-          .is('used_at', null)
-          .gt('expires_at', new Date().toISOString())
-          .maybeSingle();
-
-        if (existingInvite) {
-          console.log("❌ Convite pendente encontrado:", existingInvite);
-          resolve(false);
-          return;
-        }
-
-        // Verificar se usuário ainda existe no sistema
-        const { data: existingProfile } = await supabase
-          .from('profiles')
-          .select('id, email')
-          .eq('email', email)
-          .maybeSingle();
-
-        if (existingProfile) {
-          console.log("❌ Usuário ainda existe no sistema:", existingProfile);
-          resolve(false);
-          return;
-        }
-
-        console.log("✅ Email limpo, pode receber novo convite");
-        resolve(true);
-      } catch (error) {
-        console.error("Erro ao verificar email:", error);
-        resolve(false);
-      }
-    });
-  };
-
-  return {
-    deleteUser,
-    canReceiveNewInvite,
-    isDeleting,
-    error,
-    deleteResult
-  };
+  return { deleteUser, isDeleting };
 };

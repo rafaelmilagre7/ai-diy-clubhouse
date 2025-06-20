@@ -1,158 +1,141 @@
 
-import { useState, useEffect } from 'react';
-import { supabase } from '@/lib/supabase';
-import { toast } from 'sonner';
+import { useState, useEffect, useCallback } from "react";
+import { supabase } from "@/lib/supabase";
+import { useToast } from "@/hooks/use-toast";
 
-export interface Role {
+interface Role {
   id: string;
   name: string;
-  description?: string;
+  description: string;
+  permissions: any;
   is_system: boolean;
   created_at: string;
   updated_at: string;
 }
 
-export interface CreateRoleData {
-  name: string;
-  description?: string;
-  is_system?: boolean;
-}
-
-export interface UpdateRoleData {
-  name?: string;
-  description?: string;
-}
-
 export const useRoles = () => {
   const [roles, setRoles] = useState<Role[]>([]);
   const [loading, setLoading] = useState(true);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isCreating, setIsCreating] = useState(false);
-  const [isUpdating, setIsUpdating] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [error, setError] = useState<Error | null>(null);
-  
-  // Estados para controlar diálogos
-  const [createDialogOpen, setCreateDialogOpen] = useState(false);
-  const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [selectedRole, setSelectedRole] = useState<Role | null>(null);
+  const { toast } = useToast();
 
-  const fetchRoles = async () => {
+  const fetchRoles = useCallback(async () => {
     try {
       setLoading(true);
-      setIsLoading(true);
-      setError(null);
+
       const { data, error } = await supabase
         .from('user_roles')
         .select('*')
         .order('name');
 
       if (error) throw error;
-      setRoles(data || []);
+
+      setRoles((data as any) || []);
     } catch (error) {
-      console.error('Erro ao carregar papéis:', error);
-      setError(error as Error);
-      toast.error('Erro ao carregar papéis');
+      console.error('Erro ao buscar papéis:', error);
+      toast({
+        title: "Erro ao carregar papéis",
+        description: "Ocorreu um erro ao carregar a lista de papéis.",
+        variant: "destructive",
+      });
+      setRoles([]);
     } finally {
       setLoading(false);
-      setIsLoading(false);
     }
-  };
+  }, [toast]);
 
-  const createRole = async (roleData: CreateRoleData) => {
+  const createRole = async (roleData: Omit<Role, 'id' | 'created_at' | 'updated_at'>) => {
     try {
-      setIsCreating(true);
       const { data, error } = await supabase
         .from('user_roles')
-        .insert([roleData])
+        .insert(roleData as any)
         .select()
         .single();
 
       if (error) throw error;
 
-      setRoles(prev => [...prev, data]);
-      toast.success('Papel criado com sucesso');
-    } catch (error) {
+      toast({
+        title: "Papel criado",
+        description: `O papel "${roleData.name}" foi criado com sucesso.`,
+      });
+
+      await fetchRoles();
+      return data;
+    } catch (error: any) {
       console.error('Erro ao criar papel:', error);
-      toast.error('Erro ao criar papel');
+      toast({
+        title: "Erro ao criar papel",
+        description: error.message || "Ocorreu um erro inesperado",
+        variant: "destructive",
+      });
       throw error;
-    } finally {
-      setIsCreating(false);
     }
   };
 
-  const updateRole = async (roleId: string, roleData: UpdateRoleData) => {
+  const updateRole = async (roleId: string, updates: Partial<Role>) => {
     try {
-      setIsUpdating(true);
       const { data, error } = await supabase
         .from('user_roles')
-        .update(roleData)
-        .eq('id', roleId)
+        .update(updates as any)
+        .eq('id', roleId as any)
         .select()
         .single();
 
       if (error) throw error;
 
-      setRoles(prev => prev.map(role => 
-        role.id === roleId ? data : role
-      ));
-      toast.success('Papel atualizado com sucesso');
-    } catch (error) {
+      toast({
+        title: "Papel atualizado",
+        description: "O papel foi atualizado com sucesso.",
+      });
+
+      await fetchRoles();
+      return data;
+    } catch (error: any) {
       console.error('Erro ao atualizar papel:', error);
-      toast.error('Erro ao atualizar papel');
+      toast({
+        title: "Erro ao atualizar papel",
+        description: error.message || "Ocorreu um erro inesperado",
+        variant: "destructive",
+      });
       throw error;
-    } finally {
-      setIsUpdating(false);
     }
   };
 
   const deleteRole = async (roleId: string) => {
     try {
-      setIsDeleting(true);
       const { error } = await supabase
         .from('user_roles')
         .delete()
-        .eq('id', roleId);
+        .eq('id', roleId as any);
 
       if (error) throw error;
 
-      setRoles(prev => prev.filter(role => role.id !== roleId));
-      toast.success('Papel removido com sucesso');
-    } catch (error) {
-      console.error('Erro ao remover papel:', error);
-      toast.error('Erro ao remover papel');
+      toast({
+        title: "Papel excluído",
+        description: "O papel foi removido com sucesso.",
+      });
+
+      await fetchRoles();
+    } catch (error: any) {
+      console.error('Erro ao excluir papel:', error);
+      toast({
+        title: "Erro ao excluir papel",
+        description: error.message || "Ocorreu um erro inesperado",
+        variant: "destructive",
+      });
       throw error;
-    } finally {
-      setIsDeleting(false);
     }
   };
 
   useEffect(() => {
     fetchRoles();
-  }, []);
+  }, [fetchRoles]);
 
   return {
     roles,
     loading,
-    isLoading,
-    isCreating,
-    isUpdating,
-    isDeleting,
-    error,
+    fetchRoles,
     createRole,
     updateRole,
-    deleteRole,
-    refetch: fetchRoles,
-    fetchRoles,
-    // Estados de diálogo
-    createDialogOpen,
-    setCreateDialogOpen,
-    editDialogOpen,
-    setEditDialogOpen,
-    deleteDialogOpen,
-    setDeleteDialogOpen,
-    selectedRole,
-    setSelectedRole
+    deleteRole
   };
 };
