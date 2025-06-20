@@ -21,7 +21,7 @@ export const useModuleFetch = (solutionId: string | null) => {
       const { data, error } = await supabase
         .from("modules")
         .select("*")
-        .eq("solution_id", solutionId)
+        .eq("solution_id", solutionId as any)
         .order("module_order", { ascending: true });
       
       if (error) {
@@ -29,7 +29,7 @@ export const useModuleFetch = (solutionId: string | null) => {
       }
       
       if (data) {
-        setModules(data as Module[]);
+        setModules(data as any as Module[]);
       }
     } catch (error) {
       console.error("Error fetching modules:", error);

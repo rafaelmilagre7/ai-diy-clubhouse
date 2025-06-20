@@ -51,7 +51,7 @@ export const useOptimizedProgress = (solutions: Solution[] = []) => {
             slug
           )
         `)
-        .eq("user_id", user.id);
+        .eq("user_id", user.id as any);
 
       if (fetchError) {
         logger.error('[OPTIMIZED] Erro ao buscar progresso:', fetchError);
@@ -61,8 +61,8 @@ export const useOptimizedProgress = (solutions: Solution[] = []) => {
       const validProgress = data || [];
       logger.info('[OPTIMIZED] Progressos encontrados:', { 
         total: validProgress.length,
-        completed: validProgress.filter(p => p.is_completed).length,
-        active: validProgress.filter(p => !p.is_completed).length
+        completed: validProgress.filter(p => (p as any).is_completed).length,
+        active: validProgress.filter(p => !(p as any).is_completed).length
       });
 
       // Atualizar cache
@@ -93,7 +93,7 @@ export const useOptimizedProgress = (solutions: Solution[] = []) => {
     try {
       // Criar mapa de progressos por solution_id
       const progressMap = new Map(
-        progressData.map(progress => [progress.solution_id, progress])
+        progressData.map(progress => [(progress as any).solution_id, progress])
       );
 
       const result = {
@@ -104,22 +104,22 @@ export const useOptimizedProgress = (solutions: Solution[] = []) => {
 
       // Processar soluções com progresso
       progressData.forEach(progress => {
-        if (progress.solutions) {
+        if ((progress as any).solutions) {
           const solution = {
-            id: progress.solutions.id,
-            title: progress.solutions.title,
-            published: progress.solutions.published,
-            category: progress.solutions.category,
-            difficulty: progress.solutions.difficulty,
-            thumbnail_url: progress.solutions.thumbnail_url,
-            slug: progress.solutions.slug,
+            id: (progress as any).solutions.id,
+            title: (progress as any).solutions.title,
+            published: (progress as any).solutions.published,
+            category: (progress as any).solutions.category,
+            difficulty: (progress as any).solutions.difficulty,
+            thumbnail_url: (progress as any).solutions.thumbnail_url,
+            slug: (progress as any).solutions.slug,
             // Campos obrigatórios para compatibilidade
             description: '',
             created_at: '',
             updated_at: ''
           } as Solution;
 
-          if (progress.is_completed) {
+          if ((progress as any).is_completed) {
             result.completed.push(solution);
           } else {
             result.active.push(solution);
@@ -173,8 +173,8 @@ export const useOptimizedProgress = (solutions: Solution[] = []) => {
         
         logger.info('[OPTIMIZED] Progresso carregado com sucesso:', {
           count: data.length,
-          completed: data.filter(p => p.is_completed).length,
-          active: data.filter(p => !p.is_completed).length
+          completed: data.filter(p => (p as any).is_completed).length,
+          active: data.filter(p => !(p as any).is_completed).length
         });
         
       } catch (error: any) {

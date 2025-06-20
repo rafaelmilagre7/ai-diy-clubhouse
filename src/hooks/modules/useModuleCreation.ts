@@ -47,7 +47,7 @@ export const useModuleCreation = (
       
       const { data, error } = await supabase
         .from("modules")
-        .insert(newModules)
+        .insert(newModules as any)
         .select();
       
       if (error) {
@@ -56,7 +56,7 @@ export const useModuleCreation = (
       
       // Atualizar a lista de módulos local
       if (data) {
-        setModules(prev => [...prev, ...(data as Module[])].sort((a, b) => a.module_order - b.module_order));
+        setModules(prev => [...prev, ...(data as any as Module[])].sort((a, b) => a.module_order - b.module_order));
       }
       
       toast({
