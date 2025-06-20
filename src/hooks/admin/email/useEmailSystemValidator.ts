@@ -5,7 +5,7 @@ import { toast } from 'sonner';
 
 interface ValidationResult {
   step: string;
-  status: 'success' | 'error' | 'pending';
+  status: 'success' | 'error' | 'pending' | 'warning';
   message: string;
   duration?: number;
   details?: any;
