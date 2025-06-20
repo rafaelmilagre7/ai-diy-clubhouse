@@ -22,7 +22,7 @@ interface ResendTestEmailResponse {
 
 class ResendTestService {
   private readonly baseUrl: string;
-  private readonly defaultTimeout = 15000; // Reduzido para 15 segundos
+  private readonly defaultTimeout = 15000;
   private readonly maxRetries = 2;
 
   constructor() {
@@ -69,7 +69,6 @@ class ResendTestService {
           throw error;
         }
 
-        // Aguardar antes da próxima tentativa (backoff exponencial)
         await new Promise(resolve => setTimeout(resolve, Math.pow(2, attempt) * 1000));
       }
     }
@@ -151,51 +150,19 @@ class ResendTestService {
     }
   }
 
-  async testResendApiDirect(): Promise<{ connected: boolean; error?: string }> {
-    try {
-      this.log('info', 'Testando conectividade direta com Resend API');
-
-      // Teste básico de conectividade com timeout menor
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 segundos
-
-      const response = await fetch('https://api.resend.com/domains', {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${import.meta.env.VITE_RESEND_API_KEY || 'invalid'}`,
-          'Content-Type': 'application/json'
-        },
-        signal: controller.signal
-      });
-
-      clearTimeout(timeoutId);
-
-      if (response.ok) {
-        this.log('info', 'Conectividade direta confirmada');
-        return { connected: true };
-      } else {
-        this.log('warn', `Resposta não-OK: ${response.status}`);
-        return { connected: false, error: `HTTP ${response.status}` };
-      }
-    } catch (error: any) {
-      this.log('error', 'Erro na conectividade direta', error);
-      return { connected: false, error: error.message };
-    }
-  }
-
   // Método para testar se as Edge Functions estão deployadas
   async testEdgeFunctionDeployment(): Promise<{ 
     deployed: boolean; 
     functions: string[]; 
     errors: string[] 
   }> {
-    const functions = ['test-resend-health', 'test-resend-email', 'send-invite-email'];
+    const functions = ['test-resend-health', 'test-resend-email', 'send-invite-email', 'send-fallback-notification'];
     const results = { deployed: true, functions: [], errors: [] };
 
     for (const funcName of functions) {
       try {
         const response = await fetch(`${this.baseUrl}/${funcName}`, {
-          method: 'OPTIONS', // Teste CORS para verificar se existe
+          method: 'OPTIONS',
           headers: {
             'Authorization': `Bearer ${SUPABASE_CONFIG.getCredentials().anonKey}`,
             'apikey': SUPABASE_CONFIG.getCredentials().anonKey
