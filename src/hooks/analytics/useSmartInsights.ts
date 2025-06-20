@@ -40,13 +40,14 @@ export const useSmartInsights = (timeRange: string) => {
             return acc;
           }, {} as Record<number, number>);
 
-          const maxActivity = Math.max(...Object.values(dayActivity).map((val: any) => Number(val) || 0));
+          const activityValues = Object.values(dayActivity).map((val: any) => Number(val) || 0);
+          const maxActivity = Math.max(...activityValues);
           const maxDay = Object.keys(dayActivity).find(day => Number(dayActivity[parseInt(day)]) === maxActivity);
           const dayNames = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
           
           if (maxDay && maxActivity > 0) {
-            const avgActivity = Object.values(dayActivity).reduce((a: any, b: any) => Number(a) + Number(b), 0) / 7;
-            const increasePercent = Math.round(((Number(maxActivity) - Number(avgActivity)) / Number(avgActivity)) * 100);
+            const avgActivity = activityValues.reduce((a, b) => a + b, 0) / 7;
+            const increasePercent = Math.round(((maxActivity - avgActivity) / avgActivity) * 100);
             
             if (increasePercent > 20) {
               insights.push({

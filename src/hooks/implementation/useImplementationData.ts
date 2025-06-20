@@ -32,7 +32,7 @@ export const useImplementationData = () => {
         let query = supabase
           .from("solutions")
           .select("*")
-          .eq("id", id);
+          .eq("id", id as any);
           
         // Se não for admin, filtra apenas soluções publicadas
         if (!isAdmin) {
@@ -67,7 +67,7 @@ export const useImplementationData = () => {
           return;
         }
         
-        setSolution(solutionData as Solution);
+        setSolution(solutionData as unknown as Solution);
         
         // Fetch modules for this solution
         const { data: modulesData, error: modulesError } = await supabase
@@ -82,7 +82,7 @@ export const useImplementationData = () => {
         }
         
         if (modulesData && modulesData.length > 0) {
-          setModules(modulesData as Module[]);
+          setModules(modulesData as unknown as Module[]);
         } else {
           // Create placeholder module for implementation screen
           const placeholderModule = {
@@ -96,7 +96,7 @@ export const useImplementationData = () => {
             updated_at: new Date().toISOString(),
           };
           
-          setModules([placeholderModule as Module]);
+          setModules([placeholderModule as unknown as Module]);
         }
         
         // Fetch user progress
@@ -113,7 +113,7 @@ export const useImplementationData = () => {
               logError("Erro ao buscar progresso:", progressError);
             } else if (progressData) {
               // Cast to Progress type - now with completed_at instead of completion_date
-              setProgress(progressData as Progress);
+              setProgress(progressData as unknown as Progress);
               
               // Parse completed modules from progress data
               // Handle the case where completed_modules might not exist in the database
@@ -141,7 +141,7 @@ export const useImplementationData = () => {
               if (createError) {
                 logError("Erro ao criar progresso:", createError);
               } else if (newProgress) {
-                setProgress(newProgress as Progress);
+                setProgress(newProgress as unknown as Progress);
                 setCompletedModules([]);
               }
             }

@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { Comment } from '@/types/commentTypes';
 import { useFetchModuleComments } from './comments/useFetchModuleComments';
-import { useAddModuleComment } from './comments/useAddModuleComment';
+import { useAddComment } from './comments/useAddComment';
 import { useLikeModuleComment } from './comments/useLikeModuleComment';
 import { useDeleteModuleComment } from './comments/useDeleteModuleComment';
 import { useLogging } from '@/hooks/useLogging';
@@ -16,7 +16,13 @@ export const useModuleCommentsRefactored = (solutionId: string, moduleId: string
   log('Inicializando hook de comentários', { solutionId, moduleId });
   
   const { data: comments = [], isLoading, error } = useFetchModuleComments(solutionId, moduleId);
-  const { addComment, isSubmitting } = useAddModuleComment(solutionId, moduleId);
+  
+  // Criar função onSuccess para useAddComment
+  const onSuccess = () => {
+    // Invalidar queries será tratado dentro do hook useAddComment
+  };
+  
+  const { addComment, isSubmitting } = useAddComment(onSuccess);
   const { likeComment } = useLikeModuleComment(solutionId, moduleId);
   const { deleteComment } = useDeleteModuleComment(solutionId, moduleId);
 
@@ -30,7 +36,7 @@ export const useModuleCommentsRefactored = (solutionId: string, moduleId: string
   const handleSubmitComment = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     
-    const success = await addComment(comment, replyTo?.id || null);
+    const success = await addComment(solutionId, comment, replyTo?.id || undefined);
     if (success) {
       setComment('');
       setReplyTo(null);

@@ -80,8 +80,8 @@ export const useModuleCompletion = ({
           .update({ 
             completed_modules: updatedCompletedModules,
             last_activity: new Date().toISOString()
-          })
-          .eq("id", progressId);
+          } as any)
+          .eq("id", progressId as any);
         
         if (error) {
           throw error;

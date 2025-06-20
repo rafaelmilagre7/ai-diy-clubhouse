@@ -11,14 +11,20 @@ export const useSolutionComments = (solutionId: string, moduleId: string) => {
   const [replyTo, setReplyTo] = useState<Comment | null>(null);
   
   const { data: comments = [], isLoading } = useFetchComments(solutionId, moduleId);
-  const { addComment, isSubmitting } = useAddComment(solutionId, moduleId);
+  
+  // Criar função onSuccess para useAddComment
+  const onSuccess = () => {
+    // Invalidar queries será tratado dentro do hook useAddComment
+  };
+  
+  const { addComment, isSubmitting } = useAddComment(onSuccess);
   const { likeComment } = useLikeComment(solutionId, moduleId);
   const { deleteComment } = useDeleteComment(solutionId, moduleId);
 
   const handleSubmitComment = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     
-    const success = await addComment(comment, replyTo?.id);
+    const success = await addComment(solutionId, comment, replyTo?.id);
     if (success) {
       setComment('');
       setReplyTo(null);

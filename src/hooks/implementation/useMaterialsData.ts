@@ -47,14 +47,14 @@ export const useMaterialsData = (module: Module) => {
             (item: any) => (item as any).type !== 'video' && (item as any).type !== 'youtube'
           );
           
-          setMaterials(filteredData as Material[]);
+          setMaterials(filteredData as unknown as Material[]);
         } else {
           // Filter out video types from module data too
           const filteredModuleData = (moduleData as any || []).filter(
             (item: any) => (item as any).type !== 'video' && (item as any).type !== 'youtube'
           );
           
-          setMaterials(filteredModuleData as Material[]);
+          setMaterials(filteredModuleData as unknown as Material[]);
         }
       } catch (err) {
         logError("Error in materials fetch:", err);

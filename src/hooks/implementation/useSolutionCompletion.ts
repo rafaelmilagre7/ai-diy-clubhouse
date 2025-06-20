@@ -48,8 +48,8 @@ export const useSolutionCompletion = ({
           is_completed: true,
           completed_modules: [...new Set([...completedModules, moduleIdx])],
           completed_at: new Date().toISOString(), // Updated column name
-        })
-        .eq("id", progressId);
+        } as any)
+        .eq("id", progressId as any);
       
       if (error) {
         throw error;
