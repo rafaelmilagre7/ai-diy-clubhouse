@@ -60,13 +60,13 @@ export const useAdvancedEmailMonitoring = () => {
     } catch (error: any) {
       console.error('❌ Erro no monitoramento:', error);
       
-      // Fallback metrics em caso de erro
+      // Fallback metrics em caso de erro - correção do bug TypeScript
       setMetrics({
         timestamp: new Date().toISOString(),
         health: {
           overall: 'critical',
           resend_status: 'down',
-          queue_status: 'unknown',
+          queue_status: 'critical', // Corrigido: era 'unknown', agora 'critical'
           functions_status: 'down'
         },
         performance: {
