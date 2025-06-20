@@ -1,11 +1,21 @@
 
 import { useState } from 'react';
+import { supabase } from '@/lib/supabase';
 
 interface ValidationState {
   isValid: boolean;
   errors: string[];
   warnings: string[];
   suggestions: string[];
+  isValidating?: boolean;
+}
+
+interface TokenValidationResult {
+  isValid: boolean;
+  error?: string;
+  invite?: any;
+  needsLogout?: boolean;
+  suggestions?: string[];
 }
 
 export const useInviteValidation = () => {
@@ -13,8 +23,87 @@ export const useInviteValidation = () => {
     isValid: false,
     errors: [],
     warnings: [],
-    suggestions: []
+    suggestions: [],
+    isValidating: false
   });
+
+  const validateToken = async (token: string, userEmail?: string): Promise<TokenValidationResult> => {
+    setValidationState(prev => ({ ...prev, isValidating: true }));
+
+    try {
+      // Buscar convite pelo token
+      const { data: invite, error } = await supabase
+        .from('invites')
+        .select(`
+          *,
+          role:roles(name)
+        `)
+        .eq('token', token)
+        .single();
+
+      if (error || !invite) {
+        return {
+          isValid: false,
+          error: 'Token de convite inválido ou expirado',
+          suggestions: [
+            'Verifique se o link está correto',
+            'Solicite um novo convite se necessário'
+          ]
+        };
+      }
+
+      // Verificar se já foi usado
+      if (invite.used_at) {
+        return {
+          isValid: false,
+          error: 'Este convite já foi utilizado',
+          suggestions: [
+            'Este convite já foi aceito anteriormente',
+            'Entre em contato se precisar de um novo convite'
+          ]
+        };
+      }
+
+      // Verificar se expirou
+      if (new Date(invite.expires_at) < new Date()) {
+        return {
+          isValid: false,
+          error: 'Este convite expirou',
+          suggestions: [
+            'Solicite um novo convite',
+            'Entre em contato com o administrador'
+          ]
+        };
+      }
+
+      // Verificar se o usuário logado é diferente do convite
+      if (userEmail && userEmail !== invite.email) {
+        return {
+          isValid: false,
+          error: 'Este convite é para outro email',
+          needsLogout: true,
+          suggestions: [
+            'Faça logout e entre com o email correto',
+            `Este convite é para: ${invite.email}`
+          ]
+        };
+      }
+
+      return {
+        isValid: true,
+        invite
+      };
+
+    } catch (error) {
+      console.error('Erro ao validar token:', error);
+      return {
+        isValid: false,
+        error: 'Erro interno ao validar convite'
+      };
+    } finally {
+      setValidationState(prev => ({ ...prev, isValidating: false }));
+    }
+  };
 
   const validateInviteData = (
     email: string, 
@@ -109,6 +198,7 @@ export const useInviteValidation = () => {
     validationState,
     validateInviteData,
     validateEmailOnly,
-    validatePhoneOnly
+    validatePhoneOnly,
+    validateToken
   };
 };
