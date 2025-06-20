@@ -44,6 +44,9 @@ verify_jwt = false
 [functions.send-communication-email]
 verify_jwt = false
 
+[functions.send-invite-email]
+verify_jwt = false
+
 [functions.send-whatsapp-invite]
 verify_jwt = false
 
@@ -66,6 +69,9 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.test-resend-email]
+verify_jwt = false
+
+[functions.send-fallback-notification]
 verify_jwt = false
 
 [auth]
