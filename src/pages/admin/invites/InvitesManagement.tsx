@@ -6,7 +6,7 @@ import { useInvites } from "@/hooks/admin/useInvites";
 import SimpleCreateInviteDialog from "../invites/components/SimpleCreateInviteDialog";
 import SimpleInvitesTab from "../invites/components/SimpleInvitesTab";
 import { EmailDiagnosticsPanel } from "../invites/components/EmailDiagnosticsPanel";
-import { SystemDiagnosticsPanel } from "@/components/admin/email/SystemDiagnosticsPanel";
+import { InviteRecoveryPanel } from "../invites/components/InviteRecoveryPanel";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
@@ -19,12 +19,6 @@ const InvitesManagement = () => {
     invites, 
     loading: invitesLoading, 
     fetchInvites,
-    createInvite,
-    deleteInvite,
-    resendInvite,
-    isCreating,
-    isDeleting,
-    isSending
   } = useInvites();
 
   useEffect(() => {
@@ -40,7 +34,8 @@ const InvitesManagement = () => {
     total: invites.length,
     pending: invites.filter(i => !i.used_at && new Date(i.expires_at) > new Date()).length,
     used: invites.filter(i => i.used_at).length,
-    expired: invites.filter(i => !i.used_at && new Date(i.expires_at) <= new Date()).length
+    expired: invites.filter(i => !i.used_at && new Date(i.expires_at) <= new Date()).length,
+    orphaned: invites.filter(i => !i.used_at && new Date(i.expires_at) > new Date() && (!i.last_sent_at || i.send_attempts === 0)).length
   };
 
   if (rolesLoading) {
@@ -60,7 +55,7 @@ const InvitesManagement = () => {
         <div>
           <h1 className="text-3xl font-bold">Gerenciar Convites</h1>
           <p className="text-muted-foreground mt-1">
-            Convide novos usuários e monitore o sistema de email
+            Sistema refatorado - Convide novos usuários e monitore o sistema de email
           </p>
           <div className="flex gap-2 mt-3">
             <Badge variant="outline">{inviteStats.total} Total</Badge>
@@ -68,6 +63,11 @@ const InvitesManagement = () => {
             <Badge variant="secondary">{inviteStats.used} Utilizados</Badge>
             {inviteStats.expired > 0 && (
               <Badge variant="destructive">{inviteStats.expired} Expirados</Badge>
+            )}
+            {inviteStats.orphaned > 0 && (
+              <Badge variant="destructive" className="bg-orange-100 text-orange-800">
+                {inviteStats.orphaned} Órfãos
+              </Badge>
             )}
           </div>
         </div>
@@ -82,8 +82,8 @@ const InvitesManagement = () => {
       <Tabs defaultValue="invites" className="space-y-6">
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="invites">Lista de Convites</TabsTrigger>
+          <TabsTrigger value="recovery">Recuperação de Convites</TabsTrigger>
           <TabsTrigger value="diagnostics">Diagnóstico do Sistema</TabsTrigger>
-          <TabsTrigger value="recovery">Recuperação Avançada</TabsTrigger>
         </TabsList>
 
         <TabsContent value="invites" className="space-y-6">
@@ -91,7 +91,7 @@ const InvitesManagement = () => {
             <CardHeader>
               <CardTitle>Convites Enviados</CardTitle>
               <CardDescription>
-                Gerencie todos os convites enviados para novos usuários
+                Gerencie todos os convites enviados para novos usuários (Sistema Refatorado)
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -104,6 +104,10 @@ const InvitesManagement = () => {
           </Card>
         </TabsContent>
 
+        <TabsContent value="recovery" className="space-y-6">
+          <InviteRecoveryPanel onRecoveryComplete={handleInvitesChange} />
+        </TabsContent>
+
         <TabsContent value="diagnostics" className="space-y-6">
           <Card>
             <CardHeader>
@@ -114,20 +118,6 @@ const InvitesManagement = () => {
             </CardHeader>
             <CardContent>
               <EmailDiagnosticsPanel />
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="recovery" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Diagnóstico e Recuperação Avançada</CardTitle>
-              <CardDescription>
-                Sistema completo de diagnóstico e recuperação de emails
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <SystemDiagnosticsPanel />
             </CardContent>
           </Card>
         </TabsContent>

@@ -12,31 +12,29 @@ export function useInviteCreate() {
     const requestId = crypto.randomUUID().substring(0, 8);
     
     try {
-      console.log(`🎯 [${requestId}] Iniciando criação de convite:`, params);
+      console.log(`🎯 [${requestId}] Iniciando criação de convite (REFATORADO):`, params);
 
-      // 1. Criar convite no banco usando a função híbrida
-      const { data: inviteData, error: inviteError } = await supabase.rpc('create_invite_hybrid', {
+      // 1. Criar convite usando a função create_invite existente do banco
+      const { data: createResult, error: createError } = await supabase.rpc('create_invite', {
         p_email: params.email,
-        p_phone: params.phone || null,
         p_role_id: params.roleId,
         p_expires_in: `${params.expiresIn || '7 days'}`,
-        p_notes: params.notes || null,
-        p_channel_preference: params.channelPreference || 'email'
+        p_notes: params.notes || null
       });
 
-      if (inviteError) {
-        console.error(`❌ [${requestId}] Erro ao criar convite:`, inviteError);
-        throw new Error(`Erro ao criar convite: ${inviteError.message}`);
+      if (createError) {
+        console.error(`❌ [${requestId}] Erro ao criar convite:`, createError);
+        throw new Error(`Erro ao criar convite: ${createError.message}`);
       }
 
-      if (!inviteData.success) {
-        console.error(`❌ [${requestId}] Convite não criado:`, inviteData);
-        throw new Error(inviteData.message || 'Falha ao criar convite');
+      if (!createResult || createResult.status !== 'success') {
+        console.error(`❌ [${requestId}] Convite não criado:`, createResult);
+        throw new Error(createResult?.message || 'Falha ao criar convite');
       }
 
-      console.log(`✅ [${requestId}] Convite criado com sucesso:`, inviteData);
+      console.log(`✅ [${requestId}] Convite criado com sucesso:`, createResult);
 
-      // 2. Buscar dados completos do convite para o envio
+      // 2. Buscar dados completos do convite recém-criado
       const { data: invite, error: fetchError } = await supabase
         .from('invites')
         .select(`
@@ -44,7 +42,7 @@ export function useInviteCreate() {
           role:user_roles(name),
           creator:profiles!created_by(name, email)
         `)
-        .eq('id', inviteData.invite_id)
+        .eq('id', createResult.invite_id)
         .single();
 
       if (fetchError || !invite) {
@@ -52,7 +50,7 @@ export function useInviteCreate() {
         throw new Error('Convite criado mas não foi possível buscar os dados');
       }
 
-      // 3. Gerar URL correta do convite
+      // 3. Gerar URL do convite usando o token correto do banco
       const inviteUrl = `${window.location.origin}/accept-invite/${invite.token}`;
       console.log(`🔗 [${requestId}] URL do convite:`, inviteUrl);
 
@@ -68,14 +66,15 @@ export function useInviteCreate() {
           senderName: invite.creator?.name || 'Administrador',
           notes: params.notes,
           inviteId: invite.id,
-          requestId
+          requestId,
+          token: invite.token // Enviar token para validação na Edge Function
         }
       });
 
       if (emailError) {
         console.error(`❌ [${requestId}] Erro na Edge Function:`, emailError);
         
-        // Atualizar estatísticas mesmo com erro
+        // Atualizar tentativas mesmo com erro
         await supabase.rpc('update_invite_send_attempt', { invite_id: invite.id });
         
         toast.warning('Convite criado, mas falha no envio de email', {
@@ -98,7 +97,7 @@ export function useInviteCreate() {
       if (!emailResult?.success) {
         console.error(`❌ [${requestId}] Falha no envio:`, emailResult);
         
-        // Atualizar estatísticas mesmo com erro
+        // Atualizar tentativas mesmo com erro
         await supabase.rpc('update_invite_send_attempt', { invite_id: invite.id });
         
         toast.warning('Convite criado, mas email falhou', {
@@ -118,7 +117,9 @@ export function useInviteCreate() {
         };
       }
 
-      // 5. Sucesso completo
+      // 5. Sucesso completo - atualizar estatísticas
+      await supabase.rpc('update_invite_send_attempt', { invite_id: invite.id });
+
       console.log(`🎉 [${requestId}] Convite criado e email enviado com sucesso!`);
       
       toast.success('Convite enviado com sucesso!', {

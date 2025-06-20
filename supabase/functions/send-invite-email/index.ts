@@ -1,17 +1,13 @@
 
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3'
-import { Resend } from 'npm:resend@2.0.0'
+import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
+import { Resend } from "npm:resend@2.0.0";
 
-console.log('📧 [INVITE-EMAIL] Edge Function carregada e pronta!');
-
-// Configuração de CORS
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
-
-// Inicializar Resend
-const resend = new Resend(Deno.env.get('RESEND_API_KEY'))
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-function-timeout",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+};
 
 interface InviteEmailRequest {
   email: string;
@@ -23,223 +19,231 @@ interface InviteEmailRequest {
   inviteId?: string;
   forceResend?: boolean;
   requestId?: string;
+  token?: string;
 }
 
-function generateEmailHTML(data: InviteEmailRequest): string {
-  const expirationDate = new Date(data.expiresAt).toLocaleDateString('pt-BR', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
-  });
+const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
-  return `
-    <!DOCTYPE html>
-    <html>
-    <head>
-      <meta charset="utf-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>Convite para Plataforma</title>
-    </head>
-    <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
-      <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
-        <h1 style="color: white; margin: 0; font-size: 28px;">🎉 Você foi convidado!</h1>
-      </div>
-      
-      <div style="background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; border: 1px solid #e0e0e0;">
-        <p style="font-size: 18px; margin-bottom: 20px;">Olá!</p>
-        
-        <p style="font-size: 16px; margin-bottom: 20px;">
-          <strong>${data.senderName || 'Administrador'}</strong> convidou você para acessar nossa plataforma com o papel de <strong>${data.roleName}</strong>.
-        </p>
-        
-        ${data.notes ? `
-          <div style="background: #e3f2fd; padding: 15px; border-radius: 5px; margin: 20px 0; border-left: 4px solid #2196f3;">
-            <p style="margin: 0; font-style: italic;">"${data.notes}"</p>
-          </div>
-        ` : ''}
-        
-        <div style="text-align: center; margin: 30px 0;">
-          <a href="${data.inviteUrl}" 
-             style="display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px 30px; text-decoration: none; border-radius: 25px; font-weight: bold; font-size: 16px; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);">
-            🚀 Aceitar Convite
-          </a>
-        </div>
-        
-        <div style="background: #fff3cd; padding: 15px; border-radius: 5px; margin: 20px 0; border: 1px solid #ffeaa7;">
-          <p style="margin: 0; font-size: 14px; color: #856404;">
-            ⏰ <strong>Importante:</strong> Este convite expira em <strong>${expirationDate}</strong>
-          </p>
-        </div>
-        
-        <hr style="border: none; border-top: 1px solid #e0e0e0; margin: 30px 0;">
-        
-        <p style="font-size: 14px; color: #666; margin-bottom: 10px;">
-          Se o botão não funcionar, copie e cole este link no seu navegador:
-        </p>
-        <p style="font-size: 12px; color: #888; word-break: break-all; background: #f5f5f5; padding: 10px; border-radius: 5px;">
-          ${data.inviteUrl}
-        </p>
-        
-        <p style="font-size: 12px; color: #999; margin-top: 30px; text-align: center;">
-          Se você não estava esperando este convite, pode ignorar este email.
-        </p>
-      </div>
-    </body>
-    </html>
-  `;
-}
-
-// Função principal
-Deno.serve(async (req) => {
-  // Lidar com requisição OPTIONS para CORS
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders })
+const handler = async (req: Request): Promise<Response> => {
+  const requestId = crypto.randomUUID().substring(0, 8);
+  console.log(`📧 [SEND-EMAIL-${requestId}] Nova requisição: ${req.method}`);
+  
+  // Handle CORS preflight requests
+  if (req.method === "OPTIONS") {
+    console.log(`🔄 [SEND-EMAIL-${requestId}] CORS Preflight - respondendo`);
+    return new Response(null, { 
+      headers: corsHeaders,
+      status: 200 
+    });
   }
+
+  if (req.method !== "POST") {
+    console.log(`❌ [SEND-EMAIL-${requestId}] Método não permitido: ${req.method}`);
+    return new Response(
+      JSON.stringify({ error: "Método não permitido" }), 
+      { 
+        status: 405, 
+        headers: { "Content-Type": "application/json", ...corsHeaders } 
+      }
+    );
+  }
+
+  const startTime = Date.now();
 
   try {
-    const requestId = crypto.randomUUID().substring(0, 8);
-    console.log(`📧 [INVITE-${requestId}] Nova requisição de convite por email`);
+    console.log(`🔄 [SEND-EMAIL-${requestId}] Processando envio de convite...`);
+    
+    const {
+      email,
+      inviteUrl,
+      roleName,
+      expiresAt,
+      senderName = 'Administrador',
+      notes,
+      inviteId,
+      forceResend = false,
+      requestId: clientRequestId,
+      token
+    }: InviteEmailRequest = await req.json();
 
-    // Verificar se é POST
-    if (req.method !== 'POST') {
-      console.error(`❌ [INVITE-${requestId}] Método não permitido: ${req.method}`);
-      return new Response(
-        JSON.stringify({ 
-          success: false, 
-          message: 'Método não permitido' 
-        }),
-        { 
-          status: 405, 
-          headers: { 'Content-Type': 'application/json', ...corsHeaders } 
-        }
-      )
-    }
-
-    // Verificar variáveis de ambiente
-    const resendApiKey = Deno.env.get('RESEND_API_KEY')
-    if (!resendApiKey) {
-      console.error(`❌ [INVITE-${requestId}] RESEND_API_KEY não configurada`);
-      return new Response(
-        JSON.stringify({ 
-          success: false, 
-          message: 'Configuração de email não encontrada' 
-        }),
-        { 
-          status: 500, 
-          headers: { 'Content-Type': 'application/json', ...corsHeaders } 
-        }
-      )
-    }
-
-    // Obter dados da requisição
-    const requestData: InviteEmailRequest = await req.json()
-    console.log(`📧 [INVITE-${requestId}] Dados recebidos:`, {
-      email: requestData.email,
-      roleName: requestData.roleName,
-      hasInviteUrl: !!requestData.inviteUrl,
-      urlPreview: requestData.inviteUrl?.substring(0, 50) + '...',
-      inviteId: requestData.inviteId
+    const finalRequestId = clientRequestId || requestId;
+    
+    console.log(`📋 [SEND-EMAIL-${finalRequestId}] Dados recebidos:`, {
+      email,
+      roleName,
+      senderName,
+      inviteId,
+      forceResend,
+      hasToken: !!token,
+      tokenLength: token?.length,
+      inviteUrlLength: inviteUrl?.length
     });
 
-    // Validar dados obrigatórios
-    if (!requestData.email || !requestData.inviteUrl || !requestData.roleName) {
-      console.error(`❌ [INVITE-${requestId}] Dados obrigatórios faltando`);
+    // Validação básica
+    if (!email || !email.includes('@')) {
+      console.error(`❌ [SEND-EMAIL-${finalRequestId}] Email inválido:`, email);
       return new Response(
         JSON.stringify({ 
           success: false, 
-          message: 'Dados obrigatórios faltando (email, inviteUrl, roleName)' 
+          error: "Email inválido",
+          message: "Endereço de email não é válido" 
         }),
-        { 
-          status: 400, 
-          headers: { 'Content-Type': 'application/json', ...corsHeaders } 
+        {
+          status: 400,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
         }
-      )
+      );
     }
 
-    // Configurar Supabase para atualizar estatísticas
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')
-    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
-    let supabase = null;
-    
-    if (supabaseUrl && supabaseServiceKey) {
-      supabase = createClient(supabaseUrl, supabaseServiceKey)
+    if (!inviteUrl || !inviteUrl.includes('/accept-invite/')) {
+      console.error(`❌ [SEND-EMAIL-${finalRequestId}] URL de convite inválida:`, inviteUrl);
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          error: "URL de convite inválida",
+          message: "Link do convite não está no formato correto" 
+        }),
+        {
+          status: 400,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        }
+      );
     }
+
+    // Verificar API key do Resend
+    if (!Deno.env.get("RESEND_API_KEY")) {
+      console.error(`❌ [SEND-EMAIL-${finalRequestId}] RESEND_API_KEY não configurada`);
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          error: "Configuração de email não encontrada",
+          message: "Serviço de email não está configurado" 
+        }),
+        {
+          status: 500,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        }
+      );
+    }
+
+    // Preparar dados do email
+    const expirationDate = new Date(expiresAt).toLocaleDateString('pt-BR');
+    const emailSubject = `Convite para acessar a plataforma - ${roleName}`;
+
+    const emailHtml = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>Convite para a Plataforma</title>
+        </head>
+        <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+          <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; border-radius: 10px 10px 0 0; text-align: center;">
+            <h1 style="color: white; margin: 0; font-size: 28px;">🎉 Você foi convidado!</h1>
+          </div>
+          
+          <div style="background: #f8f9fa; padding: 30px; border-radius: 0 0 10px 10px; border: 1px solid #e9ecef;">
+            <p style="font-size: 18px; margin-bottom: 20px;">
+              Olá! <strong>${senderName}</strong> convidou você para fazer parte da nossa plataforma.
+            </p>
+            
+            <div style="background: white; padding: 20px; border-radius: 8px; border-left: 4px solid #667eea; margin: 20px 0;">
+              <p style="margin: 0; font-size: 16px;">
+                <strong>Papel:</strong> ${roleName}<br>
+                <strong>Email:</strong> ${email}<br>
+                <strong>Expira em:</strong> ${expirationDate}
+              </p>
+              ${notes ? `<p style="margin: 15px 0 0 0; font-style: italic; color: #666;">"${notes}"</p>` : ''}
+            </div>
+            
+            <div style="text-align: center; margin: 30px 0;">
+              <a href="${inviteUrl}" 
+                 style="display: inline-block; background: #667eea; color: white; padding: 15px 30px; text-decoration: none; border-radius: 5px; font-weight: bold; font-size: 16px;">
+                🚀 Aceitar Convite
+              </a>
+            </div>
+            
+            <p style="font-size: 14px; color: #666; margin-top: 30px;">
+              Se o botão não funcionar, copie e cole este link no seu navegador:<br>
+              <a href="${inviteUrl}" style="color: #667eea; word-break: break-all;">${inviteUrl}</a>
+            </p>
+            
+            <hr style="border: none; border-top: 1px solid #e9ecef; margin: 30px 0;">
+            
+            <p style="font-size: 12px; color: #999; text-align: center;">
+              Este convite expira em ${expirationDate}. Se você não solicitou este convite, pode ignorar este email.
+            </p>
+          </div>
+        </body>
+      </html>
+    `;
+
+    console.log(`📧 [SEND-EMAIL-${finalRequestId}] Enviando email via Resend...`);
 
     // Enviar email via Resend
-    console.log(`📧 [INVITE-${requestId}] Enviando email via Resend...`);
-    
-    const emailResponse = await resend.emails.send({
-      from: 'Plataforma <noreply@resend.dev>', // Substitua pelo seu domínio verificado
-      to: [requestData.email],
-      subject: `🎉 Você foi convidado! Acesso como ${requestData.roleName}`,
-      html: generateEmailHTML(requestData),
-    })
-
-    if (emailResponse.error) {
-      console.error(`❌ [INVITE-${requestId}] Erro do Resend:`, emailResponse.error);
-      
-      return new Response(
-        JSON.stringify({ 
-          success: false, 
-          message: 'Falha no envio do email',
-          error: emailResponse.error.message,
-          strategy: 'resend'
-        }),
-        { 
-          status: 500, 
-          headers: { 'Content-Type': 'application/json', ...corsHeaders } 
-        }
-      )
-    }
-
-    console.log(`✅ [INVITE-${requestId}] Email enviado com sucesso!`, {
-      emailId: emailResponse.data?.id,
-      to: requestData.email
+    const emailResult = await resend.emails.send({
+      from: "Plataforma <onboarding@resend.dev>",
+      to: [email],
+      subject: emailSubject,
+      html: emailHtml,
     });
 
-    // Atualizar estatísticas do convite se possível
-    if (supabase && requestData.inviteId) {
-      try {
-        await supabase.rpc('update_invite_send_attempt', { 
-          invite_id: requestData.inviteId 
-        });
-        console.log(`📊 [INVITE-${requestId}] Estatísticas atualizadas`);
-      } catch (statError) {
-        console.warn(`⚠️ [INVITE-${requestId}] Erro ao atualizar estatísticas:`, statError);
-        // Não falhar por causa disso
-      }
+    console.log(`📧 [SEND-EMAIL-${finalRequestId}] Resposta do Resend:`, emailResult);
+
+    if (emailResult.error) {
+      console.error(`❌ [SEND-EMAIL-${finalRequestId}] Erro do Resend:`, emailResult.error);
+      throw new Error(`Resend Error: ${emailResult.error.message || JSON.stringify(emailResult.error)}`);
     }
 
-    // Retornar sucesso
+    if (!emailResult.data?.id) {
+      console.error(`❌ [SEND-EMAIL-${finalRequestId}] Resposta inválida do Resend:`, emailResult);
+      throw new Error('Resend não retornou ID do email');
+    }
+
+    const responseTime = Date.now() - startTime;
+    console.log(`✅ [SEND-EMAIL-${finalRequestId}] Email enviado com sucesso! ID: ${emailResult.data.id}, Tempo: ${responseTime}ms`);
+
     return new Response(
-      JSON.stringify({ 
-        success: true, 
-        message: 'Email de convite enviado com sucesso',
-        emailId: emailResponse.data?.id,
-        strategy: 'resend',
-        method: 'primary'
+      JSON.stringify({
+        success: true,
+        message: "Email enviado com sucesso",
+        emailId: emailResult.data.id,
+        strategy: "resend",
+        method: "direct",
+        responseTime,
+        requestId: finalRequestId
       }),
-      { 
-        headers: { 'Content-Type': 'application/json', ...corsHeaders } 
+      {
+        status: 200,
+        headers: { "Content-Type": "application/json", ...corsHeaders },
       }
-    )
+    );
 
   } catch (error: any) {
-    const requestId = 'unknown';
-    console.error(`💥 [INVITE-${requestId}] Erro crítico:`, error);
+    console.error(`❌ [SEND-EMAIL-${requestId}] Erro crítico:`, {
+      message: error.message,
+      stack: error.stack?.substring(0, 500),
+      type: error.constructor.name
+    });
+    
+    const responseTime = Date.now() - startTime;
     
     return new Response(
-      JSON.stringify({ 
-        success: false, 
-        message: 'Erro interno do servidor',
-        error: error.message 
+      JSON.stringify({
+        success: false,
+        error: error.message || "Erro interno do servidor",
+        message: "Falha ao enviar email de convite",
+        responseTime,
+        requestId
       }),
-      { 
-        status: 500, 
-        headers: { 'Content-Type': 'application/json', ...corsHeaders } 
+      {
+        status: 500,
+        headers: { "Content-Type": "application/json", ...corsHeaders },
       }
-    )
+    );
   }
-})
+};
+
+console.log("📧 [SEND-EMAIL] Edge Function carregada e pronta para envio de convites!");
+serve(handler);
