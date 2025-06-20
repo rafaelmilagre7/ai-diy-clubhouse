@@ -295,6 +295,39 @@ export type Database = {
           },
         ]
       }
+      communication_preferences: {
+        Row: {
+          created_at: string
+          email_enabled: boolean | null
+          id: string
+          preferred_channel: string | null
+          updated_at: string
+          user_id: string
+          whatsapp_enabled: boolean | null
+          whatsapp_number: string | null
+        }
+        Insert: {
+          created_at?: string
+          email_enabled?: boolean | null
+          id?: string
+          preferred_channel?: string | null
+          updated_at?: string
+          user_id: string
+          whatsapp_enabled?: boolean | null
+          whatsapp_number?: string | null
+        }
+        Update: {
+          created_at?: string
+          email_enabled?: boolean | null
+          id?: string
+          preferred_channel?: string | null
+          updated_at?: string
+          user_id?: string
+          whatsapp_enabled?: boolean | null
+          whatsapp_number?: string | null
+        }
+        Relationships: []
+      }
       community_reports: {
         Row: {
           created_at: string
@@ -1301,6 +1334,65 @@ export type Database = {
         }
         Relationships: []
       }
+      invite_deliveries: {
+        Row: {
+          channel: string
+          clicked_at: string | null
+          created_at: string
+          delivered_at: string | null
+          error_message: string | null
+          failed_at: string | null
+          id: string
+          invite_id: string
+          metadata: Json | null
+          opened_at: string | null
+          provider_id: string | null
+          sent_at: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          channel: string
+          clicked_at?: string | null
+          created_at?: string
+          delivered_at?: string | null
+          error_message?: string | null
+          failed_at?: string | null
+          id?: string
+          invite_id: string
+          metadata?: Json | null
+          opened_at?: string | null
+          provider_id?: string | null
+          sent_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          channel?: string
+          clicked_at?: string | null
+          created_at?: string
+          delivered_at?: string | null
+          error_message?: string | null
+          failed_at?: string | null
+          id?: string
+          invite_id?: string
+          metadata?: Json | null
+          opened_at?: string | null
+          provider_id?: string | null
+          sent_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invite_deliveries_invite_id_fkey"
+            columns: ["invite_id"]
+            isOneToOne: false
+            referencedRelation: "invites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       invites: {
         Row: {
           created_at: string
@@ -1310,10 +1402,12 @@ export type Database = {
           id: string
           last_sent_at: string | null
           notes: string | null
+          preferred_channel: string | null
           role_id: string
           send_attempts: number | null
           token: string
           used_at: string | null
+          whatsapp_number: string | null
         }
         Insert: {
           created_at?: string
@@ -1323,10 +1417,12 @@ export type Database = {
           id?: string
           last_sent_at?: string | null
           notes?: string | null
+          preferred_channel?: string | null
           role_id: string
           send_attempts?: number | null
           token: string
           used_at?: string | null
+          whatsapp_number?: string | null
         }
         Update: {
           created_at?: string
@@ -1336,10 +1432,12 @@ export type Database = {
           id?: string
           last_sent_at?: string | null
           notes?: string | null
+          preferred_channel?: string | null
           role_id?: string
           send_attempts?: number | null
           token?: string
           used_at?: string | null
+          whatsapp_number?: string | null
         }
         Relationships: [
           {
@@ -4706,6 +4804,17 @@ export type Database = {
       is_user_admin: {
         Args: { user_id: string }
         Returns: boolean
+      }
+      log_invite_delivery: {
+        Args: {
+          p_invite_id: string
+          p_channel: string
+          p_status: string
+          p_provider_id?: string
+          p_error_message?: string
+          p_metadata?: Json
+        }
+        Returns: string
       }
       log_permission_change: {
         Args: {
