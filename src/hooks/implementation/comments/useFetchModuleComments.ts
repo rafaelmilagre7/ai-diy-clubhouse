@@ -19,7 +19,7 @@ export const useFetchModuleComments = (solutionId: string, moduleId: string) => 
         const { data: parentComments, error: parentError } = await supabase
           .from('tool_comments')
           .select('*')
-          .eq('tool_id', solutionId)
+          .eq('tool_id', solutionId as any)
           .is('parent_id', null)
           .order('created_at', { ascending: false });
 
@@ -29,11 +29,11 @@ export const useFetchModuleComments = (solutionId: string, moduleId: string) => 
         }
 
         // Buscar perfis dos usuários que fizeram os comentários
-        const userIds = [...new Set(parentComments.map((c: any) => c.user_id))];
+        const userIds = [...new Set((parentComments as any).map((c: any) => c.user_id))];
         const { data: userProfiles, error: profilesError } = await supabase
           .from('profiles')
           .select('id, name, avatar_url, role')
-          .in('id', userIds);
+          .in('id', userIds as any);
           
         if (profilesError) {
           logError('Erro ao buscar perfis dos usuários', profilesError);
@@ -49,7 +49,7 @@ export const useFetchModuleComments = (solutionId: string, moduleId: string) => 
         const { data: replies, error: repliesError } = await supabase
           .from('tool_comments')
           .select('*')
-          .eq('tool_id', solutionId)
+          .eq('tool_id', solutionId as any)
           .not('parent_id', 'is', null)
           .order('created_at', { ascending: true });
 
@@ -59,7 +59,7 @@ export const useFetchModuleComments = (solutionId: string, moduleId: string) => 
         }
         
         // Adicionar IDs de usuários de respostas ao conjunto de IDs
-        const replyUserIds = [...new Set(replies.map((r: any) => r.user_id))];
+        const replyUserIds = [...new Set((replies as any).map((r: any) => r.user_id))];
         
         // Buscar perfis adicionais se necessário
         if (replyUserIds.some(id => !profilesMap[id])) {
@@ -68,10 +68,10 @@ export const useFetchModuleComments = (solutionId: string, moduleId: string) => 
           const { data: additionalProfiles } = await supabase
             .from('profiles')
             .select('id, name, avatar_url, role')
-            .in('id', missingIds);
+            .in('id', missingIds as any);
             
           if (additionalProfiles) {
-            additionalProfiles.forEach((profile: any) => {
+            (additionalProfiles as any).forEach((profile: any) => {
               profilesMap[profile.id] = profile;
             });
           }
@@ -84,20 +84,20 @@ export const useFetchModuleComments = (solutionId: string, moduleId: string) => 
           const { data: userLikes } = await supabase
             .from('tool_comment_likes')
             .select('comment_id')
-            .eq('user_id', user.id);
+            .eq('user_id', user.id as any);
 
-          likesMap = (userLikes || []).reduce((acc: Record<string, boolean>, like) => {
-            acc[like.comment_id] = true;
+          likesMap = (userLikes || []).reduce((acc: Record<string, boolean>, like: any) => {
+            acc[(like as any).comment_id] = true;
             return acc;
           }, {});
         }
 
         // Organizar comentários com respostas e perfis
-        const organizedComments = parentComments.map((comment: any) => ({
+        const organizedComments = (parentComments as any).map((comment: any) => ({
           ...comment,
           profiles: profilesMap[comment.user_id] || null,
           user_has_liked: !!likesMap[comment.id],
-          replies: (replies || [])
+          replies: (replies as any || [])
             .filter((reply: any) => reply.parent_id === comment.id)
             .map((reply: any) => ({
               ...reply,

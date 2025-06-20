@@ -31,15 +31,15 @@ export const useLikeModuleComment = (solutionId: string, moduleId: string) => {
           .from('tool_comment_likes')
           .delete()
           .match({ 
-            user_id: user.id,
-            comment_id: comment.id
+            user_id: user.id as any,
+            comment_id: comment.id as any
           });
           
         if (deleteError) throw deleteError;
         
         // Decrementar contador
         const { error: decrementError } = await supabase.rpc('decrement', {
-          row_id: comment.id,
+          row_id: comment.id as any,
           table_name: 'tool_comments',
           column_name: 'likes_count'
         });
@@ -53,13 +53,13 @@ export const useLikeModuleComment = (solutionId: string, moduleId: string) => {
           .insert({
             user_id: user.id,
             comment_id: comment.id
-          });
+          } as any);
           
         if (insertError) throw insertError;
         
         // Incrementar contador
         const { error: incrementError } = await supabase.rpc('increment', {
-          row_id: comment.id,
+          row_id: comment.id as any,
           table_name: 'tool_comments',
           column_name: 'likes_count'
         });

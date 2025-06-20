@@ -22,15 +22,15 @@ export const useLikeComment = (solutionId: string, moduleId: string) => {
         const { error } = await supabase
           .from('solution_comment_likes')
           .delete()
-          .eq('comment_id', comment.id)
-          .eq('user_id', userId);
+          .eq('comment_id', comment.id as any)
+          .eq('user_id', userId as any);
           
         if (error) throw error;
         
         await supabase
           .from('solution_comments')
-          .update({ likes_count: comment.likes_count - 1 })
-          .eq('id', comment.id);
+          .update({ likes_count: comment.likes_count - 1 } as any)
+          .eq('id', comment.id as any);
       } else {
         // Adicionar curtida
         const { error } = await supabase
@@ -38,14 +38,14 @@ export const useLikeComment = (solutionId: string, moduleId: string) => {
           .insert({
             comment_id: comment.id,
             user_id: userId
-          });
+          } as any);
           
         if (error) throw error;
         
         await supabase
           .from('solution_comments')
-          .update({ likes_count: comment.likes_count + 1 })
-          .eq('id', comment.id);
+          .update({ likes_count: comment.likes_count + 1 } as any)
+          .eq('id', comment.id as any);
       }
       
       queryClient.invalidateQueries({ queryKey: ['solution-comments', solutionId, moduleId] });
