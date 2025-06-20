@@ -1,8 +1,16 @@
 
 import { useState, useEffect } from "react";
-import { supabase, Tool } from "@/lib/supabase";
+import { supabase } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
 import { SelectedTool } from "@/components/admin/solution/form/types";
+
+// Interface local para Tool já que não está exportada do supabase
+interface Tool {
+  id: string;
+  name: string;
+  official_url: string;
+  status: boolean;
+}
 
 export const useToolsChecklist = (solutionId: string | null) => {
   const [tools, setTools] = useState<SelectedTool[]>([]);

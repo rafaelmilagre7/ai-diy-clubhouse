@@ -28,11 +28,11 @@ export const useUser = (): UseUserReturn => {
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
-        .eq('id', user.id)
+        .eq('id', user.id as any)
         .single();
 
       if (error) throw error;
-      setProfile(data);
+      setProfile(data as any);
     } catch (err) {
       console.error("Erro ao carregar perfil:", err);
       setError(err);

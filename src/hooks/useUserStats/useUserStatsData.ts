@@ -28,7 +28,7 @@ export const useUserStatsData = () => {
         const { data: solutionsData, error: solutionsError } = await supabase
           .from("solutions")
           .select("id, category, difficulty")
-          .eq("published", true);
+          .eq("published", true as any);
 
         if (solutionsError) {
           throw new Error(`Error fetching solutions: ${solutionsError.message}`);
@@ -38,7 +38,7 @@ export const useUserStatsData = () => {
         const { data: progressData, error: progressError } = await supabase
           .from("progress")
           .select("*")
-          .eq("user_id", user.id);
+          .eq("user_id", user.id as any);
 
         if (progressError) {
           throw new Error(`Error fetching progress: ${progressError.message}`);
@@ -48,7 +48,7 @@ export const useUserStatsData = () => {
         const { data: analyticsData, error: analyticsError } = await supabase
           .from("analytics")
           .select("*")
-          .eq("user_id", user.id)
+          .eq("user_id", user.id as any)
           .order("created_at", { ascending: false })
           .limit(20);
 
@@ -61,8 +61,8 @@ export const useUserStatsData = () => {
         setProgressData(progressData || []);
         setAnalyticsData(analyticsData || []);
       } catch (err: any) {
-        console.error("Error fetching user stats data:", err);
-        setError(err.message || "An unknown error occurred");
+        setError(err.message || 'Erro ao carregar estatísticas');
+        console.error('Error fetching user stats data:', err);
         toast({
           title: "Erro ao carregar estatísticas",
           description: "Não foi possível carregar seus dados estatísticos.",
