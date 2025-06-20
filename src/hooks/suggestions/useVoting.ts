@@ -23,8 +23,8 @@ export const useVoting = () => {
         const { data: existingVote } = await supabase
           .from('suggestion_votes')
           .select('id, vote_type')
-          .eq('suggestion_id', suggestionId)
-          .eq('user_id', user.id)
+          .eq('suggestion_id', suggestionId as any)
+          .eq('user_id', user.id as any)
           .maybeSingle();
           
         const { error: voteError } = await supabase
@@ -34,7 +34,7 @@ export const useVoting = () => {
             user_id: user.id,
             vote_type: voteType,
             updated_at: new Date().toISOString()
-          }, {
+          } as any, {
             onConflict: 'suggestion_id,user_id'
           });
 
@@ -48,7 +48,7 @@ export const useVoting = () => {
           } else {
             await supabase.rpc('increment_suggestion_downvote', { suggestion_id: suggestionId });
           }
-        } else if (existingVote.vote_type !== voteType) {
+        } else if ((existingVote as any)?.vote_type !== voteType) {
           // Mudança de voto
           if (voteType === 'upvote') {
             await supabase.rpc('increment_suggestion_upvote', { suggestion_id: suggestionId });

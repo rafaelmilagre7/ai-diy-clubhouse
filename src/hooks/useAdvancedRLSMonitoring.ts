@@ -53,13 +53,13 @@ export const useAdvancedRLSMonitoring = () => {
         throw fetchError;
       }
 
-      setSecuritySummary(data);
+      setSecuritySummary((data as any) as RLSSecuritySummary);
       
       logger.info('[RLS-MONITORING] Resumo de segurança atualizado:', {
-        status: data?.status,
-        percentage: data?.security_percentage,
-        protected: data?.protected_tables,
-        total: data?.total_tables
+        status: (data as any)?.status,
+        percentage: (data as any)?.security_percentage,
+        protected: (data as any)?.protected_tables,
+        total: (data as any)?.total_tables
       });
 
     } catch (error: any) {
@@ -78,7 +78,7 @@ export const useAdvancedRLSMonitoring = () => {
       const { data, error: fetchError } = await supabase
         .from('audit_logs')
         .select('*')
-        .in('event_type', ['security_regression', 'security_upgrade', 'security_violation'])
+        .in('event_type', ['security_regression' as any, 'security_upgrade' as any, 'security_violation' as any])
         .order('timestamp', { ascending: false })
         .limit(50);
 
@@ -87,7 +87,7 @@ export const useAdvancedRLSMonitoring = () => {
         throw fetchError;
       }
 
-      setSecurityAlerts(data || []);
+      setSecurityAlerts((data || []) as any);
       
     } catch (error: any) {
       logger.error('[RLS-MONITORING] Erro ao carregar alertas:', error);

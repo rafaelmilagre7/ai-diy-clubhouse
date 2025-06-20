@@ -42,7 +42,7 @@ export const useSuggestionsList = () => {
       }
 
       console.log('Lista de sugestões encontradas:', data?.length || 0);
-      return (data || []) as Suggestion[];
+      return ((data || []) as unknown) as Suggestion[];
     },
     refetchOnWindowFocus: false,
     staleTime: 1000 * 60 * 2, // 2 minutos
