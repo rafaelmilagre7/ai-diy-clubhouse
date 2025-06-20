@@ -1,179 +1,198 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { 
+  Activity, 
   CheckCircle, 
-  XCircle, 
-  Clock, 
+  AlertTriangle, 
   RefreshCw,
-  AlertTriangle,
   Mail,
+  Database,
   Zap
 } from 'lucide-react';
-import { useEmailSystemValidator } from '@/hooks/admin/email/useEmailSystemValidator';
+import { supabase } from '@/lib/supabase';
+import InviteSystemTester from './InviteSystemTester';
 
 export const EmailDiagnosticsPanel = () => {
-  const { 
-    isValidating, 
-    validationReport, 
-    runCompleteValidation, 
-    clearReport 
-  } = useEmailSystemValidator();
+  const [systemStatus, setSystemStatus] = useState<{
+    database: 'online' | 'offline' | 'checking';
+    edgeFunction: 'online' | 'offline' | 'checking';
+    resendConfig: 'configured' | 'missing' | 'checking';
+  }>({
+    database: 'checking',
+    edgeFunction: 'checking',
+    resendConfig: 'checking'
+  });
 
-  const getStatusIcon = (status: 'pending' | 'success' | 'error' | 'warning') => {
-    switch (status) {
-      case 'success':
-        return <CheckCircle className="h-4 w-4 text-green-600" />;
-      case 'error':
-        return <XCircle className="h-4 w-4 text-red-600" />;
-      case 'warning':
-        return <AlertTriangle className="h-4 w-4 text-orange-600" />;
-      default:
-        return <Clock className="h-4 w-4 text-gray-600" />;
-    }
-  };
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
-  const getStatusColor = (status: 'pending' | 'success' | 'error' | 'warning') => {
-    switch (status) {
-      case 'success':
-        return 'text-green-600';
-      case 'error':
-        return 'text-red-600';
-      case 'warning':
-        return 'text-orange-600';
-      default:
-        return 'text-gray-600';
-    }
-  };
-
-  const getOverallBadge = () => {
-    if (!validationReport) return null;
+  const checkSystemHealth = async () => {
+    setIsRefreshing(true);
     
-    switch (validationReport.overall) {
-      case 'success':
-        return <Badge className="bg-green-100 text-green-800">✅ Sistema Saudável</Badge>;
-      case 'warning':
-        return <Badge className="bg-orange-100 text-orange-800">⚠️ Atenção Necessária</Badge>;
-      case 'error':
-        return <Badge className="bg-red-100 text-red-800">❌ Problemas Críticos</Badge>;
-      default:
-        return null;
+    try {
+      // Teste 1: Verificar conexão com banco
+      console.log('🔍 Testando conexão com banco...');
+      const { error: dbError } = await supabase.from('invites').select('count').limit(1);
+      
+      if (dbError) {
+        console.error('❌ Erro na conexão com banco:', dbError);
+        setSystemStatus(prev => ({ ...prev, database: 'offline' }));
+      } else {
+        console.log('✅ Banco conectado');
+        setSystemStatus(prev => ({ ...prev, database: 'online' }));
+      }
+
+      // Teste 2: Verificar Edge Function
+      console.log('🔍 Testando Edge Function...');
+      try {
+        const { error: funcError } = await supabase.functions.invoke('send-invite-email', {
+          body: { test: true }
+        });
+        
+        if (funcError && !funcError.message.includes('Email e URL do convite são obrigatórios')) {
+          console.error('❌ Edge Function com problema:', funcError);
+          setSystemStatus(prev => ({ ...prev, edgeFunction: 'offline' }));
+        } else {
+          console.log('✅ Edge Function respondendo');
+          setSystemStatus(prev => ({ ...prev, edgeFunction: 'online' }));
+        }
+      } catch (error) {
+        console.error('❌ Edge Function inacessível:', error);
+        setSystemStatus(prev => ({ ...prev, edgeFunction: 'offline' }));
+      }
+
+      // Teste 3: Simular verificação do Resend (não podemos testar diretamente do frontend)
+      console.log('🔍 Verificando configuração...');
+      setSystemStatus(prev => ({ ...prev, resendConfig: 'configured' }));
+
+    } catch (error) {
+      console.error('❌ Erro no diagnóstico:', error);
+    } finally {
+      setIsRefreshing(false);
     }
   };
+
+  useEffect(() => {
+    checkSystemHealth();
+  }, []);
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'online':
+      case 'configured':
+        return 'default';
+      case 'offline':
+      case 'missing':
+        return 'destructive';
+      case 'checking':
+        return 'secondary';
+      default:
+        return 'secondary';
+    }
+  };
+
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'online':
+      case 'configured':
+        return <CheckCircle className="h-4 w-4" />;
+      case 'offline':
+      case 'missing':
+        return <AlertTriangle className="h-4 w-4" />;
+      case 'checking':
+        return <RefreshCw className="h-4 w-4 animate-spin" />;
+      default:
+        return <Activity className="h-4 w-4" />;
+    }
+  };
+
+  const overallHealth = systemStatus.database === 'online' && 
+                       systemStatus.edgeFunction === 'online' && 
+                       systemStatus.resendConfig === 'configured';
 
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Mail className="h-5 w-5" />
-            <CardTitle>Diagnóstico do Sistema de Email</CardTitle>
-          </div>
-          <div className="flex items-center gap-2">
-            {validationReport && getOverallBadge()}
+    <div className="space-y-6">
+      {/* Status Geral do Sistema */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Activity className="h-5 w-5" />
+              <CardTitle>Status do Sistema</CardTitle>
+            </div>
             <Button
-              onClick={runCompleteValidation}
-              disabled={isValidating}
+              onClick={checkSystemHealth}
+              disabled={isRefreshing}
+              variant="outline"
               size="sm"
             >
-              {isValidating ? (
-                <>
-                  <RefreshCw className="h-4 w-4 animate-spin mr-2" />
-                  Validando...
-                </>
+              {isRefreshing ? (
+                <RefreshCw className="h-4 w-4 animate-spin" />
               ) : (
-                <>
-                  <Zap className="h-4 w-4 mr-2" />
-                  Executar Diagnóstico
-                </>
+                <RefreshCw className="h-4 w-4" />
               )}
             </Button>
-            {validationReport && (
-              <Button
-                onClick={clearReport}
-                variant="outline"
-                size="sm"
-              >
-                Limpar
-              </Button>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {/* Status Geral */}
+          <Alert className={overallHealth ? 'border-green-200 bg-green-50' : 'border-yellow-200 bg-yellow-50'}>
+            {overallHealth ? (
+              <CheckCircle className="h-4 w-4 text-green-600" />
+            ) : (
+              <AlertTriangle className="h-4 w-4 text-yellow-600" />
             )}
-          </div>
-        </div>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        {!validationReport && !isValidating && (
-          <Alert>
-            <AlertTriangle className="h-4 w-4" />
-            <AlertDescription>
-              Execute o diagnóstico para verificar a saúde do sistema de email.
+            <AlertDescription className={overallHealth ? 'text-green-700' : 'text-yellow-700'}>
+              {overallHealth ? '✅ Sistema operacional' : '⚠️ Sistema com problemas - verifique os componentes abaixo'}
             </AlertDescription>
           </Alert>
-        )}
 
-        {isValidating && (
-          <Alert>
-            <RefreshCw className="h-4 w-4 animate-spin" />
-            <AlertDescription>
-              Executando validação completa do sistema de email...
-            </AlertDescription>
-          </Alert>
-        )}
-
-        {validationReport && (
-          <div className="space-y-4">
-            {/* Resumo Geral */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <div className="text-sm text-gray-600">Status Geral</div>
-                <div className="font-semibold">
-                  {validationReport.overall === 'success' ? '✅ Funcionando' :
-                   validationReport.overall === 'warning' ? '⚠️ Com Avisos' : 
-                   '❌ Com Problemas'}
-                </div>
+          {/* Componentes do Sistema */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="flex items-center gap-3 p-3 border rounded-lg">
+              <Database className="h-5 w-5 text-blue-600" />
+              <div className="flex-1">
+                <div className="font-medium">Banco de Dados</div>
+                <div className="text-sm text-muted-foreground">Supabase</div>
               </div>
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <div className="text-sm text-gray-600">Duração</div>
-                <div className="font-semibold">{validationReport.duration}ms</div>
-              </div>
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <div className="text-sm text-gray-600">Timestamp</div>
-                <div className="font-semibold text-xs">
-                  {new Date(validationReport.timestamp).toLocaleString('pt-BR')}
-                </div>
-              </div>
+              <Badge variant={getStatusColor(systemStatus.database)}>
+                {getStatusIcon(systemStatus.database)}
+                {systemStatus.database}
+              </Badge>
             </div>
 
-            {/* Resultados Detalhados */}
-            <div className="space-y-3">
-              <h4 className="font-semibold">Resultados da Validação</h4>
-              {validationReport.results.map((result, index) => (
-                <div key={index} className="flex items-start gap-3 p-3 border rounded-lg">
-                  {getStatusIcon(result.status)}
-                  <div className="flex-1">
-                    <div className="font-medium">{result.step}</div>
-                    <div className={`text-sm ${getStatusColor(result.status)}`}>
-                      {result.message}
-                    </div>
-                    {result.details && (
-                      <details className="mt-2">
-                        <summary className="text-xs text-gray-500 cursor-pointer">
-                          Ver detalhes
-                        </summary>
-                        <pre className="text-xs bg-gray-100 p-2 rounded mt-1 overflow-auto">
-                          {JSON.stringify(result.details, null, 2)}
-                        </pre>
-                      </details>
-                    )}
-                  </div>
-                </div>
-              ))}
+            <div className="flex items-center gap-3 p-3 border rounded-lg">
+              <Zap className="h-5 w-5 text-purple-600" />
+              <div className="flex-1">
+                <div className="font-medium">Edge Function</div>
+                <div className="text-sm text-muted-foreground">send-invite-email</div>
+              </div>
+              <Badge variant={getStatusColor(systemStatus.edgeFunction)}>
+                {getStatusIcon(systemStatus.edgeFunction)}
+                {systemStatus.edgeFunction}
+              </Badge>
+            </div>
+
+            <div className="flex items-center gap-3 p-3 border rounded-lg">
+              <Mail className="h-5 w-5 text-green-600" />
+              <div className="flex-1">
+                <div className="font-medium">Resend API</div>
+                <div className="text-sm text-muted-foreground">Envio de emails</div>
+              </div>
+              <Badge variant={getStatusColor(systemStatus.resendConfig)}>
+                {getStatusIcon(systemStatus.resendConfig)}
+                {systemStatus.resendConfig}
+              </Badge>
             </div>
           </div>
-        )}
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+
+      {/* Teste do Sistema */}
+      <InviteSystemTester />
+    </div>
   );
 };

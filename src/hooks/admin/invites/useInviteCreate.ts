@@ -72,7 +72,7 @@ export function useInviteCreate() {
         // Prosseguir com envio de email usando fallback
         const inviteUrl = `${window.location.origin}/accept-invite/${createResult.token}`;
         
-        const emailResult = await this.sendEmailWithFallback(requestId, {
+        const emailResult = await sendEmailWithFallback(requestId, {
           email: params.email,
           inviteUrl,
           roleName: 'Usuário',
@@ -97,7 +97,7 @@ export function useInviteCreate() {
       const inviteUrl = `${window.location.origin}/accept-invite/${inviteData.token}`;
       console.log(`📧 [${requestId}] Enviando email para:`, params.email);
 
-      const emailResult = await this.sendEmailWithFallback(requestId, {
+      const emailResult = await sendEmailWithFallback(requestId, {
         email: params.email,
         inviteUrl,
         roleName: 'Usuário', // Simplificado por enquanto
