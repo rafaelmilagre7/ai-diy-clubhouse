@@ -1,5 +1,4 @@
 
-import { logger } from '@/utils/logger';
 import { SUPABASE_CONFIG } from '@/config/app';
 
 interface ResendHealthResponse {
@@ -30,6 +29,11 @@ class ResendTestService {
     this.baseUrl = `${credentials.url}/functions/v1`;
   }
 
+  private log(level: 'info' | 'error' | 'warn', message: string, context?: any) {
+    const logMessage = context ? `${message}: ${JSON.stringify(context)}` : message;
+    console[level](`[RESEND-SERVICE] ${logMessage}`);
+  }
+
   async testHealthWithDirectFetch(
     attempt: number = 1,
     forceRefresh: boolean = false
@@ -38,7 +42,7 @@ class ResendTestService {
     const timeoutId = setTimeout(() => controller.abort(), this.defaultTimeout);
 
     try {
-      logger.info(`🔧 [RESEND-DIRECT] Teste direto de saúde - tentativa ${attempt}`);
+      this.log('info', `Teste direto de saúde - tentativa ${attempt}`);
 
       const response = await fetch(`${this.baseUrl}/test-resend-health`, {
         method: 'POST',
@@ -64,12 +68,12 @@ class ResendTestService {
       }
 
       const result = await response.json();
-      logger.info('✅ [RESEND-DIRECT] Teste direto bem-sucedido:', result);
+      this.log('info', 'Teste direto bem-sucedido', result);
 
       return result;
     } catch (error: any) {
       clearTimeout(timeoutId);
-      logger.error('❌ [RESEND-DIRECT] Erro no teste direto:', error);
+      this.log('error', 'Erro no teste direto', error);
 
       return {
         healthy: false,
@@ -89,7 +93,7 @@ class ResendTestService {
     const timeoutId = setTimeout(() => controller.abort(), this.defaultTimeout);
 
     try {
-      logger.info('📧 [RESEND-DIRECT] Enviando email de teste direto:', email);
+      this.log('info', `Enviando email de teste direto para: ${email}`);
 
       const response = await fetch(`${this.baseUrl}/test-resend-email`, {
         method: 'POST',
@@ -110,12 +114,12 @@ class ResendTestService {
       }
 
       const result = await response.json();
-      logger.info('✅ [RESEND-DIRECT] Email enviado diretamente:', result);
+      this.log('info', 'Email enviado diretamente', result);
 
       return result;
     } catch (error: any) {
       clearTimeout(timeoutId);
-      logger.error('❌ [RESEND-DIRECT] Erro no envio direto:', error);
+      this.log('error', 'Erro no envio direto', error);
 
       return {
         success: false,
@@ -126,7 +130,7 @@ class ResendTestService {
 
   async testResendApiDirect(): Promise<{ connected: boolean; error?: string }> {
     try {
-      logger.info('🔍 [RESEND-API] Testando conectividade direta com Resend API');
+      this.log('info', 'Testando conectividade direta com Resend API');
 
       // Teste básico de conectividade com Resend (sem Edge Function)
       const response = await fetch('https://api.resend.com/domains', {
@@ -138,14 +142,14 @@ class ResendTestService {
       });
 
       if (response.ok) {
-        logger.info('✅ [RESEND-API] Conectividade direta confirmada');
+        this.log('info', 'Conectividade direta confirmada');
         return { connected: true };
       } else {
-        logger.warn('⚠️ [RESEND-API] Resposta não-OK:', response.status);
+        this.log('warn', `Resposta não-OK: ${response.status}`);
         return { connected: false, error: `HTTP ${response.status}` };
       }
     } catch (error: any) {
-      logger.error('❌ [RESEND-API] Erro na conectividade direta:', error);
+      this.log('error', 'Erro na conectividade direta', error);
       return { connected: false, error: error.message };
     }
   }
