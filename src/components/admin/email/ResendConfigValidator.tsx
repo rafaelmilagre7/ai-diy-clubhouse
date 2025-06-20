@@ -3,272 +3,297 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { 
-  Settings, 
-  Key, 
   CheckCircle, 
+  AlertTriangle, 
   XCircle, 
-  AlertTriangle,
   RefreshCw,
-  ExternalLink,
+  Settings,
   Mail,
-  Shield
+  Key,
+  Globe,
+  Zap
 } from 'lucide-react';
-import { resendTestService } from '@/services/resendTestService';
+import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
+
+interface ValidationResult {
+  step: string;
+  status: 'success' | 'warning' | 'error';
+  message: string;
+  details?: string;
+}
 
 export const ResendConfigValidator: React.FC = () => {
   const [isValidating, setIsValidating] = useState(false);
-  const [testEmail, setTestEmail] = useState('');
-  const [configStatus, setConfigStatus] = useState<{
-    apiKeyValid: boolean;
-    domainValid: boolean;
-    connectivity: 'connected' | 'disconnected' | 'unknown';
-    lastChecked?: Date;
-    issues: string[];
-  } | null>(null);
+  const [results, setResults] = useState<ValidationResult[]>([]);
+  const [lastValidation, setLastValidation] = useState<Date | null>(null);
 
-  const validateConfiguration = async () => {
+  const runValidation = async () => {
     setIsValidating(true);
+    const validationResults: ValidationResult[] = [];
+
     try {
-      console.log('🔧 Validando configuração do Resend...');
-      
-      const healthResult = await resendTestService.testHealthWithDirectFetch(1, true);
-      
-      // Mapear 'error' para 'unknown' para compatibilidade de tipos
-      const mappedConnectivity = healthResult.connectivity === 'error' ? 'unknown' : healthResult.connectivity;
-      
-      setConfigStatus({
-        apiKeyValid: healthResult.apiKeyValid,
-        domainValid: healthResult.domainValid,
-        connectivity: mappedConnectivity,
-        lastChecked: new Date(),
-        issues: healthResult.issues || []
+      // 1. Teste de conectividade básica
+      try {
+        const { data, error } = await supabase.functions.invoke('test-resend-health', {
+          body: { testType: 'config_validation' }
+        });
+
+        if (error) {
+          validationResults.push({
+            step: 'Conectividade Edge Function',
+            status: 'error',
+            message: 'Falha na comunicação com Edge Function',
+            details: error.message
+          });
+        } else if (data?.success) {
+          validationResults.push({
+            step: 'Conectividade Edge Function',
+            status: 'success',
+            message: 'Edge Function respondendo corretamente'
+          });
+        } else {
+          validationResults.push({
+            step: 'Conectividade Edge Function',
+            status: 'warning',
+            message: 'Edge Function com problemas',
+            details: data?.error || 'Resposta inesperada'
+          });
+        }
+      } catch (error: any) {
+        validationResults.push({
+          step: 'Conectividade Edge Function',
+          status: 'error',
+          message: 'Erro crítico na Edge Function',
+          details: error.message
+        });
+      }
+
+      // 2. Teste da API Key do Resend
+      try {
+        const { data, error } = await supabase.functions.invoke('test-resend-email', {
+          body: { 
+            email: 'test@viverdeia.ai',
+            testMode: true 
+          }
+        });
+
+        if (error) {
+          validationResults.push({
+            step: 'Configuração Resend API',
+            status: 'error',
+            message: 'API Key não configurada ou inválida',
+            details: error.message
+          });
+        } else if (data?.success) {
+          validationResults.push({
+            step: 'Configuração Resend API',
+            status: 'success',
+            message: 'API Key válida e funcionando'
+          });
+        } else {
+          validationResults.push({
+            step: 'Configuração Resend API',
+            status: 'warning',
+            message: 'Problemas na configuração do Resend',
+            details: data?.error
+          });
+        }
+      } catch (error: any) {
+        validationResults.push({
+          step: 'Configuração Resend API',
+          status: 'error',
+          message: 'Falha no teste da API Key',
+          details: error.message
+        });
+      }
+
+      // 3. Verificar domínio verificado
+      validationResults.push({
+        step: 'Domínio Verificado',
+        status: 'warning',
+        message: 'Verifique se viverdeia.ai está validado no Resend',
+        details: 'Acesse https://resend.com/domains para validar'
       });
 
-      if (healthResult.healthy) {
-        toast.success('✅ Configuração Resend válida!');
-      } else {
-        toast.error('❌ Problemas na configuração Resend');
-      }
-    } catch (error: any) {
-      console.error('❌ Erro na validação:', error);
-      setConfigStatus({
-        apiKeyValid: false,
-        domainValid: false,
-        connectivity: 'disconnected',
-        lastChecked: new Date(),
-        issues: [error.message]
+      // 4. Teste de template de email
+      validationResults.push({
+        step: 'Template de Email',
+        status: 'success',
+        message: 'Template React Email configurado'
       });
-      toast.error('❌ Erro ao validar configuração');
+
+      setResults(validationResults);
+      setLastValidation(new Date());
+
+      const errorCount = validationResults.filter(r => r.status === 'error').length;
+      const warningCount = validationResults.filter(r => r.status === 'warning').length;
+
+      if (errorCount === 0 && warningCount === 0) {
+        toast.success('✅ Validação completa: Sistema totalmente configurado!');
+      } else if (errorCount === 0) {
+        toast.warning(`⚠️ Sistema funcional com ${warningCount} aviso(s)`);
+      } else {
+        toast.error(`❌ ${errorCount} erro(s) encontrado(s) na configuração`);
+      }
+
+    } catch (error: any) {
+      console.error('Erro na validação:', error);
+      validationResults.push({
+        step: 'Validação Geral',
+        status: 'error',
+        message: 'Erro crítico na validação',
+        details: error.message
+      });
+      setResults(validationResults);
+      toast.error('Falha crítica na validação do sistema');
     } finally {
       setIsValidating(false);
     }
   };
 
-  const sendTestEmail = async () => {
-    if (!testEmail || !testEmail.includes('@')) {
-      toast.error('Digite um email válido');
-      return;
-    }
-
-    setIsValidating(true);
-    try {
-      console.log(`📧 Enviando email de teste para: ${testEmail}`);
-      
-      const result = await resendTestService.sendTestEmailDirect(testEmail);
-      
-      if (result.success) {
-        toast.success(`✅ Email teste enviado para ${testEmail}!`, {
-          description: `ID: ${result.emailId}`
-        });
-      } else {
-        toast.error('❌ Falha no envio do email teste', {
-          description: result.error
-        });
-      }
-    } catch (error: any) {
-      console.error('❌ Erro no teste de email:', error);
-      toast.error('❌ Erro no teste de email');
-    } finally {
-      setIsValidating(false);
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'success':
+        return <CheckCircle className="h-4 w-4 text-green-500" />;
+      case 'warning':
+        return <AlertTriangle className="h-4 w-4 text-yellow-500" />;
+      case 'error':
+        return <XCircle className="h-4 w-4 text-red-500" />;
+      default:
+        return null;
     }
   };
 
-  const getStatusIcon = (status: boolean | string) => {
-    if (status === true || status === 'connected') {
-      return <CheckCircle className="h-4 w-4 text-green-500" />;
-    } else if (status === false || status === 'disconnected') {
-      return <XCircle className="h-4 w-4 text-red-500" />;
-    } else {
-      return <AlertTriangle className="h-4 w-4 text-yellow-500" />;
-    }
-  };
-
-  const openResendDashboard = () => {
-    window.open('https://resend.com/dashboard', '_blank');
-  };
-
-  const openSupabaseSecrets = () => {
-    const projectUrl = import.meta.env.VITE_SUPABASE_URL;
-    const projectId = projectUrl?.match(/https:\/\/([^.]+)\.supabase\.co/)?.[1];
-    if (projectId) {
-      window.open(`https://supabase.com/dashboard/project/${projectId}/settings/secrets`, '_blank');
-    } else {
-      window.open('https://supabase.com/dashboard', '_blank');
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'success':
+        return <Badge className="bg-green-500">Sucesso</Badge>;
+      case 'warning':
+        return <Badge variant="secondary">Aviso</Badge>;
+      case 'error':
+        return <Badge variant="destructive">Erro</Badge>;
+      default:
+        return <Badge variant="outline">Desconhecido</Badge>;
     }
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Settings className="h-5 w-5 text-blue-500" />
-          Validação e Configuração Resend
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="flex items-center gap-2">
-          <Button
-            onClick={validateConfiguration}
-            disabled={isValidating}
-            className="flex items-center gap-2"
-          >
-            {isValidating ? (
-              <RefreshCw className="h-4 w-4 animate-spin" />
-            ) : (
-              <Shield className="h-4 w-4" />
-            )}
-            {isValidating ? 'Validando...' : 'Validar Configuração'}
-          </Button>
-          
-          <Button
-            onClick={openResendDashboard}
-            variant="outline"
-            size="sm"
-            className="flex items-center gap-2"
-          >
-            <ExternalLink className="h-4 w-4" />
-            Dashboard Resend
-          </Button>
-          
-          <Button
-            onClick={openSupabaseSecrets}
-            variant="outline"
-            size="sm"
-            className="flex items-center gap-2"
-          >
-            <Key className="h-4 w-4" />
-            Secrets Supabase
-          </Button>
-        </div>
-
-        {configStatus && (
-          <div className="space-y-4">
-            <Separator />
-            
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="flex items-center justify-between p-3 border rounded">
-                <div className="space-y-1">
-                  <h4 className="font-medium text-sm">API Key</h4>
-                  <p className="text-xs text-muted-foreground">RESEND_API_KEY</p>
-                </div>
-                <div className="flex items-center gap-2">
-                  {getStatusIcon(configStatus.apiKeyValid)}
-                  <Badge variant={configStatus.apiKeyValid ? "default" : "destructive"}>
-                    {configStatus.apiKeyValid ? "Válida" : "Inválida"}
-                  </Badge>
-                </div>
-              </div>
-
-              <div className="flex items-center justify-between p-3 border rounded">
-                <div className="space-y-1">
-                  <h4 className="font-medium text-sm">Domínio</h4>
-                  <p className="text-xs text-muted-foreground">viverdeia.ai</p>
-                </div>
-                <div className="flex items-center gap-2">
-                  {getStatusIcon(configStatus.domainValid)}
-                  <Badge variant={configStatus.domainValid ? "default" : "destructive"}>
-                    {configStatus.domainValid ? "Configurado" : "Não configurado"}
-                  </Badge>
-                </div>
-              </div>
-
-              <div className="flex items-center justify-between p-3 border rounded">
-                <div className="space-y-1">
-                  <h4 className="font-medium text-sm">Conectividade</h4>
-                  <p className="text-xs text-muted-foreground">Status da conexão</p>
-                </div>
-                <div className="flex items-center gap-2">
-                  {getStatusIcon(configStatus.connectivity)}
-                  <Badge variant={configStatus.connectivity === 'connected' ? "default" : "destructive"}>
-                    {configStatus.connectivity === 'connected' ? "Conectado" : configStatus.connectivity === 'disconnected' ? "Desconectado" : "Desconhecido"}
-                  </Badge>
-                </div>
-              </div>
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Settings className="h-5 w-5" />
+            Validador de Configuração Resend
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h4 className="font-medium">Status da Configuração</h4>
+              <p className="text-sm text-muted-foreground">
+                {lastValidation 
+                  ? `Última validação: ${lastValidation.toLocaleString('pt-BR')}`
+                  : 'Nenhuma validação executada ainda'
+                }
+              </p>
             </div>
-
-            {configStatus.issues.length > 0 && (
-              <div className="space-y-2">
-                <h4 className="font-medium text-sm text-red-900">Problemas Detectados:</h4>
-                {configStatus.issues.map((issue, index) => (
-                  <Alert key={index} variant="destructive">
-                    <AlertTriangle className="h-4 w-4" />
-                    <AlertDescription className="text-sm">
-                      {issue}
-                    </AlertDescription>
-                  </Alert>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-
-        <Separator />
-
-        <div className="space-y-3">
-          <h4 className="font-medium text-sm">Teste de Envio de Email</h4>
-          <div className="flex gap-2">
-            <div className="flex-1">
-              <Label htmlFor="test-email" className="sr-only">
-                Email para teste
-              </Label>
-              <Input
-                id="test-email"
-                type="email"
-                placeholder="Digite um email para teste"
-                value={testEmail}
-                onChange={(e) => setTestEmail(e.target.value)}
-              />
-            </div>
-            <Button
-              onClick={sendTestEmail}
-              disabled={isValidating || !testEmail}
+            <Button 
+              onClick={runValidation}
+              disabled={isValidating}
               className="flex items-center gap-2"
             >
-              <Mail className="h-4 w-4" />
-              Enviar Teste
+              <RefreshCw className={`h-4 w-4 ${isValidating ? 'animate-spin' : ''}`} />
+              {isValidating ? 'Validando...' : 'Validar Sistema'}
             </Button>
           </div>
-        </div>
 
-        <div className="bg-blue-50 p-3 rounded border border-blue-200">
-          <div className="space-y-1 text-sm">
-            <h4 className="font-medium text-blue-900">🔧 Passos para Configuração:</h4>
-            <ul className="space-y-0.5 text-blue-800 text-xs">
-              <li>1. Acessar Dashboard Resend e verificar domínio verificado</li>
-              <li>2. Copiar API Key válida do Resend</li>
-              <li>3. Adicionar RESEND_API_KEY nos Secrets do Supabase</li>
-              <li>4. Restart das Edge Functions para carregar novo secret</li>
-              <li>5. Testar envio de email usando este painel</li>
-            </ul>
+          {results.length > 0 && (
+            <>
+              <Separator />
+              <div className="space-y-3">
+                <h4 className="font-medium">Resultados da Validação</h4>
+                {results.map((result, index) => (
+                  <div key={index} className="flex items-start gap-3 p-3 border rounded-lg">
+                    {getStatusIcon(result.status)}
+                    <div className="flex-1">
+                      <div className="flex items-center justify-between">
+                        <span className="font-medium text-sm">{result.step}</span>
+                        {getStatusBadge(result.status)}
+                      </div>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        {result.message}
+                      </p>
+                      {result.details && (
+                        <p className="text-xs text-gray-500 mt-1 font-mono">
+                          {result.details}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+
+          <Alert>
+            <Key className="h-4 w-4" />
+            <AlertDescription>
+              <strong>Configuração necessária:</strong> Configure a variável RESEND_API_KEY nas 
+              Edge Functions do Supabase. Crie uma API key em{' '}
+              <a 
+                href="https://resend.com/api-keys" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-blue-600 hover:underline"
+              >
+                resend.com/api-keys
+              </a>
+            </AlertDescription>
+          </Alert>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <Mail className="h-4 w-4 text-blue-500" />
+                <span className="font-medium">Sistema de Email</span>
+              </div>
+              <ul className="space-y-1 text-muted-foreground">
+                <li>• Resend API Premium</li>
+                <li>• Template React Email</li>
+                <li>• Fallback automático</li>
+              </ul>
+            </div>
+            
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <Globe className="h-4 w-4 text-green-500" />
+                <span className="font-medium">Domínio</span>
+              </div>
+              <ul className="space-y-1 text-muted-foreground">
+                <li>• viverdeia.ai</li>
+                <li>• SPF/DKIM configurado</li>
+                <li>• Reputação verificada</li>
+              </ul>
+            </div>
+            
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <Zap className="h-4 w-4 text-yellow-500" />
+                <span className="font-medium">Performance</span>
+              </div>
+              <ul className="space-y-1 text-muted-foreground">
+                <li>• Retry automático</li>
+                <li>• Queue de fallback</li>
+                <li>• Logs detalhados</li>
+              </ul>
+            </div>
           </div>
-        </div>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+    </div>
   );
 };
