@@ -35,14 +35,14 @@ export const ModuleContentVideos: React.FC<ModuleContentVideosProps> = ({ module
           const { data: resourcesData, error: resourcesError } = await supabase
             .from("solution_resources")
             .select("*")
-            .eq("solution_id", module.solution_id)
-            .eq("type", "video");
+            .eq("solution_id", module.solution_id as any)
+            .eq("type", "video" as any);
 
           if (resourcesError) {
             logError("Error fetching video resources:", resourcesError);
             setVideos([]);
           } else if (resourcesData && resourcesData.length > 0) {
-            const videoResources = resourcesData.map(resource => ({
+            const videoResources = (resourcesData as any).map((resource: any) => ({
               title: resource.name,
               description: resource.format || "",
               url: resource.url,

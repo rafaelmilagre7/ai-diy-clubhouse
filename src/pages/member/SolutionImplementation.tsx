@@ -64,7 +64,7 @@ const SolutionImplementationPage: React.FC = () => {
         const { data, error } = await supabase
           .from("solutions")
           .select("*")
-          .eq("id", id)
+          .eq("id", id as any)
           .single();
 
         if (error) {
@@ -72,7 +72,7 @@ const SolutionImplementationPage: React.FC = () => {
         }
 
         if (data) {
-          setSolution(data as Solution);
+          setSolution(data as any as Solution);
 
           // Fetch progress for this solution and user
           if (user) {
@@ -80,8 +80,8 @@ const SolutionImplementationPage: React.FC = () => {
               const { data: progressData, error: progressError } = await supabase
                 .from("progress")
                 .select("solution_id, is_completed, current_module, completed_modules, created_at, last_activity")
-                .eq("solution_id", id)
-                .eq("user_id", user.id)
+                .eq("solution_id", id as any)
+                .eq("user_id", user.id as any)
                 .single();
 
               if (progressError) {
@@ -138,7 +138,7 @@ const SolutionImplementationPage: React.FC = () => {
           is_completed: false,
           completed_modules: [],
           last_activity: new Date().toISOString(),
-        })
+        } as any)
         .select()
         .single();
 

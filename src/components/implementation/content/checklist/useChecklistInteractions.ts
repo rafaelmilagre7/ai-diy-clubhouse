@@ -32,8 +32,8 @@ export const useChecklistInteractions = (solution: Solution | null) => {
         const { data, error } = await supabase
           .from("user_checklists")
           .select("*")
-          .eq("user_id", user.id)
-          .eq("solution_id", solution.id)
+          .eq("user_id", user.id as any)
+          .eq("solution_id", solution.id as any)
           .single();
           
         if (error && error.code !== "PGRST116") { // PGRST116 = Not found, which is expected if no record yet
@@ -47,8 +47,8 @@ export const useChecklistInteractions = (solution: Solution | null) => {
             .update({
               checked_items: newUserChecklist,
               updated_at: new Date().toISOString()
-            })
-            .eq("id", data.id);
+            } as any)
+            .eq("id", (data as any).id as any);
         } else {
           // Create new record
           await supabase
@@ -59,7 +59,7 @@ export const useChecklistInteractions = (solution: Solution | null) => {
               checked_items: newUserChecklist,
               created_at: new Date().toISOString(),
               updated_at: new Date().toISOString()
-            });
+            } as any);
         }
         
         // Log user interaction

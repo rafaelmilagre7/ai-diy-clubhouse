@@ -27,7 +27,7 @@ export const useChecklistData = (module: Module) => {
         const { data, error } = await supabase
           .from("solutions")
           .select("*")
-          .eq("id", module.solution_id)
+          .eq("id", module.solution_id as any)
           .maybeSingle();
         
         if (error) {
@@ -42,7 +42,7 @@ export const useChecklistData = (module: Module) => {
         }
         
         // Ensure data is of Solution type
-        const solutionData = data as Solution;
+        const solutionData = data as any as Solution;
         setSolution(solutionData);
         
         // Extract checklist items from solution
@@ -53,13 +53,13 @@ export const useChecklistData = (module: Module) => {
           const { data: checkpointData, error: checkpointError } = await supabase
             .from("implementation_checkpoints")
             .select("*")
-            .eq("solution_id", module.solution_id)
+            .eq("solution_id", module.solution_id as any)
             .order("checkpoint_order", { ascending: true });
             
           if (checkpointError) {
             logError("Error fetching checkpoints:", checkpointError);
           } else if (checkpointData && checkpointData.length > 0) {
-            const checkpointChecklist: ChecklistItem[] = checkpointData.map((item: any) => ({
+            const checkpointChecklist: ChecklistItem[] = (checkpointData as any).map((item: any) => ({
               id: item.id,
               title: item.description,
               checked: false
@@ -83,17 +83,17 @@ export const useChecklistData = (module: Module) => {
           const { data: userData, error: userError } = await supabase
             .from("user_checklists")
             .select("*")
-            .eq("user_id", user.id)
-            .eq("solution_id", module.solution_id)
+            .eq("user_id", user.id as any)
+            .eq("solution_id", module.solution_id as any)
             .maybeSingle();
               
           if (userError) {
             logError("Error fetching user checklist:", userError);
           } else if (userData) {
             // Parse the JSON data if it's a string
-            const userItems = typeof userData.checked_items === 'string' 
-              ? JSON.parse(userData.checked_items) 
-              : userData.checked_items;
+            const userItems = typeof (userData as any).checked_items === 'string' 
+              ? JSON.parse((userData as any).checked_items) 
+              : (userData as any).checked_items;
               
             setUserChecklist(userItems as Record<string, boolean>);
           } else {
