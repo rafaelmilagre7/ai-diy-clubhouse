@@ -12,18 +12,21 @@ interface ResendHealthStatus {
   issues: string[];
   recommendations: string[];
   checkedAt: Date;
+  edgeFunctionStatus: 'working' | 'failed' | 'unknown';
+  connectionError?: string;
 }
 
 export const useResendHealthCheck = () => {
   const [healthStatus, setHealthStatus] = useState<ResendHealthStatus>({
-    isHealthy: true,
-    apiKeyStatus: 'valid',
-    domainStatus: 'verified',
-    emailCapability: 'operational',
+    isHealthy: false,
+    apiKeyStatus: 'unknown' as any,
+    domainStatus: 'unknown',
+    emailCapability: 'error',
     lastTestEmail: null,
-    issues: [],
-    recommendations: [],
-    checkedAt: new Date()
+    issues: ['Verificação pendente'],
+    recommendations: ['Aguarde a verificação inicial'],
+    checkedAt: new Date(),
+    edgeFunctionStatus: 'unknown'
   });
   const [isChecking, setIsChecking] = useState(false);
 
@@ -33,11 +36,26 @@ export const useResendHealthCheck = () => {
     const recommendations: string[] = [];
 
     try {
-      // Testar conectividade com o Resend via edge function
-      const { data, error } = await supabase.functions.invoke('test-resend-health');
+      console.log('🔍 [RESEND-HEALTH] Iniciando verificação do sistema de email...');
+      
+      // Testar conectividade com timeout
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Timeout na Edge Function')), 10000)
+      );
+
+      const healthCheckPromise = supabase.functions.invoke('test-resend-health');
+      
+      const { data, error } = await Promise.race([
+        healthCheckPromise,
+        timeoutPromise
+      ]) as any;
       
       if (error) {
-        issues.push(`Erro na verificação: ${error.message}`);
+        console.error('❌ [RESEND-HEALTH] Erro na Edge Function:', error);
+        issues.push(`Falha na Edge Function: ${error.message}`);
+        recommendations.push('Verificar logs da Edge Function no Supabase');
+        recommendations.push('Verificar se o projeto está conectado ao Supabase');
+        
         setHealthStatus({
           isHealthy: false,
           apiKeyStatus: 'error',
@@ -45,60 +63,93 @@ export const useResendHealthCheck = () => {
           emailCapability: 'error',
           lastTestEmail: null,
           issues,
-          recommendations: ['Verificar configuração do Resend', 'Revisar API key'],
-          checkedAt: new Date()
+          recommendations,
+          checkedAt: new Date(),
+          edgeFunctionStatus: 'failed',
+          connectionError: error.message
         });
         return;
       }
 
+      console.log('✅ [RESEND-HEALTH] Edge Function respondeu:', data);
+      
       const result = data?.health || {};
       
       // Analisar status da API key
       let apiKeyStatus: ResendHealthStatus['apiKeyStatus'] = 'valid';
-      if (!result.apiKeyValid) {
-        apiKeyStatus = result.apiKeyMissing ? 'missing' : 'invalid';
-        issues.push('API key do Resend inválida ou ausente');
-        recommendations.push('Verificar configuração da API key no painel admin');
+      if (result.apiKeyMissing) {
+        apiKeyStatus = 'missing';
+        issues.push('API key do Resend não está configurada');
+        recommendations.push('Configurar RESEND_API_KEY nas secrets do Supabase');
+        recommendations.push('Obter API key em https://resend.com/api-keys');
+      } else if (!result.apiKeyValid) {
+        apiKeyStatus = 'invalid';
+        issues.push('API key do Resend é inválida');
+        recommendations.push('Verificar se a API key está correta');
+        recommendations.push('Regenerar API key no painel do Resend');
       }
 
       // Analisar status do domínio
       let domainStatus: ResendHealthStatus['domainStatus'] = 'verified';
       if (!result.domainVerified) {
         domainStatus = 'failed';
-        issues.push('Domínio não verificado no Resend');
-        recommendations.push('Verificar configurações DNS do domínio');
+        issues.push('Domínio viverdeia.ai não está verificado no Resend');
+        recommendations.push('Verificar configurações DNS em https://resend.com/domains');
+        recommendations.push('Adicionar registros DNS necessários para verificação');
       }
 
       // Analisar capacidade de envio
       let emailCapability: ResendHealthStatus['emailCapability'] = 'operational';
       if (result.quotaExceeded) {
         emailCapability = 'limited';
-        issues.push('Quota de emails atingida');
+        issues.push('Quota de emails do Resend foi atingida');
         recommendations.push('Upgradar plano do Resend ou aguardar reset da quota');
       }
 
+      // Determinar saúde geral
+      const isHealthy = issues.length === 0;
+
       setHealthStatus({
-        isHealthy: issues.length === 0,
+        isHealthy,
         apiKeyStatus,
         domainStatus,
         emailCapability,
         lastTestEmail: result.lastTestEmail ? new Date(result.lastTestEmail) : null,
         issues,
         recommendations,
-        checkedAt: new Date()
+        checkedAt: new Date(),
+        edgeFunctionStatus: 'working'
       });
 
-    } catch (error) {
-      console.error('Erro na verificação de saúde do Resend:', error);
+      console.log(`✅ [RESEND-HEALTH] Verificação concluída - Status: ${isHealthy ? 'Saudável' : 'Com problemas'}`);
+
+    } catch (error: any) {
+      console.error('❌ [RESEND-HEALTH] Erro na verificação:', error);
+      
+      let errorMessage = 'Erro na verificação do sistema';
+      let connectionError = error.message;
+      
+      if (error.message?.includes('Timeout')) {
+        errorMessage = 'Edge Function não respondeu (timeout)';
+        recommendations.push('Verificar se as Edge Functions estão funcionando');
+        recommendations.push('Tentar novamente em alguns minutos');
+      } else if (error.message?.includes('network') || error.message?.includes('fetch')) {
+        errorMessage = 'Erro de conectividade';
+        recommendations.push('Verificar conexão com a internet');
+        recommendations.push('Verificar status do Supabase');
+      }
+      
       setHealthStatus({
         isHealthy: false,
         apiKeyStatus: 'error',
         domainStatus: 'unknown',
         emailCapability: 'error',
         lastTestEmail: null,
-        issues: ['Erro na verificação do sistema'],
-        recommendations: ['Verificar logs do sistema'],
-        checkedAt: new Date()
+        issues: [errorMessage],
+        recommendations,
+        checkedAt: new Date(),
+        edgeFunctionStatus: 'failed',
+        connectionError
       });
     } finally {
       setIsChecking(false);
@@ -106,18 +157,49 @@ export const useResendHealthCheck = () => {
   }, []);
 
   const sendTestEmail = useCallback(async (email: string) => {
+    if (!email?.includes('@')) {
+      toast.error('Email inválido');
+      return { success: false, error: 'Email inválido' };
+    }
+
     try {
+      console.log('📧 [RESEND-HEALTH] Enviando email de teste para:', email);
+      
       const { data, error } = await supabase.functions.invoke('test-resend-email', {
         body: { email }
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ [RESEND-HEALTH] Erro no envio:', error);
+        throw error;
+      }
 
-      toast.success('Email de teste enviado com sucesso!');
-      performHealthCheck(); // Atualizar status após teste
-      return { success: true };
+      console.log('✅ [RESEND-HEALTH] Email enviado com sucesso:', data);
+      
+      toast.success('Email de teste enviado com sucesso!', {
+        description: `Enviado para ${email}`,
+        duration: 5000
+      });
+      
+      // Atualizar status após teste bem-sucedido
+      performHealthCheck();
+      
+      return { success: true, emailId: data?.emailId };
     } catch (error: any) {
-      toast.error(`Falha no envio: ${error.message}`);
+      console.error('❌ [RESEND-HEALTH] Falha no envio:', error);
+      
+      let errorMessage = 'Falha no envio do email';
+      if (error.message?.includes('API key')) {
+        errorMessage = 'API key do Resend inválida';
+      } else if (error.message?.includes('domain')) {
+        errorMessage = 'Problema com o domínio';
+      }
+      
+      toast.error(errorMessage, {
+        description: error.message,
+        duration: 8000
+      });
+      
       return { success: false, error: error.message };
     }
   }, [performHealthCheck]);
@@ -125,8 +207,8 @@ export const useResendHealthCheck = () => {
   useEffect(() => {
     performHealthCheck();
     
-    // Verificar a cada 10 minutos
-    const interval = setInterval(performHealthCheck, 10 * 60 * 1000);
+    // Verificar a cada 5 minutos em vez de 10
+    const interval = setInterval(performHealthCheck, 5 * 60 * 1000);
     
     return () => clearInterval(interval);
   }, [performHealthCheck]);

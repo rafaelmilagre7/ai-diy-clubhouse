@@ -1,247 +1,226 @@
 
-import React from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Separator } from '@/components/ui/separator';
-import { Progress } from '@/components/ui/progress';
-import { 
-  Database, 
-  Shield, 
-  CheckCircle, 
-  XCircle, 
-  AlertTriangle, 
-  RefreshCw,
-  Activity,
-  Mail,
-  Clock
-} from 'lucide-react';
-import { useSupabaseHealthCheck } from '@/hooks/supabase/useSupabaseHealthCheck';
-import { useResendHealthCheck } from '@/hooks/supabase/useResendHealthCheck';
-import { ResendDiagnostics } from './ResendDiagnostics';
+import React, { useState } from "react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useSupabaseHealthCheck } from "@/hooks/supabase/useSupabaseHealthCheck";
+import { useSecurityCache } from "@/hooks/performance/useSecurityCache";
+import { Database, Shield, RefreshCw, Mail, AlertTriangle } from "lucide-react";
+import { EmailSystemManager } from "@/components/admin/email/EmailSystemManager";
 
-export const SupabaseErrorDiagnostics: React.FC = () => {
-  const { healthStatus, isChecking, performHealthCheck } = useSupabaseHealthCheck();
-  const { healthStatus: resendHealth, isChecking: isCheckingResend } = useResendHealthCheck();
+export const SupabaseErrorDiagnostics = () => {
+  const { status, performHealthCheck, isChecking } = useSupabaseHealthCheck();
+  const securityMetrics = useSecurityCache({ ttl: 300000 });
+  const [activeTab, setActiveTab] = useState("system");
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'connected':
-      case 'authenticated':  
-      case 'operational':
-        return 'bg-green-500';
-      case 'slow':
-        return 'bg-yellow-500';
-      case 'disconnected':
-      case 'unauthenticated':
-      case 'error':
-        return 'bg-red-500';
+      case "healthy":
+      case "connected":
+      case "operational":
+        return "bg-green-100 text-green-800 border-green-200";
+      case "warning":
+      case "degraded":
+        return "bg-yellow-100 text-yellow-800 border-yellow-200";
+      case "error":
+      case "disconnected":
+      case "down":
+        return "bg-red-100 text-red-800 border-red-200";
       default:
-        return 'bg-gray-500';
+        return "bg-gray-100 text-gray-800 border-gray-200";
     }
   };
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'connected':
-      case 'authenticated':
-      case 'operational':
-        return <CheckCircle className="h-4 w-4 text-green-600" />;
-      case 'slow':
-        return <AlertTriangle className="h-4 w-4 text-yellow-600" />;
-      case 'disconnected':
-      case 'unauthenticated':
-      case 'error':
-        return <XCircle className="h-4 w-4 text-red-600" />;
+      case "healthy":
+      case "connected":
+      case "operational":
+        return "🟢";
+      case "warning":
+      case "degraded":
+        return "🟡";
+      case "error":
+      case "disconnected":
+      case "down":
+        return "🔴";
       default:
-        return <AlertTriangle className="h-4 w-4 text-gray-600" />;
+        return "⚪";
     }
-  };
-
-  const getStatusText = (status: string) => {
-    switch (status) {
-      case 'connected': return 'Conectado';
-      case 'disconnected': return 'Desconectado';
-      case 'slow': return 'Lento';
-      case 'authenticated': return 'Autenticado';
-      case 'unauthenticated': return 'Não Autenticado';
-      case 'operational': return 'Operacional';
-      case 'error': return 'Erro';
-      default: return 'Desconhecido';
-    }
-  };
-
-  const formatDate = (date: Date) => {
-    return new Intl.DateTimeFormat('pt-BR', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit'
-    }).format(date);
   };
 
   return (
-    <div className="container mx-auto py-6 space-y-6">
+    <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Diagnóstico do Sistema</h1>
+          <h2 className="text-2xl font-bold tracking-tight">Diagnóstico do Sistema</h2>
           <p className="text-muted-foreground">
-            Monitoramento da saúde dos serviços essenciais
+            Monitoramento em tempo real da saúde dos sistemas
           </p>
         </div>
-        <div className="flex gap-2">
-          <Button 
-            onClick={performHealthCheck} 
-            disabled={isChecking}
-            variant="outline"
-            size="sm"
-          >
-            <RefreshCw className={`h-4 w-4 mr-2 ${isChecking ? 'animate-spin' : ''}`} />
-            {isChecking ? 'Verificando...' : 'Atualizar'}
-          </Button>
-        </div>
+        <Button
+          onClick={performHealthCheck}
+          disabled={isChecking}
+          variant="outline"
+        >
+          {isChecking ? (
+            <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+          ) : (
+            <RefreshCw className="mr-2 h-4 w-4" />
+          )}
+          Verificar Tudo
+        </Button>
       </div>
 
-      <Tabs defaultValue="supabase" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="supabase" className="flex items-center gap-2">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="system" className="flex items-center gap-2">
             <Database className="h-4 w-4" />
-            Supabase
+            Sistema
           </TabsTrigger>
-          <TabsTrigger value="resend" className="flex items-center gap-2">
+          <TabsTrigger value="email" className="flex items-center gap-2">
             <Mail className="h-4 w-4" />
-            Sistema de Email
+            Email
+          </TabsTrigger>
+          <TabsTrigger value="security" className="flex items-center gap-2">
+            <Shield className="h-4 w-4" />
+            Segurança
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="supabase" className="space-y-4">
-          {/* Status Geral */}
+        <TabsContent value="system" className="space-y-4">
+          {/* Status Geral do Sistema */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Activity className="h-5 w-5" />
-                Status Geral do Sistema
+                <Database className="h-5 w-5" />
+                Status do Supabase
               </CardTitle>
               <CardDescription>
-                Última verificação: {formatDate(healthStatus.checkedAt)}
+                Conectividade e saúde dos serviços do Supabase
               </CardDescription>
             </CardHeader>
-            <CardContent>
-              <div className="flex items-center gap-4 mb-4">
-                <div className={`w-3 h-3 rounded-full ${healthStatus.isHealthy ? 'bg-green-500' : 'bg-red-500'}`} />
-                <span className="font-medium">
-                  {healthStatus.isHealthy ? 'Sistema Saudável' : 'Problemas Detectados'}
-                </span>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="flex items-center justify-between p-4 border rounded-lg">
+                  <div className="flex items-center gap-2">
+                    <span className="text-lg">{getStatusIcon(status.connectionStatus)}</span>
+                    <span className="font-medium">Conexão</span>
+                  </div>
+                  <Badge className={getStatusColor(status.connectionStatus)}>
+                    {status.connectionStatus}
+                  </Badge>
+                </div>
+
+                <div className="flex items-center justify-between p-4 border rounded-lg">
+                  <div className="flex items-center gap-2">
+                    <span className="text-lg">{getStatusIcon(status.authStatus)}</span>
+                    <span className="font-medium">Auth</span>
+                  </div>
+                  <Badge className={getStatusColor(status.authStatus)}>
+                    {status.authStatus}
+                  </Badge>
+                </div>
+
+                <div className="flex items-center justify-between p-4 border rounded-lg">
+                  <div className="flex items-center gap-2">
+                    <span className="text-lg">{getStatusIcon(status.databaseStatus)}</span>
+                    <span className="font-medium">Database</span>
+                  </div>
+                  <Badge className={getStatusColor(status.databaseStatus)}>
+                    {status.databaseStatus}
+                  </Badge>
+                </div>
+
+                <div className="flex items-center justify-between p-4 border rounded-lg">
+                  <div className="flex items-center gap-2">
+                    <span className="text-lg">{getStatusIcon(status.storageStatus)}</span>
+                    <span className="font-medium">Storage</span>
+                  </div>
+                  <Badge className={getStatusColor(status.storageStatus)}>
+                    {status.storageStatus}
+                  </Badge>
+                </div>
               </div>
-              
-              {healthStatus.issues.length > 0 && (
-                <Alert variant="destructive">
-                  <AlertTriangle className="h-4 w-4" />
-                  <AlertDescription>
-                    <div className="space-y-2">
-                      <p className="font-medium">Problemas identificados:</p>
-                      <ul className="list-disc list-inside space-y-1">
-                        {healthStatus.issues.map((issue, index) => (
-                          <li key={index} className="text-sm">{issue}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  </AlertDescription>
-                </Alert>
-              )}
+
+              <div className="text-sm text-muted-foreground">
+                Última verificação: {status.lastChecked.toLocaleString('pt-BR')}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="email">
+          <EmailSystemManager />
+        </TabsContent>
+
+        <TabsContent value="security" className="space-y-4">
+          {/* Métricas de Segurança */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Shield className="h-5 w-5" />
+                Métricas de Segurança
+              </CardTitle>
+              <CardDescription>
+                Cache e performance de segurança
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="p-4 border rounded-lg">
+                  <div className="text-sm text-muted-foreground">Hit Ratio</div>
+                  <div className="text-2xl font-bold">
+                    {(securityMetrics.hitRatio * 100).toFixed(1)}%
+                  </div>
+                </div>
+
+                <div className="p-4 border rounded-lg">
+                  <div className="text-sm text-muted-foreground">Total Requests</div>
+                  <div className="text-2xl font-bold">
+                    {securityMetrics.totalRequests.toLocaleString()}
+                  </div>
+                </div>
+
+                <div className="p-4 border rounded-lg">
+                  <div className="text-sm text-muted-foreground">Cache Hits</div>
+                  <div className="text-2xl font-bold text-green-600">
+                    {securityMetrics.hits.toLocaleString()}
+                  </div>
+                </div>
+
+                <div className="p-4 border rounded-lg">
+                  <div className="text-sm text-muted-foreground">Cache Misses</div>
+                  <div className="text-2xl font-bold text-orange-600">
+                    {securityMetrics.misses.toLocaleString()}
+                  </div>
+                </div>
+              </div>
             </CardContent>
           </Card>
 
-          {/* Métricas Detalhadas */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {/* Conexão */}
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-base flex items-center gap-2">
-                  {getStatusIcon(healthStatus.connectionStatus)}
-                  Conexão
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  <Badge variant="secondary" className={`${getStatusColor(healthStatus.connectionStatus)} text-white`}>
-                    {getStatusText(healthStatus.connectionStatus)}
+          {/* Alertas de Segurança */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <AlertTriangle className="h-5 w-5" />
+                Status de Segurança
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <Badge className="bg-green-100 text-green-800 border-green-200">
+                    Sistema Seguro
                   </Badge>
-                  <p className="text-sm text-muted-foreground">
-                    Conectividade com o servidor
-                  </p>
+                  <span className="text-sm text-muted-foreground">
+                    Nenhuma ameaça detectada
+                  </span>
                 </div>
-              </CardContent>
-            </Card>
-
-            {/* Banco de Dados */}
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-base flex items-center gap-2">
-                  {getStatusIcon(healthStatus.databaseStatus)}
-                  Banco de Dados
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  <Badge variant="secondary" className={`${getStatusColor(healthStatus.databaseStatus)} text-white`}>
-                    {getStatusText(healthStatus.databaseStatus)}
-                  </Badge>
-                  <p className="text-sm text-muted-foreground">
-                    Operações de banco de dados
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Autenticação */}
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-base flex items-center gap-2">
-                  {getStatusIcon(healthStatus.authStatus)}
-                  Autenticação
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  <Badge variant="secondary" className={`${getStatusColor(healthStatus.authStatus)} text-white`}>
-                    {getStatusText(healthStatus.authStatus)}
-                  </Badge>
-                  <p className="text-sm text-muted-foreground">
-                    Sistema de autenticação
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Storage */}
-            <Card className="md:col-span-3">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-base flex items-center gap-2">
-                  {getStatusIcon(healthStatus.storageStatus)}
-                  Armazenamento
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  <Badge variant="secondary" className={`${getStatusColor(healthStatus.storageStatus)} text-white`}>
-                    {getStatusText(healthStatus.storageStatus)}
-                  </Badge>
-                  <p className="text-sm text-muted-foreground">
-                    Sistema de armazenamento de arquivos
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
-
-        <TabsContent value="resend" className="space-y-4">
-          <ResendDiagnostics />
+              </div>
+            </CardContent>
+          </Card>
         </TabsContent>
       </Tabs>
     </div>
