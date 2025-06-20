@@ -1,45 +1,32 @@
 
-import { useState } from 'react';
-import { toast } from 'sonner';
-import { supabase } from '@/integrations/supabase/client';
-import type { Invite } from './types';
+import { useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import type { Invite } from "./types";
 
-export function useInviteResend() {
+export const useInviteResend = () => {
   const [isSending, setIsSending] = useState(false);
 
-  const resendInvite = async (invite: Invite): Promise<void> => {
-    setIsSending(true);
+  const resendInvite = async (invite: Invite) => {
     try {
-      console.log('🔄 [RESEND-INVITE] Reenviando convite:', invite.email);
+      setIsSending(true);
 
-      const { data, error } = await supabase.functions.invoke('send-invite', {
-        body: {
-          email: invite.email,
-          token: invite.token,
-          roleId: invite.role_id,
-          isResend: true
-        }
+      // Atualizar contador de tentativas
+      const { error } = await supabase.rpc('update_invite_send_attempt', {
+        invite_id: invite.id
       });
 
-      if (error) {
-        console.error('❌ [RESEND-INVITE] Erro:', error);
-        toast.error(`Erro ao reenviar convite: ${error.message}`);
-        return;
-      }
+      if (error) throw error;
 
-      console.log('✅ [RESEND-INVITE] Sucesso:', data);
-      toast.success('Convite reenviado com sucesso!');
-
+      toast.success("Convite reenviado com sucesso!");
     } catch (error: any) {
-      console.error('❌ [RESEND-INVITE] Erro geral:', error);
-      toast.error(`Erro ao reenviar convite: ${error.message}`);
+      console.error('Erro ao reenviar convite:', error);
+      toast.error(error.message || "Erro ao reenviar convite");
+      throw error;
     } finally {
       setIsSending(false);
     }
   };
 
-  return {
-    resendInvite,
-    isSending
-  };
-}
+  return { resendInvite, isSending };
+};

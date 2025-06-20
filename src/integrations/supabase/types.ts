@@ -1301,56 +1301,6 @@ export type Database = {
         }
         Relationships: []
       }
-      invite_send_attempts: {
-        Row: {
-          created_at: string | null
-          email: string
-          email_id: string | null
-          error_message: string | null
-          id: string
-          invite_id: string | null
-          method_attempted: string
-          retry_after: string | null
-          sent_at: string | null
-          status: string
-          updated_at: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          email: string
-          email_id?: string | null
-          error_message?: string | null
-          id?: string
-          invite_id?: string | null
-          method_attempted: string
-          retry_after?: string | null
-          sent_at?: string | null
-          status?: string
-          updated_at?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          email?: string
-          email_id?: string | null
-          error_message?: string | null
-          id?: string
-          invite_id?: string | null
-          method_attempted?: string
-          retry_after?: string | null
-          sent_at?: string | null
-          status?: string
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "invite_send_attempts_invite_id_fkey"
-            columns: ["invite_id"]
-            isOneToOne: false
-            referencedRelation: "invites"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       invites: {
         Row: {
           channel_preference: string | null
@@ -4002,44 +3952,6 @@ export type Database = {
         }
         Relationships: []
       }
-      trusted_domains: {
-        Row: {
-          created_at: string
-          created_by: string
-          description: string | null
-          domain: string
-          id: string
-          is_active: boolean
-          role_id: string
-        }
-        Insert: {
-          created_at?: string
-          created_by: string
-          description?: string | null
-          domain: string
-          id?: string
-          is_active?: boolean
-          role_id: string
-        }
-        Update: {
-          created_at?: string
-          created_by?: string
-          description?: string | null
-          domain?: string
-          id?: string
-          is_active?: boolean
-          role_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "trusted_domains_role_id_fkey"
-            columns: ["role_id"]
-            isOneToOne: false
-            referencedRelation: "user_roles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       user_badges: {
         Row: {
           badge_id: string
@@ -4596,10 +4508,6 @@ export type Database = {
       check_solution_certificate_eligibility: {
         Args: { p_user_id: string; p_solution_id: string }
         Returns: boolean
-      }
-      check_trusted_domain: {
-        Args: { p_email: string }
-        Returns: Json
       }
       clean_user_onboarding_data: {
         Args: { p_user_id: string }

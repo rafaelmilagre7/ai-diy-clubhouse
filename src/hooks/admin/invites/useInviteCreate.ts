@@ -1,83 +1,55 @@
 
-import { useState } from 'react';
-import { toast } from 'sonner';
-import { supabase } from '@/integrations/supabase/client';
-import type { CreateInviteParams, CreateInviteResult } from './types';
+import { useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import type { CreateInviteParams, InviteCreateResult } from "./types";
 
-export function useInviteCreate() {
+export const useInviteCreate = () => {
   const [loading, setLoading] = useState(false);
 
-  const createInvite = async (params: CreateInviteParams): Promise<CreateInviteResult | null> => {
-    setLoading(true);
+  const createInvite = async (params: CreateInviteParams): Promise<InviteCreateResult | null> => {
     try {
-      console.log('🎯 [CREATE-INVITE] Criando convite:', params);
+      setLoading(true);
+      
+      console.log("🎯 Criando convite:", params);
 
-      // Criar o convite no banco
-      const { data: dbResult, error: dbError } = await supabase.rpc('create_invite', {
+      // Criar convite via função do Supabase
+      const { data, error } = await supabase.rpc('create_invite', {
         p_email: params.email,
         p_role_id: params.roleId,
         p_expires_in: `${params.expiresIn || '7 days'}`,
-        p_notes: params.notes
+        p_notes: params.notes || null
       });
 
-      if (dbError) {
-        console.error('❌ [CREATE-INVITE] Erro no banco:', dbError);
-        toast.error(`Erro ao criar convite: ${dbError.message}`);
-        return null;
+      if (error) {
+        console.error("❌ Erro ao criar convite:", error);
+        throw error;
       }
 
-      const dbResponse = dbResult as any;
-      console.log('✅ [CREATE-INVITE] Convite criado no banco:', dbResponse);
+      console.log("✅ Resposta da função:", data);
 
-      if (dbResponse.status !== 'success') {
-        toast.error(dbResponse.message);
-        return null;
-      }
-
-      // Tentar enviar o email
-      try {
-        const { data: emailResult, error: emailError } = await supabase.functions.invoke('send-invite', {
-          body: {
-            email: params.email,
-            token: dbResponse.token,
-            roleId: params.roleId
-          }
-        });
-
-        if (emailError) {
-          console.warn('⚠️ [CREATE-INVITE] Erro no envio de email:', emailError);
-          toast.warning('Convite criado, mas houve problema no envio do email');
-          return {
-            status: 'partial_success',
-            message: 'Convite criado com sucesso, mas email não foi enviado',
-            inviteId: dbResponse.invite_id
-          };
-        }
-
-        console.log('✅ [CREATE-INVITE] Email enviado:', emailResult);
-        toast.success('Convite criado e enviado com sucesso!');
-
+      if (data?.status === 'success') {
+        toast.success("Convite criado e enviado com sucesso!");
         return {
           status: 'success',
-          message: 'Convite criado e enviado com sucesso',
-          inviteId: dbResponse.invite_id
+          message: data.message,
+          invite_id: data.invite_id,
+          token: data.token
         };
-
-      } catch (emailError: any) {
-        console.warn('⚠️ [CREATE-INVITE] Falha no envio de email:', emailError);
-        toast.warning('Convite criado, mas houve problema no envio do email');
-        
+      } else {
+        toast.error(data?.message || "Erro ao criar convite");
         return {
-          status: 'partial_success',
-          message: 'Convite criado com sucesso, mas email não foi enviado',
-          inviteId: dbResponse.invite_id
+          status: 'error',
+          message: data?.message || "Erro ao criar convite"
         };
       }
-
     } catch (error: any) {
-      console.error('❌ [CREATE-INVITE] Erro geral:', error);
-      toast.error(`Erro ao criar convite: ${error.message}`);
-      return null;
+      console.error("❌ Erro no useInviteCreate:", error);
+      toast.error(error.message || "Erro ao criar convite");
+      return {
+        status: 'error',
+        message: error.message || "Erro ao criar convite"
+      };
     } finally {
       setLoading(false);
     }
@@ -87,4 +59,4 @@ export function useInviteCreate() {
     createInvite,
     loading
   };
-}
+};

@@ -17,10 +17,10 @@ export const useInviteDelete = () => {
 
       if (error) throw error;
 
-      toast.success("Convite excluído com sucesso");
+      toast.success("Convite excluído com sucesso!");
     } catch (error: any) {
       console.error('Erro ao excluir convite:', error);
-      toast.error(`Erro ao excluir convite: ${error.message}`);
+      toast.error(error.message || "Erro ao excluir convite");
       throw error;
     } finally {
       setIsDeleting(false);

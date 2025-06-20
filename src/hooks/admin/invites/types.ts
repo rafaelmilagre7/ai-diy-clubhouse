@@ -1,4 +1,5 @@
 
+// Tipos simplificados para o sistema de convites
 export interface Invite {
   id: string;
   email: string;
@@ -6,14 +7,16 @@ export interface Invite {
   token: string;
   expires_at: string;
   used_at: string | null;
-  created_by: string;
   created_at: string;
+  created_by: string;
+  last_sent_at: string | null;
+  send_attempts: number;
   notes: string | null;
   role?: {
+    id: string;
     name: string;
+    description?: string;
   };
-  last_sent_at?: string;
-  send_attempts?: number;
 }
 
 export interface CreateInviteParams {
@@ -23,8 +26,9 @@ export interface CreateInviteParams {
   expiresIn?: string;
 }
 
-export interface CreateInviteResult {
-  status: 'success' | 'partial_success' | 'error';
+export interface InviteCreateResult {
+  status: 'success' | 'error';
   message: string;
-  inviteId?: string;
+  invite_id?: string;
+  token?: string;
 }
