@@ -17,11 +17,13 @@ export const useInviteCreate = () => {
   const { validateInviteData } = useInviteValidation();
 
   const createInvite = async (params: CreateInviteParams): Promise<CreateInviteResponse | null> => {
+    const requestId = crypto.randomUUID().substring(0, 8);
+    
     try {
       setLoading(true);
       setCurrentStep('creating');
 
-      console.log("🎯 Iniciando criação de convite com parâmetros:", {
+      console.log(`🎯 [${requestId}] Iniciando criação de convite:`, {
         email: params.email,
         roleId: params.roleId,
         expiresIn: params.expiresIn,
@@ -37,6 +39,7 @@ export const useInviteCreate = () => {
 
       if (!validation.isValid) {
         const errorMsg = validation.errors.join(', ');
+        console.error(`❌ [${requestId}] Validação falhou:`, errorMsg);
         toast.error("Dados inválidos", { description: errorMsg });
         return null;
       }
@@ -60,7 +63,7 @@ export const useInviteCreate = () => {
       
       expiresAt.setDate(expiresAt.getDate() + daysToAdd);
 
-      console.log("📅 Data de expiração calculada:", expiresAt.toISOString());
+      console.log(`📅 [${requestId}] Data de expiração:`, expiresAt.toISOString());
 
       // Criar convite no banco
       const { data: invite, error: createError } = await supabase
@@ -82,11 +85,11 @@ export const useInviteCreate = () => {
         .single();
 
       if (createError || !invite) {
-        console.error("❌ Erro ao criar convite:", createError);
+        console.error(`❌ [${requestId}] Erro ao criar convite:`, createError);
         throw new Error(createError?.message || 'Falha ao criar convite');
       }
 
-      console.log("✅ Convite criado no banco:", {
+      console.log(`✅ [${requestId}] Convite criado:`, {
         id: invite.id,
         token: invite.token,
         expiresAt: invite.expires_at
@@ -99,60 +102,34 @@ export const useInviteCreate = () => {
       const inviteUrl = getInviteLink(invite.token);
       const roleName = invite.role?.name || 'Membro';
 
-      console.log("🔗 Link do convite gerado:", inviteUrl);
+      console.log(`🔗 [${requestId}] Link gerado:`, inviteUrl);
 
-      // Tentar enviar email
-      let emailResult;
-      let maxRetries = 2;
-      let currentRetry = 0;
-
-      while (currentRetry < maxRetries) {
-        try {
-          if (currentRetry > 0) {
-            setCurrentStep('retrying');
-            console.log(`🔄 Tentativa ${currentRetry + 1} de ${maxRetries}...`);
-            
-            // Aguardar um pouco antes de tentar novamente
-            await new Promise(resolve => setTimeout(resolve, 1000 * currentRetry));
-          }
-
-          emailResult = await sendInviteEmail({
-            email: params.email,
-            inviteUrl,
-            roleName,
-            expiresAt: invite.expires_at,
-            notes: params.notes,
-            inviteId: invite.id,
-            forceResend: currentRetry > 0
-          });
-
-          if (emailResult.success) {
-            console.log("✅ Email enviado com sucesso!");
-            break;
-          } else {
-            console.log(`⚠️ Tentativa ${currentRetry + 1} falhou:`, emailResult.error);
-            currentRetry++;
-          }
-        } catch (error: any) {
-          console.error(`❌ Erro na tentativa ${currentRetry + 1}:`, error);
-          currentRetry++;
-        }
-      }
+      // Enviar email com sistema robusto
+      const emailResult = await sendInviteEmail({
+        email: params.email,
+        inviteUrl,
+        roleName,
+        expiresAt: invite.expires_at,
+        notes: params.notes,
+        inviteId: invite.id
+      });
 
       // Atualizar convite com informações do envio
-      if (emailResult?.success) {
-        await supabase
-          .from('invites')
-          .update({
-            last_sent_at: new Date().toISOString(),
-            send_attempts: currentRetry + 1,
-            email_provider: 'resend',
-            email_id: emailResult.emailId
-          })
-          .eq('id', invite.id);
+      await supabase
+        .from('invites')
+        .update({
+          last_sent_at: new Date().toISOString(),
+          send_attempts: 1,
+          email_provider: emailResult.strategy || 'unknown',
+          email_id: emailResult.emailId
+        })
+        .eq('id', invite.id);
 
-        setCurrentStep('complete');
+      setCurrentStep('complete');
 
+      if (emailResult.success) {
+        console.log(`✅ [${requestId}] Convite criado e enviado com sucesso`);
+        
         return {
           status: 'success',
           message: `Convite enviado para ${params.email}`,
@@ -160,25 +137,18 @@ export const useInviteCreate = () => {
           emailResult
         };
       } else {
-        // Email falhou, mas convite foi criado
-        await supabase
-          .from('invites')
-          .update({
-            send_attempts: maxRetries,
-            last_sent_at: new Date().toISOString()
-          })
-          .eq('id', invite.id);
-
+        console.warn(`⚠️ [${requestId}] Convite criado mas email falhou:`, emailResult.error);
+        
         return {
           status: 'partial_success',
           message: `Convite criado para ${params.email}`,
           invite,
-          suggestion: 'Email não foi enviado automaticamente. Use o botão "Reenviar" para tentar novamente.'
+          suggestion: emailResult.suggestion || 'Use o botão "Reenviar" para tentar novamente.'
         };
       }
 
     } catch (error: any) {
-      console.error('❌ Erro crítico ao criar convite:', error);
+      console.error(`❌ [${requestId}] Erro crítico:`, error);
       
       toast.error("Erro ao criar convite", {
         description: error.message || 'Erro inesperado ao processar convite'

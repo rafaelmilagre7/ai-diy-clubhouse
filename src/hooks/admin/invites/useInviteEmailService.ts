@@ -1,297 +1,238 @@
 
-import { useCallback, useState } from 'react';
+import { useState, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
-import { SendInviteResponse } from './types';
-import { APP_CONFIG } from '@/config/app';
+import type { SendInviteResponse } from './types';
 
 interface SendInviteEmailParams {
   email: string;
   inviteUrl: string;
   roleName: string;
   expiresAt: string;
-  senderName?: string;
   notes?: string;
   inviteId?: string;
   forceResend?: boolean;
 }
 
-interface EmailServiceStats {
-  totalCalls: number;
-  successfulCalls: number;
-  failedCalls: number;
-  lastError?: string;
-  lastSuccess?: Date;
-  strategiesUsed: {
-    resend_primary: number;
-    supabase_auth: number;
-    fallback_recovery: number;
-  };
-}
-
-export function useInviteEmailService() {
+export const useInviteEmailService = () => {
   const [isSending, setIsSending] = useState(false);
-  const [sendError, setSendError] = useState<Error | null>(null);
-  const [stats, setStats] = useState<EmailServiceStats>({
-    totalCalls: 0,
-    successfulCalls: 0,
-    failedCalls: 0,
-    strategiesUsed: {
-      resend_primary: 0,
-      supabase_auth: 0,
-      fallback_recovery: 0
-    }
-  });
 
-  const updateStats = (success: boolean, strategy: string, error?: string) => {
-    setStats(prev => ({
-      ...prev,
-      totalCalls: prev.totalCalls + 1,
-      successfulCalls: success ? prev.successfulCalls + 1 : prev.successfulCalls,
-      failedCalls: success ? prev.failedCalls : prev.failedCalls + 1,
-      lastError: error,
-      lastSuccess: success ? new Date() : prev.lastSuccess,
-      strategiesUsed: {
-        ...prev.strategiesUsed,
-        [strategy]: (prev.strategiesUsed[strategy] || 0) + 1
-      }
-    }));
-  };
+  const getInviteLink = useCallback((token: string): string => {
+    const baseUrl = window.location.origin;
+    return `${baseUrl}/auth/invite?token=${token}`;
+  }, []);
 
-  const sendInviteEmail = useCallback(async ({
-    email,
-    inviteUrl,
-    roleName,
-    expiresAt,
-    senderName,
-    notes,
-    inviteId,
-    forceResend = true,
-  }: SendInviteEmailParams): Promise<SendInviteResponse> => {
+  const sendInviteEmail = useCallback(async (params: SendInviteEmailParams): Promise<SendInviteResponse> => {
     const requestId = crypto.randomUUID().substring(0, 8);
     
-    try {
-      setIsSending(true);
-      setSendError(null);
+    console.log(`📧 [${requestId}] Iniciando envio de email para:`, params.email);
+    
+    setIsSending(true);
 
-      console.log(`🚀 [${requestId}] Iniciando envio de convite com sistema robusto:`, { 
-        email, 
-        roleName, 
-        forceResend,
+    try {
+      // Dados para envio
+      const emailData = {
+        email: params.email,
+        inviteUrl: params.inviteUrl,
+        roleName: params.roleName,
+        expiresAt: params.expiresAt,
+        notes: params.notes,
+        inviteId: params.inviteId,
+        requestId,
         timestamp: new Date().toISOString(),
-        inviteId
+        userAgent: navigator.userAgent.substring(0, 100),
+        clientInfo: 'viverdeia-invite-system'
+      };
+
+      console.log(`📤 [${requestId}] Dados preparados:`, {
+        email: emailData.email,
+        roleName: emailData.roleName,
+        inviteId: emailData.inviteId
       });
 
-      // Validações básicas
-      if (!email?.includes('@')) {
-        throw new Error('Email inválido');
-      }
+      // Chamada principal com timeout e retry
+      let lastError: any = null;
+      let attempt = 0;
+      const maxAttempts = 3;
+      const timeoutMs = 10000; // 10 segundos
 
-      if (!inviteUrl) {
-        throw new Error('URL do convite não fornecida');
-      }
+      while (attempt < maxAttempts) {
+        attempt++;
+        console.log(`🔄 [${requestId}] Tentativa ${attempt}/${maxAttempts}...`);
 
-      // ESTRATÉGIA 1: Resend Primary (Mais confiável)
-      console.log(`📧 [${requestId}] Tentativa 1: Resend Primary API`);
-      
-      try {
-        const startTime = Date.now();
-        
-        const { data, error } = await supabase.functions.invoke('send-invite-email', {
-          body: {
-            email,
-            inviteUrl,
-            roleName,
-            expiresAt,
-            senderName,
-            notes,
-            inviteId,
-            forceResend,
-            requestId,
-            strategy: 'resend_primary',
-            timestamp: new Date().toISOString()
-          }
-        });
-
-        const responseTime = Date.now() - startTime;
-        console.log(`⏱️ [${requestId}] Resend Primary: ${responseTime}ms`);
-
-        if (error) {
-          console.error(`❌ [${requestId}] Erro da Edge Function:`, error);
-          throw new Error(`Edge Function Error: ${error.message}`);
-        }
-
-        if (!data?.success) {
-          console.warn(`⚠️ [${requestId}] Resend Primary falhou:`, data);
-          throw new Error(data?.error || 'Resend Primary falhou');
-        }
-
-        console.log(`✅ [${requestId}] Resend Primary SUCCESS:`, {
-          strategy: data.strategy,
-          emailId: data.emailId,
-          responseTime
-        });
-
-        updateStats(true, 'resend_primary');
-
-        toast.success('Email enviado com sucesso!', {
-          description: `Convite enviado para ${email} via sistema principal`
-        });
-
-        return {
-          success: true,
-          message: 'Email enviado via Resend',
-          emailId: data.emailId,
-          strategy: 'resend_primary',
-          method: data.method
-        };
-
-      } catch (resendError: any) {
-        console.error(`❌ [${requestId}] Resend Primary falhou:`, resendError);
-        
-        // ESTRATÉGIA 2: Supabase Auth Fallback
-        console.log(`🔄 [${requestId}] Tentativa 2: Supabase Auth Fallback`);
-        
         try {
-          const { data: authData, error: authError } = await supabase.auth.resetPasswordForEmail(
-            email,
-            {
-              redirectTo: inviteUrl
-            }
-          );
-
-          if (authError) {
-            console.error(`❌ [${requestId}] Supabase Auth falhou:`, authError);
-            throw new Error(`Supabase Auth Error: ${authError.message}`);
-          }
-
-          console.log(`✅ [${requestId}] Supabase Auth SUCCESS`);
-
-          updateStats(true, 'supabase_auth');
-
-          toast.success('Convite enviado via sistema alternativo!', {
-            description: `Link de acesso enviado para ${email}`
+          // Criar uma Promise com timeout
+          const timeoutPromise = new Promise((_, reject) => {
+            setTimeout(() => reject(new Error('Timeout na requisição')), timeoutMs);
           });
 
-          return {
-            success: true,
-            message: 'Email enviado via Supabase Auth',
-            strategy: 'supabase_auth',
-            method: 'reset_password_redirect'
-          };
-
-        } catch (authError: any) {
-          console.error(`❌ [${requestId}] Supabase Auth falhou:`, authError);
-          
-          // ESTRATÉGIA 3: Recovery Fallback (último recurso)
-          console.log(`🆘 [${requestId}] Tentativa 3: Recovery Fallback`);
-          
-          try {
-            const { data: recoveryData, error: recoveryError } = await supabase.functions.invoke('send-fallback-notification', {
-              body: {
-                email,
-                inviteUrl,
-                roleName,
-                type: 'invite_fallback',
-                requestId
-              }
-            });
-
-            if (recoveryError || !recoveryData?.success) {
-              throw new Error('Recovery fallback também falhou');
+          // Chamada principal
+          const invitePromise = supabase.functions.invoke('send-invite-email', {
+            body: {
+              ...emailData,
+              attempt,
+              retryInfo: attempt > 1 ? { previousAttempts: attempt - 1 } : undefined
             }
+          });
 
-            console.log(`✅ [${requestId}] Recovery Fallback SUCCESS`);
+          // Race entre timeout e chamada
+          const { data, error } = await Promise.race([
+            invitePromise,
+            timeoutPromise
+          ]) as any;
 
-            updateStats(true, 'fallback_recovery');
+          if (error) {
+            console.warn(`⚠️ [${requestId}] Tentativa ${attempt} falhou:`, error.message);
+            lastError = error;
+            
+            // Se é erro de timeout ou rede, tentar novamente
+            if (attempt < maxAttempts && (
+              error.message.includes('timeout') || 
+              error.message.includes('network') ||
+              error.message.includes('fetch')
+            )) {
+              const delay = Math.min(1000 * Math.pow(2, attempt - 1), 5000);
+              console.log(`⏱️ [${requestId}] Aguardando ${delay}ms antes da próxima tentativa...`);
+              await new Promise(resolve => setTimeout(resolve, delay));
+              continue;
+            }
+            
+            // Erro não recuperável
+            break;
+          }
 
-            toast.warning('Convite criado - Email em fila de envio', {
-              description: 'Sistema de recuperação ativado. O email será enviado em breve.',
-              duration: 8000
+          if (data?.success) {
+            console.log(`✅ [${requestId}] Email enviado com sucesso na tentativa ${attempt}:`, {
+              emailId: data.emailId,
+              responseTime: data.responseTime
             });
 
             return {
               success: true,
-              message: 'Email em fila de envio via sistema de recuperação',
-              strategy: 'fallback_recovery',
-              method: 'recovery_queue',
-              suggestion: 'Convite foi criado com sucesso. Use o botão "Reenviar" se necessário.'
+              message: `Email enviado com sucesso para ${params.email}`,
+              emailId: data.emailId,
+              strategy: 'resend_primary',
+              method: 'edge_function',
+              channel: 'email'
             };
-
-          } catch (recoveryError: any) {
-            console.error(`❌ [${requestId}] Todas as estratégias falharam:`, recoveryError);
-            throw new Error('Todas as estratégias de envio falharam');
+          } else {
+            console.warn(`⚠️ [${requestId}] Resposta sem sucesso na tentativa ${attempt}:`, data);
+            lastError = new Error(data?.error || 'Resposta inválida do servidor');
+            
+            if (attempt < maxAttempts) {
+              const delay = 1000 * attempt;
+              await new Promise(resolve => setTimeout(resolve, delay));
+              continue;
+            }
+            break;
           }
+
+        } catch (error: any) {
+          console.error(`❌ [${requestId}] Erro na tentativa ${attempt}:`, error);
+          lastError = error;
+          
+          if (attempt < maxAttempts) {
+            const delay = 1000 * attempt;
+            console.log(`⏱️ [${requestId}] Aguardando ${delay}ms antes da próxima tentativa...`);
+            await new Promise(resolve => setTimeout(resolve, delay));
+            continue;
+          }
+          break;
         }
       }
 
-    } catch (err: any) {
-      console.error(`❌ [${requestId}] Erro final no envio:`, err);
-      setSendError(err);
-      updateStats(false, 'none', err.message);
+      // Se chegou aqui, todas as tentativas falharam
+      console.error(`❌ [${requestId}] Todas as tentativas falharam. Tentando fallback...`);
 
-      // Toast de erro com ação sugerida
-      toast.error('Falha no envio de email', {
-        description: 'Convite foi criado mas o email não foi enviado. Use "Reenviar" para tentar novamente.',
-        duration: 10000,
-        action: {
-          label: 'Verificar Status',
-          onClick: () => {
-            console.log('📊 Stats do serviço de email:', stats);
-          },
-        },
-      });
+      // Tentar sistema de fallback
+      try {
+        console.log(`🆘 [${requestId}] Ativando sistema de fallback...`);
+        
+        const { data: fallbackData, error: fallbackError } = await supabase.functions.invoke('send-fallback-notification', {
+          body: {
+            email: params.email,
+            inviteUrl: params.inviteUrl,
+            roleName: params.roleName,
+            type: 'invite_fallback',
+            requestId
+          }
+        });
 
+        if (fallbackError || !fallbackData?.success) {
+          console.error(`❌ [${requestId}] Fallback também falhou:`, fallbackError?.message || 'Resposta inválida');
+        } else {
+          console.log(`✅ [${requestId}] Fallback registrado com sucesso:`, fallbackData);
+          
+          return {
+            success: false,
+            message: 'Email principal falhou, mas foi registrado para reenvio automático',
+            error: lastError?.message || 'Falha no envio principal',
+            strategy: 'fallback_queue',
+            suggestion: 'O email será enviado automaticamente assim que o sistema se recuperar'
+          };
+        }
+      } catch (fallbackError: any) {
+        console.error(`❌ [${requestId}] Erro crítico no fallback:`, fallbackError);
+      }
+
+      // Fallback final: usar Auth do Supabase
+      try {
+        console.log(`🔐 [${requestId}] Tentando fallback via Supabase Auth...`);
+        
+        // Isso vai usar o template padrão do Supabase
+        const { error: authError } = await supabase.auth.admin.inviteUserByEmail(params.email, {
+          data: {
+            role_name: params.roleName,
+            invite_url: params.inviteUrl,
+            notes: params.notes,
+            original_invite_id: params.inviteId
+          }
+        });
+
+        if (authError) {
+          console.error(`❌ [${requestId}] Auth fallback falhou:`, authError.message);
+        } else {
+          console.log(`✅ [${requestId}] Auth fallback funcionou`);
+          
+          return {
+            success: true,
+            message: 'Email enviado via sistema de backup',
+            strategy: 'supabase_auth',
+            suggestion: 'Email enviado com template básico. Sistema principal será corrigido em breve.'
+          };
+        }
+      } catch (authError: any) {
+        console.error(`❌ [${requestId}] Erro no auth fallback:`, authError);
+      }
+
+      // Se chegou aqui, tudo falhou
+      console.error(`💥 [${requestId}] Todos os sistemas de envio falharam`);
+      
       return {
         success: false,
-        message: 'Falha em todas as estratégias de envio',
-        error: err.message,
-        suggestion: 'Convite criado com sucesso. Use o botão "Reenviar" para tentar novamente.'
+        message: 'Falha completa no envio de email',
+        error: lastError?.message || 'Sistema de email indisponível',
+        strategy: 'none',
+        suggestion: 'Verificar configuração do sistema de email e tentar novamente'
+      };
+
+    } catch (error: any) {
+      console.error(`💥 [${requestId}] Erro crítico não capturado:`, error);
+      
+      return {
+        success: false,
+        message: 'Erro inesperado no sistema de email',
+        error: error.message,
+        suggestion: 'Contatar suporte técnico'
       };
     } finally {
       setIsSending(false);
     }
-  }, [stats]);
-
-  const getInviteLink = useCallback((token: string) => {
-    if (!token?.trim()) {
-      console.error("❌ Token vazio");
-      return "";
-    }
-
-    const cleanToken = token.trim();
-    const baseUrl = APP_CONFIG.getAppUrl(`/convite/${encodeURIComponent(cleanToken)}`);
-    
-    console.log("🔗 Link gerado com domínio correto:", baseUrl);
-    return baseUrl;
-  }, []);
-
-  const getServiceStats = useCallback(() => stats, [stats]);
-
-  const resetStats = useCallback(() => {
-    setStats({
-      totalCalls: 0,
-      successfulCalls: 0,
-      failedCalls: 0,
-      strategiesUsed: {
-        resend_primary: 0,
-        supabase_auth: 0,
-        fallback_recovery: 0
-      }
-    });
   }, []);
 
   return {
     sendInviteEmail,
     getInviteLink,
-    isSending,
-    sendError,
-    getServiceStats,
-    resetStats,
-    // Compatibilidade com versões antigas
-    pendingEmails: 0,
-    retryAllPendingEmails: () => {},
-    clearEmailQueue: () => {},
-    emailQueue: []
+    isSending
   };
-}
+};
