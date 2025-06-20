@@ -21,7 +21,7 @@ export const NotificationPreferences = () => {
       const { data, error } = await supabase
         .from('notification_preferences')
         .select('*')
-        .eq('user_id', user.id)
+        .eq('user_id', user.id as any)
         .single();
 
       if (error && error.code !== 'PGRST116') {
@@ -47,9 +47,9 @@ export const NotificationPreferences = () => {
         .from('notification_preferences')
         .upsert({
           user_id: user.id,
-          ...preferences,
+          ...(preferences as any),
           ...updates,
-        })
+        } as any)
         .select()
         .single();
 
@@ -113,7 +113,7 @@ export const NotificationPreferences = () => {
             </div>
             <Switch
               id="email_enabled"
-              checked={preferences?.email_enabled || false}
+              checked={(preferences as any)?.email_enabled || false}
               onCheckedChange={(value) => handleToggle('email_enabled', value)}
             />
           </div>
@@ -132,7 +132,7 @@ export const NotificationPreferences = () => {
             </div>
             <Switch
               id="whatsapp_enabled"
-              checked={preferences?.whatsapp_enabled || false}
+              checked={(preferences as any)?.whatsapp_enabled || false}
               onCheckedChange={(value) => handleToggle('whatsapp_enabled', value)}
             />
           </div>
@@ -156,7 +156,7 @@ export const NotificationPreferences = () => {
             </div>
             <Switch
               id="admin_communications_inapp"
-              checked={preferences?.admin_communications_inapp !== false}
+              checked={(preferences as any)?.admin_communications_inapp !== false}
               onCheckedChange={(value) => handleToggle('admin_communications_inapp', value)}
             />
           </div>
@@ -175,7 +175,7 @@ export const NotificationPreferences = () => {
             </div>
             <Switch
               id="admin_communications_email"
-              checked={preferences?.admin_communications_email !== false}
+              checked={(preferences as any)?.admin_communications_email !== false}
               onCheckedChange={(value) => handleToggle('admin_communications_email', value)}
             />
           </div>

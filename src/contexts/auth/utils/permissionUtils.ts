@@ -1,42 +1,54 @@
 
-import { supabase } from "@/lib/supabase";
+import { supabase } from '@/lib/supabase';
 
-export const checkUserPermission = async (
-  userId: string,
-  permissionCode: string
-): Promise<boolean> => {
+/**
+ * Verifica se o usuário tem uma permissão específica
+ */
+export async function checkUserPermission(userId: string, permission: string): Promise<boolean> {
   try {
+    if (!userId || !permission) {
+      return false;
+    }
+
+    // Usar RPC function para verificar permissão
     const { data, error } = await supabase.rpc('user_has_permission', {
       user_id: userId,
-      permission_code: permissionCode
+      permission_code: permission
     });
-    
+
     if (error) {
       console.error('Erro ao verificar permissão:', error);
       return false;
     }
-    
-    return data || false;
+
+    return Boolean(data) || false;
   } catch (error) {
     console.error('Erro ao verificar permissão:', error);
     return false;
   }
-};
+}
 
-export const getUserPermissions = async (userId: string): Promise<string[]> => {
+/**
+ * Verifica se o usuário tem um papel específico
+ */
+export async function checkUserRole(userId: string, roleName: string): Promise<boolean> {
   try {
-    const { data, error } = await supabase.rpc('get_user_permissions', {
-      user_id: userId
-    });
-    
-    if (error) {
-      console.error('Erro ao buscar permissões do usuário:', error);
-      return [];
+    if (!userId || !roleName) {
+      return false;
     }
-    
-    return data || [];
+
+    const { data, error } = await supabase.rpc('has_role', {
+      role_name: roleName
+    });
+
+    if (error) {
+      console.error('Erro ao verificar papel:', error);
+      return false;
+    }
+
+    return Boolean(data) || false;
   } catch (error) {
-    console.error('Erro ao buscar permissões do usuário:', error);
-    return [];
+    console.error('Erro ao verificar papel:', error);
+    return false;
   }
-};
+}

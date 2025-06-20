@@ -63,9 +63,7 @@ export const LessonCompletionModal: React.FC<LessonCompletionModalProps> = ({
         <div className="p-8">
           <LessonNPSForm
             lessonId={lesson.id}
-            onCompleted={handleNPSCompleted}
-            showSuccessMessage={npsSubmitted}
-            nextLesson={nextLesson}
+            className=""
           />
         </div>
       </DialogContent>

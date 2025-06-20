@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { OnboardingData } from '../types/onboardingTypes';
 import { useCloudSync } from './useCloudSync';
 import { useAuth } from '@/contexts/auth';
+import { supabase } from '@/lib/supabase';
 
 const STORAGE_KEY = 'viver-ia-onboarding-data';
 const AUTO_SAVE_DELAY = 2000; // 2 segundos

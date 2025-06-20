@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
@@ -59,28 +58,46 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   // Função para carregar perfil de forma simplificada
   const loadUserProfile = async (userId: string) => {
     try {
-      console.log('[AUTH] Carregando perfil para:', userId);
-      
       const { data, error } = await supabase
         .from('profiles')
         .select(`
           *,
-          user_roles (*)
+          user_roles:role_id (
+            id,
+            name,
+            description,
+            permissions,
+            is_system
+          )
         `)
-        .eq('id', userId)
+        .eq('id', userId as any)
         .single();
 
-      if (error) {
-        console.error('[AUTH] Erro ao buscar perfil:', error);
-        setProfile(null);
-        return;
-      }
+      if (error) throw error;
 
-      console.log('[AUTH] Perfil carregado:', data?.email);
-      setProfile(data);
+      if (data) {
+        setProfile({
+          ...data,
+          email: (data as any).email || user?.email || '',
+        } as any);
+      }
     } catch (error) {
-      console.error('[AUTH] Erro inesperado ao carregar perfil:', error);
-      setProfile(null);
+      console.error('Erro ao carregar perfil:', error);
+      if (user?.email) {
+        setProfile({
+          id: userId,
+          email: user.email,
+          name: null,
+          avatar_url: null,
+          company_name: null,
+          industry: null,
+          role_id: null,
+          role: 'member' as any,
+          created_at: new Date().toISOString(),
+          onboarding_completed: false,
+          onboarding_completed_at: null,
+        } as any);
+      }
     }
   };
 
