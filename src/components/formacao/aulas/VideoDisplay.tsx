@@ -1,10 +1,27 @@
 
 import React, { useState, useEffect } from "react";
-import { supabase, LearningLessonVideo } from "@/lib/supabase";
+import { supabase } from "@/lib/supabase";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getYoutubeVideoId, formatVideoDuration } from "@/lib/supabase/storage";
 import { toast } from "sonner";
+
+interface LearningLessonVideo {
+  id: string;
+  lesson_id: string;
+  title: string;
+  description: string | null;
+  url: string;
+  thumbnail_url: string | null;
+  duration_seconds: number;
+  created_at: string;
+  order_index: number;
+  video_type: string;
+  file_size_bytes: number | null;
+  video_file_path: string | null;
+  video_file_name: string | null;
+  video_id: string | null;
+}
 
 interface VideoDisplayProps {
   lessonId: string;
@@ -30,7 +47,7 @@ export const VideoDisplay: React.FC<VideoDisplayProps> = ({
         const { data, error } = await supabase
           .from('learning_lesson_videos')
           .select('*')
-          .eq('lesson_id', lessonId)
+          .eq('lesson_id', lessonId as any)
           .order('order_index');
           
         if (error) {
@@ -39,12 +56,12 @@ export const VideoDisplay: React.FC<VideoDisplayProps> = ({
           return;
         }
         
-        setVideos(data || []);
+        setVideos((data as any) || []);
         
         // Definir o primeiro vídeo como ativo se houver vídeos e onVideoSelect for fornecido
         if (data && data.length > 0 && onVideoSelect) {
-          setActiveVideoId(data[0].id);
-          onVideoSelect(data[0]);
+          setActiveVideoId((data as any)[0].id);
+          onVideoSelect((data as any)[0]);
         }
       } catch (error) {
         console.error("Erro ao carregar vídeos:", error);
