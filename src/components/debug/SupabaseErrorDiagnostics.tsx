@@ -1,341 +1,347 @@
 
-import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import React, { useState } from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator';
-import { RefreshCw, AlertTriangle, CheckCircle, Clock, Zap, Bug, Mail, Globe, Database, Shield } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { 
+  AlertCircle, 
+  CheckCircle, 
+  Database, 
+  Shield, 
+  Mail, 
+  RefreshCw, 
+  ChevronDown,
+  Server,
+  Key,
+  Globe,
+  Clock
+} from 'lucide-react';
 import { useSupabaseHealthCheck } from '@/hooks/supabase/useSupabaseHealthCheck';
 import { useResendHealthCheck } from '@/hooks/supabase/useResendHealthCheck';
-import { toast } from 'sonner';
+import { ResendDiagnostics } from './ResendDiagnostics';
 
 export const SupabaseErrorDiagnostics: React.FC = () => {
-  const { 
-    healthStatus: supabaseHealth, 
-    isChecking: supabaseChecking, 
-    performHealthCheck: checkSupabase 
-  } = useSupabaseHealthCheck();
-  
-  const { 
-    healthStatus: resendHealth, 
-    isChecking: resendChecking, 
-    performHealthCheck: checkResend,
-    forceHealthCheck: forceResendCheck,
-    sendTestEmail 
-  } = useResendHealthCheck();
+  const { healthStatus: supabaseHealth, isChecking: supabaseChecking, performHealthCheck: checkSupabase } = useSupabaseHealthCheck();
+  const { healthStatus: resendHealth, isChecking: resendChecking, performHealthCheck: checkResend, debugInfo } = useResendHealthCheck();
+  const [showSupabaseDebug, setShowSupabaseDebug] = useState(false);
+  const [showResendDebug, setShowResendDebug] = useState(false);
 
-  const [testEmail, setTestEmail] = React.useState('');
-  const [showDebugInfo, setShowDebugInfo] = React.useState(false);
-
-  const handleSendTestEmail = async () => {
-    if (!testEmail) {
-      toast.error('Digite um email para teste');
-      return;
-    }
-    
-    await sendTestEmail(testEmail);
+  const getStatusIcon = (isHealthy: boolean, isChecking: boolean) => {
+    if (isChecking) return <RefreshCw className="h-4 w-4 animate-spin text-blue-500" />;
+    return isHealthy ? 
+      <CheckCircle className="h-4 w-4 text-green-500" /> : 
+      <AlertCircle className="h-4 w-4 text-red-500" />;
   };
 
-  const getStatusIcon = (status: boolean) => {
-    return status ? (
-      <CheckCircle className="h-4 w-4 text-green-500" />
-    ) : (
-      <AlertTriangle className="h-4 w-4 text-red-500" />
+  const getStatusBadge = (isHealthy: boolean, healthyLabel = 'Operacional', unhealthyLabel = 'Com Problemas') => {
+    return (
+      <Badge variant={isHealthy ? "default" : "destructive"} className={isHealthy ? "bg-green-500" : ""}>
+        {isHealthy ? healthyLabel : unhealthyLabel}
+      </Badge>
     );
   };
 
-  const getStatusBadge = (status: string, isHealthy?: boolean) => {
-    if (isHealthy) {
-      return <Badge variant="default" className="bg-green-500">Operacional</Badge>;
-    }
-    
+  const getConnectionStatusColor = (status: string) => {
     switch (status) {
-      case 'operational':
       case 'connected':
-      case 'authenticated':
-      case 'valid':
-      case 'verified':
-        return <Badge variant="default" className="bg-green-500">Operacional</Badge>;
+      case 'operational':
+        return 'text-green-500';
       case 'slow':
-      case 'limited':
-      case 'pending':
-        return <Badge variant="secondary">Limitado</Badge>;
-      case 'error':
+        return 'text-yellow-500';
       case 'disconnected':
-      case 'unauthenticated':
-      case 'invalid':
-      case 'missing':
-      case 'failed':
-        return <Badge variant="destructive">Erro</Badge>;
+      case 'error':
+        return 'text-red-500';
       default:
-        return <Badge variant="outline">Desconhecido</Badge>;
+        return 'text-gray-500';
     }
   };
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
+    <div className="container mx-auto py-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">Diagnóstico do Sistema</h1>
+          <h1 className="text-3xl font-bold tracking-tight">Diagnóstico do Sistema</h1>
           <p className="text-muted-foreground">
-            Monitoramento em tempo real da saúde dos serviços
+            Monitoramento em tempo real da saúde dos sistemas Supabase e Resend
           </p>
         </div>
-        
         <div className="flex gap-2">
-          <Button
+          <Button 
+            onClick={() => checkSupabase()}
+            disabled={supabaseChecking}
             variant="outline"
-            onClick={() => setShowDebugInfo(!showDebugInfo)}
-            className="gap-2"
+            size="sm"
           >
-            <Bug className="h-4 w-4" />
-            {showDebugInfo ? 'Ocultar Debug' : 'Mostrar Debug'}
+            {supabaseChecking ? (
+              <RefreshCw className="h-4 w-4 animate-spin mr-2" />
+            ) : (
+              <Database className="h-4 w-4 mr-2" />
+            )}
+            Verificar Supabase
           </Button>
-          
-          <Button
-            onClick={() => {
-              checkSupabase();
-              checkResend();
-            }}
-            disabled={supabaseChecking || resendChecking}
-            className="gap-2"
+          <Button 
+            onClick={() => checkResend(true)}
+            disabled={resendChecking}
+            variant="outline"
+            size="sm"
           >
-            <RefreshCw className={`h-4 w-4 ${(supabaseChecking || resendChecking) ? 'animate-spin' : ''}`} />
-            Verificar Tudo
+            {resendChecking ? (
+              <RefreshCw className="h-4 w-4 animate-spin mr-2" />
+            ) : (
+              <Mail className="h-4 w-4 mr-2" />
+            )}
+            Verificar Resend
           </Button>
         </div>
       </div>
 
-      {/* Status Geral */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Shield className="h-5 w-5" />
-            Status Geral do Sistema
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="flex items-center justify-between p-3 border rounded-lg">
-              <div className="flex items-center gap-2">
-                <Database className="h-4 w-4" />
-                <span className="font-medium">Supabase</span>
-              </div>
-              {getStatusBadge('', supabaseHealth.isHealthy)}
-            </div>
-            
-            <div className="flex items-center justify-between p-3 border rounded-lg">
-              <div className="flex items-center gap-2">
-                <Mail className="h-4 w-4" />
-                <span className="font-medium">Sistema de Email</span>
-              </div>
-              {getStatusBadge('', resendHealth.isHealthy)}
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Diagnóstico do Supabase */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Database className="h-5 w-5" />
-            Diagnóstico Supabase
-            <Badge variant="outline" className="ml-auto">
-              <Clock className="h-3 w-3 mr-1" />
-              {supabaseHealth.checkedAt.toLocaleTimeString()}
-            </Badge>
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* Visão Geral dos Sistemas */}
+      <div className="grid gap-4 md:grid-cols-2">
+        <Card>
+          <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center gap-2">
+                <Database className="h-5 w-5" />
+                Supabase
+              </CardTitle>
               <div className="flex items-center gap-2">
-                {getStatusIcon(supabaseHealth.connectionStatus === 'connected')}
-                <span className="text-sm">Conexão</span>
+                {getStatusIcon(supabaseHealth.isHealthy, supabaseChecking)}
+                {getStatusBadge(supabaseHealth.isHealthy)}
               </div>
-              {getStatusBadge(supabaseHealth.connectionStatus)}
             </div>
-            
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="grid grid-cols-2 gap-3 text-sm">
+              <div className="flex justify-between">
+                <span>Conexão:</span>
+                <Badge variant="outline" className={getConnectionStatusColor(supabaseHealth.connectionStatus)}>
+                  {supabaseHealth.connectionStatus}
+                </Badge>
+              </div>
+              <div className="flex justify-between">
+                <span>Auth:</span>
+                <Badge variant="outline" className={getConnectionStatusColor(supabaseHealth.authStatus)}>
+                  {supabaseHealth.authStatus}
+                </Badge>
+              </div>
+              <div className="flex justify-between">
+                <span>Database:</span>
+                <Badge variant="outline" className={getConnectionStatusColor(supabaseHealth.databaseStatus)}>
+                  {supabaseHealth.databaseStatus}
+                </Badge>
+              </div>
+              <div className="flex justify-between">
+                <span>Storage:</span>
+                <Badge variant="outline" className={getConnectionStatusColor(supabaseHealth.storageStatus)}>
+                  {supabaseHealth.storageStatus}
+                </Badge>
+              </div>
+            </div>
+
+            {supabaseHealth.issues.length > 0 && (
+              <div className="mt-3">
+                <Collapsible open={showSupabaseDebug} onOpenChange={setShowSupabaseDebug}>
+                  <CollapsibleTrigger className="flex items-center gap-2 text-sm text-red-600 hover:text-red-800">
+                    <ChevronDown className={`h-4 w-4 transition-transform ${showSupabaseDebug ? 'rotate-180' : ''}`} />
+                    {supabaseHealth.issues.length} problema{supabaseHealth.issues.length > 1 ? 's' : ''} detectado{supabaseHealth.issues.length > 1 ? 's' : ''}
+                  </CollapsibleTrigger>
+                  <CollapsibleContent className="mt-2 space-y-1">
+                    {supabaseHealth.issues.map((issue, index) => (
+                      <div key={index} className="text-xs p-2 rounded bg-red-50 text-red-800 border border-red-200">
+                        {issue}
+                      </div>
+                    ))}
+                  </CollapsibleContent>
+                </Collapsible>
+              </div>
+            )}
+
+            <p className="text-xs text-muted-foreground mt-2">
+              Última verificação: {supabaseHealth.checkedAt.toLocaleString('pt-BR')}
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center gap-2">
+                <Mail className="h-5 w-5" />
+                Resend
+              </CardTitle>
               <div className="flex items-center gap-2">
-                {getStatusIcon(supabaseHealth.authStatus === 'authenticated')}
-                <span className="text-sm">Autenticação</span>
+                {getStatusIcon(resendHealth.isHealthy, resendChecking)}
+                {getStatusBadge(resendHealth.isHealthy)}
               </div>
-              {getStatusBadge(supabaseHealth.authStatus)}
             </div>
-            
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                {getStatusIcon(supabaseHealth.databaseStatus === 'operational')}
-                <span className="text-sm">Banco de Dados</span>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="grid grid-cols-2 gap-3 text-sm">
+              <div className="flex justify-between">
+                <span>API Key:</span>
+                <Badge variant="outline" className={resendHealth.apiKeyValid ? 'text-green-500' : 'text-red-500'}>
+                  {resendHealth.apiKeyValid ? 'Válida' : 'Inválida'}
+                </Badge>
               </div>
-              {getStatusBadge(supabaseHealth.databaseStatus)}
-            </div>
-            
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                {getStatusIcon(supabaseHealth.storageStatus === 'operational')}
-                <span className="text-sm">Storage</span>
+              <div className="flex justify-between">
+                <span>Conectividade:</span>
+                <Badge variant="outline" className={getConnectionStatusColor(resendHealth.connectivity)}>
+                  {resendHealth.connectivity}
+                </Badge>
               </div>
-              {getStatusBadge(supabaseHealth.storageStatus)}
-            </div>
-          </div>
-
-          {supabaseHealth.issues.length > 0 && (
-            <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
-              <h4 className="font-semibold text-red-800 mb-2">Problemas Detectados:</h4>
-              <ul className="text-sm text-red-700 space-y-1">
-                {supabaseHealth.issues.map((issue, index) => (
-                  <li key={index}>• {issue}</li>
-                ))}
-              </ul>
-            </div>
-          )}
-
-          <div className="flex justify-end">
-            <Button
-              variant="outline"
-              onClick={checkSupabase}
-              disabled={supabaseChecking}
-              className="gap-2"
-            >
-              <RefreshCw className={`h-4 w-4 ${supabaseChecking ? 'animate-spin' : ''}`} />
-              {supabaseChecking ? 'Verificando...' : 'Verificar Supabase'}
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Diagnóstico do Sistema de Email (Resend) */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Mail className="h-5 w-5" />
-            Diagnóstico Sistema de Email (Resend)
-            <Badge variant="outline" className="ml-auto">
-              <Clock className="h-3 w-3 mr-1" />
-              {resendHealth.checkedAt.toLocaleTimeString()}
-            </Badge>
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                {getStatusIcon(resendHealth.apiKeyStatus === 'valid')}
-                <span className="text-sm">API Key</span>
+              <div className="flex justify-between">
+                <span>Domínio:</span>
+                <Badge variant="outline" className={resendHealth.domainValid ? 'text-green-500' : 'text-yellow-500'}>
+                  {resendHealth.domainValid ? 'Verificado' : 'Pendente'}
+                </Badge>
               </div>
-              {getStatusBadge(resendHealth.apiKeyStatus)}
-            </div>
-            
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                {getStatusIcon(resendHealth.domainStatus === 'verified')}
-                <span className="text-sm">Domínio</span>
+              <div className="flex justify-between">
+                <span>Latência:</span>
+                <Badge variant="outline">
+                  {resendHealth.responseTime ? `${resendHealth.responseTime}ms` : '--'}
+                </Badge>
               </div>
-              {getStatusBadge(resendHealth.domainStatus)}
             </div>
-            
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                {getStatusIcon(resendHealth.emailCapability === 'operational')}
-                <span className="text-sm">Envio Email</span>
+
+            {resendHealth.issues?.length > 0 && (
+              <div className="mt-3">
+                <Collapsible open={showResendDebug} onOpenChange={setShowResendDebug}>
+                  <CollapsibleTrigger className="flex items-center gap-2 text-sm text-red-600 hover:text-red-800">
+                    <ChevronDown className={`h-4 w-4 transition-transform ${showResendDebug ? 'rotate-180' : ''}`} />
+                    {resendHealth.issues.length} problema{resendHealth.issues.length > 1 ? 's' : ''} detectado{resendHealth.issues.length > 1 ? 's' : ''}
+                  </CollapsibleTrigger>
+                  <CollapsibleContent className="mt-2 space-y-1">
+                    {resendHealth.issues.map((issue, index) => (
+                      <div key={index} className="text-xs p-2 rounded bg-red-50 text-red-800 border border-red-200">
+                        {issue}
+                      </div>
+                    ))}
+                  </CollapsibleContent>
+                </Collapsible>
               </div>
-              {getStatusBadge(resendHealth.emailCapability)}
-            </div>
-            
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                {getStatusIcon(resendHealth.edgeFunctionStatus === 'working')}
-                <span className="text-sm">Edge Function</span>
+            )}
+
+            {resendHealth.lastError && (
+              <div className="text-xs p-2 rounded bg-red-50 text-red-800 border border-red-200">
+                <strong>Último erro:</strong> {resendHealth.lastError}
               </div>
-              {getStatusBadge(resendHealth.edgeFunctionStatus)}
-            </div>
-          </div>
+            )}
 
-          {/* Debug Info */}
-          {showDebugInfo && resendHealth.debugInfo && (
-            <div className="mt-4 p-3 bg-gray-50 border rounded-lg">
-              <h4 className="font-semibold mb-2">Informações de Debug:</h4>
-              <pre className="text-xs overflow-auto">
-                {JSON.stringify(resendHealth.debugInfo, null, 2)}
-              </pre>
-            </div>
-          )}
+            <p className="text-xs text-muted-foreground mt-2">
+              Última verificação: {resendHealth.lastChecked?.toLocaleString('pt-BR') || 'Nunca'}
+            </p>
+          </CardContent>
+        </Card>
+      </div>
 
-          {/* Problemas */}
-          {resendHealth.issues.length > 0 && (
-            <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
-              <h4 className="font-semibold text-red-800 mb-2">Problemas Detectados:</h4>
-              <ul className="text-sm text-red-700 space-y-1">
-                {resendHealth.issues.map((issue, index) => (
-                  <li key={index}>• {issue}</li>
-                ))}
-              </ul>
-            </div>
-          )}
+      {/* Tabs com Diagnósticos Detalhados */}
+      <Tabs defaultValue="resend" className="space-y-4">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="resend" className="flex items-center gap-2">
+            <Mail className="h-4 w-4" />
+            Sistema de Email
+          </TabsTrigger>
+          <TabsTrigger value="supabase" className="flex items-center gap-2">
+            <Database className="h-4 w-4" />
+            Base de Dados
+          </TabsTrigger>
+        </TabsList>
 
-          {/* Recomendações */}
-          {resendHealth.recommendations.length > 0 && (
-            <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-              <h4 className="font-semibold text-blue-800 mb-2">Recomendações:</h4>
-              <ul className="text-sm text-blue-700 space-y-1">
-                {resendHealth.recommendations.map((rec, index) => (
-                  <li key={index}>• {rec}</li>
-                ))}
-              </ul>
-            </div>
-          )}
+        <TabsContent value="resend" className="space-y-4">
+          <ResendDiagnostics />
+        </TabsContent>
 
-          <Separator />
+        <TabsContent value="supabase" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Shield className="h-5 w-5" />
+                Diagnóstico Supabase
+              </CardTitle>
+              <CardDescription>
+                Verificação detalhada dos serviços Supabase
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="space-y-3">
+                  <h4 className="font-medium">Status dos Serviços</h4>
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between p-2 rounded border">
+                      <span className="flex items-center gap-2">
+                        <Server className="h-4 w-4" />
+                        Conexão
+                      </span>
+                      {getStatusBadge(supabaseHealth.connectionStatus === 'connected', 'Conectado', 'Desconectado')}
+                    </div>
+                    <div className="flex items-center justify-between p-2 rounded border">
+                      <span className="flex items-center gap-2">
+                        <Key className="h-4 w-4" />
+                        Autenticação
+                      </span>
+                      {getStatusBadge(supabaseHealth.authStatus === 'authenticated', 'OK', 'Erro')}
+                    </div>
+                    <div className="flex items-center justify-between p-2 rounded border">
+                      <span className="flex items-center gap-2">
+                        <Database className="h-4 w-4" />
+                        Database
+                      </span>
+                      {getStatusBadge(supabaseHealth.databaseStatus === 'operational', 'Operacional', 'Erro')}
+                    </div>
+                    <div className="flex items-center justify-between p-2 rounded border">
+                      <span className="flex items-center gap-2">
+                        <Globe className="h-4 w-4" />
+                        Storage
+                      </span>
+                      {getStatusBadge(supabaseHealth.storageStatus === 'operational', 'Operacional', 'Erro')}
+                    </div>
+                  </div>
+                </div>
 
-          {/* Teste de Email */}
-          <div className="space-y-3">
-            <h4 className="font-semibold">Teste de Envio de Email</h4>
-            <div className="flex gap-2">
-              <input
-                type="email"
-                placeholder="Digite um email para teste"
-                value={testEmail}
-                onChange={(e) => setTestEmail(e.target.value)}
-                className="flex-1 px-3 py-2 border rounded-md"
-              />
-              <Button
-                onClick={handleSendTestEmail}
-                disabled={!testEmail || resendChecking}
-                className="gap-2"
-              >
-                <Mail className="h-4 w-4" />
-                Enviar Teste
-              </Button>
-            </div>
-          </div>
+                <div className="space-y-3">
+                  <h4 className="font-medium">Informações do Sistema</h4>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span>Última Verificação:</span>
+                      <span className="text-muted-foreground">
+                        {supabaseHealth.checkedAt.toLocaleString('pt-BR')}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Status Geral:</span>
+                      <span className={supabaseHealth.isHealthy ? 'text-green-600' : 'text-red-600'}>
+                        {supabaseHealth.isHealthy ? 'Saudável' : 'Com Problemas'}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Problemas Detectados:</span>
+                      <span>{supabaseHealth.issues.length}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
 
-          <div className="flex justify-end gap-2">
-            <Button
-              variant="outline"
-              onClick={forceResendCheck}
-              disabled={resendChecking}
-              className="gap-2"
-            >
-              <Zap className="h-4 w-4" />
-              Forçar Verificação
-            </Button>
-            
-            <Button
-              variant="outline"
-              onClick={checkResend}
-              disabled={resendChecking}
-              className="gap-2"
-            >
-              <RefreshCw className={`h-4 w-4 ${resendChecking ? 'animate-spin' : ''}`} />
-              {resendChecking ? 'Verificando...' : 'Verificar Email'}
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+              {debugInfo && (
+                <div className="mt-6">
+                  <Collapsible>
+                    <CollapsibleTrigger className="flex items-center gap-2 text-sm font-medium">
+                      <ChevronDown className="h-4 w-4" />
+                      Informações de Debug
+                    </CollapsibleTrigger>
+                    <CollapsibleContent className="mt-2">
+                      <div className="p-3 rounded bg-gray-50 border text-xs font-mono">
+                        <pre>{JSON.stringify(debugInfo, null, 2)}</pre>
+                      </div>
+                    </CollapsibleContent>
+                  </Collapsible>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
