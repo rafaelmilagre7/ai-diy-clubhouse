@@ -26,7 +26,7 @@ export const EventsTable = () => {
       const { error } = await supabase
         .from("events")
         .delete()
-        .eq("id", id);
+        .eq("id", id as any);
 
       if (error) throw error;
 

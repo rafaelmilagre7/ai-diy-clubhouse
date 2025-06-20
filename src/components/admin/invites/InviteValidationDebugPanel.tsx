@@ -1,228 +1,230 @@
 
-import { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { 
-  Search, 
-  CheckCircle, 
-  XCircle, 
-  Clock, 
-  AlertTriangle,
-  Bug,
-  FileText
-} from 'lucide-react';
-import { useInviteValidation } from '@/hooks/admin/invites/useInviteValidation';
+import { Loader2, Check, X, AlertTriangle, RefreshCw } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
+import { toast } from 'sonner';
+
+interface ValidationResult {
+  isValid: boolean;
+  invite?: any;
+  error?: string;
+  debugInfo?: any;
+}
 
 export const InviteValidationDebugPanel = () => {
-  const [testToken, setTestToken] = useState('');
-  const [validationResults, setValidationResults] = useState<any>(null);
-  const [debugLogs, setDebugLogs] = useState<any[]>([]);
-  const [loading, setLoading] = useState(false);
-  const { validateToken } = useInviteValidation();
+  const [token, setToken] = useState('');
+  const [isValidating, setIsValidating] = useState(false);
+  const [result, setResult] = useState<ValidationResult | null>(null);
+  const [recentAttempts, setRecentAttempts] = useState<any[]>([]);
 
-  const handleTestValidation = async () => {
-    if (!testToken.trim()) return;
-    
-    setLoading(true);
-    try {
-      const result = await validateToken(testToken.trim());
-      setValidationResults(result);
-      
-      // Buscar logs relacionados
-      await fetchDebugLogs(testToken.trim());
-    } catch (error) {
-      console.error('Erro na validação:', error);
-    } finally {
-      setLoading(false);
+  const validateToken = async () => {
+    if (!token.trim()) {
+      toast.error('Por favor, insira um token de convite');
+      return;
     }
-  };
 
-  const fetchDebugLogs = async (token: string) => {
+    setIsValidating(true);
+    setResult(null);
+
     try {
-      const { data: logs } = await supabase
+      // Buscar convite diretamente
+      const { data: invite, error } = await supabase
+        .from('invites')
+        .select('*')
+        .eq('token', token.trim())
+        .single();
+
+      if (error) {
+        setResult({
+          isValid: false,
+          error: error.message,
+          debugInfo: error
+        });
+      } else {
+        setResult({
+          isValid: true,
+          invite,
+          debugInfo: {
+            expires_at: invite.expires_at,
+            used_at: invite.used_at,
+            isExpired: new Date(invite.expires_at) < new Date(),
+            isUsed: !!invite.used_at
+          }
+        });
+      }
+
+      // Log da tentativa
+      await supabase
+        .from('audit_logs')
+        .insert({
+          event_type: 'invite_validation' as any,
+          action: 'debug_check',
+          details: {
+            token: token.trim(),
+            success: !error,
+            timestamp: new Date().toISOString()
+          }
+        });
+
+      // Buscar tentativas recentes
+      const { data: attempts } = await supabase
         .from('audit_logs')
         .select('*')
-        .eq('event_type', 'invite_validation')
-        .ilike('resource_id', `%${token.substring(0, 6)}%`)
+        .eq('event_type', 'invite_validation' as any)
         .order('timestamp', { ascending: false })
         .limit(10);
-      
-      setDebugLogs(logs || []);
-    } catch (error) {
-      console.error('Erro ao buscar logs:', error);
+
+      if (attempts) {
+        setRecentAttempts(attempts);
+      }
+
+    } catch (error: any) {
+      setResult({
+        isValid: false,
+        error: error.message,
+        debugInfo: error
+      });
+    } finally {
+      setIsValidating(false);
     }
   };
 
-  const getValidationStatusIcon = (isValid: boolean) => {
-    return isValid ? (
-      <CheckCircle className="h-5 w-5 text-green-600" />
-    ) : (
-      <XCircle className="h-5 w-5 text-red-600" />
-    );
-  };
+  const getStatusBadge = (result: ValidationResult) => {
+    if (result.isValid && result.invite) {
+      const isExpired = new Date(result.invite.expires_at) < new Date();
+      const isUsed = !!result.invite.used_at;
 
-  const getLogStatusBadge = (action: string) => {
-    switch (action) {
-      case 'validation_success':
-        return <Badge className="bg-green-100 text-green-800">Sucesso</Badge>;
-      case 'validation_failed':
-        return <Badge variant="destructive">Falha</Badge>;
-      default:
-        return <Badge variant="outline">{action}</Badge>;
+      if (isUsed) {
+        return <Badge variant="secondary" className="bg-gray-100 text-gray-800"><X className="w-3 h-3 mr-1" />Já Usado</Badge>;
+      }
+      if (isExpired) {
+        return <Badge variant="destructive"><X className="w-3 h-3 mr-1" />Expirado</Badge>;
+      }
+      return <Badge variant="default" className="bg-green-100 text-green-800"><Check className="w-3 h-3 mr-1" />Válido</Badge>;
     }
+    return <Badge variant="destructive"><X className="w-3 h-3 mr-1" />Inválido</Badge>;
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Bug className="h-5 w-5" />
-          Debug de Validação de Convites
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <Tabs defaultValue="test" className="space-y-4">
-          <TabsList>
-            <TabsTrigger value="test">Testar Token</TabsTrigger>
-            <TabsTrigger value="logs">Logs de Debug</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="test" className="space-y-4">
-            <div className="flex gap-3">
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <AlertTriangle className="w-5 h-5" />
+            Debug de Token de Convite
+          </CardTitle>
+          <CardDescription>
+            Ferramenta para validar e debugar tokens de convite
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="token">Token de Convite</Label>
+            <div className="flex gap-2">
               <Input
-                placeholder="Cole aqui o token do convite para testar..."
-                value={testToken}
-                onChange={(e) => setTestToken(e.target.value)}
-                className="flex-1"
+                id="token"
+                placeholder="Digite o token do convite..."
+                value={token}
+                onChange={(e) => setToken(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && validateToken()}
               />
               <Button 
-                onClick={handleTestValidation}
-                disabled={loading || !testToken.trim()}
+                onClick={validateToken} 
+                disabled={isValidating || !token.trim()}
               >
-                <Search className="h-4 w-4 mr-2" />
-                {loading ? 'Testando...' : 'Testar'}
+                {isValidating ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <RefreshCw className="w-4 h-4" />
+                )}
+                Validar
               </Button>
             </div>
+          </div>
 
-            {validationResults && (
-              <div className="space-y-4">
-                <Alert className={validationResults.isValid ? 'border-green-200 bg-green-50' : 'border-red-200 bg-red-50'}>
-                  <div className="flex items-center gap-2">
-                    {getValidationStatusIcon(validationResults.isValid)}
-                    <AlertDescription className="flex-1">
-                      <strong>Status:</strong> {validationResults.isValid ? 'Válido' : 'Inválido'}
-                      {validationResults.error && (
-                        <div className="mt-1 text-sm">
-                          <strong>Erro:</strong> {validationResults.error}
-                        </div>
-                      )}
-                    </AlertDescription>
+          {result && (
+            <div className="space-y-4 p-4 border rounded-lg">
+              <div className="flex items-center justify-between">
+                <h3 className="font-medium">Resultado da Validação</h3>
+                {getStatusBadge(result)}
+              </div>
+
+              {result.invite ? (
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <span className="font-medium">Email:</span> {result.invite.email}
                   </div>
-                </Alert>
+                  <div>
+                    <span className="font-medium">Token:</span> {result.invite.token}
+                  </div>
+                  <div>
+                    <span className="font-medium">Criado em:</span> {new Date(result.invite.created_at).toLocaleDateString('pt-BR')}
+                  </div>
+                  <div>
+                    <span className="font-medium">Expira em:</span> {new Date(result.invite.expires_at).toLocaleDateString('pt-BR')}
+                  </div>
+                  {result.invite.used_at && (
+                    <div>
+                      <span className="font-medium">Usado em:</span> {new Date(result.invite.used_at).toLocaleDateString('pt-BR')}
+                    </div>
+                  )}
+                  <div>
+                    <span className="font-medium">Tentativas de Envio:</span> {result.invite.send_attempts || 0}
+                  </div>
+                </div>
+              ) : (
+                <div className="text-red-600">
+                  <strong>Erro:</strong> {result.error}
+                </div>
+              )}
 
-                {validationResults.invite && (
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="text-sm">Dados do Convite</CardTitle>
-                    </CardHeader>
-                    <CardContent className="text-sm space-y-2">
-                      <div><strong>Email:</strong> {validationResults.invite.email}</div>
-                      <div><strong>Token:</strong> {validationResults.invite.token?.substring(0, 8)}***</div>
-                      <div><strong>Expira em:</strong> {new Date(validationResults.invite.expires_at).toLocaleString('pt-BR')}</div>
-                      <div><strong>Usado em:</strong> {validationResults.invite.used_at ? new Date(validationResults.invite.used_at).toLocaleString('pt-BR') : 'Não usado'}</div>
-                    </CardContent>
-                  </Card>
-                )}
-
-                {validationResults.suggestions && validationResults.suggestions.length > 0 && (
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="text-sm flex items-center gap-2">
-                        <AlertTriangle className="h-4 w-4" />
-                        Sugestões
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <ul className="text-sm space-y-1">
-                        {validationResults.suggestions.map((suggestion: string, index: number) => (
-                          <li key={index} className="flex items-start gap-2">
-                            <span className="text-muted-foreground">•</span>
-                            {suggestion}
-                          </li>
-                        ))}
-                      </ul>
-                    </CardContent>
-                  </Card>
-                )}
-
-                {validationResults.debugInfo && (
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="text-sm">Informações de Debug</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <pre className="text-xs bg-muted p-3 rounded-md overflow-x-auto">
-                        {JSON.stringify(validationResults.debugInfo, null, 2)}
-                      </pre>
-                    </CardContent>
-                  </Card>
-                )}
-              </div>
-            )}
-          </TabsContent>
-
-          <TabsContent value="logs" className="space-y-4">
-            <div className="flex items-center justify-between">
-              <h3 className="font-medium">Logs de Validação Recentes</h3>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => fetchDebugLogs(testToken)}
-                disabled={!testToken.trim()}
-              >
-                <FileText className="h-4 w-4 mr-2" />
-                Atualizar Logs
-              </Button>
+              {result.debugInfo && (
+                <details className="mt-4">
+                  <summary className="cursor-pointer font-medium">Debug Info</summary>
+                  <pre className="mt-2 p-2 bg-gray-100 rounded text-xs overflow-auto">
+                    {JSON.stringify(result.debugInfo, null, 2)}
+                  </pre>
+                </details>
+              )}
             </div>
+          )}
+        </CardContent>
+      </Card>
 
-            {debugLogs.length > 0 ? (
-              <div className="space-y-3">
-                {debugLogs.map((log) => (
-                  <Card key={log.id}>
-                    <CardContent className="pt-4">
-                      <div className="flex items-center justify-between mb-2">
-                        {getLogStatusBadge(log.action)}
-                        <span className="text-sm text-muted-foreground">
-                          {new Date(log.timestamp).toLocaleString('pt-BR')}
-                        </span>
-                      </div>
-                      
-                      <div className="text-sm space-y-1">
-                        <div><strong>Token:</strong> {log.details?.token_preview || 'N/A'}</div>
-                        {log.details?.error_message && (
-                          <div><strong>Erro:</strong> {log.details.error_message}</div>
-                        )}
-                        <div><strong>Comprimento:</strong> {log.details?.token_length || 'N/A'}</div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-8 text-muted-foreground">
-                <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                <p>Nenhum log encontrado</p>
-                <p className="text-sm">Teste um token para ver os logs de validação</p>
-              </div>
-            )}
-          </TabsContent>
-        </Tabs>
-      </CardContent>
-    </Card>
+      {recentAttempts.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Tentativas Recentes</CardTitle>
+            <CardDescription>Últimas 10 validações realizadas</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              {recentAttempts.map((attempt, index) => (
+                <div key={index} className="flex justify-between items-center p-2 bg-gray-50 rounded">
+                  <span className="text-sm font-mono">
+                    {attempt.details?.token || 'N/A'}
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <Badge variant={attempt.details?.success ? "default" : "destructive"}>
+                      {attempt.details?.success ? 'Sucesso' : 'Falha'}
+                    </Badge>
+                    <span className="text-xs text-gray-500">
+                      {new Date(attempt.timestamp).toLocaleString('pt-BR')}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+    </div>
   );
 };
+
+export default InviteValidationDebugPanel;

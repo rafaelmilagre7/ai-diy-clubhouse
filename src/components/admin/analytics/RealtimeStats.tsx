@@ -30,10 +30,14 @@ export const RealtimeStats = () => {
 
         if (activeUsersError) throw activeUsersError;
         
-        // Contar usuários únicos - verificar se data existe
-        const uniqueUsers = new Set(activeUsersData?.map(p => p.user_id) || []);
+        // Contar usuários únicos - verificar se data existe e não é erro
+        const uniqueUsers = new Set(
+          Array.isArray(activeUsersData) 
+            ? activeUsersData.map(p => p.user_id).filter(Boolean)
+            : []
+        );
         
-        // Buscar tempo médio de implementação
+        // Buscar tempo médio de implementação - usar filtro correto para booleano
         const { data: completedData, error: completedError } = await supabase
           .from('progress')
           .select('created_at, completed_at')
@@ -46,15 +50,17 @@ export const RealtimeStats = () => {
         let totalMinutes = 0;
         let completedCount = 0;
         
-        if (completedData && completedData.length > 0) {
+        if (Array.isArray(completedData) && completedData.length > 0) {
           completedData.forEach(item => {
-            if (item.created_at && item.completed_at) {
-              const start = new Date(item.created_at);
-              const end = new Date(item.completed_at);
-              const diffMinutes = Math.round((end.getTime() - start.getTime()) / (1000 * 60));
-              if (diffMinutes > 0 && diffMinutes < 10000) { // Ignorar outliers
-                totalMinutes += diffMinutes;
-                completedCount++;
+            if (item && typeof item === 'object' && 'created_at' in item && 'completed_at' in item) {
+              if (item.created_at && item.completed_at) {
+                const start = new Date(item.created_at);
+                const end = new Date(item.completed_at);
+                const diffMinutes = Math.round((end.getTime() - start.getTime()) / (1000 * 60));
+                if (diffMinutes > 0 && diffMinutes < 10000) { // Ignorar outliers
+                  totalMinutes += diffMinutes;
+                  completedCount++;
+                }
               }
             }
           });

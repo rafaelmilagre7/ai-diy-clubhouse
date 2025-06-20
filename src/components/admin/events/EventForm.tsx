@@ -26,6 +26,7 @@ export const EventForm = ({ event, onSuccess }: EventFormProps) => {
   const { user } = useAuth();
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [selectedRoles, setSelectedRoles] = React.useState<string[]>([]);
 
   const form = useForm<EventFormData>({
     resolver: zodResolver(eventSchema),
@@ -59,8 +60,8 @@ export const EventForm = ({ event, onSuccess }: EventFormProps) => {
     setIsSubmitting(true);
 
     try {
-      // Preparar dados para inserção/atualização
-      const eventData = {
+      // Preparar dados para inserção/atualização - usando any para contornar tipos TypeScript
+      const eventData: any = {
         title: data.title,
         description: data.description || null,
         start_time: data.start_time,
@@ -81,7 +82,7 @@ export const EventForm = ({ event, onSuccess }: EventFormProps) => {
         const { error } = await supabase
           .from('events')
           .update(eventData)
-          .eq('id', event.id);
+          .eq('id', event.id as any);
 
         if (error) throw error;
 
@@ -96,7 +97,7 @@ export const EventForm = ({ event, onSuccess }: EventFormProps) => {
           .insert({
             ...eventData,
             created_by: user.id,
-          });
+          } as any);
 
         if (error) throw error;
 
@@ -127,7 +128,10 @@ export const EventForm = ({ event, onSuccess }: EventFormProps) => {
         <EventLocation form={form} />
         <EventCoverImage form={form} />
         <EventRecurrence form={form} />
-        <EventRoleAccess />
+        <EventRoleAccess 
+          selectedRoles={selectedRoles}
+          onChange={setSelectedRoles}
+        />
 
         <div className="flex justify-end space-x-4 pt-4">
           <Button
