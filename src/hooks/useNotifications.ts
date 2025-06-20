@@ -30,13 +30,13 @@ export const useNotifications = () => {
       const { data, error } = await supabase
         .from('notifications')
         .select('*')
-        .eq('user_id', user.id)
+        .eq('user_id', user.id as any)
         .or('expires_at.is.null,expires_at.gt.now()')
         .order('created_at', { ascending: false })
         .limit(50);
 
       if (error) throw error;
-      return data as Notification[];
+      return (data as any) as Notification[];
     },
     enabled: !!user,
     refetchInterval: 30000, // Atualizar a cada 30 segundos
@@ -47,8 +47,8 @@ export const useNotifications = () => {
     mutationFn: async (notificationId: string) => {
       const { error } = await supabase
         .from('notifications')
-        .update({ is_read: true })
-        .eq('id', notificationId);
+        .update({ is_read: true } as any)
+        .eq('id', notificationId as any);
 
       if (error) throw error;
     },
@@ -67,9 +67,9 @@ export const useNotifications = () => {
 
       const { error } = await supabase
         .from('notifications')
-        .update({ is_read: true })
-        .eq('user_id', user.id)
-        .eq('is_read', false);
+        .update({ is_read: true } as any)
+        .eq('user_id', user.id as any)
+        .eq('is_read', false as any);
 
       if (error) throw error;
     },
@@ -88,7 +88,7 @@ export const useNotifications = () => {
       const { error } = await supabase
         .from('notifications')
         .delete()
-        .eq('id', notificationId);
+        .eq('id', notificationId as any);
 
       if (error) throw error;
     },

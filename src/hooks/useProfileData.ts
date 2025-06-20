@@ -100,7 +100,7 @@ export const useProfileData = () => {
                 id, title, category, difficulty
               )
             `)
-            .eq("user_id", user.id);
+            .eq("user_id", user.id as any);
           
           if (progressError) {
             console.error("❌ [PROFILE] Erro ao buscar progresso:", progressError);
@@ -120,13 +120,13 @@ export const useProfileData = () => {
             ]);
             console.log("📊 [PROFILE] Usando dados mock devido ao erro");
           } else {
-            const formattedImplementations = progressData?.map(item => ({
-              id: item.id,
-              solution: item.solution,
-              current_module: item.current_module,
-              is_completed: item.is_completed,
-              completed_at: item.completed_at,
-              last_activity: item.last_activity
+            const formattedImplementations = (progressData as any)?.map((item: any) => ({
+              id: (item as any).id,
+              solution: (item as any).solution,
+              current_module: (item as any).current_module,
+              is_completed: (item as any).is_completed,
+              completed_at: (item as any).completed_at,
+              last_activity: (item as any).last_activity
             })) || [];
             
             setImplementations(formattedImplementations);
