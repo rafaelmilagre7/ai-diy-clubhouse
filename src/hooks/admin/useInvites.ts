@@ -4,9 +4,9 @@ import { useInviteCreate } from "./invites/useInviteCreate";
 import { useInviteDelete } from "./invites/useInviteDelete";
 import { useInviteResend } from "./invites/useInviteResend";
 import { useInvitesList } from "./invites/useInvitesList";
-import { Invite } from "./invites/types";
+import type { Invite } from "./invites/types";
 
-export { Invite };
+export type { Invite };
 
 export const useInvites = () => {
   const { invites, loading, fetchInvites } = useInvitesList();

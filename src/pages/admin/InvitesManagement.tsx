@@ -2,23 +2,26 @@
 import { useState, useEffect } from "react";
 import { useDocumentTitle } from "@/hooks/use-document-title";
 import { usePermissions } from "@/hooks/auth/usePermissions";
-import { useInvitesList } from "@/hooks/admin/invites/useInvitesList";
-import { useInviteCreate } from "@/hooks/admin/invites/useInviteCreate";
-import { useInviteDelete } from "@/hooks/admin/invites/useInviteDelete";
-import { useInviteResend } from "@/hooks/admin/invites/useInviteResend";
+import { useInvites } from "@/hooks/admin/useInvites";
 import SimpleCreateInviteDialog from "./invites/components/SimpleCreateInviteDialog";
 import SimpleInvitesTab from "./invites/components/SimpleInvitesTab";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Invite } from "@/hooks/admin/invites/types";
 
 const InvitesManagement = () => {
   useDocumentTitle("Gerenciar Convites | Admin");
   
   const { roles, loading: rolesLoading } = usePermissions();
-  const { invites, loading: invitesLoading, fetchInvites } = useInvitesList();
-  const { createInvite, loading: isCreating } = useInviteCreate();
-  const { deleteInvite, isDeleting } = useInviteDelete();
-  const { resendInvite, isSending } = useInviteResend();
+  const { 
+    invites, 
+    loading: invitesLoading, 
+    fetchInvites,
+    createInvite,
+    deleteInvite,
+    resendInvite,
+    isCreating,
+    isDeleting,
+    isSending
+  } = useInvites();
 
   useEffect(() => {
     fetchInvites();
@@ -30,7 +33,7 @@ const InvitesManagement = () => {
 
   const handleCreateInvite = async (email: string, roleId: string, notes?: string) => {
     try {
-      await createInvite({ email, roleId, notes });
+      await createInvite(email, roleId, notes);
       handleInvitesChange();
     } catch (error) {
       throw error;
@@ -46,7 +49,7 @@ const InvitesManagement = () => {
     }
   };
 
-  const handleResendInvite = async (invite: Invite) => {
+  const handleResendInvite = async (invite: any) => {
     try {
       await resendInvite(invite);
       handleInvitesChange();
@@ -79,8 +82,6 @@ const InvitesManagement = () => {
           <SimpleCreateInviteDialog 
             roles={roles} 
             onInviteCreated={handleInvitesChange}
-            createInvite={handleCreateInvite}
-            isCreating={isCreating}
           />
         </div>
       </div>
@@ -97,10 +98,6 @@ const InvitesManagement = () => {
             invites={invites}
             loading={invitesLoading}
             onInvitesChange={handleInvitesChange}
-            deleteInvite={handleDeleteInvite}
-            resendInvite={handleResendInvite}
-            isDeleting={isDeleting}
-            isSending={isSending}
           />
         </CardContent>
       </Card>

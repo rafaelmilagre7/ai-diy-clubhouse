@@ -12,8 +12,10 @@ import { ResetPasswordDialog } from "@/components/admin/users/ResetPasswordDialo
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/auth";
 import { Button } from "@/components/ui/button";
+import { UserProfile as SupabaseUserProfile } from "@/lib/supabase/types";
 
-interface UserProfile {
+// Interface local para evitar conflitos de tipos
+interface LocalUserProfile {
   id: string;
   email: string;
   name: string;
@@ -57,23 +59,23 @@ const UserManagement = () => {
   const [resetPasswordDialogOpen, setResetPasswordDialogOpen] = useState(false);
   const [resetUserDialogOpen, setResetUserDialogOpen] = useState(false);
 
-  const handleEditRole = (user: UserProfile) => {
-    setSelectedUser(user);
+  const handleEditRole = (user: LocalUserProfile) => {
+    setSelectedUser(user as any);
     setRoleManagerOpen(true);
   };
 
-  const handleDeleteUser = (user: UserProfile) => {
-    setSelectedUser(user);
+  const handleDeleteUser = (user: LocalUserProfile) => {
+    setSelectedUser(user as any);
     setDeleteDialogOpen(true);
   };
 
-  const handleResetPassword = (user: UserProfile) => {
-    setSelectedUser(user);
+  const handleResetPassword = (user: LocalUserProfile) => {
+    setSelectedUser(user as any);
     setResetPasswordDialogOpen(true);
   };
 
-  const handleResetUser = (user: UserProfile) => {
-    setSelectedUser(user);
+  const handleResetUser = (user: LocalUserProfile) => {
+    setSelectedUser(user as any);
     setResetUserDialogOpen(true);
   };
 
@@ -146,11 +148,12 @@ const UserManagement = () => {
     );
   }
 
-  // Converter users para UserProfile
-  const userProfiles: UserProfile[] = users.map(user => ({
+  // Converter users para compatibilidade com componentes
+  const userProfiles: SupabaseUserProfile[] = users.map(user => ({
     ...user,
+    role: user.role as any,
     onboarding_completed: false,
-    onboarding_completed_at: undefined
+    onboarding_completed_at: null
   }));
 
   return (
@@ -169,10 +172,10 @@ const UserManagement = () => {
           canEditRoles={canAssignRoles}
           canDeleteUsers={canDeleteUsers}
           canResetPasswords={canResetPasswords}
-          onEditRole={handleEditRole}
-          onDeleteUser={handleDeleteUser}
-          onResetPassword={handleResetPassword}
-          onResetUser={handleResetUser}
+          onEditRole={handleEditRole as any}
+          onDeleteUser={handleDeleteUser as any}
+          onResetPassword={handleResetPassword as any}
+          onResetUser={handleResetUser as any}
           onRefresh={handleRefresh}
         />
       </div>
