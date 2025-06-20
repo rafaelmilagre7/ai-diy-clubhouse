@@ -34,7 +34,7 @@ const CreateDomainDialog = ({ roles, onDomainCreated }: CreateDomainDialogProps)
   const [roleId, setRoleId] = useState("");
   const [description, setDescription] = useState("");
   const [open, setOpen] = useState(false);
-  const { createDomain, isCreating } = useTrustedDomainCreate();
+  const { createTrustedDomain, loading } = useTrustedDomainCreate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -50,7 +50,7 @@ const CreateDomainDialog = ({ roles, onDomainCreated }: CreateDomainDialogProps)
       return;
     }
     
-    const result = await createDomain(domain, roleId, description);
+    const result = await createTrustedDomain(domain, roleId, description);
     if (result) {
       setDomain("");
       setRoleId("");
@@ -117,8 +117,8 @@ const CreateDomainDialog = ({ roles, onDomainCreated }: CreateDomainDialogProps)
             <Button variant="outline" type="button" onClick={() => setOpen(false)}>
               Cancelar
             </Button>
-            <Button type="submit" disabled={isCreating}>
-              {isCreating ? "Criando..." : "Adicionar Domínio"}
+            <Button type="submit" disabled={loading}>
+              {loading ? "Criando..." : "Adicionar Domínio"}
             </Button>
           </DialogFooter>
         </form>

@@ -37,7 +37,7 @@ const CreateInviteDialog = ({ roles, onInviteCreated }: CreateInviteDialogProps)
   const [notes, setNotes] = useState("");
   const [expiration, setExpiration] = useState("7 days");
   const [open, setOpen] = useState(false);
-  const { createInvite, isCreating } = useInviteCreate();
+  const { createInvite, loading } = useInviteCreate();
   const { validationState, validateInviteData } = useInviteValidation();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -59,7 +59,12 @@ const CreateInviteDialog = ({ roles, onInviteCreated }: CreateInviteDialogProps)
       });
     }
     
-    const result = await createInvite(email, roleId, notes, expiration);
+    const result = await createInvite({ 
+      email, 
+      roleId, 
+      notes, 
+      expiresIn: expiration 
+    });
     if (result) {
       setEmail("");
       setRoleId("");
@@ -167,8 +172,8 @@ const CreateInviteDialog = ({ roles, onInviteCreated }: CreateInviteDialogProps)
             <Button variant="outline" type="button" onClick={() => setOpen(false)}>
               Cancelar
             </Button>
-            <Button type="submit" disabled={isCreating || !validationState.isValid}>
-              {isCreating ? (
+            <Button type="submit" disabled={loading || !validationState.isValid}>
+              {loading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   Enviando...

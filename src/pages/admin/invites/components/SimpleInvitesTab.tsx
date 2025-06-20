@@ -62,9 +62,11 @@ const SimpleInvitesTab = ({ invites, loading, onInvitesChange }: SimpleInvitesTa
 
   const confirmDelete = async () => {
     if (selectedInvite) {
-      const success = await deleteInvite(selectedInvite.id);
-      if (success) {
+      try {
+        await deleteInvite(selectedInvite.id);
         onInvitesChange();
+      } catch (error) {
+        console.error('Erro ao excluir convite:', error);
       }
       setDeleteDialogOpen(false);
     }
