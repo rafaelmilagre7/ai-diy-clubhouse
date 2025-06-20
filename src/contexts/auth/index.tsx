@@ -46,19 +46,36 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setIsLoading,
   });
 
-  // Verificação simplificada de admin apenas por email
-  const adminEmails = [
-    'rafael@viverdeia.ai',
-    'admin@viverdeia.ai',
-    'admin@teste.com'
-  ];
+  // CORREÇÃO: Verificar admin baseado na role_id do banco
+  const isAdmin = React.useMemo(() => {
+    if (!profile) return false;
+    
+    // Verificar se tem role de admin via user_roles
+    if (profile.user_roles?.name === 'admin') {
+      console.log(`[AUTH] Usuário ${profile.email} identificado como admin via role_id`);
+      return true;
+    }
+    
+    // Verificar se tem permissões de admin
+    if (profile.user_roles?.permissions?.all === true) {
+      console.log(`[AUTH] Usuário ${profile.email} identificado como admin via permissions`);
+      return true;
+    }
+    
+    console.log(`[AUTH] Usuário ${profile.email} não é admin`, {
+      role_id: profile.role_id,
+      user_roles: profile.user_roles
+    });
+    return false;
+  }, [profile]);
 
-  const isAdmin = user?.email ? adminEmails.includes(user.email.toLowerCase()) : false;
   const isFormacao = profile?.user_roles?.name === 'formacao';
 
   // Função para carregar perfil de forma simplificada
   const loadUserProfile = async (userId: string) => {
     try {
+      console.log(`[AUTH] Carregando perfil para usuário: ${userId}`);
+      
       const { data, error } = await supabase
         .from('profiles')
         .select(`
@@ -74,17 +91,29 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         .eq('id', userId as any)
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('[AUTH] Erro ao carregar perfil:', error);
+        throw error;
+      }
 
       if (data) {
-        setProfile({
+        const profileData = {
           ...data as any,
           email: (data as any).email || user?.email || '',
-        } as any);
+        } as any;
+        
+        console.log(`[AUTH] Perfil carregado:`, {
+          email: profileData.email,
+          role_id: profileData.role_id,
+          user_roles: profileData.user_roles
+        });
+        
+        setProfile(profileData);
       }
     } catch (error) {
-      console.error('Erro ao carregar perfil:', error);
+      console.error('[AUTH] Erro ao carregar perfil:', error);
       if (user?.email) {
+        // Perfil mínimo para usuários sem dados completos
         setProfile({
           id: userId,
           email: user.email,
