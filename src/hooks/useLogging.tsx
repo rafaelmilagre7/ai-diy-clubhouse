@@ -45,7 +45,7 @@ export const LoggingProvider = ({ children }: { children: ReactNode }) => {
           solution_id: data.solution_id,
           module_id: data.module_id,
           event_data: logEntry
-        });
+        } as any);
         
       if (error) {
         logger.error("Failed to store log in Supabase", error, { userId: user_id });

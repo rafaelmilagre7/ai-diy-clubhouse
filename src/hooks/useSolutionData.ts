@@ -29,11 +29,11 @@ export const useSolutionData = (id: string | undefined) => {
         let query = supabase
           .from("solutions")
           .select("*")
-          .eq("id", id);
+          .eq("id", id as any);
           
         // Se não for um admin, só mostra soluções publicadas
         if (!isAdmin) {
-          query = query.eq("published", true);
+          query = query.eq("published", true as any);
         }
         
         const { data, error: fetchError } = await query.maybeSingle();
@@ -68,8 +68,8 @@ export const useSolutionData = (id: string | undefined) => {
               const { data: progressData, error: progressError } = await supabase
                 .from("progress")
                 .select("solution_id, is_completed, current_module, completed_modules, created_at, last_activity")
-                .eq("solution_id", id)
-                .eq("user_id", user.id)
+                .eq("solution_id", id as any)
+                .eq("user_id", user.id as any)
                 .maybeSingle();
                 
               if (progressError) {
@@ -78,8 +78,8 @@ export const useSolutionData = (id: string | undefined) => {
               } else if (progressData) {
                 console.log("[SOLUTION_DATA] Dados de progresso encontrados:", { 
                   progress: progressData,
-                  isCompleted: progressData.is_completed,
-                  currentModule: progressData.current_module
+                  isCompleted: (progressData as any).is_completed,
+                  currentModule: (progressData as any).current_module
                 });
                 setProgress(progressData);
               } else {

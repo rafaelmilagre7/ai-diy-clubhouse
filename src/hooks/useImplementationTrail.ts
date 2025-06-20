@@ -58,11 +58,11 @@ export function useImplementationTrail() {
 
       // Buscar trilha existente
       const { data: existingTrail, error: trailError } = await supabase
-        .from('implementation_trails')
-        .select('*')
-        .eq('user_id', user.id)
-        .eq('status', 'completed')
-        .order('created_at', { ascending: false })
+        .from("implementation_trails")
+        .select("*")
+        .eq("user_id", user.id as any)
+        .eq("status", 'completed' as any)
+        .order("created_at", { ascending: false })
         .limit(1)
         .maybeSingle();
 
@@ -71,9 +71,9 @@ export function useImplementationTrail() {
         throw new Error('Erro ao carregar trilha de implementação');
       }
 
-      if (existingTrail && existingTrail.trail_data) {
+      if (existingTrail && (existingTrail as any).trail_data) {
         console.log('✅ Trilha existente encontrada');
-        setTrail(existingTrail.trail_data as ImplementationTrail);
+        setTrail((existingTrail as any).trail_data as ImplementationTrail);
         setIsFirstTimeGeneration(false);
       } else {
         console.log('📝 Nenhuma trilha encontrada, gerando nova');
