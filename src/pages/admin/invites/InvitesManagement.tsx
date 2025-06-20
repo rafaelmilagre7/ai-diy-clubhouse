@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useDocumentTitle } from "@/hooks/use-document-title";
 import { usePermissions } from "@/hooks/auth/usePermissions";
@@ -120,9 +119,9 @@ const InvitesManagement = () => {
         <TabsContent value="monitor" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Dashboard de Monitoramento</CardTitle>
+              <CardTitle>Monitoramento em Tempo Real</CardTitle>
               <CardDescription>
-                Acompanhe estatísticas em tempo real do sistema de emails
+                Acompanhe métricas e performance do sistema de emails
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -138,9 +137,9 @@ const InvitesManagement = () => {
         <TabsContent value="config" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Validação e Configuração</CardTitle>
+              <CardTitle>Configuração e Testes</CardTitle>
               <CardDescription>
-                Teste e valide a configuração do sistema Resend
+                Valide e teste a configuração do sistema Resend
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -154,7 +153,7 @@ const InvitesManagement = () => {
             <CardHeader>
               <CardTitle>Status do Sistema</CardTitle>
               <CardDescription>
-                Visualize o status atual do sistema de emails profissional
+                Visualize o status detalhado do sistema de emails
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -164,21 +163,21 @@ const InvitesManagement = () => {
         </TabsContent>
       </Tabs>
 
-      {/* Informações do Sistema */}
-      <Card className="bg-gradient-to-r from-blue-50 to-green-50 border-blue-200">
+      {/* Sistema de Informações */}
+      <Card className="bg-gradient-to-r from-green-50 to-blue-50 border-green-200">
         <CardContent className="pt-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
             <div className="space-y-1">
-              <h4 className="font-medium text-blue-900">✨ Sistema Profissional</h4>
-              <p className="text-blue-700">Template React Email com design da Viver de IA</p>
+              <h4 className="font-medium text-green-900">🔥 Sistema Completo</h4>
+              <p className="text-green-700">Diagnóstico automático e recuperação inteligente</p>
             </div>
             <div className="space-y-1">
-              <h4 className="font-medium text-green-900">🚀 Alta Performance</h4>
-              <p className="text-green-700">Resend Premium com fallback automático</p>
+              <h4 className="font-medium text-blue-900">⚡ Performance</h4>
+              <p className="text-blue-700">Monitoramento em tempo real com alertas</p>
             </div>
             <div className="space-y-1">
-              <h4 className="font-medium text-purple-900">📊 Monitoramento</h4>
-              <p className="text-purple-700">Logs detalhados e estatísticas em tempo real</p>
+              <h4 className="font-medium text-purple-900">🛡️ Robustez</h4>
+              <p className="text-purple-700">Sistema de fallback e recuperação automática</p>
             </div>
           </div>
         </CardContent>
