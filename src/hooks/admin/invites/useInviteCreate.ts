@@ -164,7 +164,7 @@ export function useInviteCreate() {
           success: false,
           message: 'Erro na Edge Function',
           error: emailError.message,
-          channel: 'email'
+          channel: 'email' as const
         };
       }
 
@@ -174,7 +174,7 @@ export function useInviteCreate() {
           success: false,
           message: 'Edge Function falhou',
           error: emailResult?.message || 'Falha não especificada',
-          channel: 'email'
+          channel: 'email' as const
         };
       }
 
@@ -185,7 +185,7 @@ export function useInviteCreate() {
         emailId: emailResult.emailId,
         strategy: emailResult.strategy,
         method: emailResult.method,
-        channel: 'email'
+        channel: 'email' as const
       };
 
     } catch (error: any) {
@@ -194,7 +194,7 @@ export function useInviteCreate() {
         success: false,
         message: 'Erro crítico no envio',
         error: error.message,
-        channel: 'email'
+        channel: 'email' as const
       };
     }
   };
