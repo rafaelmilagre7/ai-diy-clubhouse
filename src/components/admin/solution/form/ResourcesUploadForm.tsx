@@ -94,7 +94,7 @@ const ResourcesUploadForm: React.FC<ResourcesUploadFormProps> = ({
       
       const { data, error } = await supabase
         .from("solution_resources")
-        .insert(newResource)
+        .insert(newResource as any)
         .select()
         .single();
         
@@ -103,12 +103,12 @@ const ResourcesUploadForm: React.FC<ResourcesUploadFormProps> = ({
       // Add to resources list
       if (data) {
         const resource: Resource = {
-          id: data.id,
-          name: data.name,
-          url: data.url,
+          id: (data as any).id,
+          name: (data as any).name,
+          url: (data as any).url,
           type: "video",
-          format: data.format,
-          solution_id: data.solution_id,
+          format: (data as any).format,
+          solution_id: (data as any).solution_id,
           metadata: {
             title: `Vídeo do YouTube (${videoId})`,
             description: "Vídeo do YouTube",
@@ -121,10 +121,10 @@ const ResourcesUploadForm: React.FC<ResourcesUploadFormProps> = ({
             size: 0,
             version: "1.0"
           },
-          created_at: data.created_at,
-          updated_at: data.updated_at,
-          module_id: data.module_id,
-          size: data.size
+          created_at: (data as any).created_at,
+          updated_at: (data as any).updated_at,
+          module_id: (data as any).module_id,
+          size: (data as any).size
         };
         
         // Update resources state

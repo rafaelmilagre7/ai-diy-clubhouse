@@ -1,13 +1,12 @@
 
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Badge } from '@/components/ui/badge';
-import { supabase } from '@/lib/supabase';
-import { useToast } from '@/hooks/use-toast';
-import { Trash2, Plus, GripVertical } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Trash2, Plus, Save, Loader2, GripVertical } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/lib/supabase";
 
 interface Checkpoint {
   id?: string;
@@ -18,13 +17,18 @@ interface Checkpoint {
 
 interface ImplementationChecklistProps {
   solutionId: string | null;
+  onSave: () => void;
+  saving: boolean;
 }
 
-export const ImplementationChecklist = ({ solutionId }: ImplementationChecklistProps) => {
+const ImplementationChecklist: React.FC<ImplementationChecklistProps> = ({
+  solutionId,
+  onSave,
+  saving
+}) => {
   const [checkpoints, setCheckpoints] = useState<Checkpoint[]>([]);
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [newCheckpoint, setNewCheckpoint] = useState('');
+  const [savingCheckpoints, setSavingCheckpoints] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -40,20 +44,23 @@ export const ImplementationChecklist = ({ solutionId }: ImplementationChecklistP
     
     try {
       setLoading(true);
+      
       const { data, error } = await supabase
-        .from('implementation_checkpoints')
-        .select('*')
-        .eq('solution_id', solutionId as any)
-        .order('checkpoint_order');
-
+        .from("implementation_checkpoints")
+        .select("*")
+        .eq("solution_id", solutionId as any)
+        .order("checkpoint_order");
+        
       if (error) throw error;
       
-      setCheckpoints((data as any) || []);
-    } catch (error) {
-      console.error('Erro ao buscar checkpoints:', error);
+      if (data) {
+        setCheckpoints(data as any || []);
+      }
+    } catch (error: any) {
+      console.error("Erro ao carregar checkpoints:", error);
       toast({
-        title: "Erro",
-        description: "Não foi possível carregar os checkpoints.",
+        title: "Erro ao carregar checkpoints",
+        description: error.message || "Ocorreu um erro ao tentar carregar os checkpoints.",
         variant: "destructive",
       });
     } finally {
@@ -61,274 +68,181 @@ export const ImplementationChecklist = ({ solutionId }: ImplementationChecklistP
     }
   };
 
-  const addCheckpoint = async () => {
-    if (!newCheckpoint.trim() || !solutionId) return;
-
-    try {
-      setSaving(true);
-      const nextOrder = Math.max(...checkpoints.map(c => c.checkpoint_order), 0) + 1;
-      
-      const { data, error } = await supabase
-        .from('implementation_checkpoints')
-        .insert({
-          solution_id: solutionId,
-          description: newCheckpoint.trim(),
-          checkpoint_order: nextOrder
-        } as any)
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      if (data) {
-        setCheckpoints(prev => [...prev, data as any]);
-        setNewCheckpoint('');
-        toast({
-          title: "Checkpoint adicionado",
-          description: "O checkpoint foi adicionado com sucesso.",
-        });
-      }
-    } catch (error) {
-      console.error('Erro ao adicionar checkpoint:', error);
-      toast({
-        title: "Erro",
-        description: "Erro ao adicionar o checkpoint.",
-        variant: "destructive",
-      });
-    } finally {
-      setSaving(false);
-    }
+  const addCheckpoint = () => {
+    if (!solutionId) return;
+    
+    const newCheckpoint: Checkpoint = {
+      solution_id: solutionId,
+      description: "",
+      checkpoint_order: checkpoints.length + 1
+    };
+    
+    setCheckpoints([...checkpoints, newCheckpoint]);
   };
 
-  const updateCheckpoint = async (id: string, description: string) => {
-    try {
-      const { error } = await supabase
-        .from('implementation_checkpoints')
-        .update({ description } as any)
-        .eq('id', id as any);
-
-      if (error) throw error;
-
-      setCheckpoints(prev => 
-        prev.map(cp => cp.id === id ? { ...cp, description } : cp)
-      );
-
-      toast({
-        title: "Checkpoint atualizado",
-        description: "O checkpoint foi atualizado com sucesso.",
-      });
-    } catch (error) {
-      console.error('Erro ao atualizar checkpoint:', error);
-      toast({
-        title: "Erro",
-        description: "Erro ao atualizar o checkpoint.",
-        variant: "destructive",
-      });
-    }
+  const updateCheckpoint = (index: number, field: keyof Checkpoint, value: string | number) => {
+    const updatedCheckpoints = [...checkpoints];
+    updatedCheckpoints[index] = {
+      ...updatedCheckpoints[index],
+      [field]: value
+    };
+    setCheckpoints(updatedCheckpoints);
   };
 
-  const deleteCheckpoint = async (id: string) => {
-    try {
-      const { error } = await supabase
-        .from('implementation_checkpoints')
-        .delete()
-        .eq('id', id as any);
-
-      if (error) throw error;
-
-      setCheckpoints(prev => prev.filter(cp => cp.id !== id));
-      
-      toast({
-        title: "Checkpoint removido",
-        description: "O checkpoint foi removido com sucesso.",
-      });
-    } catch (error) {
-      console.error('Erro ao remover checkpoint:', error);
-      toast({
-        title: "Erro",
-        description: "Erro ao remover o checkpoint.",
-        variant: "destructive",
-      });
-    }
+  const removeCheckpoint = (index: number) => {
+    const updatedCheckpoints = checkpoints.filter((_, i) => i !== index);
+    // Reordenar os checkpoints
+    const reorderedCheckpoints = updatedCheckpoints.map((checkpoint, i) => ({
+      ...checkpoint,
+      checkpoint_order: i + 1
+    }));
+    setCheckpoints(reorderedCheckpoints);
   };
 
-  const reorderCheckpoints = async (dragIndex: number, hoverIndex: number) => {
-    try {
-      const newCheckpoints = [...checkpoints];
-      const draggedItem = newCheckpoints[dragIndex];
-      newCheckpoints.splice(dragIndex, 1);
-      newCheckpoints.splice(hoverIndex, 0, draggedItem);
-      
-      // Atualizar as ordens
-      const updatedCheckpoints = newCheckpoints.map((cp, index) => ({
-        ...cp,
-        checkpoint_order: index + 1
-      }));
-      
-      setCheckpoints(updatedCheckpoints);
-      
-      // Salvar no banco
-      for (const cp of updatedCheckpoints) {
-        if (cp.id) {
-          await supabase
-            .from('implementation_checkpoints')
-            .update({ checkpoint_order: cp.checkpoint_order } as any)
-            .eq('id', cp.id as any);
-        }
-      }
-    } catch (error) {
-      console.error('Erro ao reordenar checkpoints:', error);
-      toast({
-        title: "Erro",
-        description: "Erro ao reordenar os checkpoints.",
-        variant: "destructive",
-      });
-      // Recarregar em caso de erro
-      fetchCheckpoints();
-    }
+  const moveCheckpoint = (fromIndex: number, toIndex: number) => {
+    const updatedCheckpoints = [...checkpoints];
+    const [movedItem] = updatedCheckpoints.splice(fromIndex, 1);
+    updatedCheckpoints.splice(toIndex, 0, movedItem);
+    
+    // Reordenar
+    const reorderedCheckpoints = updatedCheckpoints.map((checkpoint, i) => ({
+      ...checkpoint,
+      checkpoint_order: i + 1
+    }));
+    
+    setCheckpoints(reorderedCheckpoints);
   };
 
-  const saveAllCheckpoints = async () => {
+  const saveCheckpoints = async () => {
     if (!solutionId) return;
     
     try {
-      setSaving(true);
+      setSavingCheckpoints(true);
       
-      // Primeiro, remover todos os checkpoints existentes
+      // Primeiro, deletar todos os checkpoints existentes
       const { error: deleteError } = await supabase
-        .from('implementation_checkpoints')
+        .from("implementation_checkpoints")
         .delete()
-        .eq('solution_id', solutionId as any);
-
+        .eq("solution_id", solutionId as any);
+        
       if (deleteError) throw deleteError;
-
-      // Depois, inserir todos os checkpoints atuais
+      
+      // Depois, inserir os novos checkpoints
       if (checkpoints.length > 0) {
-        const checkpointsToInsert = checkpoints.map((cp, index) => ({
-          solution_id: solutionId,
-          description: cp.description,
-          checkpoint_order: index + 1
-        }));
-
-        const { error: insertError } = await supabase
-          .from('implementation_checkpoints')
-          .insert(checkpointsToInsert as any);
-
-        if (insertError) throw insertError;
+        const checkpointsToSave = checkpoints
+          .filter(checkpoint => checkpoint.description.trim() !== "")
+          .map(checkpoint => ({
+            solution_id: solutionId,
+            description: checkpoint.description,
+            checkpoint_order: checkpoint.checkpoint_order
+          }));
+          
+        if (checkpointsToSave.length > 0) {
+          const { error: insertError } = await supabase
+            .from("implementation_checkpoints")
+            .insert(checkpointsToSave as any);
+            
+          if (insertError) throw insertError;
+        }
       }
-
+      
+      onSave();
+      
       toast({
         title: "Checkpoints salvos",
-        description: "Todos os checkpoints foram salvos com sucesso.",
+        description: "Os checkpoints foram salvos com sucesso.",
       });
-      
-      // Recarregar para obter os IDs atualizados
-      await fetchCheckpoints();
-    } catch (error) {
-      console.error('Erro ao salvar checkpoints:', error);
+    } catch (error: any) {
+      console.error("Erro ao salvar checkpoints:", error);
       toast({
-        title: "Erro",
-        description: "Erro ao salvar os checkpoints.",
+        title: "Erro ao salvar checkpoints",
+        description: error.message || "Ocorreu um erro ao tentar salvar os checkpoints.",
         variant: "destructive",
       });
     } finally {
-      setSaving(false);
+      setSavingCheckpoints(false);
     }
   };
 
-  if (!solutionId) {
+  if (loading) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Lista de Implementação</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="text-center py-8 text-muted-foreground">
-            Salve a solução primeiro para criar checkpoints de implementação.
-          </div>
-        </CardContent>
-      </Card>
+      <div className="flex justify-center items-center p-10">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
     );
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center justify-between">
-          Lista de Implementação
-          <Badge variant="outline">
-            {checkpoints.length} checkpoint{checkpoints.length !== 1 ? 's' : ''}
-          </Badge>
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        {loading ? (
-          <div className="text-center py-4">Carregando checkpoints...</div>
-        ) : (
-          <>
-            <div className="space-y-3">
-              {checkpoints.map((checkpoint, index) => (
-                <div key={checkpoint.id || index} className="flex items-center gap-3 p-3 border rounded-lg">
-                  <GripVertical className="h-4 w-4 text-muted-foreground cursor-move" />
-                  <span className="text-sm font-medium text-muted-foreground min-w-8">
-                    {index + 1}.
+    <div className="space-y-6">
+      <Card className="border border-[#0ABAB5]/20">
+        <CardHeader>
+          <CardTitle>Lista de Implementação</CardTitle>
+          <CardDescription>
+            Crie uma lista de verificação detalhada para guiar o usuário durante a implementação da solução.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {checkpoints.map((checkpoint, index) => (
+            <div key={index} className="flex items-start gap-3 p-4 border rounded-lg">
+              <div className="flex items-center justify-center mt-2">
+                <GripVertical className="h-4 w-4 text-muted-foreground cursor-move" />
+              </div>
+              
+              <div className="flex-1 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium text-muted-foreground">
+                    Checkpoint {checkpoint.checkpoint_order}
                   </span>
-                  <Textarea
-                    value={checkpoint.description}
-                    onChange={(e) => {
-                      const newCheckpoints = [...checkpoints];
-                      newCheckpoints[index].description = e.target.value;
-                      setCheckpoints(newCheckpoints);
-                    }}
-                    onBlur={(e) => {
-                      if (checkpoint.id) {
-                        updateCheckpoint(checkpoint.id, e.target.value);
-                      }
-                    }}
-                    className="flex-1 min-h-[60px]"
-                    placeholder="Descreva este passo da implementação..."
-                  />
                   <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={() => checkpoint.id && deleteCheckpoint(checkpoint.id)}
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => removeCheckpoint(index)}
+                    className="text-red-600 hover:text-red-700 hover:bg-red-50"
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>
                 </div>
-              ))}
-            </div>
-
-            <div className="flex gap-2">
-              <Input
-                placeholder="Novo checkpoint de implementação..."
-                value={newCheckpoint}
-                onChange={(e) => setNewCheckpoint(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && addCheckpoint()}
-                className="flex-1"
-              />
-              <Button onClick={addCheckpoint} disabled={!newCheckpoint.trim() || saving}>
-                <Plus className="h-4 w-4 mr-2" />
-                Adicionar
-              </Button>
-            </div>
-
-            {checkpoints.length > 0 && (
-              <div className="flex justify-end pt-4">
-                <Button onClick={saveAllCheckpoints} disabled={saving}>
-                  {saving ? 'Salvando...' : 'Salvar Todos'}
-                </Button>
+                
+                <Textarea
+                  value={checkpoint.description}
+                  onChange={(e) => updateCheckpoint(index, 'description', e.target.value)}
+                  placeholder="Descreva o que o usuário deve fazer neste checkpoint..."
+                  className="min-h-[80px]"
+                />
               </div>
-            )}
-
-            {checkpoints.length === 0 && (
-              <div className="text-center py-8 text-muted-foreground">
-                Nenhum checkpoint criado ainda. Adicione checkpoints para guiar a implementação desta solução.
-              </div>
-            )}
+            </div>
+          ))}
+          
+          <Button
+            onClick={addCheckpoint}
+            variant="outline"
+            className="w-full border-dashed border-[#0ABAB5] text-[#0ABAB5] hover:bg-[#0ABAB5]/5"
+          >
+            <Plus className="mr-2 h-4 w-4" />
+            Adicionar Checkpoint
+          </Button>
+        </CardContent>
+      </Card>
+      
+      <Button 
+        onClick={saveCheckpoints}
+        disabled={savingCheckpoints || saving}
+        className="w-full bg-[#0ABAB5] hover:bg-[#0ABAB5]/90"
+      >
+        {savingCheckpoints ? (
+          <>
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            Salvando...
+          </>
+        ) : (
+          <>
+            <Save className="mr-2 h-4 w-4" />
+            Salvar Checkpoints
           </>
         )}
-      </CardContent>
-    </Card>
+      </Button>
+    </div>
   );
 };
+
+export default ImplementationChecklist;
