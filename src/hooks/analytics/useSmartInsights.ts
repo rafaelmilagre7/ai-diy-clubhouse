@@ -41,7 +41,7 @@ export const useSmartInsights = (timeRange: string) => {
           }, {} as Record<number, number>);
 
           const maxActivity = Math.max(...Object.values(dayActivity).map((val: any) => Number(val) || 0));
-          const maxDay = Object.keys(dayActivity).find(day => (dayActivity as any)[parseInt(day)] === maxActivity);
+          const maxDay = Object.keys(dayActivity).find(day => Number(dayActivity[parseInt(day)]) === maxActivity);
           const dayNames = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
           
           if (maxDay && maxActivity > 0) {

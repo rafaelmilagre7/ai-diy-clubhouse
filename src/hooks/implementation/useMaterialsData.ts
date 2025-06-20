@@ -27,14 +27,14 @@ export const useMaterialsData = (module: Module) => {
         let { data: moduleData, error: moduleError } = await supabase
           .from("solution_resources")
           .select("*")
-          .eq("module_id", module.id);
+          .eq("module_id", module.id as any);
         
         // If no module-specific materials or error, fetch solution-level materials
         if (moduleError || !moduleData || moduleData.length === 0) {
           const { data: solutionData, error: solutionError } = await supabase
             .from("solution_resources")
             .select("*")
-            .eq("solution_id", module.solution_id)
+            .eq("solution_id", module.solution_id as any)
             .is("module_id", null);
           
           if (solutionError) {
@@ -44,17 +44,17 @@ export const useMaterialsData = (module: Module) => {
           
           // Filter out video types - they should be in the Videos tab only
           const filteredData = (solutionData || []).filter(
-            item => item.type !== 'video' && item.type !== 'youtube'
+            (item: any) => (item as any).type !== 'video' && (item as any).type !== 'youtube'
           );
           
-          setMaterials(filteredData);
+          setMaterials(filteredData as Material[]);
         } else {
           // Filter out video types from module data too
-          const filteredModuleData = moduleData.filter(
-            item => item.type !== 'video' && item.type !== 'youtube'
+          const filteredModuleData = (moduleData as any || []).filter(
+            (item: any) => (item as any).type !== 'video' && (item as any).type !== 'youtube'
           );
           
-          setMaterials(filteredModuleData);
+          setMaterials(filteredModuleData as Material[]);
         }
       } catch (err) {
         logError("Error in materials fetch:", err);

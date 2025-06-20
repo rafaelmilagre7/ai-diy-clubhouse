@@ -29,7 +29,7 @@ export const useFetchModuleComments = (solutionId: string, moduleId: string) => 
         }
 
         // Buscar perfis dos usuários que fizeram os comentários
-        const userIds = [...new Set((parentComments as any).map((c: any) => c.user_id))];
+        const userIds = [...new Set((parentComments as any || []).map((c: any) => c.user_id))];
         const { data: userProfiles, error: profilesError } = await supabase
           .from('profiles')
           .select('id, name, avatar_url, role')
@@ -59,11 +59,11 @@ export const useFetchModuleComments = (solutionId: string, moduleId: string) => 
         }
         
         // Adicionar IDs de usuários de respostas ao conjunto de IDs
-        const replyUserIds = [...new Set((replies as any).map((r: any) => r.user_id))];
+        const replyUserIds = [...new Set((replies as any || []).map((r: any) => r.user_id))];
         
         // Buscar perfis adicionais se necessário
-        if (replyUserIds.some(id => !profilesMap[id])) {
-          const missingIds = replyUserIds.filter(id => !profilesMap[id]);
+        if (replyUserIds.some(id => !profilesMap[String(id)])) {
+          const missingIds = replyUserIds.filter(id => !profilesMap[String(id)]);
           
           const { data: additionalProfiles } = await supabase
             .from('profiles')
@@ -72,7 +72,7 @@ export const useFetchModuleComments = (solutionId: string, moduleId: string) => 
             
           if (additionalProfiles) {
             (additionalProfiles as any).forEach((profile: any) => {
-              profilesMap[profile.id] = profile;
+              profilesMap[String(profile.id)] = profile;
             });
           }
         }
@@ -87,22 +87,22 @@ export const useFetchModuleComments = (solutionId: string, moduleId: string) => 
             .eq('user_id', user.id as any);
 
           likesMap = (userLikes || []).reduce((acc: Record<string, boolean>, like: any) => {
-            acc[(like as any).comment_id] = true;
+            acc[String((like as any).comment_id)] = true;
             return acc;
           }, {});
         }
 
         // Organizar comentários com respostas e perfis
-        const organizedComments = (parentComments as any).map((comment: any) => ({
+        const organizedComments = (parentComments as any || []).map((comment: any) => ({
           ...comment,
-          profiles: profilesMap[comment.user_id] || null,
-          user_has_liked: !!likesMap[comment.id],
+          profiles: profilesMap[String(comment.user_id)] || null,
+          user_has_liked: !!likesMap[String(comment.id)],
           replies: (replies as any || [])
             .filter((reply: any) => reply.parent_id === comment.id)
             .map((reply: any) => ({
               ...reply,
-              profiles: profilesMap[reply.user_id] || null,
-              user_has_liked: !!likesMap[reply.id]
+              profiles: profilesMap[String(reply.user_id)] || null,
+              user_has_liked: !!likesMap[String(reply.id)]
             }))
         }));
 
