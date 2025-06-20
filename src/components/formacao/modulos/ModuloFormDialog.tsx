@@ -22,7 +22,6 @@ interface Modulo {
   cover_image_url?: string;
   published?: boolean;
   course_id: string;
-  order_index?: number;
 }
 
 interface ModuloFormDialogProps {
@@ -30,7 +29,7 @@ interface ModuloFormDialogProps {
   onOpenChange: (open: boolean) => void;
   onSuccess: () => void;
   modulo?: Modulo;
-  courseId: string;
+  cursoId: string;
 }
 
 export const ModuloFormDialog: React.FC<ModuloFormDialogProps> = ({
@@ -38,7 +37,7 @@ export const ModuloFormDialog: React.FC<ModuloFormDialogProps> = ({
   onOpenChange,
   onSuccess,
   modulo,
-  courseId
+  cursoId
 }) => {
   const [formData, setFormData] = useState({
     title: modulo?.title || '',
@@ -93,17 +92,6 @@ export const ModuloFormDialog: React.FC<ModuloFormDialogProps> = ({
         if (error) throw error;
         toast.success('Módulo atualizado com sucesso!');
       } else {
-        // Buscar o próximo order_index
-        const { data: lastModule } = await supabase
-          .from('learning_modules')
-          .select('order_index')
-          .eq('course_id', courseId as any)
-          .order('order_index', { ascending: false })
-          .limit(1)
-          .single();
-
-        const nextOrderIndex = (lastModule as any)?.order_index ? (lastModule as any).order_index + 1 : 0;
-
         // Criar novo módulo
         const { error } = await supabase
           .from('learning_modules')
@@ -112,8 +100,8 @@ export const ModuloFormDialog: React.FC<ModuloFormDialogProps> = ({
             description: formData.description?.trim() || null,
             cover_image_url: formData.cover_image_url || null,
             published: formData.published,
-            course_id: courseId,
-            order_index: nextOrderIndex
+            course_id: cursoId,
+            order_index: 0
           }] as any);
 
         if (error) throw error;
@@ -180,8 +168,8 @@ export const ModuloFormDialog: React.FC<ModuloFormDialogProps> = ({
             <ImageUpload
               value={formData.cover_image_url}
               onChange={handleImageUpload}
-              bucketName="course_images"
-              folderPath="modules"
+              bucketName="module_images"
+              folderPath="covers"
             />
           </div>
 

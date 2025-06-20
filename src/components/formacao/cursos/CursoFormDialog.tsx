@@ -73,6 +73,9 @@ export const CursoFormDialog: React.FC<CursoFormDialogProps> = ({
     try {
       setIsLoading(true);
       
+      // Get current user
+      const { data: { user } } = await supabase.auth.getUser();
+      
       if (curso?.id) {
         // Atualizar curso existente
         const { error } = await supabase
@@ -105,7 +108,7 @@ export const CursoFormDialog: React.FC<CursoFormDialogProps> = ({
             cover_image_url: formData.cover_image_url || null,
             published: formData.published,
             slug: slug,
-            created_by: (await supabase.auth.getUser()).data.user?.id || ''
+            created_by: user?.id || ''
           }] as any);
 
         if (error) throw error;

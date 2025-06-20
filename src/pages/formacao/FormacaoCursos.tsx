@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/auth";
 import { supabase } from "@/lib/supabase";
@@ -108,7 +107,6 @@ const FormacaoCursos = () => {
         onOpenChange={setIsDialogOpen}
         curso={editingCurso}
         onSuccess={handleSalvarCurso}
-        userId={profile?.id || ''}
       />
     </div>
   );
