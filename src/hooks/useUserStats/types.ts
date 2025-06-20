@@ -16,6 +16,11 @@ export interface UserStats {
   totalSolutions: number;
   completedSolutions: number;
   inProgressSolutions: number;
+  currentlyWorking: number;
+  totalLessonsCompleted: number;
+  certificates: number;
+  forumPosts: number;
+  joinedDate: string;
   completionRate: number;
   averageCompletionTime: number | null;
   activeDays: number;

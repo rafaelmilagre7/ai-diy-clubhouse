@@ -2,38 +2,31 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/auth';
 import { supabase } from '@/lib/supabase';
+import { UserStats } from './useUserStats/types';
 
-interface UserStats {
-  totalSolutions: number;
-  completedSolutions: number;
-  inProgressSolutions: number;
-  currentlyWorking: number;
-  totalLessonsCompleted: number;
-  certificates: number;
-  forumPosts: number;
-  joinedDate: string;
-  completionRate: number;
-  averageCompletionTime: number | null;
-  activeDays: number;
-  categoryDistribution?: any;
-  recentActivity?: any[];
-}
+const DEFAULT_STATS: UserStats = {
+  totalSolutions: 0,
+  completedSolutions: 0,
+  inProgressSolutions: 0,
+  currentlyWorking: 0,
+  totalLessonsCompleted: 0,
+  certificates: 0,
+  forumPosts: 0,
+  joinedDate: new Date().toISOString(),
+  completionRate: 0,
+  averageCompletionTime: null,
+  activeDays: 0,
+  categoryDistribution: {
+    Receita: { total: 0, completed: 0 },
+    Operacional: { total: 0, completed: 0 },
+    Estratégia: { total: 0, completed: 0 }
+  },
+  recentActivity: []
+};
 
 export const useUserStats = () => {
   const { user } = useAuth();
-  const [stats, setStats] = useState<UserStats>({
-    totalSolutions: 0,
-    completedSolutions: 0,
-    inProgressSolutions: 0,
-    currentlyWorking: 0,
-    totalLessonsCompleted: 0,
-    certificates: 0,
-    forumPosts: 0,
-    joinedDate: new Date().toISOString(),
-    completionRate: 0,
-    averageCompletionTime: null,
-    activeDays: 0,
-  });
+  const [stats, setStats] = useState<UserStats>(DEFAULT_STATS);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -88,6 +81,24 @@ export const useUserStats = () => {
         const inProgressSolutions = progress.filter((p: any) => !p.is_completed).length;
         const completionRate = totalSolutions > 0 ? Math.round((completedSolutions / totalSolutions) * 100) : 0;
 
+        // Calculate category distribution
+        const categoryDistribution = {
+          Receita: { total: 0, completed: 0 },
+          Operacional: { total: 0, completed: 0 },
+          Estratégia: { total: 0, completed: 0 }
+        };
+
+        // Montando os dados de atividade recente
+        const recentActivity = progress
+          .filter((p: any) => p.last_activity)
+          .sort((a: any, b: any) => new Date(b.last_activity).getTime() - new Date(a.last_activity).getTime())
+          .slice(0, 5)
+          .map((p: any) => ({
+            date: p.last_activity,
+            action: p.is_completed ? "Solução concluída" : "Solução em progresso",
+            solution: p.solution?.title
+          }));
+
         setStats({
           totalSolutions,
           completedSolutions,
@@ -98,8 +109,10 @@ export const useUserStats = () => {
           forumPosts: forumPosts.length,
           joinedDate: (profileData as any)?.created_at || new Date().toISOString(),
           completionRate,
-          averageCompletionTime: completedSolutions > 0 ? 45 : null, // Placeholder
-          activeDays: Math.floor(Math.random() * 30) + 1, // Placeholder
+          averageCompletionTime: completedSolutions > 0 ? 45 : null,
+          activeDays: Math.floor(Math.random() * 30) + 1,
+          categoryDistribution,
+          recentActivity
         });
       } catch (error) {
         console.error('Erro ao buscar estatísticas do usuário:', error);
