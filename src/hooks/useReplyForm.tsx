@@ -65,7 +65,7 @@ export const useReplyForm = ({
           user_id: user.id,
           content: content.trim(),
           ...(parentId && { parent_id: parentId })
-        })
+        } as any)
         .select("*");
         
       if (error) {
@@ -83,8 +83,8 @@ export const useReplyForm = ({
         .from("forum_topics")
         .update({ 
           last_activity_at: new Date().toISOString()
-        })
-        .eq("id", topicId);
+        } as any)
+        .eq("id", topicId as any);
       
       setContent("");
       if (textareaRef.current) {

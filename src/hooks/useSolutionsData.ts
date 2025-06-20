@@ -84,7 +84,7 @@ export const useSolutionsData = () => {
 
         // Se não for admin, mostrar apenas soluções publicadas
         if (!profile || profile.role !== 'admin') {
-          query = query.eq("published", true);
+          query = query.eq("published", true as any);
         }
 
         const { data, error: fetchError } = await query.order("created_at", { ascending: false });
@@ -96,16 +96,16 @@ export const useSolutionsData = () => {
 
         // Validar dados antes de definir no estado
         const validSolutions = (data || []).filter(solution => 
-          solution && typeof solution.id === 'string'
+          solution && typeof (solution as any).id === 'string'
         );
 
         // Atualizar cache
         solutionsCache.set(cacheKey, {
-          data: validSolutions,
+          data: validSolutions as unknown as Solution[],
           timestamp: now
         });
 
-        setSolutions(validSolutions);
+        setSolutions(validSolutions as unknown as Solution[]);
         
         if (process.env.NODE_ENV === 'development') {
           console.log('[SOLUTIONS] Soluções carregadas do servidor:', {

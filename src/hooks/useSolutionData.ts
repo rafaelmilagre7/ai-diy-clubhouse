@@ -58,7 +58,7 @@ export const useSolutionData = (id: string | undefined) => {
         
         if (data) {
           console.log("[SOLUTION_DATA] Dados da solução encontrados:", { solution: data });
-          setSolution(data as Solution);
+          setSolution(data as unknown as Solution);
           
           // Fetch progress for this solution and user if user is authenticated
           if (user) {

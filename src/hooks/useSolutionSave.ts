@@ -63,8 +63,8 @@ export const useSolutionSave = (
             // Atualizar solução existente
             const response = await supabase
               .from("solutions")
-              .update(solutionData)
-              .eq("id", id)
+              .update(solutionData as any)
+              .eq("id", id as any)
               .select();
             
             if (response.error) {
@@ -72,7 +72,7 @@ export const useSolutionSave = (
             }
             
             if (response.data && response.data.length > 0) {
-              setSolution(response.data[0] as Solution);
+              setSolution(response.data[0] as unknown as Solution);
               success = true;
             }
           } else {
@@ -89,7 +89,7 @@ export const useSolutionSave = (
             
             const response = await supabase
               .from("solutions")
-              .insert(newSolution)
+              .insert(newSolution as any)
               .select();
             
             if (response.error) {
@@ -97,8 +97,8 @@ export const useSolutionSave = (
             }
             
             if (response.data && response.data.length > 0) {
-              setSolution(response.data[0] as Solution);
-              navigate(`/admin/solutions/${response.data[0].id}`);
+              setSolution(response.data[0] as unknown as Solution);
+              navigate(`/admin/solutions/${(response.data[0] as any).id}`);
               success = true;
             }
           }

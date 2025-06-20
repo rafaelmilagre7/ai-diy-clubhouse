@@ -35,7 +35,7 @@ export const useSolutionInteractions = (solutionId: string | undefined, progress
             is_completed: false,
             completed_modules: [], // Initialize as empty array
             last_activity: new Date().toISOString(),
-          })
+          } as any)
           .select()
           .single();
         
