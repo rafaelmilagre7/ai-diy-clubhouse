@@ -1,207 +1,140 @@
-import { useQuery } from "@tanstack/react-query";
+
+import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
-import { LearningLesson, LearningLessonVideo, LearningResource } from "@/lib/supabase";
-import { sortLessonsByNumber } from "@/components/learning/member/course-modules/CourseModulesHelpers";
+import { useAuth } from "@/contexts/auth";
+import { LearningLesson } from "@/types/learningTypes";
 
 interface UseLessonDataProps {
   lessonId?: string;
   courseId?: string;
 }
 
-export interface LessonModule {
-  module: {
-    id: string;
-    title: string;
-    [key: string]: any;
-  };
-  lessons: LearningLesson[];
-}
+export const useLessonData = ({ lessonId, courseId }: UseLessonDataProps) => {
+  const { user } = useAuth();
+  const [lesson, setLesson] = useState<LearningLesson | null>(null);
+  const [resources, setResources] = useState<any[]>([]);
+  const [videos, setVideos] = useState<any[]>([]);
+  const [courseInfo, setCourseInfo] = useState<any>(null);
+  const [moduleData, setModuleData] = useState<any>(null);
+  const [allCourseLessons, setAllCourseLessons] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
 
-export function useLessonData({ lessonId, courseId }: UseLessonDataProps) {
-  // Buscar detalhes da lição
-  const { 
-    data: lesson, 
-    isLoading: isLoadingLesson,
-    error: lessonError
-  } = useQuery({
-    queryKey: ["learning-lesson", lessonId],
-    queryFn: async () => {
-      if (!lessonId) return null;
-      
-      const { data, error } = await supabase
-        .from("learning_lessons")
-        .select("*")
-        .eq("id", lessonId)
-        .maybeSingle();
-        
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!lessonId
-  });
-  
-  // Buscar recursos da lição
-  const { 
-    data: resources = [], 
-    isLoading: isLoadingResources 
-  } = useQuery({
-    queryKey: ["learning-resources", lessonId],
-    queryFn: async () => {
-      if (!lessonId) return [];
-      
-      const { data, error } = await supabase
-        .from("learning_resources")
-        .select("*")
-        .eq("lesson_id", lessonId)
-        .order("order_index", { ascending: true });
-        
-      if (error) return [];
-      
-      // Mapear campos para garantir compatibilidade
-      return (data || []).map(resource => ({
-        ...resource,
-        title: resource.name || resource.title // Garantir compatibilidade entre os campos name e title
-      }));
-    },
-    enabled: !!lessonId
-  });
-  
-  // Buscar vídeos da lição
-  const { 
-    data: videos = [], 
-    isLoading: isLoadingVideos 
-  } = useQuery({
-    queryKey: ["learning-videos", lessonId],
-    queryFn: async () => {
-      if (!lessonId) return [];
-      
-      const { data, error } = await supabase
-        .from("learning_lesson_videos")
-        .select("*")
-        .eq("lesson_id", lessonId)
-        .order("order_index", { ascending: true });
-        
-      if (error) return [];
-      return data || [];
-    },
-    enabled: !!lessonId
-  });
-  
-  // Buscar informações do curso
-  const { 
-    data: courseInfo 
-  } = useQuery({
-    queryKey: ["learning-course", courseId],
-    queryFn: async () => {
-      if (!courseId) return null;
-      
-      const { data, error } = await supabase
-        .from("learning_courses")
-        .select("*")
-        .eq("id", courseId)
-        .maybeSingle();
-        
-      if (error) return null;
-      return data;
-    },
-    enabled: !!courseId
-  });
-  
-  // Buscar TODAS as aulas do curso para navegação correta
-  const { 
-    data: allCourseLessons = [] 
-  } = useQuery({
-    queryKey: ["learning-course-all-lessons", courseId],
-    queryFn: async () => {
-      if (!courseId) return [];
-      
-      // Buscar todos os módulos do curso com suas aulas (todos os campos)
-      const { data: modules, error: modulesError } = await supabase
-        .from("learning_modules")
-        .select(`
-          *,
-          lessons:learning_lessons(*)
-        `)
-        .eq("course_id", courseId)
-        .eq("published", true)
-        .order("order_index", { ascending: true });
-        
-      if (modulesError) {
-        console.error("Erro ao buscar módulos:", modulesError);
-        return [];
+  useEffect(() => {
+    const fetchLessonData = async () => {
+      if (!lessonId || !user) {
+        setIsLoading(false);
+        return;
       }
-      
-      // Organizar todas as aulas do curso em ordem
-      const allLessons: LearningLesson[] = [];
-      
-      if (modules) {
-        // Ordenar módulos por order_index
-        const sortedModules = modules.sort((a, b) => a.order_index - b.order_index);
-        
-        sortedModules.forEach(module => {
-          if (module.lessons) {
-            // Filtrar apenas aulas publicadas
-            const publishedLessons = module.lessons.filter(lesson => lesson.published);
-            
-            // Ordenar aulas dentro do módulo
-            const sortedLessons = sortLessonsByNumber(publishedLessons);
-            
-            // Adicionar informações do módulo a cada aula
-            const lessonsWithModule = sortedLessons.map(lesson => ({
-              ...lesson,
-              module: {
-                id: module.id,
-                title: module.title,
-                description: module.description,
-                cover_image_url: module.cover_image_url,
-                course_id: module.course_id,
-                order_index: module.order_index,
-                published: module.published,
-                created_at: module.created_at,
-                updated_at: module.updated_at
-              }
-            }));
-            
-            allLessons.push(...lessonsWithModule);
+
+      try {
+        setIsLoading(true);
+        console.log("🔍 Carregando dados da aula:", lessonId);
+
+        // 1. Buscar dados da aula
+        const { data: lessonData, error: lessonError } = await supabase
+          .from("learning_lessons")
+          .select("*")
+          .eq("id", lessonId as any)
+          .eq("published", true as any)
+          .single();
+
+        if (lessonError) {
+          console.error("❌ Erro ao carregar aula:", lessonError);
+          throw new Error("Aula não encontrada");
+        }
+
+        setLesson(lessonData as any);
+        console.log("✅ Aula carregada:", (lessonData as any)?.title);
+
+        // 2. Buscar dados do módulo
+        const { data: moduleInfo, error: moduleError } = await supabase
+          .from("learning_modules")
+          .select(`
+            *,
+            course:learning_courses(*)
+          `)
+          .eq("id", (lessonData as any).module_id as any)
+          .single();
+
+        if (moduleError) {
+          console.error("❌ Erro ao carregar módulo:", moduleError);
+        } else {
+          setModuleData({
+            module: moduleInfo,
+            course: (moduleInfo as any).course
+          });
+          setCourseInfo((moduleInfo as any).course);
+          console.log("✅ Módulo carregado:", (moduleInfo as any)?.title);
+        }
+
+        // 3. Buscar recursos da aula
+        const { data: resourcesData, error: resourcesError } = await supabase
+          .from("learning_resources")
+          .select("*")
+          .eq("lesson_id", lessonId as any)
+          .order("order_index", { ascending: true });
+
+        if (resourcesError) {
+          console.error("❌ Erro ao carregar recursos:", resourcesError);
+        } else {
+          setResources(resourcesData || []);
+          console.log("✅ Recursos carregados:", (resourcesData || []).length);
+        }
+
+        // 4. Buscar vídeos da aula
+        const { data: videosData, error: videosError } = await supabase
+          .from("learning_lesson_videos")
+          .select("*")
+          .eq("lesson_id", lessonId as any)
+          .order("order_index", { ascending: true });
+
+        if (videosError) {
+          console.error("❌ Erro ao carregar vídeos:", videosError);
+        } else {
+          setVideos(videosData || []);
+          console.log("✅ Vídeos carregados:", (videosData || []).length);
+        }
+
+        // 5. Se temos courseId, buscar todas as aulas do curso
+        if (courseId) {
+          const { data: allLessonsData, error: allLessonsError } = await supabase
+            .from("learning_lessons")
+            .select(`
+              id,
+              title,
+              order_index,
+              module_id,
+              learning_modules!inner(
+                id,
+                title,
+                order_index,
+                course_id
+              )
+            `)
+            .eq("learning_modules.course_id", courseId as any)
+            .eq("published", true as any)
+            .order("learning_modules.order_index", { ascending: true })
+            .order("order_index", { ascending: true });
+
+          if (allLessonsError) {
+            console.error("❌ Erro ao carregar todas as aulas:", allLessonsError);
+          } else {
+            setAllCourseLessons(allLessonsData || []);
+            console.log("✅ Todas as aulas carregadas:", (allLessonsData || []).length);
           }
-        });
+        }
+
+      } catch (err) {
+        console.error("❌ Erro geral ao carregar dados da aula:", err);
+        setError(err as Error);
+      } finally {
+        setIsLoading(false);
       }
-      
-      console.log("Todas as aulas do curso ordenadas:", allLessons.map(l => ({
-        id: l.id,
-        title: l.title,
-        moduleTitle: l.module?.title,
-        moduleOrder: l.module?.order_index
-      })));
-      
-      return allLessons;
-    },
-    enabled: !!courseId
-  });
-  
-  // Buscar informações do módulo atual para compatibilidade
-  const { 
-    data: moduleData 
-  } = useQuery({
-    queryKey: ["learning-module-lessons", lesson?.module_id],
-    queryFn: async () => {
-      if (!lesson?.module_id) return null;
-      
-      const { data: moduleInfo, error: moduleError } = await supabase
-        .from("learning_modules")
-        .select("*")
-        .eq("id", lesson.module_id)
-        .maybeSingle();
-        
-      if (moduleError) return null;
-      
-      // Usar as aulas do curso inteiro em vez de apenas do módulo
-      const moduleLessons = allCourseLessons.filter(l => l.module_id === lesson.module_id);
-      
-      return { module: moduleInfo, lessons: moduleLessons };
-    },
-    enabled: !!lesson?.module_id && allCourseLessons.length > 0
-  });
+    };
+
+    fetchLessonData();
+  }, [lessonId, courseId, user]);
 
   return {
     lesson,
@@ -209,8 +142,8 @@ export function useLessonData({ lessonId, courseId }: UseLessonDataProps) {
     videos,
     courseInfo,
     moduleData,
-    allCourseLessons, // Nova propriedade com todas as aulas do curso
-    isLoading: isLoadingLesson || isLoadingResources || isLoadingVideos,
-    error: lessonError
+    allCourseLessons,
+    isLoading,
+    error
   };
-}
+};

@@ -35,7 +35,7 @@ export const useLearningCourses = () => {
             )
           )
         `)
-        .eq("published", true)
+        .eq("published", true as any)
         .order("order_index", { ascending: true });
 
       if (error) {
@@ -54,10 +54,10 @@ export const useLearningCourses = () => {
       }
 
       // Criar um conjunto com IDs dos cursos restritos para acesso mais rápido
-      const restrictedIds = new Set(restrictedCourses?.map(rc => rc.course_id) || []);
+      const restrictedIds = new Set(restrictedCourses?.map(rc => (rc as any).course_id) || []);
       
       // Processar cursos com dados de módulos e aulas
-      const processedCourses = data.map(course => {
+      const processedCourses = (data as any || []).map((course: any) => {
         // Calcular contagem de módulos
         const moduleCount = course.modules?.length || 0;
         
@@ -66,12 +66,12 @@ export const useLearningCourses = () => {
         let lessons = [];
         
         if (course.modules) {
-          course.modules.forEach(module => {
+          course.modules.forEach((module: any) => {
             if (module.lessons) {
               lessonCount += module.lessons.length;
               
               // Adicionar informações do curso e módulo a cada aula
-              const moduleLessons = module.lessons.map(lesson => ({
+              const moduleLessons = module.lessons.map((lesson: any) => ({
                 ...lesson,
                 module: {
                   id: module.id,
@@ -99,7 +99,7 @@ export const useLearningCourses = () => {
       
       // Se o usuário não estiver autenticado, filtrar os cursos restritos
       if (!user) {
-        return processedCourses.filter(course => !course.is_restricted);
+        return processedCourses.filter((course: any) => !course.is_restricted);
       }
 
       return processedCourses;
@@ -115,7 +115,7 @@ export const useLearningCourses = () => {
     getAllLessons: () => {
       if (!courses || courses.length === 0) return [];
       
-      return courses.flatMap(course => course.all_lessons || []);
+      return courses.flatMap((course: any) => course.all_lessons || []);
     }
   };
 };
