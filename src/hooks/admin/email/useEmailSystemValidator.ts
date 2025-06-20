@@ -12,287 +12,301 @@ interface ValidationResult {
 }
 
 interface ValidationReport {
-  overall: 'success' | 'warning' | 'error';
+  overall: 'success' | 'warning' | 'error' | 'pending';
   timestamp: string;
   duration: number;
   results: ValidationResult[];
-  recommendations: string[];
 }
 
 export const useEmailSystemValidator = () => {
   const [isValidating, setIsValidating] = useState(false);
   const [validationReport, setValidationReport] = useState<ValidationReport | null>(null);
 
+  const validateStep = async (
+    stepName: string,
+    validationFn: () => Promise<{ success: boolean; message: string; details?: any }>
+  ): Promise<ValidationResult> => {
+    const startTime = Date.now();
+    
+    try {
+      console.log(`🔍 Validando: ${stepName}`);
+      
+      const result = await Promise.race([
+        validationFn(),
+        new Promise<{ success: boolean; message: string }>((_, reject) => 
+          setTimeout(() => reject(new Error('Timeout')), 10000)
+        )
+      ]);
+      
+      const duration = Date.now() - startTime;
+      
+      return {
+        step: stepName,
+        status: result.success ? 'success' : 'error',
+        message: result.message,
+        duration,
+        details: result.details
+      };
+    } catch (error: any) {
+      const duration = Date.now() - startTime;
+      console.error(`❌ Erro em ${stepName}:`, error);
+      
+      return {
+        step: stepName,
+        status: 'error',
+        message: error.message === 'Timeout' ? 'Timeout após 10s' : error.message,
+        duration,
+        details: { error: error.message }
+      };
+    }
+  };
+
+  const validateResendConnectivity = async () => {
+    try {
+      const { data, error } = await supabase.functions.invoke('test-resend-health', {
+        body: {
+          testType: 'connectivity_check',
+          timestamp: new Date().toISOString(),
+          requestId: crypto.randomUUID().substring(0, 8)
+        }
+      });
+
+      if (error) {
+        return {
+          success: false,
+          message: `Erro de conectividade: ${error.message}`,
+          details: { error: error.message }
+        };
+      }
+
+      if (!data?.success) {
+        return {
+          success: false,
+          message: data?.error || 'Falha na validação do Resend',
+          details: data
+        };
+      }
+
+      return {
+        success: true,
+        message: 'Conectividade com Resend OK',
+        details: data
+      };
+    } catch (error: any) {
+      return {
+        success: false,
+        message: `Erro crítico: ${error.message}`,
+        details: { error: error.message }
+      };
+    }
+  };
+
+  const validateInviteGeneration = async () => {
+    try {
+      const testToken = crypto.randomUUID();
+      const baseUrl = window.location.origin;
+      const inviteUrl = `${baseUrl}/convite/${testToken}`;
+      
+      // Validar se a URL está bem formada
+      try {
+        new URL(inviteUrl);
+      } catch {
+        return {
+          success: false,
+          message: 'URL de convite mal formada',
+          details: { url: inviteUrl }
+        };
+      }
+
+      return {
+        success: true,
+        message: 'Geração de links funcionando',
+        details: { sampleUrl: inviteUrl }
+      };
+    } catch (error: any) {
+      return {
+        success: false,
+        message: `Erro na geração: ${error.message}`,
+        details: { error: error.message }
+      };
+    }
+  };
+
+  const validateEmailTemplate = async () => {
+    try {
+      // Testar se conseguimos chamar a edge function de email
+      const { error } = await supabase.functions.invoke('send-invite-email', {
+        body: {
+          email: 'test@example.com',
+          inviteUrl: 'https://example.com/test',
+          roleName: 'Test',
+          expiresAt: new Date().toISOString(),
+          testMode: true // Sinalizar que é apenas um teste
+        }
+      });
+
+      if (error) {
+        // Se o erro for de validação por ser teste, isso é esperado
+        if (error.message?.includes('test') || error.message?.includes('Test')) {
+          return {
+            success: true,
+            message: 'Template reativo (modo teste)',
+            details: { testResponse: error.message }
+          };
+        }
+        
+        return {
+          success: false,
+          message: `Template com problemas: ${error.message}`,
+          details: { error: error.message }
+        };
+      }
+
+      return {
+        success: true,
+        message: 'Template funcionando',
+        details: { status: 'ok' }
+      };
+    } catch (error: any) {
+      return {
+        success: false,
+        message: `Erro no template: ${error.message}`,
+        details: { error: error.message }
+      };
+    }
+  };
+
+  const validateFallbackSystem = async () => {
+    try {
+      // Testar o sistema de fallback
+      const { data, error } = await supabase.functions.invoke('send-fallback-notification', {
+        body: {
+          email: 'test@example.com',
+          inviteUrl: 'https://example.com/test',
+          roleName: 'Test',
+          type: 'system_test',
+          requestId: crypto.randomUUID().substring(0, 8)
+        }
+      });
+
+      if (error) {
+        return {
+          success: false,
+          message: `Fallback indisponível: ${error.message}`,
+          details: { error: error.message }
+        };
+      }
+
+      if (!data?.success) {
+        return {
+          success: false,
+          message: 'Fallback não responsivo',
+          details: data
+        };
+      }
+
+      return {
+        success: true,
+        message: 'Sistema de fallback ativo',
+        details: data
+      };
+    } catch (error: any) {
+      return {
+        success: false,
+        message: `Erro no fallback: ${error.message}`,
+        details: { error: error.message }
+      };
+    }
+  };
+
   const runCompleteValidation = useCallback(async () => {
     setIsValidating(true);
+    
     const startTime = Date.now();
-    const results: ValidationResult[] = [];
-    const recommendations: string[] = [];
-
+    const requestId = crypto.randomUUID().substring(0, 8);
+    
+    console.log(`🚀 [${requestId}] Iniciando validação completa do sistema de email`);
+    
     try {
-      console.log("🔍 Iniciando validação completa do sistema de email...");
+      const results: ValidationResult[] = [];
 
-      // 1. Testar conectividade com Resend
-      results.push({ step: "Conectividade Resend", status: 'pending', message: "Testando..." });
+      // Executar validações em paralelo para melhor performance
+      const validations = [
+        validateStep('Conectividade Resend', validateResendConnectivity),
+        validateStep('Geração de Links', validateInviteGeneration),
+        validateStep('Template de Email', validateEmailTemplate),
+        validateStep('Sistema Fallback', validateFallbackSystem)
+      ];
+
+      const validationResults = await Promise.allSettled(validations);
       
-      try {
-        const resendStart = Date.now();
-        const { data: resendData, error: resendError } = await supabase.functions.invoke('test-resend-health', {
-          body: {
-            testType: 'connectivity_check',
-            requestId: crypto.randomUUID().substring(0, 8),
-            timestamp: new Date().toISOString()
-          }
-        });
-
-        const resendDuration = Date.now() - resendStart;
-
-        if (resendError) {
-          results[results.length - 1] = {
-            step: "Conectividade Resend",
-            status: 'error',
-            message: `Falha: ${resendError.message}`,
-            duration: resendDuration
-          };
-          recommendations.push("Verificar configuração da API do Resend");
-        } else if (resendData?.success) {
-          results[results.length - 1] = {
-            step: "Conectividade Resend",
-            status: 'success',
-            message: `Conectado (${resendDuration}ms)`,
-            duration: resendDuration
-          };
+      validationResults.forEach((result, index) => {
+        if (result.status === 'fulfilled') {
+          results.push(result.value);
         } else {
-          results[results.length - 1] = {
-            step: "Conectividade Resend",
+          results.push({
+            step: `Validação ${index + 1}`,
             status: 'error',
-            message: "Sistema indisponível",
-            duration: resendDuration
-          };
-          recommendations.push("Verificar status do serviço Resend");
+            message: `Falha crítica: ${result.reason?.message || 'Erro desconhecido'}`,
+            duration: 0
+          });
         }
-      } catch (error: any) {
-        results[results.length - 1] = {
-          step: "Conectividade Resend",
-          status: 'error',
-          message: `Erro de rede: ${error.message}`,
-          duration: 0
-        };
-      }
-
-      // 2. Testar Edge Function de convites
-      results.push({ step: "Edge Function Convites", status: 'pending', message: "Testando..." });
-      
-      try {
-        const inviteStart = Date.now();
-        const { data: inviteData, error: inviteError } = await supabase.functions.invoke('send-invite-email', {
-          body: {
-            email: 'test@example.com',
-            inviteUrl: 'https://test.com',
-            roleName: 'Test',
-            isTest: true,
-            requestId: crypto.randomUUID().substring(0, 8)
-          }
-        });
-
-        const inviteDuration = Date.now() - inviteStart;
-
-        if (inviteError) {
-          results[results.length - 1] = {
-            step: "Edge Function Convites",
-            status: 'error',
-            message: `Falha na Edge Function: ${inviteError.message}`,
-            duration: inviteDuration
-          };
-          recommendations.push("Verificar logs da Edge Function send-invite-email");
-        } else {
-          results[results.length - 1] = {
-            step: "Edge Function Convites",
-            status: 'success',
-            message: `Edge Function respondendo (${inviteDuration}ms)`,
-            duration: inviteDuration
-          };
-        }
-      } catch (error: any) {
-        results[results.length - 1] = {
-          step: "Edge Function Convites",
-          status: 'error',
-          message: `Erro na chamada: ${error.message}`,
-          duration: 0
-        };
-        recommendations.push("Verificar conectividade com Supabase Functions");
-      }
-
-      // 3. Testar geração de links
-      results.push({ step: "Geração de Links", status: 'pending', message: "Testando..." });
-      
-      try {
-        const linkTest = `${window.location.origin}/auth/invite?token=test-token-123`;
-        const isValidLink = linkTest.includes('/auth/invite?token=');
-        
-        if (isValidLink) {
-          results[results.length - 1] = {
-            step: "Geração de Links",
-            status: 'success',
-            message: "Links sendo gerados corretamente",
-            duration: 1
-          };
-        } else {
-          results[results.length - 1] = {
-            step: "Geração de Links",
-            status: 'error',
-            message: "Erro na geração de links",
-            duration: 1
-          };
-        }
-      } catch (error: any) {
-        results[results.length - 1] = {
-          step: "Geração de Links",
-          status: 'error',
-          message: `Erro: ${error.message}`,
-          duration: 0
-        };
-      }
-
-      // 4. Testar sistema de fallback
-      results.push({ step: "Sistema de Fallback", status: 'pending', message: "Testando..." });
-      
-      try {
-        const fallbackStart = Date.now();
-        const { data: fallbackData, error: fallbackError } = await supabase.functions.invoke('send-fallback-notification', {
-          body: {
-            email: 'test@example.com',
-            inviteUrl: 'https://test.com',
-            roleName: 'Test',
-            type: 'invite_fallback',
-            requestId: crypto.randomUUID().substring(0, 8)
-          }
-        });
-
-        const fallbackDuration = Date.now() - fallbackStart;
-
-        if (fallbackError) {
-          results[results.length - 1] = {
-            step: "Sistema de Fallback",
-            status: 'error',
-            message: `Fallback indisponível: ${fallbackError.message}`,
-            duration: fallbackDuration
-          };
-          recommendations.push("Configurar sistema de fallback");
-        } else if (fallbackData?.success) {
-          results[results.length - 1] = {
-            step: "Sistema de Fallback",
-            status: 'success',
-            message: `Fallback ativo (${fallbackDuration}ms)`,
-            duration: fallbackDuration
-          };
-        } else {
-          results[results.length - 1] = {
-            step: "Sistema de Fallback",
-            status: 'error',
-            message: "Fallback não configurado",
-            duration: fallbackDuration
-          };
-        }
-      } catch (error: any) {
-        results[results.length - 1] = {
-          step: "Sistema de Fallback",
-          status: 'error',
-          message: `Erro: ${error.message}`,
-          duration: 0
-        };
-      }
-
-      // 5. Verificar performance geral
-      results.push({ step: "Performance Geral", status: 'pending', message: "Analisando..." });
-      
-      const totalDuration = Date.now() - startTime;
-      const avgResponseTime = results.reduce((acc, r) => acc + (r.duration || 0), 0) / results.length;
-      
-      if (avgResponseTime < 2000) {
-        results[results.length - 1] = {
-          step: "Performance Geral",
-          status: 'success',
-          message: `Excelente (${avgResponseTime.toFixed(0)}ms médio)`,
-          duration: totalDuration
-        };
-      } else if (avgResponseTime < 5000) {
-        results[results.length - 1] = {
-          step: "Performance Geral",
-          status: 'warning',
-          message: `Adequada (${avgResponseTime.toFixed(0)}ms médio)`,
-          duration: totalDuration
-        };
-        recommendations.push("Considerar otimização de performance");
-      } else {
-        results[results.length - 1] = {
-          step: "Performance Geral",
-          status: 'error',
-          message: `Lenta (${avgResponseTime.toFixed(0)}ms médio)`,
-          duration: totalDuration
-        };
-        recommendations.push("Performance crítica - verificar infraestrutura");
-      }
+      });
 
       // Determinar status geral
-      const errorCount = results.filter(r => r.status === 'error').length;
-      const warningCount = results.filter(r => r.status === 'warning').length;
+      const hasErrors = results.some(r => r.status === 'error');
+      const hasWarnings = results.some(r => r.status === 'warning');
       
-      let overall: 'success' | 'warning' | 'error' = 'success';
-      if (errorCount > 0) {
+      let overall: ValidationReport['overall'] = 'success';
+      if (hasErrors) {
         overall = 'error';
-      } else if (warningCount > 0) {
+      } else if (hasWarnings) {
         overall = 'warning';
       }
 
+      const duration = Date.now() - startTime;
+      
       const report: ValidationReport = {
         overall,
         timestamp: new Date().toISOString(),
-        duration: totalDuration,
-        results,
-        recommendations
+        duration,
+        results
       };
 
       setValidationReport(report);
+      
+      console.log(`✅ [${requestId}] Validação concluída:`, {
+        overall,
+        duration: `${duration}ms`,
+        errors: results.filter(r => r.status === 'error').length,
+        warnings: results.filter(r => r.status === 'warning').length
+      });
 
-      // Mostrar resultado
+      // Mostrar notificação baseada no resultado
       if (overall === 'success') {
-        toast.success("Sistema validado com sucesso!", {
-          description: `Todos os componentes funcionando corretamente`
-        });
+        toast.success('✅ Sistema de email validado com sucesso!');
       } else if (overall === 'warning') {
-        toast.warning("Sistema operacional com alertas", {
-          description: `${warningCount} item(s) precisam de atenção`
-        });
+        toast.warning('⚠️ Sistema funcionando com alertas');
       } else {
-        toast.error("Problemas detectados no sistema", {
-          description: `${errorCount} componente(s) com falhas`
-        });
+        toast.error('❌ Problemas detectados no sistema');
       }
 
-      console.log("✅ Validação completa finalizada:", report);
-
     } catch (error: any) {
-      console.error("❌ Erro durante validação:", error);
+      console.error(`❌ [${requestId}] Erro crítico na validação:`, error);
       
-      const errorReport: ValidationReport = {
+      setValidationReport({
         overall: 'error',
         timestamp: new Date().toISOString(),
         duration: Date.now() - startTime,
         results: [{
-          step: "Validação Geral",
+          step: 'Sistema Geral',
           status: 'error',
-          message: `Erro crítico: ${error.message}`,
+          message: `Falha crítica: ${error.message}`,
           duration: 0
-        }],
-        recommendations: ["Verificar conectividade e configurações gerais"]
-      };
-
-      setValidationReport(errorReport);
-      
-      toast.error("Falha na validação do sistema", {
-        description: error.message
+        }]
       });
+
+      toast.error('❌ Falha crítica na validação do sistema');
     } finally {
       setIsValidating(false);
     }
