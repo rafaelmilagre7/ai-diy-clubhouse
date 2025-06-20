@@ -93,7 +93,7 @@ export const useForumTopics = ({
         }
         
         // Buscar perfis de usuários em uma consulta separada
-        const userIds = topicsData.map(topic => topic.user_id);
+        const userIds = (topicsData as any).map((topic: any) => topic.user_id);
         const { data: profilesData, error: profilesError } = await supabase
           .from('profiles')
           .select('id, name, avatar_url, role_id, user_roles:role_id(name)')
@@ -104,7 +104,7 @@ export const useForumTopics = ({
         }
         
         // Buscar categorias em uma consulta separada
-        const categoryIds = topicsData.map(topic => topic.category_id).filter(Boolean);
+        const categoryIds = (topicsData as any).map((topic: any) => topic.category_id).filter(Boolean);
         const { data: categoriesData, error: categoriesError } = await supabase
           .from('forum_categories')
           .select('id, name, slug')
@@ -115,7 +115,7 @@ export const useForumTopics = ({
         }
         
         // Mapear os perfis e categorias para os tópicos
-        const formattedTopics: Topic[] = topicsData.map(topic => {
+        const formattedTopics: Topic[] = (topicsData as any).map((topic: any) => {
           const userProfile = (profilesData as any)?.find((profile: any) => profile.id === topic.user_id);
           const topicCategory = (categoriesData as any)?.find((cat: any) => cat.id === topic.category_id);
           

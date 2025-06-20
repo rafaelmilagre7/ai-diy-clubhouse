@@ -46,7 +46,7 @@ export const useSmartInsights = (timeRange: string) => {
           
           if (maxDay && maxActivity > 0) {
             const avgActivity = Object.values(dayActivity).reduce((a: any, b: any) => Number(a) + Number(b), 0) / 7;
-            const increasePercent = Math.round(((maxActivity - avgActivity) / avgActivity) * 100);
+            const increasePercent = Math.round(((Number(maxActivity) - Number(avgActivity)) / Number(avgActivity)) * 100);
             
             if (increasePercent > 20) {
               insights.push({

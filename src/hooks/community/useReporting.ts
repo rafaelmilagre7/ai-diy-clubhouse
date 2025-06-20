@@ -1,54 +1,72 @@
 
 import { useState } from 'react';
-import { useModeration } from '@/hooks/admin/useModeration';
+import { supabase } from '@/lib/supabase';
+import { useAuth } from '@/contexts/auth';
+import { toast } from 'sonner';
 
-type ReportType = 'spam' | 'inappropriate' | 'harassment' | 'misinformation' | 'other';
+export type ReportType = 'topic' | 'post';
+
+interface ReportData {
+  type: ReportType;
+  targetId: string;
+  reportedUserId: string;
+  reason: string;
+  description?: string;
+}
+
+interface CommunityReport {
+  id: string;
+  reporter_id: string;
+  reported_user_id: string;
+  topic_id?: string;
+  post_id?: string;
+  report_type: ReportType;
+  reason: string;
+  description?: string;
+  status: 'pending' | 'reviewed' | 'resolved' | 'dismissed';
+  created_at: string;
+  updated_at: string;
+}
 
 export const useReporting = () => {
-  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
-  const [reportTarget, setReportTarget] = useState<{
-    type: 'topic' | 'post';
-    id: string;
-    userId?: string;
-  } | null>(null);
-  
-  const { createReport } = useModeration();
+  const { user } = useAuth();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const openReportModal = (type: 'topic' | 'post', id: string, userId?: string) => {
-    setReportTarget({ type, id, userId });
-    setIsReportModalOpen(true);
-  };
+  const submitReport = async (data: ReportData) => {
+    if (!user) {
+      toast.error('Você precisa estar logado para reportar conteúdo');
+      return;
+    }
 
-  const closeReportModal = () => {
-    setIsReportModalOpen(false);
-    setReportTarget(null);
-  };
+    setIsSubmitting(true);
 
-  const submitReport = async (reportData: {
-    report_type: ReportType;
-    reason: string;
-    description?: string;
-  }) => {
-    if (!reportTarget) return;
+    try {
+      const reportPayload = {
+        reporter_id: user.id,
+        reported_user_id: data.reportedUserId,
+        report_type: data.type,
+        reason: data.reason,
+        description: data.description,
+        ...(data.type === 'topic' ? { topic_id: data.targetId } : { post_id: data.targetId })
+      };
 
-    const payload = {
-      ...reportData,
-      ...(reportTarget.type === 'topic' 
-        ? { topic_id: reportTarget.id } 
-        : { post_id: reportTarget.id }
-      ),
-      ...(reportTarget.userId && { reported_user_id: reportTarget.userId })
-    };
+      const { error } = await supabase
+        .from('community_reports')
+        .insert(reportPayload as any);
 
-    await createReport(payload);
-    closeReportModal();
+      if (error) throw error;
+
+      toast.success('Denúncia enviada com sucesso. Nossa equipe irá analisar o conteúdo.');
+    } catch (error: any) {
+      console.error('Erro ao enviar denúncia:', error);
+      toast.error('Erro ao enviar denúncia. Tente novamente.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return {
-    isReportModalOpen,
-    reportTarget,
-    openReportModal,
-    closeReportModal,
-    submitReport
+    submitReport,
+    isSubmitting
   };
 };
