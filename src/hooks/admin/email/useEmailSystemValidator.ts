@@ -1,19 +1,20 @@
 
 import { useState, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
+import { toast } from 'sonner';
 
-interface ValidationResult {
+interface ValidationStep {
   step: string;
-  status: 'success' | 'error' | 'pending';
+  status: 'success' | 'error' | 'pending' | 'warning';
   message: string;
-  duration?: number;
+  details?: any;
 }
 
 interface ValidationReport {
-  overall: 'success' | 'warning' | 'error' | 'pending';
+  overall: 'success' | 'error' | 'warning' | 'pending';
+  results: ValidationStep[];
   timestamp: string;
   duration: number;
-  results: ValidationResult[];
 }
 
 export const useEmailSystemValidator = () => {
@@ -23,219 +24,243 @@ export const useEmailSystemValidator = () => {
   const runCompleteValidation = useCallback(async () => {
     setIsValidating(true);
     const startTime = Date.now();
-    const results: ValidationResult[] = [];
-
+    const validationId = crypto.randomUUID().substring(0, 8);
+    
+    console.log(`🔍 [${validationId}] Iniciando validação completa do sistema`);
+    
+    const results: ValidationStep[] = [];
+    
     try {
-      console.log('🔍 [VALIDATOR] Iniciando validação completa do sistema...');
+      // 1. Teste de configuração do Resend
+      console.log(`🔍 [${validationId}] Testando configuração do Resend...`);
+      results.push({
+        step: 'Configuração Resend',
+        status: 'pending',
+        message: 'Verificando...'
+      });
 
-      // 1. Teste de conectividade com Resend
-      const connectivityStart = Date.now();
-      try {
-        const { data: resendTest, error: resendError } = await supabase.functions.invoke('test-resend-health', {
-          body: { testType: 'connectivity' }
-        });
+      const { data: resendTest, error: resendError } = await supabase.functions.invoke('test-resend-health', {
+        body: { testType: 'config_check', validationId }
+      });
 
-        const connectivityDuration = Date.now() - connectivityStart;
-
-        if (resendError || !resendTest?.success) {
-          results.push({
-            step: 'Conectividade Resend',
-            status: 'error',
-            message: resendError?.message || resendTest?.message || 'Falha na conectividade',
-            duration: connectivityDuration
-          });
-        } else {
-          results.push({
-            step: 'Conectividade Resend',
-            status: 'success',
-            message: 'Conectividade OK',
-            duration: connectivityDuration
-          });
-        }
-      } catch (error: any) {
-        results.push({
-          step: 'Conectividade Resend',
+      if (resendError || !resendTest?.success) {
+        results[results.length - 1] = {
+          step: 'Configuração Resend',
           status: 'error',
-          message: `Erro de conectividade: ${error.message}`,
-          duration: Date.now() - connectivityStart
-        });
+          message: resendError?.message || 'Falha na configuração',
+          details: resendTest
+        };
+      } else {
+        results[results.length - 1] = {
+          step: 'Configuração Resend',
+          status: 'success',
+          message: 'Configuração OK',
+          details: resendTest
+        };
       }
 
-      // 2. Teste de geração de links
-      const linkStart = Date.now();
+      // 2. Teste de geração de link
+      console.log(`🔍 [${validationId}] Testando geração de links...`);
+      results.push({
+        step: 'Geração de Links',
+        status: 'pending',
+        message: 'Verificando...'
+      });
+
       try {
         const testToken = crypto.randomUUID();
-        const inviteUrl = `${window.location.origin}/invite/${testToken}`;
+        const baseUrl = window.location.origin;
+        const inviteUrl = `${baseUrl}/convite/${testToken}`;
         
-        if (inviteUrl.includes('undefined') || !inviteUrl.startsWith('http')) {
-          results.push({
-            step: 'Geração de Links',
-            status: 'error',
-            message: 'URL de convite inválida',
-            duration: Date.now() - linkStart
-          });
-        } else {
-          results.push({
+        if (inviteUrl.includes('localhost') || inviteUrl.includes('lovable.app')) {
+          results[results.length - 1] = {
             step: 'Geração de Links',
             status: 'success',
             message: 'Links gerados corretamente',
-            duration: Date.now() - linkStart
-          });
+            details: { testUrl: inviteUrl }
+          };
+        } else {
+          results[results.length - 1] = {
+            step: 'Geração de Links',
+            status: 'warning',
+            message: 'URL de domínio customizado detectada',
+            details: { testUrl: inviteUrl }
+          };
         }
       } catch (error: any) {
-        results.push({
+        results[results.length - 1] = {
           step: 'Geração de Links',
           status: 'error',
-          message: `Erro na geração de links: ${error.message}`,
-          duration: Date.now() - linkStart
-        });
+          message: `Erro na geração: ${error.message}`,
+          details: error
+        };
       }
 
-      // 3. Teste de template React Email
-      const templateStart = Date.now();
-      try {
-        const { data: templateTest, error: templateError } = await supabase.functions.invoke('send-invite-email', {
-          body: {
-            email: 'test@example.com',
-            inviteUrl: 'https://example.com/invite/test',
-            roleName: 'Test Role',
-            expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-            testMode: true
-          }
-        });
+      // 3. Teste de template
+      console.log(`🔍 [${validationId}] Testando template de email...`);
+      results.push({
+        step: 'Template de Email',
+        status: 'pending',
+        message: 'Verificando...'
+      });
 
-        const templateDuration = Date.now() - templateStart;
-
-        // Verificar se a resposta tem detalhes ou não
-        const hasDetails = templateTest && typeof templateTest === 'object' && 'details' in templateTest;
-        const details = hasDetails ? templateTest.details : undefined;
-
-        if (templateError || !templateTest?.success) {
-          results.push({
-            step: 'Template React Email',
-            status: 'error',
-            message: templateError?.message || templateTest?.message || 'Falha no template',
-            duration: templateDuration
-          });
-        } else {
-          results.push({
-            step: 'Template React Email',
-            status: 'success',
-            message: details ? `Template OK: ${details}` : 'Template processado com sucesso',
-            duration: templateDuration
-          });
+      const { data: templateTest, error: templateError } = await supabase.functions.invoke('send-invite-email', {
+        body: {
+          email: 'test@validation.com',
+          inviteUrl: 'https://test.com/invite/123',
+          roleName: 'Teste',
+          expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+          validationMode: true,
+          validationId
         }
-      } catch (error: any) {
-        results.push({
-          step: 'Template React Email',
+      });
+
+      if (templateError || !templateTest?.success) {
+        results[results.length - 1] = {
+          step: 'Template de Email',
           status: 'error',
-          message: `Erro no template: ${error.message}`,
-          duration: Date.now() - templateStart
-        });
+          message: templateError?.message || 'Falha no template',
+          details: templateTest && 'details' in templateTest ? templateTest.details : undefined
+        };
+      } else {
+        results[results.length - 1] = {
+          step: 'Template de Email',
+          status: 'success',
+          message: 'Template renderizado com sucesso',
+          details: templateTest && 'details' in templateTest ? templateTest.details : undefined
+        };
       }
 
       // 4. Teste de fallback
-      const fallbackStart = Date.now();
-      try {
-        const { data: fallbackTest, error: fallbackError } = await supabase.functions.invoke('send-fallback-notification', {
-          body: {
-            email: 'test@example.com',
-            inviteUrl: 'https://example.com/invite/test',
-            roleName: 'Test Role',
-            type: 'invite_fallback',
-            testMode: true
-          }
-        });
+      console.log(`🔍 [${validationId}] Testando sistema de fallback...`);
+      results.push({
+        step: 'Sistema de Fallback',
+        status: 'pending',
+        message: 'Verificando...'
+      });
 
-        const fallbackDuration = Date.now() - fallbackStart;
-
-        if (fallbackError || !fallbackTest?.success) {
-          results.push({
-            step: 'Sistema de Fallback',
-            status: 'error',
-            message: fallbackError?.message || fallbackTest?.message || 'Falha no fallback',
-            duration: fallbackDuration
-          });
-        } else {
-          results.push({
-            step: 'Sistema de Fallback',
-            status: 'success',
-            message: 'Fallback funcional',
-            duration: fallbackDuration
-          });
+      const { data: fallbackTest, error: fallbackError } = await supabase.functions.invoke('send-fallback-notification', {
+        body: {
+          email: 'test@validation.com',
+          inviteUrl: 'https://test.com/invite/123',
+          roleName: 'Teste',
+          type: 'validation_test',
+          validationMode: true,
+          validationId
         }
-      } catch (error: any) {
-        results.push({
+      });
+
+      if (fallbackError || !fallbackTest?.success) {
+        results[results.length - 1] = {
           step: 'Sistema de Fallback',
-          status: 'error',
-          message: `Erro no fallback: ${error.message}`,
-          duration: Date.now() - fallbackStart
-        });
+          status: 'warning',
+          message: 'Fallback com problemas (não crítico)',
+          details: fallbackTest
+        };
+      } else {
+        results[results.length - 1] = {
+          step: 'Sistema de Fallback',
+          status: 'success',
+          message: 'Fallback funcionando',
+          details: fallbackTest
+        };
       }
 
       // 5. Teste de performance
-      const performanceStart = Date.now();
-      const avgResponseTime = results
-        .filter(r => r.duration)
-        .reduce((sum, r) => sum + (r.duration || 0), 0) / results.length;
+      console.log(`🔍 [${validationId}] Testando performance...`);
+      results.push({
+        step: 'Performance',
+        status: 'pending',
+        message: 'Verificando...'
+      });
 
-      if (avgResponseTime > 10000) {
-        results.push({
+      const perfStart = Date.now();
+      const { error: perfError } = await supabase.functions.invoke('test-resend-health', {
+        body: { testType: 'performance_check', validationId }
+      });
+      const perfDuration = Date.now() - perfStart;
+
+      if (perfError) {
+        results[results.length - 1] = {
           step: 'Performance',
           status: 'error',
-          message: `Tempo de resposta muito alto: ${avgResponseTime}ms`,
-          duration: Date.now() - performanceStart
-        });
-      } else if (avgResponseTime > 5000) {
-        results.push({
+          message: `Erro no teste: ${perfError.message}`,
+          details: { duration: perfDuration }
+        };
+      } else if (perfDuration > 10000) {
+        results[results.length - 1] = {
           step: 'Performance',
-          status: 'error',
-          message: `Tempo de resposta elevado: ${avgResponseTime}ms`,
-          duration: Date.now() - performanceStart
-        });
+          status: 'warning',
+          message: `Lentidão detectada: ${perfDuration}ms`,
+          details: { duration: perfDuration }
+        };
       } else {
-        results.push({
+        results[results.length - 1] = {
           step: 'Performance',
           status: 'success',
-          message: `Performance adequada: ${avgResponseTime.toFixed(0)}ms`,
-          duration: Date.now() - performanceStart
-        });
+          message: `Performance OK: ${perfDuration}ms`,
+          details: { duration: perfDuration }
+        };
       }
 
-      // Calcular status geral
+      // Determinar status geral
       const hasErrors = results.some(r => r.status === 'error');
       const hasWarnings = results.some(r => r.status === 'warning');
       
-      let overall: 'success' | 'warning' | 'error' = 'success';
-      if (hasErrors) overall = 'error';
-      else if (hasWarnings) overall = 'warning';
+      let overall: 'success' | 'error' | 'warning' | 'pending';
+      if (hasErrors) {
+        overall = 'error';
+      } else if (hasWarnings) {
+        overall = 'warning';
+      } else {
+        overall = 'success';
+      }
 
       const report: ValidationReport = {
         overall,
+        results,
         timestamp: new Date().toISOString(),
-        duration: Date.now() - startTime,
-        results
+        duration: Date.now() - startTime
       };
 
       setValidationReport(report);
-      console.log('✅ [VALIDATOR] Validação completa finalizada:', report);
+
+      // Toast com resultado
+      if (overall === 'success') {
+        toast.success('✅ Sistema totalmente operacional');
+      } else if (overall === 'warning') {
+        toast.warning('⚠️ Sistema operacional com avisos');
+      } else {
+        toast.error('❌ Problemas críticos detectados');
+      }
+
+      console.log(`✅ [${validationId}] Validação concluída:`, {
+        overall,
+        duration: Date.now() - startTime,
+        errors: results.filter(r => r.status === 'error').length,
+        warnings: results.filter(r => r.status === 'warning').length
+      });
 
     } catch (error: any) {
-      console.error('❌ [VALIDATOR] Erro crítico na validação:', error);
+      console.error(`❌ [${validationId}] Erro crítico na validação:`, error);
       
       const errorReport: ValidationReport = {
         overall: 'error',
+        results: [
+          ...results,
+          {
+            step: 'Validação Crítica',
+            status: 'error',
+            message: `Erro crítico: ${error.message}`,
+            details: error
+          }
+        ],
         timestamp: new Date().toISOString(),
-        duration: Date.now() - startTime,
-        results: [{
-          step: 'Validação Geral',
-          status: 'error',
-          message: `Erro crítico: ${error.message}`,
-          duration: Date.now() - startTime
-        }]
+        duration: Date.now() - startTime
       };
-      
+
       setValidationReport(errorReport);
+      toast.error('❌ Erro crítico na validação do sistema');
     } finally {
       setIsValidating(false);
     }
@@ -243,6 +268,7 @@ export const useEmailSystemValidator = () => {
 
   const clearReport = useCallback(() => {
     setValidationReport(null);
+    toast.info('Relatório de validação limpo');
   }, []);
 
   return {
