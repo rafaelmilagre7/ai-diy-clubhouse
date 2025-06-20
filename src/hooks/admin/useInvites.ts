@@ -1,5 +1,4 @@
 
-import { useState, useEffect, useCallback } from "react";
 import { useInviteCreate } from "./invites/useInviteCreate";
 import { useInviteDelete } from "./invites/useInviteDelete";
 import { useInviteResend } from "./invites/useInviteResend";
@@ -20,8 +19,6 @@ export const useInvites = () => {
     notes?: string,
     options?: {
       expiresIn?: string;
-      phone?: string;
-      channelPreference?: 'email' | 'whatsapp' | 'both';
     }
   ) => {
     try {
@@ -29,12 +26,10 @@ export const useInvites = () => {
         email,
         roleId,
         notes,
-        expiresIn: options?.expiresIn || '7 days',
-        phone: options?.phone,
-        channelPreference: options?.channelPreference || 'email'
+        expiresIn: options?.expiresIn || '7 days'
       };
 
-      console.log("🎯 Criando convite com parâmetros híbridos:", params);
+      console.log("🎯 Criando convite:", params);
 
       const result = await createInvite(params);
       await fetchInvites();

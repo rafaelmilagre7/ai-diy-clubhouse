@@ -1,34 +1,26 @@
 
 import { useState } from "react";
-import { supabase } from "@/lib/supabase";
-import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 export const useInviteDelete = () => {
   const [isDeleting, setIsDeleting] = useState(false);
-  const { toast } = useToast();
 
   const deleteInvite = async (inviteId: string) => {
     try {
       setIsDeleting(true);
 
-      const { error } = await (supabase as any)
+      const { error } = await supabase
         .from('invites')
         .delete()
-        .eq('id', inviteId as any);
+        .eq('id', inviteId);
 
       if (error) throw error;
 
-      toast({
-        title: "Convite excluído",
-        description: "O convite foi removido com sucesso.",
-      });
+      toast.success("Convite excluído com sucesso");
     } catch (error: any) {
       console.error('Erro ao excluir convite:', error);
-      toast({
-        title: "Erro ao excluir convite",
-        description: error.message || "Ocorreu um erro inesperado",
-        variant: "destructive",
-      });
+      toast.error(`Erro ao excluir convite: ${error.message}`);
       throw error;
     } finally {
       setIsDeleting(false);

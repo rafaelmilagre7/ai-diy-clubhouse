@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { Loader2, Plus, AlertCircle, CheckCircle } from "lucide-react";
+import { Loader2, Plus } from "lucide-react";
 import { toast } from "sonner";
 import {
   Dialog,
@@ -22,7 +22,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useInviteCreate } from "@/hooks/admin/invites/useInviteCreate";
 
 interface SimpleCreateInviteDialogProps {
@@ -36,14 +35,11 @@ const SimpleCreateInviteDialog = ({ roles, onInviteCreated }: SimpleCreateInvite
   const [notes, setNotes] = useState("");
   const [expiration, setExpiration] = useState("7 days");
   const [open, setOpen] = useState(false);
-  const [lastResult, setLastResult] = useState<any>(null);
   
   const { createInvite, loading } = useInviteCreate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    console.log('🎯 [DIALOG] Iniciando criação de convite...');
     
     // Validação básica
     if (!email?.includes('@')) {
@@ -63,11 +59,7 @@ const SimpleCreateInviteDialog = ({ roles, onInviteCreated }: SimpleCreateInvite
       expiresIn: expiration 
     });
 
-    console.log('📝 [DIALOG] Resultado da criação:', result);
-    setLastResult(result);
-
     if (result) {
-      // Resetar formulário apenas se teve sucesso completo
       if (result.status === 'success') {
         setEmail("");
         setRoleId("");
@@ -75,25 +67,12 @@ const SimpleCreateInviteDialog = ({ roles, onInviteCreated }: SimpleCreateInvite
         setExpiration("7 days");
         setOpen(false);
       }
-      
-      // Atualizar lista
       onInviteCreated();
     }
   };
 
-  const resetForm = () => {
-    setEmail("");
-    setRoleId("");
-    setNotes("");
-    setExpiration("7 days");
-    setLastResult(null);
-  };
-
   return (
-    <Dialog open={open} onOpenChange={(newOpen) => {
-      setOpen(newOpen);
-      if (!newOpen) resetForm();
-    }}>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button>
           <Plus className="mr-2 h-4 w-4" />
@@ -110,20 +89,6 @@ const SimpleCreateInviteDialog = ({ roles, onInviteCreated }: SimpleCreateInvite
           </DialogHeader>
           
           <div className="grid gap-4 py-4">
-            {/* Status do último resultado */}
-            {lastResult && (
-              <Alert className={lastResult.status === 'success' ? 'border-green-200 bg-green-50' : 'border-yellow-200 bg-yellow-50'}>
-                {lastResult.status === 'success' ? (
-                  <CheckCircle className="h-4 w-4 text-green-600" />
-                ) : (
-                  <AlertCircle className="h-4 w-4 text-yellow-600" />
-                )}
-                <AlertDescription className={lastResult.status === 'success' ? 'text-green-700' : 'text-yellow-700'}>
-                  {lastResult.message}
-                </AlertDescription>
-              </Alert>
-            )}
-
             <div className="grid gap-2">
               <Label htmlFor="email">Email *</Label>
               <Input

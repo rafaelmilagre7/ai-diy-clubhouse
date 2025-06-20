@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { useDocumentTitle } from "@/hooks/use-document-title";
 import { usePermissions } from "@/hooks/auth/usePermissions";
-import { useInvites } from "@/hooks/admin/useInvites";
+import { useInvitesList } from "@/hooks/admin/invites/useInvitesList";
 import SimpleCreateInviteDialog from "./components/SimpleCreateInviteDialog";
 import SimpleInvitesTab from "./components/SimpleInvitesTab";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,11 +12,7 @@ const InvitesManagement = () => {
   useDocumentTitle("Gerenciar Convites | Admin");
   
   const { roles, loading: rolesLoading } = usePermissions();
-  const { 
-    invites, 
-    loading: invitesLoading, 
-    fetchInvites,
-  } = useInvites();
+  const { invites, loading: invitesLoading, fetchInvites } = useInvitesList();
 
   useEffect(() => {
     fetchInvites();

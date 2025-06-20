@@ -1,6 +1,6 @@
 
 import { useState, useEffect, useCallback } from "react";
-import { supabase } from "@/lib/supabase";
+import { supabase } from "@/integrations/supabase/client";
 import { Invite } from "./types";
 
 export const useInvitesList = () => {
@@ -16,7 +16,6 @@ export const useInvitesList = () => {
         .select(`
           id,
           email,
-          phone,
           role_id,
           token,
           expires_at,
@@ -26,16 +25,13 @@ export const useInvitesList = () => {
           last_sent_at,
           send_attempts,
           notes,
-          channel_preference,
-          email_provider,
-          email_id,
           role:role_id(id, name, description)
         `)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
 
-      setInvites((data as any) || []);
+      setInvites(data || []);
     } catch (error) {
       console.error('Erro ao buscar convites:', error);
       setInvites([]);

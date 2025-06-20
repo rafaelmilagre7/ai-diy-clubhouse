@@ -1,5 +1,5 @@
 
-// Exports simplificados apenas para os hooks essenciais
+// Exports simplificados para funcionalidade básica
 export * from './types';
 export * from './useInvitesList';
 export * from './useInviteCreate';

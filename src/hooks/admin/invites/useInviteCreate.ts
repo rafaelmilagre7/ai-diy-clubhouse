@@ -12,7 +12,7 @@ export function useInviteCreate() {
     try {
       console.log('🎯 [CREATE-INVITE] Criando convite:', params);
 
-      // Primeiro, criar o convite no banco
+      // Criar o convite no banco
       const { data: dbResult, error: dbError } = await supabase.rpc('create_invite', {
         p_email: params.email,
         p_role_id: params.roleId,
@@ -34,7 +34,7 @@ export function useInviteCreate() {
         return null;
       }
 
-      // Agora tentar enviar o email
+      // Tentar enviar o email
       try {
         const { data: emailResult, error: emailError } = await supabase.functions.invoke('send-invite', {
           body: {
@@ -47,12 +47,10 @@ export function useInviteCreate() {
         if (emailError) {
           console.warn('⚠️ [CREATE-INVITE] Erro no envio de email:', emailError);
           toast.warning('Convite criado, mas houve problema no envio do email');
-          
           return {
             status: 'partial_success',
             message: 'Convite criado com sucesso, mas email não foi enviado',
-            inviteId: dbResponse.invite_id,
-            emailResult: { success: false, message: emailError.message }
+            inviteId: dbResponse.invite_id
           };
         }
 
@@ -62,8 +60,7 @@ export function useInviteCreate() {
         return {
           status: 'success',
           message: 'Convite criado e enviado com sucesso',
-          inviteId: dbResponse.invite_id,
-          emailResult: { success: true, message: 'Email enviado' }
+          inviteId: dbResponse.invite_id
         };
 
       } catch (emailError: any) {
@@ -73,8 +70,7 @@ export function useInviteCreate() {
         return {
           status: 'partial_success',
           message: 'Convite criado com sucesso, mas email não foi enviado',
-          inviteId: dbResponse.invite_id,
-          emailResult: { success: false, message: emailError.message }
+          inviteId: dbResponse.invite_id
         };
       }
 
