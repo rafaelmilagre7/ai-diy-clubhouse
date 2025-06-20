@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Tool } from '@/types/toolTypes';
 import { Link } from 'react-router-dom';
@@ -43,7 +44,7 @@ export const AdminToolList = ({ refreshTrigger }: AdminToolListProps) => {
       const { error } = await supabase
         .from('tools')
         .delete()
-        .eq('id', id);
+        .eq('id', id as any);
 
       if (error) throw error;
       

@@ -54,23 +54,23 @@ export function useSaveResources() {
       const { data: existingResource, error: queryError } = await supabase
         .from('solution_resources')
         .select('id')
-        .eq('solution_id', solutionId)
-        .eq('type', 'resources')
+        .eq('solution_id', solutionId as any)
+        .eq('type', 'resources' as any)
         .single();
       
       if (queryError && queryError.code !== 'PGRST116') {
         throw queryError;
       }
       
-      if (existingResource) {
+      if ((existingResource as any)?.id) {
         // Update existing resource
         const { error: updateError } = await supabase
           .from('solution_resources')
           .update({
             url: JSON.stringify(resourcesData),
             updated_at: new Date().toISOString()
-          })
-          .eq('id', existingResource.id);
+          } as any)
+          .eq('id', (existingResource as any).id);
         
         if (updateError) throw updateError;
       } else {
@@ -84,7 +84,7 @@ export function useSaveResources() {
             url: JSON.stringify(resourcesData),
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString()
-          });
+          } as any);
         
         if (insertError) throw insertError;
       }

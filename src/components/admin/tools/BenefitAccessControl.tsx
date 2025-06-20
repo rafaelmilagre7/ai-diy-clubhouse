@@ -47,7 +47,7 @@ export function BenefitAccessControl({
         .order('name');
 
       if (error) throw error;
-      setRoles(data || []);
+      setRoles((data as any) || []);
     } catch (err) {
       console.error('Erro ao buscar papéis:', err);
       toast.error('Erro ao carregar papéis');
@@ -64,12 +64,12 @@ export function BenefitAccessControl({
       const { data, error } = await supabase
         .from('benefit_access_control')
         .select('role_id')
-        .eq('tool_id', tool.id);
+        .eq('tool_id', tool.id as any);
 
       if (error) throw error;
       
       // Extrair IDs de papéis permitidos
-      setAllowedRoles(data.map(item => item.role_id));
+      setAllowedRoles((data || []).map(item => (item as any).role_id));
     } catch (err) {
       console.error('Erro ao buscar acesso ao benefício:', err);
       toast.error('Erro ao carregar configurações de acesso');
@@ -91,7 +91,7 @@ export function BenefitAccessControl({
           .insert({ 
             tool_id: tool.id, 
             role_id: roleId 
-          });
+          } as any);
           
         if (error) throw error;
         setAllowedRoles(prev => [...prev, roleId]);
@@ -101,8 +101,8 @@ export function BenefitAccessControl({
         const { error } = await supabase
           .from('benefit_access_control')
           .delete()
-          .eq('tool_id', tool.id)
-          .eq('role_id', roleId);
+          .eq('tool_id', tool.id as any)
+          .eq('role_id', roleId as any);
           
         if (error) throw error;
         setAllowedRoles(prev => prev.filter(id => id !== roleId));

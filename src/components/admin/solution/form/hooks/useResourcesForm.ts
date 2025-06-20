@@ -97,8 +97,8 @@ export function useResourcesForm(solutionId: string | null) {
       }
       
       // Filter modules with valid content structure
-      const validModules = data.filter(module => {
-        if (!module.content) return false;
+      const validModules = (data || []).filter(module => {
+        if (!(module as any).content) return false;
         
         try {
           // Safely parse content regardless of its current format
