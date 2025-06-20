@@ -51,7 +51,7 @@ export const useRealAdminStats = (timeRange: string) => {
         const { data: solutions, error: solutionsError } = await supabase
           .from('solutions')
           .select('id, published')
-          .eq('published', true);
+          .eq('published', true as any);
         
         if (solutionsError) throw solutionsError;
         
@@ -59,7 +59,7 @@ export const useRealAdminStats = (timeRange: string) => {
         const { data: lessons, error: lessonsError } = await supabase
           .from('learning_lessons')
           .select('id, published')
-          .eq('published', true);
+          .eq('published', true as any);
         
         if (lessonsError) throw lessonsError;
         
@@ -91,8 +91,8 @@ export const useRealAdminStats = (timeRange: string) => {
         // Distribuição por role - corrigindo o acesso ao array
         const usersByRole = usersWithRoles?.reduce((acc, user) => {
           // user.user_roles é um array, então acessamos o primeiro item
-          const userRoleData = Array.isArray(user.user_roles) ? user.user_roles[0] : user.user_roles;
-          const roleName = userRoleData?.name || user.role || 'member';
+          const userRoleData = Array.isArray((user as any).user_roles) ? (user as any).user_roles[0] : (user as any).user_roles;
+          const roleName = userRoleData?.name || (user as any).role || 'member';
           const existing = acc.find(r => r.role === roleName);
           if (existing) {
             existing.count++;
@@ -107,14 +107,14 @@ export const useRealAdminStats = (timeRange: string) => {
         oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
         
         const recentUsers = usersWithRoles?.filter(
-          u => new Date(u.created_at) >= oneMonthAgo
+          u => new Date((u as any).created_at) >= oneMonthAgo
         ).length || 0;
         
         const lastMonthGrowth = totalUsers > 0 ? 
           Math.round((recentUsers / totalUsers) * 100) : 0;
         
         // Usuários ativos últimos 7 dias
-        const uniqueActiveUsers = new Set(recentActivity?.map(a => a.user_id)).size;
+        const uniqueActiveUsers = new Set(recentActivity?.map(a => (a as any).user_id)).size;
         
         // Taxa de engajamento (usuários ativos / total de usuários)
         const contentEngagementRate = totalUsers > 0 ? 
@@ -124,9 +124,9 @@ export const useRealAdminStats = (timeRange: string) => {
         let averageImplementationTime = 0;
         if (completedProgress && completedProgress.length > 0) {
           const totalMinutes = completedProgress.reduce((acc, curr) => {
-            if (curr.completed_at && curr.created_at) {
-              const start = new Date(curr.created_at);
-              const end = new Date(curr.completed_at);
+            if ((curr as any).completed_at && (curr as any).created_at) {
+              const start = new Date((curr as any).created_at);
+              const end = new Date((curr as any).completed_at);
               const diffMinutes = Math.round((end.getTime() - start.getTime()) / (1000 * 60));
               return acc + (diffMinutes > 0 && diffMinutes < 10080 ? diffMinutes : 0);
             }

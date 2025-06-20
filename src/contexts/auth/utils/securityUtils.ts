@@ -1,4 +1,3 @@
-
 import { supabase } from '@/lib/supabase';
 import { logger } from '@/utils/logger';
 
@@ -115,7 +114,7 @@ export const getUserPermissions = async (userId: string): Promise<string[]> => {
           permissions
         )
       `)
-      .eq('id', userId)
+      .eq('id', userId as any)
       .single();
     
     if (error) {
@@ -126,10 +125,10 @@ export const getUserPermissions = async (userId: string): Promise<string[]> => {
     let permissions: string[] = [];
     
     // Acesso correto ao campo permissions
-    if (data?.user_roles) {
+    if ((data as any)?.user_roles) {
       try {
         // user_roles pode ser um objeto único ou array, verificar ambos os casos
-        const roleData = Array.isArray(data.user_roles) ? data.user_roles[0] : data.user_roles;
+        const roleData = Array.isArray((data as any).user_roles) ? (data as any).user_roles[0] : (data as any).user_roles;
         
         if (roleData?.permissions) {
           const permObj = roleData.permissions;

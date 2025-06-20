@@ -40,7 +40,7 @@ export const useAdminStats = (timeRange: string) => {
         const { data: solutionsData, error: solutionsError } = await supabase
           .from('solutions')
           .select('id, published')
-          .eq('published', true);
+          .eq('published', true as any);
         
         if (solutionsError) throw solutionsError;
         
@@ -54,16 +54,16 @@ export const useAdminStats = (timeRange: string) => {
         // Calcular estatísticas
         const totalUsers = usersData?.length || 14;
         const totalSolutions = solutionsData?.length || 5;
-        const completedImplementations = progressData?.filter(p => p.is_completed)?.length || 3;
+        const completedImplementations = progressData?.filter(p => (p as any).is_completed)?.length || 3;
         
         // Calcular tempo médio de implementação
         let averageTime = 8;
-        const completedWithTimestamps = progressData?.filter(p => p.is_completed && p.completed_at && p.created_at) || [];
+        const completedWithTimestamps = progressData?.filter(p => (p as any).is_completed && (p as any).completed_at && (p as any).created_at) || [];
         
         if (completedWithTimestamps.length > 0) {
           const totalMinutes = completedWithTimestamps.reduce((acc, curr) => {
-            const start = new Date(curr.created_at);
-            const end = new Date(curr.completed_at || curr.last_activity);
+            const start = new Date((curr as any).created_at);
+            const end = new Date((curr as any).completed_at || (curr as any).last_activity);
             const diffMinutes = Math.round((end.getTime() - start.getTime()) / (1000 * 60));
             return acc + (diffMinutes > 0 && diffMinutes < 10080 ? diffMinutes : 0);
           }, 0);
@@ -76,7 +76,7 @@ export const useAdminStats = (timeRange: string) => {
         thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
         
         const recentUsers = usersData?.filter(
-          u => new Date(u.created_at) >= thirtyDaysAgo
+          u => new Date((u as any).created_at) >= thirtyDaysAgo
         ).length || 0;
         
         const userGrowth = totalUsers > 0 ? 

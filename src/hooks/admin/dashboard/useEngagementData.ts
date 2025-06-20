@@ -52,7 +52,7 @@ export const useEngagementData = (timeRange: string) => {
         } else {
           // Processar dados reais por mês
           const monthlyData = analyticsData.reduce((acc: any, item) => {
-            const month = new Date(item.created_at).toLocaleDateString('pt-BR', { month: 'short' });
+            const month = new Date((item as any).created_at).toLocaleDateString('pt-BR', { month: 'short' });
             acc[month] = (acc[month] || 0) + 1;
             return acc;
           }, {});

@@ -86,10 +86,10 @@ export const createUserProfileIfNeeded = async (
     const { data: defaultRole } = await supabase
       .from('user_roles')
       .select('id')
-      .eq('name', 'membro_club')
+      .eq('name', 'membro_club' as any)
       .single();
     
-    const defaultRoleId = defaultRole?.id || null;
+    const defaultRoleId = (defaultRole as any)?.id || null;
     
     // Use upsert with conflict handling to avoid duplications
     const { data: newProfile, error: insertError } = await supabase
