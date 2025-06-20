@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -67,7 +66,7 @@ export const RoleSyncPanel = () => {
           if (issue.issue_type === 'missing_role_id') {
             await supabase
               .from('profiles')
-              .update({ role_id: issue.suggested_role_id })
+              .update({ role_id: issue.suggested_role_id } as any)
               .eq('id', issue.user_id as any);
             fixedCount++;
           }

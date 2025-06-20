@@ -36,9 +36,9 @@ export const InviteValidationDebugPanel = () => {
       // Verificar se inviteData existe e tem as propriedades necessárias
       const validation = {
         tokenExists: !!inviteData,
-        isExpired: inviteData && inviteData.expires_at ? new Date(inviteData.expires_at) < new Date() : false,
-        isUsed: inviteData && inviteData.used_at ? !!inviteData.used_at : false,
-        isValid: inviteData && inviteData.expires_at ? new Date(inviteData.expires_at) > new Date() && !inviteData.used_at : false,
+        isExpired: inviteData ? new Date((inviteData as any).expires_at) < new Date() : false,
+        isUsed: inviteData ? !!(inviteData as any).used_at : false,
+        isValid: inviteData ? new Date((inviteData as any).expires_at) > new Date() && !(inviteData as any).used_at : false,
         rawData: inviteData
       };
       
