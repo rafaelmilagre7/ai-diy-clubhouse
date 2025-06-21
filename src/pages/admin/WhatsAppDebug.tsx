@@ -1,10 +1,11 @@
 
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { MessageCircle, Settings, BarChart3, TestTube, FileText } from 'lucide-react';
+import { MessageCircle, Settings, BarChart3, TestTube, FileText, Search } from 'lucide-react';
 import WhatsAppConfigPanel from './invites/components/WhatsAppConfigPanel';
 import InviteAnalyticsDashboard from './invites/components/InviteAnalyticsDashboard';
 import WhatsAppTemplateTester from './invites/components/WhatsAppTemplateTester';
+import WhatsAppTemplatesList from './invites/components/WhatsAppTemplatesList';
 
 const WhatsAppDebug = () => {
   return (
@@ -20,6 +21,15 @@ const WhatsAppDebug = () => {
       </div>
 
       <div className="grid gap-6">
+        {/* Discovery de Templates */}
+        <section>
+          <div className="flex items-center gap-2 mb-4">
+            <Search className="h-5 w-5" />
+            <h2 className="text-xl font-semibold">Discovery de Templates</h2>
+          </div>
+          <WhatsAppTemplatesList />
+        </section>
+
         {/* Teste de Template WhatsApp */}
         <section>
           <div className="flex items-center gap-2 mb-4">
@@ -57,17 +67,20 @@ const WhatsAppDebug = () => {
           <div className="grid md:grid-cols-2 gap-4">
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">Template Aprovado</CardTitle>
-                <CardDescription>Template ativo no Meta Business</CardDescription>
+                <CardTitle className="text-lg">Template Atual</CardTitle>
+                <CardDescription>Template configurado no código</CardDescription>
               </CardHeader>
               <CardContent className="space-y-2">
                 <div className="font-mono text-sm bg-muted p-2 rounded">
                   <div><strong>Nome:</strong> convite_viver_ia</div>
                   <div><strong>ID:</strong> 1413982056507354</div>
-                  <div><strong>Status:</strong> APPROVED</div>
+                  <div><strong>Status:</strong> Configurado no código</div>
                   <div><strong>Language:</strong> pt_BR</div>
                   <div><strong>Variáveis:</strong> Nome, Link</div>
                 </div>
+                <p className="text-xs text-muted-foreground">
+                  Use o Discovery acima para verificar se este template realmente existe e está aprovado.
+                </p>
               </CardContent>
             </Card>
 
@@ -113,7 +126,8 @@ const WhatsAppDebug = () => {
                   <div>✅ whatsapp-webhook</div>
                   <div>✅ send-invite-whatsapp (v4.0 Template)</div>
                   <div>✅ invite-orchestrator (v4.0)</div>
-                  <div>🆕 Template System: convite_viver_ia</div>
+                  <div>🆕 whatsapp-list-templates (v1.0)</div>
+                  <div>🎯 Template System: convite_viver_ia</div>
                 </div>
               </CardContent>
             </Card>
