@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2, CheckCircle, XCircle, AlertTriangle } from 'lucide-react';
 import { useAuth } from '@/contexts/auth';
-import { RegisterForm } from '@/components/auth/RegisterForm';
+import { EnhancedInviteRegistration } from '@/components/auth/EnhancedInviteRegistration';
 import { supabase } from '@/integrations/supabase/client';
 
 const InvitePage = () => {
@@ -16,7 +16,6 @@ const InvitePage = () => {
   
   const [isValidating, setIsValidating] = useState(true);
   const [validationResult, setValidationResult] = useState<any>(null);
-  const [showRegisterForm, setShowRegisterForm] = useState(false);
 
   useEffect(() => {
     if (token) {
@@ -31,7 +30,14 @@ const InvitePage = () => {
 
       const { data: invite, error } = await supabase
         .from('invites')
-        .select('*')
+        .select(`
+          *,
+          user_roles:role_id (
+            id,
+            name,
+            description
+          )
+        `)
         .eq('token', token)
         .single();
 
@@ -68,13 +74,11 @@ const InvitePage = () => {
       console.log('✅ [INVITE-PAGE] Token válido:', invite);
       setValidationResult({
         isValid: true,
-        invite: invite
+        invite: {
+          ...invite,
+          role: invite.user_roles
+        }
       });
-
-      // Se não está logado, mostrar formulário de registro
-      if (!user) {
-        setShowRegisterForm(true);
-      }
 
     } catch (error: any) {
       console.error('❌ [INVITE-PAGE] Erro na validação:', error);
@@ -87,10 +91,14 @@ const InvitePage = () => {
     }
   };
 
+  const handleRegistrationSuccess = () => {
+    navigate('/dashboard');
+  };
+
   if (isValidating) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
-        <Card className="w-full max-w-md">
+        <Card className="w-full max-w-md bg-white/90 backdrop-blur-sm border-0 shadow-xl">
           <CardContent className="pt-6">
             <div className="flex flex-col items-center space-y-4">
               <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
@@ -105,7 +113,7 @@ const InvitePage = () => {
   if (!validationResult) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
-        <Card className="w-full max-w-md">
+        <Card className="w-full max-w-md bg-white/90 backdrop-blur-sm border-0 shadow-xl">
           <CardContent className="pt-6">
             <div className="flex flex-col items-center space-y-4">
               <AlertTriangle className="h-8 w-8 text-yellow-600" />
@@ -123,7 +131,7 @@ const InvitePage = () => {
   if (!validationResult.isValid) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-red-50 to-pink-100">
-        <Card className="w-full max-w-md">
+        <Card className="w-full max-w-md bg-white/90 backdrop-blur-sm border-0 shadow-xl">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-red-700">
               <XCircle className="h-5 w-5" />
@@ -149,7 +157,7 @@ const InvitePage = () => {
   if (user && user.email === validationResult.invite?.email) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-emerald-100">
-        <Card className="w-full max-w-md">
+        <Card className="w-full max-w-md bg-white/90 backdrop-blur-sm border-0 shadow-xl">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-green-700">
               <CheckCircle className="h-5 w-5" />
@@ -169,34 +177,23 @@ const InvitePage = () => {
     );
   }
 
-  if (showRegisterForm && validationResult.invite) {
+  if (validationResult.invite && !user) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-8">
-        <div className="container mx-auto px-4">
-          <div className="max-w-md mx-auto">
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-center">Criar Conta</CardTitle>
-                <p className="text-center text-sm text-gray-600">
-                  Convite para: {validationResult.invite.email}
-                </p>
-              </CardHeader>
-              <CardContent>
-                <RegisterForm 
-                  inviteToken={token}
-                  prefilledEmail={validationResult.invite.email}
-                />
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      </div>
+      <EnhancedInviteRegistration
+        inviteToken={token!}
+        inviteDetails={{
+          email: validationResult.invite.email,
+          role: validationResult.invite.role,
+          notes: validationResult.invite.notes
+        }}
+        onSuccess={handleRegistrationSuccess}
+      />
     );
   }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100">
-      <Card className="w-full max-w-md">
+      <Card className="w-full max-w-md bg-white/90 backdrop-blur-sm border-0 shadow-xl">
         <CardContent className="pt-6">
           <div className="flex flex-col items-center space-y-4">
             <AlertTriangle className="h-8 w-8 text-yellow-600" />
