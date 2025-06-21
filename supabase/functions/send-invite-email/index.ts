@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { Resend } from "npm:resend@2.0.0";
 
@@ -18,7 +17,7 @@ interface SendInviteEmailRequest {
 }
 
 const handler = async (req: Request): Promise<Response> => {
-  console.log(`📧 [SEND-INVITE-EMAIL] Nova requisição: ${req.method} - v3.2 Logo Supabase Storage`);
+  console.log(`📧 [SEND-INVITE-EMAIL] Nova requisição: ${req.method} - v3.3 Logo Images Bucket`);
   
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -48,8 +47,8 @@ const handler = async (req: Request): Promise<Response> => {
     
     const inviteUrl = `${Deno.env.get("SITE_URL") || "https://viverdeia.ai"}/convite/${token}`;
     
-    // URL da logo no Supabase Storage
-    const logoUrl = "https://zotzvtepvpnkcoobdubt.supabase.co/storage/v1/object/public/logos/email/viver-de-ia-logo.png";
+    // URL da logo no bucket "images" do Supabase Storage
+    const logoUrl = "https://zotzvtepvpnkcoobdubt.supabase.co/storage/v1/object/public/images/email/viver-de-ia-logo.png";
     
     const emailResponse = await resend.emails.send({
       from: "Viver de IA <convites@viverdeia.ai>",
@@ -59,7 +58,7 @@ const handler = async (req: Request): Promise<Response> => {
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 0; background-color: #f8fafc;">
           <!-- Header com logo e gradiente da marca -->
           <div style="background: linear-gradient(to right, #22d3ee, #14b8a6); color: white; padding: 40px 30px; text-align: center; border-radius: 12px 12px 0 0; box-shadow: 0 4px 20px rgba(34, 211, 238, 0.3);">
-            <img src="${logoUrl}" alt="Viver de IA" style="height: 56px; width: auto; margin-bottom: 20px; display: block; margin-left: auto; margin-right: auto;" />
+            <img src="${logoUrl}" alt="Viver de IA" style="height: 56px; width: auto; margin-bottom: 20px; display: block; margin-left: auto; margin-right: auto;" onerror="this.style.display='none';" />
             <h1 style="margin: 0 0 20px 0; font-size: 28px; font-weight: bold;">Viver de IA</h1>
             <p style="margin: 0; font-size: 18px; opacity: 0.95;">
               ${isResend ? 'Reenvio do seu' : 'Você recebeu um'} convite para nossa plataforma!
@@ -154,5 +153,5 @@ const handler = async (req: Request): Promise<Response> => {
   }
 };
 
-console.log("📧 [SEND-INVITE-EMAIL] Edge Function carregada! v3.2 Logo Supabase Storage");
+console.log("📧 [SEND-INVITE-EMAIL] Edge Function carregada! v3.3 Logo Images Bucket");
 serve(handler);

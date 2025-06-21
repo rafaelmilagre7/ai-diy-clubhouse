@@ -10,24 +10,9 @@ export const uploadEmailLogo = async () => {
     // Converter para File
     const file = new File([blob], 'viver-de-ia-email-logo.png', { type: 'image/png' });
     
-    // Verificar se o bucket existe, se não criar
-    const { data: buckets } = await supabase.storage.listBuckets();
-    const logosBucketExists = buckets?.some(bucket => bucket.id === 'logos');
-    
-    if (!logosBucketExists) {
-      const { error: bucketError } = await supabase.storage.createBucket('logos', {
-        public: true,
-        fileSizeLimit: 5242880 // 5MB
-      });
-      
-      if (bucketError) {
-        console.error('Erro ao criar bucket logos:', bucketError);
-      }
-    }
-    
-    // Fazer upload para o Supabase Storage
+    // Fazer upload para o bucket "images" existente
     const { data, error } = await supabase.storage
-      .from('logos')
+      .from('images')
       .upload('email/viver-de-ia-logo.png', file, {
         upsert: true,
         contentType: 'image/png'
@@ -40,7 +25,7 @@ export const uploadEmailLogo = async () => {
 
     // Obter URL pública
     const { data: publicUrlData } = supabase.storage
-      .from('logos')
+      .from('images')
       .getPublicUrl('email/viver-de-ia-logo.png');
 
     console.log('Logo enviada com sucesso para:', publicUrlData.publicUrl);
@@ -51,5 +36,5 @@ export const uploadEmailLogo = async () => {
   }
 };
 
-// URL da logo para usar nos emails - será atualizada após o upload
-export const EMAIL_LOGO_URL = 'https://zotzvtepvpnkcoobdubt.supabase.co/storage/v1/object/public/logos/email/viver-de-ia-logo.png';
+// URL da logo para usar nos emails - atualizada para bucket "images"
+export const EMAIL_LOGO_URL = 'https://zotzvtepvpnkcoobdubt.supabase.co/storage/v1/object/public/images/email/viver-de-ia-logo.png';

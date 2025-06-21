@@ -15,7 +15,7 @@ const EmailLogoUploader = () => {
       setIsUploading(true);
       setUploadStatus('idle');
 
-      console.log('🖼️ Iniciando upload da logo para Supabase Storage...');
+      console.log('🖼️ Iniciando upload da logo para bucket "images"...');
 
       const logoUrl = await uploadEmailLogo();
 
@@ -92,7 +92,7 @@ const EmailLogoUploader = () => {
               </code>
             </div>
             <div>
-              <strong>Bucket:</strong> logos
+              <strong>Bucket:</strong> images
             </div>
             <div>
               <strong>Caminho:</strong> email/viver-de-ia-logo.png
@@ -123,10 +123,10 @@ const EmailLogoUploader = () => {
 
         <div className="text-xs text-muted-foreground space-y-1">
           <p><strong>Como funciona:</strong></p>
-          <p>• A logo será enviada para o bucket 'logos' no Supabase Storage</p>
+          <p>• A logo será enviada para o bucket 'images' no Supabase Storage</p>
           <p>• O template de email usará a URL pública do Storage</p>
           <p>• Melhor compatibilidade com clientes de email</p>
-          <p>• A logo ficará disponível em: storage/v1/object/public/logos/email/</p>
+          <p>• A logo ficará disponível em: storage/v1/object/public/images/email/</p>
         </div>
       </CardContent>
     </Card>
