@@ -4,38 +4,37 @@ import { useAuth } from '@/contexts/auth';
 import { supabase } from '@/lib/supabase';
 import { getUserRoleName } from '@/lib/supabase/types';
 
-export const useOnboardingStatus = () => {
+export const useOnboardingRequired = () => {
   const { user, profile, isLoading: authLoading } = useAuth();
   const [isLoading, setIsLoading] = useState(true);
   const [isRequired, setIsRequired] = useState(false);
   const [hasCompleted, setHasCompleted] = useState(false);
 
   useEffect(() => {
-    const checkOnboardingStatus = async () => {
+    const checkOnboardingRequirement = async () => {
       if (authLoading || !user) {
         setIsLoading(true);
         return;
       }
 
       try {
-        console.log('[OnboardingStatus] Verificando status para usuário:', user.id);
+        console.log('[ONBOARDING-REQUIRED] Verificando necessidade de onboarding para:', user.id);
         
-        // Verificação de admin APENAS via banco de dados
+        // Verificar se é admin - admins não precisam de onboarding
         const userRole = getUserRoleName(profile);
         const isAdmin = userRole === 'admin';
 
-        console.log('[OnboardingStatus] Role do usuário:', userRole, 'É admin:', isAdmin);
+        console.log('[ONBOARDING-REQUIRED] Role do usuário:', userRole, 'É admin:', isAdmin);
 
-        // Admins não precisam de onboarding
         if (isAdmin) {
-          console.log('[OnboardingStatus] Admin detectado - onboarding não necessário');
+          console.log('[ONBOARDING-REQUIRED] Admin detectado - onboarding não necessário');
           setIsRequired(false);
           setHasCompleted(true);
           setIsLoading(false);
           return;
         }
 
-        // Verificar se o usuário já completou o onboarding
+        // Verificar se já completou onboarding
         const { data: onboardingData, error } = await supabase
           .from('user_onboarding')
           .select('completed_at, user_id')
@@ -43,19 +42,19 @@ export const useOnboardingStatus = () => {
           .maybeSingle();
 
         if (error && error.code !== 'PGRST116') {
-          console.error('[OnboardingStatus] Erro ao verificar onboarding:', error);
+          console.error('[ONBOARDING-REQUIRED] Erro ao verificar onboarding:', error);
           // Em caso de erro, assumir que precisa fazer onboarding
           setIsRequired(true);
           setHasCompleted(false);
         } else {
           const completed = !!(onboardingData as any)?.completed_at;
-          console.log('[OnboardingStatus] Dados do onboarding encontrados:', !!onboardingData, 'Completado:', completed);
+          console.log('[ONBOARDING-REQUIRED] Dados encontrados:', !!onboardingData, 'Completado:', completed);
           
           setHasCompleted(completed);
           setIsRequired(!completed);
         }
       } catch (error) {
-        console.error('[OnboardingStatus] Erro ao verificar status do onboarding:', error);
+        console.error('[ONBOARDING-REQUIRED] Erro ao verificar necessidade de onboarding:', error);
         // Em caso de erro, assumir que precisa fazer onboarding por segurança
         setIsRequired(true);
         setHasCompleted(false);
@@ -64,10 +63,10 @@ export const useOnboardingStatus = () => {
       }
     };
 
-    checkOnboardingStatus();
+    checkOnboardingRequirement();
   }, [user, profile, authLoading]);
 
-  console.log('[OnboardingStatus] Estado atual:', {
+  console.log('[ONBOARDING-REQUIRED] Estado atual:', {
     isLoading,
     isRequired,
     hasCompleted,

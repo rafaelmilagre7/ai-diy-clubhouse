@@ -1,22 +1,26 @@
 
 import { Navigate } from "react-router-dom";
 import { useAuth } from "@/contexts/auth";
+import { useOnboardingRequired } from "@/hooks/useOnboardingRequired";
 import LoadingScreen from "@/components/common/LoadingScreen";
 
 const RootRedirect = () => {
-  const { user, profile, isLoading, isAdmin } = useAuth();
+  const { user, profile, isLoading: authLoading, isAdmin } = useAuth();
+  const { isRequired: onboardingRequired, isLoading: onboardingLoading } = useOnboardingRequired();
   
   console.log("[ROOT-REDIRECT] Estado:", {
     hasUser: !!user,
     hasProfile: !!profile,
-    isLoading,
+    authLoading,
+    onboardingLoading,
+    onboardingRequired,
     isAdmin,
     userEmail: user?.email
   });
   
-  // Aguardar o carregamento completo
-  if (isLoading) {
-    return <LoadingScreen message="Verificando autenticação..." />;
+  // Aguardar o carregamento completo de auth e onboarding
+  if (authLoading || onboardingLoading) {
+    return <LoadingScreen message="Verificando seu acesso..." />;
   }
   
   // Se não há usuário, ir para login
@@ -25,15 +29,21 @@ const RootRedirect = () => {
     return <Navigate to="/login" replace />;
   }
   
-  // Se há usuário mas ainda não carregou perfil, aguardar um pouco mais
+  // Se há usuário mas ainda não carregou perfil, aguardar
   if (user && !profile) {
     console.log("[ROOT-REDIRECT] Usuário sem perfil, aguardando...");
     return <LoadingScreen message="Carregando perfil..." />;
   }
   
-  // Admin sempre vai para dashboard
+  // LÓGICA CRÍTICA: Verificar se precisa fazer onboarding
+  if (onboardingRequired) {
+    console.log("[ROOT-REDIRECT] Onboarding necessário -> /onboarding");
+    return <Navigate to="/onboarding" replace />;
+  }
+  
+  // Se admin e onboarding já foi feito (ou não é necessário), ir para dashboard
   if (isAdmin) {
-    console.log("[ROOT-REDIRECT] Admin -> dashboard");
+    console.log("[ROOT-REDIRECT] Admin com onboarding completo -> dashboard");
     return <Navigate to="/dashboard" replace />;
   }
   
@@ -43,8 +53,8 @@ const RootRedirect = () => {
     return <Navigate to="/formacao" replace />;
   }
   
-  // Padrão -> dashboard
-  console.log("[ROOT-REDIRECT] Usuário padrão -> dashboard");
+  // Padrão -> dashboard (apenas se onboarding foi completado)
+  console.log("[ROOT-REDIRECT] Usuário padrão com onboarding completo -> dashboard");
   return <Navigate to="/dashboard" replace />;
 };
 

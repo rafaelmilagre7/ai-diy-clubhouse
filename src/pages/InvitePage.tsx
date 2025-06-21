@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -91,8 +90,10 @@ const InvitePage = () => {
     }
   };
 
+  // CORREÇÃO CRÍTICA: Redirecionar para onboarding após registro bem-sucedido
   const handleRegistrationSuccess = () => {
-    navigate('/dashboard');
+    console.log('✅ [INVITE-PAGE] Registro bem-sucedido, redirecionando para onboarding');
+    navigate('/onboarding');
   };
 
   if (isValidating) {
@@ -154,6 +155,7 @@ const InvitePage = () => {
     );
   }
 
+  // CORREÇÃO: Se usuário já está logado, verificar se precisa fazer onboarding
   if (user && user.email === validationResult.invite?.email) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-emerald-100">
@@ -166,10 +168,10 @@ const InvitePage = () => {
           </CardHeader>
           <CardContent className="space-y-4">
             <p className="text-gray-600">
-              Você já está logado e pode acessar a plataforma.
+              Você já está logado. Vamos verificar seu perfil.
             </p>
-            <Button onClick={() => navigate('/dashboard')} className="w-full">
-              Ir para Dashboard
+            <Button onClick={() => navigate('/onboarding')} className="w-full">
+              Continuar para Plataforma
             </Button>
           </CardContent>
         </Card>
