@@ -1,266 +1,369 @@
 
-import { useState, useEffect } from "react";
-import { useDocumentTitle } from "@/hooks/use-document-title";
-import { usePermissions } from "@/hooks/auth/usePermissions";
-import { useInvitesList } from "@/hooks/admin/invites/useInvitesList";
-import SimpleCreateInviteDialog from "./components/SimpleCreateInviteDialog";
-import SimpleInvitesTab from "./components/SimpleInvitesTab";
-import InviteAnalyticsDashboard from "./components/InviteAnalyticsDashboard";
-import WhatsAppConfigPanel from "./components/WhatsAppConfigPanel";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { BarChart3, Users, Settings, MessageCircle } from "lucide-react";
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { 
+  Plus, 
+  Search, 
+  Filter, 
+  Mail, 
+  MessageSquare, 
+  Calendar, 
+  User, 
+  MoreHorizontal,
+  Clock,
+  CheckCircle,
+  XCircle,
+  RotateCcw
+} from 'lucide-react';
+import { useInvites } from '@/hooks/admin/useInvites';
+import { useRoles } from '@/hooks/admin/useRoles';
+import { CreateInviteModal } from './components/CreateInviteModal';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
+import { cn } from '@/lib/utils';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import { toast } from 'sonner';
 
 const InvitesManagement = () => {
-  useDocumentTitle("Gerenciar Convites | Admin");
+  const { 
+    invites, 
+    loading, 
+    isCreating, 
+    isSending, 
+    isDeleting,
+    fetchInvites, 
+    createInvite, 
+    resendInvite, 
+    deleteInvite 
+  } = useInvites();
   
-  const { roles, loading: rolesLoading } = usePermissions();
-  const { invites, loading: invitesLoading, fetchInvites } = useInvitesList();
+  const { roles } = useRoles();
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [roleFilter, setRoleFilter] = useState<string>('all');
+  const [deleteInviteId, setDeleteInviteId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchInvites();
   }, [fetchInvites]);
 
-  const handleInvitesChange = () => {
-    fetchInvites();
+  const getStatusBadge = (invite: any) => {
+    if (invite.used_at) {
+      return <Badge className="bg-green-100 text-green-800 border-green-300">Usado</Badge>;
+    }
+    
+    const isExpired = new Date(invite.expires_at) < new Date();
+    if (isExpired) {
+      return <Badge variant="destructive">Expirado</Badge>;
+    }
+    
+    return <Badge variant="outline" className="border-yellow-500 text-yellow-700">Pendente</Badge>;
   };
 
-  // Calcular estatísticas dos convites
-  const inviteStats = {
-    total: invites.length,
-    pending: invites.filter(i => !i.used_at && new Date(i.expires_at) > new Date()).length,
-    used: invites.filter(i => i.used_at).length,
-    expired: invites.filter(i => !i.used_at && new Date(i.expires_at) <= new Date()).length,
+  const getStatusIcon = (invite: any) => {
+    if (invite.used_at) {
+      return <CheckCircle className="h-4 w-4 text-green-500" />;
+    }
+    
+    const isExpired = new Date(invite.expires_at) < new Date();
+    if (isExpired) {
+      return <XCircle className="h-4 w-4 text-red-500" />;
+    }
+    
+    return <Clock className="h-4 w-4 text-yellow-500" />;
   };
 
-  if (rolesLoading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-          <p className="mt-2 text-muted-foreground">Carregando...</p>
-        </div>
-      </div>
-    );
-  }
+  const filteredInvites = invites.filter(invite => {
+    const matchesSearch = invite.email.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    let matchesStatus = true;
+    if (statusFilter !== 'all') {
+      if (statusFilter === 'used') {
+        matchesStatus = !!invite.used_at;
+      } else if (statusFilter === 'expired') {
+        matchesStatus = !invite.used_at && new Date(invite.expires_at) < new Date();
+      } else if (statusFilter === 'pending') {
+        matchesStatus = !invite.used_at && new Date(invite.expires_at) >= new Date();
+      }
+    }
+    
+    const matchesRole = roleFilter === 'all' || invite.role_id === roleFilter;
+    
+    return matchesSearch && matchesStatus && matchesRole;
+  });
+
+  const handleResendInvite = async (invite: any) => {
+    try {
+      await resendInvite(invite);
+      toast.success('Convite reenviado com sucesso!');
+    } catch (error) {
+      toast.error('Erro ao reenviar convite');
+    }
+  };
+
+  const handleDeleteInvite = async () => {
+    if (!deleteInviteId) return;
+    
+    try {
+      await deleteInvite(deleteInviteId);
+      toast.success('Convite excluído com sucesso!');
+      setDeleteInviteId(null);
+    } catch (error) {
+      toast.error('Erro ao excluir convite');
+    }
+  };
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex justify-between items-start">
+    <div className="container mx-auto py-6 space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Sistema de Comunicação</h1>
-          <p className="text-muted-foreground mt-1">
-            Gerencie convites e comunicação multicanal com usuários
+          <h1 className="text-3xl font-bold tracking-tight">Gerenciamento de Convites</h1>
+          <p className="text-muted-foreground">
+            Convide novos membros para a plataforma
           </p>
-          <div className="flex gap-2 mt-3">
-            <Badge variant="outline">{inviteStats.total} Total</Badge>
-            <Badge variant="default">{inviteStats.pending} Pendentes</Badge>
-            <Badge variant="secondary">{inviteStats.used} Utilizados</Badge>
-            {inviteStats.expired > 0 && (
-              <Badge variant="destructive">{inviteStats.expired} Expirados</Badge>
-            )}
-          </div>
         </div>
-        <div className="flex gap-2">
-          <SimpleCreateInviteDialog 
-            roles={roles} 
-            onInviteCreated={handleInvitesChange}
-          />
-        </div>
+        <Button 
+          onClick={() => setShowCreateModal(true)}
+          className="flex items-center gap-2"
+        >
+          <Plus className="h-4 w-4" />
+          Novo Convite
+        </Button>
       </div>
 
-      <Tabs defaultValue="invites" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="invites" className="flex items-center gap-2">
-            <Users className="h-4 w-4" />
-            Convites
-          </TabsTrigger>
-          <TabsTrigger value="analytics" className="flex items-center gap-2">
-            <BarChart3 className="h-4 w-4" />
-            Analytics
-          </TabsTrigger>
-          <TabsTrigger value="whatsapp" className="flex items-center gap-2">
-            <MessageCircle className="h-4 w-4" />
-            WhatsApp
-          </TabsTrigger>
-          <TabsTrigger value="settings" className="flex items-center gap-2">
-            <Settings className="h-4 w-4" />
-            Configurações
-          </TabsTrigger>
-        </TabsList>
+      {/* Filtros */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">Filtros e Busca</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Buscar</label>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Input
+                  placeholder="Email..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+            </div>
 
-        <TabsContent value="invites">
-          <Card>
-            <CardHeader>
-              <CardTitle>Lista de Convites</CardTitle>
-              <CardDescription>
-                Gerencie todos os convites enviados para novos usuários
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <SimpleInvitesTab
-                invites={invites}
-                loading={invitesLoading}
-                onInvitesChange={handleInvitesChange}
-              />
-            </CardContent>
-          </Card>
-        </TabsContent>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Status</label>
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos</SelectItem>
+                  <SelectItem value="pending">Pendentes</SelectItem>
+                  <SelectItem value="used">Usados</SelectItem>
+                  <SelectItem value="expired">Expirados</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
 
-        <TabsContent value="analytics">
-          <InviteAnalyticsDashboard />
-        </TabsContent>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Função</label>
+              <Select value={roleFilter} onValueChange={setRoleFilter}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todas</SelectItem>
+                  {roles.map(role => (
+                    <SelectItem key={role.id} value={role.id}>
+                      {role.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
-        <TabsContent value="whatsapp">
-          <div className="space-y-6">
-            <WhatsAppConfigPanel />
-            
-            <Card>
-              <CardHeader>
-                <CardTitle>Guia de Configuração WhatsApp Business API</CardTitle>
-                <CardDescription>
-                  Instruções detalhadas para configurar o WhatsApp Business API
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="prose prose-sm max-w-none">
-                  <h4>Passo 1: Criar App no Facebook Developers</h4>
-                  <ol>
-                    <li>Acesse <code>developers.facebook.com</code></li>
-                    <li>Crie um novo app do tipo "Business"</li>
-                    <li>Adicione o produto "WhatsApp Business API"</li>
-                  </ol>
-
-                  <h4>Passo 2: Configurar Number ID e Business ID</h4>
-                  <ol>
-                    <li>No painel do WhatsApp, anote o <strong>Phone Number ID</strong></li>
-                    <li>No Business Manager, anote o <strong>Business Account ID</strong></li>
-                  </ol>
-
-                  <h4>Passo 3: Gerar Access Token</h4>
-                  <ol>
-                    <li>No painel do app, vá em "WhatsApp" → "API Setup"</li>
-                    <li>Gere um Access Token permanente</li>
-                    <li>Configure as permissões necessárias</li>
-                  </ol>
-
-                  <h4>Passo 4: Configurar Variáveis no Supabase</h4>
-                  <p>Configure as seguintes variáveis de ambiente:</p>
-                  <ul>
-                    <li><code>WHATSAPP_API_TOKEN</code> - Seu access token</li>
-                    <li><code>WHATSAPP_PHONE_NUMBER_ID</code> - ID do número de telefone</li>
-                    <li><code>WHATSAPP_BUSINESS_ID</code> - ID da conta business</li>
-                    <li><code>WHATSAPP_WEBHOOK_TOKEN</code> - Token para webhooks</li>
-                  </ul>
-                </div>
-              </CardContent>
-            </Card>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">&nbsp;</label>
+              <Button 
+                variant="outline" 
+                onClick={fetchInvites}
+                className="w-full"
+                disabled={loading}
+              >
+                <RotateCcw className="h-4 w-4 mr-2" />
+                Atualizar
+              </Button>
+            </div>
           </div>
-        </TabsContent>
+        </CardContent>
+      </Card>
 
-        <TabsContent value="settings">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Configurações de E-mail</CardTitle>
-                <CardDescription>
-                  Configurações do sistema de e-mail via Resend
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <span>Provedor</span>
-                    <Badge variant="default">Resend</Badge>
+      {/* Lista de Convites */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Convites ({filteredInvites.length})</CardTitle>
+          <CardDescription>
+            Lista de todos os convites enviados
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {loading ? (
+            <div className="text-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-viverblue mx-auto"></div>
+              <p className="text-sm text-gray-500 mt-2">Carregando convites...</p>
+            </div>
+          ) : filteredInvites.length === 0 ? (
+            <div className="text-center py-8">
+              <Mail className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-gray-900 mb-2">Nenhum convite encontrado</h3>
+              <p className="text-sm text-gray-500 mb-4">
+                {searchTerm || statusFilter !== 'all' || roleFilter !== 'all'
+                  ? 'Tente ajustar os filtros'
+                  : 'Comece criando seu primeiro convite'
+                }
+              </p>
+              {!searchTerm && statusFilter === 'all' && roleFilter === 'all' && (
+                <Button onClick={() => setShowCreateModal(true)}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Criar Primeiro Convite
+                </Button>
+              )}
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {filteredInvites.map(invite => {
+                const role = roles.find(r => r.id === invite.role_id);
+                const isExpired = !invite.used_at && new Date(invite.expires_at) < new Date();
+                const canResend = !invite.used_at && !isExpired;
+                
+                return (
+                  <div
+                    key={invite.id}
+                    className={cn(
+                      "border rounded-lg p-4 space-y-3 transition-all",
+                      invite.used_at && "bg-green-50 border-green-200",
+                      isExpired && "bg-red-50 border-red-200"
+                    )}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        {getStatusIcon(invite)}
+                        <div>
+                          <p className="font-medium">{invite.email}</p>
+                          <div className="flex items-center gap-2 text-sm text-gray-500">
+                            <User className="h-3 w-3" />
+                            <span>{role?.name}</span>
+                            <span>•</span>
+                            <Calendar className="h-3 w-3" />
+                            <span>
+                              Criado em {format(new Date(invite.created_at), 'dd/MM/yyyy', { locale: ptBR })}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center gap-3">
+                        {getStatusBadge(invite)}
+                        
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon">
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            {canResend && (
+                              <DropdownMenuItem 
+                                onClick={() => handleResendInvite(invite)}
+                                disabled={isSending}
+                              >
+                                <RotateCcw className="h-4 w-4 mr-2" />
+                                Reenviar
+                              </DropdownMenuItem>
+                            )}
+                            <DropdownMenuItem 
+                              onClick={() => setDeleteInviteId(invite.id)}
+                              className="text-red-600"
+                              disabled={isDeleting}
+                            >
+                              <XCircle className="h-4 w-4 mr-2" />
+                              Excluir
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
+                    </div>
+                    
+                    {invite.notes && (
+                      <div className="bg-gray-50 rounded p-3 border-l-4 border-viverblue">
+                        <p className="text-sm text-gray-700">{invite.notes}</p>
+                      </div>
+                    )}
+                    
+                    <div className="flex items-center gap-4 text-xs text-gray-500">
+                      <span>Expira: {format(new Date(invite.expires_at), 'dd/MM/yyyy HH:mm', { locale: ptBR })}</span>
+                      {invite.last_sent_at && (
+                        <span>Último envio: {format(new Date(invite.last_sent_at), 'dd/MM/yyyy HH:mm', { locale: ptBR })}</span>
+                      )}
+                      {invite.used_at && (
+                        <span>Usado: {format(new Date(invite.used_at), 'dd/MM/yyyy HH:mm', { locale: ptBR })}</span>
+                      )}
+                    </div>
                   </div>
-                  <div className="flex items-center justify-between">
-                    <span>Domain</span>
-                    <code className="text-xs bg-muted px-2 py-1 rounded">
-                      convites@viverdeia.ai
-                    </code>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span>Status</span>
-                    <Badge variant="default">Ativo</Badge>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+                );
+              })}
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
-            <Card>
-              <CardHeader>
-                <CardTitle>Limites e Rate Limiting</CardTitle>
-                <CardDescription>
-                  Configurações de limites de envio
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <span>E-mail por hora</span>
-                    <span>100</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span>WhatsApp por hora</span>
-                    <span>80</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span>Retry automático</span>
-                    <Badge variant="default">Ativo</Badge>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+      {/* Modal de Criação */}
+      <CreateInviteModal
+        open={showCreateModal}
+        onOpenChange={setShowCreateModal}
+        onCreateInvite={createInvite}
+        isCreating={isCreating}
+      />
 
-            <Card>
-              <CardHeader>
-                <CardTitle>Templates de Mensagem</CardTitle>
-                <CardDescription>
-                  Gerencie templates de e-mail e WhatsApp
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <span>Template de E-mail</span>
-                    <Badge variant="default">Personalizado</Badge>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span>Template WhatsApp</span>
-                    <Badge variant="outline">Padrão</Badge>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Monitoramento</CardTitle>
-                <CardDescription>
-                  Status do sistema de monitoramento
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <span>Logs de entrega</span>
-                    <Badge variant="default">Ativo</Badge>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span>Webhooks</span>
-                    <Badge variant="outline">Configurar</Badge>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span>Alertas</span>
-                    <Badge variant="default">Ativo</Badge>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
-      </Tabs>
+      {/* Dialog de Confirmação de Exclusão */}
+      <AlertDialog open={!!deleteInviteId} onOpenChange={() => setDeleteInviteId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir Convite</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja excluir este convite? Esta ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteInvite} className="bg-red-600 hover:bg-red-700">
+              Excluir
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
