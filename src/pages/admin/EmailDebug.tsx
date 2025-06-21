@@ -1,9 +1,9 @@
-
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Mail, Settings, BarChart3, TestTube, FileText, CheckCircle } from 'lucide-react';
+import { Mail, Settings, BarChart3, TestTube, FileText, CheckCircle, Image } from 'lucide-react';
 import EmailTemplateTester from './invites/components/EmailTemplateTester';
 import EmailConfigPanel from './invites/components/EmailConfigPanel';
+import EmailLogoUploader from './invites/components/EmailLogoUploader';
 
 const EmailDebug = () => {
   return (
@@ -19,6 +19,15 @@ const EmailDebug = () => {
       </div>
 
       <div className="grid gap-6">
+        {/* Upload da Logo */}
+        <section>
+          <div className="flex items-center gap-2 mb-4">
+            <Image className="h-5 w-5" />
+            <h2 className="text-xl font-semibold">Gerenciamento de Logo</h2>
+          </div>
+          <EmailLogoUploader />
+        </section>
+
         {/* Teste de Template Email */}
         <section>
           <div className="flex items-center gap-2 mb-4">
@@ -56,10 +65,11 @@ const EmailDebug = () => {
                   <div><strong>Status:</strong> ✅ Configurado</div>
                   <div><strong>Remetente:</strong> Viver de IA</div>
                   <div><strong>Domínio:</strong> convites@viverdeia.ai</div>
+                  <div><strong>Logo:</strong> Supabase Storage ✅</div>
                   <div><strong>Variáveis:</strong> Nome, Link, Observações</div>
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  Template HTML responsivo com design profissional.
+                  Template HTML responsivo com design profissional e logo otimizada.
                 </p>
               </CardContent>
             </Card>
