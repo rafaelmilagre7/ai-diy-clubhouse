@@ -3,107 +3,65 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
 import { 
   CheckCircle, 
   XCircle, 
   AlertCircle, 
-  Loader2, 
+  RefreshCw, 
   Settings, 
-  TestTube,
-  Send,
-  ExternalLink,
-  Info
+  MessageSquare,
+  Loader2,
+  Bug
 } from 'lucide-react';
-
-interface ConfigStatus {
-  hasToken: boolean;
-  hasPhoneId: boolean;
-  hasBusinessId: boolean;
-  hasWebhookToken: boolean;
-  isValid: boolean;
-  details: {
-    tokenLength: number;
-    phoneIdLength: number;
-    businessIdLength: number;
-    webhookTokenLength: number;
-  };
-}
-
-interface ConnectionResult {
-  success: boolean;
-  message: string;
-  details?: any;
-}
+import { useWhatsAppDiagnostics } from '@/hooks/admin/invites/useWhatsAppDiagnostics';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 const WhatsAppConfigPanel = () => {
-  const [configStatus, setConfigStatus] = useState<ConfigStatus | null>(null);
-  const [connectionResult, setConnectionResult] = useState<ConnectionResult | null>(null);
+  const { runFullDiagnostic, testWhatsAppCredentials, isRunning } = useWhatsAppDiagnostics();
+  const [configData, setConfigData] = useState<any>(null);
+  const [connectionData, setConnectionData] = useState<any>(null);
   const [isCheckingConfig, setIsCheckingConfig] = useState(false);
   const [isTestingConnection, setIsTestingConnection] = useState(false);
-  const [isSendingTest, setIsSendingTest] = useState(false);
-  const [testNumber, setTestNumber] = useState('');
-  const [environment, setEnvironment] = useState<'local' | 'production' | 'unknown'>('unknown');
+  const [logs, setLogs] = useState<string[]>([]);
 
-  // Detectar ambiente
-  React.useEffect(() => {
-    const hostname = window.location.hostname;
-    if (hostname === 'localhost' || hostname === '127.0.0.1') {
-      setEnvironment('local');
-    } else if (hostname.includes('viverdeia') || hostname.includes('supabase')) {
-      setEnvironment('production');
-    } else {
-      setEnvironment('unknown');
-    }
-  }, []);
+  const addLog = (message: string) => {
+    const timestamp = new Date().toLocaleTimeString();
+    setLogs(prev => [...prev, `[${timestamp}] ${message}`]);
+    console.log(`🔧 [WhatsApp Debug] ${message}`);
+  };
 
   const checkConfiguration = async () => {
     setIsCheckingConfig(true);
-    setConfigStatus(null);
+    addLog('Iniciando verificação de configuração...');
     
     try {
-      // Primeiro tenta usar a Edge Function
+      addLog('Chamando Edge Function whatsapp-config-check...');
+      
       const { data, error } = await supabase.functions.invoke('whatsapp-config-check', {
         body: { action: 'check_config' }
       });
 
       if (error) {
-        console.warn('Edge Function não disponível:', error);
-        throw new Error('Edge Function indisponível');
+        addLog(`Erro ao chamar Edge Function: ${error.message}`);
+        toast.error(`Erro na verificação: ${error.message}`);
+        throw error;
       }
 
-      setConfigStatus(data);
+      addLog('Edge Function respondeu com sucesso');
+      addLog(`Dados recebidos: ${JSON.stringify(data)}`);
       
-      if (data.isValid) {
-        toast.success('Configuração do WhatsApp válida!');
-      } else {
-        toast.warning('Configuração incompleta do WhatsApp');
-      }
-
-    } catch (error) {
-      console.error('Erro ao verificar configuração:', error);
+      setConfigData(data);
+      toast.success('Configuração verificada com sucesso');
       
-      // Fallback: mostrar status básico sem validação das variáveis
-      setConfigStatus({
-        hasToken: false,
-        hasPhoneId: false,
-        hasBusinessId: false,
-        hasWebhookToken: false,
-        isValid: false,
-        details: {
-          tokenLength: 0,
-          phoneIdLength: 0,
-          businessIdLength: 0,
-          webhookTokenLength: 0
-        }
-      });
+    } catch (error: any) {
+      addLog(`Erro crítico: ${error.message || 'Erro desconhecido'}`);
+      console.error('Erro na verificação de configuração:', error);
+      setConfigData({ error: error.message, isValid: false });
       
-      toast.error('Não foi possível verificar a configuração. Edge Functions podem não estar deployadas.');
+      // NÃO usar fallback - deixar o erro aparecer
+      throw error;
     } finally {
       setIsCheckingConfig(false);
     }
@@ -111,195 +69,155 @@ const WhatsAppConfigPanel = () => {
 
   const testConnection = async () => {
     setIsTestingConnection(true);
-    setConnectionResult(null);
+    addLog('Iniciando teste de conexão...');
     
     try {
-      // Primeiro tenta usar a Edge Function
+      addLog('Chamando Edge Function para teste de conexão...');
+      
       const { data, error } = await supabase.functions.invoke('whatsapp-config-check', {
         body: { action: 'test_connection' }
       });
 
       if (error) {
-        console.warn('Edge Function não disponível, usando teste direto:', error);
-        await testConnectionDirect();
-        return;
+        addLog(`Erro no teste de conexão: ${error.message}`);
+        toast.error(`Erro no teste: ${error.message}`);
+        throw error;
       }
 
-      setConnectionResult(data);
+      addLog('Teste de conexão concluído');
+      addLog(`Resultado: ${JSON.stringify(data)}`);
+      
+      setConnectionData(data);
       
       if (data.success) {
-        toast.success('Conexão com WhatsApp API bem-sucedida!');
+        toast.success('Conexão com WhatsApp API bem-sucedida');
       } else {
-        toast.error(`Teste falhou: ${data.message}`);
+        toast.error(`Falha na conexão: ${data.message}`);
       }
-
-    } catch (error: any) {
-      console.error('Erro no teste de conexão:', error);
       
-      // Fallback para teste direto
-      await testConnectionDirect();
+    } catch (error: any) {
+      addLog(`Erro crítico no teste: ${error.message || 'Erro desconhecido'}`);
+      console.error('Erro no teste de conexão:', error);
+      setConnectionData({ error: error.message, success: false });
+      
+      // NÃO usar fallback - deixar o erro aparecer
+      throw error;
     } finally {
       setIsTestingConnection(false);
     }
   };
 
-  const testConnectionDirect = async () => {
-    try {
-      // Aviso sobre limitações do teste direto
-      toast.info('Usando teste direto (limitado por CORS). Para teste completo, use ambiente local.');
-      
-      setConnectionResult({
-        success: false,
-        message: 'Teste direto limitado por CORS. Edge Functions recomendadas para teste completo.',
-        details: {
-          recommendation: 'Use ambiente local ou faça deploy das Edge Functions',
-          environment: environment
-        }
-      });
-      
-    } catch (error: any) {
-      setConnectionResult({
-        success: false,
-        message: `Erro no teste direto: ${error.message}`,
-        details: { error: error.message }
-      });
-    }
-  };
-
-  const sendTestMessage = async () => {
-    if (!testNumber.trim()) {
-      toast.error('Digite um número para teste');
-      return;
-    }
-
-    setIsSendingTest(true);
+  const runFullDiagnosticHandler = async () => {
+    addLog('Executando diagnóstico completo...');
     
     try {
-      const { data, error } = await supabase.functions.invoke('send-invite-whatsapp', {
-        body: {
-          inviteId: 'test-' + Date.now(),
-          whatsappNumber: testNumber,
-          roleId: 'test',
-          token: 'TEST123',
-          isResend: false,
-          notes: 'Mensagem de teste do sistema'
-        }
-      });
-
-      if (error) {
-        throw new Error(error.message);
-      }
-
-      if (data.success) {
-        toast.success('Mensagem de teste enviada com sucesso!');
+      const result = await runFullDiagnostic();
+      addLog(`Diagnóstico completo: ${result.success ? 'SUCESSO' : 'FALHA'}`);
+      addLog(`Detalhes: ${JSON.stringify(result)}`);
+      
+      if (result.success) {
+        toast.success('Diagnóstico completo realizado com sucesso');
       } else {
-        toast.error(`Falha no envio: ${data.message}`);
+        toast.error(`Diagnóstico falhou: ${result.message}`);
       }
-
     } catch (error: any) {
-      console.error('Erro ao enviar mensagem de teste:', error);
-      toast.error(`Erro: ${error.message}`);
-    } finally {
-      setIsSendingTest(false);
+      addLog(`Erro no diagnóstico: ${error.message}`);
+      console.error('Erro no diagnóstico completo:', error);
+      throw error;
     }
   };
 
-  const renderEnvironmentBadge = () => {
-    const badgeProps = {
-      local: { variant: 'default' as const, text: '🔧 Local' },
-      production: { variant: 'secondary' as const, text: '🌐 Produção' },
-      unknown: { variant: 'outline' as const, text: '❓ Desconhecido' }
-    };
-
-    const { variant, text } = badgeProps[environment];
-    
-    return <Badge variant={variant}>{text}</Badge>;
+  const clearLogs = () => {
+    setLogs([]);
+    addLog('Logs limpos');
   };
 
-  const renderConfigItem = (label: string, hasValue: boolean, length: number) => (
-    <div className="flex justify-between items-center">
-      <span className="text-sm font-medium">{label}</span>
-      <div className="flex items-center gap-2">
-        {hasValue ? (
-          <>
-            <CheckCircle className="h-4 w-4 text-green-600" />
-            <span className="text-xs text-muted-foreground">({length} chars)</span>
-          </>
-        ) : (
-          <XCircle className="h-4 w-4 text-red-600" />
-        )}
-      </div>
-    </div>
-  );
+  const getStatusBadge = (isValid: boolean | undefined, error?: string) => {
+    if (error) {
+      return <Badge variant="destructive">Erro</Badge>;
+    }
+    if (isValid === undefined) {
+      return <Badge variant="secondary">Não verificado</Badge>;
+    }
+    return isValid ? 
+      <Badge variant="default" className="bg-green-600">Válido</Badge> : 
+      <Badge variant="destructive">Inválido</Badge>;
+  };
 
   return (
     <div className="space-y-6">
-      {/* Status do Ambiente */}
-      <Alert>
-        <Info className="h-4 w-4" />
-        <AlertDescription className="flex items-center justify-between">
-          <span>Ambiente detectado: {renderEnvironmentBadge()}</span>
-          {environment === 'production' && (
-            <span className="text-xs text-muted-foreground">
-              Edge Functions podem não estar deployadas
-            </span>
-          )}
-        </AlertDescription>
-      </Alert>
-
-      {/* Verificação de Configuração */}
+      {/* Status da Configuração */}
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
-            <div>
-              <CardTitle className="flex items-center gap-2">
-                <Settings className="h-5 w-5" />
-                Status da Configuração
-              </CardTitle>
-              <CardDescription>
-                Verificar se as variáveis de ambiente do WhatsApp estão configuradas
-              </CardDescription>
+            <div className="flex items-center gap-2">
+              <Settings className="h-5 w-5" />
+              <CardTitle>Status da Configuração</CardTitle>
             </div>
-            <Button
-              onClick={checkConfiguration}
-              disabled={isCheckingConfig}
-              variant="outline"
-            >
-              {isCheckingConfig ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Settings className="h-4 w-4" />
-              )}
-              Verificar
-            </Button>
+            {getStatusBadge(configData?.isValid, configData?.error)}
           </div>
+          <CardDescription>
+            Verificação das variáveis de ambiente necessárias
+          </CardDescription>
         </CardHeader>
-        <CardContent>
-          {configStatus && (
-            <div className="space-y-3">
-              {renderConfigItem('WHATSAPP_API_TOKEN', configStatus.hasToken, configStatus.details.tokenLength)}
-              {renderConfigItem('WHATSAPP_PHONE_NUMBER_ID', configStatus.hasPhoneId, configStatus.details.phoneIdLength)}
-              {renderConfigItem('WHATSAPP_BUSINESS_ID', configStatus.hasBusinessId, configStatus.details.businessIdLength)}
-              {renderConfigItem('WHATSAPP_WEBHOOK_TOKEN', configStatus.hasWebhookToken, configStatus.details.webhookTokenLength)}
-              
-              <Separator />
-              
-              <div className="flex justify-between items-center">
-                <span className="font-medium">Status Geral</span>
-                {configStatus.isValid ? (
-                  <Badge variant="default" className="bg-green-100 text-green-800">
-                    <CheckCircle className="h-3 w-3 mr-1" />
-                    Configurado
-                  </Badge>
-                ) : (
-                  <Badge variant="destructive">
-                    <XCircle className="h-3 w-3 mr-1" />
-                    Incompleto
-                  </Badge>
-                )}
+        <CardContent className="space-y-4">
+          {configData?.error ? (
+            <div className="flex items-center gap-2 p-3 bg-red-50 rounded-lg">
+              <XCircle className="h-5 w-5 text-red-500" />
+              <span className="text-red-700">Erro: {configData.error}</span>
+            </div>
+          ) : configData ? (
+            <div className="grid grid-cols-2 gap-4">
+              <div className="flex items-center gap-2">
+                {configData.hasToken ? 
+                  <CheckCircle className="h-4 w-4 text-green-500" /> : 
+                  <XCircle className="h-4 w-4 text-red-500" />
+                }
+                <span>WHATSAPP_API_TOKEN</span>
+              </div>
+              <div className="flex items-center gap-2">
+                {configData.hasPhoneId ? 
+                  <CheckCircle className="h-4 w-4 text-green-500" /> : 
+                  <XCircle className="h-4 w-4 text-red-500" />
+                }
+                <span>WHATSAPP_PHONE_NUMBER_ID</span>
+              </div>
+              <div className="flex items-center gap-2">
+                {configData.hasBusinessId ? 
+                  <CheckCircle className="h-4 w-4 text-green-500" /> : 
+                  <XCircle className="h-4 w-4 text-red-500" />
+                }
+                <span>WHATSAPP_BUSINESS_ID</span>
+              </div>
+              <div className="flex items-center gap-2">
+                {configData.hasWebhookToken ? 
+                  <CheckCircle className="h-4 w-4 text-green-500" /> : 
+                  <XCircle className="h-4 w-4 text-red-500" />
+                }
+                <span>WHATSAPP_WEBHOOK_TOKEN</span>
               </div>
             </div>
+          ) : (
+            <p className="text-muted-foreground">Clique em "Verificar" para checar a configuração</p>
           )}
+          
+          <Button 
+            onClick={checkConfiguration} 
+            disabled={isCheckingConfig}
+            className="w-full"
+          >
+            {isCheckingConfig ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                Verificando...
+              </>
+            ) : (
+              <>
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Verificar Configuração
+              </>
+            )}
+          </Button>
         </CardContent>
       </Card>
 
@@ -307,148 +225,122 @@ const WhatsAppConfigPanel = () => {
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
-            <div>
-              <CardTitle className="flex items-center gap-2">
-                <TestTube className="h-5 w-5" />
-                Teste de Conexão
-              </CardTitle>
-              <CardDescription>
-                Testar conectividade com a API do WhatsApp Business
-              </CardDescription>
+            <div className="flex items-center gap-2">
+              <MessageSquare className="h-5 w-5" />
+              <CardTitle>Teste de Conexão</CardTitle>
             </div>
-            <Button
-              onClick={testConnection}
-              disabled={isTestingConnection}
-              variant="outline"
-            >
-              {isTestingConnection ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <TestTube className="h-4 w-4" />
-              )}
-              Testar
-            </Button>
+            {connectionData && getStatusBadge(connectionData.success, connectionData.error)}
           </div>
-        </CardHeader>
-        <CardContent>
-          {connectionResult && (
-            <div className="space-y-3">
-              <div className="flex items-start gap-3">
-                {connectionResult.success ? (
-                  <CheckCircle className="h-5 w-5 text-green-600 mt-0.5" />
-                ) : (
-                  <XCircle className="h-5 w-5 text-red-600 mt-0.5" />
-                )}
-                <div className="flex-1">
-                  <p className="font-medium">
-                    {connectionResult.success ? 'Conexão bem-sucedida!' : 'Teste falhou'}
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    {connectionResult.message}
-                  </p>
-                  
-                  {connectionResult.details && (
-                    <div className="mt-2 p-2 bg-muted rounded text-xs">
-                      <pre>{JSON.stringify(connectionResult.details, null, 2)}</pre>
-                    </div>
-                  )}
-                </div>
-              </div>
-              
-              {environment === 'production' && !connectionResult.success && (
-                <Alert>
-                  <AlertCircle className="h-4 w-4" />
-                  <AlertDescription>
-                    <strong>Dica:</strong> Para funcionalidade completa em produção, 
-                    é necessário fazer deploy das Edge Functions do Supabase.
-                  </AlertDescription>
-                </Alert>
-              )}
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Envio de Mensagem de Teste */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Send className="h-5 w-5" />
-            Teste de Envio
-          </CardTitle>
           <CardDescription>
-            Enviar uma mensagem de teste para verificar o funcionamento completo
+            Teste real da conectividade com a API do WhatsApp
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="test-number">Número para teste (com código do país)</Label>
-            <Input
-              id="test-number"
-              type="tel"
-              placeholder="+55 11 99999-9999"
-              value={testNumber}
-              onChange={(e) => setTestNumber(e.target.value)}
-            />
-            <p className="text-xs text-muted-foreground">
-              Use seu próprio número para teste. Formato: +55 11 99999-9999
-            </p>
-          </div>
+          {connectionData?.error ? (
+            <div className="flex items-center gap-2 p-3 bg-red-50 rounded-lg">
+              <XCircle className="h-5 w-5 text-red-500" />
+              <span className="text-red-700">Erro: {connectionData.error}</span>
+            </div>
+          ) : connectionData?.success ? (
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 p-3 bg-green-50 rounded-lg">
+                <CheckCircle className="h-5 w-5 text-green-500" />
+                <span className="text-green-700">Conexão bem-sucedida</span>
+              </div>
+              {connectionData.details && (
+                <div className="p-3 bg-blue-50 rounded-lg">
+                  <p className="text-sm"><strong>Número:</strong> {connectionData.details.phoneNumber}</p>
+                  <p className="text-sm"><strong>Nome verificado:</strong> {connectionData.details.verifiedName}</p>
+                </div>
+              )}
+            </div>
+          ) : connectionData ? (
+            <div className="flex items-center gap-2 p-3 bg-yellow-50 rounded-lg">
+              <AlertCircle className="h-5 w-5 text-yellow-500" />
+              <span className="text-yellow-700">{connectionData.message}</span>
+            </div>
+          ) : (
+            <p className="text-muted-foreground">Clique em "Testar" para verificar a conexão</p>
+          )}
           
-          <Button
-            onClick={sendTestMessage}
-            disabled={isSendingTest || !testNumber.trim()}
+          <Button 
+            onClick={testConnection} 
+            disabled={isTestingConnection}
             className="w-full"
           >
-            {isSendingTest ? (
-              <Loader2 className="h-4 w-4 animate-spin mr-2" />
+            {isTestingConnection ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                Testando...
+              </>
             ) : (
-              <Send className="h-4 w-4 mr-2" />
+              <>
+                <MessageSquare className="h-4 w-4 mr-2" />
+                Testar Conexão
+              </>
             )}
-            Enviar Mensagem de Teste
           </Button>
-
-          {environment === 'production' && (
-            <Alert>
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription className="text-xs">
-                <strong>Nota:</strong> Em produção, certifique-se de que as Edge Functions 
-                foram deployadas para o funcionamento completo.
-              </AlertDescription>
-            </Alert>
-          )}
         </CardContent>
       </Card>
 
-      {/* Links Úteis */}
+      {/* Diagnóstico Completo */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">Links Úteis</CardTitle>
+          <div className="flex items-center gap-2">
+            <Bug className="h-5 w-5" />
+            <CardTitle>Diagnóstico Completo</CardTitle>
+          </div>
+          <CardDescription>
+            Executa todos os testes e fornece relatório detalhado
+          </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-2">
-          <Button variant="outline" size="sm" asChild>
-            <a 
-              href="https://developers.facebook.com/apps" 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="flex items-center gap-2"
-            >
-              <ExternalLink className="h-4 w-4" />
-              Meta Developers Console
-            </a>
+        <CardContent>
+          <Button 
+            onClick={runFullDiagnosticHandler} 
+            disabled={isRunning}
+            className="w-full"
+            variant="outline"
+          >
+            {isRunning ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                Executando Diagnóstico...
+              </>
+            ) : (
+              <>
+                <Bug className="h-4 w-4 mr-2" />
+                Executar Diagnóstico Completo
+              </>
+            )}
           </Button>
-          
-          <Button variant="outline" size="sm" asChild>
-            <a 
-              href="https://business.whatsapp.com" 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="flex items-center gap-2"
-            >
-              <ExternalLink className="h-4 w-4" />
-              WhatsApp Business Manager
-            </a>
-          </Button>
+        </CardContent>
+      </Card>
+
+      {/* Logs de Debug */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle>Logs de Debug</CardTitle>
+            <Button onClick={clearLogs} variant="outline" size="sm">
+              Limpar
+            </Button>
+          </div>
+          <CardDescription>
+            Logs em tempo real das operações
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="bg-black text-green-400 p-4 rounded-lg font-mono text-sm max-h-64 overflow-y-auto">
+            {logs.length === 0 ? (
+              <p className="text-gray-500">Nenhum log ainda...</p>
+            ) : (
+              logs.map((log, index) => (
+                <div key={index} className="mb-1">
+                  {log}
+                </div>
+              ))
+            )}
+          </div>
         </CardContent>
       </Card>
     </div>
