@@ -1,177 +1,250 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Brain, Lightbulb, Target } from 'lucide-react';
-import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Checkbox } from '@/components/ui/checkbox';
-import { OnboardingStepProps } from '../types/onboardingTypes';
-import { availableTools } from '@/components/admin/tools/data';
+import { Card, CardContent } from '@/components/ui/card';
+import { Brain, Zap, Users, Target } from 'lucide-react';
+import { OnboardingData } from '../types/onboardingTypes';
 
-const aiKnowledgeLevels = [
-  'Iniciante - Pouco ou nenhum conhecimento',
-  'Básico - Conheço alguns conceitos',
-  'Intermediário - Uso algumas ferramentas',
-  'Avançado - Implemento soluções regularmente',
-  'Especialista - Desenvolvo e treino modelos'
+interface OnboardingStep3Props {
+  data: OnboardingData;
+  onUpdateData: (newData: Partial<OnboardingData>) => void;
+  onNext: () => Promise<void>;
+  onPrev: () => void;
+  memberType: 'club' | 'formacao';
+  validationErrors: Array<{ field: string; message: string }>;
+  getFieldError: (field: string) => string | undefined;
+}
+
+const aiTools = [
+  { id: 'chatgpt', label: 'ChatGPT', icon: '🤖' },
+  { id: 'copilot', label: 'GitHub Copilot', icon: '👨‍💻' },
+  { id: 'claude', label: 'Claude', icon: '🧠' },
+  { id: 'midjourney', label: 'Midjourney', icon: '🎨' },
+  { id: 'gemini', label: 'Google Gemini', icon: '💎' },
+  { id: 'notion-ai', label: 'Notion AI', icon: '📝' },
+  { id: 'canva-ai', label: 'Canva AI', icon: '🎨' },
+  { id: 'jasper', label: 'Jasper', icon: '✍️' },
+  { id: 'outro', label: 'Outras ferramentas', icon: '🔧' },
+  { id: 'nenhuma', label: 'Não uso IA ainda', icon: '❌' }
 ];
 
-const OnboardingStep3: React.FC<OnboardingStepProps> = ({
+export const OnboardingStep3: React.FC<OnboardingStep3Props> = ({
   data,
   onUpdateData,
+  onNext,
+  onPrev,
+  validationErrors,
   getFieldError
 }) => {
-  const selectedTools = data.aiToolsUsed || [];
-  
-  // Extrair nomes das ferramentas do sistema e organizar alfabeticamente
-  const systemTools = availableTools
-    .map(tool => tool.name)
-    .sort((a, b) => a.localeCompare(b));
+  const handleAiImplementationChange = (value: string) => {
+    console.log('[STEP3] Mudando hasImplementedAI para:', value);
+    onUpdateData({ hasImplementedAI: value });
+  };
 
-  const handleToolToggle = (tool: string, checked: boolean) => {
-    const currentTools = selectedTools;
+  const handleKnowledgeLevelChange = (value: string) => {
+    console.log('[STEP3] Mudando aiKnowledgeLevel para:', value);
+    onUpdateData({ aiKnowledgeLevel: value });
+  };
+
+  const handleToolChange = (toolId: string, checked: boolean) => {
+    const currentTools = data.aiToolsUsed || [];
     let newTools;
     
     if (checked) {
-      newTools = [...currentTools, tool];
+      newTools = [...currentTools, toolId];
     } else {
-      newTools = currentTools.filter(t => t !== tool);
+      newTools = currentTools.filter(tool => tool !== toolId);
     }
     
+    console.log('[STEP3] Mudando aiToolsUsed para:', newTools);
     onUpdateData({ aiToolsUsed: newTools });
   };
+
+  const isToolSelected = (toolId: string) => {
+    return data.aiToolsUsed?.includes(toolId) || false;
+  };
+
+  console.log('[STEP3] Dados atuais:', {
+    hasImplementedAI: data.hasImplementedAI,
+    aiKnowledgeLevel: data.aiKnowledgeLevel,
+    aiToolsUsed: data.aiToolsUsed
+  });
 
   return (
     <motion.div
       initial={{ opacity: 0, x: 20 }}
       animate={{ opacity: 1, x: 0 }}
       exit={{ opacity: 0, x: -20 }}
-      className="space-y-6"
+      transition={{ duration: 0.3 }}
+      className="space-y-8"
     >
-      <div className="text-center mb-8">
-        <motion.div
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-          transition={{ delay: 0.2, type: "spring" }}
-          className="w-16 h-16 bg-viverblue/20 rounded-full flex items-center justify-center mx-auto mb-4"
-        >
-          <Brain className="w-8 h-8 text-viverblue" />
-        </motion.div>
-        <h2 className="text-2xl font-bold text-white mb-2">
-          Sua Maturidade em IA
-        </h2>
-        <p className="text-slate-400">
-          Vamos entender seu nível atual de conhecimento e experiência com inteligência artificial
-        </p>
+      <div className="text-center space-y-4">
+        <div className="mx-auto w-16 h-16 bg-gradient-to-br from-viverblue to-purple-600 rounded-full flex items-center justify-center">
+          <Brain className="w-8 h-8 text-white" />
+        </div>
+        <div>
+          <h2 className="text-2xl font-bold text-white mb-2">
+            Maturidade em IA
+          </h2>
+          <p className="text-slate-300">
+            Vamos entender seu nível atual de conhecimento e experiência com Inteligência Artificial
+          </p>
+        </div>
       </div>
 
       <div className="space-y-6">
-        {/* Experiência com IA */}
-        <Card className="p-6 bg-[#1A1E2E]/80 backdrop-blur-sm border-white/10">
-          <div className="space-y-6">
-            <div>
-              <Label className="text-slate-200 text-base font-medium">
-                Você já implementou alguma solução de IA no seu negócio? *
-              </Label>
-              <Select 
-                value={data.hasImplementedAI || ''} 
-                onValueChange={(value) => onUpdateData({ hasImplementedAI: value })}
+        {/* Implementação de IA */}
+        <Card className="bg-[#1A1E2E]/50 backdrop-blur-sm border-white/10">
+          <CardContent className="p-6">
+            <div className="space-y-4">
+              <div className="flex items-center gap-3">
+                <Target className="w-5 h-5 text-viverblue" />
+                <Label className="text-lg font-medium text-white">
+                  Sua empresa já implementou alguma solução de IA? *
+                </Label>
+              </div>
+              
+              <RadioGroup
+                value={data.hasImplementedAI || ''}
+                onValueChange={handleAiImplementationChange}
+                className="grid grid-cols-1 gap-3"
               >
-                <SelectTrigger className="mt-3 bg-[#151823] border-white/20 text-white">
-                  <SelectValue placeholder="Selecione sua experiência" />
-                </SelectTrigger>
-                <SelectContent className="bg-[#151823] border-white/20">
-                  <SelectItem value="never" className="text-white hover:bg-white/10">
-                    Nunca implementei IA
-                  </SelectItem>
-                  <SelectItem value="planning" className="text-white hover:bg-white/10">
-                    Estou planejando implementar
-                  </SelectItem>
-                  <SelectItem value="testing" className="text-white hover:bg-white/10">
-                    Estou testando algumas ferramentas
-                  </SelectItem>
-                  <SelectItem value="implemented" className="text-white hover:bg-white/10">
-                    Já implementei algumas soluções
-                  </SelectItem>
-                  <SelectItem value="advanced" className="text-white hover:bg-white/10">
-                    Uso IA extensivamente no meu negócio
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-              {getFieldError?.('hasImplementedAI') && (
-                <p className="text-red-400 text-sm mt-1">{getFieldError('hasImplementedAI')}</p>
+                <div className="flex items-center space-x-3 p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-colors">
+                  <RadioGroupItem value="sim" id="impl-sim" />
+                  <Label htmlFor="impl-sim" className="text-white cursor-pointer flex-1">
+                    Sim, já temos soluções de IA implementadas
+                  </Label>
+                </div>
+                <div className="flex items-center space-x-3 p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-colors">
+                  <RadioGroupItem value="nao" id="impl-nao" />
+                  <Label htmlFor="impl-nao" className="text-white cursor-pointer flex-1">
+                    Não, ainda não implementamos
+                  </Label>
+                </div>
+                <div className="flex items-center space-x-3 p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-colors">
+                  <RadioGroupItem value="planejando" id="impl-planejando" />
+                  <Label htmlFor="impl-planejando" className="text-white cursor-pointer flex-1">
+                    Estamos planejando implementar
+                  </Label>
+                </div>
+              </RadioGroup>
+              
+              {getFieldError('hasImplementedAI') && (
+                <p className="text-red-400 text-sm">{getFieldError('hasImplementedAI')}</p>
               )}
             </div>
+          </CardContent>
+        </Card>
 
-            <div>
-              <Label className="text-slate-200 text-base font-medium">
-                Qual seu nível de conhecimento em IA? *
-              </Label>
-              <Select 
-                value={data.aiKnowledgeLevel || ''} 
-                onValueChange={(value) => onUpdateData({ aiKnowledgeLevel: value })}
+        {/* Nível de Conhecimento */}
+        <Card className="bg-[#1A1E2E]/50 backdrop-blur-sm border-white/10">
+          <CardContent className="p-6">
+            <div className="space-y-4">
+              <div className="flex items-center gap-3">
+                <Zap className="w-5 h-5 text-viverblue" />
+                <Label className="text-lg font-medium text-white">
+                  Como você avalia seu nível de conhecimento em IA? *
+                </Label>
+              </div>
+              
+              <RadioGroup
+                value={data.aiKnowledgeLevel || ''}
+                onValueChange={handleKnowledgeLevelChange}
+                className="grid grid-cols-1 gap-3"
               >
-                <SelectTrigger className="mt-3 bg-[#151823] border-white/20 text-white">
-                  <SelectValue placeholder="Selecione seu nível" />
-                </SelectTrigger>
-                <SelectContent className="bg-[#151823] border-white/20">
-                  {aiKnowledgeLevels.map((level) => (
-                    <SelectItem key={level} value={level} className="text-white hover:bg-white/10">
-                      {level}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {getFieldError?.('aiKnowledgeLevel') && (
-                <p className="text-red-400 text-sm mt-1">{getFieldError('aiKnowledgeLevel')}</p>
+                <div className="flex items-center space-x-3 p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-colors">
+                  <RadioGroupItem value="iniciante" id="level-iniciante" />
+                  <Label htmlFor="level-iniciante" className="text-white cursor-pointer flex-1">
+                    <div>
+                      <div className="font-medium">Iniciante</div>
+                      <div className="text-sm text-slate-300">Tenho pouco ou nenhum conhecimento</div>
+                    </div>
+                  </Label>
+                </div>
+                <div className="flex items-center space-x-3 p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-colors">
+                  <RadioGroupItem value="intermediario" id="level-intermediario" />
+                  <Label htmlFor="level-intermediario" className="text-white cursor-pointer flex-1">
+                    <div>
+                      <div className="font-medium">Intermediário</div>
+                      <div className="text-sm text-slate-300">Uso algumas ferramentas e entendo conceitos básicos</div>
+                    </div>
+                  </Label>
+                </div>
+                <div className="flex items-center space-x-3 p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-colors">
+                  <RadioGroupItem value="avancado" id="level-avancado" />
+                  <Label htmlFor="level-avancado" className="text-white cursor-pointer flex-1">
+                    <div>
+                      <div className="font-medium">Avançado</div>
+                      <div className="text-sm text-slate-300">Tenho conhecimento técnico e experiência prática</div>
+                    </div>
+                  </Label>
+                </div>
+              </RadioGroup>
+              
+              {getFieldError('aiKnowledgeLevel') && (
+                <p className="text-red-400 text-sm">{getFieldError('aiKnowledgeLevel')}</p>
               )}
             </div>
-          </div>
+          </CardContent>
         </Card>
 
         {/* Ferramentas de IA */}
-        <Card className="p-6 bg-[#1A1E2E]/80 backdrop-blur-sm border-white/10">
-          <div className="space-y-4">
-            <div className="flex items-center gap-2">
-              <Lightbulb className="w-5 h-5 text-viverblue" />
-              <Label className="text-slate-200 text-base font-medium">
-                Quais ferramentas de IA você já usou ou conhece?
-              </Label>
-            </div>
-            <p className="text-sm text-slate-400">
-              Selecione todas as ferramentas que você já experimentou ou usa regularmente
-            </p>
-            
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-3 max-h-60 overflow-y-auto">
-              {systemTools.map((tool) => (
-                <div key={tool} className="flex items-center space-x-2">
-                  <Checkbox
-                    id={tool}
-                    checked={selectedTools.includes(tool)}
-                    onCheckedChange={(checked) => handleToolToggle(tool, checked as boolean)}
-                    className="border-white/30 data-[state=checked]:bg-viverblue data-[state=checked]:border-viverblue"
-                  />
-                  <Label 
-                    htmlFor={tool} 
-                    className="text-sm text-slate-300 cursor-pointer"
-                  >
-                    {tool}
-                  </Label>
-                </div>
-              ))}
-            </div>
-            
-            {selectedTools.length > 0 && (
-              <div className="mt-4 p-3 bg-viverblue/10 border border-viverblue/30 rounded-lg">
-                <p className="text-sm text-viverblue font-medium">
-                  {selectedTools.length} ferramenta(s) selecionada(s): {selectedTools.slice(0, 3).join(', ')}
-                  {selectedTools.length > 3 && ` e mais ${selectedTools.length - 3}...`}
-                </p>
+        <Card className="bg-[#1A1E2E]/50 backdrop-blur-sm border-white/10">
+          <CardContent className="p-6">
+            <div className="space-y-4">
+              <div className="flex items-center gap-3">
+                <Users className="w-5 h-5 text-viverblue" />
+                <Label className="text-lg font-medium text-white">
+                  Quais ferramentas de IA você já usa ou conhece? *
+                </Label>
               </div>
-            )}
-          </div>
+              <p className="text-sm text-slate-300">Selecione todas que se aplicam</p>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {aiTools.map((tool) => (
+                  <div
+                    key={tool.id}
+                    className="flex items-center space-x-3 p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-colors"
+                  >
+                    <Checkbox
+                      id={tool.id}
+                      checked={isToolSelected(tool.id)}
+                      onCheckedChange={(checked) => handleToolChange(tool.id, checked as boolean)}
+                    />
+                    <Label htmlFor={tool.id} className="text-white cursor-pointer flex-1 flex items-center gap-2">
+                      <span className="text-lg">{tool.icon}</span>
+                      {tool.label}
+                    </Label>
+                  </div>
+                ))}
+              </div>
+              
+              {getFieldError('aiToolsUsed') && (
+                <p className="text-red-400 text-sm">{getFieldError('aiToolsUsed')}</p>
+              )}
+            </div>
+          </CardContent>
         </Card>
+      </div>
+
+      <div className="flex justify-between pt-6">
+        <Button
+          onClick={onPrev}
+          variant="outline"
+          className="bg-transparent border-white/20 text-white hover:bg-white/5"
+        >
+          Voltar
+        </Button>
+        <Button
+          onClick={onNext}
+          className="bg-viverblue hover:bg-viverblue-dark text-white px-8"
+        >
+          Próxima Etapa
+        </Button>
       </div>
     </motion.div>
   );

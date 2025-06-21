@@ -9,6 +9,8 @@ interface ValidationResult {
 export const validateFormacaoStep = (step: number, data: OnboardingData): ValidationResult => {
   const errors: Array<{ field: string; message: string }> = [];
 
+  console.log(`[VALIDATION] Validando step ${step} com dados:`, data);
+
   switch (step) {
     case 1:
       // Informações Pessoais - campos obrigatórios
@@ -64,13 +66,12 @@ export const validateFormacaoStep = (step: number, data: OnboardingData): Valida
         errors.push({ field: 'aiKnowledgeLevel', message: 'Nível de conhecimento é obrigatório' });
       }
       
-      if (!data.dailyTools || data.dailyTools.length === 0) {
-        errors.push({ field: 'dailyTools', message: 'Selecione pelo menos uma ferramenta' });
+      // Usar aiToolsUsed ao invés de dailyTools
+      if (!data.aiToolsUsed || data.aiToolsUsed.length === 0) {
+        errors.push({ field: 'aiToolsUsed', message: 'Selecione pelo menos uma ferramenta' });
       }
       
-      if (!data.whoWillImplement) {
-        errors.push({ field: 'whoWillImplement', message: 'Resposta é obrigatória' });
-      }
+      console.log(`[VALIDATION] Step 3 - hasImplementedAI: ${data.hasImplementedAI}, aiKnowledgeLevel: ${data.aiKnowledgeLevel}, aiToolsUsed:`, data.aiToolsUsed);
       break;
 
     case 4:
@@ -126,6 +127,9 @@ export const validateFormacaoStep = (step: number, data: OnboardingData): Valida
     default:
       break;
   }
+
+  console.log(`[VALIDATION] Step ${step} - Errors:`, errors);
+  console.log(`[VALIDATION] Step ${step} - IsValid:`, errors.length === 0);
 
   return {
     isValid: errors.length === 0,
