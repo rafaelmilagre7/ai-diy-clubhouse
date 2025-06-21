@@ -55,6 +55,18 @@ const AdminToolEdit = () => {
     setAccessControlOpen(true);
   };
 
+  // Callback para quando a ferramenta for salva com sucesso
+  const handleSaveSuccess = (savedData: Tool) => {
+    console.log('Ferramenta salva com sucesso:', savedData);
+    // Atualizar os dados iniciais com os dados salvos
+    setInitialData(savedData);
+    
+    // Se for uma nova ferramenta (id === 'new'), navegar para a página de edição
+    if (id === 'new') {
+      navigate(`/admin/tools/${savedData.id}`, { replace: true });
+    }
+  };
+
   const showAccessControl = initialData?.has_member_benefit && id && id !== 'new';
 
   return (
@@ -95,6 +107,7 @@ const AdminToolEdit = () => {
             initialData={initialData}
             onSubmit={handleSubmit}
             isSubmitting={isSubmitting}
+            onSaveSuccess={handleSaveSuccess}
           />
         </Card>
       )}

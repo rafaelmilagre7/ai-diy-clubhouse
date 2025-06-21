@@ -9,14 +9,23 @@ import { VideoTutorials } from './components/VideoTutorials';
 import { MemberBenefit } from './components/MemberBenefit';
 import { toolFormSchema } from './schema/toolFormSchema';
 import { ToolFormProps, ToolFormValues } from './types/toolFormTypes';
-import { BenefitType, ToolCategory } from '@/types/toolTypes';
+import { BenefitType, Tool } from '@/types/toolTypes';
 import { useEffect, useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
+import { CheckCircle } from 'lucide-react';
 
-export const ToolForm = ({ initialData, onSubmit, isSubmitting }: ToolFormProps) => {
+export const ToolForm = ({ 
+  initialData, 
+  onSubmit, 
+  isSubmitting,
+  onSaveSuccess 
+}: ToolFormProps & { 
+  onSaveSuccess?: (savedData: Tool) => void 
+}) => {
   // Garantir que benefit_type seja sempre um dos valores válidos
   const defaultBenefitType = initialData?.benefit_type as BenefitType | undefined;
   const [formChanged, setFormChanged] = useState(false);
+  const [showSuccessIcon, setShowSuccessIcon] = useState(false);
   const { toast } = useToast();
 
   // Inicializa o formulário com valores padrão ou existentes, garantindo que category nunca seja string vazia
@@ -47,6 +56,30 @@ export const ToolForm = ({ initialData, onSubmit, isSubmitting }: ToolFormProps)
       setFormChanged(true);
     }
   }, [initialData]);
+
+  // Atualizar formulário quando initialData mudar (após salvamento)
+  useEffect(() => {
+    if (initialData) {
+      form.reset({
+        name: initialData.name || '',
+        description: initialData.description || '',
+        official_url: initialData.official_url || '',
+        category: initialData.category || 'Modelos de IA e Interfaces',
+        status: initialData.status ?? true,
+        logo_url: initialData.logo_url || '',
+        tags: initialData.tags || [],
+        video_tutorials: initialData.video_tutorials || [],
+        has_member_benefit: initialData.has_member_benefit || false,
+        benefit_type: initialData.benefit_type as BenefitType | undefined,
+        benefit_title: initialData.benefit_title || '',
+        benefit_description: initialData.benefit_description || '',
+        benefit_link: initialData.benefit_link || '',
+        benefit_badge_url: initialData.benefit_badge_url || '',
+        formModified: false
+      });
+      setFormChanged(false);
+    }
+  }, [initialData, form]);
 
   // Monitorar o estado do formulário para detectar mudanças
   useEffect(() => {
@@ -83,12 +116,21 @@ export const ToolForm = ({ initialData, onSubmit, isSubmitting }: ToolFormProps)
       // Remover campos auxiliares antes de enviar para o backend
       const { formModified, ...submitData } = data;
       
-      const success = await onSubmit(submitData);
+      const result = await onSubmit(submitData);
       
-      if (success) {
+      if (result.success) {
         // Reset o estado do formulário após salvar com sucesso
         setFormChanged(false);
         form.setValue("formModified", false);
+        
+        // Mostrar ícone de sucesso temporariamente
+        setShowSuccessIcon(true);
+        setTimeout(() => setShowSuccessIcon(false), 2000);
+        
+        // Notificar o componente pai sobre o sucesso
+        if (result.data && onSaveSuccess) {
+          onSaveSuccess(result.data);
+        }
       }
     } catch (error) {
       console.error("Erro ao enviar formulário:", error);
@@ -114,10 +156,21 @@ export const ToolForm = ({ initialData, onSubmit, isSubmitting }: ToolFormProps)
         <div className="pt-4 border-t">
           <Button 
             type="submit" 
-            className="w-full" 
+            className="w-full relative" 
             disabled={isSaveDisabled}
           >
-            {isSubmitting ? 'Salvando...' : 'Salvar Ferramenta'}
+            <div className="flex items-center justify-center gap-2">
+              {isSubmitting ? (
+                'Salvando...'
+              ) : showSuccessIcon ? (
+                <>
+                  <CheckCircle className="h-4 w-4 text-green-500" />
+                  'Salvo!'
+                </>
+              ) : (
+                'Salvar Ferramenta'
+              )}
+            </div>
           </Button>
           {(!formChanged && initialData) && (
             <p className="text-sm text-muted-foreground text-center mt-2">
@@ -132,6 +185,11 @@ export const ToolForm = ({ initialData, onSubmit, isSubmitting }: ToolFormProps)
           {(!initialData) && (
             <p className="text-sm text-primary text-center mt-2">
               Preencha os campos e clique para criar a ferramenta
+            </p>
+          )}
+          {showSuccessIcon && (
+            <p className="text-sm text-green-600 text-center mt-2 animate-fade-in">
+              ✓ Alterações salvas com sucesso
             </p>
           )}
         </div>

@@ -9,7 +9,7 @@ export const useToolForm = (toolId: string) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
 
-  const handleSubmit = async (data: ToolFormValues): Promise<boolean> => {
+  const handleSubmit = async (data: ToolFormValues): Promise<{ success: boolean; data?: Tool }> => {
     try {
       setIsSubmitting(true);
       console.log('Salvando ferramenta:', data);
@@ -67,6 +67,10 @@ export const useToolForm = (toolId: string) => {
 
       console.log('Resposta do Supabase:', responseData);
 
+      if (!responseData || responseData.length === 0) {
+        throw new Error('Nenhum dado retornado após salvamento');
+      }
+
       toast({
         title: toolId === 'new' ? "Ferramenta criada" : "Ferramenta atualizada",
         description: toolId === 'new' 
@@ -74,7 +78,7 @@ export const useToolForm = (toolId: string) => {
           : "As alterações foram salvas com sucesso",
       });
 
-      return true;
+      return { success: true, data: responseData[0] as unknown as Tool };
     } catch (error: any) {
       console.error('Erro ao salvar ferramenta:', error);
       toast({
@@ -82,7 +86,7 @@ export const useToolForm = (toolId: string) => {
         description: error.message || "Ocorreu um erro ao salvar as alterações",
         variant: "destructive",
       });
-      return false;
+      return { success: false };
     } finally {
       setIsSubmitting(false);
     }
