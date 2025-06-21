@@ -22,8 +22,12 @@ export const useInviteDetails = (token?: string) => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    console.log('[USE-INVITE-DETAILS] Hook inicializado com token:', token);
+    
     if (!token) {
+      console.log('[USE-INVITE-DETAILS] Nenhum token fornecido');
       setLoading(false);
+      setError('Token de convite não fornecido');
       return;
     }
 
@@ -32,7 +36,9 @@ export const useInviteDetails = (token?: string) => {
         setLoading(true);
         setError(null);
 
-        // Buscar detalhes do convite
+        console.log('[USE-INVITE-DETAILS] Buscando convite com token:', token);
+
+        // Buscar detalhes do convite com join na tabela de roles
         const { data: invite, error: inviteError } = await supabase
           .from('invites')
           .select(`
@@ -42,6 +48,7 @@ export const useInviteDetails = (token?: string) => {
             expires_at,
             created_by,
             role_id,
+            used_at,
             user_roles:role_id (
               id,
               name,
@@ -49,12 +56,31 @@ export const useInviteDetails = (token?: string) => {
             )
           `)
           .eq('token', token)
-          .eq('used_at', null)
           .single();
 
-        if (inviteError || !invite) {
-          logger.error('Erro ao buscar convite:', inviteError);
-          setError('Convite não encontrado ou inválido');
+        console.log('[USE-INVITE-DETAILS] Resultado da busca:', { invite, error: inviteError });
+
+        if (inviteError) {
+          console.error('[USE-INVITE-DETAILS] Erro ao buscar convite:', inviteError);
+          
+          if (inviteError.code === 'PGRST116') {
+            setError('Convite não encontrado. Verifique se o link está correto.');
+          } else {
+            setError(`Erro ao buscar convite: ${inviteError.message}`);
+          }
+          return;
+        }
+
+        if (!invite) {
+          console.error('[USE-INVITE-DETAILS] Convite não encontrado');
+          setError('Convite não encontrado');
+          return;
+        }
+
+        // Verificar se o convite já foi usado
+        if (invite.used_at) {
+          console.error('[USE-INVITE-DETAILS] Convite já foi usado:', invite.used_at);
+          setError('Este convite já foi utilizado');
           return;
         }
 
@@ -62,15 +88,27 @@ export const useInviteDetails = (token?: string) => {
         const now = new Date();
         const expiresAt = new Date(invite.expires_at);
         
+        console.log('[USE-INVITE-DETAILS] Verificando expiração:', {
+          now: now.toISOString(),
+          expiresAt: expiresAt.toISOString(),
+          expired: expiresAt < now
+        });
+        
         if (expiresAt < now) {
           setError('Este convite expirou');
           return;
         }
 
-        // CORREÇÃO: Verificar se user_roles é um array ou objeto
+        // Verificar se temos dados do role
         const roleData = Array.isArray(invite.user_roles) 
           ? invite.user_roles[0] 
           : invite.user_roles;
+
+        if (!roleData) {
+          console.error('[USE-INVITE-DETAILS] Dados do role não encontrados');
+          setError('Dados do cargo não encontrados');
+          return;
+        }
 
         // Montar detalhes do convite
         const details: InviteDetails = {
@@ -80,24 +118,27 @@ export const useInviteDetails = (token?: string) => {
           expires_at: invite.expires_at,
           created_by: invite.created_by,
           role: {
-            id: roleData?.id || '',
-            name: roleData?.name || 'member',
-            description: roleData?.description
+            id: roleData.id,
+            name: roleData.name,
+            description: roleData.description
           }
         };
 
+        console.log('[USE-INVITE-DETAILS] Convite válido encontrado:', details);
         setInviteDetails(details);
-        logger.info('Detalhes do convite carregados', { 
+        
+        logger.info('Detalhes do convite carregados com sucesso', { 
           component: 'useInviteDetails',
           email: details.email, 
           role: details.role.name 
         });
 
       } catch (error: any) {
+        console.error('[USE-INVITE-DETAILS] Erro inesperado:', error);
         logger.error('Erro ao carregar detalhes do convite', error, {
           component: 'useInviteDetails'
         });
-        setError('Erro ao carregar detalhes do convite');
+        setError(`Erro inesperado: ${error.message}`);
       } finally {
         setLoading(false);
       }
