@@ -89,21 +89,21 @@ export const InviteBasicInfoStep = ({ formData, onUpdate }: InviteBasicInfoStepP
               <Label htmlFor="role" className="text-sm font-medium">
                 Função/Role *
               </Label>
-              <Select
-                value={formData.roleId || ''}
-                onValueChange={(value) => onUpdate({ roleId: value })}
-                required
-              >
-                <SelectTrigger id="role">
-                  <SelectValue placeholder="Selecione uma função" />
-                </SelectTrigger>
-                <SelectContent>
-                  {loading ? (
-                    <SelectItem value="" disabled>
-                      Carregando...
-                    </SelectItem>
-                  ) : (
-                    roles.map((role) => (
+              {loading ? (
+                <div className="h-10 w-full border border-gray-600 bg-gray-800/50 rounded-md flex items-center px-3 text-gray-500 text-sm">
+                  Carregando funções...
+                </div>
+              ) : (
+                <Select
+                  value={formData.roleId || ''}
+                  onValueChange={(value) => onUpdate({ roleId: value })}
+                  required
+                >
+                  <SelectTrigger id="role">
+                    <SelectValue placeholder="Selecione uma função" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {roles.map((role) => (
                       <SelectItem key={role.id} value={role.id}>
                         <div className="flex items-center gap-2">
                           <div className={`w-2 h-2 rounded-full ${
@@ -114,10 +114,10 @@ export const InviteBasicInfoStep = ({ formData, onUpdate }: InviteBasicInfoStepP
                           {role.name}
                         </div>
                       </SelectItem>
-                    ))
-                  )}
-                </SelectContent>
-              </Select>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
             </div>
           </CardContent>
         </Card>
