@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { MessageCircle, Settings, BarChart3, TestTube, Zap, Template } from 'lucide-react';
+import { MessageCircle, Settings, BarChart3, TestTube, Zap, FileText } from 'lucide-react';
 import WhatsAppConfigPanel from './invites/components/WhatsAppConfigPanel';
 import InviteAnalyticsDashboard from './invites/components/InviteAnalyticsDashboard';
 import DualTokenTester from './invites/components/DualTokenTester';
@@ -24,7 +24,7 @@ const WhatsAppDebug = () => {
         {/* Novo: Teste de Template WhatsApp */}
         <section>
           <div className="flex items-center gap-2 mb-4">
-            <Template className="h-5 w-5" />
+            <FileText className="h-5 w-5" />
             <h2 className="text-xl font-semibold">Template de Convites</h2>
           </div>
           <WhatsAppTemplateTester />

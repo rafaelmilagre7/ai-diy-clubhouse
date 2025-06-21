@@ -1,242 +1,216 @@
 
-import { useState } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
+import React, { useState } from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { UserPlus, Mail, MessageCircle } from "lucide-react";
-import { useUserRoles } from "@/hooks/admin/useUserRoles";
+import { Plus, Mail, MessageCircle, Send } from "lucide-react";
 import { useInviteCreate } from "@/hooks/admin/invites/useInviteCreate";
 import { UserNameInput } from "./UserNameInput";
+import { useForm } from "react-hook-form";
+import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
+import { toast } from "sonner";
 
-const formSchema = z.object({
-  email: z.string().email("Email inválido"),
-  roleId: z.string().min(1, "Selecione um papel"),
-  notes: z.string().optional(),
-  channels: z.array(z.enum(["email", "whatsapp"])).min(1, "Selecione pelo menos um canal"),
-  whatsappNumber: z.string().optional(),
-  userName: z.string().optional(),
-}).refine((data) => {
-  // Se WhatsApp está selecionado, número e nome são obrigatórios
-  if (data.channels.includes("whatsapp")) {
-    return data.whatsappNumber && data.whatsappNumber.trim() !== "" &&
-           data.userName && data.userName.trim() !== "";
-  }
-  return true;
-}, {
-  message: "WhatsApp número e nome da pessoa são obrigatórios quando WhatsApp está selecionado",
-  path: ["whatsappNumber"],
-});
-
-interface SimpleCreateInviteDialogProps {
-  onInviteCreated?: () => void;
+interface Role {
+  id: string;
+  name: string;
+  description?: string;
 }
 
-const SimpleCreateInviteDialog = ({ onInviteCreated }: SimpleCreateInviteDialogProps) => {
+interface SimpleCreateInviteDialogProps {
+  roles: Role[];
+  onInviteCreated: () => void;
+}
+
+interface FormData {
+  email: string;
+  roleId: string;
+  notes: string;
+  expiresIn: string;
+  channels: string[];
+  whatsappNumber: string;
+  userName: string;
+}
+
+const SimpleCreateInviteDialog = ({ roles, onInviteCreated }: SimpleCreateInviteDialogProps) => {
   const [open, setOpen] = useState(false);
-  const { roles } = useUserRoles();
   const { createInvite, loading } = useInviteCreate();
 
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
+  const form = useForm<FormData>({
     defaultValues: {
       email: "",
       roleId: "",
       notes: "",
+      expiresIn: "7 days",
       channels: ["email"],
       whatsappNumber: "",
-      userName: "",
-    },
+      userName: ""
+    }
   });
 
-  const watchedChannels = form.watch("channels");
-  const isWhatsAppSelected = watchedChannels.includes("whatsapp");
+  const selectedChannels = form.watch("channels");
+  const isWhatsAppSelected = selectedChannels.includes("whatsapp");
 
-  const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    const result = await createInvite({
-      email: values.email,
-      roleId: values.roleId,
-      notes: values.notes,
-      channels: values.channels,
-      whatsappNumber: values.whatsappNumber,
-      userName: values.userName,
-    });
+  const onSubmit = async (data: FormData) => {
+    try {
+      console.log("🎯 Criando convite:", data);
 
-    if (result?.status === 'success') {
-      setOpen(false);
-      form.reset();
-      onInviteCreated?.();
+      const channelsArray = data.channels as ('email' | 'whatsapp')[];
+      
+      // Validar se WhatsApp está selecionado mas campos obrigatórios estão vazios
+      if (channelsArray.includes('whatsapp')) {
+        if (!data.whatsappNumber?.trim()) {
+          toast.error("Número do WhatsApp é obrigatório quando WhatsApp está selecionado");
+          return;
+        }
+        if (!data.userName?.trim()) {
+          toast.error("Nome da pessoa é obrigatório para envio via WhatsApp");
+          return;
+        }
+      }
+
+      const result = await createInvite({
+        email: data.email,
+        roleId: data.roleId,
+        notes: data.notes,
+        expiresIn: data.expiresIn,
+        channels: channelsArray,
+        whatsappNumber: data.whatsappNumber || undefined,
+        userName: data.userName || undefined
+      });
+
+      if (result?.status === 'success') {
+        setOpen(false);
+        form.reset();
+        onInviteCreated();
+      }
+    } catch (error) {
+      console.error("❌ Erro ao criar convite:", error);
+    }
+  };
+
+  const handleChannelChange = (channel: string, checked: boolean) => {
+    const currentChannels = form.getValues("channels");
+    if (checked) {
+      form.setValue("channels", [...currentChannels, channel]);
+    } else {
+      form.setValue("channels", currentChannels.filter(c => c !== channel));
     }
   };
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button className="flex items-center gap-2">
-          <UserPlus className="h-4 w-4" />
+        <Button>
+          <Plus className="h-4 w-4 mr-2" />
           Criar Convite
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[600px]">
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Criar Novo Convite</DialogTitle>
-          <DialogDescription>
-            Crie um convite para um novo usuário. Escolha os canais de envio.
-          </DialogDescription>
         </DialogHeader>
+        
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="email"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Email*</FormLabel>
-                    <FormControl>
-                      <Input placeholder="usuario@exemplo.com" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="roleId"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Papel*</FormLabel>
-                    <FormControl>
-                      <select
-                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                        {...field}
-                      >
-                        <option value="">Selecione um papel</option>
-                        {roles.map((role) => (
-                          <option key={role.id} value={role.id}>
-                            {role.name}
-                          </option>
-                        ))}
-                      </select>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            <div className="space-y-4">
-              <FormField
-                control={form.control}
-                name="channels"
-                render={() => (
-                  <FormItem>
-                    <FormLabel>Canais de Envio*</FormLabel>
-                    <div className="flex items-center space-x-4">
-                      <FormField
-                        control={form.control}
-                        name="channels"
-                        render={({ field }) => (
-                          <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                            <FormControl>
-                              <Checkbox
-                                checked={field.value?.includes("email")}
-                                onCheckedChange={(checked) => {
-                                  const currentChannels = field.value || [];
-                                  if (checked) {
-                                    field.onChange([...currentChannels.filter(c => c !== "email"), "email"]);
-                                  } else {
-                                    field.onChange(currentChannels.filter(c => c !== "email"));
-                                  }
-                                }}
-                              />
-                            </FormControl>
-                            <div className="flex items-center gap-2">
-                              <Mail className="h-4 w-4" />
-                              <FormLabel>Email</FormLabel>
-                            </div>
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={form.control}
-                        name="channels"
-                        render={({ field }) => (
-                          <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                            <FormControl>
-                              <Checkbox
-                                checked={field.value?.includes("whatsapp")}
-                                onCheckedChange={(checked) => {
-                                  const currentChannels = field.value || [];
-                                  if (checked) {
-                                    field.onChange([...currentChannels.filter(c => c !== "whatsapp"), "whatsapp"]);
-                                  } else {
-                                    field.onChange(currentChannels.filter(c => c !== "whatsapp"));
-                                  }
-                                }}
-                              />
-                            </FormControl>
-                            <div className="flex items-center gap-2">
-                              <MessageCircle className="h-4 w-4" />
-                              <FormLabel>WhatsApp</FormLabel>
-                            </div>
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              {isWhatsAppSelected && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-muted/50 rounded-lg">
-                  <FormField
-                    control={form.control}
-                    name="whatsappNumber"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="flex items-center gap-2">
-                          <MessageCircle className="h-4 w-4" />
-                          Número WhatsApp*
-                        </FormLabel>
-                        <FormControl>
-                          <Input 
-                            placeholder="(11) 99999-9999" 
-                            {...field} 
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <UserNameInput form={form} isRequired={isWhatsAppSelected} />
-                </div>
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Email *</FormLabel>
+                  <FormControl>
+                    <Input type="email" placeholder="usuario@exemplo.com" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
               )}
+            />
+
+            <FormField
+              control={form.control}
+              name="roleId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Função *</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione uma função" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {roles.map((role) => (
+                        <SelectItem key={role.id} value={role.id}>
+                          {role.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <div className="space-y-3">
+              <Label>Canais de Comunicação *</Label>
+              
+              <div className="space-y-2">
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="email-channel"
+                    checked={selectedChannels.includes("email")}
+                    onCheckedChange={(checked) => handleChannelChange("email", checked as boolean)}
+                  />
+                  <Label htmlFor="email-channel" className="flex items-center cursor-pointer">
+                    <Mail className="h-4 w-4 mr-1" />
+                    Email
+                  </Label>
+                </div>
+
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="whatsapp-channel"
+                    checked={selectedChannels.includes("whatsapp")}
+                    onCheckedChange={(checked) => handleChannelChange("whatsapp", checked as boolean)}
+                  />
+                  <Label htmlFor="whatsapp-channel" className="flex items-center cursor-pointer">
+                    <MessageCircle className="h-4 w-4 mr-1" />
+                    WhatsApp
+                  </Label>
+                </div>
+              </div>
             </div>
+
+            {isWhatsAppSelected && (
+              <div className="space-y-4 ml-6 p-4 bg-muted/50 rounded-lg">
+                <FormField
+                  control={form.control}
+                  name="whatsappNumber"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Número do WhatsApp *</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="tel"
+                          placeholder="+55 11 99999-9999"
+                          {...field}
+                        />
+                      </FormControl>
+                      <p className="text-xs text-muted-foreground">
+                        Inclua código do país (ex: +55 para Brasil)
+                      </p>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <UserNameInput form={form} isRequired={isWhatsAppSelected} />
+              </div>
+            )}
 
             <FormField
               control={form.control}
@@ -245,7 +219,7 @@ const SimpleCreateInviteDialog = ({ onInviteCreated }: SimpleCreateInviteDialogP
                 <FormItem>
                   <FormLabel>Observações</FormLabel>
                   <FormControl>
-                    <Textarea 
+                    <Textarea
                       placeholder="Observações adicionais sobre o convite..."
                       className="resize-none"
                       {...field}
@@ -256,19 +230,53 @@ const SimpleCreateInviteDialog = ({ onInviteCreated }: SimpleCreateInviteDialogP
               )}
             />
 
-            <DialogFooter>
-              <Button 
-                type="button" 
-                variant="outline" 
+            <FormField
+              control={form.control}
+              name="expiresIn"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Expiração</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="1 day">1 dia</SelectItem>
+                      <SelectItem value="3 days">3 dias</SelectItem>
+                      <SelectItem value="7 days">7 dias</SelectItem>
+                      <SelectItem value="30 days">30 dias</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <div className="flex justify-end space-x-2 pt-4">
+              <Button
+                type="button"
+                variant="outline"
                 onClick={() => setOpen(false)}
                 disabled={loading}
               >
                 Cancelar
               </Button>
               <Button type="submit" disabled={loading}>
-                {loading ? "Criando..." : "Criar Convite"}
+                {loading ? (
+                  <>
+                    <Send className="h-4 w-4 mr-2 animate-spin" />
+                    Criando...
+                  </>
+                ) : (
+                  <>
+                    <Send className="h-4 w-4 mr-2" />
+                    Criar Convite
+                  </>
+                )}
               </Button>
-            </DialogFooter>
+            </div>
           </form>
         </Form>
       </DialogContent>

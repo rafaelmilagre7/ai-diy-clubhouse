@@ -12,6 +12,7 @@ export interface Invite {
   };
   notes?: string;
   preferred_channel?: 'email' | 'whatsapp' | 'both';
+  whatsapp_number?: string; // Adicionar campo whatsapp_number
 }
 
 export interface CreateInviteParams {
