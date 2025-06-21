@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Mail, Copy, Trash2, RefreshCw, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -41,42 +40,52 @@ const SimpleInvitesTab = ({ invites, loading, onInvitesChange }: SimpleInvitesTa
 
   const getStatusBadge = (invite: Invite) => {
     if (invite.used_at) {
-      return <Badge variant="default">Usado</Badge>;
+      return <Badge variant="default" className="bg-green-600">Usado</Badge>;
     }
     
     if (new Date(invite.expires_at) < new Date()) {
       return <Badge variant="destructive">Expirado</Badge>;
     }
     
-    return <Badge variant="secondary">Pendente</Badge>;
+    return <Badge variant="secondary" className="bg-yellow-600">Pendente</Badge>;
   };
 
   const getChannelBadges = (invite: Invite) => {
     const channels = [];
     
     // Determinar canais baseado nos dados disponíveis
-    // Se tem whatsapp_number, assume que WhatsApp foi configurado
-    const hasWhatsApp = invite.whatsapp_number && invite.whatsapp_number.trim() !== '';
-    
     // Email é sempre incluído por padrão
     channels.push(
-      <Badge key="email" variant="outline" className="text-xs">
+      <Badge key="email" variant="outline" className="text-xs bg-blue-600/20 text-blue-300 border-blue-600/30">
         <Mail className="h-3 w-3 mr-1" />
         Email
       </Badge>
     );
     
-    // Adicionar WhatsApp se configurado
+    // Verificar se há evidências de configuração WhatsApp
+    const hasWhatsApp = invite.whatsapp_number && invite.whatsapp_number.trim() !== '';
+    
     if (hasWhatsApp) {
       channels.push(
-        <Badge key="whatsapp" variant="outline" className="text-xs">
+        <Badge key="whatsapp" variant="outline" className="text-xs bg-green-600/20 text-green-300 border-green-600/30">
           <MessageCircle className="h-3 w-3 mr-1" />
           WhatsApp
         </Badge>
       );
     }
     
-    return <div className="flex gap-1">{channels}</div>;
+    return <div className="flex gap-1 flex-wrap">{channels}</div>;
+  };
+
+  const getWhatsAppInfo = (invite: Invite) => {
+    if (invite.whatsapp_number) {
+      return (
+        <div className="text-xs text-neutral-400 mt-1">
+          WhatsApp: {invite.whatsapp_number}
+        </div>
+      );
+    }
+    return null;
   };
 
   const copyInviteLink = (token: string) => {
@@ -120,7 +129,7 @@ const SimpleInvitesTab = ({ invites, loading, onInvitesChange }: SimpleInvitesTa
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Email</TableHead>
+            <TableHead>Email / Contato</TableHead>
             <TableHead>Papel</TableHead>
             <TableHead>Canais</TableHead>
             <TableHead>Status</TableHead>
@@ -133,7 +142,12 @@ const SimpleInvitesTab = ({ invites, loading, onInvitesChange }: SimpleInvitesTa
           {invites.length > 0 ? (
             invites.map((invite) => (
               <TableRow key={invite.id}>
-                <TableCell className="font-medium">{invite.email}</TableCell>
+                <TableCell className="font-medium">
+                  <div>
+                    <div className="text-white">{invite.email}</div>
+                    {getWhatsAppInfo(invite)}
+                  </div>
+                </TableCell>
                 <TableCell>{invite.role?.name || 'N/A'}</TableCell>
                 <TableCell>{getChannelBadges(invite)}</TableCell>
                 <TableCell>{getStatusBadge(invite)}</TableCell>
@@ -149,6 +163,7 @@ const SimpleInvitesTab = ({ invites, loading, onInvitesChange }: SimpleInvitesTa
                       variant="outline"
                       size="sm"
                       onClick={() => copyInviteLink(invite.token)}
+                      title="Copiar link"
                     >
                       <Copy className="h-4 w-4" />
                     </Button>
@@ -158,6 +173,7 @@ const SimpleInvitesTab = ({ invites, loading, onInvitesChange }: SimpleInvitesTa
                         variant="outline"
                         size="sm"
                         onClick={() => handleResend(invite)}
+                        title="Reenviar"
                       >
                         <RefreshCw className="h-4 w-4" />
                       </Button>
@@ -167,6 +183,7 @@ const SimpleInvitesTab = ({ invites, loading, onInvitesChange }: SimpleInvitesTa
                       variant="outline"
                       size="sm"
                       onClick={() => handleDelete(invite)}
+                      title="Excluir"
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>

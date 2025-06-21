@@ -5,13 +5,13 @@ import { Plus } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
 import SimpleInvitesTab from './components/SimpleInvitesTab';
-import { CreateInviteModal } from './components/CreateInviteModal';
+import { SimplifiedCreateInviteModal } from './components/SimplifiedCreateInviteModal';
 import { useInvites, type Invite } from '@/hooks/admin/useInvites';
 import { type CreateInviteParams } from '@/hooks/admin/invites/types';
 
 const InvitesManagement = () => {
   const [open, setOpen] = useState(false);
-  const { invites, loading, fetchInvites, createInvite: createInviteHook, isCreating } = useInvites();
+  const { invites, loading, fetchInvites, createInvite, isCreating } = useInvites();
 
   useEffect(() => {
     fetchInvites();
@@ -19,18 +19,21 @@ const InvitesManagement = () => {
 
   const handleCreateInvite = async (params: CreateInviteParams) => {
     try {
-      // Usar o hook createInvite corretamente com os parâmetros esperados
-      await createInviteHook(
-        params.email,
-        params.roleId,
-        params.notes,
-        {
-          expiresIn: params.expiresIn
-        }
-      );
-      toast.success('Convite criado com sucesso!');
+      console.log("🎯 InvitesManagement: Iniciando criação de convite:", params);
+      
+      const result = await createInvite(params);
+      
+      if (result?.status === 'success') {
+        toast.success('Convite criado e enviado com sucesso!');
+        console.log("✅ InvitesManagement: Convite criado com sucesso");
+      } else {
+        toast.error(result?.message || 'Erro ao criar convite');
+        console.error("❌ InvitesManagement: Falha na criação:", result?.message);
+      }
     } catch (error: any) {
-      toast.error(`Erro ao criar convite: ${error.message || 'Erro desconhecido'}`);
+      const errorMessage = error.message || 'Erro desconhecido';
+      toast.error(`Erro ao criar convite: ${errorMessage}`);
+      console.error("❌ InvitesManagement: Erro ao criar convite:", error);
     }
   };
 
@@ -67,7 +70,7 @@ const InvitesManagement = () => {
         </TabsContent> */}
       </Tabs>
 
-      <CreateInviteModal
+      <SimplifiedCreateInviteModal
         open={open}
         onOpenChange={setOpen}
         onCreate={handleCreateInvite}
