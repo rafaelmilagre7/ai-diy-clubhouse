@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { MoreVertical, Play, CheckCircle, RotateCcw, Trash2 } from 'lucide-react';
+import { MoreVertical, Eye, CheckCircle, Trash2, Clock, XCircle } from 'lucide-react';
 import { 
   DropdownMenu, 
   DropdownMenuContent, 
@@ -32,12 +32,34 @@ export const AdminActions = ({
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-56">
+        {/* Opção: Marcar como Em Análise */}
+        <DropdownMenuItem 
+          onClick={() => onUpdateStatus('under_review')}
+          disabled={adminActionLoading || suggestionStatus === 'under_review'}
+        >
+          <Eye className="mr-2 h-4 w-4" />
+          {suggestionStatus === 'under_review' 
+            ? 'Já em Análise' 
+            : 'Marcar como Em Análise'}
+        </DropdownMenuItem>
+
+        {/* Opção: Aprovar */}
+        <DropdownMenuItem 
+          onClick={() => onUpdateStatus('approved')}
+          disabled={adminActionLoading || suggestionStatus === 'approved'}
+        >
+          <CheckCircle className="mr-2 h-4 w-4" />
+          {suggestionStatus === 'approved' 
+            ? 'Já Aprovada' 
+            : 'Aprovar Sugestão'}
+        </DropdownMenuItem>
+
         {/* Opção: Marcar como Em Desenvolvimento */}
         <DropdownMenuItem 
           onClick={() => onUpdateStatus('in_development')}
           disabled={adminActionLoading || suggestionStatus === 'in_development'}
         >
-          <Play className="mr-2 h-4 w-4" />
+          <Clock className="mr-2 h-4 w-4" />
           {suggestionStatus === 'in_development' 
             ? 'Já em Desenvolvimento' 
             : 'Marcar como Em Desenvolvimento'}
@@ -55,17 +77,29 @@ export const AdminActions = ({
         </DropdownMenuItem>
 
         {/* Opção: Marcar como Nova (reverter status) */}
-        {(suggestionStatus === 'in_development' || suggestionStatus === 'implemented') && (
+        {(suggestionStatus !== 'new') && (
           <DropdownMenuItem 
             onClick={() => onUpdateStatus('new')}
             disabled={adminActionLoading}
           >
-            <RotateCcw className="mr-2 h-4 w-4" />
+            <Clock className="mr-2 h-4 w-4" />
             Marcar como Nova
           </DropdownMenuItem>
         )}
 
         <DropdownMenuSeparator />
+        
+        {/* Opção: Rejeitar */}
+        <DropdownMenuItem 
+          onClick={() => onUpdateStatus('rejected')}
+          disabled={adminActionLoading || suggestionStatus === 'rejected'}
+          className="text-destructive focus:text-destructive"
+        >
+          <XCircle className="mr-2 h-4 w-4" />
+          {suggestionStatus === 'rejected' 
+            ? 'Já Rejeitada' 
+            : 'Rejeitar Sugestão'}
+        </DropdownMenuItem>
         
         {/* Opção: Remover Sugestão */}
         <DropdownMenuItem 
