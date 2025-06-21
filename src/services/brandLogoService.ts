@@ -1,12 +1,11 @@
-
 import { supabase } from '@/lib/supabase';
 import { logger } from '@/utils/logger';
 
-// URLs das logos - serão atualizadas após o upload
+// URLs das logos - atualizadas para as corretas
 export const BRAND_LOGOS = {
   club: 'https://zotzvtepvpnkcoobdubt.supabase.co/storage/v1/object/public/brand-logos/viver-de-ia-club-logo.png',
   formacao: 'https://zotzvtepvpnkcoobdubt.supabase.co/storage/v1/object/public/brand-logos/formacao-viver-de-ia-logo.png',
-  default: 'https://milagredigital.com/wp-content/uploads/2025/04/viverdeiaclub.avif' // fallback
+  default: '/lovable-uploads/a408c993-07fa-49f2-bee6-c66d0614298b.png' // fallback local
 };
 
 // Cores por tipo de usuário
@@ -63,7 +62,9 @@ export const detectUserType = (context?: {
  * Obtém a logo correta baseada no tipo de usuário
  */
 export const getBrandLogo = (userType: UserType): string => {
-  return BRAND_LOGOS[userType] || BRAND_LOGOS.default;
+  const logoUrl = BRAND_LOGOS[userType] || BRAND_LOGOS.default;
+  console.log(`[BRAND-LOGO] Obtendo logo para tipo ${userType}:`, logoUrl);
+  return logoUrl;
 };
 
 /**

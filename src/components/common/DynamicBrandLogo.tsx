@@ -31,6 +31,9 @@ export const DynamicBrandLogo: React.FC<DynamicBrandLogoProps> = ({
   width,
   alt
 }) => {
+  const [currentSrc, setCurrentSrc] = useState<string>('');
+  const [hasError, setHasError] = useState(false);
+
   // Detectar tipo de usuário se não foi especificado
   const detectedType = userType || detectUserType({
     inviteRole,
@@ -44,19 +47,41 @@ export const DynamicBrandLogo: React.FC<DynamicBrandLogoProps> = ({
   // Gerar alt text dinâmico
   const altText = alt || `Logo ${detectedType === 'club' ? 'VIVER DE IA Club' : 'FORMAÇÃO VIVER DE IA'}`;
 
+  // Atualizar src quando o logoUrl mudar
+  useEffect(() => {
+    setCurrentSrc(logoUrl);
+    setHasError(false);
+  }, [logoUrl]);
+
+  const handleError = () => {
+    console.warn(`Erro ao carregar logo ${detectedType}, tentando fallback`);
+    
+    if (!hasError) {
+      setHasError(true);
+      // Tentar logo local como fallback
+      const fallbackSrc = detectedType === 'club' 
+        ? '/lovable-uploads/a408c993-07fa-49f2-bee6-c66d0614298b.png'
+        : '/lovable-uploads/d847c892-aafa-4cc1-92c6-110aff1d9755.png';
+      
+      setCurrentSrc(fallbackSrc);
+    } else {
+      // Se o fallback também falhar, usar logo padrão
+      setCurrentSrc('https://milagredigital.com/wp-content/uploads/2025/04/viverdeiaclub.avif');
+    }
+  };
+
   return (
     <img
-      src={logoUrl}
+      src={currentSrc}
       alt={altText}
       className={className}
       style={{
         height: height || undefined,
         width: width || undefined
       }}
-      onError={(e) => {
-        // Fallback para logo padrão em caso de erro
-        console.warn(`Erro ao carregar logo ${detectedType}, usando fallback`);
-        (e.target as HTMLImageElement).src = 'https://milagredigital.com/wp-content/uploads/2025/04/viverdeiaclub.avif';
+      onError={handleError}
+      onLoad={() => {
+        console.log(`[DYNAMIC-LOGO] Logo carregada com sucesso: ${currentSrc}`);
       }}
     />
   );
