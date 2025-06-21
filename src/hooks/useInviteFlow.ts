@@ -7,7 +7,7 @@ import { useToast } from '@/hooks/use-toast';
 export interface InviteFlowResult {
   success: boolean;
   message?: string;
-  shouldRedirect?: boolean;
+  shouldRedirectToOnboarding?: boolean;
   redirectPath?: string;
 }
 
@@ -156,7 +156,7 @@ export const useInviteFlow = () => {
       return {
         success: true,
         message: 'Conta criada e convite aplicado com sucesso!',
-        shouldRedirect: true,
+        shouldRedirectToOnboarding: true,
         redirectPath: '/onboarding'
       };
 
@@ -211,7 +211,7 @@ export const useInviteFlow = () => {
       return {
         success: true,
         message: 'Convite aplicado com sucesso!',
-        shouldRedirect: true,
+        shouldRedirectToOnboarding: true,
         redirectPath: '/dashboard'
       };
 
@@ -226,7 +226,7 @@ export const useInviteFlow = () => {
     }
   };
 
-  // Alias para compatibilidade
+  // Aliases para compatibilidade
   const registerWithInvite = processInviteRegistration;
   const applyInviteToExistingUser = processInviteForExistingUser;
 

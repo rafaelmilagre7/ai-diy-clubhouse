@@ -1,42 +1,44 @@
 
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { Card, CardHeader, CardContent } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
-import { Loader2, AlertCircle, CheckCircle, ArrowRight } from 'lucide-react';
-import { RegisterForm } from './RegisterForm';
-import { useInviteDetails } from '@/hooks/useInviteDetails';
+import { AlertCircle, CheckCircle, Loader2 } from 'lucide-react';
 import { useInviteFlow } from '@/hooks/useInviteFlow';
+import { useInviteDetails } from '@/hooks/useInviteDetails';
 import { useAuth } from '@/contexts/auth';
 import { useToast } from '@/hooks/use-toast';
-import { DynamicBrandLogo } from '@/components/common/DynamicBrandLogo';
+import { RegisterForm } from './RegisterForm';
 
 interface EnhancedInviteRegistrationProps {
   token?: string;
 }
 
-export const EnhancedInviteRegistration: React.FC<EnhancedInviteRegistrationProps> = ({ token }) => {
+export const EnhancedInviteRegistration: React.FC<EnhancedInviteRegistrationProps> = ({
+  token
+}) => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
   const { registerWithInvite, applyInviteToExistingUser, isProcessing } = useInviteFlow();
-  const { inviteDetails, loading: inviteLoading, error: inviteError } = useInviteDetails(token);
-  
-  const [registrationStep, setRegistrationStep] = useState<'loading' | 'form' | 'success' | 'error'>('loading');
-  const [successMessage, setSuccessMessage] = useState('');
-  const [errorMessage, setErrorMessage] = useState('');
+  const { inviteDetails, loading: detailsLoading, error: detailsError } = useInviteDetails(token);
 
-  // Verificar se já existe usuário logado
+  const [currentStep, setCurrentStep] = useState<'loading' | 'register' | 'success' | 'error'>('loading');
+  const [errorMessage, setErrorMessage] = useState<string>('');
+  const [successMessage, setSuccessMessage] = useState<string>('');
+
+  // Verificar se o usuário já está logado
   useEffect(() => {
-    if (user && inviteDetails && !isProcessing) {
-      console.log('[ENHANCED-INVITE] Usuário já logado, aplicando convite automaticamente');
+    if (user && token && inviteDetails) {
       handleExistingUserInvite();
-    } else if (inviteDetails && !user) {
-      console.log('[ENHANCED-INVITE] Convite válido, mostrar formulário de registro');
-      setRegistrationStep('form');
+    } else if (!detailsLoading && inviteDetails) {
+      setCurrentStep('register');
+    } else if (!detailsLoading && detailsError) {
+      setErrorMessage(detailsError);
+      setCurrentStep('error');
     }
-  }, [user, inviteDetails]);
+  }, [user, token, inviteDetails, detailsLoading, detailsError]);
 
   const handleExistingUserInvite = async () => {
     if (!token) return;
@@ -46,33 +48,63 @@ export const EnhancedInviteRegistration: React.FC<EnhancedInviteRegistrationProp
       
       if (result.success) {
         setSuccessMessage(result.message || 'Convite aplicado com sucesso!');
-        setRegistrationStep('success');
+        setCurrentStep('success');
         
-        // Redirecionar após sucesso
+        toast({
+          title: "Sucesso!",
+          description: result.message,
+        });
+
         setTimeout(() => {
           navigate(result.redirectPath || '/dashboard');
         }, 2000);
       } else {
         setErrorMessage(result.message || 'Erro ao aplicar convite');
-        setRegistrationStep('error');
+        setCurrentStep('error');
       }
     } catch (error: any) {
-      console.error('[ENHANCED-INVITE] Erro ao aplicar convite:', error);
+      console.error('[ENHANCED-INVITE] Erro ao aplicar convite para usuário existente:', error);
       setErrorMessage('Erro inesperado ao aplicar convite');
-      setRegistrationStep('error');
+      setCurrentStep('error');
     }
   };
 
-  const handleRegistrationSuccess = async (formData: { email: string; password: string; name: string }) => {
+  const handleRegistrationSuccess = async () => {
+    setSuccessMessage('Conta criada e convite aplicado com sucesso!');
+    setCurrentStep('success');
+    
+    toast({
+      title: "Bem-vindo!",
+      description: "Sua conta foi criada com sucesso.",
+    });
+
+    setTimeout(() => {
+      navigate('/onboarding');
+    }, 2000);
+  };
+
+  const handleRegistrationError = (error: string) => {
+    setErrorMessage(error);
+    setCurrentStep('error');
+    
+    toast({
+      title: "Erro no registro",
+      description: error,
+      variant: "destructive"
+    });
+  };
+
+  const handleRegisterWithInvite = async (formData: {
+    email: string;
+    password: string;
+    name: string;
+  }) => {
     if (!token) {
-      setErrorMessage('Token de convite não encontrado');
-      setRegistrationStep('error');
+      handleRegistrationError('Token de convite não encontrado');
       return;
     }
 
     try {
-      console.log('[ENHANCED-INVITE] Processando registro com convite:', formData);
-      
       const result = await registerWithInvite(
         token,
         formData.email,
@@ -81,180 +113,115 @@ export const EnhancedInviteRegistration: React.FC<EnhancedInviteRegistrationProp
       );
 
       if (result.success) {
-        setSuccessMessage(result.message || 'Registro realizado com sucesso!');
-        setRegistrationStep('success');
-        
-        toast({
-          title: "Sucesso!",
-          description: result.message,
-        });
-
-        // Redirecionar após sucesso
-        setTimeout(() => {
-          navigate(result.redirectPath || '/dashboard');
-        }, 2000);
+        handleRegistrationSuccess();
       } else {
-        setErrorMessage(result.message || 'Erro no registro');
-        setRegistrationStep('error');
+        handleRegistrationError(result.message || 'Erro no registro');
       }
     } catch (error: any) {
-      console.error('[ENHANCED-INVITE] Erro no registro:', error);
-      setErrorMessage('Erro inesperado durante o registro');
-      setRegistrationStep('error');
+      console.error('[ENHANCED-INVITE] Erro no registro com convite:', error);
+      handleRegistrationError('Erro inesperado durante o registro');
     }
   };
 
-  const handleRegistrationError = (error: string) => {
-    setErrorMessage(error);
-    setRegistrationStep('error');
-  };
-
-  // Loading state
-  if (inviteLoading || registrationStep === 'loading') {
+  // Estado de carregamento
+  if (detailsLoading || currentStep === 'loading') {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
         <Card className="w-full max-w-md">
-          <CardContent className="flex flex-col items-center justify-center p-8">
-            <DynamicBrandLogo 
-              inviteRole={inviteDetails?.role?.name}
-              className="mb-6 h-16 w-auto"
-            />
-            <Loader2 className="h-8 w-8 animate-spin text-blue-600 mb-4" />
-            <p className="text-gray-600 text-center">Verificando convite...</p>
+          <CardContent className="flex flex-col items-center justify-center p-6">
+            <Loader2 className="h-8 w-8 animate-spin text-blue-500 mb-4" />
+            <p className="text-center text-gray-600">
+              Validando convite...
+            </p>
           </CardContent>
         </Card>
       </div>
     );
   }
 
-  // Error state
-  if (inviteError || registrationStep === 'error') {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
-        <Card className="w-full max-w-md">
-          <CardHeader className="text-center">
-            <DynamicBrandLogo 
-              className="mb-4 h-16 w-auto mx-auto"
-            />
-            <CardTitle className="text-red-600 flex items-center justify-center gap-2">
-              <AlertCircle className="h-5 w-5" />
-              Erro no Convite
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Alert variant="destructive" className="mb-4">
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>
-                {errorMessage || inviteError || 'Erro desconhecido'}
-              </AlertDescription>
-            </Alert>
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
+      <Card className="w-full max-w-md">
+        <CardHeader>
+          <div className="text-center">
+            <h1 className="text-2xl font-bold text-gray-900">
+              {currentStep === 'register' && 'Criar Conta'}
+              {currentStep === 'success' && 'Sucesso!'}
+              {currentStep === 'error' && 'Erro'}
+            </h1>
             
-            <div className="space-y-3">
-              <Button 
-                onClick={() => navigate('/')} 
-                variant="outline" 
+            {inviteDetails && currentStep === 'register' && (
+              <div className="mt-4 p-4 bg-blue-50 rounded-lg">
+                <p className="text-sm text-gray-600 mb-2">
+                  Você foi convidado para se juntar como:
+                </p>
+                <p className="font-semibold text-blue-600">
+                  {inviteDetails.role.name}
+                </p>
+                <p className="text-xs text-gray-500 mt-1">
+                  Email: {inviteDetails.email}
+                </p>
+              </div>
+            )}
+          </div>
+        </CardHeader>
+        
+        <CardContent>
+          {currentStep === 'register' && (
+            <div className="space-y-4">
+              <RegisterForm
+                defaultEmail={inviteDetails?.email || ''}
+                inviteToken={token}
+                onSuccess={handleRegistrationSuccess}
+                onError={handleRegistrationError}
+              />
+            </div>
+          )}
+
+          {currentStep === 'success' && (
+            <div className="text-center space-y-4">
+              <CheckCircle className="h-16 w-16 text-green-500 mx-auto" />
+              <Alert>
+                <CheckCircle className="h-4 w-4" />
+                <AlertDescription>
+                  {successMessage}
+                </AlertDescription>
+              </Alert>
+              <p className="text-sm text-gray-600">
+                Redirecionando...
+              </p>
+            </div>
+          )}
+
+          {currentStep === 'error' && (
+            <div className="text-center space-y-4">
+              <AlertCircle className="h-16 w-16 text-red-500 mx-auto" />
+              <Alert variant="destructive">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>
+                  {errorMessage}
+                </AlertDescription>
+              </Alert>
+              <Button
+                onClick={() => navigate('/auth')}
+                variant="outline"
                 className="w-full"
               >
-                Voltar à página inicial
+                Voltar ao Login
               </Button>
-              
-              {token && (
-                <Button 
-                  onClick={() => {
-                    setRegistrationStep('loading');
-                    setErrorMessage('');
-                    window.location.reload();
-                  }}
-                  className="w-full"
-                >
-                  Tentar novamente
-                </Button>
-              )}
             </div>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
+          )}
 
-  // Success state
-  if (registrationStep === 'success') {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-emerald-100">
-        <Card className="w-full max-w-md">
-          <CardHeader className="text-center">
-            <DynamicBrandLogo 
-              inviteRole={inviteDetails?.role?.name}
-              className="mb-4 h-16 w-auto mx-auto"
-            />
-            <CardTitle className="text-green-600 flex items-center justify-center gap-2">
-              <CheckCircle className="h-5 w-5" />
-              Sucesso!
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Alert className="mb-4 border-green-200 bg-green-50">
-              <CheckCircle className="h-4 w-4 text-green-600" />
-              <AlertDescription className="text-green-700">
-                {successMessage}
-              </AlertDescription>
-            </Alert>
-            
-            <div className="text-center">
-              <p className="text-gray-600 mb-4">
-                Redirecionando automaticamente...
-              </p>
-              <Loader2 className="h-6 w-6 animate-spin text-green-600 mx-auto" />
+          {isProcessing && (
+            <div className="flex items-center justify-center mt-4">
+              <Loader2 className="h-4 w-4 animate-spin mr-2" />
+              <span className="text-sm text-gray-600">Processando...</span>
             </div>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
-  // Registration form state
-  if (registrationStep === 'form' && inviteDetails) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
-        <Card className="w-full max-w-md">
-          <CardHeader className="text-center">
-            <DynamicBrandLogo 
-              inviteRole={inviteDetails.role?.name}
-              className="mb-4 h-16 w-auto mx-auto"
-            />
-            <CardTitle>Complete seu Cadastro</CardTitle>
-            <p className="text-sm text-gray-600 mt-2">
-              Você foi convidado como <strong>{inviteDetails.role?.name}</strong>
-            </p>
-          </CardHeader>
-          <CardContent>
-            <Alert className="mb-4 border-blue-200 bg-blue-50">
-              <ArrowRight className="h-4 w-4 text-blue-600" />
-              <AlertDescription className="text-blue-700">
-                <strong>Email:</strong> {inviteDetails.email}<br />
-                <strong>Cargo:</strong> {inviteDetails.role?.name}
-                {inviteDetails.role?.description && (
-                  <>
-                    <br />
-                    <strong>Descrição:</strong> {inviteDetails.role.description}
-                  </>
-                )}
-              </AlertDescription>
-            </Alert>
-
-            <RegisterForm
-              defaultEmail={inviteDetails.email}
-              inviteToken={token}
-              onSuccess={handleRegistrationSuccess}
-              onError={handleRegistrationError}
-            />
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
-  return null;
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
 };
 
 export default EnhancedInviteRegistration;
