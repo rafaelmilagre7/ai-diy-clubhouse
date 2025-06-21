@@ -29,7 +29,7 @@ const formatWhatsAppNumber = (number: string): string => {
 };
 
 const handler = async (req: Request): Promise<Response> => {
-  console.log(`📱 [SEND-INVITE-WHATSAPP] Nova requisição: ${req.method} - v4.0 Template System`);
+  console.log(`📱 [SEND-INVITE-WHATSAPP] Nova requisição: ${req.method} - v4.1 Template correto: convitevia`);
   
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -73,11 +73,11 @@ const handler = async (req: Request): Promise<Response> => {
     // Preparar link do convite
     const inviteUrl = `${Deno.env.get("SITE_URL") || "https://viverdeia.ai"}/convite/${token}`;
     
-    // Template ID aprovado pelo Meta
-    const templateName = "convite_viver_ia";
+    // Template correto identificado no discovery
+    const templateName = "convitevia";
     const templateId = "1413982056507354";
     
-    console.log(`📱 [SEND-INVITE-WHATSAPP] Usando template: ${templateName} (ID: ${templateId})`);
+    console.log(`📱 [SEND-INVITE-WHATSAPP] Usando template correto: ${templateName} (ID: ${templateId})`);
     console.log(`📱 [SEND-INVITE-WHATSAPP] Variáveis - Nome: ${userName}, Link: ${inviteUrl}`);
     
     // Construir URL da API
@@ -200,5 +200,5 @@ const handler = async (req: Request): Promise<Response> => {
   }
 };
 
-console.log("📱 [SEND-INVITE-WHATSAPP] Edge Function carregada com sistema de templates! v4.0");
+console.log("📱 [SEND-INVITE-WHATSAPP] Edge Function carregada com template correto 'convitevia'! v4.1");
 serve(handler);

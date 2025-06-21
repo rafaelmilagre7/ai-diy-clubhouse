@@ -72,14 +72,14 @@ const WhatsAppDebug = () => {
               </CardHeader>
               <CardContent className="space-y-2">
                 <div className="font-mono text-sm bg-muted p-2 rounded">
-                  <div><strong>Nome:</strong> convite_viver_ia</div>
+                  <div><strong>Nome:</strong> convitevia</div>
                   <div><strong>ID:</strong> 1413982056507354</div>
-                  <div><strong>Status:</strong> Configurado no código</div>
+                  <div><strong>Status:</strong> ✅ Aprovado e Configurado</div>
                   <div><strong>Language:</strong> pt_BR</div>
                   <div><strong>Variáveis:</strong> Nome, Link</div>
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  Use o Discovery acima para verificar se este template realmente existe e está aprovado.
+                  Template correto identificado via Discovery. Pronto para uso.
                 </p>
               </CardContent>
             </Card>
@@ -124,10 +124,10 @@ const WhatsAppDebug = () => {
                 <div className="space-y-2 text-sm">
                   <div>✅ whatsapp-config-check (v5.0)</div>
                   <div>✅ whatsapp-webhook</div>
-                  <div>✅ send-invite-whatsapp (v4.0 Template)</div>
+                  <div>✅ send-invite-whatsapp (v4.1 Template correto)</div>
                   <div>✅ invite-orchestrator (v4.0)</div>
-                  <div>🆕 whatsapp-list-templates (v1.0)</div>
-                  <div>🎯 Template System: convite_viver_ia</div>
+                  <div>✅ whatsapp-list-templates (v1.0)</div>
+                  <div>🎯 Template System: convitevia ✅</div>
                 </div>
               </CardContent>
             </Card>

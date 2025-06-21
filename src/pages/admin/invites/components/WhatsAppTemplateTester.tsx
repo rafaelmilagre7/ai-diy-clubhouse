@@ -73,7 +73,7 @@ const WhatsAppTemplateTester = () => {
           Teste de Template WhatsApp
         </CardTitle>
         <CardDescription>
-          Teste o template aprovado: <code>convite_viver_ia</code> (ID: 1413982056507354)
+          Teste o template aprovado: <code>convitevia</code> (ID: 1413982056507354)
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -157,7 +157,7 @@ const WhatsAppTemplateTester = () => {
         )}
 
         <div className="text-xs text-muted-foreground space-y-1">
-          <p><strong>Template:</strong> convite_viver_ia</p>
+          <p><strong>Template:</strong> convitevia</p>
           <p><strong>Template ID:</strong> 1413982056507354</p>
           <p><strong>Language:</strong> pt_BR</p>
           <p><strong>Variáveis:</strong> {`{{1}} = Nome, {{2}} = Link do convite`}</p>
