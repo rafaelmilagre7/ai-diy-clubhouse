@@ -15,7 +15,7 @@ interface OnboardingLoaderProps {
 export const OnboardingLoader = ({ children }: OnboardingLoaderProps) => {
   console.log('[OnboardingLoader] Renderizando');
   
-  const { user, profile, isLoading: authLoading, isAdmin } = useAuth();
+  const { user, profile, isLoading: authLoading } = useAuth();
   const { isRequired, isLoading: onboardingLoading, hasCompleted } = useOnboardingRequired();
   const { isAdminPreviewMode, isValidAdminAccess } = useAdminPreview();
 
@@ -30,9 +30,9 @@ export const OnboardingLoader = ({ children }: OnboardingLoaderProps) => {
     isRequired,
     hasCompleted,
     memberType,
-    isAdmin,
     roleName,
-    isAdminPreviewMode
+    isAdminPreviewMode,
+    profileOnboardingCompleted: profile?.onboarding_completed
   });
 
   // Mostrar loading enquanto carrega

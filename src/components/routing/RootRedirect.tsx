@@ -5,7 +5,7 @@ import { useOnboardingRequired } from "@/hooks/useOnboardingRequired";
 import LoadingScreen from "@/components/common/LoadingScreen";
 
 const RootRedirect = () => {
-  const { user, profile, isLoading: authLoading, isAdmin } = useAuth();
+  const { user, profile, isLoading: authLoading } = useAuth();
   const { isRequired: onboardingRequired, isLoading: onboardingLoading } = useOnboardingRequired();
   
   console.log("[ROOT-REDIRECT] Estado:", {
@@ -14,8 +14,8 @@ const RootRedirect = () => {
     authLoading,
     onboardingLoading,
     onboardingRequired,
-    isAdmin,
-    userEmail: user?.email
+    userEmail: user?.email,
+    profileOnboardingCompleted: profile?.onboarding_completed
   });
   
   // Aguardar o carregamento completo de auth e onboarding
@@ -35,26 +35,20 @@ const RootRedirect = () => {
     return <LoadingScreen message="Carregando perfil..." />;
   }
   
-  // LÓGICA CRÍTICA: Verificar se precisa fazer onboarding
+  // LÓGICA CRÍTICA: FORÇAR onboarding para TODOS que não completaram
   if (onboardingRequired) {
-    console.log("[ROOT-REDIRECT] Onboarding necessário -> /onboarding");
+    console.log("[ROOT-REDIRECT] ONBOARDING OBRIGATÓRIO -> /onboarding");
     return <Navigate to="/onboarding" replace />;
   }
   
-  // Se admin e onboarding já foi feito (ou não é necessário), ir para dashboard
-  if (isAdmin) {
-    console.log("[ROOT-REDIRECT] Admin com onboarding completo -> dashboard");
-    return <Navigate to="/dashboard" replace />;
-  }
-  
-  // Usuários de formação
+  // Apenas depois de completar onboarding, redirecionar para áreas da plataforma
   if (profile?.user_roles?.name === 'formacao') {
-    console.log("[ROOT-REDIRECT] Formação -> /formacao");
+    console.log("[ROOT-REDIRECT] Formação com onboarding completo -> /formacao");
     return <Navigate to="/formacao" replace />;
   }
   
   // Padrão -> dashboard (apenas se onboarding foi completado)
-  console.log("[ROOT-REDIRECT] Usuário padrão com onboarding completo -> dashboard");
+  console.log("[ROOT-REDIRECT] Usuário com onboarding completo -> dashboard");
   return <Navigate to="/dashboard" replace />;
 };
 
