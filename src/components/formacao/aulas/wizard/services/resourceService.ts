@@ -52,7 +52,7 @@ export async function saveResourcesForLesson(lessonId: string, resources: Resour
       return true;
     }
     
-    // Primeiro, remover todos os recursos existentes
+    // Primeiro, remover todos os recursos existentes da aula
     const { error: deleteError } = await supabase
       .from('learning_resources')
       .delete()
@@ -74,7 +74,7 @@ export async function saveResourcesForLesson(lessonId: string, resources: Resour
       }
       
       const resourceData = {
-        lesson_id: lessonId,
+        lesson_id: lessonId, // Para recursos específicos de aula
         name: resource.title || "Recurso sem título",
         description: resource.description || null,
         file_url: resource.url,

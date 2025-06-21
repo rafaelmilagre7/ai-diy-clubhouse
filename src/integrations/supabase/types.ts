@@ -1896,7 +1896,7 @@ export type Database = {
           file_type: string | null
           file_url: string
           id: string
-          lesson_id: string
+          lesson_id: string | null
           name: string
           order_index: number
         }
@@ -1907,7 +1907,7 @@ export type Database = {
           file_type?: string | null
           file_url: string
           id?: string
-          lesson_id: string
+          lesson_id?: string | null
           name: string
           order_index?: number
         }
@@ -1918,7 +1918,7 @@ export type Database = {
           file_type?: string | null
           file_url?: string
           id?: string
-          lesson_id?: string
+          lesson_id?: string | null
           name?: string
           order_index?: number
         }

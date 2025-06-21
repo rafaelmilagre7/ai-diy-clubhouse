@@ -29,7 +29,7 @@ interface RecursoFormDialogProps {
   onSuccess: () => void;
   material?: Material;
   recurso?: any;
-  lessonId?: string;
+  lessonId?: string | null;
 }
 
 export const RecursoFormDialog: React.FC<RecursoFormDialogProps> = ({
@@ -74,6 +74,7 @@ export const RecursoFormDialog: React.FC<RecursoFormDialogProps> = ({
         file_type: formData.file_type || 'document',
         file_size_bytes: formData.file_size_bytes || null,
         created_at: new Date().toISOString(),
+        // Apenas incluir lesson_id se for fornecido (não null)
         ...(lessonId && { lesson_id: lessonId })
       };
 
@@ -163,7 +164,7 @@ export const RecursoFormDialog: React.FC<RecursoFormDialogProps> = ({
               value={formData.file_url}
               onChange={handleFileUpload}
               bucketName="lesson_materials"
-              folder="resources"
+              folder="library"
               accept="*"
             />
           </div>
