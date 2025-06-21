@@ -4,10 +4,22 @@ import { motion } from "framer-motion";
 import { SecureLoginForm } from './SecureLoginForm';
 import { RegisterForm } from './RegisterForm';
 import { ArrowLeft } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
+import { DynamicBrandLogo } from '@/components/common/DynamicBrandLogo';
+import { getBrandColors, detectUserType } from '@/services/brandLogoService';
 
 const AuthLayout = () => {
   const [isLogin, setIsLogin] = useState(true);
+  const [searchParams] = useSearchParams();
+
+  // Detectar tipo de usuário baseado nos parâmetros da URL
+  const userType = detectUserType({
+    urlParams: searchParams,
+    defaultType: 'club'
+  });
+
+  // Obter cores da marca
+  const brandColors = getBrandColors(userType);
 
   return (
     <div className="min-h-screen w-full flex items-center justify-center bg-gradient-to-b from-gray-900 to-black p-4">
@@ -19,9 +31,9 @@ const AuthLayout = () => {
         className="w-full max-w-md"
       >
         <div className="mb-8 text-center">
-          <img
-            src="https://milagredigital.com/wp-content/uploads/2025/04/viverdeiaclub.avif"
-            alt="VIVER DE IA Club"
+          <DynamicBrandLogo
+            userType={userType}
+            urlParams={searchParams}
             className="mx-auto h-20 w-auto"
           />
           <h2 className="mt-4 text-2xl font-extrabold text-white">
@@ -35,7 +47,7 @@ const AuthLayout = () => {
           <div className="mt-6 text-center">
             <button
               onClick={() => setIsLogin(!isLogin)}
-              className="text-viverblue hover:text-viverblue/80 text-sm"
+              className={`${brandColors.text} ${brandColors.hover} text-sm`}
             >
               {isLogin 
                 ? 'Não tem conta? Criar uma nova conta' 
@@ -46,7 +58,10 @@ const AuthLayout = () => {
           
           {isLogin && (
             <div className="mt-4 text-center">
-              <Link to="/reset-password" className="text-viverblue hover:text-viverblue/80 text-sm">
+              <Link 
+                to="/reset-password" 
+                className={`${brandColors.text} ${brandColors.hover} text-sm`}
+              >
                 Esqueceu sua senha?
               </Link>
             </div>
