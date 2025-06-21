@@ -1,101 +1,64 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { 
-  Plus, 
-  Search, 
-  Filter, 
-  Mail, 
-  MessageSquare, 
-  Calendar, 
-  User, 
-  MoreHorizontal,
-  Clock,
-  CheckCircle,
-  XCircle,
-  RotateCcw
-} from 'lucide-react';
+import { Plus, Search, Filter, Mail, MessageSquare, Calendar, User, MoreHorizontal, Clock, CheckCircle, XCircle, RotateCcw } from 'lucide-react';
 import { useInvites } from '@/hooks/admin/useInvites';
 import { useRoles } from '@/hooks/admin/useRoles';
 import { CreateInviteModal } from './components/CreateInviteModal';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { toast } from 'sonner';
-
 const InvitesManagement = () => {
-  const { 
-    invites, 
-    loading, 
-    isCreating, 
-    isSending, 
+  const {
+    invites,
+    loading,
+    isCreating,
+    isSending,
     isDeleting,
-    fetchInvites, 
-    createInvite, 
-    resendInvite, 
-    deleteInvite 
+    fetchInvites,
+    createInvite,
+    resendInvite,
+    deleteInvite
   } = useInvites();
-  
-  const { roles } = useRoles();
+  const {
+    roles
+  } = useRoles();
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [roleFilter, setRoleFilter] = useState<string>('all');
   const [deleteInviteId, setDeleteInviteId] = useState<string | null>(null);
-
   useEffect(() => {
     fetchInvites();
   }, [fetchInvites]);
-
   const getStatusBadge = (invite: any) => {
     if (invite.used_at) {
       return <Badge className="bg-green-100 text-green-800 border-green-300">Usado</Badge>;
     }
-    
     const isExpired = new Date(invite.expires_at) < new Date();
     if (isExpired) {
       return <Badge variant="destructive">Expirado</Badge>;
     }
-    
     return <Badge variant="outline" className="border-yellow-500 text-yellow-700">Pendente</Badge>;
   };
-
   const getStatusIcon = (invite: any) => {
     if (invite.used_at) {
       return <CheckCircle className="h-4 w-4 text-green-500" />;
     }
-    
     const isExpired = new Date(invite.expires_at) < new Date();
     if (isExpired) {
       return <XCircle className="h-4 w-4 text-red-500" />;
     }
-    
     return <Clock className="h-4 w-4 text-yellow-500" />;
   };
-
   const filteredInvites = invites.filter(invite => {
     const matchesSearch = invite.email.toLowerCase().includes(searchTerm.toLowerCase());
-    
     let matchesStatus = true;
     if (statusFilter !== 'all') {
       if (statusFilter === 'used') {
@@ -106,12 +69,9 @@ const InvitesManagement = () => {
         matchesStatus = !invite.used_at && new Date(invite.expires_at) >= new Date();
       }
     }
-    
     const matchesRole = roleFilter === 'all' || invite.role_id === roleFilter;
-    
     return matchesSearch && matchesStatus && matchesRole;
   });
-
   const handleResendInvite = async (invite: any) => {
     try {
       await resendInvite(invite);
@@ -120,10 +80,8 @@ const InvitesManagement = () => {
       toast.error('Erro ao reenviar convite');
     }
   };
-
   const handleDeleteInvite = async () => {
     if (!deleteInviteId) return;
-    
     try {
       await deleteInvite(deleteInviteId);
       toast.success('Convite excluído com sucesso!');
@@ -132,9 +90,7 @@ const InvitesManagement = () => {
       toast.error('Erro ao excluir convite');
     }
   };
-
-  return (
-    <div className="container mx-auto py-6 space-y-6">
+  return <div className="container mx-auto py-6 space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -143,10 +99,7 @@ const InvitesManagement = () => {
             Convide novos membros para a plataforma
           </p>
         </div>
-        <Button 
-          onClick={() => setShowCreateModal(true)}
-          className="flex items-center gap-2"
-        >
+        <Button onClick={() => setShowCreateModal(true)} className="flex items-center gap-2">
           <Plus className="h-4 w-4" />
           Novo Convite
         </Button>
@@ -163,12 +116,7 @@ const InvitesManagement = () => {
               <label className="text-sm font-medium">Buscar</label>
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                <Input
-                  placeholder="Email..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
-                />
+                <Input placeholder="Email..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-10" />
               </div>
             </div>
 
@@ -195,23 +143,16 @@ const InvitesManagement = () => {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Todas</SelectItem>
-                  {roles.map(role => (
-                    <SelectItem key={role.id} value={role.id}>
+                  {roles.map(role => <SelectItem key={role.id} value={role.id}>
                       {role.name}
-                    </SelectItem>
-                  ))}
+                    </SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
 
             <div className="space-y-2">
               <label className="text-sm font-medium">&nbsp;</label>
-              <Button 
-                variant="outline" 
-                onClick={fetchInvites}
-                className="w-full"
-                disabled={loading}
-              >
+              <Button variant="outline" onClick={fetchInvites} className="w-full" disabled={loading}>
                 <RotateCcw className="h-4 w-4 mr-2" />
                 Atualizar
               </Button>
@@ -229,44 +170,25 @@ const InvitesManagement = () => {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {loading ? (
-            <div className="text-center py-8">
+          {loading ? <div className="text-center py-8">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-viverblue mx-auto"></div>
               <p className="text-sm text-gray-500 mt-2">Carregando convites...</p>
-            </div>
-          ) : filteredInvites.length === 0 ? (
-            <div className="text-center py-8">
+            </div> : filteredInvites.length === 0 ? <div className="text-center py-8">
               <Mail className="h-12 w-12 text-gray-400 mx-auto mb-4" />
               <h3 className="text-lg font-medium text-gray-900 mb-2">Nenhum convite encontrado</h3>
               <p className="text-sm text-gray-500 mb-4">
-                {searchTerm || statusFilter !== 'all' || roleFilter !== 'all'
-                  ? 'Tente ajustar os filtros'
-                  : 'Comece criando seu primeiro convite'
-                }
+                {searchTerm || statusFilter !== 'all' || roleFilter !== 'all' ? 'Tente ajustar os filtros' : 'Comece criando seu primeiro convite'}
               </p>
-              {!searchTerm && statusFilter === 'all' && roleFilter === 'all' && (
-                <Button onClick={() => setShowCreateModal(true)}>
+              {!searchTerm && statusFilter === 'all' && roleFilter === 'all' && <Button onClick={() => setShowCreateModal(true)}>
                   <Plus className="h-4 w-4 mr-2" />
                   Criar Primeiro Convite
-                </Button>
-              )}
-            </div>
-          ) : (
-            <div className="space-y-4">
+                </Button>}
+            </div> : <div className="space-y-4">
               {filteredInvites.map(invite => {
-                const role = roles.find(r => r.id === invite.role_id);
-                const isExpired = !invite.used_at && new Date(invite.expires_at) < new Date();
-                const canResend = !invite.used_at && !isExpired;
-                
-                return (
-                  <div
-                    key={invite.id}
-                    className={cn(
-                      "border rounded-lg p-4 space-y-3 transition-all",
-                      invite.used_at && "bg-green-50 border-green-200",
-                      isExpired && "bg-red-50 border-red-200"
-                    )}
-                  >
+            const role = roles.find(r => r.id === invite.role_id);
+            const isExpired = !invite.used_at && new Date(invite.expires_at) < new Date();
+            const canResend = !invite.used_at && !isExpired;
+            return <div key={invite.id} className="">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
                         {getStatusIcon(invite)}
@@ -278,7 +200,9 @@ const InvitesManagement = () => {
                             <span>•</span>
                             <Calendar className="h-3 w-3" />
                             <span>
-                              Criado em {format(new Date(invite.created_at), 'dd/MM/yyyy', { locale: ptBR })}
+                              Criado em {format(new Date(invite.created_at), 'dd/MM/yyyy', {
+                          locale: ptBR
+                        })}
                             </span>
                           </div>
                         </div>
@@ -294,20 +218,11 @@ const InvitesManagement = () => {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            {canResend && (
-                              <DropdownMenuItem 
-                                onClick={() => handleResendInvite(invite)}
-                                disabled={isSending}
-                              >
+                            {canResend && <DropdownMenuItem onClick={() => handleResendInvite(invite)} disabled={isSending}>
                                 <RotateCcw className="h-4 w-4 mr-2" />
                                 Reenviar
-                              </DropdownMenuItem>
-                            )}
-                            <DropdownMenuItem 
-                              onClick={() => setDeleteInviteId(invite.id)}
-                              className="text-red-600"
-                              disabled={isDeleting}
-                            >
+                              </DropdownMenuItem>}
+                            <DropdownMenuItem onClick={() => setDeleteInviteId(invite.id)} className="text-red-600" disabled={isDeleting}>
                               <XCircle className="h-4 w-4 mr-2" />
                               Excluir
                             </DropdownMenuItem>
@@ -316,36 +231,29 @@ const InvitesManagement = () => {
                       </div>
                     </div>
                     
-                    {invite.notes && (
-                      <div className="bg-gray-50 rounded p-3 border-l-4 border-viverblue">
+                    {invite.notes && <div className="bg-gray-50 rounded p-3 border-l-4 border-viverblue">
                         <p className="text-sm text-gray-700">{invite.notes}</p>
-                      </div>
-                    )}
+                      </div>}
                     
                     <div className="flex items-center gap-4 text-xs text-gray-500">
-                      <span>Expira: {format(new Date(invite.expires_at), 'dd/MM/yyyy HH:mm', { locale: ptBR })}</span>
-                      {invite.last_sent_at && (
-                        <span>Último envio: {format(new Date(invite.last_sent_at), 'dd/MM/yyyy HH:mm', { locale: ptBR })}</span>
-                      )}
-                      {invite.used_at && (
-                        <span>Usado: {format(new Date(invite.used_at), 'dd/MM/yyyy HH:mm', { locale: ptBR })}</span>
-                      )}
+                      <span>Expira: {format(new Date(invite.expires_at), 'dd/MM/yyyy HH:mm', {
+                    locale: ptBR
+                  })}</span>
+                      {invite.last_sent_at && <span>Último envio: {format(new Date(invite.last_sent_at), 'dd/MM/yyyy HH:mm', {
+                    locale: ptBR
+                  })}</span>}
+                      {invite.used_at && <span>Usado: {format(new Date(invite.used_at), 'dd/MM/yyyy HH:mm', {
+                    locale: ptBR
+                  })}</span>}
                     </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
+                  </div>;
+          })}
+            </div>}
         </CardContent>
       </Card>
 
       {/* Modal de Criação */}
-      <CreateInviteModal
-        open={showCreateModal}
-        onOpenChange={setShowCreateModal}
-        onCreateInvite={createInvite}
-        isCreating={isCreating}
-      />
+      <CreateInviteModal open={showCreateModal} onOpenChange={setShowCreateModal} onCreateInvite={createInvite} isCreating={isCreating} />
 
       {/* Dialog de Confirmação de Exclusão */}
       <AlertDialog open={!!deleteInviteId} onOpenChange={() => setDeleteInviteId(null)}>
@@ -364,8 +272,6 @@ const InvitesManagement = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </div>
-  );
+    </div>;
 };
-
 export default InvitesManagement;
