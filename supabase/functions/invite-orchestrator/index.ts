@@ -20,7 +20,7 @@ interface InviteRequest {
 }
 
 const handler = async (req: Request): Promise<Response> => {
-  console.log(`🎯 [INVITE-ORCHESTRATOR] Nova requisição: ${req.method}`);
+  console.log(`🎯 [INVITE-ORCHESTRATOR] Nova requisição: ${req.method} - v2.0 deployed`);
   
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -210,5 +210,5 @@ const handler = async (req: Request): Promise<Response> => {
   }
 };
 
-console.log("🎯 [INVITE-ORCHESTRATOR] Edge Function carregada!");
+console.log("🎯 [INVITE-ORCHESTRATOR] Edge Function carregada! v2.0 deployed");
 serve(handler);

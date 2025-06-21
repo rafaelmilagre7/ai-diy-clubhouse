@@ -20,7 +20,7 @@ const formatWhatsAppNumber = (number: string): string => {
 };
 
 const handler = async (req: Request): Promise<Response> => {
-  console.log(`🧪 [WHATSAPP-TEST] Nova requisição: ${req.method}`);
+  console.log(`🧪 [WHATSAPP-TEST] Nova requisição: ${req.method} - v2.0 deployed`);
   
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -160,5 +160,5 @@ const handler = async (req: Request): Promise<Response> => {
   }
 };
 
-console.log("🧪 [WHATSAPP-TEST] Edge Function carregada!");
+console.log("🧪 [WHATSAPP-TEST] Edge Function carregada! v2.0 deployed");
 serve(handler);

@@ -54,7 +54,7 @@ const getWhatsAppMessage = (token: string, isResend: boolean = false, notes?: st
 };
 
 const handler = async (req: Request): Promise<Response> => {
-  console.log(`📱 [SEND-INVITE-WHATSAPP] Nova requisição: ${req.method}`);
+  console.log(`📱 [SEND-INVITE-WHATSAPP] Nova requisição: ${req.method} - v2.0 deployed`);
   
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -185,5 +185,5 @@ const handler = async (req: Request): Promise<Response> => {
   }
 };
 
-console.log("📱 [SEND-INVITE-WHATSAPP] Edge Function carregada com melhorias!");
+console.log("📱 [SEND-INVITE-WHATSAPP] Edge Function carregada com melhorias! v2.0 deployed");
 serve(handler);

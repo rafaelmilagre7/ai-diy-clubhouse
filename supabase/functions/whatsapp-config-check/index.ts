@@ -150,7 +150,7 @@ const testConnection = async () => {
 };
 
 const handler = async (req: Request): Promise<Response> => {
-  console.log(`🔧 [WHATSAPP-CONFIG-CHECK] ${req.method} request received`);
+  console.log(`🔧 [WHATSAPP-CONFIG-CHECK] ${req.method} request received - v2.0 deployed`);
   
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -215,5 +215,5 @@ const handler = async (req: Request): Promise<Response> => {
   }
 };
 
-console.log("🔧 [WHATSAPP-CONFIG-CHECK] Edge Function carregada e pronta!");
+console.log("🔧 [WHATSAPP-CONFIG-CHECK] Edge Function carregada e pronta! v2.0 deployed");
 serve(handler);
