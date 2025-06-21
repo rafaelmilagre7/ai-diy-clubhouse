@@ -13,6 +13,15 @@ export const useInviteCreate = () => {
       
       console.log("🎯 Criando convite:", params);
 
+      // Validar se userName é obrigatório quando WhatsApp está incluído
+      if (params.channels?.includes('whatsapp') && (!params.userName || params.userName.trim() === '')) {
+        toast.error("Nome da pessoa é obrigatório para envio via WhatsApp");
+        return {
+          status: 'error',
+          message: "Nome da pessoa é obrigatório para envio via WhatsApp"
+        };
+      }
+
       // Criar convite via função do Supabase
       const { data, error } = await supabase.rpc('create_invite', {
         p_email: params.email,
@@ -38,7 +47,7 @@ export const useInviteCreate = () => {
             roleId: params.roleId,
             token: data.token,
             channels: params.channels || ['email'],
-            isResend: false,
+            userName: params.userName || null, // Incluir userName
             notes: params.notes
           }
         });

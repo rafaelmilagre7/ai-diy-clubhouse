@@ -1,10 +1,11 @@
 
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { MessageCircle, Settings, BarChart3, TestTube, Zap } from 'lucide-react';
+import { MessageCircle, Settings, BarChart3, TestTube, Zap, Template } from 'lucide-react';
 import WhatsAppConfigPanel from './invites/components/WhatsAppConfigPanel';
 import InviteAnalyticsDashboard from './invites/components/InviteAnalyticsDashboard';
 import DualTokenTester from './invites/components/DualTokenTester';
+import WhatsAppTemplateTester from './invites/components/WhatsAppTemplateTester';
 
 const WhatsAppDebug = () => {
   return (
@@ -20,7 +21,16 @@ const WhatsAppDebug = () => {
       </div>
 
       <div className="grid gap-6">
-        {/* Novo: Teste de Duplo Token */}
+        {/* Novo: Teste de Template WhatsApp */}
+        <section>
+          <div className="flex items-center gap-2 mb-4">
+            <Template className="h-5 w-5" />
+            <h2 className="text-xl font-semibold">Template de Convites</h2>
+          </div>
+          <WhatsAppTemplateTester />
+        </section>
+
+        {/* Teste de Duplo Token */}
         <section>
           <div className="flex items-center gap-2 mb-4">
             <Zap className="h-5 w-5" />
@@ -57,13 +67,29 @@ const WhatsAppDebug = () => {
           <div className="grid md:grid-cols-2 gap-4">
             <Card>
               <CardHeader>
+                <CardTitle className="text-lg">Template Aprovado</CardTitle>
+                <CardDescription>Template ativo no Meta Business</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                <div className="font-mono text-sm bg-muted p-2 rounded">
+                  <div><strong>Nome:</strong> convite_viver_ia</div>
+                  <div><strong>ID:</strong> 1413982056507354</div>
+                  <div><strong>Status:</strong> APPROVED</div>
+                  <div><strong>Language:</strong> pt_BR</div>
+                  <div><strong>Variáveis:</strong> Nome, Link</div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
                 <CardTitle className="text-lg">Variáveis de Ambiente Necessárias</CardTitle>
                 <CardDescription>Configure estas variáveis no Supabase</CardDescription>
               </CardHeader>
               <CardContent className="space-y-2">
                 <div className="font-mono text-sm bg-muted p-2 rounded">
                   <div>WHATSAPP_API_TOKEN</div>
-                  <div>WHATSAPP_API_TOKEN_2 (novo)</div>
+                  <div>WHATSAPP_API_TOKEN_2 (backup)</div>
                   <div>WHATSAPP_PHONE_NUMBER_ID</div>
                   <div>WHATSAPP_BUSINESS_ID</div>
                   <div>WHATSAPP_WEBHOOK_TOKEN</div>
@@ -89,22 +115,6 @@ const WhatsAppDebug = () => {
 
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">Status da API</CardTitle>
-                <CardDescription>Informações da conectividade</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2 text-sm">
-                  <div>📡 API Version: v18.0</div>
-                  <div>🔒 Autenticação: Bearer Token</div>
-                  <div>🌐 Endpoint: graph.facebook.com</div>
-                  <div>📱 Protocolo: WhatsApp Business API</div>
-                  <div>🆕 Suporte: Teste de duplo token</div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
                 <CardTitle className="text-lg">Edge Functions Ativas</CardTitle>
                 <CardDescription>Funções implementadas</CardDescription>
               </CardHeader>
@@ -112,8 +122,9 @@ const WhatsAppDebug = () => {
                 <div className="space-y-2 text-sm">
                   <div>✅ whatsapp-config-check (v4.0)</div>
                   <div>✅ whatsapp-webhook</div>
-                  <div>✅ send-invite-whatsapp</div>
-                  <div>✅ invite-orchestrator</div>
+                  <div>✅ send-invite-whatsapp (v4.0 Template)</div>
+                  <div>✅ invite-orchestrator (v4.0)</div>
+                  <div>🆕 Template System: convite_viver_ia</div>
                 </div>
               </CardContent>
             </Card>

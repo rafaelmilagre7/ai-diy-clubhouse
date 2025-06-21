@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
@@ -14,12 +15,12 @@ interface InviteRequest {
   roleId: string;
   token: string;
   channels: ('email' | 'whatsapp')[];
-  isResend?: boolean;
+  userName?: string;
   notes?: string;
 }
 
 const handler = async (req: Request): Promise<Response> => {
-  console.log(`🎯 [INVITE-ORCHESTRATOR] Nova requisição: ${req.method} - v3.0 CORS fixed`);
+  console.log(`🎯 [INVITE-ORCHESTRATOR] Nova requisição: ${req.method} - v4.0 Template System`);
   
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -33,9 +34,9 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const { inviteId, email, whatsappNumber, roleId, token, channels, isResend = false, notes }: InviteRequest = await req.json();
+    const { inviteId, email, whatsappNumber, roleId, token, channels, userName, notes }: InviteRequest = await req.json();
     
-    console.log(`📧 [INVITE-ORCHESTRATOR] Processando convite para: ${email}, Canais: ${channels.join(', ')}`);
+    console.log(`📧 [INVITE-ORCHESTRATOR] Processando convite para: ${email}, Canais: ${channels.join(', ')}, Nome: ${userName || 'N/A'}`);
 
     // Inicializar cliente Supabase
     const supabase = createClient(
@@ -56,7 +57,6 @@ const handler = async (req: Request): Promise<Response> => {
             email,
             roleId,
             token,
-            isResend,
             notes
           }
         });
@@ -81,7 +81,7 @@ const handler = async (req: Request): Promise<Response> => {
           p_status: emailData.success ? 'sent' : 'failed',
           p_provider_id: emailData.emailId,
           p_error_message: emailData.success ? null : emailData.error,
-          p_metadata: { isResend }
+          p_metadata: { userName }
         });
 
         console.log(`✅ [INVITE-ORCHESTRATOR] E-mail ${emailData.success ? 'enviado' : 'falhou'}`);
@@ -100,7 +100,7 @@ const handler = async (req: Request): Promise<Response> => {
           p_channel: 'email',
           p_status: 'failed',
           p_error_message: emailError.message,
-          p_metadata: { isResend }
+          p_metadata: { userName }
         });
       }
     }
@@ -108,7 +108,12 @@ const handler = async (req: Request): Promise<Response> => {
     // Enviar por WhatsApp se solicitado e número disponível
     if (channels.includes('whatsapp') && whatsappNumber) {
       try {
-        console.log(`📱 [INVITE-ORCHESTRATOR] Enviando por WhatsApp...`);
+        console.log(`📱 [INVITE-ORCHESTRATOR] Enviando por WhatsApp com template...`);
+        
+        // Validar se userName foi fornecido para WhatsApp (obrigatório para template)
+        if (!userName || userName.trim() === '') {
+          throw new Error("Nome do usuário é obrigatório para envio via WhatsApp template");
+        }
         
         const whatsappResponse = await supabase.functions.invoke('send-invite-whatsapp', {
           body: {
@@ -116,7 +121,7 @@ const handler = async (req: Request): Promise<Response> => {
             whatsappNumber,
             roleId,
             token,
-            isResend,
+            userName: userName.trim(),
             notes
           }
         });
@@ -141,10 +146,15 @@ const handler = async (req: Request): Promise<Response> => {
           p_status: whatsappData.success ? 'sent' : 'failed',
           p_provider_id: whatsappData.messageId,
           p_error_message: whatsappData.success ? null : whatsappData.error,
-          p_metadata: { isResend, whatsappNumber }
+          p_metadata: { 
+            userName, 
+            whatsappNumber, 
+            templateUsed: whatsappData.templateUsed,
+            templateId: whatsappData.templateId
+          }
         });
 
-        console.log(`✅ [INVITE-ORCHESTRATOR] WhatsApp ${whatsappData.success ? 'enviado' : 'falhou'}`);
+        console.log(`✅ [INVITE-ORCHESTRATOR] WhatsApp template ${whatsappData.success ? 'enviado' : 'falhou'}`);
       } catch (whatsappError: any) {
         console.error(`❌ [INVITE-ORCHESTRATOR] Erro no WhatsApp:`, whatsappError);
         
@@ -160,7 +170,7 @@ const handler = async (req: Request): Promise<Response> => {
           p_channel: 'whatsapp',
           p_status: 'failed',
           p_error_message: whatsappError.message,
-          p_metadata: { isResend, whatsappNumber }
+          p_metadata: { userName, whatsappNumber }
         });
       }
     }
@@ -209,5 +219,5 @@ const handler = async (req: Request): Promise<Response> => {
   }
 };
 
-console.log("🎯 [INVITE-ORCHESTRATOR] Edge Function carregada! v3.0 CORS fixed");
+console.log("🎯 [INVITE-ORCHESTRATOR] Edge Function carregada com sistema de templates! v4.0");
 serve(handler);

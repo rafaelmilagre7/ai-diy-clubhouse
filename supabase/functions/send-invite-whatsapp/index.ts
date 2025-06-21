@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 
 const corsHeaders = {
@@ -11,7 +12,7 @@ interface InviteWhatsAppRequest {
   whatsappNumber: string;
   roleId: string;
   token: string;
-  isResend?: boolean;
+  userName: string;
   notes?: string;
 }
 
@@ -27,33 +28,8 @@ const formatWhatsAppNumber = (number: string): string => {
   return cleanNumber;
 };
 
-const getWhatsAppMessage = (token: string, isResend: boolean = false, notes?: string) => {
-  const inviteUrl = `${Deno.env.get("SITE_URL") || "https://viverdeia.ai"}/convite/${token}`;
-  
-  let message = isResend 
-    ? `🔄 *Reenvio do Convite - Viver de IA*\n\n` 
-    : `🎉 *Convite para Viver de IA*\n\n`;
-    
-  message += isResend
-    ? `Você recebeu novamente seu convite para fazer parte da comunidade *Viver de IA* - a plataforma de educação e networking em Inteligência Artificial.\n\n`
-    : `Você foi convidado para fazer parte da comunidade *Viver de IA* - a plataforma de educação e networking em Inteligência Artificial mais completa do Brasil!\n\n`;
-    
-  message += `✨ *Aceite seu convite clicando no link:*\n${inviteUrl}\n\n`;
-  
-  message += `🔑 *Código do convite:* \`${token}\`\n\n`;
-  
-  if (notes) {
-    message += `📝 *Observações:*\n${notes}\n\n`;
-  }
-  
-  message += `Este convite é pessoal e intransferível. Se você não solicitou este convite, pode ignorar esta mensagem.\n\n`;
-  message += `© 2024 Viver de IA - Transformando negócios com IA`;
-  
-  return message;
-};
-
 const handler = async (req: Request): Promise<Response> => {
-  console.log(`📱 [SEND-INVITE-WHATSAPP] Nova requisição: ${req.method} - v3.0 CORS fixed`);
+  console.log(`📱 [SEND-INVITE-WHATSAPP] Nova requisição: ${req.method} - v4.0 Template System`);
   
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -67,9 +43,9 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const { inviteId, whatsappNumber, roleId, token, isResend = false, notes }: InviteWhatsAppRequest = await req.json();
+    const { inviteId, whatsappNumber, roleId, token, userName, notes }: InviteWhatsAppRequest = await req.json();
     
-    console.log(`📱 [SEND-INVITE-WHATSAPP] Enviando para: ${whatsappNumber}, Token: ${token}, Reenvio: ${isResend}`);
+    console.log(`📱 [SEND-INVITE-WHATSAPP] Enviando template para: ${whatsappNumber}, Usuario: ${userName}, Token: ${token}`);
 
     // Validar configurações necessárias
     const whatsappToken = Deno.env.get("WHATSAPP_API_TOKEN");
@@ -85,32 +61,67 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error("WHATSAPP_PHONE_NUMBER_ID não configurado no Supabase");
     }
 
+    if (!userName || userName.trim() === '') {
+      console.error("❌ [SEND-INVITE-WHATSAPP] Nome do usuário é obrigatório para template");
+      throw new Error("Nome do usuário é obrigatório para envio via template WhatsApp");
+    }
+
     // Formatar número do WhatsApp
     const formattedNumber = formatWhatsAppNumber(whatsappNumber);
     console.log(`📱 [SEND-INVITE-WHATSAPP] Número formatado: ${formattedNumber}`);
 
-    // Preparar mensagem
-    const message = getWhatsAppMessage(token, isResend, notes);
+    // Preparar link do convite
+    const inviteUrl = `${Deno.env.get("SITE_URL") || "https://viverdeia.ai"}/convite/${token}`;
+    
+    // Template ID aprovado pelo Meta
+    const templateName = "convite_viver_ia";
+    const templateId = "1413982056507354";
+    
+    console.log(`📱 [SEND-INVITE-WHATSAPP] Usando template: ${templateName} (ID: ${templateId})`);
+    console.log(`📱 [SEND-INVITE-WHATSAPP] Variáveis - Nome: ${userName}, Link: ${inviteUrl}`);
     
     // Construir URL da API
     const apiUrl = `https://graph.facebook.com/v18.0/${phoneNumberId}/messages`;
     console.log(`📱 [SEND-INVITE-WHATSAPP] URL da API: ${apiUrl}`);
     
-    // Enviar mensagem via WhatsApp Business API
+    // Estrutura do template conforme aprovado pelo Meta
+    const templateMessage = {
+      messaging_product: "whatsapp",
+      to: formattedNumber,
+      type: "template",
+      template: {
+        name: templateName,
+        language: {
+          code: "pt_BR"
+        },
+        components: [
+          {
+            type: "body",
+            parameters: [
+              {
+                type: "text",
+                text: userName.trim()
+              },
+              {
+                type: "text", 
+                text: inviteUrl
+              }
+            ]
+          }
+        ]
+      }
+    };
+
+    console.log(`📱 [SEND-INVITE-WHATSAPP] Payload do template:`, JSON.stringify(templateMessage, null, 2));
+    
+    // Enviar mensagem via WhatsApp Business API usando template
     const whatsappResponse = await fetch(apiUrl, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${whatsappToken}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        messaging_product: "whatsapp",
-        to: formattedNumber,
-        type: "text",
-        text: {
-          body: message
-        }
-      })
+      body: JSON.stringify(templateMessage)
     });
 
     const responseText = await whatsappResponse.text();
@@ -126,18 +137,20 @@ const handler = async (req: Request): Promise<Response> => {
       
       console.error(`❌ [SEND-INVITE-WHATSAPP] Erro da API (${whatsappResponse.status}):`, errorData);
       
-      // Mapear erros comuns para mensagens mais amigáveis
+      // Mapear erros específicos de template
       let errorMessage = errorData.error?.message || 'Erro desconhecido da API do WhatsApp';
       
       if (errorMessage.includes('Invalid phone number')) {
         errorMessage = `Número de telefone inválido: ${whatsappNumber}`;
-      } else if (errorMessage.includes('Unsupported request')) {
-        errorMessage = 'Configuração da API do WhatsApp inválida';
+      } else if (errorMessage.includes('template')) {
+        errorMessage = `Erro no template WhatsApp: ${errorMessage}`;
       } else if (errorMessage.includes('Invalid access token')) {
         errorMessage = 'Token de acesso do WhatsApp inválido ou expirado';
+      } else if (errorMessage.includes('parameter')) {
+        errorMessage = `Erro nos parâmetros do template: ${errorMessage}`;
       }
       
-      throw new Error(`WhatsApp API Error: ${errorMessage}`);
+      throw new Error(`WhatsApp Template Error: ${errorMessage}`);
     }
 
     let responseData;
@@ -149,15 +162,18 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     const messageId = responseData.messages?.[0]?.id;
-    console.log(`✅ [SEND-INVITE-WHATSAPP] Mensagem enviada com sucesso. ID: ${messageId}`);
+    console.log(`✅ [SEND-INVITE-WHATSAPP] Template enviado com sucesso. ID: ${messageId}, Template: ${templateName}`);
 
     return new Response(
       JSON.stringify({
         success: true,
-        message: "Mensagem de convite enviada por WhatsApp com sucesso",
+        message: "Template de convite WhatsApp enviado com sucesso",
         messageId: messageId,
         whatsappNumber: formattedNumber,
         inviteId,
+        templateUsed: templateName,
+        templateId: templateId,
+        userName: userName,
         apiResponse: responseData
       }),
       {
@@ -173,7 +189,7 @@ const handler = async (req: Request): Promise<Response> => {
       JSON.stringify({
         success: false,
         error: error.message || "Erro interno do servidor",
-        message: "Falha ao enviar mensagem de convite por WhatsApp",
+        message: "Falha ao enviar template de convite WhatsApp",
         details: error.stack ? error.stack.split('\n').slice(0, 3) : undefined
       }),
       {
@@ -184,5 +200,5 @@ const handler = async (req: Request): Promise<Response> => {
   }
 };
 
-console.log("📱 [SEND-INVITE-WHATSAPP] Edge Function carregada com melhorias! v3.0 CORS fixed");
+console.log("📱 [SEND-INVITE-WHATSAPP] Edge Function carregada com sistema de templates! v4.0");
 serve(handler);
