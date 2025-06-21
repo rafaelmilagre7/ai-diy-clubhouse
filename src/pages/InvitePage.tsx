@@ -184,6 +184,11 @@ const InvitePage = () => {
     return (
       <EnhancedInviteRegistration
         inviteToken={token!}
+        inviteDetails={{
+          email: validationResult.invite.email,
+          role: validationResult.invite.role,
+          notes: validationResult.invite.notes
+        }}
         onSuccess={handleRegistrationSuccess}
       />
     );
@@ -201,9 +206,9 @@ const InvitePage = () => {
             </Button>
           </div>
         </CardContent>
-      </div>
-    );
-  }
+      </Card>
+    </div>
+  );
 };
 
 export default InvitePage;
