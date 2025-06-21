@@ -1,138 +1,140 @@
 
-import React, { useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { useForm } from 'react-hook-form';
-import { yupResolver } from '@hookform/resolvers/yup';
-import * as yup from 'yup';
-import { supabase } from '@/lib/supabase';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/contexts/auth';
 import { useInviteDetails } from '@/hooks/useInviteDetails';
-import { DynamicBrandLogo } from '@/components/common/DynamicBrandLogo';
-import { getBrandColors } from '@/services/brandLogoService';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Loader2, Mail, Lock, User, CheckCircle } from 'lucide-react';
+import { DynamicBrandLogo } from '@/components/common/DynamicBrandLogo';
+import { getBrandColors, detectUserType } from '@/services/brandLogoService';
 import { toast } from 'sonner';
-import { Eye, EyeOff, Loader2 } from 'lucide-react';
-import LoadingScreen from '@/components/common/LoadingScreen';
 
-const schema = yup.object({
-  name: yup.string().required('Nome é obrigatório'),
-  password: yup.string()
-    .min(8, 'Senha deve ter pelo menos 8 caracteres')
-    .matches(/[A-Za-z]/, 'Senha deve conter pelo menos uma letra')
-    .matches(/[0-9]/, 'Senha deve conter pelo menos um número')
-    .required('Senha é obrigatória'),
-  confirmPassword: yup.string()
-    .oneOf([yup.ref('password')], 'Senhas não coincidem')
-    .required('Confirmação de senha é obrigatória')
-});
+interface EnhancedInviteRegistrationProps {
+  inviteToken: string;
+  onSuccess?: () => void;
+}
 
-type FormData = yup.InferType<typeof schema>;
-
-export const EnhancedInviteRegistration = () => {
-  const { token } = useParams<{ token: string }>();
+export const EnhancedInviteRegistration: React.FC<EnhancedInviteRegistrationProps> = ({
+  inviteToken,
+  onSuccess
+}) => {
   const navigate = useNavigate();
-  const { inviteDetails, loading: inviteLoading, error: inviteError } = useInviteDetails(token);
+  const { signUp } = useAuth();
+  const { inviteDetails, loading: inviteLoading, error: inviteError } = useInviteDetails(inviteToken);
   
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [registering, setRegistering] = useState(false);
-
-  const {
-    register,
-    handleSubmit,
-    formState: { errors }
-  } = useForm<FormData>({
-    resolver: yupResolver(schema)
+  const [formData, setFormData] = useState({
+    fullName: '',
+    password: '',
+    confirmPassword: ''
   });
+  const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
-  // Detectar tipo de usuário baseado no role do convite
-  const userType = inviteDetails?.role.name.toLowerCase().includes('formacao') ? 'formacao' : 'club';
+  // Detectar tipo de usuário para logos e cores
+  const userType = detectUserType({
+    inviteRole: inviteDetails?.role?.name,
+    defaultType: 'club'
+  });
   const brandColors = getBrandColors(userType);
 
-  const onSubmit = async (data: FormData) => {
-    if (!inviteDetails) return;
+  const validateForm = () => {
+    const newErrors: Record<string, string> = {};
+    
+    if (!formData.fullName.trim()) {
+      newErrors.fullName = 'Nome completo é obrigatório';
+    }
+    
+    if (!formData.password) {
+      newErrors.password = 'Senha é obrigatória';
+    } else if (formData.password.length < 6) {
+      newErrors.password = 'Senha deve ter pelo menos 6 caracteres';
+    }
+    
+    if (formData.password !== formData.confirmPassword) {
+      newErrors.confirmPassword = 'Senhas não coincidem';
+    }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!validateForm() || !inviteDetails) return;
+    
+    setLoading(true);
+    
     try {
-      setRegistering(true);
-
-      // Criar conta no Supabase Auth
-      const { data: authData, error: signUpError } = await supabase.auth.signUp({
+      const result = await signUp({
         email: inviteDetails.email,
-        password: data.password,
-        options: {
-          data: {
-            name: data.name,
-            invite_token: token
-          }
-        }
+        password: formData.password,
+        fullName: formData.fullName,
+        inviteToken
       });
-
-      if (signUpError) {
-        toast.error('Erro ao criar conta: ' + signUpError.message);
-        return;
-      }
-
-      if (!authData.user) {
-        toast.error('Erro ao criar usuário');
-        return;
-      }
-
-      // Usar o convite
-      const { data: useInviteResult, error: useInviteError } = await supabase.rpc('use_invite', {
-        invite_token: token,
-        user_id: authData.user.id
-      });
-
-      if (useInviteError) {
-        toast.error('Erro ao processar convite: ' + useInviteError.message);
-        return;
-      }
-
-      toast.success('Conta criada com sucesso! Bem-vindo(a)!');
       
-      // Redirecionar baseado no tipo de usuário
-      if (userType === 'formacao') {
-        navigate('/formacao');
+      if (result.success) {
+        toast.success('Conta criada com sucesso!');
+        onSuccess?.();
       } else {
-        navigate('/dashboard');
+        toast.error(result.error || 'Erro ao criar conta');
       }
-
     } catch (error: any) {
       console.error('Erro no registro:', error);
-      toast.error('Erro ao criar conta. Tente novamente.');
+      toast.error('Erro inesperado ao criar conta');
     } finally {
-      setRegistering(false);
+      setLoading(false);
     }
   };
 
   if (inviteLoading) {
-    return <LoadingScreen message="Carregando convite..." />;
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-gray-900 to-black p-4">
+        <Card className="w-full max-w-md bg-gray-800 border-gray-700">
+          <CardContent className="pt-6">
+            <div className="flex flex-col items-center space-y-4">
+              <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
+              <p className="text-center text-gray-300">Validando convite...</p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
   }
 
   if (inviteError || !inviteDetails) {
     return (
-      <div className="min-h-screen w-full flex items-center justify-center bg-gradient-to-b from-gray-900 to-black p-4">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-white mb-4">Convite Inválido</h1>
-          <p className="text-gray-400 mb-6">{inviteError || 'Convite não encontrado'}</p>
-          <Button 
-            onClick={() => navigate('/login')} 
-            variant="outline"
-          >
-            Voltar ao Login
-          </Button>
-        </div>
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-gray-900 to-black p-4">
+        <Card className="w-full max-w-md bg-gray-800 border-gray-700">
+          <CardContent className="pt-6">
+            <Alert variant="destructive">
+              <AlertDescription>
+                {inviteError || 'Convite inválido'}
+              </AlertDescription>
+            </Alert>
+            <Button 
+              onClick={() => navigate('/login')} 
+              className="w-full mt-4"
+            >
+              Voltar ao Login
+            </Button>
+          </CardContent>
+        </Card>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center bg-gradient-to-b from-gray-900 to-black p-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-gray-900 to-black p-4">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -20 }}
         transition={{ duration: 0.5 }}
         className="w-full max-w-md"
       >
@@ -146,106 +148,115 @@ export const EnhancedInviteRegistration = () => {
             Criar sua conta
           </h2>
           <p className="mt-2 text-gray-400">
-            Você foi convidado para se juntar como <span className={`font-semibold ${brandColors.text}`}>
-              {inviteDetails.role.name}
-            </span>
+            Você foi convidado para: <span className={brandColors.text}>{inviteDetails.role.name}</span>
           </p>
         </div>
 
-        <div className="bg-gray-800 border border-gray-700 rounded-lg shadow-xl p-6">
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-            {/* Email (readonly) */}
-            <div>
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                value={inviteDetails.email}
-                disabled
-                className="bg-gray-700 text-gray-400"
-              />
-            </div>
-
-            {/* Nome */}
-            <div>
-              <Label htmlFor="name">Nome completo</Label>
-              <Input
-                id="name"
-                type="text"
-                {...register('name')}
-                className="bg-gray-700 border-gray-600 text-white"
-                placeholder="Seu nome completo"
-              />
-              {errors.name && (
-                <p className="text-red-400 text-sm mt-1">{errors.name.message}</p>
-              )}
-            </div>
-
-            {/* Senha */}
-            <div>
-              <Label htmlFor="password">Senha</Label>
-              <div className="relative">
-                <Input
-                  id="password"
-                  type={showPassword ? 'text' : 'password'}
-                  {...register('password')}
-                  className="bg-gray-700 border-gray-600 text-white pr-10"
-                  placeholder="Digite sua senha"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-white"
-                >
-                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                </button>
+        <Card className="bg-gray-800 border-gray-700">
+          <CardHeader>
+            <CardTitle className="text-white flex items-center gap-2">
+              <CheckCircle className="h-5 w-5 text-green-500" />
+              Convite Válido
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="email" className="text-gray-300">
+                  Email
+                </Label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                  <Input
+                    id="email"
+                    type="email"
+                    value={inviteDetails.email}
+                    disabled
+                    className="pl-10 bg-gray-700 border-gray-600 text-gray-300"
+                  />
+                </div>
               </div>
-              {errors.password && (
-                <p className="text-red-400 text-sm mt-1">{errors.password.message}</p>
-              )}
-            </div>
 
-            {/* Confirmar senha */}
-            <div>
-              <Label htmlFor="confirmPassword">Confirmar senha</Label>
-              <div className="relative">
-                <Input
-                  id="confirmPassword"
-                  type={showConfirmPassword ? 'text' : 'password'}
-                  {...register('confirmPassword')}
-                  className="bg-gray-700 border-gray-600 text-white pr-10"
-                  placeholder="Confirme sua senha"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-white"
-                >
-                  {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                </button>
+              <div className="space-y-2">
+                <Label htmlFor="fullName" className="text-gray-300">
+                  Nome Completo
+                </Label>
+                <div className="relative">
+                  <User className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                  <Input
+                    id="fullName"
+                    type="text"
+                    placeholder="Seu nome completo"
+                    value={formData.fullName}
+                    onChange={(e) => setFormData(prev => ({ ...prev, fullName: e.target.value }))}
+                    className="pl-10 bg-gray-700 border-gray-600 text-white placeholder-gray-400"
+                    required
+                  />
+                </div>
+                {errors.fullName && (
+                  <p className="text-red-400 text-sm">{errors.fullName}</p>
+                )}
               </div>
-              {errors.confirmPassword && (
-                <p className="text-red-400 text-sm mt-1">{errors.confirmPassword.message}</p>
-              )}
-            </div>
 
-            {/* Botão de criar conta */}
-            <Button
-              type="submit"
-              disabled={registering}
-              className={`w-full ${brandColors.bg} ${brandColors.bgHover} text-white`}
-            >
-              {registering ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Criando conta...
-                </>
-              ) : (
-                'Criar conta'
-              )}
-            </Button>
-          </form>
-        </div>
+              <div className="space-y-2">
+                <Label htmlFor="password" className="text-gray-300">
+                  Senha
+                </Label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                  <Input
+                    id="password"
+                    type="password"
+                    placeholder="Mínimo 6 caracteres"
+                    value={formData.password}
+                    onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
+                    className="pl-10 bg-gray-700 border-gray-600 text-white placeholder-gray-400"
+                    required
+                  />
+                </div>
+                {errors.password && (
+                  <p className="text-red-400 text-sm">{errors.password}</p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="confirmPassword" className="text-gray-300">
+                  Confirmar Senha
+                </Label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                  <Input
+                    id="confirmPassword"
+                    type="password"
+                    placeholder="Confirme sua senha"
+                    value={formData.confirmPassword}
+                    onChange={(e) => setFormData(prev => ({ ...prev, confirmPassword: e.target.value }))}
+                    className="pl-10 bg-gray-700 border-gray-600 text-white placeholder-gray-400"
+                    required
+                  />
+                </div>
+                {errors.confirmPassword && (
+                  <p className="text-red-400 text-sm">{errors.confirmPassword}</p>
+                )}
+              </div>
+
+              <Button
+                type="submit"
+                disabled={loading}
+                className={`w-full ${brandColors.bg} ${brandColors.bgHover} text-white`}
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Criando conta...
+                  </>
+                ) : (
+                  'Criar Conta'
+                )}
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
       </motion.div>
     </div>
   );

@@ -92,7 +92,9 @@ export const uploadBrandLogo = async (
       });
 
     if (error) {
-      logger.error(`Erro ao fazer upload da logo ${logoType}:`, error);
+      logger.error(`Erro ao fazer upload da logo ${logoType}`, error, {
+        component: 'brandLogoService'
+      });
       return { success: false, error: error.message };
     }
 
@@ -101,11 +103,16 @@ export const uploadBrandLogo = async (
       .from('brand-logos')
       .getPublicUrl(fileName);
 
-    logger.info(`Logo ${logoType} carregada com sucesso:`, publicUrl);
+    logger.info(`Logo ${logoType} carregada com sucesso`, {
+      component: 'brandLogoService',
+      url: publicUrl
+    });
     
     return { success: true, url: publicUrl };
   } catch (error: any) {
-    logger.error(`Erro no upload da logo ${logoType}:`, error);
+    logger.error(`Erro no upload da logo ${logoType}`, error, {
+      component: 'brandLogoService'
+    });
     return { success: false, error: error.message };
   }
 };
@@ -117,8 +124,12 @@ export const initializeBrandLogos = async (): Promise<void> => {
   try {
     // Esta função pode ser chamada manualmente se necessário
     // para fazer upload das logos iniciais
-    logger.info('Serviço de logos inicializado');
+    logger.info('Serviço de logos inicializado', {
+      component: 'brandLogoService'
+    });
   } catch (error) {
-    logger.error('Erro ao inicializar logos:', error);
+    logger.error('Erro ao inicializar logos', error, {
+      component: 'brandLogoService'
+    });
   }
 };

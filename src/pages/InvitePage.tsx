@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -5,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2, CheckCircle, XCircle, AlertTriangle } from 'lucide-react';
 import { useAuth } from '@/contexts/auth';
-import { EnhancedInviteRegistration } from '@/components/auth/EnhancedInviteRegistration';
+import EnhancedInviteRegistration from '@/components/auth/EnhancedInviteRegistration';
 import { supabase } from '@/integrations/supabase/client';
 
 const InvitePage = () => {
@@ -183,11 +184,6 @@ const InvitePage = () => {
     return (
       <EnhancedInviteRegistration
         inviteToken={token!}
-        inviteDetails={{
-          email: validationResult.invite.email,
-          role: validationResult.invite.role,
-          notes: validationResult.invite.notes
-        }}
         onSuccess={handleRegistrationSuccess}
       />
     );
@@ -205,9 +201,9 @@ const InvitePage = () => {
             </Button>
           </div>
         </CardContent>
-      </Card>
-    </div>
-  );
+      </div>
+    );
+  }
 };
 
 export default InvitePage;

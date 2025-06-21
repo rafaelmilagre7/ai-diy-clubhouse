@@ -82,13 +82,16 @@ export const useInviteDetails = (token?: string) => {
         };
 
         setInviteDetails(details);
-        logger.info('Detalhes do convite carregados:', { 
+        logger.info('Detalhes do convite carregados', { 
+          component: 'useInviteDetails',
           email: details.email, 
           role: details.role.name 
         });
 
       } catch (error: any) {
-        logger.error('Erro ao carregar detalhes do convite:', error);
+        logger.error('Erro ao carregar detalhes do convite', error, {
+          component: 'useInviteDetails'
+        });
         setError('Erro ao carregar detalhes do convite');
       } finally {
         setLoading(false);
