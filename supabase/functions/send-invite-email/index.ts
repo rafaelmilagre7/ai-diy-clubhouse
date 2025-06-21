@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { Resend } from "npm:resend@2.0.0";
 
@@ -17,7 +18,7 @@ interface SendInviteEmailRequest {
 }
 
 const handler = async (req: Request): Promise<Response> => {
-  console.log(`📧 [SEND-INVITE-EMAIL] Nova requisição: ${req.method} - v3.0 CORS fixed`);
+  console.log(`📧 [SEND-INVITE-EMAIL] Nova requisição: ${req.method} - v3.1 Design System`);
   
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -52,48 +53,71 @@ const handler = async (req: Request): Promise<Response> => {
       to: [email],
       subject: isResend ? "🔄 Convite Reenviado - Viver de IA" : "🎉 Convite para Viver de IA",
       html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-          <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
-            <h1>Viver de IA</h1>
-            <p>${isResend ? 'Reenvio do seu' : 'Você recebeu um'} convite para nossa plataforma!</p>
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 0; background-color: #f8fafc;">
+          <!-- Header com logo e gradiente da marca -->
+          <div style="background: linear-gradient(to right, #22d3ee, #14b8a6); color: white; padding: 40px 30px; text-align: center; border-radius: 12px 12px 0 0; box-shadow: 0 4px 20px rgba(34, 211, 238, 0.3);">
+            <div style="display: flex; align-items: center; justify-content: center; gap: 15px; margin-bottom: 20px;">
+              <img src="https://viverdeia.ai/lovable-uploads/6bdb44c0-b115-45bc-977d-4284836453c2.png" alt="Viver de IA" style="height: 48px; width: auto;" />
+              <h1 style="margin: 0; font-size: 28px; font-weight: bold;">Viver de IA</h1>
+            </div>
+            <p style="margin: 0; font-size: 18px; opacity: 0.95;">
+              ${isResend ? 'Reenvio do seu' : 'Você recebeu um'} convite para nossa plataforma!
+            </p>
           </div>
           
-          <div style="background: white; padding: 30px; border: 1px solid #e0e0e0;">
-            <p>Olá!</p>
+          <!-- Corpo do e-mail -->
+          <div style="background: white; padding: 40px 30px; border-left: 1px solid #e2e8f0; border-right: 1px solid #e2e8f0; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);">
+            <p style="margin: 0 0 20px 0; font-size: 16px; color: #374151; line-height: 1.6;">Olá!</p>
             
             ${isResend ? 
-              '<p>Este é um reenvio do seu convite para acessar a plataforma Viver de IA.</p>' :
-              '<p>Você foi convidado para fazer parte da comunidade Viver de IA - a plataforma de educação e networking em Inteligência Artificial.</p>'
+              '<p style="margin: 0 0 20px 0; font-size: 16px; color: #374151; line-height: 1.6;">Este é um reenvio do seu convite para acessar a plataforma Viver de IA.</p>' :
+              '<p style="margin: 0 0 20px 0; font-size: 16px; color: #374151; line-height: 1.6;">Você foi convidado para fazer parte da comunidade Viver de IA - a plataforma de educação e networking em Inteligência Artificial.</p>'
             }
             
-            ${notes ? `<p><strong>Observações:</strong> ${notes}</p>` : ''}
+            ${notes ? `<div style="background: #f0f9ff; border-left: 4px solid #22d3ee; padding: 16px; margin: 20px 0; border-radius: 8px;">
+              <p style="margin: 0; font-size: 16px; color: #374151;"><strong style="color: #0891b2;">Observações:</strong> ${notes}</p>
+            </div>` : ''}
             
-            <div style="background: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0; text-align: center;">
-              <p style="margin: 0 0 15px 0; font-weight: bold;">Clique no botão abaixo para aceitar o convite:</p>
+            <!-- CTA Section -->
+            <div style="background: linear-gradient(135deg, #f0f9ff 0%, #ecfeff 100%); padding: 30px; border-radius: 12px; margin: 30px 0; text-align: center; border: 1px solid #bae6fd;">
+              <p style="margin: 0 0 20px 0; font-size: 18px; font-weight: 600; color: #0f172a;">Clique no botão abaixo para aceitar o convite:</p>
               <a href="${inviteUrl}" 
-                 style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+                 style="display: inline-block;
+                        background: linear-gradient(to right, #22d3ee, #14b8a6); 
                         color: white; 
-                        padding: 15px 30px; 
+                        padding: 16px 32px; 
                         text-decoration: none; 
-                        border-radius: 5px; 
-                        font-weight: bold;
-                        display: inline-block;">
-                Aceitar Convite
+                        border-radius: 12px; 
+                        font-weight: 600;
+                        font-size: 16px;
+                        box-shadow: 0 4px 15px rgba(34, 211, 238, 0.3);
+                        transition: all 0.3s ease;">
+                ✨ Aceitar Convite
               </a>
             </div>
             
-            <p>Ou copie e cole este link no seu navegador:</p>
-            <p style="word-break: break-all; color: #667eea; font-size: 14px;">${inviteUrl}</p>
+            <div style="border-top: 2px solid #f1f5f9; padding-top: 20px; margin-top: 30px;">
+              <p style="margin: 0 0 10px 0; font-size: 14px; color: #6b7280;">Ou copie e cole este link no seu navegador:</p>
+              <p style="word-break: break-all; color: #0891b2; font-size: 14px; background: #f8fafc; padding: 12px; border-radius: 8px; border: 1px solid #e2e8f0; font-family: monospace;">
+                ${inviteUrl}
+              </p>
+            </div>
             
-            <hr style="margin: 30px 0; border: none; border-top: 1px solid #e0e0e0;">
+            <hr style="margin: 30px 0; border: none; border-top: 1px solid #e2e8f0;">
             
-            <p style="font-size: 12px; color: #666;">
+            <p style="font-size: 12px; color: #9ca3af; line-height: 1.5; margin: 0;">
               Este convite é pessoal e intransferível. Se você não solicitou este convite, pode ignorar este email.
             </p>
           </div>
           
-          <div style="background: #f8f9fa; padding: 20px; text-align: center; border-radius: 0 0 10px 10px; font-size: 12px; color: #666;">
-            <p>© 2024 Viver de IA - Plataforma de Inteligência Artificial</p>
+          <!-- Footer atualizado com ano correto -->
+          <div style="background: #1f2937; color: #d1d5db; padding: 25px; text-align: center; border-radius: 0 0 12px 12px; border-top: 3px solid #22d3ee;">
+            <p style="margin: 0; font-size: 12px;">
+              © 2025 Viver de IA - Plataforma de Inteligência Artificial
+            </p>
+            <p style="margin: 8px 0 0 0; font-size: 11px; opacity: 0.8;">
+              A maior comunidade brasileira de IA aplicada
+            </p>
           </div>
         </div>
       `,
@@ -129,5 +153,5 @@ const handler = async (req: Request): Promise<Response> => {
   }
 };
 
-console.log("📧 [SEND-INVITE-EMAIL] Edge Function carregada! v3.0 CORS fixed");
+console.log("📧 [SEND-INVITE-EMAIL] Edge Function carregada! v3.1 Design System");
 serve(handler);
