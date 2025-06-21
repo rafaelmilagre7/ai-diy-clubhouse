@@ -8,7 +8,7 @@ import { TagManager } from './components/TagManager';
 import { VideoTutorials } from './components/VideoTutorials';
 import { MemberBenefit } from './components/MemberBenefit';
 import { toolFormSchema } from './schema/toolFormSchema';
-import { ToolFormProps, ToolFormValues } from './types/toolFormTypes';
+import { ToolFormComponentProps, ToolFormValues } from './types/toolFormTypes';
 import { BenefitType, Tool } from '@/types/toolTypes';
 import { useEffect, useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
@@ -19,9 +19,7 @@ export const ToolForm = ({
   onSubmit, 
   isSubmitting,
   onSaveSuccess 
-}: ToolFormProps & { 
-  onSaveSuccess?: (savedData: Tool) => void 
-}) => {
+}: ToolFormComponentProps) => {
   // Garantir que benefit_type seja sempre um dos valores válidos
   const defaultBenefitType = initialData?.benefit_type as BenefitType | undefined;
   const [formChanged, setFormChanged] = useState(false);
