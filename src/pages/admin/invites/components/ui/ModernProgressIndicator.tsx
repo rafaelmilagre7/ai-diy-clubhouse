@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Check, User, MessageCircle, Settings, CheckCircle } from 'lucide-react';
+import { Check } from 'lucide-react';
 
 interface Step {
   key: string;
@@ -15,22 +15,12 @@ interface ModernProgressIndicatorProps {
   onStepClick?: (stepIndex: number) => void;
 }
 
-const getIconComponent = (iconName: string) => {
-  const icons = {
-    'user': User,
-    'message-circle': MessageCircle,
-    'settings': Settings,
-    'check-circle': CheckCircle,
-  };
-  return icons[iconName as keyof typeof icons] || User;
-};
-
 export const ModernProgressIndicator = ({ steps, currentStep, onStepClick }: ModernProgressIndicatorProps) => {
   return (
-    <div className="w-full">
+    <div className="w-full max-w-4xl mx-auto">
       <div className="flex items-center justify-between relative">
         {/* Progress Line */}
-        <div className="absolute top-6 left-0 w-full h-0.5 bg-gray-200 z-0">
+        <div className="absolute top-4 left-0 w-full h-0.5 bg-neutral-700 z-0">
           <div 
             className="h-full bg-[#0ABAB5] transition-all duration-500 ease-out"
             style={{ width: `${(currentStep / (steps.length - 1)) * 100}%` }}
@@ -39,48 +29,41 @@ export const ModernProgressIndicator = ({ steps, currentStep, onStepClick }: Mod
 
         {/* Steps */}
         {steps.map((step, index) => {
-          const IconComponent = getIconComponent(step.icon);
           const isCompleted = index < currentStep;
           const isCurrent = index === currentStep;
-          const isClickable = onStepClick && (index < currentStep || (index === currentStep + 1));
+          const isClickable = onStepClick && index <= currentStep;
 
           return (
             <div 
               key={step.key} 
-              className={`flex flex-col items-center relative z-10 ${isClickable ? 'cursor-pointer' : ''}`}
+              className={`flex flex-col items-center relative z-10 flex-1 ${isClickable ? 'cursor-pointer' : ''}`}
               onClick={() => isClickable && onStepClick(index)}
             >
               {/* Step Circle */}
               <div className={`
-                w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300 border-2
+                w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300 border-2
                 ${isCompleted 
-                  ? 'bg-[#0ABAB5] border-[#0ABAB5] text-white shadow-lg' 
+                  ? 'bg-[#0ABAB5] border-[#0ABAB5] text-white' 
                   : isCurrent 
-                  ? 'bg-white border-[#0ABAB5] text-[#0ABAB5] shadow-md' 
-                  : 'bg-white border-gray-200 text-gray-400'
+                  ? 'bg-[#0ABAB5] border-[#0ABAB5] text-white' 
+                  : 'bg-[#1A1E2E] border-neutral-600 text-neutral-400'
                 }
-                ${isClickable ? 'hover:shadow-lg hover:scale-105' : ''}
+                ${isClickable ? 'hover:scale-105' : ''}
               `}>
                 {isCompleted ? (
-                  <Check className="h-5 w-5" />
+                  <Check className="h-4 w-4" />
                 ) : (
-                  <IconComponent className="h-5 w-5" />
+                  <span className="text-xs font-medium">{index + 1}</span>
                 )}
               </div>
 
               {/* Step Content */}
               <div className="mt-3 text-center max-w-[120px]">
                 <div className={`
-                  text-sm font-medium transition-colors duration-200
-                  ${isCompleted || isCurrent ? 'text-gray-900' : 'text-gray-400'}
+                  text-xs font-medium transition-colors duration-200
+                  ${isCompleted || isCurrent ? 'text-white' : 'text-neutral-500'}
                 `}>
                   {step.title}
-                </div>
-                <div className={`
-                  text-xs mt-1 transition-colors duration-200
-                  ${isCompleted || isCurrent ? 'text-gray-500' : 'text-gray-400'}
-                `}>
-                  {step.description}
                 </div>
               </div>
             </div>

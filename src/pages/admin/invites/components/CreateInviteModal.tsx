@@ -20,10 +20,10 @@ interface CreateInviteModalProps {
 const STEPS = [
   { 
     key: 'basic', 
-    title: 'Informações Básicas', 
+    title: 'Dados Básicos', 
     component: InviteBasicInfoStep,
     icon: 'user',
-    description: 'Dados do convidado'
+    description: 'Informações do convidado'
   },
   { 
     key: 'channels', 
@@ -41,10 +41,10 @@ const STEPS = [
   },
   { 
     key: 'preview', 
-    title: 'Confirmação', 
+    title: 'Revisar', 
     component: InvitePreviewStep,
     icon: 'check-circle',
-    description: 'Revisar informações'
+    description: 'Confirmar informações'
   },
 ];
 
@@ -110,15 +110,15 @@ export const CreateInviteModal = ({ open, onOpenChange, onCreate, isLoading }: C
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="max-w-5xl max-h-[90vh] overflow-hidden flex flex-col bg-white border-0 shadow-2xl">
+      <DialogContent className="max-w-4xl max-h-[85vh] overflow-hidden flex flex-col bg-[#0F111A] border border-neutral-700 shadow-2xl">
         {/* Header */}
-        <DialogHeader className="flex-shrink-0 border-b border-gray-100 pb-6">
+        <DialogHeader className="flex-shrink-0 border-b border-neutral-700 pb-6">
           <div className="flex items-center justify-between">
             <div>
-              <DialogTitle className="text-2xl font-bold text-gray-900">
+              <DialogTitle className="text-2xl font-bold text-white">
                 Novo Convite
               </DialogTitle>
-              <p className="text-sm text-gray-500 mt-1">
+              <p className="text-sm text-neutral-400 mt-1">
                 {STEPS[currentStep].description}
               </p>
             </div>
@@ -126,7 +126,7 @@ export const CreateInviteModal = ({ open, onOpenChange, onCreate, isLoading }: C
               variant="ghost"
               size="icon"
               onClick={handleClose}
-              className="text-gray-400 hover:text-gray-600 hover:bg-gray-50"
+              className="text-neutral-400 hover:text-white hover:bg-neutral-800"
             >
               <X className="h-5 w-5" />
             </Button>
@@ -134,7 +134,7 @@ export const CreateInviteModal = ({ open, onOpenChange, onCreate, isLoading }: C
         </DialogHeader>
 
         {/* Progress Indicator */}
-        <div className="flex-shrink-0 py-6">
+        <div className="flex-shrink-0 py-8">
           <ModernProgressIndicator
             steps={STEPS}
             currentStep={currentStep}
@@ -147,7 +147,7 @@ export const CreateInviteModal = ({ open, onOpenChange, onCreate, isLoading }: C
         </div>
 
         {/* Step Content */}
-        <div className="flex-1 overflow-y-auto px-1 pb-6">
+        <div className="flex-1 overflow-y-auto px-2 pb-6">
           <div className="min-h-[400px]">
             <CurrentStepComponent 
               formData={formData} 
@@ -157,14 +157,14 @@ export const CreateInviteModal = ({ open, onOpenChange, onCreate, isLoading }: C
         </div>
 
         {/* Navigation Footer */}
-        <div className="flex-shrink-0 border-t border-gray-100 pt-6">
+        <div className="flex-shrink-0 border-t border-neutral-700 pt-6">
           <div className="flex items-center justify-between">
             <Button
               type="button"
               variant="outline"
               onClick={handleBack}
               disabled={currentStep === 0}
-              className="flex items-center gap-2 text-gray-600 border-gray-200 hover:bg-gray-50 disabled:opacity-50"
+              className="flex items-center gap-2 text-neutral-300 border-neutral-600 hover:bg-neutral-800 hover:text-white disabled:opacity-50"
             >
               <ChevronLeft className="h-4 w-4" />
               Voltar
@@ -176,7 +176,7 @@ export const CreateInviteModal = ({ open, onOpenChange, onCreate, isLoading }: C
                   type="button"
                   onClick={handleNext}
                   disabled={!canProceed()}
-                  className="flex items-center gap-2 bg-[#0ABAB5] hover:bg-[#0ABAB5]/90 text-white px-6"
+                  className="flex items-center gap-2 bg-[#0ABAB5] hover:bg-[#0ABAB5]/90 text-white px-6 disabled:opacity-50"
                 >
                   Próximo
                   <ChevronRight className="h-4 w-4" />
@@ -186,7 +186,7 @@ export const CreateInviteModal = ({ open, onOpenChange, onCreate, isLoading }: C
                   type="button"
                   onClick={handleSubmit}
                   disabled={!isFormValid() || isLoading}
-                  className="flex items-center gap-2 bg-[#0ABAB5] hover:bg-[#0ABAB5]/90 text-white px-6"
+                  className="flex items-center gap-2 bg-[#0ABAB5] hover:bg-[#0ABAB5]/90 text-white px-6 disabled:opacity-50"
                 >
                   {isLoading ? (
                     <>
