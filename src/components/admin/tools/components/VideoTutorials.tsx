@@ -56,7 +56,7 @@ export const VideoTutorials = ({ form }: VideoTutorialsProps) => {
       <CardContent className="space-y-4">
         {videoTutorials.length > 0 && (
           <VideoTutorialsList 
-            tutorials={videoTutorials}
+            tutorials={videoTutorials as VideoTutorial[]}
             onDelete={handleDeleteTutorial}
           />
         )}
