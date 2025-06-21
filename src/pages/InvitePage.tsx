@@ -184,11 +184,8 @@ const InvitePage = () => {
     return (
       <EnhancedInviteRegistration
         inviteToken={token!}
-        inviteDetails={{
-          email: validationResult.invite.email,
-          role: validationResult.invite.role,
-          notes: validationResult.invite.notes
-        }}
+        inviteEmail={validationResult.invite.email}
+        inviteRole={validationResult.invite.role?.name}
         onSuccess={handleRegistrationSuccess}
       />
     );

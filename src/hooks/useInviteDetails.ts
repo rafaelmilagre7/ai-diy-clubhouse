@@ -67,6 +67,11 @@ export const useInviteDetails = (token?: string) => {
           return;
         }
 
+        // CORREÇÃO: Verificar se user_roles é um array ou objeto
+        const roleData = Array.isArray(invite.user_roles) 
+          ? invite.user_roles[0] 
+          : invite.user_roles;
+
         // Montar detalhes do convite
         const details: InviteDetails = {
           id: invite.id,
@@ -75,9 +80,9 @@ export const useInviteDetails = (token?: string) => {
           expires_at: invite.expires_at,
           created_by: invite.created_by,
           role: {
-            id: invite.user_roles?.id || '',
-            name: invite.user_roles?.name || 'member',
-            description: invite.user_roles?.description
+            id: roleData?.id || '',
+            name: roleData?.name || 'member',
+            description: roleData?.description
           }
         };
 

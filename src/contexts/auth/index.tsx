@@ -14,6 +14,7 @@ const AuthContext = createContext<{
   isLoading: boolean;
   authError: Error | null;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
+  signUp: (email: string, password: string, metadata?: any) => Promise<{ error: any }>;
   signOut: () => Promise<{ success: boolean; error: any }>;
   signInAsMember: (email: string, password: string) => Promise<{ error: any }>;
   signInAsAdmin: (email: string, password: string) => Promise<{ error: any }>;
@@ -45,6 +46,30 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const { signIn, signOut, signInAsMember, signInAsAdmin } = useAuthMethods({
     setIsLoading,
   });
+
+  // Função signUp adicionada
+  const signUp = async (email: string, password: string, metadata?: any) => {
+    try {
+      setIsLoading(true);
+      const redirectUrl = `${window.location.origin}/`;
+      
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: redirectUrl,
+          data: metadata || {}
+        }
+      });
+      
+      return { error };
+    } catch (error: any) {
+      console.error('[AUTH] Erro no signUp:', error);
+      return { error };
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   // CORREÇÃO: Verificar admin baseado na role_id do banco
   const isAdmin = React.useMemo(() => {
@@ -213,6 +238,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     isLoading,
     authError,
     signIn,
+    signUp,
     signOut,
     signInAsMember,
     signInAsAdmin,
