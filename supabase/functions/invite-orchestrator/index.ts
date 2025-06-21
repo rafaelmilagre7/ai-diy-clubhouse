@@ -1,6 +1,6 @@
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -8,7 +8,7 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
-interface InviteRequest {
+interface InviteOrchestratorRequest {
   inviteId: string;
   email: string;
   whatsappNumber?: string;
@@ -17,10 +17,11 @@ interface InviteRequest {
   channels: ('email' | 'whatsapp')[];
   userName?: string;
   notes?: string;
+  isResend?: boolean;
 }
 
 const handler = async (req: Request): Promise<Response> => {
-  console.log(`🎯 [INVITE-ORCHESTRATOR] Nova requisição: ${req.method} - v4.0 Template System`);
+  console.log(`🎯 [INVITE-ORCHESTRATOR] Nova requisição: ${req.method} - v4.1 URL Corrigida`);
   
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -34,182 +35,130 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const { inviteId, email, whatsappNumber, roleId, token, channels, userName, notes }: InviteRequest = await req.json();
-    
+    const {
+      inviteId,
+      email,
+      whatsappNumber,
+      roleId,
+      token,
+      channels,
+      userName,
+      notes,
+      isResend = false
+    }: InviteOrchestratorRequest = await req.json();
+
     console.log(`📧 [INVITE-ORCHESTRATOR] Processando convite para: ${email}, Canais: ${channels.join(', ')}, Nome: ${userName || 'N/A'}`);
 
-    // Inicializar cliente Supabase
-    const supabase = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
-    );
+    const results: any[] = [];
+    let successfulChannels = 0;
 
-    const results: Array<{ channel: string; success: boolean; error?: string; providerId?: string }> = [];
+    // Criar cliente Supabase para chamadas das functions
+    const supabaseUrl = Deno.env.get("SUPABASE_URL") || "https://zotzvtepvpnkcoobdubt.supabase.co";
+    const supabaseKey = Deno.env.get("SUPABASE_ANON_KEY") || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpvdHp2dGVwdnBua2Nvb2JkdWJ0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQzNzgzODAsImV4cCI6MjA1OTk1NDM4MH0.dxjPkqTPnK8gjjxJbooPX5_kpu3INciLeDpuU8dszHQ";
+    
+    const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Enviar por e-mail se solicitado
-    if (channels.includes('email')) {
+    // Processar cada canal
+    for (const channel of channels) {
       try {
-        console.log(`📧 [INVITE-ORCHESTRATOR] Enviando por e-mail...`);
-        
-        const emailResponse = await supabase.functions.invoke('send-invite-email', {
-          body: {
-            inviteId,
-            email,
-            roleId,
-            token,
-            notes
-          }
-        });
+        if (channel === 'email') {
+          console.log(`📧 [INVITE-ORCHESTRATOR] Enviando por e-mail...`);
+          
+          const emailResult = await supabase.functions.invoke('send-invite-email', {
+            body: {
+              inviteId,
+              email,
+              roleId,
+              token,
+              isResend,
+              notes
+            }
+          });
 
-        if (emailResponse.error) {
-          throw new Error(emailResponse.error.message);
+          if (emailResult.error) {
+            throw new Error(`Erro no e-mail: ${emailResult.error.message}`);
+          }
+
+          console.log(`✅ [INVITE-ORCHESTRATOR] E-mail enviado`);
+          results.push({ channel: 'email', success: true, data: emailResult.data });
+          successfulChannels++;
+
+        } else if (channel === 'whatsapp') {
+          console.log(`📱 [INVITE-ORCHESTRATOR] Enviando por WhatsApp...`);
+          
+          // Validar se userName foi fornecido para WhatsApp
+          if (!userName || userName.trim() === '') {
+            throw new Error("Nome do usuário é obrigatório para envio via WhatsApp");
+          }
+
+          if (!whatsappNumber || whatsappNumber.trim() === '') {
+            throw new Error("Número do WhatsApp é obrigatório");
+          }
+
+          const whatsappResult = await supabase.functions.invoke('send-invite-whatsapp', {
+            body: {
+              inviteId,
+              whatsappNumber,
+              roleId,
+              token,
+              userName: userName.trim(),
+              notes
+            }
+          });
+
+          if (whatsappResult.error) {
+            throw new Error(`Erro no WhatsApp: ${whatsappResult.error.message}`);
+          }
+
+          console.log(`✅ [INVITE-ORCHESTRATOR] WhatsApp enviado`);
+          results.push({ channel: 'whatsapp', success: true, data: whatsappResult.data });
+          successfulChannels++;
         }
 
-        const emailData = emailResponse.data;
-        
-        results.push({
-          channel: 'email',
-          success: emailData.success,
-          providerId: emailData.emailId,
-          error: emailData.success ? undefined : emailData.error
-        });
-
-        // Log do resultado do e-mail
-        await supabase.rpc('log_invite_delivery', {
-          p_invite_id: inviteId,
-          p_channel: 'email',
-          p_status: emailData.success ? 'sent' : 'failed',
-          p_provider_id: emailData.emailId,
-          p_error_message: emailData.success ? null : emailData.error,
-          p_metadata: { userName }
-        });
-
-        console.log(`✅ [INVITE-ORCHESTRATOR] E-mail ${emailData.success ? 'enviado' : 'falhou'}`);
-      } catch (emailError: any) {
-        console.error(`❌ [INVITE-ORCHESTRATOR] Erro no e-mail:`, emailError);
-        
-        results.push({
-          channel: 'email',
-          success: false,
-          error: emailError.message
-        });
-
-        // Log do erro do e-mail
-        await supabase.rpc('log_invite_delivery', {
-          p_invite_id: inviteId,
-          p_channel: 'email',
-          p_status: 'failed',
-          p_error_message: emailError.message,
-          p_metadata: { userName }
+      } catch (error: any) {
+        console.error(`❌ [INVITE-ORCHESTRATOR] Erro no canal ${channel}:`, error.message);
+        results.push({ 
+          channel, 
+          success: false, 
+          error: error.message || `Erro desconhecido no canal ${channel}` 
         });
       }
     }
 
-    // Enviar por WhatsApp se solicitado e número disponível
-    if (channels.includes('whatsapp') && whatsappNumber) {
-      try {
-        console.log(`📱 [INVITE-ORCHESTRATOR] Enviando por WhatsApp com template...`);
-        
-        // Validar se userName foi fornecido para WhatsApp (obrigatório para template)
-        if (!userName || userName.trim() === '') {
-          throw new Error("Nome do usuário é obrigatório para envio via WhatsApp template");
-        }
-        
-        const whatsappResponse = await supabase.functions.invoke('send-invite-whatsapp', {
-          body: {
-            inviteId,
-            whatsappNumber,
-            roleId,
-            token,
-            userName: userName.trim(),
-            notes
-          }
-        });
+    console.log(`🎯 [INVITE-ORCHESTRATOR] Resultado final: ${successfulChannels}/${channels.length} canais bem-sucedidos`);
 
-        if (whatsappResponse.error) {
-          throw new Error(whatsappResponse.error.message);
-        }
-
-        const whatsappData = whatsappResponse.data;
-        
-        results.push({
-          channel: 'whatsapp',
-          success: whatsappData.success,
-          providerId: whatsappData.messageId,
-          error: whatsappData.success ? undefined : whatsappData.error
-        });
-
-        // Log do resultado do WhatsApp
-        await supabase.rpc('log_invite_delivery', {
-          p_invite_id: inviteId,
-          p_channel: 'whatsapp',
-          p_status: whatsappData.success ? 'sent' : 'failed',
-          p_provider_id: whatsappData.messageId,
-          p_error_message: whatsappData.success ? null : whatsappData.error,
-          p_metadata: { 
-            userName, 
-            whatsappNumber, 
-            templateUsed: whatsappData.templateUsed,
-            templateId: whatsappData.templateId
-          }
-        });
-
-        console.log(`✅ [INVITE-ORCHESTRATOR] WhatsApp template ${whatsappData.success ? 'enviado' : 'falhou'}`);
-      } catch (whatsappError: any) {
-        console.error(`❌ [INVITE-ORCHESTRATOR] Erro no WhatsApp:`, whatsappError);
-        
-        results.push({
-          channel: 'whatsapp',
-          success: false,
-          error: whatsappError.message
-        });
-
-        // Log do erro do WhatsApp
-        await supabase.rpc('log_invite_delivery', {
-          p_invite_id: inviteId,
-          p_channel: 'whatsapp',
-          p_status: 'failed',
-          p_error_message: whatsappError.message,
-          p_metadata: { userName, whatsappNumber }
-        });
-      }
-    }
-
-    // Calcular resultado geral
-    const successfulChannels = results.filter(r => r.success);
-    const failedChannels = results.filter(r => !r.success);
+    // Retornar resultado consolidado
+    const overallSuccess = successfulChannels > 0;
     
-    const overallSuccess = successfulChannels.length > 0;
-    
-    console.log(`🎯 [INVITE-ORCHESTRATOR] Resultado final: ${successfulChannels.length}/${results.length} canais bem-sucedidos`);
-
     return new Response(
       JSON.stringify({
         success: overallSuccess,
         message: overallSuccess 
-          ? `Convite enviado com sucesso via ${successfulChannels.map(r => r.channel).join(' e ')}`
-          : `Falha ao enviar convite via ${failedChannels.map(r => r.channel).join(' e ')}`,
-        results,
+          ? `Convite enviado com sucesso via ${successfulChannels} canal(is)`
+          : "Falha ao enviar convite por todos os canais",
         summary: {
-          totalChannels: results.length,
-          successfulChannels: successfulChannels.length,
-          failedChannels: failedChannels.length
-        }
+          totalChannels: channels.length,
+          successfulChannels,
+          failedChannels: channels.length - successfulChannels
+        },
+        results,
+        inviteId,
+        token
       }),
       {
-        status: 200,
+        status: overallSuccess ? 200 : 500,
         headers: { "Content-Type": "application/json", ...corsHeaders },
       }
     );
 
   } catch (error: any) {
-    console.error(`❌ [INVITE-ORCHESTRATOR] Erro crítico:`, error);
+    console.error(`❌ [INVITE-ORCHESTRATOR] Erro geral:`, error);
     
     return new Response(
       JSON.stringify({
         success: false,
-        error: error.message || "Erro interno do servidor",
-        message: "Falha na orquestração do convite"
+        error: error.message || "Erro interno do orquestrador",
+        message: "Falha no processamento do convite"
       }),
       {
         status: 500,
@@ -219,5 +168,5 @@ const handler = async (req: Request): Promise<Response> => {
   }
 };
 
-console.log("🎯 [INVITE-ORCHESTRATOR] Edge Function carregada com sistema de templates! v4.0");
+console.log("🎯 [INVITE-ORCHESTRATOR] Edge Function carregada com URL corrigida! v4.1");
 serve(handler);

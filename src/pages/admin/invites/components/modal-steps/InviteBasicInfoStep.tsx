@@ -4,7 +4,7 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { CreateInviteParams } from '@/hooks/admin/invites/types';
-import { Mail, UserCheck } from 'lucide-react';
+import { Mail, UserCheck, User } from 'lucide-react';
 import { useRoles } from '@/hooks/admin/useRoles';
 
 interface InviteBasicInfoStepProps {
@@ -34,6 +34,22 @@ export const InviteBasicInfoStep = ({ formData, onUpdate }: InviteBasicInfoStepP
             placeholder="exemplo@empresa.com"
             value={formData.email || ''}
             onChange={(e) => onUpdate({ email: e.target.value })}
+            className="bg-[#1A1E2E] border-neutral-700 text-white placeholder:text-neutral-500 focus-visible:ring-[#0ABAB5] focus-visible:border-[#0ABAB5]"
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="userName" className="text-neutral-200 flex items-center gap-2">
+            <User className="h-4 w-4 text-[#0ABAB5]" />
+            Nome da pessoa
+            <span className="text-xs text-orange-400">(obrigatório para WhatsApp)</span>
+          </Label>
+          <Input
+            id="userName"
+            type="text"
+            placeholder="Nome completo da pessoa"
+            value={formData.userName || ''}
+            onChange={(e) => onUpdate({ userName: e.target.value })}
             className="bg-[#1A1E2E] border-neutral-700 text-white placeholder:text-neutral-500 focus-visible:ring-[#0ABAB5] focus-visible:border-[#0ABAB5]"
           />
         </div>

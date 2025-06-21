@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { Resend } from "npm:resend@2.0.0";
 
@@ -17,7 +18,7 @@ interface SendInviteEmailRequest {
 }
 
 const handler = async (req: Request): Promise<Response> => {
-  console.log(`📧 [SEND-INVITE-EMAIL] Nova requisição: ${req.method} - v3.3 Logo Images Bucket`);
+  console.log(`📧 [SEND-INVITE-EMAIL] Nova requisição: ${req.method} - v3.4 URL Corrigida`);
   
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -45,7 +46,11 @@ const handler = async (req: Request): Promise<Response> => {
 
     const resend = new Resend(apiKey);
     
-    const inviteUrl = `${Deno.env.get("SITE_URL") || "https://viverdeia.ai"}/convite/${token}`;
+    // URL CORRIGIDA - usando app.viverdeia.ai
+    const siteUrl = Deno.env.get("SITE_URL") || "https://app.viverdeia.ai";
+    const inviteUrl = `${siteUrl}/convite/${token}`;
+    
+    console.log(`📧 [SEND-INVITE-EMAIL] URL do convite: ${inviteUrl}`);
     
     // URL da logo no bucket "images" do Supabase Storage
     const logoUrl = "https://zotzvtepvpnkcoobdubt.supabase.co/storage/v1/object/public/images/email/viver-de-ia-logo.png";
@@ -129,7 +134,8 @@ const handler = async (req: Request): Promise<Response> => {
       JSON.stringify({
         success: true,
         message: "Email de convite enviado com sucesso",
-        emailId: emailResponse.data?.id
+        emailId: emailResponse.data?.id,
+        inviteUrl: inviteUrl // Incluir URL para verificação
       }),
       {
         status: 200,
@@ -153,5 +159,5 @@ const handler = async (req: Request): Promise<Response> => {
   }
 };
 
-console.log("📧 [SEND-INVITE-EMAIL] Edge Function carregada! v3.3 Logo Images Bucket");
+console.log("📧 [SEND-INVITE-EMAIL] Edge Function carregada! v3.4 URL Corrigida");
 serve(handler);

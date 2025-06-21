@@ -1,29 +1,12 @@
-export interface Invite {
-  id: string;
-  email: string;
-  token: string;
-  expires_at: string;
-  created_at: string;
-  used_at?: string;
-  role_id: string;
-  role?: {
-    name: string;
-  };
-  notes?: string;
-  preferred_channel?: 'email' | 'whatsapp' | 'both';
-  whatsapp_number?: string;
-  last_sent_at?: string;
-  send_attempts?: number;
-}
 
 export interface CreateInviteParams {
   email: string;
   roleId: string;
-  expiresIn?: string;
-  notes?: string;
   channels?: ('email' | 'whatsapp')[];
   whatsappNumber?: string;
-  userName?: string;
+  userName?: string; // Campo adicionado para nome da pessoa
+  expiresIn?: string;
+  notes?: string;
 }
 
 export interface InviteCreateResult {
@@ -33,13 +16,27 @@ export interface InviteCreateResult {
   token?: string;
 }
 
-export interface ResendInviteParams {
-  inviteId: string;
+export interface Invite {
+  id: string;
   email: string;
-  roleId: string;
+  role_id: string;
   token: string;
-  channels?: ('email' | 'whatsapp')[];
-  whatsappNumber?: string;
-  userName?: string;
-  notes?: string;
+  expires_at: string;
+  used_at: string | null;
+  created_at: string;
+  created_by: string;
+  last_sent_at: string | null;
+  send_attempts: number;
+  notes: string | null;
+  whatsapp_number?: string;
+  role?: {
+    id: string;
+    name: string;
+    description?: string;
+  };
+  user_roles?: {
+    id: string;
+    name: string;
+    description?: string;
+  };
 }

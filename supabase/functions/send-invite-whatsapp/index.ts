@@ -29,7 +29,7 @@ const formatWhatsAppNumber = (number: string): string => {
 };
 
 const handler = async (req: Request): Promise<Response> => {
-  console.log(`📱 [SEND-INVITE-WHATSAPP] Nova requisição: ${req.method} - v4.1 Template correto: convitevia`);
+  console.log(`📱 [SEND-INVITE-WHATSAPP] Nova requisição: ${req.method} - v4.2 URL Corrigida`);
   
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -70,8 +70,11 @@ const handler = async (req: Request): Promise<Response> => {
     const formattedNumber = formatWhatsAppNumber(whatsappNumber);
     console.log(`📱 [SEND-INVITE-WHATSAPP] Número formatado: ${formattedNumber}`);
 
-    // Preparar link do convite
-    const inviteUrl = `${Deno.env.get("SITE_URL") || "https://viverdeia.ai"}/convite/${token}`;
+    // URL CORRIGIDA - usando app.viverdeia.ai
+    const siteUrl = Deno.env.get("SITE_URL") || "https://app.viverdeia.ai";
+    const inviteUrl = `${siteUrl}/convite/${token}`;
+    
+    console.log(`📱 [SEND-INVITE-WHATSAPP] URL do convite: ${inviteUrl}`);
     
     // Template correto identificado no discovery
     const templateName = "convitevia";
@@ -174,6 +177,7 @@ const handler = async (req: Request): Promise<Response> => {
         templateUsed: templateName,
         templateId: templateId,
         userName: userName,
+        inviteUrl: inviteUrl, // Incluir URL para verificação
         apiResponse: responseData
       }),
       {
@@ -200,5 +204,5 @@ const handler = async (req: Request): Promise<Response> => {
   }
 };
 
-console.log("📱 [SEND-INVITE-WHATSAPP] Edge Function carregada com template correto 'convitevia'! v4.1");
+console.log("📱 [SEND-INVITE-WHATSAPP] Edge Function carregada com URL corrigida! v4.2");
 serve(handler);
