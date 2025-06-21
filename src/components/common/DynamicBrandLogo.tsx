@@ -65,8 +65,8 @@ export const DynamicBrandLogo: React.FC<DynamicBrandLogoProps> = ({
       
       setCurrentSrc(fallbackSrc);
     } else {
-      // Se o fallback também falhar, usar logo padrão
-      setCurrentSrc('https://milagredigital.com/wp-content/uploads/2025/04/viverdeiaclub.avif');
+      // Se o fallback também falhar, usar logo padrão do Club
+      setCurrentSrc('/lovable-uploads/a408c993-07fa-49f2-bee6-c66d0614298b.png');
     }
   };
 
