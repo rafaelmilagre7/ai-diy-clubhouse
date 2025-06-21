@@ -1,3 +1,4 @@
+
 import { RouteObject } from "react-router-dom";
 import { ProtectedRoutes } from '@/auth/ProtectedRoutes';
 import AdminLayout from '@/components/layout/admin/AdminLayout';
@@ -16,6 +17,7 @@ import AdminEvents from '@/pages/admin/AdminEvents';
 import AdminRoles from '@/pages/admin/AdminRoles';
 import InvitesManagement from '@/pages/admin/invites/InvitesManagement';
 import WhatsAppDebug from '@/pages/admin/WhatsAppDebug';
+import EmailDebug from '@/pages/admin/EmailDebug';
 import AdminCommunications from '@/pages/admin/AdminCommunications';
 import SupabaseDiagnostics from '@/pages/admin/SupabaseDiagnostics';
 import AdminSecurity from '@/pages/admin/AdminSecurity';
@@ -49,5 +51,6 @@ export const adminRoutes: RouteObject[] = [
   createAdminRoute("/admin/communications", AdminCommunications),
   createAdminRoute("/admin/security", AdminSecurity),
   createAdminRoute("/admin/whatsapp-debug", WhatsAppDebug),
+  createAdminRoute("/admin/email-debug", EmailDebug),
   createAdminRoute("/admin/diagnostics", SupabaseDiagnostics),
 ];

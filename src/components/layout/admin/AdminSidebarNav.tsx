@@ -1,3 +1,4 @@
+
 import { useLocation, Link } from "react-router-dom";
 import { 
   BarChart3, 
@@ -80,6 +81,11 @@ const navigationItems = [
     title: "WhatsApp Debug",
     href: "/admin/whatsapp-debug",
     icon: MessageSquare,
+  },
+  {
+    title: "Email Debug",
+    href: "/admin/email-debug",
+    icon: Mail,
   },
   {
     title: "Diagnósticos",
