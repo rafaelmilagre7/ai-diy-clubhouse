@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { Resend } from "npm:resend@2.0.0";
 
@@ -56,10 +55,8 @@ const handler = async (req: Request): Promise<Response> => {
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 0; background-color: #f8fafc;">
           <!-- Header com logo e gradiente da marca -->
           <div style="background: linear-gradient(to right, #22d3ee, #14b8a6); color: white; padding: 40px 30px; text-align: center; border-radius: 12px 12px 0 0; box-shadow: 0 4px 20px rgba(34, 211, 238, 0.3);">
-            <div style="display: flex; align-items: center; justify-content: center; gap: 15px; margin-bottom: 20px;">
-              <img src="https://viverdeia.ai/lovable-uploads/6bdb44c0-b115-45bc-977d-4284836453c2.png" alt="Viver de IA" style="height: 48px; width: auto;" />
-              <h1 style="margin: 0; font-size: 28px; font-weight: bold;">Viver de IA</h1>
-            </div>
+            <img src="https://viverdeia.ai/lovable-uploads/6bdb44c0-b115-45bc-977d-4284836453c2.png" alt="Viver de IA" style="height: 48px; width: auto; display: inline-block; vertical-align: middle; margin-bottom: 15px;" />
+            <h1 style="margin: 10px 0 20px 0; font-size: 28px; font-weight: bold; display: block;">Viver de IA</h1>
             <p style="margin: 0; font-size: 18px; opacity: 0.95;">
               ${isResend ? 'Reenvio do seu' : 'Você recebeu um'} convite para nossa plataforma!
             </p>
