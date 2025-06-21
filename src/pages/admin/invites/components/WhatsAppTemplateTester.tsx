@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -7,27 +6,22 @@ import { Label } from '@/components/ui/label';
 import { MessageCircle, Send, CheckCircle, AlertCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-
 const WhatsAppTemplateTester = () => {
   const [testData, setTestData] = useState({
     whatsappNumber: '',
-    userName: '',
+    userName: ''
   });
   const [isLoading, setIsLoading] = useState(false);
   const [testResult, setTestResult] = useState<any>(null);
-
   const handleTest = async () => {
     if (!testData.whatsappNumber || !testData.userName) {
       toast.error('Preencha todos os campos para testar');
       return;
     }
-
     setIsLoading(true);
     setTestResult(null);
-
     try {
       console.log('🧪 Testando template WhatsApp:', testData);
-
       const response = await supabase.functions.invoke('send-invite-whatsapp', {
         body: {
           inviteId: 'test-invite-id',
@@ -38,15 +32,11 @@ const WhatsAppTemplateTester = () => {
           notes: 'Teste do template WhatsApp'
         }
       });
-
       console.log('🧪 Resposta do teste:', response);
-
       if (response.error) {
         throw new Error(response.error.message);
       }
-
       setTestResult(response.data);
-      
       if (response.data?.success) {
         toast.success('Template enviado com sucesso!');
       } else {
@@ -64,9 +54,7 @@ const WhatsAppTemplateTester = () => {
       setIsLoading(false);
     }
   };
-
-  return (
-    <Card>
+  return <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <MessageCircle className="h-5 w-5 text-green-600" />
@@ -80,22 +68,18 @@ const WhatsAppTemplateTester = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label htmlFor="testNumber">Número WhatsApp (Teste)</Label>
-            <Input
-              id="testNumber"
-              placeholder="(11) 99999-9999"
-              value={testData.whatsappNumber}
-              onChange={(e) => setTestData(prev => ({ ...prev, whatsappNumber: e.target.value }))}
-            />
+            <Input id="testNumber" placeholder="(11) 99999-9999" value={testData.whatsappNumber} onChange={e => setTestData(prev => ({
+            ...prev,
+            whatsappNumber: e.target.value
+          }))} />
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="testName">Nome da Pessoa</Label>
-            <Input
-              id="testName"
-              placeholder="João Silva"
-              value={testData.userName}
-              onChange={(e) => setTestData(prev => ({ ...prev, userName: e.target.value }))}
-            />
+            <Input id="testName" placeholder="João Silva" value={testData.userName} onChange={e => setTestData(prev => ({
+            ...prev,
+            userName: e.target.value
+          }))} />
           </div>
         </div>
 
@@ -109,52 +93,28 @@ const WhatsAppTemplateTester = () => {
           </div>
         </div>
 
-        <Button 
-          onClick={handleTest}
-          disabled={isLoading || !testData.whatsappNumber || !testData.userName}
-          className="w-full"
-        >
-          {isLoading ? (
-            <>
+        <Button onClick={handleTest} disabled={isLoading || !testData.whatsappNumber || !testData.userName} className="w-full">
+          {isLoading ? <>
               <Send className="h-4 w-4 mr-2 animate-spin" />
               Enviando Template...
-            </>
-          ) : (
-            <>
+            </> : <>
               <Send className="h-4 w-4 mr-2" />
               Testar Template
-            </>
-          )}
+            </>}
         </Button>
 
-        {testResult && (
-          <div className={`p-4 rounded-lg border ${
-            testResult.success 
-              ? 'bg-green-50 border-green-200 text-green-800' 
-              : 'bg-red-50 border-red-200 text-red-800'
-          }`}>
+        {testResult && <div className="">
             <div className="flex items-center gap-2 mb-2">
-              {testResult.success ? (
-                <CheckCircle className="h-5 w-5" />
-              ) : (
-                <AlertCircle className="h-5 w-5" />
-              )}
+              {testResult.success ? <CheckCircle className="h-5 w-5" /> : <AlertCircle className="h-5 w-5" />}
               <span className="font-semibold">
                 {testResult.success ? 'Sucesso!' : 'Erro!'}
               </span>
             </div>
             <p className="text-sm">{testResult.message}</p>
-            {testResult.templateUsed && (
-              <p className="text-xs mt-1">Template usado: {testResult.templateUsed}</p>
-            )}
-            {testResult.messageId && (
-              <p className="text-xs mt-1">Message ID: {testResult.messageId}</p>
-            )}
-            {testResult.error && (
-              <p className="text-xs mt-1 font-mono">{testResult.error}</p>
-            )}
-          </div>
-        )}
+            {testResult.templateUsed && <p className="text-xs mt-1">Template usado: {testResult.templateUsed}</p>}
+            {testResult.messageId && <p className="text-xs mt-1">Message ID: {testResult.messageId}</p>}
+            {testResult.error && <p className="text-xs mt-1 font-mono">{testResult.error}</p>}
+          </div>}
 
         <div className="text-xs text-muted-foreground space-y-1">
           <p><strong>Template:</strong> convitevia</p>
@@ -163,8 +123,6 @@ const WhatsAppTemplateTester = () => {
           <p><strong>Variáveis:</strong> {`{{1}} = Nome, {{2}} = Link do convite`}</p>
         </div>
       </CardContent>
-    </Card>
-  );
+    </Card>;
 };
-
 export default WhatsAppTemplateTester;
