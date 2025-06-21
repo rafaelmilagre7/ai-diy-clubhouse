@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -5,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Search, CheckCircle, AlertCircle, Copy, RefreshCw } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+
 interface Template {
   id: string;
   name: string;
@@ -17,26 +19,33 @@ interface Template {
     date: number;
   };
 }
+
 const WhatsAppTemplatesList = () => {
   const [templates, setTemplates] = useState<Template[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [searchResult, setSearchResult] = useState<any>(null);
+
   const handleSearchTemplates = async () => {
     setIsLoading(true);
     setSearchResult(null);
+    
     try {
       console.log('🔍 Buscando todos os templates WhatsApp...');
       const response = await supabase.functions.invoke('whatsapp-list-templates', {
         body: {}
       });
+
       console.log('🔍 Resposta do discovery:', response);
+
       if (response.error) {
         throw new Error(response.error.message);
       }
+
       const data = response.data;
       if (data?.success) {
         setTemplates(data.data.templates || []);
         setSearchResult(data.data);
+        
         const targetFound = data.data.hasTargetTemplate;
         if (targetFound) {
           toast.success(`Templates encontrados! Template 'convitevia' está aprovado e disponível.`);
@@ -57,6 +66,7 @@ const WhatsAppTemplatesList = () => {
       setIsLoading(false);
     }
   };
+
   const copyTemplateConfig = (template: Template) => {
     const config = {
       name: template.name,
@@ -68,10 +78,13 @@ const WhatsAppTemplatesList = () => {
     navigator.clipboard.writeText(JSON.stringify(config, null, 2));
     toast.success(`Configuração do template '${template.name}' copiada!`);
   };
+
   const isTargetTemplate = (templateName: string) => {
     return templateName === 'convitevia';
   };
-  return <Card>
+
+  return (
+    <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Search className="h-5 w-5 text-blue-600" />
@@ -83,24 +96,34 @@ const WhatsAppTemplatesList = () => {
       </CardHeader>
       <CardContent className="space-y-4">
         <Button onClick={handleSearchTemplates} disabled={isLoading} className="w-full">
-          {isLoading ? <>
+          {isLoading ? (
+            <>
               <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
               Buscando Templates...
-            </> : <>
+            </>
+          ) : (
+            <>
               <Search className="h-4 w-4 mr-2" />
               Buscar Todos os Templates
-            </>}
+            </>
+          )}
         </Button>
 
-        {searchResult && <div className="">
+        {searchResult && (
+          <div className="">
             <div className="flex items-center gap-2 mb-2">
-              {searchResult.success ? <CheckCircle className="h-5 w-5 text-blue-600" /> : <AlertCircle className="h-5 w-5 text-red-600" />}
+              {searchResult.success ? (
+                <CheckCircle className="h-5 w-5 text-blue-600" />
+              ) : (
+                <AlertCircle className="h-5 w-5 text-red-600" />
+              )}
               <span className="font-semibold">
                 {searchResult.success ? 'Busca Concluída!' : 'Erro na Busca!'}
               </span>
             </div>
             
-            {searchResult.success ? <div className="text-sm space-y-1">
+            {searchResult.success ? (
+              <div className="text-sm space-y-1">
                 <p><strong>Total de templates:</strong> {searchResult.totalTemplates}</p>
                 <p><strong>Templates aprovados:</strong> {searchResult.approvedTemplates}</p>
                 <p><strong>Business ID:</strong> {searchResult.businessId}</p>
@@ -109,20 +132,28 @@ const WhatsAppTemplatesList = () => {
                     {searchResult.hasTargetTemplate ? "✅ SIM" : "❌ NÃO"}
                   </Badge>
                 </p>
-              </div> : <p className="text-sm text-red-600">{searchResult.error}</p>}
-          </div>}
+              </div>
+            ) : (
+              <p className="text-sm text-red-600">{searchResult.error}</p>
+            )}
+          </div>
+        )}
 
-        {templates.length > 0 && <div className="space-y-4">
+        {templates.length > 0 && (
+          <div className="space-y-4">
             <h3 className="font-semibold">Templates Aprovados ({templates.length})</h3>
             
             <div className="grid gap-3 max-h-96 overflow-y-auto">
-              {templates.map(template => <div key={template.id} className="">
+              {templates.map(template => (
+                <div key={template.id} className="">
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-2">
                       <h4 className="font-medium">{template.name}</h4>
-                      {isTargetTemplate(template.name) && <Badge variant="default" className="bg-green-600">
+                      {isTargetTemplate(template.name) && (
+                        <Badge variant="default" className="bg-green-600">
                           🎯 TEMPLATE ATUAL
-                        </Badge>}
+                        </Badge>
+                      )}
                     </div>
                     <Button variant="outline" size="sm" onClick={() => copyTemplateConfig(template)}>
                       <Copy className="h-3 w-3 mr-1" />
@@ -139,17 +170,23 @@ const WhatsAppTemplatesList = () => {
                         {template.status}
                       </Badge>
                     </p>
-                    {template.quality_score && <p><strong>Quality Score:</strong> {template.quality_score.score}</p>}
+                    {template.quality_score && (
+                      <p><strong>Quality Score:</strong> {template.quality_score.score}</p>
+                    )}
                   </div>
-                </div>)}
+                </div>
+              ))}
             </div>
-          </div>}
+          </div>
+        )}
 
         <div className="text-xs text-muted-foreground">
           <p><strong>Objetivo:</strong> Encontrar e confirmar o template 'convitevia' (ID: 1413982056507354)</p>
           <p><strong>Uso:</strong> Template para envio de convites da plataforma via WhatsApp</p>
         </div>
       </CardContent>
-    </Card>;
+    </Card>
+  );
 };
+
 export default WhatsAppTemplatesList;

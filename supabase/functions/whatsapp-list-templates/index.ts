@@ -21,7 +21,7 @@ interface Template {
 }
 
 const handler = async (req: Request): Promise<Response> => {
-  console.log(`📋 [WHATSAPP-LIST-TEMPLATES] ${req.method} request received - v1.0`);
+  console.log(`📋 [WHATSAPP-LIST-TEMPLATES] ${req.method} request received - v1.1`);
   
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -96,9 +96,9 @@ const handler = async (req: Request): Promise<Response> => {
     const approvedTemplates = templates.filter(template => template.status === 'APPROVED');
     console.log(`📋 [LIST-TEMPLATES] Templates aprovados: ${approvedTemplates.length}`);
 
-    // Buscar especificamente o template convite_viver_ia
-    const targetTemplate = approvedTemplates.find(t => t.name === 'convite_viver_ia');
-    console.log(`📋 [LIST-TEMPLATES] Template 'convite_viver_ia' encontrado:`, !!targetTemplate);
+    // Buscar especificamente o template convitevia (CORRIGIDO)
+    const targetTemplate = approvedTemplates.find(t => t.name === 'convitevia');
+    console.log(`📋 [LIST-TEMPLATES] Template 'convitevia' encontrado:`, !!targetTemplate);
 
     // Log de templates encontrados
     approvedTemplates.forEach(template => {
@@ -141,5 +141,5 @@ const handler = async (req: Request): Promise<Response> => {
   }
 };
 
-console.log("📋 [WHATSAPP-LIST-TEMPLATES] Edge Function carregada! v1.0");
+console.log("📋 [WHATSAPP-LIST-TEMPLATES] Edge Function carregada! v1.1 - Template corrigido para 'convitevia'");
 serve(handler);
