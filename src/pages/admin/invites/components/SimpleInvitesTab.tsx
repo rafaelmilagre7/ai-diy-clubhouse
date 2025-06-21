@@ -54,29 +54,24 @@ const SimpleInvitesTab = ({ invites, loading, onInvitesChange }: SimpleInvitesTa
   const getChannelBadges = (invite: Invite) => {
     const channels = [];
     
-    if (invite.preferred_channel === 'email' || invite.preferred_channel === 'both') {
-      channels.push(
-        <Badge key="email" variant="outline" className="text-xs">
-          <Mail className="h-3 w-3 mr-1" />
-          Email
-        </Badge>
-      );
-    }
+    // Determinar canais baseado nos dados disponíveis
+    // Se tem whatsapp_number, assume que WhatsApp foi configurado
+    const hasWhatsApp = invite.whatsapp_number && invite.whatsapp_number.trim() !== '';
     
-    if (invite.preferred_channel === 'whatsapp' || invite.preferred_channel === 'both') {
+    // Email é sempre incluído por padrão
+    channels.push(
+      <Badge key="email" variant="outline" className="text-xs">
+        <Mail className="h-3 w-3 mr-1" />
+        Email
+      </Badge>
+    );
+    
+    // Adicionar WhatsApp se configurado
+    if (hasWhatsApp) {
       channels.push(
         <Badge key="whatsapp" variant="outline" className="text-xs">
           <MessageCircle className="h-3 w-3 mr-1" />
           WhatsApp
-        </Badge>
-      );
-    }
-    
-    if (channels.length === 0) {
-      channels.push(
-        <Badge key="email-default" variant="outline" className="text-xs">
-          <Mail className="h-3 w-3 mr-1" />
-          Email
         </Badge>
       );
     }

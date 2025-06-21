@@ -29,6 +29,7 @@ export interface Invite {
   send_attempts: number;
   notes: string | null;
   whatsapp_number?: string;
+  // Campos relacionados ao papel/role
   role?: {
     id: string;
     name: string;
@@ -39,4 +40,6 @@ export interface Invite {
     name: string;
     description?: string;
   };
+  // Campos para os canais de envio (derivados dos deliveries)
+  channels?: ('email' | 'whatsapp')[];
 }
