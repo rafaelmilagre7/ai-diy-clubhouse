@@ -1,4 +1,3 @@
-
 export interface Invite {
   id: string;
   email: string;
@@ -12,7 +11,9 @@ export interface Invite {
   };
   notes?: string;
   preferred_channel?: 'email' | 'whatsapp' | 'both';
-  whatsapp_number?: string; // Adicionar campo whatsapp_number
+  whatsapp_number?: string;
+  last_sent_at?: string;
+  send_attempts?: number;
 }
 
 export interface CreateInviteParams {
@@ -22,7 +23,7 @@ export interface CreateInviteParams {
   notes?: string;
   channels?: ('email' | 'whatsapp')[];
   whatsappNumber?: string;
-  userName?: string; // Novo campo obrigatório para WhatsApp
+  userName?: string;
 }
 
 export interface InviteCreateResult {
@@ -39,6 +40,6 @@ export interface ResendInviteParams {
   token: string;
   channels?: ('email' | 'whatsapp')[];
   whatsappNumber?: string;
-  userName?: string; // Novo campo para reenvio via WhatsApp
+  userName?: string;
   notes?: string;
 }

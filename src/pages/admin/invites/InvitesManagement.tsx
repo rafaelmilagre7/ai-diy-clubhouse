@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -13,7 +12,7 @@ import EmailLogoUploader from './components/EmailLogoUploader';
 const InvitesManagement = () => {
   const { invites, loading, createInvite, deleteInvite, resendInvite, isCreating, isDeleting, isSending } = useInvites();
   const { toast } = useToast();
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [showCreateModal, setShowCreateModal] = useState(false);
 
   const handleCreateInvite = async (params: CreateInviteParams) => {
     try {
@@ -28,7 +27,7 @@ const InvitesManagement = () => {
         }
       );
       
-      setIsCreateModalOpen(false);
+      setShowCreateModal(false);
       toast({
         title: "Convite criado!",
         description: `Convite enviado para ${params.email}`,
@@ -75,7 +74,7 @@ const InvitesManagement = () => {
     }
   };
 
-  const getStatusBadge = (invite: any) => {
+  const getStatusBadge = (invite: Invite) => {
     if (invite.used_at) {
       return <Badge variant="default" className="bg-green-100 text-green-800 hover:bg-green-100">
         <CheckCircle className="w-3 h-3 mr-1" />
@@ -94,6 +93,23 @@ const InvitesManagement = () => {
       <Clock className="w-3 h-3 mr-1" />
       Pendente
     </Badge>;
+  };
+
+  const getLastSentInfo = (invite: Invite) => {
+    if (!invite.last_sent_at && !invite.send_attempts) {
+      return <span className="text-gray-500 text-xs">Nunca enviado</span>;
+    }
+
+    return (
+      <div className="text-xs text-gray-600">
+        {invite.last_sent_at && (
+          <div>Último envio: {formatDate(invite.last_sent_at)}</div>
+        )}
+        {invite.send_attempts && invite.send_attempts > 0 && (
+          <div>{invite.send_attempts} tentativa(s)</div>
+        )}
+      </div>
+    );
   };
 
   const formatDate = (dateString: string) => {
@@ -131,7 +147,7 @@ const InvitesManagement = () => {
           </p>
         </div>
         <Button 
-          onClick={() => setIsCreateModalOpen(true)}
+          onClick={() => setShowCreateModal(true)}
           className="bg-viverblue hover:bg-viverblue/90"
           disabled={isCreating}
         >
@@ -202,7 +218,7 @@ const InvitesManagement = () => {
               <h3 className="text-lg font-medium text-gray-900 mb-2">Nenhum convite encontrado</h3>
               <p className="text-gray-600 mb-4">Comece criando seu primeiro convite</p>
               <Button 
-                onClick={() => setIsCreateModalOpen(true)}
+                onClick={() => setShowCreateModal(true)}
                 className="bg-viverblue hover:bg-viverblue/90"
               >
                 <Plus className="w-4 h-4 mr-2" />
@@ -247,8 +263,8 @@ const InvitesManagement = () => {
                       <td className="py-3 px-4 text-sm text-gray-600">
                         {formatDate(invite.expires_at)}
                       </td>
-                      <td className="py-3 px-4 text-sm text-gray-600">
-                        {invite.last_sent_at ? formatDate(invite.last_sent_at) : 'Nunca enviado'}
+                      <td className="py-3 px-4">
+                        {getLastSentInfo(invite)}
                       </td>
                       <td className="py-3 px-4 text-sm text-gray-600">
                         {invite.send_attempts || 0}
@@ -289,9 +305,9 @@ const InvitesManagement = () => {
 
       {/* Modal de Criação */}
       <CreateInviteModal
-        open={isCreateModalOpen}
-        onOpenChange={setIsCreateModalOpen}
-        onSubmit={handleCreateInvite}
+        open={showCreateModal}
+        onOpenChange={setShowCreateModal}
+        onCreate={handleCreateInvite}
         isLoading={isCreating}
       />
     </div>
