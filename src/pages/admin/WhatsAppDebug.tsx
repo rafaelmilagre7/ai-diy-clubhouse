@@ -1,9 +1,10 @@
 
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { MessageCircle, Settings, BarChart3, TestTube } from 'lucide-react';
+import { MessageCircle, Settings, BarChart3, TestTube, Zap } from 'lucide-react';
 import WhatsAppConfigPanel from './invites/components/WhatsAppConfigPanel';
 import InviteAnalyticsDashboard from './invites/components/InviteAnalyticsDashboard';
+import DualTokenTester from './invites/components/DualTokenTester';
 
 const WhatsAppDebug = () => {
   return (
@@ -19,6 +20,15 @@ const WhatsAppDebug = () => {
       </div>
 
       <div className="grid gap-6">
+        {/* Novo: Teste de Duplo Token */}
+        <section>
+          <div className="flex items-center gap-2 mb-4">
+            <Zap className="h-5 w-5" />
+            <h2 className="text-xl font-semibold">Teste de Duplo Token</h2>
+          </div>
+          <DualTokenTester />
+        </section>
+
         {/* Painel de Configuração Principal */}
         <section>
           <div className="flex items-center gap-2 mb-4">
@@ -53,6 +63,7 @@ const WhatsAppDebug = () => {
               <CardContent className="space-y-2">
                 <div className="font-mono text-sm bg-muted p-2 rounded">
                   <div>WHATSAPP_API_TOKEN</div>
+                  <div>WHATSAPP_API_TOKEN_2 (novo)</div>
                   <div>WHATSAPP_PHONE_NUMBER_ID</div>
                   <div>WHATSAPP_BUSINESS_ID</div>
                   <div>WHATSAPP_WEBHOOK_TOKEN</div>
@@ -87,6 +98,7 @@ const WhatsAppDebug = () => {
                   <div>🔒 Autenticação: Bearer Token</div>
                   <div>🌐 Endpoint: graph.facebook.com</div>
                   <div>📱 Protocolo: WhatsApp Business API</div>
+                  <div>🆕 Suporte: Teste de duplo token</div>
                 </div>
               </CardContent>
             </Card>
@@ -98,7 +110,7 @@ const WhatsAppDebug = () => {
               </CardHeader>
               <CardContent>
                 <div className="space-y-2 text-sm">
-                  <div>✅ whatsapp-config-check</div>
+                  <div>✅ whatsapp-config-check (v4.0)</div>
                   <div>✅ whatsapp-webhook</div>
                   <div>✅ send-invite-whatsapp</div>
                   <div>✅ invite-orchestrator</div>

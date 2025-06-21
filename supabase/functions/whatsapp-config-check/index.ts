@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 
 const corsHeaders = {
@@ -7,56 +8,66 @@ const corsHeaders = {
 };
 
 interface ConfigCheckRequest {
-  action: 'check_config' | 'test_connection';
+  action: 'check_config' | 'test_connection' | 'test_token_1' | 'test_token_2' | 'compare_tokens';
 }
 
 const checkConfiguration = () => {
   console.log('🔧 [CONFIG-CHECK] Verificando configuração...');
   
-  const token = Deno.env.get("WHATSAPP_API_TOKEN");
+  const token1 = Deno.env.get("WHATSAPP_API_TOKEN");
+  const token2 = Deno.env.get("WHATSAPP_API_TOKEN_2");
   const phoneId = Deno.env.get("WHATSAPP_PHONE_NUMBER_ID");
   const businessId = Deno.env.get("WHATSAPP_BUSINESS_ID");
   const webhookToken = Deno.env.get("WHATSAPP_WEBHOOK_TOKEN");
 
-  const hasToken = !!token && token.length > 10;
+  const hasToken1 = !!token1 && token1.length > 10;
+  const hasToken2 = !!token2 && token2.length > 10;
   const hasPhoneId = !!phoneId && phoneId.length > 5;
   const hasBusinessId = !!businessId && businessId.length > 5;
   const hasWebhookToken = !!webhookToken && webhookToken.length > 5;
 
-  console.log(`🔧 [CONFIG-CHECK] Token: ${hasToken ? 'OK' : 'MISSING'}`);
+  console.log(`🔧 [CONFIG-CHECK] Token 1: ${hasToken1 ? 'OK' : 'MISSING'}`);
+  console.log(`🔧 [CONFIG-CHECK] Token 2: ${hasToken2 ? 'OK' : 'MISSING'}`);
   console.log(`🔧 [CONFIG-CHECK] Phone ID: ${hasPhoneId ? 'OK' : 'MISSING'}`);
   console.log(`🔧 [CONFIG-CHECK] Business ID: ${hasBusinessId ? 'OK' : 'MISSING'}`);
   console.log(`🔧 [CONFIG-CHECK] Webhook Token: ${hasWebhookToken ? 'OK' : 'MISSING'}`);
 
   const result = {
-    hasToken,
+    hasToken1,
+    hasToken2,
     hasPhoneId,
     hasBusinessId,
     hasWebhookToken,
-    isValid: hasToken && hasPhoneId && hasBusinessId && hasWebhookToken,
+    isValid: hasToken1 && hasPhoneId && hasBusinessId && hasWebhookToken,
+    isValidToken2: hasToken2 && hasPhoneId && hasBusinessId && hasWebhookToken,
     details: {
-      tokenLength: token ? token.length : 0,
+      token1Length: token1 ? token1.length : 0,
+      token2Length: token2 ? token2.length : 0,
       phoneIdLength: phoneId ? phoneId.length : 0,
       businessIdLength: businessId ? businessId.length : 0,
       webhookTokenLength: webhookToken ? webhookToken.length : 0
     }
   };
 
-  console.log(`🔧 [CONFIG-CHECK] Resultado: ${result.isValid ? 'VÁLIDO' : 'INVÁLIDO'}`);
+  console.log(`🔧 [CONFIG-CHECK] Token 1: ${result.isValid ? 'VÁLIDO' : 'INVÁLIDO'}`);
+  console.log(`🔧 [CONFIG-CHECK] Token 2: ${result.isValidToken2 ? 'VÁLIDO' : 'INVÁLIDO'}`);
   return result;
 };
 
-const testConnection = async () => {
-  console.log('🔧 [CONNECTION-TEST] Iniciando teste de conexão...');
+const testConnectionWithToken = async (tokenType: 'token1' | 'token2') => {
+  console.log(`🔧 [CONNECTION-TEST-${tokenType.toUpperCase()}] Iniciando teste de conexão...`);
   
-  const token = Deno.env.get("WHATSAPP_API_TOKEN");
+  const token = tokenType === 'token1' 
+    ? Deno.env.get("WHATSAPP_API_TOKEN")
+    : Deno.env.get("WHATSAPP_API_TOKEN_2");
   const phoneId = Deno.env.get("WHATSAPP_PHONE_NUMBER_ID");
 
   if (!token || !phoneId) {
-    console.log('❌ [CONNECTION-TEST] Credenciais não configuradas');
+    console.log(`❌ [CONNECTION-TEST-${tokenType.toUpperCase()}] Credenciais não configuradas`);
     return {
       success: false,
-      message: "Credenciais WhatsApp não configuradas",
+      tokenType,
+      message: `Credenciais WhatsApp não configuradas para ${tokenType}`,
       details: { 
         missingToken: !token, 
         missingPhoneId: !phoneId 
@@ -65,10 +76,9 @@ const testConnection = async () => {
   }
 
   try {
-    // Teste: verificar informações do número de telefone
     const apiUrl = `https://graph.facebook.com/v18.0/${phoneId}?fields=display_phone_number,verified_name`;
     
-    console.log(`🔧 [CONNECTION-TEST] Testando URL: ${apiUrl}`);
+    console.log(`🔧 [CONNECTION-TEST-${tokenType.toUpperCase()}] Testando URL: ${apiUrl}`);
 
     const response = await fetch(apiUrl, {
       method: 'GET',
@@ -79,14 +89,14 @@ const testConnection = async () => {
     });
 
     const responseText = await response.text();
-    console.log(`📱 [CONNECTION-TEST] Status: ${response.status}`);
-    console.log(`📱 [CONNECTION-TEST] Resposta: ${responseText}`);
+    console.log(`📱 [CONNECTION-TEST-${tokenType.toUpperCase()}] Status: ${response.status}`);
+    console.log(`📱 [CONNECTION-TEST-${tokenType.toUpperCase()}] Resposta: ${responseText}`);
 
     let responseData;
     try {
       responseData = JSON.parse(responseText);
     } catch (e) {
-      console.log('⚠️ [CONNECTION-TEST] Resposta não é JSON válido');
+      console.log(`⚠️ [CONNECTION-TEST-${tokenType.toUpperCase()}] Resposta não é JSON válido`);
       responseData = { raw: responseText };
     }
 
@@ -96,9 +106,8 @@ const testConnection = async () => {
       if (responseData.error) {
         errorMessage = responseData.error.message || responseData.error.error_user_msg || 'Erro da API do WhatsApp';
         
-        // Mapear erros comuns para mensagens mais claras
         if (errorMessage.includes('Invalid access token')) {
-          errorMessage = 'Token de acesso inválido. Verifique o WHATSAPP_API_TOKEN';
+          errorMessage = `Token de acesso inválido para ${tokenType}. Verifique o WHATSAPP_API_TOKEN${tokenType === 'token2' ? '_2' : ''}`;
         } else if (errorMessage.includes('Unsupported request')) {
           errorMessage = 'ID do número de telefone inválido. Verifique o WHATSAPP_PHONE_NUMBER_ID';
         } else if (errorMessage.includes('Application does not have the permission')) {
@@ -106,10 +115,11 @@ const testConnection = async () => {
         }
       }
 
-      console.log(`❌ [CONNECTION-TEST] Falha: ${errorMessage}`);
+      console.log(`❌ [CONNECTION-TEST-${tokenType.toUpperCase()}] Falha: ${errorMessage}`);
 
       return {
         success: false,
+        tokenType,
         message: errorMessage,
         details: {
           status: response.status,
@@ -119,27 +129,30 @@ const testConnection = async () => {
       };
     }
 
-    console.log(`✅ [CONNECTION-TEST] Sucesso!`);
-    console.log(`📱 [CONNECTION-TEST] Número: ${responseData.display_phone_number || 'N/A'}`);
-    console.log(`📱 [CONNECTION-TEST] Nome: ${responseData.verified_name || 'N/A'}`);
+    console.log(`✅ [CONNECTION-TEST-${tokenType.toUpperCase()}] Sucesso!`);
+    console.log(`📱 [CONNECTION-TEST-${tokenType.toUpperCase()}] Número: ${responseData.display_phone_number || 'N/A'}`);
+    console.log(`📱 [CONNECTION-TEST-${tokenType.toUpperCase()}] Nome: ${responseData.verified_name || 'N/A'}`);
 
     return {
       success: true,
-      message: "Conexão com WhatsApp API bem-sucedida",
+      tokenType,
+      message: `Conexão com WhatsApp API bem-sucedida usando ${tokenType}`,
       details: {
         phoneNumber: responseData.display_phone_number,
         verifiedName: responseData.verified_name,
         phoneId: phoneId,
-        apiVersion: 'v18.0'
+        apiVersion: 'v18.0',
+        tokenInfo: `${tokenType} (${token.substring(0, 8)}...${token.substring(token.length - 8)})`
       }
     };
 
   } catch (error: any) {
-    console.error(`❌ [CONNECTION-TEST] Erro de rede:`, error);
+    console.error(`❌ [CONNECTION-TEST-${tokenType.toUpperCase()}] Erro de rede:`, error);
     
     return {
       success: false,
-      message: `Erro de conexão: ${error.message}`,
+      tokenType,
+      message: `Erro de conexão com ${tokenType}: ${error.message}`,
       details: {
         errorType: error.name,
         errorMessage: error.message
@@ -148,8 +161,38 @@ const testConnection = async () => {
   }
 };
 
+const compareTokens = async () => {
+  console.log('🔍 [COMPARE-TOKENS] Iniciando comparação de tokens...');
+  
+  const [token1Result, token2Result] = await Promise.all([
+    testConnectionWithToken('token1'),
+    testConnectionWithToken('token2')
+  ]);
+
+  const comparison = {
+    token1: token1Result,
+    token2: token2Result,
+    recommendation: token1Result.success && token2Result.success 
+      ? 'Ambos os tokens estão funcionando! Você pode usar qualquer um.'
+      : token1Result.success 
+        ? 'Recomendamos usar o Token 1 (WHATSAPP_API_TOKEN)'
+        : token2Result.success 
+          ? 'Recomendamos usar o Token 2 (WHATSAPP_API_TOKEN_2)'
+          : 'Nenhum token está funcionando. Verifique as configurações.',
+    summary: {
+      token1Status: token1Result.success ? 'working' : 'failed',
+      token2Status: token2Result.success ? 'working' : 'failed',
+      bothWorking: token1Result.success && token2Result.success,
+      noneWorking: !token1Result.success && !token2Result.success
+    }
+  };
+
+  console.log('🔍 [COMPARE-TOKENS] Comparação finalizada:', comparison.recommendation);
+  return comparison;
+};
+
 const handler = async (req: Request): Promise<Response> => {
-  console.log(`🔧 [WHATSAPP-CONFIG-CHECK] ${req.method} request received - v3.0 CORS fixed`);
+  console.log(`🔧 [WHATSAPP-CONFIG-CHECK] ${req.method} request received - v4.0 dual-token support`);
   
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -176,7 +219,19 @@ const handler = async (req: Request): Promise<Response> => {
         break;
         
       case 'test_connection':
-        result = await testConnection();
+        result = await testConnectionWithToken('token1');
+        break;
+
+      case 'test_token_1':
+        result = await testConnectionWithToken('token1');
+        break;
+
+      case 'test_token_2':
+        result = await testConnectionWithToken('token2');
+        break;
+
+      case 'compare_tokens':
+        result = await compareTokens();
         break;
         
       default:
@@ -214,5 +269,5 @@ const handler = async (req: Request): Promise<Response> => {
   }
 };
 
-console.log("🔧 [WHATSAPP-CONFIG-CHECK] Edge Function carregada e pronta! v3.0 CORS fixed");
+console.log("🔧 [WHATSAPP-CONFIG-CHECK] Edge Function carregada e pronta! v4.0 dual-token support");
 serve(handler);
