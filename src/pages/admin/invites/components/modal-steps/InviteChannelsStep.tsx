@@ -3,8 +3,8 @@ import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Mail, MessageSquare, Phone, Info } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
+import { Mail, MessageSquare, Phone, Info, CheckCircle, Circle } from 'lucide-react';
 import { CreateInviteParams } from '@/hooks/admin/invites/types';
 
 interface InviteChannelsStepProps {
@@ -13,10 +13,10 @@ interface InviteChannelsStepProps {
 }
 
 export const InviteChannelsStep = ({ formData, onUpdate }: InviteChannelsStepProps) => {
-  const handleChannelChange = (channel: 'email' | 'whatsapp', checked: boolean) => {
+  const handleChannelChange = (channel: 'email' | 'whatsapp', enabled: boolean) => {
     const currentChannels = formData.channels || ['email'];
     
-    if (checked) {
+    if (enabled) {
       if (!currentChannels.includes(channel)) {
         onUpdate({ channels: [...currentChannels, channel] });
       }
@@ -33,108 +33,138 @@ export const InviteChannelsStep = ({ formData, onUpdate }: InviteChannelsStepPro
   const whatsappEnabled = formData.channels?.includes('whatsapp') ?? false;
 
   return (
-    <div className="space-y-6 max-w-2xl mx-auto">
-      <div className="text-center">
-        <h3 className="text-lg font-semibold text-gray-900">Canais de Comunicação</h3>
-        <p className="text-sm text-gray-600 mt-1">
+    <div className="max-w-4xl mx-auto space-y-8">
+      {/* Header */}
+      <div className="text-center space-y-2">
+        <h3 className="text-xl font-semibold text-gray-900">Canais de Comunicação</h3>
+        <p className="text-gray-600">
           Escolha como enviar o convite para o usuário
         </p>
       </div>
 
-      <div className="grid gap-6">
-        {/* Email */}
-        <Card className="border-2 border-green-200 bg-green-50">
+      {/* Channel Selection */}
+      <div className="space-y-6">
+        {/* Email Channel */}
+        <Card className="border-2 border-green-200 bg-gradient-to-r from-green-50 to-emerald-50 shadow-sm">
           <CardHeader className="pb-4">
-            <CardTitle className="flex items-center gap-2 text-base">
-              <div className="flex items-center justify-center w-8 h-8 bg-green-500 rounded-full">
-                <Mail className="h-4 w-4 text-white" />
-              </div>
-              <div className="flex-1">
-                Email
-              </div>
-              <div className="flex items-center gap-2">
-                <Checkbox
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center gap-4 text-lg text-gray-900">
+                <div className="w-12 h-12 bg-green-500 rounded-xl flex items-center justify-center shadow-md">
+                  <Mail className="h-6 w-6 text-white" />
+                </div>
+                <div>
+                  <div className="font-semibold">Email</div>
+                  <div className="text-sm text-green-700 font-normal">Canal principal (obrigatório)</div>
+                </div>
+              </CardTitle>
+              <div className="flex items-center gap-3">
+                <CheckCircle className="h-5 w-5 text-green-600" />
+                <Switch
                   id="email-channel"
                   checked={emailEnabled}
-                  onCheckedChange={(checked) => handleChannelChange('email', checked as boolean)}
-                  disabled={true} // Email sempre obrigatório
+                  disabled={true}
+                  className="data-[state=checked]:bg-green-600"
                 />
-                <Label htmlFor="email-channel" className="text-sm font-medium cursor-pointer">
-                  Ativo
-                </Label>
               </div>
-            </CardTitle>
-            <CardDescription>
-              Envio via email (obrigatório)
-            </CardDescription>
+            </div>
           </CardHeader>
-          <CardContent>
-            <div className="bg-white rounded-lg p-4 border">
-              <p className="text-sm text-gray-600">
-                ✅ Email configurado: <span className="font-mono text-xs">{formData.email || 'Não informado'}</span>
-              </p>
-              <p className="text-xs text-gray-500 mt-2">
-                Template profissional com logo da marca
-              </p>
+          <CardContent className="pt-0">
+            <div className="bg-white/60 rounded-lg p-4 border border-green-200">
+              <div className="flex items-center gap-3">
+                <CheckCircle className="h-5 w-5 text-green-600" />
+                <div>
+                  <p className="text-sm font-medium text-gray-900">
+                    Email configurado: <span className="font-mono text-[#0ABAB5]">{formData.email || 'Não informado'}</span>
+                  </p>
+                  <p className="text-xs text-gray-600 mt-1">
+                    Template profissional com identidade visual da marca
+                  </p>
+                </div>
+              </div>
             </div>
           </CardContent>
         </Card>
 
-        {/* WhatsApp */}
-        <Card className={`border-2 transition-all ${
-          whatsappEnabled ? 'border-green-200 bg-green-50' : 'border-gray-200'
+        {/* WhatsApp Channel */}
+        <Card className={`border-2 transition-all duration-300 shadow-sm ${
+          whatsappEnabled 
+            ? 'border-[#0ABAB5] bg-gradient-to-r from-cyan-50 to-teal-50' 
+            : 'border-gray-200 bg-white hover:bg-gray-50'
         }`}>
           <CardHeader className="pb-4">
-            <CardTitle className="flex items-center gap-2 text-base">
-              <div className={`flex items-center justify-center w-8 h-8 rounded-full ${
-                whatsappEnabled ? 'bg-green-500' : 'bg-gray-400'
-              }`}>
-                <MessageSquare className="h-4 w-4 text-white" />
-              </div>
-              <div className="flex-1">
-                WhatsApp
-              </div>
-              <div className="flex items-center gap-2">
-                <Checkbox
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center gap-4 text-lg text-gray-900">
+                <div className={`w-12 h-12 rounded-xl flex items-center justify-center shadow-md transition-colors duration-300 ${
+                  whatsappEnabled ? 'bg-[#0ABAB5]' : 'bg-gray-400'
+                }`}>
+                  <MessageSquare className="h-6 w-6 text-white" />
+                </div>
+                <div>
+                  <div className="font-semibold">WhatsApp</div>
+                  <div className={`text-sm font-normal ${whatsappEnabled ? 'text-teal-700' : 'text-gray-500'}`}>
+                    Canal adicional (opcional)
+                  </div>
+                </div>
+              </CardTitle>
+              <div className="flex items-center gap-3">
+                {whatsappEnabled ? (
+                  <CheckCircle className="h-5 w-5 text-[#0ABAB5]" />
+                ) : (
+                  <Circle className="h-5 w-5 text-gray-400" />
+                )}
+                <Switch
                   id="whatsapp-channel"
                   checked={whatsappEnabled}
-                  onCheckedChange={(checked) => handleChannelChange('whatsapp', checked as boolean)}
+                  onCheckedChange={(checked) => handleChannelChange('whatsapp', checked)}
+                  className="data-[state=checked]:bg-[#0ABAB5]"
                 />
-                <Label htmlFor="whatsapp-channel" className="text-sm font-medium cursor-pointer">
-                  Ativo
-                </Label>
               </div>
-            </CardTitle>
-            <CardDescription>
-              Envio via WhatsApp (opcional)
-            </CardDescription>
+            </div>
           </CardHeader>
-          <CardContent className="space-y-4">
-            {whatsappEnabled && (
-              <div className="space-y-2">
-                <Label htmlFor="whatsapp" className="text-sm font-medium">
-                  Número do WhatsApp *
-                </Label>
-                <div className="relative">
-                  <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                  <Input
-                    id="whatsapp"
-                    placeholder="+55 11 99999-9999"
-                    value={formData.whatsappNumber || ''}
-                    onChange={(e) => onUpdate({ whatsappNumber: e.target.value })}
-                    className="pl-10"
-                  />
+          <CardContent className="pt-0 space-y-4">
+            {whatsappEnabled ? (
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="whatsapp" className="text-sm font-medium text-gray-900">
+                    Número do WhatsApp *
+                  </Label>
+                  <div className="relative">
+                    <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                    <Input
+                      id="whatsapp"
+                      placeholder="+55 11 99999-9999"
+                      value={formData.whatsappNumber || ''}
+                      onChange={(e) => onUpdate({ whatsappNumber: e.target.value })}
+                      className="pl-10 border-gray-200 focus:border-[#0ABAB5] focus:ring-[#0ABAB5]/20 bg-white text-gray-900"
+                    />
+                  </div>
+                  <p className="text-xs text-gray-600">
+                    Formato: +55 11 99999-9999 (com código do país)
+                  </p>
                 </div>
-                <p className="text-xs text-gray-500">
-                  Formato: +55 11 99999-9999 (com código do país)
-                </p>
+                
+                <div className="bg-white/60 rounded-lg p-4 border border-teal-200">
+                  <div className="flex items-center gap-3">
+                    <CheckCircle className="h-5 w-5 text-[#0ABAB5]" />
+                    <div>
+                      <p className="text-sm font-medium text-gray-900">
+                        WhatsApp ativo
+                      </p>
+                      <p className="text-xs text-gray-600 mt-1">
+                        Mensagem personalizada será enviada via WhatsApp Business
+                      </p>
+                    </div>
+                  </div>
+                </div>
               </div>
-            )}
-            
-            {!whatsappEnabled && (
-              <div className="bg-gray-100 rounded-lg p-4 text-center">
-                <p className="text-sm text-gray-600">
-                  Marque a opção acima para enviar também via WhatsApp
+            ) : (
+              <div className="bg-gray-50 rounded-lg p-6 text-center border-2 border-dashed border-gray-200">
+                <MessageSquare className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+                <p className="text-sm text-gray-600 mb-2">
+                  Ative o WhatsApp para envio adicional
+                </p>
+                <p className="text-xs text-gray-500">
+                  Melhora a taxa de resposta em até 40%
                 </p>
               </div>
             )}
@@ -142,21 +172,37 @@ export const InviteChannelsStep = ({ formData, onUpdate }: InviteChannelsStepPro
         </Card>
       </div>
 
-      {/* Informações importantes */}
-      <Card className="bg-blue-50 border-blue-200">
-        <CardContent className="pt-6">
-          <div className="flex items-start gap-3">
-            <Info className="h-5 w-5 text-blue-500 mt-0.5 flex-shrink-0" />
-            <div className="space-y-2">
+      {/* Information Card */}
+      <Card className="bg-blue-50 border-blue-200 shadow-sm">
+        <CardContent className="p-6">
+          <div className="flex items-start gap-4">
+            <Info className="h-6 w-6 text-blue-500 mt-0.5 flex-shrink-0" />
+            <div className="space-y-3">
               <p className="text-sm font-medium text-blue-900">
-                Informações sobre os canais:
+                📋 Informações sobre os canais:
               </p>
-              <ul className="text-xs text-blue-700 space-y-1">
-                <li>• <strong>Email:</strong> Sempre obrigatório, usado para login e recuperação</li>
-                <li>• <strong>WhatsApp:</strong> Opcional, útil para comunicação mais direta</li>
-                <li>• O convite será enviado nos canais selecionados simultaneamente</li>
-                <li>• Se o WhatsApp estiver ativo, o nome da pessoa é obrigatório</li>
-              </ul>
+              <div className="grid md:grid-cols-2 gap-4 text-sm text-blue-800">
+                <ul className="space-y-2">
+                  <li className="flex items-start gap-2">
+                    <span className="text-green-600 font-bold">•</span>
+                    <span><strong>Email:</strong> Sempre obrigatório para login e recuperação</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-green-600 font-bold">•</span>
+                    <span><strong>WhatsApp:</strong> Canal adicional para maior engajamento</span>
+                  </li>
+                </ul>
+                <ul className="space-y-2">
+                  <li className="flex items-start gap-2">
+                    <span className="text-green-600 font-bold">•</span>
+                    <span>Convites são enviados simultaneamente nos canais ativos</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-green-600 font-bold">•</span>
+                    <span>WhatsApp ativo requer número válido</span>
+                  </li>
+                </ul>
+              </div>
             </div>
           </div>
         </CardContent>
