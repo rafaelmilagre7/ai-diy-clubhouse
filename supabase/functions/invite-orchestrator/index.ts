@@ -1,10 +1,9 @@
-
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-security-level",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
@@ -20,7 +19,7 @@ interface InviteRequest {
 }
 
 const handler = async (req: Request): Promise<Response> => {
-  console.log(`🎯 [INVITE-ORCHESTRATOR] Nova requisição: ${req.method} - v2.0 deployed`);
+  console.log(`🎯 [INVITE-ORCHESTRATOR] Nova requisição: ${req.method} - v3.0 CORS fixed`);
   
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -210,5 +209,5 @@ const handler = async (req: Request): Promise<Response> => {
   }
 };
 
-console.log("🎯 [INVITE-ORCHESTRATOR] Edge Function carregada! v2.0 deployed");
+console.log("🎯 [INVITE-ORCHESTRATOR] Edge Function carregada! v3.0 CORS fixed");
 serve(handler);
