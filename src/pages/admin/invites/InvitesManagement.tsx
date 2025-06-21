@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
@@ -10,7 +11,7 @@ import { type CreateInviteParams } from '@/hooks/admin/invites/types';
 
 const InvitesManagement = () => {
   const [open, setOpen] = useState(false);
-  const { invites, loading, fetchInvites, createInvite, isCreating } = useInvites();
+  const { invites, loading, fetchInvites, createInvite: createInviteHook, isCreating } = useInvites();
 
   useEffect(() => {
     fetchInvites();
@@ -18,7 +19,15 @@ const InvitesManagement = () => {
 
   const handleCreateInvite = async (params: CreateInviteParams) => {
     try {
-      await createInvite(params);
+      // Usar o hook createInvite corretamente com os parâmetros esperados
+      await createInviteHook(
+        params.email,
+        params.roleId,
+        params.notes,
+        {
+          expiresIn: params.expiresIn
+        }
+      );
       toast.success('Convite criado com sucesso!');
     } catch (error: any) {
       toast.error(`Erro ao criar convite: ${error.message || 'Erro desconhecido'}`);
