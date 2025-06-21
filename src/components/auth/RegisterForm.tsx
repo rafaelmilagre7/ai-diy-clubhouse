@@ -2,18 +2,22 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 import { Eye, EyeOff, Mail, Lock, User } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
 
 interface RegisterFormProps {
   inviteToken?: string;
   prefilledEmail?: string;
+  onSuccess?: (data: { email: string; password: string; name: string }) => void;
+  isLoading?: boolean;
 }
 
 export const RegisterForm: React.FC<RegisterFormProps> = ({ 
   inviteToken, 
-  prefilledEmail 
+  prefilledEmail,
+  onSuccess,
+  isLoading = false
 }) => {
   const [email, setEmail] = useState(prefilledEmail || '');
   const [password, setPassword] = useState('');
@@ -21,7 +25,6 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
   const [name, setName] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,6 +39,28 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
       return;
     }
 
+    if (!name.trim()) {
+      toast.error('Nome é obrigatório.');
+      return;
+    }
+
+    if (!email.trim()) {
+      toast.error('Email é obrigatório.');
+      return;
+    }
+
+    // Se há um callback personalizado (para convites), usar ele
+    if (onSuccess) {
+      onSuccess({
+        email: email.trim(),
+        password,
+        name: name.trim()
+      });
+      return;
+    }
+
+    // Caso contrário, fazer registro padrão (sem convite)
+    // Este código permanece igual ao original para compatibilidade
     setIsLoading(true);
 
     try {

@@ -4557,6 +4557,10 @@ export type Database = {
         Args: { user_id: string; course_id: string }
         Returns: boolean
       }
+      can_use_invite: {
+        Args: { invite_token: string; user_email: string }
+        Returns: Json
+      }
       check_and_fix_onboarding_data: {
         Args: { user_id_param: string }
         Returns: Json
