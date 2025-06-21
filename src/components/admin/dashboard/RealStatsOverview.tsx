@@ -44,19 +44,26 @@ export const RealStatsOverview = ({ data, loading }: RealStatsOverviewProps) => 
     .filter(role => role.role !== 'admin')
     .sort((a, b) => b.count - a.count)[0];
 
+  // Função para determinar a cor do indicador de crescimento
+  const getGrowthColor = (growth: number) => {
+    if (growth > 0) return "green";
+    if (growth < 0) return "red";
+    return "blue";
+  };
+
   return (
     <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
       <StatCard
-        title="Total de Membros"
+        title="Novos Membros"
         value={data.totalUsers}
         icon={<Users className="h-5 w-5" />}
         percentageChange={data.lastMonthGrowth}
-        percentageText="crescimento último mês"
-        colorScheme="blue"
+        percentageText={data.lastMonthGrowth !== 0 ? "vs período anterior" : "no período"}
+        colorScheme={getGrowthColor(data.lastMonthGrowth)}
       />
       
       <StatCard
-        title="Usuários Ativos (7d)"
+        title="Usuários Ativos"
         value={data.activeUsersLast7Days}
         icon={<Activity className="h-5 w-5" />}
         percentageChange={data.contentEngagementRate}
@@ -65,28 +72,28 @@ export const RealStatsOverview = ({ data, loading }: RealStatsOverviewProps) => 
       />
       
       <StatCard
-        title="Soluções Publicadas"
+        title="Soluções"
         value={data.totalSolutions}
         icon={<FileText className="h-5 w-5" />}
         colorScheme="blue"
       />
       
       <StatCard
-        title="Aulas Publicadas"
+        title="Aulas"
         value={data.totalLearningLessons}
         icon={<GraduationCap className="h-5 w-5" />}
         colorScheme="blue"
       />
       
       <StatCard
-        title="Implementações Completas"
+        title="Implementações"
         value={data.completedImplementations}
         icon={<CheckCircle className="h-5 w-5" />}
         colorScheme="green"
       />
       
       <StatCard
-        title="Tempo Médio Implementação"
+        title="Tempo Médio"
         value={formatTime(data.averageImplementationTime)}
         icon={<Clock className="h-5 w-5" />}
         colorScheme="blue"
@@ -104,7 +111,7 @@ export const RealStatsOverview = ({ data, loading }: RealStatsOverviewProps) => 
         value={`${data.totalSolutions > 0 ? Math.round((data.completedImplementations / data.totalSolutions) * 100) : 0}%`}
         icon={<TrendingUp className="h-5 w-5" />}
         percentageChange={data.completedImplementations > 0 ? 15.2 : 0}
-        percentageText="vs período anterior"
+        percentageText="estimativa de sucesso"
         colorScheme="green"
       />
     </div>

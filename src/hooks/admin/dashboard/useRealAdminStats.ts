@@ -35,8 +35,29 @@ export const useRealAdminStats = (timeRange: string) => {
       try {
         setLoading(true);
         
-        // Buscar total de usuários com roles
-        const { data: usersWithRoles, error: usersError } = await supabase
+        // Calcular data de início baseada no timeRange
+        const now = new Date();
+        let startDate: Date | null = null;
+        
+        if (timeRange !== 'all') {
+          startDate = new Date();
+          switch (timeRange) {
+            case '7d':
+              startDate.setDate(now.getDate() - 7);
+              break;
+            case '30d':
+              startDate.setDate(now.getDate() - 30);
+              break;
+            case '90d':
+              startDate.setDate(now.getDate() - 90);
+              break;
+            default:
+              startDate = null;
+          }
+        }
+        
+        // Buscar total de usuários com filtro de data se aplicável
+        let usersQuery = supabase
           .from('profiles')
           .select(`
             id, 
@@ -45,52 +66,76 @@ export const useRealAdminStats = (timeRange: string) => {
             user_roles!inner(name)
           `);
         
+        if (startDate) {
+          usersQuery = usersQuery.gte('created_at', startDate.toISOString());
+        }
+        
+        const { data: usersWithRoles, error: usersError } = await usersQuery;
         if (usersError) throw usersError;
         
-        // Buscar soluções publicadas
-        const { data: solutions, error: solutionsError } = await supabase
+        // Para comparação, buscar todos os usuários para calcular crescimento
+        const { data: allUsers, error: allUsersError } = await supabase
+          .from('profiles')
+          .select('id, created_at');
+        if (allUsersError) throw allUsersError;
+        
+        // Buscar soluções publicadas com filtro de data
+        let solutionsQuery = supabase
           .from('solutions')
-          .select('id, published')
+          .select('id, published, created_at')
           .eq('published', true as any);
         
+        if (startDate) {
+          solutionsQuery = solutionsQuery.gte('created_at', startDate.toISOString());
+        }
+        
+        const { data: solutions, error: solutionsError } = await solutionsQuery;
         if (solutionsError) throw solutionsError;
         
-        // Buscar aulas publicadas
-        const { data: lessons, error: lessonsError } = await supabase
+        // Buscar aulas publicadas com filtro de data
+        let lessonsQuery = supabase
           .from('learning_lessons')
-          .select('id, published')
+          .select('id, published, created_at')
           .eq('published', true as any);
         
+        if (startDate) {
+          lessonsQuery = lessonsQuery.gte('created_at', startDate.toISOString());
+        }
+        
+        const { data: lessons, error: lessonsError } = await lessonsQuery;
         if (lessonsError) throw lessonsError;
         
-        // Buscar implementações completadas
-        const { data: completedProgress, error: progressError } = await supabase
+        // Buscar implementações completadas com filtro de data
+        let progressQuery = supabase
           .from('progress')
           .select('id, completed_at, created_at')
           .not('completed_at', 'is', null);
         
+        if (startDate) {
+          progressQuery = progressQuery.gte('completed_at', startDate.toISOString());
+        }
+        
+        const { data: completedProgress, error: progressError } = await progressQuery;
         if (progressError) throw progressError;
         
-        // Buscar atividade recente (últimos 7 dias)
-        const sevenDaysAgo = new Date();
-        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+        // Buscar atividade recente baseada no timeRange
+        const activityDate = startDate || new Date(now.getTime() - (7 * 24 * 60 * 60 * 1000));
         
         const { data: recentActivity, error: activityError } = await supabase
           .from('analytics')
           .select('user_id, created_at')
-          .gte('created_at', sevenDaysAgo.toISOString());
+          .gte('created_at', activityDate.toISOString());
         
         if (activityError) throw activityError;
         
-        // Calcular estatísticas
+        // Calcular estatísticas baseadas no período
         const totalUsers = usersWithRoles?.length || 0;
         const totalSolutions = solutions?.length || 0;
         const totalLearningLessons = lessons?.length || 0;
         const completedImplementations = completedProgress?.length || 0;
         
-        // Distribuição por role - corrigindo o acesso ao array
+        // Distribuição por role - apenas para o período selecionado
         const usersByRole = usersWithRoles?.reduce((acc, user) => {
-          // user.user_roles é um array, então acessamos o primeiro item
           const userRoleData = Array.isArray((user as any).user_roles) ? (user as any).user_roles[0] : (user as any).user_roles;
           const roleName = userRoleData?.name || (user as any).role || 'member';
           const existing = acc.find(r => r.role === roleName);
@@ -102,25 +147,37 @@ export const useRealAdminStats = (timeRange: string) => {
           return acc;
         }, [] as { role: string; count: number }[]) || [];
         
-        // Crescimento do último mês
-        const oneMonthAgo = new Date();
-        oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
+        // Calcular crescimento comparativo
+        let lastMonthGrowth = 0;
+        if (timeRange !== 'all' && allUsers) {
+          const periodStart = startDate || new Date(0);
+          const periodEnd = now;
+          const periodLength = periodEnd.getTime() - periodStart.getTime();
+          const previousPeriodStart = new Date(periodStart.getTime() - periodLength);
+          
+          const currentPeriodUsers = allUsers.filter(
+            u => new Date((u as any).created_at) >= periodStart && new Date((u as any).created_at) <= periodEnd
+          ).length;
+          
+          const previousPeriodUsers = allUsers.filter(
+            u => new Date((u as any).created_at) >= previousPeriodStart && new Date((u as any).created_at) < periodStart
+          ).length;
+          
+          if (previousPeriodUsers > 0) {
+            lastMonthGrowth = Math.round(((currentPeriodUsers - previousPeriodUsers) / previousPeriodUsers) * 100);
+          } else if (currentPeriodUsers > 0) {
+            lastMonthGrowth = 100;
+          }
+        }
         
-        const recentUsers = usersWithRoles?.filter(
-          u => new Date((u as any).created_at) >= oneMonthAgo
-        ).length || 0;
-        
-        const lastMonthGrowth = totalUsers > 0 ? 
-          Math.round((recentUsers / totalUsers) * 100) : 0;
-        
-        // Usuários ativos últimos 7 dias
+        // Usuários ativos no período
         const uniqueActiveUsers = new Set(recentActivity?.map(a => (a as any).user_id)).size;
         
-        // Taxa de engajamento (usuários ativos / total de usuários)
-        const contentEngagementRate = totalUsers > 0 ? 
-          Math.round((uniqueActiveUsers / totalUsers) * 100) : 0;
+        // Taxa de engajamento baseada no total de usuários existentes
+        const allUsersCount = allUsers?.length || 1;
+        const contentEngagementRate = Math.round((uniqueActiveUsers / allUsersCount) * 100);
         
-        // Tempo médio de implementação
+        // Tempo médio de implementação para o período
         let averageImplementationTime = 0;
         if (completedProgress && completedProgress.length > 0) {
           const totalMinutes = completedProgress.reduce((acc, curr) => {
