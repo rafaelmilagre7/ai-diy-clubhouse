@@ -160,7 +160,7 @@ const WhatsAppTemplateTester = () => {
           <p><strong>Template:</strong> convite_viver_ia</p>
           <p><strong>Template ID:</strong> 1413982056507354</p>
           <p><strong>Language:</strong> pt_BR</p>
-          <p><strong>Variáveis:</strong> {{1}} = Nome, {{2}} = Link do convite</p>
+          <p><strong>Variáveis:</strong> {`{{1}} = Nome, {{2}} = Link do convite`}</p>
         </div>
       </CardContent>
     </Card>
