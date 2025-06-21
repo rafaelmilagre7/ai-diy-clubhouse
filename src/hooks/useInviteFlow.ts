@@ -1,267 +1,241 @@
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/auth';
-import { toast } from 'sonner';
 import { logger } from '@/utils/logger';
 
 interface InviteFlowResult {
   success: boolean;
-  message: string;
-  shouldRedirectToOnboarding?: boolean;
-  shouldRedirectToLogin?: boolean;
+  error?: string;
+  needsLogin?: boolean;
+  needsOnboarding?: boolean;
 }
 
 export const useInviteFlow = () => {
+  const { user, signUp, signIn } = useAuth();
   const [isProcessing, setIsProcessing] = useState(false);
-  const { signUp } = useAuth();
 
-  const checkUserExists = async (email: string): Promise<boolean> => {
+  const validateInvite = useCallback(async (token: string, email?: string) => {
     try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('email', email)
-        .single();
-
-      if (error && error.code !== 'PGRST116') {
-        console.error('[INVITE-FLOW] Erro ao verificar usuário:', error);
-        return false;
+      console.log('[INVITE-FLOW] Validando convite:', { token, email });
+      
+      if (!email) {
+        return { valid: false, message: 'Email é obrigatório para validação' };
       }
 
-      return !!data;
-    } catch (error) {
-      console.error('[INVITE-FLOW] Erro na verificação:', error);
-      return false;
-    }
-  };
-
-  const validateInvite = async (token: string, email: string) => {
-    try {
-      console.log('[INVITE-FLOW] Validando convite:', { token: token.substring(0, 8) + '...', email });
-      
       const { data, error } = await supabase.rpc('can_use_invite', {
         invite_token: token,
         user_email: email
       });
 
       if (error) {
-        console.error('[INVITE-FLOW] Erro ao validar convite:', error);
-        return { valid: false, message: error.message };
+        console.error('[INVITE-FLOW] Erro na validação:', error);
+        return { valid: false, message: 'Erro ao validar convite' };
       }
 
+      console.log('[INVITE-FLOW] Resultado da validação:', data);
       return data;
     } catch (error: any) {
       console.error('[INVITE-FLOW] Erro inesperado na validação:', error);
-      return { valid: false, message: error.message };
+      return { valid: false, message: 'Erro inesperado na validação' };
     }
-  };
+  }, []);
 
-  const waitForUserProfile = async (userId: string, maxAttempts: number = 10): Promise<boolean> => {
-    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-      console.log(`[INVITE-FLOW] Verificando perfil do usuário - tentativa ${attempt}/${maxAttempts}`);
-      
-      try {
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('id, email, name')
-          .eq('id', userId)
-          .single();
-
-        if (!error && data) {
-          console.log('[INVITE-FLOW] Perfil do usuário encontrado:', data);
-          return true;
-        }
-
-        if (error && error.code !== 'PGRST116') {
-          console.error('[INVITE-FLOW] Erro ao buscar perfil:', error);
-        }
-
-        // Aguardar antes da próxima tentativa
-        await new Promise(resolve => setTimeout(resolve, 1000));
-      } catch (error) {
-        console.error('[INVITE-FLOW] Erro inesperado ao verificar perfil:', error);
-      }
-    }
-
-    console.error('[INVITE-FLOW] Perfil do usuário não foi criado após múltiplas tentativas');
-    return false;
-  };
-
-  const applyInviteToUser = async (token: string, userId: string): Promise<InviteFlowResult> => {
+  const applyInviteToUser = useCallback(async (token: string, userId: string) => {
     try {
-      console.log('[INVITE-FLOW] Aplicando convite ao usuário:', { userId, token: token.substring(0, 8) + '...' });
-
-      const result = await supabase.rpc('use_invite', {
+      console.log('[INVITE-FLOW] Aplicando convite ao usuário:', { token, userId });
+      
+      const { data, error } = await supabase.rpc('use_invite', {
         invite_token: token,
         user_id: userId
       });
 
-      if (result.error) {
-        console.error('[INVITE-FLOW] Erro ao aplicar convite:', result.error);
-        return {
-          success: false,
-          message: 'Erro ao aplicar convite: ' + result.error.message
-        };
+      if (error) {
+        console.error('[INVITE-FLOW] Erro ao aplicar convite:', error);
+        return { success: false, error: error.message };
       }
 
-      const data = result.data;
-      if (data?.status === 'success') {
-        logger.info('Convite aplicado com sucesso', {
-          component: 'useInviteFlow',
-          userId,
-          token: token.substring(0, 8) + '...'
-        });
-
+      console.log('[INVITE-FLOW] Convite aplicado com sucesso:', data);
+      
+      // Verificar se o resultado é um objeto JSON válido
+      if (typeof data === 'object' && data !== null) {
         return {
-          success: true,
-          message: 'Convite aplicado com sucesso!',
-          shouldRedirectToOnboarding: true
-        };
-      } else {
-        return {
-          success: false,
-          message: data?.message || 'Erro ao aplicar convite'
+          success: data.status === 'success',
+          error: data.status !== 'success' ? data.message : undefined
         };
       }
+      
+      // Se data não é um objeto, tentar parsear como JSON
+      if (typeof data === 'string') {
+        try {
+          const parsed = JSON.parse(data);
+          return {
+            success: parsed.status === 'success',
+            error: parsed.status !== 'success' ? parsed.message : undefined
+          };
+        } catch (parseError) {
+          console.error('[INVITE-FLOW] Erro ao parsear resposta:', parseError);
+          return { success: false, error: 'Resposta inválida do servidor' };
+        }
+      }
+
+      return { success: false, error: 'Resposta inesperada do servidor' };
     } catch (error: any) {
       console.error('[INVITE-FLOW] Erro inesperado ao aplicar convite:', error);
-      return {
-        success: false,
-        message: 'Erro inesperado: ' + error.message
-      };
+      return { success: false, error: 'Erro inesperado ao aplicar convite' };
     }
-  };
+  }, []);
 
-  const applyInviteToExistingUser = async (token: string, userId: string): Promise<InviteFlowResult> => {
-    try {
-      console.log('[INVITE-FLOW] Aplicando convite a usuário existente:', { token: token.substring(0, 8) + '...', userId });
+  const waitForProfile = useCallback(async (userId: string, maxAttempts = 10) => {
+    console.log('[INVITE-FLOW] Aguardando criação do perfil para:', userId);
+    
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+      try {
+        const { data: profile, error } = await supabase
+          .from('profiles')
+          .select('id, email, role_id')
+          .eq('id', userId)
+          .single();
 
-      // Verificar se o usuário já tem perfil
-      const profileExists = await waitForUserProfile(userId, 3);
-      if (!profileExists) {
-        return {
-          success: false,
-          message: 'Perfil do usuário não encontrado. Faça login primeiro.'
-        };
+        if (!error && profile) {
+          console.log('[INVITE-FLOW] Perfil encontrado na tentativa', attempt, ':', profile);
+          return { success: true, profile };
+        }
+
+        console.log('[INVITE-FLOW] Perfil não encontrado na tentativa', attempt, 'aguardando...');
+        
+        // Aguardar antes da próxima tentativa (progressivamente mais tempo)
+        await new Promise(resolve => setTimeout(resolve, attempt * 500));
+        
+      } catch (error: any) {
+        console.error('[INVITE-FLOW] Erro ao verificar perfil na tentativa', attempt, ':', error);
       }
-
-      return await applyInviteToUser(token, userId);
-    } catch (error: any) {
-      console.error('[INVITE-FLOW] Erro inesperado:', error);
-      return {
-        success: false,
-        message: 'Erro inesperado: ' + error.message
-      };
     }
-  };
 
-  const registerWithInvite = async (
-    email: string, 
-    password: string, 
-    name: string, 
-    token: string
+    return { success: false, error: 'Perfil não foi criado dentro do tempo esperado' };
+  }, []);
+
+  const processInviteRegistration = useCallback(async (
+    token: string,
+    email: string,
+    password: string,
+    name?: string
   ): Promise<InviteFlowResult> => {
+    setIsProcessing(true);
+    
     try {
-      setIsProcessing(true);
-      console.log('[INVITE-FLOW] Iniciando registro com convite:', { email, name, token: token.substring(0, 8) + '...' });
-
-      // 1. Verificar se usuário já existe
-      const userExists = await checkUserExists(email);
-      if (userExists) {
-        console.log('[INVITE-FLOW] Usuário já existe, precisa fazer login');
-        return {
-          success: false,
-          message: 'Esta conta já existe. Faça login para aplicar o convite.',
-          shouldRedirectToLogin: true
-        };
+      console.log('[INVITE-FLOW] Iniciando processo de registro com convite');
+      
+      // 1. Validar convite primeiro
+      const validation = await validateInvite(token, email);
+      if (!validation.valid) {
+        return { success: false, error: validation.message };
       }
 
-      // 2. Validar convite antes de criar a conta
-      const inviteValidation = await validateInvite(token, email);
-      if (!inviteValidation.valid) {
-        return {
-          success: false,
-          message: inviteValidation.message || 'Convite inválido'
-        };
-      }
-
-      console.log('[INVITE-FLOW] Convite validado, criando conta:', { email, name });
-
-      // 3. Criar conta nova SEM metadados do convite (para evitar processamento automático)
-      const { data: authData, error: signUpError } = await signUp(email, password, {
-        name: name.trim(),
-        full_name: name.trim()
-        // NÃO incluir invite_token aqui para evitar processamento automático
+      // 2. Criar conta
+      console.log('[INVITE-FLOW] Criando conta do usuário');
+      const { error: signUpError } = await signUp(email, password, {
+        name,
+        invite_token: token
       });
 
       if (signUpError) {
         console.error('[INVITE-FLOW] Erro no registro:', signUpError);
-        
-        if (signUpError.message?.includes('User already registered')) {
-          return {
-            success: false,
-            message: 'Esta conta já existe. Faça login para aplicar o convite.',
-            shouldRedirectToLogin: true
-          };
-        }
-        
-        return {
-          success: false,
-          message: 'Erro ao criar conta: ' + signUpError.message
-        };
+        return { success: false, error: signUpError.message };
       }
 
-      if (!authData?.user?.id) {
-        return {
-          success: false,
-          message: 'Erro: usuário não foi criado corretamente'
-        };
-      }
-
-      console.log('[INVITE-FLOW] Conta criada, aguardando perfil ser criado...');
-
-      // 4. Aguardar o perfil ser criado pelo trigger
-      const profileCreated = await waitForUserProfile(authData.user.id);
-      if (!profileCreated) {
-        return {
-          success: false,
-          message: 'Erro: perfil do usuário não foi criado. Tente novamente.'
-        };
-      }
-
-      console.log('[INVITE-FLOW] Perfil criado, aplicando convite...');
-
-      // 5. Aplicar convite agora que o usuário existe
-      const inviteResult = await applyInviteToUser(token, authData.user.id);
+      // 3. Fazer login para obter o usuário autenticado
+      console.log('[INVITE-FLOW] Fazendo login após registro');
+      const { error: signInError } = await signIn(email, password);
       
-      if (inviteResult.success) {
-        logger.info('Conta criada com sucesso via convite', {
-          component: 'useInviteFlow',
-          email,
-          userId: authData.user.id,
-          token: token.substring(0, 8) + '...'
-        });
+      if (signInError) {
+        console.error('[INVITE-FLOW] Erro no login após registro:', signInError);
+        return { success: false, error: 'Conta criada, mas erro no login. Tente fazer login manualmente.' };
       }
 
-      return inviteResult;
+      // 4. Aguardar a criação do perfil
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // 5. Obter sessão atual para pegar o user ID
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user) {
+        return { success: false, error: 'Usuário não autenticado após login' };
+      }
+
+      // 6. Aguardar perfil ser criado
+      const profileResult = await waitForProfile(session.user.id);
+      if (!profileResult.success) {
+        return { success: false, error: profileResult.error };
+      }
+
+      // 7. Aplicar convite ao usuário
+      console.log('[INVITE-FLOW] Aplicando convite ao usuário autenticado');
+      const applyResult = await applyInviteToUser(token, session.user.id);
+      
+      if (!applyResult.success) {
+        return { success: false, error: applyResult.error };
+      }
+
+      console.log('[INVITE-FLOW] Processo completo de registro com convite finalizado com sucesso');
+      
+      logger.info('Convite processado com sucesso', {
+        component: 'useInviteFlow',
+        userId: session.user.id,
+        email
+      });
+
+      return { 
+        success: true, 
+        needsOnboarding: true
+      };
 
     } catch (error: any) {
-      console.error('[INVITE-FLOW] Erro inesperado no registro:', error);
-      return {
-        success: false,
-        message: 'Erro inesperado: ' + error.message
-      };
+      console.error('[INVITE-FLOW] Erro inesperado no processo:', error);
+      logger.error('Erro no processo de convite', error, {
+        component: 'useInviteFlow'
+      });
+      return { success: false, error: 'Erro inesperado durante o processo' };
     } finally {
       setIsProcessing(false);
     }
-  };
+  }, [validateInvite, signUp, signIn, applyInviteToUser, waitForProfile]);
+
+  const processInviteForExistingUser = useCallback(async (token: string): Promise<InviteFlowResult> => {
+    if (!user) {
+      return { success: false, error: 'Usuário não autenticado', needsLogin: true };
+    }
+
+    setIsProcessing(true);
+    
+    try {
+      console.log('[INVITE-FLOW] Processando convite para usuário existente:', user.id);
+      
+      // Aplicar convite diretamente
+      const result = await applyInviteToUser(token, user.id);
+      
+      if (!result.success) {
+        return { success: false, error: result.error };
+      }
+
+      console.log('[INVITE-FLOW] Convite aplicado para usuário existente com sucesso');
+      
+      return { 
+        success: true,
+        needsOnboarding: false // Usuário existente não precisa de onboarding
+      };
+
+    } catch (error: any) {
+      console.error('[INVITE-FLOW] Erro ao processar convite para usuário existente:', error);
+      return { success: false, error: 'Erro inesperado ao processar convite' };
+    } finally {
+      setIsProcessing(false);
+    }
+  }, [user, applyInviteToUser]);
 
   return {
-    isProcessing,
-    checkUserExists,
     validateInvite,
-    applyInviteToExistingUser,
-    registerWithInvite
+    processInviteRegistration,
+    processInviteForExistingUser,
+    isProcessing
   };
 };

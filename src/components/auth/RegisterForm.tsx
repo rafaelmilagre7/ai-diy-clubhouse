@@ -1,233 +1,196 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { toast } from 'sonner';
-import { Eye, EyeOff, Mail, Lock, User } from 'lucide-react';
-import { supabase } from '@/lib/supabase';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { AlertCircle, Eye, EyeOff } from 'lucide-react';
+import { useAuth } from '@/contexts/auth';
 
 interface RegisterFormProps {
+  onSuccess?: () => void;
+  onError?: (error: string) => void;
+  defaultEmail?: string;
   inviteToken?: string;
-  prefilledEmail?: string;
-  onSuccess?: (data: { email: string; password: string; name: string }) => void;
-  isLoading?: boolean;
 }
 
-export const RegisterForm: React.FC<RegisterFormProps> = ({ 
-  inviteToken, 
-  prefilledEmail,
+export const RegisterForm: React.FC<RegisterFormProps> = ({
   onSuccess,
-  isLoading = false
+  onError,
+  defaultEmail = '',
+  inviteToken
 }) => {
-  const [email, setEmail] = useState(prefilledEmail || '');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [name, setName] = useState('');
+  const { signUp } = useAuth();
+  const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [formData, setFormData] = useState({
+    email: defaultEmail,
+    password: '',
+    confirmPassword: '',
+    name: ''
+  });
+  const [error, setError] = useState('');
+
+  const validateForm = () => {
+    if (!formData.email || !formData.password || !formData.confirmPassword) {
+      setError('Todos os campos são obrigatórios');
+      return false;
+    }
+
+    if (formData.password !== formData.confirmPassword) {
+      setError('As senhas não coincidem');
+      return false;
+    }
+
+    if (formData.password.length < 6) {
+      setError('A senha deve ter pelo menos 6 caracteres');
+      return false;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email)) {
+      setError('Email inválido');
+      return false;
+    }
+
+    return true;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (password !== confirmPassword) {
-      toast.error('As senhas não coincidem.');
+    if (!validateForm()) {
       return;
     }
 
-    if (password.length < 6) {
-      toast.error('A senha deve ter pelo menos 6 caracteres.');
-      return;
-    }
-
-    if (!name.trim()) {
-      toast.error('Nome é obrigatório.');
-      return;
-    }
-
-    if (!email.trim()) {
-      toast.error('Email é obrigatório.');
-      return;
-    }
-
-    // Se há um callback personalizado (para convites), usar ele
-    if (onSuccess) {
-      onSuccess({
-        email: email.trim(),
-        password,
-        name: name.trim()
-      });
-      return;
-    }
-
-    // Caso contrário, fazer registro padrão (sem convite)
-    // Este código permanece igual ao original para compatibilidade
     setIsLoading(true);
+    setError('');
 
     try {
-      // Limpeza de estado antes do registro
-      try {
-        await supabase.auth.signOut({ scope: 'global' });
-      } catch (err) {
-        // Continuar mesmo se falhar
-      }
-
-      const redirectUrl = `${window.location.origin}/`;
-
-      const signUpOptions: any = {
-        email: email.trim(),
-        password,
-        options: {
-          emailRedirectTo: redirectUrl,
-          data: {
-            name: name.trim(),
-            full_name: name.trim(),
-          }
-        }
+      const metadata = {
+        name: formData.name || undefined,
+        invite_token: inviteToken || undefined
       };
 
-      // Se há um token de convite, incluir nos metadados
-      if (inviteToken) {
-        signUpOptions.options.data.invite_token = inviteToken;
+      const { error: signUpError } = await signUp(
+        formData.email,
+        formData.password,
+        metadata
+      );
+
+      if (signUpError) {
+        console.error('[REGISTER-FORM] Erro no registro:', signUpError);
+        const errorMessage = signUpError.message === 'User already registered'
+          ? 'Este email já está cadastrado. Tente fazer login.'
+          : `Erro no registro: ${signUpError.message}`;
+        
+        setError(errorMessage);
+        onError?.(errorMessage);
+        return;
       }
 
-      console.log('[REGISTER-FORM] Tentando registrar usuário:', {
-        email: email.trim(),
-        hasInviteToken: !!inviteToken
-      });
+      console.log('[REGISTER-FORM] Registro realizado com sucesso');
+      onSuccess?.();
 
-      const { data, error } = await supabase.auth.signUp(signUpOptions);
-
-      if (error) {
-        console.error('[REGISTER-FORM] Erro no signUp:', error);
-        throw error;
-      }
-
-      console.log('[REGISTER-FORM] SignUp bem-sucedido:', {
-        user: !!data.user,
-        session: !!data.session
-      });
-
-      if (data.user) {
-        if (inviteToken) {
-          toast.success('Conta criada com sucesso! Você será redirecionado em breve.');
-          // Para convites, redirecionar automaticamente após sucesso
-          setTimeout(() => {
-            window.location.href = '/dashboard';
-          }, 2000);
-        } else {
-          toast.success('Conta criada com sucesso! Verifique seu email para confirmar.');
-        }
-      }
-    } catch (error: any) {
-      console.error('[REGISTER-FORM] Erro no registro:', error);
-      
-      let errorMessage = 'Erro ao criar conta. Tente novamente.';
-      
-      if (error.message?.includes('User already registered')) {
-        errorMessage = 'Este email já está cadastrado.';
-      } else if (error.message?.includes('Password should be at least')) {
-        errorMessage = 'A senha deve ter pelo menos 6 caracteres.';
-      } else if (error.message?.includes('Invalid email')) {
-        errorMessage = 'Email inválido.';
-      }
-      
-      toast.error(errorMessage);
+    } catch (err: any) {
+      console.error('[REGISTER-FORM] Erro inesperado:', err);
+      const errorMessage = 'Erro inesperado durante o registro';
+      setError(errorMessage);
+      onError?.(errorMessage);
     } finally {
       setIsLoading(false);
     }
   };
 
+  const handleInputChange = (field: keyof typeof formData) => (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: e.target.value
+    }));
+    
+    // Limpar erro ao digitar
+    if (error) {
+      setError('');
+    }
+  };
+
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+      {error && (
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
+
       <div className="space-y-2">
-        <Label htmlFor="name" className="text-gray-200">Nome completo</Label>
-        <div className="relative">
-          <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-          <Input
-            id="name"
-            type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            className="pl-10 bg-gray-700 border-gray-600 text-white placeholder-gray-400"
-            placeholder="Seu nome completo"
-            required
-            disabled={isLoading}
-          />
-        </div>
+        <Label htmlFor="name">Nome (opcional)</Label>
+        <Input
+          id="name"
+          type="text"
+          value={formData.name}
+          onChange={handleInputChange('name')}
+          placeholder="Seu nome completo"
+        />
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="email" className="text-gray-200">Email</Label>
-        <div className="relative">
-          <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-          <Input
-            id="email"
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="pl-10 bg-gray-700 border-gray-600 text-white placeholder-gray-400"
-            placeholder="seu@email.com"
-            required
-            disabled={isLoading || !!prefilledEmail}
-            readOnly={!!prefilledEmail}
-          />
-        </div>
+        <Label htmlFor="email">Email *</Label>
+        <Input
+          id="email"
+          type="email"
+          value={formData.email}
+          onChange={handleInputChange('email')}
+          placeholder="seu@email.com"
+          required
+          disabled={!!defaultEmail}
+        />
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="password" className="text-gray-200">Senha</Label>
+        <Label htmlFor="password">Senha *</Label>
         <div className="relative">
-          <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
           <Input
             id="password"
             type={showPassword ? 'text' : 'password'}
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="pl-10 pr-10 bg-gray-700 border-gray-600 text-white placeholder-gray-400"
+            value={formData.password}
+            onChange={handleInputChange('password')}
             placeholder="Mínimo 6 caracteres"
             required
-            disabled={isLoading}
-            minLength={6}
           />
-          <button
+          <Button
             type="button"
+            variant="ghost"
+            size="sm"
+            className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
             onClick={() => setShowPassword(!showPassword)}
-            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-300"
-            disabled={isLoading}
           >
-            {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-          </button>
+            {showPassword ? (
+              <EyeOff className="h-4 w-4" />
+            ) : (
+              <Eye className="h-4 w-4" />
+            )}
+          </Button>
         </div>
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="confirmPassword" className="text-gray-200">Confirmar senha</Label>
-        <div className="relative">
-          <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-          <Input
-            id="confirmPassword"
-            type={showConfirmPassword ? 'text' : 'password'}
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-            className="pl-10 pr-10 bg-gray-700 border-gray-600 text-white placeholder-gray-400"
-            placeholder="Repita sua senha"
-            required
-            disabled={isLoading}
-          />
-          <button
-            type="button"
-            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-300"
-            disabled={isLoading}
-          >
-            {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-          </button>
-        </div>
+        <Label htmlFor="confirmPassword">Confirmar Senha *</Label>
+        <Input
+          id="confirmPassword"
+          type="password"
+          value={formData.confirmPassword}
+          onChange={handleInputChange('confirmPassword')}
+          placeholder="Digite a senha novamente"
+          required
+        />
       </div>
 
       <Button
         type="submit"
-        className="w-full bg-viverblue hover:bg-viverblue/90"
+        className="w-full"
         disabled={isLoading}
       >
         {isLoading ? 'Criando conta...' : 'Criar conta'}
@@ -235,3 +198,5 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
     </form>
   );
 };
+
+export default RegisterForm;
