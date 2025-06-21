@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -66,11 +65,22 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
         signUpOptions.options.data.invite_token = inviteToken;
       }
 
+      console.log('[REGISTER-FORM] Tentando registrar usuário:', {
+        email: email.trim(),
+        hasInviteToken: !!inviteToken
+      });
+
       const { data, error } = await supabase.auth.signUp(signUpOptions);
 
       if (error) {
+        console.error('[REGISTER-FORM] Erro no signUp:', error);
         throw error;
       }
+
+      console.log('[REGISTER-FORM] SignUp bem-sucedido:', {
+        user: !!data.user,
+        session: !!data.session
+      });
 
       if (data.user) {
         if (inviteToken) {
@@ -84,7 +94,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
         }
       }
     } catch (error: any) {
-      console.error('Erro no registro:', error);
+      console.error('[REGISTER-FORM] Erro no registro:', error);
       
       let errorMessage = 'Erro ao criar conta. Tente novamente.';
       
