@@ -50,6 +50,7 @@ export interface OnboardingData {
   completedAt?: string;
   startedAt?: string;
   updatedAt?: string;
+  fromInvite?: boolean; // Nova propriedade para identificar se veio de convite
   
   // IA Interativa - mensagens personalizadas para cada etapa
   aiMessage1?: string;
