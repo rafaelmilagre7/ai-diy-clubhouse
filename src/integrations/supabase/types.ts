@@ -2359,6 +2359,7 @@ export type Database = {
       }
       onboarding_backups: {
         Row: {
+          additional_data: Json | null
           backup_type: string
           created_at: string
           id: string
@@ -2367,6 +2368,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          additional_data?: Json | null
           backup_type?: string
           created_at?: string
           id?: string
@@ -2375,6 +2377,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          additional_data?: Json | null
           backup_type?: string
           created_at?: string
           id?: string
@@ -4531,6 +4534,10 @@ export type Database = {
       }
     }
     Functions: {
+      admin_complete_user_cleanup: {
+        Args: { user_email: string }
+        Returns: Json
+      }
       admin_reset_user: {
         Args: { user_email: string }
         Returns: Json

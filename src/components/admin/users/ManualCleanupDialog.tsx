@@ -14,22 +14,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { LoadingSpinner } from "@/components/common/LoadingSpinner";
-import { resetUserByEmail } from "@/utils/adminUserReset";
+import { completeUserCleanup, type CompleteCleanupResult } from "@/utils/adminCompleteUserCleanup";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle, AlertTriangle, Trash2 } from "lucide-react";
+import { CheckCircle, AlertTriangle, Trash2, Users, Database } from "lucide-react";
 
 interface ManualCleanupDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess?: () => void;
-}
-
-interface ResetResult {
-  success: boolean;
-  message: string;
-  backup_records?: number;
-  user_id?: string;
-  reset_timestamp?: string;
 }
 
 export const ManualCleanupDialog: React.FC<ManualCleanupDialogProps> = ({
@@ -39,16 +31,16 @@ export const ManualCleanupDialog: React.FC<ManualCleanupDialogProps> = ({
 }) => {
   const [email, setEmail] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
-  const [result, setResult] = useState<ResetResult | null>(null);
+  const [result, setResult] = useState<CompleteCleanupResult | null>(null);
 
-  const handleCleanup = async () => {
+  const handleCompleteCleanup = async () => {
     if (!email.trim()) return;
     
     setIsProcessing(true);
     setResult(null);
     
     try {
-      const cleanupResult = await resetUserByEmail(email.trim());
+      const cleanupResult = await completeUserCleanup(email.trim());
       setResult(cleanupResult);
       
       if (cleanupResult.success && onSuccess) {
@@ -57,10 +49,10 @@ export const ManualCleanupDialog: React.FC<ManualCleanupDialogProps> = ({
           onOpenChange(false);
           setEmail('');
           setResult(null);
-        }, 2000);
+        }, 3000);
       }
     } catch (error) {
-      console.error('Erro na limpeza:', error);
+      console.error('Erro na limpeza completa:', error);
     } finally {
       setIsProcessing(false);
     }
@@ -80,16 +72,26 @@ export const ManualCleanupDialog: React.FC<ManualCleanupDialogProps> = ({
         <AlertDialogHeader>
           <AlertDialogTitle className="flex items-center gap-2">
             <Trash2 className="h-5 w-5 text-red-600" />
-            🧹 Limpeza Manual Completa
+            🗑️ Limpeza Completa de Usuário
           </AlertDialogTitle>
           <AlertDialogDescription className="space-y-4">
-            <p>
-              Esta ferramenta faz a limpeza completa de um usuário específico por email, 
-              liberando o email para novos convites.
-            </p>
+            <div className="p-4 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800 rounded-lg">
+              <div className="flex items-center gap-2 mb-2">
+                <AlertTriangle className="h-4 w-4 text-red-600" />
+                <p className="text-sm font-medium text-red-800 dark:text-red-200">
+                  ⚠️ ATENÇÃO: Exclusão Total e Irreversível
+                </p>
+              </div>
+              <ul className="text-xs text-red-700 dark:text-red-300 space-y-1">
+                <li>• Remove COMPLETAMENTE o usuário do sistema</li>
+                <li>• Exclui da tabela auth.users (não pode fazer login)</li>
+                <li>• Libera o email para novos convites</li>
+                <li>• Backup automático antes da exclusão</li>
+              </ul>
+            </div>
             
             <div className="space-y-2">
-              <Label htmlFor="email">Email do usuário:</Label>
+              <Label htmlFor="email">Email do usuário para exclusão total:</Label>
               <Input
                 id="email"
                 type="email"
@@ -119,16 +121,32 @@ export const ManualCleanupDialog: React.FC<ManualCleanupDialogProps> = ({
                   </p>
                 </div>
                 
-                {result.success && result.backup_records && (
-                  <div className="mt-2 flex items-center gap-2">
-                    <Badge variant="outline" className="text-xs">
-                      ✅ {result.backup_records} registro(s) salvos em backup
-                    </Badge>
-                    {result.user_id && (
+                {result.success && (
+                  <div className="mt-3 space-y-2">
+                    <div className="flex items-center gap-2">
+                      <Database className="h-3 w-3" />
                       <Badge variant="outline" className="text-xs">
-                        ID: {result.user_id.substring(0, 8)}...
+                        📦 {result.details.backupRecords} backup(s) criado(s)
                       </Badge>
+                      {result.details.authUserDeleted && (
+                        <Badge variant="outline" className="text-xs bg-green-100">
+                          <Users className="h-3 w-3 mr-1" />
+                          Auth removido
+                        </Badge>
+                      )}
+                    </div>
+                    
+                    {result.details.tablesAffected.length > 0 && (
+                      <div className="text-xs text-muted-foreground">
+                        📊 Tabelas afetadas: {result.details.tablesAffected.join(', ')}
+                      </div>
                     )}
+                  </div>
+                )}
+
+                {result.details.errors.length > 0 && (
+                  <div className="mt-2 text-xs text-red-600 dark:text-red-400">
+                    ⚠️ Erros: {result.details.errors.map(e => e.operation).join(', ')}
                   </div>
                 )}
               </div>
@@ -142,7 +160,7 @@ export const ManualCleanupDialog: React.FC<ManualCleanupDialogProps> = ({
           <AlertDialogAction
             onClick={(e) => {
               e.preventDefault();
-              handleCleanup();
+              handleCompleteCleanup();
             }}
             disabled={isProcessing || !email.trim()}
             className="bg-red-600 hover:bg-red-700"
@@ -150,10 +168,10 @@ export const ManualCleanupDialog: React.FC<ManualCleanupDialogProps> = ({
             {isProcessing ? (
               <>
                 <LoadingSpinner className="mr-2 h-4 w-4" />
-                Processando...
+                Removendo Completamente...
               </>
             ) : (
-              "🧹 Limpar Completamente"
+              "🗑️ EXCLUIR COMPLETAMENTE"
             )}
           </AlertDialogAction>
         </AlertDialogFooter>
