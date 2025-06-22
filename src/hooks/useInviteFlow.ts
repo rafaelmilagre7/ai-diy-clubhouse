@@ -22,22 +22,30 @@ export const useInviteFlow = () => {
       };
     }
 
+    if (!user?.id) {
+      return {
+        success: false,
+        message: 'Usuário deve estar logado para aceitar convite'
+      };
+    }
+
     setIsProcessing(true);
 
     try {
-      console.log('[USE-INVITE-FLOW] Iniciando aceitação de convite:', token);
+      console.log('[USE-INVITE-FLOW] Usando função use_invite com token:', token.substring(0, 8) + '...');
 
-      // Chamar a função do Supabase para processar o convite
-      const { data, error } = await supabase.rpc('accept_invite', {
-        p_token: token
+      // Usar a função use_invite que existe no banco
+      const { data, error } = await supabase.rpc('use_invite', {
+        invite_token: token,
+        user_id: user.id
       });
 
-      console.log('[USE-INVITE-FLOW] Resultado da aceitação:', { data, error });
+      console.log('[USE-INVITE-FLOW] Resultado de use_invite:', { data, error });
 
       if (error) {
-        console.error('[USE-INVITE-FLOW] Erro ao aceitar convite:', error);
+        console.error('[USE-INVITE-FLOW] Erro ao usar convite:', error);
         
-        const errorMessage = error.message.includes('not found') || error.message.includes('expired')
+        const errorMessage = error.message.includes('não encontrado') || error.message.includes('inválido')
           ? 'Convite não encontrado, expirado ou já utilizado'
           : `Erro ao processar convite: ${error.message}`;
           
@@ -47,36 +55,41 @@ export const useInviteFlow = () => {
         };
       }
 
-      if (!data || data.length === 0) {
+      // Verificar se a resposta indica sucesso
+      if (!data || (typeof data === 'object' && data.status === 'error')) {
+        const errorMsg = (typeof data === 'object' && data.message) || 'Convite não encontrado ou já utilizado';
         return {
           success: false,
-          message: 'Convite não encontrado ou já utilizado'
+          message: errorMsg
         };
       }
 
-      // Recarregar perfil do usuário se estiver logado
-      if (user) {
-        const { data: profileData } = await supabase
-          .from('profiles')
-          .select(`
-            *,
-            user_roles:role_id (
-              id,
-              name,
-              description,
-              permissions,
-              is_system
-            )
-          `)
-          .eq('id', user.id)
-          .single();
+      // Recarregar perfil do usuário para refletir mudanças de role
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select(`
+          *,
+          user_roles:role_id (
+            id,
+            name,
+            description,
+            permissions,
+            is_system
+          )
+        `)
+        .eq('id', user.id)
+        .single();
 
-        if (profileData) {
-          setProfile({
-            ...profileData as any,
-            email: profileData.email || user.email || '',
-          } as any);
-        }
+      if (profileData) {
+        console.log('[USE-INVITE-FLOW] Atualizando perfil com novos dados:', {
+          email: profileData.email || user.email,
+          role: profileData.user_roles?.name
+        });
+        
+        setProfile({
+          ...profileData as any,
+          email: profileData.email || user.email || '',
+        } as any);
       }
 
       logger.info('Convite aceito com sucesso', {
@@ -107,9 +120,9 @@ export const useInviteFlow = () => {
   };
 
   const applyInviteToExistingUser = async (token: string): Promise<InviteFlowResult> => {
-    console.log('[USE-INVITE-FLOW] Aplicando convite a usuário existente:', token);
+    console.log('[USE-INVITE-FLOW] Aplicando convite a usuário existente:', token.substring(0, 8) + '...');
     
-    // Reutilizar a mesma lógica
+    // Usar a mesma lógica do acceptInvite
     return await acceptInvite(token);
   };
 

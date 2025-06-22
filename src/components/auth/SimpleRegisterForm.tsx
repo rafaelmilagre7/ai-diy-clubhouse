@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AlertCircle, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '@/contexts/auth';
+import { useInviteFlow } from '@/hooks/useInviteFlow';
 
 interface SimpleRegisterFormProps {
   onSuccess?: () => void;
@@ -21,6 +22,7 @@ export const SimpleRegisterForm: React.FC<SimpleRegisterFormProps> = ({
   inviteToken
 }) => {
   const { signUp } = useAuth();
+  const { acceptInvite } = useInviteFlow();
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
@@ -72,6 +74,11 @@ export const SimpleRegisterForm: React.FC<SimpleRegisterFormProps> = ({
         invite_token: inviteToken || undefined
       };
 
+      console.log('[SIMPLE-REGISTER-FORM] Iniciando registro com metadata:', {
+        name: metadata.name,
+        hasInviteToken: !!metadata.invite_token
+      });
+
       const { error: signUpError } = await signUp(
         formData.email,
         formData.password,
@@ -90,6 +97,28 @@ export const SimpleRegisterForm: React.FC<SimpleRegisterFormProps> = ({
       }
 
       console.log('[SIMPLE-REGISTER-FORM] Registro realizado com sucesso');
+
+      // Se há token de convite, aguardar um pouco e tentar aplicá-lo
+      if (inviteToken) {
+        console.log('[SIMPLE-REGISTER-FORM] Processando convite após registro...');
+        
+        // Aguardar um pouco para garantir que o usuário foi criado
+        setTimeout(async () => {
+          try {
+            const result = await acceptInvite(inviteToken);
+            if (result.success) {
+              console.log('[SIMPLE-REGISTER-FORM] Convite aplicado com sucesso');
+            } else {
+              console.warn('[SIMPLE-REGISTER-FORM] Falha ao aplicar convite:', result.message);
+              // Não bloquear o fluxo por erro do convite
+            }
+          } catch (error) {
+            console.error('[SIMPLE-REGISTER-FORM] Erro ao aplicar convite:', error);
+            // Não bloquear o fluxo por erro do convite
+          }
+        }, 2000);
+      }
+
       onSuccess?.();
 
     } catch (err: any) {
@@ -118,9 +147,14 @@ export const SimpleRegisterForm: React.FC<SimpleRegisterFormProps> = ({
   return (
     <div className="space-y-6">
       <div className="text-center space-y-2">
-        <h2 className="text-2xl font-bold text-gray-900">Complete seu cadastro</h2>
+        <h2 className="text-2xl font-bold text-gray-900">
+          {inviteToken ? 'Aceitar convite' : 'Complete seu cadastro'}
+        </h2>
         <p className="text-gray-600">
-          Preencha os dados básicos. Após o cadastro, você completará seu perfil no onboarding.
+          {inviteToken 
+            ? 'Preencha seus dados para aceitar o convite e acessar a plataforma.'
+            : 'Preencha os dados básicos. Após o cadastro, você completará seu perfil no onboarding.'
+          }
         </p>
       </div>
 
@@ -201,11 +235,17 @@ export const SimpleRegisterForm: React.FC<SimpleRegisterFormProps> = ({
           className="w-full"
           disabled={isLoading}
         >
-          {isLoading ? 'Criando conta...' : 'Criar conta e continuar'}
+          {isLoading 
+            ? (inviteToken ? 'Aceitando convite...' : 'Criando conta...') 
+            : (inviteToken ? 'Aceitar convite e continuar' : 'Criar conta e continuar')
+          }
         </Button>
 
         <div className="text-center text-sm text-gray-500">
-          Após criar sua conta, você será direcionado para completar seu perfil.
+          {inviteToken 
+            ? 'Após aceitar o convite, você será direcionado para completar seu perfil.'
+            : 'Após criar sua conta, você será direcionado para completar seu perfil.'
+          }
         </div>
       </form>
     </div>
