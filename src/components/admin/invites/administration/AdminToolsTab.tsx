@@ -2,186 +2,116 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { 
   Trash2, 
-  AlertTriangle, 
+  RotateCcw, 
+  Users, 
+  UserX, 
   Database, 
-  RefreshCw, 
-  Settings,
-  Shield,
-  Users,
-  Mail
+  AlertTriangle,
+  CheckCircle,
+  Clock,
+  BarChart3
 } from 'lucide-react';
-import { ForceDeleteDialog } from '@/components/admin/users/ForceDeleteDialog';
-import { ManualCleanupDialog } from '@/components/admin/users/ManualCleanupDialog';
 import { toast } from 'sonner';
-import { supabase } from '@/integrations/supabase/client';
+import { ManualCleanupDialog } from '@/components/admin/users/ManualCleanupDialog';
+import { useInviteCleanup } from '@/hooks/admin/invites/useInviteCleanup';
+import { useAnalyticsReset } from '@/hooks/admin/analytics/useAnalyticsReset';
 
 interface AdminToolsTabProps {
   onRefresh?: () => void;
 }
 
 export const AdminToolsTab: React.FC<AdminToolsTabProps> = ({ onRefresh }) => {
-  const [forceDeleteOpen, setForceDeleteOpen] = useState(false);
   const [manualCleanupOpen, setManualCleanupOpen] = useState(false);
-  const [isCleaningExpired, setIsCleaningExpired] = useState(false);
-  const [isResettingStats, setIsResettingStats] = useState(false);
+  
+  const { 
+    cleanupExpiredInvites, 
+    isLoading: isCleaningInvites, 
+    stats: cleanupStats 
+  } = useInviteCleanup();
+  
+  const { 
+    resetAnalyticsData, 
+    isResetting: isResettingAnalytics, 
+    resetStats: analyticsResetStats 
+  } = useAnalyticsReset();
 
-  const handleCleanExpiredInvites = async () => {
+  const handleCleanupExpiredInvites = async () => {
     try {
-      setIsCleaningExpired(true);
+      const stats = await cleanupExpiredInvites();
       
-      // Buscar convites expirados (mais de 30 dias)
-      const thirtyDaysAgo = new Date();
-      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-      
-      const { data: expiredInvites, error: fetchError } = await supabase
-        .from('invites')
-        .select('id, email, created_at')
-        .lt('created_at', thirtyDaysAgo.toISOString())
-        .is('used_at', null);
-
-      if (fetchError) throw fetchError;
-
-      if (!expiredInvites || expiredInvites.length === 0) {
-        toast.success('Nenhum convite expirado encontrado');
-        return;
+      if (stats.deletedInvites > 0) {
+        toast.success(`🧹 Limpeza concluída!`, {
+          description: `${stats.deletedInvites} convites expirados removidos`,
+          duration: 5000
+        });
+      } else {
+        toast.info('✨ Sistema limpo!', {
+          description: 'Nenhum convite expirado encontrado',
+          duration: 3000
+        });
       }
-
-      // Deletar convites expirados
-      const { error: deleteError } = await supabase
-        .from('invites')
-        .delete()
-        .in('id', expiredInvites.map(inv => inv.id));
-
-      if (deleteError) throw deleteError;
-
-      toast.success(`${expiredInvites.length} convites expirados removidos com sucesso`);
       
       if (onRefresh) {
         onRefresh();
       }
-      
-    } catch (error: any) {
-      console.error('Erro ao limpar convites expirados:', error);
-      toast.error('Erro ao limpar convites expirados');
-    } finally {
-      setIsCleaningExpired(false);
+    } catch (error) {
+      toast.error('❌ Erro na limpeza', {
+        description: 'Falha ao limpar convites expirados',
+        duration: 5000
+      });
     }
   };
 
-  const handleResetAnalyticsStats = async () => {
+  const handleResetAnalytics = async () => {
     try {
-      setIsResettingStats(true);
+      const stats = await resetAnalyticsData();
       
-      // Reset de estatísticas de analytics (simulado)
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      toast.success('Estatísticas de analytics resetadas com sucesso');
+      toast.success('📊 Analytics resetado!', {
+        description: `${stats.backupRecords} registros salvos em backup antes da limpeza`,
+        duration: 5000
+      });
       
       if (onRefresh) {
         onRefresh();
       }
-      
-    } catch (error: any) {
-      console.error('Erro ao resetar estatísticas:', error);
-      toast.error('Erro ao resetar estatísticas');
-    } finally {
-      setIsResettingStats(false);
+    } catch (error) {
+      toast.error('❌ Erro no reset', {
+        description: 'Falha ao resetar dados de analytics',
+        duration: 5000
+      });
     }
   };
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold flex items-center gap-2">
-            <Settings className="h-6 w-6" />
-            Administração do Sistema
-          </h2>
-          <p className="text-muted-foreground">
-            Ferramentas administrativas e operações avançadas
-          </p>
-        </div>
-        <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">
-          <Shield className="h-3 w-3 mr-1" />
-          Área Restrita
-        </Badge>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         
-        {/* Exclusão Total de Usuários */}
-        <Card className="border-red-200 bg-red-50/50">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-red-700">
-              <Trash2 className="h-5 w-5" />
-              Exclusão Total de Usuários
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center gap-2 p-3 bg-red-100 border border-red-200 rounded-md">
-              <AlertTriangle className="h-4 w-4 text-red-600" />
-              <span className="text-sm text-red-700 font-medium">
-                Operação irreversível que remove completamente o usuário
-              </span>
-            </div>
-            
-            <div className="space-y-3">
-              <Button
-                onClick={() => setForceDeleteOpen(true)}
-                variant="destructive"
-                className="w-full"
-              >
-                <Trash2 className="h-4 w-4 mr-2" />
-                🗑️ EXCLUSÃO TOTAL (SQL)
-              </Button>
-              
-              <Button
-                onClick={() => setManualCleanupOpen(true)}
-                variant="outline"
-                className="w-full border-red-200 text-red-700 hover:bg-red-50"
-              >
-                <Database className="h-4 w-4 mr-2" />
-                🧹 Limpeza Manual
-              </Button>
-            </div>
-            
-            <div className="text-xs text-red-600 space-y-1">
-              <p>• Remove da tabela auth.users</p>
-              <p>• Libera email para novos convites</p>
-              <p>• Backup automático dos dados</p>
-            </div>
-          </CardContent>
-        </Card>
-
         {/* Limpeza de Convites */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Mail className="h-5 w-5" />
-              Manutenção de Convites
+              <Trash2 className="h-5 w-5 text-orange-600" />
+              Limpeza de Convites
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="text-sm text-muted-foreground">
-              Ferramentas para manutenção e limpeza dos convites do sistema
-            </div>
+            <p className="text-sm text-muted-foreground">
+              Remove convites expirados e não utilizados do sistema.
+            </p>
             
-            <Button
-              onClick={handleCleanExpiredInvites}
-              disabled={isCleaningExpired}
+            <Button 
+              onClick={handleCleanupExpiredInvites}
+              disabled={isCleaningInvites}
               variant="outline"
               className="w-full"
             >
-              {isCleaningExpired ? (
+              {isCleaningInvites ? (
                 <>
-                  <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                  <Clock className="h-4 w-4 mr-2 animate-spin" />
                   Limpando...
                 </>
               ) : (
@@ -191,10 +121,22 @@ export const AdminToolsTab: React.FC<AdminToolsTabProps> = ({ onRefresh }) => {
                 </>
               )}
             </Button>
-            
-            <div className="text-xs text-muted-foreground">
-              Remove convites não utilizados há mais de 30 dias
-            </div>
+
+            {cleanupStats && (
+              <div className="p-3 bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800 rounded-md">
+                <div className="flex items-center gap-2 mb-2">
+                  <CheckCircle className="h-4 w-4 text-green-600" />
+                  <span className="text-sm font-medium text-green-800 dark:text-green-200">
+                    Limpeza Concluída
+                  </span>
+                </div>
+                <div className="text-xs text-green-700 dark:text-green-300 space-y-1">
+                  <div>📧 Convites expirados: {cleanupStats.expiredInvites}</div>
+                  <div>🗑️ Convites removidos: {cleanupStats.deletedInvites}</div>
+                  <div>⏰ Timestamp: {new Date(cleanupStats.cleanupTimestamp).toLocaleString()}</div>
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -202,81 +144,101 @@ export const AdminToolsTab: React.FC<AdminToolsTabProps> = ({ onRefresh }) => {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Database className="h-5 w-5" />
-              Analytics e Estatísticas
+              <BarChart3 className="h-5 w-5 text-blue-600" />
+              Reset de Analytics
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="text-sm text-muted-foreground">
-              Operações de reset e manutenção de dados analíticos
-            </div>
+            <p className="text-sm text-muted-foreground">
+              Reseta todas as estatísticas e dados de analytics do sistema.
+            </p>
             
-            <Button
-              onClick={handleResetAnalyticsStats}
-              disabled={isResettingStats}
+            <Button 
+              onClick={handleResetAnalytics}
+              disabled={isResettingAnalytics}
               variant="outline"
               className="w-full"
             >
-              {isResettingStats ? (
+              {isResettingAnalytics ? (
                 <>
-                  <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                  <Clock className="h-4 w-4 mr-2 animate-spin" />
                   Resetando...
                 </>
               ) : (
                 <>
-                  <RefreshCw className="h-4 w-4 mr-2" />
-                  Reset Estatísticas Analytics
+                  <RotateCcw className="h-4 w-4 mr-2" />
+                  Reset Analytics
                 </>
               )}
             </Button>
-            
-            <div className="text-xs text-muted-foreground">
-              Redefine contadores e métricas de analytics
-            </div>
-          </CardContent>
-        </Card>
 
-        {/* Informações do Sistema */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Users className="h-5 w-5" />
-              Informações do Sistema
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <div className="flex justify-between text-sm">
-                <span>Última atualização:</span>
-                <Badge variant="outline">
-                  {new Date().toLocaleDateString('pt-BR')}
-                </Badge>
+            {analyticsResetStats && (
+              <div className="p-3 bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-md">
+                <div className="flex items-center gap-2 mb-2">
+                  <CheckCircle className="h-4 w-4 text-blue-600" />
+                  <span className="text-sm font-medium text-blue-800 dark:text-blue-200">
+                    Reset Concluído
+                  </span>
+                </div>
+                <div className="text-xs text-blue-700 dark:text-blue-300 space-y-1">
+                  <div>💾 Registros em backup: {analyticsResetStats.backupRecords}</div>
+                  <div>📊 Tabelas afetadas: {analyticsResetStats.tablesAffected.length}</div>
+                  <div>⏰ Timestamp: {new Date(analyticsResetStats.resetTimestamp).toLocaleString()}</div>
+                </div>
               </div>
-              
-              <Separator />
-              
-              <div className="text-xs text-muted-foreground">
-                Sistema de convites e gerenciamento de usuários ativo
-              </div>
-            </div>
+            )}
           </CardContent>
         </Card>
       </div>
 
-      {/* Dialogs */}
-      <ForceDeleteDialog
-        open={forceDeleteOpen}
-        onOpenChange={setForceDeleteOpen}
-        onSuccess={onRefresh}
-      />
+      <Separator />
+
+      {/* Exclusão Total de Usuários */}
+      <Card className="border-red-200 dark:border-red-800">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-red-700 dark:text-red-300">
+            <UserX className="h-5 w-5" />
+            🗑️ Exclusão Total de Usuários
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="p-4 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800 rounded-lg">
+            <div className="flex items-start gap-2">
+              <AlertTriangle className="h-4 w-4 text-red-600 mt-0.5" />
+              <div className="text-sm">
+                <p className="font-medium text-red-800 dark:text-red-200 mb-1">
+                  ⚠️ ATENÇÃO: Operação Irreversível
+                </p>
+                <ul className="text-red-700 dark:text-red-300 space-y-1 text-xs">
+                  <li>• Remove COMPLETAMENTE o usuário do sistema</li>
+                  <li>• Exclui da tabela auth.users (não pode mais fazer login)</li>
+                  <li>• Libera o email para novos convites</li>
+                  <li>• Backup automático antes da exclusão</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <Button 
+            onClick={() => setManualCleanupOpen(true)}
+            variant="destructive"
+            className="w-full"
+          >
+            <UserX className="h-4 w-4 mr-2" />
+            🗑️ EXCLUSÃO TOTAL DE USUÁRIO
+          </Button>
+        </CardContent>
+      </Card>
 
       <ManualCleanupDialog
         open={manualCleanupOpen}
         onOpenChange={setManualCleanupOpen}
-        onSuccess={onRefresh}
+        onSuccess={() => {
+          if (onRefresh) {
+            onRefresh();
+          }
+        }}
       />
     </div>
   );
 };
-
-export default AdminToolsTab;
