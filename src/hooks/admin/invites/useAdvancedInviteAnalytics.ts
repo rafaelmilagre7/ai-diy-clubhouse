@@ -139,7 +139,10 @@ export const useAdvancedInviteAnalytics = () => {
       const roleStats = new Map();
       
       invitesData?.forEach(invite => {
-        const roleName = invite.user_roles?.name || 'Unknown';
+        // Corrigir o acesso à propriedade user_roles
+        const userRole = Array.isArray(invite.user_roles) ? invite.user_roles[0] : invite.user_roles;
+        const roleName = userRole?.name || 'Unknown';
+        
         if (!roleStats.has(roleName)) {
           roleStats.set(roleName, {
             roleId: invite.role_id,
