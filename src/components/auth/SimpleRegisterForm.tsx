@@ -1,254 +1,287 @@
 
 import React, { useState } from 'react';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { AlertCircle, Eye, EyeOff } from 'lucide-react';
-import { useAuth } from '@/contexts/auth';
-import { useInviteFlow } from '@/hooks/useInviteFlow';
+import { AlertCircle, Eye, EyeOff, CheckCircle } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
+import { toast } from 'sonner';
 
 interface SimpleRegisterFormProps {
-  onSuccess?: () => void;
-  onError?: (error: string) => void;
+  onSuccess: () => void;
   defaultEmail?: string;
   inviteToken?: string;
 }
 
-export const SimpleRegisterForm: React.FC<SimpleRegisterFormProps> = ({
+const SimpleRegisterForm: React.FC<SimpleRegisterFormProps> = ({
   onSuccess,
-  onError,
   defaultEmail = '',
   inviteToken
 }) => {
-  const { signUp } = useAuth();
-  const { acceptInvite } = useInviteFlow();
-  const [isLoading, setIsLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  
+  // Obter token da URL se não foi passado via props
+  const token = inviteToken || searchParams.get('token');
+  const emailFromUrl = searchParams.get('email');
+  
   const [formData, setFormData] = useState({
-    email: defaultEmail,
+    name: '',
+    email: defaultEmail || emailFromUrl || '',
     password: '',
-    confirmPassword: '',
-    name: ''
+    confirmPassword: ''
   });
+  
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
+  console.log('[SIMPLE-REGISTER] Renderizando com:', {
+    token: token ? `${token.substring(0, 8)}...` : null,
+    defaultEmail,
+    emailFromUrl
+  });
+
   const validateForm = () => {
-    if (!formData.email || !formData.password || !formData.confirmPassword || !formData.name) {
-      setError('Todos os campos são obrigatórios');
+    if (!formData.name.trim()) {
+      setError('Nome é obrigatório');
       return false;
     }
-
-    if (formData.password !== formData.confirmPassword) {
-      setError('As senhas não coincidem');
+    
+    if (!formData.email.trim()) {
+      setError('Email é obrigatório');
       return false;
     }
-
+    
     if (formData.password.length < 6) {
-      setError('A senha deve ter pelo menos 6 caracteres');
+      setError('Senha deve ter pelo menos 6 caracteres');
       return false;
     }
-
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(formData.email)) {
-      setError('Email inválido');
+    
+    if (formData.password !== formData.confirmPassword) {
+      setError('Senhas não coincidem');
       return false;
     }
-
+    
     return true;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!validateForm()) {
-      return;
-    }
-
+    if (!validateForm()) return;
+    
     setIsLoading(true);
     setError('');
-
+    
     try {
-      const metadata = {
-        name: formData.name,
-        invite_token: inviteToken || undefined
+      console.log('[SIMPLE-REGISTER] Iniciando registro com token:', token ? `${token.substring(0, 8)}...` : 'nenhum');
+      
+      // Preparar metadados do usuário
+      const userMetadata: Record<string, any> = {
+        name: formData.name.trim(),
+        email: formData.email.trim()
       };
-
-      console.log('[SIMPLE-REGISTER-FORM] Iniciando registro com metadata:', {
-        name: metadata.name,
-        hasInviteToken: !!metadata.invite_token
+      
+      // Incluir token de convite nos metadados se existir
+      if (token) {
+        userMetadata.invite_token = token;
+        console.log('[SIMPLE-REGISTER] Token de convite incluído nos metadados');
+      }
+      
+      // Criar usuário no Supabase Auth
+      const { data, error: signUpError } = await supabase.auth.signUp({
+        email: formData.email.trim(),
+        password: formData.password,
+        options: {
+          data: userMetadata
+        }
       });
-
-      const { error: signUpError } = await signUp(
-        formData.email,
-        formData.password,
-        metadata
-      );
-
+      
       if (signUpError) {
-        console.error('[SIMPLE-REGISTER-FORM] Erro no registro:', signUpError);
-        const errorMessage = signUpError.message === 'User already registered'
-          ? 'Este email já está cadastrado. Tente fazer login.'
-          : `Erro no registro: ${signUpError.message}`;
-        
-        setError(errorMessage);
-        onError?.(errorMessage);
-        return;
+        console.error('[SIMPLE-REGISTER] Erro no signUp:', signUpError);
+        throw signUpError;
       }
-
-      console.log('[SIMPLE-REGISTER-FORM] Registro realizado com sucesso');
-
-      // Se há token de convite, aguardar um pouco e tentar aplicá-lo
-      if (inviteToken) {
-        console.log('[SIMPLE-REGISTER-FORM] Processando convite após registro...');
-        
-        // Aguardar um pouco para garantir que o usuário foi criado
-        setTimeout(async () => {
-          try {
-            const result = await acceptInvite(inviteToken);
-            if (result.success) {
-              console.log('[SIMPLE-REGISTER-FORM] Convite aplicado com sucesso');
-            } else {
-              console.warn('[SIMPLE-REGISTER-FORM] Falha ao aplicar convite:', result.message);
-              // Não bloquear o fluxo por erro do convite
-            }
-          } catch (error) {
-            console.error('[SIMPLE-REGISTER-FORM] Erro ao aplicar convite:', error);
-            // Não bloquear o fluxo por erro do convite
-          }
-        }, 2000);
+      
+      if (!data?.user) {
+        throw new Error('Falha ao criar usuário');
       }
-
-      onSuccess?.();
-
-    } catch (err: any) {
-      console.error('[SIMPLE-REGISTER-FORM] Erro inesperado:', err);
-      const errorMessage = 'Erro inesperado durante o registro';
+      
+      console.log('[SIMPLE-REGISTER] Usuário criado com sucesso:', data.user.id);
+      
+      // Se temos token, mostrar mensagem específica
+      if (token) {
+        toast.success('Conta criada e convite aplicado com sucesso!', {
+          description: 'Você será redirecionado para completar seu perfil.'
+        });
+      } else {
+        toast.success('Conta criada com sucesso!', {
+          description: 'Você será redirecionado para completar seu perfil.'
+        });
+      }
+      
+      // Aguardar um momento para que os triggers do banco processem
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Chamar onSuccess para redirecionar
+      onSuccess();
+      
+    } catch (error: any) {
+      console.error('[SIMPLE-REGISTER] Erro no registro:', error);
+      
+      let errorMessage = 'Erro ao criar conta';
+      
+      if (error.message?.includes('User already registered')) {
+        errorMessage = 'Este email já está cadastrado. Tente fazer login.';
+      } else if (error.message?.includes('Invalid email')) {
+        errorMessage = 'Email inválido';
+      } else if (error.message?.includes('Password')) {
+        errorMessage = 'Senha muito fraca';
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
       setError(errorMessage);
-      onError?.(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleInputChange = (field: keyof typeof formData) => (
-    e: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: e.target.value
-    }));
-    
-    if (error) {
-      setError('');
-    }
+  const handleInputChange = (field: keyof typeof formData, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+    if (error) setError('');
   };
 
   return (
-    <div className="space-y-6">
-      <div className="text-center space-y-2">
-        <h2 className="text-2xl font-bold text-gray-900">
-          {inviteToken ? 'Aceitar convite' : 'Complete seu cadastro'}
-        </h2>
+    <Card className="w-full max-w-md mx-auto">
+      <CardHeader className="text-center space-y-2">
+        <CardTitle className="text-2xl font-bold text-gray-900">
+          {token ? 'Aceitar Convite' : 'Criar Conta'}
+        </CardTitle>
         <p className="text-gray-600">
-          {inviteToken 
-            ? 'Preencha seus dados para aceitar o convite e acessar a plataforma.'
-            : 'Preencha os dados básicos. Após o cadastro, você completará seu perfil no onboarding.'
-          }
+          {token ? 'Complete seu cadastro para aceitar o convite' : 'Preencha os dados para criar sua conta'}
         </p>
-      </div>
-
-      <form onSubmit={handleSubmit} className="space-y-4">
+        {token && (
+          <Alert className="text-left">
+            <CheckCircle className="h-4 w-4 text-green-600" />
+            <AlertDescription className="text-green-700">
+              Você foi convidado para a plataforma! Complete o cadastro para aceitar o convite automaticamente.
+            </AlertDescription>
+          </Alert>
+        )}
+      </CardHeader>
+      
+      <CardContent>
         {error && (
-          <Alert variant="destructive">
+          <Alert variant="destructive" className="mb-4">
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>{error}</AlertDescription>
           </Alert>
         )}
-
-        <div className="space-y-2">
-          <Label htmlFor="name">Nome completo *</Label>
-          <Input
-            id="name"
-            type="text"
-            value={formData.name}
-            onChange={handleInputChange('name')}
-            placeholder="Seu nome completo"
-            required
-          />
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="email">Email *</Label>
-          <Input
-            id="email"
-            type="email"
-            value={formData.email}
-            onChange={handleInputChange('email')}
-            placeholder="seu@email.com"
-            required
-            disabled={!!defaultEmail}
-          />
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="password">Senha *</Label>
-          <div className="relative">
+        
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="name">Nome completo</Label>
             <Input
-              id="password"
-              type={showPassword ? 'text' : 'password'}
-              value={formData.password}
-              onChange={handleInputChange('password')}
-              placeholder="Mínimo 6 caracteres"
+              id="name"
+              type="text"
+              value={formData.name}
+              onChange={(e) => handleInputChange('name', e.target.value)}
+              placeholder="Seu nome completo"
               required
+              disabled={isLoading}
             />
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-              onClick={() => setShowPassword(!showPassword)}
-            >
-              {showPassword ? (
-                <EyeOff className="h-4 w-4" />
-              ) : (
-                <Eye className="h-4 w-4" />
-              )}
-            </Button>
           </div>
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="confirmPassword">Confirmar Senha *</Label>
-          <Input
-            id="confirmPassword"
-            type="password"
-            value={formData.confirmPassword}
-            onChange={handleInputChange('confirmPassword')}
-            placeholder="Digite a senha novamente"
-            required
-          />
-        </div>
-
-        <Button
-          type="submit"
-          className="w-full"
-          disabled={isLoading}
-        >
-          {isLoading 
-            ? (inviteToken ? 'Aceitando convite...' : 'Criando conta...') 
-            : (inviteToken ? 'Aceitar convite e continuar' : 'Criar conta e continuar')
-          }
-        </Button>
-
-        <div className="text-center text-sm text-gray-500">
-          {inviteToken 
-            ? 'Após aceitar o convite, você será direcionado para completar seu perfil.'
-            : 'Após criar sua conta, você será direcionado para completar seu perfil.'
-          }
-        </div>
-      </form>
-    </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="email">Email</Label>
+            <Input
+              id="email"
+              type="email"
+              value={formData.email}
+              onChange={(e) => handleInputChange('email', e.target.value)}
+              placeholder="seu@email.com"
+              required
+              disabled={isLoading}
+            />
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="password">Senha</Label>
+            <div className="relative">
+              <Input
+                id="password"
+                type={showPassword ? "text" : "password"}
+                value={formData.password}
+                onChange={(e) => handleInputChange('password', e.target.value)}
+                placeholder="Mínimo 6 caracteres"
+                required
+                disabled={isLoading}
+              />
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                onClick={() => setShowPassword(!showPassword)}
+                disabled={isLoading}
+              >
+                {showPassword ? (
+                  <EyeOff className="h-4 w-4" />
+                ) : (
+                  <Eye className="h-4 w-4" />
+                )}
+              </Button>
+            </div>
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="confirmPassword">Confirmar senha</Label>
+            <div className="relative">
+              <Input
+                id="confirmPassword"
+                type={showConfirmPassword ? "text" : "password"}
+                value={formData.confirmPassword}
+                onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
+                placeholder="Repita sua senha"
+                required
+                disabled={isLoading}
+              />
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                disabled={isLoading}
+              >
+                {showConfirmPassword ? (
+                  <EyeOff className="h-4 w-4" />
+                ) : (
+                  <Eye className="h-4 w-4" />
+                )}
+              </Button>
+            </div>
+          </div>
+          
+          <Button type="submit" className="w-full" disabled={isLoading}>
+            {isLoading ? (
+              <div className="flex items-center space-x-2">
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                <span>Criando conta...</span>
+              </div>
+            ) : (
+              token ? 'Aceitar Convite e Criar Conta' : 'Criar Conta'
+            )}
+          </Button>
+        </form>
+      </CardContent>
+    </Card>
   );
 };
 

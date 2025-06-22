@@ -8,7 +8,6 @@ import { formacaoRoutes } from './FormacaoRoutes';
 import { certificateRoutes } from './CertificateRoutes';
 import { CommunityRedirects } from '@/components/routing/CommunityRedirects';
 import NotFound from '@/pages/NotFound';
-import InvitePage from '@/pages/InvitePage';
 import OnboardingPage from '@/pages/OnboardingPage';
 import { ProtectedRoutes } from '@/auth/ProtectedRoutes';
 
@@ -63,9 +62,15 @@ const AppRoutes = () => {
       {!skipRedirects && <CommunityRedirects />}
       
       <Routes>
-        {/* Convite Routes - Alta prioridade e fora do sistema de autenticação */}
-        <Route path="/convite/:token" element={<InvitePage />} />
-        <Route path="/convite" element={<InvitePage />} />
+        {/* NOVO: Redirecionamento direto de convites para AuthLayout */}
+        <Route 
+          path="/convite/:token" 
+          element={<Navigate to={`/auth?token=${window.location.pathname.split('/')[2]}`} replace />} 
+        />
+        <Route 
+          path="/convite" 
+          element={<Navigate to="/auth" replace />} 
+        />
         
         {/* Certificate Routes - Públicas */}
         {certificateRoutes.map((route) => (

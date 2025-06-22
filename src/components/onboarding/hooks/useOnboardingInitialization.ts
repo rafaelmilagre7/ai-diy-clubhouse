@@ -30,6 +30,9 @@ export const useOnboardingInitialization = (
           const { data: userData } = await supabase.auth.getUser();
           const userMetadata = userData?.user?.user_metadata || {};
           
+          // Verificar se usuário veio de convite (dados já coletados no registro)
+          const hasInviteData = userMetadata.invite_token;
+          
           const initialData: OnboardingData = {
             // Dados básicos já coletados no registro
             name: userMetadata.name || profile?.name || '',
@@ -75,20 +78,24 @@ export const useOnboardingInitialization = (
             
             // Metadados
             memberType,
-            startedAt: new Date().toISOString()
+            startedAt: new Date().toISOString(),
+            
+            // Flag para identificar se veio de convite
+            fromInvite: hasInviteData
           };
           
           console.log('[ONBOARDING-INIT] Dados inicializados:', {
             hasName: !!initialData.name,
             hasEmail: !!initialData.email,
-            memberType: initialData.memberType
+            memberType: initialData.memberType,
+            fromInvite: hasInviteData
           });
           
           updateData(initialData);
         }
         
         // Atualizar avatar se necessário
-        if (user.email) {
+        if (user.email && !profile?.avatar_url) {
           const profileUpdate = {
             avatar_url: `https://ui-avatars.com/api/?name=${encodeURIComponent(user.email)}&background=0D8ABC&color=fff`
           };

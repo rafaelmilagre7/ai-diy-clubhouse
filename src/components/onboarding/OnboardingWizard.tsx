@@ -42,6 +42,7 @@ const OnboardingWizard = () => {
             <OnboardingWelcome
               userName={data.name}
               memberType={memberType || 'club'}
+              fromInvite={(data as any).fromInvite}
               onStart={handleStartOnboarding}
             />
           );

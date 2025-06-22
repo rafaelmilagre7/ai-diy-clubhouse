@@ -6,7 +6,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AlertCircle } from 'lucide-react';
 import { useAuth } from '@/contexts/auth';
-import { useInviteFlow } from '@/hooks/useInviteFlow';
 import LoginForm from './LoginForm';
 import SimpleRegisterForm from './SimpleRegisterForm';
 
@@ -14,11 +13,9 @@ const AuthLayout = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { applyInviteToExistingUser } = useInviteFlow();
   
   const [activeTab, setActiveTab] = useState('login');
   const [message, setMessage] = useState('');
-  const [isProcessingInvite, setIsProcessingInvite] = useState(false);
 
   const inviteToken = searchParams.get('token');
   const email = searchParams.get('email');
@@ -29,50 +26,20 @@ const AuthLayout = () => {
     user: user ? user.email : null
   });
 
-  // Processar convite para usuário logado
+  // Redirecionar usuário autenticado
   useEffect(() => {
-    const processExistingUserInvite = async () => {
-      if (inviteToken && user && !isProcessingInvite) {
-        setIsProcessingInvite(true);
-        
-        try {
-          console.log('[AUTH-LAYOUT] Processando convite para usuário logado:', {
-            token: inviteToken.substring(0, 8) + '...',
-            userEmail: user.email
-          });
-
-          const result = await applyInviteToExistingUser(inviteToken);
-          
-          if (result.success) {
-            setMessage(result.message || 'Convite aplicado com sucesso!');
-            
-            setTimeout(() => {
-              if (result.shouldRedirectToOnboarding) {
-                navigate('/onboarding');
-              } else {
-                navigate('/dashboard');
-              }
-            }, 2000);
-          } else {
-            setMessage(result.message || 'Erro ao aplicar convite');
-          }
-        } catch (error) {
-          console.error('[AUTH-LAYOUT] Erro inesperado:', error);
-          setMessage('Erro inesperado ao processar convite');
-        } finally {
-          setIsProcessingInvite(false);
-        }
+    if (user) {
+      console.log('[AUTH-LAYOUT] Usuário logado detectado, redirecionando...');
+      
+      // Se há token de convite, o sistema já aplicou automaticamente via trigger
+      // Redirecionar direto para onboarding se necessário, ou dashboard
+      if (inviteToken) {
+        console.log('[AUTH-LAYOUT] Usuário logado com convite, redirecionando para onboarding');
+        navigate('/onboarding');
+      } else {
+        console.log('[AUTH-LAYOUT] Usuário logado sem convite, redirecionando para dashboard');
+        navigate('/dashboard');
       }
-    };
-
-    processExistingUserInvite();
-  }, [inviteToken, user, applyInviteToExistingUser, navigate, isProcessingInvite]);
-
-  // Redirecionar usuário autenticado sem convite
-  useEffect(() => {
-    if (user && !inviteToken) {
-      console.log('[AUTH-LAYOUT] Usuário logado sem convite, redirecionando para dashboard');
-      navigate('/dashboard');
     }
   }, [user, inviteToken, navigate]);
 
@@ -84,29 +51,6 @@ const AuthLayout = () => {
     }
   }, [inviteToken, user]);
 
-  // Se usuário logado está processando convite
-  if (user && inviteToken) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
-        <Card className="w-full max-w-md">
-          <CardHeader className="text-center">
-            <h2 className="text-xl font-semibold">
-              {isProcessingInvite ? 'Processando convite...' : 'Convite processado'}
-            </h2>
-          </CardHeader>
-          <CardContent>
-            {message && (
-              <Alert>
-                <AlertCircle className="h-4 w-4" />
-                <AlertDescription>{message}</AlertDescription>
-              </Alert>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
   const handleSuccess = () => {
     console.log('[AUTH-LAYOUT] Sucesso na autenticação, redirecionando...');
     // Redirecionar para onboarding se novo usuário, ou dashboard se existente
@@ -116,6 +60,24 @@ const AuthLayout = () => {
       navigate('/dashboard');
     }
   };
+
+  // Se usuário está logado, mostrar loading enquanto redireciona
+  if (user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
+        <Card className="w-full max-w-md">
+          <CardHeader className="text-center">
+            <h2 className="text-xl font-semibold">Redirecionando...</h2>
+          </CardHeader>
+          <CardContent>
+            <div className="flex justify-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">

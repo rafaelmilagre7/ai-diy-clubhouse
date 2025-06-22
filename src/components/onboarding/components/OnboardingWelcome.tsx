@@ -2,17 +2,19 @@
 import React from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { CheckCircle, ArrowRight, User } from 'lucide-react';
+import { CheckCircle, ArrowRight, User, Heart } from 'lucide-react';
 
 interface OnboardingWelcomeProps {
   userName?: string;
   memberType: 'club' | 'formacao';
+  fromInvite?: boolean;
   onStart: () => void;
 }
 
 export const OnboardingWelcome: React.FC<OnboardingWelcomeProps> = ({
   userName,
   memberType,
+  fromInvite = false,
   onStart
 }) => {
   const isFormacao = memberType === 'formacao';
@@ -24,24 +26,24 @@ export const OnboardingWelcome: React.FC<OnboardingWelcomeProps> = ({
           {/* Ícone de boas-vindas */}
           <div className="flex justify-center">
             <div className="w-16 h-16 bg-viverblue/20 rounded-full flex items-center justify-center">
-              <User className="w-8 h-8 text-viverblue" />
+              {fromInvite ? <Heart className="w-8 h-8 text-viverblue" /> : <User className="w-8 h-8 text-viverblue" />}
             </div>
           </div>
 
           {/* Mensagem de boas-vindas */}
           <div className="space-y-3">
             <h1 className="text-3xl font-bold text-white">
-              Bem-vindo{userName ? `, ${userName.split(' ')[0]}` : ''}!
+              {fromInvite ? `Bem-vindo à nossa comunidade${userName ? `, ${userName.split(' ')[0]}` : ''}!` : `Bem-vindo${userName ? `, ${userName.split(' ')[0]}` : ''}!`}
             </h1>
             <p className="text-xl text-slate-300">
-              Sua conta foi criada com sucesso
+              {fromInvite ? 'Sua conta foi criada e convite aceito com sucesso' : 'Sua conta foi criada com sucesso'}
             </p>
           </div>
 
           {/* Status */}
           <div className="flex items-center justify-center space-x-2 text-green-400">
             <CheckCircle className="w-5 h-5" />
-            <span>Cadastro concluído</span>
+            <span>{fromInvite ? 'Convite aceito automaticamente' : 'Cadastro concluído'}</span>
           </div>
 
           {/* Descrição do próximo passo */}
@@ -50,7 +52,7 @@ export const OnboardingWelcome: React.FC<OnboardingWelcomeProps> = ({
               Próximo passo: Complete seu perfil
             </h2>
             <p className="text-slate-300 leading-relaxed">
-              Para personalizar sua experiência na plataforma, vamos completar seu perfil em 
+              Para personalizar sua experiência na plataforma{fromInvite ? ' e aproveitar ao máximo os benefícios do seu convite' : ''}, vamos completar seu perfil em 
               <span className="font-semibold text-viverblue"> 5 etapas rápidas</span>.
             </p>
             
