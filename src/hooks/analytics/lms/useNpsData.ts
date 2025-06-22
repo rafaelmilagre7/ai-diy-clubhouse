@@ -35,7 +35,19 @@ export const useNpsData = (startDate: string | null) => {
         throw npsError;
       }
 
-      const responses = (npsResponses as LessonNpsResponse[]) || [];
+      // Converter para o tipo correto, tratando a estrutura real do Supabase
+      const responses = (npsResponses || []).map(response => ({
+        id: response.id,
+        lesson_id: response.lesson_id,
+        score: response.score,
+        feedback: response.feedback,
+        created_at: response.created_at,
+        user_id: response.user_id,
+        // Extrair o título da aula do objeto aninhado
+        lessonTitle: response.learning_lessons?.title || 'Aula sem título',
+        // Extrair o nome do usuário do objeto aninhado
+        userName: response.profiles?.name || 'Usuário anônimo'
+      }));
       
       // Se não há dados, retornar estruturas vazias
       if (responses.length === 0) {
@@ -62,13 +74,13 @@ export const useNpsData = (startDate: string | null) => {
         if (!acc[lessonId]) {
           acc[lessonId] = {
             lessonId,
-            lessonTitle: response.learning_lessons?.title || 'Aula sem título',
+            lessonTitle: response.lessonTitle,
             responses: []
           };
         }
         acc[lessonId].responses.push(response);
         return acc;
-      }, {} as Record<string, { lessonId: string; lessonTitle: string; responses: LessonNpsResponse[] }>);
+      }, {} as Record<string, { lessonId: string; lessonTitle: string; responses: typeof responses }>);
 
       // Calcular NPS por aula
       const perLesson = Object.values(lessonGroups).map(group => {
@@ -92,11 +104,11 @@ export const useNpsData = (startDate: string | null) => {
         .map(response => ({
           id: response.id,
           lessonId: response.lesson_id,
-          lessonTitle: response.learning_lessons?.title || 'Aula sem título',
+          lessonTitle: response.lessonTitle,
           score: response.score,
           feedback: response.feedback,
           createdAt: response.created_at,
-          userName: response.profiles?.name || 'Usuário anônimo'
+          userName: response.userName
         }))
         .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
