@@ -1,10 +1,8 @@
 
-import AuthLayout from '@/components/auth/AuthLayout';
+import AuthLayout from "@/components/auth/AuthLayout";
 
 const Login = () => {
-  return (
-    <AuthLayout />
-  );
+  return <AuthLayout />;
 };
 
 export default Login;

@@ -23,6 +23,7 @@ interface OnboardingWizardContainerProps {
     handleSubmit: () => Promise<void>;
     isCurrentStepValid: boolean;
     totalSteps: number;
+    memberType: 'club' | 'formacao';
   }) => React.ReactNode;
 }
 
@@ -74,6 +75,7 @@ export const OnboardingWizardContainer: React.FC<OnboardingWizardContainerProps>
     handleDataChange,
     handleSubmit,
     isCurrentStepValid,
-    totalSteps: 6
+    totalSteps: 6,
+    memberType: typedMemberType
   });
 };
