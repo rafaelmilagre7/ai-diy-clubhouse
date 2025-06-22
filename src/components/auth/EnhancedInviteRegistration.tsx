@@ -1,62 +1,82 @@
 
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { supabase } from '@/lib/supabase';
+import { useInviteDetails } from '@/hooks/useInviteDetails';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Loader2, CheckCircle, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
-import { useAuth } from '@/contexts/auth';
-import { useInviteDetails } from '@/hooks/useInviteDetails';
-import { supabase } from '@/lib/supabase';
-import LoadingScreen from '@/components/common/LoadingScreen';
-import { Eye, EyeOff, Mail, User, Lock, UserPlus } from 'lucide-react';
 
 interface EnhancedInviteRegistrationProps {
   token?: string;
 }
 
 export const EnhancedInviteRegistration = ({ token }: EnhancedInviteRegistrationProps) => {
+  console.log('[ENHANCED-INVITE-REGISTRATION] Iniciando com token:', token);
+  
   const navigate = useNavigate();
-  const { signUp, isLoading: authLoading } = useAuth();
   const { inviteDetails, loading: inviteLoading, error: inviteError } = useInviteDetails(token);
   
   const [formData, setFormData] = useState({
-    name: '',
-    email: inviteDetails?.email || '',
+    email: '',
     password: '',
-    confirmPassword: ''
+    confirmPassword: '',
+    name: ''
   });
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  const [loading, setLoading] = useState(false);
+  const [registrationStep, setRegistrationStep] = useState<'invite' | 'register' | 'complete'>('invite');
 
-  // Atualizar email quando inviteDetails carregar
+  // Atualizar email quando detalhes do convite carregarem
   useEffect(() => {
-    if (inviteDetails?.email && !formData.email) {
+    if (inviteDetails?.email) {
       setFormData(prev => ({ ...prev, email: inviteDetails.email }));
+      setRegistrationStep('register');
     }
-  }, [inviteDetails, formData.email]);
+  }, [inviteDetails]);
 
-  // Mostrar loading enquanto carrega detalhes do convite
+  // Exibir loading enquanto carrega detalhes do convite
   if (inviteLoading) {
-    return <LoadingScreen message="Validando convite..." />;
-  }
-
-  // Mostrar erro se convite inválido
-  if (inviteError || !inviteDetails) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
         <Card className="w-full max-w-md">
-          <CardHeader className="text-center">
-            <CardTitle className="text-red-600">Convite Inválido</CardTitle>
-            <CardDescription>
-              {inviteError || 'O convite não foi encontrado ou expirou'}
-            </CardDescription>
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-center space-x-2">
+              <Loader2 className="h-6 w-6 animate-spin text-blue-600" />
+              <span className="text-lg font-medium">Validando convite...</span>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // Exibir erro se convite for inválido
+  if (inviteError || !inviteDetails) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-red-50 to-pink-100">
+        <Card className="w-full max-w-md">
+          <CardHeader>
+            <div className="flex items-center space-x-2">
+              <AlertCircle className="h-6 w-6 text-red-600" />
+              <CardTitle className="text-red-800">Convite Inválido</CardTitle>
+            </div>
           </CardHeader>
           <CardContent>
-            <Button onClick={() => navigate('/login')} className="w-full">
-              Ir para Login
+            <Alert variant="destructive">
+              <AlertDescription>
+                {inviteError || 'Convite não encontrado, expirado ou já utilizado.'}
+              </AlertDescription>
+            </Alert>
+            <Button 
+              className="w-full mt-4" 
+              onClick={() => navigate('/login')}
+            >
+              Voltar ao Login
             </Button>
           </CardContent>
         </Card>
@@ -64,230 +84,188 @@ export const EnhancedInviteRegistration = ({ token }: EnhancedInviteRegistration
     );
   }
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
-
-  const validateForm = () => {
-    if (!formData.name.trim()) {
-      toast.error('Nome é obrigatório');
-      return false;
-    }
-    
-    if (!formData.email.trim()) {
-      toast.error('E-mail é obrigatório');
-      return false;
-    }
-    
-    if (formData.password.length < 6) {
-      toast.error('A senha deve ter pelo menos 6 caracteres');
-      return false;
-    }
-    
-    if (formData.password !== formData.confirmPassword) {
-      toast.error('As senhas não conferem');
-      return false;
-    }
-    
-    return true;
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleRegistration = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!validateForm()) return;
-    if (!inviteDetails) return;
+    if (formData.password !== formData.confirmPassword) {
+      toast.error('As senhas não coincidem');
+      return;
+    }
 
-    setIsSubmitting(true);
+    if (formData.password.length < 6) {
+      toast.error('A senha deve ter pelo menos 6 caracteres');
+      return;
+    }
+
+    setLoading(true);
 
     try {
-      console.log('[INVITE-REGISTRATION] Iniciando registro com convite');
+      console.log('[ENHANCED-INVITE-REGISTRATION] Iniciando registro com email:', formData.email);
 
-      // 1. Registrar usuário
-      const { user, error: signUpError } = await signUp(
-        formData.email,
-        formData.password,
-        {
-          full_name: formData.name,
-          invite_token: token
+      // 1. Criar conta no Supabase Auth
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email: formData.email,
+        password: formData.password,
+        options: {
+          data: {
+            name: formData.name
+          }
         }
-      );
+      });
 
-      if (signUpError) {
-        console.error('[INVITE-REGISTRATION] Erro no registro:', signUpError);
-        toast.error(`Erro no registro: ${signUpError.message}`);
-        return;
+      if (authError) {
+        console.error('[ENHANCED-INVITE-REGISTRATION] Erro no registro:', authError);
+        throw authError;
       }
 
-      if (!user) {
-        toast.error('Erro inesperado no registro');
-        return;
+      console.log('[ENHANCED-INVITE-REGISTRATION] Usuário criado:', authData.user?.id);
+
+      // 2. Aguardar criação do perfil (trigger automático)
+      await new Promise(resolve => setTimeout(resolve, 2000));
+
+      // 3. Aplicar o convite usando a função RPC
+      if (authData.user && token) {
+        console.log('[ENHANCED-INVITE-REGISTRATION] Aplicando convite para usuário:', authData.user.id);
+        
+        const { data: inviteResult, error: inviteApplyError } = await supabase
+          .rpc('use_invite', {
+            invite_token: token,
+            user_id: authData.user.id
+          });
+
+        console.log('[ENHANCED-INVITE-REGISTRATION] Resultado do convite:', inviteResult);
+
+        if (inviteApplyError) {
+          console.error('[ENHANCED-INVITE-REGISTRATION] Erro ao aplicar convite:', inviteApplyError);
+          throw new Error(`Erro ao aplicar convite: ${inviteApplyError.message}`);
+        }
+
+        // Verificar se a aplicação do convite foi bem-sucedida
+        if (inviteResult && typeof inviteResult === 'object' && 'status' in inviteResult) {
+          if (inviteResult.status !== 'success') {
+            throw new Error(inviteResult.message || 'Erro ao aplicar convite');
+          }
+        }
       }
 
-      console.log('[INVITE-REGISTRATION] Usuário registrado:', user.id);
-
-      // 2. Aplicar convite (atualizar role e marcar como usado)
-      const { data: useInviteResult, error: useInviteError } = await supabase
-        .rpc('use_invite', {
-          invite_token: token,
-          user_id: user.id
-        });
-
-      if (useInviteError) {
-        console.error('[INVITE-REGISTRATION] Erro ao aplicar convite:', useInviteError);
-        toast.error(`Erro ao aplicar convite: ${useInviteError.message}`);
-        return;
-      }
-
-      console.log('[INVITE-REGISTRATION] Resultado do uso do convite:', useInviteResult);
-
-      if (useInviteResult?.status === 'error') {
-        toast.error(`Erro: ${useInviteResult.message}`);
-        return;
-      }
-
-      // 3. Sucesso!
-      toast.success('Conta criada com sucesso! Bem-vindo à plataforma!');
+      setRegistrationStep('complete');
+      toast.success('Registro concluído com sucesso!');
       
-      console.log('[INVITE-REGISTRATION] Registro completo, redirecionando...');
-      
-      // Redirecionar para onboarding
-      navigate('/onboarding');
+      // Redirecionar após alguns segundos
+      setTimeout(() => {
+        navigate('/dashboard');
+      }, 2000);
 
     } catch (error: any) {
-      console.error('[INVITE-REGISTRATION] Erro inesperado:', error);
-      toast.error(`Erro inesperado: ${error.message}`);
+      console.error('[ENHANCED-INVITE-REGISTRATION] Erro no processo:', error);
+      toast.error(error.message || 'Erro ao processar registro');
     } finally {
-      setIsSubmitting(false);
+      setLoading(false);
     }
   };
 
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 px-4">
-      <Card className="w-full max-w-md shadow-lg">
-        <CardHeader className="text-center space-y-2">
-          <div className="mx-auto w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-            <UserPlus className="w-6 h-6 text-blue-600" />
-          </div>
-          <CardTitle className="text-2xl">Você foi convidado!</CardTitle>
-          <CardDescription>
-            Complete seu cadastro para acessar a plataforma como{' '}
-            <span className="font-semibold text-blue-600">
-              {inviteDetails.role.name}
-            </span>
-          </CardDescription>
-        </CardHeader>
-
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">Nome completo</Label>
-              <div className="relative">
-                <User className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+  // Renderizar formulário de registro
+  if (registrationStep === 'register') {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
+        <Card className="w-full max-w-md">
+          <CardHeader>
+            <CardTitle>Aceitar Convite</CardTitle>
+            <CardDescription>
+              Você foi convidado para: <strong>{inviteDetails.role.name}</strong>
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleRegistration} className="space-y-4">
+              <div>
+                <Label htmlFor="name">Nome Completo</Label>
                 <Input
                   id="name"
-                  name="name"
                   type="text"
-                  placeholder="Seu nome completo"
                   value={formData.name}
-                  onChange={handleInputChange}
-                  className="pl-10"
+                  onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
                   required
                 />
               </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="email">E-mail</Label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+              
+              <div>
+                <Label htmlFor="email">E-mail</Label>
                 <Input
                   id="email"
-                  name="email"
                   type="email"
                   value={formData.email}
-                  className="pl-10 bg-gray-50"
                   disabled
+                  className="bg-gray-50"
                 />
               </div>
-              <p className="text-xs text-gray-500">
-                E-mail definido pelo convite
-              </p>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="password">Senha</Label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+              
+              <div>
+                <Label htmlFor="password">Senha</Label>
                 <Input
                   id="password"
-                  name="password"
-                  type={showPassword ? 'text' : 'password'}
-                  placeholder="Mínimo 6 caracteres"
+                  type="password"
                   value={formData.password}
-                  onChange={handleInputChange}
-                  className="pl-10 pr-10"
+                  onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
                   required
+                  minLength={6}
                 />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-3 text-gray-400 hover:text-gray-600"
-                >
-                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                </button>
               </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="confirmPassword">Confirmar senha</Label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+              
+              <div>
+                <Label htmlFor="confirmPassword">Confirmar Senha</Label>
                 <Input
                   id="confirmPassword"
-                  name="confirmPassword"
-                  type={showConfirmPassword ? 'text' : 'password'}
-                  placeholder="Digite a senha novamente"
+                  type="password"
                   value={formData.confirmPassword}
-                  onChange={handleInputChange}
-                  className="pl-10 pr-10"
+                  onChange={(e) => setFormData(prev => ({ ...prev, confirmPassword: e.target.value }))}
                   required
+                  minLength={6}
                 />
-                <button
-                  type="button"
-                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute right-3 top-3 text-gray-400 hover:text-gray-600"
-                >
-                  {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                </button>
               </div>
-            </div>
-
-            <Button
-              type="submit"
-              className="w-full"
-              disabled={isSubmitting || authLoading}
-            >
-              {isSubmitting ? 'Criando conta...' : 'Criar conta'}
-            </Button>
-          </form>
-
-          <div className="mt-6 pt-4 border-t text-center">
-            <p className="text-sm text-gray-600">
-              Já tem uma conta?{' '}
-              <button
-                onClick={() => navigate('/login')}
-                className="text-blue-600 hover:underline font-medium"
+              
+              <Button 
+                type="submit" 
+                className="w-full" 
+                disabled={loading}
               >
-                Fazer login
-              </button>
-            </p>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
-  );
-};
+                {loading ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Processando...
+                  </>
+                ) : (
+                  'Criar Conta'
+                )}
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
-export default EnhancedInviteRegistration;
+  // Renderizar tela de conclusão
+  if (registrationStep === 'complete') {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-emerald-100">
+        <Card className="w-full max-w-md">
+          <CardHeader>
+            <div className="flex items-center space-x-2">
+              <CheckCircle className="h-6 w-6 text-green-600" />
+              <CardTitle className="text-green-800">Registro Concluído!</CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <Alert>
+              <AlertDescription>
+                Sua conta foi criada com sucesso. Redirecionando para o dashboard...
+              </AlertDescription>
+            </Alert>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  return null;
+};
