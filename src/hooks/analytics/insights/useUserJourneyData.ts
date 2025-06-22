@@ -8,13 +8,13 @@ interface JourneyStep {
   step: string;
   users: number;
   conversionRate: number;
-  avgTimeMinutes: number;
+  avgTimeMinutes?: number; // Agora opcional
   dropoffRate: number;
 }
 
 export const useUserJourneyData = (timeRange: string) => {
   const { log, logWarning } = useLogging();
-  const { validateAnalyticsData, sanitizeNumericValue } = useDataValidation();
+  const { validateAnalyticsData, validateNumericValue } = useDataValidation();
 
   return useQuery({
     queryKey: ['user-journey-data', timeRange],
@@ -57,15 +57,16 @@ export const useUserJourneyData = (timeRange: string) => {
         // 3. Buscar progresso de implementações
         const { data: implementations } = await supabase
           .from('progress')
-          .select('user_id, created_at, is_completed')
+          .select('user_id, created_at, is_completed, updated_at')
           .gte('created_at', startDate.toISOString())
           .lte('created_at', now.toISOString());
 
-        const totalRegistered = sanitizeNumericValue(registeredUsers?.length, 0);
-        
-        if (totalRegistered === 0) {
+        const totalValidation = validateNumericValue(registeredUsers?.length);
+        if (!totalValidation.isValid || totalValidation.value === 0) {
           return [];
         }
+
+        const totalRegistered = totalValidation.value;
 
         // Processar dados da jornada
         const userIds = new Set(registeredUsers?.map(u => u.id) || []);
@@ -79,40 +80,56 @@ export const useUserJourneyData = (timeRange: string) => {
         const implementationUsers = Array.from(userIds).filter(id => implementingUserIds.has(id));
         const completionUsers = Array.from(userIds).filter(id => completedUserIds.has(id));
 
-        // Calcular tempos médios (simulado baseado em dados reais)
-        const avgRegistrationTime = 2; // minutos
-        const avgFirstAccessTime = 15; // minutos
-        const avgImplementationTime = 45; // minutos
-        const avgCompletionTime = 120; // minutos
+        // Calcular tempos médios baseados em dados reais, se disponíveis
+        const calculateAvgTime = (dataSet: any[], dateField: string) => {
+          if (!dataSet || dataSet.length === 0) return undefined;
+          
+          const times = dataSet
+            .filter(item => item[dateField])
+            .map(item => new Date(item[dateField]).getTime())
+            .filter(time => !isNaN(time));
+            
+          if (times.length === 0) return undefined;
+          
+          const avgTimestamp = times.reduce((sum, time) => sum + time, 0) / times.length;
+          return Math.round((Date.now() - avgTimestamp) / (1000 * 60)); // minutos desde a ação
+        };
 
         const journeySteps: JourneyStep[] = [
           {
             step: 'Registro',
             users: totalRegistered,
             conversionRate: 100,
-            avgTimeMinutes: avgRegistrationTime,
+            avgTimeMinutes: calculateAvgTime(registeredUsers || [], 'created_at'),
             dropoffRate: 0
           },
           {
             step: 'Primeiro Acesso',
             users: firstAccessUsers.length,
             conversionRate: (firstAccessUsers.length / totalRegistered) * 100,
-            avgTimeMinutes: avgFirstAccessTime,
+            avgTimeMinutes: calculateAvgTime(userActivity || [], 'created_at'),
             dropoffRate: ((totalRegistered - firstAccessUsers.length) / totalRegistered) * 100
           },
           {
             step: 'Primeira Implementação',
             users: implementationUsers.length,
             conversionRate: (implementationUsers.length / totalRegistered) * 100,
-            avgTimeMinutes: avgImplementationTime,
-            dropoffRate: ((firstAccessUsers.length - implementationUsers.length) / firstAccessUsers.length) * 100
+            avgTimeMinutes: calculateAvgTime(implementations || [], 'created_at'),
+            dropoffRate: firstAccessUsers.length > 0 
+              ? ((firstAccessUsers.length - implementationUsers.length) / firstAccessUsers.length) * 100 
+              : 0
           },
           {
             step: 'Conclusão',
             users: completionUsers.length,
             conversionRate: (completionUsers.length / totalRegistered) * 100,
-            avgTimeMinutes: avgCompletionTime,
-            dropoffRate: ((implementationUsers.length - completionUsers.length) / implementationUsers.length) * 100
+            avgTimeMinutes: calculateAvgTime(
+              implementations?.filter(p => p.is_completed) || [], 
+              'updated_at'
+            ),
+            dropoffRate: implementationUsers.length > 0
+              ? ((implementationUsers.length - completionUsers.length) / implementationUsers.length) * 100
+              : 0
           }
         ];
 
@@ -134,7 +151,7 @@ export const useUserJourneyData = (timeRange: string) => {
           error: error.message,
           timeRange
         });
-        return [];
+        throw new Error(`Falha ao carregar dados de jornada: ${error.message}`);
       }
     },
     staleTime: 5 * 60 * 1000, // 5 minutos

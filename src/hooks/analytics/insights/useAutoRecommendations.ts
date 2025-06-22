@@ -22,7 +22,7 @@ interface Recommendation {
 
 export const useAutoRecommendations = (timeRange: string) => {
   const { log, logWarning } = useLogging();
-  const { sanitizeNumericValue, sanitizePercentage } = useDataValidation();
+  const { validateNumericValue, validatePercentage } = useDataValidation();
 
   return useQuery({
     queryKey: ['auto-recommendations', timeRange],
@@ -63,115 +63,110 @@ export const useAutoRecommendations = (timeRange: string) => {
 
         const recommendations: Recommendation[] = [];
 
-        // Analisar taxa de conclusão
-        const totalImplementations = sanitizeNumericValue(implementations?.length, 0);
-        const completedImplementations = sanitizeNumericValue(
-          implementations?.filter(i => i.is_completed).length, 0
-        );
-        const completionRate = totalImplementations > 0 
-          ? (completedImplementations / totalImplementations) * 100 
-          : 0;
-
-        if (completionRate < 60) {
-          recommendations.push({
-            id: 'improve-completion-rate',
-            type: 'performance',
-            title: 'Melhorar Taxa de Conclusão',
-            description: 'A taxa de conclusão está abaixo do ideal. Considere simplificar os módulos iniciais.',
-            priority: 85,
-            impact: 'high',
-            effort: 'medium',
-            metrics: {
-              current: completionRate,
-              target: 75,
-              unit: '%'
-            },
-            actionItems: [
-              'Revisar complexidade dos primeiros módulos',
-              'Adicionar mais checkpoints intermediários',
-              'Implementar sistema de lembretes automáticos'
-            ]
-          });
-        }
-
-        // Analisar engajamento de usuários
-        const totalUsers = sanitizeNumericValue(users?.length, 0);
-        const activeUsers = new Set(analytics?.map(a => a.user_id) || []).size;
-        const engagementRate = totalUsers > 0 ? (activeUsers / totalUsers) * 100 : 0;
-
-        if (engagementRate < 40) {
-          recommendations.push({
-            id: 'increase-engagement',
-            type: 'engagement',
-            title: 'Aumentar Engajamento',
-            description: 'Muitos usuários não estão interagindo ativamente. Implemente estratégias de reengajamento.',
-            priority: 75,
-            impact: 'high',
-            effort: 'medium',
-            metrics: {
-              current: engagementRate,
-              target: 55,
-              unit: '%'
-            },
-            actionItems: [
-              'Criar programa de onboarding interativo',
-              'Enviar newsletters com dicas semanais',
-              'Implementar gamificação'
-            ]
-          });
-        }
-
-        // Analisar conteúdo
-        const publishedSolutions = sanitizeNumericValue(
-          solutions?.filter(s => s.is_published).length, 0
-        );
-        const totalSolutions = sanitizeNumericValue(solutions?.length, 0);
-
-        if (publishedSolutions < 5) {
-          recommendations.push({
-            id: 'expand-content',
-            type: 'content',
-            title: 'Expandir Biblioteca de Conteúdo',
-            description: 'Poucos conteúdos publicados limitam as opções dos usuários.',
-            priority: 60,
-            impact: 'medium',
-            effort: 'high',
-            metrics: {
-              current: publishedSolutions,
-              target: 15,
-              unit: ' soluções'
-            },
-            actionItems: [
-              'Priorizar publicação de soluções em rascunho',
-              'Criar calendário editorial',
-              'Envolver especialistas externos'
-            ]
-          });
-        }
-
-        // Analisar experiência do usuário
-        const avgSessionTime = analytics?.length > 0 ? 25 : 0; // Simulado
+        // Validar dados básicos
+        const totalUsersValidation = validateNumericValue(users?.length);
+        const totalImplementationsValidation = validateNumericValue(implementations?.length);
         
-        if (avgSessionTime < 20) {
-          recommendations.push({
-            id: 'improve-ux',
-            type: 'user_experience',
-            title: 'Melhorar Experiência do Usuário',
-            description: 'Tempo de sessão baixo indica possíveis problemas de usabilidade.',
-            priority: 70,
-            impact: 'medium',
-            effort: 'low',
-            metrics: {
-              current: avgSessionTime,
-              target: 35,
-              unit: ' min'
-            },
-            actionItems: [
-              'Otimizar navegação principal',
-              'Melhorar velocidade de carregamento',
-              'Simplificar fluxos críticos'
-            ]
+        if (!totalUsersValidation.isValid || !totalImplementationsValidation.isValid) {
+          log('Dados insuficientes para gerar recomendações', { 
+            users: users?.length,
+            implementations: implementations?.length
           });
+          return [];
+        }
+
+        const totalUsers = totalUsersValidation.value!;
+        const totalImplementations = totalImplementationsValidation.value!;
+
+        // Analisar taxa de conclusão apenas se houver implementações
+        if (totalImplementations > 0) {
+          const completedValidation = validateNumericValue(
+            implementations?.filter(i => i.is_completed).length
+          );
+          
+          if (completedValidation.isValid) {
+            const completedImplementations = completedValidation.value!;
+            const completionRate = (completedImplementations / totalImplementations) * 100;
+
+            if (completionRate < 60) {
+              recommendations.push({
+                id: 'improve-completion-rate',
+                type: 'performance',
+                title: 'Melhorar Taxa de Conclusão',
+                description: 'A taxa de conclusão está abaixo do ideal. Considere simplificar os módulos iniciais.',
+                priority: 85,
+                impact: 'high',
+                effort: 'medium',
+                metrics: {
+                  current: Math.round(completionRate * 10) / 10,
+                  target: 75,
+                  unit: '%'
+                },
+                actionItems: [
+                  'Revisar complexidade dos primeiros módulos',
+                  'Adicionar mais checkpoints intermediários',
+                  'Implementar sistema de lembretes automáticos'
+                ]
+              });
+            }
+          }
+        }
+
+        // Analisar engajamento de usuários apenas se houver dados de analytics
+        if (analytics && analytics.length > 0 && totalUsers > 0) {
+          const activeUsers = new Set(analytics.map(a => a.user_id)).size;
+          const engagementRate = (activeUsers / totalUsers) * 100;
+
+          if (engagementRate < 40) {
+            recommendations.push({
+              id: 'increase-engagement',
+              type: 'engagement',
+              title: 'Aumentar Engajamento',
+              description: 'Muitos usuários não estão interagindo ativamente. Implemente estratégias de reengajamento.',
+              priority: 75,
+              impact: 'high',
+              effort: 'medium',
+              metrics: {
+                current: Math.round(engagementRate * 10) / 10,
+                target: 55,
+                unit: '%'
+              },
+              actionItems: [
+                'Criar programa de onboarding interativo',
+                'Enviar newsletters com dicas semanais',
+                'Implementar gamificação'
+              ]
+            });
+          }
+        }
+
+        // Analisar conteúdo apenas se houver soluções
+        if (solutions && solutions.length > 0) {
+          const publishedValidation = validateNumericValue(
+            solutions.filter(s => s.is_published).length
+          );
+          
+          if (publishedValidation.isValid && publishedValidation.value! < 5) {
+            recommendations.push({
+              id: 'expand-content',
+              type: 'content',
+              title: 'Expandir Biblioteca de Conteúdo',
+              description: 'Poucos conteúdos publicados limitam as opções dos usuários.',
+              priority: 60,
+              impact: 'medium',
+              effort: 'high',
+              metrics: {
+                current: publishedValidation.value!,
+                target: 15,
+                unit: ' soluções'
+              },
+              actionItems: [
+                'Priorizar publicação de soluções em rascunho',
+                'Criar calendário editorial',
+                'Envolver especialistas externos'
+              ]
+            });
+          }
         }
 
         // Ordenar por prioridade
@@ -189,7 +184,7 @@ export const useAutoRecommendations = (timeRange: string) => {
           error: error.message,
           timeRange
         });
-        return [];
+        throw new Error(`Falha ao gerar recomendações: ${error.message}`);
       }
     },
     staleTime: 10 * 60 * 1000, // 10 minutos (recomendações não mudam tão frequentemente)

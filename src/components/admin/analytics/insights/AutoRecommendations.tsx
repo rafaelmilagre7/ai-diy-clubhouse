@@ -9,7 +9,9 @@ import {
   BookOpen, 
   Sparkles,
   AlertTriangle,
-  CheckCircle
+  CheckCircle,
+  AlertCircle,
+  Database
 } from 'lucide-react';
 import { ModernLoadingState } from '../ModernLoadingState';
 import { useAutoRecommendations } from '@/hooks/analytics/insights/useAutoRecommendations';
@@ -35,8 +37,12 @@ export const AutoRecommendations: React.FC<AutoRecommendationsProps> = ({ timeRa
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex items-center justify-center h-32 text-muted-foreground">
-            <p>Erro ao carregar recomendações</p>
+          <div className="flex items-center justify-center h-32 text-center">
+            <div className="space-y-2">
+              <AlertCircle className="h-8 w-8 text-red-500 mx-auto" />
+              <p className="text-muted-foreground">Erro ao carregar recomendações</p>
+              <p className="text-sm text-gray-500">{error.message}</p>
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -53,8 +59,14 @@ export const AutoRecommendations: React.FC<AutoRecommendationsProps> = ({ timeRa
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex items-center justify-center h-32 text-muted-foreground">
-            <p>Nenhuma recomendação disponível</p>
+          <div className="flex items-center justify-center h-32 text-center">
+            <div className="space-y-2">
+              <Database className="h-8 w-8 text-gray-400 mx-auto" />
+              <p className="text-muted-foreground">Dados insuficientes para gerar recomendações</p>
+              <p className="text-sm text-gray-500">
+                Aguardando mais atividade na plataforma para análise ({timeRange})
+              </p>
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -120,7 +132,7 @@ export const AutoRecommendations: React.FC<AutoRecommendationsProps> = ({ timeRa
           Recomendações IA
         </CardTitle>
         <p className="text-sm text-gray-600">
-          Sugestões baseadas em análise de dados ({timeRange})
+          Sugestões baseadas em análise de dados reais ({timeRange})
         </p>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -153,7 +165,7 @@ export const AutoRecommendations: React.FC<AutoRecommendationsProps> = ({ timeRa
             
             <div className="mb-3">
               <div className="flex items-center justify-between text-xs text-gray-500 mb-1">
-                <span>Progresso atual</span>
+                <span>Progresso atual (dados reais)</span>
                 <span>
                   {recommendation.metrics.current.toFixed(1)}{recommendation.metrics.unit} / 
                   {recommendation.metrics.target}{recommendation.metrics.unit}
@@ -182,6 +194,15 @@ export const AutoRecommendations: React.FC<AutoRecommendationsProps> = ({ timeRa
             </div>
           </div>
         ))}
+        
+        {/* Aviso sobre dados reais */}
+        <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+          <p className="text-xs text-blue-700">
+            <CheckCircle className="h-3 w-3 inline mr-1" />
+            Todas as recomendações são baseadas exclusivamente em dados reais da plataforma. 
+            Nenhuma métrica é simulada ou estimada.
+          </p>
+        </div>
       </CardContent>
     </Card>
   );

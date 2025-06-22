@@ -8,7 +8,8 @@ import {
   Users, 
   TrendingUp,
   Clock,
-  Target
+  Target,
+  AlertCircle
 } from 'lucide-react';
 import { ModernLoadingState } from '../ModernLoadingState';
 import { useUserJourneyData } from '@/hooks/analytics/insights/useUserJourneyData';
@@ -34,8 +35,12 @@ export const UserJourneyAnalysis: React.FC<UserJourneyAnalysisProps> = ({ timeRa
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex items-center justify-center h-32 text-muted-foreground">
-            <p>Erro ao carregar dados da jornada</p>
+          <div className="flex items-center justify-center h-32 text-center">
+            <div className="space-y-2">
+              <AlertCircle className="h-8 w-8 text-red-500 mx-auto" />
+              <p className="text-muted-foreground">Erro ao carregar dados da jornada</p>
+              <p className="text-sm text-gray-500">{error.message}</p>
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -52,8 +57,14 @@ export const UserJourneyAnalysis: React.FC<UserJourneyAnalysisProps> = ({ timeRa
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex items-center justify-center h-32 text-muted-foreground">
-            <p>Dados insuficientes para análise da jornada</p>
+          <div className="flex items-center justify-center h-32 text-center">
+            <div className="space-y-2">
+              <Users className="h-8 w-8 text-gray-400 mx-auto" />
+              <p className="text-muted-foreground">Dados insuficientes para análise da jornada</p>
+              <p className="text-sm text-gray-500">
+                Não há usuários registrados no período selecionado ({timeRange})
+              </p>
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -64,11 +75,11 @@ export const UserJourneyAnalysis: React.FC<UserJourneyAnalysisProps> = ({ timeRa
     switch (step.toLowerCase()) {
       case 'registro':
         return <Users className="h-4 w-4" />;
-      case 'primeiro_acesso':
+      case 'primeiro acesso':
         return <Clock className="h-4 w-4" />;
-      case 'primeira_implementacao':
+      case 'primeira implementação':
         return <Target className="h-4 w-4" />;
-      case 'conclusao':
+      case 'conclusão':
         return <TrendingUp className="h-4 w-4" />;
       default:
         return <ArrowRight className="h-4 w-4" />;
@@ -104,7 +115,13 @@ export const UserJourneyAnalysis: React.FC<UserJourneyAnalysisProps> = ({ timeRa
                   <div>
                     <h3 className="font-semibold text-gray-900">{step.step}</h3>
                     <p className="text-sm text-gray-600">
-                      {step.users} usuários • {step.avgTimeMinutes} min médio
+                      {step.users} usuários
+                      {step.avgTimeMinutes !== undefined && (
+                        <> • {step.avgTimeMinutes} min médio</>
+                      )}
+                      {step.avgTimeMinutes === undefined && (
+                        <> • Tempo não disponível</>
+                      )}
                     </p>
                   </div>
                 </div>
@@ -138,13 +155,30 @@ export const UserJourneyAnalysis: React.FC<UserJourneyAnalysisProps> = ({ timeRa
           ))}
         </div>
         
-        {/* Resumo de insights */}
+        {/* Resumo de insights baseado em dados reais */}
         <div className="mt-6 p-4 bg-purple-50 rounded-lg">
           <h4 className="font-semibold text-purple-900 mb-2">Insights da Jornada</h4>
           <ul className="text-sm text-purple-700 space-y-1">
-            <li>• Maior perda de usuários acontece entre registro e primeiro acesso</li>
-            <li>• Usuários que completam a primeira implementação têm 85% de chance de continuar</li>
-            <li>• Tempo médio da jornada completa: {journeyData.reduce((acc, step) => acc + step.avgTimeMinutes, 0)} minutos</li>
+            {journeyData.length >= 2 && (
+              <li>
+                • Maior perda de usuários: {journeyData[0].step} → {journeyData[1].step} 
+                ({((journeyData[0].users - journeyData[1].users) / journeyData[0].users * 100).toFixed(1)}% de perda)
+              </li>
+            )}
+            {journeyData.length >= 3 && journeyData[2].users > 0 && (
+              <li>
+                • Taxa de conversão para implementação: {((journeyData[2].users / journeyData[0].users) * 100).toFixed(1)}%
+              </li>
+            )}
+            {journeyData.some(step => step.avgTimeMinutes !== undefined) ? (
+              <li>
+                • Dados de tempo baseados em atividade real dos usuários
+              </li>
+            ) : (
+              <li>
+                • Dados de tempo indisponíveis - aguardando mais atividade na plataforma
+              </li>
+            )}
           </ul>
         </div>
       </CardContent>

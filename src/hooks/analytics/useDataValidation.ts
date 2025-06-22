@@ -52,21 +52,29 @@ export const useDataValidation = () => {
     };
   };
 
-  const sanitizeNumericValue = (value: any, defaultValue: number = 0): number => {
+  const validateNumericValue = (value: any): { isValid: boolean; value?: number } => {
     if (typeof value === 'number' && !isNaN(value) && value >= 0) {
-      return value;
+      return { isValid: true, value };
     }
-    return defaultValue;
+    return { isValid: false };
   };
 
-  const sanitizePercentage = (value: any): number => {
-    const num = sanitizeNumericValue(value);
-    return Math.min(Math.max(num, 0), 100);
+  const validatePercentage = (value: any): { isValid: boolean; value?: number } => {
+    const validation = validateNumericValue(value);
+    if (!validation.isValid || validation.value === undefined) {
+      return { isValid: false };
+    }
+    
+    if (validation.value >= 0 && validation.value <= 100) {
+      return { isValid: true, value: validation.value };
+    }
+    
+    return { isValid: false };
   };
 
   return {
     validateAnalyticsData,
-    sanitizeNumericValue,
-    sanitizePercentage
+    validateNumericValue,
+    validatePercentage
   };
 };
