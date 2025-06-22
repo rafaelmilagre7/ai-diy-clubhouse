@@ -1,509 +1,314 @@
 
-import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useLogging } from '@/hooks/useLogging';
 
 interface AuditResult {
   category: string;
-  test: string;
-  status: 'pass' | 'fail' | 'warning';
+  status: 'success' | 'warning' | 'error';
   message: string;
   details?: any;
+  recommendation?: string;
 }
 
-interface AuditReport {
-  summary: {
-    total: number;
-    passed: number;
-    failed: number;
-    warnings: number;
+interface InviteAuditData {
+  overview: {
+    totalInvites: number;
+    activeInvites: number;
+    usedInvites: number;
+    expiredInvites: number;
   };
-  results: AuditResult[];
-  timestamp: string;
+  dataIntegrity: AuditResult[];
+  performance: AuditResult[];
+  security: AuditResult[];
+  integrations: AuditResult[];
+  recommendations: string[];
+}
+
+interface InviteRow {
+  id: string;
+  email: string;
+  expires_at: string;
+  used_at: string | null;
+  created_at: string;
+  role_id: string;
+  token: string;
+  send_attempts: number;
+  last_sent_at: string | null;
+}
+
+interface RoleRow {
+  id: string;
+  name: string;
+}
+
+interface DeliveryRow {
+  id: string;
+  invite_id: string;
+  channel: string;
+  status: string;
+  created_at: string;
 }
 
 export const useInviteAudit = () => {
-  const [isAuditing, setIsAuditing] = useState(false);
-  const [auditReport, setAuditReport] = useState<AuditReport | null>(null);
   const { log, logWarning } = useLogging();
 
-  const runAudit = async (): Promise<AuditReport> => {
-    setIsAuditing(true);
-    const results: AuditResult[] = [];
+  return useQuery({
+    queryKey: ['invite-audit'],
+    queryFn: async (): Promise<InviteAuditData> => {
+      try {
+        log('Iniciando auditoria completa do sistema de convites');
 
-    try {
-      log('Iniciando auditoria completa do sistema de convites');
+        // 1. Buscar dados básicos de convites
+        const { data: invites, error: invitesError } = await supabase
+          .from('invites')
+          .select('*');
 
-      // 1. Auditoria de Dados Reais
-      await auditDataIntegrity(results);
-      
-      // 2. Auditoria de Performance
-      await auditPerformance(results);
-      
-      // 3. Auditoria de Validações
-      await auditValidations(results);
-      
-      // 4. Auditoria de Integrações
-      await auditIntegrations(results);
-      
-      // 5. Auditoria de Segurança
-      await auditSecurity(results);
+        if (invitesError) {
+          throw new Error(`Erro ao buscar convites: ${invitesError.message}`);
+        }
 
-      const summary = {
-        total: results.length,
-        passed: results.filter(r => r.status === 'pass').length,
-        failed: results.filter(r => r.status === 'fail').length,
-        warnings: results.filter(r => r.status === 'warning').length,
-      };
+        // 2. Buscar dados de roles
+        const { data: roles, error: rolesError } = await supabase
+          .from('user_roles')
+          .select('id, name');
 
-      const report: AuditReport = {
-        summary,
-        results,
-        timestamp: new Date().toISOString()
-      };
+        if (rolesError) {
+          throw new Error(`Erro ao buscar roles: ${rolesError.message}`);
+        }
 
-      setAuditReport(report);
-      log('Auditoria completa finalizada', { summary });
-      
-      return report;
+        // 3. Buscar dados de deliveries
+        const { data: deliveries, error: deliveriesError } = await supabase
+          .from('invite_deliveries')
+          .select('*');
 
-    } catch (error: any) {
-      logWarning('Erro durante auditoria', { error: error.message });
-      throw error;
-    } finally {
-      setIsAuditing(false);
-    }
-  };
+        if (deliveriesError) {
+          throw new Error(`Erro ao buscar deliveries: ${deliveriesError.message}`);
+        }
 
-  const auditDataIntegrity = async (results: AuditResult[]) => {
-    try {
-      // Verificar se há dados reais na tabela invites
-      const { data: invites, error } = await supabase
-        .from('invites')
-        .select('id, email, token, created_at, used_at, expires_at')
-        .limit(10);
+        // Garantir que os dados são arrays tipados
+        const typedInvites = (invites || []) as InviteRow[];
+        const typedRoles = (roles || []) as RoleRow[];
+        const typedDeliveries = (deliveries || []) as DeliveryRow[];
 
-      if (error) {
-        results.push({
-          category: 'Integridade de Dados',
-          test: 'Conexão com tabela invites',
-          status: 'fail',
-          message: `Erro ao acessar dados: ${error.message}`,
-          details: { error }
-        });
-        return;
-      }
+        // Calcular overview
+        const now = new Date();
+        const overview = {
+          totalInvites: typedInvites.length,
+          activeInvites: typedInvites.filter(invite => 
+            !invite.used_at && new Date(invite.expires_at) > now
+          ).length,
+          usedInvites: typedInvites.filter(invite => invite.used_at).length,
+          expiredInvites: typedInvites.filter(invite => 
+            !invite.used_at && new Date(invite.expires_at) <= now
+          ).length
+        };
 
-      results.push({
-        category: 'Integridade de Dados',
-        test: 'Conexão com tabela invites',
-        status: 'pass',
-        message: `${invites?.length || 0} convites encontrados`
-      });
+        // Auditoria de integridade de dados
+        const dataIntegrity: AuditResult[] = [];
 
-      // Verificar qualidade dos dados
-      if (invites && invites.length > 0) {
-        const validEmails = invites.filter(i => i.email && i.email.includes('@'));
-        const validTokens = invites.filter(i => i.token && i.token.length >= 8);
-        
-        if (validEmails.length === invites.length) {
-          results.push({
+        // Verificar convites sem role válido
+        const invalidRoleInvites = typedInvites.filter(invite => 
+          !typedRoles.find(role => role.id === invite.role_id)
+        );
+
+        if (invalidRoleInvites.length > 0) {
+          dataIntegrity.push({
             category: 'Integridade de Dados',
-            test: 'Validação de emails',
-            status: 'pass',
-            message: 'Todos os emails são válidos'
+            status: 'error',
+            message: `${invalidRoleInvites.length} convites com roles inválidos`,
+            details: invalidRoleInvites.map(inv => ({ id: inv.id, email: inv.email, role_id: inv.role_id })),
+            recommendation: 'Verificar e corrigir referências de roles nos convites'
           });
         } else {
-          results.push({
+          dataIntegrity.push({
             category: 'Integridade de Dados',
-            test: 'Validação de emails',
-            status: 'fail',
-            message: `${invites.length - validEmails.length} emails inválidos encontrados`
+            status: 'success',
+            message: 'Todos os convites possuem roles válidos'
           });
         }
 
-        if (validTokens.length === invites.length) {
-          results.push({
+        // Verificar tokens duplicados
+        const tokenCounts = new Map<string, number>();
+        typedInvites.forEach(invite => {
+          const count = tokenCounts.get(invite.token) || 0;
+          tokenCounts.set(invite.token, count + 1);
+        });
+
+        const duplicateTokens = Array.from(tokenCounts.entries())
+          .filter(([_, count]) => count > 1);
+
+        if (duplicateTokens.length > 0) {
+          dataIntegrity.push({
             category: 'Integridade de Dados',
-            test: 'Validação de tokens',
-            status: 'pass',
-            message: 'Todos os tokens são válidos'
+            status: 'error',
+            message: `${duplicateTokens.length} tokens duplicados encontrados`,
+            details: duplicateTokens,
+            recommendation: 'Regenerar tokens duplicados'
           });
         } else {
-          results.push({
+          dataIntegrity.push({
             category: 'Integridade de Dados',
-            test: 'Validação de tokens',
-            status: 'fail',
-            message: `${invites.length - validTokens.length} tokens inválidos encontrados`
-          });
-        }
-      }
-
-      // Verificar se há dados de analytics reais
-      const { data: analytics } = await supabase
-        .from('analytics')
-        .select('id, event_type, created_at')
-        .eq('event_type', 'invite_sent')
-        .limit(5);
-
-      if (analytics && analytics.length > 0) {
-        results.push({
-          category: 'Integridade de Dados',
-          test: 'Analytics de convites',
-          status: 'pass',
-          message: `${analytics.length} eventos de convite registrados`
-        });
-      } else {
-        results.push({
-          category: 'Integridade de Dados',
-          test: 'Analytics de convites',
-          status: 'warning',
-          message: 'Nenhum evento de convite encontrado nos analytics'
-        });
-      }
-
-    } catch (error: any) {
-      results.push({
-        category: 'Integridade de Dados',
-        test: 'Auditoria geral de dados',
-        status: 'fail',
-        message: `Erro inesperado: ${error.message}`
-      });
-    }
-  };
-
-  const auditPerformance = async (results: AuditResult[]) => {
-    try {
-      // Teste de performance da query principal
-      const startTime = performance.now();
-      
-      const { data, error } = await supabase
-        .from('invites')
-        .select(`
-          id,
-          email,
-          token,
-          expires_at,
-          used_at,
-          created_at,
-          user_roles:role_id!inner(id, name, description)
-        `)
-        .order('created_at', { ascending: false })
-        .limit(50);
-
-      const endTime = performance.now();
-      const queryTime = endTime - startTime;
-
-      if (error) {
-        results.push({
-          category: 'Performance',
-          test: 'Query principal de convites',
-          status: 'fail',
-          message: `Erro na query: ${error.message}`
-        });
-      } else if (queryTime > 2000) {
-        results.push({
-          category: 'Performance',
-          test: 'Query principal de convites',
-          status: 'warning',
-          message: `Query lenta: ${queryTime.toFixed(2)}ms`,
-          details: { queryTime, recordCount: data?.length }
-        });
-      } else {
-        results.push({
-          category: 'Performance',
-          test: 'Query principal de convites',
-          status: 'pass',
-          message: `Query rápida: ${queryTime.toFixed(2)}ms (${data?.length} registros)`
-        });
-      }
-
-      // Verificar índices implicitamente
-      const indexTestStart = performance.now();
-      
-      const { data: tokenTest } = await supabase
-        .from('invites')
-        .select('id')
-        .eq('token', 'TEST_TOKEN_PERFORMANCE')
-        .limit(1);
-
-      const indexTestEnd = performance.now();
-      const indexTime = indexTestEnd - indexTestStart;
-
-      if (indexTime < 100) {
-        results.push({
-          category: 'Performance',
-          test: 'Busca por token (índice)',
-          status: 'pass',
-          message: `Busca por token eficiente: ${indexTime.toFixed(2)}ms`
-        });
-      } else {
-        results.push({
-          category: 'Performance',
-          test: 'Busca por token (índice)',
-          status: 'warning',
-          message: `Busca por token lenta: ${indexTime.toFixed(2)}ms - considerar adicionar índice`
-        });
-      }
-
-    } catch (error: any) {
-      results.push({
-        category: 'Performance',
-        test: 'Testes de performance',
-        status: 'fail',
-        message: `Erro durante testes: ${error.message}`
-      });
-    }
-  };
-
-  const auditValidations = async (results: AuditResult[]) => {
-    try {
-      // Testar função de criação de convite
-      const { data: testCreateResult, error: createError } = await supabase
-        .rpc('create_invite', {
-          p_email: 'test@audit.com',
-          p_role_id: '00000000-0000-0000-0000-000000000000', // UUID inválido propositalmente
-          p_expires_in: '7 days',
-          p_notes: 'Teste de auditoria'
-        });
-
-      if (createError) {
-        results.push({
-          category: 'Validações',
-          test: 'Função create_invite com dados inválidos',
-          status: 'pass',
-          message: 'Função rejeitou corretamente dados inválidos'
-        });
-      } else {
-        results.push({
-          category: 'Validações',
-          test: 'Função create_invite com dados inválidos',
-          status: 'warning',
-          message: 'Função deveria rejeitar role_id inválido'
-        });
-      }
-
-      // Testar função use_invite
-      const { data: testUseResult, error: useError } = await supabase
-        .rpc('use_invite', {
-          invite_token: 'TOKEN_INEXISTENTE_TESTE',
-          user_id: '00000000-0000-0000-0000-000000000000'
-        });
-
-      if (useError || (testUseResult && typeof testUseResult === 'object' && testUseResult.status === 'error')) {
-        results.push({
-          category: 'Validações',
-          test: 'Função use_invite com token inválido',
-          status: 'pass',
-          message: 'Função rejeitou corretamente token inválido'
-        });
-      } else {
-        results.push({
-          category: 'Validações',
-          test: 'Função use_invite com token inválido',
-          status: 'fail',
-          message: 'Função deveria rejeitar token inexistente'
-        });
-      }
-
-      // Verificar se há políticas RLS ativas
-      const { data: rlsCheck } = await supabase
-        .rpc('check_rls_status')
-        .single();
-
-      if (rlsCheck) {
-        const inviteTableSecurity = rlsCheck.find((table: any) => table.table_name === 'invites');
-        
-        if (inviteTableSecurity?.rls_enabled && inviteTableSecurity?.has_policies) {
-          results.push({
-            category: 'Validações',
-            test: 'Segurança RLS na tabela invites',
-            status: 'pass',
-            message: 'RLS ativo com políticas configuradas'
-          });
-        } else {
-          results.push({
-            category: 'Validações',
-            test: 'Segurança RLS na tabela invites',
-            status: 'fail',
-            message: 'RLS não configurado adequadamente'
-          });
-        }
-      }
-
-    } catch (error: any) {
-      results.push({
-        category: 'Validações',
-        test: 'Testes de validação',
-        status: 'fail',
-        message: `Erro durante validações: ${error.message}`
-      });
-    }
-  };
-
-  const auditIntegrations = async (results: AuditResult[]) => {
-    try {
-      // Testar Edge Function de email
-      const emailTestResponse = await supabase.functions.invoke('send-invite-email', {
-        body: {
-          inviteId: 'test-audit-id',
-          email: 'audit@test.com',
-          roleId: 'test-role-id',
-          token: 'TEST123456',
-          isResend: false,
-          notes: 'Teste de auditoria - não enviar'
-        }
-      });
-
-      if (emailTestResponse.error) {
-        if (emailTestResponse.error.message.includes('RESEND_API_KEY')) {
-          results.push({
-            category: 'Integrações',
-            test: 'Edge Function de email',
-            status: 'warning',
-            message: 'RESEND_API_KEY não configurada'
-          });
-        } else {
-          results.push({
-            category: 'Integrações',
-            test: 'Edge Function de email',
-            status: 'fail',
-            message: `Erro na função: ${emailTestResponse.error.message}`
-          });
-        }
-      } else {
-        results.push({
-          category: 'Integrações',
-          test: 'Edge Function de email',
-          status: 'pass',
-          message: 'Função de email respondeu corretamente'
-        });
-      }
-
-      // Testar orquestrador de convites
-      const orchestratorResponse = await supabase.functions.invoke('invite-orchestrator', {
-        body: {
-          inviteId: 'test-audit-id',
-          email: 'audit@test.com',
-          roleId: 'test-role-id',
-          token: 'TEST123456',
-          channels: ['email'],
-          isResend: false
-        }
-      });
-
-      if (orchestratorResponse.error) {
-        results.push({
-          category: 'Integrações',
-          test: 'Orquestrador de convites',
-          status: 'fail',
-          message: `Erro no orquestrador: ${orchestratorResponse.error.message}`
-        });
-      } else {
-        results.push({
-          category: 'Integrações',
-          test: 'Orquestrador de convites',
-          status: 'pass',
-          message: 'Orquestrador funcionando corretamente'
-        });
-      }
-
-    } catch (error: any) {
-      results.push({
-        category: 'Integrações',
-        test: 'Testes de integração',
-        status: 'fail',
-        message: `Erro durante testes: ${error.message}`
-      });
-    }
-  };
-
-  const auditSecurity = async (results: AuditResult[]) => {
-    try {
-      // Verificar se há convites expirados não limpos
-      const { data: expiredInvites } = await supabase
-        .from('invites')
-        .select('id')
-        .lt('expires_at', new Date().toISOString())
-        .is('used_at', null);
-
-      if (expiredInvites && expiredInvites.length > 0) {
-        results.push({
-          category: 'Segurança',
-          test: 'Limpeza de convites expirados',
-          status: 'warning',
-          message: `${expiredInvites.length} convites expirados não utilizados encontrados`
-        });
-      } else {
-        results.push({
-          category: 'Segurança',
-          test: 'Limpeza de convites expirados',
-          status: 'pass',
-          message: 'Nenhum convite expirado não utilizado encontrado'
-        });
-      }
-
-      // Verificar unicidade de tokens
-      const { data: tokenCheck } = await supabase
-        .from('invites')
-        .select('token')
-        .limit(100);
-
-      if (tokenCheck) {
-        const uniqueTokens = new Set(tokenCheck.map(i => i.token));
-        
-        if (uniqueTokens.size === tokenCheck.length) {
-          results.push({
-            category: 'Segurança',
-            test: 'Unicidade de tokens',
-            status: 'pass',
+            status: 'success',
             message: 'Todos os tokens são únicos'
           });
+        }
+
+        // Auditoria de performance
+        const performance: AuditResult[] = [];
+
+        // Verificar convites com muitas tentativas de envio
+        const highAttemptInvites = typedInvites.filter(invite => invite.send_attempts > 5);
+
+        if (highAttemptInvites.length > 0) {
+          performance.push({
+            category: 'Performance',
+            status: 'warning',
+            message: `${highAttemptInvites.length} convites com muitas tentativas de envio`,
+            details: highAttemptInvites.map(inv => ({ 
+              id: inv.id, 
+              email: inv.email, 
+              attempts: inv.send_attempts 
+            })),
+            recommendation: 'Verificar problemas de entrega e considerar reenvio manual'
+          });
         } else {
-          results.push({
-            category: 'Segurança',
-            test: 'Unicidade de tokens',
-            status: 'fail',
-            message: 'Tokens duplicados encontrados!'
+          performance.push({
+            category: 'Performance',
+            status: 'success',
+            message: 'Tentativas de envio dentro do esperado'
           });
         }
-      }
 
-      // Verificar se há tentativas excessivas de envio
-      const { data: highAttempts } = await supabase
-        .from('invites')
-        .select('id, email, send_attempts')
-        .gt('send_attempts', 5);
+        // Verificar convites antigos não utilizados
+        const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+        const oldUnusedInvites = typedInvites.filter(invite => 
+          !invite.used_at && 
+          new Date(invite.expires_at) > now &&
+          new Date(invite.created_at) < thirtyDaysAgo
+        );
 
-      if (highAttempts && highAttempts.length > 0) {
-        results.push({
-          category: 'Segurança',
-          test: 'Tentativas excessivas de envio',
-          status: 'warning',
-          message: `${highAttempts.length} convites com mais de 5 tentativas de envio`
+        if (oldUnusedInvites.length > 0) {
+          performance.push({
+            category: 'Performance',
+            status: 'warning',
+            message: `${oldUnusedInvites.length} convites antigos não utilizados`,
+            details: oldUnusedInvites.map(inv => ({ 
+              id: inv.id, 
+              email: inv.email, 
+              created_at: inv.created_at 
+            })),
+            recommendation: 'Considerar reenvio ou cancelamento'
+          });
+        }
+
+        // Auditoria de segurança
+        const security: AuditResult[] = [];
+
+        // Verificar convites com período de expiração muito longo
+        const longExpirationInvites = typedInvites.filter(invite => {
+          const createdAt = new Date(invite.created_at);
+          const expiresAt = new Date(invite.expires_at);
+          const diffDays = (expiresAt.getTime() - createdAt.getTime()) / (1000 * 60 * 60 * 24);
+          return diffDays > 30;
         });
-      } else {
-        results.push({
-          category: 'Segurança',
-          test: 'Tentativas excessivas de envio',
-          status: 'pass',
-          message: 'Nenhuma tentativa excessiva detectada'
+
+        if (longExpirationInvites.length > 0) {
+          security.push({
+            category: 'Segurança',
+            status: 'warning',
+            message: `${longExpirationInvites.length} convites com expiração muito longa`,
+            details: longExpirationInvites.map(inv => ({ 
+              id: inv.id, 
+              email: inv.email, 
+              expires_at: inv.expires_at 
+            })),
+            recommendation: 'Reduzir período de expiração para melhor segurança'
+          });
+        } else {
+          security.push({
+            category: 'Segurança',
+            status: 'success',
+            message: 'Períodos de expiração adequados'
+          });
+        }
+
+        // Auditoria de integrações
+        const integrations: AuditResult[] = [];
+
+        // Verificar status de deliveries
+        const failedDeliveries = typedDeliveries.filter(delivery => 
+          delivery.status === 'failed' || delivery.status === 'error'
+        );
+
+        if (failedDeliveries.length > 0) {
+          integrations.push({
+            category: 'Integrações',
+            status: 'error',
+            message: `${failedDeliveries.length} falhas de entrega`,
+            details: failedDeliveries.map(del => ({ 
+              id: del.id, 
+              invite_id: del.invite_id, 
+              channel: del.channel,
+              status: del.status
+            })),
+            recommendation: 'Verificar configurações de email e WhatsApp'
+          });
+        } else if (typedDeliveries.length > 0) {
+          integrations.push({
+            category: 'Integrações',
+            status: 'success',
+            message: 'Todas as entregas foram bem-sucedidas'
+          });
+        } else {
+          integrations.push({
+            category: 'Integrações',
+            status: 'warning',
+            message: 'Nenhuma entrega registrada',
+            recommendation: 'Verificar se o sistema de deliveries está funcionando'
+          });
+        }
+
+        // Gerar recomendações
+        const recommendations: string[] = [];
+
+        if (overview.expiredInvites > overview.totalInvites * 0.3) {
+          recommendations.push('Alto número de convites expirados - considerar reduzir tempo de expiração');
+        }
+
+        if (overview.usedInvites / overview.totalInvites < 0.5 && overview.totalInvites > 10) {
+          recommendations.push('Taxa de conversão baixa - revisar processo de onboarding');
+        }
+
+        if (failedDeliveries.length > 0) {
+          recommendations.push('Falhas de entrega detectadas - verificar configurações de integração');
+        }
+
+        if (recommendations.length === 0) {
+          recommendations.push('Sistema de convites funcionando adequadamente');
+        }
+
+        log('Auditoria de convites concluída', {
+          totalInvites: overview.totalInvites,
+          issues: [...dataIntegrity, ...performance, ...security, ...integrations]
+            .filter(result => result.status !== 'success').length
         });
+
+        return {
+          overview,
+          dataIntegrity,
+          performance,
+          security,
+          integrations,
+          recommendations
+        };
+
+      } catch (error: any) {
+        logWarning('Erro durante auditoria de convites', { error: error.message });
+        throw new Error(`Falha na auditoria: ${error.message}`);
       }
-
-    } catch (error: any) {
-      results.push({
-        category: 'Segurança',
-        test: 'Testes de segurança',
-        status: 'fail',
-        message: `Erro durante testes: ${error.message}`
-      });
-    }
-  };
-
-  return {
-    runAudit,
-    isAuditing,
-    auditReport
-  };
+    },
+    staleTime: 5 * 60 * 1000, // 5 minutos
+    refetchOnWindowFocus: false
+  });
 };
