@@ -14,7 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { LoadingSpinner } from "@/components/common/LoadingSpinner";
-import { manualCompleteUserCleanup, ManualCleanupResult } from "@/utils/manualUserCleanup";
+import { resetUserByEmail } from "@/utils/adminUserReset";
 import { Badge } from "@/components/ui/badge";
 import { CheckCircle, AlertTriangle, Trash2 } from "lucide-react";
 
@@ -24,6 +24,14 @@ interface ManualCleanupDialogProps {
   onSuccess?: () => void;
 }
 
+interface ResetResult {
+  success: boolean;
+  message: string;
+  backup_records?: number;
+  user_id?: string;
+  reset_timestamp?: string;
+}
+
 export const ManualCleanupDialog: React.FC<ManualCleanupDialogProps> = ({
   open,
   onOpenChange,
@@ -31,7 +39,7 @@ export const ManualCleanupDialog: React.FC<ManualCleanupDialogProps> = ({
 }) => {
   const [email, setEmail] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
-  const [result, setResult] = useState<ManualCleanupResult | null>(null);
+  const [result, setResult] = useState<ResetResult | null>(null);
 
   const handleCleanup = async () => {
     if (!email.trim()) return;
@@ -40,7 +48,7 @@ export const ManualCleanupDialog: React.FC<ManualCleanupDialogProps> = ({
     setResult(null);
     
     try {
-      const cleanupResult = await manualCompleteUserCleanup(email.trim());
+      const cleanupResult = await resetUserByEmail(email.trim());
       setResult(cleanupResult);
       
       if (cleanupResult.success && onSuccess) {
@@ -111,38 +119,18 @@ export const ManualCleanupDialog: React.FC<ManualCleanupDialogProps> = ({
                   </p>
                 </div>
                 
-                {result.details.tablesProcessed.length > 0 && (
-                  <div className="mb-2">
-                    <p className="text-xs font-medium mb-1">Tabelas processadas:</p>
-                    <div className="flex flex-wrap gap-1">
-                      {result.details.tablesProcessed.map((table) => (
-                        <Badge key={table} variant="outline" className="text-xs">
-                          {table}
-                        </Badge>
-                      ))}
-                    </div>
+                {result.success && result.backup_records && (
+                  <div className="mt-2 flex items-center gap-2">
+                    <Badge variant="outline" className="text-xs">
+                      ✅ {result.backup_records} registro(s) salvos em backup
+                    </Badge>
+                    {result.user_id && (
+                      <Badge variant="outline" className="text-xs">
+                        ID: {result.user_id.substring(0, 8)}...
+                      </Badge>
+                    )}
                   </div>
                 )}
-                
-                {result.details.errors.length > 0 && (
-                  <div>
-                    <p className="text-xs font-medium mb-1">Avisos ({result.details.errors.length}):</p>
-                    <div className="text-xs opacity-70">
-                      {result.details.errors.slice(0, 3).map((error, i) => (
-                        <div key={i}>• {error.table}: {error.error}</div>
-                      ))}
-                      {result.details.errors.length > 3 && (
-                        <div>... e mais {result.details.errors.length - 3} avisos</div>
-                      )}
-                    </div>
-                  </div>
-                )}
-                
-                <div className="mt-2 flex items-center gap-2">
-                  <Badge variant={result.details.emailLiberated ? "default" : "destructive"} className="text-xs">
-                    {result.details.emailLiberated ? "✅ Email liberado" : "❌ Email não liberado"}
-                  </Badge>
-                </div>
               </div>
             )}
           </AlertDialogDescription>

@@ -6,11 +6,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
 import SimpleInvitesTab from './components/SimpleInvitesTab';
 import { SimplifiedCreateInviteModal } from './components/SimplifiedCreateInviteModal';
+import { ManualCleanupDialog } from '@/components/admin/users/ManualCleanupDialog';
 import { useInvites, type Invite } from '@/hooks/admin/useInvites';
 import { type CreateInviteParams } from '@/hooks/admin/invites/types';
 
 const InvitesManagement = () => {
   const [open, setOpen] = useState(false);
+  const [cleanupOpen, setCleanupOpen] = useState(false);
   const { invites, loading, fetchInvites, createInvite, isCreating } = useInvites();
 
   useEffect(() => {
@@ -47,16 +49,24 @@ const InvitesManagement = () => {
           </p>
         </div>
 
-        <Button onClick={() => setOpen(true)}>
-          <Plus className="w-4 h-4 mr-2" />
-          Criar Convite
-        </Button>
+        <div className="flex gap-2">
+          <Button 
+            variant="outline"
+            onClick={() => setCleanupOpen(true)}
+            className="bg-red-50 hover:bg-red-100 text-red-700 border-red-200"
+          >
+            🧹 Limpeza Manual
+          </Button>
+          <Button onClick={() => setOpen(true)}>
+            <Plus className="w-4 h-4 mr-2" />
+            Criar Convite
+          </Button>
+        </div>
       </div>
 
       <Tabs defaultValue="simples" className="mt-4">
         <TabsList>
           <TabsTrigger value="simples">Convites</TabsTrigger>
-          {/* <TabsTrigger value="avancado">Relatórios</TabsTrigger> */}
         </TabsList>
         <TabsContent value="simples" className="space-y-4">
            <SimpleInvitesTab
@@ -65,9 +75,6 @@ const InvitesManagement = () => {
               onInvitesChange={fetchInvites}
             />
         </TabsContent>
-        {/* <TabsContent value="avancado">
-          Em breve: Relatórios detalhados sobre os convites.
-        </TabsContent> */}
       </Tabs>
 
       <SimplifiedCreateInviteModal
@@ -75,6 +82,12 @@ const InvitesManagement = () => {
         onOpenChange={setOpen}
         onCreate={handleCreateInvite}
         isLoading={isCreating}
+      />
+
+      <ManualCleanupDialog
+        open={cleanupOpen}
+        onOpenChange={setCleanupOpen}
+        onSuccess={fetchInvites}
       />
     </div>
   );
