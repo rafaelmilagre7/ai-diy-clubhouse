@@ -24,6 +24,11 @@ interface OptimizedAnalyticsData {
     count: number;
     percentage: number;
   }[];
+  conversionFunnel: {
+    stage: string;
+    count: number;
+    percentage: number;
+  }[];
 }
 
 export const useOptimizedAnalytics = (timeRange: string = '30d') => {
@@ -36,7 +41,7 @@ export const useOptimizedAnalytics = (timeRange: string = '30d') => {
   const { optimizeQuery } = useInviteCache();
   const { validateAnalyticsData } = useDataValidation();
 
-  const { data, loading, error, refetch } = useQuery({
+  const { data, isLoading, error, refetch } = useQuery({
     queryKey: ['invite-analytics-optimized', timeRange, filters],
     queryFn: async () => {
       const startDate = new Date();
@@ -137,6 +142,25 @@ export const useOptimizedAnalytics = (timeRange: string = '30d') => {
         });
       });
 
+      // Processar funil de conversão
+      const conversionFunnel: OptimizedAnalyticsData['conversionFunnel'] = [
+        {
+          stage: 'Convites Enviados',
+          count: totalInvites,
+          percentage: 100
+        },
+        {
+          stage: 'Convites Entregues',
+          count: invites.filter(i => (i.invite_deliveries || []).some((d: any) => d.status === 'delivered')).length,
+          percentage: totalInvites > 0 ? (invites.filter(i => (i.invite_deliveries || []).some((d: any) => d.status === 'delivered')).length / totalInvites) * 100 : 0
+        },
+        {
+          stage: 'Convites Aceitos',
+          count: acceptedInvites,
+          percentage: totalInvites > 0 ? (acceptedInvites / totalInvites) * 100 : 0
+        }
+      ];
+
       const analyticsData: OptimizedAnalyticsData = {
         metrics: {
           totalInvites,
@@ -145,7 +169,8 @@ export const useOptimizedAnalytics = (timeRange: string = '30d') => {
           topPerformingChannel
         },
         trends: trendsResult.data || [],
-        segmentation: segmentationData
+        segmentation: segmentationData,
+        conversionFunnel
       };
 
       // Validar dados antes de retornar
@@ -195,9 +220,10 @@ export const useOptimizedAnalytics = (timeRange: string = '30d') => {
         topPerformingChannel: 'email'
       },
       trends: [],
-      segmentation: []
+      segmentation: [],
+      conversionFunnel: []
     },
-    loading,
+    loading: isLoading,
     error,
     filters,
     updateFilters,
