@@ -6,14 +6,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
 import SimpleInvitesTab from './components/SimpleInvitesTab';
 import { SimplifiedCreateInviteModal } from './components/SimplifiedCreateInviteModal';
-import { ManualCleanupDialog } from '@/components/admin/users/ManualCleanupDialog';
 import { ForceDeleteDialog } from '@/components/admin/users/ForceDeleteDialog';
 import { useInvites, type Invite } from '@/hooks/admin/useInvites';
 import { type CreateInviteParams } from '@/hooks/admin/invites/types';
 
 const InvitesManagement = () => {
   const [open, setOpen] = useState(false);
-  const [cleanupOpen, setCleanupOpen] = useState(false);
   const [forceDeleteOpen, setForceDeleteOpen] = useState(false);
   const { invites, loading, fetchInvites, createInvite, isCreating } = useInvites();
 
@@ -54,13 +52,6 @@ const InvitesManagement = () => {
         <div className="flex gap-2">
           <Button 
             variant="outline"
-            onClick={() => setCleanupOpen(true)}
-            className="bg-yellow-50 hover:bg-yellow-100 text-yellow-700 border-yellow-200"
-          >
-            🧹 Limpeza Simples
-          </Button>
-          <Button 
-            variant="outline"
             onClick={() => setForceDeleteOpen(true)}
             className="bg-red-50 hover:bg-red-100 text-red-700 border-red-200"
           >
@@ -91,12 +82,6 @@ const InvitesManagement = () => {
         onOpenChange={setOpen}
         onCreate={handleCreateInvite}
         isLoading={isCreating}
-      />
-
-      <ManualCleanupDialog
-        open={cleanupOpen}
-        onOpenChange={setCleanupOpen}
-        onSuccess={fetchInvites}
       />
 
       <ForceDeleteDialog

@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Search, RefreshCw, UserPlus, Trash2 } from "lucide-react";
-import { ManualCleanupDialog } from "./ManualCleanupDialog";
+import { ForceDeleteDialog } from "./ForceDeleteDialog";
 
 interface UsersHeaderProps {
   searchQuery: string;
@@ -18,7 +18,7 @@ export const UsersHeader: React.FC<UsersHeaderProps> = ({
   onRefresh,
   isRefreshing,
 }) => {
-  const [cleanupDialogOpen, setCleanupDialogOpen] = useState(false);
+  const [forceDeleteOpen, setForceDeleteOpen] = useState(false);
 
   return (
     <>
@@ -32,13 +32,13 @@ export const UsersHeader: React.FC<UsersHeaderProps> = ({
         
         <div className="flex items-center space-x-2">
           <Button
-            onClick={() => setCleanupDialogOpen(true)}
+            onClick={() => setForceDeleteOpen(true)}
             variant="outline"
             size="sm"
             className="text-red-600 border-red-200 hover:bg-red-50"
           >
             <Trash2 className="mr-2 h-4 w-4" />
-            Limpeza Manual
+            🚨 EXCLUSÃO TOTAL
           </Button>
           
           <Button
@@ -74,9 +74,9 @@ export const UsersHeader: React.FC<UsersHeaderProps> = ({
         </div>
       </div>
 
-      <ManualCleanupDialog
-        open={cleanupDialogOpen}
-        onOpenChange={setCleanupDialogOpen}
+      <ForceDeleteDialog
+        open={forceDeleteOpen}
+        onOpenChange={setForceDeleteOpen}
         onSuccess={onRefresh}
       />
     </>
