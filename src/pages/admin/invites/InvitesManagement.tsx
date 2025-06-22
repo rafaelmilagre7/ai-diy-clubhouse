@@ -64,7 +64,7 @@ const InvitesManagement = () => {
             onClick={() => setForceDeleteOpen(true)}
             className="bg-red-50 hover:bg-red-100 text-red-700 border-red-200"
           >
-            🚨 Exclusão Total
+            🚨 EXCLUSÃO TOTAL
           </Button>
           <Button onClick={() => setOpen(true)}>
             <Plus className="w-4 h-4 mr-2" />
