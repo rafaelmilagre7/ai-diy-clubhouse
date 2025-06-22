@@ -3,21 +3,20 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useLogging } from '@/hooks/useLogging';
 
-interface Recommendation {
+interface AutoRecommendation {
   id: string;
-  type: 'performance' | 'engagement' | 'content' | 'user_experience';
   title: string;
   description: string;
-  impact: 'low' | 'medium' | 'high';
-  effort: 'low' | 'medium' | 'high';
+  type: 'performance' | 'engagement' | 'content' | 'user_experience';
+  impact: 'high' | 'medium' | 'low';
+  effort: 'high' | 'medium' | 'low';
   priority: number;
-  category: string;
-  actionItems: string[];
   metrics: {
     current: number;
     target: number;
     unit: string;
   };
+  actionItems: string[];
 }
 
 export const useAutoRecommendations = (timeRange: string) => {
@@ -25,15 +24,14 @@ export const useAutoRecommendations = (timeRange: string) => {
 
   return useQuery({
     queryKey: ['auto-recommendations', timeRange],
-    queryFn: async (): Promise<Recommendation[]> => {
+    queryFn: async (): Promise<AutoRecommendation[]> => {
       try {
         log('Gerando recomendações automáticas baseadas em dados', { timeRange });
 
-        const recommendations: Recommendation[] = [];
-        
-        // Calcular data de início baseada no timeRange
+        // Calcular período baseado no timeRange
         const now = new Date();
         let startDate: Date;
+
         switch (timeRange) {
           case '7d':
             startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
@@ -48,179 +46,147 @@ export const useAutoRecommendations = (timeRange: string) => {
             startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
         }
 
-        // 1. Analisar taxa de conclusão
+        // 1. Buscar dados de progresso para análise
         const { data: progressData } = await supabase
           .from('progress')
-          .select('is_completed, created_at')
-          .gte('created_at', startDate.toISOString());
-
-        if (progressData && progressData.length > 0) {
-          const completionRate = (progressData.filter(p => p.is_completed).length / progressData.length) * 100;
-          
-          if (completionRate < 50) {
-            recommendations.push({
-              id: 'low-completion-rate',
-              type: 'performance',
-              title: 'Melhorar Taxa de Conclusão',
-              description: `A taxa de conclusão atual é de ${completionRate.toFixed(1)}%, abaixo do ideal de 70%.`,
-              impact: 'high',
-              effort: 'medium',
-              priority: 90,
-              category: 'Performance',
-              actionItems: [
-                'Revisar conteúdo dos módulos iniciais',
-                'Implementar sistema de gamificação',
-                'Adicionar lembretes por email',
-                'Simplificar navegação entre módulos'
-              ],
-              metrics: {
-                current: completionRate,
-                target: 70,
-                unit: '%'
-              }
-            });
-          }
-        }
-
-        // 2. Analisar atividade de usuários
-        const { data: activeUsers } = await supabase
-          .from('analytics')
-          .select('user_id, created_at')
-          .gte('created_at', startDate.toISOString());
-
-        const uniqueActiveUsers = new Set(activeUsers?.map(u => u.user_id) || []).size;
-        
-        // 3. Buscar total de usuários registrados
-        const { data: totalUsers } = await supabase
-          .from('profiles')
-          .select('id', { count: 'exact', head: true });
-
-        const totalUsersCount = totalUsers?.length || 0;
-        const engagementRate = totalUsersCount > 0 ? (uniqueActiveUsers / totalUsersCount) * 100 : 0;
-
-        if (engagementRate < 30 && totalUsersCount > 10) {
-          recommendations.push({
-            id: 'low-engagement',
-            type: 'engagement',
-            title: 'Aumentar Engajamento de Usuários',
-            description: `Apenas ${engagementRate.toFixed(1)}% dos usuários estão ativos. Meta: 50%.`,
-            impact: 'high',
-            effort: 'high',
-            priority: 85,
-            category: 'Engajamento',
-            actionItems: [
-              'Criar programa de onboarding mais envolvente',
-              'Implementar notificações push',
-              'Desenvolver conteúdo mais interativo',
-              'Adicionar comunidade ativa'
-            ],
-            metrics: {
-              current: engagementRate,
-              target: 50,
-              unit: '%'
-            }
-          });
-        }
-
-        // 4. Analisar abandono por dificuldade
-        const { data: solutionProgress } = await supabase
-          .from('progress')
           .select(`
-            is_completed,
-            solutions!inner (
-              difficulty
-            )
+            *,
+            solutions(title, category, difficulty)
           `)
           .gte('created_at', startDate.toISOString());
 
-        if (solutionProgress && solutionProgress.length > 0) {
-          const hardSolutions = solutionProgress.filter(sp => sp.solutions?.difficulty === 'Difícil');
-          const hardCompletionRate = hardSolutions.length > 0 
-            ? (hardSolutions.filter(hs => hs.is_completed).length / hardSolutions.length) * 100 
-            : 0;
-
-          if (hardCompletionRate < 20 && hardSolutions.length > 5) {
-            recommendations.push({
-              id: 'hard-content-optimization',
-              type: 'content',
-              title: 'Otimizar Conteúdo Difícil',
-              description: `Soluções difíceis têm apenas ${hardCompletionRate.toFixed(1)}% de conclusão.`,
-              impact: 'medium',
-              effort: 'medium',
-              priority: 70,
-              category: 'Conteúdo',
-              actionItems: [
-                'Adicionar mais exemplos práticos',
-                'Criar vídeos explicativos detalhados',
-                'Implementar sistema de mentoria',
-                'Dividir conteúdo em etapas menores'
-              ],
-              metrics: {
-                current: hardCompletionRate,
-                target: 40,
-                unit: '%'
-              }
-            });
-          }
-        }
-
-        // 5. Analisar tempo de resposta no fórum (se houver dados)
-        const { data: forumActivity } = await supabase
-          .from('forum_topics')
-          .select('reply_count, created_at')
+        // 2. Buscar dados de usuários ativos
+        const { data: activeUsers } = await supabase
+          .from('analytics')
+          .select('user_id')
           .gte('created_at', startDate.toISOString());
 
-        if (forumActivity && forumActivity.length > 0) {
-          const topicsWithoutReplies = forumActivity.filter(t => t.reply_count === 0).length;
-          const responseRate = ((forumActivity.length - topicsWithoutReplies) / forumActivity.length) * 100;
+        // 3. Buscar dados de implementações
+        const { data: implementations } = await supabase
+          .from('user_solutions')
+          .select('*')
+          .gte('created_at', startDate.toISOString());
 
-          if (responseRate < 60 && forumActivity.length > 10) {
-            recommendations.push({
-              id: 'improve-community-response',
-              type: 'user_experience',
-              title: 'Melhorar Resposta da Comunidade',
-              description: `${responseRate.toFixed(1)}% dos tópicos recebem respostas. Meta: 80%.`,
-              impact: 'medium',
-              effort: 'low',
-              priority: 60,
-              category: 'Experiência do Usuário',
-              actionItems: [
-                'Implementar sistema de gamificação para respostas',
-                'Destacar perguntas não respondidas',
-                'Criar programa de moderadores voluntários',
-                'Adicionar notificações para especialistas'
-              ],
-              metrics: {
-                current: responseRate,
-                target: 80,
-                unit: '%'
-              }
-            });
-          }
+        const recommendations: AutoRecommendation[] = [];
+
+        // Análise 1: Taxa de conclusão baixa
+        const totalProgress = progressData?.length || 0;
+        const completedProgress = progressData?.filter(p => p.is_completed).length || 0;
+        const completionRate = totalProgress > 0 ? (completedProgress / totalProgress) * 100 : 0;
+
+        if (completionRate < 60 && totalProgress > 10) {
+          recommendations.push({
+            id: 'low-completion-rate',
+            title: 'Melhorar Taxa de Conclusão',
+            description: 'A taxa de conclusão de implementações está abaixo do ideal. Considere revisar o conteúdo e adicionar mais suporte.',
+            type: 'performance',
+            impact: 'high',
+            effort: 'medium',
+            priority: 90,
+            metrics: {
+              current: completionRate,
+              target: 75,
+              unit: '%'
+            },
+            actionItems: [
+              'Revisar módulos com maior taxa de abandono',
+              'Adicionar mais exemplos práticos',
+              'Implementar sistema de gamificação',
+              'Criar conteúdo de apoio adicional'
+            ]
+          });
         }
 
-        // Se não há dados suficientes, adicionar recomendação padrão
-        if (recommendations.length === 0) {
+        // Análise 2: Engajamento de usuários
+        const uniqueActiveUsers = new Set(activeUsers?.map(u => u.user_id) || []).size;
+        const totalImplementations = implementations?.length || 0;
+        const engagementRate = uniqueActiveUsers > 0 ? (totalImplementations / uniqueActiveUsers) : 0;
+
+        if (engagementRate < 2 && uniqueActiveUsers > 5) {
           recommendations.push({
-            id: 'data-collection',
-            type: 'performance',
-            title: 'Aumentar Coleta de Dados',
-            description: 'Colete mais dados de uso para gerar recomendações personalizadas.',
-            impact: 'low',
-            effort: 'low',
-            priority: 30,
-            category: 'Análise',
-            actionItems: [
-              'Implementar mais eventos de tracking',
-              'Adicionar formulários de feedback',
-              'Configurar analytics avançados',
-              'Criar dashboards de monitoramento'
-            ],
+            id: 'low-user-engagement',
+            title: 'Aumentar Engajamento dos Usuários',
+            description: 'Os usuários estão iniciando poucas implementações. Melhore a descoberta de conteúdo e motivação.',
+            type: 'engagement',
+            impact: 'high',
+            effort: 'medium',
+            priority: 85,
             metrics: {
-              current: 0,
-              target: 100,
-              unit: '%'
+              current: engagementRate,
+              target: 3,
+              unit: ' impl/usuário'
+            },
+            actionItems: [
+              'Implementar sistema de recomendações personalizadas',
+              'Criar trilhas de aprendizado guiadas',
+              'Adicionar notificações de lembrete',
+              'Melhorar onboarding inicial'
+            ]
+          });
+        }
+
+        // Análise 3: Distribuição de dificuldade
+        const solutionsByDifficulty = progressData?.reduce((acc, progress) => {
+          if (progress.solutions && Array.isArray(progress.solutions) && progress.solutions.length > 0) {
+            const solution = progress.solutions[0];
+            if (solution && solution.difficulty) {
+              acc[solution.difficulty] = (acc[solution.difficulty] || 0) + 1;
             }
+          }
+          return acc;
+        }, {} as Record<string, number>) || {};
+
+        const beginnerCount = solutionsByDifficulty['beginner'] || 0;
+        const totalSolutions = Object.values(solutionsByDifficulty).reduce((sum, count) => sum + count, 0);
+
+        if (beginnerCount / totalSolutions > 0.8 && totalSolutions > 5) {
+          recommendations.push({
+            id: 'content-difficulty-balance',
+            title: 'Diversificar Níveis de Dificuldade',
+            description: 'Há um excesso de conteúdo para iniciantes. Adicione mais soluções intermediárias e avançadas.',
+            type: 'content',
+            impact: 'medium',
+            effort: 'high',
+            priority: 70,
+            metrics: {
+              current: (beginnerCount / totalSolutions) * 100,
+              target: 50,
+              unit: '% iniciante'
+            },
+            actionItems: [
+              'Criar mais soluções de nível intermediário',
+              'Desenvolver conteúdo avançado',
+              'Implementar sistema de progressão gradual',
+              'Adicionar pré-requisitos para soluções complexas'
+            ]
+          });
+        }
+
+        // Análise 4: Tempo de implementação
+        const recentImplementations = implementations?.filter(impl => 
+          impl.created_at && new Date(impl.created_at) > startDate
+        ) || [];
+
+        if (recentImplementations.length < uniqueActiveUsers * 0.5 && uniqueActiveUsers > 3) {
+          recommendations.push({
+            id: 'implementation-speed',
+            title: 'Acelerar Início de Implementações',
+            description: 'Usuários estão demorando para iniciar implementações após o cadastro.',
+            type: 'user_experience',
+            impact: 'medium',
+            effort: 'low',
+            priority: 65,
+            metrics: {
+              current: recentImplementations.length,
+              target: Math.ceil(uniqueActiveUsers * 0.8),
+              unit: ' implementações'
+            },
+            actionItems: [
+              'Simplificar processo de seleção de soluções',
+              'Adicionar tour guiado na primeira visita',
+              'Criar dashboard mais intuitivo',
+              'Implementar sugestões automáticas na homepage'
+            ]
           });
         }
 
@@ -229,7 +195,13 @@ export const useAutoRecommendations = (timeRange: string) => {
 
         log('Recomendações automáticas geradas', { 
           count: recommendations.length,
-          timeRange
+          timeRange,
+          dataAnalyzed: {
+            totalProgress,
+            completedProgress,
+            uniqueActiveUsers,
+            totalImplementations
+          }
         });
 
         return recommendations;
@@ -240,23 +212,8 @@ export const useAutoRecommendations = (timeRange: string) => {
           timeRange
         });
         
-        // Retornar recomendação padrão em caso de erro
-        return [{
-          id: 'error-fallback',
-          type: 'performance',
-          title: 'Erro na Análise',
-          description: 'Não foi possível gerar recomendações automáticas no momento.',
-          impact: 'low',
-          effort: 'low',
-          priority: 10,
-          category: 'Sistema',
-          actionItems: ['Verificar conexão com banco de dados', 'Revisar logs de erro'],
-          metrics: {
-            current: 0,
-            target: 100,
-            unit: '%'
-          }
-        }];
+        // Retornar lista vazia em caso de erro
+        return [];
       }
     },
     staleTime: 10 * 60 * 1000, // 10 minutos
