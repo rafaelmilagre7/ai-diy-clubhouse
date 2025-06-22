@@ -77,7 +77,7 @@ export const OnboardingWizardContainer: React.FC<OnboardingWizardContainerProps>
   };
 
   const { data, updateData, forceSave } = useOnboardingStorage();
-  const { validationErrors, validateStep, getFieldError } = useOnboardingValidation(data, currentStep, memberType);
+  const { validationErrors, validateStep, getFieldError } = useOnboardingValidation();
 
   // Carregar dados ao inicializar
   useEffect(() => {
