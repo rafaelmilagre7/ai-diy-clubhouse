@@ -41,7 +41,7 @@ interface OnboardingWizardContainerProps {
 
 export const OnboardingWizardContainer: React.FC<OnboardingWizardContainerProps> = ({ children }) => {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const totalSteps = 6;
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -61,7 +61,6 @@ export const OnboardingWizardContainer: React.FC<OnboardingWizardContainerProps>
     validateStep 
   } = useOnboardingValidation();
 
-  // Usar useCallback para evitar re-criação desnecessária das funções
   const handleNext = useCallback(async (): Promise<void> => {
     if (currentStep < totalSteps) {
       await forceSave();
@@ -81,7 +80,7 @@ export const OnboardingWizardContainer: React.FC<OnboardingWizardContainerProps>
   }, [updateData]);
 
   const handleSubmit = useCallback(async (): Promise<void> => {
-    if (isSubmitting || !user?.id) return; // Prevenir múltiplas submissões
+    if (isSubmitting || !user?.id) return;
     
     try {
       setIsSubmitting(true);
@@ -129,6 +128,7 @@ export const OnboardingWizardContainer: React.FC<OnboardingWizardContainerProps>
         started_at: data.startedAt || new Date().toISOString()
       };
 
+      // Salvar na tabela user_onboarding
       const { error: saveError } = await supabase
         .from('user_onboarding')
         .upsert(onboardingRecord as any, { 
@@ -141,21 +141,45 @@ export const OnboardingWizardContainer: React.FC<OnboardingWizardContainerProps>
         throw new Error(`Erro ao salvar onboarding: ${saveError.message}`);
       }
 
-      console.log('[OnboardingWizard] Onboarding salvo com sucesso na base de dados');
+      console.log('[OnboardingWizard] Onboarding salvo com sucesso na user_onboarding');
 
-      // 3. Mostrar mensagem de sucesso
+      // 3. CRÍTICO: Atualizar profiles.onboarding_completed = true
+      const { error: profileUpdateError } = await supabase
+        .from('profiles')
+        .update({ 
+          onboarding_completed: true,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', user.id);
+
+      if (profileUpdateError) {
+        console.error('[OnboardingWizard] Erro ao atualizar profile:', profileUpdateError);
+        throw new Error(`Erro ao atualizar perfil: ${profileUpdateError.message}`);
+      }
+
+      console.log('[OnboardingWizard] Profile atualizado com onboarding_completed = true');
+
+      // 4. Mostrar mensagem de sucesso
       toast({
         title: "Onboarding Concluído! 🎉",
-        description: "Seus dados foram salvos com sucesso. Redirecionando para o dashboard...",
+        description: "Seus dados foram salvos com sucesso. Redirecionando...",
       });
 
-      // 4. Aguardar um pouco antes de redirecionar
+      // 5. Aguardar um pouco antes de redirecionar
       await new Promise(resolve => setTimeout(resolve, 1500));
       
-      console.log('[OnboardingWizard] Redirecionando para dashboard');
+      console.log('[OnboardingWizard] Redirecionando usuário');
       
-      // 5. Redirecionar para o dashboard após conclusão bem-sucedida
-      navigate('/dashboard', { replace: true });
+      // 6. Redirecionar baseado no tipo de membro
+      const userRole = profile?.user_roles?.name;
+      let redirectPath = '/dashboard';
+      
+      if (userRole === 'formacao') {
+        redirectPath = '/formacao';
+      }
+      
+      console.log('[OnboardingWizard] Redirecionando para:', redirectPath);
+      navigate(redirectPath, { replace: true });
       
     } catch (error) {
       console.error('[OnboardingWizard] Erro ao finalizar onboarding:', error);
@@ -167,9 +191,8 @@ export const OnboardingWizardContainer: React.FC<OnboardingWizardContainerProps>
     } finally {
       setIsSubmitting(false);
     }
-  }, [isSubmitting, user?.id, forceSave, navigate, data]);
+  }, [isSubmitting, user?.id, profile?.user_roles?.name, forceSave, navigate, data]);
 
-  // Calcular se o passo atual é válido de forma memoizada
   const isCurrentStepValid = React.useMemo(() => {
     return validateStep(currentStep, data, 'club');
   }, [validateStep, currentStep, data]);

@@ -58,15 +58,15 @@ export const validateFormacaoStep = (step: number, data: OnboardingData): Valida
 
     case 3:
       // Maturidade em IA - campos obrigatórios
-      if (!data.hasImplementedAI) {
+      if (!data.hasImplementedAI?.trim()) {
         errors.push({ field: 'hasImplementedAI', message: 'Resposta é obrigatória' });
       }
       
-      if (!data.aiKnowledgeLevel) {
+      if (!data.aiKnowledgeLevel?.trim()) {
         errors.push({ field: 'aiKnowledgeLevel', message: 'Nível de conhecimento é obrigatório' });
       }
       
-      // Usar aiToolsUsed ao invés de dailyTools
+      // Validar se pelo menos uma ferramenta foi selecionada
       if (!data.aiToolsUsed || data.aiToolsUsed.length === 0) {
         errors.push({ field: 'aiToolsUsed', message: 'Selecione pelo menos uma ferramenta' });
       }
@@ -76,7 +76,7 @@ export const validateFormacaoStep = (step: number, data: OnboardingData): Valida
 
     case 4:
       // Objetivos e Expectativas - campos obrigatórios
-      if (!data.mainObjective) {
+      if (!data.mainObjective?.trim()) {
         errors.push({ field: 'mainObjective', message: 'Objetivo principal é obrigatório' });
       }
       
@@ -88,22 +88,22 @@ export const validateFormacaoStep = (step: number, data: OnboardingData): Valida
         errors.push({ field: 'expectedResult90Days', message: 'Resultado esperado é obrigatório' });
       }
       
-      if (!data.aiImplementationBudget) {
+      if (!data.aiImplementationBudget?.trim()) {
         errors.push({ field: 'aiImplementationBudget', message: 'Orçamento é obrigatório' });
       }
       break;
 
     case 5:
       // Personalização da Experiência - campos obrigatórios
-      if (!data.weeklyLearningTime) {
+      if (!data.weeklyLearningTime?.trim()) {
         errors.push({ field: 'weeklyLearningTime', message: 'Tempo semanal é obrigatório' });
       }
       
-      if (!data.contentPreference) {
+      if (!data.contentPreference || data.contentPreference.length === 0) {
         errors.push({ field: 'contentPreference', message: 'Preferência de conteúdo é obrigatória' });
       }
       
-      if (!data.wantsNetworking) {
+      if (!data.wantsNetworking?.trim()) {
         errors.push({ field: 'wantsNetworking', message: 'Resposta sobre networking é obrigatória' });
       }
       
@@ -115,7 +115,7 @@ export const validateFormacaoStep = (step: number, data: OnboardingData): Valida
         errors.push({ field: 'bestPeriods', message: 'Selecione pelo menos um período' });
       }
       
-      if (!data.acceptsCaseStudy) {
+      if (!data.acceptsCaseStudy?.trim()) {
         errors.push({ field: 'acceptsCaseStudy', message: 'Resposta sobre estudo de caso é obrigatória' });
       }
       break;
