@@ -23,6 +23,12 @@ const AuthLayout = () => {
   const inviteToken = searchParams.get('token');
   const email = searchParams.get('email');
 
+  console.log('[AUTH-LAYOUT] Renderizando com parâmetros:', {
+    inviteToken: inviteToken ? `${inviteToken.substring(0, 8)}...` : null,
+    email,
+    user: user ? user.email : null
+  });
+
   // Processar convite para usuário logado
   useEffect(() => {
     const processExistingUserInvite = async () => {
@@ -31,7 +37,7 @@ const AuthLayout = () => {
         
         try {
           console.log('[AUTH-LAYOUT] Processando convite para usuário logado:', {
-            token: inviteToken,
+            token: inviteToken.substring(0, 8) + '...',
             userEmail: user.email
           });
 
@@ -65,6 +71,7 @@ const AuthLayout = () => {
   // Redirecionar usuário autenticado sem convite
   useEffect(() => {
     if (user && !inviteToken) {
+      console.log('[AUTH-LAYOUT] Usuário logado sem convite, redirecionando para dashboard');
       navigate('/dashboard');
     }
   }, [user, inviteToken, navigate]);
@@ -72,6 +79,7 @@ const AuthLayout = () => {
   // Mostrar tab de registro se houver convite
   useEffect(() => {
     if (inviteToken && !user) {
+      console.log('[AUTH-LAYOUT] Convite detectado, definindo tab para registro');
       setActiveTab('register');
     }
   }, [inviteToken, user]);
@@ -100,6 +108,7 @@ const AuthLayout = () => {
   }
 
   const handleSuccess = () => {
+    console.log('[AUTH-LAYOUT] Sucesso na autenticação, redirecionando...');
     // Redirecionar para onboarding se novo usuário, ou dashboard se existente
     if (inviteToken) {
       navigate('/onboarding');
@@ -123,7 +132,7 @@ const AuthLayout = () => {
             <TabsList className="grid w-full grid-cols-2 mb-6">
               <TabsTrigger value="login">Entrar</TabsTrigger>
               <TabsTrigger value="register">
-                {inviteToken ? 'Cadastrar' : 'Criar conta'}
+                {inviteToken ? 'Aceitar Convite' : 'Criar conta'}
               </TabsTrigger>
             </TabsList>
             
