@@ -1,7 +1,6 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/auth';
-import { supabase } from '@/lib/supabase';
 import { getUserRoleName } from '@/lib/supabase/types';
 
 export const useOnboardingRequired = () => {
@@ -20,25 +19,28 @@ export const useOnboardingRequired = () => {
       try {
         console.log('[ONBOARDING-REQUIRED] Verificando necessidade de onboarding para:', user.id);
         
-        // MUDANÇA CRÍTICA: Usar APENAS profiles.onboarding_completed como fonte de verdade
+        // Verificar se onboarding foi completado
         const onboardingCompleted = profile?.onboarding_completed === true;
+        
+        // NOVA LÓGICA: Verificar se dados básicos foram coletados no registro
+        const basicInfoCompleted = profile?.basic_info_completed === true;
         
         console.log('[ONBOARDING-REQUIRED] Status do onboarding:', {
           userId: user.id,
           email: user.email,
           profileOnboardingCompleted: profile?.onboarding_completed,
+          basicInfoCompleted: profile?.basic_info_completed,
           onboardingCompleted,
           userRole: getUserRoleName(profile)
         });
 
-        // TODOS os usuários (incluindo admins) DEVEM fazer onboarding
-        // Única exceção: se onboarding_completed = true no perfil
-        if (onboardingCompleted) {
-          console.log('[ONBOARDING-REQUIRED] Onboarding já completado');
+        // Se onboarding já foi completado OU dados básicos foram coletados
+        if (onboardingCompleted || basicInfoCompleted) {
+          console.log('[ONBOARDING-REQUIRED] Onboarding não necessário - dados suficientes');
           setIsRequired(false);
           setHasCompleted(true);
         } else {
-          console.log('[ONBOARDING-REQUIRED] Onboarding OBRIGATÓRIO - não completado');
+          console.log('[ONBOARDING-REQUIRED] Onboarding OBRIGATÓRIO - dados insuficientes');
           setIsRequired(true);
           setHasCompleted(false);
         }
@@ -61,7 +63,8 @@ export const useOnboardingRequired = () => {
     isRequired,
     hasCompleted,
     userId: user?.id,
-    profileOnboardingCompleted: profile?.onboarding_completed
+    profileOnboardingCompleted: profile?.onboarding_completed,
+    basicInfoCompleted: profile?.basic_info_completed
   });
 
   return {
