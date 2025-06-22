@@ -67,76 +67,70 @@ export const useCampaignManagement = () => {
     try {
       setLoading(true);
       
-      // Por enquanto, vamos simular dados até termos a tabela no banco
-      const mockCampaigns: InviteCampaign[] = [
-        {
-          id: '1',
-          name: 'Campanha Q4 - Novos Membros',
-          description: 'Captação de novos membros para Q4',
-          status: 'active',
-          targetRole: 'member',
-          targetRoleName: 'Membro',
-          emailTemplate: 'template-welcome-member',
-          channels: ['email', 'whatsapp'],
-          segmentation: {
-            industry: ['tecnologia', 'marketing'],
-            companySize: ['startup', 'pequena']
-          },
-          followUpRules: {
-            enabled: true,
-            intervals: [3, 7, 14],
-            maxAttempts: 3
-          },
-          metrics: {
-            totalInvites: 150,
-            sent: 150,
-            delivered: 142,
-            opened: 85,
-            clicked: 32,
-            registered: 18,
-            conversionRate: 12.0
-          },
-          createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
-          createdBy: 'admin',
-          updatedAt: new Date().toISOString()
-        },
-        {
-          id: '2',
-          name: 'Formação - Especialistas IA',
-          description: 'Convites para especialistas em IA',
-          status: 'paused',
-          targetRole: 'formacao',
-          targetRoleName: 'Formação',
-          emailTemplate: 'template-welcome-formacao',
-          channels: ['email'],
-          segmentation: {
-            industry: ['tecnologia', 'educacao'],
-            companySize: ['media', 'grande']
-          },
-          followUpRules: {
+      // Buscar campanhas reais do banco de dados
+      const { data: campaignsData, error: campaignsError } = await supabase
+        .from('invite_campaigns')
+        .select(`
+          *,
+          user_roles:target_role_id(name),
+          campaign_invites(
+            invite_id,
+            invites(id, used_at, created_at)
+          )
+        `)
+        .order('created_at', { ascending: false });
+
+      if (campaignsError) {
+        console.error("Erro ao buscar campanhas:", campaignsError);
+        toast.error("Erro ao carregar campanhas");
+        setCampaigns([]);
+        return;
+      }
+
+      // Processar campanhas reais (sem dados fictícios)
+      const processedCampaigns = campaignsData?.map(campaign => {
+        const totalInvites = campaign.campaign_invites?.length || 0;
+        const conversions = campaign.campaign_invites?.filter(
+          ci => ci.invites?.used_at
+        ).length || 0;
+        
+        return {
+          id: campaign.id,
+          name: campaign.name,
+          description: campaign.description,
+          status: campaign.status,
+          targetRole: campaign.target_role_id,
+          targetRoleName: campaign.user_roles?.name,
+          emailTemplate: campaign.email_template,
+          whatsappTemplate: campaign.whatsapp_template,
+          scheduledFor: campaign.scheduled_for,
+          channels: campaign.channels || ['email'],
+          segmentation: campaign.segmentation || {},
+          followUpRules: campaign.follow_up_rules || {
             enabled: false,
             intervals: [],
             maxAttempts: 1
           },
           metrics: {
-            totalInvites: 50,
-            sent: 45,
-            delivered: 43,
-            opened: 28,
-            clicked: 12,
-            registered: 8,
-            conversionRate: 16.0
+            totalInvites,
+            sent: totalInvites, // Todos os convites da campanha foram enviados
+            delivered: 0, // Calcular baseado em invite_deliveries
+            opened: 0, // Calcular baseado em invite_analytics_events
+            clicked: 0, // Calcular baseado em invite_analytics_events
+            registered: conversions,
+            conversionRate: totalInvites > 0 ? (conversions / totalInvites) * 100 : 0
           },
-          createdAt: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString(),
-          createdBy: 'admin',
-          updatedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString()
-        }
-      ];
+          createdAt: campaign.created_at,
+          createdBy: campaign.created_by,
+          updatedAt: campaign.updated_at
+        };
+      }) || [];
 
-      setCampaigns(mockCampaigns);
+      setCampaigns(processedCampaigns);
     } catch (error: any) {
       console.error("Erro ao buscar campanhas:", error);
       toast.error("Erro ao carregar campanhas");
+      setCampaigns([]);
     } finally {
       setLoading(false);
     }
@@ -146,29 +140,30 @@ export const useCampaignManagement = () => {
     try {
       setCreating(true);
       
-      // Simular criação até termos a tabela
-      const newCampaign: InviteCampaign = {
-        id: Math.random().toString(36).substr(2, 9),
-        ...params,
-        status: 'draft',
-        metrics: {
-          totalInvites: 0,
-          sent: 0,
-          delivered: 0,
-          opened: 0,
-          clicked: 0,
-          registered: 0,
-          conversionRate: 0
-        },
-        createdAt: new Date().toISOString(),
-        createdBy: 'current-user',
-        updatedAt: new Date().toISOString()
-      };
+      const { data, error } = await supabase
+        .from('invite_campaigns')
+        .insert([{
+          name: params.name,
+          description: params.description,
+          target_role_id: params.targetRole,
+          email_template: params.emailTemplate,
+          whatsapp_template: params.whatsappTemplate,
+          scheduled_for: params.scheduledFor,
+          channels: params.channels,
+          segmentation: params.segmentation,
+          follow_up_rules: params.followUpRules,
+          status: 'draft',
+          created_by: (await supabase.auth.getUser()).data.user?.id
+        }])
+        .select()
+        .single();
 
-      setCampaigns(prev => [newCampaign, ...prev]);
+      if (error) throw error;
+
       toast.success("Campanha criada com sucesso!");
+      await fetchCampaigns();
       
-      return newCampaign.id;
+      return data.id;
     } catch (error: any) {
       console.error("Erro ao criar campanha:", error);
       toast.error("Erro ao criar campanha");
@@ -180,15 +175,15 @@ export const useCampaignManagement = () => {
 
   const updateCampaignStatus = async (campaignId: string, status: InviteCampaign['status']) => {
     try {
-      setCampaigns(prev => 
-        prev.map(campaign => 
-          campaign.id === campaignId 
-            ? { ...campaign, status, updatedAt: new Date().toISOString() }
-            : campaign
-        )
-      );
-      
+      const { error } = await supabase
+        .from('invite_campaigns')
+        .update({ status, updated_at: new Date().toISOString() })
+        .eq('id', campaignId);
+
+      if (error) throw error;
+
       toast.success(`Campanha ${status === 'active' ? 'ativada' : status === 'paused' ? 'pausada' : 'atualizada'} com sucesso!`);
+      await fetchCampaigns();
     } catch (error: any) {
       console.error("Erro ao atualizar status da campanha:", error);
       toast.error("Erro ao atualizar campanha");
@@ -197,8 +192,15 @@ export const useCampaignManagement = () => {
 
   const deleteCampaign = async (campaignId: string) => {
     try {
-      setCampaigns(prev => prev.filter(campaign => campaign.id !== campaignId));
+      const { error } = await supabase
+        .from('invite_campaigns')
+        .delete()
+        .eq('id', campaignId);
+
+      if (error) throw error;
+
       toast.success("Campanha excluída com sucesso!");
+      await fetchCampaigns();
     } catch (error: any) {
       console.error("Erro ao excluir campanha:", error);
       toast.error("Erro ao excluir campanha");
@@ -210,26 +212,25 @@ export const useCampaignManagement = () => {
       const originalCampaign = campaigns.find(c => c.id === campaignId);
       if (!originalCampaign) return;
 
-      const duplicatedCampaign: InviteCampaign = {
-        ...originalCampaign,
-        id: Math.random().toString(36).substr(2, 9),
-        name: `${originalCampaign.name} (Cópia)`,
-        status: 'draft',
-        metrics: {
-          totalInvites: 0,
-          sent: 0,
-          delivered: 0,
-          opened: 0,
-          clicked: 0,
-          registered: 0,
-          conversionRate: 0
-        },
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      };
+      const { error } = await supabase
+        .from('invite_campaigns')
+        .insert([{
+          name: `${originalCampaign.name} (Cópia)`,
+          description: originalCampaign.description,
+          target_role_id: originalCampaign.targetRole,
+          email_template: originalCampaign.emailTemplate,
+          whatsapp_template: originalCampaign.whatsappTemplate,
+          channels: originalCampaign.channels,
+          segmentation: originalCampaign.segmentation,
+          follow_up_rules: originalCampaign.followUpRules,
+          status: 'draft',
+          created_by: (await supabase.auth.getUser()).data.user?.id
+        }]);
 
-      setCampaigns(prev => [duplicatedCampaign, ...prev]);
+      if (error) throw error;
+
       toast.success("Campanha duplicada com sucesso!");
+      await fetchCampaigns();
     } catch (error: any) {
       console.error("Erro ao duplicar campanha:", error);
       toast.error("Erro ao duplicar campanha");

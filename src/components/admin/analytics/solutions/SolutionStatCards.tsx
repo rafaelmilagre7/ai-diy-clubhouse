@@ -1,92 +1,69 @@
 
 import React from 'react';
-import { ModernStatsCard } from '../ModernStatsCard';
-import { BookOpen, FileCheck, Clock, Award } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Target, CheckCircle, TrendingUp, Users } from 'lucide-react';
 
 interface SolutionStatCardsProps {
-  totalSolutions: number;
-  publishedSolutions: number;
-  drafts: number;
-  avgCompletionRate: number;
-  loading?: boolean;
+  data: {
+    totalSolutions: number;
+    publishedSolutions: number;
+    totalImplementations: number;
+    averageCompletionRate: number;
+    // Remover trends hardcoded
+  };
 }
 
-export const SolutionStatCards: React.FC<SolutionStatCardsProps> = ({
-  totalSolutions,
-  publishedSolutions,
-  drafts,
-  avgCompletionRate,
-  loading = false
-}) => {
-  if (loading) {
-    return (
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-        {Array(4).fill(0).map((_, i) => (
-          <ModernStatsCard
-            key={i}
-            title="Carregando..."
-            value="-"
-            icon={BookOpen}
-            colorScheme="blue"
-            loading={true}
-          />
-        ))}
-      </div>
-    );
-  }
-
-  const publishRate = totalSolutions > 0 ? (publishedSolutions / totalSolutions) * 100 : 0;
-  const draftRate = totalSolutions > 0 ? (drafts / totalSolutions) * 100 : 0;
+export const SolutionStatCards = ({ data }: SolutionStatCardsProps) => {
+  const stats = [
+    {
+      title: 'Total de Soluções',
+      value: data.totalSolutions,
+      icon: Target,
+      description: 'Soluções criadas na plataforma'
+    },
+    {
+      title: 'Soluções Publicadas',
+      value: data.publishedSolutions,
+      icon: CheckCircle,
+      description: 'Soluções disponíveis para implementação'
+    },
+    {
+      title: 'Implementações Totais',
+      value: data.totalImplementations,
+      icon: Users,
+      description: 'Número total de implementações iniciadas'
+    },
+    {
+      title: 'Taxa Média de Conclusão',
+      value: `${data.averageCompletionRate.toFixed(1)}%`,
+      icon: TrendingUp,
+      description: 'Percentual médio de conclusão das implementações'
+    }
+  ];
 
   return (
-    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-      <ModernStatsCard
-        title="Total de Soluções"
-        value={totalSolutions}
-        icon={BookOpen}
-        colorScheme="blue"
-        trend={{
-          value: totalSolutions,
-          label: "soluções criadas",
-          type: totalSolutions > 0 ? 'positive' : 'neutral'
-        }}
-      />
-      
-      <ModernStatsCard
-        title="Soluções Publicadas"
-        value={publishedSolutions}
-        icon={FileCheck}
-        colorScheme="green"
-        trend={{
-          value: Math.round(publishRate),
-          label: "taxa de publicação",
-          type: publishRate > 80 ? 'positive' : publishRate > 50 ? 'neutral' : 'negative'
-        }}
-      />
-      
-      <ModernStatsCard
-        title="Rascunhos"
-        value={drafts}
-        icon={Clock}
-        colorScheme="orange"
-        trend={{
-          value: Math.round(draftRate),
-          label: "em desenvolvimento",
-          type: draftRate < 20 ? 'positive' : draftRate < 50 ? 'neutral' : 'negative'
-        }}
-      />
-      
-      <ModernStatsCard
-        title="Taxa Média de Conclusão"
-        value={`${avgCompletionRate}%`}
-        icon={Award}
-        colorScheme="purple"
-        trend={{
-          value: avgCompletionRate,
-          label: "média de conclusão",
-          type: avgCompletionRate > 70 ? 'positive' : avgCompletionRate > 40 ? 'neutral' : 'negative'
-        }}
-      />
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      {stats.map((stat, index) => {
+        const Icon = stat.icon;
+        
+        return (
+          <Card key={index}>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">
+                {stat.title}
+              </CardTitle>
+              <Icon className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stat.value}</div>
+              <p className="text-xs text-muted-foreground mt-1">
+                {stat.description}
+              </p>
+              {/* REMOVIDO: trends hardcoded */}
+            </CardContent>
+          </Card>
+        );
+      })}
     </div>
   );
 };

@@ -1,124 +1,120 @@
 
-import React from 'react';
-import { PopularSolutionsChart } from '../PopularSolutionsChart';
-import { ImplementationsByCategoryChart } from '../ImplementationsByCategoryChart';
-import { GlassStatsCard } from '../GlassStatsCard';
-import { useRealAnalyticsData } from '@/hooks/analytics/useRealAnalyticsData';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Card, CardHeader, CardContent, CardTitle } from '@/components/ui/card';
-import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
-import { AlertTriangle, Package, TrendingUp, Target } from 'lucide-react';
+import React, { useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { RefreshCw } from 'lucide-react';
+import { SolutionStatCards } from './SolutionStatCards';
+import { CategoryDistributionChart } from './CategoryDistributionChart';
+import { SolutionPopularityChart } from './SolutionPopularityChart';
+import { CompletionRatesChart } from './CompletionRatesChart';
+import { DifficultyDistributionChart } from './DifficultyDistributionChart';
+import { useRealAnalyticsData } from '@/hooks/admin/analytics/useRealAnalyticsData';
 
-interface SolutionsAnalyticsTabContentProps {
-  timeRange: string;
-}
+export const SolutionsAnalyticsTabContent = () => {
+  const { data, loading, refresh } = useRealAnalyticsData();
 
-export const SolutionsAnalyticsTabContent = ({ timeRange }: SolutionsAnalyticsTabContentProps) => {
-  const { data, loading, error } = useRealAnalyticsData({
-    timeRange,
-    category: 'all',
-    difficulty: 'all'
-  });
-
-  const renderSkeleton = () => (
-    <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {Array(3).fill(0).map((_, i) => (
-          <Card key={i} className="border-gray-800/50 bg-[#151823]/80 backdrop-blur-xl">
-            <CardContent className="p-6">
-              <Skeleton className="h-4 w-[120px] mb-2 bg-gray-700/50" />
-              <Skeleton className="h-8 w-[80px] bg-gray-700/50" />
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card className="border-gray-800/50 bg-[#151823]/80 backdrop-blur-xl">
-          <CardHeader>
-            <Skeleton className="h-6 w-[200px] bg-gray-700/50" />
-          </CardHeader>
-          <CardContent>
-            <Skeleton className="h-[300px] w-full bg-gray-700/50" />
-          </CardContent>
-        </Card>
-        
-        <Card className="border-gray-800/50 bg-[#151823]/80 backdrop-blur-xl">
-          <CardHeader>
-            <Skeleton className="h-6 w-[200px] bg-gray-700/50" />
-          </CardHeader>
-          <CardContent>
-            <Skeleton className="h-[300px] w-full bg-gray-700/50" />
-          </CardContent>
-        </Card>
-      </div>
-    </div>
-  );
+  useEffect(() => {
+    refresh();
+  }, [refresh]);
 
   if (loading) {
-    return renderSkeleton();
-  }
-
-  if (error) {
     return (
-      <Alert variant="destructive" className="border-red-800/50 bg-red-950/20 backdrop-blur-xl">
-        <AlertTriangle className="h-4 w-4" />
-        <AlertTitle className="text-red-400">Erro ao carregar dados</AlertTitle>
-        <AlertDescription className="text-red-300">{error}</AlertDescription>
-      </Alert>
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-2xl font-bold">Analytics de Soluções</h2>
+            <p className="text-muted-foreground">Carregando dados...</p>
+          </div>
+          <Button disabled variant="outline">
+            <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+            Atualizando
+          </Button>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {Array(4).fill(null).map((_, i) => (
+            <Card key={i} className="animate-pulse">
+              <CardContent className="p-6">
+                <div className="h-4 bg-muted rounded mb-2"></div>
+                <div className="h-8 bg-muted rounded"></div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
     );
   }
 
-  const totalSolutions = data?.solutionPopularity?.length || 0;
-  const totalImplementations = data?.implementationsByCategory?.reduce((sum, item) => sum + (item.value || 0), 0) || 0;
-  const avgImplementationsPerSolution = totalSolutions > 0 ? Math.round(totalImplementations / totalSolutions) : 0;
-
   return (
-    <div className="space-y-8">
-      {/* Cards de estatísticas com glassmorphism */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <GlassStatsCard
-          title="Total de Soluções"
-          value={totalSolutions}
-          icon={Package}
-          colorScheme="primary"
-          trend={{
-            value: 15.2,
-            label: "vs mês anterior",
-            type: 'positive'
-          }}
-        />
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-bold">Analytics de Soluções</h2>
+          <p className="text-muted-foreground">
+            Análise detalhada do desempenho das soluções implementadas
+          </p>
+        </div>
         
-        <GlassStatsCard
-          title="Implementações Totais"
-          value={totalImplementations}
-          icon={TrendingUp}
-          colorScheme="success"
-          trend={{
-            value: 23.8,
-            label: "vs mês anterior",
-            type: 'positive'
-          }}
-        />
-        
-        <GlassStatsCard
-          title="Média por Solução"
-          value={avgImplementationsPerSolution}
-          icon={Target}
-          colorScheme="secondary"
-          trend={{
-            value: 8.5,
-            label: "implementações",
-            type: 'positive'
-          }}
-        />
+        <Button onClick={refresh} variant="outline">
+          <RefreshCw className="h-4 w-4 mr-2" />
+          Atualizar
+        </Button>
       </div>
 
-      {/* Gráficos com tema moderno */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <PopularSolutionsChart data={data?.solutionPopularity || []} />
-        <ImplementationsByCategoryChart data={data?.implementationsByCategory || []} />
+      {/* Cards de Estatísticas - SEM trends hardcoded */}
+      <SolutionStatCards data={data} />
+
+      {/* Charts baseados em dados reais */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Distribuição por Categoria</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <CategoryDistributionChart data={data.categoryDistribution} />
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Soluções Mais Populares</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <SolutionPopularityChart data={data.popularSolutions} />
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Taxa de Conclusão por Solução</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <CompletionRatesChart data={data.completionRates} />
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Distribuição de Dificuldade</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <DifficultyDistributionChart data={data.difficultyDistribution} />
+          </CardContent>
+        </Card>
       </div>
+
+      {/* Mostrar aviso se não há dados suficientes */}
+      {(!data.categoryDistribution.length && !data.popularSolutions.length) && (
+        <Card className="border-dashed border-2 border-muted-foreground/25">
+          <CardContent className="flex flex-col items-center justify-center py-12 text-center">
+            <h3 className="text-lg font-semibold mb-2">Dados insuficientes</h3>
+            <p className="text-muted-foreground">
+              Ainda não há dados suficientes de soluções implementadas para gerar analytics detalhados.
+              Os dados aparecerão conforme os usuários interagirem com as soluções.
+            </p>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 };

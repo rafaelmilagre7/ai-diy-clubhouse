@@ -3,267 +3,224 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { 
-  Plus, 
-  Play, 
-  Pause, 
-  Copy, 
-  Trash2, 
-  Edit, 
-  BarChart3,
-  Calendar,
-  Users,
-  Mail,
-  MessageSquare
-} from 'lucide-react';
-import { useCampaignManagement, type InviteCampaign } from '@/hooks/admin/invites/useCampaignManagement';
-import { CreateCampaignDialog } from './CreateCampaignDialog';
-import { CampaignDetailsDialog } from './CampaignDetailsDialog';
+import { Plus, Play, Pause, Copy, Trash2, Users, Send, Target, TrendingUp } from 'lucide-react';
+import { useCampaignManagement } from '@/hooks/admin/invites/useCampaignManagement';
+import { CampaignEmptyState } from './CampaignEmptyState';
 
 export const CampaignManager = () => {
-  const { 
-    campaigns, 
-    loading, 
-    updateCampaignStatus, 
-    deleteCampaign, 
-    duplicateCampaign 
+  const [showCreateForm, setShowCreateForm] = useState(false);
+  const {
+    campaigns,
+    loading,
+    updateCampaignStatus,
+    deleteCampaign,
+    duplicateCampaign
   } = useCampaignManagement();
-  
-  const [createDialogOpen, setCreateDialogOpen] = useState(false);
-  const [selectedCampaign, setSelectedCampaign] = useState<InviteCampaign | null>(null);
-  const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
 
-  const getStatusBadge = (status: InviteCampaign['status']) => {
-    const variants = {
-      draft: 'secondary',
-      active: 'default',
-      paused: 'outline',
-      completed: 'default'
-    } as const;
-
-    const labels = {
-      draft: 'Rascunho',
-      active: 'Ativa',
-      paused: 'Pausada',
-      completed: 'Concluída'
-    };
-
-    return (
-      <Badge variant={variants[status]} className={
-        status === 'active' ? 'bg-green-500 hover:bg-green-600' :
-        status === 'paused' ? 'bg-yellow-500 hover:bg-yellow-600' :
-        status === 'completed' ? 'bg-blue-500 hover:bg-blue-600' : ''
-      }>
-        {labels[status]}
-      </Badge>
-    );
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'active': return 'success';
+      case 'paused': return 'warning';
+      case 'completed': return 'info';
+      default: return 'secondary';
+    }
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('pt-BR', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric'
-    });
+  const getStatusText = (status: string) => {
+    switch (status) {
+      case 'active': return 'Ativa';
+      case 'paused': return 'Pausada';
+      case 'completed': return 'Concluída';
+      default: return 'Rascunho';
+    }
   };
 
-  const handleViewDetails = (campaign: InviteCampaign) => {
-    setSelectedCampaign(campaign);
-    setDetailsDialogOpen(true);
+  // Calcular estatísticas reais apenas com dados disponíveis
+  const stats = {
+    totalCampaigns: campaigns.length,
+    activeCampaigns: campaigns.filter(c => c.status === 'active').length,
+    totalInvitesSent: campaigns.reduce((sum, c) => sum + c.metrics.totalInvites, 0),
+    avgConversionRate: campaigns.length > 0 
+      ? campaigns.reduce((sum, c) => sum + c.metrics.conversionRate, 0) / campaigns.length 
+      : 0
   };
 
   if (loading) {
     return (
-      <div className="space-y-4">
-        {Array.from({ length: 3 }).map((_, i) => (
-          <Card key={i} className="animate-pulse">
-            <CardHeader>
-              <div className="h-4 bg-gray-200 rounded w-1/3"></div>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                <div className="h-3 bg-gray-200 rounded w-3/4"></div>
-                <div className="h-3 bg-gray-200 rounded w-1/2"></div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+      <div className="space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          {Array(4).fill(null).map((_, i) => (
+            <Card key={i} className="animate-pulse">
+              <CardContent className="p-6">
+                <div className="h-4 bg-muted rounded mb-2"></div>
+                <div className="h-8 bg-muted rounded"></div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+        <Card className="animate-pulse">
+          <CardContent className="p-6">
+            <div className="h-32 bg-muted rounded"></div>
+          </CardContent>
+        </Card>
       </div>
     );
   }
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex justify-between items-center">
+      <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold">Gestão de Campanhas</h2>
+          <h2 className="text-2xl font-bold">Campanhas de Convites</h2>
           <p className="text-muted-foreground">
-            Crie e gerencie campanhas de convites automatizadas
+            Gerencie suas campanhas de convites organizadas
           </p>
         </div>
         
-        <Button onClick={() => setCreateDialogOpen(true)}>
-          <Plus className="w-4 h-4 mr-2" />
+        <Button onClick={() => setShowCreateForm(true)}>
+          <Plus className="h-4 w-4 mr-2" />
           Nova Campanha
         </Button>
       </div>
 
-      {/* Lista de Campanhas */}
-      <div className="grid gap-4">
-        {campaigns.map((campaign) => (
-          <Card key={campaign.id} className="hover:shadow-md transition-shadow">
-            <CardHeader>
-              <div className="flex justify-between items-start">
-                <div className="space-y-1">
-                  <CardTitle className="flex items-center gap-2">
-                    {campaign.name}
-                    {getStatusBadge(campaign.status)}
-                  </CardTitle>
-                  {campaign.description && (
-                    <p className="text-sm text-muted-foreground">
-                      {campaign.description}
-                    </p>
-                  )}
-                </div>
-                
-                <div className="flex space-x-1">
-                  {campaign.status === 'draft' || campaign.status === 'paused' ? (
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => updateCampaignStatus(campaign.id, 'active')}
-                    >
-                      <Play className="w-4 h-4" />
-                    </Button>
-                  ) : campaign.status === 'active' ? (
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => updateCampaignStatus(campaign.id, 'paused')}
-                    >
-                      <Pause className="w-4 h-4" />
-                    </Button>
-                  ) : null}
-                  
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => handleViewDetails(campaign)}
-                  >
-                    <BarChart3 className="w-4 h-4" />
-                  </Button>
-                  
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => duplicateCampaign(campaign.id)}
-                  >
-                    <Copy className="w-4 h-4" />
-                  </Button>
-                  
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => deleteCampaign(campaign.id)}
-                    className="text-red-600 hover:text-red-700"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
-                </div>
+      {/* Estatísticas Reais */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Total de Campanhas</p>
+                <p className="text-2xl font-bold">{stats.totalCampaigns}</p>
               </div>
-            </CardHeader>
-            
-            <CardContent className="space-y-4">
-              {/* Métricas Resumidas */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="text-center">
-                  <div className="text-2xl font-bold">{campaign.metrics.totalInvites}</div>
-                  <div className="text-sm text-muted-foreground">Total</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold">{campaign.metrics.sent}</div>
-                  <div className="text-sm text-muted-foreground">Enviados</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold">{campaign.metrics.registered}</div>
-                  <div className="text-sm text-muted-foreground">Cadastros</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-green-600">
-                    {campaign.metrics.conversionRate.toFixed(1)}%
-                  </div>
-                  <div className="text-sm text-muted-foreground">Conversão</div>
-                </div>
-              </div>
+              <Target className="h-8 w-8 text-viverblue" />
+            </div>
+          </CardContent>
+        </Card>
 
-              {/* Detalhes */}
-              <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
-                <div className="flex items-center gap-1">
-                  <Users className="w-4 h-4" />
-                  {campaign.targetRoleName || campaign.targetRole}
-                </div>
-                
-                <div className="flex items-center gap-1">
-                  {campaign.channels.includes('email') && <Mail className="w-4 h-4" />}
-                  {campaign.channels.includes('whatsapp') && <MessageSquare className="w-4 h-4" />}
-                  {campaign.channels.join(' + ')}
-                </div>
-                
-                <div className="flex items-center gap-1">
-                  <Calendar className="w-4 h-4" />
-                  Criada em {formatDate(campaign.createdAt)}
-                </div>
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Campanhas Ativas</p>
+                <p className="text-2xl font-bold">{stats.activeCampaigns}</p>
               </div>
+              <Play className="h-8 w-8 text-green-500" />
+            </div>
+          </CardContent>
+        </Card>
 
-              {/* Progress Bar */}
-              <div className="space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span>Progresso da Campanha</span>
-                  <span>{campaign.metrics.conversionRate.toFixed(1)}% conversão</span>
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div 
-                    className="bg-blue-500 h-2 rounded-full transition-all duration-500"
-                    style={{ 
-                      width: `${Math.min((campaign.metrics.registered / Math.max(campaign.metrics.totalInvites, 1)) * 100, 100)}%` 
-                    }}
-                  />
-                </div>
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Convites Enviados</p>
+                <p className="text-2xl font-bold">{stats.totalInvitesSent}</p>
               </div>
-            </CardContent>
-          </Card>
-        ))}
+              <Send className="h-8 w-8 text-blue-500" />
+            </div>
+          </CardContent>
+        </Card>
 
-        {campaigns.length === 0 && (
-          <Card>
-            <CardContent className="flex flex-col items-center justify-center py-12">
-              <BarChart3 className="w-12 h-12 text-muted-foreground mb-4" />
-              <h3 className="text-lg font-semibold mb-2">Nenhuma campanha criada</h3>
-              <p className="text-muted-foreground text-center mb-4">
-                Crie sua primeira campanha de convites para começar a gerenciar seus envios de forma automatizada.
-              </p>
-              <Button onClick={() => setCreateDialogOpen(true)}>
-                <Plus className="w-4 h-4 mr-2" />
-                Criar Primeira Campanha
-              </Button>
-            </CardContent>
-          </Card>
-        )}
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Taxa de Conversão Média</p>
+                <p className="text-2xl font-bold">
+                  {stats.avgConversionRate > 0 ? `${stats.avgConversionRate.toFixed(1)}%` : '0%'}
+                </p>
+              </div>
+              <TrendingUp className="h-8 w-8 text-orange-500" />
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
-      {/* Dialogs */}
-      <CreateCampaignDialog 
-        open={createDialogOpen} 
-        onOpenChange={setCreateDialogOpen} 
-      />
-      
-      {selectedCampaign && (
-        <CampaignDetailsDialog
-          campaign={selectedCampaign}
-          open={detailsDialogOpen}
-          onOpenChange={setDetailsDialogOpen}
-        />
+      {/* Lista de Campanhas ou Empty State */}
+      {campaigns.length === 0 ? (
+        <CampaignEmptyState onCreateCampaign={() => setShowCreateForm(true)} />
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {campaigns.map((campaign) => (
+            <Card key={campaign.id}>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-lg">{campaign.name}</CardTitle>
+                  <Badge variant={getStatusColor(campaign.status)}>
+                    {getStatusText(campaign.status)}
+                  </Badge>
+                </div>
+                {campaign.description && (
+                  <p className="text-sm text-muted-foreground">{campaign.description}</p>
+                )}
+              </CardHeader>
+              
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2 text-sm">
+                    <Users className="h-4 w-4" />
+                    <span>Papel: {campaign.targetRoleName || campaign.targetRole}</span>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <p className="text-muted-foreground">Convites</p>
+                      <p className="font-semibold">{campaign.metrics.totalInvites}</p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground">Conversões</p>
+                      <p className="font-semibold">{campaign.metrics.registered}</p>
+                    </div>
+                    <div className="col-span-2">
+                      <p className="text-muted-foreground">Taxa de Conversão</p>
+                      <p className="font-semibold">{campaign.metrics.conversionRate.toFixed(1)}%</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex gap-2">
+                    {campaign.status === 'active' ? (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => updateCampaignStatus(campaign.id, 'paused')}
+                      >
+                        <Pause className="h-3 w-3 mr-1" />
+                        Pausar
+                      </Button>
+                    ) : (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => updateCampaignStatus(campaign.id, 'active')}
+                      >
+                        <Play className="h-3 w-3 mr-1" />
+                        Ativar
+                      </Button>
+                    )}
+                    
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => duplicateCampaign(campaign.id)}
+                    >
+                      <Copy className="h-3 w-3 mr-1" />
+                      Duplicar
+                    </Button>
+                    
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => deleteCampaign(campaign.id)}
+                    >
+                      <Trash2 className="h-3 w-3 mr-1" />
+                      Excluir
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
       )}
     </div>
   );
