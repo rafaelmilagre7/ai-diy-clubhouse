@@ -43,10 +43,10 @@ export const useNpsData = (startDate: string | null) => {
         feedback: response.feedback,
         created_at: response.created_at,
         user_id: response.user_id,
-        // Extrair o título da aula do objeto aninhado
-        lessonTitle: response.learning_lessons?.title || 'Aula sem título',
-        // Extrair o nome do usuário do objeto aninhado
-        userName: response.profiles?.name || 'Usuário anônimo'
+        // Extrair o título da aula do primeiro elemento do array
+        lessonTitle: response.learning_lessons?.[0]?.title || 'Aula sem título',
+        // Extrair o nome do usuário do primeiro elemento do array
+        userName: response.profiles?.[0]?.name || 'Usuário anônimo'
       }));
       
       // Se não há dados, retornar estruturas vazias
