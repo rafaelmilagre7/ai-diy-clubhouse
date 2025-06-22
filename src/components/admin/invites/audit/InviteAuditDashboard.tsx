@@ -1,266 +1,337 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Button } from '@/components/ui/button';
 import { 
   Shield, 
-  Play, 
+  Database, 
+  Zap, 
+  AlertTriangle, 
   CheckCircle, 
-  XCircle, 
-  AlertTriangle,
+  XCircle,
+  RefreshCw,
+  Mail,
+  MessageSquare,
   Clock,
-  FileText,
-  TrendingUp,
-  Settings,
-  Lock
+  TrendingUp
 } from 'lucide-react';
 import { useInviteAudit } from '@/hooks/admin/invites/useInviteAudit';
-import { toast } from 'sonner';
+import { ModernLoadingState } from '@/components/admin/analytics/ModernLoadingState';
 
-export const InviteAuditDashboard = () => {
-  const { runAudit, isAuditing, auditReport } = useInviteAudit();
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+export const InviteAuditDashboard: React.FC = () => {
+  const { data, isLoading, error, runAudit, isAuditing } = useInviteAudit();
 
-  const handleRunAudit = async () => {
-    try {
-      await runAudit();
-      toast.success('Auditoria concluída com sucesso!');
-    } catch (error: any) {
-      toast.error(`Erro na auditoria: ${error.message}`);
-    }
-  };
+  if (isLoading) {
+    return <ModernLoadingState type="chart" />;
+  }
+
+  if (error) {
+    return (
+      <Card className="border-0 shadow-xl bg-white/80 backdrop-blur-sm">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-red-600">
+            <XCircle className="h-6 w-6" />
+            Erro na Auditoria
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-red-600">
+            Erro ao carregar auditoria: {error.message}
+          </p>
+          <Button 
+            onClick={() => runAudit()} 
+            disabled={isAuditing}
+            className="mt-4"
+          >
+            <RefreshCw className={`h-4 w-4 mr-2 ${isAuditing ? 'animate-spin' : ''}`} />
+            Tentar Novamente
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (!data) {
+    return (
+      <Card className="border-0 shadow-xl bg-white/80 backdrop-blur-sm">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Shield className="h-6 w-6 text-blue-500" />
+            Auditoria do Sistema de Convites
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-center py-8">
+            <p className="text-gray-600 mb-4">Nenhuma auditoria foi executada ainda.</p>
+            <Button 
+              onClick={() => runAudit()} 
+              disabled={isAuditing}
+              className="bg-blue-600 hover:bg-blue-700"
+            >
+              <Shield className={`h-4 w-4 mr-2 ${isAuditing ? 'animate-spin' : ''}`} />
+              Executar Auditoria
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'pass':
-        return <CheckCircle className="h-4 w-4 text-green-500" />;
-      case 'fail':
-        return <XCircle className="h-4 w-4 text-red-500" />;
+      case 'healthy':
+        return <CheckCircle className="h-5 w-5 text-green-500" />;
       case 'warning':
-        return <AlertTriangle className="h-4 w-4 text-yellow-500" />;
+        return <AlertTriangle className="h-5 w-5 text-yellow-500" />;
+      case 'critical':
+        return <XCircle className="h-5 w-5 text-red-500" />;
       default:
-        return <Clock className="h-4 w-4 text-gray-500" />;
+        return <CheckCircle className="h-5 w-5 text-gray-400" />;
     }
   };
 
-  const getStatusBadge = (status: string) => {
+  const getStatusColor = (status: string) => {
     switch (status) {
-      case 'pass':
-        return <Badge className="bg-green-100 text-green-800 border-green-200">Passou</Badge>;
-      case 'fail':
-        return <Badge className="bg-red-100 text-red-800 border-red-200">Falhou</Badge>;
+      case 'healthy':
+        return 'bg-green-100 text-green-800 border-green-200';
       case 'warning':
-        return <Badge className="bg-yellow-100 text-yellow-800 border-yellow-200">Atenção</Badge>;
+        return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+      case 'critical':
+        return 'bg-red-100 text-red-800 border-red-200';
       default:
-        return <Badge variant="secondary">Pendente</Badge>;
+        return 'bg-gray-100 text-gray-800 border-gray-200';
     }
   };
-
-  const getCategoryIcon = (category: string) => {
-    switch (category) {
-      case 'Integridade de Dados':
-        return <FileText className="h-5 w-5" />;
-      case 'Performance':
-        return <TrendingUp className="h-5 w-5" />;
-      case 'Validações':
-        return <Settings className="h-5 w-5" />;
-      case 'Integrações':
-        return <Shield className="h-5 w-5" />;
-      case 'Segurança':
-        return <Lock className="h-5 w-5" />;
-      default:
-        return <Shield className="h-5 w-5" />;
-    }
-  };
-
-  const categories = auditReport?.results.reduce((acc, result) => {
-    if (!acc[result.category]) {
-      acc[result.category] = [];
-    }
-    acc[result.category].push(result);
-    return acc;
-  }, {} as Record<string, typeof auditReport.results>) || {};
-
-  const filteredResults = selectedCategory 
-    ? auditReport?.results.filter(r => r.category === selectedCategory) || []
-    : auditReport?.results || [];
 
   return (
     <div className="space-y-6">
+      {/* Header com Resumo */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold flex items-center gap-2">
-            <Shield className="h-6 w-6 text-blue-600" />
-            Auditoria do Sistema de Convites
-          </h2>
-          <p className="text-muted-foreground mt-1">
-            Verificação completa de integridade, performance e segurança
+          <h1 className="text-2xl font-bold text-gray-900">Auditoria do Sistema de Convites</h1>
+          <p className="text-gray-600">
+            Última auditoria: {new Date(data.auditedAt).toLocaleString('pt-BR')}
           </p>
         </div>
-        
         <Button 
-          onClick={handleRunAudit} 
+          onClick={() => runAudit()} 
           disabled={isAuditing}
-          className="flex items-center gap-2"
+          className="bg-blue-600 hover:bg-blue-700"
         >
-          <Play className={`h-4 w-4 ${isAuditing ? 'animate-spin' : ''}`} />
-          {isAuditing ? 'Executando Auditoria...' : 'Executar Auditoria'}
+          <RefreshCw className={`h-4 w-4 mr-2 ${isAuditing ? 'animate-spin' : ''}`} />
+          Executar Nova Auditoria
         </Button>
       </div>
 
-      {auditReport && (
-        <>
-          {/* Resumo */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">Total de Testes</p>
-                    <p className="text-2xl font-bold">{auditReport.summary.total}</p>
-                  </div>
-                  <FileText className="h-8 w-8 text-gray-500" />
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">Passaram</p>
-                    <p className="text-2xl font-bold text-green-600">{auditReport.summary.passed}</p>
-                  </div>
-                  <CheckCircle className="h-8 w-8 text-green-500" />
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">Atenções</p>
-                    <p className="text-2xl font-bold text-yellow-600">{auditReport.summary.warnings}</p>
-                  </div>
-                  <AlertTriangle className="h-8 w-8 text-yellow-500" />
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">Falharam</p>
-                    <p className="text-2xl font-bold text-red-600">{auditReport.summary.failed}</p>
-                  </div>
-                  <XCircle className="h-8 w-8 text-red-500" />
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Filtros por Categoria */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Filtrar por Categoria</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex flex-wrap gap-2">
-                <Button
-                  variant={selectedCategory === null ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setSelectedCategory(null)}
-                >
-                  Todas as Categorias
-                </Button>
-                {Object.keys(categories).map((category) => (
-                  <Button
-                    key={category}
-                    variant={selectedCategory === category ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => setSelectedCategory(category)}
-                    className="flex items-center gap-2"
-                  >
-                    {getCategoryIcon(category)}
-                    {category} ({categories[category].length})
-                  </Button>
-                ))}
+      {/* Cards de Resumo */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <Card className="border-0 shadow-lg bg-white/90 backdrop-blur-sm">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600">Total de Problemas</p>
+                <p className="text-3xl font-bold text-gray-900">{data.summary.totalIssues}</p>
               </div>
-            </CardContent>
-          </Card>
-
-          {/* Resultados Detalhados */}
-          <Card>
-            <CardHeader>
-              <CardTitle>
-                Resultados da Auditoria
-                {selectedCategory && ` - ${selectedCategory}`}
-              </CardTitle>
-              <p className="text-sm text-muted-foreground">
-                Executado em: {new Date(auditReport.timestamp).toLocaleString('pt-BR')}
-              </p>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {filteredResults.map((result, index) => (
-                  <div 
-                    key={index}
-                    className="flex items-start gap-4 p-4 border border-gray-200 rounded-lg"
-                  >
-                    <div className="flex items-center gap-2 min-w-0 flex-1">
-                      {getStatusIcon(result.status)}
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-2 mb-1">
-                          <h4 className="font-medium">{result.test}</h4>
-                          {getStatusBadge(result.status)}
-                        </div>
-                        <p className="text-sm text-gray-600 mb-1">{result.message}</p>
-                        <p className="text-xs text-muted-foreground">{result.category}</p>
-                        
-                        {result.details && (
-                          <div className="mt-2 p-2 bg-gray-50 rounded text-xs">
-                            <strong>Detalhes:</strong>
-                            <pre className="mt-1 whitespace-pre-wrap">
-                              {JSON.stringify(result.details, null, 2)}
-                            </pre>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              {filteredResults.length === 0 && (
-                <div className="text-center py-8 text-muted-foreground">
-                  <Shield className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                  <p>Nenhum resultado encontrado para os filtros selecionados.</p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </>
-      )}
-
-      {!auditReport && !isAuditing && (
-        <Card>
-          <CardContent className="text-center py-12">
-            <Shield className="h-16 w-16 mx-auto mb-4 text-gray-400" />
-            <h3 className="text-lg font-semibold mb-2">Nenhuma Auditoria Executada</h3>
-            <p className="text-muted-foreground mb-4">
-              Execute uma auditoria completa para verificar a integridade do sistema de convites.
-            </p>
-            <Button onClick={handleRunAudit} className="flex items-center gap-2">
-              <Play className="h-4 w-4" />
-              Executar Primeira Auditoria
-            </Button>
+              <AlertTriangle className="h-8 w-8 text-orange-500" />
+            </div>
           </CardContent>
         </Card>
-      )}
+
+        <Card className="border-0 shadow-lg bg-white/90 backdrop-blur-sm">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600">Problemas Críticos</p>
+                <p className="text-3xl font-bold text-red-600">{data.summary.criticalIssues}</p>
+              </div>
+              <XCircle className="h-8 w-8 text-red-500" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-0 shadow-lg bg-white/90 backdrop-blur-sm">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600">Avisos</p>
+                <p className="text-3xl font-bold text-yellow-600">{data.summary.warnings}</p>
+              </div>
+              <AlertTriangle className="h-8 w-8 text-yellow-500" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-0 shadow-lg bg-white/90 backdrop-blur-sm">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600">Recomendações</p>
+                <p className="text-3xl font-bold text-blue-600">{data.summary.recommendations}</p>
+              </div>
+              <TrendingUp className="h-8 w-8 text-blue-500" />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Seções de Auditoria */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Integridade de Dados */}
+        <Card className="border-0 shadow-xl bg-white/80 backdrop-blur-sm">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Database className="h-6 w-6 text-purple-500" />
+              Integridade de Dados
+              <Badge className={getStatusColor(data.dataIntegrity.status)}>
+                {getStatusIcon(data.dataIntegrity.status)}
+                {data.dataIntegrity.status}
+              </Badge>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {data.dataIntegrity.issues.length === 0 ? (
+              <div className="flex items-center gap-2 text-green-600">
+                <CheckCircle className="h-5 w-5" />
+                <span>Nenhum problema de integridade detectado</span>
+              </div>
+            ) : (
+              data.dataIntegrity.issues.map((issue, index) => (
+                <div key={index} className="p-3 border border-gray-200 rounded-lg">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="font-medium">{issue.description}</span>
+                    <Badge className={getStatusColor(issue.severity === 'critical' ? 'critical' : issue.severity === 'high' ? 'warning' : 'healthy')}>
+                      {issue.severity}
+                    </Badge>
+                  </div>
+                  <p className="text-sm text-gray-600">
+                    {issue.count} registro(s) afetado(s)
+                  </p>
+                </div>
+              ))
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Performance */}
+        <Card className="border-0 shadow-xl bg-white/80 backdrop-blur-sm">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Zap className="h-6 w-6 text-yellow-500" />
+              Performance
+              <Badge className={getStatusColor(data.performance.status)}>
+                {getStatusIcon(data.performance.status)}
+                {data.performance.status}
+              </Badge>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-3 gap-4 text-center">
+              <div>
+                <p className="text-2xl font-bold text-gray-900">{data.performance.metrics.avgResponseTime}ms</p>
+                <p className="text-sm text-gray-600">Tempo Médio</p>
+              </div>
+              <div>
+                <p className="text-2xl font-bold text-gray-900">{data.performance.metrics.slowQueries}</p>
+                <p className="text-sm text-gray-600">Queries Lentas</p>
+              </div>
+              <div>
+                <p className="text-2xl font-bold text-gray-900">{data.performance.metrics.cacheHitRate}%</p>
+                <p className="text-sm text-gray-600">Taxa de Cache</p>
+              </div>
+            </div>
+            
+            {data.performance.recommendations.length > 0 && (
+              <div className="space-y-2">
+                <h4 className="font-medium text-gray-900">Recomendações:</h4>
+                {data.performance.recommendations.map((rec, index) => (
+                  <div key={index} className="flex items-start gap-2">
+                    <TrendingUp className="h-4 w-4 text-blue-500 mt-0.5" />
+                    <span className="text-sm text-gray-700">{rec}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Integrações */}
+        <Card className="border-0 shadow-xl bg-white/80 backdrop-blur-sm">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <MessageSquare className="h-6 w-6 text-green-500" />
+              Integrações
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
+              <div className="flex items-center gap-2">
+                <Mail className="h-5 w-5 text-blue-500" />
+                <span className="font-medium">Email</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Badge className={getStatusColor(data.integrations.email.status)}>
+                  {getStatusIcon(data.integrations.email.status)}
+                  {data.integrations.email.status}
+                </Badge>
+                <span className="text-sm text-gray-600">
+                  {data.integrations.email.errorRate.toFixed(1)}% erro
+                </span>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
+              <div className="flex items-center gap-2">
+                <MessageSquare className="h-5 w-5 text-green-500" />
+                <span className="font-medium">WhatsApp</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Badge className={getStatusColor(data.integrations.whatsapp.status)}>
+                  {getStatusIcon(data.integrations.whatsapp.status)}
+                  {data.integrations.whatsapp.status}
+                </Badge>
+                <span className="text-sm text-gray-600">
+                  {data.integrations.whatsapp.errorRate.toFixed(1)}% erro
+                </span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Segurança */}
+        <Card className="border-0 shadow-xl bg-white/80 backdrop-blur-sm">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Shield className="h-6 w-6 text-red-500" />
+              Segurança
+              <Badge className={getStatusColor(data.security.status)}>
+                {getStatusIcon(data.security.status)}
+                {data.security.status}
+              </Badge>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {data.security.issues.length === 0 ? (
+              <div className="flex items-center gap-2 text-green-600">
+                <CheckCircle className="h-5 w-5" />
+                <span>Nenhum problema de segurança detectado</span>
+              </div>
+            ) : (
+              data.security.issues.map((issue, index) => (
+                <div key={index} className="p-3 border border-gray-200 rounded-lg">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="font-medium">{issue.description}</span>
+                    <Badge className={getStatusColor(issue.severity === 'critical' ? 'critical' : issue.severity === 'high' ? 'warning' : 'healthy')}>
+                      {issue.severity}
+                    </Badge>
+                  </div>
+                  <p className="text-sm text-gray-600">Tipo: {issue.type}</p>
+                </div>
+              ))
+            )}
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 };
