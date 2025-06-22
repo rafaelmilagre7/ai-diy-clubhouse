@@ -7,9 +7,10 @@ import { useOnboardingValidation } from './useOnboardingValidation';
 interface UseOnboardingWizardProps {
   initialData: OnboardingData;
   onDataChange: (data: Partial<OnboardingData>) => void;
+  memberType: 'club' | 'formacao'; // ADICIONADO: parâmetro memberType
 }
 
-export const useOnboardingWizard = ({ initialData, onDataChange }: UseOnboardingWizardProps) => {
+export const useOnboardingWizard = ({ initialData, onDataChange, memberType }: UseOnboardingWizardProps) => {
   const [currentStep, setCurrentStep] = useState(1);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
@@ -32,12 +33,12 @@ export const useOnboardingWizard = ({ initialData, onDataChange }: UseOnboarding
 
   const handleNext = useCallback(async () => {
     if (currentStep < totalSteps) {
-      const isValid = validateStep(currentStep, initialData);
+      const isValid = validateStep(currentStep, initialData, memberType); // CORRIGIDO: adicionado memberType
       if (isValid) {
         setCurrentStep(prev => prev + 1);
       }
     }
-  }, [currentStep, totalSteps, validateStep, initialData]);
+  }, [currentStep, totalSteps, validateStep, initialData, memberType]);
 
   const handlePrevious = useCallback(() => {
     if (currentStep > 1) {
@@ -54,7 +55,7 @@ export const useOnboardingWizard = ({ initialData, onDataChange }: UseOnboarding
     }
   }, [submitOnboarding, initialData]);
 
-  const isCurrentStepValid = validateStep(currentStep, initialData);
+  const isCurrentStepValid = validateStep(currentStep, initialData, memberType); // CORRIGIDO: adicionado memberType
 
   return {
     currentStep,

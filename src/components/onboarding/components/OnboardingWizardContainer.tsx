@@ -40,13 +40,14 @@ export const OnboardingWizardContainer = ({ children }: OnboardingWizardContaine
     setupForInvite();
   }, [inviteToken, cleanupForInvite, initializeCleanData]);
 
-  const wizardProps = useOnboardingWizard({
-    initialData: cleanData,
-    onDataChange: updateData
-  });
-
   const memberType = cleanData.memberType || 'club';
   const isLoading = Object.keys(cleanData).length <= 1;
+
+  const wizardProps = useOnboardingWizard({
+    initialData: cleanData,
+    onDataChange: updateData,
+    memberType // ADICIONADO: passando memberType para o hook
+  });
 
   return (
     <>
