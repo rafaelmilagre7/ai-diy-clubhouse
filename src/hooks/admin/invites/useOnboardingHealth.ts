@@ -16,6 +16,7 @@ interface OnboardingHealthData {
     stage: string;
     users: number;
     avgTimeSpent: number;
+    abandonmentRate: number;
   }>;
   stuckUsers: Array<{
     id: string;
@@ -31,6 +32,14 @@ interface OnboardingHealthData {
     avgTimeSpent: number;
     usersStuck: number;
   }>;
+  timeAnalysis: {
+    avgTimePerStep: Record<string, number>;
+    completionTrends: Array<{
+      date: string;
+      completions: number;
+      starts: number;
+    }>;
+  };
 }
 
 export const useOnboardingHealth = () => {
@@ -45,7 +54,11 @@ export const useOnboardingHealth = () => {
     },
     funnel: [],
     stuckUsers: [],
-    bottlenecks: []
+    bottlenecks: [],
+    timeAnalysis: {
+      avgTimePerStep: {},
+      completionTrends: []
+    }
   });
   const [loading, setLoading] = useState(true);
 
@@ -64,18 +77,33 @@ export const useOnboardingHealth = () => {
           completed_at,
           created_at,
           updated_at,
+          time_per_step,
           profiles(id, email, name)
         `);
 
       if (onboardingError) throw onboardingError;
 
-      // Calcular métricas
+      // Buscar dados detalhados de tracking
+      const { data: stepTracking, error: trackingError } = await supabase
+        .from('onboarding_step_tracking')
+        .select('*');
+
+      if (trackingError) throw trackingError;
+
+      // Buscar pontos de abandono
+      const { data: abandonmentPoints, error: abandonmentError } = await supabase
+        .from('onboarding_abandonment_points')
+        .select('*');
+
+      if (abandonmentError) throw abandonmentError;
+
+      // Calcular métricas básicas
       const total = onboardingData?.length || 0;
       const completed = onboardingData?.filter(o => o.is_completed).length || 0;
       const inProgress = total - completed;
       const completionRate = total > 0 ? (completed / total) * 100 : 0;
 
-      // Calcular tempo médio de conclusão
+      // Calcular tempo médio de conclusão usando dados reais
       const completedOnboardings = onboardingData?.filter(o => o.is_completed && o.completed_at) || [];
       const avgCompletionTime = completedOnboardings.length > 0 
         ? completedOnboardings.reduce((acc, o) => {
@@ -91,23 +119,77 @@ export const useOnboardingHealth = () => {
         !o.is_completed && new Date(o.updated_at) < oneDayAgo
       ).length || 0;
 
-      // Simular dados do funil
-      const funnel = [
-        { stage: 'personal_info', users: total, avgTimeSpent: 0.5 },
-        { stage: 'business_info', users: Math.floor(total * 0.85), avgTimeSpent: 1.2 },
-        { stage: 'goals', users: Math.floor(total * 0.75), avgTimeSpent: 0.8 },
-        { stage: 'ai_experience', users: Math.floor(total * 0.68), avgTimeSpent: 1.0 },
-        { stage: 'personalization', users: completed, avgTimeSpent: 0.7 }
-      ];
+      // Analisar funil baseado em dados reais de step tracking
+      const stepStats = new Map();
+      const maxSteps = 5; // Assumindo 5 etapas no onboarding
 
-      // Identificar usuários presos - corrigindo o acesso aos dados do profiles
+      // Inicializar stats para todos os passos
+      for (let step = 1; step <= maxSteps; step++) {
+        stepStats.set(step, {
+          users: 0,
+          completed: 0,
+          totalTime: 0,
+          timeCount: 0,
+          abandoned: 0
+        });
+      }
+
+      // Processar dados de onboarding
+      onboardingData?.forEach(onboarding => {
+        const currentStep = onboarding.current_step;
+        
+        // Contar usuários que chegaram até cada etapa
+        for (let step = 1; step <= currentStep; step++) {
+          const stats = stepStats.get(step);
+          stats.users++;
+          
+          if (step < currentStep || onboarding.is_completed) {
+            stats.completed++;
+          }
+        }
+
+        // Calcular tempo por etapa se disponível
+        if (onboarding.time_per_step) {
+          Object.entries(onboarding.time_per_step).forEach(([step, time]) => {
+            const stepNum = parseInt(step);
+            const stats = stepStats.get(stepNum);
+            if (stats && typeof time === 'number') {
+              stats.totalTime += time;
+              stats.timeCount++;
+            }
+          });
+        }
+      });
+
+      // Processar pontos de abandono
+      abandonmentPoints?.forEach(point => {
+        const stats = stepStats.get(point.step_number);
+        if (stats) {
+          stats.abandoned++;
+        }
+      });
+
+      // Criar dados do funil
+      const funnel = Array.from(stepStats.entries()).map(([step, stats]) => {
+        const stageName = getStepName(step);
+        const avgTimeSpent = stats.timeCount > 0 ? stats.totalTime / stats.timeCount / 60 : 0; // em minutos
+        const abandonmentRate = stats.users > 0 ? (stats.abandoned / stats.users) * 100 : 0;
+        
+        return {
+          stage: stageName,
+          users: stats.users,
+          avgTimeSpent,
+          abandonmentRate
+        };
+      });
+
+      // Identificar usuários presos
       const stuckUsers = onboardingData
         ?.filter(o => !o.is_completed)
         .map(o => {
           const lastActivity = new Date(o.updated_at);
           const daysStuck = Math.floor((Date.now() - lastActivity.getTime()) / (1000 * 60 * 60 * 24));
           
-          // Corrigir acesso ao profiles - pode ser array ou objeto
           const profileData = Array.isArray(o.profiles) 
             ? o.profiles[0] 
             : o.profiles;
@@ -116,7 +198,7 @@ export const useOnboardingHealth = () => {
             id: o.user_id,
             email: profileData?.email || 'Email não disponível',
             name: profileData?.name || undefined,
-            currentStage: `step_${o.current_step}`,
+            currentStage: getStepName(o.current_step),
             lastActivity: o.updated_at,
             daysStuck
           };
@@ -124,25 +206,45 @@ export const useOnboardingHealth = () => {
         .filter(u => u.daysStuck > 0)
         .sort((a, b) => b.daysStuck - a.daysStuck) || [];
 
-      // Identificar gargalos
+      // Identificar gargalos (etapas com alta taxa de abandono)
       const bottlenecks = funnel
-        .map((stage, index) => {
-          if (index === 0) return null;
-          
-          const previousStage = funnel[index - 1];
-          const abandonmentRate = previousStage.users > 0 
-            ? ((previousStage.users - stage.users) / previousStage.users) * 100
-            : 0;
-          
-          return {
-            stage: stage.stage,
-            abandonmentRate,
-            avgTimeSpent: stage.avgTimeSpent,
-            usersStuck: Math.floor((previousStage.users - stage.users) * 0.3)
-          };
-        })
-        .filter(b => b && b.abandonmentRate > 20) // Apenas gargalos com +20% abandono
-        .sort((a, b) => b!.abandonmentRate - a!.abandonmentRate) as any[];
+        .filter(stage => stage.abandonmentRate > 15) // Mais de 15% de abandono
+        .sort((a, b) => b.abandonmentRate - a.abandonmentRate)
+        .map(stage => ({
+          stage: stage.stage,
+          abandonmentRate: stage.abandonmentRate,
+          avgTimeSpent: stage.avgTimeSpent,
+          usersStuck: Math.floor(stage.users * (stage.abandonmentRate / 100))
+        }));
+
+      // Análise temporal
+      const avgTimePerStep: Record<string, number> = {};
+      stepStats.forEach((stats, step) => {
+        const stageName = getStepName(step);
+        avgTimePerStep[stageName] = stats.timeCount > 0 ? stats.totalTime / stats.timeCount / 60 : 0;
+      });
+
+      // Tendências de conclusão (últimos 7 dias)
+      const completionTrends = [];
+      for (let i = 6; i >= 0; i--) {
+        const date = new Date();
+        date.setDate(date.getDate() - i);
+        const dateStr = date.toISOString().split('T')[0];
+        
+        const dayCompletions = onboardingData?.filter(o => 
+          o.completed_at && o.completed_at.startsWith(dateStr)
+        ).length || 0;
+        
+        const dayStarts = onboardingData?.filter(o => 
+          o.created_at.startsWith(dateStr)
+        ).length || 0;
+        
+        completionTrends.push({
+          date: dateStr,
+          completions: dayCompletions,
+          starts: dayStarts
+        });
+      }
 
       setData({
         overview: {
@@ -155,7 +257,11 @@ export const useOnboardingHealth = () => {
         },
         funnel,
         stuckUsers,
-        bottlenecks
+        bottlenecks,
+        timeAnalysis: {
+          avgTimePerStep,
+          completionTrends
+        }
       });
 
     } catch (error: any) {
@@ -166,6 +272,43 @@ export const useOnboardingHealth = () => {
     }
   };
 
+  const getStepName = (step: number): string => {
+    const stepNames = {
+      1: 'Informações Pessoais',
+      2: 'Informações Comerciais',
+      3: 'Objetivos',
+      4: 'Experiência com IA',
+      5: 'Personalização'
+    };
+    return stepNames[step as keyof typeof stepNames] || `Etapa ${step}`;
+  };
+
+  const triggerIntervention = async (userId: string, interventionType: string) => {
+    try {
+      const { error } = await supabase
+        .from('automated_interventions')
+        .insert([{
+          user_id: userId,
+          intervention_type: interventionType,
+          trigger_condition: 'manual_trigger',
+          action_taken: `Intervenção manual: ${interventionType}`,
+          status: 'pending',
+          metadata: {
+            triggered_by: 'admin',
+            timestamp: new Date().toISOString()
+          }
+        }]);
+
+      if (error) throw error;
+
+      toast.success("Intervenção agendada com sucesso!");
+      await fetchOnboardingHealth();
+    } catch (error: any) {
+      console.error("Erro ao agendar intervenção:", error);
+      toast.error("Erro ao agendar intervenção");
+    }
+  };
+
   useEffect(() => {
     fetchOnboardingHealth();
   }, []);
@@ -173,6 +316,7 @@ export const useOnboardingHealth = () => {
   return {
     data,
     loading,
-    refresh: fetchOnboardingHealth
+    refresh: fetchOnboardingHealth,
+    triggerIntervention
   };
 };

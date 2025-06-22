@@ -153,6 +153,87 @@ export type Database = {
         }
         Relationships: []
       }
+      automated_interventions: {
+        Row: {
+          action_taken: string
+          created_at: string
+          executed_at: string | null
+          id: string
+          intervention_type: string
+          metadata: Json | null
+          scheduled_for: string | null
+          status: string
+          trigger_condition: string
+          user_id: string
+        }
+        Insert: {
+          action_taken: string
+          created_at?: string
+          executed_at?: string | null
+          id?: string
+          intervention_type: string
+          metadata?: Json | null
+          scheduled_for?: string | null
+          status?: string
+          trigger_condition: string
+          user_id: string
+        }
+        Update: {
+          action_taken?: string
+          created_at?: string
+          executed_at?: string | null
+          id?: string
+          intervention_type?: string
+          metadata?: Json | null
+          scheduled_for?: string | null
+          status?: string
+          trigger_condition?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      automation_rules: {
+        Row: {
+          actions: Json
+          conditions: Json
+          created_at: string
+          created_by: string
+          description: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          priority: number | null
+          rule_type: string
+          updated_at: string
+        }
+        Insert: {
+          actions: Json
+          conditions: Json
+          created_at?: string
+          created_by: string
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          priority?: number | null
+          rule_type: string
+          updated_at?: string
+        }
+        Update: {
+          actions?: Json
+          conditions?: Json
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          priority?: number | null
+          rule_type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       badges: {
         Row: {
           category: string
@@ -244,6 +325,42 @@ export type Database = {
             columns: ["tool_id"]
             isOneToOne: false
             referencedRelation: "tools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      campaign_invites: {
+        Row: {
+          campaign_id: string
+          created_at: string
+          id: string
+          invite_id: string
+        }
+        Insert: {
+          campaign_id: string
+          created_at?: string
+          id?: string
+          invite_id: string
+        }
+        Update: {
+          campaign_id?: string
+          created_at?: string
+          id?: string
+          invite_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campaign_invites_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "invite_campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campaign_invites_invite_id_fkey"
+            columns: ["invite_id"]
+            isOneToOne: false
+            referencedRelation: "invites"
             referencedColumns: ["id"]
           },
         ]
@@ -1334,10 +1451,115 @@ export type Database = {
         }
         Relationships: []
       }
+      invite_analytics_events: {
+        Row: {
+          channel: string
+          event_type: string
+          id: string
+          invite_id: string
+          ip_address: string | null
+          metadata: Json | null
+          provider_id: string | null
+          timestamp: string
+          user_agent: string | null
+        }
+        Insert: {
+          channel: string
+          event_type: string
+          id?: string
+          invite_id: string
+          ip_address?: string | null
+          metadata?: Json | null
+          provider_id?: string | null
+          timestamp?: string
+          user_agent?: string | null
+        }
+        Update: {
+          channel?: string
+          event_type?: string
+          id?: string
+          invite_id?: string
+          ip_address?: string | null
+          metadata?: Json | null
+          provider_id?: string | null
+          timestamp?: string
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invite_analytics_events_invite_id_fkey"
+            columns: ["invite_id"]
+            isOneToOne: false
+            referencedRelation: "invites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      invite_campaigns: {
+        Row: {
+          channels: string[]
+          created_at: string
+          created_by: string
+          description: string | null
+          email_template: string
+          follow_up_rules: Json | null
+          id: string
+          name: string
+          scheduled_for: string | null
+          segmentation: Json | null
+          status: string
+          target_role_id: string | null
+          updated_at: string
+          whatsapp_template: string | null
+        }
+        Insert: {
+          channels?: string[]
+          created_at?: string
+          created_by: string
+          description?: string | null
+          email_template: string
+          follow_up_rules?: Json | null
+          id?: string
+          name: string
+          scheduled_for?: string | null
+          segmentation?: Json | null
+          status?: string
+          target_role_id?: string | null
+          updated_at?: string
+          whatsapp_template?: string | null
+        }
+        Update: {
+          channels?: string[]
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          email_template?: string
+          follow_up_rules?: Json | null
+          id?: string
+          name?: string
+          scheduled_for?: string | null
+          segmentation?: Json | null
+          status?: string
+          target_role_id?: string | null
+          updated_at?: string
+          whatsapp_template?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invite_campaigns_target_role_id_fkey"
+            columns: ["target_role_id"]
+            isOneToOne: false
+            referencedRelation: "user_roles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       invite_deliveries: {
         Row: {
           channel: string
           clicked_at: string | null
+          clicked_count: number | null
+          conversion_value: number | null
           created_at: string
           delivered_at: string | null
           error_message: string | null
@@ -1346,14 +1568,20 @@ export type Database = {
           invite_id: string
           metadata: Json | null
           opened_at: string | null
+          opened_count: number | null
           provider_id: string | null
           sent_at: string | null
           status: string
           updated_at: string
+          utm_campaign: string | null
+          utm_medium: string | null
+          utm_source: string | null
         }
         Insert: {
           channel: string
           clicked_at?: string | null
+          clicked_count?: number | null
+          conversion_value?: number | null
           created_at?: string
           delivered_at?: string | null
           error_message?: string | null
@@ -1362,14 +1590,20 @@ export type Database = {
           invite_id: string
           metadata?: Json | null
           opened_at?: string | null
+          opened_count?: number | null
           provider_id?: string | null
           sent_at?: string | null
           status?: string
           updated_at?: string
+          utm_campaign?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
         }
         Update: {
           channel?: string
           clicked_at?: string | null
+          clicked_count?: number | null
+          conversion_value?: number | null
           created_at?: string
           delivered_at?: string | null
           error_message?: string | null
@@ -1378,10 +1612,14 @@ export type Database = {
           invite_id?: string
           metadata?: Json | null
           opened_at?: string | null
+          opened_count?: number | null
           provider_id?: string | null
           sent_at?: string | null
           status?: string
           updated_at?: string
+          utm_campaign?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
         }
         Relationships: [
           {
@@ -2321,6 +2559,51 @@ export type Database = {
         }
         Relationships: []
       }
+      notification_queue: {
+        Row: {
+          channels: string[]
+          created_at: string
+          id: string
+          message: string
+          metadata: Json | null
+          notification_type: string
+          priority: number | null
+          scheduled_for: string | null
+          sent_at: string | null
+          status: string
+          title: string
+          user_id: string
+        }
+        Insert: {
+          channels?: string[]
+          created_at?: string
+          id?: string
+          message: string
+          metadata?: Json | null
+          notification_type: string
+          priority?: number | null
+          scheduled_for?: string | null
+          sent_at?: string | null
+          status?: string
+          title: string
+          user_id: string
+        }
+        Update: {
+          channels?: string[]
+          created_at?: string
+          id?: string
+          message?: string
+          metadata?: Json | null
+          notification_type?: string
+          priority?: number | null
+          scheduled_for?: string | null
+          sent_at?: string | null
+          status?: string
+          title?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       notifications: {
         Row: {
           created_at: string
@@ -2357,6 +2640,39 @@ export type Database = {
         }
         Relationships: []
       }
+      onboarding_abandonment_points: {
+        Row: {
+          abandoned_at: string
+          abandonment_reason: string | null
+          id: string
+          metadata: Json | null
+          step_number: number
+          time_on_step_seconds: number | null
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          abandoned_at?: string
+          abandonment_reason?: string | null
+          id?: string
+          metadata?: Json | null
+          step_number: number
+          time_on_step_seconds?: number | null
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          abandoned_at?: string
+          abandonment_reason?: string | null
+          id?: string
+          metadata?: Json | null
+          step_number?: number
+          time_on_step_seconds?: number | null
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       onboarding_backups: {
         Row: {
           additional_data: Json | null
@@ -2389,6 +2705,7 @@ export type Database = {
       }
       onboarding_final: {
         Row: {
+          abandonment_points: Json | null
           ai_experience: Json
           ai_knowledge_level: string | null
           annual_revenue: string | null
@@ -2402,11 +2719,13 @@ export type Database = {
           completed_at: string | null
           completed_steps: number[]
           completion_message: string | null
+          completion_score: number | null
           created_at: string
           current_step: number
           discovery_info: Json
           experience_personalization: Json | null
           goals_info: Json
+          help_requests: number | null
           id: string
           is_completed: boolean
           location_info: Json
@@ -2415,10 +2734,12 @@ export type Database = {
           personal_info: Json
           personalization: Json
           professional_info: Json | null
+          time_per_step: Json | null
           updated_at: string
           user_id: string
         }
         Insert: {
+          abandonment_points?: Json | null
           ai_experience?: Json
           ai_knowledge_level?: string | null
           annual_revenue?: string | null
@@ -2432,11 +2753,13 @@ export type Database = {
           completed_at?: string | null
           completed_steps?: number[]
           completion_message?: string | null
+          completion_score?: number | null
           created_at?: string
           current_step?: number
           discovery_info?: Json
           experience_personalization?: Json | null
           goals_info?: Json
+          help_requests?: number | null
           id?: string
           is_completed?: boolean
           location_info?: Json
@@ -2445,10 +2768,12 @@ export type Database = {
           personal_info?: Json
           personalization?: Json
           professional_info?: Json | null
+          time_per_step?: Json | null
           updated_at?: string
           user_id: string
         }
         Update: {
+          abandonment_points?: Json | null
           ai_experience?: Json
           ai_knowledge_level?: string | null
           annual_revenue?: string | null
@@ -2462,11 +2787,13 @@ export type Database = {
           completed_at?: string | null
           completed_steps?: number[]
           completion_message?: string | null
+          completion_score?: number | null
           created_at?: string
           current_step?: number
           discovery_info?: Json
           experience_personalization?: Json | null
           goals_info?: Json
+          help_requests?: number | null
           id?: string
           is_completed?: boolean
           location_info?: Json
@@ -2475,6 +2802,7 @@ export type Database = {
           personal_info?: Json
           personalization?: Json
           professional_info?: Json | null
+          time_per_step?: Json | null
           updated_at?: string
           user_id?: string
         }
@@ -2506,6 +2834,45 @@ export type Database = {
           id?: string
           issues_found?: Json | null
           status?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      onboarding_step_tracking: {
+        Row: {
+          attempts: number | null
+          completed_at: string | null
+          id: string
+          is_completed: boolean | null
+          started_at: string
+          step_data: Json | null
+          step_name: string
+          step_number: number
+          time_spent_seconds: number | null
+          user_id: string
+        }
+        Insert: {
+          attempts?: number | null
+          completed_at?: string | null
+          id?: string
+          is_completed?: boolean | null
+          started_at?: string
+          step_data?: Json | null
+          step_name: string
+          step_number: number
+          time_spent_seconds?: number | null
+          user_id: string
+        }
+        Update: {
+          attempts?: number | null
+          completed_at?: string | null
+          id?: string
+          is_completed?: boolean | null
+          started_at?: string
+          step_data?: Json | null
+          step_name?: string
+          step_number?: number
+          time_spent_seconds?: number | null
           user_id?: string
         }
         Relationships: []
@@ -4041,6 +4408,39 @@ export type Database = {
         }
         Relationships: []
       }
+      user_activity_tracking: {
+        Row: {
+          activity_data: Json | null
+          activity_type: string
+          created_at: string
+          id: string
+          ip_address: string | null
+          session_id: string | null
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          activity_data?: Json | null
+          activity_type: string
+          created_at?: string
+          id?: string
+          ip_address?: string | null
+          session_id?: string | null
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          activity_data?: Json | null
+          activity_type?: string
+          created_at?: string
+          id?: string
+          ip_address?: string | null
+          session_id?: string | null
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_badges: {
         Row: {
           badge_id: string
@@ -4104,6 +4504,90 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      user_health_alerts: {
+        Row: {
+          alert_type: string
+          description: string
+          id: string
+          metadata: Json | null
+          resolved_at: string | null
+          resolved_by: string | null
+          severity: string
+          status: string
+          title: string
+          triggered_at: string
+          user_id: string
+        }
+        Insert: {
+          alert_type: string
+          description: string
+          id?: string
+          metadata?: Json | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity?: string
+          status?: string
+          title: string
+          triggered_at?: string
+          user_id: string
+        }
+        Update: {
+          alert_type?: string
+          description?: string
+          id?: string
+          metadata?: Json | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity?: string
+          status?: string
+          title?: string
+          triggered_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_health_metrics: {
+        Row: {
+          calculated_at: string
+          created_at: string
+          engagement_level: string | null
+          health_score: number | null
+          id: string
+          last_activity: string | null
+          metrics_data: Json | null
+          onboarding_completion_rate: number | null
+          risk_level: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          calculated_at?: string
+          created_at?: string
+          engagement_level?: string | null
+          health_score?: number | null
+          id?: string
+          last_activity?: string | null
+          metrics_data?: Json | null
+          onboarding_completion_rate?: number | null
+          risk_level?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          calculated_at?: string
+          created_at?: string
+          engagement_level?: string | null
+          health_score?: number | null
+          id?: string
+          last_activity?: string | null
+          metrics_data?: Json | null
+          onboarding_completion_rate?: number | null
+          risk_level?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       user_moderation_status: {
         Row: {
@@ -4560,6 +5044,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: Json
       }
+      calculate_user_health_score: {
+        Args: { p_user_id: string }
+        Returns: number
+      }
       can_access_benefit: {
         Args: { user_id: string; tool_id: string }
         Returns: boolean
@@ -4690,6 +5178,10 @@ export type Database = {
       deleteforumpost: {
         Args: { post_id: string }
         Returns: Json
+      }
+      detect_at_risk_users: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
       }
       detect_login_anomaly: {
         Args: { p_user_id: string; p_ip_address: string }
