@@ -30,7 +30,7 @@ export const useOnboardingWizard = ({ initialData, onDataChange }: UseOnboarding
     }, 1000);
   }, [onDataChange]);
 
-  const handleNext = useCallback(() => {
+  const handleNext = useCallback(async () => {
     if (currentStep < totalSteps) {
       const isValid = validateStep(currentStep, initialData);
       if (isValid) {
