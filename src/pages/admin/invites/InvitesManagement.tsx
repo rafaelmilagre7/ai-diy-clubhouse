@@ -11,6 +11,7 @@ import { CampaignManager } from '@/components/admin/invites/campaigns/CampaignMa
 import { OnboardingHealthDashboard } from '@/components/admin/invites/onboarding/OnboardingHealthDashboard';
 import { UserHealthDashboard } from '@/components/admin/invites/health/UserHealthDashboard';
 import { AdminToolsTab } from '@/components/admin/invites/administration/AdminToolsTab';
+import { InviteAuditDashboard } from '@/components/admin/invites/audit/InviteAuditDashboard';
 import { useInvites, type Invite } from '@/hooks/admin/useInvites';
 import { type CreateInviteParams } from '@/hooks/admin/invites/types';
 
@@ -61,12 +62,13 @@ const InvitesManagement = () => {
       </div>
 
       <Tabs defaultValue="convites" className="mt-4">
-        <TabsList className="grid w-full grid-cols-6">
+        <TabsList className="grid w-full grid-cols-7">
           <TabsTrigger value="convites">Convites</TabsTrigger>
           <TabsTrigger value="analytics">Analytics</TabsTrigger>
           <TabsTrigger value="campanhas">Campanhas</TabsTrigger>
           <TabsTrigger value="onboarding">Onboarding</TabsTrigger>
           <TabsTrigger value="health">Health Check</TabsTrigger>
+          <TabsTrigger value="auditoria">Auditoria</TabsTrigger>
           <TabsTrigger value="administracao">Administração</TabsTrigger>
         </TabsList>
 
@@ -92,6 +94,10 @@ const InvitesManagement = () => {
 
         <TabsContent value="health" className="space-y-4">
           <UserHealthDashboard />
+        </TabsContent>
+
+        <TabsContent value="auditoria" className="space-y-4">
+          <InviteAuditDashboard />
         </TabsContent>
 
         <TabsContent value="administracao" className="space-y-4">
