@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState } from 'react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -9,12 +9,14 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { Button } from "@/components/ui/button";
-import { supabase } from "@/lib/supabase";
-import { toast } from "sonner";
-import { Loader2, AlertTriangle, Trash2 } from "lucide-react";
-import { findRelatedEmails, parseEmailPattern } from "@/utils/emailUtils";
+} from '@/components/ui/alert-dialog';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { supabase } from '@/lib/supabase';
+import { toast } from 'sonner';
+import { parseEmailPattern, findRelatedEmails } from '@/utils/emailUtils';
+import { adminForceDeleteUser } from '@/utils/adminForceDeleteUser';
 
 interface ForceDeleteDialogProps {
   open: boolean;
@@ -25,145 +27,241 @@ interface ForceDeleteDialogProps {
 export const ForceDeleteDialog: React.FC<ForceDeleteDialogProps> = ({
   open,
   onOpenChange,
-  onSuccess,
+  onSuccess
 }) => {
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [relatedEmailsFound, setRelatedEmailsFound] = useState<string[]>([]);
+  const [email, setEmail] = useState('');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [duplicates, setDuplicates] = useState<{
+    users: string[];
+    invites: string[];
+  }>({ users: [], invites: [] });
+  const [showConfirmation, setShowConfirmation] = useState(false);
 
-  const analyzeRelatedEmails = async () => {
-    setIsAnalyzing(true);
-    setRelatedEmailsFound([]);
-
+  const handleAnalyzeSystem = async () => {
     try {
-      // Buscar todos os usuários
+      setIsAnalyzing(true);
+      console.log('🔍 Analisando sistema para emails duplicados...');
+
+      // 1. Buscar todos os usuários
       const { data: usersData, error: usersError } = await supabase.rpc('get_users_with_roles', {
         limit_count: 1000,
-        offset_count: 0,
-        search_query: null
+        offset_count: 0
       });
 
       if (usersError) {
         console.error('Erro ao buscar usuários:', usersError);
-        toast.error("Erro ao analisar usuários");
-        return;
+        throw usersError;
       }
 
-      // Buscar todos os convites
+      // 2. Buscar todos os convites
       const { data: invitesData, error: invitesError } = await supabase
         .from('invites')
         .select('email');
 
       if (invitesError) {
         console.error('Erro ao buscar convites:', invitesError);
-        toast.error("Erro ao analisar convites");
-        return;
+        throw invitesError;
       }
 
-      // Combinar todos os emails
-      const allEmails = [
-        ...(usersData || []).map((user: any) => user.email).filter(Boolean),
-        ...(invitesData || []).map((invite: any) => invite.email).filter(Boolean)
-      ];
+      // 3. Analisar duplicados
+      const allUserEmails = usersData?.users || [];
+      const allInviteEmails = invitesData?.map(i => i.email) || [];
 
-      console.log('📧 Emails encontrados para análise:', allEmails.length);
+      const userEmailsSet = new Set<string>();
+      const inviteEmailsSet = new Set<string>();
+      const duplicateUsers: string[] = [];
+      const duplicateInvites: string[] = [];
 
-      // Encontrar emails relacionados (com sufixos)
-      const emailGroups = new Map<string, string[]>();
-      
-      allEmails.forEach(email => {
-        const { baseEmail } = parseEmailPattern(email);
-        if (!emailGroups.has(baseEmail)) {
-          emailGroups.set(baseEmail, []);
+      // Analisar emails de usuários
+      allUserEmails.forEach((user: any) => {
+        if (user.email) {
+          const { baseEmail } = parseEmailPattern(user.email);
+          
+          // Se já temos este email base, é um duplicado
+          const existingEmails = Array.from(userEmailsSet).filter(existingEmail => {
+            const { baseEmail: existingBase } = parseEmailPattern(existingEmail);
+            return existingBase === baseEmail;
+          });
+
+          if (existingEmails.length > 0) {
+            // Adicionar todos os relacionados como duplicados
+            duplicateUsers.push(user.email);
+            existingEmails.forEach(existing => {
+              if (!duplicateUsers.includes(existing)) {
+                duplicateUsers.push(existing);
+              }
+            });
+          } else {
+            userEmailsSet.add(user.email);
+          }
         }
-        emailGroups.get(baseEmail)!.push(email);
       });
 
-      // Filtrar apenas grupos com múltiplos emails (duplicados)
-      const duplicatedEmails: string[] = [];
-      emailGroups.forEach((emails, baseEmail) => {
-        if (emails.length > 1) {
-          duplicatedEmails.push(...emails);
-          console.log(`🔍 Base ${baseEmail} tem ${emails.length} variações:`, emails);
+      // Analisar emails de convites
+      allInviteEmails.forEach((inviteEmail) => {
+        if (inviteEmail) {
+          const { baseEmail } = parseEmailPattern(inviteEmail);
+          
+          const existingEmails = Array.from(inviteEmailsSet).filter(existingEmail => {
+            const { baseEmail: existingBase } = parseEmailPattern(existingEmail);
+            return existingBase === baseEmail;
+          });
+
+          if (existingEmails.length > 0) {
+            duplicateInvites.push(inviteEmail);
+            existingEmails.forEach(existing => {
+              if (!duplicateInvites.includes(existing)) {
+                duplicateInvites.push(existing);
+              }
+            });
+          } else {
+            inviteEmailsSet.add(inviteEmail);
+          }
         }
       });
 
-      setRelatedEmailsFound(duplicatedEmails);
-      
-      if (duplicatedEmails.length > 0) {
-        toast.info(`Encontrados ${duplicatedEmails.length} emails duplicados/relacionados`);
+      setDuplicates({
+        users: duplicateUsers,
+        invites: duplicateInvites
+      });
+
+      console.log('📊 Análise concluída:', {
+        duplicateUsers: duplicateUsers.length,
+        duplicateInvites: duplicateInvites.length
+      });
+
+      if (duplicateUsers.length === 0 && duplicateInvites.length === 0) {
+        toast.success('✅ Nenhum email duplicado encontrado no sistema');
       } else {
-        toast.success("Nenhum email duplicado encontrado");
+        setShowConfirmation(true);
       }
 
     } catch (error: any) {
-      console.error('Erro na análise de emails:', error);
-      toast.error("Erro inesperado na análise");
+      console.error('❌ Erro na análise:', error);
+      toast.error('Erro ao analisar sistema: ' + error.message);
     } finally {
       setIsAnalyzing(false);
     }
   };
 
-  const handleForceDelete = async () => {
-    if (relatedEmailsFound.length === 0) {
-      toast.error("Nenhum email duplicado foi encontrado para limpar");
+  const handleCleanupAll = async () => {
+    try {
+      setIsDeleting(true);
+      console.log('🗑️ Iniciando limpeza TOTAL de emails duplicados...');
+
+      let successCount = 0;
+      let errorCount = 0;
+      const errors: string[] = [];
+
+      // 1. Limpar usuários duplicados
+      for (const userEmail of duplicates.users) {
+        try {
+          console.log(`🧹 Limpando usuário: ${userEmail}`);
+          
+          // Usar a função correta que existe no sistema
+          const result = await adminForceDeleteUser(userEmail);
+          
+          if (result.success) {
+            console.log(`✅ Usuário ${userEmail} removido com sucesso`);
+            successCount++;
+          } else {
+            console.error(`❌ Falha ao remover usuário ${userEmail}:`, result.message);
+            errorCount++;
+            errors.push(`${userEmail}: ${result.message}`);
+          }
+        } catch (error: any) {
+          console.error(`❌ Erro ao remover usuário ${userEmail}:`, error);
+          errorCount++;
+          errors.push(`${userEmail}: ${error.message}`);
+        }
+      }
+
+      // 2. Limpar convites duplicados
+      for (const inviteEmail of duplicates.invites) {
+        try {
+          console.log(`🧹 Limpando convites para: ${inviteEmail}`);
+          
+          const { error } = await supabase
+            .from('invites')
+            .delete()
+            .eq('email', inviteEmail);
+
+          if (error) {
+            throw error;
+          }
+
+          console.log(`✅ Convites para ${inviteEmail} removidos com sucesso`);
+          successCount++;
+        } catch (error: any) {
+          console.error(`❌ Erro ao remover convites para ${inviteEmail}:`, error);
+          errorCount++;
+          errors.push(`Convites ${inviteEmail}: ${error.message}`);
+        }
+      }
+
+      // 3. Resultado final
+      const totalProcessed = duplicates.users.length + duplicates.invites.length;
+      
+      if (errorCount === 0) {
+        toast.success(`🎉 Limpeza TOTAL concluída com sucesso!`, {
+          description: `${successCount} emails duplicados removidos`,
+          duration: 5000
+        });
+      } else {
+        toast.warning(`⚠️ Limpeza parcial realizada`, {
+          description: `${successCount} removidos, ${errorCount} erros`,
+          duration: 8000
+        });
+        
+        if (errors.length > 0) {
+          console.error('📋 Erros detalhados:', errors);
+        }
+      }
+
+      // Resetar estado
+      setDuplicates({ users: [], invites: [] });
+      setShowConfirmation(false);
+      onSuccess?.();
+
+    } catch (error: any) {
+      console.error('💥 Erro na limpeza total:', error);
+      toast.error('Erro na limpeza total: ' + error.message);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const handleSingleUserDelete = async () => {
+    if (!email.trim()) {
+      toast.error('Por favor, insira um email válido');
       return;
     }
 
-    setIsDeleting(true);
-
     try {
-      console.log('🗑️ Iniciando limpeza TOTAL de emails duplicados:', relatedEmailsFound);
+      setIsDeleting(true);
+      console.log(`🗑️ Executando exclusão TOTAL para: ${email}`);
 
-      // 1. Deletar todos os convites relacionados
-      for (const email of relatedEmailsFound) {
-        const { error: inviteError } = await supabase
-          .from('invites')
-          .delete()
-          .eq('email', email);
+      const result = await adminForceDeleteUser(email);
 
-        if (inviteError) {
-          console.error(`Erro ao deletar convite ${email}:`, inviteError);
-        } else {
-          console.log(`✅ Convite deletado: ${email}`);
-        }
+      if (result.success) {
+        toast.success('✅ Usuário removido COMPLETAMENTE do sistema', {
+          description: `${result.details.total_records_deleted} registros removidos`,
+          duration: 5000
+        });
+        setEmail('');
+        onOpenChange(false);
+        onSuccess?.();
+      } else {
+        toast.error('❌ Erro na exclusão', {
+          description: result.message,
+          duration: 8000
+        });
       }
-
-      // 2. Deletar usuários relacionados (via função admin)
-      for (const email of relatedEmailsFound) {
-        try {
-          const { error: deleteError } = await supabase.rpc('admin_delete_user_by_email', {
-            user_email: email
-          });
-
-          if (deleteError) {
-            console.error(`Erro ao deletar usuário ${email}:`, deleteError);
-          } else {
-            console.log(`✅ Usuário deletado: ${email}`);
-          }
-        } catch (error) {
-          console.error(`Erro inesperado ao deletar usuário ${email}:`, error);
-        }
-      }
-
-      // 3. Limpeza adicional de dados órfãos
-      try {
-        const { error: cleanupError } = await supabase.rpc('cleanup_orphaned_data');
-        if (cleanupError) {
-          console.warn('Aviso na limpeza de dados órfãos:', cleanupError);
-        }
-      } catch (error) {
-        console.warn('Limpeza de dados órfãos não disponível:', error);
-      }
-
-      toast.success(`✅ Limpeza concluída! ${relatedEmailsFound.length} emails duplicados removidos.`);
-      setRelatedEmailsFound([]);
-      onSuccess?.();
-      onOpenChange(false);
 
     } catch (error: any) {
-      console.error('❌ Erro na limpeza TOTAL:', error);
-      toast.error(`Erro na limpeza: ${error.message}`);
+      console.error('❌ Erro na exclusão:', error);
+      toast.error('Erro na exclusão: ' + error.message);
     } finally {
       setIsDeleting(false);
     }
@@ -171,95 +269,150 @@ export const ForceDeleteDialog: React.FC<ForceDeleteDialogProps> = ({
 
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
-      <AlertDialogContent className="max-w-2xl">
+      <AlertDialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
         <AlertDialogHeader>
-          <AlertDialogTitle className="flex items-center gap-2 text-red-600">
-            <AlertTriangle className="h-5 w-5" />
-            🚨 LIMPEZA TOTAL - EMAILS DUPLICADOS
+          <AlertDialogTitle className="text-red-600 text-xl">
+            🚨 EXCLUSÃO TOTAL - Gerenciar Emails Duplicados
           </AlertDialogTitle>
-          <AlertDialogDescription className="space-y-4">
-            <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-              <p className="text-sm text-yellow-800 font-medium">
-                ⚠️ Esta ação irá detectar e remover TODOS os emails duplicados (com sufixos) do sistema:
-              </p>
-              <ul className="mt-2 text-sm text-yellow-700 list-disc list-inside space-y-1">
-                <li>Usuários com emails como: email+123@domain.com</li>
-                <li>Convites pendentes relacionados</li>
-                <li>Dados órfãos no sistema</li>
+          <AlertDialogDescription className="text-sm space-y-2">
+            <div className="bg-red-50 p-3 rounded border border-red-200">
+              <p className="font-medium text-red-800">⚠️ ATENÇÃO: Esta ação é IRREVERSÍVEL!</p>
+              <p className="text-red-700">Remove COMPLETAMENTE todos os dados do usuário, incluindo:</p>
+              <ul className="text-red-600 text-xs mt-1 ml-4">
+                <li>• Perfil do usuário</li>
+                <li>• Dados de onboarding</li>
+                <li>• Progresso de implementações</li>
+                <li>• Posts e comentários no fórum</li>
+                <li>• Notificações e analytics</li>
+                <li>• Conta na tabela auth.users</li>
               </ul>
-            </div>
-
-            {!isAnalyzing && relatedEmailsFound.length === 0 && (
-              <div className="flex justify-center">
-                <Button 
-                  onClick={analyzeRelatedEmails}
-                  variant="outline"
-                  className="border-blue-200 text-blue-700 hover:bg-blue-50"
-                >
-                  🔍 Analisar Sistema (Encontrar Duplicados)
-                </Button>
-              </div>
-            )}
-
-            {isAnalyzing && (
-              <div className="flex items-center justify-center gap-2 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
-                <span className="text-blue-700">Analisando sistema...</span>
-              </div>
-            )}
-
-            {relatedEmailsFound.length > 0 && (
-              <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
-                <p className="text-sm font-medium text-red-800 mb-2">
-                  📋 {relatedEmailsFound.length} emails duplicados encontrados:
-                </p>
-                <div className="max-h-32 overflow-y-auto space-y-1">
-                  {relatedEmailsFound.slice(0, 10).map((email, index) => (
-                    <div key={index} className="text-xs text-red-700 bg-red-100 px-2 py-1 rounded">
-                      {email}
-                    </div>
-                  ))}
-                  {relatedEmailsFound.length > 10 && (
-                    <div className="text-xs text-red-600 font-medium">
-                      ... e mais {relatedEmailsFound.length - 10} emails
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-
-            <div className="p-4 bg-red-100 border border-red-300 rounded-lg">
-              <p className="text-sm font-bold text-red-800">
-                ⚠️ ATENÇÃO: Esta ação é IRREVERSÍVEL!
-              </p>
             </div>
           </AlertDialogDescription>
         </AlertDialogHeader>
 
-        <AlertDialogFooter>
-          <AlertDialogCancel disabled={isDeleting}>
-            Cancelar
-          </AlertDialogCancel>
-          
-          {relatedEmailsFound.length > 0 && (
-            <AlertDialogAction
-              onClick={handleForceDelete}
-              disabled={isDeleting}
-              className="bg-red-600 hover:bg-red-700 text-white"
+        <div className="space-y-6">
+          {/* Análise do Sistema */}
+          <div className="space-y-3">
+            <h3 className="font-medium text-lg">📊 Análise do Sistema</h3>
+            <p className="text-sm text-gray-600">
+              Detectar automaticamente emails duplicados (com sufixos como +teste) em todo o sistema:
+            </p>
+            
+            <Button 
+              onClick={handleAnalyzeSystem}
+              disabled={isAnalyzing}
+              variant="outline"
+              className="w-full"
             >
-              {isDeleting ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Limpando...
-                </>
-              ) : (
-                <>
-                  <Trash2 className="mr-2 h-4 w-4" />
-                  🗑️ LIMPAR TUDO ({relatedEmailsFound.length})
-                </>
-              )}
-            </AlertDialogAction>
-          )}
+              {isAnalyzing ? '🔍 Analisando...' : '🔍 Analisar Sistema'}
+            </Button>
+
+            {showConfirmation && (
+              <div className="bg-yellow-50 p-4 rounded border border-yellow-200">
+                <h4 className="font-medium text-yellow-800 mb-2">
+                  🚨 LIMPEZA TOTAL - EMAILS DUPLICADOS
+                </h4>
+                <p className="text-yellow-700 text-sm mb-3">
+                  ⚠️ Esta ação irá detectar e remover TODOS os emails duplicados (com sufixos) do sistema:
+                </p>
+                <ul className="text-yellow-600 text-xs mb-3 ml-4">
+                  <li>• Usuários com emails como: email+123@domain.com</li>
+                  <li>• Convites pendentes relacionados</li>
+                  <li>• Dados órfãos no sistema</li>
+                </ul>
+
+                {(duplicates.users.length > 0 || duplicates.invites.length > 0) && (
+                  <div className="bg-white p-3 rounded border">
+                    <p className="font-medium text-sm mb-2">
+                      📋 {duplicates.users.length + duplicates.invites.length} emails duplicados encontrados:
+                    </p>
+                    
+                    {duplicates.users.length > 0 && (
+                      <div className="mb-2">
+                        <p className="text-xs font-medium text-gray-700">Usuários:</p>
+                        <ul className="text-xs text-gray-600 ml-2">
+                          {duplicates.users.map(email => (
+                            <li key={email}>• {email}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                    
+                    {duplicates.invites.length > 0 && (
+                      <div>
+                        <p className="text-xs font-medium text-gray-700">Convites:</p>
+                        <ul className="text-xs text-gray-600 ml-2">
+                          {duplicates.invites.map(email => (
+                            <li key={email}>• {email}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                <p className="text-yellow-800 font-medium text-sm mt-3">
+                  ⚠️ ATENÇÃO: Esta ação é IRREVERSÍVEL!
+                </p>
+
+                <div className="flex gap-2 mt-4">
+                  <Button
+                    onClick={() => setShowConfirmation(false)}
+                    variant="outline"
+                    size="sm"
+                  >
+                    Cancelar
+                  </Button>
+                  <Button
+                    onClick={handleCleanupAll}
+                    disabled={isDeleting}
+                    variant="destructive"
+                    size="sm"
+                  >
+                    {isDeleting 
+                      ? '🗑️ Limpando...' 
+                      : `🗑️ LIMPAR TUDO (${duplicates.users.length + duplicates.invites.length})`
+                    }
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Exclusão Individual */}
+          <div className="space-y-3 border-t pt-4">
+            <h3 className="font-medium text-lg">👤 Exclusão Individual</h3>
+            <p className="text-sm text-gray-600">
+              Remover um usuário específico e todos os seus dados:
+            </p>
+            
+            <div>
+              <Label htmlFor="email" className="text-sm font-medium">
+                Email do usuário:
+              </Label>
+              <Input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="usuario@exemplo.com"
+                className="mt-1"
+              />
+            </div>
+
+            <Button 
+              onClick={handleSingleUserDelete}
+              disabled={isDeleting || !email.trim()}
+              variant="destructive"
+              className="w-full"
+            >
+              {isDeleting ? '🗑️ Excluindo...' : '🗑️ EXCLUIR USUÁRIO COMPLETAMENTE'}
+            </Button>
+          </div>
+        </div>
+
+        <AlertDialogFooter>
+          <AlertDialogCancel>Fechar</AlertDialogCancel>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
