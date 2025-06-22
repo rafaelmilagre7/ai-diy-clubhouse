@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -11,14 +11,10 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { LoadingSpinner } from "@/components/common/LoadingSpinner";
-import { Badge } from "@/components/ui/badge";
-import { CheckCircle, AlertTriangle, Trash2, Users, Database, RotateCcw, Mail } from "lucide-react";
-import { parseEmailPattern, findRelatedEmails } from "@/utils/emailUtils";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
+import { Loader2, AlertTriangle, Trash2 } from "lucide-react";
+import { findRelatedEmails, parseEmailPattern } from "@/utils/emailUtils";
 
 interface ForceDeleteDialogProps {
   open: boolean;
@@ -26,372 +22,244 @@ interface ForceDeleteDialogProps {
   onSuccess?: () => void;
 }
 
-interface ExtendedDeleteResult {
-  success: boolean;
-  message: string;
-  details: {
-    primary_email: string;
-    related_emails: string[];
-    backup_records: number;
-    affected_tables: string[];
-    auth_users_deleted: number;
-    profiles_deleted: number;
-    invites_deleted: number;
-    error_count: number;
-    error_messages: string[];
-    operation_timestamp: string;
-    total_records_deleted: number;
-  };
-}
-
 export const ForceDeleteDialog: React.FC<ForceDeleteDialogProps> = ({
   open,
   onOpenChange,
-  onSuccess
+  onSuccess,
 }) => {
-  const [email, setEmail] = useState('');
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [result, setResult] = useState<ExtendedDeleteResult | null>(null);
-  const [relatedEmails, setRelatedEmails] = useState<string[]>([]);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [relatedEmailsFound, setRelatedEmailsFound] = useState<string[]>([]);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
 
-  const searchRelatedEmails = async (targetEmail: string) => {
+  const analyzeRelatedEmails = async () => {
+    setIsAnalyzing(true);
+    setRelatedEmailsFound([]);
+
     try {
-      const { baseEmail } = parseEmailPattern(targetEmail);
-      
-      // Buscar em profiles
-      const { data: profiles } = await supabase
-        .from('profiles')
-        .select('email')
-        .or(`email.like.${baseEmail.replace('@', '+%@')},email.eq.${baseEmail}`);
-      
-      // Buscar em invites
-      const { data: invites } = await supabase
-        .from('invites')
-        .select('email')
-        .or(`email.like.${baseEmail.replace('@', '+%@')},email.eq.${baseEmail}`);
-      
-      // Buscar em auth.users (se possível)
-      const { data: authUsers } = await supabase.auth.admin.listUsers();
-      
-      const allEmails = [
-        ...(profiles?.map(p => p.email) || []),
-        ...(invites?.map(i => i.email) || []),
-        ...(authUsers.data?.users?.map(u => u.email) || [])
-      ].filter(Boolean);
-      
-      const uniqueEmails = [...new Set(allEmails)];
-      const related = findRelatedEmails(uniqueEmails, targetEmail);
-      
-      setRelatedEmails(related);
-      return related;
-    } catch (error) {
-      console.error('Erro ao buscar emails relacionados:', error);
-      return [];
-    }
-  };
+      // Buscar todos os usuários
+      const { data: usersData, error: usersError } = await supabase.rpc('get_users_with_roles', {
+        limit_count: 1000,
+        offset_count: 0,
+        search_query: null
+      });
 
-  const handleEmailChange = async (newEmail: string) => {
-    setEmail(newEmail);
-    if (newEmail.includes('@')) {
-      await searchRelatedEmails(newEmail);
-    } else {
-      setRelatedEmails([]);
-    }
-  };
-
-  const executeCompleteCleanup = async (targetEmail: string): Promise<ExtendedDeleteResult> => {
-    const { baseEmail } = parseEmailPattern(targetEmail);
-    
-    try {
-      // Primeiro, buscar todos os emails relacionados
-      const relatedEmailsList = await searchRelatedEmails(targetEmail);
-      
-      let totalDeleted = 0;
-      let authUsersDeleted = 0;
-      let profilesDeleted = 0;
-      let invitesDeleted = 0;
-      const errors: string[] = [];
-      const affectedTables: string[] = [];
-      
-      // Para cada email relacionado, fazer exclusão completa
-      for (const emailToDelete of relatedEmailsList) {
-        try {
-          // Buscar usuário por email
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('id')
-            .eq('email', emailToDelete)
-            .maybeSingle();
-          
-          if (profile) {
-            // Usar a função de exclusão total existente
-            const { data, error } = await supabase.rpc('admin_force_delete_auth_user', {
-              user_email: emailToDelete
-            });
-            
-            if (error) {
-              errors.push(`Erro ao deletar ${emailToDelete}: ${error.message}`);
-            } else if (data?.success) {
-              totalDeleted += data.details.total_records_deleted || 0;
-              if (data.details.auth_user_deleted) authUsersDeleted++;
-              profilesDeleted++;
-              affectedTables.push(...(data.details.affected_tables || []));
-            }
-          }
-          
-          // Limpar convites
-          const { error: inviteError } = await supabase
-            .from('invites')
-            .delete()
-            .eq('email', emailToDelete);
-          
-          if (inviteError) {
-            errors.push(`Erro ao deletar convites de ${emailToDelete}: ${inviteError.message}`);
-          } else {
-            invitesDeleted++;
-            if (!affectedTables.includes('invites')) {
-              affectedTables.push('invites');
-            }
-          }
-        } catch (error: any) {
-          errors.push(`Erro ao processar ${emailToDelete}: ${error.message}`);
-        }
+      if (usersError) {
+        console.error('Erro ao buscar usuários:', usersError);
+        toast.error("Erro ao analisar usuários");
+        return;
       }
+
+      // Buscar todos os convites
+      const { data: invitesData, error: invitesError } = await supabase
+        .from('invites')
+        .select('email');
+
+      if (invitesError) {
+        console.error('Erro ao buscar convites:', invitesError);
+        toast.error("Erro ao analisar convites");
+        return;
+      }
+
+      // Combinar todos os emails
+      const allEmails = [
+        ...(usersData || []).map((user: any) => user.email).filter(Boolean),
+        ...(invitesData || []).map((invite: any) => invite.email).filter(Boolean)
+      ];
+
+      console.log('📧 Emails encontrados para análise:', allEmails.length);
+
+      // Encontrar emails relacionados (com sufixos)
+      const emailGroups = new Map<string, string[]>();
       
-      return {
-        success: errors.length === 0 || totalDeleted > 0,
-        message: `Limpeza completa realizada para ${relatedEmailsList.length} emails relacionados`,
-        details: {
-          primary_email: targetEmail,
-          related_emails: relatedEmailsList,
-          backup_records: 0, // A função SQL já faz backup
-          affected_tables: [...new Set(affectedTables)],
-          auth_users_deleted: authUsersDeleted,
-          profiles_deleted: profilesDeleted,
-          invites_deleted: invitesDeleted,
-          error_count: errors.length,
-          error_messages: errors,
-          operation_timestamp: new Date().toISOString(),
-          total_records_deleted: totalDeleted
+      allEmails.forEach(email => {
+        const { baseEmail } = parseEmailPattern(email);
+        if (!emailGroups.has(baseEmail)) {
+          emailGroups.set(baseEmail, []);
         }
-      };
+        emailGroups.get(baseEmail)!.push(email);
+      });
+
+      // Filtrar apenas grupos com múltiplos emails (duplicados)
+      const duplicatedEmails: string[] = [];
+      emailGroups.forEach((emails, baseEmail) => {
+        if (emails.length > 1) {
+          duplicatedEmails.push(...emails);
+          console.log(`🔍 Base ${baseEmail} tem ${emails.length} variações:`, emails);
+        }
+      });
+
+      setRelatedEmailsFound(duplicatedEmails);
+      
+      if (duplicatedEmails.length > 0) {
+        toast.info(`Encontrados ${duplicatedEmails.length} emails duplicados/relacionados`);
+      } else {
+        toast.success("Nenhum email duplicado encontrado");
+      }
+
     } catch (error: any) {
-      return {
-        success: false,
-        message: `Erro na limpeza completa: ${error.message}`,
-        details: {
-          primary_email: targetEmail,
-          related_emails: [],
-          backup_records: 0,
-          affected_tables: [],
-          auth_users_deleted: 0,
-          profiles_deleted: 0,
-          invites_deleted: 0,
-          error_count: 1,
-          error_messages: [error.message],
-          operation_timestamp: new Date().toISOString(),
-          total_records_deleted: 0
-        }
-      };
+      console.error('Erro na análise de emails:', error);
+      toast.error("Erro inesperado na análise");
+    } finally {
+      setIsAnalyzing(false);
     }
   };
 
   const handleForceDelete = async () => {
-    if (!email.trim()) return;
-    
-    setIsProcessing(true);
-    setResult(null);
-    
-    try {
-      const deleteResult = await executeCompleteCleanup(email.trim());
-      setResult(deleteResult);
-      
-      if (deleteResult.success) {
-        toast.success('🗑️ LIMPEZA COMPLETA realizada', {
-          description: `${deleteResult.details.related_emails.length} emails relacionados limpos`,
-          duration: 8000
-        });
-        
-        if (onSuccess) {
-          setTimeout(() => {
-            onSuccess();
-            onOpenChange(false);
-            setEmail('');
-            setResult(null);
-            setRelatedEmails([]);
-          }, 4000);
-        }
-      } else {
-        toast.error('❌ Erro na limpeza completa', {
-          description: deleteResult.message,
-          duration: 10000
-        });
-      }
-    } catch (error) {
-      console.error('Erro na exclusão total:', error);
-      toast.error('❌ Erro inesperado na limpeza');
-    } finally {
-      setIsProcessing(false);
+    if (relatedEmailsFound.length === 0) {
+      toast.error("Nenhum email duplicado foi encontrado para limpar");
+      return;
     }
-  };
 
-  const handleClose = () => {
-    if (!isProcessing) {
+    setIsDeleting(true);
+
+    try {
+      console.log('🗑️ Iniciando limpeza TOTAL de emails duplicados:', relatedEmailsFound);
+
+      // 1. Deletar todos os convites relacionados
+      for (const email of relatedEmailsFound) {
+        const { error: inviteError } = await supabase
+          .from('invites')
+          .delete()
+          .eq('email', email);
+
+        if (inviteError) {
+          console.error(`Erro ao deletar convite ${email}:`, inviteError);
+        } else {
+          console.log(`✅ Convite deletado: ${email}`);
+        }
+      }
+
+      // 2. Deletar usuários relacionados (via função admin)
+      for (const email of relatedEmailsFound) {
+        try {
+          const { error: deleteError } = await supabase.rpc('admin_delete_user_by_email', {
+            user_email: email
+          });
+
+          if (deleteError) {
+            console.error(`Erro ao deletar usuário ${email}:`, deleteError);
+          } else {
+            console.log(`✅ Usuário deletado: ${email}`);
+          }
+        } catch (error) {
+          console.error(`Erro inesperado ao deletar usuário ${email}:`, error);
+        }
+      }
+
+      // 3. Limpeza adicional de dados órfãos
+      try {
+        const { error: cleanupError } = await supabase.rpc('cleanup_orphaned_data');
+        if (cleanupError) {
+          console.warn('Aviso na limpeza de dados órfãos:', cleanupError);
+        }
+      } catch (error) {
+        console.warn('Limpeza de dados órfãos não disponível:', error);
+      }
+
+      toast.success(`✅ Limpeza concluída! ${relatedEmailsFound.length} emails duplicados removidos.`);
+      setRelatedEmailsFound([]);
+      onSuccess?.();
       onOpenChange(false);
-      setEmail('');
-      setResult(null);
-      setRelatedEmails([]);
+
+    } catch (error: any) {
+      console.error('❌ Erro na limpeza TOTAL:', error);
+      toast.error(`Erro na limpeza: ${error.message}`);
+    } finally {
+      setIsDeleting(false);
     }
   };
 
   return (
-    <AlertDialog open={open} onOpenChange={handleClose}>
-      <AlertDialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+    <AlertDialog open={open} onOpenChange={onOpenChange}>
+      <AlertDialogContent className="max-w-2xl">
         <AlertDialogHeader>
-          <AlertDialogTitle className="flex items-center gap-2">
-            <Trash2 className="h-5 w-5 text-red-600" />
-            🚨 LIMPEZA COMPLETA DE EMAILS RELACIONADOS
+          <AlertDialogTitle className="flex items-center gap-2 text-red-600">
+            <AlertTriangle className="h-5 w-5" />
+            🚨 LIMPEZA TOTAL - EMAILS DUPLICADOS
           </AlertDialogTitle>
           <AlertDialogDescription className="space-y-4">
-            <div className="p-4 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800 rounded-lg">
-              <div className="flex items-center gap-2 mb-2">
-                <AlertTriangle className="h-4 w-4 text-red-600" />
-                <p className="text-sm font-medium text-red-800 dark:text-red-200">
-                  ⚠️ ATENÇÃO: Limpeza TOTAL com detecção de emails relacionados
-                </p>
-              </div>
-              <ul className="text-xs text-red-700 dark:text-red-300 space-y-1">
-                <li>• Detecta automaticamente emails com sufixos (+123456)</li>
-                <li>• Remove de TODAS as tabelas do sistema</li>
-                <li>• Exclui DEFINITIVAMENTE da auth.users</li>
-                <li>• Libera email base COMPLETAMENTE para novos convites</li>
-                <li>• Backup automático antes da exclusão</li>
-                <li>• IRREVERSÍVEL - não há como desfazer</li>
+            <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+              <p className="text-sm text-yellow-800 font-medium">
+                ⚠️ Esta ação irá detectar e remover TODOS os emails duplicados (com sufixos) do sistema:
+              </p>
+              <ul className="mt-2 text-sm text-yellow-700 list-disc list-inside space-y-1">
+                <li>Usuários com emails como: email+123@domain.com</li>
+                <li>Convites pendentes relacionados</li>
+                <li>Dados órfãos no sistema</li>
               </ul>
             </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="email">Email para LIMPEZA COMPLETA:</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="usuario@exemplo.com"
-                value={email}
-                onChange={(e) => handleEmailChange(e.target.value)}
-                disabled={isProcessing}
-              />
-            </div>
 
-            {relatedEmails.length > 0 && (
-              <div className="p-3 bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-lg">
-                <div className="flex items-center gap-2 mb-2">
-                  <Mail className="h-4 w-4 text-blue-600" />
-                  <p className="text-sm font-medium text-blue-800 dark:text-blue-200">
-                    📧 Emails relacionados encontrados ({relatedEmails.length})
-                  </p>
-                </div>
-                <div className="flex flex-wrap gap-1">
-                  {relatedEmails.map((relatedEmail, index) => {
-                    const { hasSuffix } = parseEmailPattern(relatedEmail);
-                    return (
-                      <Badge 
-                        key={index} 
-                        variant="outline" 
-                        className={`text-xs ${hasSuffix ? 'bg-orange-100 border-orange-300' : 'bg-blue-100 border-blue-300'}`}
-                      >
-                        {hasSuffix ? '🔄' : '📧'} {relatedEmail}
-                      </Badge>
-                    );
-                  })}
-                </div>
+            {!isAnalyzing && relatedEmailsFound.length === 0 && (
+              <div className="flex justify-center">
+                <Button 
+                  onClick={analyzeRelatedEmails}
+                  variant="outline"
+                  className="border-blue-200 text-blue-700 hover:bg-blue-50"
+                >
+                  🔍 Analisar Sistema (Encontrar Duplicados)
+                </Button>
               </div>
             )}
 
-            {result && (
-              <div className={`p-4 rounded-md border ${
-                result.success 
-                  ? 'bg-green-50 dark:bg-green-950/20 border-green-200 dark:border-green-800' 
-                  : 'bg-red-50 dark:bg-red-950/20 border-red-200 dark:border-red-800'
-              }`}>
-                <div className="flex items-center gap-2 mb-2">
-                  {result.success ? (
-                    <CheckCircle className="h-4 w-4 text-green-600" />
-                  ) : (
-                    <AlertTriangle className="h-4 w-4 text-red-600" />
+            {isAnalyzing && (
+              <div className="flex items-center justify-center gap-2 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
+                <span className="text-blue-700">Analisando sistema...</span>
+              </div>
+            )}
+
+            {relatedEmailsFound.length > 0 && (
+              <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+                <p className="text-sm font-medium text-red-800 mb-2">
+                  📋 {relatedEmailsFound.length} emails duplicados encontrados:
+                </p>
+                <div className="max-h-32 overflow-y-auto space-y-1">
+                  {relatedEmailsFound.slice(0, 10).map((email, index) => (
+                    <div key={index} className="text-xs text-red-700 bg-red-100 px-2 py-1 rounded">
+                      {email}
+                    </div>
+                  ))}
+                  {relatedEmailsFound.length > 10 && (
+                    <div className="text-xs text-red-600 font-medium">
+                      ... e mais {relatedEmailsFound.length - 10} emails
+                    </div>
                   )}
-                  <p className={`text-sm font-medium ${
-                    result.success ? 'text-green-800 dark:text-green-200' : 'text-red-800 dark:text-red-200'
-                  }`}>
-                    {result.message}
-                  </p>
                 </div>
-                
-                {result.success && (
-                  <div className="mt-3 space-y-3">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <Badge variant="outline" className="text-xs bg-blue-100">
-                        <Mail className="h-3 w-3 mr-1" />
-                        📧 {result.details.related_emails.length} emails
-                      </Badge>
-                      
-                      <Badge variant="outline" className="text-xs bg-green-100">
-                        <Users className="h-3 w-3 mr-1" />
-                        👤 {result.details.auth_users_deleted} auth
-                      </Badge>
-                      
-                      <Badge variant="outline" className="text-xs bg-purple-100">
-                        <Database className="h-3 w-3 mr-1" />
-                        🗂️ {result.details.profiles_deleted} perfis
-                      </Badge>
-
-                      <Badge variant="outline" className="text-xs bg-orange-100">
-                        <RotateCcw className="h-3 w-3 mr-1" />
-                        📨 {result.details.invites_deleted} convites
-                      </Badge>
-                    </div>
-                    
-                    <div className="text-xs text-muted-foreground">
-                      📊 Tabelas afetadas ({result.details.affected_tables.length}): {result.details.affected_tables.join(', ')}
-                    </div>
-
-                    {result.details.related_emails.length > 0 && (
-                      <div className="text-xs text-muted-foreground">
-                        🔗 Emails processados: {result.details.related_emails.join(', ')}
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {result.details.error_messages.length > 0 && (
-                  <div className="mt-2 text-xs text-red-600 dark:text-red-400">
-                    ⚠️ Erros ({result.details.error_count}): {result.details.error_messages.join(', ')}
-                  </div>
-                )}
               </div>
             )}
+
+            <div className="p-4 bg-red-100 border border-red-300 rounded-lg">
+              <p className="text-sm font-bold text-red-800">
+                ⚠️ ATENÇÃO: Esta ação é IRREVERSÍVEL!
+              </p>
+            </div>
           </AlertDialogDescription>
         </AlertDialogHeader>
+
         <AlertDialogFooter>
-          <AlertDialogCancel disabled={isProcessing}>
+          <AlertDialogCancel disabled={isDeleting}>
             Cancelar
           </AlertDialogCancel>
-          <AlertDialogAction
-            onClick={(e) => {
-              e.preventDefault();
-              handleForceDelete();
-            }}
-            disabled={isProcessing || !email.trim()}
-            className="bg-red-600 hover:bg-red-700"
-          >
-            {isProcessing ? (
-              <>
-                <LoadingSpinner className="mr-2 h-4 w-4" />
-                🗑️ LIMPANDO COMPLETAMENTE...
-              </>
-            ) : (
-              `🚨 LIMPAR ${relatedEmails.length > 0 ? `${relatedEmails.length} EMAILS` : 'COMPLETAMENTE'}`
-            )}
-          </AlertDialogAction>
+          
+          {relatedEmailsFound.length > 0 && (
+            <AlertDialogAction
+              onClick={handleForceDelete}
+              disabled={isDeleting}
+              className="bg-red-600 hover:bg-red-700 text-white"
+            >
+              {isDeleting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Limpando...
+                </>
+              ) : (
+                <>
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  🗑️ LIMPAR TUDO ({relatedEmailsFound.length})
+                </>
+              )}
+            </AlertDialogAction>
+          )}
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
