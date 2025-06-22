@@ -6,17 +6,16 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
 import SimpleInvitesTab from './components/SimpleInvitesTab';
 import { SimplifiedCreateInviteModal } from './components/SimplifiedCreateInviteModal';
-import { ForceDeleteDialog } from '@/components/admin/users/ForceDeleteDialog';
 import { InviteAnalyticsDashboard } from '@/components/admin/invites/analytics/InviteAnalyticsDashboard';
 import { CampaignManager } from '@/components/admin/invites/campaigns/CampaignManager';
 import { OnboardingHealthDashboard } from '@/components/admin/invites/onboarding/OnboardingHealthDashboard';
 import { UserHealthDashboard } from '@/components/admin/invites/health/UserHealthDashboard';
+import { AdminToolsTab } from '@/components/admin/invites/administration/AdminToolsTab';
 import { useInvites, type Invite } from '@/hooks/admin/useInvites';
 import { type CreateInviteParams } from '@/hooks/admin/invites/types';
 
 const InvitesManagement = () => {
   const [open, setOpen] = useState(false);
-  const [forceDeleteOpen, setForceDeleteOpen] = useState(false);
   const { invites, loading, fetchInvites, createInvite, isCreating } = useInvites();
 
   useEffect(() => {
@@ -54,13 +53,6 @@ const InvitesManagement = () => {
         </div>
 
         <div className="flex gap-2">
-          <Button 
-            variant="outline"
-            onClick={() => setForceDeleteOpen(true)}
-            className="bg-red-50 hover:bg-red-100 text-red-700 border-red-200"
-          >
-            🚨 EXCLUSÃO TOTAL
-          </Button>
           <Button onClick={() => setOpen(true)}>
             <Plus className="w-4 h-4 mr-2" />
             Criar Convite
@@ -69,12 +61,13 @@ const InvitesManagement = () => {
       </div>
 
       <Tabs defaultValue="convites" className="mt-4">
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-6">
           <TabsTrigger value="convites">Convites</TabsTrigger>
           <TabsTrigger value="analytics">Analytics</TabsTrigger>
           <TabsTrigger value="campanhas">Campanhas</TabsTrigger>
           <TabsTrigger value="onboarding">Onboarding</TabsTrigger>
           <TabsTrigger value="health">Health Check</TabsTrigger>
+          <TabsTrigger value="administracao">Administração</TabsTrigger>
         </TabsList>
 
         <TabsContent value="convites" className="space-y-4">
@@ -100,6 +93,10 @@ const InvitesManagement = () => {
         <TabsContent value="health" className="space-y-4">
           <UserHealthDashboard />
         </TabsContent>
+
+        <TabsContent value="administracao" className="space-y-4">
+          <AdminToolsTab onRefresh={fetchInvites} />
+        </TabsContent>
       </Tabs>
 
       <SimplifiedCreateInviteModal
@@ -107,12 +104,6 @@ const InvitesManagement = () => {
         onOpenChange={setOpen}
         onCreate={handleCreateInvite}
         isLoading={isCreating}
-      />
-
-      <ForceDeleteDialog
-        open={forceDeleteOpen}
-        onOpenChange={setForceDeleteOpen}
-        onSuccess={fetchInvites}
       />
     </div>
   );
