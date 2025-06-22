@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { Resend } from "npm:resend@2.0.0";
 
@@ -100,7 +99,7 @@ const getOutlookCompatibleTemplate = (inviteUrl: string, userName?: string, isRe
 };
 
 const handler = async (req: Request): Promise<Response> => {
-  console.log(`📧 [SEND-INVITE-EMAIL] Nova requisição: ${req.method} - v3.5 Outlook Compatível`);
+  console.log(`📧 [SEND-INVITE-EMAIL] Nova requisição: ${req.method} - v3-5 Outlook Compatível`);
   
   // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
@@ -141,7 +140,7 @@ const handler = async (req: Request): Promise<Response> => {
       html: emailHtml,
       tags: [
         { name: 'type', value: 'invite' },
-        { name: 'version', value: 'v3.5-outlook' },
+        { name: 'version', value: 'v3-5-outlook' },
         { name: 'is_resend', value: isResend.toString() }
       ]
     });
@@ -176,5 +175,5 @@ const handler = async (req: Request): Promise<Response> => {
   }
 };
 
-console.log("📧 [SEND-INVITE-EMAIL] Edge Function carregada! v3.5 Outlook Compatível");
+console.log("📧 [SEND-INVITE-EMAIL] Edge Function carregada! v3-5 Outlook Compatível");
 serve(handler);
