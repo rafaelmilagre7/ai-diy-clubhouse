@@ -2,10 +2,49 @@
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { parseEmailPattern, findRelatedEmails } from "@/utils/emailUtils";
 import type { CreateInviteParams, InviteCreateResult } from "./types";
 
 export const useInviteCreate = () => {
   const [loading, setLoading] = useState(false);
+
+  const validateUniqueEmail = async (email: string): Promise<{ isValid: boolean; message?: string; relatedEmails?: string[] }> => {
+    try {
+      const { baseEmail } = parseEmailPattern(email);
+      
+      // Buscar emails relacionados em profiles
+      const { data: profiles } = await supabase
+        .from('profiles')
+        .select('email')
+        .or(`email.like.${baseEmail.replace('@', '+%@')},email.eq.${baseEmail}`);
+      
+      // Buscar emails relacionados em invites
+      const { data: invites } = await supabase
+        .from('invites')
+        .select('email')
+        .or(`email.like.${baseEmail.replace('@', '+%@')},email.eq.${baseEmail}`);
+      
+      const allEmails = [
+        ...(profiles?.map(p => p.email) || []),
+        ...(invites?.map(i => i.email) || [])
+      ].filter(Boolean);
+      
+      const relatedEmails = findRelatedEmails(allEmails, email);
+      
+      if (relatedEmails.length > 0) {
+        return {
+          isValid: false,
+          message: `Email base já existe no sistema com ${relatedEmails.length} variação(ões)`,
+          relatedEmails
+        };
+      }
+      
+      return { isValid: true };
+    } catch (error) {
+      console.error('Erro ao validar email:', error);
+      return { isValid: true }; // Em caso de erro, permitir criação
+    }
+  };
 
   const createInvite = async (params: CreateInviteParams): Promise<InviteCreateResult | null> => {
     try {
@@ -19,6 +58,20 @@ export const useInviteCreate = () => {
         return {
           status: 'error',
           message: "Nome da pessoa é obrigatório para envio via WhatsApp"
+        };
+      }
+
+      // Validar email único
+      const emailValidation = await validateUniqueEmail(params.email);
+      if (!emailValidation.isValid) {
+        const errorMessage = `${emailValidation.message}\nEmails encontrados: ${emailValidation.relatedEmails?.join(', ')}`;
+        toast.error("Email já existe no sistema", {
+          description: errorMessage,
+          duration: 8000
+        });
+        return {
+          status: 'error',
+          message: errorMessage
         };
       }
 
@@ -47,7 +100,7 @@ export const useInviteCreate = () => {
             roleId: params.roleId,
             token: data.token,
             channels: params.channels || ['email'],
-            userName: params.userName || null, // Incluir userName
+            userName: params.userName || null,
             notes: params.notes
           }
         });
