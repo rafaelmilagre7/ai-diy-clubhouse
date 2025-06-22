@@ -124,7 +124,10 @@ export const ImplementationsAnalyticsTabContent = ({ timeRange }: Implementation
                 <CardTitle>Distribuição por Dificuldade</CardTitle>
               </CardHeader>
               <CardContent>
-                <DifficultyDistributionChart data={data.implementationsByDifficulty} />
+                <DifficultyDistributionChart 
+                  data={data.implementationsByDifficulty} 
+                  loading={isLoading}
+                />
               </CardContent>
             </Card>
 
@@ -133,7 +136,10 @@ export const ImplementationsAnalyticsTabContent = ({ timeRange }: Implementation
                 <CardTitle>Tempo Médio de Conclusão</CardTitle>
               </CardHeader>
               <CardContent>
-                <CompletionTimeChart data={data.averageCompletionTime} />
+                <CompletionTimeChart 
+                  data={data.averageCompletionTime} 
+                  loading={isLoading}
+                />
               </CardContent>
             </Card>
 
@@ -142,7 +148,10 @@ export const ImplementationsAnalyticsTabContent = ({ timeRange }: Implementation
                 <CardTitle>Taxa de Abandono por Módulo</CardTitle>
               </CardHeader>
               <CardContent>
-                <AbandonmentRateChart data={data.abandonmentByModule} />
+                <AbandonmentRateChart 
+                  data={data.abandonmentByModule} 
+                  loading={isLoading}
+                />
               </CardContent>
             </Card>
 
@@ -151,7 +160,10 @@ export const ImplementationsAnalyticsTabContent = ({ timeRange }: Implementation
                 <CardTitle>Implementações Recentes</CardTitle>
               </CardHeader>
               <CardContent>
-                <RecentImplementationsTable data={data.recentImplementations} />
+                <RecentImplementationsTable 
+                  data={data.recentImplementations} 
+                  loading={isLoading}
+                />
               </CardContent>
             </Card>
           </div>
