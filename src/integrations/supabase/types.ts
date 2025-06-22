@@ -4538,6 +4538,10 @@ export type Database = {
         Args: { user_email: string }
         Returns: Json
       }
+      admin_force_delete_auth_user: {
+        Args: { user_email: string }
+        Returns: Json
+      }
       admin_reset_user: {
         Args: { user_email: string }
         Returns: Json
