@@ -22,11 +22,20 @@ export const useOnboardingInitialization = (
       try {
         setIsLoading(true);
         
-        // Criar dados iniciais se necessário
+        // Criar dados iniciais com informações já coletadas
         if (Object.keys(data).length === 1) {
+          console.log('[ONBOARDING-INIT] Inicializando dados do onboarding');
+          
+          // Buscar dados do usuário para pré-preenchimento
+          const { data: userData } = await supabase.auth.getUser();
+          const userMetadata = userData?.user?.user_metadata || {};
+          
           const initialData: OnboardingData = {
-            name: profile?.name || '',
+            // Dados básicos já coletados no registro
+            name: userMetadata.name || profile?.name || '',
             email: profile?.email || user?.email || '',
+            
+            // Dados do perfil existente (se houver)
             phone: (profile as any)?.phone || '',
             instagram: (profile as any)?.instagram || '',
             linkedin: (profile as any)?.linkedin || '',
@@ -34,29 +43,46 @@ export const useOnboardingInitialization = (
             city: (profile as any)?.city || '',
             birthDate: (profile as any)?.birth_date || '',
             curiosity: (profile as any)?.curiosity || '',
+            
+            // Dados empresariais
             companyName: (profile as any)?.company_name || '',
             companyWebsite: (profile as any)?.company_website || '',
             businessSector: (profile as any)?.business_sector || '',
             companySize: (profile as any)?.company_size || '',
             annualRevenue: (profile as any)?.annual_revenue || '',
             position: (profile as any)?.position || '',
+            
+            // Dados de IA
             hasImplementedAI: (profile as any)?.has_implemented_ai || 'nao',
             aiToolsUsed: (profile as any)?.ai_tools_used || [],
             aiKnowledgeLevel: (profile as any)?.ai_knowledge_level || '',
             dailyTools: (profile as any)?.daily_tools || [],
             whoWillImplement: (profile as any)?.who_will_implement || '',
+            
+            // Objetivos
             mainObjective: (profile as any)?.main_objective || '',
             areaToImpact: (profile as any)?.area_to_impact || '',
             expectedResult90Days: (profile as any)?.expected_result_90_days || '',
             aiImplementationBudget: (profile as any)?.ai_implementation_budget || '',
+            
+            // Personalização
             weeklyLearningTime: (profile as any)?.weekly_learning_time || '',
             contentPreference: (profile as any)?.content_preference || [],
             wantsNetworking: (profile as any)?.wants_networking || 'nao',
             bestDays: (profile as any)?.best_days || [],
             bestPeriods: (profile as any)?.best_periods || [],
             acceptsCaseStudy: (profile as any)?.accepts_case_study || 'nao',
-            memberType
+            
+            // Metadados
+            memberType,
+            startedAt: new Date().toISOString()
           };
+          
+          console.log('[ONBOARDING-INIT] Dados inicializados:', {
+            hasName: !!initialData.name,
+            hasEmail: !!initialData.email,
+            memberType: initialData.memberType
+          });
           
           updateData(initialData);
         }
@@ -81,7 +107,7 @@ export const useOnboardingInitialization = (
     };
 
     loadData();
-  }, [user?.id, data, updateData, profile]);
+  }, [user?.id, data, updateData, profile, memberType]);
 
   return {
     isLoading,

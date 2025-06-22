@@ -1,6 +1,7 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { OnboardingWizardContainer } from './components/OnboardingWizardContainer';
+import { OnboardingWelcome } from './components/OnboardingWelcome';
 import { OnboardingStepRenderer } from './components/OnboardingStepRenderer';
 import { OnboardingWizardControls } from './components/OnboardingWizardControls';
 import { OnboardingProgress } from './OnboardingProgress';
@@ -16,6 +17,39 @@ const stepTitles = [
 ];
 
 const OnboardingWizard = () => {
+  const [showWelcome, setShowWelcome] = useState(true);
+
+  const handleStartOnboarding = () => {
+    setShowWelcome(false);
+  };
+
+  if (showWelcome) {
+    return (
+      <OnboardingWizardContainer>
+        {({ data, memberType, isLoading }) => {
+          if (isLoading) {
+            return (
+              <div className="min-h-screen bg-gradient-to-br from-[#0F111A] to-[#151823] flex items-center justify-center">
+                <div className="text-center">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-viverblue mx-auto mb-4"></div>
+                  <p className="text-slate-300">Carregando...</p>
+                </div>
+              </div>
+            );
+          }
+
+          return (
+            <OnboardingWelcome
+              userName={data.name}
+              memberType={memberType || 'club'}
+              onStart={handleStartOnboarding}
+            />
+          );
+        }}
+      </OnboardingWizardContainer>
+    );
+  }
+
   return (
     <OnboardingWizardContainer>
       {({
