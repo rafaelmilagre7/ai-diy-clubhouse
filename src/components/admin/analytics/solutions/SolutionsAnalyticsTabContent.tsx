@@ -10,7 +10,11 @@ import { CompletionRatesChart } from './CompletionRatesChart';
 import { DifficultyDistributionChart } from './DifficultyDistributionChart';
 import { useRealAnalyticsData } from '@/hooks/admin/analytics/useRealAnalyticsData';
 
-export const SolutionsAnalyticsTabContent = () => {
+interface SolutionsAnalyticsTabContentProps {
+  timeRange: string;
+}
+
+export const SolutionsAnalyticsTabContent = ({ timeRange }: SolutionsAnalyticsTabContentProps) => {
   const { data, loading, refresh } = useRealAnalyticsData();
 
   useEffect(() => {
