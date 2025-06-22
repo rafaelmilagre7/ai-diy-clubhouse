@@ -7,6 +7,10 @@ import { toast } from 'sonner';
 import SimpleInvitesTab from './components/SimpleInvitesTab';
 import { SimplifiedCreateInviteModal } from './components/SimplifiedCreateInviteModal';
 import { ForceDeleteDialog } from '@/components/admin/users/ForceDeleteDialog';
+import { InviteAnalyticsDashboard } from '@/components/admin/invites/analytics/InviteAnalyticsDashboard';
+import { CampaignManager } from '@/components/admin/invites/campaigns/CampaignManager';
+import { OnboardingHealthDashboard } from '@/components/admin/invites/onboarding/OnboardingHealthDashboard';
+import { UserHealthDashboard } from '@/components/admin/invites/health/UserHealthDashboard';
 import { useInvites, type Invite } from '@/hooks/admin/useInvites';
 import { type CreateInviteParams } from '@/hooks/admin/invites/types';
 
@@ -45,7 +49,7 @@ const InvitesManagement = () => {
         <div className="mb-4">
           <h1 className="text-2xl font-semibold">Gerenciar Convites</h1>
           <p className="text-muted-foreground">
-            Crie, edite e gerencie os convites para sua plataforma.
+            Crie, gerencie e analise os convites para sua plataforma.
           </p>
         </div>
 
@@ -64,16 +68,37 @@ const InvitesManagement = () => {
         </div>
       </div>
 
-      <Tabs defaultValue="simples" className="mt-4">
-        <TabsList>
-          <TabsTrigger value="simples">Convites</TabsTrigger>
+      <Tabs defaultValue="convites" className="mt-4">
+        <TabsList className="grid w-full grid-cols-5">
+          <TabsTrigger value="convites">Convites</TabsTrigger>
+          <TabsTrigger value="analytics">Analytics</TabsTrigger>
+          <TabsTrigger value="campanhas">Campanhas</TabsTrigger>
+          <TabsTrigger value="onboarding">Onboarding</TabsTrigger>
+          <TabsTrigger value="health">Health Check</TabsTrigger>
         </TabsList>
-        <TabsContent value="simples" className="space-y-4">
-           <SimpleInvitesTab
-              invites={invites}
-              loading={loading}
-              onInvitesChange={fetchInvites}
-            />
+
+        <TabsContent value="convites" className="space-y-4">
+          <SimpleInvitesTab
+            invites={invites}
+            loading={loading}
+            onInvitesChange={fetchInvites}
+          />
+        </TabsContent>
+
+        <TabsContent value="analytics" className="space-y-4">
+          <InviteAnalyticsDashboard />
+        </TabsContent>
+
+        <TabsContent value="campanhas" className="space-y-4">
+          <CampaignManager />
+        </TabsContent>
+
+        <TabsContent value="onboarding" className="space-y-4">
+          <OnboardingHealthDashboard />
+        </TabsContent>
+
+        <TabsContent value="health" className="space-y-4">
+          <UserHealthDashboard />
         </TabsContent>
       </Tabs>
 
