@@ -12,7 +12,7 @@ interface InviteFlowResult {
 
 export const useInviteFlow = () => {
   const [isProcessing, setIsProcessing] = useState(false);
-  const { refreshProfile } = useAuth();
+  const { setProfile, user } = useAuth();
 
   const acceptInvite = async (token: string): Promise<InviteFlowResult> => {
     if (!token) {
@@ -54,8 +54,30 @@ export const useInviteFlow = () => {
         };
       }
 
-      // Atualizar perfil do usuário
-      await refreshProfile();
+      // Recarregar perfil do usuário se estiver logado
+      if (user) {
+        const { data: profileData } = await supabase
+          .from('profiles')
+          .select(`
+            *,
+            user_roles:role_id (
+              id,
+              name,
+              description,
+              permissions,
+              is_system
+            )
+          `)
+          .eq('id', user.id)
+          .single();
+
+        if (profileData) {
+          setProfile({
+            ...profileData as any,
+            email: profileData.email || user.email || '',
+          } as any);
+        }
+      }
 
       logger.info('Convite aceito com sucesso', {
         component: 'useInviteFlow',
@@ -65,7 +87,7 @@ export const useInviteFlow = () => {
       return {
         success: true,
         message: 'Convite aceito com sucesso! Bem-vindo à plataforma.',
-        shouldRedirectToOnboarding: false // Com dados expandidos, não precisamos de onboarding completo
+        shouldRedirectToOnboarding: false
       };
 
     } catch (error: any) {

@@ -22,25 +22,21 @@ export const useOnboardingRequired = () => {
         // Verificar se onboarding foi completado
         const onboardingCompleted = profile?.onboarding_completed === true;
         
-        // NOVA LÓGICA: Verificar se dados básicos foram coletados no registro
-        const basicInfoCompleted = profile?.basic_info_completed === true;
-        
         console.log('[ONBOARDING-REQUIRED] Status do onboarding:', {
           userId: user.id,
           email: user.email,
           profileOnboardingCompleted: profile?.onboarding_completed,
-          basicInfoCompleted: profile?.basic_info_completed,
           onboardingCompleted,
           userRole: getUserRoleName(profile)
         });
 
-        // Se onboarding já foi completado OU dados básicos foram coletados
-        if (onboardingCompleted || basicInfoCompleted) {
-          console.log('[ONBOARDING-REQUIRED] Onboarding não necessário - dados suficientes');
+        // Se onboarding foi completado, não é necessário
+        if (onboardingCompleted) {
+          console.log('[ONBOARDING-REQUIRED] Onboarding não necessário - já completado');
           setIsRequired(false);
           setHasCompleted(true);
         } else {
-          console.log('[ONBOARDING-REQUIRED] Onboarding OBRIGATÓRIO - dados insuficientes');
+          console.log('[ONBOARDING-REQUIRED] Onboarding OBRIGATÓRIO - não completado');
           setIsRequired(true);
           setHasCompleted(false);
         }
@@ -63,8 +59,7 @@ export const useOnboardingRequired = () => {
     isRequired,
     hasCompleted,
     userId: user?.id,
-    profileOnboardingCompleted: profile?.onboarding_completed,
-    basicInfoCompleted: profile?.basic_info_completed
+    profileOnboardingCompleted: profile?.onboarding_completed
   });
 
   return {
