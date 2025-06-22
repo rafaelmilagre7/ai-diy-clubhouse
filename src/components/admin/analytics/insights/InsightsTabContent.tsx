@@ -4,6 +4,7 @@ import { SmartInsights } from './SmartInsights';
 import { TrendAnalysis } from './TrendAnalysis';
 import { PerformanceScore } from './PerformanceScore';
 import { AutomatedAlerts } from './AutomatedAlerts';
+import { AutoRecommendations } from './AutoRecommendations';
 import { UserJourneyAnalysis } from './UserJourneyAnalysis';
 
 interface InsightsTabContentProps {
@@ -16,7 +17,7 @@ export const InsightsTabContent: React.FC<InsightsTabContentProps> = ({ timeRang
       {/* Primeira linha - Insights principais */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <SmartInsights timeRange={timeRange} />
-        <AutomatedAlerts timeRange={timeRange} />
+        <AutoRecommendations timeRange={timeRange} />
       </div>
 
       {/* Segunda linha - Análises avançadas */}
@@ -25,7 +26,13 @@ export const InsightsTabContent: React.FC<InsightsTabContentProps> = ({ timeRang
         <PerformanceScore timeRange={timeRange} />
       </div>
 
-      {/* Terceira linha - Jornada do usuário */}
+      {/* Terceira linha - Alertas automáticos */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <AutomatedAlerts timeRange={timeRange} />
+        <PerformanceScore timeRange={timeRange} />
+      </div>
+
+      {/* Quarta linha - Jornada do usuário */}
       <UserJourneyAnalysis timeRange={timeRange} />
     </div>
   );
