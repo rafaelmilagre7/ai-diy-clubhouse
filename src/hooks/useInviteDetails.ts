@@ -38,74 +38,70 @@ export const useInviteDetails = (token?: string) => {
 
         console.log('[USE-INVITE-DETAILS] Buscando convite com token:', token);
 
-        // Buscar detalhes do convite com join na tabela de roles
-        const { data: invite, error: inviteError } = await supabase
-          .from('invites')
-          .select(`
-            id,
-            email,
-            token,
-            expires_at,
-            created_by,
-            role_id,
-            used_at,
-            user_roles:role_id (
+        // Primeiro, tentar usar a função melhorada de validação
+        const { data: enhancedResult, error: enhancedError } = await supabase
+          .rpc('validate_invite_token_enhanced', { p_token: token });
+
+        console.log('[USE-INVITE-DETAILS] Resultado da função enhanced:', { enhancedResult, error: enhancedError });
+
+        let invite = null;
+
+        if (!enhancedError && enhancedResult && enhancedResult.length > 0) {
+          invite = enhancedResult[0];
+        } else {
+          // Fallback para busca direta
+          console.log('[USE-INVITE-DETAILS] Fallback para busca direta');
+          const { data: fallbackResult, error: fallbackError } = await supabase
+            .from('invites')
+            .select(`
               id,
-              name,
-              description
-            )
-          `)
-          .eq('token', token)
-          .single();
+              email,
+              token,
+              expires_at,
+              created_by,
+              role_id,
+              used_at
+            `)
+            .or(`token.eq.${token},token.ilike.${token.substring(0, 8)}%`)
+            .is('used_at', null)
+            .gt('expires_at', new Date().toISOString())
+            .limit(1)
+            .single();
 
-        console.log('[USE-INVITE-DETAILS] Resultado da busca:', { invite, error: inviteError });
-
-        if (inviteError) {
-          console.error('[USE-INVITE-DETAILS] Erro ao buscar convite:', inviteError);
-          
-          if (inviteError.code === 'PGRST116') {
-            setError('Convite não encontrado. Verifique se o link está correto.');
+          if (fallbackError) {
+            console.error('[USE-INVITE-DETAILS] Erro na busca fallback:', fallbackError);
           } else {
-            setError(`Erro ao buscar convite: ${inviteError.message}`);
+            invite = fallbackResult;
           }
-          return;
         }
 
         if (!invite) {
           console.error('[USE-INVITE-DETAILS] Convite não encontrado');
-          setError('Convite não encontrado');
+          setError('Convite não encontrado, expirado ou já utilizado');
+          
+          // Log da tentativa de validação
+          try {
+            await supabase.rpc('log_invite_validation_attempt', {
+              p_token: token,
+              p_success: false,
+              p_error_message: 'Convite não encontrado'
+            });
+          } catch (logError) {
+            console.warn('[USE-INVITE-DETAILS] Erro ao registrar tentativa:', logError);
+          }
+          
           return;
         }
 
-        // Verificar se o convite já foi usado
-        if (invite.used_at) {
-          console.error('[USE-INVITE-DETAILS] Convite já foi usado:', invite.used_at);
-          setError('Este convite já foi utilizado');
-          return;
-        }
+        // Buscar informações do role
+        const { data: roleData, error: roleError } = await supabase
+          .from('user_roles')
+          .select('id, name, description')
+          .eq('id', invite.role_id)
+          .single();
 
-        // Verificar se o convite não expirou
-        const now = new Date();
-        const expiresAt = new Date(invite.expires_at);
-        
-        console.log('[USE-INVITE-DETAILS] Verificando expiração:', {
-          now: now.toISOString(),
-          expiresAt: expiresAt.toISOString(),
-          expired: expiresAt < now
-        });
-        
-        if (expiresAt < now) {
-          setError('Este convite expirou');
-          return;
-        }
-
-        // Verificar se temos dados do role
-        const roleData = Array.isArray(invite.user_roles) 
-          ? invite.user_roles[0] 
-          : invite.user_roles;
-
-        if (!roleData) {
-          console.error('[USE-INVITE-DETAILS] Dados do role não encontrados');
+        if (roleError || !roleData) {
+          console.error('[USE-INVITE-DETAILS] Erro ao buscar role:', roleError);
           setError('Dados do cargo não encontrados');
           return;
         }
@@ -127,6 +123,16 @@ export const useInviteDetails = (token?: string) => {
         console.log('[USE-INVITE-DETAILS] Convite válido encontrado:', details);
         setInviteDetails(details);
         
+        // Log da tentativa de validação bem-sucedida
+        try {
+          await supabase.rpc('log_invite_validation_attempt', {
+            p_token: token,
+            p_success: true
+          });
+        } catch (logError) {
+          console.warn('[USE-INVITE-DETAILS] Erro ao registrar tentativa bem-sucedida:', logError);
+        }
+        
         logger.info('Detalhes do convite carregados com sucesso', { 
           component: 'useInviteDetails',
           email: details.email, 
@@ -139,6 +145,17 @@ export const useInviteDetails = (token?: string) => {
           component: 'useInviteDetails'
         });
         setError(`Erro inesperado: ${error.message}`);
+        
+        // Log da tentativa de validação com erro
+        try {
+          await supabase.rpc('log_invite_validation_attempt', {
+            p_token: token,
+            p_success: false,
+            p_error_message: error.message
+          });
+        } catch (logError) {
+          console.warn('[USE-INVITE-DETAILS] Erro ao registrar tentativa com erro:', logError);
+        }
       } finally {
         setLoading(false);
       }
