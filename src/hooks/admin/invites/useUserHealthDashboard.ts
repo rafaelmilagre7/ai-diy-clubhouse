@@ -1,327 +1,296 @@
 
-import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
+import { useState, useEffect, useCallback } from 'react';
+import { supabase } from '@/lib/supabase';
+import { useLogging } from '@/hooks/useLogging';
+
+interface HealthMetrics {
+  totalUsers: number;
+  healthyUsers: number;
+  atRiskUsers: number;
+  criticalUsers: number;
+  averageHealthScore: number;
+}
 
 interface UserHealthData {
-  overview: {
-    totalUsers: number;
-    healthyUsers: number;
-    atRiskUsers: number;
-    criticalUsers: number;
-    avgHealthScore: number;
-    improvementRate: number;
-  };
-  riskFactors: Array<{
-    factor: string;
-    severity: 'low' | 'medium' | 'high' | 'critical';
-    affectedUsers: number;
-    description: string;
-  }>;
-  recentAlerts: Array<{
-    id: string;
-    userId: string;
-    userName: string;
-    userEmail: string;
-    alertType: string;
-    severity: string;
-    title: string;
-    description: string;
-    triggeredAt: string;
-    status: string;
-  }>;
-  healthTrends: {
-    period: string;
-    averageScore: number;
-    totalUsers: number;
-    improvements: number;
-    deteriorations: number;
-  }[];
-  interventionSuggestions: Array<{
-    type: string;
-    priority: 'low' | 'medium' | 'high';
-    title: string;
-    description: string;
-    estimatedImpact: number;
-    affectedUsers: number;
-  }>;
+  id: string;
+  email: string;
+  name: string;
+  overall_score: number;
+  engagement_score: number;
+  activity_score: number;
+  progress_score: number;
+  risk_level: 'low' | 'medium' | 'high' | 'critical';
+  last_calculated_at: string;
+  risk_factors: string[];
+  recommendations: string[];
+}
+
+interface HealthAlert {
+  id: string;
+  user_id: string;
+  user_name: string;
+  user_email: string;
+  alert_type: string;
+  severity: 'low' | 'medium' | 'high' | 'critical';
+  title: string;
+  message: string;
+  status: 'active' | 'resolved' | 'dismissed';
+  triggered_at: string;
+  metadata: Record<string, any>;
 }
 
 export const useUserHealthDashboard = () => {
-  const [data, setData] = useState<UserHealthData>({
-    overview: {
-      totalUsers: 0,
-      healthyUsers: 0,
-      atRiskUsers: 0,
-      criticalUsers: 0,
-      avgHealthScore: 0,
-      improvementRate: 0
-    },
-    riskFactors: [],
-    recentAlerts: [],
-    healthTrends: [],
-    interventionSuggestions: []
+  const [metrics, setMetrics] = useState<HealthMetrics>({
+    totalUsers: 0,
+    healthyUsers: 0,
+    atRiskUsers: 0,
+    criticalUsers: 0,
+    averageHealthScore: 0
   });
+  
+  const [users, setUsers] = useState<UserHealthData[]>([]);
+  const [alerts, setAlerts] = useState<HealthAlert[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const { log, logError } = useLogging();
 
-  const fetchUserHealthData = async () => {
+  const fetchHealthMetrics = useCallback(async () => {
     try {
-      setLoading(true);
-
-      // Buscar métricas de saúde dos usuários
-      const { data: healthMetrics, error: healthError } = await supabase
+      const { data: healthData, error: healthError } = await supabase
         .from('user_health_metrics')
-        .select(`
-          *,
-          profiles(id, name, email)
-        `);
+        .select('overall_score, risk_level');
 
-      if (healthError) throw healthError;
+      if (healthError) {
+        throw new Error(`Erro ao buscar métricas: ${healthError.message}`);
+      }
 
-      // Buscar alertas recentes
-      const { data: alerts, error: alertsError } = await supabase
-        .from('user_health_alerts')
-        .select(`
-          *,
-          profiles(name, email)
-        `)
-        .eq('status', 'active')
-        .order('triggered_at', { ascending: false })
-        .limit(10);
+      const totalUsers = healthData?.length || 0;
+      let healthyUsers = 0;
+      let atRiskUsers = 0;
+      let criticalUsers = 0;
+      let totalScore = 0;
 
-      if (alertsError) throw alertsError;
-
-      // Buscar dados de onboarding para análise complementar
-      const { data: onboardingData, error: onboardingError } = await supabase
-        .from('onboarding_final')
-        .select('user_id, is_completed, current_step, updated_at');
-
-      if (onboardingError) throw onboardingError;
-
-      // Calcular overview
-      const totalUsers = healthMetrics?.length || 0;
-      const avgHealthScore = totalUsers > 0 
-        ? healthMetrics.reduce((sum, metric) => sum + (metric.health_score || 0), 0) / totalUsers
-        : 0;
-
-      const healthyUsers = healthMetrics?.filter(m => (m.health_score || 0) >= 0.7).length || 0;
-      const atRiskUsers = healthMetrics?.filter(m => {
-        const score = m.health_score || 0;
-        return score >= 0.4 && score < 0.7;
-      }).length || 0;
-      const criticalUsers = healthMetrics?.filter(m => (m.health_score || 0) < 0.4).length || 0;
-
-      // Processar alertas recentes
-      const recentAlerts = alerts?.map(alert => {
-        const profileData = Array.isArray(alert.profiles) 
-          ? alert.profiles[0] 
-          : alert.profiles;
-        
-        return {
-          id: alert.id,
-          userId: alert.user_id,
-          userName: profileData?.name || 'Nome não disponível',
-          userEmail: profileData?.email || 'Email não disponível',
-          alertType: alert.alert_type,
-          severity: alert.severity,
-          title: alert.title,
-          description: alert.description,
-          triggeredAt: alert.triggered_at,
-          status: alert.status
-        };
-      }) || [];
-
-      // Analisar fatores de risco
-      const riskFactors = [
-        {
-          factor: 'Onboarding incompleto',
-          severity: 'high' as const,
-          affectedUsers: onboardingData?.filter(o => !o.is_completed).length || 0,
-          description: 'Usuários que não completaram o onboarding'
-        },
-        {
-          factor: 'Baixa atividade',
-          severity: 'medium' as const,
-          affectedUsers: healthMetrics?.filter(m => m.engagement_level === 'low').length || 0,
-          description: 'Usuários com pouca atividade na plataforma'
-        },
-        {
-          factor: 'Score de saúde crítico',
-          severity: 'critical' as const,
-          affectedUsers: criticalUsers,
-          description: 'Usuários com score de saúde muito baixo'
-        },
-        {
-          factor: 'Sem atividade recente',
-          severity: 'medium' as const,
-          affectedUsers: healthMetrics?.filter(m => {
-            const lastActivity = new Date(m.last_activity || 0);
-            const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-            return lastActivity < weekAgo;
-          }).length || 0,
-          description: 'Usuários sem atividade na última semana'
+      healthData?.forEach(user => {
+        totalScore += user.overall_score;
+        switch (user.risk_level) {
+          case 'low':
+            healthyUsers++;
+            break;
+          case 'medium':
+            break;
+          case 'high':
+            atRiskUsers++;
+            break;
+          case 'critical':
+            criticalUsers++;
+            break;
         }
-      ];
+      });
 
-      // Sugestões de intervenção baseadas nos dados
-      const interventionSuggestions = [
-        {
-          type: 'onboarding_assistance',
-          priority: 'high' as const,
-          title: 'Assistência no Onboarding',
-          description: 'Oferecer suporte personalizado para usuários presos no onboarding',
-          estimatedImpact: 85,
-          affectedUsers: onboardingData?.filter(o => !o.is_completed && o.current_step > 1).length || 0
-        },
-        {
-          type: 'engagement_campaign',
-          priority: 'medium' as const,
-          title: 'Campanha de Reengajamento',
-          description: 'Enviar conteúdo personalizado para usuários com baixa atividade',
-          estimatedImpact: 60,
-          affectedUsers: healthMetrics?.filter(m => m.engagement_level === 'low').length || 0
-        },
-        {
-          type: 'proactive_support',
-          priority: 'high' as const,
-          title: 'Suporte Proativo',
-          description: 'Contato direto com usuários críticos',
-          estimatedImpact: 90,
-          affectedUsers: criticalUsers
-        }
-      ];
+      const averageHealthScore = totalUsers > 0 ? Math.round(totalScore / totalUsers) : 0;
 
-      // Tendências de saúde (simulação baseada nos dados atuais)
-      const healthTrends = [
-        {
-          period: 'Última semana',
-          averageScore: avgHealthScore,
-          totalUsers,
-          improvements: Math.floor(totalUsers * 0.15),
-          deteriorations: Math.floor(totalUsers * 0.08)
-        },
-        {
-          period: 'Últimas 2 semanas',
-          averageScore: avgHealthScore - 0.05,
-          totalUsers: Math.floor(totalUsers * 0.95),
-          improvements: Math.floor(totalUsers * 0.12),
-          deteriorations: Math.floor(totalUsers * 0.10)
-        },
-        {
-          period: 'Último mês',
-          averageScore: avgHealthScore - 0.1,
-          totalUsers: Math.floor(totalUsers * 0.85),
-          improvements: Math.floor(totalUsers * 0.20),
-          deteriorations: Math.floor(totalUsers * 0.15)
-        }
-      ];
-
-      setData({
-        overview: {
-          totalUsers,
-          healthyUsers,
-          atRiskUsers,
-          criticalUsers,
-          avgHealthScore,
-          improvementRate: totalUsers > 0 ? (healthyUsers / totalUsers) * 100 : 0
-        },
-        riskFactors: riskFactors.filter(rf => rf.affectedUsers > 0),
-        recentAlerts,
-        healthTrends,
-        interventionSuggestions: interventionSuggestions.filter(is => is.affectedUsers > 0)
+      setMetrics({
+        totalUsers,
+        healthyUsers,
+        atRiskUsers,
+        criticalUsers,
+        averageHealthScore
       });
 
     } catch (error: any) {
-      console.error("Erro ao carregar dados de saúde dos usuários:", error);
-      toast.error("Erro ao carregar dados de saúde dos usuários");
+      logError('Erro ao buscar métricas de saúde', { error: error.message });
+      setError(error.message);
+    }
+  }, [logError]);
+
+  const fetchUsersHealth = useCallback(async () => {
+    try {
+      const { data: usersData, error: usersError } = await supabase
+        .from('user_health_metrics')
+        .select(`
+          *,
+          profiles!user_health_metrics_user_id_fkey (
+            email,
+            name
+          )
+        `)
+        .order('overall_score', { ascending: true });
+
+      if (usersError) {
+        throw new Error(`Erro ao buscar dados dos usuários: ${usersError.message}`);
+      }
+
+      const formattedUsers: UserHealthData[] = (usersData || []).map(user => ({
+        id: user.user_id,
+        email: user.profiles?.email || 'Email não encontrado',
+        name: user.profiles?.name || 'Nome não encontrado',
+        overall_score: user.overall_score,
+        engagement_score: user.engagement_score,
+        activity_score: user.activity_score,
+        progress_score: user.progress_score,
+        risk_level: user.risk_level,
+        last_calculated_at: user.last_calculated_at,
+        risk_factors: user.risk_factors || [],
+        recommendations: user.recommendations || []
+      }));
+
+      setUsers(formattedUsers);
+
+    } catch (error: any) {
+      logError('Erro ao buscar dados dos usuários', { error: error.message });
+      setError(error.message);
+    }
+  }, [logError]);
+
+  const fetchHealthAlerts = useCallback(async () => {
+    try {
+      const { data: alertsData, error: alertsError } = await supabase
+        .from('user_health_alerts')
+        .select(`
+          *,
+          profiles!user_health_alerts_user_id_fkey (
+            email,
+            name
+          )
+        `)
+        .eq('status', 'active')
+        .order('triggered_at', { ascending: false })
+        .limit(20);
+
+      if (alertsError) {
+        throw new Error(`Erro ao buscar alertas: ${alertsError.message}`);
+      }
+
+      const formattedAlerts: HealthAlert[] = (alertsData || []).map(alert => ({
+        id: alert.id,
+        user_id: alert.user_id,
+        user_name: alert.profiles?.name || 'Nome não encontrado',
+        user_email: alert.profiles?.email || 'Email não encontrado',
+        alert_type: alert.alert_type,
+        severity: alert.severity,
+        title: alert.title,
+        message: alert.message,
+        status: alert.status,
+        triggered_at: alert.triggered_at,
+        metadata: alert.metadata || {}
+      }));
+
+      setAlerts(formattedAlerts);
+
+    } catch (error: any) {
+      logError('Erro ao buscar alertas de saúde', { error: error.message });
+      setError(error.message);
+    }
+  }, [logError]);
+
+  const recalculateHealthScores = useCallback(async () => {
+    try {
+      setLoading(true);
+      log('Iniciando recálculo de scores de saúde...');
+
+      const { error } = await supabase.rpc('detect_at_risk_users');
+
+      if (error) {
+        throw new Error(`Erro ao recalcular scores: ${error.message}`);
+      }
+
+      // Recarregar dados após recálculo
+      await Promise.all([
+        fetchHealthMetrics(),
+        fetchUsersHealth(),
+        fetchHealthAlerts()
+      ]);
+
+      log('Scores de saúde recalculados com sucesso');
+
+    } catch (error: any) {
+      logError('Erro ao recalcular scores de saúde', { error: error.message });
+      setError(error.message);
     } finally {
       setLoading(false);
     }
-  };
+  }, [fetchHealthMetrics, fetchUsersHealth, fetchHealthAlerts, log, logError]);
 
-  const resolveAlert = async (alertId: string) => {
+  const resolveAlert = useCallback(async (alertId: string) => {
     try {
       const { error } = await supabase
         .from('user_health_alerts')
         .update({ 
           status: 'resolved',
-          resolved_at: new Date().toISOString(),
-          resolved_by: (await supabase.auth.getUser()).data.user?.id
+          resolved_at: new Date().toISOString()
         })
         .eq('id', alertId);
 
-      if (error) throw error;
+      if (error) {
+        throw new Error(`Erro ao resolver alerta: ${error.message}`);
+      }
 
-      toast.success("Alerta resolvido com sucesso!");
-      await fetchUserHealthData();
+      // Atualizar lista de alertas
+      setAlerts(prev => prev.filter(alert => alert.id !== alertId));
+      log('Alerta resolvido com sucesso');
+
     } catch (error: any) {
-      console.error("Erro ao resolver alerta:", error);
-      toast.error("Erro ao resolver alerta");
+      logError('Erro ao resolver alerta', { error: error.message });
+      setError(error.message);
     }
-  };
+  }, [log, logError]);
 
-  const dismissAlert = async (alertId: string) => {
+  const dismissAlert = useCallback(async (alertId: string) => {
     try {
       const { error } = await supabase
         .from('user_health_alerts')
         .update({ status: 'dismissed' })
         .eq('id', alertId);
 
-      if (error) throw error;
-
-      toast.success("Alerta dispensado!");
-      await fetchUserHealthData();
-    } catch (error: any) {
-      console.error("Erro ao dispensar alerta:", error);
-      toast.error("Erro ao dispensar alerta");
-    }
-  };
-
-  const triggerHealthCalculation = async () => {
-    try {
-      // Executar função para recalcular saúde de todos os usuários
-      const { data: users } = await supabase
-        .from('profiles')
-        .select('id');
-
-      if (users) {
-        for (const user of users) {
-          // Calcular score de saúde
-          const { data: score } = await supabase
-            .rpc('calculate_user_health_score', { p_user_id: user.id });
-
-          // Atualizar ou inserir métricas de saúde
-          await supabase
-            .from('user_health_metrics')
-            .upsert({
-              user_id: user.id,
-              health_score: score || 0,
-              calculated_at: new Date().toISOString()
-            });
-        }
+      if (error) {
+        throw new Error(`Erro ao dispensar alerta: ${error.message}`);
       }
 
-      // Executar detecção de usuários em risco
-      await supabase.rpc('detect_at_risk_users');
+      // Atualizar lista de alertas
+      setAlerts(prev => prev.filter(alert => alert.id !== alertId));
+      log('Alerta dispensado com sucesso');
 
-      toast.success("Cálculo de saúde executado com sucesso!");
-      await fetchUserHealthData();
     } catch (error: any) {
-      console.error("Erro ao calcular saúde dos usuários:", error);
-      toast.error("Erro ao calcular saúde dos usuários");
+      logError('Erro ao dispensar alerta', { error: error.message });
+      setError(error.message);
     }
-  };
+  }, [log, logError]);
 
+  // Carregar dados iniciais
   useEffect(() => {
-    fetchUserHealthData();
-  }, []);
+    const loadData = async () => {
+      setLoading(true);
+      setError(null);
+
+      try {
+        await Promise.all([
+          fetchHealthMetrics(),
+          fetchUsersHealth(),
+          fetchHealthAlerts()
+        ]);
+      } catch (error: any) {
+        setError(error.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadData();
+  }, [fetchHealthMetrics, fetchUsersHealth, fetchHealthAlerts]);
 
   return {
-    data,
+    metrics,
+    users,
+    alerts,
     loading,
-    refresh: fetchUserHealthData,
+    error,
+    recalculateHealthScores,
     resolveAlert,
     dismissAlert,
-    triggerHealthCalculation
+    refreshData: () => {
+      fetchHealthMetrics();
+      fetchUsersHealth();
+      fetchHealthAlerts();
+    }
   };
 };
