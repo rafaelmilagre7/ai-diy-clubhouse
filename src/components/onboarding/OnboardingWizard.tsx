@@ -69,7 +69,8 @@ const OnboardingWizard = () => {
         isCurrentStepValid,
         totalSteps
       }) => {
-        if (isLoading) {
+        // Loading melhorado com proteção contra renderização prematura
+        if (isLoading || Object.keys(data).length <= 1) {
           return (
             <div className="min-h-screen bg-gradient-to-br from-[#0F111A] to-[#151823] flex items-center justify-center">
               <div className="text-center">

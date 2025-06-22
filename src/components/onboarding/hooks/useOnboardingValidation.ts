@@ -1,5 +1,5 @@
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { OnboardingData } from '../types/onboardingTypes';
 import { validateFormacaoStep } from '../validation/formacaoValidation';
 
@@ -13,10 +13,19 @@ interface ValidationResult {
   errors: ValidationError[];
 }
 
-export const useOnboardingValidation = () => {
+export const useOnboardingValidation = (isDataLoaded: boolean = false) => {
   const [validationErrors, setValidationErrors] = useState<ValidationError[]>([]);
 
   const validateCurrentStep = useCallback((step: number, data: OnboardingData, memberType: 'club' | 'formacao'): ValidationResult => {
+    // Não validar se os dados ainda não foram carregados
+    if (!isDataLoaded) {
+      console.log(`[VALIDATION] Aguardando carregamento dos dados para step ${step}`);
+      return {
+        isValid: true, // Considerar válido durante carregamento
+        errors: []
+      };
+    }
+
     let result;
     
     if (memberType === 'formacao') {
@@ -28,7 +37,7 @@ export const useOnboardingValidation = () => {
     
     setValidationErrors(result.errors);
     return result;
-  }, []);
+  }, [isDataLoaded]);
 
   const validateStep = useCallback((step: number, data: OnboardingData, memberType: 'club' | 'formacao') => {
     const result = validateCurrentStep(step, data, memberType);

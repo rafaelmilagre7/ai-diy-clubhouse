@@ -9,7 +9,10 @@ interface ValidationResult {
 export const validateFormacaoStep = (step: number, data: OnboardingData): ValidationResult => {
   const errors: Array<{ field: string; message: string }> = [];
 
-  console.log(`[VALIDATION] Validando step ${step} com dados:`, data);
+  // Log mais controlado - apenas quando necessário
+  if (process.env.NODE_ENV === 'development') {
+    console.log(`[VALIDATION] Validando step ${step}`);
+  }
 
   switch (step) {
     case 1:
@@ -70,8 +73,6 @@ export const validateFormacaoStep = (step: number, data: OnboardingData): Valida
       if (!data.aiToolsUsed || data.aiToolsUsed.length === 0) {
         errors.push({ field: 'aiToolsUsed', message: 'Selecione pelo menos uma ferramenta' });
       }
-      
-      console.log(`[VALIDATION] Step 3 - hasImplementedAI: ${data.hasImplementedAI}, aiKnowledgeLevel: ${data.aiKnowledgeLevel}, aiToolsUsed:`, data.aiToolsUsed);
       break;
 
     case 4:
@@ -128,8 +129,10 @@ export const validateFormacaoStep = (step: number, data: OnboardingData): Valida
       break;
   }
 
-  console.log(`[VALIDATION] Step ${step} - Errors:`, errors);
-  console.log(`[VALIDATION] Step ${step} - IsValid:`, errors.length === 0);
+  // Log controlado de resultados
+  if (process.env.NODE_ENV === 'development' && errors.length > 0) {
+    console.log(`[VALIDATION] Step ${step} - ${errors.length} erro(s) encontrado(s)`);
+  }
 
   return {
     isValid: errors.length === 0,

@@ -1,5 +1,5 @@
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { useOnboardingStorage } from '../hooks/useOnboardingStorage';
 import { useOnboardingValidation } from '../hooks/useOnboardingValidation';
 import { useOnboardingFlow } from '../hooks/useOnboardingFlow';
@@ -33,9 +33,13 @@ export const OnboardingWizardContainer: React.FC<OnboardingWizardContainerProps>
 
   // Hooks modulares
   const { data, updateData, forceSave, hasUnsavedChanges: storageHasChanges } = useOnboardingStorage();
-  const { validationErrors, validateStep, getFieldError } = useOnboardingValidation();
-  const { currentStep, isSubmitting, setIsSubmitting, handleNext: flowHandleNext, handlePrevious } = useOnboardingFlow();
   const { isLoading, memberType } = useOnboardingInitialization(data, updateData);
+  
+  // Passar isDataLoaded para o hook de validação
+  const isDataLoaded = !isLoading && Object.keys(data).length > 1;
+  const { validationErrors, validateStep, getFieldError } = useOnboardingValidation(isDataLoaded);
+  
+  const { currentStep, isSubmitting, setIsSubmitting, handleNext: flowHandleNext, handlePrevious } = useOnboardingFlow();
   const { handleSubmit: submitOnboarding } = useOnboardingSubmission();
 
   // Atualizar estado quando storage muda
@@ -51,7 +55,17 @@ export const OnboardingWizardContainer: React.FC<OnboardingWizardContainerProps>
   // Garantir que memberType seja tipado corretamente
   const typedMemberType: 'club' | 'formacao' = (memberType === 'formacao') ? 'formacao' : 'club';
 
-  const isCurrentStepValid = validateStep(currentStep, data, typedMemberType);
+  // Memoizar validação do step atual para evitar recálculos desnecessários
+  const isCurrentStepValid = useMemo(() => {
+    if (!isDataLoaded) {
+      console.log('[VALIDATION] Dados ainda não carregados, considerando step válido');
+      return true;
+    }
+    
+    const isValid = validateStep(currentStep, data, typedMemberType);
+    console.log(`[VALIDATION] Step ${currentStep} é válido: ${isValid}`);
+    return isValid;
+  }, [isDataLoaded, currentStep, data, typedMemberType, validateStep]);
 
   const handleNext = useCallback(async () => {
     await flowHandleNext(isCurrentStepValid, forceSave, setLastSaved, setHasUnsavedChanges);
