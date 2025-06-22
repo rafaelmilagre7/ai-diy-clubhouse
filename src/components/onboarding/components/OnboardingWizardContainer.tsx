@@ -45,39 +45,39 @@ export const OnboardingWizardContainer: React.FC<OnboardingWizardContainerProps>
   const initialData: OnboardingData = {
     name: profile?.name || '',
     email: profile?.email || user?.email || '',
-    phone: profile?.phone || '',
-    instagram: profile?.instagram || '',
-    linkedin: profile?.linkedin || '',
-    state: profile?.state || '',
-    city: profile?.city || '',
-    birthDate: profile?.birth_date || '',
-    curiosity: profile?.curiosity || '',
-    companyName: profile?.company_name || '',
-    companyWebsite: profile?.company_website || '',
-    businessSector: profile?.business_sector || '',
-    companySize: profile?.company_size || '',
-    annualRevenue: profile?.annual_revenue || '',
-    position: profile?.position || '',
-    hasImplementedAI: profile?.has_implemented_ai || 'nao',
-    aiToolsUsed: profile?.ai_tools_used || [],
-    aiKnowledgeLevel: profile?.ai_knowledge_level || '',
-    dailyTools: profile?.daily_tools || [],
-    whoWillImplement: profile?.who_will_implement || '',
-    mainObjective: profile?.main_objective || '',
-    areaToImpact: profile?.area_to_impact || '',
-    expectedResult90Days: profile?.expected_result_90_days || '',
-    aiImplementationBudget: profile?.ai_implementation_budget || '',
-    weeklyLearningTime: profile?.weekly_learning_time || '',
-    contentPreference: profile?.content_preference || [],
-    wantsNetworking: profile?.wants_networking || 'nao',
-    bestDays: profile?.best_days || [],
-    bestPeriods: profile?.best_periods || [],
-    acceptsCaseStudy: profile?.accepts_case_study || 'nao',
+    phone: (profile as any)?.phone || '',
+    instagram: (profile as any)?.instagram || '',
+    linkedin: (profile as any)?.linkedin || '',
+    state: (profile as any)?.state || '',
+    city: (profile as any)?.city || '',
+    birthDate: (profile as any)?.birth_date || '',
+    curiosity: (profile as any)?.curiosity || '',
+    companyName: (profile as any)?.company_name || '',
+    companyWebsite: (profile as any)?.company_website || '',
+    businessSector: (profile as any)?.business_sector || '',
+    companySize: (profile as any)?.company_size || '',
+    annualRevenue: (profile as any)?.annual_revenue || '',
+    position: (profile as any)?.position || '',
+    hasImplementedAI: (profile as any)?.has_implemented_ai || 'nao',
+    aiToolsUsed: (profile as any)?.ai_tools_used || [],
+    aiKnowledgeLevel: (profile as any)?.ai_knowledge_level || '',
+    dailyTools: (profile as any)?.daily_tools || [],
+    whoWillImplement: (profile as any)?.who_will_implement || '',
+    mainObjective: (profile as any)?.main_objective || '',
+    areaToImpact: (profile as any)?.area_to_impact || '',
+    expectedResult90Days: (profile as any)?.expected_result_90_days || '',
+    aiImplementationBudget: (profile as any)?.ai_implementation_budget || '',
+    weeklyLearningTime: (profile as any)?.weekly_learning_time || '',
+    contentPreference: (profile as any)?.content_preference || [],
+    wantsNetworking: (profile as any)?.wants_networking || 'nao',
+    bestDays: (profile as any)?.best_days || [],
+    bestPeriods: (profile as any)?.best_periods || [],
+    acceptsCaseStudy: (profile as any)?.accepts_case_study || 'nao',
     memberType
   };
 
-  const { data, updateData, saveData } = useOnboardingStorage(user?.id, initialData);
-  const { validationErrors, isCurrentStepValid, getFieldError } = useOnboardingValidation(data, currentStep, memberType);
+  const { data, updateData, forceSave } = useOnboardingStorage();
+  const { validationErrors, validateStep, getFieldError } = useOnboardingValidation(data, currentStep, memberType);
 
   // Carregar dados ao inicializar
   useEffect(() => {
@@ -86,7 +86,10 @@ export const OnboardingWizardContainer: React.FC<OnboardingWizardContainerProps>
       
       try {
         setIsLoading(true);
-        // Os dados já são carregados pelo hook useOnboardingStorage
+        // Atualizar dados iniciais se necessário
+        if (Object.keys(data).length === 1) { // Apenas memberType
+          updateData(initialData);
+        }
         setIsLoading(false);
       } catch (error) {
         console.error('Erro ao carregar dados do onboarding:', error);
@@ -102,6 +105,8 @@ export const OnboardingWizardContainer: React.FC<OnboardingWizardContainerProps>
     setHasUnsavedChanges(true);
   }, [updateData]);
 
+  const isCurrentStepValid = validateStep(currentStep, data, memberType);
+
   const handleNext = useCallback(async () => {
     if (!isCurrentStepValid) {
       toast.error('Por favor, complete todos os campos obrigatórios antes de continuar.');
@@ -110,7 +115,7 @@ export const OnboardingWizardContainer: React.FC<OnboardingWizardContainerProps>
 
     try {
       setIsSubmitting(true);
-      await saveData();
+      await forceSave();
       setLastSaved(new Date());
       setHasUnsavedChanges(false);
       
@@ -123,7 +128,7 @@ export const OnboardingWizardContainer: React.FC<OnboardingWizardContainerProps>
     } finally {
       setIsSubmitting(false);
     }
-  }, [isCurrentStepValid, saveData, currentStep]);
+  }, [isCurrentStepValid, forceSave, currentStep]);
 
   const handlePrevious = useCallback(() => {
     if (currentStep > 1) {
@@ -142,7 +147,7 @@ export const OnboardingWizardContainer: React.FC<OnboardingWizardContainerProps>
         memberType
       };
 
-      await saveData(finalData);
+      await forceSave();
 
       // Marcar onboarding como completado no perfil
       const { error: profileError } = await supabase
@@ -179,7 +184,7 @@ export const OnboardingWizardContainer: React.FC<OnboardingWizardContainerProps>
     } finally {
       setIsSubmitting(false);
     }
-  }, [data, saveData, user?.id, memberType, navigate]);
+  }, [data, forceSave, user?.id, memberType, navigate]);
 
   return children({
     currentStep,
