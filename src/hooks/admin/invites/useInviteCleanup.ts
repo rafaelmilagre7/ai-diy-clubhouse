@@ -17,86 +17,58 @@ export const useInviteCleanup = () => {
     try {
       setIsLoading(true);
       
-      console.log('🧹 [INVITE CLEANUP] Iniciando limpeza de convites expirados');
+      console.log('🧹 [INVITE CLEANUP] Iniciando limpeza com backup automático');
       
-      // 1. Buscar convites expirados
-      const { data: expiredInvites, error: fetchError } = await supabase
-        .from('invites')
-        .select('id, email, expires_at')
-        .lt('expires_at', new Date().toISOString())
-        .is('used_at', null);
+      // Usar a nova função SQL aprimorada
+      const { data, error } = await supabase.rpc('cleanup_expired_invites_enhanced');
 
-      if (fetchError) {
-        console.error('❌ Erro ao buscar convites expirados:', fetchError);
-        throw fetchError;
+      if (error) {
+        console.error('❌ Erro na limpeza de convites:', error);
+        throw error;
       }
 
-      const expiredCount = expiredInvites?.length || 0;
-      console.log(`📊 Encontrados ${expiredCount} convites expirados`);
-
-      if (expiredCount === 0) {
-        const result: InviteCleanupStats = {
-          expiredInvites: 0,
-          deletedInvites: 0,
-          cleanupTimestamp: new Date().toISOString()
-        };
-        setStats(result);
-        return result;
+      if (!data) {
+        throw new Error('Resposta vazia da função de limpeza');
       }
 
-      // 2. Fazer backup dos convites antes de excluir
-      const { error: backupError } = await supabase
-        .from('invite_backups')
-        .insert(
-          expiredInvites.map(invite => ({
-            original_invite_id: invite.id,
-            email: invite.email,
-            backup_reason: 'expired_cleanup',
-            backup_data: invite
-          }))
-        );
+      console.log('📋 Resultado da limpeza:', data);
 
-      if (backupError) {
-        console.warn('⚠️ Erro ao fazer backup dos convites:', backupError);
-        // Continuar mesmo com erro no backup
+      if (!data.success) {
+        throw new Error(data.message || 'Erro na limpeza de convites');
       }
-
-      // 3. Excluir convites expirados
-      const { error: deleteError } = await supabase
-        .from('invites')
-        .delete()
-        .lt('expires_at', new Date().toISOString())
-        .is('used_at', null);
-
-      if (deleteError) {
-        console.error('❌ Erro ao excluir convites expirados:', deleteError);
-        throw deleteError;
-      }
-
-      // 4. Registrar no log de auditoria
-      await supabase
-        .from('audit_logs')
-        .insert({
-          event_type: 'admin_action',
-          action: 'cleanup_expired_invites',
-          details: {
-            expired_count: expiredCount,
-            cleanup_timestamp: new Date().toISOString()
-          }
-        });
 
       const result: InviteCleanupStats = {
-        expiredInvites: expiredCount,
-        deletedInvites: expiredCount,
-        cleanupTimestamp: new Date().toISOString()
+        expiredInvites: data.expired_invites || 0,
+        deletedInvites: data.deleted_invites || 0,
+        cleanupTimestamp: data.cleanup_timestamp || new Date().toISOString()
       };
 
       setStats(result);
+      
+      // Toast baseado no resultado
+      if (result.deletedInvites === 0) {
+        toast.info('ℹ️ Nenhum convite expirado encontrado', {
+          description: 'Todos os convites estão dentro do prazo válido',
+          duration: 4000
+        });
+      } else {
+        toast.success('✅ Limpeza de convites concluída!', {
+          description: `${result.deletedInvites} convites expirados removidos com backup automático`,
+          duration: 6000
+        });
+      }
+
       console.log('✅ Limpeza de convites concluída:', result);
       return result;
 
     } catch (error: any) {
       console.error('❌ Erro na limpeza de convites:', error);
+      
+      toast.error('❌ Erro na limpeza de convites', {
+        description: error.message || 'Erro desconhecido',
+        duration: 8000
+      });
+      
       throw error;
     } finally {
       setIsLoading(false);

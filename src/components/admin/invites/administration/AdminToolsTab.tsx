@@ -1,139 +1,169 @@
 
 import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
-import { 
-  Trash2, 
-  RotateCcw, 
-  Users, 
-  UserX, 
-  Database, 
-  AlertTriangle,
-  CheckCircle,
-  Clock,
-  BarChart3
-} from 'lucide-react';
-import { toast } from 'sonner';
-import { ManualCleanupDialog } from '@/components/admin/users/ManualCleanupDialog';
+import { Separator } from '@/components/ui/separator';
+import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { useInviteCleanup } from '@/hooks/admin/invites/useInviteCleanup';
 import { useAnalyticsReset } from '@/hooks/admin/analytics/useAnalyticsReset';
+import { 
+  Trash2, 
+  Database, 
+  AlertTriangle, 
+  CheckCircle, 
+  Clock,
+  BarChart3,
+  Settings,
+  Shield
+} from 'lucide-react';
+import { toast } from 'sonner';
 
 interface AdminToolsTabProps {
   onRefresh?: () => void;
 }
 
 export const AdminToolsTab: React.FC<AdminToolsTabProps> = ({ onRefresh }) => {
-  const [manualCleanupOpen, setManualCleanupOpen] = useState(false);
+  const [showDetails, setShowDetails] = useState<string | null>(null);
   
   const { 
     cleanupExpiredInvites, 
     isLoading: isCleaningInvites, 
-    stats: cleanupStats 
+    stats: cleanupStats,
+    resetStats: resetCleanupStats
   } = useInviteCleanup();
   
   const { 
     resetAnalyticsData, 
-    isResetting: isResettingAnalytics, 
-    resetStats: analyticsResetStats 
+    isResetting, 
+    resetStats,
+    clearResetStats
   } = useAnalyticsReset();
 
-  const handleCleanupExpiredInvites = async () => {
+  const handleCleanupInvites = async () => {
     try {
-      const stats = await cleanupExpiredInvites();
-      
-      if (stats.deletedInvites > 0) {
-        toast.success(`🧹 Limpeza concluída!`, {
-          description: `${stats.deletedInvites} convites expirados removidos`,
-          duration: 5000
-        });
-      } else {
-        toast.info('✨ Sistema limpo!', {
-          description: 'Nenhum convite expirado encontrado',
-          duration: 3000
-        });
-      }
-      
-      if (onRefresh) {
-        onRefresh();
-      }
+      const result = await cleanupExpiredInvites();
+      setShowDetails('cleanup');
+      if (onRefresh) onRefresh();
     } catch (error) {
-      toast.error('❌ Erro na limpeza', {
-        description: 'Falha ao limpar convites expirados',
-        duration: 5000
-      });
+      console.error('Erro na limpeza:', error);
     }
   };
 
   const handleResetAnalytics = async () => {
     try {
-      const stats = await resetAnalyticsData();
-      
-      toast.success('📊 Analytics resetado!', {
-        description: `${stats.backupRecords} registros salvos em backup antes da limpeza`,
-        duration: 5000
-      });
-      
-      if (onRefresh) {
-        onRefresh();
-      }
+      const result = await resetAnalyticsData();
+      setShowDetails('analytics');
     } catch (error) {
-      toast.error('❌ Erro no reset', {
-        description: 'Falha ao resetar dados de analytics',
-        duration: 5000
-      });
+      console.error('Erro no reset:', error);
     }
+  };
+
+  const clearAllDetails = () => {
+    setShowDetails(null);
+    resetCleanupStats();
+    clearResetStats();
   };
 
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-bold">Ferramentas Administrativas</h2>
+          <p className="text-muted-foreground">
+            Operações avançadas de manutenção e limpeza do sistema
+          </p>
+        </div>
         
+        {(cleanupStats || resetStats) && (
+          <Button 
+            onClick={clearAllDetails} 
+            variant="outline" 
+            size="sm"
+          >
+            Limpar Resultados
+          </Button>
+        )}
+      </div>
+
+      {/* Security Warning */}
+      <Card className="border-orange-200 bg-orange-50 dark:bg-orange-950/10">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-orange-700 dark:text-orange-300">
+            <Shield className="h-5 w-5" />
+            Aviso de Segurança
+          </CardTitle>
+          <CardDescription className="text-orange-600 dark:text-orange-400">
+            Estas operações fazem alterações permanentes no banco de dados. Backups automáticos são criados antes de cada operação.
+          </CardDescription>
+        </CardHeader>
+      </Card>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Limpeza de Convites */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Trash2 className="h-5 w-5 text-orange-600" />
+              <Trash2 className="h-5 w-5" />
               Limpeza de Convites
             </CardTitle>
+            <CardDescription>
+              Remove convites expirados e não utilizados do sistema
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <p className="text-sm text-muted-foreground">
-              Remove convites expirados e não utilizados do sistema.
-            </p>
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Database className="h-4 w-4" />
+                <span>Backup automático habilitado</span>
+              </div>
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <CheckCircle className="h-4 w-4" />
+                <span>Preserva convites válidos</span>
+              </div>
+            </div>
             
             <Button 
-              onClick={handleCleanupExpiredInvites}
+              onClick={handleCleanupInvites}
               disabled={isCleaningInvites}
-              variant="outline"
               className="w-full"
+              variant="outline"
             >
               {isCleaningInvites ? (
                 <>
-                  <Clock className="h-4 w-4 mr-2 animate-spin" />
+                  <LoadingSpinner className="mr-2 h-4 w-4" />
                   Limpando...
                 </>
               ) : (
                 <>
-                  <Trash2 className="h-4 w-4 mr-2" />
-                  Limpar Convites Expirados
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Executar Limpeza
                 </>
               )}
             </Button>
 
-            {cleanupStats && (
-              <div className="p-3 bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800 rounded-md">
-                <div className="flex items-center gap-2 mb-2">
-                  <CheckCircle className="h-4 w-4 text-green-600" />
-                  <span className="text-sm font-medium text-green-800 dark:text-green-200">
-                    Limpeza Concluída
-                  </span>
-                </div>
-                <div className="text-xs text-green-700 dark:text-green-300 space-y-1">
-                  <div>📧 Convites expirados: {cleanupStats.expiredInvites}</div>
-                  <div>🗑️ Convites removidos: {cleanupStats.deletedInvites}</div>
-                  <div>⏰ Timestamp: {new Date(cleanupStats.cleanupTimestamp).toLocaleString()}</div>
+            {/* Resultados da Limpeza */}
+            {cleanupStats && showDetails === 'cleanup' && (
+              <div className="space-y-3 p-3 bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800 rounded-lg">
+                <h4 className="font-medium text-green-800 dark:text-green-200">
+                  ✅ Limpeza Concluída
+                </h4>
+                <div className="space-y-1 text-sm">
+                  <div className="flex justify-between">
+                    <span>Convites expirados:</span>
+                    <Badge variant="secondary">{cleanupStats.expiredInvites}</Badge>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Convites removidos:</span>
+                    <Badge variant="secondary">{cleanupStats.deletedInvites}</Badge>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Timestamp:</span>
+                    <span className="text-xs text-muted-foreground">
+                      {new Date(cleanupStats.cleanupTimestamp).toLocaleString()}
+                    </span>
+                  </div>
                 </div>
               </div>
             )}
@@ -144,46 +174,72 @@ export const AdminToolsTab: React.FC<AdminToolsTabProps> = ({ onRefresh }) => {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <BarChart3 className="h-5 w-5 text-blue-600" />
+              <BarChart3 className="h-5 w-5" />
               Reset de Analytics
             </CardTitle>
+            <CardDescription>
+              Limpa dados de analytics e reinicia estatísticas
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <p className="text-sm text-muted-foreground">
-              Reseta todas as estatísticas e dados de analytics do sistema.
-            </p>
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Database className="h-4 w-4" />
+                <span>Backup automático habilitado</span>
+              </div>
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Settings className="h-4 w-4" />
+                <span>Preserva configurações do sistema</span>
+              </div>
+            </div>
             
             <Button 
               onClick={handleResetAnalytics}
-              disabled={isResettingAnalytics}
-              variant="outline"
+              disabled={isResetting}
               className="w-full"
+              variant="outline"
             >
-              {isResettingAnalytics ? (
+              {isResetting ? (
                 <>
-                  <Clock className="h-4 w-4 mr-2 animate-spin" />
+                  <LoadingSpinner className="mr-2 h-4 w-4" />
                   Resetando...
                 </>
               ) : (
                 <>
-                  <RotateCcw className="h-4 w-4 mr-2" />
-                  Reset Analytics
+                  <BarChart3 className="mr-2 h-4 w-4" />
+                  Resetar Analytics
                 </>
               )}
             </Button>
 
-            {analyticsResetStats && (
-              <div className="p-3 bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-md">
-                <div className="flex items-center gap-2 mb-2">
-                  <CheckCircle className="h-4 w-4 text-blue-600" />
-                  <span className="text-sm font-medium text-blue-800 dark:text-blue-200">
-                    Reset Concluído
-                  </span>
-                </div>
-                <div className="text-xs text-blue-700 dark:text-blue-300 space-y-1">
-                  <div>💾 Registros em backup: {analyticsResetStats.backupRecords}</div>
-                  <div>📊 Tabelas afetadas: {analyticsResetStats.tablesAffected.length}</div>
-                  <div>⏰ Timestamp: {new Date(analyticsResetStats.resetTimestamp).toLocaleString()}</div>
+            {/* Resultados do Reset */}
+            {resetStats && showDetails === 'analytics' && (
+              <div className="space-y-3 p-3 bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                <h4 className="font-medium text-blue-800 dark:text-blue-200">
+                  ✅ Reset Concluído
+                </h4>
+                <div className="space-y-1 text-sm">
+                  <div className="flex justify-between">
+                    <span>Registros em backup:</span>
+                    <Badge variant="secondary">{resetStats.backupRecords}</Badge>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Registros removidos:</span>
+                    <Badge variant="secondary">{resetStats.deletedRecords}</Badge>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Tabelas afetadas:</span>
+                    <Badge variant="secondary">{resetStats.tablesAffected.length}</Badge>
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    Tabelas: {resetStats.tablesAffected.join(', ')}
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Timestamp:</span>
+                    <span className="text-xs text-muted-foreground">
+                      {new Date(resetStats.resetTimestamp).toLocaleString()}
+                    </span>
+                  </div>
                 </div>
               </div>
             )}
@@ -191,54 +247,37 @@ export const AdminToolsTab: React.FC<AdminToolsTabProps> = ({ onRefresh }) => {
         </Card>
       </div>
 
-      <Separator />
-
-      {/* Exclusão Total de Usuários */}
-      <Card className="border-red-200 dark:border-red-800">
+      {/* Informações Técnicas */}
+      <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-red-700 dark:text-red-300">
-            <UserX className="h-5 w-5" />
-            🗑️ Exclusão Total de Usuários
+          <CardTitle className="flex items-center gap-2">
+            <AlertTriangle className="h-5 w-5" />
+            Informações Técnicas
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="p-4 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800 rounded-lg">
-            <div className="flex items-start gap-2">
-              <AlertTriangle className="h-4 w-4 text-red-600 mt-0.5" />
-              <div className="text-sm">
-                <p className="font-medium text-red-800 dark:text-red-200 mb-1">
-                  ⚠️ ATENÇÃO: Operação Irreversível
-                </p>
-                <ul className="text-red-700 dark:text-red-300 space-y-1 text-xs">
-                  <li>• Remove COMPLETAMENTE o usuário do sistema</li>
-                  <li>• Exclui da tabela auth.users (não pode mais fazer login)</li>
-                  <li>• Libera o email para novos convites</li>
-                  <li>• Backup automático antes da exclusão</li>
-                </ul>
-              </div>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+            <div>
+              <h4 className="font-medium mb-2">Limpeza de Convites:</h4>
+              <ul className="space-y-1 text-muted-foreground">
+                <li>• Remove apenas convites expirados</li>
+                <li>• Backup em invite_backups</li>
+                <li>• Preserva histórico de uso</li>
+                <li>• Log em audit_logs</li>
+              </ul>
+            </div>
+            <div>
+              <h4 className="font-medium mb-2">Reset de Analytics:</h4>
+              <ul className="space-y-1 text-muted-foreground">
+                <li>• Backup em analytics_backups</li>
+                <li>• Preserva registros do sistema</li>
+                <li>• Reinicia contadores</li>
+                <li>• Mantém configurações</li>
+              </ul>
             </div>
           </div>
-
-          <Button 
-            onClick={() => setManualCleanupOpen(true)}
-            variant="destructive"
-            className="w-full"
-          >
-            <UserX className="h-4 w-4 mr-2" />
-            🗑️ EXCLUSÃO TOTAL DE USUÁRIO
-          </Button>
         </CardContent>
       </Card>
-
-      <ManualCleanupDialog
-        open={manualCleanupOpen}
-        onOpenChange={setManualCleanupOpen}
-        onSuccess={() => {
-          if (onRefresh) {
-            onRefresh();
-          }
-        }}
-      />
     </div>
   );
 };

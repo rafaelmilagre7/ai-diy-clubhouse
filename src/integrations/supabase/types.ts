@@ -111,6 +111,33 @@ export type Database = {
           },
         ]
       }
+      analytics_backups: {
+        Row: {
+          backup_data: Json
+          backup_reason: string
+          created_at: string
+          id: string
+          record_count: number
+          table_name: string
+        }
+        Insert: {
+          backup_data: Json
+          backup_reason: string
+          created_at?: string
+          id?: string
+          record_count?: number
+          table_name: string
+        }
+        Update: {
+          backup_data?: Json
+          backup_reason?: string
+          created_at?: string
+          id?: string
+          record_count?: number
+          table_name?: string
+        }
+        Relationships: []
+      }
       audit_logs: {
         Row: {
           action: string
@@ -1494,6 +1521,33 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      invite_backups: {
+        Row: {
+          backup_data: Json
+          backup_reason: string
+          created_at: string
+          email: string
+          id: string
+          original_invite_id: string | null
+        }
+        Insert: {
+          backup_data: Json
+          backup_reason: string
+          created_at?: string
+          email: string
+          id?: string
+          original_invite_id?: string | null
+        }
+        Update: {
+          backup_data?: Json
+          backup_reason?: string
+          created_at?: string
+          email?: string
+          id?: string
+          original_invite_id?: string | null
+        }
+        Relationships: []
       }
       invite_campaigns: {
         Row: {
@@ -4441,6 +4495,39 @@ export type Database = {
         }
         Relationships: []
       }
+      user_backups: {
+        Row: {
+          affected_tables: string[]
+          backup_data: Json
+          backup_reason: string
+          created_at: string
+          email: string
+          id: string
+          original_user_id: string
+          total_records_deleted: number
+        }
+        Insert: {
+          affected_tables?: string[]
+          backup_data: Json
+          backup_reason: string
+          created_at?: string
+          email: string
+          id?: string
+          original_user_id: string
+          total_records_deleted?: number
+        }
+        Update: {
+          affected_tables?: string[]
+          backup_data?: Json
+          backup_reason?: string
+          created_at?: string
+          email?: string
+          id?: string
+          original_user_id?: string
+          total_records_deleted?: number
+        }
+        Relationships: []
+      }
       user_badges: {
         Row: {
           badge_id: string
@@ -5098,6 +5185,10 @@ export type Database = {
         Args: { p_user_id: string }
         Returns: Json
       }
+      cleanup_expired_invites_enhanced: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
       cleanup_expired_sessions: {
         Args: Record<PropertyKey, never>
         Returns: undefined
@@ -5410,6 +5501,10 @@ export type Database = {
         Returns: boolean
       }
       reset_all_onboarding_data: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
+      reset_analytics_data_enhanced: {
         Args: Record<PropertyKey, never>
         Returns: Json
       }
