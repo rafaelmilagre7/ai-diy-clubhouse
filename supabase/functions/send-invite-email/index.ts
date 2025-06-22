@@ -17,6 +17,8 @@ interface SendInviteRequest {
 
 // Template compatível com Outlook/Hotmail usando tabelas
 const getOutlookCompatibleTemplate = (inviteUrl: string, userName?: string, isResend?: boolean) => {
+  const currentYear = new Date().getFullYear();
+  
   return `
 <!DOCTYPE html>
 <html>
@@ -85,7 +87,7 @@ const getOutlookCompatibleTemplate = (inviteUrl: string, userName?: string, isRe
                 Este convite é pessoal e intransferível. Se você não solicitou este convite, pode ignorar este email.
               </p>
               <p style="margin: 0; font-size: 12px; color: #666666;">
-                © 2024 Viver de IA - Plataforma de Inteligência Artificial
+                © ${currentYear} Viver de IA - Plataforma de Inteligência Artificial
               </p>
             </td>
           </tr>
@@ -99,7 +101,7 @@ const getOutlookCompatibleTemplate = (inviteUrl: string, userName?: string, isRe
 };
 
 const handler = async (req: Request): Promise<Response> => {
-  console.log(`📧 [SEND-INVITE-EMAIL] Nova requisição: ${req.method} - v3-5 Outlook Compatível`);
+  console.log(`📧 [SEND-INVITE-EMAIL] Nova requisição: ${req.method} - v3-6 Data Corrigida`);
   
   // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
@@ -140,7 +142,7 @@ const handler = async (req: Request): Promise<Response> => {
       html: emailHtml,
       tags: [
         { name: 'type', value: 'invite' },
-        { name: 'version', value: 'v3-5-outlook' },
+        { name: 'version', value: 'v3-6-data-corrigida' },
         { name: 'is_resend', value: isResend.toString() }
       ]
     });
@@ -175,5 +177,5 @@ const handler = async (req: Request): Promise<Response> => {
   }
 };
 
-console.log("📧 [SEND-INVITE-EMAIL] Edge Function carregada! v3-5 Outlook Compatível");
+console.log("📧 [SEND-INVITE-EMAIL] Edge Function carregada! v3-6 Data Corrigida");
 serve(handler);
