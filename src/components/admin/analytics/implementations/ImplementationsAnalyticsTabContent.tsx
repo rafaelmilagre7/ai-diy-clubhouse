@@ -1,29 +1,40 @@
 
 import React from 'react';
-import { CompletionRateChart } from '../CompletionRateChart';
-import { WeeklyActivityChart } from '../WeeklyActivityChart';
-import { useAnalyticsData } from '@/hooks/analytics/useAnalyticsData';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Card, CardHeader, CardContent } from '@/components/ui/card';
+import { Card, CardHeader, CardContent, CardTitle } from '@/components/ui/card';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
-import { AlertTriangle, CheckCircle, Clock, TrendingUp } from 'lucide-react';
+import { AlertTriangle, RefreshCw } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
+import { ImplementationsStatCards } from './ImplementationsStatCards';
+import { DifficultyDistributionChart } from './DifficultyDistributionChart';
+import { CompletionTimeChart } from './CompletionTimeChart';
+import { AbandonmentRateChart } from './AbandonmentRateChart';
+import { RecentImplementationsTable } from './RecentImplementationsTable';
+import { useImplementationsAnalyticsData } from '@/hooks/analytics/implementations/useImplementationsAnalyticsData';
 
 interface ImplementationsAnalyticsTabContentProps {
   timeRange: string;
 }
 
 export const ImplementationsAnalyticsTabContent = ({ timeRange }: ImplementationsAnalyticsTabContentProps) => {
-  const { data, loading, error } = useAnalyticsData({
-    timeRange,
-    category: 'all',
-    difficulty: 'all'
-  });
+  const { data, isLoading, error, refetch } = useImplementationsAnalyticsData(timeRange);
 
   const renderSkeleton = () => (
     <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-bold">Analytics de Implementações</h2>
+          <p className="text-muted-foreground">Carregando dados...</p>
+        </div>
+        <Button disabled variant="outline">
+          <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+          Atualizando
+        </Button>
+      </div>
+      
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {Array(3).fill(0).map((_, i) => (
-          <Card key={i} className="border border-gray-200 dark:border-gray-800">
+          <Card key={i} className="animate-pulse">
             <CardContent className="p-6">
               <Skeleton className="h-4 w-[150px] mb-2" />
               <Skeleton className="h-8 w-[80px]" />
@@ -33,93 +44,129 @@ export const ImplementationsAnalyticsTabContent = ({ timeRange }: Implementation
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card>
-          <CardHeader>
-            <Skeleton className="h-6 w-[200px]" />
-          </CardHeader>
-          <CardContent>
-            <Skeleton className="h-[300px] w-full" />
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader>
-            <Skeleton className="h-6 w-[200px]" />
-          </CardHeader>
-          <CardContent>
-            <Skeleton className="h-[300px] w-full" />
-          </CardContent>
-        </Card>
+        {Array(4).fill(0).map((_, i) => (
+          <Card key={i}>
+            <CardHeader>
+              <Skeleton className="h-6 w-[200px]" />
+            </CardHeader>
+            <CardContent>
+              <Skeleton className="h-[300px] w-full" />
+            </CardContent>
+          </Card>
+        ))}
       </div>
     </div>
   );
 
-  if (loading) {
+  if (isLoading) {
     return renderSkeleton();
   }
 
   if (error) {
     return (
-      <Alert variant="destructive">
-        <AlertTriangle className="h-4 w-4" />
-        <AlertTitle>Erro ao carregar dados</AlertTitle>
-        <AlertDescription>{error}</AlertDescription>
-      </Alert>
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-2xl font-bold">Analytics de Implementações</h2>
+            <p className="text-muted-foreground">Erro ao carregar dados</p>
+          </div>
+          <Button onClick={() => refetch()} variant="outline">
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Tentar novamente
+          </Button>
+        </div>
+        
+        <Alert variant="destructive">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertTitle>Erro ao carregar dados</AlertTitle>
+          <AlertDescription>
+            Ocorreu um erro ao carregar os dados de analytics de implementações. 
+            Tente atualizar a página ou entre em contato com o suporte.
+          </AlertDescription>
+        </Alert>
+      </div>
     );
   }
 
-  const completionData = data?.userCompletionRate || [];
-  const totalCompleted = completionData.find(item => item.name === 'Concluídas')?.value || 0;
-  const totalInProgress = completionData.find(item => item.name === 'Em andamento')?.value || 0;
-  const totalImplementations = totalCompleted + totalInProgress;
-  const completionRate = totalImplementations > 0 ? Math.round((totalCompleted / totalImplementations) * 100) : 0;
+  // Verificar se há dados suficientes
+  const hasData = data && (
+    data.completionRate.completed > 0 || 
+    data.completionRate.inProgress > 0 ||
+    data.implementationsByDifficulty.length > 0 ||
+    data.recentImplementations.length > 0
+  );
 
   return (
     <div className="space-y-6">
-      {/* Cards de estatísticas */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card className="border border-gray-200 dark:border-gray-800 shadow-sm">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Implementações Concluídas</p>
-                <p className="text-2xl font-bold text-foreground">{totalCompleted}</p>
-              </div>
-              <CheckCircle className="h-8 w-8 text-success" />
-            </div>
-          </CardContent>
-        </Card>
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-bold">Analytics de Implementações</h2>
+          <p className="text-muted-foreground">
+            Análise detalhada do progresso e desempenho das implementações
+          </p>
+        </div>
         
-        <Card className="border border-gray-200 dark:border-gray-800 shadow-sm">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Em Andamento</p>
-                <p className="text-2xl font-bold text-foreground">{totalInProgress}</p>
-              </div>
-              <Clock className="h-8 w-8 text-warning" />
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card className="border border-gray-200 dark:border-gray-800 shadow-sm">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Taxa de Conclusão</p>
-                <p className="text-2xl font-bold text-foreground">{completionRate}%</p>
-              </div>
-              <TrendingUp className="h-8 w-8 text-info" />
-            </div>
-          </CardContent>
-        </Card>
+        <Button onClick={() => refetch()} variant="outline">
+          <RefreshCw className="h-4 w-4 mr-2" />
+          Atualizar
+        </Button>
       </div>
 
-      {/* Gráficos */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <CompletionRateChart data={completionData} />
-        <WeeklyActivityChart data={data?.dayOfWeekActivity || []} />
-      </div>
+      {/* Cards de Estatísticas */}
+      <ImplementationsStatCards data={data} />
+
+      {hasData ? (
+        <>
+          {/* Gráficos */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Distribuição por Dificuldade</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <DifficultyDistributionChart data={data.implementationsByDifficulty} />
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Tempo Médio de Conclusão</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <CompletionTimeChart data={data.averageCompletionTime} />
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Taxa de Abandono por Módulo</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <AbandonmentRateChart data={data.abandonmentByModule} />
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Implementações Recentes</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <RecentImplementationsTable data={data.recentImplementations} />
+              </CardContent>
+            </Card>
+          </div>
+        </>
+      ) : (
+        <Card className="border-dashed border-2 border-muted-foreground/25">
+          <CardContent className="flex flex-col items-center justify-center py-12 text-center">
+            <h3 className="text-lg font-semibold mb-2">Dados insuficientes</h3>
+            <p className="text-muted-foreground">
+              Ainda não há dados suficientes de implementações para gerar analytics detalhados.
+              Os dados aparecerão conforme os usuários iniciarem e concluírem implementações.
+            </p>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 };

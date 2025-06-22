@@ -1,5 +1,5 @@
 
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/integrations/supabase/client';
 
 /**
  * Função utilitária para logging que não depende de hooks React
@@ -9,7 +9,7 @@ const logWarning = (message: string, data: any = {}) => {
 };
 
 /**
- * Busca dados sobre conclusões de implementações - CORRIGIDO para usar tabela 'progress'
+ * Busca dados sobre conclusões de implementações - usando tabela 'progress'
  */
 export const fetchCompletionData = async (startDate: string | null) => {
   let completionQuery = supabase
@@ -29,11 +29,11 @@ export const fetchCompletionData = async (startDate: string | null) => {
     });
   }
 
-  return (data as any) || [];
+  return data || [];
 };
 
 /**
- * Busca implementações por dificuldade - CORRIGIDO para usar tabela 'progress'
+ * Busca implementações por dificuldade - usando tabela 'progress' + 'solutions'
  */
 export const fetchDifficultyData = async (startDate: string | null) => {
   let difficultyQuery = supabase
@@ -58,11 +58,11 @@ export const fetchDifficultyData = async (startDate: string | null) => {
     });
   }
 
-  return (data as any) || [];
+  return data || [];
 };
 
 /**
- * Busca tempo médio de implementação - CORRIGIDO para usar tabela 'progress'
+ * Busca tempo médio de implementação - usando tabela 'progress'
  */
 export const fetchTimeCompletionData = async (startDate: string | null) => {
   let timeQuery = supabase
@@ -76,7 +76,7 @@ export const fetchTimeCompletionData = async (startDate: string | null) => {
         title
       )
     `)
-    .eq('is_completed', true as any);
+    .eq('is_completed', true);
 
   if (startDate) {
     timeQuery = timeQuery.gte('created_at', startDate);
@@ -91,7 +91,7 @@ export const fetchTimeCompletionData = async (startDate: string | null) => {
     });
   }
 
-  return (data as any) || [];
+  return data || [];
 };
 
 /**
@@ -118,11 +118,11 @@ export const fetchModuleData = async () => {
     });
   }
 
-  return (data as any) || [];
+  return data || [];
 };
 
 /**
- * Busca implementações recentes - CORRIGIDO para usar tabela 'progress'
+ * Busca implementações recentes - usando tabela 'progress'
  */
 export const fetchRecentImplementations = async (startDate: string | null) => {
   let recentQuery = supabase
@@ -159,5 +159,5 @@ export const fetchRecentImplementations = async (startDate: string | null) => {
     });
   }
 
-  return (data as any) || [];
+  return data || [];
 };
