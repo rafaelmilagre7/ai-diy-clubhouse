@@ -38,58 +38,28 @@ export const useInviteDetails = (token?: string) => {
 
         console.log('[USE-INVITE-DETAILS] Buscando convite com token:', token);
 
-        // Primeiro, tentar usar a função melhorada de validação
-        const { data: enhancedResult, error: enhancedError } = await supabase
-          .rpc('validate_invite_token_enhanced', { p_token: token });
+        // Busca direta e simplificada do convite
+        const { data: inviteData, error: inviteError } = await supabase
+          .from('invites')
+          .select(`
+            id,
+            email,
+            token,
+            expires_at,
+            created_by,
+            role_id,
+            used_at
+          `)
+          .eq('token', token)
+          .is('used_at', null)
+          .gt('expires_at', new Date().toISOString())
+          .single();
 
-        console.log('[USE-INVITE-DETAILS] Resultado da função enhanced:', { enhancedResult, error: enhancedError });
+        console.log('[USE-INVITE-DETAILS] Resultado da busca do convite:', { inviteData, error: inviteError });
 
-        let invite = null;
-
-        if (!enhancedError && enhancedResult && enhancedResult.length > 0) {
-          invite = enhancedResult[0];
-        } else {
-          // Fallback para busca direta
-          console.log('[USE-INVITE-DETAILS] Fallback para busca direta');
-          const { data: fallbackResult, error: fallbackError } = await supabase
-            .from('invites')
-            .select(`
-              id,
-              email,
-              token,
-              expires_at,
-              created_by,
-              role_id,
-              used_at
-            `)
-            .or(`token.eq.${token},token.ilike.${token.substring(0, 8)}%`)
-            .is('used_at', null)
-            .gt('expires_at', new Date().toISOString())
-            .limit(1)
-            .single();
-
-          if (fallbackError) {
-            console.error('[USE-INVITE-DETAILS] Erro na busca fallback:', fallbackError);
-          } else {
-            invite = fallbackResult;
-          }
-        }
-
-        if (!invite) {
-          console.error('[USE-INVITE-DETAILS] Convite não encontrado');
+        if (inviteError || !inviteData) {
+          console.error('[USE-INVITE-DETAILS] Convite não encontrado:', inviteError);
           setError('Convite não encontrado, expirado ou já utilizado');
-          
-          // Log da tentativa de validação
-          try {
-            await supabase.rpc('log_invite_validation_attempt', {
-              p_token: token,
-              p_success: false,
-              p_error_message: 'Convite não encontrado'
-            });
-          } catch (logError) {
-            console.warn('[USE-INVITE-DETAILS] Erro ao registrar tentativa:', logError);
-          }
-          
           return;
         }
 
@@ -97,8 +67,10 @@ export const useInviteDetails = (token?: string) => {
         const { data: roleData, error: roleError } = await supabase
           .from('user_roles')
           .select('id, name, description')
-          .eq('id', invite.role_id)
+          .eq('id', inviteData.role_id)
           .single();
+
+        console.log('[USE-INVITE-DETAILS] Resultado da busca do role:', { roleData, error: roleError });
 
         if (roleError || !roleData) {
           console.error('[USE-INVITE-DETAILS] Erro ao buscar role:', roleError);
@@ -108,11 +80,11 @@ export const useInviteDetails = (token?: string) => {
 
         // Montar detalhes do convite
         const details: InviteDetails = {
-          id: invite.id,
-          email: invite.email,
-          token: invite.token,
-          expires_at: invite.expires_at,
-          created_by: invite.created_by,
+          id: inviteData.id,
+          email: inviteData.email,
+          token: inviteData.token,
+          expires_at: inviteData.expires_at,
+          created_by: inviteData.created_by,
           role: {
             id: roleData.id,
             name: roleData.name,
@@ -122,16 +94,6 @@ export const useInviteDetails = (token?: string) => {
 
         console.log('[USE-INVITE-DETAILS] Convite válido encontrado:', details);
         setInviteDetails(details);
-        
-        // Log da tentativa de validação bem-sucedida
-        try {
-          await supabase.rpc('log_invite_validation_attempt', {
-            p_token: token,
-            p_success: true
-          });
-        } catch (logError) {
-          console.warn('[USE-INVITE-DETAILS] Erro ao registrar tentativa bem-sucedida:', logError);
-        }
         
         logger.info('Detalhes do convite carregados com sucesso', { 
           component: 'useInviteDetails',
@@ -145,17 +107,6 @@ export const useInviteDetails = (token?: string) => {
           component: 'useInviteDetails'
         });
         setError(`Erro inesperado: ${error.message}`);
-        
-        // Log da tentativa de validação com erro
-        try {
-          await supabase.rpc('log_invite_validation_attempt', {
-            p_token: token,
-            p_success: false,
-            p_error_message: error.message
-          });
-        } catch (logError) {
-          console.warn('[USE-INVITE-DETAILS] Erro ao registrar tentativa com erro:', logError);
-        }
       } finally {
         setLoading(false);
       }
