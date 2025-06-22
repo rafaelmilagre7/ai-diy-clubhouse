@@ -15,14 +15,14 @@ export const useCleanOnboardingData = (inviteToken?: string) => {
     const roleName = getUserRoleName(profile);
     const memberType: 'club' | 'formacao' = roleName === 'formacao' ? 'formacao' : 'club';
 
-    // Para convites, sempre inicializar com dados limpos
+    // Para convites, SEMPRE inicializar com dados TOTALMENTE VAZIOS
     if (inviteToken) {
-      console.log('[CLEAN-ONBOARDING] Inicializando dados limpos para convite');
+      console.log('[CLEAN-ONBOARDING] Inicializando dados TOTALMENTE LIMPOS para convite');
       
       const cleanData: OnboardingData = {
-        // Apenas dados básicos obrigatórios
+        // Campos obrigatórios VAZIOS para forçar preenchimento manual
         name: '',
-        email: user?.email || '',
+        email: '',
         
         // Metadados do convite
         memberType,
@@ -32,8 +32,9 @@ export const useCleanOnboardingData = (inviteToken?: string) => {
       };
 
       setData(cleanData);
-      console.log('[CLEAN-ONBOARDING] Dados limpos inicializados:', {
-        hasEmail: !!cleanData.email,
+      console.log('[CLEAN-ONBOARDING] Dados TOTALMENTE VAZIOS inicializados para convite:', {
+        name: cleanData.name,
+        email: cleanData.email,
         memberType: cleanData.memberType,
         fromInvite: cleanData.fromInvite
       });

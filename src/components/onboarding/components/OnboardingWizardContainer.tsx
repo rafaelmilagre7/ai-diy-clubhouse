@@ -4,7 +4,7 @@ import { useSearchParams } from 'react-router-dom';
 import { useOnboardingWizard } from '../hooks/useOnboardingWizard';
 import { useCleanOnboardingData } from '../hooks/useCleanOnboardingData';
 import { useInviteCleanup } from '@/hooks/useInviteCleanup';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 interface OnboardingWizardContainerProps {
   children: (props: ReturnType<typeof useOnboardingWizard> & {
@@ -17,6 +17,7 @@ interface OnboardingWizardContainerProps {
 export const OnboardingWizardContainer = ({ children }: OnboardingWizardContainerProps) => {
   const [searchParams] = useSearchParams();
   const inviteToken = searchParams.get('token');
+  const [isCleanupComplete, setIsCleanupComplete] = useState(false);
   const { cleanupForInvite } = useInviteCleanup();
   
   const {
@@ -25,15 +26,25 @@ export const OnboardingWizardContainer = ({ children }: OnboardingWizardContaine
     initializeCleanData
   } = useCleanOnboardingData(inviteToken || undefined);
 
-  // Executar limpeza e inicialização quando há convite
+  // Executar limpeza ANTES de qualquer inicialização
   useEffect(() => {
     const setupForInvite = async () => {
       if (inviteToken) {
-        console.log('[WIZARD-CONTAINER] Detectado convite, executando limpeza');
+        console.log('[WIZARD-CONTAINER] Detectado convite - executando limpeza TOTAL primeiro');
+        
+        // Primeiro: limpeza total
         await cleanupForInvite(inviteToken);
-        initializeCleanData();
+        
+        // Aguardar um pouco para garantir que limpeza foi concluída
+        setTimeout(() => {
+          console.log('[WIZARD-CONTAINER] Limpeza concluída, inicializando dados limpos');
+          initializeCleanData();
+          setIsCleanupComplete(true);
+        }, 200);
       } else {
+        // Sem convite, inicializar normalmente
         initializeCleanData();
+        setIsCleanupComplete(true);
       }
     };
 
@@ -41,12 +52,16 @@ export const OnboardingWizardContainer = ({ children }: OnboardingWizardContaine
   }, [inviteToken, cleanupForInvite, initializeCleanData]);
 
   const memberType = cleanData.memberType || 'club';
-  const isLoading = Object.keys(cleanData).length <= 1;
+  
+  // Para convites, aguardar limpeza completa + dados devem estar vazios
+  const isLoading = inviteToken 
+    ? (!isCleanupComplete || Object.keys(cleanData).length <= 3) // Apenas memberType, startedAt, fromInvite
+    : Object.keys(cleanData).length <= 1;
 
   const wizardProps = useOnboardingWizard({
     initialData: cleanData,
     onDataChange: updateData,
-    memberType // ADICIONADO: passando memberType para o hook
+    memberType
   });
 
   return (
