@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/auth';
@@ -77,7 +76,7 @@ export const useInviteFlow = () => {
     }
   };
 
-  // Processar registro com convite
+  // Processar registro com convite - MELHORADO
   const processInviteRegistration = async (
     token: string, 
     email: string, 
@@ -106,16 +105,28 @@ export const useInviteFlow = () => {
 
       if (signUpError) {
         console.error('[INVITE-FLOW] Erro no registro:', signUpError);
+        
+        // Melhor tratamento de erros específicos
+        let errorMessage = 'Erro no registro';
+        
+        if (signUpError.message.includes('User already registered')) {
+          errorMessage = 'Este email já está cadastrado. Use a opção "Já tem uma conta?" abaixo.';
+        } else if (signUpError.message.includes('Password')) {
+          errorMessage = 'A senha deve ter pelo menos 6 caracteres';
+        } else if (signUpError.message.includes('Email')) {
+          errorMessage = 'Email inválido';
+        } else {
+          errorMessage = `Erro no registro: ${signUpError.message}`;
+        }
+        
         return {
           success: false,
-          message: signUpError.message === 'User already registered'
-            ? 'Este email já está cadastrado. Tente fazer login.'
-            : `Erro no registro: ${signUpError.message}`
+          message: errorMessage
         };
       }
 
       // Aguardar um pouco para garantir que o usuário foi criado
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise(resolve => setTimeout(resolve, 2000));
 
       // Obter o usuário atual
       const { data: { user } } = await supabase.auth.getUser();
@@ -123,7 +134,7 @@ export const useInviteFlow = () => {
       if (!user) {
         return {
           success: false,
-          message: 'Erro: usuário não encontrado após registro'
+          message: 'Conta criada, mas erro ao fazer login automático. Tente fazer login manualmente.'
         };
       }
 
@@ -137,7 +148,7 @@ export const useInviteFlow = () => {
         console.error('[INVITE-FLOW] Erro ao aplicar convite:', applyError);
         return {
           success: false,
-          message: 'Registro realizado, mas erro ao aplicar convite. Contate o suporte.'
+          message: 'Conta criada com sucesso, mas erro ao aplicar convite. Contate o suporte.'
         };
       }
 
@@ -171,7 +182,7 @@ export const useInviteFlow = () => {
     }
   };
 
-  // Processar convite para usuário existente
+  // Processar convite para usuário existente - MELHORADO
   const processInviteForExistingUser = async (token: string): Promise<InviteFlowResult> => {
     try {
       setIsProcessing(true);
@@ -185,6 +196,12 @@ export const useInviteFlow = () => {
         };
       }
 
+      console.log('[INVITE-FLOW] Aplicando convite para usuário existente:', {
+        token,
+        userId: user.id,
+        userEmail: user.email
+      });
+
       // Aplicar o convite
       const { data: applyResult, error: applyError } = await supabase.rpc('use_invite', {
         invite_token: token,
@@ -193,9 +210,20 @@ export const useInviteFlow = () => {
 
       if (applyError) {
         console.error('[INVITE-FLOW] Erro ao aplicar convite:', applyError);
+        
+        let errorMessage = 'Erro ao aplicar convite';
+        
+        if (applyError.message.includes('already used')) {
+          errorMessage = 'Este convite já foi utilizado';
+        } else if (applyError.message.includes('expired')) {
+          errorMessage = 'Este convite expirou';
+        } else if (applyError.message.includes('not found')) {
+          errorMessage = 'Convite não encontrado';
+        }
+        
         return {
           success: false,
-          message: 'Erro ao aplicar convite'
+          message: errorMessage
         };
       }
 
@@ -212,7 +240,7 @@ export const useInviteFlow = () => {
         success: true,
         message: 'Convite aplicado com sucesso!',
         shouldRedirectToOnboarding: true,
-        redirectPath: '/dashboard'
+        redirectPath: '/onboarding'
       };
 
     } catch (error: any) {
