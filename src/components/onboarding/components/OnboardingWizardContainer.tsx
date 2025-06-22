@@ -47,15 +47,18 @@ export const OnboardingWizardContainer: React.FC<OnboardingWizardContainerProps>
     setHasUnsavedChanges(true);
   }, [updateData]);
 
-  const isCurrentStepValid = validateStep(currentStep, data, memberType);
+  // Garantir que memberType seja tipado corretamente
+  const typedMemberType: 'club' | 'formacao' = (memberType === 'formacao') ? 'formacao' : 'club';
+
+  const isCurrentStepValid = validateStep(currentStep, data, typedMemberType);
 
   const handleNext = useCallback(async () => {
     await flowHandleNext(isCurrentStepValid, forceSave, setLastSaved, setHasUnsavedChanges);
   }, [flowHandleNext, isCurrentStepValid, forceSave]);
 
   const handleSubmit = useCallback(async () => {
-    await submitOnboarding(data, memberType, forceSave, setIsSubmitting);
-  }, [submitOnboarding, data, memberType, forceSave, setIsSubmitting]);
+    await submitOnboarding(data, typedMemberType, forceSave, setIsSubmitting);
+  }, [submitOnboarding, data, typedMemberType, forceSave, setIsSubmitting]);
 
   return children({
     currentStep,

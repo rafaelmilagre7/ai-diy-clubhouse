@@ -13,7 +13,7 @@ export const useOnboardingInitialization = (
   const [isLoading, setIsLoading] = useState(true);
 
   const roleName = getUserRoleName(profile);
-  const memberType = roleName === 'formacao' ? 'formacao' : 'club';
+  const memberType: 'club' | 'formacao' = roleName === 'formacao' ? 'formacao' : 'club';
 
   useEffect(() => {
     const loadData = async () => {
