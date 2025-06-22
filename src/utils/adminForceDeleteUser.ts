@@ -18,6 +18,7 @@ export interface ForceDeleteResult {
 export const forceDeleteUser = async (userEmail: string): Promise<ForceDeleteResult> => {
   try {
     console.log(`🗑️ [FORCE DELETE] Iniciando exclusão COMPLETA para: ${userEmail}`);
+    console.log(`🔧 [FORCE DELETE] Usando função SQL CORRIGIDA com limpeza de benefit_clicks`);
     
     const { data, error } = await supabase.rpc('admin_force_delete_auth_user', {
       user_email: userEmail
@@ -33,6 +34,14 @@ export const forceDeleteUser = async (userEmail: string): Promise<ForceDeleteRes
     }
     
     console.log('📊 Resultado da exclusão completa:', data);
+    
+    // Validar se a exclusão da auth.users foi bem-sucedida
+    if (data.success && data.details.auth_user_deleted) {
+      console.log('✅ [FORCE DELETE] Usuário removido da auth.users com sucesso!');
+      console.log(`📋 [FORCE DELETE] Tabelas afetadas: ${data.details.affected_tables.join(', ')}`);
+    } else if (data.details.error_count > 0) {
+      console.warn('⚠️ [FORCE DELETE] Exclusão com erros:', data.details.error_messages);
+    }
     
     return data as ForceDeleteResult;
   } catch (error: any) {
@@ -62,12 +71,17 @@ export const adminForceDeleteUser = async (userEmail: string) => {
       duration: 8000
     });
     console.log('✅ Resultado da exclusão completa:', result);
+    console.log('🎯 Email agora está COMPLETAMENTE liberado para novos registros');
   } else {
     toast.error('❌ Erro na exclusão completa', {
       description: result.message,
       duration: 10000
     });
     console.error('❌ Falha na exclusão completa:', result);
+    
+    if (result.details.error_messages.length > 0) {
+      console.error('📋 Erros detalhados:', result.details.error_messages);
+    }
   }
   
   return result;

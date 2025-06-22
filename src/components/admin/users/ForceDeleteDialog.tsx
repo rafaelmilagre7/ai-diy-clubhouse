@@ -35,7 +35,11 @@ export const ForceDeleteDialog: React.FC<ForceDeleteDialogProps> = ({
   const [result, setResult] = useState<ForceDeleteResult | null>(null);
 
   const handleForceDelete = async () => {
-    if (!email.trim() || email !== confirmEmail) return;
+    if (!email.trim()) return;
+    if (email.trim() !== confirmEmail.trim()) {
+      console.error('Emails não coincidem');
+      return;
+    }
     
     setIsProcessing(true);
     setResult(null);
@@ -69,14 +73,15 @@ export const ForceDeleteDialog: React.FC<ForceDeleteDialogProps> = ({
     }
   };
 
-  const isEmailConfirmed = email.trim() && email === confirmEmail;
+  const emailsMatch = email.trim() === confirmEmail.trim();
+  const canProceed = emailsMatch && email.trim() && confirmEmail.trim() && !isProcessing;
 
   return (
     <AlertDialog open={open} onOpenChange={handleClose}>
       <AlertDialogContent className="max-w-3xl">
         <AlertDialogHeader>
           <AlertDialogTitle className="flex items-center gap-2">
-            <Shield className="h-5 w-5 text-red-600" />
+            <Trash2 className="h-5 w-5 text-red-600" />
             🚨 EXCLUSÃO TOTAL E DEFINITIVA
           </AlertDialogTitle>
           <AlertDialogDescription className="space-y-4">
@@ -98,9 +103,7 @@ export const ForceDeleteDialog: React.FC<ForceDeleteDialogProps> = ({
             
             <div className="space-y-3">
               <div>
-                <Label htmlFor="email" className="text-sm font-medium">
-                  Email do usuário para EXCLUSÃO TOTAL:
-                </Label>
+                <Label htmlFor="email">Email do usuário para EXCLUSÃO TOTAL:</Label>
                 <Input
                   id="email"
                   type="email"
@@ -108,31 +111,26 @@ export const ForceDeleteDialog: React.FC<ForceDeleteDialogProps> = ({
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   disabled={isProcessing}
-                  className="mt-1"
+                  className={email && !email.includes('@') ? 'border-red-300' : ''}
                 />
               </div>
-
+              
               <div>
-                <Label htmlFor="confirmEmail" className="text-sm font-medium">
-                  Confirme o email para prosseguir:
-                </Label>
+                <Label htmlFor="confirmEmail">Confirme o email para prosseguir:</Label>
                 <Input
                   id="confirmEmail"
                   type="email"
-                  placeholder="Confirme o email acima"
+                  placeholder="usuario@exemplo.com"
                   value={confirmEmail}
                   onChange={(e) => setConfirmEmail(e.target.value)}
                   disabled={isProcessing}
-                  className={`mt-1 ${
-                    confirmEmail && email !== confirmEmail 
-                      ? 'border-red-500 focus:border-red-500' 
-                      : ''
-                  }`}
+                  className={confirmEmail && !emailsMatch ? 'border-red-300' : emailsMatch && confirmEmail ? 'border-green-300' : ''}
                 />
-                {confirmEmail && email !== confirmEmail && (
-                  <p className="text-xs text-red-600 mt-1">
-                    Os emails não coincidem
-                  </p>
+                {confirmEmail && !emailsMatch && (
+                  <p className="text-xs text-red-600 mt-1">Os emails não coincidem</p>
+                )}
+                {emailsMatch && confirmEmail && (
+                  <p className="text-xs text-green-600 mt-1">✓ Emails coincidem</p>
                 )}
               </div>
             </div>
@@ -161,30 +159,48 @@ export const ForceDeleteDialog: React.FC<ForceDeleteDialogProps> = ({
                     <div className="flex items-center gap-2 flex-wrap">
                       <Database className="h-3 w-3" />
                       <Badge variant="outline" className="text-xs">
-                        📦 {result.details.backup_records} backup(s)
+                        📦 {result.details.backup_records} backup(s) criado(s)
                       </Badge>
                       {result.details.auth_user_deleted && (
                         <Badge variant="outline" className="text-xs bg-green-100">
                           <Users className="h-3 w-3 mr-1" />
-                          Auth removido
+                          Auth removido ✓
                         </Badge>
                       )}
-                      <Badge variant="outline" className="text-xs">
-                        🗑️ {result.details.affected_tables.length} tabelas
+                      <Badge variant="outline" className="text-xs bg-blue-100">
+                        <Shield className="h-3 w-3 mr-1" />
+                        {result.details.affected_tables.length} tabelas limpas
                       </Badge>
                     </div>
                     
                     {result.details.affected_tables.length > 0 && (
                       <div className="text-xs text-muted-foreground">
-                        📊 Tabelas afetadas: {result.details.affected_tables.join(', ')}
+                        <details className="cursor-pointer">
+                          <summary className="font-medium mb-1">📊 Tabelas afetadas ({result.details.affected_tables.length})</summary>
+                          <div className="pl-4 space-y-1">
+                            {result.details.affected_tables.map((table, index) => (
+                              <div key={index} className="flex items-center gap-2">
+                                <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+                                <code className="text-xs">{table}</code>
+                              </div>
+                            ))}
+                          </div>
+                        </details>
                       </div>
                     )}
                   </div>
                 )}
 
-                {result.details.error_messages.length > 0 && (
+                {result.details.error_count > 0 && (
                   <div className="mt-2 text-xs text-red-600 dark:text-red-400">
-                    ⚠️ Erros: {result.details.error_messages.join(', ')}
+                    <details className="cursor-pointer">
+                      <summary className="font-medium">⚠️ Erros encontrados ({result.details.error_count})</summary>
+                      <div className="pl-4 mt-1 space-y-1">
+                        {result.details.error_messages.map((error, index) => (
+                          <div key={index} className="text-xs">{error}</div>
+                        ))}
+                      </div>
+                    </details>
                   </div>
                 )}
               </div>
@@ -200,19 +216,16 @@ export const ForceDeleteDialog: React.FC<ForceDeleteDialogProps> = ({
               e.preventDefault();
               handleForceDelete();
             }}
-            disabled={isProcessing || !isEmailConfirmed}
+            disabled={!canProceed}
             className="bg-red-600 hover:bg-red-700"
           >
             {isProcessing ? (
               <>
                 <LoadingSpinner className="mr-2 h-4 w-4" />
-                Excluindo PERMANENTEMENTE...
+                Removendo Completamente...
               </>
             ) : (
-              <>
-                <Trash2 className="mr-2 h-4 w-4" />
-                🚨 EXCLUIR PERMANENTEMENTE
-              </>
+              "🗑️ EXCLUIR COMPLETAMENTE"
             )}
           </AlertDialogAction>
         </AlertDialogFooter>
