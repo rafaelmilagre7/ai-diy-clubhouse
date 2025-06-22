@@ -1,5 +1,5 @@
 
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.4'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -7,10 +7,8 @@ const corsHeaders = {
 }
 
 interface DeleteUserRequest {
-  userId?: string;
-  userEmail?: string;
+  userEmail: string;
   forceDelete?: boolean;
-  softDelete?: boolean;
 }
 
 interface DeleteUserResponse {
@@ -25,6 +23,8 @@ interface DeleteUserResponse {
 }
 
 Deno.serve(async (req) => {
+  console.log(`🚀 [ADMIN-DELETE-USER] Requisição recebida: ${req.method}`);
+
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -34,7 +34,7 @@ Deno.serve(async (req) => {
     // Verificar se é uma requisição POST
     if (req.method !== 'POST') {
       return new Response(
-        JSON.stringify({ error: 'Method not allowed' }),
+        JSON.stringify({ error: 'Método não permitido' }),
         { 
           status: 405, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
@@ -42,72 +42,12 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Criar cliente Supabase com service role
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    
-    const supabase = createClient(supabaseUrl, supabaseServiceKey, {
-      auth: {
-        autoRefreshToken: false,
-        persistSession: false
-      }
-    });
-
-    // Verificar autenticação do usuário que está fazendo a requisição
-    const authHeader = req.headers.get('Authorization');
-    if (!authHeader) {
-      return new Response(
-        JSON.stringify({ error: 'Authorization header required' }),
-        { 
-          status: 401, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      );
-    }
-
-    // Verificar se o usuário é admin
-    const { data: { user }, error: authError } = await supabase.auth.getUser(
-      authHeader.replace('Bearer ', '')
-    );
-
-    if (authError || !user) {
-      console.error('Authentication error:', authError);
-      return new Response(
-        JSON.stringify({ error: 'Invalid authentication' }),
-        { 
-          status: 401, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      );
-    }
-
-    // Verificar se o usuário é admin
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select(`
-        id,
-        user_roles:role_id!inner(name)
-      `)
-      .eq('id', user.id)
-      .single();
-
-    if (!profile || profile.user_roles?.name !== 'admin') {
-      return new Response(
-        JSON.stringify({ error: 'Admin access required' }),
-        { 
-          status: 403, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      );
-    }
-
     // Parse do body da requisição
-    const body: DeleteUserRequest = await req.json();
-    const { userId, userEmail, forceDelete = false } = body;
-
-    if (!userId && !userEmail) {
+    const { userEmail, forceDelete = false }: DeleteUserRequest = await req.json();
+    
+    if (!userEmail) {
       return new Response(
-        JSON.stringify({ error: 'userId or userEmail is required' }),
+        JSON.stringify({ error: 'Email do usuário é obrigatório' }),
         { 
           status: 400, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
@@ -115,9 +55,15 @@ Deno.serve(async (req) => {
       );
     }
 
-    console.log(`🗑️ [ADMIN-DELETE-USER] Iniciando exclusão completa para: ${userEmail || userId}`);
+    console.log(`📧 [ADMIN-DELETE-USER] Processando limpeza para: ${userEmail}`);
 
-    const response: DeleteUserResponse = {
+    // Inicializar cliente Supabase com service role
+    const supabaseAdmin = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    );
+
+    const result: DeleteUserResponse = {
       success: false,
       message: '',
       details: {
@@ -128,118 +74,94 @@ Deno.serve(async (req) => {
       }
     };
 
-    let targetUserId = userId;
-
-    // Se foi fornecido email, buscar o userId
-    if (userEmail && !userId) {
-      const { data: authUser, error: userError } = await supabase.auth.admin.listUsers();
-      
-      if (userError) {
-        console.error('❌ Erro ao buscar usuários:', userError);
-        response.details.errors.push({ operation: 'list_users', error: userError.message });
-      } else {
-        const foundUser = authUser.users.find(u => u.email === userEmail);
-        if (foundUser) {
-          targetUserId = foundUser.id;
-          console.log(`👤 Usuário encontrado: ${foundUser.id}`);
-        } else {
-          return new Response(
-            JSON.stringify({ 
-              success: false, 
-              message: `Usuário não encontrado com email: ${userEmail}` 
-            }),
-            { 
-              status: 404, 
-              headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-            }
-          );
-        }
-      }
-    }
-
-    if (!targetUserId) {
-      return new Response(
-        JSON.stringify({ 
-          success: false, 
-          message: 'Não foi possível determinar o ID do usuário' 
-        }),
-        { 
-          status: 400, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      );
-    }
-
-    // FASE 1: Limpeza dos dados públicos usando a nova função SQL
-    console.log('🧹 Executando limpeza completa dos dados públicos...');
-    const { data: cleanupResult, error: cleanupError } = await supabase.rpc(
-      'admin_complete_user_cleanup', 
-      { user_email: userEmail || '' }
+    // FASE 1: Executar limpeza completa via função SQL
+    console.log(`🧹 [ADMIN-DELETE-USER] Executando limpeza completa dos dados públicos`);
+    
+    const { data: cleanupData, error: cleanupError } = await supabaseAdmin.rpc(
+      'admin_complete_user_cleanup',
+      { user_email: userEmail }
     );
 
     if (cleanupError) {
-      console.error('❌ Erro na limpeza de dados públicos:', cleanupError);
-      response.details.errors.push({ operation: 'public_cleanup', error: cleanupError.message });
-    } else if (cleanupResult?.success) {
-      console.log('✅ Dados públicos limpos com sucesso');
-      response.details.backupRecords = cleanupResult.backup_records || 0;
-      response.details.tablesAffected.push('profiles', 'onboarding_sync', 'user_onboarding', 'implementation_trails', 'analytics', 'notifications');
+      console.error(`❌ [ADMIN-DELETE-USER] Erro na limpeza dos dados:`, cleanupError);
+      result.details.errors.push({
+        operation: 'cleanup_public_data',
+        error: cleanupError.message
+      });
+    } else if (cleanupData?.success) {
+      console.log(`✅ [ADMIN-DELETE-USER] Limpeza dos dados públicos concluída:`, cleanupData);
+      result.details.backupRecords = cleanupData.backup_records || 0;
+      result.details.tablesAffected = [
+        'profiles', 'user_onboarding', 'onboarding_sync', 'onboarding_final',
+        'implementation_trails', 'analytics', 'notifications', 'progress',
+        'learning_progress', 'forum_posts', 'forum_topics', 'solution_comments'
+      ];
     }
 
-    // FASE 2: Exclusão do usuário da auth.users
+    // FASE 2: Excluir usuário da auth.users (se forceDelete = true)
     if (forceDelete) {
-      console.log('🗑️ Removendo usuário da auth.users...');
-      const { data: deleteData, error: deleteError } = await supabase.auth.admin.deleteUser(targetUserId);
+      console.log(`🗑️ [ADMIN-DELETE-USER] Executando exclusão do auth.users`);
       
-      if (deleteError) {
-        console.error('❌ Erro ao deletar usuário da auth:', deleteError);
-        response.details.errors.push({ operation: 'auth_delete', error: deleteError.message });
-      } else {
-        console.log('✅ Usuário removido da auth.users');
-        response.details.authUserDeleted = true;
-        response.details.tablesAffected.push('auth.users');
+      // Buscar o ID do usuário primeiro
+      const { data: userData, error: userError } = await supabaseAdmin
+        .from('auth.users')
+        .select('id')
+        .eq('email', userEmail)
+        .single();
+
+      if (userError) {
+        console.error(`❌ [ADMIN-DELETE-USER] Erro ao buscar usuário:`, userError);
+        result.details.errors.push({
+          operation: 'find_auth_user',
+          error: userError.message
+        });
+      } else if (userData?.id) {
+        // Excluir usuário da auth.users usando Admin API
+        const { error: deleteError } = await supabaseAdmin.auth.admin.deleteUser(userData.id);
+        
+        if (deleteError) {
+          console.error(`❌ [ADMIN-DELETE-USER] Erro ao excluir auth user:`, deleteError);
+          result.details.errors.push({
+            operation: 'delete_auth_user',
+            error: deleteError.message
+          });
+        } else {
+          console.log(`✅ [ADMIN-DELETE-USER] Usuário removido da auth.users com sucesso`);
+          result.details.authUserDeleted = true;
+        }
       }
     }
 
-    // FASE 3: Limpeza final de convites
-    console.log('📧 Limpando convites relacionados...');
-    const { error: inviteError } = await supabase
-      .from('invites')
-      .delete()
-      .eq('email', userEmail || '');
-
-    if (inviteError) {
-      console.warn('⚠️ Erro ao limpar convites:', inviteError);
-      response.details.errors.push({ operation: 'cleanup_invites', error: inviteError.message });
+    // FASE 3: Determinar resultado final
+    const hasErrors = result.details.errors.length > 0;
+    const authDeletionSuccess = forceDelete ? result.details.authUserDeleted : true;
+    
+    result.success = !hasErrors && authDeletionSuccess;
+    
+    if (result.success) {
+      result.message = forceDelete 
+        ? `Usuário ${userEmail} completamente removido do sistema`
+        : `Dados públicos do usuário ${userEmail} limpos com sucesso`;
     } else {
-      response.details.tablesAffected.push('invites');
+      result.message = `Limpeza parcial realizada com ${result.details.errors.length} erro(s)`;
     }
 
-    // Determinar sucesso geral
-    const hasErrors = response.details.errors.length > 0;
-    const authDeleted = forceDelete ? response.details.authUserDeleted : true; // Se não forçou delete, considera sucesso
-
-    response.success = !hasErrors && authDeleted;
-    response.message = response.success 
-      ? `✅ Usuário ${userEmail || targetUserId} completamente removido do sistema`
-      : `⚠️ Limpeza parcial concluída com ${response.details.errors.length} erro(s)`;
-
-    console.log('📊 Resultado final:', response);
+    console.log(`📊 [ADMIN-DELETE-USER] Resultado final:`, result);
 
     return new Response(
-      JSON.stringify(response),
+      JSON.stringify(result),
       { 
-        status: response.success ? 200 : 207, // 207 = Multi-Status para sucesso parcial
+        status: result.success ? 200 : 207, // 207 = Multi-Status (partial success)
         headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
       }
     );
 
-  } catch (error) {
-    console.error('❌ Erro inesperado na Edge Function:', error);
+  } catch (error: any) {
+    console.error(`💥 [ADMIN-DELETE-USER] Erro inesperado:`, error);
     
     return new Response(
-      JSON.stringify({ 
-        success: false, 
+      JSON.stringify({
+        success: false,
         message: `Erro inesperado: ${error.message}`,
         details: {
           tablesAffected: [],
