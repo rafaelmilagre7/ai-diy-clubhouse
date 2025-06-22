@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -7,39 +6,27 @@ import { Separator } from '@/components/ui/separator';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { useInviteCleanup } from '@/hooks/admin/invites/useInviteCleanup';
 import { useAnalyticsReset } from '@/hooks/admin/analytics/useAnalyticsReset';
-import { 
-  Trash2, 
-  Database, 
-  AlertTriangle, 
-  CheckCircle, 
-  Clock,
-  BarChart3,
-  Settings,
-  Shield
-} from 'lucide-react';
+import { Trash2, Database, AlertTriangle, CheckCircle, Clock, BarChart3, Settings, Shield } from 'lucide-react';
 import { toast } from 'sonner';
-
 interface AdminToolsTabProps {
   onRefresh?: () => void;
 }
-
-export const AdminToolsTab: React.FC<AdminToolsTabProps> = ({ onRefresh }) => {
+export const AdminToolsTab: React.FC<AdminToolsTabProps> = ({
+  onRefresh
+}) => {
   const [showDetails, setShowDetails] = useState<string | null>(null);
-  
-  const { 
-    cleanupExpiredInvites, 
-    isLoading: isCleaningInvites, 
+  const {
+    cleanupExpiredInvites,
+    isLoading: isCleaningInvites,
     stats: cleanupStats,
     resetStats: resetCleanupStats
   } = useInviteCleanup();
-  
-  const { 
-    resetAnalyticsData, 
-    isResetting, 
+  const {
+    resetAnalyticsData,
+    isResetting,
     resetStats,
     clearResetStats
   } = useAnalyticsReset();
-
   const handleCleanupInvites = async () => {
     try {
       const result = await cleanupExpiredInvites();
@@ -49,7 +36,6 @@ export const AdminToolsTab: React.FC<AdminToolsTabProps> = ({ onRefresh }) => {
       console.error('Erro na limpeza:', error);
     }
   };
-
   const handleResetAnalytics = async () => {
     try {
       const result = await resetAnalyticsData();
@@ -58,15 +44,12 @@ export const AdminToolsTab: React.FC<AdminToolsTabProps> = ({ onRefresh }) => {
       console.error('Erro no reset:', error);
     }
   };
-
   const clearAllDetails = () => {
     setShowDetails(null);
     resetCleanupStats();
     clearResetStats();
   };
-
-  return (
-    <div className="space-y-6">
+  return <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -76,15 +59,9 @@ export const AdminToolsTab: React.FC<AdminToolsTabProps> = ({ onRefresh }) => {
           </p>
         </div>
         
-        {(cleanupStats || resetStats) && (
-          <Button 
-            onClick={clearAllDetails} 
-            variant="outline" 
-            size="sm"
-          >
+        {(cleanupStats || resetStats) && <Button onClick={clearAllDetails} variant="outline" size="sm">
             Limpar Resultados
-          </Button>
-        )}
+          </Button>}
       </div>
 
       {/* Security Warning */}
@@ -124,49 +101,38 @@ export const AdminToolsTab: React.FC<AdminToolsTabProps> = ({ onRefresh }) => {
               </div>
             </div>
             
-            <Button 
-              onClick={handleCleanupInvites}
-              disabled={isCleaningInvites}
-              className="w-full"
-              variant="outline"
-            >
-              {isCleaningInvites ? (
-                <>
+            <Button onClick={handleCleanupInvites} disabled={isCleaningInvites} className="w-full" variant="outline">
+              {isCleaningInvites ? <>
                   <LoadingSpinner className="mr-2 h-4 w-4" />
                   Limpando...
-                </>
-              ) : (
-                <>
+                </> : <>
                   <Trash2 className="mr-2 h-4 w-4" />
                   Executar Limpeza
-                </>
-              )}
+                </>}
             </Button>
 
             {/* Resultados da Limpeza */}
-            {cleanupStats && showDetails === 'cleanup' && (
-              <div className="space-y-3 p-3 bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800 rounded-lg">
+            {cleanupStats && showDetails === 'cleanup' && <div className="space-y-3 p-3 bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800 rounded-lg">
                 <h4 className="font-medium text-green-800 dark:text-green-200">
                   ✅ Limpeza Concluída
                 </h4>
                 <div className="space-y-1 text-sm">
                   <div className="flex justify-between">
-                    <span>Convites expirados:</span>
+                    <span className="text-gray-950">Convites expirados:</span>
                     <Badge variant="secondary">{cleanupStats.expiredInvites}</Badge>
                   </div>
-                  <div className="flex justify-between">
+                  <div className="flex justify-between bg-zinc-950">
                     <span>Convites removidos:</span>
                     <Badge variant="secondary">{cleanupStats.deletedInvites}</Badge>
                   </div>
-                  <div className="flex justify-between">
+                  <div className="flex justify-between bg-zinc-950">
                     <span>Timestamp:</span>
-                    <span className="text-xs text-muted-foreground">
+                    <span className="text-xs font-normal text-zinc-950">
                       {new Date(cleanupStats.cleanupTimestamp).toLocaleString()}
                     </span>
                   </div>
                 </div>
-              </div>
-            )}
+              </div>}
           </CardContent>
         </Card>
 
@@ -193,28 +159,18 @@ export const AdminToolsTab: React.FC<AdminToolsTabProps> = ({ onRefresh }) => {
               </div>
             </div>
             
-            <Button 
-              onClick={handleResetAnalytics}
-              disabled={isResetting}
-              className="w-full"
-              variant="outline"
-            >
-              {isResetting ? (
-                <>
+            <Button onClick={handleResetAnalytics} disabled={isResetting} className="w-full" variant="outline">
+              {isResetting ? <>
                   <LoadingSpinner className="mr-2 h-4 w-4" />
                   Resetando...
-                </>
-              ) : (
-                <>
+                </> : <>
                   <BarChart3 className="mr-2 h-4 w-4" />
                   Resetar Analytics
-                </>
-              )}
+                </>}
             </Button>
 
             {/* Resultados do Reset */}
-            {resetStats && showDetails === 'analytics' && (
-              <div className="space-y-3 p-3 bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+            {resetStats && showDetails === 'analytics' && <div className="space-y-3 p-3 bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-lg">
                 <h4 className="font-medium text-blue-800 dark:text-blue-200">
                   ✅ Reset Concluído
                 </h4>
@@ -241,8 +197,7 @@ export const AdminToolsTab: React.FC<AdminToolsTabProps> = ({ onRefresh }) => {
                     </span>
                   </div>
                 </div>
-              </div>
-            )}
+              </div>}
           </CardContent>
         </Card>
       </div>
@@ -278,6 +233,5 @@ export const AdminToolsTab: React.FC<AdminToolsTabProps> = ({ onRefresh }) => {
           </div>
         </CardContent>
       </Card>
-    </div>
-  );
+    </div>;
 };
