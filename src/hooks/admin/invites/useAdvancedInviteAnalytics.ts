@@ -111,12 +111,12 @@ export const useAdvancedInviteAnalytics = (timeRange: string = '30d') => {
           startDate.setDate(now.getDate() - 30);
       }
 
-      // Buscar dados dos convites
+      // Buscar dados dos convites com roles
       const { data: invites, error: invitesError } = await supabase
         .from('invites')
         .select(`
           id, email, created_at, used_at, role_id,
-          user_roles!inner(name),
+          user_roles(id, name),
           invite_deliveries(*)
         `)
         .gte('created_at', startDate.toISOString());
@@ -175,13 +175,20 @@ export const useAdvancedInviteAnalytics = (timeRange: string = '30d') => {
       const whatsappConversion = whatsappDeliveries.length > 0 
         ? (registeredUsers / whatsappDeliveries.length) * 100 : 0;
 
-      // Segmentação por role
+      // Segmentação por role - corrigindo o acesso aos dados
       const roleStats = new Map();
       invites?.forEach(invite => {
-        const roleName = invite.user_roles?.name || 'Unknown';
+        // Corrigir acesso ao user_roles - pode ser array ou objeto
+        const roleData = Array.isArray(invite.user_roles) 
+          ? invite.user_roles[0] 
+          : invite.user_roles;
+        
+        const roleName = roleData?.name || 'Unknown';
+        const roleId = invite.role_id;
+        
         if (!roleStats.has(roleName)) {
           roleStats.set(roleName, {
-            roleId: invite.role_id,
+            roleId,
             roleName,
             totalInvites: 0,
             conversions: 0,

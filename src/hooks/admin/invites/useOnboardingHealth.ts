@@ -53,7 +53,7 @@ export const useOnboardingHealth = () => {
     try {
       setLoading(true);
       
-      // Buscar dados de onboarding
+      // Buscar dados de onboarding com profiles
       const { data: onboardingData, error: onboardingError } = await supabase
         .from('onboarding_final')
         .select(`
@@ -64,7 +64,7 @@ export const useOnboardingHealth = () => {
           completed_at,
           created_at,
           updated_at,
-          profiles!inner(id, email, name)
+          profiles(id, email, name)
         `);
 
       if (onboardingError) throw onboardingError;
@@ -100,17 +100,22 @@ export const useOnboardingHealth = () => {
         { stage: 'personalization', users: completed, avgTimeSpent: 0.7 }
       ];
 
-      // Identificar usuários presos
+      // Identificar usuários presos - corrigindo o acesso aos dados do profiles
       const stuckUsers = onboardingData
         ?.filter(o => !o.is_completed)
         .map(o => {
           const lastActivity = new Date(o.updated_at);
           const daysStuck = Math.floor((Date.now() - lastActivity.getTime()) / (1000 * 60 * 60 * 24));
           
+          // Corrigir acesso ao profiles - pode ser array ou objeto
+          const profileData = Array.isArray(o.profiles) 
+            ? o.profiles[0] 
+            : o.profiles;
+          
           return {
             id: o.user_id,
-            email: o.profiles.email,
-            name: o.profiles.name,
+            email: profileData?.email || 'Email não disponível',
+            name: profileData?.name || undefined,
             currentStage: `step_${o.current_step}`,
             lastActivity: o.updated_at,
             daysStuck
