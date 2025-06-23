@@ -1,251 +1,184 @@
 
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState, useCallback, ReactNode } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
-import { UserProfile } from '@/lib/supabase';
 import { useAuthMethods } from './hooks/useAuthMethods';
+import { toast } from 'sonner';
 
-const AuthContext = createContext<{
+export interface Profile {
+  id: string;
+  email?: string;
+  name?: string;
+  role?: string;
+  onboarding_completed?: boolean;
+  avatar_url?: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface AuthContextType {
   user: User | null;
+  profile: Profile | null;
   session: Session | null;
-  profile: UserProfile | null;
-  isAdmin: boolean;
-  isFormacao: boolean;
   isLoading: boolean;
-  authError: Error | null;
+  isAdmin: boolean;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
-  signUp: (email: string, password: string, metadata?: any) => Promise<{ error: any }>;
+  signUp: (email: string, password: string, options?: { inviteToken?: string; userData?: { name?: string } }) => Promise<{ error: any }>;
   signOut: () => Promise<{ success: boolean; error: any }>;
   signInAsMember: (email: string, password: string) => Promise<{ error: any }>;
   signInAsAdmin: (email: string, password: string) => Promise<{ error: any }>;
-  setUser: (user: User | null) => void;
-  setSession: (session: Session | null) => void;
-  setProfile: (profile: UserProfile | null) => void;
-  setIsLoading: (loading: boolean) => void;
-} | undefined>(undefined);
-
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
-};
-
-interface AuthProviderProps {
-  children: React.ReactNode;
+  refreshProfile: () => Promise<void>;
 }
 
-export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+interface AuthProviderProps {
+  children: ReactNode;
+}
+
+export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [user, setUser] = useState<User | null>(null);
+  const [profile, setProfile] = useState<Profile | null>(null);
   const [session, setSession] = useState<Session | null>(null);
-  const [profile, setProfile] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [authError, setAuthError] = useState<Error | null>(null);
 
-  const { signIn, signOut, signInAsMember, signInAsAdmin } = useAuthMethods({
-    setIsLoading,
-  });
-
-  // Função signUp adicionada
-  const signUp = async (email: string, password: string, metadata?: any) => {
+  // Função para carregar perfil do usuário com tratamento robusto de erros
+  const loadUserProfile = useCallback(async (userId: string) => {
     try {
-      setIsLoading(true);
-      const redirectUrl = `${window.location.origin}/`;
+      console.log('[AUTH-CONTEXT] Carregando perfil do usuário:', userId);
       
-      const { error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          emailRedirectTo: redirectUrl,
-          data: metadata || {}
-        }
-      });
-      
-      return { error };
-    } catch (error: any) {
-      console.error('[AUTH] Erro no signUp:', error);
-      return { error };
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // CORREÇÃO: Verificar admin baseado na role_id do banco
-  const isAdmin = React.useMemo(() => {
-    if (!profile) return false;
-    
-    // Verificar se tem role de admin via user_roles
-    if (profile.user_roles?.name === 'admin') {
-      console.log(`[AUTH] Usuário ${profile.email} identificado como admin via role_id`);
-      return true;
-    }
-    
-    // Verificar se tem permissões de admin
-    if (profile.user_roles?.permissions?.all === true) {
-      console.log(`[AUTH] Usuário ${profile.email} identificado como admin via permissions`);
-      return true;
-    }
-    
-    console.log(`[AUTH] Usuário ${profile.email} não é admin`, {
-      role_id: profile.role_id,
-      user_roles: profile.user_roles
-    });
-    return false;
-  }, [profile]);
-
-  const isFormacao = profile?.user_roles?.name === 'formacao';
-
-  // Função para carregar perfil de forma simplificada
-  const loadUserProfile = async (userId: string) => {
-    try {
-      console.log(`[AUTH] Carregando perfil para usuário: ${userId}`);
-      
-      const { data, error } = await supabase
+      const { data: profileData, error } = await supabase
         .from('profiles')
-        .select(`
-          *,
-          user_roles:role_id (
-            id,
-            name,
-            description,
-            permissions,
-            is_system
-          )
-        `)
-        .eq('id', userId as any)
-        .single();
+        .select('*')
+        .eq('id', userId)
+        .maybeSingle();
 
       if (error) {
-        console.error('[AUTH] Erro ao carregar perfil:', error);
-        throw error;
+        console.error('[AUTH-CONTEXT] Erro ao carregar perfil:', error);
+        // Não retornar aqui - vamos criar um perfil básico
       }
 
-      if (data) {
-        const profileData = {
-          ...data as any,
-          email: (data as any).email || user?.email || '',
-        } as any;
-        
-        console.log(`[AUTH] Perfil carregado:`, {
-          email: profileData.email,
-          role_id: profileData.role_id,
-          user_roles: profileData.user_roles
-        });
-        
-        setProfile(profileData);
-      }
-    } catch (error) {
-      console.error('[AUTH] Erro ao carregar perfil:', error);
-      if (user?.email) {
-        // Perfil mínimo para usuários sem dados completos
-        setProfile({
+      // Se não há perfil ou erro, criar perfil básico baseado no user
+      if (!profileData) {
+        console.log('[AUTH-CONTEXT] Criando perfil básico para usuário sem perfil');
+        const basicProfile: Profile = {
           id: userId,
-          email: user.email,
-          name: null,
-          avatar_url: null,
-          company_name: null,
-          industry: null,
-          role_id: null,
-          role: 'member' as any,
-          created_at: new Date().toISOString(),
+          email: user?.email || '',
+          name: user?.user_metadata?.name || user?.user_metadata?.full_name || '',
           onboarding_completed: false,
-          onboarding_completed_at: null,
-        } as any);
+          created_at: new Date().toISOString()
+        };
+        setProfile(basicProfile);
+        return;
       }
+
+      console.log('[AUTH-CONTEXT] Perfil carregado com sucesso:', profileData);
+      setProfile(profileData);
+    } catch (error) {
+      console.error('[AUTH-CONTEXT] Erro inesperado ao carregar perfil:', error);
+      // Fallback: criar perfil básico
+      const fallbackProfile: Profile = {
+        id: userId,
+        email: user?.email || '',
+        name: user?.user_metadata?.name || '',
+        onboarding_completed: false
+      };
+      setProfile(fallbackProfile);
     }
-  };
+  }, [user]);
 
-  // Inicialização simplificada
-  useEffect(() => {
-    console.log('[AUTH] Inicializando autenticação');
-    
-    let mounted = true;
+  // Função para atualizar perfil
+  const refreshProfile = useCallback(async () => {
+    if (user?.id) {
+      await loadUserProfile(user.id);
+    }
+  }, [user?.id, loadUserProfile]);
 
-    const initializeAuth = async () => {
-      try {
-        // 1. Buscar sessão atual
-        const { data: { session }, error } = await supabase.auth.getSession();
-        
-        if (error) {
-          console.error('[AUTH] Erro ao buscar sessão:', error);
-          setAuthError(error);
-        }
+  // Hook para métodos de autenticação
+  const authMethods = useAuthMethods({ setIsLoading });
 
-        if (!mounted) return;
-
-        // 2. Atualizar estados da sessão
-        setSession(session);
-        setUser(session?.user || null);
-
-        // 3. Se há usuário, carregar perfil
-        if (session?.user) {
-          await loadUserProfile(session.user.id);
-        }
-
-        // 4. Marcar como carregado apenas no final
-        if (mounted) {
-          setIsLoading(false);
-        }
-      } catch (error) {
-        console.error('[AUTH] Erro na inicialização:', error);
-        if (mounted) {
-          setAuthError(error as Error);
-          setIsLoading(false);
-        }
+  // Função signUp atualizada para processar convites
+  const signUp = useCallback(async (
+    email: string, 
+    password: string, 
+    options?: { inviteToken?: string; userData?: { name?: string } }
+  ) => {
+    try {
+      console.log('[AUTH-CONTEXT] Iniciando signup com opções:', !!options?.inviteToken);
+      
+      // Usar o método atualizado que já processa convites
+      const result = await authMethods.signUp(email, password, options);
+      
+      if (!result.error) {
+        console.log('[AUTH-CONTEXT] Signup realizado com sucesso');
+        // O perfil será carregado automaticamente pelo listener de auth
       }
-    };
+      
+      return result;
+    } catch (error) {
+      console.error('[AUTH-CONTEXT] Erro no signup:', error);
+      return { error };
+    }
+  }, [authMethods]);
 
-    // Configurar listener de mudanças de auth
+  // Listener de mudanças de autenticação
+  useEffect(() => {
+    console.log('[AUTH-CONTEXT] Configurando listener de autenticação');
+    
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        console.log(`[AUTH] Evento: ${event}`);
+        console.log('[AUTH-CONTEXT] Evento de auth:', event, !!session);
         
-        if (!mounted) return;
-
         setSession(session);
-        setUser(session?.user || null);
+        setUser(session?.user ?? null);
         
-        if (event === 'SIGNED_IN' && session?.user) {
-          // Defer para evitar deadlocks
+        if (session?.user) {
+          // Carregar perfil após definir o usuário
           setTimeout(() => {
-            if (mounted) {
-              loadUserProfile(session.user.id);
-            }
+            loadUserProfile(session.user.id);
           }, 0);
-        } else if (event === 'SIGNED_OUT') {
+        } else {
           setProfile(null);
-          setAuthError(null);
         }
+        
+        setIsLoading(false);
       }
     );
 
-    // Inicializar
-    initializeAuth();
+    // Verificar sessão inicial
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log('[AUTH-CONTEXT] Sessão inicial:', !!session);
+      setSession(session);
+      setUser(session?.user ?? null);
+      
+      if (session?.user) {
+        loadUserProfile(session.user.id);
+      } else {
+        setIsLoading(false);
+      }
+    });
 
     return () => {
-      mounted = false;
+      console.log('[AUTH-CONTEXT] Limpando listener de autenticação');
       subscription.unsubscribe();
     };
-  }, []);
+  }, [loadUserProfile]);
 
-  const value = {
+  // Calcular se é admin baseado no perfil
+  const isAdmin = profile?.role === 'admin' || false;
+
+  const value: AuthContextType = {
     user,
-    session,
     profile,
-    isAdmin,
-    isFormacao,
+    session,
     isLoading,
-    authError,
-    signIn,
+    isAdmin,
+    signIn: authMethods.signIn,
     signUp,
-    signOut,
-    signInAsMember,
-    signInAsAdmin,
-    setUser,
-    setSession,
-    setProfile,
-    setIsLoading,
+    signOut: authMethods.signOut,
+    signInAsMember: authMethods.signInAsMember,
+    signInAsAdmin: authMethods.signInAsAdmin,
+    refreshProfile
   };
 
   return (
@@ -253,4 +186,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       {children}
     </AuthContext.Provider>
   );
+};
+
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (context === undefined) {
+    throw new Error('useAuth deve ser usado dentro de um AuthProvider');
+  }
+  return context;
 };

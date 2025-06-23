@@ -19,32 +19,28 @@ type InitializationState = 'idle' | 'loading' | 'ready' | 'error';
 export const OnboardingWizardContainer = ({ children }: OnboardingWizardContainerProps) => {
   const [searchParams] = useSearchParams();
   const [initializationState, setInitializationState] = useState<InitializationState>('idle');
+  const [retryCount, setRetryCount] = useState(0);
+  const maxRetries = 3;
   
   const { cleanupForInvite } = useOnboardingCleanup();
   
-  // CORREÇÃO 1: Obter token de múltiplas fontes
+  // Obter token de múltiplas fontes com priorização
   const inviteToken = useMemo(() => {
     // 1. URL params tem prioridade
     const urlToken = searchParams.get('token');
     if (urlToken) {
-      console.log('[WIZARD-CONTAINER] Token encontrado na URL');
+      console.log('[WIZARD-CONTAINER] Token encontrado na URL:', urlToken.substring(0, 8) + '...');
       return urlToken;
     }
     
     // 2. Fallback para token armazenado
     const storedToken = InviteTokenManager.getStoredToken();
     if (storedToken) {
-      console.log('[WIZARD-CONTAINER] Token encontrado no storage');
+      console.log('[WIZARD-CONTAINER] Token encontrado no storage:', storedToken.substring(0, 8) + '...');
       return storedToken;
     }
     
-    // 3. Tentar obter do manager geral
-    const managerToken = InviteTokenManager.getToken();
-    if (managerToken) {
-      console.log('[WIZARD-CONTAINER] Token encontrado via manager');
-      return managerToken;
-    }
-    
+    console.log('[WIZARD-CONTAINER] Nenhum token encontrado');
     return null;
   }, [searchParams]);
 
@@ -58,17 +54,18 @@ export const OnboardingWizardContainer = ({ children }: OnboardingWizardContaine
   // Memoizar o memberType para evitar re-renders
   const memberType = useMemo(() => cleanData.memberType || 'club', [cleanData.memberType]);
   
-  // CORREÇÃO: Inicialização melhorada com suporte a token
+  // Inicialização simplificada e robusta
   useEffect(() => {
     let isCancelled = false;
 
-    const setupOnboarding = async () => {
-      try {
-        if (initializationState !== 'idle') {
-          return;
-        }
+    const initializeOnboarding = async () => {
+      // Evitar re-inicialização desnecessária
+      if (initializationState === 'ready' || initializationState === 'loading') {
+        return;
+      }
 
-        console.log('[WIZARD-CONTAINER] Iniciando configuração com token:', inviteToken);
+      try {
+        console.log('[WIZARD-CONTAINER] Iniciando inicialização - Tentativa', retryCount + 1);
         setInitializationState('loading');
         
         // Se há token, armazenar para garantir persistência
@@ -81,49 +78,78 @@ export const OnboardingWizardContainer = ({ children }: OnboardingWizardContaine
         // Aguardar carregamento do convite se necessário
         if (inviteToken && isInviteLoading) {
           console.log('[WIZARD-CONTAINER] Aguardando carregamento do convite...');
-          return;
+          return; // Sair e aguardar próxima execução
         }
 
+        // Inicializar dados limpos
         if (!isCancelled) {
           await initializeCleanData();
           setInitializationState('ready');
-          console.log('[WIZARD-CONTAINER] Configuração concluída:', {
+          setRetryCount(0); // Reset counter on success
+          
+          console.log('[WIZARD-CONTAINER] Inicialização concluída com sucesso:', {
             hasToken: !!inviteToken,
             memberType: cleanData.memberType,
-            email: cleanData.email
+            email: cleanData.email,
+            name: cleanData.name
           });
         }
       } catch (error) {
-        console.error('[WIZARD-CONTAINER] Erro na configuração:', error);
+        console.error('[WIZARD-CONTAINER] Erro na inicialização:', error);
+        
         if (!isCancelled) {
-          setInitializationState('error');
+          if (retryCount < maxRetries) {
+            console.warn(`[WIZARD-CONTAINER] Tentando novamente em 1s (${retryCount + 1}/${maxRetries})`);
+            setRetryCount(prev => prev + 1);
+            setTimeout(() => {
+              if (!isCancelled) {
+                setInitializationState('idle'); // Trigger retry
+              }
+            }, 1000);
+          } else {
+            console.error('[WIZARD-CONTAINER] Máximo de tentativas atingido');
+            setInitializationState('error');
+          }
         }
       }
     };
 
-    setupOnboarding();
+    initializeOnboarding();
 
     return () => {
       isCancelled = true;
     };
-  }, [inviteToken, isInviteLoading, initializationState, initializeCleanData, cleanupForInvite]);
+  }, [inviteToken, isInviteLoading, initializationState, initializeCleanData, cleanupForInvite, retryCount, maxRetries, cleanData.memberType, cleanData.email, cleanData.name]);
 
-  // Estado de loading melhorado
+  // Estado de loading melhorado e mais preciso
   const isLoading = useMemo(() => {
-    if (initializationState === 'loading') return true;
-    if (initializationState === 'idle') return true;
-    if (inviteToken && isInviteLoading) return true;
-    if (initializationState === 'error') return false;
+    // Estados que indicam loading
+    if (initializationState === 'loading' || initializationState === 'idle') {
+      return true;
+    }
     
+    // Se tem token e ainda está carregando convite
+    if (inviteToken && isInviteLoading) {
+      return true;
+    }
+    
+    // Se já deu erro, não está mais loading
+    if (initializationState === 'error') {
+      return false;
+    }
+    
+    // Verificar se tem dados mínimos necessários
     const hasMinimalData = cleanData.memberType && (cleanData.email || cleanData.name);
-    if (!hasMinimalData && initializationState !== 'ready') return true;
+    if (!hasMinimalData && initializationState !== 'ready') {
+      return true;
+    }
     
     return false;
   }, [initializationState, inviteToken, isInviteLoading, cleanData]);
 
   // Memoizar updateData para evitar re-criação
   const memoizedUpdateData = useCallback((newData: any) => {
-    // CORREÇÃO: Preservar token nos dados se presente
+    // Preservar token nos dados se presente
     const dataWithToken = inviteToken ? { ...newData, inviteToken } : newData;
     updateData(dataWithToken);
   }, [updateData, inviteToken]);
@@ -134,16 +160,21 @@ export const OnboardingWizardContainer = ({ children }: OnboardingWizardContaine
     memberType
   });
 
-  // Se houver erro de inicialização, mostrar estado de erro
+  // Estado de erro com opção de retry
   if (initializationState === 'error') {
     return (
       <div className="min-h-screen bg-gradient-to-br from-[#0F111A] to-[#151823] flex items-center justify-center">
-        <div className="text-center text-white">
+        <div className="text-center text-white max-w-md">
           <h2 className="text-xl font-semibold mb-2">Erro na Inicialização</h2>
-          <p className="text-neutral-300">Não foi possível carregar os dados do onboarding.</p>
+          <p className="text-neutral-300 mb-4">
+            Não foi possível carregar os dados do onboarding após {maxRetries} tentativas.
+          </p>
           <button 
-            onClick={() => setInitializationState('idle')} 
-            className="mt-4 px-4 py-2 bg-viverblue rounded text-white hover:bg-viverblue/90"
+            onClick={() => {
+              setRetryCount(0);
+              setInitializationState('idle');
+            }}
+            className="px-4 py-2 bg-viverblue rounded text-white hover:bg-viverblue/90 transition-colors"
           >
             Tentar Novamente
           </button>

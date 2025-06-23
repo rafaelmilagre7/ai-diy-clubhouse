@@ -8,11 +8,20 @@ export const useOnboardingRequired = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isRequired, setIsRequired] = useState(false);
   const [hasCompleted, setHasCompleted] = useState(false);
+  const [error, setError] = useState<string>('');
 
   useEffect(() => {
     const checkOnboardingRequirement = async () => {
-      if (authLoading || !user) {
+      if (authLoading) {
         setIsLoading(true);
+        return;
+      }
+
+      if (!user) {
+        console.log('[ONBOARDING-REQUIRED] Sem usuário - onboarding não aplicável');
+        setIsLoading(false);
+        setIsRequired(false);
+        setHasCompleted(false);
         return;
       }
 
@@ -25,9 +34,10 @@ export const useOnboardingRequired = () => {
         console.log('[ONBOARDING-REQUIRED] Status do onboarding:', {
           userId: user.id,
           email: user.email,
+          profileExists: !!profile,
           profileOnboardingCompleted: profile?.onboarding_completed,
           onboardingCompleted,
-          userRole: getUserRoleName(profile)
+          userRole: getUserRoleName ? getUserRoleName(profile) : 'N/A'
         });
 
         // Se onboarding foi completado, não é necessário
@@ -35,17 +45,28 @@ export const useOnboardingRequired = () => {
           console.log('[ONBOARDING-REQUIRED] Onboarding não necessário - já completado');
           setIsRequired(false);
           setHasCompleted(true);
+          setError('');
         } else {
           console.log('[ONBOARDING-REQUIRED] Onboarding OBRIGATÓRIO - não completado');
           setIsRequired(true);
           setHasCompleted(false);
+          setError('');
         }
         
-      } catch (error) {
-        console.error('[ONBOARDING-REQUIRED] Erro ao verificar necessidade de onboarding:', error);
+      } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : 'Erro ao verificar onboarding';
+        console.error('[ONBOARDING-REQUIRED] Erro ao verificar necessidade de onboarding:', err);
+        setError(errorMessage);
+        
         // SEGURANÇA: Em caso de erro, assumir que precisa fazer onboarding
-        setIsRequired(true);
-        setHasCompleted(false);
+        // A menos que o perfil claramente indique que foi completado
+        if (profile?.onboarding_completed === true) {
+          setIsRequired(false);
+          setHasCompleted(true);
+        } else {
+          setIsRequired(true);
+          setHasCompleted(false);
+        }
       } finally {
         setIsLoading(false);
       }
@@ -58,6 +79,7 @@ export const useOnboardingRequired = () => {
     isLoading,
     isRequired,
     hasCompleted,
+    error: !!error,
     userId: user?.id,
     profileOnboardingCompleted: profile?.onboarding_completed
   });
@@ -65,6 +87,7 @@ export const useOnboardingRequired = () => {
   return {
     isRequired,
     hasCompleted,
-    isLoading
+    isLoading,
+    error
   };
 };
