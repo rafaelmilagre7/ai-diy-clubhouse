@@ -1,7 +1,7 @@
 
 /**
- * Gerenciador simples de tokens de convite
- * UMA ÚNICA FONTE DE VERDADE
+ * MELHORADO: Gerenciador robusto de tokens de convite
+ * UMA ÚNICA FONTE DE VERDADE com limpeza consolidada
  */
 export class InviteTokenManager {
   private static readonly TOKEN_KEY = 'viver_invite_token';
@@ -17,7 +17,7 @@ export class InviteTokenManager {
       if (typeof window !== 'undefined' && window.localStorage) {
         localStorage.setItem(this.TOKEN_KEY, token);
         localStorage.setItem(this.EXPIRY_KEY, expiryTime.toString());
-        console.log('[TOKEN-MANAGER] Token armazenado');
+        console.log('[TOKEN-MANAGER] Token armazenado com segurança');
       }
     } catch (error) {
       console.error('[TOKEN-MANAGER] Erro ao armazenar token:', error);
@@ -51,7 +51,7 @@ export class InviteTokenManager {
 
         // Verificar se não expirou
         if (Date.now() > parseInt(expiry)) {
-          console.log('[TOKEN-MANAGER] Token expirado, removendo');
+          console.log('[TOKEN-MANAGER] Token expirado, limpando automaticamente');
           this.clearToken();
           return null;
         }
@@ -75,17 +75,41 @@ export class InviteTokenManager {
   }
 
   /**
-   * Limpar token armazenado
+   * MELHORIA 4: Limpeza consolidada e robusta
    */
   static clearToken(): void {
     try {
       if (typeof window !== 'undefined' && window.localStorage) {
         localStorage.removeItem(this.TOKEN_KEY);
         localStorage.removeItem(this.EXPIRY_KEY);
-        console.log('[TOKEN-MANAGER] Token limpo');
+        console.log('[TOKEN-MANAGER] Token limpo completamente');
       }
     } catch (error) {
       console.error('[TOKEN-MANAGER] Erro ao limpar token:', error);
     }
+  }
+
+  /**
+   * MELHORIA 4: Limpeza específica para sucesso no fluxo
+   */
+  static clearTokenOnSuccess(): void {
+    console.log('[TOKEN-MANAGER] Limpando token após sucesso no fluxo');
+    this.clearToken();
+  }
+
+  /**
+   * MELHORIA 4: Limpeza específica para erro no fluxo
+   */
+  static clearTokenOnError(): void {
+    console.log('[TOKEN-MANAGER] Limpando token após erro no fluxo');
+    this.clearToken();
+  }
+
+  /**
+   * MELHORIA 4: Limpeza específica para logout
+   */
+  static clearTokenOnLogout(): void {
+    console.log('[TOKEN-MANAGER] Limpando token no logout');
+    this.clearToken();
   }
 }

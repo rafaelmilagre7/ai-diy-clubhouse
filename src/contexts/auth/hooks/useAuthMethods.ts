@@ -50,7 +50,7 @@ export const useAuthMethods = ({ setIsLoading }: AuthMethodsParams) => {
     }
   };
 
-  // SignUp SIMPLIFICADO - validação direta
+  // SignUp ROBUSTO com validação melhorada
   const signUp = async (
     email: string, 
     password: string, 
@@ -59,13 +59,13 @@ export const useAuthMethods = ({ setIsLoading }: AuthMethodsParams) => {
     try {
       setIsLoading(true);
       console.log('[AUTH-METHODS] Iniciando signup:', {
-        email,
+        email: email.toLowerCase(), // MELHORIA 3: Normalizar email
         hasInviteToken: !!options.inviteToken,
         userName: options.userData?.name
       });
 
       const { data, error } = await supabase.auth.signUp({
-        email,
+        email: email.toLowerCase(), // MELHORIA 3: Normalizar email
         password,
         options: {
           data: {
@@ -89,9 +89,17 @@ export const useAuthMethods = ({ setIsLoading }: AuthMethodsParams) => {
 
       console.log('[AUTH-METHODS] Usuário criado:', data.user.email);
 
-      // PROCESSAR CONVITE - validação direta sem try/catch aninhado
+      // PROCESSAR CONVITE com validação robusta
       if (options.inviteToken) {
         console.log('[AUTH-METHODS] Processando convite');
+        
+        // MELHORIA 5: Validação do token antes do processamento
+        if (options.inviteToken.length < 10) {
+          const tokenError = new Error('Token de convite inválido');
+          console.error('[AUTH-METHODS] Token inválido');
+          toast.error('Token de convite inválido');
+          return { error: tokenError };
+        }
         
         const { data: inviteResult, error: inviteError } = await supabase.rpc(
           'complete_invite_registration',
@@ -106,13 +114,18 @@ export const useAuthMethods = ({ setIsLoading }: AuthMethodsParams) => {
           const errorMessage = inviteError?.message || inviteResult?.message || 'Erro ao processar convite';
           console.error('[AUTH-METHODS] Erro no convite:', errorMessage);
           toast.error('Erro ao processar convite: ' + errorMessage);
+          
+          // MELHORIA 4: Usar limpeza específica para erro
+          InviteTokenManager.clearTokenOnError();
           return { error: new Error(errorMessage) };
         }
 
         // Sucesso no convite
         console.log('[AUTH-METHODS] Convite processado com sucesso');
         toast.success('Conta criada e convite aceito com sucesso!');
-        InviteTokenManager.clearToken();
+        
+        // MELHORIA 4: Usar limpeza específica para sucesso
+        InviteTokenManager.clearTokenOnSuccess();
       } else {
         toast.success('Conta criada com sucesso!');
       }
@@ -122,6 +135,12 @@ export const useAuthMethods = ({ setIsLoading }: AuthMethodsParams) => {
       const error = err instanceof Error ? err : new Error('Erro inesperado');
       console.error('[AUTH-METHODS] Erro inesperado no signup:', error);
       toast.error('Erro inesperado: ' + error.message);
+      
+      // MELHORIA 4: Limpar token em caso de erro inesperado
+      if (options.inviteToken) {
+        InviteTokenManager.clearTokenOnError();
+      }
+      
       return { error };
     } finally {
       setIsLoading(false);
@@ -131,6 +150,9 @@ export const useAuthMethods = ({ setIsLoading }: AuthMethodsParams) => {
   const signOut = async () => {
     try {
       setIsLoading(true);
+      
+      // MELHORIA 4: Limpar token no logout
+      InviteTokenManager.clearTokenOnLogout();
       
       const { error } = await supabase.auth.signOut();
       

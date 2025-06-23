@@ -34,6 +34,9 @@ const InviteAcceptPage = () => {
     if (result.success) {
       toast.success(result.message);
       
+      // MELHORIA 4: Usar limpeza específica para sucesso
+      InviteTokenManager.clearTokenOnSuccess();
+      
       redirect({
         requiresOnboarding: result.requiresOnboarding,
         fromInvite: true,
@@ -63,7 +66,8 @@ const InviteAcceptPage = () => {
       
       return result;
     } else {
-      InviteTokenManager.clearToken();
+      // MELHORIA 4: Usar limpeza específica para erro
+      InviteTokenManager.clearTokenOnError();
       toast.error(result.message);
       return result;
     }
@@ -93,16 +97,16 @@ const InviteAcceptPage = () => {
     );
   }
 
-  // Usuário já logado - verificação melhorada
+  // Usuário já logado - verificação melhorada com normalização
   if (user) {
-    const userEmail = user.email || '';
-    const inviteEmail = inviteDetails.email;
+    const userEmail = (user.email || '').toLowerCase(); // MELHORIA 3: Normalizar
+    const inviteEmail = inviteDetails.email.toLowerCase(); // MELHORIA 3: Normalizar
     
-    // Verificar se o email confere
-    if (userEmail.toLowerCase() !== inviteEmail.toLowerCase()) {
+    // Verificar se o email confere (case-insensitive)
+    if (userEmail !== inviteEmail) {
       return (
         <InviteErrorScreen
-          error={`Este convite foi enviado para ${inviteEmail}, mas você está logado como ${userEmail}. Faça login com a conta correta.`}
+          error={`Este convite foi enviado para ${inviteDetails.email}, mas você está logado como ${user.email}. Faça login com a conta correta.`}
           showRequestNewInvite={false}
         />
       );
