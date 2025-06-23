@@ -13,42 +13,40 @@ const RootRedirect = () => {
     hasProfile: !!profile,
     authLoading,
     onboardingLoading,
-    onboardingRequired,
-    userEmail: user?.email,
-    profileOnboardingCompleted: profile?.onboarding_completed
+    onboardingRequired
   });
   
-  // Aguardar o carregamento completo de auth e onboarding
+  // Loading simples - sem verificações complexas
   if (authLoading || onboardingLoading) {
     return <LoadingScreen message="Verificando seu acesso..." />;
   }
   
-  // Se não há usuário, ir para login
+  // Sem usuário = login
   if (!user) {
     console.log("[ROOT-REDIRECT] Sem usuário -> login");
     return <Navigate to="/login" replace />;
   }
   
-  // Se há usuário mas ainda não carregou perfil, aguardar
+  // Sem perfil = aguardar (mas sem complexidade)
   if (user && !profile) {
-    console.log("[ROOT-REDIRECT] Usuário sem perfil, aguardando...");
+    console.log("[ROOT-REDIRECT] Aguardando perfil...");
     return <LoadingScreen message="Carregando perfil..." />;
   }
   
-  // LÓGICA CRÍTICA: FORÇAR onboarding para TODOS que não completaram
+  // Onboarding obrigatório = onboarding
   if (onboardingRequired) {
-    console.log("[ROOT-REDIRECT] ONBOARDING OBRIGATÓRIO -> /onboarding");
+    console.log("[ROOT-REDIRECT] Onboarding obrigatório -> /onboarding");
     return <Navigate to="/onboarding" replace />;
   }
   
-  // Apenas depois de completar onboarding, redirecionar para áreas da plataforma
+  // Formação = área específica
   if (profile?.user_roles?.name === 'formacao') {
-    console.log("[ROOT-REDIRECT] Formação com onboarding completo -> /formacao");
+    console.log("[ROOT-REDIRECT] Formação -> /formacao");
     return <Navigate to="/formacao" replace />;
   }
   
-  // Padrão -> dashboard (apenas se onboarding foi completado)
-  console.log("[ROOT-REDIRECT] Usuário com onboarding completo -> dashboard");
+  // Padrão = dashboard
+  console.log("[ROOT-REDIRECT] Dashboard padrão");
   return <Navigate to="/dashboard" replace />;
 };
 

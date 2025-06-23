@@ -9,7 +9,7 @@ import { InviteTokenManager } from "@/utils/inviteTokenManager";
 
 interface ProtectedRoutesProps {
   children: ReactNode;
-  allowInviteFlow?: boolean; // CORREÇÃO 4: Nova prop para permitir fluxo de convite
+  allowInviteFlow?: boolean;
 }
 
 export const ProtectedRoutes = ({ children, allowInviteFlow = false }: ProtectedRoutesProps) => {
@@ -17,7 +17,7 @@ export const ProtectedRoutes = ({ children, allowInviteFlow = false }: Protected
   const { user, isLoading: authLoading } = useAuth();
   const { isRequired: onboardingRequired, isLoading: onboardingLoading } = useOnboardingRequired();
 
-  // CORREÇÃO 4: Detectar se usuário está em fluxo de convite
+  // Detecção simples de fluxo de convite
   const isInInviteFlow = InviteTokenManager.hasStoredToken() || 
                         new URLSearchParams(location.search).has('token') ||
                         location.pathname.includes('/invite');
@@ -29,22 +29,22 @@ export const ProtectedRoutes = ({ children, allowInviteFlow = false }: Protected
     onboardingLoading,
     onboardingRequired,
     allowInviteFlow,
-    isInInviteFlow,
-    hasStoredToken: InviteTokenManager.hasStoredToken()
+    isInInviteFlow
   });
   
+  // Loading simples
   if (authLoading || onboardingLoading) {
     return <LoadingScreen message="Verificando credenciais..." />;
   }
 
-  // Se não há usuário autenticado, redirecionar para login
+  // Sem usuário = login
   if (!user) {
     return <Navigate to="/login" state={{ from: location.pathname }} replace />;
   }
 
-  // CORREÇÃO 4: Lógica especial para fluxo de convites
+  // Permitir fluxo de convite se configurado
   if (allowInviteFlow && isInInviteFlow) {
-    console.log("[PROTECTED-ROUTES] Permitindo acesso por fluxo de convite");
+    console.log("[PROTECTED-ROUTES] Fluxo de convite permitido");
     return (
       <SecurityProvider>
         {children}
@@ -52,11 +52,11 @@ export const ProtectedRoutes = ({ children, allowInviteFlow = false }: Protected
     );
   }
 
-  // PROTEÇÃO CRÍTICA: Se onboarding é obrigatório e não estamos na rota de onboarding
+  // Onboarding obrigatório (exceto se já estiver na rota)
   if (onboardingRequired && location.pathname !== '/onboarding') {
-    console.log("[PROTECTED-ROUTES] Onboarding obrigatório - redirecionando");
+    console.log("[PROTECTED-ROUTES] Redirecionando para onboarding");
     
-    // CORREÇÃO 4: Preservar token se estiver em fluxo de convite
+    // Preservar token se em fluxo de convite
     if (isInInviteFlow) {
       const currentToken = new URLSearchParams(location.search).get('token') || 
                           InviteTokenManager.getStoredToken();
@@ -70,7 +70,7 @@ export const ProtectedRoutes = ({ children, allowInviteFlow = false }: Protected
     return <Navigate to="/onboarding" replace />;
   }
 
-  // Usuário autenticado e onboarding ok - renderizar conteúdo protegido
+  // Renderizar conteúdo protegido
   return (
     <SecurityProvider>
       {children}

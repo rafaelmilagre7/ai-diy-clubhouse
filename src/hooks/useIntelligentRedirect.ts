@@ -12,7 +12,7 @@ interface RedirectOptions {
 
 export const useIntelligentRedirect = () => {
   const navigate = useNavigate();
-  const { user, profile } = useAuth();
+  const { user } = useAuth();
 
   const redirect = useCallback((options: RedirectOptions = {}) => {
     const {
@@ -21,41 +21,29 @@ export const useIntelligentRedirect = () => {
       preserveToken = false
     } = options;
 
-    console.log('[INTELLIGENT-REDIRECT] Processando redirecionamento:', {
+    console.log('[INTELLIGENT-REDIRECT] Redirecionando:', {
       userId: user?.id,
       requiresOnboarding,
       fromInvite,
-      preserveToken,
-      hasStoredToken: InviteTokenManager.hasStoredToken()
+      preserveToken
     });
 
-    // Se precisa preservar token, armazenar antes do redirecionamento
+    // Preservar token se necessário
     if (preserveToken && fromInvite) {
       const currentToken = new URLSearchParams(window.location.search).get('token');
       if (currentToken) {
         InviteTokenManager.storeToken(currentToken);
-        console.log('[INTELLIGENT-REDIRECT] Token preservado para uso posterior');
       }
     }
 
-    // Determinar destino baseado no estado
+    // Redirecionamento direto e simples
     if (requiresOnboarding) {
       const storedToken = InviteTokenManager.getStoredToken();
-      
-      if (storedToken) {
-        console.log('[INTELLIGENT-REDIRECT] Redirecionando para onboarding com token preservado');
-        navigate(`/onboarding?token=${storedToken}`);
-        // NÃO limpar o token aqui - deixar o onboarding gerenciar
-      } else {
-        console.log('[INTELLIGENT-REDIRECT] Redirecionando para onboarding sem token');
-        navigate('/onboarding');
-      }
+      const destination = storedToken ? `/onboarding?token=${storedToken}` : '/onboarding';
+      navigate(destination);
     } else {
-      console.log('[INTELLIGENT-REDIRECT] Redirecionando para dashboard');
-      // Só limpar o token se não precisar mais dele
-      if (!requiresOnboarding) {
-        InviteTokenManager.clearToken();
-      }
+      // Limpar token se não precisar mais
+      InviteTokenManager.clearToken();
       navigate('/dashboard');
     }
   }, [navigate, user]);
