@@ -20,27 +20,45 @@ import { type CreateInviteParams } from '@/hooks/admin/invites/types';
 const InvitesManagement = () => {
   const [open, setOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('convites');
-  const { invites, loading, fetchInvites, createInvite, isCreating, deleteInvite, resendInvite } = useInvites();
-  const { prefetchInviteData, invalidateInviteData } = useInviteCache();
+  const { 
+    invites, 
+    loading, 
+    fetchInvites, 
+    createInvite, 
+    isCreating, 
+    deleteInvite, 
+    resendInvite,
+    realtimeConnected,
+    prefetchCriticalData
+  } = useInvites();
+
+  const { invalidateInviteData } = useInviteCache();
 
   useEffect(() => {
+    console.log('🚀 [INVITES-MANAGEMENT] Inicializando com cache otimizado');
+    
+    // Buscar dados iniciais
     fetchInvites();
-    // Prefetch dados para melhor performance
-    prefetchInviteData();
-  }, [fetchInvites, prefetchInviteData]);
+    
+    // Pré-carregar dados críticos
+    prefetchCriticalData();
+  }, [fetchInvites, prefetchCriticalData]);
 
   const handleCreateInvite = async (params: CreateInviteParams) => {
     try {
-      console.log("🎯 InvitesManagement: Iniciando criação de convite:", params);
+      console.log("🎯 InvitesManagement: Criando convite com sistema otimizado:", params);
       
       const result = await createInvite(params);
       
       if (result?.status === 'success') {
-        toast.success('Convite criado e enviado com sucesso!');
         console.log("✅ InvitesManagement: Convite criado com sucesso");
         setOpen(false);
-        // Invalidar cache para atualizar dados
-        invalidateInviteData();
+        
+        // Toast com informações mais detalhadas
+        const channels = params.channels?.join(' e ') || 'email';
+        toast.success(`Convite enviado via ${channels}!`, {
+          description: `Convite para ${params.email} criado com sucesso`
+        });
       } else {
         toast.error(result?.message || 'Erro ao criar convite');
         console.error("❌ InvitesManagement: Falha na criação:", result?.message);
@@ -54,27 +72,33 @@ const InvitesManagement = () => {
 
   const handleDeleteInvite = async (inviteId: string) => {
     try {
+      console.log("🗑️ InvitesManagement: Deletando convite:", inviteId);
       await deleteInvite(inviteId);
-      invalidateInviteData();
+      toast.success('Convite removido com sucesso');
     } catch (error) {
-      console.error("Erro ao deletar convite:", error);
+      console.error("❌ InvitesManagement: Erro ao deletar convite:", error);
+      toast.error('Erro ao remover convite');
     }
   };
 
   const handleResendInvite = async (invite: Invite) => {
     try {
+      console.log("🔄 InvitesManagement: Reenviando convite:", invite.id);
       await resendInvite(invite);
-      invalidateInviteData();
+      toast.success('Convite reenviado com sucesso');
     } catch (error) {
-      console.error("Erro ao reenviar convite:", error);
+      console.error("❌ InvitesManagement: Erro ao reenviar convite:", error);
+      toast.error('Erro ao reenviar convite');
     }
   };
 
   const handleTabChange = (value: string) => {
     setActiveTab(value);
-    // Prefetch dados específicos da aba se necessário
+    console.log(`📋 [INVITES-MANAGEMENT] Mudando para aba: ${value}`);
+    
+    // Pré-carregar dados específicos da aba
     if (value === 'analytics' || value === 'monitoramento') {
-      prefetchInviteData();
+      prefetchCriticalData();
     }
   };
 
@@ -82,7 +106,15 @@ const InvitesManagement = () => {
     <div>
       <div className="md:flex md:items-center md:justify-between space-y-4 md:space-y-0">
         <div className="mb-4">
-          <h1 className="text-2xl font-semibold">Gerenciar Convites</h1>
+          <div className="flex items-center space-x-3">
+            <h1 className="text-2xl font-semibold">Gerenciar Convites</h1>
+            {realtimeConnected && (
+              <div className="flex items-center space-x-1 text-green-600 text-sm">
+                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                <span>Tempo Real</span>
+              </div>
+            )}
+          </div>
           <p className="text-muted-foreground">
             Sistema completo de convites com analytics avançado e monitoramento em tempo real.
           </p>

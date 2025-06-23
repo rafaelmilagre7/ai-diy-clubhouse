@@ -3,7 +3,10 @@ import { useInviteCreate } from "./invites/useInviteCreate";
 import { useInviteDelete } from "./invites/useInviteDelete";
 import { useInviteResend } from "./invites/useInviteResend";
 import { useInvitesList } from "./invites/useInvitesList";
+import { useSmartInviteCache } from "./invites/useSmartInviteCache";
+import { useRealtimeInvites } from "./invites/useRealtimeInvites";
 import type { Invite, CreateInviteParams } from "./invites/types";
+import { useEffect } from "react";
 
 export type { Invite };
 
@@ -12,64 +15,116 @@ export const useInvites = () => {
   const { createInvite: createInviteHook, loading: isCreating } = useInviteCreate();
   const { deleteInvite, isDeleting } = useInviteDelete();
   const { resendInvite, isSending } = useInviteResend();
+  
+  // Sistema de cache inteligente
+  const {
+    prefetchCriticalData,
+    updateInviteInCache,
+    addInviteToCache,
+    removeInviteFromCache,
+    invalidateAllInviteData
+  } = useSmartInviteCache({
+    prefetchOnMount: true,
+    optimisticUpdates: true
+  });
 
-  // Função atualizada para suportar todos os parâmetros do CreateInviteParams
+  // Real-time updates
+  const { isConnected: realtimeConnected } = useRealtimeInvites();
+
+  // Pré-carregar dados críticos na inicialização
+  useEffect(() => {
+    prefetchCriticalData();
+  }, [prefetchCriticalData]);
+
   const handleCreateInvite = async (params: CreateInviteParams) => {
     try {
-      console.log("🎯 useInvites: Criando convite com parâmetros completos:", params);
+      console.log("🎯 useInvites: Criando convite com cache otimizado:", params);
+
+      // Update otimista no cache
+      const optimisticInvite = {
+        id: `temp-${Date.now()}`,
+        email: params.email,
+        role_id: params.roleId,
+        notes: params.notes,
+        created_at: new Date().toISOString(),
+        expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+        used_at: null,
+        last_sent_at: null,
+        send_attempts: 0,
+        user_roles: { name: 'Carregando...', description: '' },
+        _optimistic: true
+      };
+
+      addInviteToCache(optimisticInvite);
 
       const result = await createInviteHook(params);
       
       if (result?.status === 'success') {
-        console.log("✅ useInvites: Convite criado com sucesso, atualizando lista");
+        console.log("✅ useInvites: Convite criado com sucesso, atualizando cache");
+        
+        // Invalidar cache para obter dados reais
+        await invalidateAllInviteData();
+        
+        // Buscar dados atualizados
         await fetchInvites();
+      } else {
+        // Remover convite otimista em caso de erro
+        removeInviteFromCache(optimisticInvite.id);
       }
       
       return result;
     } catch (error) {
       console.error("❌ useInvites: Erro ao criar convite:", error);
+      
+      // Remover convite otimista em caso de erro
+      const optimisticId = `temp-${Math.floor(Date.now() / 1000)}`;
+      removeInviteFromCache(optimisticId);
+      
       throw error;
     }
   };
 
-  // Manter compatibilidade com a interface antiga para não quebrar outros usos
-  const handleCreateInviteLegacy = async (
-    email: string, 
-    roleId: string, 
-    notes?: string,
-    options?: {
-      expiresIn?: string;
-    }
-  ) => {
-    const params: CreateInviteParams = {
-      email,
-      roleId,
-      notes,
-      expiresIn: options?.expiresIn || '7 days',
-      channels: ['email'], // Padrão apenas email para compatibilidade
-    };
-
-    return await handleCreateInvite(params);
-  };
-
   const handleDeleteInvite = async (inviteId: string) => {
     try {
-      console.log("🗑️ useInvites: Deletando convite:", inviteId);
+      console.log("🗑️ useInvites: Deletando convite com cache otimizado:", inviteId);
+      
+      // Update otimista - remover do cache imediatamente
+      removeInviteFromCache(inviteId);
+      
       await deleteInvite(inviteId);
-      await fetchInvites();
+      
+      // Invalidar cache para garantir consistência
+      await invalidateAllInviteData();
+      
     } catch (error) {
       console.error("❌ useInvites: Erro ao deletar convite:", error);
+      
+      // Recarregar dados em caso de erro
+      await fetchInvites();
       throw error;
     }
   };
 
   const handleResendInvite = async (invite: Invite) => {
     try {
-      console.log("🔄 useInvites: Reenviando convite:", invite.id);
+      console.log("🔄 useInvites: Reenviando convite com cache otimizado:", invite.id);
+      
+      // Update otimista
+      updateInviteInCache(invite.id, {
+        last_sent_at: new Date().toISOString(),
+        send_attempts: (invite.send_attempts || 0) + 1
+      });
+      
       await resendInvite(invite);
-      await fetchInvites();
+      
+      // Invalidar cache para obter dados atualizados
+      await invalidateAllInviteData();
+      
     } catch (error) {
       console.error("❌ useInvites: Erro ao reenviar convite:", error);
+      
+      // Recarregar dados em caso de erro
+      await fetchInvites();
       throw error;
     }
   };
@@ -80,12 +135,13 @@ export const useInvites = () => {
     isCreating,
     isDeleting,
     isSending,
+    realtimeConnected,
     fetchInvites,
-    // Nova interface principal
     createInvite: handleCreateInvite,
-    // Interface legacy para compatibilidade
-    createInviteLegacy: handleCreateInviteLegacy,
     deleteInvite: handleDeleteInvite,
-    resendInvite: handleResendInvite
+    resendInvite: handleResendInvite,
+    // Funções de cache para uso avançado
+    prefetchCriticalData,
+    invalidateAllInviteData
   };
 };
