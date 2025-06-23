@@ -1,74 +1,69 @@
 
 export interface OnboardingData {
-  // Etapa 1 - Informações pessoais
+  // Informações pessoais básicas
   name?: string;
   email?: string;
+  
+  // Informações de contato
   phone?: string;
-  instagram?: string;
-  linkedin?: string;
+  phone_country_code?: string;
+  
+  // Localização
+  country?: string;
   state?: string;
   city?: string;
-  birthDate?: string;
-  // Campos separados para salvar parcialmente
-  birthDay?: string;
-  birthMonth?: string;
-  birthYear?: string;
-  curiosity?: string;
-  profilePicture?: string; // Nova foto de perfil opcional
   
-  // Etapa 2 - Perfil Empresarial
-  companyName?: string;
-  companyWebsite?: string;
-  businessSector?: string;
-  companySize?: string;
-  annualRevenue?: string;
-  position?: string;
+  // Redes sociais
+  linkedin?: string;
+  instagram?: string;
   
-  // Etapa 3 - Maturidade em IA
-  hasImplementedAI?: string;
-  aiToolsUsed?: string[];
-  aiKnowledgeLevel?: string;
-  dailyTools?: string[];
-  whoWillImplement?: string;
+  // Informações profissionais
+  company_name?: string;
+  company_website?: string;
+  current_position?: string;
+  company_sector?: string;
+  company_size?: string;
+  annual_revenue?: string;
   
-  // Etapa 4 - Objetivos e Expectativas
-  mainObjective?: string;
-  areaToImpact?: string;
-  expectedResult90Days?: string;
-  aiImplementationBudget?: string;
+  // Objetivos e interesses
+  primary_goal?: string;
+  business_challenges?: string[];
+  networking_interests?: string[];
   
-  // Etapa 5 - Personalização da Experiência
-  weeklyLearningTime?: string;
-  contentPreference?: string[]; // Corrigido para array
-  wantsNetworking?: string;
-  bestDays?: string[]; // Novo campo obrigatório
-  bestPeriods?: string[]; // Novo campo obrigatório
-  acceptsCaseStudy?: string; // Novo campo obrigatório
+  // Disponibilidade e conhecimento
+  weekly_availability?: string;
+  ai_knowledge_level?: number;
   
-  // Metadados
-  memberType?: 'club' | 'formacao';
-  completedAt?: string;
+  // Feedback
+  nps_score?: number;
+  
+  // Metadados do onboarding
+  memberType: 'club' | 'formacao';
   startedAt?: string;
-  updatedAt?: string;
-  fromInvite?: boolean; // Nova propriedade para identificar se veio de convite
-  inviteToken?: string; // ADICIONADO: Token do convite
-  
-  // IA Interativa - mensagens personalizadas para cada etapa
-  aiMessage1?: string;
-  aiMessage2?: string;
-  aiMessage3?: string;
-  aiMessage4?: string;
-  aiMessage5?: string;
-  aiFinalMessage?: string;
+  completedAt?: string;
+  lastUpdated?: string;
+  fromInvite?: boolean;
+  inviteToken?: string;
 }
 
-export interface OnboardingStepProps {
+export interface OnboardingStep {
+  id: string;
+  title: string;
+  component: React.ComponentType<any>;
+  isRequired: boolean;
+  order: number;
+  memberTypes: ('club' | 'formacao')[];
+}
+
+export interface OnboardingConfig {
+  steps: OnboardingStep[];
+  totalSteps: number;
+  currentStep: number;
+}
+
+export interface OnboardingWizardProps {
   data: OnboardingData;
-  onUpdateData: (stepData: Partial<OnboardingData>) => void;
-  onNext: () => void;
-  onPrev?: () => void;
+  updateData: (newData: Partial<OnboardingData>) => void;
   memberType: 'club' | 'formacao';
-  userProfile?: any;
-  validationErrors?: Array<{ field: string; message: string }>;
-  getFieldError?: (field: string) => string | undefined;
+  isLoading?: boolean;
 }

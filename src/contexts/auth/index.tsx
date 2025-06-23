@@ -10,10 +10,20 @@ export interface Profile {
   email?: string;
   name?: string;
   role?: string;
+  role_id?: string;
   onboarding_completed?: boolean;
+  onboarding_completed_at?: string;
   avatar_url?: string;
   created_at?: string;
   updated_at?: string;
+  // Campos adicionais para compatibilidade com UserProfile
+  company_name?: string;
+  industry?: string;
+  user_roles?: {
+    id: string;
+    name: string;
+    description: string;
+  };
 }
 
 export interface AuthContextType {
@@ -22,12 +32,15 @@ export interface AuthContextType {
   session: Session | null;
   isLoading: boolean;
   isAdmin: boolean;
+  isFormacao: boolean;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signUp: (email: string, password: string, options?: { inviteToken?: string; userData?: { name?: string } }) => Promise<{ error: any }>;
   signOut: () => Promise<{ success: boolean; error: any }>;
   signInAsMember: (email: string, password: string) => Promise<{ error: any }>;
   signInAsAdmin: (email: string, password: string) => Promise<{ error: any }>;
   refreshProfile: () => Promise<void>;
+  setProfile: React.Dispatch<React.SetStateAction<Profile | null>>;
+  setIsLoading: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -49,7 +62,14 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       
       const { data: profileData, error } = await supabase
         .from('profiles')
-        .select('*')
+        .select(`
+          *,
+          user_roles:role_id (
+            id,
+            name,
+            description
+          )
+        `)
         .eq('id', userId)
         .maybeSingle();
 
@@ -66,14 +86,26 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
           email: user?.email || '',
           name: user?.user_metadata?.name || user?.user_metadata?.full_name || '',
           onboarding_completed: false,
-          created_at: new Date().toISOString()
+          created_at: new Date().toISOString(),
+          // Campos para compatibilidade
+          company_name: '',
+          industry: ''
         };
         setProfile(basicProfile);
         return;
       }
 
       console.log('[AUTH-CONTEXT] Perfil carregado com sucesso:', profileData);
-      setProfile(profileData);
+      
+      // Garantir compatibilidade com UserProfile
+      const enhancedProfile: Profile = {
+        ...profileData,
+        company_name: profileData.company_name || '',
+        industry: profileData.industry || '',
+        role_id: profileData.role_id || profileData.user_roles?.id
+      };
+      
+      setProfile(enhancedProfile);
     } catch (error) {
       console.error('[AUTH-CONTEXT] Erro inesperado ao carregar perfil:', error);
       // Fallback: criar perfil básico
@@ -81,7 +113,9 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         id: userId,
         email: user?.email || '',
         name: user?.user_metadata?.name || '',
-        onboarding_completed: false
+        onboarding_completed: false,
+        company_name: '',
+        industry: ''
       };
       setProfile(fallbackProfile);
     }
@@ -164,8 +198,9 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     };
   }, [loadUserProfile]);
 
-  // Calcular se é admin baseado no perfil
-  const isAdmin = profile?.role === 'admin' || false;
+  // Calcular propriedades derivadas
+  const isAdmin = profile?.role === 'admin' || profile?.user_roles?.name === 'admin' || false;
+  const isFormacao = profile?.role === 'formacao' || profile?.user_roles?.name === 'formacao' || false;
 
   const value: AuthContextType = {
     user,
@@ -173,12 +208,15 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     session,
     isLoading,
     isAdmin,
+    isFormacao,
     signIn: authMethods.signIn,
     signUp,
     signOut: authMethods.signOut,
     signInAsMember: authMethods.signInAsMember,
     signInAsAdmin: authMethods.signInAsAdmin,
-    refreshProfile
+    refreshProfile,
+    setProfile,
+    setIsLoading
   };
 
   return (
