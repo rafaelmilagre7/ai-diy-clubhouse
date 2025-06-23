@@ -1,6 +1,6 @@
 
 import { useState, useCallback } from 'react';
-import { initializeHealthCheckData } from '@/utils/healthCheckInitializer';
+import { calculateBasicHealthMetrics, generateSimulatedHealthData } from '@/utils/healthCheckInitializer';
 import { logger } from '@/utils/logger';
 import { toast } from 'sonner';
 
@@ -18,87 +18,65 @@ export const useHealthCheckInitializer = () => {
     message: 'Pronto para inicializar'
   });
 
-  const simulateData = useCallback(() => {
-    setProgress({
-      stage: 'simulating',
-      progress: 25,
-      message: 'Gerando dados de demonstração...',
-      details: 'Criando métricas simuladas para visualização imediata'
-    });
+  const initializeWithProgress = useCallback(async () => {
+    try {
+      // Etapa 1: Simular carregamento inicial
+      setProgress({
+        stage: 'simulating',
+        progress: 25,
+        message: 'Gerando dados de demonstração...',
+        details: 'Criando métricas simuladas para visualização imediata'
+      });
 
-    // Simular dados para demonstração imediata
-    setTimeout(() => {
+      // Aguardar um pouco para mostrar progresso
+      await new Promise(resolve => setTimeout(resolve, 800));
+
+      // Etapa 2: Processar dados reais de forma segura
+      setProgress({
+        stage: 'processing',
+        progress: 60,
+        message: 'Calculando métricas de saúde...',
+        details: 'Processando dados dos usuários'
+      });
+
+      const result = await calculateBasicHealthMetrics();
+      
+      // Etapa 3: Finalizar com sucesso
       setProgress({
         stage: 'completed',
         progress: 100,
-        message: 'Dados simulados carregados com sucesso!',
-        details: 'Sistema pronto para uso com dados de demonstração'
+        message: 'Health Check inicializado com sucesso!',
+        details: `${result.details.totalUsers} usuários processados - ${result.details.healthyUsers} saudáveis, ${result.details.atRiskUsers} em risco, ${result.details.criticalUsers} críticos`
       });
-      
-      toast.success('Health Check inicializado com dados simulados', {
-        description: 'Processamento real continuará em background'
-      });
-    }, 800);
-  }, []);
 
-  const initializeWithProgress = useCallback(async () => {
-    try {
-      // Primeiro, carregar dados simulados para resposta imediata
-      simulateData();
-      
-      // Aguardar um pouco antes de começar processamento real
-      setTimeout(async () => {
-        setProgress({
-          stage: 'processing',
-          progress: 30,
-          message: 'Processando dados reais em background...',
-          details: 'Calculando métricas de saúde dos usuários'
+      if (result.success) {
+        toast.success('Health Check inicializado', {
+          description: result.message
         });
-
-        try {
-          const result = await initializeHealthCheckData();
-          
-          setProgress({
-            stage: 'completed',
-            progress: 100,
-            message: 'Inicialização completa!',
-            details: `Processados ${result.details.totalUsers} usuários com sucesso`
-          });
-
-          if (result.success) {
-            toast.success('Health Check totalmente inicializado', {
-              description: 'Dados reais processados com sucesso'
-            });
-          } else {
-            toast.warning('Inicialização parcial', {
-              description: 'Alguns dados podem estar incompletos'
-            });
-          }
-        } catch (error: any) {
-          logger.error('[HEALTH INIT] Erro no processamento real:', error);
-          setProgress({
-            stage: 'error',
-            progress: 0,
-            message: 'Erro no processamento real',
-            details: 'Dados simulados continuam disponíveis'
-          });
-        }
-      }, 1000);
+      } else {
+        toast.warning('Inicialização com dados simulados', {
+          description: 'Alguns dados podem estar incompletos'
+        });
+      }
 
     } catch (error: any) {
       logger.error('[HEALTH INIT] Erro na inicialização:', error);
+      
+      // Fallback para dados simulados em caso de erro
+      const fallbackData = generateSimulatedHealthData();
+      
       setProgress({
-        stage: 'error',
-        progress: 0,
-        message: 'Erro na inicialização',
-        details: error.message
+        stage: 'completed',
+        progress: 100,
+        message: 'Inicialização com dados simulados',
+        details: `${fallbackData.details.totalUsers} usuários simulados para demonstração`
       });
       
-      toast.error('Falha na inicialização do Health Check', {
-        description: error.message || 'Erro desconhecido'
+      toast.info('Health Check inicializado com dados simulados', {
+        description: 'Sistema pronto para uso com dados de demonstração'
       });
     }
-  }, [simulateData]);
+  }, []);
 
   const reset = useCallback(() => {
     setProgress({
