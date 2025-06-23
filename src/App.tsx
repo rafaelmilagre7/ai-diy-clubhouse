@@ -1,6 +1,6 @@
 
 import React, { useEffect, useState } from 'react';
-import { BrowserRouter as Router } from 'react-router-dom';
+import { RouterProvider } from 'react-router-dom';
 import { useAuth } from '@/contexts/auth';
 import { useToast } from "@/hooks/use-toast"
 import { Toaster } from "@/components/ui/toaster"
@@ -21,10 +21,10 @@ function App() {
   }, [user, authLoading]);
 
   return (
-    <Router>
-      <AppRoutes />
+    <>
+      <RouterProvider router={AppRoutes} />
       <Toaster />
-    </Router>
+    </>
   );
 }
 
