@@ -1,4 +1,3 @@
-
 import { useInviteCreate } from "./invites/useInviteCreate";
 import { useInviteDelete } from "./invites/useInviteDelete";
 import { useInviteResend } from "./invites/useInviteResend";
@@ -105,25 +104,36 @@ export const useInvites = () => {
     }
   };
 
-  const handleResendInvite = async (invite: Invite) => {
+  const handleResendInvite = async (invite: Invite, channels?: ('email' | 'whatsapp')[], whatsappNumber?: string) => {
     try {
-      console.log("🔄 useInvites: Reenviando convite com cache otimizado:", invite.id);
-      
-      // Update otimista
-      updateInviteInCache(invite.id, {
-        last_sent_at: new Date().toISOString(),
-        send_attempts: (invite.send_attempts || 0) + 1
+      console.log("🔄 [USE-INVITES] Iniciando reenvio com sincronização:", {
+        inviteId: invite.id,
+        email: invite.email,
+        channels: channels || ['email']
       });
       
-      await resendInvite(invite);
+      // Update otimista - atualizar tentativas localmente
+      const newAttemptCount = (invite.send_attempts || 0) + 1;
+      updateInviteInCache(invite.id, {
+        last_sent_at: new Date().toISOString(),
+        send_attempts: newAttemptCount
+      });
       
-      // Invalidar cache para obter dados atualizados
+      // Executar reenvio
+      const result = await resendInvite(invite, channels, whatsappNumber);
+      
+      console.log("✅ [USE-INVITES] Reenvio concluído, sincronizando dados:", result);
+      
+      // Forçar atualização dos dados após sucesso
       await invalidateAllInviteData();
+      await fetchInvites();
+      
+      return result;
       
     } catch (error) {
-      console.error("❌ useInvites: Erro ao reenviar convite:", error);
+      console.error("❌ [USE-INVITES] Erro no reenvio:", error);
       
-      // Recarregar dados em caso de erro
+      // Reverter update otimista em caso de erro
       await fetchInvites();
       throw error;
     }
