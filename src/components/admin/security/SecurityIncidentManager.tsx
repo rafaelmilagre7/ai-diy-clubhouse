@@ -1,13 +1,8 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { AlertTriangle, CheckCircle, Clock, Users, TrendingDown, Activity } from 'lucide-react';
-import { useHealthCheckData } from '@/hooks/admin/useHealthCheckData';
-import { useAtRiskUsers } from '@/hooks/admin/useAtRiskUsers';
-import { initializeHealthCheckData } from '@/utils/healthCheckInitializer';
-import { toast } from 'sonner';
+import { AlertTriangle, Shield, Users, TrendingUp } from 'lucide-react';
 
 interface SecurityIncident {
   id: string;
@@ -26,234 +21,116 @@ interface SecurityIncidentManagerProps {
 }
 
 export const SecurityIncidentManager: React.FC<SecurityIncidentManagerProps> = ({ incidents }) => {
-  const { stats, loading: healthLoading, error: healthError, recalculateHealthScores } = useHealthCheckData();
-  const { atRiskUsers, loading: riskLoading, triggerIntervention } = useAtRiskUsers();
-  const [isInitializing, setIsInitializing] = useState(false);
+  const openIncidents = incidents.filter(incident => incident.status !== 'resolved');
+  const criticalIncidents = incidents.filter(incident => incident.severity === 'critical');
+  const recentIncidents = incidents.slice(0, 5);
 
-  const handleInitializeHealthCheck = async () => {
-    setIsInitializing(true);
-    try {
-      const result = await initializeHealthCheckData();
-      
-      if (result.success) {
-        toast.success('Health Check inicializado com sucesso!', {
-          description: `${result.details.totalUsers} usuários processados`
-        });
-      } else {
-        toast.error('Falha na inicialização do Health Check', {
-          description: result.details.errors.join(', ')
-        });
-      }
-    } catch (error: any) {
-      toast.error('Erro ao inicializar Health Check', {
-        description: error.message
-      });
-    } finally {
-      setIsInitializing(false);
+  const getSeverityColor = (severity: string) => {
+    switch (severity) {
+      case 'critical': return 'destructive';
+      case 'high': return 'destructive';
+      case 'medium': return 'default';
+      case 'low': return 'secondary';
+      default: return 'secondary';
     }
   };
 
-  const handleRecalculateScores = async () => {
-    try {
-      await recalculateHealthScores();
-      toast.success('Health scores recalculados com sucesso!');
-    } catch (error: any) {
-      toast.error('Erro ao recalcular scores', {
-        description: error.message
-      });
-    }
-  };
-
-  const handleTriggerIntervention = async (userId: string) => {
-    try {
-      await triggerIntervention(userId);
-      toast.success('Intervenção agendada com sucesso!');
-    } catch (error: any) {
-      toast.error('Erro ao agendar intervenção', {
-        description: error.message
-      });
-    }
-  };
-
-  const getRiskColor = (level: 'critical' | 'high' | 'medium') => {
-    switch (level) {
-      case 'critical': return 'bg-red-500';
-      case 'high': return 'bg-orange-500';
-      case 'medium': return 'bg-yellow-500';
-      default: return 'bg-gray-500';
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'open': return 'destructive';
+      case 'investigating': return 'default';
+      case 'resolved': return 'secondary';
+      default: return 'secondary';
     }
   };
 
   return (
     <div className="space-y-6">
-      {/* Ações de Inicialização */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Activity className="h-5 w-5" />
-            Controle do Health Check
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex gap-3">
-            <Button 
-              onClick={handleInitializeHealthCheck} 
-              disabled={isInitializing}
-              variant="outline"
-            >
-              {isInitializing ? 'Inicializando...' : 'Inicializar Health Check'}
-            </Button>
-            <Button 
-              onClick={handleRecalculateScores} 
-              disabled={healthLoading}
-              variant="outline"
-            >
-              Recalcular Scores
-            </Button>
-          </div>
-          
-          {healthError && (
-            <div className="text-sm text-red-600 bg-red-50 p-3 rounded">
-              {healthError}
+      {/* Estatísticas de Segurança */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center space-x-2">
+              <AlertTriangle className="h-4 w-4 text-red-500" />
+              <div>
+                <p className="text-sm font-medium">Incidentes Abertos</p>
+                <p className="text-2xl font-bold">{openIncidents.length}</p>
+              </div>
             </div>
-          )}
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
 
-      {/* Estatísticas de Saúde */}
-      {stats && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <CheckCircle className="h-8 w-8 text-green-500" />
-                <div>
-                  <p className="text-2xl font-bold text-green-600">{stats.healthyUsers}</p>
-                  <p className="text-sm text-muted-foreground">Usuários Saudáveis</p>
-                </div>
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center space-x-2">
+              <Shield className="h-4 w-4 text-orange-500" />
+              <div>
+                <p className="text-sm font-medium">Críticos</p>
+                <p className="text-2xl font-bold">{criticalIncidents.length}</p>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </CardContent>
+        </Card>
 
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <AlertTriangle className="h-8 w-8 text-orange-500" />
-                <div>
-                  <p className="text-2xl font-bold text-orange-600">{stats.atRiskUsers}</p>
-                  <p className="text-sm text-muted-foreground">Em Risco</p>
-                </div>
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center space-x-2">
+              <Users className="h-4 w-4 text-blue-500" />
+              <div>
+                <p className="text-sm font-medium">Total de Incidentes</p>
+                <p className="text-2xl font-bold">{incidents.length}</p>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </CardContent>
+        </Card>
 
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <TrendingDown className="h-8 w-8 text-red-500" />
-                <div>
-                  <p className="text-2xl font-bold text-red-600">{stats.criticalUsers}</p>
-                  <p className="text-sm text-muted-foreground">Críticos</p>
-                </div>
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center space-x-2">
+              <TrendingUp className="h-4 w-4 text-green-500" />
+              <div>
+                <p className="text-sm font-medium">Taxa de Resolução</p>
+                <p className="text-2xl font-bold">
+                  {incidents.length > 0 ? Math.round(((incidents.length - openIncidents.length) / incidents.length) * 100) : 0}%
+                </p>
               </div>
-            </CardContent>
-          </Card>
-        </div>
-      )}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
 
-      {/* Lista de Usuários em Risco */}
+      {/* Lista de Incidentes Recentes */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Users className="h-5 w-5" />
-            Usuários em Risco ({atRiskUsers.length})
-          </CardTitle>
+          <CardTitle>Incidentes Recentes</CardTitle>
         </CardHeader>
         <CardContent>
-          {riskLoading ? (
-            <div className="text-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-              <p className="mt-2 text-sm text-muted-foreground">Carregando usuários em risco...</p>
-            </div>
-          ) : atRiskUsers.length === 0 ? (
-            <div className="text-center py-8">
-              <CheckCircle className="h-12 w-12 text-green-500 mx-auto mb-4" />
-              <p className="text-lg font-medium">Nenhum usuário em risco encontrado</p>
-              <p className="text-sm text-muted-foreground">Todos os usuários estão com bons níveis de engajamento</p>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {atRiskUsers.slice(0, 10).map((user) => (
-                <div key={user.user_id} className="flex items-center justify-between p-4 border rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <Badge className={`${getRiskColor(user.risk_level)} text-white`}>
-                      {user.risk_level.toUpperCase()}
-                    </Badge>
-                    <div>
-                      <p className="font-medium">{user.user_profile.name}</p>
-                      <p className="text-sm text-muted-foreground">{user.user_profile.email}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <div className="text-right">
-                      <p className="text-sm font-medium">Score: {user.health_score}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {user.interventions_count} intervenções
-                      </p>
-                    </div>
-                    <Button 
-                      size="sm" 
-                      variant="outline"
-                      onClick={() => handleTriggerIntervention(user.user_id)}
-                    >
-                      Intervir
-                    </Button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Incidentes de Segurança Tradicionais */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <AlertTriangle className="h-5 w-5" />
-            Incidentes de Segurança ({incidents.length})
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {incidents.length === 0 ? (
-            <div className="text-center py-8">
-              <CheckCircle className="h-12 w-12 text-green-500 mx-auto mb-4" />
-              <p className="text-lg font-medium">Nenhum incidente ativo</p>
-              <p className="text-sm text-muted-foreground">O sistema está funcionando normalmente</p>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {incidents.map((incident) => (
+          {recentIncidents.length > 0 ? (
+            <div className="space-y-4">
+              {recentIncidents.map((incident) => (
                 <div key={incident.id} className="flex items-center justify-between p-4 border rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <Badge variant={incident.severity === 'critical' ? 'destructive' : 'outline'}>
-                      {incident.severity}
-                    </Badge>
-                    <div>
-                      <p className="font-medium">{incident.title}</p>
-                      <p className="text-sm text-muted-foreground">{incident.description}</p>
+                  <div className="flex-1">
+                    <div className="flex items-center space-x-2 mb-2">
+                      <h4 className="font-medium">{incident.title}</h4>
+                      <Badge variant={getSeverityColor(incident.severity) as any}>
+                        {incident.severity}
+                      </Badge>
+                      <Badge variant={getStatusColor(incident.status) as any}>
+                        {incident.status}
+                      </Badge>
                     </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    {incident.status === 'resolved' ? (
-                      <CheckCircle className="h-5 w-5 text-green-500" />
-                    ) : (
-                      <Clock className="h-5 w-5 text-orange-500" />
-                    )}
-                    <span className="text-sm capitalize">{incident.status}</span>
+                    <p className="text-sm text-gray-600">{incident.description}</p>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Criado em {new Date(incident.created_at).toLocaleDateString('pt-BR')}
+                    </p>
                   </div>
                 </div>
               ))}
+            </div>
+          ) : (
+            <div className="text-center py-8 text-gray-500">
+              <Shield className="h-12 w-12 mx-auto mb-4 opacity-50" />
+              <p>Nenhum incidente de segurança registrado</p>
             </div>
           )}
         </CardContent>
