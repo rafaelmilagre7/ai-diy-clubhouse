@@ -1,10 +1,12 @@
 
 import React from 'react';
-import { useSearchParams, useNavigate } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { UserCheck, Mail } from 'lucide-react';
 import { useInviteFlow } from '@/hooks/useInviteFlow';
 import { useAuth } from '@/contexts/auth';
+import { useIntelligentRedirect } from '@/hooks/useIntelligentRedirect';
+import { InviteTokenManager } from '@/utils/inviteTokenManager';
 import InviteRegisterForm from '@/components/auth/InviteRegisterForm';
 import InviteErrorScreen from '@/components/auth/InviteErrorScreen';
 import { Button } from '@/components/ui/button';
@@ -12,8 +14,8 @@ import { toast } from 'sonner';
 
 const InviteAcceptPage = () => {
   const [searchParams] = useSearchParams();
-  const navigate = useNavigate();
   const { user } = useAuth();
+  const { redirect } = useIntelligentRedirect();
   const inviteToken = searchParams.get('token');
   
   const {
@@ -32,12 +34,12 @@ const InviteAcceptPage = () => {
     if (result.success) {
       toast.success(result.message);
       
-      // Redirecionar baseado na necessidade de onboarding
-      if (result.requiresOnboarding) {
-        navigate(`/onboarding?token=${inviteToken}`);
-      } else {
-        navigate('/dashboard');
-      }
+      // Usar redirecionamento inteligente
+      redirect({
+        requiresOnboarding: result.requiresOnboarding,
+        fromInvite: true,
+        preserveToken: result.requiresOnboarding
+      });
     } else {
       toast.error(result.message);
     }
@@ -45,20 +47,27 @@ const InviteAcceptPage = () => {
 
   // Registrar novo usuário
   const handleRegisterNewUser = async (name: string, password: string) => {
+    // Preservar token antes do registro
+    if (inviteToken) {
+      InviteTokenManager.storeToken(inviteToken);
+    }
+
     const result = await registerWithInvite(name, password);
     
     if (result.success) {
       toast.success(result.message);
       
-      // Usuário recém-registrado sempre precisa de onboarding
-      if (result.requiresOnboarding) {
-        navigate('/onboarding');
-      } else {
-        navigate('/dashboard');
-      }
+      // Usar redirecionamento inteligente
+      redirect({
+        requiresOnboarding: result.requiresOnboarding,
+        fromInvite: true,
+        preserveToken: false // Token já foi armazenado acima
+      });
       
       return result;
     } else {
+      // Limpar token se registro falhou
+      InviteTokenManager.clearToken();
       toast.error(result.message);
       return result;
     }
@@ -78,7 +87,7 @@ const InviteAcceptPage = () => {
     );
   }
 
-  // Error state - usar componente específico
+  // Error state
   if (!inviteToken || error || !inviteDetails) {
     return (
       <InviteErrorScreen
@@ -88,7 +97,7 @@ const InviteAcceptPage = () => {
     );
   }
 
-  // Usuário já logado - verificação de email
+  // Usuário já logado - verificação melhorada
   if (user) {
     const userEmail = user.email || '';
     const inviteEmail = inviteDetails.email;
@@ -158,7 +167,7 @@ const InviteAcceptPage = () => {
 
             <div className="text-center">
               <button 
-                onClick={() => navigate('/login')}
+                onClick={() => redirect({ requiresOnboarding: false })}
                 className="text-sm text-neutral-400 hover:text-white underline"
               >
                 Trocar de conta

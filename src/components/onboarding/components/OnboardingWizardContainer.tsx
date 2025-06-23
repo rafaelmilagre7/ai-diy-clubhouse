@@ -16,7 +16,7 @@ interface OnboardingWizardContainerProps {
 export const OnboardingWizardContainer = ({ children }: OnboardingWizardContainerProps) => {
   const [searchParams] = useSearchParams();
   const inviteToken = searchParams.get('token');
-  const [isInitialized, setIsInitialized] = useState(false);
+  const [initializationState, setInitializationState] = useState<'idle' | 'loading' | 'ready'>('idle');
   
   const { cleanupForInvite } = useOnboardingCleanup();
   
@@ -30,14 +30,13 @@ export const OnboardingWizardContainer = ({ children }: OnboardingWizardContaine
   // Memoizar o memberType para evitar re-renders
   const memberType = useMemo(() => cleanData.memberType || 'club', [cleanData.memberType]);
   
-  // Inicialização otimizada
+  // Inicialização unificada e otimizada
   useEffect(() => {
-    if (isInitialized) return;
+    let isCancelled = false;
 
     const setupOnboarding = async () => {
       try {
-        setIsInitialized(true);
-        console.log('[WIZARD-CONTAINER] Inicializando onboarding');
+        console.log('[WIZARD-CONTAINER] Iniciando configuração única');
         
         // Limpeza seletiva apenas se for convite
         if (inviteToken) {
@@ -45,34 +44,44 @@ export const OnboardingWizardContainer = ({ children }: OnboardingWizardContaine
           cleanupForInvite();
         }
 
-        // Inicializar dados quando não está carregando convite
-        if (!isInviteLoading) {
-          initializeCleanData();
+        // Aguardar carregamento do convite se necessário
+        if (inviteToken && isInviteLoading) {
+          return; // Esperar próxima execução quando isInviteLoading for false
         }
-      } catch (error: any) {
+
+        if (!isCancelled) {
+          setInitializationState('loading');
+          await initializeCleanData();
+          setInitializationState('ready');
+        }
+      } catch (error) {
         console.error('[WIZARD-CONTAINER] Erro na configuração:', error);
+        if (!isCancelled) {
+          setInitializationState('ready'); // Prosseguir mesmo com erro
+        }
       }
     };
 
-    setupOnboarding();
-  }, [inviteToken, isInitialized, isInviteLoading, initializeCleanData, cleanupForInvite]);
-
-  // Inicializar dados quando convite carrega
-  useEffect(() => {
-    if (inviteToken && !isInviteLoading && isInitialized && Object.keys(cleanData).length <= 2) {
-      console.log('[WIZARD-CONTAINER] Inicializando dados após carregamento do convite');
-      initializeCleanData();
+    // Só executar se ainda não foi inicializado
+    if (initializationState === 'idle') {
+      setupOnboarding();
     }
-  }, [inviteToken, isInviteLoading, isInitialized, cleanData, initializeCleanData]);
 
-  // Estado de loading otimizado
+    return () => {
+      isCancelled = true;
+    };
+  }, [inviteToken, isInviteLoading, initializationState, initializeCleanData, cleanupForInvite]);
+
+  // Estado de loading melhorado
   const isLoading = useMemo(() => {
+    if (initializationState === 'loading') return true;
     if (inviteToken && isInviteLoading) return true;
-    if (!isInitialized) return true;
-    if (inviteToken && Object.keys(cleanData).length <= 2) return true;
-    if (!inviteToken && Object.keys(cleanData).length <= 1) return true;
-    return false;
-  }, [inviteToken, isInviteLoading, isInitialized, cleanData]);
+    if (initializationState === 'idle') return true;
+    
+    // Verificar se tem dados mínimos
+    const hasMinimalData = cleanData.memberType && (cleanData.email || cleanData.name);
+    return !hasMinimalData;
+  }, [initializationState, inviteToken, isInviteLoading, cleanData]);
 
   // Memoizar updateData para evitar re-criação
   const memoizedUpdateData = useCallback((newData: any) => {
