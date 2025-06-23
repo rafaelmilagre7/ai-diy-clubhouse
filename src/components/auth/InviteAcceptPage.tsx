@@ -1,210 +1,189 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Loader2, UserPlus, CheckCircle, AlertCircle } from 'lucide-react';
-import { useAuth } from '@/contexts/auth';
-import { useInviteFlow } from '@/hooks/useInviteFlow';
+import { Button } from '@/components/ui/button';
+import { Loader2, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { RegisterForm } from '@/components/auth/RegisterForm';
 import { InviteTokenManager } from '@/utils/inviteTokenManager';
-import RegisterForm from './RegisterForm';
+import { auditLogger } from '@/utils/auditLogger';
+import { logger } from '@/utils/logger';
+
+interface ValidationResult {
+  valid: boolean;
+  message: string;
+  error?: string;
+  invite_data?: any;
+}
 
 const InviteAcceptPage = () => {
   const { token: paramToken } = useParams();
+  const [validationResult, setValidationResult] = useState<ValidationResult | null>(null);
+  const [isChecking, setIsChecking] = useState(true);
+  const [registrationSuccess, setRegistrationSuccess] = useState(false);
   const navigate = useNavigate();
-  const { user } = useAuth();
-  const [showRegisterForm, setShowRegisterForm] = useState(false);
 
-  // Token único de múltiplas fontes
+  // FONTE ÚNICA DE TOKEN - suporta tanto /convite/:token quanto /invite/:token
   const inviteToken = paramToken || InviteTokenManager.getToken();
-  
-  const {
-    isLoading,
-    inviteDetails,
-    error,
-    isProcessing,
-    acceptInvite,
-    registerWithInvite
-  } = useInviteFlow(inviteToken);
 
-  console.log('[INVITE-ACCEPT-PAGE] Estado:', {
-    hasToken: !!inviteToken,
-    hasUser: !!user,
-    hasInviteDetails: !!inviteDetails,
-    isLoading,
-    error,
-    showRegisterForm
-  });
-
-  // Guardar token quando disponível
   useEffect(() => {
-    if (inviteToken) {
-      InviteTokenManager.storeToken(inviteToken);
-    }
-  }, [inviteToken]);
+    const validateInvite = async () => {
+      setIsChecking(true);
+      try {
+        if (!inviteToken) {
+          setValidationResult({
+            valid: false,
+            message: 'Nenhum convite detectado. Verifique o link ou insira o token manualmente.'
+          });
+          return;
+        }
 
-  // Loading inicial
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-[#0F111A] to-[#151823] flex items-center justify-center p-4">
-        <Card className="w-full max-w-md bg-[#1A1E2E]/80 backdrop-blur-sm border-white/10">
-          <CardContent className="flex flex-col items-center justify-center p-8 space-y-4">
-            <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
-            <p className="text-white/80">Carregando detalhes do convite...</p>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
+        const { data, error } = await supabase.rpc('validate_user_invite_match', {
+          p_token: inviteToken
+        });
 
-  // Erro ao carregar convite
-  if (error || !inviteDetails) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-[#0F111A] to-[#151823] flex items-center justify-center p-4">
-        <Card className="w-full max-w-md bg-[#1A1E2E]/80 backdrop-blur-sm border-white/10">
-          <CardHeader className="text-center">
-            <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
-            <CardTitle className="text-white">Convite Inválido</CardTitle>
-            <CardDescription className="text-white/60">
-              {error || 'Convite não encontrado ou expirado'}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button 
-              onClick={() => navigate('/login')} 
-              className="w-full"
-            >
-              Ir para Login
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
-  // Usuário logado - aceitar convite
-  if (user && !showRegisterForm) {
-    const userEmail = (user.email || '').toLowerCase();
-    const inviteEmail = inviteDetails.email.toLowerCase();
-    const emailMatches = userEmail === inviteEmail;
-
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-[#0F111A] to-[#151823] flex items-center justify-center p-4">
-        <Card className="w-full max-w-md bg-[#1A1E2E]/80 backdrop-blur-sm border-white/10">
-          <CardHeader className="text-center">
-            <UserPlus className="h-12 w-12 text-blue-500 mx-auto mb-4" />
-            <CardTitle className="text-white">Aceitar Convite</CardTitle>
-            <CardDescription className="text-white/60">
-              Você foi convidado para {inviteDetails.role.description}
-            </CardDescription>
-          </CardHeader>
+        if (error) {
+          logger.error('Erro ao validar convite', {
+            component: 'InviteAcceptPage',
+            error: error.message,
+            inviteToken
+          });
           
-          <CardContent className="space-y-4">
-            <div className="bg-[#2A2E3E]/50 p-4 rounded-lg space-y-2">
-              <p className="text-sm text-white/60">Convite para:</p>
-              <p className="text-white font-medium">{inviteDetails.email}</p>
-              <p className="text-sm text-white/60">Papel:</p>
-              <p className="text-white font-medium">{inviteDetails.role.name}</p>
-            </div>
+          await auditLogger.logInviteProcess('invite_validation_failed', inviteToken, {
+            error: error.message
+          });
 
-            {!emailMatches && (
+          setValidationResult({
+            valid: false,
+            message: 'Erro ao validar o convite. Tente novamente mais tarde.',
+            error: error.message
+          });
+          return;
+        }
+
+        if (data?.valid === true) {
+          logger.info('Convite válido', {
+            component: 'InviteAcceptPage',
+            inviteToken
+          });
+          
+          await auditLogger.logInviteProcess('invite_validation_success', inviteToken);
+
+          setValidationResult({
+            valid: true,
+            message: 'Convite válido. Complete seu registro abaixo!',
+            invite_data: data.invite_data
+          });
+        } else {
+          logger.warn('Convite inválido', {
+            component: 'InviteAcceptPage',
+            inviteToken,
+            error: data?.error,
+            message: data?.message
+          });
+          
+          await auditLogger.logInviteProcess('invite_validation_invalid', inviteToken, {
+            error: data?.error,
+            message: data?.message
+          });
+
+          setValidationResult({
+            valid: false,
+            message: data?.message || 'Convite inválido. Verifique o link ou insira o token manualmente.',
+            error: data?.error
+          });
+        }
+
+      } catch (err: any) {
+        logger.error('Erro inesperado ao validar convite', {
+          component: 'InviteAcceptPage',
+          error: err.message,
+          inviteToken
+        });
+        
+        await auditLogger.logInviteProcess('invite_validation_error', inviteToken, {
+          error: err.message
+        });
+
+        setValidationResult({
+          valid: false,
+          message: 'Erro inesperado ao validar o convite.',
+          error: err.message
+        });
+      } finally {
+        setIsChecking(false);
+      }
+    };
+
+    validateInvite();
+  }, [inviteToken, navigate]);
+
+  const handleRegistrationSuccess = () => {
+    setRegistrationSuccess(true);
+    
+    // Limpar o token após o registro bem-sucedido
+    InviteTokenManager.clearToken();
+
+    setTimeout(() => {
+      navigate('/dashboard');
+    }, 3000);
+  };
+
+  return (
+    <AuthLayout>
+      <Card>
+        <CardHeader>
+          <CardTitle>Aceitar Convite</CardTitle>
+          <CardDescription>
+            {isChecking && 'Validando convite...'}
+            {validationResult && validationResult.message}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {isChecking ? (
+            <div className="flex justify-center">
+              <Loader2 className="h-6 w-6 animate-spin" />
+            </div>
+          ) : validationResult ? (
+            validationResult.valid ? (
+              <>
+                {registrationSuccess ? (
+                  <Alert variant="success">
+                    <CheckCircle2 className="h-4 w-4" />
+                    <AlertDescription>
+                      Registro completo! Redirecionando para o painel...
+                    </AlertDescription>
+                  </Alert>
+                ) : (
+                  <RegisterForm
+                    inviteToken={inviteToken}
+                    onSuccess={handleRegistrationSuccess}
+                    defaultEmail={validationResult.invite_data?.email}
+                  />
+                )}
+              </>
+            ) : (
               <Alert variant="destructive">
                 <AlertCircle className="h-4 w-4" />
                 <AlertDescription>
-                  Este convite foi enviado para {inviteDetails.email}, mas você está logado como {user.email}
+                  {validationResult.message}
+                  {validationResult.error && ` (${validationResult.error})`}
+                  <div className="mt-2">
+                    <Button size="sm" onClick={() => navigate('/register')}>
+                      Tentar se registrar sem o convite
+                    </Button>
+                  </div>
                 </AlertDescription>
               </Alert>
-            )}
-
-            <Button
-              onClick={async () => {
-                const result = await acceptInvite();
-                if (result.success) {
-                  if (result.requiresOnboarding) {
-                    navigate('/onboarding', { replace: true });
-                  } else {
-                    navigate('/dashboard', { replace: true });
-                  }
-                }
-              }}
-              disabled={!emailMatches || isProcessing}
-              className="w-full"
-            >
-              {isProcessing ? (
-                <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Aceitando...
-                </>
-              ) : (
-                <>
-                  <CheckCircle className="h-4 w-4 mr-2" />
-                  Aceitar Convite
-                </>
-              )}
-            </Button>
-
-            <Button
-              variant="outline"
-              onClick={() => navigate('/login')}
-              className="w-full"
-            >
-              Cancelar
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
-  // Usuário não logado ou modo registro
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-[#0F111A] to-[#151823] flex items-center justify-center p-4">
-      <Card className="w-full max-w-md bg-[#1A1E2E]/80 backdrop-blur-sm border-white/10">
-        <CardHeader className="text-center">
-          <UserPlus className="h-12 w-12 text-blue-500 mx-auto mb-4" />
-          <CardTitle className="text-white">Criar Conta</CardTitle>
-          <CardDescription className="text-white/60">
-            Complete seu registro para aceitar o convite
-          </CardDescription>
-        </CardHeader>
-        
-        <CardContent className="space-y-4">
-          <div className="bg-[#2A2E3E]/50 p-4 rounded-lg space-y-2">
-            <p className="text-sm text-white/60">Convite para:</p>
-            <p className="text-white font-medium">{inviteDetails.email}</p>
-            <p className="text-sm text-white/60">Papel:</p>
-            <p className="text-white font-medium">{inviteDetails.role.description}</p>
-          </div>
-
-          <RegisterForm
-            defaultEmail={inviteDetails.email}
-            inviteToken={inviteToken}
-            onSuccess={() => {
-              // Após registro bem-sucedido, redirecionar para onboarding
-              navigate('/onboarding', { replace: true });
-            }}
-            onError={(error) => {
-              console.error('[INVITE-ACCEPT-PAGE] Erro no registro:', error);
-            }}
-          />
-
-          <div className="text-center">
-            <p className="text-sm text-white/60">
-              Já tem uma conta?{' '}
-              <Button
-                variant="link"
-                onClick={() => navigate('/login')}
-                className="text-blue-400 hover:text-blue-300 p-0"
-              >
-                Fazer login
-              </Button>
-            </p>
-          </div>
+            )
+          ) : null}
         </CardContent>
       </Card>
-    </div>
+    </AuthLayout>
   );
 };
 
 export default InviteAcceptPage;
+
+import AuthLayout from './AuthLayout';

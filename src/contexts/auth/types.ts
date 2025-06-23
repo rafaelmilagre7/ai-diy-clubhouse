@@ -1,21 +1,44 @@
 
-import { Session, User } from '@supabase/supabase-js';
-import { UserProfile } from '@/lib/supabase';
+import { User, Session } from '@supabase/supabase-js';
+
+export interface UserProfile {
+  id: string;
+  email: string;
+  name?: string;
+  role_id?: string;
+  role?: {
+    name: string;
+    permissions: string[];
+  };
+  onboarding_completed?: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface RegisterParams {
+  email: string;
+  password: string;
+  name: string;
+  inviteToken?: string;
+}
+
+export interface RegisterResult {
+  user?: any;
+  error?: any;
+}
 
 export interface AuthContextType {
-  session: Session | null;
   user: User | null;
+  session: Session | null;
   profile: UserProfile | null;
   isAdmin: boolean;
   isFormacao: boolean;
   isLoading: boolean;
   authError: Error | null;
-  signIn: (email: string, password: string) => Promise<{ error?: Error }>;
-  signOut: () => Promise<{ success: boolean; error?: Error | null }>;
-  signInAsMember: (email: string, password: string) => Promise<{ error?: Error }>;
-  signInAsAdmin: (email: string, password: string) => Promise<{ error?: Error }>;
-  setSession: React.Dispatch<React.SetStateAction<Session | null>>;
-  setUser: React.Dispatch<React.SetStateAction<User | null>>;
-  setProfile: React.Dispatch<React.SetStateAction<UserProfile | null>>;
-  setIsLoading: React.Dispatch<React.SetStateAction<boolean>>;
+  signIn: (email: string, password: string) => Promise<{ user: User | null; error: any }>;
+  signOut: () => Promise<void>;
+  signInAsMember: () => Promise<{ user: User | null; error: any }>;
+  signInAsAdmin: () => Promise<{ user: User | null; error: any }>;
+  registerWithInvite: (params: RegisterParams) => Promise<RegisterResult>;
+  setIsLoading: (loading: boolean) => void;
 }
