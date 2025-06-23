@@ -19,7 +19,7 @@ export const useInviteJourney = (token?: string) => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { inviteDetails, loading: detailsLoading } = useInviteDetails(token);
-  const { acceptInvite, isProcessing } = useInviteFlow();
+  const { acceptInvite, isProcessing } = useInviteFlow(token);
 
   const [journeyState, setJourneyState] = useState<InviteJourneyState>({
     phase: 'detecting',
@@ -47,7 +47,8 @@ export const useInviteJourney = (token?: string) => {
         
         setJourneyState(prev => ({ ...prev, phase: 'accepting' }));
         
-        const result = await acceptInvite(token);
+        // Corrigido: acceptInvite não recebe argumentos
+        const result = await acceptInvite();
         
         if (result.success) {
           toast.success('Convite aceito com sucesso!');
