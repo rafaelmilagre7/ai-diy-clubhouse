@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { memo, useMemo } from 'react';
 import { cn } from '@/lib/utils';
 import { CheckIcon } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -10,11 +10,25 @@ interface OnboardingProgressProps {
   stepTitles: string[];
 }
 
-export const OnboardingProgress = ({ 
+const OnboardingProgress = memo<OnboardingProgressProps>(({ 
   currentStep, 
   totalSteps, 
   stepTitles 
-}: OnboardingProgressProps) => {
+}) => {
+  // Memoizar cálculos de progresso
+  const progressPercentage = useMemo(() => {
+    return Math.round((currentStep / totalSteps) * 100);
+  }, [currentStep, totalSteps]);
+
+  const progressWidth = useMemo(() => {
+    return `${((currentStep - 1) / (totalSteps - 1)) * 100}%`;
+  }, [currentStep, totalSteps]);
+
+  // Memoizar título atual
+  const currentStepTitle = useMemo(() => {
+    return stepTitles[currentStep - 1] || '';
+  }, [stepTitles, currentStep]);
+
   return (
     <div className="w-full space-y-4">
       {/* Header */}
@@ -38,11 +52,11 @@ export const OnboardingProgress = ({
       <div className="hidden lg:block">
         <div className="relative">
           {/* Linha de conexão */}
-          <div className="absolute top-4 left-0 right-0 h-0.5 bg-white/10 -z-10"></div>
+          <div className="absolute top-4 left-0 right-0 h-0.5 bg-white/10 -z-10" />
           <div 
             className="absolute top-4 left-0 h-0.5 bg-gradient-to-r from-viverblue to-viverblue-light transition-all duration-500 -z-10"
-            style={{ width: `${((currentStep - 1) / (totalSteps - 1)) * 100}%` }}
-          ></div>
+            style={{ width: progressWidth }}
+          />
           
           {/* Steps */}
           <div className="flex items-start justify-between">
@@ -52,7 +66,7 @@ export const OnboardingProgress = ({
               const isCurrent = stepNumber === currentStep;
               
               return (
-                <div key={stepNumber} className="flex flex-col items-center max-w-[140px]">
+                <div key={`step-${stepNumber}`} className="flex flex-col items-center max-w-[140px]">
                   <motion.div
                     initial={{ scale: 0.8, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
@@ -107,7 +121,7 @@ export const OnboardingProgress = ({
             </div>
             <div className="flex-1">
               <h3 className="text-white font-semibold text-sm">
-                {stepTitles[currentStep - 1]}
+                {currentStepTitle}
               </h3>
               <p className="text-slate-300 text-xs">
                 Etapa {currentStep} de {totalSteps}
@@ -117,11 +131,11 @@ export const OnboardingProgress = ({
               <div className="w-16 bg-white/10 rounded-full h-2 overflow-hidden">
                 <div 
                   className="h-full bg-gradient-to-r from-viverblue to-viverblue-light transition-all duration-300"
-                  style={{ width: `${(currentStep / totalSteps) * 100}%` }}
+                  style={{ width: `${progressPercentage}%` }}
                 />
               </div>
               <span className="text-xs text-slate-300 mt-1 block">
-                {Math.round((currentStep / totalSteps) * 100)}%
+                {progressPercentage}%
               </span>
             </div>
           </div>
@@ -129,4 +143,8 @@ export const OnboardingProgress = ({
       </div>
     </div>
   );
-};
+});
+
+OnboardingProgress.displayName = 'OnboardingProgress';
+
+export { OnboardingProgress };

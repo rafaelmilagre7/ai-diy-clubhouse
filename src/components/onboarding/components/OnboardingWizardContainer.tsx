@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useOnboardingWizard } from '../hooks/useOnboardingWizard';
 import { useCleanOnboardingData } from '../hooks/useCleanOnboardingData';
@@ -19,6 +19,8 @@ export const OnboardingWizardContainer = ({ children }: OnboardingWizardContaine
   const inviteToken = searchParams.get('token');
   const [isCleanupComplete, setIsCleanupComplete] = useState(false);
   const [containerError, setContainerError] = useState<string | null>(null);
+  const [hasInitialized, setHasInitialized] = useState(false);
+  
   const { cleanupForInvite } = useInviteCleanup();
   
   const {
@@ -27,17 +29,24 @@ export const OnboardingWizardContainer = ({ children }: OnboardingWizardContaine
     initializeCleanData
   } = useCleanOnboardingData(inviteToken || undefined);
 
-  // Executar limpeza ANTES de qualquer inicialização
+  // Memoizar o memberType para evitar re-renders
+  const memberType = useMemo(() => cleanData.memberType || 'club', [cleanData.memberType]);
+  
+  // Executar limpeza APENAS UMA VEZ
   useEffect(() => {
+    if (hasInitialized) return;
+
     const setupForInvite = async () => {
       try {
+        setHasInitialized(true);
+        
         if (inviteToken) {
-          console.log('[WIZARD-CONTAINER] Detectado convite - executando limpeza TOTAL primeiro');
+          console.log('[WIZARD-CONTAINER] Detectado convite - executando limpeza primeiro');
           
-          // Primeiro: limpeza total
+          // Limpeza total para convites
           await cleanupForInvite(inviteToken);
           
-          // Aguardar um pouco para garantir que limpeza foi concluída
+          // Pequeno delay para garantir limpeza completa
           setTimeout(() => {
             console.log('[WIZARD-CONTAINER] Limpeza concluída, inicializando dados limpos');
             initializeCleanData();
@@ -51,31 +60,42 @@ export const OnboardingWizardContainer = ({ children }: OnboardingWizardContaine
       } catch (error: any) {
         console.error('[WIZARD-CONTAINER] Erro na configuração:', error);
         setContainerError(`Erro na inicialização: ${error.message}`);
-        setIsCleanupComplete(true); // Continuar mesmo com erro
+        setIsCleanupComplete(true);
       }
     };
 
     setupForInvite();
-  }, [inviteToken, cleanupForInvite, initializeCleanData]);
+  }, [inviteToken, cleanupForInvite, initializeCleanData, hasInitialized]);
 
-  const memberType = cleanData.memberType || 'club';
-  
-  // Para convites, aguardar limpeza completa + dados devem estar vazios
-  const isLoading = inviteToken 
-    ? (!isCleanupComplete || Object.keys(cleanData).length <= 3) // Apenas memberType, startedAt, fromInvite
-    : Object.keys(cleanData).length <= 1;
+  // Determinar estado de loading com lógica mais robusta
+  const isLoading = useMemo(() => {
+    if (!isCleanupComplete) return true;
+    
+    if (inviteToken) {
+      // Para convites, aguardar dados vazios/limpos
+      return Object.keys(cleanData).length <= 3; // Apenas memberType, startedAt, fromInvite
+    } else {
+      // Para usuários normais, aguardar dados básicos
+      return Object.keys(cleanData).length <= 1;
+    }
+  }, [isCleanupComplete, inviteToken, cleanData]);
+
+  // Memoizar updateData para evitar re-criação
+  const memoizedUpdateData = useCallback((newData: any) => {
+    updateData(newData);
+  }, [updateData]);
 
   const wizardProps = useOnboardingWizard({
     initialData: cleanData,
-    onDataChange: updateData,
+    onDataChange: memoizedUpdateData,
     memberType
   });
 
-  // Incorporar erro do container nos props
-  const enhancedProps = {
+  // Incorporar erro do container
+  const enhancedProps = useMemo(() => ({
     ...wizardProps,
     completionError: containerError || wizardProps.completionError
-  };
+  }), [wizardProps, containerError]);
 
   return (
     <>

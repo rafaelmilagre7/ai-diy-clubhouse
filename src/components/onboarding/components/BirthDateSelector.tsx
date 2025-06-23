@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, memo } from 'react';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
@@ -11,7 +11,7 @@ interface BirthDateSelectorProps {
   getFieldError?: (field: string) => string | undefined;
 }
 
-export const BirthDateSelector: React.FC<BirthDateSelectorProps> = ({
+const BirthDateSelector: React.FC<BirthDateSelectorProps> = memo(({
   birthDay,
   birthMonth,
   birthYear,
@@ -49,7 +49,7 @@ export const BirthDateSelector: React.FC<BirthDateSelectorProps> = ({
     return daysArray;
   }, [selectedMonth, selectedYear]);
 
-  const months = [
+  const months = useMemo(() => [
     { value: '01', label: 'Janeiro' },
     { value: '02', label: 'Fevereiro' },
     { value: '03', label: 'Março' },
@@ -62,7 +62,7 @@ export const BirthDateSelector: React.FC<BirthDateSelectorProps> = ({
     { value: '10', label: 'Outubro' },
     { value: '11', label: 'Novembro' },
     { value: '12', label: 'Dezembro' }
-  ];
+  ], []);
 
   const years = useMemo(() => {
     const currentYear = new Date().getFullYear();
@@ -73,13 +73,13 @@ export const BirthDateSelector: React.FC<BirthDateSelectorProps> = ({
     return yearsArray;
   }, []);
 
-  const handleDayChange = (day: string) => {
+  const handleDayChange = useCallback((day: string) => {
     console.log('[BirthDateSelector] Dia selecionado:', day);
     setSelectedDay(day);
     onChange(day, selectedMonth, selectedYear);
-  };
+  }, [onChange, selectedMonth, selectedYear]);
 
-  const handleMonthChange = (month: string) => {
+  const handleMonthChange = useCallback((month: string) => {
     console.log('[BirthDateSelector] Mês selecionado:', month);
     setSelectedMonth(month);
     
@@ -95,9 +95,9 @@ export const BirthDateSelector: React.FC<BirthDateSelectorProps> = ({
     }
     
     onChange(dayToUse, month, selectedYear);
-  };
+  }, [onChange, selectedDay, selectedYear]);
 
-  const handleYearChange = (year: string) => {
+  const handleYearChange = useCallback((year: string) => {
     console.log('[BirthDateSelector] Ano selecionado:', year);
     setSelectedYear(year);
     
@@ -113,7 +113,10 @@ export const BirthDateSelector: React.FC<BirthDateSelectorProps> = ({
     }
     
     onChange(dayToUse, selectedMonth, year);
-  };
+  }, [onChange, selectedDay, selectedMonth]);
+
+  // Memoizar erro
+  const birthDateError = useMemo(() => getFieldError?.('birthDate'), [getFieldError]);
 
   return (
     <div>
@@ -127,9 +130,13 @@ export const BirthDateSelector: React.FC<BirthDateSelectorProps> = ({
           <SelectTrigger className="bg-[#151823] border-white/20 text-white">
             <SelectValue placeholder="Dia" />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent className="bg-[#151823] border-white/20 z-50">
             {days.map((day) => (
-              <SelectItem key={day} value={day}>
+              <SelectItem 
+                key={`day-${day}`} 
+                value={day}
+                className="text-white hover:bg-white/10"
+              >
                 {day}
               </SelectItem>
             ))}
@@ -141,9 +148,13 @@ export const BirthDateSelector: React.FC<BirthDateSelectorProps> = ({
           <SelectTrigger className="bg-[#151823] border-white/20 text-white">
             <SelectValue placeholder="Mês" />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent className="bg-[#151823] border-white/20 z-50">
             {months.map((month) => (
-              <SelectItem key={month.value} value={month.value}>
+              <SelectItem 
+                key={`month-${month.value}`} 
+                value={month.value}
+                className="text-white hover:bg-white/10"
+              >
                 {month.label}
               </SelectItem>
             ))}
@@ -155,9 +166,13 @@ export const BirthDateSelector: React.FC<BirthDateSelectorProps> = ({
           <SelectTrigger className="bg-[#151823] border-white/20 text-white">
             <SelectValue placeholder="Ano" />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent className="bg-[#151823] border-white/20 z-50">
             {years.map((year) => (
-              <SelectItem key={year} value={year}>
+              <SelectItem 
+                key={`year-${year}`} 
+                value={year}
+                className="text-white hover:bg-white/10"
+              >
                 {year}
               </SelectItem>
             ))}
@@ -165,9 +180,13 @@ export const BirthDateSelector: React.FC<BirthDateSelectorProps> = ({
         </Select>
       </div>
 
-      {getFieldError?.('birthDate') && (
-        <p className="text-red-400 text-sm mt-1">{getFieldError('birthDate')}</p>
+      {birthDateError && (
+        <p className="text-red-400 text-sm mt-1">{birthDateError}</p>
       )}
     </div>
   );
-};
+});
+
+BirthDateSelector.displayName = 'BirthDateSelector';
+
+export { BirthDateSelector };

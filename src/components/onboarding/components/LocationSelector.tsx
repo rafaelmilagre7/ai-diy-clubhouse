@@ -1,5 +1,5 @@
 
-import React, { useEffect, useMemo, useCallback } from 'react';
+import React, { useEffect, useMemo, useCallback, memo } from 'react';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useIBGELocations } from '@/hooks/useIBGELocations';
@@ -13,7 +13,7 @@ interface LocationSelectorProps {
   getFieldError?: (field: string) => string | undefined;
 }
 
-export const LocationSelector: React.FC<LocationSelectorProps> = ({
+const LocationSelector: React.FC<LocationSelectorProps> = memo(({
   selectedState,
   selectedCity,
   onStateChange,
@@ -56,7 +56,9 @@ export const LocationSelector: React.FC<LocationSelectorProps> = ({
     onCityChange(cityName);
   }, [onCityChange]);
 
-  console.log('[LocationSelector] Render - selectedState:', selectedState, 'selectedCity:', selectedCity);
+  // Memoizar erros para evitar re-renders
+  const stateError = useMemo(() => getFieldError?.('state'), [getFieldError]);
+  const cityError = useMemo(() => getFieldError?.('city'), [getFieldError]);
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -69,7 +71,7 @@ export const LocationSelector: React.FC<LocationSelectorProps> = ({
           <SelectTrigger className="mt-1 bg-[#151823] border-white/20 text-white">
             <SelectValue placeholder={isLoading ? "Carregando estados..." : "Selecione seu estado"} />
           </SelectTrigger>
-          <SelectContent className="bg-[#151823] border-white/20">
+          <SelectContent className="bg-[#151823] border-white/20 z-50">
             {isLoading ? (
               <div className="flex items-center justify-center p-4">
                 <Loader2 className="w-4 h-4 animate-spin mr-2" />
@@ -78,7 +80,7 @@ export const LocationSelector: React.FC<LocationSelectorProps> = ({
             ) : (
               estados.map((estado) => (
                 <SelectItem 
-                  key={estado.code} 
+                  key={`state-${estado.code}`}
                   value={estado.code}
                   className="text-white hover:bg-white/10"
                 >
@@ -88,8 +90,8 @@ export const LocationSelector: React.FC<LocationSelectorProps> = ({
             )}
           </SelectContent>
         </Select>
-        {getFieldError?.('state') && (
-          <p className="text-red-400 text-sm mt-1">{getFieldError('state')}</p>
+        {stateError && (
+          <p className="text-red-400 text-sm mt-1">{stateError}</p>
         )}
       </div>
 
@@ -114,7 +116,7 @@ export const LocationSelector: React.FC<LocationSelectorProps> = ({
               } 
             />
           </SelectTrigger>
-          <SelectContent className="bg-[#151823] border-white/20">
+          <SelectContent className="bg-[#151823] border-white/20 z-50">
             {isCitiesLoading ? (
               <div className="flex items-center justify-center p-4">
                 <Loader2 className="w-4 h-4 animate-spin mr-2" />
@@ -123,7 +125,7 @@ export const LocationSelector: React.FC<LocationSelectorProps> = ({
             ) : citiesForSelectedState.length > 0 ? (
               citiesForSelectedState.map((cidade) => (
                 <SelectItem 
-                  key={cidade.name} 
+                  key={`city-${selectedState}-${cidade.name}`}
                   value={cidade.name}
                   className="text-white hover:bg-white/10"
                 >
@@ -137,10 +139,14 @@ export const LocationSelector: React.FC<LocationSelectorProps> = ({
             ) : null}
           </SelectContent>
         </Select>
-        {getFieldError?.('city') && (
-          <p className="text-red-400 text-sm mt-1">{getFieldError('city')}</p>
+        {cityError && (
+          <p className="text-red-400 text-sm mt-1">{cityError}</p>
         )}
       </div>
     </div>
   );
-};
+});
+
+LocationSelector.displayName = 'LocationSelector';
+
+export { LocationSelector };

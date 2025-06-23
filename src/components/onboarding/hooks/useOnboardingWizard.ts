@@ -1,5 +1,5 @@
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { OnboardingData } from '../types/onboardingTypes';
 import { useOnboardingCompletion } from './useOnboardingCompletion';
 import { useOnboardingValidation } from './useOnboardingValidation';
@@ -19,20 +19,47 @@ export const useOnboardingWizard = ({
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
+  // Ref para controlar componente montado
+  const isMountedRef = useRef(true);
+  
+  // Ref para timeout de auto-save
+  const autoSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
   const { completeOnboarding, isCompleting, completionError } = useOnboardingCompletion();
   const { validateStep, validationErrors, getFieldError } = useOnboardingValidation();
 
   const totalSteps = 6;
 
+  // Cleanup ao desmontar
+  useEffect(() => {
+    return () => {
+      isMountedRef.current = false;
+      if (autoSaveTimeoutRef.current) {
+        clearTimeout(autoSaveTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  // Debounced data change handler
   const handleDataChange = useCallback((newData: Partial<OnboardingData>) => {
     try {
+      // Só atualizar se componente ainda estiver montado
+      if (!isMountedRef.current) return;
+      
       onDataChange(newData);
       setHasUnsavedChanges(true);
       
-      // Simulação de auto-save com proteção contra erros
-      setTimeout(() => {
-        setLastSaved(new Date());
-        setHasUnsavedChanges(false);
+      // Limpar timeout anterior
+      if (autoSaveTimeoutRef.current) {
+        clearTimeout(autoSaveTimeoutRef.current);
+      }
+      
+      // Auto-save com debounce
+      autoSaveTimeoutRef.current = setTimeout(() => {
+        if (isMountedRef.current) {
+          setLastSaved(new Date());
+          setHasUnsavedChanges(false);
+        }
       }, 1000);
     } catch (error) {
       console.error('[ONBOARDING-WIZARD] Erro ao atualizar dados:', error);
@@ -42,7 +69,7 @@ export const useOnboardingWizard = ({
   const handleNext = useCallback(async () => {
     try {
       if (currentStep < totalSteps) {
-        // Validar apenas se os dados estão carregados
+        // Só validar se dados estão carregados (evita validação prematura)
         if (Object.keys(initialData).length > 1) {
           const isValid = validateStep(currentStep, initialData, memberType);
           if (isValid) {
@@ -51,7 +78,7 @@ export const useOnboardingWizard = ({
             console.warn('[ONBOARDING-WIZARD] Validação falhou para etapa:', currentStep);
           }
         } else {
-          console.warn('[ONBOARDING-WIZARD] Dados ainda não carregados, aguardando...');
+          console.warn('[ONBOARDING-WIZARD] Dados ainda não carregados');
         }
       }
     } catch (error) {
@@ -79,10 +106,12 @@ export const useOnboardingWizard = ({
     }
   }, [completeOnboarding, initialData, memberType]);
 
-  // Validação com proteção contra dados não carregados
-  const isCurrentStepValid = Object.keys(initialData).length > 1 
-    ? validateStep(currentStep, initialData, memberType)
-    : false;
+  // Validação memoizada para evitar re-renders desnecessários
+  const isCurrentStepValid = useCallback(() => {
+    return Object.keys(initialData).length > 1 
+      ? validateStep(currentStep, initialData, memberType)
+      : false;
+  }, [currentStep, initialData, memberType, validateStep]);
 
   return {
     currentStep,
@@ -94,7 +123,7 @@ export const useOnboardingWizard = ({
     handlePrevious,
     handleDataChange,
     handleSubmit,
-    isCurrentStepValid,
+    isCurrentStepValid: isCurrentStepValid(),
     lastSaved,
     hasUnsavedChanges,
     completionError
