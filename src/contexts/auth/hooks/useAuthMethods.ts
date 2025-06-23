@@ -50,7 +50,7 @@ export const useAuthMethods = ({ setIsLoading }: AuthMethodsParams) => {
     }
   };
 
-  // CORREÇÃO 2: SignUp melhorado com suporte a convites
+  // SignUp CORRIGIDO - processa convites adequadamente
   const signUp = async (
     email: string, 
     password: string, 
@@ -58,7 +58,11 @@ export const useAuthMethods = ({ setIsLoading }: AuthMethodsParams) => {
   ) => {
     try {
       setIsLoading(true);
-      console.log('[AUTH-METHODS] Iniciando signup com convite:', !!options.inviteToken);
+      console.log('[AUTH-METHODS] Iniciando signup:', {
+        email,
+        hasInviteToken: !!options.inviteToken,
+        userName: options.userData?.name
+      });
 
       const { data, error } = await supabase.auth.signUp({
         email,
@@ -85,10 +89,10 @@ export const useAuthMethods = ({ setIsLoading }: AuthMethodsParams) => {
 
       console.log('[AUTH-METHODS] Usuário criado:', data.user.email);
 
-      // CORREÇÃO 2: Processar convite se presente
+      // PROCESSAR CONVITE se presente
       if (options.inviteToken) {
         try {
-          console.log('[AUTH-METHODS] Completando registro do convite');
+          console.log('[AUTH-METHODS] Processando convite');
           
           const { data: inviteResult, error: inviteError } = await supabase.rpc(
             'complete_invite_registration',
@@ -99,16 +103,14 @@ export const useAuthMethods = ({ setIsLoading }: AuthMethodsParams) => {
           );
 
           if (inviteError) {
-            console.error('[AUTH-METHODS] Erro ao completar convite:', inviteError);
+            console.error('[AUTH-METHODS] Erro no convite:', inviteError);
             toast.error('Erro ao processar convite: ' + inviteError.message);
           } else if (inviteResult?.success) {
             console.log('[AUTH-METHODS] Convite processado com sucesso');
             toast.success('Conta criada e convite aceito com sucesso!');
-            
-            // Limpar token após sucesso
             InviteTokenManager.clearToken();
           } else {
-            console.warn('[AUTH-METHODS] Convite não processado completamente');
+            console.warn('[AUTH-METHODS] Convite não processado');
             toast.warning('Conta criada, mas houve problema com o convite');
           }
         } catch (inviteErr) {

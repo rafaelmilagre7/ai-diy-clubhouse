@@ -17,10 +17,8 @@ export const ProtectedRoutes = ({ children, allowInviteFlow = false }: Protected
   const { user, isLoading: authLoading } = useAuth();
   const { isRequired: onboardingRequired, isLoading: onboardingLoading } = useOnboardingRequired();
 
-  // Detecção simples de fluxo de convite
-  const isInInviteFlow = InviteTokenManager.hasStoredToken() || 
-                        new URLSearchParams(location.search).has('token') ||
-                        location.pathname.includes('/invite');
+  // Detecção SIMPLES de fluxo de convite
+  const isInInviteFlow = InviteTokenManager.hasToken() || location.pathname.includes('/invite');
 
   console.log("[PROTECTED-ROUTES] Estado:", {
     pathname: location.pathname,
@@ -58,8 +56,7 @@ export const ProtectedRoutes = ({ children, allowInviteFlow = false }: Protected
     
     // Preservar token se em fluxo de convite
     if (isInInviteFlow) {
-      const currentToken = new URLSearchParams(location.search).get('token') || 
-                          InviteTokenManager.getStoredToken();
+      const currentToken = InviteTokenManager.getToken();
       
       if (currentToken) {
         InviteTokenManager.storeToken(currentToken);

@@ -21,12 +21,12 @@ export const useCleanOnboardingData = (inviteToken?: string) => {
     email: profile?.email || user?.email || ''
   }), [profile, user?.email]);
 
-  // Inicialização simplificada - sem fallbacks complexos
+  // Inicialização DIRETA - sem fallbacks
   const initializeCleanData = useCallback(() => {
     console.log('[CLEAN-ONBOARDING] Inicializando dados');
     
     if (inviteToken && inviteDetails) {
-      // Fluxo de convite - direto e simples
+      // Fluxo de convite - DIRETO
       const inviteData: OnboardingData = {
         name: '',
         email: inviteDetails.email,
@@ -38,8 +38,8 @@ export const useCleanOnboardingData = (inviteToken?: string) => {
 
       setData(inviteData);
       console.log('[CLEAN-ONBOARDING] Dados do convite aplicados');
-    } else if (!inviteToken) {
-      // Fluxo normal - direto e simples
+    } else {
+      // Fluxo normal - DIRETO
       const memberType: 'club' | 'formacao' = profileData.roleName === 'formacao' ? 'formacao' : 'club';
       
       const regularData: OnboardingData = {

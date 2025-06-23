@@ -18,9 +18,9 @@ export const OnboardingWizardContainer = ({ children }: OnboardingWizardContaine
   const [searchParams] = useSearchParams();
   const { cleanupForInvite } = useOnboardingCleanup();
   
-  // Token simples: URL ou storage, sem fallbacks múltiplos
+  // Token ÚNICO - sem múltiplas fontes
   const inviteToken = useMemo(() => {
-    return searchParams.get('token') || InviteTokenManager.getStoredToken();
+    return InviteTokenManager.getToken();
   }, [searchParams]);
 
   const {
@@ -32,33 +32,29 @@ export const OnboardingWizardContainer = ({ children }: OnboardingWizardContaine
 
   const memberType = useMemo(() => cleanData.memberType || 'club', [cleanData.memberType]);
   
-  // Inicialização simples - sem estados complexos
+  // Inicialização SIMPLES
   useEffect(() => {
-    const setupOnboarding = async () => {
-      console.log('[WIZARD-CONTAINER] Configurando onboarding');
-      
-      if (inviteToken) {
-        InviteTokenManager.storeToken(inviteToken);
-        cleanupForInvite();
-      }
+    console.log('[WIZARD-CONTAINER] Configurando onboarding');
+    
+    if (inviteToken) {
+      InviteTokenManager.storeToken(inviteToken);
+      cleanupForInvite();
+    }
 
-      // Aguardar carregamento do convite apenas se necessário
-      if (inviteToken && isInviteLoading) {
-        return;
-      }
+    // Se está carregando convite, aguardar
+    if (inviteToken && isInviteLoading) {
+      return;
+    }
 
-      await initializeCleanData();
-      console.log('[WIZARD-CONTAINER] Configuração concluída');
-    };
-
-    setupOnboarding();
+    // Caso contrário, inicializar
+    initializeCleanData();
+    console.log('[WIZARD-CONTAINER] Configuração concluída');
   }, [inviteToken, isInviteLoading, initializeCleanData, cleanupForInvite]);
 
-  // Loading simples - sem estados de erro complexos
+  // Loading SIMPLES
   const isLoading = useMemo(() => {
-    if (inviteToken && isInviteLoading) return true;
-    return !cleanData.memberType || (!cleanData.email && !cleanData.name);
-  }, [inviteToken, isInviteLoading, cleanData]);
+    return inviteToken && isInviteLoading;
+  }, [inviteToken, isInviteLoading]);
 
   const memoizedUpdateData = useCallback((newData: any) => {
     const dataWithToken = inviteToken ? { ...newData, inviteToken } : newData;

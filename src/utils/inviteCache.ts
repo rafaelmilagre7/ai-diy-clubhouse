@@ -1,26 +1,23 @@
 
+/**
+ * Cache simples para dados de convite
+ * SEM COMPLEXIDADES DE EXPIRAÇÃO
+ */
 interface CachedInvite {
   data: any;
-  timestamp: number;
   token: string;
 }
 
 export class InviteCache {
   private static readonly CACHE_KEY = 'viver-ia-invite-cache';
-  private static readonly CACHE_DURATION = 5 * 60 * 1000; // 5 minutos
 
   static set(token: string, data: any): void {
     try {
-      const cached: CachedInvite = {
-        data,
-        timestamp: Date.now(),
-        token
-      };
-      
+      const cached: CachedInvite = { data, token };
       sessionStorage.setItem(this.CACHE_KEY, JSON.stringify(cached));
-      console.log('[INVITE-CACHE] Dados do convite armazenados em cache');
+      console.log('[INVITE-CACHE] Dados armazenados');
     } catch (error) {
-      console.error('[INVITE-CACHE] Erro ao armazenar cache:', error);
+      console.error('[INVITE-CACHE] Erro ao armazenar:', error);
     }
   }
 
@@ -37,17 +34,10 @@ export class InviteCache {
         return null;
       }
 
-      // Verificar se não expirou
-      const isExpired = Date.now() - cached.timestamp > this.CACHE_DURATION;
-      if (isExpired) {
-        this.clear();
-        return null;
-      }
-
-      console.log('[INVITE-CACHE] Dados do convite recuperados do cache');
+      console.log('[INVITE-CACHE] Dados recuperados');
       return cached.data;
     } catch (error) {
-      console.error('[INVITE-CACHE] Erro ao recuperar cache:', error);
+      console.error('[INVITE-CACHE] Erro ao recuperar:', error);
       this.clear();
       return null;
     }
@@ -58,7 +48,7 @@ export class InviteCache {
       sessionStorage.removeItem(this.CACHE_KEY);
       console.log('[INVITE-CACHE] Cache limpo');
     } catch (error) {
-      console.error('[INVITE-CACHE] Erro ao limpar cache:', error);
+      console.error('[INVITE-CACHE] Erro ao limpar:', error);
     }
   }
 
