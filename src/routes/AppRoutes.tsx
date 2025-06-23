@@ -13,7 +13,27 @@ import RootRedirect from '@/components/routing/RootRedirect';
 
 // Route configurations
 import { ProtectedRoutes } from '@/auth/ProtectedRoutes';
-import { adminRoutes } from './AdminRoutes';
+import { formacaoRoutes } from './FormacaoRoutes';
+
+// Admin pages
+import AdminLayout from '@/components/layout/admin/AdminLayout';
+import AdminDashboard from '@/pages/admin/AdminDashboard';
+import AdminUsers from '@/pages/admin/AdminUsers';
+import AdminTools from '@/pages/admin/AdminTools';
+import AdminToolEdit from '@/pages/admin/AdminToolEdit';
+import AdminSolutions from '@/pages/admin/AdminSolutions';
+import AdminSolutionCreate from '@/pages/admin/AdminSolutionCreate';
+import SolutionEditor from '@/pages/admin/SolutionEditor';
+import AdminAnalytics from '@/pages/admin/AdminAnalytics';
+import AdminSuggestions from '@/pages/admin/AdminSuggestions';
+import AdminEvents from '@/pages/admin/AdminEvents';
+import AdminRoles from '@/pages/admin/AdminRoles';
+import InvitesManagement from '@/pages/admin/invites/InvitesManagement';
+import WhatsAppDebug from '@/pages/admin/WhatsAppDebug';
+import EmailDebug from '@/pages/admin/EmailDebug';
+import AdminCommunications from '@/pages/admin/AdminCommunications';
+import SupabaseDiagnostics from '@/pages/admin/SupabaseDiagnostics';
+import AdminSecurity from '@/pages/admin/AdminSecurity';
 
 const AppRoutes = () => {
   const { user, isLoading } = useAuth();
@@ -59,8 +79,190 @@ const AppRoutes = () => {
         } 
       />
 
-      {/* Admin routes - using consolidated admin routes */}
-      {adminRoutes.map((route, index) => (
+      {/* Admin routes - expanded individually */}
+      <Route 
+        path="/admin" 
+        element={
+          <ProtectedRoutes>
+            <AdminLayout>
+              <AdminDashboard />
+            </AdminLayout>
+          </ProtectedRoutes>
+        } 
+      />
+      <Route 
+        path="/admin/users" 
+        element={
+          <ProtectedRoutes>
+            <AdminLayout>
+              <AdminUsers />
+            </AdminLayout>
+          </ProtectedRoutes>
+        } 
+      />
+      <Route 
+        path="/admin/tools" 
+        element={
+          <ProtectedRoutes>
+            <AdminLayout>
+              <AdminTools />
+            </AdminLayout>
+          </ProtectedRoutes>
+        } 
+      />
+      <Route 
+        path="/admin/tools/new" 
+        element={
+          <ProtectedRoutes>
+            <AdminLayout>
+              <AdminToolEdit />
+            </AdminLayout>
+          </ProtectedRoutes>
+        } 
+      />
+      <Route 
+        path="/admin/tools/:id" 
+        element={
+          <ProtectedRoutes>
+            <AdminLayout>
+              <AdminToolEdit />
+            </AdminLayout>
+          </ProtectedRoutes>
+        } 
+      />
+      <Route 
+        path="/admin/solutions" 
+        element={
+          <ProtectedRoutes>
+            <AdminLayout>
+              <AdminSolutions />
+            </AdminLayout>
+          </ProtectedRoutes>
+        } 
+      />
+      <Route 
+        path="/admin/solutions/new" 
+        element={
+          <ProtectedRoutes>
+            <AdminLayout>
+              <AdminSolutionCreate />
+            </AdminLayout>
+          </ProtectedRoutes>
+        } 
+      />
+      <Route 
+        path="/admin/solutions/:id" 
+        element={
+          <ProtectedRoutes>
+            <AdminLayout>
+              <SolutionEditor />
+            </AdminLayout>
+          </ProtectedRoutes>
+        } 
+      />
+      <Route 
+        path="/admin/analytics" 
+        element={
+          <ProtectedRoutes>
+            <AdminLayout>
+              <AdminAnalytics />
+            </AdminLayout>
+          </ProtectedRoutes>
+        } 
+      />
+      <Route 
+        path="/admin/suggestions" 
+        element={
+          <ProtectedRoutes>
+            <AdminLayout>
+              <AdminSuggestions />
+            </AdminLayout>
+          </ProtectedRoutes>
+        } 
+      />
+      <Route 
+        path="/admin/events" 
+        element={
+          <ProtectedRoutes>
+            <AdminLayout>
+              <AdminEvents />
+            </AdminLayout>
+          </ProtectedRoutes>
+        } 
+      />
+      <Route 
+        path="/admin/roles" 
+        element={
+          <ProtectedRoutes>
+            <AdminLayout>
+              <AdminRoles />
+            </AdminLayout>
+          </ProtectedRoutes>
+        } 
+      />
+      <Route 
+        path="/admin/invites" 
+        element={
+          <ProtectedRoutes>
+            <AdminLayout>
+              <InvitesManagement />
+            </AdminLayout>
+          </ProtectedRoutes>
+        } 
+      />
+      <Route 
+        path="/admin/communications" 
+        element={
+          <ProtectedRoutes>
+            <AdminLayout>
+              <AdminCommunications />
+            </AdminLayout>
+          </ProtectedRoutes>
+        } 
+      />
+      <Route 
+        path="/admin/security" 
+        element={
+          <ProtectedRoutes>
+            <AdminLayout>
+              <AdminSecurity />
+            </AdminLayout>
+          </ProtectedRoutes>
+        } 
+      />
+      <Route 
+        path="/admin/whatsapp-debug" 
+        element={
+          <ProtectedRoutes>
+            <AdminLayout>
+              <WhatsAppDebug />
+            </AdminLayout>
+          </ProtectedRoutes>
+        } 
+      />
+      <Route 
+        path="/admin/email-debug" 
+        element={
+          <ProtectedRoutes>
+            <AdminLayout>
+              <EmailDebug />
+            </AdminLayout>
+          </ProtectedRoutes>
+        } 
+      />
+      <Route 
+        path="/admin/diagnostics" 
+        element={
+          <ProtectedRoutes>
+            <AdminLayout>
+              <SupabaseDiagnostics />
+            </AdminLayout>
+          </ProtectedRoutes>
+        } 
+      />
+
+      {/* LMS/Formacao routes - expanded individually */}
+      {formacaoRoutes.map((route, index) => (
         <Route key={index} {...route} />
       ))}
 
