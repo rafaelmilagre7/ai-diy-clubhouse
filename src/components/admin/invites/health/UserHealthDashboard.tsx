@@ -3,18 +3,20 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Separator } from '@/components/ui/separator';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { 
-  Activity, 
+  RefreshCw, 
   AlertTriangle, 
-  Users, 
   TrendingUp, 
-  Heart,
-  RefreshCw,
-  BarChart3,
-  Shield
+  Users, 
+  Activity,
+  Settings,
+  PlayCircle
 } from 'lucide-react';
-import { useUserHealthDashboard } from '@/hooks/admin/invites/useUserHealthDashboard';
+import { useHealthCheckData } from '@/hooks/admin/useHealthCheckData';
+import { useAtRiskUsers } from '@/hooks/admin/useAtRiskUsers';
 import { useHealthCheckInitializer } from '@/hooks/admin/invites/useHealthCheckInitializer';
 import { HealthCheckProgressDialog } from './HealthCheckProgressDialog';
 import { toast } from 'sonner';
@@ -23,82 +25,64 @@ export const UserHealthDashboard = () => {
   const { 
     healthMetrics, 
     healthStats, 
-    healthAlerts, 
-    loading, 
-    error, 
-    refetch, 
-    initializeHealthData,
+    loading: healthLoading, 
+    error: healthError, 
+    refetch: refetchHealth, 
     recalculateHealthScores 
-  } = useUserHealthDashboard();
+  } = useHealthCheckData();
+
+  const {
+    atRiskUsers,
+    loading: atRiskLoading,
+    error: atRiskError,
+    refetch: refetchAtRisk,
+    triggerIntervention
+  } = useAtRiskUsers();
 
   const { progress, initialize, reset, isProcessing } = useHealthCheckInitializer();
   const [showProgressDialog, setShowProgressDialog] = useState(false);
 
-  const handleInitializeData = async () => {
-    try {
-      setShowProgressDialog(true);
-      reset();
-      await initialize();
-      // Recarregar dados após inicialização
-      setTimeout(() => {
-        refetch();
-      }, 1000);
-    } catch (error: any) {
-      toast.error('Erro na inicialização', {
-        description: error.message
-      });
-    }
+  const loading = healthLoading || atRiskLoading;
+  const error = healthError || atRiskError;
+
+  const handleInitialize = async () => {
+    setShowProgressDialog(true);
+    await initialize();
   };
 
-  const handleRecalculate = async () => {
+  const handleRecalculateScores = async () => {
     try {
       await recalculateHealthScores();
-      toast.success('Health scores recalculados com sucesso');
+      toast.success('Health scores recalculados com sucesso!');
     } catch (error: any) {
-      toast.error('Erro ao recalcular scores', {
-        description: error.message
-      });
+      toast.error('Erro ao recalcular scores: ' + error.message);
     }
   };
 
-  const getRiskLevelColor = (level: string) => {
-    switch (level) {
-      case 'critical': return 'bg-red-100 text-red-800 border-red-200';
-      case 'high': return 'bg-orange-100 text-orange-800 border-orange-200';
-      case 'medium': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      default: return 'bg-gray-100 text-gray-800 border-gray-200';
+  const handleRefresh = async () => {
+    try {
+      await Promise.all([refetchHealth(), refetchAtRisk()]);
+      toast.success('Dados atualizados com sucesso!');
+    } catch (error: any) {
+      toast.error('Erro ao atualizar dados: ' + error.message);
     }
   };
 
-  const getHealthScoreColor = (score: number) => {
-    if (score >= 70) return 'text-green-600';
-    if (score >= 40) return 'text-yellow-600';
-    return 'text-red-600';
+  const handleTriggerIntervention = async (userId: string) => {
+    try {
+      await triggerIntervention(userId);
+      toast.success('Intervenção agendada com sucesso!');
+    } catch (error: any) {
+      toast.error('Erro ao agendar intervenção: ' + error.message);
+    }
   };
 
-  if (loading) {
+  if (loading && !healthStats) {
     return (
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-3xl font-bold tracking-tight">Health Check</h2>
-            <p className="text-muted-foreground">Monitoramento de saúde dos usuários</p>
-          </div>
-        </div>
-
-        <div className="grid gap-6 md:grid-cols-4">
-          {[...Array(4)].map((_, i) => (
-            <Card key={i}>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Carregando...</CardTitle>
-                <div className="h-4 w-4 bg-muted rounded animate-pulse" />
-              </CardHeader>
-              <CardContent>
-                <div className="h-6 bg-muted rounded animate-pulse mb-1" />
-                <div className="h-4 bg-muted rounded animate-pulse w-2/3" />
-              </CardContent>
-            </Card>
-          ))}
+      <div className="flex items-center justify-center p-8">
+        <div className="flex items-center gap-2">
+          <RefreshCw className="h-4 w-4 animate-spin" />
+          <span>Carregando dados de saúde...</span>
         </div>
       </div>
     );
@@ -106,71 +90,60 @@ export const UserHealthDashboard = () => {
 
   if (error) {
     return (
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-3xl font-bold tracking-tight">Health Check</h2>
-            <p className="text-muted-foreground">Monitoramento de saúde dos usuários</p>
-          </div>
-          <div className="flex gap-2">
-            <Button onClick={handleInitializeData} disabled={isProcessing}>
-              <Activity className="w-4 h-4 mr-2" />
-              Inicializar Dados
-            </Button>
-          </div>
-        </div>
-
-        <Card className="border-red-200 bg-red-50">
-          <CardHeader>
-            <CardTitle className="text-red-800 flex items-center gap-2">
-              <AlertTriangle className="w-5 h-5" />
-              Erro no Health Check
-            </CardTitle>
-            <CardDescription className="text-red-600">
-              {error}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-muted-foreground mb-4">
-              O sistema de monitoramento de saúde ainda não foi inicializado ou encontrou um erro.
-              Clique no botão acima para configurar o sistema.
-            </p>
-          </CardContent>
-        </Card>
-
-        <HealthCheckProgressDialog
-          open={showProgressDialog}
-          onOpenChange={setShowProgressDialog}
-          progress={progress}
-        />
-      </div>
+      <Alert variant="destructive">
+        <AlertTriangle className="h-4 w-4" />
+        <AlertDescription>
+          {error}
+        </AlertDescription>
+      </Alert>
     );
   }
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      {/* Header com ações */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">Health Check</h2>
-          <p className="text-muted-foreground">Monitoramento de saúde dos usuários</p>
+          <h2 className="text-2xl font-bold text-gray-900">Health Check dos Usuários</h2>
+          <p className="text-gray-600">
+            Monitore a saúde e engajamento dos usuários da plataforma
+          </p>
         </div>
+        
         <div className="flex gap-2">
-          <Button variant="outline" onClick={handleRecalculate} disabled={loading}>
-            <RefreshCw className="w-4 h-4 mr-2" />
+          <Button 
+            variant="outline" 
+            onClick={handleRefresh}
+            disabled={loading}
+          >
+            <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+            Atualizar
+          </Button>
+          
+          <Button 
+            variant="outline" 
+            onClick={handleRecalculateScores}
+            disabled={loading}
+          >
+            <Settings className="h-4 w-4 mr-2" />
             Recalcular
           </Button>
-          <Button onClick={handleInitializeData} disabled={isProcessing}>
-            <Activity className="w-4 h-4 mr-2" />
-            Reinicializar
+
+          <Button 
+            onClick={handleInitialize}
+            disabled={isProcessing}
+          >
+            <PlayCircle className={`h-4 w-4 mr-2 ${isProcessing ? 'animate-spin' : ''}`} />
+            {isProcessing ? 'Processando...' : 'Inicializar'}
           </Button>
         </div>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid gap-6 md:grid-cols-4">
+      {/* Cards de estatísticas */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total de Usuários</CardTitle>
+            <CardTitle className="text-sm font-medium">Total Usuários</CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -181,8 +154,19 @@ export const UserHealthDashboard = () => {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Score Médio</CardTitle>
+            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{healthStats?.averageHealthScore || 0}</div>
+            <p className="text-xs text-muted-foreground">Pontuação geral</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Usuários Saudáveis</CardTitle>
-            <Heart className="h-4 w-4 text-green-600" />
+            <Activity className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-600">{healthStats?.healthyUsers || 0}</div>
@@ -193,18 +177,18 @@ export const UserHealthDashboard = () => {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Em Risco</CardTitle>
-            <AlertTriangle className="h-4 w-4 text-yellow-600" />
+            <AlertTriangle className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-yellow-600">{healthStats?.atRiskUsers || 0}</div>
-            <p className="text-xs text-muted-foreground">Score 30-69</p>
+            <p className="text-xs text-muted-foreground">Score entre 30-70</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Críticos</CardTitle>
-            <Shield className="h-4 w-4 text-red-600" />
+            <AlertTriangle className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-red-600">{healthStats?.criticalUsers || 0}</div>
@@ -213,92 +197,54 @@ export const UserHealthDashboard = () => {
         </Card>
       </div>
 
-      {/* Health Alerts */}
-      {healthAlerts && healthAlerts.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <AlertTriangle className="w-5 h-5 text-yellow-600" />
-              Alertas de Saúde
-            </CardTitle>
-            <CardDescription>
-              Usuários que precisam de atenção imediata
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {healthAlerts.map((alert) => (
-                <div key={alert.id} className="flex items-center justify-between p-3 border rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <Badge className={getRiskLevelColor(alert.riskLevel)}>
-                      {alert.riskLevel}
-                    </Badge>
-                    <div>
-                      <p className="font-medium">{alert.userName}</p>
-                      <p className="text-sm text-muted-foreground">{alert.reason}</p>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <p className={`font-semibold ${getHealthScoreColor(alert.healthScore)}`}>
-                      {alert.healthScore}
-                    </p>
-                    <p className="text-xs text-muted-foreground">Health Score</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Health Metrics */}
+      {/* Lista de usuários em risco */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <BarChart3 className="w-5 h-5" />
-            Métricas de Saúde
-          </CardTitle>
+          <CardTitle>Usuários em Risco</CardTitle>
           <CardDescription>
-            Distribuição de scores de saúde dos usuários
+            Usuários que necessitam atenção especial
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {healthMetrics && healthMetrics.length > 0 ? (
-            <div className="space-y-4">
-              {healthMetrics.slice(0, 10).map((metric) => (
-                <div key={metric.user_id} className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
-                      <span className="text-xs font-medium">
-                        {metric.user_profile?.name?.charAt(0) || 'U'}
-                      </span>
+          {atRiskUsers && atRiskUsers.length > 0 ? (
+            <ScrollArea className="h-[400px]">
+              <div className="space-y-4">
+                {atRiskUsers.map((user) => (
+                  <div key={user.user_id} className="flex items-center justify-between p-4 border rounded-lg">
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium">{user.user_profile.name}</span>
+                        <Badge 
+                          variant={
+                            user.risk_level === 'critical' ? 'destructive' :
+                            user.risk_level === 'high' ? 'secondary' : 'outline'
+                          }
+                        >
+                          {user.risk_level === 'critical' ? 'Crítico' :
+                           user.risk_level === 'high' ? 'Alto' : 'Médio'}
+                        </Badge>
+                      </div>
+                      <p className="text-sm text-muted-foreground">{user.user_profile.email}</p>
+                      <div className="text-xs text-muted-foreground">
+                        Health Score: {user.health_score} | 
+                        Engajamento: {user.engagement_score} | 
+                        Intervenções: {user.interventions_count}
+                      </div>
                     </div>
-                    <div>
-                      <p className="font-medium">{metric.user_profile?.name || 'Usuário'}</p>
-                      <p className="text-sm text-muted-foreground">{metric.user_profile?.email}</p>
-                    </div>
+                    <Button 
+                      size="sm" 
+                      variant="outline"
+                      onClick={() => handleTriggerIntervention(user.user_id)}
+                    >
+                      Intervir
+                    </Button>
                   </div>
-                  <div className="flex items-center gap-4">
-                    <div className="text-right">
-                      <p className={`font-semibold ${getHealthScoreColor(metric.health_score)}`}>
-                        {metric.health_score}
-                      </p>
-                      <p className="text-xs text-muted-foreground">Health</p>
-                    </div>
-                    <div className="w-24">
-                      <Progress value={metric.health_score} className="h-2" />
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            </ScrollArea>
           ) : (
-            <div className="text-center py-8">
-              <TrendingUp className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-              <h3 className="text-lg font-semibold mb-2">Nenhuma métrica encontrada</h3>
-              <p className="text-muted-foreground mb-4">
-                Initialize o sistema para começar a monitorar a saúde dos usuários.
-              </p>
+            <div className="text-center py-8 text-muted-foreground">
+              Nenhum usuário em risco identificado
             </div>
           )}
         </CardContent>
@@ -308,6 +254,7 @@ export const UserHealthDashboard = () => {
         open={showProgressDialog}
         onOpenChange={setShowProgressDialog}
         progress={progress}
+        onCancel={reset}
       />
     </div>
   );
