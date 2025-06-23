@@ -7,9 +7,9 @@ import LoginPage from '@/pages/auth/LoginPage';
 import RegisterPage from '@/pages/auth/RegisterPage';
 
 // Main components
-import LandingPage from '@/pages/LandingPage';
 import DashboardPage from '@/pages/DashboardPage';
 import OnboardingWizard from '@/components/onboarding/OnboardingWizard';
+import RootRedirect from '@/components/routing/RootRedirect';
 
 // Route configurations
 import { ProtectedRoutes } from '@/auth/ProtectedRoutes';
@@ -37,14 +37,14 @@ const AppRoutes = () => {
 
   return (
     <Routes>
-      {/* Public routes */}
-      <Route path="/" element={<LandingPage />} />
+      {/* Root route - intelligent redirect */}
+      <Route path="/" element={<RootRedirect />} />
       
       {/* Auth routes */}
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
       
-      {/* CORREÇÃO 3: Rotas de convite melhoradas */}
+      {/* Invite routes */}
       <Route path="/invite/:token" element={<RegisterPage />} />
       <Route path="/invite" element={<RegisterPage />} />
       
@@ -142,7 +142,7 @@ const AppRoutes = () => {
       {/* Fallback redirect */}
       <Route 
         path="*" 
-        element={<Navigate to={user ? "/dashboard" : "/"} replace />} 
+        element={<Navigate to={user ? "/dashboard" : "/login"} replace />} 
       />
     </Routes>
   );
