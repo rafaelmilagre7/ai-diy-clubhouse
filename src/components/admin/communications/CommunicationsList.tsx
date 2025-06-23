@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -60,10 +59,10 @@ export const CommunicationsList = ({
   const getChannelIcons = (channels: string[]) => {
     return channels.map(channel => {
       if (channel === 'email') {
-        return <Mail key={channel} className="h-4 w-4" title="Email" />;
+        return <Mail key={channel} className="h-4 w-4" />;
       }
       if (channel === 'notification') {
-        return <MessageSquare key={channel} className="h-4 w-4" title="Notificação" />;
+        return <MessageSquare key={channel} className="h-4 w-4" />;
       }
       return null;
     });
