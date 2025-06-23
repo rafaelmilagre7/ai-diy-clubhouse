@@ -13,6 +13,7 @@ import NotFound from '@/pages/NotFound';
 import ResetPassword from '@/pages/auth/ResetPassword';
 import SetNewPassword from '@/pages/auth/SetNewPassword';
 import OnboardingPage from '@/pages/OnboardingPage';
+import RegisterPage from '@/pages/auth/RegisterPage';
 
 // Layout base
 import BaseLayout from '@/components/layout/BaseLayout';
@@ -36,6 +37,16 @@ export const AppRoutes = createBrowserRouter([
   {
     path: "/onboarding",
     element: <OnboardingPage />
+  },
+
+  // Rotas de convite
+  {
+    path: "/convite/:token",
+    element: <RegisterPage />
+  },
+  {
+    path: "/invite/:token",
+    element: <RegisterPage />
   },
 
   // Rotas de membros
