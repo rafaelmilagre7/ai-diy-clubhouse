@@ -1,8 +1,7 @@
-
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { parseEmailPattern, findRelatedEmails } from "@/utils/emailUtils";
+import { parseEmailPattern, findRelatedEmails, canCoexist } from "@/utils/emailUtils";
 import type { CreateInviteParams, InviteCreateResult } from "./types";
 
 export const useInviteCreate = () => {
@@ -10,32 +9,41 @@ export const useInviteCreate = () => {
 
   const validateUniqueEmail = async (email: string): Promise<{ isValid: boolean; message?: string; relatedEmails?: string[] }> => {
     try {
-      const { baseEmail } = parseEmailPattern(email);
+      const { baseLocalPart, domain } = parseEmailPattern(email);
       
-      // Buscar emails relacionados em profiles
+      // Buscar apenas emails do mesmo domínio para verificar conflitos reais
+      const domainPattern = `%${domain}`;
+      const basePattern = `${baseLocalPart}%${domain}`;
+      
+      // Buscar emails relacionados em profiles (mesmo domínio)
       const { data: profiles } = await supabase
         .from('profiles')
         .select('email')
-        .or(`email.like.${baseEmail.replace('@', '+%@')},email.eq.${baseEmail}`);
+        .ilike('email', domainPattern)
+        .ilike('email', basePattern);
       
-      // Buscar emails relacionados em invites
+      // Buscar emails relacionados em invites (mesmo domínio)
       const { data: invites } = await supabase
         .from('invites')
         .select('email')
-        .or(`email.like.${baseEmail.replace('@', '+%@')},email.eq.${baseEmail}`);
+        .ilike('email', domainPattern)
+        .ilike('email', basePattern);
       
       const allEmails = [
         ...(profiles?.map(p => p.email) || []),
         ...(invites?.map(i => i.email) || [])
       ].filter(Boolean);
       
-      const relatedEmails = findRelatedEmails(allEmails, email);
+      // Verificar se há conflitos reais usando a nova lógica
+      const conflictingEmails = allEmails.filter(existingEmail => 
+        !canCoexist(email, existingEmail)
+      );
       
-      if (relatedEmails.length > 0) {
+      if (conflictingEmails.length > 0) {
         return {
           isValid: false,
-          message: `Email base já existe no sistema com ${relatedEmails.length} variação(ões)`,
-          relatedEmails
+          message: `Email já existe no sistema com ${conflictingEmails.length} variação(ões) no mesmo domínio`,
+          relatedEmails: conflictingEmails
         };
       }
       
@@ -61,7 +69,7 @@ export const useInviteCreate = () => {
         };
       }
 
-      // Validar email único
+      // Validar email único com nova lógica
       const emailValidation = await validateUniqueEmail(params.email);
       if (!emailValidation.isValid) {
         const errorMessage = `${emailValidation.message}\nEmails encontrados: ${emailValidation.relatedEmails?.join(', ')}`;
