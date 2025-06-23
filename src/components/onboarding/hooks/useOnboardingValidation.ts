@@ -38,8 +38,8 @@ export const useOnboardingValidation = () => {
           break;
 
         case 2: // Perfil Empresarial
-          if (!data.company?.trim()) {
-            errors.push({ field: 'company', message: 'Nome da empresa é obrigatório' });
+          if (!data.companyName?.trim()) {
+            errors.push({ field: 'companyName', message: 'Nome da empresa é obrigatório' });
           }
           if (!data.position?.trim()) {
             errors.push({ field: 'position', message: 'Cargo é obrigatório' });
@@ -50,38 +50,37 @@ export const useOnboardingValidation = () => {
           break;
 
         case 3: // Maturidade em IA
-          if (!data.aiExperience) {
-            errors.push({ field: 'aiExperience', message: 'Experiência com IA é obrigatória' });
+          if (!data.aiKnowledgeLevel) {
+            errors.push({ field: 'aiKnowledgeLevel', message: 'Nível de conhecimento em IA é obrigatório' });
           }
-          if (!data.currentTools || data.currentTools.length === 0) {
-            errors.push({ field: 'currentTools', message: 'Selecione pelo menos uma ferramenta' });
+          if (!data.aiToolsUsed || data.aiToolsUsed.length === 0) {
+            errors.push({ field: 'aiToolsUsed', message: 'Selecione pelo menos uma ferramenta de IA' });
           }
           break;
 
         case 4: // Objetivos e Expectativas
-          if (!data.primaryGoals || data.primaryGoals.length === 0) {
-            errors.push({ field: 'primaryGoals', message: 'Selecione pelo menos um objetivo' });
+          if (!data.mainObjective?.trim()) {
+            errors.push({ field: 'mainObjective', message: 'Objetivo principal é obrigatório' });
           }
-          if (!data.timeline) {
-            errors.push({ field: 'timeline', message: 'Timeline é obrigatório' });
+          if (!data.expectedResult90Days?.trim()) {
+            errors.push({ field: 'expectedResult90Days', message: 'Resultado esperado em 90 dias é obrigatório' });
           }
           break;
 
         case 5: // Personalização da Experiência
-          if (!data.preferredLearningStyle) {
-            errors.push({ field: 'preferredLearningStyle', message: 'Estilo de aprendizado é obrigatório' });
+          if (!data.weeklyLearningTime?.trim()) {
+            errors.push({ field: 'weeklyLearningTime', message: 'Tempo semanal de aprendizado é obrigatório' });
           }
-          if (!data.communicationPreference) {
-            errors.push({ field: 'communicationPreference', message: 'Preferência de comunicação é obrigatória' });
+          if (!data.contentPreference || data.contentPreference.length === 0) {
+            errors.push({ field: 'contentPreference', message: 'Preferência de conteúdo é obrigatória' });
           }
           break;
 
         case 6: // Finalização
           // Validação final - todos os campos obrigatórios devem estar preenchidos
           const requiredFields = [
-            'name', 'email', 'phone', 'company', 'position', 
-            'companySize', 'aiExperience', 'timeline', 
-            'preferredLearningStyle', 'communicationPreference'
+            'name', 'email', 'phone', 'companyName', 'position', 
+            'companySize', 'aiKnowledgeLevel', 'weeklyLearningTime'
           ];
 
           for (const field of requiredFields) {
@@ -93,17 +92,17 @@ export const useOnboardingValidation = () => {
             }
           }
 
-          if (!data.currentTools || data.currentTools.length === 0) {
+          if (!data.aiToolsUsed || data.aiToolsUsed.length === 0) {
             errors.push({ 
-              field: 'currentTools', 
-              message: 'Selecione pelo menos uma ferramenta atual' 
+              field: 'aiToolsUsed', 
+              message: 'Selecione pelo menos uma ferramenta de IA' 
             });
           }
 
-          if (!data.primaryGoals || data.primaryGoals.length === 0) {
+          if (!data.mainObjective?.trim()) {
             errors.push({ 
-              field: 'primaryGoals', 
-              message: 'Selecione pelo menos um objetivo principal' 
+              field: 'mainObjective', 
+              message: 'Objetivo principal é obrigatório' 
             });
           }
           break;
