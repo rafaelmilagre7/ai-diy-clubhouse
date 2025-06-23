@@ -98,6 +98,20 @@ class AuditLogger {
   async logAdminAction(action: string, resourceId?: string, details?: Record<string, any>, userId?: string) {
     return this.safeLog('admin_action', { action, resource_id: resourceId, details }, userId);
   }
+
+  // Logs de acesso a dados - método adicionado para compatibilidade
+  async logAccessEvent(action: string, resourceId?: string, details?: Record<string, any>, userId?: string) {
+    return this.safeLog('data_access', { action, resource_id: resourceId, details }, userId);
+  }
+
+  // Logs de eventos de dados - método adicionado para compatibilidade
+  async logDataEvent(action: string, resourceType: string, resourceId?: string, details?: Record<string, any>, userId?: string) {
+    return this.safeLog('data_access', { 
+      action: `${action}_${resourceType}`, 
+      resource_id: resourceId, 
+      details 
+    }, userId);
+  }
 }
 
 export const auditLogger = new AuditLogger();

@@ -1,320 +1,220 @@
 
 import React, { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { AlertCircle, Eye, EyeOff, CheckCircle, Loader2 } from 'lucide-react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Eye, EyeOff, Loader2 } from 'lucide-react';
+import { toast } from 'sonner';
 import { useAuth } from '@/contexts/auth';
+import { registerSchema, type RegisterFormData } from './schemas/authSchemas';
 import { logger } from '@/utils/logger';
 
 interface RegisterFormProps {
-  onSuccess?: () => void;
-  onError?: (error: string) => void;
-  defaultEmail?: string;
-  inviteToken?: string;
+  onSwitchToLogin: () => void;
+  token?: string | null;
 }
 
-export const RegisterForm: React.FC<RegisterFormProps> = ({
-  onSuccess,
-  onError,
-  defaultEmail = '',
-  inviteToken
-}) => {
-  const { signUp } = useAuth();
-  const [isLoading, setIsLoading] = useState(false);
+const RegisterForm = ({ onSwitchToLogin, token }: RegisterFormProps) => {
   const [showPassword, setShowPassword] = useState(false);
-  const [formData, setFormData] = useState({
-    email: defaultEmail,
-    password: '',
-    confirmPassword: '',
-    name: ''
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const { register } = useAuth();
+
+  const form = useForm<RegisterFormData>({
+    resolver: zodResolver(registerSchema),
+    defaultValues: {
+      email: '',
+      password: '',
+      confirmPassword: '',
+      fullName: '',
+    },
   });
-  const [error, setError] = useState('');
-  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
 
-  const validateField = (field: string, value: string) => {
-    const errors: Record<string, string> = {};
-
-    switch (field) {
-      case 'email':
-        if (!value) {
-          errors.email = 'Email é obrigatório';
-        } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
-          errors.email = 'Email inválido';
-        }
-        break;
-      case 'password':
-        if (!value) {
-          errors.password = 'Senha é obrigatória';
-        } else if (value.length < 6) {
-          errors.password = 'A senha deve ter pelo menos 6 caracteres';
-        }
-        break;
-      case 'confirmPassword':
-        if (!value) {
-          errors.confirmPassword = 'Confirmação de senha é obrigatória';
-        } else if (value !== formData.password) {
-          errors.confirmPassword = 'As senhas não coincidem';
-        }
-        break;
-    }
-
-    return errors;
-  };
-
-  const validateForm = () => {
-    const allErrors: Record<string, string> = {};
-
-    // Validar todos os campos
-    Object.entries(formData).forEach(([field, value]) => {
-      const fieldErrors = validateField(field, value);
-      Object.assign(allErrors, fieldErrors);
-    });
-
-    // Validação adicional para confirmação de senha
-    if (formData.password && formData.confirmPassword && formData.password !== formData.confirmPassword) {
-      allErrors.confirmPassword = 'As senhas não coincidem';
-    }
-
-    setValidationErrors(allErrors);
-    return Object.keys(allErrors).length === 0;
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!validateForm()) {
-      return;
-    }
-
-    setIsLoading(true);
-    setError('');
-
+  const onSubmit = async (data: RegisterFormData) => {
     try {
-      logger.info('Iniciando processo de registro:', {
-        email: formData.email,
-        hasInviteToken: !!inviteToken,
-        component: 'REGISTER_FORM'
+      logger.info('Iniciando processo de registro', {
+        component: 'RegisterForm',
+        email: data.email,
+        hasToken: !!token
       });
 
-      const metadata = {
-        name: formData.name || undefined,
-        invite_token: inviteToken || undefined
-      };
-
-      const { error: signUpError, partialSuccess } = await signUp(
-        formData.email,
-        formData.password,
-        metadata
-      );
-
-      if (signUpError) {
-        logger.error('Erro no registro via RegisterForm:', signUpError, {
-          component: 'REGISTER_FORM',
-          email: formData.email
+      const result = await register(data.email, data.password, data.fullName, token);
+      
+      if (result.error) {
+        logger.error('Erro no registro de usuário', {
+          component: 'RegisterForm',
+          error: result.error.message,
+          email: data.email
         });
-        
-        setError(signUpError.message);
-        onError?.(signUpError.message);
+
+        // Verificar se é erro específico de confirmação de email
+        if (result.error.message?.includes('confirm') || result.error.message?.includes('verification')) {
+          toast.success('Conta criada! Verifique seu email para confirmar o cadastro.');
+          return;
+        }
+
+        toast.error(result.error.message || 'Erro ao criar conta');
         return;
       }
 
-      logger.info('Registro concluído com sucesso:', {
-        email: formData.email,
-        partialSuccess,
-        component: 'REGISTER_FORM'
+      logger.info('Registro realizado com sucesso', {
+        component: 'RegisterForm',
+        email: data.email
       });
 
-      if (partialSuccess) {
-        // Usuário criado mas convite teve problema
-        setError('Conta criada com sucesso, mas houve um problema com o convite. Entre em contato com o administrador.');
-      }
-
-      onSuccess?.();
-
-    } catch (err: any) {
-      logger.error('Erro inesperado no registro:', err, {
-        component: 'REGISTER_FORM',
-        email: formData.email
+      toast.success('Conta criada com sucesso!');
+      
+    } catch (error) {
+      logger.error('Erro inesperado no registro', {
+        component: 'RegisterForm',
+        error: error instanceof Error ? error.message : 'Erro desconhecido',
+        email: data.email
       });
       
-      const errorMessage = err?.message || 'Erro inesperado durante o registro';
-      setError(errorMessage);
-      onError?.(errorMessage);
-    } finally {
-      setIsLoading(false);
+      toast.error('Erro inesperado ao criar conta. Tente novamente.');
     }
-  };
-
-  const handleInputChange = (field: keyof typeof formData) => (
-    e: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    const value = e.target.value;
-    setFormData(prev => ({
-      ...prev,
-      [field]: value
-    }));
-    
-    // Limpar erros ao digitar
-    if (error) {
-      setError('');
-    }
-
-    // Validação em tempo real
-    const fieldErrors = validateField(field, value);
-    setValidationErrors(prev => ({
-      ...prev,
-      [field]: fieldErrors[field] || ''
-    }));
-
-    // Validação especial para confirmação de senha
-    if (field === 'password' && formData.confirmPassword) {
-      const confirmErrors = validateField('confirmPassword', formData.confirmPassword);
-      setValidationErrors(prev => ({
-        ...prev,
-        confirmPassword: confirmErrors.confirmPassword || ''
-      }));
-    }
-  };
-
-  const getFieldStatus = (field: string) => {
-    if (validationErrors[field]) return 'error';
-    if (formData[field as keyof typeof formData]) return 'success';
-    return 'default';
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      {error && (
-        <Alert variant="destructive">
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
-      )}
+    <Card className="w-full max-w-md">
+      <CardHeader className="space-y-1">
+        <CardTitle className="text-2xl font-bold text-center">Criar Conta</CardTitle>
+        <CardDescription className="text-center">
+          {token ? 'Complete seu cadastro usando o convite' : 'Preencha os dados para criar sua conta'}
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <FormField
+              control={form.control}
+              name="fullName"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Nome Completo</FormLabel>
+                  <FormControl>
+                    <Input 
+                      placeholder="Seu nome completo" 
+                      {...field} 
+                      disabled={form.formState.isSubmitting}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-      <div className="space-y-2">
-        <Label htmlFor="name">Nome (opcional)</Label>
-        <div className="relative">
-          <Input
-            id="name"
-            type="text"
-            value={formData.name}
-            onChange={handleInputChange('name')}
-            placeholder="Seu nome completo"
-            className={getFieldStatus('name') === 'success' ? 'border-green-500' : ''}
-          />
-          {getFieldStatus('name') === 'success' && (
-            <CheckCircle className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-green-500" />
-          )}
-        </div>
-      </div>
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Email</FormLabel>
+                  <FormControl>
+                    <Input 
+                      type="email" 
+                      placeholder="seu@email.com" 
+                      {...field} 
+                      disabled={form.formState.isSubmitting}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-      <div className="space-y-2">
-        <Label htmlFor="email">Email *</Label>
-        <div className="relative">
-          <Input
-            id="email"
-            type="email"
-            value={formData.email}
-            onChange={handleInputChange('email')}
-            placeholder="seu@email.com"
-            required
-            disabled={!!defaultEmail}
-            className={`${
-              validationErrors.email ? 'border-red-500' : 
-              getFieldStatus('email') === 'success' ? 'border-green-500' : ''
-            }`}
-          />
-          {getFieldStatus('email') === 'success' && !validationErrors.email && (
-            <CheckCircle className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-green-500" />
-          )}
-        </div>
-        {validationErrors.email && (
-          <p className="text-sm text-red-600">{validationErrors.email}</p>
-        )}
-      </div>
+            <FormField
+              control={form.control}
+              name="password"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Senha</FormLabel>
+                  <FormControl>
+                    <div className="relative">
+                      <Input
+                        type={showPassword ? 'text' : 'password'}
+                        placeholder="Sua senha"
+                        {...field}
+                        disabled={form.formState.isSubmitting}
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                        onClick={() => setShowPassword(!showPassword)}
+                        disabled={form.formState.isSubmitting}
+                      >
+                        {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                      </Button>
+                    </div>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-      <div className="space-y-2">
-        <Label htmlFor="password">Senha *</Label>
-        <div className="relative">
-          <Input
-            id="password"
-            type={showPassword ? 'text' : 'password'}
-            value={formData.password}
-            onChange={handleInputChange('password')}
-            placeholder="Mínimo 6 caracteres"
-            required
-            className={`pr-10 ${
-              validationErrors.password ? 'border-red-500' : 
-              getFieldStatus('password') === 'success' ? 'border-green-500' : ''
-            }`}
-          />
+            <FormField
+              control={form.control}
+              name="confirmPassword"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Confirmar Senha</FormLabel>
+                  <FormControl>
+                    <div className="relative">
+                      <Input
+                        type={showConfirmPassword ? 'text' : 'password'}
+                        placeholder="Confirme sua senha"
+                        {...field}
+                        disabled={form.formState.isSubmitting}
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                        disabled={form.formState.isSubmitting}
+                      >
+                        {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                      </Button>
+                    </div>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <Button 
+              type="submit" 
+              className="w-full"
+              disabled={form.formState.isSubmitting}
+            >
+              {form.formState.isSubmitting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Criando conta...
+                </>
+              ) : (
+                'Criar Conta'
+              )}
+            </Button>
+          </form>
+        </Form>
+
+        <div className="mt-4 text-center">
           <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-            onClick={() => setShowPassword(!showPassword)}
+            variant="link"
+            onClick={onSwitchToLogin}
+            className="text-sm"
           >
-            {showPassword ? (
-              <EyeOff className="h-4 w-4" />
-            ) : (
-              <Eye className="h-4 w-4" />
-            )}
+            Já tem uma conta? Fazer login
           </Button>
         </div>
-        {validationErrors.password && (
-          <p className="text-sm text-red-600">{validationErrors.password}</p>
-        )}
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="confirmPassword">Confirmar Senha *</Label>
-        <div className="relative">
-          <Input
-            id="confirmPassword"
-            type="password"
-            value={formData.confirmPassword}
-            onChange={handleInputChange('confirmPassword')}
-            placeholder="Digite a senha novamente"
-            required
-            className={`${
-              validationErrors.confirmPassword ? 'border-red-500' : 
-              getFieldStatus('confirmPassword') === 'success' ? 'border-green-500' : ''
-            }`}
-          />
-          {getFieldStatus('confirmPassword') === 'success' && !validationErrors.confirmPassword && (
-            <CheckCircle className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-green-500" />
-          )}
-        </div>
-        {validationErrors.confirmPassword && (
-          <p className="text-sm text-red-600">{validationErrors.confirmPassword}</p>
-        )}
-      </div>
-
-      <Button
-        type="submit"
-        className="w-full"
-        disabled={isLoading || Object.keys(validationErrors).some(key => validationErrors[key])}
-      >
-        {isLoading ? (
-          <>
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            Criando conta...
-          </>
-        ) : (
-          'Criar conta'
-        )}
-      </Button>
-
-      {inviteToken && (
-        <div className="text-center text-sm text-muted-foreground">
-          <CheckCircle className="inline h-4 w-4 mr-1 text-green-500" />
-          Você está usando um convite válido
-        </div>
-      )}
-    </form>
+      </CardContent>
+    </Card>
   );
 };
 
