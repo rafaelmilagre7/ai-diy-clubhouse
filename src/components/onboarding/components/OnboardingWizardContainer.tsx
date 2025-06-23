@@ -18,7 +18,7 @@ export const OnboardingWizardContainer = ({ children }: OnboardingWizardContaine
   const [searchParams] = useSearchParams();
   const { cleanupForInvite } = useOnboardingCleanup();
   
-  // Token ÚNICO - sem múltiplas fontes
+  // Token ÚNICO - fonte única de verdade
   const inviteToken = useMemo(() => {
     return InviteTokenManager.getToken();
   }, [searchParams]);
@@ -32,23 +32,20 @@ export const OnboardingWizardContainer = ({ children }: OnboardingWizardContaine
 
   const memberType = useMemo(() => cleanData.memberType || 'club', [cleanData.memberType]);
   
-  // Inicialização DIRETA - sem estados intermediários
+  // Inicialização SIMPLES sem estados complexos
   useEffect(() => {
-    console.log('[WIZARD-CONTAINER] Configuração direta do onboarding');
+    console.log('[WIZARD-CONTAINER] Inicialização simples');
     
     if (inviteToken) {
       InviteTokenManager.storeToken(inviteToken);
       cleanupForInvite();
     }
 
-    // Inicializar sempre - sem aguardar loading de convite
     initializeCleanData();
-    console.log('[WIZARD-CONTAINER] Configuração concluída');
   }, [inviteToken, initializeCleanData, cleanupForInvite]);
 
-  // Loading SIMPLIFICADO - apenas para dados essenciais
+  // Loading SIMPLIFICADO
   const isLoading = useMemo(() => {
-    // Só considerar loading se realmente não tem dados básicos
     return !cleanData.memberType && isInviteLoading;
   }, [cleanData.memberType, isInviteLoading]);
 

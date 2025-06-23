@@ -1,5 +1,5 @@
 
-import { useState, useCallback } from 'react';
+import { useCallback, useState } from 'react';
 import { OnboardingData } from '../types/onboardingTypes';
 
 interface ValidationError {
@@ -15,126 +15,66 @@ export const useOnboardingValidation = () => {
     data: OnboardingData, 
     memberType: 'club' | 'formacao'
   ): boolean => {
+    const errors: ValidationError[] = [];
+
     try {
-      // Proteção contra dados não carregados
-      if (!data || Object.keys(data).length <= 1) {
-        console.warn('[ONBOARDING-VALIDATION] Dados não carregados ainda');
-        return false;
-      }
-
-      const errors: ValidationError[] = [];
-
       switch (step) {
-        case 1: // Informações Pessoais
+        case 1:
           if (!data.name?.trim()) {
             errors.push({ field: 'name', message: 'Nome é obrigatório' });
           }
           if (!data.email?.trim()) {
-            errors.push({ field: 'email', message: 'E-mail é obrigatório' });
-          }
-          if (!data.phone?.trim()) {
-            errors.push({ field: 'phone', message: 'Telefone é obrigatório' });
+            errors.push({ field: 'email', message: 'Email é obrigatório' });
           }
           break;
 
-        case 2: // Perfil Empresarial
+        case 2:
           if (!data.companyName?.trim()) {
             errors.push({ field: 'companyName', message: 'Nome da empresa é obrigatório' });
           }
-          if (!data.position?.trim()) {
-            errors.push({ field: 'position', message: 'Cargo é obrigatório' });
-          }
-          if (!data.companySize) {
-            errors.push({ field: 'companySize', message: 'Tamanho da empresa é obrigatório' });
+          if (!data.businessSector?.trim()) {
+            errors.push({ field: 'businessSector', message: 'Setor é obrigatório' });
           }
           break;
 
-        case 3: // Maturidade em IA
+        case 3:
           if (!data.aiKnowledgeLevel) {
-            errors.push({ field: 'aiKnowledgeLevel', message: 'Nível de conhecimento em IA é obrigatório' });
-          }
-          if (!data.aiToolsUsed || data.aiToolsUsed.length === 0) {
-            errors.push({ field: 'aiToolsUsed', message: 'Selecione pelo menos uma ferramenta de IA' });
+            errors.push({ field: 'aiKnowledgeLevel', message: 'Nível de conhecimento é obrigatório' });
           }
           break;
 
-        case 4: // Objetivos e Expectativas
-          if (!data.mainObjective?.trim()) {
+        case 4:
+          if (!data.mainObjective) {
             errors.push({ field: 'mainObjective', message: 'Objetivo principal é obrigatório' });
           }
-          if (!data.expectedResult90Days?.trim()) {
-            errors.push({ field: 'expectedResult90Days', message: 'Resultado esperado em 90 dias é obrigatório' });
-          }
           break;
 
-        case 5: // Personalização da Experiência
-          if (!data.weeklyLearningTime?.trim()) {
-            errors.push({ field: 'weeklyLearningTime', message: 'Tempo semanal de aprendizado é obrigatório' });
+        case 5:
+          if (!data.weeklyLearningTime) {
+            errors.push({ field: 'weeklyLearningTime', message: 'Tempo de aprendizado é obrigatório' });
           }
-          if (!data.contentPreference || data.contentPreference.length === 0) {
-            errors.push({ field: 'contentPreference', message: 'Preferência de conteúdo é obrigatória' });
+          if (!data.bestDays || data.bestDays.length === 0) {
+            errors.push({ field: 'bestDays', message: 'Pelo menos um dia deve ser selecionado' });
           }
-          break;
-
-        case 6: // Finalização
-          // Validação final - todos os campos obrigatórios devem estar preenchidos
-          const requiredFields = [
-            'name', 'email', 'phone', 'companyName', 'position', 
-            'companySize', 'aiKnowledgeLevel', 'weeklyLearningTime'
-          ];
-
-          for (const field of requiredFields) {
-            if (!data[field as keyof OnboardingData]) {
-              errors.push({ 
-                field, 
-                message: `Campo ${field} é obrigatório` 
-              });
-            }
-          }
-
-          if (!data.aiToolsUsed || data.aiToolsUsed.length === 0) {
-            errors.push({ 
-              field: 'aiToolsUsed', 
-              message: 'Selecione pelo menos uma ferramenta de IA' 
-            });
-          }
-
-          if (!data.mainObjective?.trim()) {
-            errors.push({ 
-              field: 'mainObjective', 
-              message: 'Objetivo principal é obrigatório' 
-            });
+          if (!data.bestPeriods || data.bestPeriods.length === 0) {
+            errors.push({ field: 'bestPeriods', message: 'Pelo menos um período deve ser selecionado' });
           }
           break;
 
         default:
-          console.warn('[ONBOARDING-VALIDATION] Etapa desconhecida:', step);
-          return true;
+          break;
       }
 
       setValidationErrors(errors);
-      
-      const isValid = errors.length === 0;
-      
-      if (!isValid) {
-        console.log('[ONBOARDING-VALIDATION] Erros encontrados na etapa', step, ':', errors);
-      }
-
-      return isValid;
-
+      return errors.length === 0;
     } catch (error) {
-      console.error('[ONBOARDING-VALIDATION] Erro na validação:', error);
-      setValidationErrors([{ 
-        field: 'general', 
-        message: 'Erro na validação' 
-      }]);
+      console.error('[VALIDATION] Erro na validação:', error);
       return false;
     }
   }, []);
 
-  const getFieldError = useCallback((fieldName: string): string | undefined => {
-    const error = validationErrors.find(err => err.field === fieldName);
-    return error?.message;
+  const getFieldError = useCallback((field: string): string | undefined => {
+    return validationErrors.find(error => error.field === field)?.message;
   }, [validationErrors]);
 
   const clearValidationErrors = useCallback(() => {

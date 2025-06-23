@@ -72,7 +72,7 @@ const OnboardingWizard = memo(() => {
             totalSteps,
             completionError
           }) => {
-            // Loading com mensagens específicas
+            // Loading com verificação básica
             if (isLoading) {
               return <OnboardingLoadingState type="preparation" message="Preparando onboarding personalizado..." />;
             }
@@ -83,7 +83,7 @@ const OnboardingWizard = memo(() => {
               return <OnboardingLoadingState type="initialization" message="Carregando suas informações..." />;
             }
 
-            // Erro de finalização com tratamento específico
+            // Erro de finalização
             if (completionError) {
               return (
                 <OnboardingErrorHandler

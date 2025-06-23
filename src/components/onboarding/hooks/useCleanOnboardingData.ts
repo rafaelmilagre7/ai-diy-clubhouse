@@ -21,15 +21,15 @@ export const useCleanOnboardingData = (inviteToken?: string) => {
     email: profile?.email || user?.email || ''
   }), [profile, user?.email]);
 
-  // MELHORIA 1: Eliminar loop de dependência - usar useEffect direto
+  // Inicialização SIMPLIFICADA
   useEffect(() => {
-    console.log('[CLEAN-ONBOARDING] Detectando mudanças nos dados');
+    console.log('[CLEAN-ONBOARDING] Inicializando dados');
     
     if (inviteToken && inviteDetails) {
-      // Fluxo de convite - dados do convite carregados
+      // Fluxo de convite com dados válidos
       const inviteData: OnboardingData = {
         name: '',
-        email: inviteDetails.email.toLowerCase(), // MELHORIA 3: Normalizar email
+        email: inviteDetails.email.toLowerCase(),
         memberType: inviteDetails.role.name === 'formacao' ? 'formacao' : 'club',
         startedAt: new Date().toISOString(),
         fromInvite: true,
@@ -37,9 +37,9 @@ export const useCleanOnboardingData = (inviteToken?: string) => {
       };
 
       setData(inviteData);
-      console.log('[CLEAN-ONBOARDING] Dados do convite aplicados com email normalizado');
+      console.log('[CLEAN-ONBOARDING] Dados do convite aplicados');
     } else if (inviteToken && !inviteDetails && !inviteLoading && !inviteError) {
-      // MELHORIA 2: Token existe mas ainda aguardando dados do convite
+      // Token válido mas aguardando detalhes
       const pendingData: OnboardingData = {
         name: '',
         email: '',
@@ -50,9 +50,9 @@ export const useCleanOnboardingData = (inviteToken?: string) => {
       };
 
       setData(pendingData);
-      console.log('[CLEAN-ONBOARDING] Dados pendentes com token aplicados');
+      console.log('[CLEAN-ONBOARDING] Dados pendentes aplicados');
     } else if (inviteToken && inviteError) {
-      // MELHORIA 5: Tratar erro específico do convite
+      // Erro no convite - fallback
       const fallbackData: OnboardingData = {
         name: '',
         email: '',
@@ -63,33 +63,31 @@ export const useCleanOnboardingData = (inviteToken?: string) => {
       };
 
       setData(fallbackData);
-      console.log('[CLEAN-ONBOARDING] Dados fallback por erro no convite aplicados');
+      console.log('[CLEAN-ONBOARDING] Dados fallback aplicados');
     } else if (!inviteToken) {
-      // Fluxo normal - dados do perfil
+      // Fluxo normal sem convite
       const memberType: 'club' | 'formacao' = profileData.roleName === 'formacao' ? 'formacao' : 'club';
       
       const regularData: OnboardingData = {
         name: profileData.name,
-        email: profileData.email.toLowerCase(), // MELHORIA 3: Normalizar email
+        email: profileData.email.toLowerCase(),
         memberType,
         startedAt: new Date().toISOString()
       };
 
       setData(regularData);
-      console.log('[CLEAN-ONBOARDING] Dados regulares aplicados com email normalizado');
+      console.log('[CLEAN-ONBOARDING] Dados regulares aplicados');
     }
   }, [inviteToken, inviteDetails, inviteLoading, inviteError, profileData]);
 
-  // MELHORIA 2: Loading otimizado - só considerar loading se realmente necessário
+  // Loading otimizado
   const isReallyLoading = useMemo(() => {
-    // Só está loading se tem token, não tem dados do convite E está carregando
     return !!(inviteToken && !inviteDetails && inviteLoading && !inviteError);
   }, [inviteToken, inviteDetails, inviteLoading, inviteError]);
 
   const updateData = useCallback((newData: Partial<OnboardingData>) => {
     console.log('[CLEAN-ONBOARDING] Atualizando dados:', newData);
     
-    // MELHORIA 3: Normalizar email se fornecido
     const normalizedData = newData.email 
       ? { ...newData, email: newData.email.toLowerCase() }
       : newData;
@@ -97,9 +95,8 @@ export const useCleanOnboardingData = (inviteToken?: string) => {
     setData(prevData => ({ ...prevData, ...normalizedData }));
   }, []);
 
-  // Função de inicialização manual (mantida por compatibilidade)
   const initializeCleanData = useCallback(() => {
-    console.log('[CLEAN-ONBOARDING] Inicialização manual solicitada (já feita via useEffect)');
+    console.log('[CLEAN-ONBOARDING] Inicialização manual (já feita via useEffect)');
     // Não faz nada - a inicialização já é feita pelo useEffect
   }, []);
 

@@ -1,38 +1,51 @@
 
 import { useCallback } from 'react';
-import { InviteTokenManager } from '@/utils/inviteTokenManager';
-import { InviteCache } from '@/utils/inviteCache';
 
 export const useOnboardingCleanup = () => {
   const cleanupForInvite = useCallback(() => {
-    console.log('[ONBOARDING-CLEANUP] Executando limpeza seletiva para convite');
-    
     try {
-      // Limpar cache antigo que pode estar inconsistente
-      InviteCache.clear();
+      // Limpeza simples de dados de onboarding anterior
+      const keysToRemove = [
+        'viver-ia-onboarding-data',
+        'viver-ia-onboarding-step',
+        'viver-ia-onboarding-temp'
+      ];
       
-      // NÃO limpar o token aqui - deixar o fluxo gerenciar
-      console.log('[ONBOARDING-CLEANUP] Limpeza seletiva concluída');
+      keysToRemove.forEach(key => {
+        localStorage.removeItem(key);
+        sessionStorage.removeItem(key);
+      });
+      
+      console.log('[ONBOARDING-CLEANUP] Limpeza concluída para fluxo de convite');
     } catch (error) {
-      console.error('[ONBOARDING-CLEANUP] Erro na limpeza:', error);
+      console.warn('[ONBOARDING-CLEANUP] Erro na limpeza:', error);
     }
   }, []);
 
-  const fullCleanup = useCallback(() => {
-    console.log('[ONBOARDING-CLEANUP] Executando limpeza completa');
-    
+  const cleanupOnComplete = useCallback(() => {
     try {
-      InviteCache.clear();
-      InviteTokenManager.clearToken();
+      // Limpeza após conclusão do onboarding
+      const keysToRemove = [
+        'viver-ia-onboarding-data',
+        'viver-ia-onboarding-step',
+        'viver-ia-onboarding-temp',
+        'viver_invite_token',
+        'viver_invite_token_expiry'
+      ];
       
-      console.log('[ONBOARDING-CLEANUP] Limpeza completa concluída');
+      keysToRemove.forEach(key => {
+        localStorage.removeItem(key);
+        sessionStorage.removeItem(key);
+      });
+      
+      console.log('[ONBOARDING-CLEANUP] Limpeza completa após conclusão');
     } catch (error) {
-      console.error('[ONBOARDING-CLEANUP] Erro na limpeza completa:', error);
+      console.warn('[ONBOARDING-CLEANUP] Erro na limpeza final:', error);
     }
   }, []);
 
   return {
     cleanupForInvite,
-    fullCleanup
+    cleanupOnComplete
   };
 };
