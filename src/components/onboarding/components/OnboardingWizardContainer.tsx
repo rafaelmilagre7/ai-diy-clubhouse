@@ -4,6 +4,7 @@ import { useSearchParams } from 'react-router-dom';
 import { useOnboardingWizard } from '../hooks/useOnboardingWizard';
 import { useCleanOnboardingData } from '../hooks/useCleanOnboardingData';
 import { useOnboardingCleanup } from '../hooks/useOnboardingCleanup';
+import { InviteTokenManager } from '@/utils/inviteTokenManager';
 
 interface OnboardingWizardContainerProps {
   children: (props: ReturnType<typeof useOnboardingWizard> & {
@@ -17,11 +18,36 @@ type InitializationState = 'idle' | 'loading' | 'ready' | 'error';
 
 export const OnboardingWizardContainer = ({ children }: OnboardingWizardContainerProps) => {
   const [searchParams] = useSearchParams();
-  const inviteToken = searchParams.get('token');
   const [initializationState, setInitializationState] = useState<InitializationState>('idle');
   
   const { cleanupForInvite } = useOnboardingCleanup();
   
+  // CORREÇÃO 1: Obter token de múltiplas fontes
+  const inviteToken = useMemo(() => {
+    // 1. URL params tem prioridade
+    const urlToken = searchParams.get('token');
+    if (urlToken) {
+      console.log('[WIZARD-CONTAINER] Token encontrado na URL');
+      return urlToken;
+    }
+    
+    // 2. Fallback para token armazenado
+    const storedToken = InviteTokenManager.getStoredToken();
+    if (storedToken) {
+      console.log('[WIZARD-CONTAINER] Token encontrado no storage');
+      return storedToken;
+    }
+    
+    // 3. Tentar obter do manager geral
+    const managerToken = InviteTokenManager.getToken();
+    if (managerToken) {
+      console.log('[WIZARD-CONTAINER] Token encontrado via manager');
+      return managerToken;
+    }
+    
+    return null;
+  }, [searchParams]);
+
   const {
     data: cleanData,
     updateData,
@@ -32,36 +58,40 @@ export const OnboardingWizardContainer = ({ children }: OnboardingWizardContaine
   // Memoizar o memberType para evitar re-renders
   const memberType = useMemo(() => cleanData.memberType || 'club', [cleanData.memberType]);
   
-  // Inicialização unificada e otimizada com controle de estado
+  // CORREÇÃO: Inicialização melhorada com suporte a token
   useEffect(() => {
     let isCancelled = false;
 
     const setupOnboarding = async () => {
       try {
-        // Evitar execuções duplicadas
         if (initializationState !== 'idle') {
           return;
         }
 
-        console.log('[WIZARD-CONTAINER] Iniciando configuração única');
+        console.log('[WIZARD-CONTAINER] Iniciando configuração com token:', inviteToken);
         setInitializationState('loading');
         
-        // Limpeza seletiva apenas se for convite
+        // Se há token, armazenar para garantir persistência
         if (inviteToken) {
-          console.log('[WIZARD-CONTAINER] Convite detectado - executando limpeza');
+          InviteTokenManager.storeToken(inviteToken);
+          console.log('[WIZARD-CONTAINER] Token de convite armazenado');
           cleanupForInvite();
         }
 
         // Aguardar carregamento do convite se necessário
         if (inviteToken && isInviteLoading) {
           console.log('[WIZARD-CONTAINER] Aguardando carregamento do convite...');
-          return; // Esperar próxima execução quando isInviteLoading for false
+          return;
         }
 
         if (!isCancelled) {
           await initializeCleanData();
           setInitializationState('ready');
-          console.log('[WIZARD-CONTAINER] Configuração concluída com sucesso');
+          console.log('[WIZARD-CONTAINER] Configuração concluída:', {
+            hasToken: !!inviteToken,
+            memberType: cleanData.memberType,
+            email: cleanData.email
+          });
         }
       } catch (error) {
         console.error('[WIZARD-CONTAINER] Erro na configuração:', error);
@@ -78,20 +108,14 @@ export const OnboardingWizardContainer = ({ children }: OnboardingWizardContaine
     };
   }, [inviteToken, isInviteLoading, initializationState, initializeCleanData, cleanupForInvite]);
 
-  // Estado de loading melhorado com validação robusta
+  // Estado de loading melhorado
   const isLoading = useMemo(() => {
-    // Estados que sempre indicam loading
     if (initializationState === 'loading') return true;
     if (initializationState === 'idle') return true;
     if (inviteToken && isInviteLoading) return true;
-    
-    // Se houve erro, não está loading mas sim com erro
     if (initializationState === 'error') return false;
     
-    // Verificar se tem dados mínimos necessários
     const hasMinimalData = cleanData.memberType && (cleanData.email || cleanData.name);
-    
-    // Se não tem dados mínimos e não está pronto, ainda está loading
     if (!hasMinimalData && initializationState !== 'ready') return true;
     
     return false;
@@ -99,8 +123,10 @@ export const OnboardingWizardContainer = ({ children }: OnboardingWizardContaine
 
   // Memoizar updateData para evitar re-criação
   const memoizedUpdateData = useCallback((newData: any) => {
-    updateData(newData);
-  }, [updateData]);
+    // CORREÇÃO: Preservar token nos dados se presente
+    const dataWithToken = inviteToken ? { ...newData, inviteToken } : newData;
+    updateData(dataWithToken);
+  }, [updateData, inviteToken]);
 
   const wizardProps = useOnboardingWizard({
     initialData: cleanData,
@@ -130,7 +156,7 @@ export const OnboardingWizardContainer = ({ children }: OnboardingWizardContaine
     <>
       {children({
         ...wizardProps,
-        data: cleanData,
+        data: { ...cleanData, inviteToken }, // Garantir que token está disponível
         memberType,
         isLoading
       })}

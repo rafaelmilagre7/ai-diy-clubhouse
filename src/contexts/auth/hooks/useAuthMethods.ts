@@ -2,9 +2,17 @@
 import { useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
+import { InviteTokenManager } from '@/utils/inviteTokenManager';
 
 interface AuthMethodsParams {
   setIsLoading: (loading: boolean) => void;
+}
+
+interface SignUpOptions {
+  inviteToken?: string;
+  userData?: {
+    name?: string;
+  };
 }
 
 export const useAuthMethods = ({ setIsLoading }: AuthMethodsParams) => {
@@ -42,6 +50,86 @@ export const useAuthMethods = ({ setIsLoading }: AuthMethodsParams) => {
     }
   };
 
+  // CORREÇÃO 2: SignUp melhorado com suporte a convites
+  const signUp = async (
+    email: string, 
+    password: string, 
+    options: SignUpOptions = {}
+  ) => {
+    try {
+      setIsLoading(true);
+      console.log('[AUTH-METHODS] Iniciando signup com convite:', !!options.inviteToken);
+
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            name: options.userData?.name || '',
+            invite_token: options.inviteToken || ''
+          }
+        }
+      });
+
+      if (error) {
+        console.error('[AUTH-METHODS] Erro no signup:', error);
+        toast.error('Erro no cadastro: ' + error.message);
+        return { error };
+      }
+
+      if (!data.user) {
+        const signupError = new Error('Falha ao criar usuário');
+        toast.error('Falha ao criar usuário');
+        return { error: signupError };
+      }
+
+      console.log('[AUTH-METHODS] Usuário criado:', data.user.email);
+
+      // CORREÇÃO 2: Processar convite se presente
+      if (options.inviteToken) {
+        try {
+          console.log('[AUTH-METHODS] Completando registro do convite');
+          
+          const { data: inviteResult, error: inviteError } = await supabase.rpc(
+            'complete_invite_registration',
+            {
+              p_token: options.inviteToken,
+              p_user_id: data.user.id
+            }
+          );
+
+          if (inviteError) {
+            console.error('[AUTH-METHODS] Erro ao completar convite:', inviteError);
+            toast.error('Erro ao processar convite: ' + inviteError.message);
+          } else if (inviteResult?.success) {
+            console.log('[AUTH-METHODS] Convite processado com sucesso');
+            toast.success('Conta criada e convite aceito com sucesso!');
+            
+            // Limpar token após sucesso
+            InviteTokenManager.clearToken();
+          } else {
+            console.warn('[AUTH-METHODS] Convite não processado completamente');
+            toast.warning('Conta criada, mas houve problema com o convite');
+          }
+        } catch (inviteErr) {
+          console.error('[AUTH-METHODS] Erro inesperado no convite:', inviteErr);
+          toast.warning('Conta criada, mas convite pode não ter sido processado');
+        }
+      } else {
+        toast.success('Conta criada com sucesso!');
+      }
+
+      return { error: null };
+    } catch (err) {
+      const error = err instanceof Error ? err : new Error('Erro inesperado');
+      console.error('[AUTH-METHODS] Erro inesperado no signup:', error);
+      toast.error('Erro inesperado: ' + error.message);
+      return { error };
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const signOut = async () => {
     try {
       setIsLoading(true);
@@ -75,6 +163,7 @@ export const useAuthMethods = ({ setIsLoading }: AuthMethodsParams) => {
 
   return {
     signIn,
+    signUp,
     signOut,
     signInAsMember,
     signInAsAdmin,

@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/auth';
@@ -25,7 +24,7 @@ export interface InviteFlowResult {
 }
 
 export const useInviteFlow = (token?: string) => {
-  const { user } = useAuth();
+  const { user, signUp } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [inviteDetails, setInviteDetails] = useState<InviteDetails | null>(null);
   const [error, setError] = useState<string>('');
@@ -165,65 +164,26 @@ export const useInviteFlow = (token?: string) => {
 
     try {
       setIsProcessing(true);
+      console.log('[INVITE-FLOW] Iniciando registro com convite');
 
-      // Primeiro, validar o convite
-      const validationResult = await RetryManager.withRetry(async () => {
-        const { data, error } = await supabase.rpc('register_with_invite', {
-          p_token: token,
-          p_name: name,
-          p_password: password
-        });
-
-        if (error) throw error;
-        return data;
+      // Usar a função signUp atualizada que já processa convites
+      const { error } = await signUp(inviteDetails.email, password, {
+        inviteToken: token,
+        userData: { name }
       });
 
-      if (!validationResult?.success) {
-        throw new Error(validationResult?.message || 'Erro na validação do convite');
+      if (error) {
+        throw error;
       }
 
-      // Criar conta no Supabase Auth
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email: inviteDetails.email,
-        password: password,
-        options: {
-          data: {
-            name: name,
-            invite_token: token
-          }
-        }
-      });
-
-      if (authError) {
-        throw new Error(authError.message);
-      }
-
-      if (!authData.user) {
-        throw new Error('Erro ao criar usuário');
-      }
-
-      // Completar registro do convite
-      const completionResult = await RetryManager.withRetry(async () => {
-        const { data, error } = await supabase.rpc('complete_invite_registration', {
-          p_token: token,
-          p_user_id: authData.user.id
-        });
-
-        if (error) throw error;
-        return data;
-      });
-
-      if (completionResult?.success) {
-        InviteCache.clear();
-        
-        return {
-          success: true,
-          message: 'Conta criada com sucesso!',
-          requiresOnboarding: true
-        };
-      } else {
-        throw new Error(completionResult?.message || 'Erro ao completar registro');
-      }
+      console.log('[INVITE-FLOW] Registro completado com sucesso');
+      InviteCache.clear();
+      
+      return {
+        success: true,
+        message: 'Conta criada com sucesso!',
+        requiresOnboarding: true
+      };
 
     } catch (error: any) {
       console.error('[INVITE-FLOW] Erro no registro:', error);
@@ -234,7 +194,7 @@ export const useInviteFlow = (token?: string) => {
     } finally {
       setIsProcessing(false);
     }
-  }, [token, inviteDetails]);
+  }, [token, inviteDetails, signUp]);
 
   useEffect(() => {
     if (token) {

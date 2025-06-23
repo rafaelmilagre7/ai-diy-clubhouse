@@ -3,34 +3,35 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { UserCheck, Mail, User, Lock, Eye, EyeOff } from 'lucide-react';
-
-interface InviteFlowResult {
-  success: boolean;
-  message: string;
-  requiresOnboarding?: boolean;
-}
+import { UserPlus, Eye, EyeOff, Mail, User } from 'lucide-react';
+import { useAuth } from '@/contexts/auth';
 
 interface InviteRegisterFormProps {
   email: string;
   roleName: string;
-  onSubmit: (name: string, password: string) => Promise<InviteFlowResult>;
-  isLoading: boolean;
+  onSubmit: (name: string, password: string) => Promise<any>;
+  isLoading?: boolean;
 }
 
-const InviteRegisterForm = ({ email, roleName, onSubmit, isLoading }: InviteRegisterFormProps) => {
+const InviteRegisterForm = ({ 
+  email, 
+  roleName, 
+  onSubmit, 
+  isLoading = false 
+}: InviteRegisterFormProps) => {
   const [name, setName] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [errors, setErrors] = useState<{ [key: string]: string }>({});
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const validateForm = () => {
-    const newErrors: { [key: string]: string } = {};
+  const validateForm = (): boolean => {
+    const newErrors: Record<string, string> = {};
 
     if (!name.trim()) {
       newErrors.name = 'Nome é obrigatório';
+    } else if (name.trim().length < 2) {
+      newErrors.name = 'Nome deve ter pelo menos 2 caracteres';
     }
 
     if (!password) {
@@ -39,10 +40,8 @@ const InviteRegisterForm = ({ email, roleName, onSubmit, isLoading }: InviteRegi
       newErrors.password = 'Senha deve ter pelo menos 6 caracteres';
     }
 
-    if (!confirmPassword) {
-      newErrors.confirmPassword = 'Confirmação de senha é obrigatória';
-    } else if (password !== confirmPassword) {
-      newErrors.confirmPassword = 'Senhas não coincidem';
+    if (password !== confirmPassword) {
+      newErrors.confirmPassword = 'Senhas não conferem';
     }
 
     setErrors(newErrors);
@@ -54,16 +53,21 @@ const InviteRegisterForm = ({ email, roleName, onSubmit, isLoading }: InviteRegi
     
     if (!validateForm()) return;
 
-    await onSubmit(name.trim(), password);
+    try {
+      await onSubmit(name.trim(), password);
+    } catch (error) {
+      console.error('Erro no formulário:', error);
+    }
   };
 
   return (
     <div className="space-y-6">
-      <div className="text-center">
-        <div className="mx-auto w-16 h-16 bg-viverblue/20 rounded-full flex items-center justify-center mb-4">
-          <UserCheck className="w-8 h-8 text-viverblue" />
+      <div className="text-center space-y-2">
+        <div className="mx-auto w-16 h-16 bg-viverblue/20 rounded-full flex items-center justify-center">
+          <UserPlus className="w-8 h-8 text-viverblue" />
         </div>
-        <h2 className="text-2xl font-bold text-white mb-2">
+        
+        <h2 className="text-2xl font-bold text-white">
           Criar Conta
         </h2>
         <p className="text-neutral-300">
@@ -75,10 +79,12 @@ const InviteRegisterForm = ({ email, roleName, onSubmit, isLoading }: InviteRegi
         <div className="flex items-center gap-2">
           <Mail className="w-4 h-4 text-viverblue" />
           <span className="text-sm font-medium text-white">
-            Convite para:
+            Email do convite:
           </span>
         </div>
-        <p className="text-neutral-300">{email}</p>
+        <p className="text-neutral-300 break-all">
+          {email}
+        </p>
         
         <div className="mt-2">
           <span className="text-sm font-medium text-white">
@@ -93,7 +99,7 @@ const InviteRegisterForm = ({ email, roleName, onSubmit, isLoading }: InviteRegi
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="space-y-2">
           <Label htmlFor="name" className="text-white">
-            Nome completo
+            Nome completo *
           </Label>
           <div className="relative">
             <User className="absolute left-3 top-3 h-4 w-4 text-neutral-400" />
@@ -102,29 +108,28 @@ const InviteRegisterForm = ({ email, roleName, onSubmit, isLoading }: InviteRegi
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="pl-10 bg-[#1A1E2E]/50 border-white/20 text-white placeholder:text-neutral-400"
-              placeholder="Seu nome completo"
+              className="pl-10 bg-[#252842] border-white/20 text-white placeholder:text-neutral-400"
+              placeholder="Digite seu nome completo"
               disabled={isLoading}
             />
           </div>
           {errors.name && (
-            <p className="text-red-400 text-sm">{errors.name}</p>
+            <p className="text-sm text-red-400">{errors.name}</p>
           )}
         </div>
 
         <div className="space-y-2">
           <Label htmlFor="password" className="text-white">
-            Senha
+            Senha *
           </Label>
           <div className="relative">
-            <Lock className="absolute left-3 top-3 h-4 w-4 text-neutral-400" />
             <Input
               id="password"
-              type={showPassword ? 'text' : 'password'}
+              type={showPassword ? "text" : "password"}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="pl-10 pr-10 bg-[#1A1E2E]/50 border-white/20 text-white placeholder:text-neutral-400"
-              placeholder="Mínimo 6 caracteres"
+              className="pr-10 bg-[#252842] border-white/20 text-white placeholder:text-neutral-400"
+              placeholder="Crie uma senha segura"
               disabled={isLoading}
             />
             <button
@@ -137,36 +142,25 @@ const InviteRegisterForm = ({ email, roleName, onSubmit, isLoading }: InviteRegi
             </button>
           </div>
           {errors.password && (
-            <p className="text-red-400 text-sm">{errors.password}</p>
+            <p className="text-sm text-red-400">{errors.password}</p>
           )}
         </div>
 
         <div className="space-y-2">
           <Label htmlFor="confirmPassword" className="text-white">
-            Confirmar senha
+            Confirmar senha *
           </Label>
-          <div className="relative">
-            <Lock className="absolute left-3 top-3 h-4 w-4 text-neutral-400" />
-            <Input
-              id="confirmPassword"
-              type={showConfirmPassword ? 'text' : 'password'}
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              className="pl-10 pr-10 bg-[#1A1E2E]/50 border-white/20 text-white placeholder:text-neutral-400"
-              placeholder="Confirme sua senha"
-              disabled={isLoading}
-            />
-            <button
-              type="button"
-              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-              className="absolute right-3 top-3 text-neutral-400 hover:text-white"
-              disabled={isLoading}
-            >
-              {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-            </button>
-          </div>
+          <Input
+            id="confirmPassword"
+            type="password"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            className="bg-[#252842] border-white/20 text-white placeholder:text-neutral-400"
+            placeholder="Digite a senha novamente"
+            disabled={isLoading}
+          />
           {errors.confirmPassword && (
-            <p className="text-red-400 text-sm">{errors.confirmPassword}</p>
+            <p className="text-sm text-red-400">{errors.confirmPassword}</p>
           )}
         </div>
 
@@ -181,10 +175,23 @@ const InviteRegisterForm = ({ email, roleName, onSubmit, isLoading }: InviteRegi
               <span>Criando conta...</span>
             </div>
           ) : (
-            'Criar Conta'
+            'Criar Conta e Aceitar Convite'
           )}
         </Button>
       </form>
+
+      <div className="text-center">
+        <p className="text-sm text-neutral-400">
+          Já tem uma conta?{' '}
+          <button 
+            onClick={() => window.location.href = '/login'}
+            className="text-viverblue hover:text-viverblue/80 underline"
+            disabled={isLoading}
+          >
+            Fazer login
+          </button>
+        </p>
+      </div>
     </div>
   );
 };

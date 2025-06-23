@@ -44,7 +44,8 @@ const AppRoutes = () => {
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
       
-      {/* Invite routes - RegisterPage now handles tokens */}
+      {/* CORREÇÃO 3: Rotas de convite melhoradas */}
+      <Route path="/invite/:token" element={<RegisterPage />} />
       <Route path="/invite" element={<RegisterPage />} />
       
       {/* Protected routes */}
@@ -60,7 +61,7 @@ const AppRoutes = () => {
       <Route 
         path="/onboarding" 
         element={
-          <ProtectedRoutes>
+          <ProtectedRoutes allowInviteFlow={true}>
             <OnboardingWizard />
           </ProtectedRoutes>
         } 
