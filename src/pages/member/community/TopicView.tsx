@@ -29,6 +29,7 @@ const TopicView = () => {
     user,
     profile
   } = useAuth();
+  const isAdmin = getUserRoleName(profile) === 'admin';
   const queryClient = useQueryClient();
   console.log("TopicView: parâmetro topicId da URL:", topicId);
 
@@ -152,7 +153,6 @@ const TopicView = () => {
 
   // Verificações de permissão
   const isTopicAuthor = user?.id === topic?.user_id;
-  const isAdmin = profile?.role === 'admin';
   const handleReplyAdded = () => {
     refetchPosts();
     // Invalidar cache do tópico para atualizar contadores

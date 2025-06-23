@@ -14,8 +14,9 @@ import { Loader2 } from "lucide-react";
 const FormacaoCursoDetalhes = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { profile } = useAuth();
-  
+  const { user, profile } = useAuth();
+  const isFormacao = getUserRoleName(profile) === 'formacao';
+
   const [curso, setCurso] = useState<LearningCourse | null>(null);
   const [modulos, setModulos] = useState<LearningModule[]>([]);
   const [loading, setLoading] = useState(true);

@@ -8,7 +8,9 @@ import { CursoFormDialog } from "@/components/formacao/cursos/CursoFormDialog";
 import { toast } from "sonner";
 
 const FormacaoCursos = () => {
-  const { profile } = useAuth();
+  const { user, profile } = useAuth();
+  const isFormacao = getUserRoleName(profile) === 'formacao';
+
   const [cursos, setCursos] = useState<LearningCourse[]>([]);
   const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);

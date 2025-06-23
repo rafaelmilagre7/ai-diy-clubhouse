@@ -24,9 +24,11 @@ import { Button } from "@/components/ui/button";
 import { Search } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { NovaAulaButton } from "@/components/formacao/aulas/NovaAulaButton";
+import { getUserRoleName } from "@/lib/utils";
 
 const FormacaoAulas = () => {
-  const { profile } = useAuth();
+  const { user, profile } = useAuth();
+  const isFormacao = getUserRoleName(profile) === 'formacao';
   const navigate = useNavigate();
   const [aulas, setAulas] = useState<LearningLesson[]>([]);
   const [loading, setLoading] = useState(true);

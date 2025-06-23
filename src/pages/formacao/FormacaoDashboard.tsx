@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/auth";
 import { supabase } from "@/lib/supabase";
@@ -9,7 +8,8 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 
 const FormacaoDashboard = () => {
-  const { profile } = useAuth();
+  const { user, profile } = useAuth();
+  const isFormacao = getUserRoleName(profile) === 'formacao';
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({

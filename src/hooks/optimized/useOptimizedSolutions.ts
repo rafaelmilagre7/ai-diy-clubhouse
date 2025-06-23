@@ -13,35 +13,35 @@ export const useOptimizedSolutions = () => {
 
   const isAdmin = getUserRoleName(profile) === 'admin';
 
-  useEffect(() => {
-    const fetchSolutions = async () => {
-      try {
-        setLoading(true);
-        setError(null);
+  const fetchSolutions = async () => {
+    try {
+      setLoading(true);
+      setError(null);
 
-        let query = supabase
-          .from("solutions")
-          .select("*")
-          .order("created_at", { ascending: false });
+      let query = supabase
+        .from("solutions")
+        .select("*")
+        .order("created_at", { ascending: false });
 
-        // Se não for admin, mostrar apenas soluções publicadas
-        if (!isAdmin) {
-          query = query.eq("published", true);
-        }
-
-        const { data, error } = await query;
-
-        if (error) throw error;
-
-        setSolutions((data as any) || []);
-      } catch (err: any) {
-        console.error("Error fetching solutions:", err);
-        setError(err.message || "Erro ao carregar soluções");
-      } finally {
-        setLoading(false);
+      // Se não for admin, mostrar apenas soluções publicadas
+      if (!isAdmin) {
+        query = query.eq("published", true);
       }
-    };
 
+      const { data, error } = await query;
+
+      if (error) throw error;
+
+      setSolutions((data as any) || []);
+    } catch (err: any) {
+      console.error("Error fetching solutions:", err);
+      setError(err.message || "Erro ao carregar soluções");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchSolutions();
   }, [user, isAdmin]);
 
@@ -49,9 +49,6 @@ export const useOptimizedSolutions = () => {
     solutions,
     loading,
     error,
-    refetch: () => {
-      setLoading(true);
-      fetchSolutions();
-    }
+    refetch: fetchSolutions
   };
 };

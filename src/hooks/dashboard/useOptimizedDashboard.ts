@@ -10,8 +10,7 @@ export const useOptimizedDashboard = () => {
     solutions, 
     loading: solutionsLoading, 
     error: solutionsError,
-    cacheStatus: solutionsCacheStatus,
-    invalidateCache
+    refetch
   } = useOptimizedSolutions();
   
   const {
@@ -59,12 +58,10 @@ export const useOptimizedDashboard = () => {
         active: totals.active,
         completed: totals.completed,
         recommended: totals.recommended,
-        cacheHit: solutionsCacheStatus.isCached,
-        cacheAge: solutionsCacheStatus.cacheAge,
         hasError: !!error
       });
     }
-  }, [isLoading, totals, solutionsCacheStatus, error]);
+  }, [isLoading, totals, error]);
 
   return {
     active,
@@ -76,10 +73,9 @@ export const useOptimizedDashboard = () => {
     hasData: totals.total > 0,
     // Informações para debug e invalidação de cache
     performance: {
-      cacheStatus: solutionsCacheStatus,
       totalQueries: 2, // solutions + progress
       optimized: true,
-      invalidateCache // Função para limpar cache se necessário
+      invalidateCache: refetch // Função para limpar cache se necessário
     }
   };
 };
