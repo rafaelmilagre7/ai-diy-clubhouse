@@ -4,33 +4,15 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator';
-import { 
-  Users, 
-  AlertTriangle, 
-  TrendingUp, 
-  Activity, 
-  RefreshCcw,
-  CheckCircle,
-  XCircle,
-  Clock
-} from 'lucide-react';
+import { Users, AlertTriangle, TrendingUp, Activity, RefreshCcw, CheckCircle, XCircle } from 'lucide-react';
 import { useHealthCheckData } from '@/hooks/admin/useHealthCheckData';
-import { useAtRiskUsers } from '@/hooks/admin/invites/useAtRiskUsers';
+import { useAtRiskUsers } from '@/hooks/admin/useAtRiskUsers';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
 export const UserHealthDashboard = () => {
-  const { 
-    healthMetrics, 
-    stats, // CORREÇÃO: usar 'stats' em vez de 'healthStats'
-    loading, 
-    error, 
-    refetch, 
-    recalculateHealthScores 
-  } = useHealthCheckData();
-  
-  const { atRiskUsers, healthAlerts, loading: alertsLoading } = useAtRiskUsers();
+  const { healthMetrics, stats, loading, error, refetch, recalculateHealthScores } = useHealthCheckData();
+  const { atRiskUsers, loading: alertsLoading } = useAtRiskUsers();
 
   const handleRecalculate = async () => {
     try {
@@ -55,30 +37,27 @@ export const UserHealthDashboard = () => {
     return (
       <Alert variant="destructive">
         <AlertTriangle className="h-4 w-4" />
-        <AlertDescription>
-          {error}
-        </AlertDescription>
+        <AlertDescription>{error}</AlertDescription>
       </Alert>
     );
   }
 
   return (
     <div className="space-y-6">
-      {/* Header com ações */}
+      {/* Header */}
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-2xl font-bold">Health Check dos Usuários</h1>
-          <p className="text-muted-foreground">
-            Monitoramento da saúde e engajamento dos membros
-          </p>
+          <p className="text-muted-foreground">Monitoramento da saúde e engajamento dos membros</p>
         </div>
+        
         <Button onClick={handleRecalculate} variant="outline" size="sm">
           <RefreshCcw className="h-4 w-4 mr-2" />
           Recalcular Scores
         </Button>
       </div>
 
-      {/* Cards de estatísticas */}
+      {/* Stats Overview */}
       {stats && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <Card>
@@ -89,7 +68,7 @@ export const UserHealthDashboard = () => {
             <CardContent>
               <div className="text-2xl font-bold">{stats.totalUsers}</div>
               <p className="text-xs text-muted-foreground">
-                Última atualização: {format(new Date(stats.lastUpdated), 'dd/MM/yyyy HH:mm', { locale: ptBR })}
+                Atualizado em {format(new Date(stats.lastUpdated), 'dd/MM/yyyy HH:mm', { locale: ptBR })}
               </p>
             </CardContent>
           </Card>
@@ -102,7 +81,7 @@ export const UserHealthDashboard = () => {
             <CardContent>
               <div className="text-2xl font-bold text-green-600">{stats.healthyUsers}</div>
               <p className="text-xs text-muted-foreground">
-                {stats.totalUsers > 0 ? Math.round((stats.healthyUsers / stats.totalUsers) * 100) : 0}% do total
+                {((stats.healthyUsers / stats.totalUsers) * 100).toFixed(1)}% do total
               </p>
             </CardContent>
           </Card>
@@ -115,7 +94,7 @@ export const UserHealthDashboard = () => {
             <CardContent>
               <div className="text-2xl font-bold text-yellow-600">{stats.atRiskUsers}</div>
               <p className="text-xs text-muted-foreground">
-                {stats.totalUsers > 0 ? Math.round((stats.atRiskUsers / stats.totalUsers) * 100) : 0}% do total
+                Score entre 30-70
               </p>
             </CardContent>
           </Card>
@@ -128,166 +107,87 @@ export const UserHealthDashboard = () => {
             <CardContent>
               <div className="text-2xl font-bold text-red-600">{stats.criticalUsers}</div>
               <p className="text-xs text-muted-foreground">
-                {stats.totalUsers > 0 ? Math.round((stats.criticalUsers / stats.totalUsers) * 100) : 0}% do total
+                Score abaixo de 30
               </p>
             </CardContent>
           </Card>
         </div>
       )}
 
-      {/* Métricas médias */}
+      {/* Health Score Summary */}
       {stats && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Activity className="h-4 w-4" />
-                Score Médio de Saúde
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold">{stats.averageHealthScore}</div>
-              <div className="flex items-center gap-2 mt-2">
-                <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div 
-                    className={`h-2 rounded-full ${
-                      stats.averageHealthScore >= 70 ? 'bg-green-500' :
-                      stats.averageHealthScore >= 40 ? 'bg-yellow-500' : 'bg-red-500'
-                    }`}
-                    style={{ width: `${Math.min(stats.averageHealthScore, 100)}%` }}
-                  />
-                </div>
-                <Badge 
-                  variant={
-                    stats.averageHealthScore >= 70 ? 'default' :
-                    stats.averageHealthScore >= 40 ? 'secondary' : 'destructive'
-                  }
-                >
-                  {stats.averageHealthScore >= 70 ? 'Saudável' :
-                   stats.averageHealthScore >= 40 ? 'Moderado' : 'Crítico'}
-                </Badge>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <TrendingUp className="h-4 w-4" />
-                Score Médio de Engajamento
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold">{stats.averageEngagementScore}</div>
-              <div className="flex items-center gap-2 mt-2">
-                <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div 
-                    className={`h-2 rounded-full ${
-                      stats.averageEngagementScore >= 70 ? 'bg-blue-500' :
-                      stats.averageEngagementScore >= 40 ? 'bg-yellow-500' : 'bg-red-500'
-                    }`}
-                    style={{ width: `${Math.min(stats.averageEngagementScore, 100)}%` }}
-                  />
-                </div>
-                <Badge 
-                  variant={
-                    stats.averageEngagementScore >= 70 ? 'default' :
-                    stats.averageEngagementScore >= 40 ? 'secondary' : 'destructive'
-                  }
-                >
-                  {stats.averageEngagementScore >= 70 ? 'Alto' :
-                   stats.averageEngagementScore >= 40 ? 'Moderado' : 'Baixo'}
-                </Badge>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      )}
-
-      {/* Alertas de usuários em risco */}
-      {healthAlerts && healthAlerts.length > 0 && (
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <AlertTriangle className="h-4 w-4 text-yellow-500" />
-              Usuários que Precisam de Atenção
+              <Activity className="h-5 w-5" />
+              Score Médio de Saúde
             </CardTitle>
             <CardDescription>
-              Usuários com baixo engajamento ou health score crítico
+              Indicadores gerais de engajamento e progresso
             </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {healthAlerts.slice(0, 5).map((alert, index) => (
-                <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <Badge 
-                      variant={
-                        alert.severity === 'critical' ? 'destructive' :
-                        alert.severity === 'medium' ? 'secondary' : 'outline'
-                      }
-                    >
-                      {alert.severity === 'critical' ? 'Crítico' :
-                       alert.severity === 'medium' ? 'Moderado' : 'Baixo'}
-                    </Badge>
-                    <div>
-                      <p className="font-medium">{alert.user_name || 'Usuário sem nome'}</p>
-                      <p className="text-sm text-muted-foreground">{alert.description}</p>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-sm font-medium">Score: {alert.health_score || 0}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {alert.severity === 'critical' ? 'Ação urgente' : 'Monitorar'}
-                    </p>
-                  </div>
-                </div>
-              ))}
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium">Score Médio de Saúde</span>
+                <Badge variant={stats.averageHealthScore >= 70 ? 'default' : stats.averageHealthScore >= 50 ? 'secondary' : 'destructive'}>
+                  {stats.averageHealthScore}/100
+                </Badge>
+              </div>
+              
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium">Score Médio de Engajamento</span>
+                <Badge variant={stats.averageEngagementScore >= 70 ? 'default' : stats.averageEngagementScore >= 50 ? 'secondary' : 'destructive'}>
+                  {stats.averageEngagementScore}/100
+                </Badge>
+              </div>
             </div>
           </CardContent>
         </Card>
       )}
 
-      {/* Lista de métricas dos usuários */}
-      {healthMetrics && healthMetrics.length > 0 && (
+      {/* Users at Risk */}
+      {atRiskUsers && atRiskUsers.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle>Métricas Detalhadas dos Usuários</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-yellow-500" />
+              Usuários que Precisam de Atenção
+            </CardTitle>
             <CardDescription>
-              Visão detalhada do health score de cada usuário
+              Membros com baixo engajamento que podem precisar de intervenção
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-2">
-              {healthMetrics.slice(0, 10).map((metric) => (
-                <div key={metric.user_id} className="flex items-center justify-between p-2 border-b">
-                  <div>
-                    <p className="font-medium">
-                      {metric.user_profile?.name || 'Usuário sem nome'}
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      {metric.user_profile?.email || 'Email não disponível'}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <div className="text-right">
-                      <p className="text-sm">Saúde: {metric.health_score}</p>
-                      <p className="text-xs text-muted-foreground">
-                        Engajamento: {metric.engagement_score}
-                      </p>
+            <div className="space-y-4">
+              {atRiskUsers.slice(0, 10).map((user) => (
+                <div key={user.user_id} className="flex items-center justify-between p-3 border rounded-lg">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <Badge 
+                        variant={user.risk_level === 'critical' ? 'destructive' : 
+                               user.risk_level === 'high' ? 'secondary' : 'outline'}
+                      >
+                        {user.risk_level === 'critical' ? 'Crítico' : 
+                         user.risk_level === 'high' ? 'Alto Risco' : 'Médio Risco'}
+                      </Badge>
                     </div>
-                    <Badge 
-                      variant={
-                        metric.health_score >= 70 ? 'default' :
-                        metric.health_score >= 40 ? 'secondary' : 'destructive'
-                      }
-                    >
-                      {metric.health_score >= 70 ? 'Saudável' :
-                       metric.health_score >= 40 ? 'Moderado' : 'Crítico'}
-                    </Badge>
+                    <p className="font-medium mt-1">{user.user_profile?.name || 'Usuário sem nome'}</p>
+                    <p className="text-sm text-muted-foreground">{user.user_profile?.email || 'Email não disponível'}</p>
+                  </div>
+                  
+                  <div className="text-right">
+                    <div className="text-lg font-bold text-red-600">{user.health_score || 0}</div>
+                    <div className="text-xs text-muted-foreground">Health Score</div>
                   </div>
                 </div>
               ))}
+              
+              {atRiskUsers.length > 10 && (
+                <p className="text-center text-sm text-muted-foreground">
+                  E mais {atRiskUsers.length - 10} usuários...
+                </p>
+              )}
             </div>
           </CardContent>
         </Card>
