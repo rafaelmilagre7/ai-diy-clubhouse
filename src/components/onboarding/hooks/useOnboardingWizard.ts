@@ -40,6 +40,13 @@ export const useOnboardingWizard = ({
     };
   }, []);
 
+  // Verificar se dados estão prontos para validação
+  const isDataReady = useCallback(() => {
+    const hasBasicData = initialData.memberType && initialData.startedAt;
+    const hasRequiredFields = initialData.email || initialData.name;
+    return hasBasicData && hasRequiredFields;
+  }, [initialData]);
+
   // Debounced data change handler
   const handleDataChange = useCallback((newData: Partial<OnboardingData>) => {
     try {
@@ -69,8 +76,8 @@ export const useOnboardingWizard = ({
   const handleNext = useCallback(async () => {
     try {
       if (currentStep < totalSteps) {
-        // Só validar se dados estão carregados (evita validação prematura)
-        if (Object.keys(initialData).length > 1) {
+        // Só validar se dados estão prontos
+        if (isDataReady()) {
           const isValid = validateStep(currentStep, initialData, memberType);
           if (isValid) {
             setCurrentStep(prev => prev + 1);
@@ -78,13 +85,17 @@ export const useOnboardingWizard = ({
             console.warn('[ONBOARDING-WIZARD] Validação falhou para etapa:', currentStep);
           }
         } else {
-          console.warn('[ONBOARDING-WIZARD] Dados ainda não carregados');
+          console.log('[ONBOARDING-WIZARD] Dados ainda não estão prontos para validação');
+          // Para convites, permitir avanço na primeira etapa mesmo sem validação completa
+          if (initialData.fromInvite && currentStep === 1) {
+            setCurrentStep(prev => prev + 1);
+          }
         }
       }
     } catch (error) {
       console.error('[ONBOARDING-WIZARD] Erro ao avançar etapa:', error);
     }
-  }, [currentStep, totalSteps, validateStep, initialData, memberType]);
+  }, [currentStep, totalSteps, validateStep, initialData, memberType, isDataReady]);
 
   const handlePrevious = useCallback(() => {
     try {
@@ -106,12 +117,11 @@ export const useOnboardingWizard = ({
     }
   }, [completeOnboarding, initialData, memberType]);
 
-  // Validação memoizada para evitar re-renders desnecessários
+  // Validação memoizada com proteção
   const isCurrentStepValid = useCallback(() => {
-    return Object.keys(initialData).length > 1 
-      ? validateStep(currentStep, initialData, memberType)
-      : false;
-  }, [currentStep, initialData, memberType, validateStep]);
+    if (!isDataReady()) return false;
+    return validateStep(currentStep, initialData, memberType);
+  }, [currentStep, initialData, memberType, validateStep, isDataReady]);
 
   return {
     currentStep,

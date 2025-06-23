@@ -3,9 +3,12 @@ import { useState, useCallback } from 'react';
 import { OnboardingData } from '../types/onboardingTypes';
 import { useAuth } from '@/contexts/auth';
 import { getUserRoleName } from '@/lib/supabase/types';
+import { useInviteDetails } from '@/hooks/useInviteDetails';
 
 export const useCleanOnboardingData = (inviteToken?: string) => {
   const { user, profile } = useAuth();
+  const { inviteDetails, loading: inviteLoading } = useInviteDetails(inviteToken);
+  
   const [data, setData] = useState<OnboardingData>({
     memberType: 'club',
     startedAt: new Date().toISOString()
@@ -15,31 +18,30 @@ export const useCleanOnboardingData = (inviteToken?: string) => {
     const roleName = getUserRoleName(profile);
     const memberType: 'club' | 'formacao' = roleName === 'formacao' ? 'formacao' : 'club';
 
-    // Para convites, SEMPRE inicializar com dados TOTALMENTE VAZIOS
-    if (inviteToken) {
-      console.log('[CLEAN-ONBOARDING] Inicializando dados TOTALMENTE LIMPOS para convite');
+    // Para convites, usar dados do convite quando disponíveis
+    if (inviteToken && inviteDetails) {
+      console.log('[CLEAN-ONBOARDING] Inicializando com dados do convite');
       
-      const cleanData: OnboardingData = {
-        // Campos obrigatórios VAZIOS para forçar preenchimento manual
+      const inviteData: OnboardingData = {
+        // Usar dados do convite
         name: '',
-        email: '',
+        email: inviteDetails.email,
         
         // Metadados do convite
-        memberType,
+        memberType: inviteDetails.role.name === 'formacao' ? 'formacao' : 'club',
         startedAt: new Date().toISOString(),
         fromInvite: true,
         inviteToken: inviteToken
       };
 
-      setData(cleanData);
-      console.log('[CLEAN-ONBOARDING] Dados TOTALMENTE VAZIOS inicializados para convite:', {
-        name: cleanData.name,
-        email: cleanData.email,
-        memberType: cleanData.memberType,
-        fromInvite: cleanData.fromInvite
+      setData(inviteData);
+      console.log('[CLEAN-ONBOARDING] Dados inicializados com convite:', {
+        email: inviteData.email,
+        memberType: inviteData.memberType,
+        fromInvite: inviteData.fromInvite
       });
-    } else {
-      // Para usuários sem convite, manter comportamento atual
+    } else if (!inviteToken) {
+      // Para usuários sem convite, usar dados do perfil
       const regularData: OnboardingData = {
         name: profile?.name || '',
         email: profile?.email || user?.email || '',
@@ -49,7 +51,8 @@ export const useCleanOnboardingData = (inviteToken?: string) => {
 
       setData(regularData);
     }
-  }, [user, profile, inviteToken]);
+    // Se é convite mas ainda não carregou, não inicializar ainda
+  }, [user, profile, inviteToken, inviteDetails]);
 
   const updateData = useCallback((newData: Partial<OnboardingData>) => {
     setData(prevData => ({ ...prevData, ...newData }));
@@ -58,6 +61,7 @@ export const useCleanOnboardingData = (inviteToken?: string) => {
   return {
     data,
     updateData,
-    initializeCleanData
+    initializeCleanData,
+    isInviteLoading: inviteLoading
   };
 };

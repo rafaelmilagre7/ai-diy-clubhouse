@@ -45,7 +45,7 @@ const OnboardingWizard = memo(() => {
           <OnboardingWizardContainer>
             {({ data, memberType, isLoading }) => {
               if (isLoading) {
-                return <LoadingScreen message="Carregando..." />;
+                return <LoadingScreen message="Preparando dados..." />;
               }
 
               return (
@@ -84,9 +84,15 @@ const OnboardingWizard = memo(() => {
             totalSteps,
             completionError
           }) => {
-            // Loading com proteção contra renderização prematura
-            if (isLoading || Object.keys(data).length <= 1) {
+            // Loading com proteção melhorada
+            if (isLoading) {
               return <LoadingScreen message="Preparando onboarding..." />;
+            }
+
+            // Verificação de dados mínimos
+            const hasMinimalData = data.memberType && (data.email || data.name);
+            if (!hasMinimalData) {
+              return <LoadingScreen message="Carregando dados..." />;
             }
 
             return (

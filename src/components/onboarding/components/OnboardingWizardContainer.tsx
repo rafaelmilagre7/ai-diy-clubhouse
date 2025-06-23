@@ -1,10 +1,9 @@
 
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback, useMemo, useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useOnboardingWizard } from '../hooks/useOnboardingWizard';
 import { useCleanOnboardingData } from '../hooks/useCleanOnboardingData';
 import { useInviteCleanup } from '@/hooks/useInviteCleanup';
-import { useEffect, useState } from 'react';
 
 interface OnboardingWizardContainerProps {
   children: (props: ReturnType<typeof useOnboardingWizard> & {
@@ -17,68 +16,84 @@ interface OnboardingWizardContainerProps {
 export const OnboardingWizardContainer = ({ children }: OnboardingWizardContainerProps) => {
   const [searchParams] = useSearchParams();
   const inviteToken = searchParams.get('token');
-  const [isCleanupComplete, setIsCleanupComplete] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
   const [containerError, setContainerError] = useState<string | null>(null);
-  const [hasInitialized, setHasInitialized] = useState(false);
   
   const { cleanupForInvite } = useInviteCleanup();
   
   const {
     data: cleanData,
     updateData,
-    initializeCleanData
+    initializeCleanData,
+    isInviteLoading
   } = useCleanOnboardingData(inviteToken || undefined);
 
   // Memoizar o memberType para evitar re-renders
   const memberType = useMemo(() => cleanData.memberType || 'club', [cleanData.memberType]);
   
-  // Executar limpeza APENAS UMA VEZ
+  // Inicialização única e controlada
   useEffect(() => {
-    if (hasInitialized) return;
+    if (isInitialized) return;
 
-    const setupForInvite = async () => {
+    const setupOnboarding = async () => {
       try {
-        setHasInitialized(true);
+        setIsInitialized(true);
         
         if (inviteToken) {
-          console.log('[WIZARD-CONTAINER] Detectado convite - executando limpeza primeiro');
+          console.log('[WIZARD-CONTAINER] Convite detectado - limpeza seletiva');
           
-          // Limpeza total para convites
-          await cleanupForInvite(inviteToken);
-          
-          // Pequeno delay para garantir limpeza completa
-          setTimeout(() => {
-            console.log('[WIZARD-CONTAINER] Limpeza concluída, inicializando dados limpos');
+          // Limpeza seletiva apenas do localStorage, sem deletar dados do banco
+          const storageKeys = [
+            'viver-ia-onboarding-data',
+            'onboarding-wizard-step'
+          ];
+
+          storageKeys.forEach(key => {
+            localStorage.removeItem(key);
+            console.log('[WIZARD-CONTAINER] Removido do storage:', key);
+          });
+
+          // Aguardar carregamento dos dados do convite se necessário
+          if (!isInviteLoading) {
             initializeCleanData();
-            setIsCleanupComplete(true);
-          }, 200);
+          }
         } else {
           // Sem convite, inicializar normalmente
           initializeCleanData();
-          setIsCleanupComplete(true);
         }
       } catch (error: any) {
         console.error('[WIZARD-CONTAINER] Erro na configuração:', error);
         setContainerError(`Erro na inicialização: ${error.message}`);
-        setIsCleanupComplete(true);
       }
     };
 
-    setupForInvite();
-  }, [inviteToken, cleanupForInvite, initializeCleanData, hasInitialized]);
+    setupOnboarding();
+  }, [inviteToken, isInitialized, isInviteLoading, initializeCleanData]);
 
-  // Determinar estado de loading com lógica mais robusta
-  const isLoading = useMemo(() => {
-    if (!isCleanupComplete) return true;
-    
-    if (inviteToken) {
-      // Para convites, aguardar dados vazios/limpos
-      return Object.keys(cleanData).length <= 3; // Apenas memberType, startedAt, fromInvite
-    } else {
-      // Para usuários normais, aguardar dados básicos
-      return Object.keys(cleanData).length <= 1;
+  // Inicializar dados quando convite carrega
+  useEffect(() => {
+    if (inviteToken && !isInviteLoading && isInitialized && Object.keys(cleanData).length <= 2) {
+      console.log('[WIZARD-CONTAINER] Inicializando dados após carregamento do convite');
+      initializeCleanData();
     }
-  }, [isCleanupComplete, inviteToken, cleanData]);
+  }, [inviteToken, isInviteLoading, isInitialized, cleanData, initializeCleanData]);
+
+  // Estado de loading melhorado
+  const isLoading = useMemo(() => {
+    // Se é convite e ainda está carregando detalhes
+    if (inviteToken && isInviteLoading) return true;
+    
+    // Se ainda não inicializou
+    if (!isInitialized) return true;
+    
+    // Se é convite mas dados ainda não foram carregados
+    if (inviteToken && Object.keys(cleanData).length <= 2) return true;
+    
+    // Para usuários normais
+    if (!inviteToken && Object.keys(cleanData).length <= 1) return true;
+    
+    return false;
+  }, [inviteToken, isInviteLoading, isInitialized, cleanData]);
 
   // Memoizar updateData para evitar re-criação
   const memoizedUpdateData = useCallback((newData: any) => {
