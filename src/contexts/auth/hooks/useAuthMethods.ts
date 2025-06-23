@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 import { InviteTokenManager } from '@/utils/inviteTokenManager';
+import { logger } from '@/utils/logger';
 
 interface AuthMethodsParams {
   setIsLoading: (loading: boolean) => void;
@@ -29,19 +30,20 @@ export const useAuthMethods = ({ setIsLoading }: AuthMethodsParams) => {
       });
 
       if (error) {
-        console.error('Erro no login:', error);
+        logger.error('Erro no login:', error, { component: 'AUTH_METHODS' });
         toast.error('Erro no login: ' + error.message);
         return { error };
       }
 
       if (data.user) {
-        console.log('Login realizado:', data.user.email);
+        logger.info('Login realizado:', { email: data.user.email, component: 'AUTH_METHODS' });
         toast.success('Login realizado com sucesso!');
       }
 
       return { error: null };
     } catch (err) {
       const error = err instanceof Error ? err : new Error('Erro inesperado');
+      logger.error('Erro inesperado no login:', error, { component: 'AUTH_METHODS' });
       toast.error('Erro inesperado: ' + error.message);
       return { error };
     } finally {
@@ -50,7 +52,7 @@ export const useAuthMethods = ({ setIsLoading }: AuthMethodsParams) => {
     }
   };
 
-  // SignUp ROBUSTO com validação melhorada
+  // SignUp ROBUSTO com melhor tratamento de erros
   const signUp = async (
     email: string, 
     password: string, 
@@ -58,14 +60,16 @@ export const useAuthMethods = ({ setIsLoading }: AuthMethodsParams) => {
   ) => {
     try {
       setIsLoading(true);
-      console.log('[AUTH-METHODS] Iniciando signup:', {
-        email: email.toLowerCase(), // MELHORIA 3: Normalizar email
+      logger.info('Iniciando signup:', {
+        email: email.toLowerCase(),
         hasInviteToken: !!options.inviteToken,
-        userName: options.userData?.name
+        userName: options.userData?.name,
+        component: 'AUTH_METHODS'
       });
 
+      // Signup básico primeiro
       const { data, error } = await supabase.auth.signUp({
-        email: email.toLowerCase(), // MELHORIA 3: Normalizar email
+        email: email.toLowerCase(),
         password,
         options: {
           data: {
@@ -76,56 +80,101 @@ export const useAuthMethods = ({ setIsLoading }: AuthMethodsParams) => {
       });
 
       if (error) {
-        console.error('[AUTH-METHODS] Erro no signup:', error);
-        toast.error('Erro no cadastro: ' + error.message);
-        return { error };
+        logger.error('Erro no signup básico:', error, { 
+          component: 'AUTH_METHODS',
+          email: email.toLowerCase() 
+        });
+        
+        // Melhor tratamento de mensagens de erro
+        let errorMessage = 'Erro no cadastro';
+        if (error.message.includes('already registered')) {
+          errorMessage = 'Este email já está cadastrado. Tente fazer login.';
+        } else if (error.message.includes('password')) {
+          errorMessage = 'Senha muito fraca. Use pelo menos 6 caracteres.';
+        } else if (error.message.includes('email')) {
+          errorMessage = 'Email inválido.';
+        } else {
+          errorMessage = `Erro no cadastro: ${error.message}`;
+        }
+        
+        toast.error(errorMessage);
+        return { error: new Error(errorMessage) };
       }
 
       if (!data.user) {
         const signupError = new Error('Falha ao criar usuário');
+        logger.error('Usuário não criado no signup:', signupError, { component: 'AUTH_METHODS' });
         toast.error('Falha ao criar usuário');
         return { error: signupError };
       }
 
-      console.log('[AUTH-METHODS] Usuário criado:', data.user.email);
+      logger.info('Usuário criado com sucesso:', { 
+        userId: data.user.id,
+        email: data.user.email,
+        component: 'AUTH_METHODS' 
+      });
 
-      // PROCESSAR CONVITE com validação robusta
+      // PROCESSAR CONVITE de forma mais robusta
       if (options.inviteToken) {
-        console.log('[AUTH-METHODS] Processando convite');
+        logger.info('Processando convite após signup:', { 
+          token: options.inviteToken.substring(0, 8) + '...',
+          userId: data.user.id,
+          component: 'AUTH_METHODS' 
+        });
         
-        // MELHORIA 5: Validação do token antes do processamento
-        if (options.inviteToken.length < 10) {
-          const tokenError = new Error('Token de convite inválido');
-          console.error('[AUTH-METHODS] Token inválido');
-          toast.error('Token de convite inválido');
-          return { error: tokenError };
-        }
-        
-        const { data: inviteResult, error: inviteError } = await supabase.rpc(
-          'complete_invite_registration',
-          {
-            p_token: options.inviteToken,
-            p_user_id: data.user.id
+        try {
+          // Validação adicional do token
+          if (options.inviteToken.length < 10) {
+            throw new Error('Token de convite inválido');
           }
-        );
-
-        if (inviteError || !inviteResult?.success) {
-          // Erro no convite = falha clara
-          const errorMessage = inviteError?.message || inviteResult?.message || 'Erro ao processar convite';
-          console.error('[AUTH-METHODS] Erro no convite:', errorMessage);
-          toast.error('Erro ao processar convite: ' + errorMessage);
           
-          // MELHORIA 4: Usar limpeza específica para erro
-          InviteTokenManager.clearTokenOnError();
-          return { error: new Error(errorMessage) };
-        }
+          const { data: inviteResult, error: inviteError } = await supabase.rpc(
+            'complete_invite_registration',
+            {
+              p_token: options.inviteToken,
+              p_user_id: data.user.id
+            }
+          );
 
-        // Sucesso no convite
-        console.log('[AUTH-METHODS] Convite processado com sucesso');
-        toast.success('Conta criada e convite aceito com sucesso!');
-        
-        // MELHORIA 4: Usar limpeza específica para sucesso
-        InviteTokenManager.clearTokenOnSuccess();
+          if (inviteError) {
+            logger.error('Erro na função RPC de convite:', inviteError, { 
+              component: 'AUTH_METHODS',
+              token: options.inviteToken.substring(0, 8) + '...'
+            });
+            throw new Error(inviteError.message);
+          }
+
+          if (!inviteResult?.success) {
+            const errorMessage = inviteResult?.message || 'Erro ao processar convite';
+            logger.error('Convite não processado:', new Error(errorMessage), { 
+              component: 'AUTH_METHODS',
+              result: inviteResult
+            });
+            throw new Error(errorMessage);
+          }
+
+          // Sucesso no convite
+          logger.info('Convite processado com sucesso:', { 
+            userId: data.user.id,
+            component: 'AUTH_METHODS' 
+          });
+          toast.success('Conta criada e convite aceito com sucesso!');
+          
+          InviteTokenManager.clearTokenOnSuccess();
+        } catch (inviteError: any) {
+          // Log do erro do convite mas não falha todo o processo
+          logger.error('Erro ao processar convite (usuário já criado):', inviteError, { 
+            component: 'AUTH_METHODS',
+            userId: data.user.id
+          });
+          
+          // Mostrar erro específico mas não falhar o signup
+          toast.error('Conta criada, mas erro ao processar convite: ' + inviteError.message);
+          InviteTokenManager.clearTokenOnError();
+          
+          // Retornar sucesso parcial - usuário foi criado
+          return { error: null, partialSuccess: true };
+        }
       } else {
         toast.success('Conta criada com sucesso!');
       }
@@ -133,10 +182,9 @@ export const useAuthMethods = ({ setIsLoading }: AuthMethodsParams) => {
       return { error: null };
     } catch (err) {
       const error = err instanceof Error ? err : new Error('Erro inesperado');
-      console.error('[AUTH-METHODS] Erro inesperado no signup:', error);
+      logger.error('Erro inesperado no signup:', error, { component: 'AUTH_METHODS' });
       toast.error('Erro inesperado: ' + error.message);
       
-      // MELHORIA 4: Limpar token em caso de erro inesperado
       if (options.inviteToken) {
         InviteTokenManager.clearTokenOnError();
       }
@@ -151,22 +199,22 @@ export const useAuthMethods = ({ setIsLoading }: AuthMethodsParams) => {
     try {
       setIsLoading(true);
       
-      // MELHORIA 4: Limpar token no logout
       InviteTokenManager.clearTokenOnLogout();
       
       const { error } = await supabase.auth.signOut();
       
       if (error) {
-        console.error('Erro no logout:', error);
+        logger.error('Erro no logout:', error, { component: 'AUTH_METHODS' });
         toast.error('Erro ao fazer logout: ' + error.message);
         return { success: false, error };
       }
 
-      console.log('Logout realizado');
+      logger.info('Logout realizado com sucesso', { component: 'AUTH_METHODS' });
       toast.success('Logout realizado com sucesso!');
       return { success: true, error: null };
     } catch (err) {
       const error = err instanceof Error ? err : new Error('Erro inesperado');
+      logger.error('Erro inesperado no logout:', error, { component: 'AUTH_METHODS' });
       return { success: false, error };
     } finally {
       setIsLoading(false);

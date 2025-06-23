@@ -4,8 +4,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { AlertCircle, Eye, EyeOff } from 'lucide-react';
+import { AlertCircle, Eye, EyeOff, CheckCircle, Loader2 } from 'lucide-react';
 import { useAuth } from '@/contexts/auth';
+import { logger } from '@/utils/logger';
 
 interface RegisterFormProps {
   onSuccess?: () => void;
@@ -30,30 +31,54 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
     name: ''
   });
   const [error, setError] = useState('');
+  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
+
+  const validateField = (field: string, value: string) => {
+    const errors: Record<string, string> = {};
+
+    switch (field) {
+      case 'email':
+        if (!value) {
+          errors.email = 'Email é obrigatório';
+        } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+          errors.email = 'Email inválido';
+        }
+        break;
+      case 'password':
+        if (!value) {
+          errors.password = 'Senha é obrigatória';
+        } else if (value.length < 6) {
+          errors.password = 'A senha deve ter pelo menos 6 caracteres';
+        }
+        break;
+      case 'confirmPassword':
+        if (!value) {
+          errors.confirmPassword = 'Confirmação de senha é obrigatória';
+        } else if (value !== formData.password) {
+          errors.confirmPassword = 'As senhas não coincidem';
+        }
+        break;
+    }
+
+    return errors;
+  };
 
   const validateForm = () => {
-    if (!formData.email || !formData.password || !formData.confirmPassword) {
-      setError('Todos os campos são obrigatórios');
-      return false;
+    const allErrors: Record<string, string> = {};
+
+    // Validar todos os campos
+    Object.entries(formData).forEach(([field, value]) => {
+      const fieldErrors = validateField(field, value);
+      Object.assign(allErrors, fieldErrors);
+    });
+
+    // Validação adicional para confirmação de senha
+    if (formData.password && formData.confirmPassword && formData.password !== formData.confirmPassword) {
+      allErrors.confirmPassword = 'As senhas não coincidem';
     }
 
-    if (formData.password !== formData.confirmPassword) {
-      setError('As senhas não coincidem');
-      return false;
-    }
-
-    if (formData.password.length < 6) {
-      setError('A senha deve ter pelo menos 6 caracteres');
-      return false;
-    }
-
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(formData.email)) {
-      setError('Email inválido');
-      return false;
-    }
-
-    return true;
+    setValidationErrors(allErrors);
+    return Object.keys(allErrors).length === 0;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -67,34 +92,54 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
     setError('');
 
     try {
+      logger.info('Iniciando processo de registro:', {
+        email: formData.email,
+        hasInviteToken: !!inviteToken,
+        component: 'REGISTER_FORM'
+      });
+
       const metadata = {
         name: formData.name || undefined,
         invite_token: inviteToken || undefined
       };
 
-      const { error: signUpError } = await signUp(
+      const { error: signUpError, partialSuccess } = await signUp(
         formData.email,
         formData.password,
         metadata
       );
 
       if (signUpError) {
-        console.error('[REGISTER-FORM] Erro no registro:', signUpError);
-        const errorMessage = signUpError.message === 'User already registered'
-          ? 'Este email já está cadastrado. Tente fazer login.'
-          : `Erro no registro: ${signUpError.message}`;
+        logger.error('Erro no registro via RegisterForm:', signUpError, {
+          component: 'REGISTER_FORM',
+          email: formData.email
+        });
         
-        setError(errorMessage);
-        onError?.(errorMessage);
+        setError(signUpError.message);
+        onError?.(signUpError.message);
         return;
       }
 
-      console.log('[REGISTER-FORM] Registro realizado com sucesso');
+      logger.info('Registro concluído com sucesso:', {
+        email: formData.email,
+        partialSuccess,
+        component: 'REGISTER_FORM'
+      });
+
+      if (partialSuccess) {
+        // Usuário criado mas convite teve problema
+        setError('Conta criada com sucesso, mas houve um problema com o convite. Entre em contato com o administrador.');
+      }
+
       onSuccess?.();
 
     } catch (err: any) {
-      console.error('[REGISTER-FORM] Erro inesperado:', err);
-      const errorMessage = 'Erro inesperado durante o registro';
+      logger.error('Erro inesperado no registro:', err, {
+        component: 'REGISTER_FORM',
+        email: formData.email
+      });
+      
+      const errorMessage = err?.message || 'Erro inesperado durante o registro';
       setError(errorMessage);
       onError?.(errorMessage);
     } finally {
@@ -105,15 +150,38 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
   const handleInputChange = (field: keyof typeof formData) => (
     e: React.ChangeEvent<HTMLInputElement>
   ) => {
+    const value = e.target.value;
     setFormData(prev => ({
       ...prev,
-      [field]: e.target.value
+      [field]: value
     }));
     
-    // Limpar erro ao digitar
+    // Limpar erros ao digitar
     if (error) {
       setError('');
     }
+
+    // Validação em tempo real
+    const fieldErrors = validateField(field, value);
+    setValidationErrors(prev => ({
+      ...prev,
+      [field]: fieldErrors[field] || ''
+    }));
+
+    // Validação especial para confirmação de senha
+    if (field === 'password' && formData.confirmPassword) {
+      const confirmErrors = validateField('confirmPassword', formData.confirmPassword);
+      setValidationErrors(prev => ({
+        ...prev,
+        confirmPassword: confirmErrors.confirmPassword || ''
+      }));
+    }
+  };
+
+  const getFieldStatus = (field: string) => {
+    if (validationErrors[field]) return 'error';
+    if (formData[field as keyof typeof formData]) return 'success';
+    return 'default';
   };
 
   return (
@@ -127,26 +195,44 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
 
       <div className="space-y-2">
         <Label htmlFor="name">Nome (opcional)</Label>
-        <Input
-          id="name"
-          type="text"
-          value={formData.name}
-          onChange={handleInputChange('name')}
-          placeholder="Seu nome completo"
-        />
+        <div className="relative">
+          <Input
+            id="name"
+            type="text"
+            value={formData.name}
+            onChange={handleInputChange('name')}
+            placeholder="Seu nome completo"
+            className={getFieldStatus('name') === 'success' ? 'border-green-500' : ''}
+          />
+          {getFieldStatus('name') === 'success' && (
+            <CheckCircle className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-green-500" />
+          )}
+        </div>
       </div>
 
       <div className="space-y-2">
         <Label htmlFor="email">Email *</Label>
-        <Input
-          id="email"
-          type="email"
-          value={formData.email}
-          onChange={handleInputChange('email')}
-          placeholder="seu@email.com"
-          required
-          disabled={!!defaultEmail}
-        />
+        <div className="relative">
+          <Input
+            id="email"
+            type="email"
+            value={formData.email}
+            onChange={handleInputChange('email')}
+            placeholder="seu@email.com"
+            required
+            disabled={!!defaultEmail}
+            className={`${
+              validationErrors.email ? 'border-red-500' : 
+              getFieldStatus('email') === 'success' ? 'border-green-500' : ''
+            }`}
+          />
+          {getFieldStatus('email') === 'success' && !validationErrors.email && (
+            <CheckCircle className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-green-500" />
+          )}
+        </div>
+        {validationErrors.email && (
+          <p className="text-sm text-red-600">{validationErrors.email}</p>
+        )}
       </div>
 
       <div className="space-y-2">
@@ -159,6 +245,10 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
             onChange={handleInputChange('password')}
             placeholder="Mínimo 6 caracteres"
             required
+            className={`pr-10 ${
+              validationErrors.password ? 'border-red-500' : 
+              getFieldStatus('password') === 'success' ? 'border-green-500' : ''
+            }`}
           />
           <Button
             type="button"
@@ -174,27 +264,56 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
             )}
           </Button>
         </div>
+        {validationErrors.password && (
+          <p className="text-sm text-red-600">{validationErrors.password}</p>
+        )}
       </div>
 
       <div className="space-y-2">
         <Label htmlFor="confirmPassword">Confirmar Senha *</Label>
-        <Input
-          id="confirmPassword"
-          type="password"
-          value={formData.confirmPassword}
-          onChange={handleInputChange('confirmPassword')}
-          placeholder="Digite a senha novamente"
-          required
-        />
+        <div className="relative">
+          <Input
+            id="confirmPassword"
+            type="password"
+            value={formData.confirmPassword}
+            onChange={handleInputChange('confirmPassword')}
+            placeholder="Digite a senha novamente"
+            required
+            className={`${
+              validationErrors.confirmPassword ? 'border-red-500' : 
+              getFieldStatus('confirmPassword') === 'success' ? 'border-green-500' : ''
+            }`}
+          />
+          {getFieldStatus('confirmPassword') === 'success' && !validationErrors.confirmPassword && (
+            <CheckCircle className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-green-500" />
+          )}
+        </div>
+        {validationErrors.confirmPassword && (
+          <p className="text-sm text-red-600">{validationErrors.confirmPassword}</p>
+        )}
       </div>
 
       <Button
         type="submit"
         className="w-full"
-        disabled={isLoading}
+        disabled={isLoading || Object.keys(validationErrors).some(key => validationErrors[key])}
       >
-        {isLoading ? 'Criando conta...' : 'Criar conta'}
+        {isLoading ? (
+          <>
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            Criando conta...
+          </>
+        ) : (
+          'Criar conta'
+        )}
       </Button>
+
+      {inviteToken && (
+        <div className="text-center text-sm text-muted-foreground">
+          <CheckCircle className="inline h-4 w-4 mr-1 text-green-500" />
+          Você está usando um convite válido
+        </div>
+      )}
     </form>
   );
 };
