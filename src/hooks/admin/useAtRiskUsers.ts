@@ -101,6 +101,9 @@ export const useAtRiskUsers = () => {
           healthScore < 30 ? 'critical' :
           healthScore < 50 ? 'high' : 'medium';
 
+        // Corrigir acesso aos dados do perfil
+        const profileData = Array.isArray(user.profiles) ? user.profiles[0] : user.profiles;
+
         return {
           user_id: user.user_id,
           health_score: healthScore,
@@ -110,10 +113,10 @@ export const useAtRiskUsers = () => {
           risk_level: riskLevel,
           last_activity: activityData[user.user_id] || null,
           user_profile: {
-            name: user.profiles?.name || 'Usuário sem nome',
-            email: user.profiles?.email || 'Email não disponível',
-            role: user.profiles?.role || 'member',
-            created_at: user.profiles?.created_at || new Date().toISOString()
+            name: profileData?.name || 'Usuário sem nome',
+            email: profileData?.email || 'Email não disponível',
+            role: profileData?.role || 'member',
+            created_at: profileData?.created_at || new Date().toISOString()
           },
           interventions_count: interventionsData[user.user_id] || 0
         };
@@ -121,7 +124,7 @@ export const useAtRiskUsers = () => {
 
       setAtRiskUsers(formattedUsers);
 
-      logger.info('[AT RISK] Usuários em risco carregados:', {
+      logger.info('[AT RISK] Usuários em risco carregados', {
         total: formattedUsers.length,
         critical: formattedUsers.filter(u => u.risk_level === 'critical').length,
         high: formattedUsers.filter(u => u.risk_level === 'high').length,
@@ -129,7 +132,9 @@ export const useAtRiskUsers = () => {
       });
 
     } catch (error: any) {
-      logger.error('[AT RISK] Erro ao carregar usuários em risco:', error);
+      logger.error('[AT RISK] Erro ao carregar usuários em risco', error, {
+        component: 'useAtRiskUsers'
+      });
       setError(error.message || 'Erro ao carregar usuários em risco');
     } finally {
       setLoading(false);
@@ -156,13 +161,16 @@ export const useAtRiskUsers = () => {
         throw new Error(`Erro ao agendar intervenção: ${error.message}`);
       }
 
-      logger.info('[AT RISK] Intervenção agendada para usuário:', userId);
+      logger.info('[AT RISK] Intervenção agendada para usuário', { userId });
       
       // Recarregar dados
       await fetchAtRiskUsers();
 
     } catch (error: any) {
-      logger.error('[AT RISK] Erro ao agendar intervenção:', error);
+      logger.error('[AT RISK] Erro ao agendar intervenção', error, {
+        component: 'useAtRiskUsers',
+        userId
+      });
       throw error;
     }
   };

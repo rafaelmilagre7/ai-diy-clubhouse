@@ -68,19 +68,24 @@ export const useHealthCheckData = () => {
         throw new Error(`Erro ao buscar métricas: ${metricsError.message}`);
       }
 
-      const formattedMetrics: UserHealthMetrics[] = (metricsData || []).map(metric => ({
-        user_id: metric.user_id,
-        health_score: metric.health_score || 0,
-        engagement_score: metric.engagement_score || 0,
-        progress_score: metric.progress_score || 0,
-        activity_score: metric.activity_score || 0,
-        last_calculated_at: metric.last_calculated_at,
-        user_profile: metric.profiles ? {
-          name: metric.profiles.name || 'Usuário sem nome',
-          email: metric.profiles.email || 'Email não disponível',
-          role: metric.profiles.role || 'member'
-        } : undefined
-      }));
+      const formattedMetrics: UserHealthMetrics[] = (metricsData || []).map(metric => {
+        // Corrigir acesso aos dados do perfil
+        const profileData = Array.isArray(metric.profiles) ? metric.profiles[0] : metric.profiles;
+
+        return {
+          user_id: metric.user_id,
+          health_score: metric.health_score || 0,
+          engagement_score: metric.engagement_score || 0,
+          progress_score: metric.progress_score || 0,
+          activity_score: metric.activity_score || 0,
+          last_calculated_at: metric.last_calculated_at,
+          user_profile: profileData ? {
+            name: profileData.name || 'Usuário sem nome',
+            email: profileData.email || 'Email não disponível',
+            role: profileData.role || 'member'
+          } : undefined
+        };
+      });
 
       setHealthMetrics(formattedMetrics);
 
@@ -114,13 +119,15 @@ export const useHealthCheckData = () => {
         });
       }
 
-      logger.info('[HEALTH CHECK] Dados carregados:', {
+      logger.info('[HEALTH CHECK] Dados carregados', {
         metricsCount: formattedMetrics.length,
         hasStats: !!stats
       });
 
     } catch (error: any) {
-      logger.error('[HEALTH CHECK] Erro ao carregar dados:', error);
+      logger.error('[HEALTH CHECK] Erro ao carregar dados de saúde', error, {
+        component: 'useHealthCheckData'
+      });
       setError(error.message || 'Erro ao carregar dados de saúde');
     } finally {
       setLoading(false);
@@ -138,13 +145,15 @@ export const useHealthCheckData = () => {
         throw new Error(`Erro ao recalcular scores: ${error.message}`);
       }
 
-      logger.info('[HEALTH CHECK] Scores recalculados:', result);
+      logger.info('[HEALTH CHECK] Scores recalculados', { result });
       
       // Recarregar dados após recálculo
       await fetchHealthData();
       
     } catch (error: any) {
-      logger.error('[HEALTH CHECK] Erro ao recalcular:', error);
+      logger.error('[HEALTH CHECK] Erro ao recalcular', error, {
+        component: 'useHealthCheckData'
+      });
       setError(error.message || 'Erro ao recalcular health scores');
     }
   };
