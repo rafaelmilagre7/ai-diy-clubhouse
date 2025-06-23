@@ -1,4 +1,6 @@
 
+import { extractTokenFromCurrentUrl } from './inviteRouting';
+
 /**
  * MELHORADO: Gerenciador robusto de tokens de convite
  * UMA ÚNICA FONTE DE VERDADE com limpeza consolidada
@@ -25,18 +27,27 @@ export class InviteTokenManager {
   }
 
   /**
-   * Recuperar token válido - FONTE ÚNICA
+   * Recuperar token válido - FONTE ÚNICA MELHORADA
    */
   static getToken(): string | null {
     try {
-      // PRIMEIRA prioridade: URL
+      // PRIMEIRA prioridade: URL (tanto /convite quanto /invite)
       if (typeof window !== 'undefined') {
-        const urlParams = new URLSearchParams(window.location.search);
-        const urlToken = urlParams.get('token');
+        // Usar nova função para extrair token da URL
+        const urlToken = extractTokenFromCurrentUrl();
         
         if (urlToken) {
           console.log('[TOKEN-MANAGER] Token encontrado na URL');
           return urlToken;
+        }
+
+        // Fallback: parâmetro de query string
+        const urlParams = new URLSearchParams(window.location.search);
+        const queryToken = urlParams.get('token');
+        
+        if (queryToken) {
+          console.log('[TOKEN-MANAGER] Token encontrado na query string');
+          return queryToken;
         }
       }
 

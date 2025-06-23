@@ -44,7 +44,8 @@ const AppRoutes = () => {
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
       
-      {/* Invite routes */}
+      {/* Invite routes - CORRIGIDO: adicionando rota /convite */}
+      <Route path="/convite/:token" element={<RegisterPage />} />
       <Route path="/invite/:token" element={<RegisterPage />} />
       <Route path="/invite" element={<RegisterPage />} />
       

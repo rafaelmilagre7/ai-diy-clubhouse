@@ -8,10 +8,10 @@ import { InviteTokenManager } from '@/utils/inviteTokenManager';
 const RegisterPage = () => {
   const { token: paramToken } = useParams();
   
-  // FONTE ÚNICA DE TOKEN
+  // FONTE ÚNICA DE TOKEN - suporta tanto /convite/:token quanto /invite/:token
   const inviteToken = paramToken || InviteTokenManager.getToken();
 
-  console.log('[REGISTER-PAGE] Token detectado:', !!inviteToken);
+  console.log('[REGISTER-PAGE] Token detectado:', !!inviteToken, 'Rota atual:', window.location.pathname);
 
   // Se há um token de convite, mostrar a página específica de convite
   if (inviteToken) {
