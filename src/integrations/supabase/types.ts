@@ -4634,42 +4634,6 @@ export type Database = {
         }
         Relationships: []
       }
-      user_health_metrics: {
-        Row: {
-          activity_score: number
-          created_at: string
-          engagement_score: number
-          health_score: number
-          id: string
-          last_calculated_at: string
-          progress_score: number
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          activity_score?: number
-          created_at?: string
-          engagement_score?: number
-          health_score?: number
-          id?: string
-          last_calculated_at?: string
-          progress_score?: number
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          activity_score?: number
-          created_at?: string
-          engagement_score?: number
-          health_score?: number
-          id?: string
-          last_calculated_at?: string
-          progress_score?: number
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
       user_moderation_status: {
         Row: {
           ban_reason: string | null
@@ -5125,16 +5089,6 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: Json
       }
-      calculate_user_health_score: {
-        Args: { target_user_id?: string }
-        Returns: {
-          user_id: string
-          health_score: number
-          engagement_score: number
-          progress_score: number
-          activity_score: number
-        }[]
-      }
       can_access_benefit: {
         Args: { user_id: string; tool_id: string }
         Returns: boolean
@@ -5518,7 +5472,7 @@ export type Database = {
       }
       simple_health_check: {
         Args: Record<PropertyKey, never>
-        Returns: Json
+        Returns: boolean
       }
       sync_profile_roles: {
         Args: Record<PropertyKey, never>

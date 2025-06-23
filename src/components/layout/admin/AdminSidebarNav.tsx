@@ -1,4 +1,3 @@
-
 import { useLocation, Link } from "react-router-dom";
 import { 
   BarChart3, 
@@ -9,7 +8,6 @@ import {
   UserCheck, 
   Mail, 
   MessageSquare,
-  Stethoscope,
   GraduationCap,
   Shield
 } from "lucide-react";
@@ -90,7 +88,7 @@ const navigationItems = [
   {
     title: "Diagnósticos",
     href: "/admin/diagnostics",
-    icon: Stethoscope,
+    icon: MessageSquare,
   },
 ];
 

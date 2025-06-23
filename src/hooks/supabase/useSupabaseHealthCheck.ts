@@ -51,14 +51,14 @@ export const useSupabaseHealthCheck = () => {
         issues.push(`Erro de autenticação: ${authError.message}`);
       }
 
-      // Testar banco de dados usando função auxiliar corrigida
+      // Testar banco de dados usando função auxiliar
       const dbTest = await supabase.rpc('simple_health_check');
       const databaseStatus: HealthStatus['databaseStatus'] = dbTest.error ? 'error' : 'operational';
       if (dbTest.error) {
         issues.push(`Erro no banco: ${dbTest.error.message}`);
       }
 
-      // Testar storage (simplificado)
+      // Testar storage
       const storageTest = await supabase.storage.listBuckets();
       const storageStatus: HealthStatus['storageStatus'] = storageTest.error ? 'error' : 'operational';
       if (storageTest.error) {
