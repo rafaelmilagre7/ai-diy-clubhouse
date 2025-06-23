@@ -2,11 +2,11 @@
 import React from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { AlertCircle, Mail, UserCheck } from 'lucide-react';
+import { UserCheck, Mail } from 'lucide-react';
 import { useInviteFlow } from '@/hooks/useInviteFlow';
 import { useAuth } from '@/contexts/auth';
 import InviteRegisterForm from '@/components/auth/InviteRegisterForm';
+import InviteErrorScreen from '@/components/auth/InviteErrorScreen';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 
@@ -31,7 +31,13 @@ const InviteAcceptPage = () => {
     
     if (result.success) {
       toast.success(result.message);
-      navigate('/dashboard');
+      
+      // Redirecionar baseado na necessidade de onboarding
+      if (result.requiresOnboarding) {
+        navigate(`/onboarding?token=${inviteToken}`);
+      } else {
+        navigate('/dashboard');
+      }
     } else {
       toast.error(result.message);
     }
@@ -43,7 +49,14 @@ const InviteAcceptPage = () => {
     
     if (result.success) {
       toast.success(result.message);
-      navigate('/onboarding');
+      
+      // Usuário recém-registrado sempre precisa de onboarding
+      if (result.requiresOnboarding) {
+        navigate('/onboarding');
+      } else {
+        navigate('/dashboard');
+      }
+      
       return result;
     } else {
       toast.error(result.message);
@@ -65,36 +78,31 @@ const InviteAcceptPage = () => {
     );
   }
 
-  // Error state
+  // Error state - usar componente específico
   if (!inviteToken || error || !inviteDetails) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-[#0F111A] to-[#151823] flex items-center justify-center p-4">
-        <Card className="w-full max-w-md bg-[#1A1E2E]/90 backdrop-blur-sm border-white/20">
-          <CardContent className="p-6">
-            <Alert variant="destructive" className="bg-red-500/10 border-red-500/20">
-              <AlertCircle className="h-4 w-4 text-red-400" />
-              <AlertDescription className="text-red-400">
-                {!inviteToken ? 'Token de convite não encontrado' : (error || 'Convite inválido ou expirado')}
-              </AlertDescription>
-            </Alert>
-            
-            <div className="mt-4 text-center">
-              <Button 
-                onClick={() => navigate('/login')}
-                variant="outline"
-                className="border-white/20 text-white hover:bg-white/10"
-              >
-                Fazer login
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+      <InviteErrorScreen
+        error={!inviteToken ? 'Token de convite não encontrado' : (error || 'Convite inválido')}
+        onRetry={() => window.location.reload()}
+      />
     );
   }
 
-  // Usuário já logado - mostrar opção de aceitar convite
+  // Usuário já logado - verificação de email
   if (user) {
+    const userEmail = user.email || '';
+    const inviteEmail = inviteDetails.email;
+    
+    // Verificar se o email confere
+    if (userEmail.toLowerCase() !== inviteEmail.toLowerCase()) {
+      return (
+        <InviteErrorScreen
+          error={`Este convite foi enviado para ${inviteEmail}, mas você está logado como ${userEmail}. Faça login com a conta correta.`}
+          showRequestNewInvite={false}
+        />
+      );
+    }
+
     return (
       <div className="min-h-screen bg-gradient-to-br from-[#0F111A] to-[#151823] flex items-center justify-center p-4">
         <Card className="w-full max-w-md bg-[#1A1E2E]/90 backdrop-blur-sm border-white/20">
@@ -108,11 +116,11 @@ const InviteAcceptPage = () => {
                 Aceitar Convite
               </h2>
               <p className="text-neutral-300">
-                Você está logado como <strong className="text-white">{user.email}</strong>
+                Você está logado como <strong className="text-white">{userEmail}</strong>
               </p>
             </div>
 
-            <div className="bg-[#252842]/50 rounded-lg p-4 space-y-2">
+            <div className="bg-[#252842]/50 rounded-lg p-4 space-y-3">
               <div className="flex items-center gap-2">
                 <Mail className="w-4 h-4 text-viverblue" />
                 <span className="text-sm font-medium text-white">

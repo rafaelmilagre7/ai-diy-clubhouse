@@ -1,9 +1,7 @@
 
 import { useState, useCallback, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/auth';
 import { supabase } from '@/lib/supabase';
-import { toast } from 'sonner';
 
 interface InviteDetails {
   id: string;
@@ -24,8 +22,13 @@ interface InviteFlowState {
   isProcessing: boolean;
 }
 
+interface InviteFlowResult {
+  success: boolean;
+  message: string;
+  requiresOnboarding?: boolean;
+}
+
 export const useInviteFlow = (token?: string) => {
-  const navigate = useNavigate();
   const { user, setProfile } = useAuth();
   
   const [state, setState] = useState<InviteFlowState>({
@@ -35,7 +38,7 @@ export const useInviteFlow = (token?: string) => {
     isProcessing: false
   });
 
-  // Carregar detalhes do convite
+  // Carregar e validar convite
   useEffect(() => {
     if (!token) {
       setState(prev => ({ ...prev, isLoading: false, error: 'Token não fornecido' }));
@@ -44,8 +47,9 @@ export const useInviteFlow = (token?: string) => {
 
     const loadInviteDetails = async () => {
       try {
-        console.log('[INVITE-FLOW] Carregando detalhes do convite:', token.substring(0, 8) + '...');
+        console.log('[INVITE-FLOW] Carregando convite:', token.substring(0, 8) + '...');
 
+        // Query otimizada - buscar convite e role em uma única operação
         const { data: inviteData, error: inviteError } = await supabase
           .from('invites')
           .select(`
@@ -54,7 +58,12 @@ export const useInviteFlow = (token?: string) => {
             token,
             expires_at,
             role_id,
-            used_at
+            used_at,
+            user_roles!inner (
+              id,
+              name,
+              description
+            )
           `)
           .eq('token', token)
           .is('used_at', null)
@@ -62,17 +71,10 @@ export const useInviteFlow = (token?: string) => {
           .single();
 
         if (inviteError || !inviteData) {
-          throw new Error('Convite não encontrado, expirado ou já utilizado');
-        }
-
-        const { data: roleData, error: roleError } = await supabase
-          .from('user_roles')
-          .select('id, name, description')
-          .eq('id', inviteData.role_id)
-          .single();
-
-        if (roleError || !roleData) {
-          throw new Error('Dados do cargo não encontrados');
+          const errorMsg = inviteError?.code === 'PGRST116' 
+            ? 'Convite não encontrado, expirado ou já utilizado'
+            : 'Erro ao carregar convite';
+          throw new Error(errorMsg);
         }
 
         const details: InviteDetails = {
@@ -81,9 +83,9 @@ export const useInviteFlow = (token?: string) => {
           token: inviteData.token,
           expires_at: inviteData.expires_at,
           role: {
-            id: roleData.id,
-            name: roleData.name,
-            description: roleData.description
+            id: inviteData.user_roles.id,
+            name: inviteData.user_roles.name,
+            description: inviteData.user_roles.description
           }
         };
 
@@ -94,7 +96,7 @@ export const useInviteFlow = (token?: string) => {
           error: null
         }));
 
-        console.log('[INVITE-FLOW] Convite carregado com sucesso:', {
+        console.log('[INVITE-FLOW] Convite válido carregado:', {
           email: details.email,
           role: details.role.name
         });
@@ -112,19 +114,34 @@ export const useInviteFlow = (token?: string) => {
     loadInviteDetails();
   }, [token]);
 
+  // Validar se o usuário logado pode aceitar este convite
+  const validateUserForInvite = useCallback((userEmail: string, inviteEmail: string): boolean => {
+    const normalizeEmail = (email: string) => email.toLowerCase().trim();
+    return normalizeEmail(userEmail) === normalizeEmail(inviteEmail);
+  }, []);
+
   // Aceitar convite (para usuários já logados)
-  const acceptInvite = useCallback(async (): Promise<{ success: boolean; message: string }> => {
-    if (!token || !user?.id) {
+  const acceptInvite = useCallback(async (): Promise<InviteFlowResult> => {
+    if (!token || !user?.id || !state.inviteDetails) {
       return {
         success: false,
-        message: 'Token ou usuário não encontrado'
+        message: 'Dados insuficientes para aceitar convite'
+      };
+    }
+
+    // Validação de segurança - email deve corresponder
+    const userEmail = user.email || '';
+    if (!validateUserForInvite(userEmail, state.inviteDetails.email)) {
+      return {
+        success: false,
+        message: 'Este convite foi enviado para outro email. Faça login com a conta correta ou solicite um novo convite.'
       };
     }
 
     setState(prev => ({ ...prev, isProcessing: true }));
 
     try {
-      console.log('[INVITE-FLOW] Aceitando convite para usuário logado:', user.email);
+      console.log('[INVITE-FLOW] Aceitando convite para usuário:', userEmail);
 
       const { data, error } = await supabase.rpc('use_invite', {
         invite_token: token,
@@ -139,7 +156,7 @@ export const useInviteFlow = (token?: string) => {
         throw new Error('Convite não encontrado ou já utilizado');
       }
 
-      // Recarregar perfil
+      // Recarregar perfil atualizado
       const { data: profileData } = await supabase
         .from('profiles')
         .select(`
@@ -158,15 +175,26 @@ export const useInviteFlow = (token?: string) => {
       if (profileData) {
         setProfile({
           ...profileData as any,
-          email: profileData.email || user.email || '',
+          email: profileData.email || userEmail,
         } as any);
       }
 
+      // Log de auditoria para segurança
+      await supabase.rpc('log_security_access', {
+        p_table_name: 'invites',
+        p_operation: 'accept_invite',
+        p_resource_id: state.inviteDetails.id
+      }).catch(() => {}); // Falhar silenciosamente
+
       setState(prev => ({ ...prev, isProcessing: false }));
+      
+      // Verificar se precisa de onboarding
+      const needsOnboarding = !user.user_metadata?.onboarding_completed;
       
       return {
         success: true,
-        message: 'Convite aceito com sucesso!'
+        message: 'Convite aceito com sucesso!',
+        requiresOnboarding: needsOnboarding
       };
 
     } catch (error: any) {
@@ -178,13 +206,13 @@ export const useInviteFlow = (token?: string) => {
         message: error.message || 'Erro ao processar convite'
       };
     }
-  }, [token, user, setProfile]);
+  }, [token, user, state.inviteDetails, setProfile, validateUserForInvite]);
 
   // Registrar novo usuário com convite
   const registerWithInvite = useCallback(async (
     name: string, 
     password: string
-  ): Promise<{ success: boolean; message: string }> => {
+  ): Promise<InviteFlowResult> => {
     if (!token || !state.inviteDetails) {
       return {
         success: false,
@@ -195,7 +223,7 @@ export const useInviteFlow = (token?: string) => {
     setState(prev => ({ ...prev, isProcessing: true }));
 
     try {
-      console.log('[INVITE-FLOW] Registrando novo usuário:', state.inviteDetails.email);
+      console.log('[INVITE-FLOW] Registrando usuário:', state.inviteDetails.email);
 
       // Criar conta do usuário
       const { data: authData, error: authError } = await supabase.auth.signUp({
@@ -218,21 +246,29 @@ export const useInviteFlow = (token?: string) => {
         throw new Error('Erro ao criar usuário');
       }
 
-      // Usar convite
+      // Usar convite automaticamente
       const { error: inviteError } = await supabase.rpc('use_invite', {
         invite_token: token,
         user_id: authData.user.id
       });
 
       if (inviteError) {
-        console.warn('[INVITE-FLOW] Erro ao usar convite, mas usuário foi criado:', inviteError);
+        console.warn('[INVITE-FLOW] Erro ao usar convite após registro:', inviteError);
       }
+
+      // Log de auditoria
+      await supabase.rpc('log_security_access', {
+        p_table_name: 'invites',
+        p_operation: 'register_with_invite',
+        p_resource_id: state.inviteDetails.id
+      }).catch(() => {});
 
       setState(prev => ({ ...prev, isProcessing: false }));
 
       return {
         success: true,
-        message: 'Conta criada com sucesso! Bem-vindo à plataforma.'
+        message: 'Conta criada com sucesso! Bem-vindo à plataforma.',
+        requiresOnboarding: true
       };
 
     } catch (error: any) {
@@ -258,6 +294,7 @@ export const useInviteFlow = (token?: string) => {
   return {
     ...state,
     acceptInvite,
-    registerWithInvite
+    registerWithInvite,
+    validateUserForInvite
   };
 };

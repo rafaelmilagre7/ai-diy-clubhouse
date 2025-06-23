@@ -3,6 +3,7 @@ import React, { useCallback, useMemo, useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useOnboardingWizard } from '../hooks/useOnboardingWizard';
 import { useCleanOnboardingData } from '../hooks/useCleanOnboardingData';
+import { useOnboardingCleanup } from '../hooks/useOnboardingCleanup';
 
 interface OnboardingWizardContainerProps {
   children: (props: ReturnType<typeof useOnboardingWizard> & {
@@ -17,6 +18,8 @@ export const OnboardingWizardContainer = ({ children }: OnboardingWizardContaine
   const inviteToken = searchParams.get('token');
   const [isInitialized, setIsInitialized] = useState(false);
   
+  const { cleanupForInvite } = useOnboardingCleanup();
+  
   const {
     data: cleanData,
     updateData,
@@ -27,7 +30,7 @@ export const OnboardingWizardContainer = ({ children }: OnboardingWizardContaine
   // Memoizar o memberType para evitar re-renders
   const memberType = useMemo(() => cleanData.memberType || 'club', [cleanData.memberType]);
   
-  // Inicialização simplificada
+  // Inicialização otimizada
   useEffect(() => {
     if (isInitialized) return;
 
@@ -36,22 +39,13 @@ export const OnboardingWizardContainer = ({ children }: OnboardingWizardContaine
         setIsInitialized(true);
         console.log('[WIZARD-CONTAINER] Inicializando onboarding');
         
+        // Limpeza seletiva apenas se for convite
         if (inviteToken) {
-          console.log('[WIZARD-CONTAINER] Convite detectado - limpeza seletiva');
-          
-          // Limpeza seletiva apenas do localStorage relacionado ao onboarding
-          const storageKeys = [
-            'viver-ia-onboarding-data',
-            'onboarding-wizard-step'
-          ];
-
-          storageKeys.forEach(key => {
-            localStorage.removeItem(key);
-            console.log('[WIZARD-CONTAINER] Removido do storage:', key);
-          });
+          console.log('[WIZARD-CONTAINER] Convite detectado - executando limpeza');
+          cleanupForInvite();
         }
 
-        // Aguardar carregamento dos dados se necessário
+        // Inicializar dados quando não está carregando convite
         if (!isInviteLoading) {
           initializeCleanData();
         }
@@ -61,7 +55,7 @@ export const OnboardingWizardContainer = ({ children }: OnboardingWizardContaine
     };
 
     setupOnboarding();
-  }, [inviteToken, isInitialized, isInviteLoading, initializeCleanData]);
+  }, [inviteToken, isInitialized, isInviteLoading, initializeCleanData, cleanupForInvite]);
 
   // Inicializar dados quando convite carrega
   useEffect(() => {
@@ -71,7 +65,7 @@ export const OnboardingWizardContainer = ({ children }: OnboardingWizardContaine
     }
   }, [inviteToken, isInviteLoading, isInitialized, cleanData, initializeCleanData]);
 
-  // Estado de loading simplificado
+  // Estado de loading otimizado
   const isLoading = useMemo(() => {
     if (inviteToken && isInviteLoading) return true;
     if (!isInitialized) return true;

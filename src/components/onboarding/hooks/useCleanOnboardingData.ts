@@ -3,11 +3,11 @@ import { useState, useCallback } from 'react';
 import { OnboardingData } from '../types/onboardingTypes';
 import { useAuth } from '@/contexts/auth';
 import { getUserRoleName } from '@/lib/supabase/types';
-import { useInviteDetails } from '@/hooks/useInviteDetails';
+import { useInviteFlow } from '@/hooks/useInviteFlow';
 
 export const useCleanOnboardingData = (inviteToken?: string) => {
   const { user, profile } = useAuth();
-  const { inviteDetails, loading: inviteLoading } = useInviteDetails(inviteToken);
+  const { inviteDetails, isLoading: inviteLoading } = useInviteFlow(inviteToken);
   
   const [data, setData] = useState<OnboardingData>({
     memberType: 'club',
@@ -23,11 +23,11 @@ export const useCleanOnboardingData = (inviteToken?: string) => {
       console.log('[CLEAN-ONBOARDING] Inicializando com dados do convite');
       
       const inviteData: OnboardingData = {
-        // Usar dados do convite
+        // Dados do convite
         name: '',
         email: inviteDetails.email,
         
-        // Metadados do convite
+        // Metadados
         memberType: inviteDetails.role.name === 'formacao' ? 'formacao' : 'club',
         startedAt: new Date().toISOString(),
         fromInvite: true,
@@ -35,7 +35,7 @@ export const useCleanOnboardingData = (inviteToken?: string) => {
       };
 
       setData(inviteData);
-      console.log('[CLEAN-ONBOARDING] Dados inicializados com convite:', {
+      console.log('[CLEAN-ONBOARDING] Dados inicializados:', {
         email: inviteData.email,
         memberType: inviteData.memberType,
         fromInvite: inviteData.fromInvite
@@ -50,8 +50,10 @@ export const useCleanOnboardingData = (inviteToken?: string) => {
       };
 
       setData(regularData);
+      console.log('[CLEAN-ONBOARDING] Dados regulares inicializados:', {
+        memberType: regularData.memberType
+      });
     }
-    // Se é convite mas ainda não carregou, não inicializar ainda
   }, [user, profile, inviteToken, inviteDetails]);
 
   const updateData = useCallback((newData: Partial<OnboardingData>) => {
