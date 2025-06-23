@@ -12,16 +12,16 @@ export const useToolForm = (toolId: string) => {
   const handleSubmit = async (data: ToolFormValues): Promise<{ success: boolean; data?: Tool }> => {
     try {
       setIsSubmitting(true);
-      console.log('Salvando ferramenta:', data);
+      console.log('Salvando ferramenta:', { toolId, data });
 
-      // Garantir que todos os campos esperados estejam presentes
+      // Preparar dados para salvar
       const toolData = {
         name: data.name,
         description: data.description,
         official_url: data.official_url,
         category: data.category,
         status: data.status,
-        logo_url: data.logo_url,
+        logo_url: data.logo_url || null,
         tags: data.tags || [],
         video_tutorials: data.video_tutorials || [],
         has_member_benefit: data.has_member_benefit || false,
@@ -37,9 +37,8 @@ export const useToolForm = (toolId: string) => {
 
       let response;
 
-      // Verifica se é uma nova ferramenta ou atualização
       if (toolId === 'new') {
-        // Adicionando created_at para novas ferramentas
+        // Criar nova ferramenta
         const newToolData = {
           ...toolData,
           created_at: new Date().toISOString()
@@ -47,15 +46,17 @@ export const useToolForm = (toolId: string) => {
 
         response = await supabase
           .from('tools')
-          .insert(newToolData as any)
-          .select();
+          .insert(newToolData)
+          .select()
+          .single();
       } else {
-        // Atualização de ferramenta existente
+        // Atualizar ferramenta existente
         response = await supabase
           .from('tools')
-          .update(toolData as any)
-          .eq('id', toolId as any)
-          .select();
+          .update(toolData)
+          .eq('id', toolId)
+          .select()
+          .single();
       }
 
       const { error, data: responseData } = response;
@@ -65,11 +66,11 @@ export const useToolForm = (toolId: string) => {
         throw error;
       }
 
-      console.log('Resposta do Supabase:', responseData);
-
-      if (!responseData || responseData.length === 0) {
+      if (!responseData) {
         throw new Error('Nenhum dado retornado após salvamento');
       }
+
+      console.log('Ferramenta salva com sucesso:', responseData);
 
       toast({
         title: toolId === 'new' ? "Ferramenta criada" : "Ferramenta atualizada",
@@ -78,14 +79,18 @@ export const useToolForm = (toolId: string) => {
           : "As alterações foram salvas com sucesso",
       });
 
-      return { success: true, data: responseData[0] as unknown as Tool };
+      return { success: true, data: responseData as Tool };
     } catch (error: any) {
       console.error('Erro ao salvar ferramenta:', error);
+      
+      const errorMessage = error.message || "Ocorreu um erro ao salvar as alterações";
+      
       toast({
         title: "Erro ao salvar",
-        description: error.message || "Ocorreu um erro ao salvar as alterações",
+        description: errorMessage,
         variant: "destructive",
       });
+      
       return { success: false };
     } finally {
       setIsSubmitting(false);
