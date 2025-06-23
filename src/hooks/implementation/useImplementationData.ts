@@ -5,6 +5,7 @@ import { useAuth } from "@/contexts/auth";
 import { supabase, Solution, Module, Progress } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
 import { useLogging } from "@/hooks/useLogging";
+import { getUserRoleName } from "@/lib/supabase/types";
 
 export const useImplementationData = () => {
   const { id } = useParams<{ id: string }>();
@@ -12,7 +13,7 @@ export const useImplementationData = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const { log, logError } = useLogging();
-  const isAdmin = profile?.role === 'admin';
+  const isAdmin = getUserRoleName(profile) === 'admin';
   
   const [solution, setSolution] = useState<Solution | null>(null);
   const [modules, setModules] = useState<Module[]>([]);
@@ -163,7 +164,7 @@ export const useImplementationData = () => {
     };
     
     fetchData();
-  }, [id, user, toast, navigate, isAdmin, profile?.role, log, logError]);
+  }, [id, user, toast, navigate, isAdmin, log, logError]);
   
   return {
     solution,
