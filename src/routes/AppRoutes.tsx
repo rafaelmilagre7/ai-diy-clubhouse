@@ -5,6 +5,7 @@ import { memberRoutes } from "./MemberRoutes";
 import { adminRoutes } from "./AdminRoutes";
 import { certificateRoutes } from "./CertificateRoutes";
 import { publicRoutes } from "./PublicRoutes";
+import { formacaoRoutes } from "./FormacaoRoutes";
 
 // Páginas de erro
 import NotFound from '@/pages/NotFound';
@@ -54,6 +55,9 @@ export const AppRoutes = createBrowserRouter([
 
   // Rotas de admin
   ...adminRoutes,
+
+  // Rotas de formação
+  ...formacaoRoutes,
 
   // Rotas de certificados
   ...certificateRoutes,
