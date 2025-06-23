@@ -4,9 +4,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { AlertCircle, Eye, EyeOff } from 'lucide-react';
+import { AlertCircle, Eye, EyeOff, UserPlus } from 'lucide-react';
 import { useAuth } from '@/contexts/auth';
 import { useInviteDetails } from '@/hooks/useInviteDetails';
+import { contrastClasses } from '@/lib/contrastUtils';
 
 interface SimpleRegisterFormProps {
   onSuccess?: () => void;
@@ -70,7 +71,6 @@ export const SimpleRegisterForm: React.FC<SimpleRegisterFormProps> = ({
       const metadata = {
         name: formData.name || undefined,
         invite_token: inviteToken || undefined,
-        // Flag para indicar que vem de convite - força limpeza
         from_invite: !!inviteToken
       };
 
@@ -120,23 +120,17 @@ export const SimpleRegisterForm: React.FC<SimpleRegisterFormProps> = ({
   const displayEmail = formData.email || inviteDetails?.email || '';
 
   return (
-    <div className="space-y-4">
-      {isInviteMode && inviteDetails && (
-        <div className="text-center space-y-2">
-          <h2 className="text-2xl font-bold text-gray-900">Aceitar Convite</h2>
-          <p className="text-gray-600">
-            Você foi convidado para {inviteDetails.role.name}
-          </p>
-          <p className="text-sm text-gray-500">
-            Email: {inviteDetails.email}
-          </p>
-        </div>
-      )}
-
+    <div className="space-y-6">
+      {/* Cabeçalho apenas para modo não-convite */}
       {!isInviteMode && (
         <div className="text-center space-y-2">
-          <h2 className="text-2xl font-bold text-gray-900">Criar conta</h2>
-          <p className="text-gray-600">
+          <div className="mx-auto w-12 h-12 bg-viverblue/20 rounded-full flex items-center justify-center mb-4">
+            <UserPlus className="w-6 h-6 text-viverblue" />
+          </div>
+          <h2 className={`text-2xl font-bold ${contrastClasses.heading}`}>
+            Criar conta
+          </h2>
+          <p className={contrastClasses.secondary}>
             Crie sua conta para começar
           </p>
         </div>
@@ -144,25 +138,32 @@ export const SimpleRegisterForm: React.FC<SimpleRegisterFormProps> = ({
 
       <form onSubmit={handleSubmit} className="space-y-4">
         {error && (
-          <Alert variant="destructive">
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription>{error}</AlertDescription>
+          <Alert variant="destructive" className="bg-red-500/10 border-red-500/20">
+            <AlertCircle className="h-4 w-4 text-red-400" />
+            <AlertDescription className="text-red-400">
+              {error}
+            </AlertDescription>
           </Alert>
         )}
 
         <div className="space-y-2">
-          <Label htmlFor="name">Nome (opcional)</Label>
+          <Label htmlFor="name" className={contrastClasses.label}>
+            Nome (opcional)
+          </Label>
           <Input
             id="name"
             type="text"
             value={formData.name}
             onChange={handleInputChange('name')}
             placeholder="Seu nome completo"
+            className="bg-[#151823] border-white/20 text-white placeholder:text-neutral-400 focus:border-viverblue focus:ring-viverblue"
           />
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="email">Email *</Label>
+          <Label htmlFor="email" className={contrastClasses.label}>
+            Email *
+          </Label>
           <Input
             id="email"
             type="email"
@@ -171,11 +172,14 @@ export const SimpleRegisterForm: React.FC<SimpleRegisterFormProps> = ({
             placeholder="seu@email.com"
             required
             disabled={isInviteMode}
+            className="bg-[#151823] border-white/20 text-white placeholder:text-neutral-400 focus:border-viverblue focus:ring-viverblue disabled:opacity-50"
           />
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="password">Senha *</Label>
+          <Label htmlFor="password" className={contrastClasses.label}>
+            Senha *
+          </Label>
           <div className="relative">
             <Input
               id="password"
@@ -184,12 +188,13 @@ export const SimpleRegisterForm: React.FC<SimpleRegisterFormProps> = ({
               onChange={handleInputChange('password')}
               placeholder="Mínimo 6 caracteres"
               required
+              className="bg-[#151823] border-white/20 text-white placeholder:text-neutral-400 focus:border-viverblue focus:ring-viverblue pr-10"
             />
             <Button
               type="button"
               variant="ghost"
               size="sm"
-              className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+              className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent text-neutral-400 hover:text-white"
               onClick={() => setShowPassword(!showPassword)}
             >
               {showPassword ? (
@@ -202,7 +207,9 @@ export const SimpleRegisterForm: React.FC<SimpleRegisterFormProps> = ({
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="confirmPassword">Confirmar Senha *</Label>
+          <Label htmlFor="confirmPassword" className={contrastClasses.label}>
+            Confirmar Senha *
+          </Label>
           <Input
             id="confirmPassword"
             type="password"
@@ -210,15 +217,23 @@ export const SimpleRegisterForm: React.FC<SimpleRegisterFormProps> = ({
             onChange={handleInputChange('confirmPassword')}
             placeholder="Digite a senha novamente"
             required
+            className="bg-[#151823] border-white/20 text-white placeholder:text-neutral-400 focus:border-viverblue focus:ring-viverblue"
           />
         </div>
 
         <Button
           type="submit"
-          className="w-full"
+          className="w-full bg-viverblue hover:bg-viverblue-dark text-white font-medium"
           disabled={isLoading}
         >
-          {isLoading ? 'Criando conta...' : (isInviteMode ? 'Aceitar Convite' : 'Criar conta')}
+          {isLoading ? (
+            <div className="flex items-center gap-2">
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
+              <span>Criando conta...</span>
+            </div>
+          ) : (
+            isInviteMode ? 'Aceitar Convite' : 'Criar conta'
+          )}
         </Button>
       </form>
     </div>

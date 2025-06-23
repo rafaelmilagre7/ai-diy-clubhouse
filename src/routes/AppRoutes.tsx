@@ -9,6 +9,7 @@ import { certificateRoutes } from './CertificateRoutes';
 import { CommunityRedirects } from '@/components/routing/CommunityRedirects';
 import NotFound from '@/pages/NotFound';
 import OnboardingPage from '@/pages/OnboardingPage';
+import InviteAcceptPage from '@/pages/InviteAcceptPage';
 import { ProtectedRoutes } from '@/auth/ProtectedRoutes';
 
 const AppRoutes = () => {
@@ -62,10 +63,13 @@ const AppRoutes = () => {
       {!skipRedirects && <CommunityRedirects />}
       
       <Routes>
-        {/* NOVO: Redirecionamento direto de convites para AuthLayout */}
+        {/* NOVO: Página específica para aceitar convites */}
+        <Route path="/convite-aceitar" element={<InviteAcceptPage />} />
+        
+        {/* Redirecionamento direto de convites para a nova página */}
         <Route 
           path="/convite/:token" 
-          element={<Navigate to={`/auth?token=${window.location.pathname.split('/')[2]}`} replace />} 
+          element={<Navigate to={`/convite-aceitar?token=${window.location.pathname.split('/')[2]}`} replace />} 
         />
         <Route 
           path="/convite" 
