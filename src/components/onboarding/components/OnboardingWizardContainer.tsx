@@ -3,7 +3,6 @@ import React, { useCallback, useMemo, useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useOnboardingWizard } from '../hooks/useOnboardingWizard';
 import { useCleanOnboardingData } from '../hooks/useCleanOnboardingData';
-import { useInviteCleanup } from '@/hooks/useInviteCleanup';
 
 interface OnboardingWizardContainerProps {
   children: (props: ReturnType<typeof useOnboardingWizard> & {
@@ -17,9 +16,6 @@ export const OnboardingWizardContainer = ({ children }: OnboardingWizardContaine
   const [searchParams] = useSearchParams();
   const inviteToken = searchParams.get('token');
   const [isInitialized, setIsInitialized] = useState(false);
-  const [containerError, setContainerError] = useState<string | null>(null);
-  
-  const { cleanupForInvite } = useInviteCleanup();
   
   const {
     data: cleanData,
@@ -31,18 +27,19 @@ export const OnboardingWizardContainer = ({ children }: OnboardingWizardContaine
   // Memoizar o memberType para evitar re-renders
   const memberType = useMemo(() => cleanData.memberType || 'club', [cleanData.memberType]);
   
-  // Inicialização única e controlada
+  // Inicialização simplificada
   useEffect(() => {
     if (isInitialized) return;
 
     const setupOnboarding = async () => {
       try {
         setIsInitialized(true);
+        console.log('[WIZARD-CONTAINER] Inicializando onboarding');
         
         if (inviteToken) {
           console.log('[WIZARD-CONTAINER] Convite detectado - limpeza seletiva');
           
-          // Limpeza seletiva apenas do localStorage, sem deletar dados do banco
+          // Limpeza seletiva apenas do localStorage relacionado ao onboarding
           const storageKeys = [
             'viver-ia-onboarding-data',
             'onboarding-wizard-step'
@@ -52,18 +49,14 @@ export const OnboardingWizardContainer = ({ children }: OnboardingWizardContaine
             localStorage.removeItem(key);
             console.log('[WIZARD-CONTAINER] Removido do storage:', key);
           });
+        }
 
-          // Aguardar carregamento dos dados do convite se necessário
-          if (!isInviteLoading) {
-            initializeCleanData();
-          }
-        } else {
-          // Sem convite, inicializar normalmente
+        // Aguardar carregamento dos dados se necessário
+        if (!isInviteLoading) {
           initializeCleanData();
         }
       } catch (error: any) {
         console.error('[WIZARD-CONTAINER] Erro na configuração:', error);
-        setContainerError(`Erro na inicialização: ${error.message}`);
       }
     };
 
@@ -78,20 +71,12 @@ export const OnboardingWizardContainer = ({ children }: OnboardingWizardContaine
     }
   }, [inviteToken, isInviteLoading, isInitialized, cleanData, initializeCleanData]);
 
-  // Estado de loading melhorado
+  // Estado de loading simplificado
   const isLoading = useMemo(() => {
-    // Se é convite e ainda está carregando detalhes
     if (inviteToken && isInviteLoading) return true;
-    
-    // Se ainda não inicializou
     if (!isInitialized) return true;
-    
-    // Se é convite mas dados ainda não foram carregados
     if (inviteToken && Object.keys(cleanData).length <= 2) return true;
-    
-    // Para usuários normais
     if (!inviteToken && Object.keys(cleanData).length <= 1) return true;
-    
     return false;
   }, [inviteToken, isInviteLoading, isInitialized, cleanData]);
 
@@ -106,16 +91,10 @@ export const OnboardingWizardContainer = ({ children }: OnboardingWizardContaine
     memberType
   });
 
-  // Incorporar erro do container
-  const enhancedProps = useMemo(() => ({
-    ...wizardProps,
-    completionError: containerError || wizardProps.completionError
-  }), [wizardProps, containerError]);
-
   return (
     <>
       {children({
-        ...enhancedProps,
+        ...wizardProps,
         data: cleanData,
         memberType,
         isLoading

@@ -1,13 +1,14 @@
 
 import { useCallback } from 'react';
 
+// Hook simplificado apenas para limpeza seletiva do localStorage para convites
 export const useInviteCleanup = () => {
   const cleanupForInvite = useCallback(async (inviteToken?: string) => {
     if (!inviteToken) return;
 
     console.log('[INVITE-CLEANUP] Limpeza seletiva para convite:', inviteToken.substring(0, 8) + '...');
 
-    // Limpeza seletiva APENAS do localStorage - não tocar no banco
+    // Limpeza seletiva APENAS do localStorage relacionado ao onboarding
     const storageKeysToClean = [
       'viver-ia-onboarding-data',
       'onboarding-wizard-step',
@@ -34,7 +35,7 @@ export const useInviteCleanup = () => {
       });
     }
 
-    console.log('[INVITE-CLEANUP] Limpeza seletiva concluída - banco de dados preservado');
+    console.log('[INVITE-CLEANUP] Limpeza seletiva concluída');
   }, []);
 
   return { cleanupForInvite };

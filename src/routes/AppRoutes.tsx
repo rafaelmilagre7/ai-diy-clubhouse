@@ -49,13 +49,12 @@ const AppRoutes = () => {
     });
   }, [location]);
   
-  // Verificar se estamos em uma rota de comunidade para evitar renderizar CommunityRedirects
-  // Ou em uma rota de autenticação/convite onde não precisamos do redirecionamento
+  // Verificar se estamos em uma rota de comunidade ou convite para evitar renderizar CommunityRedirects
   const skipRedirects = 
     location.pathname.startsWith('/comunidade') || 
     location.pathname.startsWith('/login') ||
     location.pathname.startsWith('/auth') ||
-    location.pathname.startsWith('/convite');
+    location.pathname.startsWith('/convite-aceitar');
   
   return (
     <>
@@ -63,10 +62,10 @@ const AppRoutes = () => {
       {!skipRedirects && <CommunityRedirects />}
       
       <Routes>
-        {/* NOVO: Página específica para aceitar convites */}
+        {/* ÚNICA rota para aceitar convites */}
         <Route path="/convite-aceitar" element={<InviteAcceptPage />} />
         
-        {/* Redirecionamento direto de convites para a nova página */}
+        {/* Redirecionamentos legados para compatibilidade */}
         <Route 
           path="/convite/:token" 
           element={<Navigate to={`/convite-aceitar?token=${window.location.pathname.split('/')[2]}`} replace />} 
@@ -96,7 +95,7 @@ const AppRoutes = () => {
           } 
         />
         
-        {/* Member Routes - Agora incluindo a rota raiz com RootRedirect */}
+        {/* Member Routes */}
         {memberRoutes.map((route) => (
           <Route key={route.path} path={route.path} element={route.element} />
         ))}

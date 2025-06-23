@@ -1,63 +1,34 @@
 
 import React, { useState, useEffect } from 'react';
-import { useSearchParams, useNavigate } from 'react-router-dom';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { useNavigate } from 'react-router-dom';
+import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AlertCircle } from 'lucide-react';
 import { useAuth } from '@/contexts/auth';
 import LoginForm from './LoginForm';
 import SimpleRegisterForm from './SimpleRegisterForm';
-import { contrastClasses } from '@/lib/contrastUtils';
 
 const AuthLayout = () => {
-  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { user } = useAuth();
   
   const [activeTab, setActiveTab] = useState('login');
   const [message, setMessage] = useState('');
 
-  const inviteToken = searchParams.get('token');
-  const email = searchParams.get('email');
-
-  console.log('[AUTH-LAYOUT] Renderizando com parâmetros:', {
-    inviteToken: inviteToken ? `${inviteToken.substring(0, 8)}...` : null,
-    email,
-    user: user ? user.email : null
-  });
-
-  // Redirecionar para página específica de convite se houver token
-  useEffect(() => {
-    if (inviteToken && !user) {
-      console.log('[AUTH-LAYOUT] Convite detectado, redirecionando para página específica');
-      navigate(`/convite-aceitar?token=${inviteToken}`, { replace: true });
-      return;
-    }
-  }, [inviteToken, user, navigate]);
+  console.log('[AUTH-LAYOUT] Renderizando para usuário:', user ? user.email : 'não logado');
 
   // Redirecionar usuário autenticado
   useEffect(() => {
     if (user) {
-      console.log('[AUTH-LAYOUT] Usuário logado detectado, redirecionando...');
-      
-      if (inviteToken) {
-        console.log('[AUTH-LAYOUT] Usuário logado com convite, redirecionando para onboarding');
-        navigate('/onboarding');
-      } else {
-        console.log('[AUTH-LAYOUT] Usuário logado sem convite, redirecionando para dashboard');
-        navigate('/dashboard');
-      }
-    }
-  }, [user, inviteToken, navigate]);
-
-  const handleSuccess = () => {
-    console.log('[AUTH-LAYOUT] Sucesso na autenticação, redirecionando...');
-    if (inviteToken) {
-      navigate('/onboarding');
-    } else {
+      console.log('[AUTH-LAYOUT] Usuário logado detectado, redirecionando para dashboard');
       navigate('/dashboard');
     }
+  }, [user, navigate]);
+
+  const handleSuccess = () => {
+    console.log('[AUTH-LAYOUT] Sucesso na autenticação, redirecionando para dashboard');
+    navigate('/dashboard');
   };
 
   // Se usuário está logado, mostrar loading enquanto redireciona
@@ -65,12 +36,10 @@ const AuthLayout = () => {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#0F111A] to-[#151823] p-4">
         <Card className="w-full max-w-md bg-[#1A1E2E]/90 backdrop-blur-sm border-white/20">
-          <CardHeader className="text-center">
-            <h2 className={`text-xl font-semibold ${contrastClasses.heading}`}>
+          <CardContent className="p-6 text-center">
+            <h2 className="text-xl font-semibold text-white mb-4">
               Redirecionando...
             </h2>
-          </CardHeader>
-          <CardContent>
             <div className="flex justify-center">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-viverblue"></div>
             </div>
@@ -110,10 +79,10 @@ const AuthLayout = () => {
             <TabsContent value="login">
               <div className="space-y-4">
                 <div className="text-center space-y-2">
-                  <h2 className={`text-2xl font-bold ${contrastClasses.heading}`}>
+                  <h2 className="text-2xl font-bold text-white">
                     Entrar na conta
                   </h2>
-                  <p className={contrastClasses.secondary}>
+                  <p className="text-neutral-300">
                     Acesse sua conta para continuar
                   </p>
                 </div>
@@ -122,10 +91,7 @@ const AuthLayout = () => {
             </TabsContent>
             
             <TabsContent value="register">
-              <SimpleRegisterForm 
-                onSuccess={handleSuccess}
-                defaultEmail={email || ''}
-              />
+              <SimpleRegisterForm onSuccess={handleSuccess} />
             </TabsContent>
           </Tabs>
         </CardContent>

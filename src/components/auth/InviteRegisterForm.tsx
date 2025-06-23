@@ -5,27 +5,27 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AlertCircle, Eye, EyeOff, UserPlus } from 'lucide-react';
-import { useAuth } from '@/contexts/auth';
 
-interface SimpleRegisterFormProps {
-  onSuccess?: () => void;
-  defaultEmail?: string;
+interface InviteRegisterFormProps {
+  email: string;
+  roleName: string;
+  onSubmit: (name: string, password: string) => Promise<{ success: boolean; message: string }>;
+  isLoading?: boolean;
 }
 
-const SimpleRegisterForm: React.FC<SimpleRegisterFormProps> = ({ 
-  onSuccess,
-  defaultEmail = ''
+const InviteRegisterForm: React.FC<InviteRegisterFormProps> = ({
+  email,
+  roleName,
+  onSubmit,
+  isLoading = false
 }) => {
-  const { signUp } = useAuth();
-  const [isLoading, setIsLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
-    email: defaultEmail,
     password: '',
     confirmPassword: ''
   });
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -33,11 +33,6 @@ const SimpleRegisterForm: React.FC<SimpleRegisterFormProps> = ({
     
     if (!formData.name.trim()) {
       setError('Nome é obrigatório');
-      return;
-    }
-
-    if (!formData.email.trim()) {
-      setError('Email é obrigatório');
       return;
     }
 
@@ -56,40 +51,17 @@ const SimpleRegisterForm: React.FC<SimpleRegisterFormProps> = ({
       return;
     }
 
-    setIsLoading(true);
     setError('');
 
     try {
-      const { error: signUpError } = await signUp(
-        formData.email.trim(),
-        formData.password,
-        formData.name.trim()
-      );
-
-      if (signUpError) {
-        console.error('[SIMPLE-REGISTER-FORM] Erro no registro:', signUpError);
-        
-        let errorMessage = 'Erro ao criar conta';
-        if (signUpError.message?.includes('User already registered')) {
-          errorMessage = 'Este email já possui uma conta. Faça login.';
-        } else if (signUpError.message?.includes('Invalid email')) {
-          errorMessage = 'Email inválido';
-        } else if (signUpError.message) {
-          errorMessage = signUpError.message;
-        }
-        
-        setError(errorMessage);
-        return;
+      const result = await onSubmit(formData.name.trim(), formData.password);
+      
+      if (!result.success) {
+        setError(result.message);
       }
-
-      console.log('[SIMPLE-REGISTER-FORM] Registro realizado com sucesso');
-      onSuccess?.();
-
+      // Se sucesso, o componente pai lidará com o redirecionamento
     } catch (err: any) {
-      console.error('[SIMPLE-REGISTER-FORM] Erro inesperado:', err);
-      setError('Erro inesperado durante o registro');
-    } finally {
-      setIsLoading(false);
+      setError('Erro inesperado ao criar conta');
     }
   };
 
@@ -109,15 +81,35 @@ const SimpleRegisterForm: React.FC<SimpleRegisterFormProps> = ({
   return (
     <div className="space-y-6">
       <div className="text-center">
-        <div className="mx-auto w-12 h-12 bg-viverblue/20 rounded-full flex items-center justify-center mb-4">
-          <UserPlus className="w-6 h-6 text-viverblue" />
+        <div className="mx-auto w-16 h-16 bg-viverblue/20 rounded-full flex items-center justify-center mb-4">
+          <UserPlus className="w-8 h-8 text-viverblue" />
         </div>
         <h2 className="text-2xl font-bold text-white mb-2">
-          Criar conta
+          Aceitar Convite
         </h2>
         <p className="text-neutral-300">
-          Preencha os dados para se cadastrar
+          Complete seu cadastro para acessar a plataforma
         </p>
+      </div>
+
+      <div className="bg-[#252842]/50 rounded-lg p-4 space-y-3">
+        <div>
+          <span className="text-sm font-medium text-white">
+            Email:
+          </span>
+          <p className="text-neutral-300 mt-1">
+            {email}
+          </p>
+        </div>
+        
+        <div>
+          <span className="text-sm font-medium text-white">
+            Cargo: 
+          </span>
+          <span className="ml-2 text-sm px-3 py-1 bg-viverblue/20 text-viverblue rounded-full">
+            {roleName === 'formacao' ? 'Formação' : 'Membro do Clube'}
+          </span>
+        </div>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
@@ -140,21 +132,6 @@ const SimpleRegisterForm: React.FC<SimpleRegisterFormProps> = ({
             value={formData.name}
             onChange={handleInputChange('name')}
             placeholder="Seu nome completo"
-            required
-            className="bg-[#151823] border-white/20 text-white placeholder:text-neutral-400 focus:border-viverblue focus:ring-viverblue"
-          />
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="email" className="text-white">
-            Email
-          </Label>
-          <Input
-            id="email"
-            type="email"
-            value={formData.email}
-            onChange={handleInputChange('email')}
-            placeholder="seu@email.com"
             required
             className="bg-[#151823] border-white/20 text-white placeholder:text-neutral-400 focus:border-viverblue focus:ring-viverblue"
           />
@@ -231,7 +208,7 @@ const SimpleRegisterForm: React.FC<SimpleRegisterFormProps> = ({
               <span>Criando conta...</span>
             </div>
           ) : (
-            'Criar conta'
+            'Aceitar Convite e Criar Conta'
           )}
         </Button>
       </form>
@@ -239,4 +216,4 @@ const SimpleRegisterForm: React.FC<SimpleRegisterFormProps> = ({
   );
 };
 
-export default SimpleRegisterForm;
+export default InviteRegisterForm;
