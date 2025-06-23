@@ -2,95 +2,111 @@
 import { supabase } from '@/lib/supabase';
 import { logger } from '@/utils/logger';
 
-export interface HealthCheckInitResult {
+export interface HealthCheckResult {
   success: boolean;
   message: string;
   details: {
-    activityDataPopulated: boolean;
-    healthScoresCalculated: boolean;
-    atRiskUsersDetected: boolean;
     totalUsers: number;
-    errors: string[];
+    averageScore: number;
+    healthyUsers: number;
+    atRiskUsers: number;
+    criticalUsers: number;
   };
 }
 
-export const initializeHealthCheckData = async (): Promise<HealthCheckInitResult> => {
-  const errors: string[] = [];
-  let activityDataPopulated = false;
-  let healthScoresCalculated = false;
-  let atRiskUsersDetected = false;
-  let totalUsers = 0;
-
+export async function initializeHealthCheckData(): Promise<HealthCheckResult> {
   try {
-    logger.info('[HEALTH CHECK] Iniciando inicialização dos dados de health check');
+    logger.info('[HEALTH INIT] Iniciando inicialização do Health Check...');
 
-    // 1. Popular dados de atividade dos usuários
+    // Primeiro, popular dados de atividade se necessário
     const { data: activityResult, error: activityError } = await supabase
       .rpc('populate_user_activity_data');
 
     if (activityError) {
-      errors.push(`Erro ao popular dados de atividade: ${activityError.message}`);
-      logger.error('[HEALTH CHECK] Erro ao popular atividades:', activityError);
+      logger.warn('[HEALTH INIT] Erro ao popular atividades:', activityError);
     } else {
-      activityDataPopulated = true;
-      logger.info('[HEALTH CHECK] Dados de atividade populados:', activityResult);
+      logger.info('[HEALTH INIT] Dados de atividade populados:', activityResult);
     }
 
-    // 2. Calcular health scores usando user_health_metrics
-    const { data: scoresResult, error: scoresError } = await supabase
+    // Calcular health scores para todos os usuários
+    const { data: healthResult, error: healthError } = await supabase
       .rpc('calculate_user_health_score');
 
-    if (scoresError) {
-      errors.push(`Erro ao calcular health scores: ${scoresError.message}`);
-      logger.error('[HEALTH CHECK] Erro ao calcular scores:', scoresError);
-    } else {
-      healthScoresCalculated = true;
-      totalUsers = scoresResult?.processed_users || 0;
-      logger.info('[HEALTH CHECK] Health scores calculados:', scoresResult);
+    if (healthError) {
+      throw new Error(`Erro ao calcular health scores: ${healthError.message}`);
     }
 
-    // 3. Detectar usuários em risco
-    const { data: riskResult, error: riskError } = await supabase
-      .rpc('detect_at_risk_users');
+    logger.info('[HEALTH INIT] Health scores calculados:', healthResult);
 
-    if (riskError) {
-      errors.push(`Erro ao detectar usuários em risco: ${riskError.message}`);
-      logger.error('[HEALTH CHECK] Erro ao detectar riscos:', riskError);
-    } else {
-      atRiskUsersDetected = true;
-      logger.info('[HEALTH CHECK] Usuários em risco detectados:', riskResult);
+    // Buscar estatísticas finais
+    const { data: stats, error: statsError } = await supabase
+      .from('user_health_metrics')
+      .select('health_score');
+
+    if (statsError) {
+      throw new Error(`Erro ao buscar estatísticas: ${statsError.message}`);
     }
 
-    const success = activityDataPopulated && healthScoresCalculated && atRiskUsersDetected;
+    const totalUsers = stats?.length || 0;
+    const averageScore = totalUsers > 0 
+      ? Math.round(stats.reduce((sum, user) => sum + (user.health_score || 0), 0) / totalUsers)
+      : 0;
 
-    return {
-      success,
-      message: success 
-        ? 'Health Check inicializado com sucesso'
-        : 'Health Check inicializado com alguns erros',
+    const healthyUsers = stats?.filter(u => (u.health_score || 0) >= 70).length || 0;
+    const atRiskUsers = stats?.filter(u => {
+      const score = u.health_score || 0;
+      return score >= 30 && score < 70;
+    }).length || 0;
+    const criticalUsers = stats?.filter(u => (u.health_score || 0) < 30).length || 0;
+
+    const result: HealthCheckResult = {
+      success: true,
+      message: `Health Check inicializado com sucesso! Processados ${totalUsers} usuários.`,
       details: {
-        activityDataPopulated,
-        healthScoresCalculated,
-        atRiskUsersDetected,
         totalUsers,
-        errors
+        averageScore,
+        healthyUsers,
+        atRiskUsers,
+        criticalUsers
       }
     };
 
-  } catch (error: any) {
-    logger.error('[HEALTH CHECK] Erro inesperado na inicialização:', error);
-    errors.push(`Erro inesperado: ${error.message}`);
+    logger.info('[HEALTH INIT] Inicialização concluída:', result);
+    return result;
 
+  } catch (error: any) {
+    logger.error('[HEALTH INIT] Erro na inicialização:', error);
+    
     return {
       success: false,
-      message: 'Falha na inicialização do Health Check',
+      message: `Erro na inicialização: ${error.message}`,
       details: {
-        activityDataPopulated,
-        healthScoresCalculated,
-        atRiskUsersDetected,
-        totalUsers,
-        errors
+        totalUsers: 0,
+        averageScore: 0,
+        healthyUsers: 0,
+        atRiskUsers: 0,
+        criticalUsers: 0
       }
     };
   }
-};
+}
+
+// Função para simular dados de demonstração
+export function generateSimulatedHealthData() {
+  const simulatedUsers = 44; // Baseado no número real de usuários
+  const healthyUsers = Math.floor(simulatedUsers * 0.6); // 60% saudáveis
+  const atRiskUsers = Math.floor(simulatedUsers * 0.3); // 30% em risco
+  const criticalUsers = simulatedUsers - healthyUsers - atRiskUsers; // Resto críticos
+
+  return {
+    success: true,
+    message: 'Dados simulados carregados para demonstração',
+    details: {
+      totalUsers: simulatedUsers,
+      averageScore: 65,
+      healthyUsers,
+      atRiskUsers,
+      criticalUsers
+    }
+  };
+}
