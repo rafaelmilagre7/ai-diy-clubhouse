@@ -18,6 +18,7 @@ export const OnboardingWizardContainer = ({ children }: OnboardingWizardContaine
   const [searchParams] = useSearchParams();
   const inviteToken = searchParams.get('token');
   const [isCleanupComplete, setIsCleanupComplete] = useState(false);
+  const [containerError, setContainerError] = useState<string | null>(null);
   const { cleanupForInvite } = useInviteCleanup();
   
   const {
@@ -29,22 +30,28 @@ export const OnboardingWizardContainer = ({ children }: OnboardingWizardContaine
   // Executar limpeza ANTES de qualquer inicialização
   useEffect(() => {
     const setupForInvite = async () => {
-      if (inviteToken) {
-        console.log('[WIZARD-CONTAINER] Detectado convite - executando limpeza TOTAL primeiro');
-        
-        // Primeiro: limpeza total
-        await cleanupForInvite(inviteToken);
-        
-        // Aguardar um pouco para garantir que limpeza foi concluída
-        setTimeout(() => {
-          console.log('[WIZARD-CONTAINER] Limpeza concluída, inicializando dados limpos');
+      try {
+        if (inviteToken) {
+          console.log('[WIZARD-CONTAINER] Detectado convite - executando limpeza TOTAL primeiro');
+          
+          // Primeiro: limpeza total
+          await cleanupForInvite(inviteToken);
+          
+          // Aguardar um pouco para garantir que limpeza foi concluída
+          setTimeout(() => {
+            console.log('[WIZARD-CONTAINER] Limpeza concluída, inicializando dados limpos');
+            initializeCleanData();
+            setIsCleanupComplete(true);
+          }, 200);
+        } else {
+          // Sem convite, inicializar normalmente
           initializeCleanData();
           setIsCleanupComplete(true);
-        }, 200);
-      } else {
-        // Sem convite, inicializar normalmente
-        initializeCleanData();
-        setIsCleanupComplete(true);
+        }
+      } catch (error: any) {
+        console.error('[WIZARD-CONTAINER] Erro na configuração:', error);
+        setContainerError(`Erro na inicialização: ${error.message}`);
+        setIsCleanupComplete(true); // Continuar mesmo com erro
       }
     };
 
@@ -64,10 +71,16 @@ export const OnboardingWizardContainer = ({ children }: OnboardingWizardContaine
     memberType
   });
 
+  // Incorporar erro do container nos props
+  const enhancedProps = {
+    ...wizardProps,
+    completionError: containerError || wizardProps.completionError
+  };
+
   return (
     <>
       {children({
-        ...wizardProps,
+        ...enhancedProps,
         data: cleanData,
         memberType,
         isLoading
