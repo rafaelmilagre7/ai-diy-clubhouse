@@ -5063,6 +5063,10 @@ export type Database = {
       }
     }
     Functions: {
+      accept_invite: {
+        Args: { p_token: string }
+        Returns: Json
+      }
       admin_complete_user_cleanup: {
         Args: { user_email: string }
         Returns: Json
@@ -5153,6 +5157,10 @@ export type Database = {
       }
       clear_all_networking_data: {
         Args: Record<PropertyKey, never>
+        Returns: Json
+      }
+      complete_invite_registration: {
+        Args: { p_token: string; p_user_id: string }
         Returns: Json
       }
       complete_onboarding_and_unlock_features: {
@@ -5467,6 +5475,10 @@ export type Database = {
       quick_check_permission: {
         Args: { user_id: string; permission_code: string }
         Returns: boolean
+      }
+      register_with_invite: {
+        Args: { p_token: string; p_name: string; p_password: string }
+        Returns: Json
       }
       reset_all_onboarding_data: {
         Args: Record<PropertyKey, never>

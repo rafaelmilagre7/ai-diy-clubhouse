@@ -5,7 +5,6 @@ import { useAuth } from '@/contexts/auth';
 // Auth components
 import LoginPage from '@/pages/auth/LoginPage';
 import RegisterPage from '@/pages/auth/RegisterPage';
-import InviteAcceptPage from '@/components/auth/InviteAcceptPage';
 
 // Main components
 import LandingPage from '@/pages/LandingPage';
@@ -45,8 +44,8 @@ const AppRoutes = () => {
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
       
-      {/* Invite routes */}
-      <Route path="/invite" element={<InviteAcceptPage />} />
+      {/* Invite routes - RegisterPage now handles tokens */}
+      <Route path="/invite" element={<RegisterPage />} />
       
       {/* Protected routes */}
       <Route 

@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/auth';
 import { InviteCache } from '@/utils/inviteCache';
+import { InviteTokenManager } from '@/utils/inviteTokenManager';
 import { RetryManager } from '@/utils/retryUtils';
 
 export interface InviteDetails {
@@ -30,7 +31,7 @@ export const useInviteFlow = (token?: string) => {
   const [error, setError] = useState<string>('');
   const [isProcessing, setIsProcessing] = useState(false);
 
-  // Buscar detalhes do convite com cache e retry
+  // Buscar detalhes do convite
   const fetchInviteDetails = useCallback(async () => {
     if (!token) return;
 
@@ -48,7 +49,6 @@ export const useInviteFlow = (token?: string) => {
 
       console.log('[INVITE-FLOW] Buscando detalhes do convite:', token);
 
-      // Buscar com retry
       const data = await RetryManager.withRetry(async () => {
         const { data: invites, error } = await supabase
           .from('invites')
@@ -74,7 +74,6 @@ export const useInviteFlow = (token?: string) => {
         throw new Error('Convite não encontrado ou expirado');
       }
 
-      // Processar dados
       const roleData = Array.isArray(data.user_roles) ? data.user_roles[0] : data.user_roles;
       
       const processedData: InviteDetails = {
@@ -89,21 +88,18 @@ export const useInviteFlow = (token?: string) => {
         created_at: data.created_at
       };
 
-      // Armazenar no cache
       InviteCache.set(token, processedData);
       setInviteDetails(processedData);
 
-      console.log('[INVITE-FLOW] Detalhes do convite carregados:', {
+      console.log('[INVITE-FLOW] Detalhes carregados:', {
         email: processedData.email,
         role: processedData.role.name
       });
 
     } catch (err: any) {
       const errorMessage = err.message || 'Erro ao carregar convite';
-      console.error('[INVITE-FLOW] Erro ao buscar convite:', err);
+      console.error('[INVITE-FLOW] Erro:', err);
       setError(errorMessage);
-      
-      // Limpar cache se houver erro
       InviteCache.clear();
     } finally {
       setIsLoading(false);
@@ -122,20 +118,6 @@ export const useInviteFlow = (token?: string) => {
     try {
       setIsProcessing(true);
 
-      // Validar com backend usando nova função de segurança
-      const validationResult = await RetryManager.withRetry(async () => {
-        const { data } = await supabase.rpc('validate_user_invite_match', {
-          p_token: token,
-          p_user_id: user.id
-        });
-        return data;
-      });
-
-      if (!validationResult?.valid) {
-        throw new Error(validationResult?.message || 'Validação falhou');
-      }
-
-      // Aceitar convite
       const result = await RetryManager.withRetry(async () => {
         const { data, error } = await supabase.rpc('accept_invite', {
           p_token: token
@@ -146,8 +128,8 @@ export const useInviteFlow = (token?: string) => {
       });
 
       if (result?.success) {
-        // Limpar cache após sucesso
         InviteCache.clear();
+        InviteTokenManager.clearToken();
         
         return {
           success: true,
@@ -159,7 +141,7 @@ export const useInviteFlow = (token?: string) => {
       }
 
     } catch (error: any) {
-      console.error('[INVITE-FLOW] Erro ao aceitar convite:', error);
+      console.error('[INVITE-FLOW] Erro ao aceitar:', error);
       return {
         success: false,
         message: error.message || 'Erro ao aceitar convite'
@@ -184,8 +166,8 @@ export const useInviteFlow = (token?: string) => {
     try {
       setIsProcessing(true);
 
-      // Registrar usuário com retry
-      const result = await RetryManager.withRetry(async () => {
+      // Primeiro, validar o convite
+      const validationResult = await RetryManager.withRetry(async () => {
         const { data, error } = await supabase.rpc('register_with_invite', {
           p_token: token,
           p_name: name,
@@ -196,17 +178,51 @@ export const useInviteFlow = (token?: string) => {
         return data;
       });
 
-      if (result?.success) {
-        // Limpar cache após sucesso
+      if (!validationResult?.success) {
+        throw new Error(validationResult?.message || 'Erro na validação do convite');
+      }
+
+      // Criar conta no Supabase Auth
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email: inviteDetails.email,
+        password: password,
+        options: {
+          data: {
+            name: name,
+            invite_token: token
+          }
+        }
+      });
+
+      if (authError) {
+        throw new Error(authError.message);
+      }
+
+      if (!authData.user) {
+        throw new Error('Erro ao criar usuário');
+      }
+
+      // Completar registro do convite
+      const completionResult = await RetryManager.withRetry(async () => {
+        const { data, error } = await supabase.rpc('complete_invite_registration', {
+          p_token: token,
+          p_user_id: authData.user.id
+        });
+
+        if (error) throw error;
+        return data;
+      });
+
+      if (completionResult?.success) {
         InviteCache.clear();
         
         return {
           success: true,
-          message: result.message || 'Conta criada com sucesso!',
-          requiresOnboarding: true // Novos usuários sempre precisam de onboarding
+          message: 'Conta criada com sucesso!',
+          requiresOnboarding: true
         };
       } else {
-        throw new Error(result?.message || 'Erro ao criar conta');
+        throw new Error(completionResult?.message || 'Erro ao completar registro');
       }
 
     } catch (error: any) {
@@ -220,7 +236,6 @@ export const useInviteFlow = (token?: string) => {
     }
   }, [token, inviteDetails]);
 
-  // Carregar dados quando token muda
   useEffect(() => {
     if (token) {
       fetchInviteDetails();
