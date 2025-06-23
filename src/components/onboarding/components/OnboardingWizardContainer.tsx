@@ -32,29 +32,25 @@ export const OnboardingWizardContainer = ({ children }: OnboardingWizardContaine
 
   const memberType = useMemo(() => cleanData.memberType || 'club', [cleanData.memberType]);
   
-  // Inicialização SIMPLES
+  // Inicialização DIRETA - sem estados intermediários
   useEffect(() => {
-    console.log('[WIZARD-CONTAINER] Configurando onboarding');
+    console.log('[WIZARD-CONTAINER] Configuração direta do onboarding');
     
     if (inviteToken) {
       InviteTokenManager.storeToken(inviteToken);
       cleanupForInvite();
     }
 
-    // Se está carregando convite, aguardar
-    if (inviteToken && isInviteLoading) {
-      return;
-    }
-
-    // Caso contrário, inicializar
+    // Inicializar sempre - sem aguardar loading de convite
     initializeCleanData();
     console.log('[WIZARD-CONTAINER] Configuração concluída');
-  }, [inviteToken, isInviteLoading, initializeCleanData, cleanupForInvite]);
+  }, [inviteToken, initializeCleanData, cleanupForInvite]);
 
-  // Loading SIMPLES
+  // Loading SIMPLIFICADO - apenas para dados essenciais
   const isLoading = useMemo(() => {
-    return inviteToken && isInviteLoading;
-  }, [inviteToken, isInviteLoading]);
+    // Só considerar loading se realmente não tem dados básicos
+    return !cleanData.memberType && isInviteLoading;
+  }, [cleanData.memberType, isInviteLoading]);
 
   const memoizedUpdateData = useCallback((newData: any) => {
     const dataWithToken = inviteToken ? { ...newData, inviteToken } : newData;

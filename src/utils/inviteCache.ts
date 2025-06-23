@@ -1,7 +1,7 @@
 
 /**
- * Cache simples para dados de convite
- * SEM COMPLEXIDADES DE EXPIRAÇÃO
+ * Cache DIRETO para dados de convite
+ * Operações simples: sucesso = retorna dados, erro = retorna null
  */
 interface CachedInvite {
   data: any;
@@ -12,23 +12,28 @@ export class InviteCache {
   private static readonly CACHE_KEY = 'viver-ia-invite-cache';
 
   static set(token: string, data: any): void {
+    if (!token || !data) return;
+    
     try {
       const cached: CachedInvite = { data, token };
       sessionStorage.setItem(this.CACHE_KEY, JSON.stringify(cached));
       console.log('[INVITE-CACHE] Dados armazenados');
     } catch (error) {
-      console.error('[INVITE-CACHE] Erro ao armazenar:', error);
+      // Falha = operação silenciosa, sem poluir logs
+      console.warn('[INVITE-CACHE] Falha ao armazenar');
     }
   }
 
   static get(token: string): any | null {
+    if (!token) return null;
+    
     try {
       const cachedStr = sessionStorage.getItem(this.CACHE_KEY);
       if (!cachedStr) return null;
 
       const cached: CachedInvite = JSON.parse(cachedStr);
       
-      // Verificar se é o token correto
+      // Token não confere = limpar e retornar null
       if (cached.token !== token) {
         this.clear();
         return null;
@@ -37,7 +42,7 @@ export class InviteCache {
       console.log('[INVITE-CACHE] Dados recuperados');
       return cached.data;
     } catch (error) {
-      console.error('[INVITE-CACHE] Erro ao recuperar:', error);
+      // Erro = limpar cache e retornar null
       this.clear();
       return null;
     }
@@ -46,9 +51,8 @@ export class InviteCache {
   static clear(): void {
     try {
       sessionStorage.removeItem(this.CACHE_KEY);
-      console.log('[INVITE-CACHE] Cache limpo');
     } catch (error) {
-      console.error('[INVITE-CACHE] Erro ao limpar:', error);
+      // Falha silenciosa
     }
   }
 

@@ -50,7 +50,7 @@ export const useAuthMethods = ({ setIsLoading }: AuthMethodsParams) => {
     }
   };
 
-  // SignUp CORRIGIDO - processa convites adequadamente
+  // SignUp SIMPLIFICADO - validação direta
   const signUp = async (
     email: string, 
     password: string, 
@@ -89,34 +89,30 @@ export const useAuthMethods = ({ setIsLoading }: AuthMethodsParams) => {
 
       console.log('[AUTH-METHODS] Usuário criado:', data.user.email);
 
-      // PROCESSAR CONVITE se presente
+      // PROCESSAR CONVITE - validação direta sem try/catch aninhado
       if (options.inviteToken) {
-        try {
-          console.log('[AUTH-METHODS] Processando convite');
-          
-          const { data: inviteResult, error: inviteError } = await supabase.rpc(
-            'complete_invite_registration',
-            {
-              p_token: options.inviteToken,
-              p_user_id: data.user.id
-            }
-          );
-
-          if (inviteError) {
-            console.error('[AUTH-METHODS] Erro no convite:', inviteError);
-            toast.error('Erro ao processar convite: ' + inviteError.message);
-          } else if (inviteResult?.success) {
-            console.log('[AUTH-METHODS] Convite processado com sucesso');
-            toast.success('Conta criada e convite aceito com sucesso!');
-            InviteTokenManager.clearToken();
-          } else {
-            console.warn('[AUTH-METHODS] Convite não processado');
-            toast.warning('Conta criada, mas houve problema com o convite');
+        console.log('[AUTH-METHODS] Processando convite');
+        
+        const { data: inviteResult, error: inviteError } = await supabase.rpc(
+          'complete_invite_registration',
+          {
+            p_token: options.inviteToken,
+            p_user_id: data.user.id
           }
-        } catch (inviteErr) {
-          console.error('[AUTH-METHODS] Erro inesperado no convite:', inviteErr);
-          toast.warning('Conta criada, mas convite pode não ter sido processado');
+        );
+
+        if (inviteError || !inviteResult?.success) {
+          // Erro no convite = falha clara
+          const errorMessage = inviteError?.message || inviteResult?.message || 'Erro ao processar convite';
+          console.error('[AUTH-METHODS] Erro no convite:', errorMessage);
+          toast.error('Erro ao processar convite: ' + errorMessage);
+          return { error: new Error(errorMessage) };
         }
+
+        // Sucesso no convite
+        console.log('[AUTH-METHODS] Convite processado com sucesso');
+        toast.success('Conta criada e convite aceito com sucesso!');
+        InviteTokenManager.clearToken();
       } else {
         toast.success('Conta criada com sucesso!');
       }

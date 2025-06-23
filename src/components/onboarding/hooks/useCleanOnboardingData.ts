@@ -21,12 +21,12 @@ export const useCleanOnboardingData = (inviteToken?: string) => {
     email: profile?.email || user?.email || ''
   }), [profile, user?.email]);
 
-  // Inicialização DIRETA - sem fallbacks
+  // Inicialização DIRETA - sempre executa
   const initializeCleanData = useCallback(() => {
-    console.log('[CLEAN-ONBOARDING] Inicializando dados');
+    console.log('[CLEAN-ONBOARDING] Inicializando dados diretamente');
     
     if (inviteToken && inviteDetails) {
-      // Fluxo de convite - DIRETO
+      // Fluxo de convite - dados do convite
       const inviteData: OnboardingData = {
         name: '',
         email: inviteDetails.email,
@@ -38,8 +38,21 @@ export const useCleanOnboardingData = (inviteToken?: string) => {
 
       setData(inviteData);
       console.log('[CLEAN-ONBOARDING] Dados do convite aplicados');
+    } else if (inviteToken && !inviteDetails && !inviteLoading) {
+      // Token existe mas convite não carregou = usar dados padrão com token
+      const fallbackData: OnboardingData = {
+        name: '',
+        email: '',
+        memberType: 'club',
+        startedAt: new Date().toISOString(),
+        fromInvite: true,
+        inviteToken: inviteToken
+      };
+
+      setData(fallbackData);
+      console.log('[CLEAN-ONBOARDING] Dados fallback com token aplicados');
     } else {
-      // Fluxo normal - DIRETO
+      // Fluxo normal - dados do perfil
       const memberType: 'club' | 'formacao' = profileData.roleName === 'formacao' ? 'formacao' : 'club';
       
       const regularData: OnboardingData = {
@@ -52,7 +65,7 @@ export const useCleanOnboardingData = (inviteToken?: string) => {
       setData(regularData);
       console.log('[CLEAN-ONBOARDING] Dados regulares aplicados');
     }
-  }, [profileData, inviteToken, inviteDetails]);
+  }, [profileData, inviteToken, inviteDetails, inviteLoading]);
 
   const updateData = useCallback((newData: Partial<OnboardingData>) => {
     console.log('[CLEAN-ONBOARDING] Atualizando dados:', newData);

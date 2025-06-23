@@ -21,7 +21,7 @@ export const useIntelligentRedirect = () => {
       preserveToken = false
     } = options;
 
-    console.log('[INTELLIGENT-REDIRECT] Redirecionando:', {
+    console.log('[INTELLIGENT-REDIRECT] Redirecionamento direto:', {
       userId: user?.id,
       requiresOnboarding,
       fromInvite,
@@ -36,13 +36,13 @@ export const useIntelligentRedirect = () => {
       }
     }
 
-    // Redirecionamento direto e simples
+    // Redirecionamento DIRETO
     if (requiresOnboarding) {
       const storedToken = InviteTokenManager.getToken();
       const destination = storedToken ? `/onboarding?token=${storedToken}` : '/onboarding';
       navigate(destination);
     } else {
-      // Limpar token se não precisar mais
+      // Limpar token quando não precisa mais
       InviteTokenManager.clearToken();
       navigate('/dashboard');
     }
