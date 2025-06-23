@@ -1,3 +1,4 @@
+
 import { useInviteCreate } from "./invites/useInviteCreate";
 import { useInviteDelete } from "./invites/useInviteDelete";
 import { useInviteResend } from "./invites/useInviteResend";
@@ -5,7 +6,7 @@ import { useInvitesList } from "./invites/useInvitesList";
 import { useSmartInviteCache } from "./invites/useSmartInviteCache";
 import { useRealtimeInvites } from "./invites/useRealtimeInvites";
 import type { Invite, CreateInviteParams } from "./invites/types";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 export type { Invite };
 
@@ -14,6 +15,9 @@ export const useInvites = () => {
   const { createInvite: createInviteHook, loading: isCreating } = useInviteCreate();
   const { deleteInvite, isDeleting } = useInviteDelete();
   const { resendInvite, isSending } = useInviteResend();
+  
+  // Estado para rastrear convites específicos sendo reenviados
+  const [resendingInvites, setResendingInvites] = useState<Set<string>>(new Set());
   
   // Sistema de cache inteligente
   const {
@@ -106,11 +110,14 @@ export const useInvites = () => {
 
   const handleResendInvite = async (invite: Invite, channels?: ('email' | 'whatsapp')[], whatsappNumber?: string) => {
     try {
-      console.log("🔄 [USE-INVITES] Iniciando reenvio com sincronização:", {
+      console.log("🔄 [USE-INVITES] Iniciando reenvio com feedback visual:", {
         inviteId: invite.id,
         email: invite.email,
         channels: channels || ['email']
       });
+      
+      // Marcar convite como sendo reenviado
+      setResendingInvites(prev => new Set(prev).add(invite.id));
       
       // Update otimista - atualizar tentativas localmente
       const newAttemptCount = (invite.send_attempts || 0) + 1;
@@ -136,7 +143,19 @@ export const useInvites = () => {
       // Reverter update otimista em caso de erro
       await fetchInvites();
       throw error;
+    } finally {
+      // Remover convite da lista de reenvios
+      setResendingInvites(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(invite.id);
+        return newSet;
+      });
     }
+  };
+
+  // Função para verificar se um convite específico está sendo reenviado
+  const isInviteResending = (inviteId: string) => {
+    return resendingInvites.has(inviteId);
   };
 
   return {
@@ -150,6 +169,7 @@ export const useInvites = () => {
     createInvite: handleCreateInvite,
     deleteInvite: handleDeleteInvite,
     resendInvite: handleResendInvite,
+    isInviteResending,
     // Funções de cache para uso avançado
     prefetchCriticalData,
     invalidateAllInviteData

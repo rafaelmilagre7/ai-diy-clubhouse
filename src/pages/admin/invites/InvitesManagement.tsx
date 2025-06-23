@@ -1,185 +1,142 @@
 
-import React, { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
+import React, { useState } from 'react';
 import { Plus } from 'lucide-react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Button } from '@/components/ui/button';
+import { useInvites } from '@/hooks/admin/useInvites';
+import { useRoles } from '@/hooks/admin/useRoles';
 import { toast } from 'sonner';
-import SimpleInvitesTab from './components/SimpleInvitesTab';
-import { SimplifiedCreateInviteModal } from './components/SimplifiedCreateInviteModal';
+
+// Componentes
+import { InvitesTable } from '@/components/admin/invites/ui/InvitesTable';
+import { CreateInviteDialog } from './components/CreateInviteDialog';
+import ResendInviteDialog from './components/ResendInviteDialog';
 import { InviteAnalyticsDashboard } from '@/components/admin/invites/analytics/InviteAnalyticsDashboard';
-import { CampaignManager } from '@/components/admin/invites/campaigns/CampaignManager';
-import { OnboardingHealthDashboard } from '@/components/admin/invites/onboarding/OnboardingHealthDashboard';
-import { AdminToolsTab } from '@/components/admin/invites/administration/AdminToolsTab';
-import { InviteAuditDashboard } from '@/components/admin/invites/audit/InviteAuditDashboard';
-import { RealTimeMonitoring } from '@/components/admin/invites/monitoring/RealTimeMonitoring';
-import { OptimizedInviteInterface } from '@/components/admin/invites/ui/OptimizedInviteInterface';
-import { useInvites, type Invite } from '@/hooks/admin/useInvites';
-import { useInviteCache } from '@/hooks/admin/invites/useInviteCache';
-import { type CreateInviteParams } from '@/hooks/admin/invites/types';
+
+// Types
+import type { Invite } from '@/hooks/admin/invites/types';
 
 const InvitesManagement = () => {
-  const [open, setOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState('convites');
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [selectedInvite, setSelectedInvite] = useState<Invite | null>(null);
+  const [showResendDialog, setShowResendDialog] = useState(false);
+
   const { 
     invites, 
     loading, 
-    fetchInvites, 
-    createInvite, 
-    isCreating, 
-    deleteInvite, 
+    createInvite,
+    deleteInvite,
     resendInvite,
-    realtimeConnected,
-    prefetchCriticalData
+    isCreating,
+    isDeleting,
+    isSending,
+    isInviteResending,
+    fetchInvites
   } = useInvites();
 
-  const { invalidateInviteData } = useInviteCache();
+  const { roles } = useRoles();
 
-  useEffect(() => {
-    console.log('🚀 [INVITES-MANAGEMENT] Inicializando com cache otimizado');
-    
-    // Buscar dados iniciais
-    fetchInvites();
-    
-    // Pré-carregar dados críticos
-    prefetchCriticalData();
-  }, [fetchInvites, prefetchCriticalData]);
-
-  const handleCreateInvite = async (params: CreateInviteParams) => {
+  const handleCreateInvite = async (data: any) => {
     try {
-      console.log("🎯 InvitesManagement: Criando convite com sistema otimizado:", params);
-      
-      const result = await createInvite(params);
-      
+      const result = await createInvite(data);
       if (result?.status === 'success') {
-        console.log("✅ InvitesManagement: Convite criado com sucesso");
-        setOpen(false);
-        
-        // Toast com informações mais detalhadas
-        const channels = params.channels?.join(' e ') || 'email';
-        toast.success(`Convite enviado via ${channels}!`, {
-          description: `Convite para ${params.email} criado com sucesso`
-        });
-      } else {
-        toast.error(result?.message || 'Erro ao criar convite');
-        console.error("❌ InvitesManagement: Falha na criação:", result?.message);
+        toast.success('Convite criado e enviado com sucesso!');
+        setShowCreateDialog(false);
       }
     } catch (error: any) {
-      const errorMessage = error.message || 'Erro desconhecido';
-      toast.error(`Erro ao criar convite: ${errorMessage}`);
-      console.error("❌ InvitesManagement: Erro ao criar convite:", error);
+      console.error('Erro ao criar convite:', error);
+      toast.error(error.message || 'Erro ao criar convite');
     }
   };
 
   const handleDeleteInvite = async (inviteId: string) => {
     try {
-      console.log("🗑️ InvitesManagement: Deletando convite:", inviteId);
       await deleteInvite(inviteId);
-      toast.success('Convite removido com sucesso');
-    } catch (error) {
-      console.error("❌ InvitesManagement: Erro ao deletar convite:", error);
-      toast.error('Erro ao remover convite');
+      toast.success('Convite excluído com sucesso!');
+    } catch (error: any) {
+      console.error('Erro ao excluir convite:', error);
+      toast.error(error.message || 'Erro ao excluir convite');
     }
   };
 
-  const handleResendInvite = async (invite: Invite) => {
-    try {
-      console.log("🔄 InvitesManagement: Reenviando convite:", invite.id);
-      await resendInvite(invite);
-      toast.success('Convite reenviado com sucesso');
-    } catch (error) {
-      console.error("❌ InvitesManagement: Erro ao reenviar convite:", error);
-      toast.error('Erro ao reenviar convite');
-    }
+  const handleResendClick = (invite: Invite) => {
+    console.log('[INVITES-MANAGEMENT] Abrindo diálogo de reenvio para:', invite.id);
+    setSelectedInvite(invite);
+    setShowResendDialog(true);
   };
 
-  const handleTabChange = (value: string) => {
-    setActiveTab(value);
-    console.log(`📋 [INVITES-MANAGEMENT] Mudando para aba: ${value}`);
-    
-    // Pré-carregar dados específicos da aba
-    if (value === 'analytics' || value === 'monitoramento') {
-      prefetchCriticalData();
-    }
+  const handleResendSuccess = () => {
+    console.log('[INVITES-MANAGEMENT] Reenvio concluído com sucesso');
+    setShowResendDialog(false);
+    setSelectedInvite(null);
+    // A lista será atualizada automaticamente pelo hook useInvites
   };
 
-  return (
-    <div>
-      <div className="md:flex md:items-center md:justify-between space-y-4 md:space-y-0">
-        <div className="mb-4">
-          <div className="flex items-center space-x-3">
-            <h1 className="text-2xl font-semibold">Gerenciar Convites</h1>
-            {realtimeConnected && (
-              <div className="flex items-center space-x-1 text-green-600 text-sm">
-                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                <span>Tempo Real</span>
-              </div>
-            )}
+  if (loading) {
+    return (
+      <div className="container mx-auto p-6">
+        <div className="flex justify-between items-center mb-6">
+          <div>
+            <h1 className="text-3xl font-bold">Gerenciamento de Convites</h1>
+            <p className="text-muted-foreground">Convide novos usuários para a plataforma</p>
           </div>
-          <p className="text-muted-foreground">
-            Sistema completo de convites com analytics avançado e monitoramento em tempo real.
-          </p>
         </div>
-
-        <div className="flex gap-2">
-          <Button onClick={() => setOpen(true)}>
-            <Plus className="w-4 h-4 mr-2" />
-            Criar Convite
-          </Button>
+        
+        <div className="space-y-6">
+          <div className="h-64 bg-muted animate-pulse rounded-lg" />
+          <div className="h-96 bg-muted animate-pulse rounded-lg" />
         </div>
       </div>
+    );
+  }
 
-      <Tabs value={activeTab} onValueChange={handleTabChange} className="mt-4">
-        <TabsList className="grid w-full grid-cols-7">
-          <TabsTrigger value="convites">Convites</TabsTrigger>
-          <TabsTrigger value="analytics">Analytics</TabsTrigger>
-          <TabsTrigger value="monitoramento">Monitoramento</TabsTrigger>
-          <TabsTrigger value="campanhas">Campanhas</TabsTrigger>
-          <TabsTrigger value="onboarding">Onboarding</TabsTrigger>
-          <TabsTrigger value="auditoria">Auditoria</TabsTrigger>
-          <TabsTrigger value="administracao">Administração</TabsTrigger>
-        </TabsList>
+  return (
+    <div className="container mx-auto p-6 space-y-8">
+      {/* Header */}
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-3xl font-bold">Gerenciamento de Convites</h1>
+          <p className="text-muted-foreground">
+            Convide novos usuários para a plataforma - {invites.length} convites ativos
+          </p>
+        </div>
+        
+        <Button 
+          onClick={() => setShowCreateDialog(true)}
+          disabled={isCreating}
+        >
+          <Plus className="h-4 w-4 mr-2" />
+          {isCreating ? 'Criando...' : 'Novo Convite'}
+        </Button>
+      </div>
 
-        <TabsContent value="convites" className="space-y-4">
-          <OptimizedInviteInterface
-            invites={invites}
-            loading={loading}
-            onRefresh={fetchInvites}
-            onCreateNew={() => setOpen(true)}
-            onResend={handleResendInvite}
-            onDelete={handleDeleteInvite}
-          />
-        </TabsContent>
+      {/* Analytics Dashboard */}
+      <InviteAnalyticsDashboard />
 
-        <TabsContent value="analytics" className="space-y-4">
-          <InviteAnalyticsDashboard />
-        </TabsContent>
+      {/* Invites Table */}
+      <InvitesTable
+        invites={invites}
+        onDelete={handleDeleteInvite}
+        onResend={handleResendClick}
+        isDeleting={isDeleting}
+        isSending={isSending}
+        isInviteResending={isInviteResending}
+      />
 
-        <TabsContent value="monitoramento" className="space-y-4">
-          <RealTimeMonitoring />
-        </TabsContent>
+      {/* Create Invite Dialog */}
+      <CreateInviteDialog
+        open={showCreateDialog}
+        onOpenChange={setShowCreateDialog}
+        onSubmit={handleCreateInvite}
+        roles={roles}
+        isCreating={isCreating}
+      />
 
-        <TabsContent value="campanhas" className="space-y-4">
-          <CampaignManager />
-        </TabsContent>
-
-        <TabsContent value="onboarding" className="space-y-4">
-          <OnboardingHealthDashboard />
-        </TabsContent>
-
-        <TabsContent value="auditoria" className="space-y-4">
-          <InviteAuditDashboard />
-        </TabsContent>
-
-        <TabsContent value="administracao" className="space-y-4">
-          <AdminToolsTab onRefresh={fetchInvites} />
-        </TabsContent>
-      </Tabs>
-
-      <SimplifiedCreateInviteModal
-        open={open}
-        onOpenChange={setOpen}
-        onCreate={handleCreateInvite}
-        isLoading={isCreating}
+      {/* Resend Invite Dialog */}
+      <ResendInviteDialog
+        invite={selectedInvite}
+        open={showResendDialog}
+        onOpenChange={setShowResendDialog}
+        onSuccess={handleResendSuccess}
       />
     </div>
   );
