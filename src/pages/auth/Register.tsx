@@ -1,10 +1,13 @@
 
 import React from 'react';
 import AuthLayout from '@/components/auth/AuthLayout';
+import { RegisterForm } from '@/components/auth/RegisterForm';
 
 const Register = () => {
   return (
-    <AuthLayout />
+    <AuthLayout>
+      <RegisterForm />
+    </AuthLayout>
   );
 };
 

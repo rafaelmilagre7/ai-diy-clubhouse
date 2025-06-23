@@ -45,6 +45,7 @@ export interface AuthContextType {
   isLoading: boolean;
   authError: Error | null;
   signIn: (email: string, password: string) => Promise<{ user: User | null; error: any }>;
+  signUp: (email: string, password: string, metadata?: any) => Promise<{ user: User | null; error: any }>;
   signOut: () => Promise<void>;
   signInAsMember: () => Promise<{ user: User | null; error: any }>;
   signInAsAdmin: () => Promise<{ user: User | null; error: any }>;

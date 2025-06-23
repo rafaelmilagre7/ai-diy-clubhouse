@@ -32,3 +32,20 @@ export const isSuperAdmin = (profile: UserProfile): boolean => {
   
   return false;
 };
+
+// Função utilitária para obter o nome da role
+export const getUserRoleName = (profile: UserProfile | null): string => {
+  if (!profile) return 'member';
+  
+  // Priorizar user_roles (novo sistema)
+  if (profile.user_roles?.name) {
+    return profile.user_roles.name;
+  }
+  
+  // Verificar via role
+  if (profile.role?.name) {
+    return profile.role.name;
+  }
+  
+  return 'member';
+};

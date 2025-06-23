@@ -2,36 +2,25 @@
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Eye, EyeOff, Loader2 } from 'lucide-react';
-import { toast } from 'sonner';
-import { useAuthMethods } from '@/contexts/auth/hooks/useAuthMethods';
+import { Loader2, AlertCircle } from 'lucide-react';
+import { useAuth } from '@/contexts/auth';
 import { registerSchema, type RegisterFormData } from './schemas/authSchemas';
-import { auditLogger } from '@/utils/auditLogger';
 
-export interface RegisterFormProps {
-  defaultEmail?: string;
+interface RegisterFormProps {
   inviteToken?: string;
   onSuccess?: () => void;
   onError?: (error: any) => void;
+  defaultEmail?: string;
 }
 
-export const RegisterForm: React.FC<RegisterFormProps> = ({
-  defaultEmail = '',
-  inviteToken,
-  onSuccess,
-  onError
-}) => {
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+export const RegisterForm = ({ inviteToken, onSuccess, onError, defaultEmail }: RegisterFormProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  
-  const { registerWithInvite } = useAuthMethods();
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const { registerWithInvite } = useAuth();
 
   const {
     register,
@@ -40,69 +29,38 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
   } = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
-      email: defaultEmail,
+      email: defaultEmail || '',
       password: '',
       confirmPassword: '',
       name: '',
     },
   });
 
-  const onSubmit = async (formData: RegisterFormData) => {
+  const onSubmit = async (data: RegisterFormData) => {
     try {
       setIsSubmitting(true);
-      setError(null);
-      
-      // Log início do registro
-      await auditLogger.logUserRegistration('registration_attempt', {
-        email: formData.email,
-        has_invite_token: !!inviteToken
-      });
+      setSubmitError(null);
 
       const result = await registerWithInvite({
-        email: formData.email,
-        password: formData.password,
-        name: formData.name,
-        inviteToken: inviteToken || undefined
+        email: data.email,
+        password: data.password,
+        name: data.name,
+        inviteToken,
       });
 
       if (result.error) {
-        const errorMessage = result.error.message || 'Erro ao criar conta';
-        setError(errorMessage);
-        
-        await auditLogger.logUserRegistration('registration_failed', {
-          email: formData.email,
-          error: errorMessage
-        });
-        
-        if (onError) {
-          onError(result.error);
-        }
-        return;
+        throw result.error;
       }
 
-      // Log sucesso
-      await auditLogger.logUserRegistration('registration_success', {
-        email: formData.email,
-        user_id: result.user?.id
-      });
-
-      toast.success('Conta criada com sucesso!');
-      
       if (onSuccess) {
         onSuccess();
       }
-
-    } catch (err: any) {
-      const errorMessage = err.message || 'Erro inesperado ao criar conta';
-      setError(errorMessage);
-      
-      await auditLogger.logUserRegistration('registration_error', {
-        email: formData.email,
-        error: errorMessage
-      });
+    } catch (error: any) {
+      const errorMessage = error.message || 'Erro ao criar conta';
+      setSubmitError(errorMessage);
       
       if (onError) {
-        onError(err);
+        onError(error);
       }
     } finally {
       setIsSubmitting(false);
@@ -110,118 +68,91 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
   };
 
   return (
-    <Card className="w-full max-w-md mx-auto">
+    <Card>
       <CardHeader>
         <CardTitle>Criar Conta</CardTitle>
         <CardDescription>
-          {inviteToken ? 'Complete seu registro com o convite' : 'Preencha os dados para criar sua conta'}
+          {inviteToken 
+            ? 'Complete seu registro para aceitar o convite'
+            : 'Crie sua conta para acessar a plataforma'
+          }
         </CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          {error && (
+          {submitError && (
             <Alert variant="destructive">
-              <AlertDescription>{error}</AlertDescription>
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>{submitError}</AlertDescription>
             </Alert>
           )}
 
           <div className="space-y-2">
-            <Label htmlFor="name">Nome completo</Label>
+            <label htmlFor="name" className="text-sm font-medium">
+              Nome completo
+            </label>
             <Input
               id="name"
-              type="text"
-              placeholder="Seu nome completo"
               {...register('name')}
+              placeholder="Seu nome completo"
               disabled={isSubmitting}
             />
             {errors.name && (
-              <p className="text-sm text-destructive">{errors.name.message}</p>
+              <p className="text-sm text-red-500">{errors.name.message}</p>
             )}
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
+            <label htmlFor="email" className="text-sm font-medium">
+              Email
+            </label>
             <Input
               id="email"
               type="email"
-              placeholder="seu@email.com"
               {...register('email')}
-              disabled={isSubmitting || !!defaultEmail}
+              placeholder="seu@email.com"
+              disabled={isSubmitting}
             />
             {errors.email && (
-              <p className="text-sm text-destructive">{errors.email.message}</p>
+              <p className="text-sm text-red-500">{errors.email.message}</p>
             )}
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="password">Senha</Label>
-            <div className="relative">
-              <Input
-                id="password"
-                type={showPassword ? 'text' : 'password'}
-                placeholder="Sua senha"
-                {...register('password')}
-                disabled={isSubmitting}
-              />
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                onClick={() => setShowPassword(!showPassword)}
-                disabled={isSubmitting}
-              >
-                {showPassword ? (
-                  <EyeOff className="h-4 w-4" />
-                ) : (
-                  <Eye className="h-4 w-4" />
-                )}
-              </Button>
-            </div>
+            <label htmlFor="password" className="text-sm font-medium">
+              Senha
+            </label>
+            <Input
+              id="password"
+              type="password"
+              {...register('password')}
+              placeholder="Sua senha"
+              disabled={isSubmitting}
+            />
             {errors.password && (
-              <p className="text-sm text-destructive">{errors.password.message}</p>
+              <p className="text-sm text-red-500">{errors.password.message}</p>
             )}
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="confirmPassword">Confirmar senha</Label>
-            <div className="relative">
-              <Input
-                id="confirmPassword"
-                type={showConfirmPassword ? 'text' : 'password'}
-                placeholder="Confirme sua senha"
-                {...register('confirmPassword')}
-                disabled={isSubmitting}
-              />
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                disabled={isSubmitting}
-              >
-                {showConfirmPassword ? (
-                  <EyeOff className="h-4 w-4" />
-                ) : (
-                  <Eye className="h-4 w-4" />
-                )}
-              </Button>
-            </div>
+            <label htmlFor="confirmPassword" className="text-sm font-medium">
+              Confirmar senha
+            </label>
+            <Input
+              id="confirmPassword"
+              type="password"
+              {...register('confirmPassword')}
+              placeholder="Confirme sua senha"
+              disabled={isSubmitting}
+            />
             {errors.confirmPassword && (
-              <p className="text-sm text-destructive">{errors.confirmPassword.message}</p>
+              <p className="text-sm text-red-500">{errors.confirmPassword.message}</p>
             )}
           </div>
 
           <Button type="submit" className="w-full" disabled={isSubmitting}>
-            {isSubmitting ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Criando conta...
-              </>
-            ) : (
-              'Criar conta'
-            )}
+            {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            {isSubmitting ? 'Criando conta...' : 'Criar conta'}
           </Button>
         </form>
       </CardContent>

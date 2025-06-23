@@ -42,7 +42,7 @@ export interface UserRoleData {
 // Enum para tipos de roles conhecidos (compatibilidade)
 export type UserRole = 'admin' | 'formacao' | 'membro_club';
 
-// CORREÇÃO: Usar a mesma interface de UserProfile do auth context
+// USAR a mesma interface de UserProfile do auth context
 export interface UserProfile {
   id: string;
   email: string;

@@ -45,8 +45,40 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  // Função de sign up
+  const signUp = async (email: string, password: string, metadata?: any) => {
+    try {
+      setIsLoading(true);
+      setAuthError(null);
+
+      const redirectUrl = `${window.location.origin}/`;
+      
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: redirectUrl,
+          data: metadata
+        }
+      });
+
+      if (error) throw error;
+
+      return { user: data.user, error: null };
+    } catch (error: any) {
+      logger.error('Erro no sign up', {
+        component: 'AuthProvider',
+        error: error.message
+      });
+      setAuthError(error);
+      return { user: null, error };
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   // Função de sign out
-  const signOut = async () => {
+  const signOut = async (): Promise<void> => {
     try {
       setIsLoading(true);
       await supabase.auth.signOut();
@@ -60,6 +92,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         error: error.message
       });
       setAuthError(error);
+      throw error;
     } finally {
       setIsLoading(false);
     }
@@ -131,6 +164,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     isLoading,
     authError,
     signIn,
+    signUp,
     signOut,
     signInAsMember,
     signInAsAdmin,

@@ -3,6 +3,7 @@ import React from 'react';
 import { useParams } from 'react-router-dom';
 import AuthLayout from '@/components/auth/AuthLayout';
 import InviteAcceptPage from '@/components/auth/InviteAcceptPage';
+import { RegisterForm } from '@/components/auth/RegisterForm';
 import { InviteTokenManager } from '@/utils/inviteTokenManager';
 
 const RegisterPage = () => {
@@ -18,8 +19,12 @@ const RegisterPage = () => {
     return <InviteAcceptPage />;
   }
 
-  // Caso contrário, mostrar o AuthLayout normal
-  return <AuthLayout />;
+  // Caso contrário, mostrar o AuthLayout normal com RegisterForm
+  return (
+    <AuthLayout>
+      <RegisterForm />
+    </AuthLayout>
+  );
 };
 
 export default RegisterPage;
