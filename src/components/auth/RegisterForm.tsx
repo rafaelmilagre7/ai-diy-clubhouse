@@ -1,157 +1,191 @@
 
 import React, { useState } from 'react';
-import { useSearchParams, useNavigate } from 'react-router-dom';
-import { useAuth } from '@/contexts/auth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Loader2 } from 'lucide-react';
-import { toast } from 'sonner';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { AlertCircle, Eye, EyeOff } from 'lucide-react';
+import { useAuth } from '@/contexts/auth';
 
 interface RegisterFormProps {
+  onSuccess?: () => void;
+  onError?: (error: string) => void;
+  defaultEmail?: string;
   inviteToken?: string;
-  inviteEmail?: string;
 }
 
-const RegisterForm = ({ inviteToken, inviteEmail }: RegisterFormProps) => {
+export const RegisterForm: React.FC<RegisterFormProps> = ({
+  onSuccess,
+  onError,
+  defaultEmail = '',
+  inviteToken
+}) => {
   const { signUp } = useAuth();
-  const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  
-  const [formData, setFormData] = useState({
-    name: '',
-    email: inviteEmail || '',
-    password: '',
-    confirmPassword: ''
-  });
   const [isLoading, setIsLoading] = useState(false);
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [showPassword, setShowPassword] = useState(false);
+  const [formData, setFormData] = useState({
+    email: defaultEmail,
+    password: '',
+    confirmPassword: '',
+    name: ''
+  });
+  const [error, setError] = useState('');
 
   const validateForm = () => {
-    const newErrors: Record<string, string> = {};
-
-    if (!formData.name.trim()) {
-      newErrors.name = 'Nome é obrigatório';
-    }
-
-    if (!formData.email.trim()) {
-      newErrors.email = 'Email é obrigatório';
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = 'Email inválido';
-    }
-
-    if (!formData.password) {
-      newErrors.password = 'Senha é obrigatória';
-    } else if (formData.password.length < 6) {
-      newErrors.password = 'Senha deve ter pelo menos 6 caracteres';
+    if (!formData.email || !formData.password || !formData.confirmPassword) {
+      setError('Todos os campos são obrigatórios');
+      return false;
     }
 
     if (formData.password !== formData.confirmPassword) {
-      newErrors.confirmPassword = 'Senhas não coincidem';
+      setError('As senhas não coincidem');
+      return false;
     }
 
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleInputChange = (field: string, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-    if (errors[field]) {
-      setErrors(prev => ({ ...prev, [field]: '' }));
+    if (formData.password.length < 6) {
+      setError('A senha deve ter pelo menos 6 caracteres');
+      return false;
     }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email)) {
+      setError('Email inválido');
+      return false;
+    }
+
+    return true;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!validateForm()) return;
+    if (!validateForm()) {
+      return;
+    }
 
     setIsLoading(true);
-    
+    setError('');
+
     try {
-      const options = inviteToken ? {
-        inviteToken,
-        userData: { name: formData.name }
-      } : {
-        userData: { name: formData.name }
+      const metadata = {
+        name: formData.name || undefined,
+        invite_token: inviteToken || undefined
       };
 
-      const { error } = await signUp(formData.email, formData.password, options);
+      const { error: signUpError } = await signUp(
+        formData.email,
+        formData.password,
+        metadata
+      );
 
-      if (error) {
-        toast.error(`Erro no cadastro: ${error.message}`);
+      if (signUpError) {
+        console.error('[REGISTER-FORM] Erro no registro:', signUpError);
+        const errorMessage = signUpError.message === 'User already registered'
+          ? 'Este email já está cadastrado. Tente fazer login.'
+          : `Erro no registro: ${signUpError.message}`;
+        
+        setError(errorMessage);
+        onError?.(errorMessage);
         return;
       }
 
-      toast.success('Conta criada com sucesso!');
-      
-      // Redirecionar com token se aplicável
-      if (inviteToken) {
-        navigate(`/onboarding?token=${inviteToken}`);
-      } else {
-        navigate('/onboarding');
-      }
+      console.log('[REGISTER-FORM] Registro realizado com sucesso');
+      onSuccess?.();
 
-    } catch (error: any) {
-      console.error('Erro no cadastro:', error);
-      toast.error('Erro inesperado no cadastro');
+    } catch (err: any) {
+      console.error('[REGISTER-FORM] Erro inesperado:', err);
+      const errorMessage = 'Erro inesperado durante o registro';
+      setError(errorMessage);
+      onError?.(errorMessage);
     } finally {
       setIsLoading(false);
     }
   };
 
+  const handleInputChange = (field: keyof typeof formData) => (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: e.target.value
+    }));
+    
+    // Limpar erro ao digitar
+    if (error) {
+      setError('');
+    }
+  };
+
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+      {error && (
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
+
       <div className="space-y-2">
-        <Label htmlFor="name">Nome completo</Label>
+        <Label htmlFor="name">Nome (opcional)</Label>
         <Input
           id="name"
           type="text"
           value={formData.name}
-          onChange={(e) => handleInputChange('name', e.target.value)}
-          placeholder="Digite seu nome completo"
-          disabled={isLoading}
+          onChange={handleInputChange('name')}
+          placeholder="Seu nome completo"
         />
-        {errors.name && <p className="text-sm text-red-500">{errors.name}</p>}
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="email">Email</Label>
+        <Label htmlFor="email">Email *</Label>
         <Input
           id="email"
           type="email"
           value={formData.email}
-          onChange={(e) => handleInputChange('email', e.target.value)}
-          placeholder="Digite seu email"
-          disabled={isLoading || !!inviteEmail}
+          onChange={handleInputChange('email')}
+          placeholder="seu@email.com"
+          required
+          disabled={!!defaultEmail}
         />
-        {errors.email && <p className="text-sm text-red-500">{errors.email}</p>}
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="password">Senha</Label>
-        <Input
-          id="password"
-          type="password"
-          value={formData.password}
-          onChange={(e) => handleInputChange('password', e.target.value)}
-          placeholder="Digite sua senha"
-          disabled={isLoading}
-        />
-        {errors.password && <p className="text-sm text-red-500">{errors.password}</p>}
+        <Label htmlFor="password">Senha *</Label>
+        <div className="relative">
+          <Input
+            id="password"
+            type={showPassword ? 'text' : 'password'}
+            value={formData.password}
+            onChange={handleInputChange('password')}
+            placeholder="Mínimo 6 caracteres"
+            required
+          />
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+            onClick={() => setShowPassword(!showPassword)}
+          >
+            {showPassword ? (
+              <EyeOff className="h-4 w-4" />
+            ) : (
+              <Eye className="h-4 w-4" />
+            )}
+          </Button>
+        </div>
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="confirmPassword">Confirmar senha</Label>
+        <Label htmlFor="confirmPassword">Confirmar Senha *</Label>
         <Input
           id="confirmPassword"
           type="password"
           value={formData.confirmPassword}
-          onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
-          placeholder="Confirme sua senha"
-          disabled={isLoading}
+          onChange={handleInputChange('confirmPassword')}
+          placeholder="Digite a senha novamente"
+          required
         />
-        {errors.confirmPassword && <p className="text-sm text-red-500">{errors.confirmPassword}</p>}
       </div>
 
       <Button
@@ -159,14 +193,7 @@ const RegisterForm = ({ inviteToken, inviteEmail }: RegisterFormProps) => {
         className="w-full"
         disabled={isLoading}
       >
-        {isLoading ? (
-          <>
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            Criando conta...
-          </>
-        ) : (
-          'Criar conta'
-        )}
+        {isLoading ? 'Criando conta...' : 'Criar conta'}
       </Button>
     </form>
   );

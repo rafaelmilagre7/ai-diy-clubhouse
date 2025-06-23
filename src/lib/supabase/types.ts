@@ -1,4 +1,3 @@
-
 import { Database } from './types/database.types';
 
 // Tipos de tabelas expandidos
@@ -30,11 +29,11 @@ export type LearningComment = Database['public']['Tables']['learning_comments'][
 // Outros tipos existentes
 export * from './types/database.types';
 
-// Interface para dados de role do usuário - ATUALIZADA para compatibilidade
+// Interface para dados de role do usuário
 export interface UserRoleData {
   id: string;
   name: string;
-  description?: string; // Opcional para compatibilidade
+  description?: string;
   permissions?: any;
   is_system?: boolean;
 }
@@ -42,20 +41,19 @@ export interface UserRoleData {
 // Enum para tipos de roles conhecidos (compatibilidade)
 export type UserRole = 'admin' | 'formacao' | 'membro_club';
 
-// CORREÇÃO CRÍTICA: Atualizar UserProfile para ser totalmente compatível com Profile
 export interface UserProfile {
   id: string;
-  email?: string; // Opcional para compatibilidade total
-  name?: string; // Opcional para compatibilidade total
-  avatar_url?: string | null;
-  company_name?: string | null;
-  industry?: string | null;
-  role_id?: string | null;
-  role?: UserRole; // Campo legado - opcional
-  user_roles?: UserRoleData | null; // Dados da role via join - opcional
-  created_at?: string;
-  onboarding_completed?: boolean;
-  onboarding_completed_at?: string | null;
+  email: string;
+  name: string | null;
+  avatar_url: string | null;
+  company_name: string | null;
+  industry: string | null;
+  role_id: string | null; // Campo principal para roles
+  role?: UserRole; // Campo legado - deprecado, mas mantido para compatibilidade
+  user_roles?: UserRoleData | null; // Dados da role via join
+  created_at: string;
+  onboarding_completed: boolean;
+  onboarding_completed_at: string | null;
 }
 
 // Função utilitária para obter o nome da role

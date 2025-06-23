@@ -35,7 +35,8 @@ export const useCleanOnboardingData = (token?: string) => {
       let cleanData: OnboardingData = {
         memberType: 'club',
         startedAt: new Date().toISOString(),
-        fromInvite: isFromInvite
+        fromInvite: isFromInvite,
+        completedSteps: []
       };
 
       // Dados do convite têm prioridade
@@ -92,7 +93,8 @@ export const useCleanOnboardingData = (token?: string) => {
       setData({
         memberType: 'club',
         startedAt: new Date().toISOString(),
-        fromInvite: false
+        fromInvite: false,
+        completedSteps: []
       });
       setIsInitialized(true);
     }

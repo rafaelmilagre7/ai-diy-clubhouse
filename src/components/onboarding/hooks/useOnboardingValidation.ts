@@ -38,19 +38,19 @@ export const useOnboardingValidation = () => {
           break;
 
         case 2: // Perfil Empresarial
-          if (!data.company_name?.trim() && !data.companyName?.trim()) {
+          if (!data.companyName?.trim()) {
             errors.push({ field: 'companyName', message: 'Nome da empresa é obrigatório' });
           }
-          if (!data.current_position?.trim() && !data.position?.trim()) {
+          if (!data.position?.trim()) {
             errors.push({ field: 'position', message: 'Cargo é obrigatório' });
           }
-          if (!data.company_size && !data.companySize) {
+          if (!data.companySize) {
             errors.push({ field: 'companySize', message: 'Tamanho da empresa é obrigatório' });
           }
           break;
 
         case 3: // Maturidade em IA
-          if (!data.ai_knowledge_level && !data.aiKnowledgeLevel) {
+          if (!data.aiKnowledgeLevel) {
             errors.push({ field: 'aiKnowledgeLevel', message: 'Nível de conhecimento em IA é obrigatório' });
           }
           if (!data.aiToolsUsed || data.aiToolsUsed.length === 0) {
@@ -59,7 +59,7 @@ export const useOnboardingValidation = () => {
           break;
 
         case 4: // Objetivos e Expectativas
-          if (!data.primary_goal?.trim() && !data.mainObjective?.trim()) {
+          if (!data.mainObjective?.trim()) {
             errors.push({ field: 'mainObjective', message: 'Objetivo principal é obrigatório' });
           }
           if (!data.expectedResult90Days?.trim()) {
@@ -68,7 +68,7 @@ export const useOnboardingValidation = () => {
           break;
 
         case 5: // Personalização da Experiência
-          if (!data.weekly_availability?.trim() && !data.weeklyLearningTime?.trim()) {
+          if (!data.weeklyLearningTime?.trim()) {
             errors.push({ field: 'weeklyLearningTime', message: 'Tempo semanal de aprendizado é obrigatório' });
           }
           if (!data.contentPreference || data.contentPreference.length === 0) {
@@ -79,7 +79,8 @@ export const useOnboardingValidation = () => {
         case 6: // Finalização
           // Validação final - todos os campos obrigatórios devem estar preenchidos
           const requiredFields = [
-            'name', 'email', 'phone'
+            'name', 'email', 'phone', 'companyName', 'position', 
+            'companySize', 'aiKnowledgeLevel', 'weeklyLearningTime'
           ];
 
           for (const field of requiredFields) {
@@ -91,11 +92,6 @@ export const useOnboardingValidation = () => {
             }
           }
 
-          // Verificar campos empresariais
-          if (!data.company_name && !data.companyName) {
-            errors.push({ field: 'companyName', message: 'Nome da empresa é obrigatório' });
-          }
-
           if (!data.aiToolsUsed || data.aiToolsUsed.length === 0) {
             errors.push({ 
               field: 'aiToolsUsed', 
@@ -103,7 +99,7 @@ export const useOnboardingValidation = () => {
             });
           }
 
-          if (!data.primary_goal?.trim() && !data.mainObjective?.trim()) {
+          if (!data.mainObjective?.trim()) {
             errors.push({ 
               field: 'mainObjective', 
               message: 'Objetivo principal é obrigatório' 

@@ -22,8 +22,8 @@ export const PermissionGuard: React.FC<PermissionGuardProps> = ({
   const { profile } = useAuth();
   const [timedOut, setTimedOut] = useState(false);
   
-  // CORREÇÃO: Usar profile diretamente como UserProfile com type assertion segura
-  const isAdmin = getUserRoleName(profile as any) === 'admin';
+  // Verificação rápida e simplificada - APENAS via banco de dados
+  const isAdmin = getUserRoleName(profile) === 'admin';
   const isLoading = !profile && !timedOut;
   
   // Se é admin, renderiza imediatamente os filhos

@@ -38,7 +38,6 @@ export const OnboardingStepRenderer: React.FC<OnboardingStepRendererProps> = ({
       return (
         <OnboardingStep1
           data={data}
-          updateData={onUpdateData}
           onUpdateData={onUpdateData}
           onNext={onNext}
           onPrev={onPrev}
@@ -51,7 +50,6 @@ export const OnboardingStepRenderer: React.FC<OnboardingStepRendererProps> = ({
       return (
         <OnboardingStep2
           data={data}
-          updateData={onUpdateData}
           onUpdateData={onUpdateData}
           onNext={onNext}
           onPrev={onPrev}
@@ -64,7 +62,7 @@ export const OnboardingStepRenderer: React.FC<OnboardingStepRendererProps> = ({
       return (
         <OnboardingStep3
           data={data}
-          updateData={onUpdateData}
+          onUpdateData={onUpdateData}
           onNext={onNext}
           onPrev={onPrev}
           memberType={memberType}
@@ -76,7 +74,6 @@ export const OnboardingStepRenderer: React.FC<OnboardingStepRendererProps> = ({
       return (
         <OnboardingStep4
           data={data}
-          updateData={onUpdateData}
           onUpdateData={onUpdateData}
           onNext={onNext}
           onPrev={onPrev}
@@ -89,7 +86,6 @@ export const OnboardingStepRenderer: React.FC<OnboardingStepRendererProps> = ({
       return (
         <OnboardingStep5
           data={data}
-          updateData={onUpdateData}
           onUpdateData={onUpdateData}
           onNext={onNext}
           onPrev={onPrev}

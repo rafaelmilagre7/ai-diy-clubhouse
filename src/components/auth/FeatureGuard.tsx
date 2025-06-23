@@ -20,8 +20,8 @@ export const FeatureGuard: React.FC<FeatureGuardProps> = ({
 }) => {
   const { profile } = useAuth();
   
-  // CORREÇÃO: Usar profile diretamente como UserProfile com type assertion segura
-  const roleName = getUserRoleName(profile as any);
+  // Verificação simplificada baseada apenas no papel do usuário
+  const roleName = getUserRoleName(profile);
   const hasAccess = roleName && ['admin', 'member', 'membro_club'].includes(roleName);
   
   if (hasAccess) {

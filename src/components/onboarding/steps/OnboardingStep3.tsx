@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
@@ -10,7 +11,6 @@ import { useTools } from '@/hooks/useTools';
 
 interface OnboardingStep3Props {
   data: OnboardingData;
-  updateData: (newData: Partial<OnboardingData>) => void;
   onUpdateData: (newData: Partial<OnboardingData>) => void;
   onNext: () => Promise<void>;
   onPrev: () => void;
@@ -21,7 +21,6 @@ interface OnboardingStep3Props {
 
 const OnboardingStep3: React.FC<OnboardingStep3Props> = ({
   data,
-  updateData,
   onUpdateData,
   validationErrors,
   getFieldError
@@ -65,14 +64,6 @@ const OnboardingStep3: React.FC<OnboardingStep3Props> = ({
         <AlertDescription>{error}</AlertDescription>
       </Alert>
     ) : null;
-  };
-
-  const handleKnowledgeLevelChange = (value: number) => {
-    const updateFunction = onUpdateData || updateData;
-    updateFunction({ 
-      ai_knowledge_level: value,
-      aiKnowledgeLevel: value // Manter compatibilidade
-    });
   };
 
   return (
@@ -128,24 +119,28 @@ const OnboardingStep3: React.FC<OnboardingStep3Props> = ({
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <Slider
-              value={[data.ai_knowledge_level || data.aiKnowledgeLevel || 1]}
-              onValueChange={(value) => handleKnowledgeLevelChange(value[0])}
-              max={10}
-              min={1}
-              step={1}
-              className="w-full"
-            />
-            <div className="flex justify-between text-sm text-muted-foreground mt-2">
-              <span>Iniciante</span>
-              <span>Especialista</span>
-            </div>
-            <div className="text-center mt-2">
-              <span className="text-lg font-medium">
-                Nível: {data.ai_knowledge_level || data.aiKnowledgeLevel || 1}/10
-              </span>
-            </div>
-            {getFieldErrorMessage('ai_knowledge_level')}
+            <RadioGroup
+              value={data.aiKnowledgeLevel || ''}
+              onValueChange={(value) => onUpdateData({ aiKnowledgeLevel: value })}
+              className="space-y-3"
+            >
+              {aiKnowledgeLevels.map((level) => (
+                <div key={level.value} className="flex items-center space-x-3">
+                  <RadioGroupItem 
+                    value={level.value} 
+                    id={`knowledge-${level.value}`}
+                    className="border-white/30 text-viverblue"
+                  />
+                  <Label 
+                    htmlFor={`knowledge-${level.value}`}
+                    className="text-slate-200 cursor-pointer flex-1"
+                  >
+                    {level.label}
+                  </Label>
+                </div>
+              ))}
+            </RadioGroup>
+            {getFieldErrorMessage('aiKnowledgeLevel')}
           </CardContent>
         </Card>
 
