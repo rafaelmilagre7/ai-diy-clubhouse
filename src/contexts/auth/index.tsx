@@ -77,8 +77,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  // Função de sign out
-  const signOut = async (): Promise<void> => {
+  // Função de sign out corrigida para retornar um objeto com success
+  const signOut = async () => {
     try {
       setIsLoading(true);
       await supabase.auth.signOut();
@@ -86,13 +86,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setSession(null);
       setProfile(null);
       setAuthError(null);
+      return { success: true };
     } catch (error: any) {
       logger.error('Erro no sign out', {
         component: 'AuthProvider',
         error: error.message
       });
       setAuthError(error);
-      throw error;
+      return { success: false, error };
     } finally {
       setIsLoading(false);
     }
@@ -151,7 +152,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return () => subscription.unsubscribe();
   }, []);
 
-  // Calcular propriedades derivadas
+  // Calcular propriedades derivadas usando a função correta
   const isAdmin = profile ? validateUserRole(profile, ['admin', 'super_admin']) : false;
   const isFormacao = profile ? validateUserRole(profile, ['formacao']) : false;
 

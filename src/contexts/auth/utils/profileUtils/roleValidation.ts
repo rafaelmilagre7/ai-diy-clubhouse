@@ -49,3 +49,15 @@ export const getUserRoleName = (profile: UserProfile | null): string => {
   
   return 'member';
 };
+
+// Função para verificar se é admin
+export const isAdminRole = (profile: UserProfile | null): boolean => {
+  const roleName = getUserRoleName(profile);
+  return roleName === 'admin';
+};
+
+// Função para verificar se é formação
+export const isFormacaoRole = (profile: UserProfile | null): boolean => {
+  const roleName = getUserRoleName(profile);
+  return roleName === 'formacao';
+};
