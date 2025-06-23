@@ -38,7 +38,7 @@ export const useIntelligentRedirect = () => {
 
     // Redirecionamento direto e simples
     if (requiresOnboarding) {
-      const storedToken = InviteTokenManager.getStoredToken();
+      const storedToken = InviteTokenManager.getToken();
       const destination = storedToken ? `/onboarding?token=${storedToken}` : '/onboarding';
       navigate(destination);
     } else {
