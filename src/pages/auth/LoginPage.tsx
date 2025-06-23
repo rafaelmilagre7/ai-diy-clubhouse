@@ -1,14 +1,9 @@
 
 import React from 'react';
 import AuthLayout from '@/components/auth/AuthLayout';
-import LoginForm from '@/components/auth/LoginForm';
 
 const LoginPage = () => {
-  return (
-    <AuthLayout>
-      <LoginForm />
-    </AuthLayout>
-  );
+  return <AuthLayout />;
 };
 
 export default LoginPage;

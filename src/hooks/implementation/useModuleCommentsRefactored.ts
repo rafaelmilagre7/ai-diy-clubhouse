@@ -24,7 +24,7 @@ export const useModuleCommentsRefactored = (solutionId: string, moduleId: string
   
   const { addComment, isSubmitting } = useAddComment(onSuccess);
   const { likeComment } = useLikeModuleComment(solutionId, moduleId);
-  const deleteCommentMutation = useDeleteModuleComment();
+  const { deleteComment } = useDeleteModuleComment(solutionId, moduleId);
 
   // Log para diagnosticar possíveis problemas com os dados carregados
   if (error) {
@@ -52,10 +52,6 @@ export const useModuleCommentsRefactored = (solutionId: string, moduleId: string
     setReplyTo(null);
   };
 
-  const handleDeleteComment = (commentId: string, userId: string) => {
-    deleteCommentMutation.mutate({ commentId, userId });
-  };
-
   return {
     comments,
     isLoading,
@@ -67,6 +63,6 @@ export const useModuleCommentsRefactored = (solutionId: string, moduleId: string
     startReply,
     cancelReply,
     likeComment,
-    deleteComment: handleDeleteComment
+    deleteComment
   };
 };

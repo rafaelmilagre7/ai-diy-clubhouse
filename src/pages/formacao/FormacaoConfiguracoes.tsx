@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/auth";
 import { supabase } from "@/lib/supabase";
@@ -42,9 +43,7 @@ interface LMSSettings {
 }
 
 const FormacaoConfiguracoes = () => {
-  const { user, profile } = useAuth();
-  const isFormacao = getUserRoleName(profile) === 'formacao';
-
+  const { profile } = useAuth();
   const [settings, setSettings] = useState<LMSSettings>({
     site_name: "LMS Viver de IA",
     site_description: "Sistema de Aprendizagem Online",

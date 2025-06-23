@@ -1,189 +1,194 @@
 
 import React from "react";
-import { useParams } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/lib/supabase";
-import { useAuth } from "@/contexts/auth";
+import { useParams, useNavigate } from "react-router-dom";
+import { useSolutionData } from "@/hooks/useSolutionData";
+import { useSolutionCertificate } from "@/hooks/learning/useSolutionCertificate";
+import { CertificateViewer } from "@/components/learning/certificates/CertificateViewer";
+import { SolutionCertificateEligibility } from "@/components/learning/certificates/SolutionCertificateEligibility";
 import { Button } from "@/components/ui/button";
+import { ArrowLeft, Award } from "lucide-react";
+import LoadingScreen from "@/components/common/LoadingScreen";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Calendar, Award, Download, Share2 } from "lucide-react";
-import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
-import jsPDF from "jspdf";
-import html2canvas from "html2canvas";
-import { toast } from "sonner";
+import { useAuth } from "@/contexts/auth";
 
 const SolutionCertificate = () => {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const { user, profile } = useAuth();
+  const { solution, loading: solutionLoading } = useSolutionData(id);
+  const {
+    certificate,
+    isEligible,
+    isLoading: certificateLoading,
+    generateCertificate,
+    isGenerating,
+    downloadCertificate,
+    openCertificateInNewTab
+  } = useSolutionCertificate(id || '');
 
-  const { data: solution, isLoading: solutionLoading } = useQuery({
-    queryKey: ["solution", id],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("solutions")
-        .select("*")
-        .eq("id", id!)
-        .single();
+  const loading = solutionLoading || certificateLoading;
 
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!id,
+  console.log('Página do certificado - Estado atual:', {
+    certificate: !!certificate,
+    isEligible,
+    loading,
+    isGenerating,
+    hasCachedPDF: !!(certificate?.certificate_url)
   });
 
-  const { data: progress, isLoading: progressLoading } = useQuery({
-    queryKey: ["progress", id, user?.id],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("progress")
-        .select("*")
-        .eq("solution_id", id!)
-        .eq("user_id", user!.id)
-        .eq("is_completed", true)
-        .single();
-
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!id && !!user,
-  });
-
-  const generatePDF = async () => {
-    const element = document.getElementById("certificate");
-    if (!element) return;
-
-    try {
-      const canvas = await html2canvas(element, {
-        scale: 2,
-        useCORS: true,
-        backgroundColor: "#ffffff",
-      });
-
-      const imgData = canvas.toDataURL("image/png");
-      const pdf = new jsPDF({
-        orientation: "landscape",
-        unit: "mm",
-        format: "a4",
-      });
-
-      const imgWidth = 297;
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
-
-      pdf.addImage(imgData, "PNG", 0, 0, imgWidth, imgHeight);
-      pdf.save(`certificado-${solution?.slug || "solucao"}.pdf`);
-
-      toast.success("Certificado baixado com sucesso!");
-    } catch (error) {
-      console.error("Erro ao gerar PDF:", error);
-      toast.error("Erro ao gerar o certificado");
-    }
-  };
-
-  const shareCertificate = async () => {
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: `Certificado - ${solution?.title}`,
-          text: `Completei a implementação da solução: ${solution?.title}`,
-          url: window.location.href,
-        });
-      } catch (error) {
-        console.log("Erro ao compartilhar:", error);
-      }
-    } else {
-      // Fallback para copiar URL
-      navigator.clipboard.writeText(window.location.href);
-      toast.success("Link copiado para a área de transferência!");
-    }
-  };
-
-  if (solutionLoading || progressLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
-      </div>
-    );
+  if (loading) {
+    return <LoadingScreen message="Carregando certificado..." />;
   }
 
-  if (!progress || !solution) {
+  if (!solution) {
     return (
-      <div className="container mx-auto px-4 py-8">
-        <Card>
-          <CardContent className="text-center py-8">
-            <p className="text-muted-foreground">
-              Certificado não encontrado ou você ainda não completou esta solução.
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
-  // Garantir que temos nome e email válidos
-  const userName = profile?.name || profile?.email || "Usuário";
-  const userEmail = profile?.email || "";
-
-  return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="mb-6 flex gap-4">
-        <Button onClick={generatePDF} className="flex items-center gap-2">
-          <Download className="h-4 w-4" />
-          Baixar PDF
-        </Button>
-        <Button variant="outline" onClick={shareCertificate} className="flex items-center gap-2">
-          <Share2 className="h-4 w-4" />
-          Compartilhar
-        </Button>
-      </div>
-
-      <div
-        id="certificate"
-        className="bg-white p-8 rounded-lg shadow-lg max-w-4xl mx-auto border-8 border-primary/20"
-      >
-        <div className="text-center space-y-6">
-          <div className="flex justify-center">
-            <Award className="h-16 w-16 text-primary" />
-          </div>
-
-          <div>
-            <h1 className="text-4xl font-bold text-primary mb-2">CERTIFICADO</h1>
-            <p className="text-lg text-muted-foreground">de Conclusão</p>
-          </div>
-
-          <div className="py-8">
-            <p className="text-lg mb-4">Certificamos que</p>
-            <h2 className="text-3xl font-bold text-foreground mb-4">{userName}</h2>
-            <p className="text-lg">concluiu com sucesso a implementação da solução</p>
-            <h3 className="text-2xl font-semibold text-primary mt-4 mb-6">
-              {solution.title}
-            </h3>
-
-            <div className="flex justify-center items-center gap-4 text-sm text-muted-foreground">
-              <div className="flex items-center gap-2">
-                <Calendar className="h-4 w-4" />
-                <span>
-                  Concluído em{" "}
-                  {format(new Date(progress.completed_at!), "dd 'de' MMMM 'de' yyyy", {
-                    locale: ptBR,
-                  })}
-                </span>
-              </div>
-              <Badge variant="secondary">{solution.category}</Badge>
-            </div>
-          </div>
-
-          <div className="pt-8 border-t">
-            <p className="text-sm text-muted-foreground">
-              Este certificado foi emitido digitalmente pela plataforma
-            </p>
-            <p className="text-xs text-muted-foreground mt-2">
-              ID do Certificado: {progress.id}
-            </p>
-          </div>
+      <div className="container mx-auto py-8">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-white mb-4">Solução não encontrada</h1>
+          <Button onClick={() => navigate("/solutions")}>
+            Voltar para Soluções
+          </Button>
         </div>
       </div>
+    );
+  }
+
+  if (!profile) {
+    return (
+      <div className="container mx-auto py-8">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-white mb-4">Perfil não encontrado</h1>
+          <Button onClick={() => navigate("/dashboard")}>
+            Voltar ao Dashboard
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  const handleDownload = () => {
+    if (certificate && profile) {
+      downloadCertificate(certificate, profile);
+    }
+  };
+
+  const handleOpenInNewTab = () => {
+    if (certificate && profile) {
+      openCertificateInNewTab(certificate, profile);
+    }
+  };
+
+  // Função de compartilhamento simplificada (mantida para compatibilidade)
+  const handleShare = () => {
+    console.log('Share function called (using new ShareCertificateDropdown component)');
+  };
+
+  const handleGenerate = () => {
+    generateCertificate();
+  };
+
+  return (
+    <div className="container mx-auto py-8 max-w-4xl">
+      <div className="mb-6">
+        <Button
+          variant="ghost"
+          onClick={() => navigate(`/solution/${id}`)}
+          className="text-gray-300 hover:text-white mb-4"
+        >
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Voltar para a solução
+        </Button>
+        
+        <div className="flex items-center gap-3 mb-2">
+          <Award className="h-6 w-6 text-viverblue" />
+          <h1 className="text-3xl font-bold text-white">Certificado de Implementação</h1>
+        </div>
+        
+        <p className="text-gray-300">
+          Certificado para a solução: <strong>{solution.title}</strong>
+        </p>
+      </div>
+
+      {/* Se tem certificado, mostrar o viewer */}
+      {certificate ? (
+        <CertificateViewer
+          certificate={certificate}
+          userProfile={profile}
+          onDownload={handleDownload}
+          onShare={handleShare}
+          onOpenInNewTab={handleOpenInNewTab}
+        />
+      ) : isEligible ? (
+        /* Se é elegível mas não tem certificado, mostrar botão para gerar */
+        <Card className="bg-[#151823] border-neutral-700/50">
+          <CardHeader>
+            <CardTitle className="text-white flex items-center gap-2">
+              <Award className="h-5 w-5 text-viverblue" />
+              Gerar Certificado
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-6 text-center">
+              <div className="p-6 rounded-lg bg-green-900/20 border border-green-700/30">
+                <h3 className="font-semibold text-green-400 mb-2">Parabéns! 🎉</h3>
+                <p className="text-gray-300 mb-4">
+                  Você completou com sucesso a implementação da solução <strong>{solution.title}</strong>.
+                </p>
+                <p className="text-gray-400 text-sm mb-4">
+                  Clique no botão abaixo para gerar seu certificado de implementação.
+                </p>
+                
+                <Button 
+                  onClick={handleGenerate}
+                  disabled={isGenerating}
+                  className="bg-viverblue hover:bg-viverblue/90 text-white"
+                >
+                  <Award className="h-4 w-4 mr-2" />
+                  {isGenerating ? 'Gerando certificado...' : 'Gerar Certificado'}
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      ) : (
+        /* Se não é elegível, mostrar status */
+        <Card className="bg-[#151823] border-neutral-700/50">
+          <CardHeader>
+            <CardTitle className="text-white flex items-center gap-2">
+              <Award className="h-5 w-5 text-viverblue" />
+              Status do Certificado
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-6">
+              <div className="p-4 rounded-lg bg-[#1A1E2E] border border-neutral-600">
+                <h3 className="font-semibold text-white mb-2">Sobre esta solução</h3>
+                <p className="text-gray-300 text-sm mb-3">{solution.description}</p>
+                
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <span className="text-gray-400">Categoria:</span>
+                    <span className="text-white ml-2">{solution.category}</span>
+                  </div>
+                  <div>
+                    <span className="text-gray-400">Dificuldade:</span>
+                    <span className="text-white ml-2">
+                      {solution.difficulty === "easy" && "Fácil"}
+                      {solution.difficulty === "medium" && "Médio"}
+                      {solution.difficulty === "advanced" && "Avançado"}
+                    </span>
+                  </div>
+                </div>
+              </div>
+              
+              <SolutionCertificateEligibility 
+                solutionId={solution.id}
+                isCompleted={isEligible}
+              />
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 };

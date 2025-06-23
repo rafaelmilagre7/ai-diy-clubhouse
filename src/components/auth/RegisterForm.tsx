@@ -1,161 +1,202 @@
 
 import React, { useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Loader2, AlertCircle } from 'lucide-react';
+import { AlertCircle, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '@/contexts/auth';
-import { registerSchema, type RegisterFormData } from './schemas/authSchemas';
 
 interface RegisterFormProps {
-  inviteToken?: string;
   onSuccess?: () => void;
-  onError?: (error: any) => void;
+  onError?: (error: string) => void;
   defaultEmail?: string;
+  inviteToken?: string;
 }
 
-export const RegisterForm = ({ inviteToken, onSuccess, onError, defaultEmail }: RegisterFormProps) => {
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitError, setSubmitError] = useState<string | null>(null);
-  const { registerWithInvite } = useAuth();
-
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = useForm<RegisterFormData>({
-    resolver: zodResolver(registerSchema),
-    defaultValues: {
-      email: defaultEmail || '',
-      password: '',
-      confirmPassword: '',
-      name: '',
-    },
+export const RegisterForm: React.FC<RegisterFormProps> = ({
+  onSuccess,
+  onError,
+  defaultEmail = '',
+  inviteToken
+}) => {
+  const { signUp } = useAuth();
+  const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [formData, setFormData] = useState({
+    email: defaultEmail,
+    password: '',
+    confirmPassword: '',
+    name: ''
   });
+  const [error, setError] = useState('');
 
-  const onSubmit = async (data: RegisterFormData) => {
+  const validateForm = () => {
+    if (!formData.email || !formData.password || !formData.confirmPassword) {
+      setError('Todos os campos são obrigatórios');
+      return false;
+    }
+
+    if (formData.password !== formData.confirmPassword) {
+      setError('As senhas não coincidem');
+      return false;
+    }
+
+    if (formData.password.length < 6) {
+      setError('A senha deve ter pelo menos 6 caracteres');
+      return false;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email)) {
+      setError('Email inválido');
+      return false;
+    }
+
+    return true;
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!validateForm()) {
+      return;
+    }
+
+    setIsLoading(true);
+    setError('');
+
     try {
-      setIsSubmitting(true);
-      setSubmitError(null);
+      const metadata = {
+        name: formData.name || undefined,
+        invite_token: inviteToken || undefined
+      };
 
-      const result = await registerWithInvite({
-        email: data.email,
-        password: data.password,
-        name: data.name,
-        inviteToken,
-      });
+      const { error: signUpError } = await signUp(
+        formData.email,
+        formData.password,
+        metadata
+      );
 
-      if (result.error) {
-        throw result.error;
+      if (signUpError) {
+        console.error('[REGISTER-FORM] Erro no registro:', signUpError);
+        const errorMessage = signUpError.message === 'User already registered'
+          ? 'Este email já está cadastrado. Tente fazer login.'
+          : `Erro no registro: ${signUpError.message}`;
+        
+        setError(errorMessage);
+        onError?.(errorMessage);
+        return;
       }
 
-      if (onSuccess) {
-        onSuccess();
-      }
-    } catch (error: any) {
-      const errorMessage = error.message || 'Erro ao criar conta';
-      setSubmitError(errorMessage);
-      
-      if (onError) {
-        onError(error);
-      }
+      console.log('[REGISTER-FORM] Registro realizado com sucesso');
+      onSuccess?.();
+
+    } catch (err: any) {
+      console.error('[REGISTER-FORM] Erro inesperado:', err);
+      const errorMessage = 'Erro inesperado durante o registro';
+      setError(errorMessage);
+      onError?.(errorMessage);
     } finally {
-      setIsSubmitting(false);
+      setIsLoading(false);
+    }
+  };
+
+  const handleInputChange = (field: keyof typeof formData) => (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: e.target.value
+    }));
+    
+    // Limpar erro ao digitar
+    if (error) {
+      setError('');
     }
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Criar Conta</CardTitle>
-        <CardDescription>
-          {inviteToken 
-            ? 'Complete seu registro para aceitar o convite'
-            : 'Crie sua conta para acessar a plataforma'
-          }
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          {submitError && (
-            <Alert variant="destructive">
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>{submitError}</AlertDescription>
-            </Alert>
-          )}
+    <form onSubmit={handleSubmit} className="space-y-4">
+      {error && (
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
 
-          <div className="space-y-2">
-            <label htmlFor="name" className="text-sm font-medium">
-              Nome completo
-            </label>
-            <Input
-              id="name"
-              {...register('name')}
-              placeholder="Seu nome completo"
-              disabled={isSubmitting}
-            />
-            {errors.name && (
-              <p className="text-sm text-red-500">{errors.name.message}</p>
+      <div className="space-y-2">
+        <Label htmlFor="name">Nome (opcional)</Label>
+        <Input
+          id="name"
+          type="text"
+          value={formData.name}
+          onChange={handleInputChange('name')}
+          placeholder="Seu nome completo"
+        />
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="email">Email *</Label>
+        <Input
+          id="email"
+          type="email"
+          value={formData.email}
+          onChange={handleInputChange('email')}
+          placeholder="seu@email.com"
+          required
+          disabled={!!defaultEmail}
+        />
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="password">Senha *</Label>
+        <div className="relative">
+          <Input
+            id="password"
+            type={showPassword ? 'text' : 'password'}
+            value={formData.password}
+            onChange={handleInputChange('password')}
+            placeholder="Mínimo 6 caracteres"
+            required
+          />
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+            onClick={() => setShowPassword(!showPassword)}
+          >
+            {showPassword ? (
+              <EyeOff className="h-4 w-4" />
+            ) : (
+              <Eye className="h-4 w-4" />
             )}
-          </div>
-
-          <div className="space-y-2">
-            <label htmlFor="email" className="text-sm font-medium">
-              Email
-            </label>
-            <Input
-              id="email"
-              type="email"
-              {...register('email')}
-              placeholder="seu@email.com"
-              disabled={isSubmitting}
-            />
-            {errors.email && (
-              <p className="text-sm text-red-500">{errors.email.message}</p>
-            )}
-          </div>
-
-          <div className="space-y-2">
-            <label htmlFor="password" className="text-sm font-medium">
-              Senha
-            </label>
-            <Input
-              id="password"
-              type="password"
-              {...register('password')}
-              placeholder="Sua senha"
-              disabled={isSubmitting}
-            />
-            {errors.password && (
-              <p className="text-sm text-red-500">{errors.password.message}</p>
-            )}
-          </div>
-
-          <div className="space-y-2">
-            <label htmlFor="confirmPassword" className="text-sm font-medium">
-              Confirmar senha
-            </label>
-            <Input
-              id="confirmPassword"
-              type="password"
-              {...register('confirmPassword')}
-              placeholder="Confirme sua senha"
-              disabled={isSubmitting}
-            />
-            {errors.confirmPassword && (
-              <p className="text-sm text-red-500">{errors.confirmPassword.message}</p>
-            )}
-          </div>
-
-          <Button type="submit" className="w-full" disabled={isSubmitting}>
-            {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            {isSubmitting ? 'Criando conta...' : 'Criar conta'}
           </Button>
-        </form>
-      </CardContent>
-    </Card>
+        </div>
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="confirmPassword">Confirmar Senha *</Label>
+        <Input
+          id="confirmPassword"
+          type="password"
+          value={formData.confirmPassword}
+          onChange={handleInputChange('confirmPassword')}
+          placeholder="Digite a senha novamente"
+          required
+        />
+      </div>
+
+      <Button
+        type="submit"
+        className="w-full"
+        disabled={isLoading}
+      >
+        {isLoading ? 'Criando conta...' : 'Criar conta'}
+      </Button>
+    </form>
   );
 };
+
+export default RegisterForm;

@@ -1,24 +1,20 @@
-import { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import { useAuth } from "@/contexts/auth";
-import { supabase, Solution, Module, Progress } from "@/lib/supabase";
-import { useToast } from "@/hooks/use-toast";
-import { useLogging } from "@/hooks/useLogging";
-import { getUserRoleName } from "@/lib/supabase/types";
 
-export const useSolutionData = () => {
-  const { id } = useParams<{ id: string }>();
+import { useState, useEffect } from "react";
+import { supabase, Solution } from "@/lib/supabase";
+import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/auth";
+import { useNavigate } from "react-router-dom";
+
+export const useSolutionData = (id: string | undefined) => {
   const { user, profile } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
-  const { log, logError } = useLogging();
-  const isAdmin = getUserRoleName(profile) === 'admin';
-  
   const [solution, setSolution] = useState<Solution | null>(null);
-  const [progress, setProgress] = useState<Progress | null>(null);
+  const [progress, setProgress] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  
+  const isAdmin = profile?.role === 'admin';
+
   useEffect(() => {
     const fetchSolution = async () => {
       if (!id) {
@@ -125,7 +121,7 @@ export const useSolutionData = () => {
     
     fetchSolution();
   }, [id, toast, user, navigate, isAdmin, profile?.role]);
-  
+
   return {
     solution,
     setSolution,

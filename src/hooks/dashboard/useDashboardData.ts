@@ -2,52 +2,98 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/auth";
 import { supabase } from "@/lib/supabase";
-import { getUserRoleName } from "@/lib/supabase/types";
+import { useToast } from "@/hooks/use-toast";
+import { Solution } from "@/lib/supabase";
 
 export const useDashboardData = () => {
   const { user, profile } = useAuth();
+  const { toast } = useToast();
   const [loading, setLoading] = useState(true);
-  const [stats, setStats] = useState({
-    totalSolutions: 0,
-    activeSolutions: 0,
-    completedSolutions: 0
-  });
-
-  const isAdmin = getUserRoleName(profile) === 'admin';
+  const [solutions, setSolutions] = useState<Solution[]>([]);
+  const [progressData, setProgressData] = useState<any[]>([]);
+  const [analyticsData, setAnalyticsData] = useState<any[]>([]);
+  const [profilesData, setProfilesData] = useState<any[]>([]);
+  const [error, setError] = useState<string | null>(null);
+  const isAdmin = profile?.role === 'admin';
 
   useEffect(() => {
-    const fetchDashboardData = async () => {
-      if (!user) return;
-      
+    const fetchData = async () => {
       try {
         setLoading(true);
+        setError(null);
         
-        // Fetch solutions stats
-        let query = supabase.from("solutions").select("id, published");
-        
+        // Fetch solutions - filtrar apenas publicadas se não for admin
+        let query = supabase.from("solutions").select("*");
         if (!isAdmin) {
-          query = query.eq("published", true);
+          query = query.eq("published", true as any);
         }
         
-        const { data: solutions, error } = await query;
+        const { data: solutionsData, error: solutionsError } = await query;
         
-        if (error) throw error;
+        if (solutionsError) {
+          throw solutionsError;
+        }
         
-        setStats({
-          totalSolutions: solutions?.length || 0,
-          activeSolutions: solutions?.filter(s => s.published)?.length || 0,
-          completedSolutions: 0 // TODO: Implement completion tracking
+        // Ensure solutions array is type-safe
+        setSolutions(solutionsData as any);
+        
+        // Fetch all progress data
+        const { data: progress, error: progressError } = await supabase
+          .from("progress")
+          .select("*");
+        
+        if (progressError) {
+          throw progressError;
+        }
+        
+        setProgressData(progress || []);
+        
+        // Fetch analytics data
+        const { data: analytics, error: analyticsError } = await supabase
+          .from("analytics")
+          .select("*")
+          .order("created_at", { ascending: false })
+          .limit(50);
+        
+        if (analyticsError && !analyticsError.message.includes('does not exist')) {
+          console.warn("Erro ao buscar analytics:", analyticsError);
+        } else {
+          setAnalyticsData(analytics || []);
+        }
+        
+        // Fetch profiles data
+        const { data: profiles, error: profilesError } = await supabase
+          .from("profiles")
+          .select("*");
+        
+        if (profilesError) {
+          throw profilesError;
+        }
+        
+        setProfilesData(profiles || []);
+        
+      } catch (error: any) {
+        console.error("Erro no carregamento de dados do dashboard:", error);
+        setError(error.message || "Erro inesperado ao carregar dados");
+        toast({
+          title: "Erro ao carregar dados",
+          description: "Ocorreu um erro ao carregar os dados do dashboard.",
+          variant: "destructive",
         });
-        
-      } catch (error) {
-        console.error("Error fetching dashboard data:", error);
       } finally {
         setLoading(false);
       }
     };
-
-    fetchDashboardData();
-  }, [user, isAdmin]);
-
-  return { stats, loading, isAdmin };
+    
+    fetchData();
+  }, [toast, isAdmin, profile?.role]);
+  
+  return { 
+    solutions, 
+    progressData, 
+    analyticsData,
+    profilesData,
+    loading, 
+    error 
+  };
 };

@@ -3,7 +3,6 @@ import { useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/auth';
 import { logger } from '@/utils/logger';
-import { getUserRoleName } from '@/lib/supabase/types';
 
 /**
  * Hook para gerenciar segurança RLS com correções
@@ -98,7 +97,7 @@ export const useRLSSecurityManager = () => {
     runSecurityCheck();
 
     // Verificação periódica apenas para admins
-    if (getUserRoleName(profile) === 'admin') {
+    if (profile.role === 'admin') {
       const interval = setInterval(runSecurityCheck, 15 * 60 * 1000); // 15 minutos
       return () => clearInterval(interval);
     }
@@ -109,6 +108,6 @@ export const useRLSSecurityManager = () => {
     logSecureAccess,
     checkRLSViolation,
     isSecurityActive: !!user,
-    isAdmin: getUserRoleName(profile) === 'admin'
+    isAdmin: profile?.role === 'admin'
   };
 };

@@ -26,21 +26,21 @@ export const useEnhancedDashboard = () => {
   // CORREÇÃO: Sempre retornar dados válidos
   return useMemo(() => {
     if (shouldUseFallback) {
-      const { stats, loading, error } = fallback;
+      const { solutions, loading, error } = fallback;
       
       const fallbackResult = {
         active: [],
         completed: [],
-        recommended: [],
+        recommended: solutions || [],
         isLoading: loading,
-        error: error || null,
+        error,
         totals: {
           active: 0,
           completed: 0,
-          recommended: stats.totalSolutions || 0,
-          total: stats.totalSolutions || 0
+          recommended: solutions ? solutions.length : 0,
+          total: solutions ? solutions.length : 0
         },
-        hasData: (stats.totalSolutions || 0) > 0,
+        hasData: solutions ? solutions.length > 0 : false,
         performance: {
           optimized: false,
           fallback: true
