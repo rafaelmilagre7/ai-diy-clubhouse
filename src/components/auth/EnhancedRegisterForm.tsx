@@ -1,286 +1,240 @@
 
 import React, { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useAuth } from '@/contexts/auth';
+import { useInviteDetails } from '@/hooks/useInviteDetails';
+import { useInviteFlow } from '@/hooks/useInviteFlow';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { AlertCircle, Eye, EyeOff, Mail, UserCheck } from 'lucide-react';
-import { useAuth } from '@/contexts/auth';
-import { useInviteDetails } from '@/hooks/useInviteDetails';
-import { useInviteJourney } from '@/hooks/useInviteJourney';
-import { Card } from '@/components/ui/card';
+import { InviteJourneyProgress } from '@/components/invite/InviteJourneyProgress';
+import { supabase } from '@/lib/supabase';
+import { toast } from 'sonner';
 
-interface EnhancedRegisterFormProps {
-  onSuccess?: () => void;
-  defaultEmail?: string;
-  inviteToken?: string;
-}
-
-export const EnhancedRegisterForm: React.FC<EnhancedRegisterFormProps> = ({
-  onSuccess,
-  defaultEmail = '',
-  inviteToken
-}) => {
+export const EnhancedRegisterForm: React.FC = () => {
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const { signUp } = useAuth();
-  const { inviteDetails, isLoading: inviteLoading } = useInviteDetails(inviteToken);
-  const { journeyState } = useInviteJourney(inviteToken);
   
-  const [isLoading, setIsLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
-  const [formData, setFormData] = useState({
-    email: '',
-    password: '',
-    confirmPassword: '',
-    name: ''
-  });
-  const [error, setError] = useState('');
+  const token = searchParams.get('token');
+  const prefilledEmail = searchParams.get('email');
+  
+  const { inviteDetails, loading, error: inviteError } = useInviteDetails(token || undefined);
+  const { acceptInvite, isProcessing } = useInviteFlow();
 
-  // Pré-preencher dados quando convite for carregado
+  const [formData, setFormData] = useState({
+    email: prefilledEmail || '',
+    password: '',
+    confirmPassword: ''
+  });
+  
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Pré-preencher email quando detalhes do convite chegarem
   useEffect(() => {
-    if (inviteDetails && !formData.email) {
-      console.log('📝 [ENHANCED-REGISTER] Pré-preenchendo dados do convite');
-      setFormData(prev => ({
-        ...prev,
-        email: inviteDetails.email,
-        name: prev.name || '' // Manter nome se já preenchido
-      }));
+    if (inviteDetails?.email && !formData.email) {
+      setFormData(prev => ({ ...prev, email: inviteDetails.email }));
     }
   }, [inviteDetails, formData.email]);
 
   const validateForm = () => {
-    if (!formData.email || !formData.password || !formData.confirmPassword) {
-      setError('Todos os campos obrigatórios devem ser preenchidos');
-      return false;
+    const newErrors: Record<string, string> = {};
+    
+    if (!formData.email) {
+      newErrors.email = 'Email é obrigatório';
+    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      newErrors.email = 'Email inválido';
     }
-
+    
+    if (!formData.password) {
+      newErrors.password = 'Senha é obrigatória';
+    } else if (formData.password.length < 6) {
+      newErrors.password = 'Senha deve ter pelo menos 6 caracteres';
+    }
+    
     if (formData.password !== formData.confirmPassword) {
-      setError('As senhas não coincidem');
-      return false;
+      newErrors.confirmPassword = 'Senhas não coincidem';
     }
 
-    if (formData.password.length < 6) {
-      setError('A senha deve ter pelo menos 6 caracteres');
-      return false;
+    // Validar se email corresponde ao convite
+    if (token && inviteDetails && formData.email !== inviteDetails.email) {
+      newErrors.email = 'Email deve corresponder ao convite recebido';
     }
-
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(formData.email)) {
-      setError('Email inválido');
-      return false;
-    }
-
-    return true;
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!validateForm()) {
-      return;
-    }
-
-    setIsLoading(true);
-    setError('');
-
+    if (!validateForm()) return;
+    
+    setIsSubmitting(true);
+    
     try {
-      const metadata = {
-        name: formData.name || undefined,
-        invite_token: inviteToken || undefined,
-        from_invite: !!inviteToken,
-        // Dados do convite para referência
-        invite_role: inviteDetails?.role?.name || undefined,
-        invite_email: inviteDetails?.email || undefined
-      };
-
-      console.log('[ENHANCED-REGISTER] Registrando com metadata completa:', {
-        ...metadata,
-        invite_token: inviteToken ? inviteToken.substring(0, 8) + '...' : undefined
-      });
-
-      const { error: signUpError } = await signUp(
-        formData.email,
-        formData.password,
-        metadata
-      );
-
+      console.log('📝 [ENHANCED-REGISTER] Iniciando registro com convite:', { token, email: formData.email });
+      
+      // Registrar usuário
+      const { error: signUpError } = await signUp(formData.email, formData.password);
+      
       if (signUpError) {
-        console.error('[ENHANCED-REGISTER] Erro no registro:', signUpError);
-        const errorMessage = signUpError.message === 'User already registered'
-          ? 'Este email já está cadastrado. Tente fazer login.'
-          : `Erro no registro: ${signUpError.message}`;
-        
-        setError(errorMessage);
+        toast.error(`Erro no registro: ${signUpError.message}`);
         return;
       }
 
-      console.log('[ENHANCED-REGISTER] Registro realizado com sucesso');
-      onSuccess?.();
-
-    } catch (err: any) {
-      console.error('[ENHANCED-REGISTER] Erro inesperado:', err);
-      setError('Erro inesperado durante o registro');
+      // Se temos um token, aceitar o convite automaticamente após registro
+      if (token && inviteDetails) {
+        console.log('🎫 [ENHANCED-REGISTER] Aplicando convite após registro');
+        
+        // Aguardar um pouco para garantir que o usuário foi criado
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        
+        const result = await acceptInvite(token);
+        
+        if (result.success) {
+          toast.success('Conta criada e convite aceito com sucesso!');
+          navigate('/onboarding?token=' + token);
+        } else {
+          toast.error(`Conta criada, mas erro ao aceitar convite: ${result.message}`);
+          navigate('/onboarding');
+        }
+      } else {
+        toast.success('Conta criada com sucesso!');
+        navigate('/onboarding');
+      }
+      
+    } catch (error: any) {
+      console.error('❌ [ENHANCED-REGISTER] Erro no registro:', error);
+      toast.error('Erro inesperado no registro');
     } finally {
-      setIsLoading(false);
+      setIsSubmitting(false);
     }
   };
 
-  const handleInputChange = (field: keyof typeof formData) => (
-    e: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: e.target.value
-    }));
-    
-    if (error) {
-      setError('');
-    }
-  };
-
-  const isInviteMode = !!inviteToken;
-
-  // Loading melhorado
-  if (inviteLoading && isInviteMode) {
+  if (loading) {
     return (
-      <div className="flex items-center justify-center p-8">
-        <div className="text-center space-y-4">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-viverblue mx-auto"></div>
-          <p className="text-slate-600">Carregando informações do convite...</p>
-        </div>
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
+        <Card className="w-full max-w-md">
+          <CardContent className="p-6">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-viverblue mx-auto"></div>
+              <p className="text-gray-600 mt-2">Carregando detalhes do convite...</p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (token && inviteError) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
+        <Card className="w-full max-w-md">
+          <CardContent className="p-6">
+            <Alert>
+              <AlertDescription>
+                {inviteError}
+              </AlertDescription>
+            </Alert>
+            <Button 
+              className="w-full mt-4" 
+              onClick={() => navigate('/register')}
+            >
+              Continuar sem convite
+            </Button>
+          </CardContent>
+        </Card>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header contextual */}
-      {isInviteMode && inviteDetails ? (
-        <Card className="p-4 border-l-4 border-l-viverblue bg-blue-50/50">
-          <div className="flex items-start space-x-3">
-            <div className="flex-shrink-0">
-              <UserCheck className="h-6 w-6 text-viverblue mt-0.5" />
-            </div>
-            <div className="flex-1 space-y-2">
-              <h3 className="text-lg font-semibold text-gray-900">Você foi convidado!</h3>
-              <div className="space-y-1 text-sm text-gray-600">
-                <div className="flex items-center space-x-2">
-                  <Mail className="h-4 w-4" />
-                  <span>Email: {inviteDetails.email}</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <UserCheck className="h-4 w-4" />
-                  <span>Função: {inviteDetails.role.name}</span>
-                </div>
-              </div>
-              <p className="text-sm text-gray-500">
-                Complete seu cadastro para aceitar o convite automaticamente.
-              </p>
-            </div>
-          </div>
-        </Card>
-      ) : (
-        <div className="text-center space-y-2">
-          <h2 className="text-2xl font-bold text-gray-900">Criar conta</h2>
-          <p className="text-gray-600">
-            Crie sua conta para começar sua jornada
-          </p>
-        </div>
-      )}
-
-      <form onSubmit={handleSubmit} className="space-y-4">
-        {error && (
-          <Alert variant="destructive">
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription>{error}</AlertDescription>
-          </Alert>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
+      <div className="w-full max-w-md space-y-6">
+        
+        {/* Progress do convite */}
+        {token && inviteDetails && (
+          <InviteJourneyProgress
+            currentPhase="registering"
+            userEmail={inviteDetails.email}
+            roleName={inviteDetails.role.name}
+            percentage={40}
+          />
         )}
 
-        <div className="space-y-2">
-          <Label htmlFor="name">Nome (opcional)</Label>
-          <Input
-            id="name"
-            type="text"
-            value={formData.name}
-            onChange={handleInputChange('name')}
-            placeholder="Seu nome completo"
-          />
-        </div>
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-center">
+              {token ? 'Complete seu Registro' : 'Criar Conta'}
+            </CardTitle>
+            {token && inviteDetails && (
+              <p className="text-sm text-gray-600 text-center">
+                Você foi convidado como <strong>{inviteDetails.role.name}</strong>
+              </p>
+            )}
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              
+              <div>
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={formData.email}
+                  onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+                  disabled={!!token} // Desabilitar se veio de convite
+                  className={errors.email ? 'border-red-500' : ''}
+                />
+                {errors.email && (
+                  <p className="text-red-500 text-sm mt-1">{errors.email}</p>
+                )}
+              </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="email">
-            Email * {isInviteMode && <span className="text-sm text-gray-500">(pré-preenchido do convite)</span>}
-          </Label>
-          <Input
-            id="email"
-            type="email"
-            value={formData.email}
-            onChange={handleInputChange('email')}
-            placeholder="seu@email.com"
-            required
-            disabled={isInviteMode}
-            className={isInviteMode ? 'bg-gray-50' : ''}
-          />
-        </div>
+              <div>
+                <Label htmlFor="password">Senha</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  value={formData.password}
+                  onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
+                  className={errors.password ? 'border-red-500' : ''}
+                />
+                {errors.password && (
+                  <p className="text-red-500 text-sm mt-1">{errors.password}</p>
+                )}
+              </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="password">Senha *</Label>
-          <div className="relative">
-            <Input
-              id="password"
-              type={showPassword ? 'text' : 'password'}
-              value={formData.password}
-              onChange={handleInputChange('password')}
-              placeholder="Mínimo 6 caracteres"
-              required
-            />
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-              onClick={() => setShowPassword(!showPassword)}
-            >
-              {showPassword ? (
-                <EyeOff className="h-4 w-4" />
-              ) : (
-                <Eye className="h-4 w-4" />
-              )}
-            </Button>
-          </div>
-        </div>
+              <div>
+                <Label htmlFor="confirmPassword">Confirmar Senha</Label>
+                <Input
+                  id="confirmPassword"
+                  type="password"
+                  value={formData.confirmPassword}
+                  onChange={(e) => setFormData(prev => ({ ...prev, confirmPassword: e.target.value }))}
+                  className={errors.confirmPassword ? 'border-red-500' : ''}
+                />
+                {errors.confirmPassword && (
+                  <p className="text-red-500 text-sm mt-1">{errors.confirmPassword}</p>
+                )}
+              </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="confirmPassword">Confirmar Senha *</Label>
-          <Input
-            id="confirmPassword"
-            type="password"
-            value={formData.confirmPassword}
-            onChange={handleInputChange('confirmPassword')}
-            placeholder="Digite a senha novamente"
-            required
-          />
-        </div>
+              <Button 
+                type="submit" 
+                className="w-full"
+                disabled={isSubmitting || isProcessing}
+              >
+                {isSubmitting || isProcessing ? 'Criando conta...' : 'Criar Conta'}
+              </Button>
 
-        <Button
-          type="submit"
-          className="w-full"
-          disabled={isLoading}
-        >
-          {isLoading 
-            ? 'Criando conta...' 
-            : (isInviteMode ? 'Aceitar Convite e Criar Conta' : 'Criar conta')
-          }
-        </Button>
-      </form>
-
-      {/* Progress indicator para convites */}
-      {isInviteMode && (
-        <div className="text-center text-sm text-gray-500">
-          <p>Após criar sua conta, você será redirecionado para completar seu perfil</p>
-        </div>
-      )}
+            </form>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 };
-
-export default EnhancedRegisterForm;

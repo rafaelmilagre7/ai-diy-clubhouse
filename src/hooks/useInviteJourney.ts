@@ -18,7 +18,7 @@ interface InviteJourneyState {
 export const useInviteJourney = (token?: string) => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { inviteDetails, isLoading: detailsLoading } = useInviteDetails(token);
+  const { inviteDetails, loading: detailsLoading } = useInviteDetails(token);
   const { acceptInvite, isProcessing } = useInviteFlow();
 
   const [journeyState, setJourneyState] = useState<InviteJourneyState>({
