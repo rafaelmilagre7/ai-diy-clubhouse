@@ -129,7 +129,7 @@ export const CreateInviteDialog = ({
                 </div>
               </div>
 
-              <div className={`flex items-start space-x-3 p-3 rounded-lg border ${isWhatsAppValidationError ? 'border-red-200 bg-red-50' : ''}`}>
+              <div className="bg-slate-950">
                 <Checkbox id="whatsapp-channel" checked={hasWhatsApp} onCheckedChange={checked => handleChannelChange('whatsapp', checked as boolean)} disabled={isCreating} />
                 <div className="flex-1">
                   <Label htmlFor="whatsapp-channel" className="flex items-center gap-2 cursor-pointer">
