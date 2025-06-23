@@ -29,10 +29,10 @@ export async function initializeHealthCheckData(): Promise<HealthCheckResult> {
 
       if (totalUsers && totalUsers > 0) {
         simulatedData.details.totalUsers = totalUsers;
-        logger.info('[HEALTH INIT] Usando contagem real de usuários:', totalUsers);
+        logger.info('[HEALTH INIT] Usando contagem real de usuários:', { totalUsers });
       }
     } catch (error) {
-      logger.warn('[HEALTH INIT] Erro ao buscar dados reais, usando simulados:', error);
+      logger.warn('[HEALTH INIT] Erro ao buscar dados reais, usando simulados:', { error });
     }
 
     logger.info('[HEALTH INIT] Inicialização concluída com dados seguros');
