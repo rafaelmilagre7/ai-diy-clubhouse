@@ -121,7 +121,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Calcular propriedades derivadas
   const isAdmin = profile ? validateUserRole(profile, ['admin', 'super_admin']) : false;
   const isFormacao = profile ? validateUserRole(profile, ['formacao']) : false;
-  const isSuperAdminUser = profile ? isSuperAdmin(profile) : false;
 
   const value: AuthContextType = {
     user,
@@ -137,6 +136,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     signInAsAdmin,
     registerWithInvite: authMethods.registerWithInvite,
     setIsLoading: setAuthLoading,
+    setProfile,
   };
 
   return (

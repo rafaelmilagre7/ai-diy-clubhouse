@@ -5,12 +5,21 @@ export interface UserProfile {
   id: string;
   email: string;
   name?: string;
+  avatar_url?: string;
+  company_name?: string;
+  industry?: string;
   role_id?: string;
   role?: {
     name: string;
     permissions: string[];
   };
+  user_roles?: {
+    id: string;
+    name: string;
+    description?: string;
+  };
   onboarding_completed?: boolean;
+  onboarding_completed_at?: string;
   created_at?: string;
   updated_at?: string;
 }
@@ -41,4 +50,5 @@ export interface AuthContextType {
   signInAsAdmin: () => Promise<{ user: User | null; error: any }>;
   registerWithInvite: (params: RegisterParams) => Promise<RegisterResult>;
   setIsLoading: (loading: boolean) => void;
+  setProfile: (profile: UserProfile | null) => void;
 }

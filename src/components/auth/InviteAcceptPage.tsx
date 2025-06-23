@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -9,6 +10,7 @@ import { RegisterForm } from '@/components/auth/RegisterForm';
 import { InviteTokenManager } from '@/utils/inviteTokenManager';
 import { auditLogger } from '@/utils/auditLogger';
 import { logger } from '@/utils/logger';
+import AuthLayout from './AuthLayout';
 
 interface ValidationResult {
   valid: boolean;
@@ -185,5 +187,3 @@ const InviteAcceptPage = () => {
 };
 
 export default InviteAcceptPage;
-
-import AuthLayout from './AuthLayout';

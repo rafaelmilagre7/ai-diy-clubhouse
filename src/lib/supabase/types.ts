@@ -1,3 +1,4 @@
+
 import { Database } from './types/database.types';
 
 // Tipos de tabelas expandidos
@@ -41,19 +42,28 @@ export interface UserRoleData {
 // Enum para tipos de roles conhecidos (compatibilidade)
 export type UserRole = 'admin' | 'formacao' | 'membro_club';
 
+// CORREÇÃO: Usar a mesma interface de UserProfile do auth context
 export interface UserProfile {
   id: string;
   email: string;
-  name: string | null;
-  avatar_url: string | null;
-  company_name: string | null;
-  industry: string | null;
-  role_id: string | null; // Campo principal para roles
-  role?: UserRole; // Campo legado - deprecado, mas mantido para compatibilidade
-  user_roles?: UserRoleData | null; // Dados da role via join
-  created_at: string;
-  onboarding_completed: boolean;
-  onboarding_completed_at: string | null;
+  name?: string;
+  avatar_url?: string;
+  company_name?: string;
+  industry?: string;
+  role_id?: string;
+  role?: {
+    name: string;
+    permissions: string[];
+  };
+  user_roles?: {
+    id: string;
+    name: string;
+    description?: string;
+  };
+  onboarding_completed?: boolean;
+  onboarding_completed_at?: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
 // Função utilitária para obter o nome da role
@@ -65,18 +75,9 @@ export const getUserRoleName = (profile: UserProfile | null): string => {
     return profile.user_roles.name;
   }
   
-  // Fallback para campo legado durante migração
-  if (profile.role) {
-    // CORREÇÃO: Log de deprecação para monitoramento
-    if (process.env.NODE_ENV !== 'production') {
-      console.warn('⚠️ [DEPRECATED] Usando profile.role (legado). Migre para role_id/user_roles.', {
-        profileId: profile.id.substring(0, 8) + '***',
-        legacyRole: profile.role,
-        hasRoleId: !!profile.role_id,
-        hasUserRoles: !!profile.user_roles
-      });
-    }
-    return profile.role;
+  // Verificar via role
+  if (profile.role?.name) {
+    return profile.role.name;
   }
   
   return 'member';
