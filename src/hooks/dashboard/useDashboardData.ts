@@ -4,6 +4,7 @@ import { useAuth } from "@/contexts/auth";
 import { supabase } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
 import { Solution } from "@/lib/supabase";
+import { getUserRoleName } from "@/lib/supabase/types";
 
 export const useDashboardData = () => {
   const { user, profile } = useAuth();
@@ -14,7 +15,7 @@ export const useDashboardData = () => {
   const [analyticsData, setAnalyticsData] = useState<any[]>([]);
   const [profilesData, setProfilesData] = useState<any[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const isAdmin = profile?.role === 'admin';
+  const isAdmin = getUserRoleName(profile) === 'admin';
 
   useEffect(() => {
     const fetchData = async () => {
@@ -86,7 +87,7 @@ export const useDashboardData = () => {
     };
     
     fetchData();
-  }, [toast, isAdmin, profile?.role]);
+  }, [toast, isAdmin, getUserRoleName(profile)]);
   
   return { 
     solutions, 

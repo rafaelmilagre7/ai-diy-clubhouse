@@ -6,6 +6,7 @@ import { Comment } from '@/types/commentTypes';
 import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { useLogging } from '@/hooks/useLogging';
+import { getUserRoleName } from '@/lib/supabase/types';
 
 export const useDeleteModuleComment = (solutionId: string, moduleId: string) => {
   const [isDeleting, setIsDeleting] = useState(false);
@@ -20,7 +21,7 @@ export const useDeleteModuleComment = (solutionId: string, moduleId: string) => 
     }
 
     const isAuthor = user.id === comment.user_id;
-    const isAdmin = profile?.role === 'admin';
+    const isAdmin = getUserRoleName(profile) === 'admin';
     
     if (!isAuthor && !isAdmin) {
       toast.error('Você só pode excluir seus próprios comentários');
