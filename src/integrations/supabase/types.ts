@@ -5232,6 +5232,16 @@ export type Database = {
         Args: { p_user_id: string; p_ip_address: string }
         Returns: boolean
       }
+      ensure_audit_log: {
+        Args: {
+          p_event_type: string
+          p_action: string
+          p_resource_id?: string
+          p_details?: Json
+          p_retry_count?: number
+        }
+        Returns: boolean
+      }
       generate_certificate_validation_code: {
         Args: Record<PropertyKey, never>
         Returns: string
@@ -5367,6 +5377,10 @@ export type Database = {
           p_metadata?: Json
         }
         Returns: string
+      }
+      log_invite_validation_attempt: {
+        Args: { p_token: string; p_success: boolean; p_details: string }
+        Returns: undefined
       }
       log_permission_change: {
         Args: {
@@ -5526,6 +5540,10 @@ export type Database = {
       }
       validate_solution_certificate: {
         Args: { p_validation_code: string }
+        Returns: Json
+      }
+      validate_user_invite_match: {
+        Args: { p_token: string; p_user_id?: string }
         Returns: Json
       }
     }

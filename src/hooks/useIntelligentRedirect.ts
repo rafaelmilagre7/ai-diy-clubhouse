@@ -34,6 +34,7 @@ export const useIntelligentRedirect = () => {
       const currentToken = new URLSearchParams(window.location.search).get('token');
       if (currentToken) {
         InviteTokenManager.storeToken(currentToken);
+        console.log('[INTELLIGENT-REDIRECT] Token preservado para uso posterior');
       }
     }
 
@@ -42,16 +43,19 @@ export const useIntelligentRedirect = () => {
       const storedToken = InviteTokenManager.getStoredToken();
       
       if (storedToken) {
-        console.log('[INTELLIGENT-REDIRECT] Redirecionando para onboarding com token');
+        console.log('[INTELLIGENT-REDIRECT] Redirecionando para onboarding com token preservado');
         navigate(`/onboarding?token=${storedToken}`);
-        InviteTokenManager.clearToken(); // Limpar após uso
+        // NÃO limpar o token aqui - deixar o onboarding gerenciar
       } else {
         console.log('[INTELLIGENT-REDIRECT] Redirecionando para onboarding sem token');
         navigate('/onboarding');
       }
     } else {
       console.log('[INTELLIGENT-REDIRECT] Redirecionando para dashboard');
-      InviteTokenManager.clearToken(); // Limpar se não precisa mais
+      // Só limpar o token se não precisar mais dele
+      if (!requiresOnboarding) {
+        InviteTokenManager.clearToken();
+      }
       navigate('/dashboard');
     }
   }, [navigate, user]);

@@ -14,17 +14,17 @@ export const useCleanOnboardingData = (inviteToken?: string) => {
     startedAt: new Date().toISOString()
   });
 
-  // Memoizar dados do perfil para evitar re-cálculos
+  // Memoizar dados do perfil para evitar re-cálculos desnecessários
   const profileData = useMemo(() => ({
     roleName: getUserRoleName(profile),
     name: profile?.name || '',
     email: profile?.email || user?.email || ''
-  }), [profile, user]);
+  }), [profile, user?.email]);
 
-  // Memoizar função de inicialização
+  // Memoizar função de inicialização para evitar loops infinitos
   const initializeCleanData = useCallback(() => {
-    const memberType: 'club' | 'formacao' = profileData.roleName === 'formacao' ? 'formacao' : 'club';
-
+    console.log('[CLEAN-ONBOARDING] Iniciando inicialização de dados limpos');
+    
     // Para convites, usar dados do convite quando disponíveis
     if (inviteToken && inviteDetails) {
       console.log('[CLEAN-ONBOARDING] Inicializando com dados do convite');
@@ -42,9 +42,11 @@ export const useCleanOnboardingData = (inviteToken?: string) => {
       };
 
       setData(inviteData);
-      console.log('[CLEAN-ONBOARDING] Dados inicializados com convite');
+      console.log('[CLEAN-ONBOARDING] Dados inicializados com convite:', inviteData);
     } else if (!inviteToken) {
       // Para usuários sem convite, usar dados do perfil
+      const memberType: 'club' | 'formacao' = profileData.roleName === 'formacao' ? 'formacao' : 'club';
+      
       const regularData: OnboardingData = {
         name: profileData.name,
         email: profileData.email,
@@ -53,12 +55,13 @@ export const useCleanOnboardingData = (inviteToken?: string) => {
       };
 
       setData(regularData);
-      console.log('[CLEAN-ONBOARDING] Dados regulares inicializados');
+      console.log('[CLEAN-ONBOARDING] Dados regulares inicializados:', regularData);
     }
   }, [profileData, inviteToken, inviteDetails]);
 
-  // Memoizar função de update
+  // Memoizar função de update para evitar re-criação
   const updateData = useCallback((newData: Partial<OnboardingData>) => {
+    console.log('[CLEAN-ONBOARDING] Atualizando dados:', newData);
     setData(prevData => ({ ...prevData, ...newData }));
   }, []);
 
