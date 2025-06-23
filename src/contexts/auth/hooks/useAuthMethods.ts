@@ -1,240 +1,154 @@
 
 import { useState } from 'react';
-import { supabase } from '@/lib/supabase';
-import { toast } from 'sonner';
-import { InviteTokenManager } from '@/utils/inviteTokenManager';
+import { supabase } from '@/integrations/supabase/client';
+import { useNavigate } from 'react-router-dom';
+import { auditLogger } from '@/utils/auditLogger';
 import { logger } from '@/utils/logger';
 
-interface AuthMethodsParams {
-  setIsLoading: (loading: boolean) => void;
-}
-
-interface SignUpOptions {
+interface RegisterParams {
+  email: string;
+  password: string;
+  name: string;
   inviteToken?: string;
-  userData?: {
-    name?: string;
-  };
 }
 
-export const useAuthMethods = ({ setIsLoading }: AuthMethodsParams) => {
-  const [isSigningIn, setIsSigningIn] = useState(false);
+interface RegisterResult {
+  user?: any;
+  error?: any;
+}
 
-  const signIn = async (email: string, password: string) => {
+export const useAuthMethods = () => {
+  const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
+
+  const registerWithInvite = async (params: RegisterParams): Promise<RegisterResult> => {
     try {
       setIsLoading(true);
-      setIsSigningIn(true);
       
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password
+      logger.info('Iniciando registro com convite', {
+        component: 'useAuthMethods',
+        email: params.email,
+        hasInviteToken: !!params.inviteToken
+      });
+
+      // Log tentativa de registro
+      await auditLogger.logUserRegistration('register_attempt', {
+        email: params.email,
+        has_invite_token: !!params.inviteToken
+      });
+
+      // Tentar registrar o usuário
+      const redirectUrl = `${window.location.origin}/`;
+      
+      const { data, error } = await supabase.auth.signUp({
+        email: params.email,
+        password: params.password,
+        options: {
+          emailRedirectTo: redirectUrl,
+          data: {
+            name: params.name,
+            invite_token: params.inviteToken
+          }
+        }
       });
 
       if (error) {
-        logger.error('Erro no login:', error, { component: 'AUTH_METHODS' });
-        toast.error('Erro no login: ' + error.message);
+        logger.error('Erro no registro do usuário', {
+          component: 'useAuthMethods',
+          error: error.message,
+          email: params.email
+        });
+
+        await auditLogger.logUserRegistration('register_failed', {
+          email: params.email,
+          error: error.message
+        });
+
         return { error };
       }
 
-      if (data.user) {
-        logger.info('Login realizado:', { email: data.user.email, component: 'AUTH_METHODS' });
-        toast.success('Login realizado com sucesso!');
-      }
-
-      return { error: null };
-    } catch (err) {
-      const error = err instanceof Error ? err : new Error('Erro inesperado');
-      logger.error('Erro inesperado no login:', error, { component: 'AUTH_METHODS' });
-      toast.error('Erro inesperado: ' + error.message);
-      return { error };
-    } finally {
-      setIsSigningIn(false);
-      setIsLoading(false);
-    }
-  };
-
-  // SignUp ROBUSTO com melhor tratamento de erros
-  const signUp = async (
-    email: string, 
-    password: string, 
-    options: SignUpOptions = {}
-  ) => {
-    try {
-      setIsLoading(true);
-      logger.info('Iniciando signup:', {
-        email: email.toLowerCase(),
-        hasInviteToken: !!options.inviteToken,
-        userName: options.userData?.name,
-        component: 'AUTH_METHODS'
-      });
-
-      // Signup básico primeiro
-      const { data, error } = await supabase.auth.signUp({
-        email: email.toLowerCase(),
-        password,
-        options: {
-          data: {
-            name: options.userData?.name || '',
-            invite_token: options.inviteToken || ''
-          }
-        }
-      });
-
-      if (error) {
-        logger.error('Erro no signup básico:', error, { 
-          component: 'AUTH_METHODS',
-          email: email.toLowerCase() 
-        });
-        
-        // Melhor tratamento de mensagens de erro
-        let errorMessage = 'Erro no cadastro';
-        if (error.message.includes('already registered')) {
-          errorMessage = 'Este email já está cadastrado. Tente fazer login.';
-        } else if (error.message.includes('password')) {
-          errorMessage = 'Senha muito fraca. Use pelo menos 6 caracteres.';
-        } else if (error.message.includes('email')) {
-          errorMessage = 'Email inválido.';
-        } else {
-          errorMessage = `Erro no cadastro: ${error.message}`;
-        }
-        
-        toast.error(errorMessage);
-        return { error: new Error(errorMessage) };
-      }
-
       if (!data.user) {
-        const signupError = new Error('Falha ao criar usuário');
-        logger.error('Usuário não criado no signup:', signupError, { component: 'AUTH_METHODS' });
-        toast.error('Falha ao criar usuário');
-        return { error: signupError };
+        const errorMsg = 'Usuário não foi criado';
+        logger.error(errorMsg, {
+          component: 'useAuthMethods',
+          email: params.email
+        });
+
+        await auditLogger.logUserRegistration('register_failed', {
+          email: params.email,
+          error: errorMsg
+        });
+
+        return { error: new Error(errorMsg) };
       }
 
-      logger.info('Usuário criado com sucesso:', { 
-        userId: data.user.id,
-        email: data.user.email,
-        component: 'AUTH_METHODS' 
+      logger.info('Usuário registrado com sucesso', {
+        component: 'useAuthMethods',
+        user_id: data.user.id,
+        email: params.email
       });
 
-      // PROCESSAR CONVITE de forma mais robusta
-      if (options.inviteToken) {
-        logger.info('Processando convite após signup:', { 
-          token: options.inviteToken.substring(0, 8) + '...',
-          userId: data.user.id,
-          component: 'AUTH_METHODS' 
-        });
-        
+      // Se há token de convite, completar o processo
+      if (params.inviteToken) {
         try {
-          // Validação adicional do token
-          if (options.inviteToken.length < 10) {
-            throw new Error('Token de convite inválido');
-          }
-          
-          const { data: inviteResult, error: inviteError } = await supabase.rpc(
-            'complete_invite_registration',
-            {
-              p_token: options.inviteToken,
-              p_user_id: data.user.id
-            }
-          );
-
-          if (inviteError) {
-            logger.error('Erro na função RPC de convite:', inviteError, { 
-              component: 'AUTH_METHODS',
-              token: options.inviteToken.substring(0, 8) + '...'
-            });
-            throw new Error(inviteError.message);
-          }
-
-          if (!inviteResult?.success) {
-            const errorMessage = inviteResult?.message || 'Erro ao processar convite';
-            logger.error('Convite não processado:', new Error(errorMessage), { 
-              component: 'AUTH_METHODS',
-              result: inviteResult
-            });
-            throw new Error(errorMessage);
-          }
-
-          // Sucesso no convite
-          logger.info('Convite processado com sucesso:', { 
-            userId: data.user.id,
-            component: 'AUTH_METHODS' 
+          const { error: completeError } = await supabase.rpc('complete_invite_registration', {
+            p_token: params.inviteToken,
+            p_user_id: data.user.id
           });
-          toast.success('Conta criada e convite aceito com sucesso!');
-          
-          InviteTokenManager.clearTokenOnSuccess();
+
+          if (completeError) {
+            logger.warn('Erro ao completar registro com convite (não crítico)', {
+              component: 'useAuthMethods',
+              error: completeError.message,
+              user_id: data.user.id
+            });
+            
+            await auditLogger.logInviteProcess('invite_completion_failed', params.inviteToken, {
+              user_id: data.user.id,
+              error: completeError.message
+            });
+          } else {
+            await auditLogger.logInviteProcess('invite_completion_success', params.inviteToken, {
+              user_id: data.user.id
+            });
+          }
         } catch (inviteError: any) {
-          // Log do erro do convite mas não falha todo o processo
-          logger.error('Erro ao processar convite (usuário já criado):', inviteError, { 
-            component: 'AUTH_METHODS',
-            userId: data.user.id
+          logger.warn('Erro inesperado ao processar convite', {
+            component: 'useAuthMethods',
+            error: inviteError.message,
+            user_id: data.user.id
           });
-          
-          // Mostrar erro específico mas não falhar o signup
-          toast.error('Conta criada, mas erro ao processar convite: ' + inviteError.message);
-          InviteTokenManager.clearTokenOnError();
-          
-          // Retornar sucesso parcial - usuário foi criado
-          return { error: null, partialSuccess: true };
         }
-      } else {
-        toast.success('Conta criada com sucesso!');
       }
 
-      return { error: null };
-    } catch (err) {
-      const error = err instanceof Error ? err : new Error('Erro inesperado');
-      logger.error('Erro inesperado no signup:', error, { component: 'AUTH_METHODS' });
-      toast.error('Erro inesperado: ' + error.message);
-      
-      if (options.inviteToken) {
-        InviteTokenManager.clearTokenOnError();
-      }
-      
+      await auditLogger.logUserRegistration('register_success', {
+        email: params.email,
+        user_id: data.user.id
+      });
+
+      return { user: data.user };
+
+    } catch (error: any) {
+      logger.error('Erro inesperado no registro', {
+        component: 'useAuthMethods',
+        error: error.message,
+        email: params.email
+      });
+
+      await auditLogger.logUserRegistration('register_error', {
+        email: params.email,
+        error: error.message
+      });
+
       return { error };
+
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const signOut = async () => {
-    try {
-      setIsLoading(true);
-      
-      InviteTokenManager.clearTokenOnLogout();
-      
-      const { error } = await supabase.auth.signOut();
-      
-      if (error) {
-        logger.error('Erro no logout:', error, { component: 'AUTH_METHODS' });
-        toast.error('Erro ao fazer logout: ' + error.message);
-        return { success: false, error };
-      }
-
-      logger.info('Logout realizado com sucesso', { component: 'AUTH_METHODS' });
-      toast.success('Logout realizado com sucesso!');
-      return { success: true, error: null };
-    } catch (err) {
-      const error = err instanceof Error ? err : new Error('Erro inesperado');
-      logger.error('Erro inesperado no logout:', error, { component: 'AUTH_METHODS' });
-      return { success: false, error };
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const signInAsMember = async (email: string, password: string) => {
-    return await signIn(email, password);
-  };
-
-  const signInAsAdmin = async (email: string, password: string) => {
-    return await signIn(email, password);
   };
 
   return {
-    signIn,
-    signUp,
-    signOut,
-    signInAsMember,
-    signInAsAdmin,
-    isSigningIn
+    registerWithInvite,
+    isLoading
   };
 };
