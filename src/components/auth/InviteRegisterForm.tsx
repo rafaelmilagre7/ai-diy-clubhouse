@@ -1,284 +1,190 @@
 
-import React, { useState, useEffect } from 'react';
-import { useSearchParams, useNavigate } from 'react-router-dom';
-import { useInviteFlow } from '@/hooks/useInviteFlow';
-import { useIntelligentRedirect } from '@/hooks/useIntelligentRedirect';
-import { InviteSecurityUtils } from '@/utils/inviteSecurityUtils';
-import { OnboardingLoadingState } from '@/components/onboarding/components/OnboardingLoadingStates';
-import { OnboardingErrorHandler } from '@/components/onboarding/components/OnboardingErrorHandler';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { UserPlus, Eye, EyeOff } from 'lucide-react';
-import { toast } from 'sonner';
+import { UserCheck, Mail, User, Lock, Eye, EyeOff } from 'lucide-react';
 
-const InviteRegisterForm = () => {
-  const [searchParams] = useSearchParams();
-  const navigate = useNavigate();
-  const { redirect } = useIntelligentRedirect();
-  
-  const token = searchParams.get('token');
-  const [formData, setFormData] = useState({
-    name: '',
-    password: '',
-    confirmPassword: ''
-  });
+interface InviteFlowResult {
+  success: boolean;
+  message: string;
+  requiresOnboarding?: boolean;
+}
+
+interface InviteRegisterFormProps {
+  email: string;
+  roleName: string;
+  onSubmit: (name: string, password: string) => Promise<InviteFlowResult>;
+  isLoading: boolean;
+}
+
+const InviteRegisterForm = ({ email, roleName, onSubmit, isLoading }: InviteRegisterFormProps) => {
+  const [name, setName] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [registrationError, setRegistrationError] = useState<string>('');
-  
-  const { 
-    inviteDetails, 
-    isLoading: inviteLoading, 
-    error: inviteError, 
-    registerWithInvite,
-    isProcessing 
-  } = useInviteFlow(token || undefined);
+  const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
-  // Validação inicial do token
-  useEffect(() => {
-    if (!token) {
-      console.log('[INVITE-REGISTER] Token não fornecido');
-      navigate('/register');
-      return;
+  const validateForm = () => {
+    const newErrors: { [key: string]: string } = {};
+
+    if (!name.trim()) {
+      newErrors.name = 'Nome é obrigatório';
     }
 
-    if (!InviteSecurityUtils.validateTokenFormat(token)) {
-      console.log('[INVITE-REGISTER] Formato de token inválido');
-      toast.error('Formato de convite inválido');
-      navigate('/register');
-      return;
-    }
-  }, [token, navigate]);
-
-  const handleInputChange = (field: string, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-    // Limpar erros quando usuário começar a digitar
-    if (registrationError) {
-      setRegistrationError('');
-    }
-  };
-
-  const validateForm = (): string | null => {
-    if (!formData.name.trim()) {
-      return 'Nome é obrigatório';
+    if (!password) {
+      newErrors.password = 'Senha é obrigatória';
+    } else if (password.length < 6) {
+      newErrors.password = 'Senha deve ter pelo menos 6 caracteres';
     }
 
-    if (formData.name.trim().length < 2) {
-      return 'Nome deve ter pelo menos 2 caracteres';
+    if (!confirmPassword) {
+      newErrors.confirmPassword = 'Confirmação de senha é obrigatória';
+    } else if (password !== confirmPassword) {
+      newErrors.confirmPassword = 'Senhas não coincidem';
     }
 
-    if (!formData.password) {
-      return 'Senha é obrigatória';
-    }
-
-    if (formData.password.length < 6) {
-      return 'Senha deve ter pelo menos 6 caracteres';
-    }
-
-    if (formData.password !== formData.confirmPassword) {
-      return 'Senhas não coincidem';
-    }
-
-    return null;
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!inviteDetails || !token) {
-      toast.error('Dados do convite não encontrados');
-      return;
-    }
+    if (!validateForm()) return;
 
-    // Validação do formulário
-    const validationError = validateForm();
-    if (validationError) {
-      setRegistrationError(validationError);
-      toast.error(validationError);
-      return;
-    }
-
-    try {
-      setRegistrationError('');
-      console.log('[INVITE-REGISTER] Iniciando registro com convite');
-
-      // Registrar usuário
-      const result = await registerWithInvite(formData.name.trim(), formData.password);
-      
-      if (result.success) {
-        toast.success(result.message);
-        
-        // Log de sucesso
-        await InviteSecurityUtils.logInviteUsageAttempt(
-          token,
-          true,
-          'Registro com convite realizado com sucesso'
-        );
-
-        // Redirecionamento inteligente
-        redirect({
-          requiresOnboarding: result.requiresOnboarding,
-          fromInvite: true,
-          preserveToken: true
-        });
-      } else {
-        throw new Error(result.message);
-      }
-    } catch (error: any) {
-      console.error('[INVITE-REGISTER] Erro no registro:', error);
-      setRegistrationError(error.message);
-      toast.error(error.message);
-      
-      // Log de erro
-      await InviteSecurityUtils.logInviteUsageAttempt(
-        token!,
-        false,
-        error.message
-      );
-    }
+    await onSubmit(name.trim(), password);
   };
 
-  // Loading state
-  if (inviteLoading) {
-    return <OnboardingLoadingState type="verification" message="Validando convite..." />;
-  }
-
-  // Error state
-  if (inviteError) {
-    return (
-      <OnboardingErrorHandler
-        error={inviteError}
-        type="validation"
-        onRetry={() => window.location.reload()}
-        onCancel={() => navigate('/register')}
-        showContactSupport={true}
-      />
-    );
-  }
-
-  if (registrationError && registrationError.includes('sistema')) {
-    return (
-      <OnboardingErrorHandler
-        error={registrationError}
-        type="system"
-        onRetry={() => setRegistrationError('')}
-        onCancel={() => navigate('/register')}
-        showContactSupport={true}
-      />
-    );
-  }
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#0F111A] to-[#151823] flex items-center justify-center p-4">
-      <Card className="w-full max-w-md bg-[#1A1E2E]/90 backdrop-blur-sm border-white/20">
-        <CardHeader className="text-center">
-          <div className="mx-auto w-16 h-16 bg-viverblue/20 rounded-full flex items-center justify-center mb-4">
-            <UserPlus className="w-8 h-8 text-viverblue" />
+    <div className="space-y-6">
+      <div className="text-center">
+        <div className="mx-auto w-16 h-16 bg-viverblue/20 rounded-full flex items-center justify-center mb-4">
+          <UserCheck className="w-8 h-8 text-viverblue" />
+        </div>
+        <h2 className="text-2xl font-bold text-white mb-2">
+          Criar Conta
+        </h2>
+        <p className="text-neutral-300">
+          Complete seu cadastro para aceitar o convite
+        </p>
+      </div>
+
+      <div className="bg-[#252842]/50 rounded-lg p-4 space-y-3">
+        <div className="flex items-center gap-2">
+          <Mail className="w-4 h-4 text-viverblue" />
+          <span className="text-sm font-medium text-white">
+            Convite para:
+          </span>
+        </div>
+        <p className="text-neutral-300">{email}</p>
+        
+        <div className="mt-2">
+          <span className="text-sm font-medium text-white">
+            Cargo: 
+          </span>
+          <span className="ml-2 text-sm px-3 py-1 bg-viverblue/20 text-viverblue rounded-full">
+            {roleName === 'formacao' ? 'Formação' : 'Membro do Clube'}
+          </span>
+        </div>
+      </div>
+
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="space-y-2">
+          <Label htmlFor="name" className="text-white">
+            Nome completo
+          </Label>
+          <div className="relative">
+            <User className="absolute left-3 top-3 h-4 w-4 text-neutral-400" />
+            <Input
+              id="name"
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="pl-10 bg-[#1A1E2E]/50 border-white/20 text-white placeholder:text-neutral-400"
+              placeholder="Seu nome completo"
+              disabled={isLoading}
+            />
           </div>
-          <CardTitle className="text-2xl font-bold text-white">
-            Criar Conta via Convite
-          </CardTitle>
-          {inviteDetails && (
-            <div className="text-sm text-neutral-300 space-y-1">
-              <p>Você foi convidado para:</p>
-              <p className="text-viverblue font-medium">{inviteDetails.role.description}</p>
-              <p className="text-neutral-400">Email: {inviteDetails.email}</p>
-            </div>
+          {errors.name && (
+            <p className="text-red-400 text-sm">{errors.name}</p>
           )}
-        </CardHeader>
+        </div>
 
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="name" className="text-white">Nome Completo</Label>
-              <Input
-                id="name"
-                type="text"
-                value={formData.name}
-                onChange={(e) => handleInputChange('name', e.target.value)}
-                placeholder="Digite seu nome completo"
-                className="bg-[#252842] border-white/20 text-white placeholder:text-neutral-400"
-                disabled={isProcessing}
-                required
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="password" className="text-white">Senha</Label>
-              <div className="relative">
-                <Input
-                  id="password"
-                  type={showPassword ? "text" : "password"}
-                  value={formData.password}
-                  onChange={(e) => handleInputChange('password', e.target.value)}
-                  placeholder="Digite sua senha"
-                  className="bg-[#252842] border-white/20 text-white placeholder:text-neutral-400 pr-10"
-                  disabled={isProcessing}
-                  required
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-neutral-400 hover:text-white"
-                >
-                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                </button>
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="confirmPassword" className="text-white">Confirmar Senha</Label>
-              <div className="relative">
-                <Input
-                  id="confirmPassword"
-                  type={showConfirmPassword ? "text" : "password"}
-                  value={formData.confirmPassword}
-                  onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
-                  placeholder="Confirme sua senha"
-                  className="bg-[#252842] border-white/20 text-white placeholder:text-neutral-400 pr-10"
-                  disabled={isProcessing}
-                  required
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-neutral-400 hover:text-white"
-                >
-                  {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                </button>
-              </div>
-            </div>
-
-            {registrationError && !registrationError.includes('sistema') && (
-              <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3">
-                <p className="text-red-400 text-sm">{registrationError}</p>
-              </div>
-            )}
-
-            <Button
-              type="submit"
-              className="w-full bg-viverblue hover:bg-viverblue/90 text-white"
-              disabled={isProcessing}
+        <div className="space-y-2">
+          <Label htmlFor="password" className="text-white">
+            Senha
+          </Label>
+          <div className="relative">
+            <Lock className="absolute left-3 top-3 h-4 w-4 text-neutral-400" />
+            <Input
+              id="password"
+              type={showPassword ? 'text' : 'password'}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="pl-10 pr-10 bg-[#1A1E2E]/50 border-white/20 text-white placeholder:text-neutral-400"
+              placeholder="Mínimo 6 caracteres"
+              disabled={isLoading}
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-3 top-3 text-neutral-400 hover:text-white"
+              disabled={isLoading}
             >
-              {isProcessing ? 'Criando conta...' : 'Criar Conta e Aceitar Convite'}
-            </Button>
+              {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            </button>
+          </div>
+          {errors.password && (
+            <p className="text-red-400 text-sm">{errors.password}</p>
+          )}
+        </div>
 
-            <div className="text-center">
-              <Button
-                type="button"
-                variant="ghost"
-                onClick={() => navigate('/login')}
-                className="text-neutral-400 hover:text-white"
-                disabled={isProcessing}
-              >
-                Já tenho conta - Fazer Login
-              </Button>
+        <div className="space-y-2">
+          <Label htmlFor="confirmPassword" className="text-white">
+            Confirmar senha
+          </Label>
+          <div className="relative">
+            <Lock className="absolute left-3 top-3 h-4 w-4 text-neutral-400" />
+            <Input
+              id="confirmPassword"
+              type={showConfirmPassword ? 'text' : 'password'}
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              className="pl-10 pr-10 bg-[#1A1E2E]/50 border-white/20 text-white placeholder:text-neutral-400"
+              placeholder="Confirme sua senha"
+              disabled={isLoading}
+            />
+            <button
+              type="button"
+              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+              className="absolute right-3 top-3 text-neutral-400 hover:text-white"
+              disabled={isLoading}
+            >
+              {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            </button>
+          </div>
+          {errors.confirmPassword && (
+            <p className="text-red-400 text-sm">{errors.confirmPassword}</p>
+          )}
+        </div>
+
+        <Button
+          type="submit"
+          disabled={isLoading}
+          className="w-full bg-viverblue hover:bg-viverblue/90 text-white font-medium py-3"
+        >
+          {isLoading ? (
+            <div className="flex items-center gap-2">
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
+              <span>Criando conta...</span>
             </div>
-          </form>
-        </CardContent>
-      </Card>
+          ) : (
+            'Criar Conta'
+          )}
+        </Button>
+      </form>
     </div>
   );
 };

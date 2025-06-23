@@ -6,7 +6,6 @@ import { useAuth } from '@/contexts/auth';
 import LoginPage from '@/pages/auth/LoginPage';
 import RegisterPage from '@/pages/auth/RegisterPage';
 import InviteAcceptPage from '@/components/auth/InviteAcceptPage';
-import InviteRegisterForm from '@/components/auth/InviteRegisterForm';
 
 // Main components
 import LandingPage from '@/pages/LandingPage';
@@ -14,8 +13,17 @@ import DashboardPage from '@/pages/DashboardPage';
 import OnboardingWizard from '@/components/onboarding/OnboardingWizard';
 
 // Route configurations
-import { adminRoutes } from './AdminRoutes';
 import { ProtectedRoutes } from '@/auth/ProtectedRoutes';
+
+// Import admin routes properly
+import AdminDashboard from '@/pages/admin/AdminDashboard';
+import AdminUsers from '@/pages/admin/AdminUsers';
+import AdminTools from '@/pages/admin/AdminTools';
+import AdminSolutions from '@/pages/admin/AdminSolutions';
+import AdminAnalytics from '@/pages/admin/AdminAnalytics';
+import AdminEvents from '@/pages/admin/AdminEvents';
+import InvitesManagement from '@/pages/admin/invites/InvitesManagement';
+import AdminLayout from '@/components/layout/admin/AdminLayout';
 
 const AppRoutes = () => {
   const { user, isLoading } = useAuth();
@@ -37,9 +45,8 @@ const AppRoutes = () => {
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
       
-      {/* Invite routes - simplificadas e unificadas */}
+      {/* Invite routes */}
       <Route path="/invite" element={<InviteAcceptPage />} />
-      <Route path="/invite/register" element={<InviteRegisterForm />} />
       
       {/* Protected routes */}
       <Route 
@@ -61,9 +68,76 @@ const AppRoutes = () => {
       />
 
       {/* Admin routes */}
-      {adminRoutes.map((route, index) => (
-        <Route key={index} {...route} />
-      ))}
+      <Route
+        path="/admin"
+        element={
+          <ProtectedRoutes>
+            <AdminLayout>
+              <AdminDashboard />
+            </AdminLayout>
+          </ProtectedRoutes>
+        }
+      />
+      <Route
+        path="/admin/users"
+        element={
+          <ProtectedRoutes>
+            <AdminLayout>
+              <AdminUsers />
+            </AdminLayout>
+          </ProtectedRoutes>
+        }
+      />
+      <Route
+        path="/admin/tools"
+        element={
+          <ProtectedRoutes>
+            <AdminLayout>
+              <AdminTools />
+            </AdminLayout>
+          </ProtectedRoutes>
+        }
+      />
+      <Route
+        path="/admin/solutions"
+        element={
+          <ProtectedRoutes>
+            <AdminLayout>
+              <AdminSolutions />
+            </AdminLayout>
+          </ProtectedRoutes>
+        }
+      />
+      <Route
+        path="/admin/analytics"
+        element={
+          <ProtectedRoutes>
+            <AdminLayout>
+              <AdminAnalytics />
+            </AdminLayout>
+          </ProtectedRoutes>
+        }
+      />
+      <Route
+        path="/admin/events"
+        element={
+          <ProtectedRoutes>
+            <AdminLayout>
+              <AdminEvents />
+            </AdminLayout>
+          </ProtectedRoutes>
+        }
+      />
+      <Route
+        path="/admin/invites"
+        element={
+          <ProtectedRoutes>
+            <AdminLayout>
+              <InvitesManagement />
+            </AdminLayout>
+          </ProtectedRoutes>
+        }
+      />
 
       {/* Fallback redirect */}
       <Route 
