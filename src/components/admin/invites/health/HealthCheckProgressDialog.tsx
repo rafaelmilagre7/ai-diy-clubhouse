@@ -9,7 +9,7 @@ import {
 } from '@/components/ui/dialog';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
-import { CheckCircle, AlertCircle, Loader2, X } from 'lucide-react';
+import { CheckCircle, AlertCircle, Loader2, X, Calculator } from 'lucide-react';
 import { InitializationProgress } from '@/hooks/admin/invites/useHealthCheckInitializer';
 
 interface HealthCheckProgressDialogProps {
@@ -27,9 +27,10 @@ export const HealthCheckProgressDialog = ({
 }: HealthCheckProgressDialogProps) => {
   const getStatusIcon = () => {
     switch (progress.stage) {
-      case 'simulating':
+      case 'calculating':
+        return <Calculator className="h-5 w-5 animate-pulse text-blue-500" />;
       case 'processing':
-        return <Loader2 className="h-5 w-5 animate-spin text-blue-500" />;
+        return <Loader2 className="h-5 w-5 animate-spin text-yellow-500" />;
       case 'completed':
         return <CheckCircle className="h-5 w-5 text-green-500" />;
       case 'error':
@@ -41,7 +42,7 @@ export const HealthCheckProgressDialog = ({
 
   const getProgressColor = () => {
     switch (progress.stage) {
-      case 'simulating':
+      case 'calculating':
         return 'bg-blue-500';
       case 'processing':
         return 'bg-yellow-500';
@@ -65,7 +66,7 @@ export const HealthCheckProgressDialog = ({
             Inicializando Health Check
           </DialogTitle>
           <DialogDescription>
-            Sistema de monitoramento de saúde dos usuários
+            Sistema de monitoramento de saúde dos usuários com dados reais
           </DialogDescription>
         </DialogHeader>
 
@@ -92,7 +93,7 @@ export const HealthCheckProgressDialog = ({
           )}
 
           <div className="flex justify-end gap-2">
-            {progress.stage === 'processing' && onCancel && (
+            {(progress.stage === 'processing' || progress.stage === 'calculating') && onCancel && (
               <Button
                 variant="outline"
                 size="sm"

@@ -4636,41 +4636,35 @@ export type Database = {
       }
       user_health_metrics: {
         Row: {
-          calculated_at: string
+          activity_score: number
           created_at: string
-          engagement_level: string | null
-          health_score: number | null
+          engagement_score: number
+          health_score: number
           id: string
-          last_activity: string | null
-          metrics_data: Json | null
-          onboarding_completion_rate: number | null
-          risk_level: string | null
+          last_calculated_at: string
+          progress_score: number
           updated_at: string
           user_id: string
         }
         Insert: {
-          calculated_at?: string
+          activity_score?: number
           created_at?: string
-          engagement_level?: string | null
-          health_score?: number | null
+          engagement_score?: number
+          health_score?: number
           id?: string
-          last_activity?: string | null
-          metrics_data?: Json | null
-          onboarding_completion_rate?: number | null
-          risk_level?: string | null
+          last_calculated_at?: string
+          progress_score?: number
           updated_at?: string
           user_id: string
         }
         Update: {
-          calculated_at?: string
+          activity_score?: number
           created_at?: string
-          engagement_level?: string | null
-          health_score?: number | null
+          engagement_score?: number
+          health_score?: number
           id?: string
-          last_activity?: string | null
-          metrics_data?: Json | null
-          onboarding_completion_rate?: number | null
-          risk_level?: string | null
+          last_calculated_at?: string
+          progress_score?: number
           updated_at?: string
           user_id?: string
         }
@@ -5132,8 +5126,14 @@ export type Database = {
         Returns: Json
       }
       calculate_user_health_score: {
-        Args: { p_user_id: string }
-        Returns: number
+        Args: { target_user_id?: string }
+        Returns: {
+          user_id: string
+          health_score: number
+          engagement_score: number
+          progress_score: number
+          activity_score: number
+        }[]
       }
       can_access_benefit: {
         Args: { user_id: string; tool_id: string }

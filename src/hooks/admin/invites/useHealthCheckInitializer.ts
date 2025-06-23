@@ -5,7 +5,7 @@ import { logger } from '@/utils/logger';
 import { toast } from 'sonner';
 
 export interface InitializationProgress {
-  stage: 'idle' | 'simulating' | 'processing' | 'completed' | 'error';
+  stage: 'idle' | 'calculating' | 'processing' | 'completed' | 'error';
   progress: number;
   message: string;
   details?: string;
@@ -20,23 +20,22 @@ export const useHealthCheckInitializer = () => {
 
   const initializeWithProgress = useCallback(async () => {
     try {
-      // Etapa 1: Simular carregamento inicial
+      // Etapa 1: Calcular métricas reais
       setProgress({
-        stage: 'simulating',
-        progress: 25,
-        message: 'Gerando dados de demonstração...',
-        details: 'Criando métricas simuladas para visualização imediata'
+        stage: 'calculating',
+        progress: 30,
+        message: 'Calculando métricas de saúde reais...',
+        details: 'Analisando dados de progresso, engajamento e atividade dos usuários'
       });
 
-      // Aguardar um pouco para mostrar progresso
-      await new Promise(resolve => setTimeout(resolve, 800));
+      await new Promise(resolve => setTimeout(resolve, 1000));
 
-      // Etapa 2: Processar dados reais de forma segura
+      // Etapa 2: Processar dados
       setProgress({
         stage: 'processing',
-        progress: 60,
-        message: 'Calculando métricas de saúde...',
-        details: 'Processando dados dos usuários'
+        progress: 70,
+        message: 'Processando métricas calculadas...',
+        details: 'Categorizando usuários e gerando relatórios'
       });
 
       const result = await calculateBasicHealthMetrics();
@@ -46,7 +45,7 @@ export const useHealthCheckInitializer = () => {
         stage: 'completed',
         progress: 100,
         message: 'Health Check inicializado com sucesso!',
-        details: `${result.details.totalUsers} usuários processados - ${result.details.healthyUsers} saudáveis, ${result.details.atRiskUsers} em risco, ${result.details.criticalUsers} críticos`
+        details: `${result.details.totalUsers} usuários analisados - ${result.details.healthyUsers} saudáveis, ${result.details.atRiskUsers} em risco, ${result.details.criticalUsers} críticos`
       });
 
       if (result.success) {
@@ -90,6 +89,6 @@ export const useHealthCheckInitializer = () => {
     progress,
     initialize: initializeWithProgress,
     reset,
-    isProcessing: progress.stage === 'processing' || progress.stage === 'simulating'
+    isProcessing: progress.stage === 'processing' || progress.stage === 'calculating'
   };
 };

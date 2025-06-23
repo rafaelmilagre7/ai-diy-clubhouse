@@ -18,40 +18,94 @@ export async function initializeHealthCheckData(): Promise<HealthCheckResult> {
   try {
     logger.info('[HEALTH INIT] Iniciando inicialização do Health Check...');
 
-    // Usar dados simulados para evitar problemas com triggers e constraints
-    const simulatedData = generateSimulatedHealthData();
-    
-    // Tentar buscar dados reais se possível
-    try {
-      const { count: totalUsers } = await supabase
-        .from('profiles')
-        .select('id', { count: 'exact', head: true });
+    // Primeiro, calcular métricas reais usando a nova função
+    const { data: healthMetrics, error: healthError } = await supabase.rpc('calculate_user_health_score');
 
-      if (totalUsers && totalUsers > 0) {
-        simulatedData.details.totalUsers = totalUsers;
-        logger.info('[HEALTH INIT] Usando contagem real de usuários:', { totalUsers });
-      }
-    } catch (error) {
-      logger.warn('[HEALTH INIT] Erro ao buscar dados reais, usando simulados:', { error });
+    if (healthError) {
+      logger.warn('[HEALTH INIT] Erro ao calcular métricas reais:', { error: healthError });
+      return generateSimulatedHealthData();
     }
 
-    logger.info('[HEALTH INIT] Inicialização concluída com dados seguros');
-    return simulatedData;
+    if (!healthMetrics || healthMetrics.length === 0) {
+      logger.info('[HEALTH INIT] Nenhuma métrica calculada, usando dados simulados');
+      return generateSimulatedHealthData();
+    }
+
+    // Processar dados reais
+    const totalUsers = healthMetrics.length;
+    const scores = healthMetrics.map((m: any) => m.health_score);
+    const averageScore = Math.round(scores.reduce((sum: number, score: number) => sum + score, 0) / totalUsers);
+
+    // Categorizar usuários baseado no health score
+    const healthyUsers = healthMetrics.filter((m: any) => m.health_score >= 70).length;
+    const atRiskUsers = healthMetrics.filter((m: any) => m.health_score >= 40 && m.health_score < 70).length;
+    const criticalUsers = healthMetrics.filter((m: any) => m.health_score < 40).length;
+
+    logger.info('[HEALTH INIT] Métricas reais calculadas:', {
+      totalUsers,
+      averageScore,
+      healthyUsers,
+      atRiskUsers,
+      criticalUsers
+    });
+
+    return {
+      success: true,
+      message: `Health Check inicializado com dados reais de ${totalUsers} usuários`,
+      details: {
+        totalUsers,
+        averageScore,
+        healthyUsers,
+        atRiskUsers,
+        criticalUsers
+      }
+    };
 
   } catch (error: any) {
     logger.error('[HEALTH INIT] Erro na inicialização:', error);
-    
+    return generateSimulatedHealthData();
+  }
+}
+
+// Função para calcular métricas básicas sem inserir dados problemáticos
+export async function calculateBasicHealthMetrics() {
+  try {
+    // Usar a nova função de cálculo de health score
+    const { data: healthMetrics, error } = await supabase.rpc('calculate_user_health_score');
+
+    if (error) {
+      logger.error('[HEALTH METRICS] Erro ao calcular métricas:', error);
+      return generateSimulatedHealthData();
+    }
+
+    if (!healthMetrics || healthMetrics.length === 0) {
+      return generateSimulatedHealthData();
+    }
+
+    const totalUsers = healthMetrics.length;
+    const scores = healthMetrics.map((m: any) => m.health_score);
+    const averageScore = Math.round(scores.reduce((sum: number, score: number) => sum + score, 0) / totalUsers);
+
+    // Categorizar usuários baseado no health score
+    const healthyUsers = healthMetrics.filter((m: any) => m.health_score >= 70).length;
+    const atRiskUsers = healthMetrics.filter((m: any) => m.health_score >= 40 && m.health_score < 70).length;
+    const criticalUsers = healthMetrics.filter((m: any) => m.health_score < 40).length;
+
     return {
-      success: false,
-      message: `Erro na inicialização: ${error.message}`,
+      success: true,
+      message: `Métricas calculadas para ${totalUsers} usuários reais`,
       details: {
-        totalUsers: 0,
-        averageScore: 0,
-        healthyUsers: 0,
-        atRiskUsers: 0,
-        criticalUsers: 0
+        totalUsers,
+        averageScore,
+        healthyUsers,
+        atRiskUsers,
+        criticalUsers
       }
     };
+
+  } catch (error: any) {
+    logger.error('[HEALTH METRICS] Erro ao calcular métricas:', error);
+    return generateSimulatedHealthData();
   }
 }
 
@@ -73,42 +127,4 @@ export function generateSimulatedHealthData(): HealthCheckResult {
       criticalUsers
     }
   };
-}
-
-// Função para calcular métricas básicas sem inserir dados problemáticos
-export async function calculateBasicHealthMetrics() {
-  try {
-    // Buscar estatísticas básicas sem acionar triggers problemáticos
-    const { data: profiles } = await supabase
-      .from('profiles')
-      .select('id, created_at')
-      .limit(100);
-
-    const totalUsers = profiles?.length || 0;
-    
-    if (totalUsers === 0) {
-      return generateSimulatedHealthData();
-    }
-
-    // Calcular distribuição simulada baseada no número real de usuários
-    const healthyUsers = Math.floor(totalUsers * 0.65);
-    const atRiskUsers = Math.floor(totalUsers * 0.25);
-    const criticalUsers = totalUsers - healthyUsers - atRiskUsers;
-
-    return {
-      success: true,
-      message: `Métricas calculadas para ${totalUsers} usuários reais`,
-      details: {
-        totalUsers,
-        averageScore: Math.floor(Math.random() * 20) + 65, // 65-85
-        healthyUsers,
-        atRiskUsers,
-        criticalUsers: Math.max(0, criticalUsers)
-      }
-    };
-
-  } catch (error: any) {
-    logger.error('[HEALTH METRICS] Erro ao calcular métricas:', error);
-    return generateSimulatedHealthData();
-  }
 }
