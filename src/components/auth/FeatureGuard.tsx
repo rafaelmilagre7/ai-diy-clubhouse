@@ -21,7 +21,17 @@ export const FeatureGuard: React.FC<FeatureGuardProps> = ({
   const { profile } = useAuth();
   
   // Verificação simplificada baseada apenas no papel do usuário
-  const roleName = getUserRoleName(profile);
+  // Converter Profile para UserProfile para compatibilidade
+  const userProfile = profile ? {
+    ...profile,
+    email: profile.email || '',
+    user_roles: profile.user_roles ? {
+      ...profile.user_roles,
+      description: profile.user_roles.description || ''
+    } : null
+  } : null;
+  
+  const roleName = getUserRoleName(userProfile);
   const hasAccess = roleName && ['admin', 'member', 'membro_club'].includes(roleName);
   
   if (hasAccess) {

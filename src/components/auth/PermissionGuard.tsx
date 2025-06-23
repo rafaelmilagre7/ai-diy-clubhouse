@@ -22,8 +22,18 @@ export const PermissionGuard: React.FC<PermissionGuardProps> = ({
   const { profile } = useAuth();
   const [timedOut, setTimedOut] = useState(false);
   
+  // Converter Profile para UserProfile para compatibilidade
+  const userProfile = profile ? {
+    ...profile,
+    email: profile.email || '',
+    user_roles: profile.user_roles ? {
+      ...profile.user_roles,
+      description: profile.user_roles.description || ''
+    } : null
+  } : null;
+  
   // Verificação rápida e simplificada - APENAS via banco de dados
-  const isAdmin = getUserRoleName(profile) === 'admin';
+  const isAdmin = getUserRoleName(userProfile) === 'admin';
   const isLoading = !profile && !timedOut;
   
   // Se é admin, renderiza imediatamente os filhos

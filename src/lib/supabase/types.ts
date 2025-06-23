@@ -33,7 +33,7 @@ export * from './types/database.types';
 export interface UserRoleData {
   id: string;
   name: string;
-  description?: string;
+  description?: string; // Tornando opcional para compatibilidade
   permissions?: any;
   is_system?: boolean;
 }
@@ -41,9 +41,10 @@ export interface UserRoleData {
 // Enum para tipos de roles conhecidos (compatibilidade)
 export type UserRole = 'admin' | 'formacao' | 'membro_club';
 
+// Atualizar UserProfile para ser compatível com Profile
 export interface UserProfile {
   id: string;
-  email: string;
+  email?: string; // Tornando opcional para compatibilidade
   name: string | null;
   avatar_url: string | null;
   company_name: string | null;

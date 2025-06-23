@@ -44,6 +44,29 @@ export interface OnboardingData {
   lastUpdated?: string;
   fromInvite?: boolean;
   inviteToken?: string;
+  
+  // Propriedades adicionais para compatibilidade com componentes existentes
+  curiosity?: string;
+  companyName?: string;
+  businessSector?: string;
+  companySize?: string;
+  annualRevenue?: string;
+  position?: string;
+  hasImplementedAI?: string;
+  aiKnowledgeLevel?: number;
+  whoWillImplement?: string;
+  mainObjective?: string;
+  areaToImpact?: string;
+  expectedResult90Days?: string;
+  aiImplementationBudget?: string;
+  weeklyLearningTime?: string;
+  contentPreference?: string[];
+  wantsNetworking?: string;
+  bestDays?: string[];
+  bestPeriods?: string[];
+  acceptsCaseStudy?: string;
+  aiToolsUsed?: string[];
+  updatedAt?: string;
 }
 
 export interface OnboardingStep {
@@ -66,4 +89,13 @@ export interface OnboardingWizardProps {
   updateData: (newData: Partial<OnboardingData>) => void;
   memberType: 'club' | 'formacao';
   isLoading?: boolean;
+}
+
+// Adicionar export que estava faltando
+export interface OnboardingStepProps {
+  data: OnboardingData;
+  updateData: (newData: Partial<OnboardingData>) => void;
+  onNext?: () => void;
+  onPrev?: () => void;
+  memberType: 'club' | 'formacao';
 }
