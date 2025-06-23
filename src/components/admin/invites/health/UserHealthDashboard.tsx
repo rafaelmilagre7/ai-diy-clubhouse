@@ -186,7 +186,7 @@ export const UserHealthDashboard = () => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-600">{healthStats?.healthyUsers || 0}</div>
-            <p className="text-xs text-muted-foreground">Score ≥ 70</p>
+            <p className="text-xs text-muted-foreground">Score maior ou igual a 70</p>
           </CardContent>
         </Card>
 
@@ -208,7 +208,7 @@ export const UserHealthDashboard = () => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-red-600">{healthStats?.criticalUsers || 0}</div>
-            <p className="text-xs text-muted-foreground">Score < 30</p>
+            <p className="text-xs text-muted-foreground">Score menor que 30</p>
           </CardContent>
         </Card>
       </div>
