@@ -27,25 +27,56 @@ export const useOnboardingCompletion = () => {
     try {
       console.log('[ONBOARDING-COMPLETION] Iniciando finalização:', { 
         userId: user.id, 
-        memberType 
+        memberType,
+        fromInvite: (data as any).fromInvite,
+        inviteToken: (data as any).inviteToken
       });
 
-      // 1. Marcar onboarding como completado no perfil
+      // 1. Atualizar perfil com dados do onboarding
+      const profileUpdates = {
+        name: data.name || '',
+        onboarding_completed: true,
+        onboarding_completed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
+
+      console.log('[ONBOARDING-COMPLETION] Atualizando perfil:', profileUpdates);
+
       const { error: profileError } = await supabase
         .from('profiles')
-        .update({ 
-          onboarding_completed: true,
-          onboarding_completed_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        })
+        .update(profileUpdates)
         .eq('id', user.id);
 
       if (profileError) {
         console.error('[ONBOARDING-COMPLETION] Erro ao atualizar perfil:', profileError);
-        throw new Error(`Erro ao finalizar: ${profileError.message}`);
+        throw new Error(`Erro ao finalizar perfil: ${profileError.message}`);
       }
 
-      // 2. Recarregar perfil atualizado
+      console.log('[ONBOARDING-COMPLETION] Perfil atualizado com sucesso');
+
+      // 2. Se veio de convite, tentar aceitar o convite agora
+      if ((data as any).fromInvite && (data as any).inviteToken) {
+        console.log('[ONBOARDING-COMPLETION] Processando convite...');
+        
+        try {
+          const { data: inviteData, error: inviteError } = await supabase.rpc('accept_invite', {
+            p_token: (data as any).inviteToken
+          });
+
+          if (inviteError) {
+            console.error('[ONBOARDING-COMPLETION] Erro ao aceitar convite:', inviteError);
+            // Não falhar aqui, apenas logar o erro
+            console.warn('[ONBOARDING-COMPLETION] Continuando sem aceitar convite');
+          } else {
+            console.log('[ONBOARDING-COMPLETION] Convite aceito:', inviteData);
+          }
+        } catch (inviteError) {
+          console.error('[ONBOARDING-COMPLETION] Exceção ao aceitar convite:', inviteError);
+          // Não falhar aqui
+        }
+      }
+
+      // 3. Recarregar perfil atualizado
       const { data: updatedProfile, error: fetchError } = await supabase
         .from('profiles')
         .select(`
@@ -64,7 +95,7 @@ export const useOnboardingCompletion = () => {
       if (fetchError) {
         console.warn('[ONBOARDING-COMPLETION] Aviso ao recarregar perfil:', fetchError);
       } else if (updatedProfile) {
-        console.log('[ONBOARDING-COMPLETION] Perfil atualizado:', {
+        console.log('[ONBOARDING-COMPLETION] Perfil recarregado:', {
           onboardingCompleted: updatedProfile.onboarding_completed,
           role: updatedProfile.user_roles?.name
         });
@@ -85,15 +116,14 @@ export const useOnboardingCompletion = () => {
         duration: 3000
       });
 
-      // 3. Aguardar um momento para sincronização
-      await new Promise(resolve => setTimeout(resolve, 500));
+      // 4. Aguardar sincronização
+      await new Promise(resolve => setTimeout(resolve, 1000));
 
-      // 4. Navegação robusta baseada no tipo de membro
+      // 5. Navegação baseada no tipo de membro
       const redirectPath = memberType === 'formacao' ? '/formacao' : '/dashboard';
       
       console.log('[ONBOARDING-COMPLETION] Redirecionando para:', redirectPath);
       
-      // Usar replace para evitar voltar ao onboarding
       navigate(redirectPath, { replace: true });
 
       return { success: true };
@@ -111,7 +141,7 @@ export const useOnboardingCompletion = () => {
       });
       
       toast.error(`Erro: ${errorMessage}`, {
-        duration: 5000
+        duration: 8000
       });
 
       throw error;

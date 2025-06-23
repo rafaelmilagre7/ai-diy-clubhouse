@@ -1,21 +1,13 @@
 
 import React from 'react';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { 
-  AlertTriangle, 
-  RefreshCw, 
-  Mail, 
-  Clock, 
-  XCircle,
-  WifiOff
-} from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { AlertTriangle, RefreshCw, Home, HelpCircle } from 'lucide-react';
 
 interface OnboardingErrorHandlerProps {
   error: string;
-  type?: 'network' | 'validation' | 'permission' | 'timeout' | 'system';
+  type: 'validation' | 'network' | 'system' | 'unknown';
   onRetry?: () => void;
   onCancel?: () => void;
   showContactSupport?: boolean;
@@ -23,106 +15,92 @@ interface OnboardingErrorHandlerProps {
 
 export const OnboardingErrorHandler: React.FC<OnboardingErrorHandlerProps> = ({
   error,
-  type = 'system',
+  type,
   onRetry,
   onCancel,
-  showContactSupport = true
+  showContactSupport = false
 }) => {
-  const navigate = useNavigate();
-
-  const errorConfigs = {
-    network: {
-      icon: <WifiOff className="w-8 h-8 text-amber-400" />,
-      title: 'Problema de Conexão',
-      description: 'Verifique sua internet e tente novamente',
-      color: 'amber',
-      canRetry: true
-    },
-    validation: {
-      icon: <AlertTriangle className="w-8 h-8 text-red-400" />,
-      title: 'Dados Inválidos',
-      description: 'Alguns dados precisam ser corrigidos',
-      color: 'red',
-      canRetry: false
-    },
-    permission: {
-      icon: <XCircle className="w-8 h-8 text-red-400" />,
-      title: 'Acesso Negado',
-      description: 'Você não tem permissão para esta ação',
-      color: 'red',
-      canRetry: false
-    },
-    timeout: {
-      icon: <Clock className="w-8 h-8 text-amber-400" />,
-      title: 'Tempo Esgotado',
-      description: 'A operação demorou mais que o esperado',
-      color: 'amber',
-      canRetry: true
-    },
-    system: {
-      icon: <AlertTriangle className="w-8 h-8 text-red-400" />,
-      title: 'Erro do Sistema',
-      description: 'Ocorreu um problema interno',
-      color: 'red',
-      canRetry: true
+  const getErrorTitle = () => {
+    switch (type) {
+      case 'validation':
+        return 'Erro de Validação';
+      case 'network':
+        return 'Erro de Conexão';
+      case 'system':
+        return 'Erro do Sistema';
+      default:
+        return 'Erro Inesperado';
     }
   };
 
-  const config = errorConfigs[type];
+  const getErrorDescription = () => {
+    switch (type) {
+      case 'validation':
+        return 'Verifique os dados preenchidos e tente novamente.';
+      case 'network':
+        return 'Verifique sua conexão com a internet e tente novamente.';
+      case 'system':
+        return 'Ocorreu um problema interno. Tente novamente em alguns momentos.';
+      default:
+        return 'Algo deu errado. Por favor, tente novamente.';
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#0F111A] to-[#151823] flex items-center justify-center p-4">
-      <Card className="w-full max-w-md bg-[#1A1E2E]/90 backdrop-blur-sm border-white/20">
-        <CardContent className="p-6 text-center space-y-6">
-          <div className={`mx-auto w-16 h-16 bg-${config.color}-500/20 rounded-full flex items-center justify-center`}>
-            {config.icon}
-          </div>
-          
-          <div className="space-y-2">
-            <h2 className="text-2xl font-bold text-white">
-              {config.title}
-            </h2>
-            <p className="text-neutral-300">
-              {config.description}
-            </p>
-          </div>
-
-          <Alert variant="destructive" className={`bg-${config.color}-500/10 border-${config.color}-500/20`}>
-            <AlertTriangle className={`h-4 w-4 text-${config.color}-400`} />
-            <AlertDescription className={`text-${config.color}-400`}>
+      <Card className="w-full max-w-md bg-[#1A1E2E]/80 backdrop-blur-sm border-white/10">
+        <CardHeader className="text-center">
+          <AlertTriangle className="h-12 w-12 text-red-500 mx-auto mb-4" />
+          <CardTitle className="text-white">{getErrorTitle()}</CardTitle>
+        </CardHeader>
+        
+        <CardContent className="space-y-4">
+          <Alert variant="destructive">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertDescription>
               {error}
             </AlertDescription>
           </Alert>
 
-          <div className="space-y-3">
-            {config.canRetry && onRetry && (
-              <Button 
-                onClick={onRetry}
-                className="w-full bg-viverblue hover:bg-viverblue/90 text-white"
-              >
+          <p className="text-white/60 text-sm text-center">
+            {getErrorDescription()}
+          </p>
+
+          <div className="space-y-2">
+            {onRetry && (
+              <Button onClick={onRetry} className="w-full">
                 <RefreshCw className="h-4 w-4 mr-2" />
                 Tentar Novamente
               </Button>
             )}
 
-            {showContactSupport && (
+            {onCancel && (
               <Button 
-                onClick={() => navigate('/login')}
-                variant="outline"
-                className="w-full border-viverblue/50 text-viverblue hover:bg-viverblue/10"
+                variant="outline" 
+                onClick={onCancel} 
+                className="w-full"
               >
-                <Mail className="h-4 w-4 mr-2" />
-                Contatar Suporte
+                <Home className="h-4 w-4 mr-2" />
+                Ir para Dashboard
               </Button>
             )}
 
-            <Button 
-              onClick={onCancel || (() => navigate('/login'))}
-              variant="ghost"
-              className="w-full text-neutral-400 hover:text-white"
-            >
-              Voltar ao Login
-            </Button>
+            {showContactSupport && (
+              <Button 
+                variant="secondary" 
+                onClick={() => window.location.href = 'mailto:suporte@viverdeia.ai'}
+                className="w-full"
+              >
+                <HelpCircle className="h-4 w-4 mr-2" />
+                Contatar Suporte
+              </Button>
+            )}
+          </div>
+
+          <div className="text-center">
+            <p className="text-xs text-white/40">
+              Código do erro: {type.toUpperCase()}
+            </p>
           </div>
         </CardContent>
       </Card>

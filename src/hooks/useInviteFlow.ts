@@ -2,6 +2,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/auth';
+import { toast } from 'sonner';
 
 export interface InviteDetails {
   id: string;
@@ -28,7 +29,6 @@ export const useInviteFlow = (token?: string) => {
   const [error, setError] = useState<string>('');
   const [isProcessing, setIsProcessing] = useState(false);
 
-  // MELHORIA 5: Buscar detalhes com validação robusta
   const fetchInviteDetails = useCallback(async () => {
     if (!token) {
       setInviteDetails(null);
@@ -42,7 +42,6 @@ export const useInviteFlow = (token?: string) => {
 
       console.log('[INVITE-FLOW] Buscando detalhes do convite:', token);
 
-      // MELHORIA 5: Validação de token antes da consulta
       if (token.length < 10) {
         throw new Error('Token de convite inválido');
       }
@@ -72,7 +71,6 @@ export const useInviteFlow = (token?: string) => {
         throw new Error('Convite não encontrado ou expirado');
       }
 
-      // MELHORIA 5: Validação de dados retornados
       if (!invites.email || !invites.user_roles) {
         throw new Error('Dados do convite incompletos');
       }
@@ -81,7 +79,7 @@ export const useInviteFlow = (token?: string) => {
       
       const processedData: InviteDetails = {
         id: invites.id,
-        email: invites.email.toLowerCase(), // MELHORIA 3: Normalizar email
+        email: invites.email.toLowerCase(),
         role: {
           id: roleData.id,
           name: roleData.name,
@@ -103,12 +101,12 @@ export const useInviteFlow = (token?: string) => {
       console.error('[INVITE-FLOW] Erro capturado:', err);
       setError(errorMessage);
       setInviteDetails(null);
+      toast.error(errorMessage);
     } finally {
       setIsLoading(false);
     }
   }, [token]);
 
-  // Aceitar convite para usuário logado - SIMPLES
   const acceptInvite = useCallback(async (): Promise<InviteFlowResult> => {
     if (!token || !user || !inviteDetails) {
       return {
@@ -117,7 +115,6 @@ export const useInviteFlow = (token?: string) => {
       };
     }
 
-    // MELHORIA 3: Validação de email case-insensitive
     const userEmail = (user.email || '').toLowerCase();
     const inviteEmail = inviteDetails.email.toLowerCase();
     
@@ -130,35 +127,45 @@ export const useInviteFlow = (token?: string) => {
 
     try {
       setIsProcessing(true);
+      console.log('[INVITE-FLOW] Aceitando convite:', { token, userId: user.id });
 
       const { data, error } = await supabase.rpc('accept_invite', {
         p_token: token
       });
 
-      if (error) throw error;
+      console.log('[INVITE-FLOW] Resposta accept_invite:', { data, error });
+
+      if (error) {
+        console.error('[INVITE-FLOW] Erro RPC accept_invite:', error);
+        throw error;
+      }
 
       if (data?.success) {
+        console.log('[INVITE-FLOW] Convite aceito com sucesso');
+        toast.success('Convite aceito com sucesso!');
         return {
           success: true,
           message: data.message || 'Convite aceito com sucesso!',
           requiresOnboarding: data.requires_onboarding
         };
       } else {
+        console.error('[INVITE-FLOW] Falha na aceitação:', data);
         throw new Error(data?.message || 'Erro ao aceitar convite');
       }
 
     } catch (error: any) {
       console.error('[INVITE-FLOW] Erro ao aceitar:', error);
+      const errorMessage = error.message || 'Erro ao aceitar convite';
+      toast.error(errorMessage);
       return {
         success: false,
-        message: error.message || 'Erro ao aceitar convite'
+        message: errorMessage
       };
     } finally {
       setIsProcessing(false);
     }
   }, [token, user, inviteDetails]);
 
-  // Registrar novo usuário com convite - DIRETO
   const registerWithInvite = useCallback(async (
     name: string,
     password: string
@@ -172,18 +179,55 @@ export const useInviteFlow = (token?: string) => {
 
     try {
       setIsProcessing(true);
-      console.log('[INVITE-FLOW] Iniciando registro com convite');
-
-      const { error } = await signUp(inviteDetails.email, password, {
-        inviteToken: token,
-        userData: { name }
+      console.log('[INVITE-FLOW] Iniciando registro com convite:', {
+        email: inviteDetails.email,
+        token,
+        name
       });
 
-      if (error) {
-        throw error;
+      // Primeiro, criar o usuário
+      const { error: signUpError } = await signUp(inviteDetails.email, password, {
+        inviteToken: token,
+        userData: { 
+          name: name || '',
+          invite_token: token 
+        }
+      });
+
+      if (signUpError) {
+        console.error('[INVITE-FLOW] Erro no signUp:', signUpError);
+        throw signUpError;
       }
 
-      console.log('[INVITE-FLOW] Registro completado com sucesso');
+      console.log('[INVITE-FLOW] Registro completado, aguardando confirmação...');
+      
+      // Aguardar um pouco para garantir que o usuário foi criado
+      await new Promise(resolve => setTimeout(resolve, 2000));
+
+      // Verificar se o usuário foi criado e está logado
+      const { data: { user: newUser } } = await supabase.auth.getUser();
+      
+      if (!newUser) {
+        throw new Error('Usuário não foi criado corretamente');
+      }
+
+      console.log('[INVITE-FLOW] Usuário criado:', newUser.id);
+
+      // Agora tentar completar o registro do convite
+      const { data: completeData, error: completeError } = await supabase.rpc('complete_invite_registration', {
+        p_token: token,
+        p_user_id: newUser.id
+      });
+
+      console.log('[INVITE-FLOW] Resultado complete_invite_registration:', { completeData, completeError });
+
+      if (completeError) {
+        console.error('[INVITE-FLOW] Erro ao completar registro:', completeError);
+        // Não falhar aqui, pois o usuário já foi criado
+        console.warn('[INVITE-FLOW] Continuando apesar do erro na finalização');
+      }
+
+      toast.success('Conta criada com sucesso!');
       
       return {
         success: true,
@@ -193,9 +237,11 @@ export const useInviteFlow = (token?: string) => {
 
     } catch (error: any) {
       console.error('[INVITE-FLOW] Erro no registro:', error);
+      const errorMessage = error.message || 'Erro ao criar conta';
+      toast.error(errorMessage);
       return {
         success: false,
-        message: error.message || 'Erro ao criar conta'
+        message: errorMessage
       };
     } finally {
       setIsProcessing(false);
