@@ -3,92 +3,100 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
 import { 
-  Users, 
   Activity, 
   AlertTriangle, 
+  Users, 
   TrendingUp, 
+  Heart,
   RefreshCw,
-  Play,
   BarChart3,
   Shield
 } from 'lucide-react';
 import { useUserHealthDashboard } from '@/hooks/admin/invites/useUserHealthDashboard';
 import { useHealthCheckInitializer } from '@/hooks/admin/invites/useHealthCheckInitializer';
 import { HealthCheckProgressDialog } from './HealthCheckProgressDialog';
+import { toast } from 'sonner';
 
 export const UserHealthDashboard = () => {
   const { 
     healthMetrics, 
-    stats, 
-    atRiskUsers,
-    alerts,
+    healthStats, 
+    healthAlerts, 
     loading, 
     error, 
-    refetch,
-    recalculateHealthScores
+    refetch, 
+    initializeHealthData,
+    recalculateHealthScores 
   } = useUserHealthDashboard();
 
-  const {
-    progress,
-    initialize,
-    reset,
-    isProcessing
-  } = useHealthCheckInitializer();
-
+  const { progress, initialize, reset, isProcessing } = useHealthCheckInitializer();
   const [showProgressDialog, setShowProgressDialog] = useState(false);
 
-  const handleInitialize = async () => {
-    setShowProgressDialog(true);
-    await initialize();
-  };
-
-  const handleCloseProgress = () => {
-    setShowProgressDialog(false);
-    reset();
-    refetch(); // Atualizar dados após inicialização
+  const handleInitializeData = async () => {
+    try {
+      setShowProgressDialog(true);
+      reset();
+      await initialize();
+      // Recarregar dados após inicialização
+      setTimeout(() => {
+        refetch();
+      }, 1000);
+    } catch (error: any) {
+      toast.error('Erro na inicialização', {
+        description: error.message
+      });
+    }
   };
 
   const handleRecalculate = async () => {
     try {
       await recalculateHealthScores();
-    } catch (error) {
-      console.error('Erro ao recalcular:', error);
+      toast.success('Health scores recalculados com sucesso');
+    } catch (error: any) {
+      toast.error('Erro ao recalcular scores', {
+        description: error.message
+      });
     }
   };
 
-  // Dados simulados se não houver dados reais
-  const displayStats = stats || {
-    totalUsers: 0,
-    healthyUsers: 0,
-    atRiskUsers: 0,
-    criticalUsers: 0,
-    averageHealthScore: 0,
-    averageEngagementScore: 0,
-    lastUpdated: new Date().toISOString()
+  const getRiskLevelColor = (level: string) => {
+    switch (level) {
+      case 'critical': return 'bg-red-100 text-red-800 border-red-200';
+      case 'high': return 'bg-orange-100 text-orange-800 border-orange-200';
+      case 'medium': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+      default: return 'bg-gray-100 text-gray-800 border-gray-200';
+    }
   };
 
-  if (loading && !stats) {
+  const getHealthScoreColor = (score: number) => {
+    if (score >= 70) return 'text-green-600';
+    if (score >= 40) return 'text-yellow-600';
+    return 'text-red-600';
+  };
+
+  if (loading) {
     return (
       <div className="space-y-6">
-        <div className="flex justify-between items-center">
+        <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-2xl font-bold">Health Check Dashboard</h2>
-            <p className="text-muted-foreground">
-              Monitoramento de saúde e engajamento dos usuários
-            </p>
+            <h2 className="text-3xl font-bold tracking-tight">Health Check</h2>
+            <p className="text-muted-foreground">Monitoramento de saúde dos usuários</p>
           </div>
         </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {[1, 2, 3, 4].map((i) => (
-            <Card key={i} className="animate-pulse">
-              <CardHeader className="pb-2">
-                <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-                <div className="h-8 bg-gray-200 rounded w-1/2 mt-2"></div>
+
+        <div className="grid gap-6 md:grid-cols-4">
+          {[...Array(4)].map((_, i) => (
+            <Card key={i}>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Carregando...</CardTitle>
+                <div className="h-4 w-4 bg-muted rounded animate-pulse" />
               </CardHeader>
+              <CardContent>
+                <div className="h-6 bg-muted rounded animate-pulse mb-1" />
+                <div className="h-4 bg-muted rounded animate-pulse w-2/3" />
+              </CardContent>
             </Card>
           ))}
         </div>
@@ -96,295 +104,210 @@ export const UserHealthDashboard = () => {
     );
   }
 
-  if (error && !stats) {
+  if (error) {
     return (
       <div className="space-y-6">
-        <div className="flex justify-between items-center">
+        <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-2xl font-bold">Health Check Dashboard</h2>
-            <p className="text-muted-foreground">
-              Monitoramento de saúde e engajamento dos usuários
-            </p>
+            <h2 className="text-3xl font-bold tracking-tight">Health Check</h2>
+            <p className="text-muted-foreground">Monitoramento de saúde dos usuários</p>
           </div>
-          <Button onClick={handleInitialize} className="gap-2">
-            <Play className="h-4 w-4" />
-            Inicializar Health Check
-          </Button>
+          <div className="flex gap-2">
+            <Button onClick={handleInitializeData} disabled={isProcessing}>
+              <Activity className="w-4 h-4 mr-2" />
+              Inicializar Dados
+            </Button>
+          </div>
         </div>
-        
-        <Card className="border-orange-200 bg-orange-50">
+
+        <Card className="border-red-200 bg-red-50">
           <CardHeader>
-            <CardTitle className="text-orange-800 flex items-center gap-2">
-              <AlertTriangle className="h-5 w-5" />
-              Sistema não inicializado
+            <CardTitle className="text-red-800 flex items-center gap-2">
+              <AlertTriangle className="w-5 h-5" />
+              Erro no Health Check
             </CardTitle>
-            <CardDescription className="text-orange-700">
-              O Health Check precisa ser inicializado para funcionar corretamente.
-              Clique no botão "Inicializar Health Check" para começar.
+            <CardDescription className="text-red-600">
+              {error}
             </CardDescription>
           </CardHeader>
+          <CardContent>
+            <p className="text-sm text-muted-foreground mb-4">
+              O sistema de monitoramento de saúde ainda não foi inicializado ou encontrou um erro.
+              Clique no botão acima para configurar o sistema.
+            </p>
+          </CardContent>
         </Card>
+
+        <HealthCheckProgressDialog
+          open={showProgressDialog}
+          onOpenChange={setShowProgressDialog}
+          progress={progress}
+        />
       </div>
     );
   }
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold">Health Check Dashboard</h2>
-          <p className="text-muted-foreground">
-            Monitoramento de saúde e engajamento dos usuários
-          </p>
+          <h2 className="text-3xl font-bold tracking-tight">Health Check</h2>
+          <p className="text-muted-foreground">Monitoramento de saúde dos usuários</p>
         </div>
-        
         <div className="flex gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={refetch}
-            disabled={loading}
-            className="gap-2"
-          >
-            <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-            Atualizar
-          </Button>
-          
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleRecalculate}
-            disabled={loading}
-            className="gap-2"
-          >
-            <BarChart3 className="h-4 w-4" />
+          <Button variant="outline" onClick={handleRecalculate} disabled={loading}>
+            <RefreshCw className="w-4 h-4 mr-2" />
             Recalcular
           </Button>
-
-          <Button
-            onClick={handleInitialize}
-            disabled={isProcessing}
-            className="gap-2"
-          >
-            <Play className="h-4 w-4" />
-            {isProcessing ? 'Processando...' : 'Inicializar'}
+          <Button onClick={handleInitializeData} disabled={isProcessing}>
+            <Activity className="w-4 h-4 mr-2" />
+            Reinicializar
           </Button>
         </div>
       </div>
 
-      {/* Cards de Estatísticas */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* Stats Cards */}
+      <div className="grid gap-6 md:grid-cols-4">
         <Card>
-          <CardHeader className="pb-2">
-            <div className="flex justify-between items-start">
-              <div>
-                <CardTitle className="text-sm font-medium text-muted-foreground">
-                  Total de Usuários
-                </CardTitle>
-                <div className="text-2xl font-bold mt-1">
-                  {displayStats.totalUsers}
-                </div>
-              </div>
-              <Users className="h-8 w-8 text-blue-500 bg-blue-100 p-2 rounded-md" />
-            </div>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total de Usuários</CardTitle>
+            <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{healthStats?.totalUsers || 0}</div>
+            <p className="text-xs text-muted-foreground">Usuários monitorados</p>
+          </CardContent>
         </Card>
 
         <Card>
-          <CardHeader className="pb-2">
-            <div className="flex justify-between items-start">
-              <div>
-                <CardTitle className="text-sm font-medium text-muted-foreground">
-                  Usuários Saudáveis
-                </CardTitle>
-                <div className="text-2xl font-bold mt-1 text-green-600">
-                  {displayStats.healthyUsers}
-                </div>
-              </div>
-              <Shield className="h-8 w-8 text-green-500 bg-green-100 p-2 rounded-md" />
-            </div>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Usuários Saudáveis</CardTitle>
+            <Heart className="h-4 w-4 text-green-600" />
           </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-green-600">{healthStats?.healthyUsers || 0}</div>
+            <p className="text-xs text-muted-foreground">Score ≥ 70</p>
+          </CardContent>
         </Card>
 
         <Card>
-          <CardHeader className="pb-2">
-            <div className="flex justify-between items-start">
-              <div>
-                <CardTitle className="text-sm font-medium text-muted-foreground">
-                  Em Risco
-                </CardTitle>
-                <div className="text-2xl font-bold mt-1 text-yellow-600">
-                  {displayStats.atRiskUsers}
-                </div>
-              </div>
-              <AlertTriangle className="h-8 w-8 text-yellow-500 bg-yellow-100 p-2 rounded-md" />
-            </div>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Em Risco</CardTitle>
+            <AlertTriangle className="h-4 w-4 text-yellow-600" />
           </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-yellow-600">{healthStats?.atRiskUsers || 0}</div>
+            <p className="text-xs text-muted-foreground">Score 30-69</p>
+          </CardContent>
         </Card>
 
         <Card>
-          <CardHeader className="pb-2">
-            <div className="flex justify-between items-start">
-              <div>
-                <CardTitle className="text-sm font-medium text-muted-foreground">
-                  Críticos
-                </CardTitle>
-                <div className="text-2xl font-bold mt-1 text-red-600">
-                  {displayStats.criticalUsers}
-                </div>
-              </div>
-              <Activity className="h-8 w-8 text-red-500 bg-red-100 p-2 rounded-md" />
-            </div>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Críticos</CardTitle>
+            <Shield className="h-4 w-4 text-red-600" />
           </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-red-600">{healthStats?.criticalUsers || 0}</div>
+            <p className="text-xs text-muted-foreground">Score < 30</p>
+          </CardContent>
         </Card>
       </div>
 
-      <Tabs defaultValue="overview" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="overview">Visão Geral</TabsTrigger>
-          <TabsTrigger value="users">Usuários em Risco</TabsTrigger>
-          <TabsTrigger value="alerts">Alertas Ativos</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="overview" className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Score Médio de Saúde</CardTitle>
-                <CardDescription>
-                  Média geral de saúde dos usuários
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  <div className="flex justify-between">
-                    <span className="text-2xl font-bold">
-                      {displayStats.averageHealthScore}%
-                    </span>
-                    <Badge variant={displayStats.averageHealthScore >= 70 ? 'default' : 'destructive'}>
-                      {displayStats.averageHealthScore >= 70 ? 'Bom' : 'Atenção'}
+      {/* Health Alerts */}
+      {healthAlerts && healthAlerts.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <AlertTriangle className="w-5 h-5 text-yellow-600" />
+              Alertas de Saúde
+            </CardTitle>
+            <CardDescription>
+              Usuários que precisam de atenção imediata
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {healthAlerts.map((alert) => (
+                <div key={alert.id} className="flex items-center justify-between p-3 border rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <Badge className={getRiskLevelColor(alert.riskLevel)}>
+                      {alert.riskLevel}
                     </Badge>
-                  </div>
-                  <Progress value={displayStats.averageHealthScore} className="h-2" />
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Score de Engajamento</CardTitle>
-                <CardDescription>
-                  Nível médio de engajamento
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  <div className="flex justify-between">
-                    <span className="text-2xl font-bold">
-                      {displayStats.averageEngagementScore}%
-                    </span>
-                    <Badge variant={displayStats.averageEngagementScore >= 60 ? 'default' : 'secondary'}>
-                      {displayStats.averageEngagementScore >= 60 ? 'Ativo' : 'Baixo'}
-                    </Badge>
-                  </div>
-                  <Progress value={displayStats.averageEngagementScore} className="h-2" />
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
-
-        <TabsContent value="users" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Usuários que Precisam de Atenção</CardTitle>
-              <CardDescription>
-                Lista de usuários com baixo score de saúde
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {atRiskUsers.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  <Shield className="h-12 w-12 mx-auto mb-4 text-green-500" />
-                  <p className="text-lg font-medium">Nenhum usuário em risco!</p>
-                  <p className="text-sm">Todos os usuários estão com boa saúde no sistema.</p>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {atRiskUsers.slice(0, 5).map((user) => (
-                    <div key={user.user_id} className="flex items-center justify-between p-3 border rounded-lg">
-                      <div>
-                        <p className="font-medium">{user.user_profile.name}</p>
-                        <p className="text-sm text-muted-foreground">{user.user_profile.email}</p>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Badge variant={
-                          user.risk_level === 'critical' ? 'destructive' :
-                          user.risk_level === 'high' ? 'secondary' : 'outline'
-                        }>
-                          {user.risk_level === 'critical' ? 'Crítico' :
-                           user.risk_level === 'high' ? 'Alto' : 'Médio'}
-                        </Badge>
-                        <span className="text-sm font-medium">
-                          {user.health_score}%
-                        </span>
-                      </div>
+                    <div>
+                      <p className="font-medium">{alert.userName}</p>
+                      <p className="text-sm text-muted-foreground">{alert.reason}</p>
                     </div>
-                  ))}
+                  </div>
+                  <div className="text-right">
+                    <p className={`font-semibold ${getHealthScoreColor(alert.healthScore)}`}>
+                      {alert.healthScore}
+                    </p>
+                    <p className="text-xs text-muted-foreground">Health Score</p>
+                  </div>
                 </div>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
-        <TabsContent value="alerts" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Alertas do Sistema</CardTitle>
-              <CardDescription>
-                Notificações e alertas ativos
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {alerts.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  <TrendingUp className="h-12 w-12 mx-auto mb-4 text-blue-500" />
-                  <p className="text-lg font-medium">Sistema funcionando normalmente</p>
-                  <p className="text-sm">Nenhum alerta ativo no momento.</p>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {alerts.map((alert) => (
-                    <div key={alert.id} className="flex items-start gap-3 p-3 border rounded-lg">
-                      <AlertTriangle className="h-5 w-5 text-yellow-500 mt-0.5" />
-                      <div className="flex-1">
-                        <p className="font-medium">{alert.title}</p>
-                        <p className="text-sm text-muted-foreground">{alert.description}</p>
-                        <p className="text-xs text-muted-foreground mt-1">
-                          {new Date(alert.created_at).toLocaleString('pt-BR')}
-                        </p>
-                      </div>
-                      <Badge variant="outline">
-                        {alert.severity === 'high' ? 'Alto' : 
-                         alert.severity === 'medium' ? 'Médio' : 'Baixo'}
-                      </Badge>
+      {/* Health Metrics */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <BarChart3 className="w-5 h-5" />
+            Métricas de Saúde
+          </CardTitle>
+          <CardDescription>
+            Distribuição de scores de saúde dos usuários
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {healthMetrics && healthMetrics.length > 0 ? (
+            <div className="space-y-4">
+              {healthMetrics.slice(0, 10).map((metric) => (
+                <div key={metric.user_id} className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
+                      <span className="text-xs font-medium">
+                        {metric.user_profile?.name?.charAt(0) || 'U'}
+                      </span>
                     </div>
-                  ))}
+                    <div>
+                      <p className="font-medium">{metric.user_profile?.name || 'Usuário'}</p>
+                      <p className="text-sm text-muted-foreground">{metric.user_profile?.email}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <div className="text-right">
+                      <p className={`font-semibold ${getHealthScoreColor(metric.health_score)}`}>
+                        {metric.health_score}
+                      </p>
+                      <p className="text-xs text-muted-foreground">Health</p>
+                    </div>
+                    <div className="w-24">
+                      <Progress value={metric.health_score} className="h-2" />
+                    </div>
+                  </div>
                 </div>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-8">
+              <TrendingUp className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+              <h3 className="text-lg font-semibold mb-2">Nenhuma métrica encontrada</h3>
+              <p className="text-muted-foreground mb-4">
+                Initialize o sistema para começar a monitorar a saúde dos usuários.
+              </p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       <HealthCheckProgressDialog
         open={showProgressDialog}
-        onOpenChange={handleCloseProgress}
+        onOpenChange={setShowProgressDialog}
         progress={progress}
-        onCancel={() => {
-          setShowProgressDialog(false);
-          reset();
-        }}
       />
     </div>
   );

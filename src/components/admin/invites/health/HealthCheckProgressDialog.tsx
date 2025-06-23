@@ -58,7 +58,7 @@ export const HealthCheckProgressDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={canClose ? onOpenChange : undefined}>
-      <DialogContent className="sm:max-w-md" hideClose={!canClose}>
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             {getStatusIcon()}
