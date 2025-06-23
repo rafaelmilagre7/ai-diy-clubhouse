@@ -67,6 +67,15 @@ export interface OnboardingData {
   acceptsCaseStudy?: string;
   aiToolsUsed?: string[];
   updatedAt?: string;
+  
+  // Campos adicionais necessários
+  birthDay?: string;
+  birthMonth?: string;
+  birthYear?: string;
+  birthDate?: string;
+  profilePicture?: string;
+  dailyTools?: string[];
+  companyWebsite?: string;
 }
 
 export interface OnboardingStep {
@@ -91,11 +100,16 @@ export interface OnboardingWizardProps {
   isLoading?: boolean;
 }
 
-// Adicionar export que estava faltando
+// CORREÇÃO CRÍTICA: Atualizar OnboardingStepProps para ter as propriedades corretas
 export interface OnboardingStepProps {
   data: OnboardingData;
   updateData: (newData: Partial<OnboardingData>) => void;
   onNext?: () => void;
   onPrev?: () => void;
   memberType: 'club' | 'formacao';
+  
+  // Adicionar propriedades que estavam sendo usadas
+  onUpdateData?: (newData: Partial<OnboardingData>) => void;
+  validationErrors?: Array<{ field: string; message: string }>;
+  getFieldError?: (field: string) => string | undefined;
 }
