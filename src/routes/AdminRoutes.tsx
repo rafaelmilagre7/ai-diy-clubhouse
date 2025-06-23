@@ -22,7 +22,7 @@ import AdminCommunications from '@/pages/admin/AdminCommunications';
 import SupabaseDiagnostics from '@/pages/admin/SupabaseDiagnostics';
 import AdminSecurity from '@/pages/admin/AdminSecurity';
 
-// Função helper para criar rotas protegidas com AdminLayout (sempre aberto)
+// Função helper para criar rotas protegidas com AdminLayout
 const createAdminRoute = (path: string, Component: React.ComponentType<any>) => ({
   path,
   element: (

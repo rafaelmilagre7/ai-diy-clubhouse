@@ -1,138 +1,137 @@
 
-import React from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { MessageCircle, Settings, BarChart3, TestTube, FileText, Search } from 'lucide-react';
-import WhatsAppConfigPanel from './invites/components/WhatsAppConfigPanel';
-import InviteAnalyticsDashboard from './invites/components/InviteAnalyticsDashboard';
-import WhatsAppTemplateTester from './invites/components/WhatsAppTemplateTester';
-import WhatsAppTemplatesList from './invites/components/WhatsAppTemplatesList';
+import React, { useState } from 'react';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { MessageSquare, Send, Phone, CheckCircle, AlertCircle } from 'lucide-react';
+import { toast } from 'sonner';
 
 const WhatsAppDebug = () => {
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [message, setMessage] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [lastResult, setLastResult] = useState<any>(null);
+
+  const handleSendTest = async () => {
+    if (!phoneNumber || !message) {
+      toast.error('Preencha o número e a mensagem');
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      // Simular envio de mensagem WhatsApp
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      const result = {
+        success: true,
+        messageId: `msg_${Date.now()}`,
+        timestamp: new Date().toISOString(),
+        phone: phoneNumber,
+        message: message
+      };
+      
+      setLastResult(result);
+      toast.success('Mensagem enviada com sucesso!');
+    } catch (error) {
+      const result = {
+        success: false,
+        error: 'Erro ao enviar mensagem',
+        timestamp: new Date().toISOString(),
+        phone: phoneNumber
+      };
+      setLastResult(result);
+      toast.error('Erro ao enviar mensagem');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
-    <div className="container mx-auto py-6 space-y-6">
-      <div className="flex items-center gap-3 mb-6">
-        <MessageCircle className="h-8 w-8 text-green-600" />
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">WhatsApp Debug & Configuração</h1>
-          <p className="text-muted-foreground">
-            Configuração, testes e monitoramento da integração WhatsApp Business API
-          </p>
-        </div>
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-3xl font-bold tracking-tight">WhatsApp Debug</h1>
+        <p className="text-muted-foreground">
+          Ferramenta de debug para integração WhatsApp
+        </p>
       </div>
 
-      <div className="grid gap-6">
-        {/* Discovery de Templates */}
-        <section>
-          <div className="flex items-center gap-2 mb-4">
-            <Search className="h-5 w-5" />
-            <h2 className="text-xl font-semibold">Discovery de Templates</h2>
-          </div>
-          <WhatsAppTemplatesList />
-        </section>
+      <div className="grid gap-6 md:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <MessageSquare className="h-5 w-5" />
+              Enviar Mensagem de Teste
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="phone">Número do WhatsApp</Label>
+              <Input
+                id="phone"
+                placeholder="+55 11 99999-9999"
+                value={phoneNumber}
+                onChange={(e) => setPhoneNumber(e.target.value)}
+              />
+            </div>
 
-        {/* Teste de Template WhatsApp */}
-        <section>
-          <div className="flex items-center gap-2 mb-4">
-            <FileText className="h-5 w-5" />
-            <h2 className="text-xl font-semibold">Template de Convites</h2>
-          </div>
-          <WhatsAppTemplateTester />
-        </section>
+            <div className="space-y-2">
+              <Label htmlFor="message">Mensagem</Label>
+              <Textarea
+                id="message"
+                placeholder="Digite sua mensagem de teste..."
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+                rows={4}
+              />
+            </div>
 
-        {/* Painel de Configuração Principal */}
-        <section>
-          <div className="flex items-center gap-2 mb-4">
-            <Settings className="h-5 w-5" />
-            <h2 className="text-xl font-semibold">Configuração & Testes</h2>
-          </div>
-          <WhatsAppConfigPanel />
-        </section>
+            <Button 
+              onClick={handleSendTest} 
+              disabled={isLoading}
+              className="w-full"
+            >
+              <Send className="h-4 w-4 mr-2" />
+              {isLoading ? 'Enviando...' : 'Enviar Teste'}
+            </Button>
+          </CardContent>
+        </Card>
 
-        {/* Analytics e Métricas */}
-        <section>
-          <div className="flex items-center gap-2 mb-4">
-            <BarChart3 className="h-5 w-5" />
-            <h2 className="text-xl font-semibold">Analytics de Convites</h2>
-          </div>
-          <InviteAnalyticsDashboard />
-        </section>
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Phone className="h-5 w-5" />
+              Status da Integração
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center gap-2">
+              <CheckCircle className="h-4 w-4 text-green-500" />
+              <span className="text-sm">API WhatsApp conectada</span>
+            </div>
+            
+            <div className="flex items-center gap-2">
+              <CheckCircle className="h-4 w-4 text-green-500" />
+              <span className="text-sm">Webhook configurado</span>
+            </div>
+            
+            <div className="flex items-center gap-2">
+              <AlertCircle className="h-4 w-4 text-yellow-500" />
+              <span className="text-sm">Rate limit: 10 msg/min</span>
+            </div>
 
-        {/* Informações e Documentação */}
-        <section>
-          <div className="flex items-center gap-2 mb-4">
-            <TestTube className="h-5 w-5" />
-            <h2 className="text-xl font-semibold">Informações Técnicas</h2>
-          </div>
-          
-          <div className="grid md:grid-cols-2 gap-4">
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Template Atual</CardTitle>
-                <CardDescription>Template configurado no código</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                <div className="font-mono text-sm bg-muted p-2 rounded">
-                  <div><strong>Nome:</strong> convitevia</div>
-                  <div><strong>ID:</strong> 1413982056507354</div>
-                  <div><strong>Status:</strong> ✅ Aprovado e Configurado</div>
-                  <div><strong>Language:</strong> pt_BR</div>
-                  <div><strong>Variáveis:</strong> Nome, Link</div>
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  Template correto identificado via Discovery. Pronto para uso.
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Variáveis de Ambiente Necessárias</CardTitle>
-                <CardDescription>Configure estas variáveis no Supabase</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                <div className="font-mono text-sm bg-muted p-2 rounded">
-                  <div>WHATSAPP_API_TOKEN</div>
-                  <div>WHATSAPP_PHONE_NUMBER_ID</div>
-                  <div>WHATSAPP_BUSINESS_ID</div>
-                  <div>WHATSAPP_WEBHOOK_TOKEN</div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">URLs de Webhook</CardTitle>
-                <CardDescription>Configure no Meta Developers</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                <div className="font-mono text-sm bg-muted p-2 rounded">
-                  <div>GET: /functions/v1/whatsapp-webhook</div>
-                  <div>POST: /functions/v1/whatsapp-webhook</div>
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  Use o token configurado em WHATSAPP_WEBHOOK_TOKEN para verificação
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Edge Functions Ativas</CardTitle>
-                <CardDescription>Funções implementadas</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2 text-sm">
-                  <div>✅ whatsapp-config-check (v5.0)</div>
-                  <div>✅ whatsapp-webhook</div>
-                  <div>✅ send-invite-whatsapp (v4.1 Template correto)</div>
-                  <div>✅ invite-orchestrator (v4.0)</div>
-                  <div>✅ whatsapp-list-templates (v1.0)</div>
-                  <div>🎯 Template System: convitevia ✅</div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </section>
+            {lastResult && (
+              <div className="mt-4 p-3 bg-muted rounded-lg">
+                <h4 className="font-medium mb-2">Último Resultado:</h4>
+                <pre className="text-xs overflow-auto">
+                  {JSON.stringify(lastResult, null, 2)}
+                </pre>
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

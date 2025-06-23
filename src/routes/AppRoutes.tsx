@@ -13,16 +13,7 @@ import RootRedirect from '@/components/routing/RootRedirect';
 
 // Route configurations
 import { ProtectedRoutes } from '@/auth/ProtectedRoutes';
-
-// Import admin routes properly
-import AdminDashboard from '@/pages/admin/AdminDashboard';
-import AdminUsers from '@/pages/admin/AdminUsers';
-import AdminTools from '@/pages/admin/AdminTools';
-import AdminSolutions from '@/pages/admin/AdminSolutions';
-import AdminAnalytics from '@/pages/admin/AdminAnalytics';
-import AdminEvents from '@/pages/admin/AdminEvents';
-import InvitesManagement from '@/pages/admin/invites/InvitesManagement';
-import AdminLayout from '@/components/layout/admin/AdminLayout';
+import { adminRoutes } from './AdminRoutes';
 
 const AppRoutes = () => {
   const { user, isLoading } = useAuth();
@@ -44,7 +35,7 @@ const AppRoutes = () => {
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
       
-      {/* Invite routes - CORRIGIDO: adicionando rota /convite */}
+      {/* Invite routes */}
       <Route path="/convite/:token" element={<RegisterPage />} />
       <Route path="/invite/:token" element={<RegisterPage />} />
       <Route path="/invite" element={<RegisterPage />} />
@@ -68,77 +59,10 @@ const AppRoutes = () => {
         } 
       />
 
-      {/* Admin routes */}
-      <Route
-        path="/admin"
-        element={
-          <ProtectedRoutes>
-            <AdminLayout>
-              <AdminDashboard />
-            </AdminLayout>
-          </ProtectedRoutes>
-        }
-      />
-      <Route
-        path="/admin/users"
-        element={
-          <ProtectedRoutes>
-            <AdminLayout>
-              <AdminUsers />
-            </AdminLayout>
-          </ProtectedRoutes>
-        }
-      />
-      <Route
-        path="/admin/tools"
-        element={
-          <ProtectedRoutes>
-            <AdminLayout>
-              <AdminTools />
-            </AdminLayout>
-          </ProtectedRoutes>
-        }
-      />
-      <Route
-        path="/admin/solutions"
-        element={
-          <ProtectedRoutes>
-            <AdminLayout>
-              <AdminSolutions />
-            </AdminLayout>
-          </ProtectedRoutes>
-        }
-      />
-      <Route
-        path="/admin/analytics"
-        element={
-          <ProtectedRoutes>
-            <AdminLayout>
-              <AdminAnalytics />
-            </AdminLayout>
-          </ProtectedRoutes>
-        }
-      />
-      <Route
-        path="/admin/events"
-        element={
-          <ProtectedRoutes>
-            <AdminLayout>
-              <AdminEvents />
-            </AdminLayout>
-          </ProtectedRoutes>
-        }
-      />
-      <Route
-        path="/admin/invites"
-        element={
-          <ProtectedRoutes>
-            <AdminLayout>
-              <InvitesManagement />
-            </AdminLayout>
-          </ProtectedRoutes>
-        }
-      />
+      {/* Admin routes - using consolidated admin routes */}
+      {adminRoutes.map((route, index) => (
+        <Route key={index} {...route} />
+      ))}
 
       {/* Fallback redirect */}
       <Route 

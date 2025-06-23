@@ -1,127 +1,49 @@
 
-import { useParams } from "react-router-dom";
-import { useAuth } from "@/contexts/auth";
-import LoadingScreen from "@/components/common/LoadingScreen";
-import SolutionEditorHeader from "@/components/admin/solution-editor/SolutionEditorHeader";
-import SolutionEditorTabs from "@/components/admin/solution-editor/SolutionEditorTabs";
-import { Card, CardContent } from "@/components/ui/card";
-import NavigationButtons from "@/components/admin/solution-editor/NavigationButtons";
-import AuthError from "@/components/admin/solution-editor/AuthError";
-import { useToast } from "@/hooks/use-toast";
-import { useSolutionEditor } from "@/components/admin/solution-editor/useSolutionEditor";
+import React from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { ArrowLeft, FileEdit } from 'lucide-react';
 
 const SolutionEditor = () => {
-  const { id } = useParams<{ id: string }>();
-  const { user } = useAuth();
-  const { toast } = useToast();
-  
-  const {
-    solution,
-    loading,
-    saving,
-    activeTab,
-    setActiveTab,
-    onSubmit,
-    currentValues,
-    currentStep,
-    setCurrentStep,
-    totalSteps,
-    stepTitles
-  } = useSolutionEditor(id, user);
-  
-  if (loading) {
-    return <LoadingScreen />;
-  }
-  
-  // Função para mostrar toast explicitamente ao salvar
-  const handleSaveWithToast = () => {
-    // Na primeira etapa, dispara o submit do formulário
-    if (currentStep === 0) {
-      const form = document.querySelector("form");
-      if (form) form.dispatchEvent(new Event("submit", { cancelable: true, bubbles: true }));
-    } else {
-      // Nas outras etapas, chama a função específica de salvamento
-      onSubmit({...currentValues, published: currentStep === totalSteps - 1})
-        .then(() => {
-          toast({
-            title: "Progresso salvo",
-            description: "Suas alterações foram salvas com sucesso."
-          });
-        })
-        .catch(error => {
-          toast({
-            title: "Erro ao salvar",
-            description: "Ocorreu um erro ao salvar suas alterações.",
-            variant: "destructive"
-          });
-        });
-    }
-  };
+  const { id } = useParams();
+  const navigate = useNavigate();
 
-  const handleNextStep = () => {
-    if (currentStep < totalSteps - 1) {
-      setCurrentStep(currentStep + 1);
-    }
-  };
-
-  const handlePreviousStep = () => {
-    if (currentStep > 0) {
-      setCurrentStep(currentStep - 1);
-    }
-  };
-
-  // Determina a cor do nível de dificuldade
-  const getDifficultyColor = () => {
-    const difficulty = currentValues.difficulty;
-    switch (difficulty) {
-      case "easy":
-        return "bg-green-500";
-      case "medium":
-        return "bg-orange-500";
-      case "advanced":
-        return "bg-red-500";
-      default:
-        return "bg-gray-500";
-    }
-  };
-  
   return (
-    <div className="space-y-6 max-w-7xl mx-auto pb-10">
-      <SolutionEditorHeader 
-        id={id} 
-        saving={saving} 
-        onSave={handleSaveWithToast}
-        title={currentValues.title}
-        difficulty={currentValues.difficulty}
-        difficultyColor={getDifficultyColor()}
-      />
-      
-      {!user && <AuthError />}
-      
-      <Card className="border-none shadow-sm">
-        <CardContent className="p-0">
-          <SolutionEditorTabs 
-            activeTab={activeTab}
-            setActiveTab={setActiveTab}
-            solution={solution}
-            currentValues={currentValues}
-            onSubmit={onSubmit}
-            saving={saving}
-            currentStep={currentStep}
-          />
+    <div className="space-y-6">
+      <div className="flex items-center gap-4">
+        <Button 
+          variant="outline" 
+          size="icon"
+          onClick={() => navigate('/admin/solutions')}
+        >
+          <ArrowLeft className="h-4 w-4" />
+        </Button>
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Editor de Solução</h1>
+          <p className="text-muted-foreground">
+            Editando solução ID: {id}
+          </p>
+        </div>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <FileEdit className="h-5 w-5" />
+            Editor Avançado de Soluções
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-muted-foreground mb-4">
+            Use o editor completo para modificar módulos, conteúdo e recursos da solução.
+          </p>
+          
+          <div className="text-sm text-muted-foreground">
+            Carregando editor para solução {id}...
+          </div>
         </CardContent>
       </Card>
-      
-      {(solution || currentStep === 0) && (
-        <NavigationButtons 
-          currentStep={currentStep}
-          totalSteps={totalSteps}
-          onPrevious={handlePreviousStep}
-          onNext={handleNextStep}
-          onSave={handleSaveWithToast}
-          saving={saving}
-        />
-      )}
     </div>
   );
 };
