@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -58,15 +59,35 @@ export const useInviteCreate = () => {
     try {
       setLoading(true);
       
-      console.log("🎯 Criando convite:", params);
+      console.log("🎯 [INVITE-CREATE] Criando convite:", {
+        email: params.email,
+        channels: params.channels,
+        whatsappNumber: params.whatsappNumber,
+        userName: params.userName
+      });
 
-      // Validar se userName é obrigatório quando WhatsApp está incluído
-      if (params.channels?.includes('whatsapp') && (!params.userName || params.userName.trim() === '')) {
-        toast.error("Nome da pessoa é obrigatório para envio via WhatsApp");
-        return {
-          status: 'error',
-          message: "Nome da pessoa é obrigatório para envio via WhatsApp"
-        };
+      // Definir canais padrão se não especificado
+      const channels = params.channels || ['email'];
+      
+      // Validações específicas para WhatsApp
+      if (channels.includes('whatsapp')) {
+        if (!params.userName || params.userName.trim() === '') {
+          console.error("❌ [INVITE-CREATE] Nome obrigatório para WhatsApp");
+          toast.error("Nome da pessoa é obrigatório para envio via WhatsApp");
+          return {
+            status: 'error',
+            message: "Nome da pessoa é obrigatório para envio via WhatsApp"
+          };
+        }
+
+        if (!params.whatsappNumber || params.whatsappNumber.trim() === '') {
+          console.error("❌ [INVITE-CREATE] Número WhatsApp obrigatório");
+          toast.error("Número do WhatsApp é obrigatório");
+          return {
+            status: 'error',
+            message: "Número do WhatsApp é obrigatório"
+          };
+        }
       }
 
       // Validar email único com nova lógica
@@ -84,6 +105,7 @@ export const useInviteCreate = () => {
       }
 
       // Criar convite via função do Supabase
+      console.log("📧 [INVITE-CREATE] Criando convite no banco...");
       const { data, error } = await supabase.rpc('create_invite', {
         p_email: params.email,
         p_role_id: params.roleId,
@@ -92,29 +114,37 @@ export const useInviteCreate = () => {
       });
 
       if (error) {
-        console.error("❌ Erro ao criar convite:", error);
+        console.error("❌ [INVITE-CREATE] Erro ao criar convite:", error);
         throw error;
       }
 
-      console.log("✅ Convite criado:", data);
+      console.log("✅ [INVITE-CREATE] Convite criado no banco:", data);
 
       if (data?.status === 'success') {
+        // Preparar dados para o orquestrador com validação
+        const orchestratorData = {
+          inviteId: data.invite_id,
+          email: params.email,
+          roleId: params.roleId,
+          token: data.token,
+          channels, // Garantir que channels seja sempre enviado
+          notes: params.notes || null,
+          // Campos específicos para WhatsApp (só enviar se WhatsApp estiver nos canais)
+          ...(channels.includes('whatsapp') && {
+            whatsappNumber: params.whatsappNumber,
+            userName: params.userName?.trim()
+          })
+        };
+
+        console.log("🎯 [INVITE-CREATE] Enviando para orquestrador:", orchestratorData);
+
         // Agora enviar via orquestrador
         const orchestratorResponse = await supabase.functions.invoke('invite-orchestrator', {
-          body: {
-            inviteId: data.invite_id,
-            email: params.email,
-            whatsappNumber: params.whatsappNumber,
-            roleId: params.roleId,
-            token: data.token,
-            channels: params.channels || ['email'],
-            userName: params.userName || null,
-            notes: params.notes
-          }
+          body: orchestratorData
         });
 
         if (orchestratorResponse.error) {
-          console.error("❌ Erro no orquestrador:", orchestratorResponse.error);
+          console.error("❌ [INVITE-CREATE] Erro no orquestrador:", orchestratorResponse.error);
           toast.error("Convite criado mas falha no envio: " + orchestratorResponse.error.message);
           return {
             status: 'error',
@@ -122,24 +152,29 @@ export const useInviteCreate = () => {
           };
         }
 
-        const orchestratorData = orchestratorResponse.data;
+        const orchestratorResult = orchestratorResponse.data;
         
-        if (orchestratorData?.success) {
-          toast.success("Convite criado e enviado com sucesso!");
+        console.log("🎯 [INVITE-CREATE] Resultado do orquestrador:", orchestratorResult);
+        
+        if (orchestratorResult?.success) {
+          const channelNames = channels.map(c => c === 'email' ? 'E-mail' : 'WhatsApp').join(' e ');
+          toast.success(`Convite criado e enviado via ${channelNames}!`);
           return {
             status: 'success',
-            message: orchestratorData.message,
+            message: orchestratorResult.message || `Convite enviado via ${channelNames}`,
             invite_id: data.invite_id,
             token: data.token
           };
         } else {
-          toast.error(orchestratorData?.message || "Erro ao enviar convite");
+          console.error("❌ [INVITE-CREATE] Falha no orquestrador:", orchestratorResult);
+          toast.error(orchestratorResult?.message || "Erro ao enviar convite");
           return {
             status: 'error',
-            message: orchestratorData?.message || "Erro ao enviar convite"
+            message: orchestratorResult?.message || "Erro ao enviar convite"
           };
         }
       } else {
+        console.error("❌ [INVITE-CREATE] Falha ao criar convite:", data);
         toast.error(data?.message || "Erro ao criar convite");
         return {
           status: 'error',
@@ -147,7 +182,7 @@ export const useInviteCreate = () => {
         };
       }
     } catch (error: any) {
-      console.error("❌ Erro no useInviteCreate:", error);
+      console.error("❌ [INVITE-CREATE] Erro crítico:", error);
       toast.error(error.message || "Erro ao criar convite");
       return {
         status: 'error',

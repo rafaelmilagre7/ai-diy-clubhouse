@@ -21,7 +21,7 @@ interface InviteOrchestratorRequest {
 }
 
 const handler = async (req: Request): Promise<Response> => {
-  console.log(`🎯 [INVITE-ORCHESTRATOR] Nova requisição: ${req.method} - v4.1 URL Corrigida`);
+  console.log(`🎯 [INVITE-ORCHESTRATOR] Nova requisição: ${req.method} - v4.2 Corrigido`);
   
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -35,6 +35,17 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
+    const requestBody: InviteOrchestratorRequest = await req.json();
+    
+    console.log(`📧 [INVITE-ORCHESTRATOR] Dados recebidos:`, {
+      inviteId: requestBody.inviteId,
+      email: requestBody.email,
+      channels: requestBody.channels,
+      hasWhatsappNumber: !!requestBody.whatsappNumber,
+      hasUserName: !!requestBody.userName,
+      isResend: requestBody.isResend || false
+    });
+
     const {
       inviteId,
       email,
@@ -45,9 +56,54 @@ const handler = async (req: Request): Promise<Response> => {
       userName,
       notes,
       isResend = false
-    }: InviteOrchestratorRequest = await req.json();
+    } = requestBody;
 
-    console.log(`📧 [INVITE-ORCHESTRATOR] Processando convite para: ${email}, Canais: ${channels.join(', ')}, Nome: ${userName || 'N/A'}`);
+    // Validações de entrada
+    if (!Array.isArray(channels) || channels.length === 0) {
+      console.error(`❌ [INVITE-ORCHESTRATOR] Canais inválidos:`, channels);
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: "Pelo menos um canal deve ser especificado",
+          message: "Canais de envio não especificados corretamente"
+        }),
+        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    // Validação específica para WhatsApp
+    if (channels.includes('whatsapp')) {
+      if (!userName || userName.trim() === '') {
+        console.error(`❌ [INVITE-ORCHESTRATOR] Nome obrigatório para WhatsApp`);
+        return new Response(
+          JSON.stringify({
+            success: false,
+            error: "Nome da pessoa é obrigatório para envio via WhatsApp",
+            message: "Campo 'userName' é obrigatório quando WhatsApp está incluído"
+          }),
+          { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+        );
+      }
+
+      if (!whatsappNumber || whatsappNumber.trim() === '') {
+        console.error(`❌ [INVITE-ORCHESTRATOR] Número WhatsApp obrigatório`);
+        return new Response(
+          JSON.stringify({
+            success: false,
+            error: "Número do WhatsApp é obrigatório",
+            message: "Campo 'whatsappNumber' é obrigatório quando WhatsApp está incluído"
+          }),
+          { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+        );
+      }
+    }
+
+    console.log(`📱 [INVITE-ORCHESTRATOR] Processando convite:`, {
+      email,
+      canais: channels.join(', '),
+      userName: userName || 'N/A',
+      whatsappNumber: whatsappNumber || 'N/A'
+    });
 
     const results: any[] = [];
     let successfulChannels = 0;
@@ -79,29 +135,20 @@ const handler = async (req: Request): Promise<Response> => {
             throw new Error(`Erro no e-mail: ${emailResult.error.message}`);
           }
 
-          console.log(`✅ [INVITE-ORCHESTRATOR] E-mail enviado`);
+          console.log(`✅ [INVITE-ORCHESTRATOR] E-mail enviado com sucesso`);
           results.push({ channel: 'email', success: true, data: emailResult.data });
           successfulChannels++;
 
         } else if (channel === 'whatsapp') {
-          console.log(`📱 [INVITE-ORCHESTRATOR] Enviando por WhatsApp...`);
+          console.log(`📱 [INVITE-ORCHESTRATOR] Enviando por WhatsApp para: ${whatsappNumber}`);
           
-          // Validar se userName foi fornecido para WhatsApp
-          if (!userName || userName.trim() === '') {
-            throw new Error("Nome do usuário é obrigatório para envio via WhatsApp");
-          }
-
-          if (!whatsappNumber || whatsappNumber.trim() === '') {
-            throw new Error("Número do WhatsApp é obrigatório");
-          }
-
           const whatsappResult = await supabase.functions.invoke('send-invite-whatsapp', {
             body: {
               inviteId,
               whatsappNumber,
               roleId,
               token,
-              userName: userName.trim(),
+              userName: userName!.trim(), // Já validamos que existe
               notes
             }
           });
@@ -110,7 +157,7 @@ const handler = async (req: Request): Promise<Response> => {
             throw new Error(`Erro no WhatsApp: ${whatsappResult.error.message}`);
           }
 
-          console.log(`✅ [INVITE-ORCHESTRATOR] WhatsApp enviado`);
+          console.log(`✅ [INVITE-ORCHESTRATOR] WhatsApp enviado com sucesso`);
           results.push({ channel: 'whatsapp', success: true, data: whatsappResult.data });
           successfulChannels++;
         }
@@ -125,16 +172,25 @@ const handler = async (req: Request): Promise<Response> => {
       }
     }
 
-    console.log(`🎯 [INVITE-ORCHESTRATOR] Resultado final: ${successfulChannels}/${channels.length} canais bem-sucedidos`);
+    console.log(`🎯 [INVITE-ORCHESTRATOR] Resultado final:`, {
+      totalCanais: channels.length,
+      sucessos: successfulChannels,
+      falhas: channels.length - successfulChannels,
+      resultados: results.map(r => ({ canal: r.channel, sucesso: r.success }))
+    });
 
     // Retornar resultado consolidado
     const overallSuccess = successfulChannels > 0;
+    const channelNames = channels
+      .filter((_, index) => results[index]?.success)
+      .map(c => c === 'email' ? 'E-mail' : 'WhatsApp')
+      .join(' e ');
     
     return new Response(
       JSON.stringify({
         success: overallSuccess,
         message: overallSuccess 
-          ? `Convite enviado com sucesso via ${successfulChannels} canal(is)`
+          ? `Convite enviado com sucesso via ${channelNames}`
           : "Falha ao enviar convite por todos os canais",
         summary: {
           totalChannels: channels.length,
@@ -168,5 +224,5 @@ const handler = async (req: Request): Promise<Response> => {
   }
 };
 
-console.log("🎯 [INVITE-ORCHESTRATOR] Edge Function carregada com URL corrigida! v4.1");
+console.log("🎯 [INVITE-ORCHESTRATOR] Edge Function carregada! v4.2 Corrigido");
 serve(handler);

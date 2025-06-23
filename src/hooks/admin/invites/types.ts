@@ -2,7 +2,7 @@
 export interface CreateInviteParams {
   email: string;
   roleId: string;
-  channels?: ('email' | 'whatsapp')[];
+  channels: ('email' | 'whatsapp')[]; // Tornar obrigatório
   whatsappNumber?: string;
   userName?: string; // Campo adicionado para nome da pessoa
   expiresIn?: string;
