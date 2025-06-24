@@ -1,10 +1,12 @@
 
 import { Solution } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
-import { PlayCircle, CheckCircle, Award } from "lucide-react";
+import { PlayCircle, CheckCircle, Award, FileText, Wrench, Video, BookOpen } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { SolutionCategory } from "@/lib/types/categoryTypes";
 import { useEffect } from "react";
+import { useSolutionStats } from "@/hooks/useSolutionStats";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface SolutionSidebarProps {
   solution: Solution;
@@ -22,6 +24,7 @@ export const SolutionSidebar = ({
   initializing = false
 }: SolutionSidebarProps) => {
   const navigate = useNavigate();
+  const { stats, loading: statsLoading } = useSolutionStats(solution.id);
   
   // Log de depuração para identificar o problema
   useEffect(() => {
@@ -121,6 +124,68 @@ export const SolutionSidebar = ({
           </Button>
         )}
       </div>
+
+      {/* Seção de Estatísticas Detalhadas */}
+      <div className="pt-4 border-t border-white/5">
+        <h3 className="font-medium mb-3 text-neutral-100">Conteúdo da Solução</h3>
+        {statsLoading ? (
+          <div className="space-y-2">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="flex justify-between items-center">
+                <Skeleton className="h-4 w-20" />
+                <Skeleton className="h-4 w-8" />
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {stats.modulesCount > 0 && (
+              <div className="flex justify-between text-sm">
+                <div className="flex items-center gap-2">
+                  <BookOpen className="h-4 w-4 text-viverblue" />
+                  <span className="text-neutral-400">Módulos:</span>
+                </div>
+                <span className="font-medium text-neutral-200">{stats.modulesCount}</span>
+              </div>
+            )}
+            {stats.resourcesCount > 0 && (
+              <div className="flex justify-between text-sm">
+                <div className="flex items-center gap-2">
+                  <FileText className="h-4 w-4 text-viverblue" />
+                  <span className="text-neutral-400">Recursos:</span>
+                </div>
+                <span className="font-medium text-neutral-200">{stats.resourcesCount}</span>
+              </div>
+            )}
+            {stats.toolsCount > 0 && (
+              <div className="flex justify-between text-sm">
+                <div className="flex items-center gap-2">
+                  <Wrench className="h-4 w-4 text-viverblue" />
+                  <span className="text-neutral-400">Ferramentas:</span>
+                </div>
+                <span className="font-medium text-neutral-200">{stats.toolsCount}</span>
+              </div>
+            )}
+            {stats.videosCount > 0 && (
+              <div className="flex justify-between text-sm">
+                <div className="flex items-center gap-2">
+                  <Video className="h-4 w-4 text-viverblue" />
+                  <span className="text-neutral-400">Vídeos:</span>
+                </div>
+                <span className="font-medium text-neutral-200">{stats.videosCount}</span>
+              </div>
+            )}
+            {stats.estimatedTimeMinutes > 0 && (
+              <div className="flex justify-between text-sm">
+                <span className="text-neutral-400">Tempo estimado:</span>
+                <span className="font-medium text-neutral-200">
+                  {stats.estimatedTimeMinutes} min
+                </span>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
       
       <div className="pt-4 border-t border-white/5">
         <h3 className="font-medium mb-2 text-neutral-100">Informações</h3>
@@ -149,15 +214,6 @@ export const SolutionSidebar = ({
               <span className="text-neutral-400">Tempo estimado:</span>
               <span className="font-medium text-neutral-200">
                 {(solution as any).estimated_time} minutos
-              </span>
-            </div>
-          )}
-          {/* success_rate também removido */}
-          {"success_rate" in solution && typeof (solution as any).success_rate === "number" && (solution as any).success_rate > 0 && (
-            <div className="flex justify-between text-sm">
-              <span className="text-neutral-400">Taxa de sucesso:</span>
-              <span className="font-medium text-neutral-200">
-                {(solution as any).success_rate}%
               </span>
             </div>
           )}

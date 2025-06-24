@@ -8,6 +8,7 @@ import { ResourcesTab } from "./ResourcesTab";
 import { ToolsTab } from "./ToolsTab";
 import { VideosTab } from "./VideosTab";
 import { BookOpen, Play, FileText, Wrench, Video } from "lucide-react";
+import { useSolutionStats } from "@/hooks/useSolutionStats";
 
 interface SolutionTabsContentProps {
   solution: Solution;
@@ -15,6 +16,12 @@ interface SolutionTabsContentProps {
 
 export const SolutionTabsContent = ({ solution }: SolutionTabsContentProps) => {
   const [activeTab, setActiveTab] = useState("overview");
+  const { stats, loading: statsLoading } = useSolutionStats(solution.id);
+
+  const getTabCounter = (count: number) => {
+    if (statsLoading) return "";
+    return count > 0 ? ` (${count})` : "";
+  };
 
   return (
     <div className="w-full">
@@ -26,19 +33,27 @@ export const SolutionTabsContent = ({ solution }: SolutionTabsContentProps) => {
           </TabsTrigger>
           <TabsTrigger value="modules" className="flex items-center gap-2">
             <Play className="h-4 w-4" />
-            <span className="hidden sm:inline">Módulos</span>
+            <span className="hidden sm:inline">
+              Módulos{getTabCounter(stats.modulesCount)}
+            </span>
           </TabsTrigger>
           <TabsTrigger value="resources" className="flex items-center gap-2">
             <FileText className="h-4 w-4" />
-            <span className="hidden sm:inline">Recursos</span>
+            <span className="hidden sm:inline">
+              Recursos{getTabCounter(stats.resourcesCount)}
+            </span>
           </TabsTrigger>
           <TabsTrigger value="tools" className="flex items-center gap-2">
             <Wrench className="h-4 w-4" />
-            <span className="hidden sm:inline">Ferramentas</span>
+            <span className="hidden sm:inline">
+              Ferramentas{getTabCounter(stats.toolsCount)}
+            </span>
           </TabsTrigger>
           <TabsTrigger value="videos" className="flex items-center gap-2">
             <Video className="h-4 w-4" />
-            <span className="hidden sm:inline">Vídeos</span>
+            <span className="hidden sm:inline">
+              Vídeos{getTabCounter(stats.videosCount)}
+            </span>
           </TabsTrigger>
         </TabsList>
 
