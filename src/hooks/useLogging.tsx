@@ -1,7 +1,6 @@
 
 import { useState, useCallback, createContext, useContext, ReactNode } from "react";
 import { supabase } from "@/lib/supabase";
-import { useToast } from "@/hooks/use-toast";
 import { logger } from "@/utils/logger";
 import { sanitizeData } from "@/components/security/DataSanitizer";
 
@@ -19,7 +18,6 @@ interface LoggingContextType {
 const LoggingContext = createContext<LoggingContextType | undefined>(undefined);
 
 export const LoggingProvider = ({ children }: { children: ReactNode }) => {
-  const { toast } = useToast();
   const [lastError, setLastError] = useState<any>(null);
   
   const storeLog = useCallback(async (action: string, data: LogData, level: string, user_id: string) => {
@@ -69,29 +67,11 @@ export const LoggingProvider = ({ children }: { children: ReactNode }) => {
     if (data.user_id) {
       storeLog(action, data, "warning", data.user_id);
     }
-    
-    if (data.critical === true) {
-      toast({
-        title: "Aviso",
-        description: action,
-        variant: "default",
-      });
-    }
-  }, [toast, storeLog]);
+  }, [storeLog]);
   
   const logError = useCallback((action: string, error: any, data: LogData = {}) => {
     logger.error(action, error, data);
     setLastError(error);
-    
-    const shouldShowToast = error?.showToast !== false;
-    
-    if (shouldShowToast) {
-      toast({
-        title: "Erro ao carregar conteúdo",
-        description: "Ocorreu um erro ao carregar o conteúdo. Alguns dados podem não estar disponíveis.",
-        variant: "destructive",
-      });
-    }
     
     const userId = data.user_id || error?.user_id;
     if (userId) {
@@ -99,13 +79,12 @@ export const LoggingProvider = ({ children }: { children: ReactNode }) => {
         ...data,
         error: error?.message || String(error),
         stack: error?.stack,
-        showToast: shouldShowToast
       };
       storeLog(action, errorData, "error", userId);
     }
     
     return error;
-  }, [toast, storeLog]);
+  }, [storeLog]);
   
   const contextValue: LoggingContextType = {
     log,
