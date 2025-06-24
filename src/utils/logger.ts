@@ -10,26 +10,32 @@ class Logger {
   private logs: LogEntry[] = [];
   private maxLogs = 1000;
 
-  info(message: string, data?: any) {
+  info(message: string, data?: any, context?: any) {
     this.log('info', message, data);
-    console.log(`[INFO] ${message}`, data);
+    console.log(`[INFO] ${message}`, data, context);
   }
 
-  warn(message: string, data?: any) {
+  warn(message: string, data?: any, context?: any) {
     this.log('warn', message, data);
-    console.warn(`[WARN] ${message}`, data);
+    console.warn(`[WARN] ${message}`, data, context);
   }
 
-  error(message: string, data?: any) {
+  error(message: string, data?: any, context?: any) {
     this.log('error', message, data);
-    console.error(`[ERROR] ${message}`, data);
+    console.error(`[ERROR] ${message}`, data, context);
   }
 
-  debug(message: string, data?: any) {
+  debug(message: string, data?: any, context?: any) {
     this.log('debug', message, data);
     if (process.env.NODE_ENV === 'development') {
-      console.debug(`[DEBUG] ${message}`, data);
+      console.debug(`[DEBUG] ${message}`, data, context);
     }
+  }
+
+  // Método security que alguns arquivos esperam
+  security(message: string, data?: any, context?: any) {
+    this.log('error', `[SECURITY] ${message}`, data);
+    console.error(`[SECURITY] ${message}`, data, context);
   }
 
   private log(level: LogEntry['level'], message: string, data?: any) {
