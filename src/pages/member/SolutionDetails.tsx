@@ -96,21 +96,6 @@ const SolutionDetails = () => {
                       {solution.description || "Esta solução foi desenvolvida para otimizar seus processos e impulsionar seus resultados."}
                     </p>
                     
-                    {solution.benefits && solution.benefits.length > 0 && (
-                      <div className="mb-6">
-                        <h4 className="text-lg font-medium text-neutral-100 mb-3">
-                          Principais Benefícios
-                        </h4>
-                        <ul className="list-disc list-inside space-y-2">
-                          {solution.benefits.map((benefit, index) => (
-                            <li key={index} className="text-neutral-300">
-                              {benefit}
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-                    
                     <div className="bg-viverblue/10 border border-viverblue/30 rounded-lg p-6 mt-6">
                       <p className="text-neutral-200 text-center">
                         <span className="font-medium">Pronto para começar?</span>
