@@ -1,6 +1,7 @@
 
 import React from "react";
-import { Solution, Progress } from "@/hooks/useSolutionData";
+import { Solution } from "@/lib/supabase/types";
+import { Progress } from "@/hooks/useSolutionData";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";

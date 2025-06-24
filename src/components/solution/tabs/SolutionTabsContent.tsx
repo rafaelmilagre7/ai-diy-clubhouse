@@ -1,6 +1,6 @@
 
 import React from "react";
-import { Solution } from "@/hooks/useSolutionData";
+import { Solution } from "@/lib/supabase/types";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 
