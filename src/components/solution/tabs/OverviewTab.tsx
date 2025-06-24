@@ -40,8 +40,8 @@ export const OverviewTab = ({ solution }: OverviewTabProps) => {
         </CardHeader>
         <CardContent>
           {statsLoading ? (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {[1, 2, 3, 4].map((i) => (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {[1, 2, 3].map((i) => (
                 <div key={i} className="text-center p-4 bg-neutral-800/50 rounded-lg">
                   <Skeleton className="h-8 w-8 mx-auto mb-2" />
                   <Skeleton className="h-4 w-12 mx-auto mb-1" />
@@ -50,18 +50,7 @@ export const OverviewTab = ({ solution }: OverviewTabProps) => {
               ))}
             </div>
           ) : (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {stats.modulesCount > 0 && (
-                <div className="text-center p-4 bg-viverblue/10 rounded-lg border border-viverblue/20">
-                  <div className="text-2xl font-bold text-viverblue mb-1">
-                    {stats.modulesCount}
-                  </div>
-                  <div className="text-sm text-neutral-300">
-                    {stats.modulesCount === 1 ? 'Módulo' : 'Módulos'}
-                  </div>
-                </div>
-              )}
-              
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {stats.resourcesCount > 0 && (
                 <div className="text-center p-4 bg-emerald-500/10 rounded-lg border border-emerald-500/20">
                   <div className="text-2xl font-bold text-emerald-400 mb-1">
@@ -94,17 +83,6 @@ export const OverviewTab = ({ solution }: OverviewTabProps) => {
                   </div>
                 </div>
               )}
-            </div>
-          )}
-          
-          {stats.estimatedTimeMinutes > 0 && (
-            <div className="mt-6 p-4 bg-neutral-800/30 rounded-lg border border-neutral-700">
-              <div className="flex items-center justify-center gap-2">
-                <CheckCircle2 className="h-5 w-5 text-viverblue" />
-                <span className="text-neutral-300">
-                  Tempo estimado total: <strong className="text-viverblue">{stats.estimatedTimeMinutes} minutos</strong>
-                </span>
-              </div>
             </div>
           )}
         </CardContent>

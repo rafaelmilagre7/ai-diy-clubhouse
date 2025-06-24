@@ -7,17 +7,13 @@ export interface SolutionStats {
   resourcesCount: number;
   toolsCount: number;
   videosCount: number;
-  modulesCount: number;
-  estimatedTimeMinutes: number;
 }
 
 export const useSolutionStats = (solutionId: string) => {
   const [stats, setStats] = useState<SolutionStats>({
     resourcesCount: 0,
     toolsCount: 0,
-    videosCount: 0,
-    modulesCount: 0,
-    estimatedTimeMinutes: 0
+    videosCount: 0
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -53,35 +49,16 @@ export const useSolutionStats = (solutionId: string) => {
           .eq("solution_id", solutionId as any)
           .eq("type", "video" as any);
 
-        // Buscar contagem de módulos
-        const { count: modulesCount } = await supabase
-          .from("modules")
-          .select("*", { count: 'exact', head: true })
-          .eq("solution_id", solutionId as any);
-
-        // Buscar tempo estimado dos módulos
-        const { data: modulesData } = await supabase
-          .from("modules")
-          .select("estimated_time_minutes")
-          .eq("solution_id", solutionId as any);
-
-        const totalTime = modulesData?.reduce((sum, module) => 
-          sum + (module.estimated_time_minutes || 0), 0) || 0;
-
         setStats({
           resourcesCount: resourcesCount || 0,
           toolsCount: toolsCount || 0,
-          videosCount: videosCount || 0,
-          modulesCount: modulesCount || 0,
-          estimatedTimeMinutes: totalTime
+          videosCount: videosCount || 0
         });
 
         log("Estatísticas carregadas com sucesso", { 
           resourcesCount, 
           toolsCount, 
-          videosCount, 
-          modulesCount,
-          totalTime 
+          videosCount
         });
       } catch (err: any) {
         logError("Erro ao carregar estatísticas", err);
