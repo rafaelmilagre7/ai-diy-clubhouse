@@ -48,7 +48,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       } else if (retryCount < maxRetries) {
         // Retry com delay progressivo
         const delay = (retryCount + 1) * 1000;
-        logger.warn('Tentativa de retry em', delay, 'ms');
+        logger.warn('Tentativa de retry em', { delayMs: delay });
         
         setTimeout(() => {
           loadUserProfile(userId, email, retryCount + 1);

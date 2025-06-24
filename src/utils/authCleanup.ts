@@ -14,7 +14,7 @@ export const cleanupAuthState = async () => {
       await supabase.auth.signOut({ scope: 'global' });
       logger.info('SignOut global realizado');
     } catch (error) {
-      logger.warn('Erro no signOut, continuando limpeza:', error);
+      logger.warn('Erro no signOut, continuando limpeza:', { error });
     }
     
     // 2. Limpar localStorage
@@ -27,7 +27,7 @@ export const cleanupAuthState = async () => {
     
     keysToRemove.forEach(key => {
       localStorage.removeItem(key);
-      logger.debug('Removida chave:', key);
+      logger.debug('Removida chave:', { key });
     });
     
     // 3. Limpar sessionStorage se existir
