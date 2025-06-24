@@ -17,38 +17,43 @@ const RobustRootRedirect = () => {
   
   const totalLoading = authLoading || onboardingLoading;
   
+  // Timeout mais generoso para desenvolvimento
+  const timeoutMs = import.meta.env.DEV ? 20000 : 12000;
+  
   const { hasTimedOut, retry } = useLoadingTimeoutEnhanced({
     isLoading: totalLoading,
     context: 'root-redirect',
-    timeoutMs: 12000,
+    timeoutMs,
     onTimeout: () => {
       logger.error("[ROOT-REDIRECT] Timeout na verificação inicial");
       setHasError(true);
     }
   });
 
-  // Monitor de erros do auth
+  // Monitor de erros do auth mais permissivo
   useEffect(() => {
-    if (authError) {
+    if (authError && !import.meta.env.DEV) {
       logger.error("[ROOT-REDIRECT] Erro de auth detectado:", authError);
       setHasError(true);
     }
   }, [authError]);
 
-  // Log detalhado do estado
+  // Log apenas em desenvolvimento para reduzir overhead
   useEffect(() => {
-    logger.info("[ROOT-REDIRECT] Estado atual:", {
-      hasUser: !!user,
-      hasProfile: !!profile,
-      userRole: profile ? getUserRoleName(profile) : null,
-      authLoading,
-      onboardingLoading,
-      onboardingRequired,
-      retryCount,
-      hasError,
-      hasTimedOut,
-      authError
-    });
+    if (import.meta.env.DEV) {
+      logger.info("[ROOT-REDIRECT] Estado atual:", {
+        hasUser: !!user,
+        hasProfile: !!profile,
+        userRole: profile ? getUserRoleName(profile) : null,
+        authLoading,
+        onboardingLoading,
+        onboardingRequired,
+        retryCount,
+        hasError,
+        hasTimedOut,
+        authError
+      });
+    }
   }, [user, profile, authLoading, onboardingLoading, onboardingRequired, retryCount, hasError, hasTimedOut, authError]);
 
   const handleRetry = () => {
@@ -57,8 +62,8 @@ const RobustRootRedirect = () => {
     setHasError(false);
     retry();
     
-    // Se já tentou 3 vezes, forçar limpeza
-    if (retryCount >= 2) {
+    // Reduzir tentativas máximas para evitar loops
+    if (retryCount >= 1) {
       logger.warn("[ROOT-REDIRECT] Muitas tentativas, forçando limpeza");
       handleForceExit();
     }
@@ -69,8 +74,10 @@ const RobustRootRedirect = () => {
     await recoverFromAuthError();
   };
 
-  // Se há timeout, erro de auth ou erro geral, mostrar tela de erro
-  if (hasTimedOut || hasError || authError) {
+  // Ser mais permissivo com erros em desenvolvimento
+  const shouldShowError = hasTimedOut || hasError || (authError && !import.meta.env.DEV);
+
+  if (shouldShowError) {
     return (
       <EnhancedLoadingScreen
         message={authError ? `Erro de autenticação: ${authError}` : "Problema na verificação de acesso"}
@@ -104,23 +111,25 @@ const RobustRootRedirect = () => {
     return <Navigate to="/auth" replace />;
   }
 
-  // Verificação de perfil mais robusta
+  // Verificação de perfil mais relaxada
   if (user && !profile) {
-    logger.warn("[ROOT-REDIRECT] Usuário sem perfil válido");
-    
-    // Se já tentou algumas vezes, forçar recriação
-    if (retryCount >= 2) {
-      return <Navigate to="/auth" replace />;
+    // Em desenvolvimento, ser mais permissivo
+    if (import.meta.env.DEV && retryCount < 1) {
+      return (
+        <EnhancedLoadingScreen
+          message="Carregando seu perfil..."
+          context="profile"
+          isLoading={true}
+          onRetry={handleRetry}
+        />
+      );
     }
     
-    return (
-      <EnhancedLoadingScreen
-        message="Carregando seu perfil..."
-        context="profile"
-        isLoading={true}
-        onRetry={handleRetry}
-      />
-    );
+    // Se já tentou algumas vezes, continuar sem perfil ou redirecionar
+    if (retryCount >= 1) {
+      logger.warn("[ROOT-REDIRECT] Continuando sem perfil após tentativas");
+      return <Navigate to="/auth" replace />;
+    }
   }
 
   // Onboarding obrigatório
@@ -130,7 +139,7 @@ const RobustRootRedirect = () => {
   }
 
   // Determinar rota baseada no papel do usuário
-  const userRole = getUserRoleName(profile);
+  const userRole = profile ? getUserRoleName(profile) : null;
   
   if (userRole === 'formacao') {
     logger.info("[ROOT-REDIRECT] Usuário formação -> /formacao");

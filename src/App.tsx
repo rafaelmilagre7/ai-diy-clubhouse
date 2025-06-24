@@ -10,19 +10,21 @@ import { useSecureSession } from "@/hooks/useSecureSession";
 function App() {
   const { user, isLoading } = useAuth();
   
-  // Ativar sessão segura
+  // Configuração de sessão segura mais relaxada para desenvolvimento
   useSecureSession({
-    maxIdleTime: 60, // 60 minutos
-    checkInterval: 180, // 3 minutos
-    autoLogoutWarning: 15 // 15 minutos de aviso
+    maxIdleTime: import.meta.env.DEV ? 120 : 60, // 2h dev, 1h prod
+    checkInterval: import.meta.env.DEV ? 300 : 180, // 5 min dev, 3 min prod  
+    autoLogoutWarning: 15
   });
 
   useEffect(() => {
-    logger.info('[APP] Inicialização da aplicação', {
-      hasUser: !!user,
-      isLoading,
-      timestamp: new Date().toISOString()
-    });
+    // Log simplificado para evitar overhead
+    if (import.meta.env.DEV) {
+      logger.info('[APP] App initialized', {
+        hasUser: !!user,
+        isLoading
+      });
+    }
   }, [user, isLoading]);
 
   return (

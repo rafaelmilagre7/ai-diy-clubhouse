@@ -12,16 +12,15 @@ interface SessionSecurityOptions {
 
 export const useSecureSession = (options: SessionSecurityOptions = {}) => {
   const {
-    maxIdleTime = 45, // Aumentado para 45 minutos
-    checkInterval = 120, // Verificar a cada 2 minutos ao invés de 1
-    autoLogoutWarning = 10 // Avisar 10 minutos antes
+    maxIdleTime = 120, // Aumentado para 2 horas em dev
+    checkInterval = 300, // Verificar a cada 5 minutos em dev
+    autoLogoutWarning = 15
   } = options;
 
   const { user, signOut } = useAuth();
   const [lastActivity, setLastActivity] = useState(Date.now());
   const [warningShown, setWarningShown] = useState(false);
   const intervalRef = useRef<NodeJS.Timeout>();
-  const timeoutRef = useRef<NodeJS.Timeout>();
   const validationInProgress = useRef(false);
 
   // Atualizar última atividade
@@ -30,9 +29,9 @@ export const useSecureSession = (options: SessionSecurityOptions = {}) => {
     setWarningShown(false);
   }, []);
 
-  // Verificar se a sessão ainda é válida (com throttling)
+  // Verificação de sessão mais leve para desenvolvimento
   const validateSession = useCallback(async () => {
-    if (!user || validationInProgress.current) return true;
+    if (!user || validationInProgress.current || import.meta.env.DEV) return true;
 
     try {
       validationInProgress.current = true;
@@ -45,36 +44,16 @@ export const useSecureSession = (options: SessionSecurityOptions = {}) => {
         return false;
       }
 
-      // Verificar se o token não está próximo da expiração
-      const now = Math.floor(Date.now() / 1000);
-      const expiresAt = session.expires_at || 0;
-      
-      if (expiresAt - now < 600) { // 10 minutos para expirar
-        console.info('[SECURITY] Token próximo da expiração, renovando...');
-        try {
-          const { error: refreshError } = await supabase.auth.refreshSession();
-          if (refreshError) {
-            console.warn('[SECURITY] Erro ao renovar token:', refreshError.message);
-            await signOut();
-            return false;
-          }
-        } catch {
-          await signOut();
-          return false;
-        }
-      }
-
       return true;
     } catch (error) {
       console.error('[SECURITY] Erro na validação de sessão:', error);
-      // Não fazer logout automático em caso de erro de rede
-      return true;
+      return true; // Não fazer logout automático em caso de erro de rede
     } finally {
       validationInProgress.current = false;
     }
   }, [user, signOut]);
 
-  // Verificar inatividade (menos agressivo)
+  // Verificação de inatividade mais relaxada
   const checkInactivity = useCallback(async () => {
     if (!user) return;
 
@@ -82,11 +61,14 @@ export const useSecureSession = (options: SessionSecurityOptions = {}) => {
     const timeSinceActivity = now - lastActivity;
     const inactiveMinutes = timeSinceActivity / (1000 * 60);
 
-    // Mostrar aviso antes do logout automático
-    if (inactiveMinutes >= (maxIdleTime - autoLogoutWarning) && !warningShown) {
+    // Em desenvolvimento, ser mais permissivo
+    const effectiveMaxIdle = import.meta.env.DEV ? maxIdleTime * 2 : maxIdleTime;
+
+    // Mostrar aviso apenas em produção ou quando próximo do limite
+    if (inactiveMinutes >= (effectiveMaxIdle - autoLogoutWarning) && !warningShown && !import.meta.env.DEV) {
       setWarningShown(true);
       toast.warning(
-        `Sua sessão expirará em ${autoLogoutWarning} minutos por inatividade. Clique aqui para continuar.`,
+        `Sua sessão expirará em ${autoLogoutWarning} minutos por inatividade.`,
         {
           duration: autoLogoutWarning * 60 * 1000,
           action: {
@@ -97,38 +79,54 @@ export const useSecureSession = (options: SessionSecurityOptions = {}) => {
       );
     }
 
-    // Logout automático por inatividade (menos frequente)
-    if (inactiveMinutes >= maxIdleTime) {
+    // Logout automático apenas se realmente necessário
+    if (inactiveMinutes >= effectiveMaxIdle) {
       console.warn('[SECURITY] Logout automático por inatividade');
-      toast.error('Sessão expirada por inatividade');
+      if (!import.meta.env.DEV) {
+        toast.error('Sessão expirada por inatividade');
+      }
       await signOut();
       return;
     }
 
-    // Validar sessão apenas se necessário
-    if (inactiveMinutes < (maxIdleTime - autoLogoutWarning)) {
+    // Validar sessão apenas em produção
+    if (!import.meta.env.DEV) {
       await validateSession();
     }
   }, [user, lastActivity, maxIdleTime, autoLogoutWarning, warningShown, updateActivity, validateSession, signOut]);
 
-  // Configurar listeners de atividade
+  // Configurar listeners de atividade mais leves
   useEffect(() => {
     if (!user) return;
 
-    const events = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart', 'click'];
+    // Menos eventos em desenvolvimento para reduzir overhead
+    const events = import.meta.env.DEV 
+      ? ['click', 'keypress'] 
+      : ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart', 'click'];
+    
+    const throttledUpdateActivity = (() => {
+      let lastUpdate = 0;
+      return () => {
+        const now = Date.now();
+        if (now - lastUpdate > 10000) { // Throttle para 10 segundos
+          lastUpdate = now;
+          updateActivity();
+        }
+      };
+    })();
     
     events.forEach(event => {
-      document.addEventListener(event, updateActivity, { passive: true });
+      document.addEventListener(event, throttledUpdateActivity, { passive: true });
     });
 
     return () => {
       events.forEach(event => {
-        document.removeEventListener(event, updateActivity);
+        document.removeEventListener(event, throttledUpdateActivity);
       });
     };
   }, [user, updateActivity]);
 
-  // Configurar verificação periódica (menos frequente)
+  // Configurar verificação periódica mais relaxada
   useEffect(() => {
     if (!user) {
       if (intervalRef.current) {
@@ -137,7 +135,9 @@ export const useSecureSession = (options: SessionSecurityOptions = {}) => {
       return;
     }
 
-    intervalRef.current = setInterval(checkInactivity, checkInterval * 1000);
+    // Intervalo maior em desenvolvimento
+    const effectiveInterval = import.meta.env.DEV ? checkInterval * 2 : checkInterval;
+    intervalRef.current = setInterval(checkInactivity, effectiveInterval * 1000);
 
     return () => {
       if (intervalRef.current) {
@@ -150,7 +150,6 @@ export const useSecureSession = (options: SessionSecurityOptions = {}) => {
   useEffect(() => {
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
-      if (timeoutRef.current) clearTimeout(timeoutRef.current);
     };
   }, []);
 
