@@ -5,16 +5,15 @@ import { useSolutionData } from "@/hooks/useSolutionData";
 import { useSolutionInteractions } from "@/hooks/useSolutionInteractions";
 import { SolutionBackButton } from "@/components/solution/SolutionBackButton";
 import { SolutionHeaderSection } from "@/components/solution/SolutionHeaderSection";
-import { SolutionTabsContent } from "@/components/solution/tabs/SolutionTabsContent";
 import { SolutionSidebar } from "@/components/solution/SolutionSidebar";
 import { SolutionMobileActions } from "@/components/solution/SolutionMobileActions";
 import { SolutionNotFound } from "@/components/solution/SolutionNotFound";
 import { useEffect, useState } from "react";
-import { useToolsData } from "@/hooks/useToolsData";
 import { useLogging } from "@/hooks/useLogging";
 import { PageTransition } from "@/components/transitions/PageTransition";
 import { FadeTransition } from "@/components/transitions/FadeTransition";
 import { SuccessCard } from "@/components/celebration/SuccessCard";
+import { Card, CardContent } from "@/components/ui/card";
 
 const SolutionDetails = () => {
   const { id } = useParams<{ id: string }>();
@@ -22,10 +21,7 @@ const SolutionDetails = () => {
   const { log, logError } = useLogging();
   const [showStartSuccess, setShowStartSuccess] = useState(false);
   
-  // Garantir que os dados das ferramentas estejam corretos, mas ignorar erros
-  const { isLoading: toolsDataLoading } = useToolsData();
-  
-  // Fetch solution data with the updated hook that includes progress
+  // Fetch solution data with progress
   const { solution, loading, error, progress } = useSolutionData(id);
   
   // Solution interaction handlers
@@ -58,20 +54,6 @@ const SolutionDetails = () => {
     }
   }, [solution, location.pathname, log]);
   
-  // Log adicional para depuração da inconsistência
-  useEffect(() => {
-    if (solution && id) {
-      console.log("[SOLUTION_DETAILS] Estado completo:", {
-        solutionId: id,
-        solutionTitle: solution.title,
-        progress: progress,
-        hasProgress: !!progress,
-        isCompleted: progress?.is_completed,
-        progressFields: progress ? Object.keys(progress) : []
-      });
-    }
-  }, [solution, progress, id]);
-  
   if (loading) {
     return <LoadingScreen message="Carregando detalhes da solução..." />;
   }
@@ -80,15 +62,6 @@ const SolutionDetails = () => {
     logError("Solution not found", { id });
     return <SolutionNotFound />;
   }
-  
-  // Log para depuração
-  log("Renderizando SolutionDetails com solução", { 
-    solutionId: solution.id, 
-    solutionTitle: solution.title,
-    progress,
-    hasValidProgress: !!progress,
-    isCompleted: progress?.is_completed
-  });
   
   return (
     <PageTransition>
@@ -113,7 +86,41 @@ const SolutionDetails = () => {
         <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-8">
           <div className="md:col-span-2">
             <FadeTransition delay={0.2}>
-              <SolutionTabsContent solution={solution} />
+              <Card className="bg-[#151823] border border-white/5">
+                <CardContent className="p-8">
+                  <div className="prose prose-invert max-w-none">
+                    <h3 className="text-xl font-semibold text-neutral-100 mb-4">
+                      Sobre esta Solução
+                    </h3>
+                    <p className="text-neutral-300 leading-relaxed mb-6">
+                      {solution.description || "Esta solução foi desenvolvida para otimizar seus processos e impulsionar seus resultados."}
+                    </p>
+                    
+                    {solution.benefits && solution.benefits.length > 0 && (
+                      <div className="mb-6">
+                        <h4 className="text-lg font-medium text-neutral-100 mb-3">
+                          Principais Benefícios
+                        </h4>
+                        <ul className="list-disc list-inside space-y-2">
+                          {solution.benefits.map((benefit, index) => (
+                            <li key={index} className="text-neutral-300">
+                              {benefit}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                    
+                    <div className="bg-viverblue/10 border border-viverblue/30 rounded-lg p-6 mt-6">
+                      <p className="text-neutral-200 text-center">
+                        <span className="font-medium">Pronto para começar?</span>
+                        <br />
+                        Clique em "Implementar Solução" para acessar todos os recursos, ferramentas e guias passo a passo.
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
             </FadeTransition>
             
             <FadeTransition delay={0.3}>
@@ -131,6 +138,10 @@ const SolutionDetails = () => {
             <FadeTransition delay={0.4} direction="right">
               <SolutionSidebar 
                 solution={solution}
+                progress={progress}
+                startImplementation={startImplementation}
+                continueImplementation={continueImplementation}
+                initializing={initializing}
               />
             </FadeTransition>
           </div>

@@ -13,13 +13,18 @@ import {
   BarChart,
   FileText,
   Wrench,
-  Video
+  Video,
+  ArrowRight
 } from "lucide-react";
 import { useSolutionStats } from "@/hooks/useSolutionStats";
 import { useNavigate } from "react-router-dom";
 
 interface SolutionSidebarProps {
   solution: Solution;
+  progress?: any;
+  startImplementation?: () => Promise<any>;
+  continueImplementation?: () => void;
+  initializing?: boolean;
 }
 
 const getDifficultyColor = (difficulty: string) => {
@@ -61,12 +66,42 @@ const getCategoryIcon = (category: string) => {
   }
 };
 
-export const SolutionSidebar = ({ solution }: SolutionSidebarProps) => {
+export const SolutionSidebar = ({ 
+  solution, 
+  progress, 
+  startImplementation, 
+  continueImplementation, 
+  initializing 
+}: SolutionSidebarProps) => {
   const { stats, loading: statsLoading } = useSolutionStats(solution.id);
   const navigate = useNavigate();
 
-  const handleStartImplementation = () => {
-    navigate(`/implementation/${solution.id}/0`);
+  const handleImplementationClick = async () => {
+    if (progress?.is_completed || progress?.current_module > 0) {
+      // Se já há progresso, vai direto para a implementação
+      navigate(`/implementation/${solution.id}`);
+    } else if (startImplementation) {
+      // Se não há progresso, inicia a implementação
+      await startImplementation();
+      navigate(`/implementation/${solution.id}`);
+    } else {
+      // Fallback - vai direto para implementação
+      navigate(`/implementation/${solution.id}`);
+    }
+  };
+
+  const getButtonText = () => {
+    if (initializing) return "Iniciando...";
+    if (progress?.is_completed) return "Revisar Implementação";
+    if (progress?.current_module > 0) return "Continuar Implementação";
+    return "Implementar Solução";
+  };
+
+  const getButtonIcon = () => {
+    if (progress?.is_completed || progress?.current_module > 0) {
+      return <ArrowRight className="h-5 w-5 mr-2" />;
+    }
+    return <Play className="h-5 w-5 mr-2" />;
   };
 
   return (
@@ -75,15 +110,21 @@ export const SolutionSidebar = ({ solution }: SolutionSidebarProps) => {
       <Card className="bg-gradient-to-br from-viverblue/20 to-viverblue/5 border border-viverblue/30">
         <CardContent className="p-6">
           <Button
-            onClick={handleStartImplementation}
+            onClick={handleImplementationClick}
+            disabled={initializing}
             className="w-full bg-viverblue hover:bg-viverblue/90 text-white font-medium py-3"
             size="lg"
           >
-            <Play className="h-5 w-5 mr-2" />
-            Implementar Solução
+            {getButtonIcon()}
+            {getButtonText()}
           </Button>
           <p className="text-xs text-neutral-400 mt-3 text-center">
-            Comece agora a aplicar esta solução no seu contexto
+            {progress?.is_completed 
+              ? "Revise sua implementação completa"
+              : progress?.current_module > 0
+              ? "Continue de onde parou"
+              : "Comece agora a aplicar esta solução"
+            }
           </p>
         </CardContent>
       </Card>
