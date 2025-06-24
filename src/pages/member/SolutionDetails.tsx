@@ -131,10 +131,6 @@ const SolutionDetails = () => {
             <FadeTransition delay={0.4} direction="right">
               <SolutionSidebar 
                 solution={solution}
-                progress={progress}
-                startImplementation={startImplementation}
-                continueImplementation={continueImplementation}
-                initializing={initializing}
               />
             </FadeTransition>
           </div>
