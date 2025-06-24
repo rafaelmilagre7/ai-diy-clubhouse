@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/auth';
 import { getUserRoleName } from '@/lib/supabase/types';
+import { logger } from '@/utils/logger';
 
 export const useOnboardingRequired = () => {
   const { user, profile, isLoading: authLoading } = useAuth();
@@ -17,32 +18,47 @@ export const useOnboardingRequired = () => {
       }
 
       try {
-        console.log('[ONBOARDING-REQUIRED] Verificando necessidade de onboarding para:', user.id);
+        logger.info('[ONBOARDING-REQUIRED] Verificando necessidade de onboarding:', {
+          userId: user.id.substring(0, 8) + '***',
+          email: user.email,
+          hasProfile: !!profile
+        });
+        
+        // Se não há perfil, aguardar um pouco mais
+        if (!profile) {
+          logger.warn('[ONBOARDING-REQUIRED] Aguardando carregamento do perfil...');
+          setTimeout(() => {
+            setIsLoading(false);
+          }, 2000);
+          return;
+        }
         
         // Verificar se onboarding foi completado
         const onboardingCompleted = profile?.onboarding_completed === true;
         
-        console.log('[ONBOARDING-REQUIRED] Status do onboarding:', {
-          userId: user.id,
-          email: user.email,
-          profileOnboardingCompleted: profile?.onboarding_completed,
+        logger.info('[ONBOARDING-REQUIRED] Status do onboarding:', {
+          userId: user.id.substring(0, 8) + '***',
           onboardingCompleted,
           userRole: getUserRoleName(profile)
         });
 
-        // Se onboarding foi completado, não é necessário
-        if (onboardingCompleted) {
-          console.log('[ONBOARDING-REQUIRED] Onboarding não necessário - já completado');
+        // Administradores podem pular onboarding
+        if (getUserRoleName(profile) === 'admin') {
+          logger.info('[ONBOARDING-REQUIRED] Admin detectado - onboarding opcional');
+          setIsRequired(false);
+          setHasCompleted(true);
+        } else if (onboardingCompleted) {
+          logger.info('[ONBOARDING-REQUIRED] Onboarding já completado');
           setIsRequired(false);
           setHasCompleted(true);
         } else {
-          console.log('[ONBOARDING-REQUIRED] Onboarding OBRIGATÓRIO - não completado');
+          logger.info('[ONBOARDING-REQUIRED] Onboarding OBRIGATÓRIO');
           setIsRequired(true);
           setHasCompleted(false);
         }
         
       } catch (error) {
-        console.error('[ONBOARDING-REQUIRED] Erro ao verificar necessidade de onboarding:', error);
+        logger.error('[ONBOARDING-REQUIRED] Erro ao verificar onboarding:', error);
         // SEGURANÇA: Em caso de erro, assumir que precisa fazer onboarding
         setIsRequired(true);
         setHasCompleted(false);
@@ -53,14 +69,6 @@ export const useOnboardingRequired = () => {
 
     checkOnboardingRequirement();
   }, [user, profile, authLoading]);
-
-  console.log('[ONBOARDING-REQUIRED] Estado final:', {
-    isLoading,
-    isRequired,
-    hasCompleted,
-    userId: user?.id,
-    profileOnboardingCompleted: profile?.onboarding_completed
-  });
 
   return {
     isRequired,

@@ -6,9 +6,11 @@ import EnhancedLoadingScreen from "@/components/common/EnhancedLoadingScreen";
 import { useLoadingTimeoutEnhanced } from "@/hooks/useLoadingTimeoutEnhanced";
 import { logger } from "@/utils/logger";
 import { useState, useEffect } from "react";
+import { cleanupAuthState, recoverFromAuthError } from "@/utils/authCleanup";
+import { getUserRoleName } from "@/lib/supabase/types";
 
 const RobustRootRedirect = () => {
-  const { user, profile, isLoading: authLoading } = useAuth();
+  const { user, profile, isLoading: authLoading, error: authError } = useAuth();
   const { isRequired: onboardingRequired, isLoading: onboardingLoading } = useOnboardingRequired();
   const [retryCount, setRetryCount] = useState(0);
   const [hasError, setHasError] = useState(false);
@@ -18,26 +20,36 @@ const RobustRootRedirect = () => {
   const { hasTimedOut, retry } = useLoadingTimeoutEnhanced({
     isLoading: totalLoading,
     context: 'root-redirect',
-    timeoutMs: 15000,
+    timeoutMs: 12000,
     onTimeout: () => {
       logger.error("[ROOT-REDIRECT] Timeout na verificação inicial");
       setHasError(true);
     }
   });
 
+  // Monitor de erros do auth
+  useEffect(() => {
+    if (authError) {
+      logger.error("[ROOT-REDIRECT] Erro de auth detectado:", authError);
+      setHasError(true);
+    }
+  }, [authError]);
+
   // Log detalhado do estado
   useEffect(() => {
     logger.info("[ROOT-REDIRECT] Estado atual:", {
       hasUser: !!user,
       hasProfile: !!profile,
+      userRole: profile ? getUserRoleName(profile) : null,
       authLoading,
       onboardingLoading,
       onboardingRequired,
       retryCount,
       hasError,
-      hasTimedOut
+      hasTimedOut,
+      authError
     });
-  }, [user, profile, authLoading, onboardingLoading, onboardingRequired, retryCount, hasError, hasTimedOut]);
+  }, [user, profile, authLoading, onboardingLoading, onboardingRequired, retryCount, hasError, hasTimedOut, authError]);
 
   const handleRetry = () => {
     logger.info("[ROOT-REDIRECT] Tentativa de retry", { attempt: retryCount + 1 });
@@ -45,32 +57,23 @@ const RobustRootRedirect = () => {
     setHasError(false);
     retry();
     
-    // Se já tentou 3 vezes, forçar logout
+    // Se já tentou 3 vezes, forçar limpeza
     if (retryCount >= 2) {
-      logger.warn("[ROOT-REDIRECT] Muitas tentativas, forçando logout");
+      logger.warn("[ROOT-REDIRECT] Muitas tentativas, forçando limpeza");
       handleForceExit();
     }
   };
 
-  const handleForceExit = () => {
-    logger.info("[ROOT-REDIRECT] Forçando saída e limpeza");
-    
-    // Limpar completamente o estado de auth
-    Object.keys(localStorage).forEach(key => {
-      if (key.startsWith('supabase.auth.') || key.includes('sb-')) {
-        localStorage.removeItem(key);
-      }
-    });
-    
-    // Recarregar a página para um estado limpo
-    window.location.href = '/auth';
+  const handleForceExit = async () => {
+    logger.info("[ROOT-REDIRECT] Forçando limpeza e redirecionamento");
+    await recoverFromAuthError();
   };
 
-  // Se há timeout ou erro, mostrar loading com opções de recuperação
-  if (hasTimedOut || hasError) {
+  // Se há timeout, erro de auth ou erro geral, mostrar tela de erro
+  if (hasTimedOut || hasError || authError) {
     return (
       <EnhancedLoadingScreen
-        message="Problema na verificação de acesso"
+        message={authError ? `Erro de autenticação: ${authError}` : "Problema na verificação de acesso"}
         context="root-redirect-error"
         isLoading={false}
         onRetry={handleRetry}
@@ -83,7 +86,7 @@ const RobustRootRedirect = () => {
   // Loading normal
   if (totalLoading) {
     const loadingContext = authLoading ? 'auth' : 'onboarding';
-    const loadingMessage = authLoading ? 'Verificando credenciais...' : 'Verificando seu progresso...';
+    const loadingMessage = authLoading ? 'Verificando suas credenciais...' : 'Verificando seu progresso...';
     
     return (
       <EnhancedLoadingScreen
@@ -127,7 +130,7 @@ const RobustRootRedirect = () => {
   }
 
   // Determinar rota baseada no papel do usuário
-  const userRole = profile?.user_roles?.name || profile?.role;
+  const userRole = getUserRoleName(profile);
   
   if (userRole === 'formacao') {
     logger.info("[ROOT-REDIRECT] Usuário formação -> /formacao");

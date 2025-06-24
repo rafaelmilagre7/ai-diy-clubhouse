@@ -16,7 +16,7 @@ import SetNewPassword from '@/pages/auth/SetNewPassword';
 import OnboardingPage from '@/pages/OnboardingPage';
 import RegisterPage from '@/pages/auth/RegisterPage';
 
-// Redirect robusto
+// Usar o redirect robusto
 import RobustRootRedirect from '@/components/routing/RobustRootRedirect';
 
 export const AppRoutes = createBrowserRouter([
@@ -56,7 +56,7 @@ export const AppRoutes = createBrowserRouter([
     element: <RegisterPage />
   },
 
-  // Rotas de membros
+  // Rotas de membros (já usando RobustProtectedRoutes)
   ...memberRoutes,
 
   // Rotas de admin
