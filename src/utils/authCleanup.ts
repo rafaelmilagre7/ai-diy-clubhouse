@@ -6,15 +6,15 @@ import { logger } from '@/utils/logger';
  * Limpeza completa do estado de autenticação
  */
 export const cleanupAuthState = async () => {
-  logger.info('[AUTH-CLEANUP] Iniciando limpeza completa do estado de auth');
+  logger.info('Iniciando limpeza completa do estado de auth');
   
   try {
     // 1. Tentar signOut global
     try {
       await supabase.auth.signOut({ scope: 'global' });
-      logger.info('[AUTH-CLEANUP] SignOut global realizado');
+      logger.info('SignOut global realizado');
     } catch (error) {
-      logger.warn('[AUTH-CLEANUP] Erro no signOut, continuando limpeza:', error);
+      logger.warn('Erro no signOut, continuando limpeza:', error);
     }
     
     // 2. Limpar localStorage
@@ -27,7 +27,7 @@ export const cleanupAuthState = async () => {
     
     keysToRemove.forEach(key => {
       localStorage.removeItem(key);
-      logger.debug('[AUTH-CLEANUP] Removida chave:', key);
+      logger.debug('Removida chave:', key);
     });
     
     // 3. Limpar sessionStorage se existir
@@ -39,10 +39,10 @@ export const cleanupAuthState = async () => {
       });
     }
     
-    logger.info('[AUTH-CLEANUP] Limpeza concluída com sucesso');
+    logger.info('Limpeza concluída com sucesso');
     
   } catch (error) {
-    logger.error('[AUTH-CLEANUP] Erro durante limpeza:', error);
+    logger.error('Erro durante limpeza:', error);
   }
 };
 
@@ -50,7 +50,7 @@ export const cleanupAuthState = async () => {
  * Função de recuperação de erro de auth
  */
 export const recoverFromAuthError = async () => {
-  logger.warn('[AUTH-RECOVERY] Iniciando recuperação de erro de auth');
+  logger.warn('Iniciando recuperação de erro de auth');
   
   await cleanupAuthState();
   
@@ -65,6 +65,6 @@ export const recoverFromAuthError = async () => {
  * Função para forçar reload em caso de erro crítico
  */
 export const forceReload = () => {
-  logger.warn('[AUTH-RECOVERY] Forçando reload da página');
+  logger.warn('Forçando reload da página');
   window.location.reload();
 };

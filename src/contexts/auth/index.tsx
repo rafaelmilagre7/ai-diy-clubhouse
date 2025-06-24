@@ -24,7 +24,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   // Usar métodos de auth robustos
   const authMethods = useAuthMethods({ setIsLoading });
 
-  // Função para carregar perfil com retry
+  // Função para carregar perfil com retry - CORRIGIR assinatura
   const loadUserProfile = async (userId: string, email?: string, retryCount = 0) => {
     const maxRetries = 3;
     
@@ -32,23 +32,23 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setProfileLoading(true);
       setError(null);
       
-      logger.info('[AUTH-PROVIDER] Carregando perfil:', { userId, email, attempt: retryCount + 1 });
+      logger.info('Carregando perfil:', { userId, email, attempt: retryCount + 1 });
       
       let userProfile = await fetchUserProfile(userId);
       
       // Se não encontrou perfil, tentar criar
       if (!userProfile && email) {
-        logger.info('[AUTH-PROVIDER] Perfil não encontrado, criando...');
+        logger.info('Perfil não encontrado, criando...');
         userProfile = await createUserProfileIfNeeded(userId, email);
       }
       
       if (userProfile) {
         setProfile(userProfile);
-        logger.info('[AUTH-PROVIDER] Perfil carregado com sucesso');
+        logger.info('Perfil carregado com sucesso');
       } else if (retryCount < maxRetries) {
         // Retry com delay progressivo
         const delay = (retryCount + 1) * 1000;
-        logger.warn('[AUTH-PROVIDER] Tentativa de retry em', delay, 'ms');
+        logger.warn('Tentativa de retry em', delay, 'ms');
         
         setTimeout(() => {
           loadUserProfile(userId, email, retryCount + 1);
@@ -59,7 +59,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
       
     } catch (error) {
-      logger.error('[AUTH-PROVIDER] Erro ao carregar perfil:', error);
+      logger.error('Erro ao carregar perfil:', error);
       setError(error instanceof Error ? error.message : 'Erro desconhecido');
       
       if (retryCount < maxRetries) {
@@ -75,12 +75,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   // Configurar listener de mudanças de auth
   useEffect(() => {
-    logger.info('[AUTH-PROVIDER] Inicializando AuthProvider');
+    logger.info('Inicializando AuthProvider');
     
     // Configurar listener de mudanças de auth
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        logger.info('[AUTH-PROVIDER] Auth state changed:', { event, hasSession: !!session });
+        logger.info('Auth state changed:', { event, hasSession: !!session });
         
         setSession(session);
         setUser(session?.user ?? null);
@@ -100,10 +100,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     // Verificar sessão existente
     supabase.auth.getSession().then(({ data: { session }, error }) => {
       if (error) {
-        logger.error('[AUTH-PROVIDER] Erro ao obter sessão:', error);
+        logger.error('Erro ao obter sessão:', error);
         setError(error.message);
       } else {
-        logger.info('[AUTH-PROVIDER] Sessão inicial:', { hasSession: !!session });
+        logger.info('Sessão inicial:', { hasSession: !!session });
         setSession(session);
         setUser(session?.user ?? null);
         
@@ -135,6 +135,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     isLoading: isLoading || profileLoading,
     error,
     refreshProfile,
+    isAdmin: profile?.user_roles?.name === 'admin',
+    isFormacao: profile?.user_roles?.name === 'formacao',
+    setSession,
+    setUser,
+    setProfile,
+    setIsLoading,
     ...authMethods
   };
 
