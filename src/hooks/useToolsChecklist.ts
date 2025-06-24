@@ -51,8 +51,7 @@ export const useToolsChecklist = (solutionId: string | null) => {
         const { data, error } = await supabase
           .from('solution_tools')
           .select('*')
-          .eq('solution_id', solutionId as any)
-          .order('order_index');
+          .eq('solution_id', solutionId as any);
 
         if (error) throw error;
 
@@ -61,8 +60,7 @@ export const useToolsChecklist = (solutionId: string | null) => {
             const tool = availableTools.find(t => t.name === solutionTool.tool_name);
             return {
               ...tool,
-              is_required: solutionTool.is_required,
-              order_index: solutionTool.order_index
+              is_required: solutionTool.is_required
             };
           })
         );
@@ -99,12 +97,11 @@ export const useToolsChecklist = (solutionId: string | null) => {
 
       // Inserir novas ferramentas
       if (tools.length > 0) {
-        const toolsToInsert = tools.map((tool, index) => ({
+        const toolsToInsert = tools.map((tool) => ({
           solution_id: solutionId,
           tool_name: tool.name,
           tool_url: tool.official_url,
-          is_required: tool.is_required,
-          order_index: index
+          is_required: tool.is_required
         }));
 
         const { error } = await supabase
