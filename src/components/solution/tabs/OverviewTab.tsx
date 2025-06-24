@@ -3,13 +3,22 @@ import React from "react";
 import { Solution } from "@/lib/supabase";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Clock, Target, CheckCircle, AlertCircle } from "lucide-react";
+import { Clock, Target, CheckCircle, AlertCircle, FileText, Wrench, Video } from "lucide-react";
+import { useSolutionResources } from "@/hooks/useSolutionResources";
+import { useSolutionTools } from "@/hooks/useSolutionTools";
+import { useSolutionVideos } from "@/hooks/useSolutionVideos";
 
 interface OverviewTabProps {
   solution: Solution;
 }
 
 export const OverviewTab = ({ solution }: OverviewTabProps) => {
+  const { resources } = useSolutionResources(solution.id);
+  const { tools } = useSolutionTools(solution.id);
+  const { videos } = useSolutionVideos(solution.id);
+
+  const requiredTools = tools.filter(tool => tool.is_required);
+
   return (
     <div className="space-y-6">
       {/* Descrição Principal */}
@@ -61,11 +70,11 @@ export const OverviewTab = ({ solution }: OverviewTabProps) => {
           </CardContent>
         </Card>
 
-        {/* Status e Tempo */}
+        {/* Status e Resumo de Recursos */}
         <Card className="bg-[#151823] border border-white/5">
           <CardHeader>
             <CardTitle className="text-neutral-100 text-lg">
-              Status da Solução
+              Status e Recursos
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -83,30 +92,104 @@ export const OverviewTab = ({ solution }: OverviewTabProps) => {
               )}
             </div>
             
-            {/* Tempo estimado se disponível */}
-            {"estimated_time" in solution && typeof (solution as any).estimated_time === "number" && (solution as any).estimated_time > 0 && (
-              <div className="flex items-center gap-2">
-                <Clock className="h-4 w-4 text-blue-400" />
-                <span className="text-neutral-200">
-                  Tempo estimado: {(solution as any).estimated_time} minutos
-                </span>
+            <div className="space-y-2">
+              <div className="flex items-center justify-between text-sm">
+                <div className="flex items-center gap-2 text-neutral-400">
+                  <FileText className="h-4 w-4" />
+                  <span>Materiais de apoio</span>
+                </div>
+                <span className="text-neutral-200">{resources.length}</span>
               </div>
-            )}
+              
+              <div className="flex items-center justify-between text-sm">
+                <div className="flex items-center gap-2 text-neutral-400">
+                  <Wrench className="h-4 w-4" />
+                  <span>Ferramentas necessárias</span>
+                </div>
+                <span className="text-neutral-200">{tools.length}</span>
+              </div>
+              
+              <div className="flex items-center justify-between text-sm">
+                <div className="flex items-center gap-2 text-neutral-400">
+                  <Video className="h-4 w-4" />
+                  <span>Vídeos educacionais</span>
+                </div>
+                <span className="text-neutral-200">{videos.length}</span>
+              </div>
+            </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Placeholder para conteúdo futuro */}
+      {/* Resumo de Ferramentas Obrigatórias */}
+      {requiredTools.length > 0 && (
+        <Card className="bg-[#151823] border border-white/5">
+          <CardHeader>
+            <CardTitle className="text-neutral-100 text-lg">
+              Ferramentas Obrigatórias
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-neutral-400 mb-4">
+              Para implementar esta solução, você precisará ter acesso às seguintes ferramentas:
+            </p>
+            <div className="grid gap-2">
+              {requiredTools.map((tool) => (
+                <div key={tool.id} className="flex items-center gap-3 p-3 bg-neutral-800/50 rounded-lg">
+                  <Wrench className="h-4 w-4 text-viverblue" />
+                  <span className="text-neutral-200">{tool.tool_name}</span>
+                  <Badge variant="outline" className="bg-amber-900/30 text-amber-400 border-amber-900/30 text-xs ml-auto">
+                    Obrigatória
+                  </Badge>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Próximos Passos */}
       <Card className="bg-[#151823] border border-white/5">
         <CardHeader>
           <CardTitle className="text-neutral-100 text-lg">
-            O que você vai aprender
+            Como começar
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-neutral-400 italic">
-            Conteúdo detalhado será expandido nas próximas atualizações com base nos módulos e recursos da solução.
-          </p>
+          <div className="space-y-3">
+            <div className="flex items-start gap-3">
+              <div className="bg-viverblue/20 text-viverblue rounded-full w-6 h-6 flex items-center justify-center text-sm font-semibold">
+                1
+              </div>
+              <p className="text-neutral-200">
+                Revise as ferramentas necessárias e certifique-se de ter acesso a elas
+              </p>
+            </div>
+            <div className="flex items-start gap-3">
+              <div className="bg-viverblue/20 text-viverblue rounded-full w-6 h-6 flex items-center justify-center text-sm font-semibold">
+                2
+              </div>
+              <p className="text-neutral-200">
+                Faça download dos materiais de apoio disponíveis
+              </p>
+            </div>
+            <div className="flex items-start gap-3">
+              <div className="bg-viverblue/20 text-viverblue rounded-full w-6 h-6 flex items-center justify-center text-sm font-semibold">
+                3
+              </div>
+              <p className="text-neutral-200">
+                Assista aos vídeos educacionais para entender o processo
+              </p>
+            </div>
+            <div className="flex items-start gap-3">
+              <div className="bg-viverblue/20 text-viverblue rounded-full w-6 h-6 flex items-center justify-center text-sm font-semibold">
+                4
+              </div>
+              <p className="text-neutral-200">
+                Inicie a implementação seguindo os módulos em ordem
+              </p>
+            </div>
+          </div>
         </CardContent>
       </Card>
     </div>
