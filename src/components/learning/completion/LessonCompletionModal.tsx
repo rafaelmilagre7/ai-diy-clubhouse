@@ -28,15 +28,21 @@ export const LessonCompletionModal: React.FC<LessonCompletionModalProps> = ({
     log('NPS enviado com sucesso para a aula', { lessonId: lesson.id, lessonTitle: lesson.title });
     setNpsSubmitted(true);
     
-    // Automaticamente avança para próxima aula ou fecha o modal após envio
-    setTimeout(() => {
-      setIsOpen(false);
-      if (onNext) onNext();
-    }, 1500);
+    // Fechar modal e avançar para próxima aula
+    setIsOpen(false);
+    if (onNext) {
+      setTimeout(() => {
+        onNext();
+      }, 500);
+    }
+  };
+
+  const handleCloseModal = () => {
+    setIsOpen(false);
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={() => {}} modal>
+    <Dialog open={isOpen} onOpenChange={handleCloseModal}>
       <DialogContent className="sm:max-w-2xl border-0 shadow-2xl bg-white p-0 overflow-hidden max-h-[90vh] overflow-y-auto">
         {/* Header with celebration animation */}
         <div className="relative bg-gradient-to-r from-emerald-500 to-blue-500 p-8 text-white">
@@ -63,6 +69,7 @@ export const LessonCompletionModal: React.FC<LessonCompletionModalProps> = ({
         <div className="p-8">
           <LessonNPSForm
             lessonId={lesson.id}
+            onNPSSubmitted={handleNPSCompleted}
             className=""
           />
         </div>
