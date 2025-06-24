@@ -8,10 +8,17 @@ export interface Profile {
   id: string;
   name: string;
   email: string;
+  avatar_url?: string;
+  company_name?: string;
+  industry?: string;
+  role_id?: string;
+  role?: string;
   user_roles?: {
     name: string;
   };
-  role?: string;
+  created_at: string;
+  onboarding_completed: boolean;
+  onboarding_completed_at?: string;
 }
 
 export interface AuthContextType {
@@ -20,6 +27,13 @@ export interface AuthContextType {
   isLoading: boolean;
   error: string | null;
   isAdmin: boolean;
+  isFormacao: boolean;
+  signIn: (email: string, password: string) => Promise<{ error?: Error }>;
+  signUp: (email: string, password: string, metadata?: any) => Promise<{ error?: Error }>;
+  signOut: () => Promise<{ success: boolean; error?: Error | null }>;
+  refreshProfile: () => Promise<void>;
+  setProfile: React.Dispatch<React.SetStateAction<Profile | null>>;
+  setIsLoading: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -30,6 +44,104 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
+
+  const signIn = async (email: string, password: string) => {
+    try {
+      setIsLoading(true);
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
+
+      if (error) {
+        toast({
+          title: "Erro no login",
+          description: error.message,
+          variant: "destructive"
+        });
+        return { error };
+      }
+
+      return { error: null };
+    } catch (err) {
+      const error = err instanceof Error ? err : new Error('Erro inesperado');
+      return { error };
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const signUp = async (email: string, password: string, metadata?: any) => {
+    try {
+      setIsLoading(true);
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: metadata || {}
+        }
+      });
+
+      if (error) {
+        toast({
+          title: "Erro no cadastro",
+          description: error.message,
+          variant: "destructive"
+        });
+        return { error };
+      }
+
+      return { error: null };
+    } catch (err) {
+      const error = err instanceof Error ? err : new Error('Erro inesperado');
+      return { error };
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const signOut = async () => {
+    try {
+      setIsLoading(true);
+      const { error } = await supabase.auth.signOut();
+      
+      if (error) {
+        return { success: false, error };
+      }
+
+      setUser(null);
+      setProfile(null);
+      return { success: true, error: null };
+    } catch (err) {
+      const error = err instanceof Error ? err : new Error('Erro inesperado');
+      return { success: false, error };
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const refreshProfile = async () => {
+    if (user) {
+      try {
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select(`
+            *,
+            user_roles (
+              name
+            )
+          `)
+          .eq('id', user.id)
+          .single();
+          
+        if (!profileError && profile) {
+          setProfile(profile);
+        }
+      } catch (error) {
+        console.error('Erro ao atualizar perfil:', error);
+      }
+    }
+  };
 
   useEffect(() => {
     // Get initial user
@@ -102,6 +214,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }, [toast]);
 
   const isAdmin = profile?.user_roles?.name === 'admin' || profile?.role === 'admin';
+  const isFormacao = profile?.user_roles?.name === 'formacao' || profile?.role === 'formacao';
 
   return (
     <AuthContext.Provider
@@ -110,7 +223,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         profile,
         isLoading,
         error,
-        isAdmin
+        isAdmin,
+        isFormacao,
+        signIn,
+        signUp,
+        signOut,
+        refreshProfile,
+        setProfile,
+        setIsLoading
       }}
     >
       {children}

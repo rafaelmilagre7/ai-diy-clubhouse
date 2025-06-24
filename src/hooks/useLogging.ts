@@ -10,5 +10,9 @@ export const useLogging = () => {
     console.error(`[ERROR] ${message}`, error);
   }, []);
 
-  return { log, logError };
+  const logWarning = useCallback((message: string, data?: any) => {
+    console.warn(`[WARNING] ${message}`, data);
+  }, []);
+
+  return { log, logError, logWarning };
 };

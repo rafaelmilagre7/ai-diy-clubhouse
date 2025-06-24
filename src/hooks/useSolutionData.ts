@@ -11,6 +11,8 @@ export interface Solution {
   category: string;
   difficulty: string;
   published: boolean;
+  thumbnail_url?: string;
+  slug: string;
   created_at: string;
   updated_at: string;
 }
@@ -83,5 +85,5 @@ export const useSolutionData = (solutionId?: string) => {
     fetchData();
   }, [solutionId, user, log, logError]);
 
-  return { solution, progress, loading, error };
+  return { solution, setSolution, progress, loading, error };
 };
