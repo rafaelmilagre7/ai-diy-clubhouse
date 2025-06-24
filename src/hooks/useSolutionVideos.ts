@@ -1,71 +1,49 @@
 
-import { useState, useEffect } from "react";
-import { supabase } from "@/lib/supabase";
-import { useLogging } from "@/hooks/useLogging";
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/lib/supabase';
+import { useLogging } from '@/hooks/useLogging';
 
 export interface SolutionVideo {
   id: string;
+  solution_id: string;
   title: string;
-  url: string;
   description?: string;
-  video_type: string;
+  video_url: string;
   thumbnail_url?: string;
   duration_seconds?: number;
+  video_type: 'youtube' | 'vimeo' | 'direct';
+  order_index: number;
+  created_at: string;
 }
 
 export const useSolutionVideos = (solutionId: string) => {
-  const [videos, setVideos] = useState<SolutionVideo[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const { log, logError } = useLogging();
 
-  useEffect(() => {
-    const fetchVideos = async () => {
-      if (!solutionId) {
-        setLoading(false);
-        return;
-      }
+  const { data: videos = [], isLoading: loading, error } = useQuery({
+    queryKey: ['solution-videos', solutionId],
+    queryFn: async () => {
+      if (!solutionId) return [];
+
+      log('Buscando vídeos da solução', { solutionId });
 
       try {
-        setLoading(true);
-        log("Buscando vídeos da solução", { solutionId });
-
-        // Buscar vídeos associados à solução através dos recursos
         const { data, error } = await supabase
-          .from("solution_resources")
-          .select("*")
-          .eq("solution_id", solutionId as any)
-          .eq("type", "video" as any)
-          .order("created_at", { ascending: true });
+          .from('solution_videos')
+          .select('*')
+          .eq('solution_id', solutionId as any)
+          .order('order_index', { ascending: true });
 
-        if (error) {
-          logError("Erro ao buscar vídeos da solução", error);
-          throw error;
-        }
+        if (error) throw error;
 
-        const formattedVideos = (data || []).map((video: any) => ({
-          id: video.id,
-          title: video.name,
-          url: video.url,
-          description: video.description,
-          video_type: video.format || "youtube",
-          thumbnail_url: video.thumbnail_url,
-          duration_seconds: video.duration_seconds
-        }));
-
-        setVideos(formattedVideos);
-        log("Vídeos carregados com sucesso", { count: formattedVideos.length });
-      } catch (err: any) {
-        logError("Erro ao carregar vídeos", err);
-        setError(err.message);
-        setVideos([]);
-      } finally {
-        setLoading(false);
+        log('Vídeos da solução carregados', { count: data?.length || 0 });
+        return (data as any[]) || [];
+      } catch (error) {
+        logError('Erro ao buscar vídeos da solução', error);
+        throw error;
       }
-    };
-
-    fetchVideos();
-  }, [solutionId, log, logError]);
+    },
+    enabled: !!solutionId
+  });
 
   return { videos, loading, error };
 };
