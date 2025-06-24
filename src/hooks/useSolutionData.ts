@@ -3,19 +3,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/auth";
 import { useLogging } from "@/hooks/useLogging";
-
-export interface Solution {
-  id: string;
-  title: string;
-  description: string;
-  category: string;
-  difficulty: string;
-  published: boolean;
-  thumbnail_url?: string;
-  slug: string;
-  created_at: string;
-  updated_at: string;
-}
+import { Solution } from "@/lib/supabase/types";
 
 export interface Progress {
   user_id: string;

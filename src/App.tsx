@@ -5,7 +5,7 @@ import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { RouterProvider } from "react-router-dom";
 import { Toaster } from "@/components/ui/toaster";
 
-import { AuthProvider } from "./contexts/auth";
+import { AuthProvider } from "./contexts/auth/index";
 import { AppRoutes } from "./routes/AppRoutes";
 
 const queryClient = new QueryClient();
