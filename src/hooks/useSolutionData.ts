@@ -1,136 +1,87 @@
 
 import { useState, useEffect } from "react";
-import { supabase, Solution } from "@/lib/supabase";
-import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/auth";
-import { useNavigate } from "react-router-dom";
+import { useLogging } from "@/hooks/useLogging";
 
-export const useSolutionData = (id: string | undefined) => {
-  const { user, profile } = useAuth();
-  const { toast } = useToast();
-  const navigate = useNavigate();
+export interface Solution {
+  id: string;
+  title: string;
+  description: string;
+  category: string;
+  difficulty: string;
+  published: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Progress {
+  user_id: string;
+  solution_id: string;
+  is_completed: boolean;
+  current_module?: number;
+  completed_modules?: number[];
+  started_at?: string;
+  completed_at?: string;
+}
+
+export const useSolutionData = (solutionId?: string) => {
+  const { user } = useAuth();
+  const { log, logError } = useLogging();
   const [solution, setSolution] = useState<Solution | null>(null);
-  const [progress, setProgress] = useState<any | null>(null);
+  const [progress, setProgress] = useState<Progress | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  
-  // Verificação correta se o usuário é admin
-  const isAdmin = profile?.user_roles?.name === 'admin' || profile?.role === 'admin';
 
   useEffect(() => {
-    const fetchSolution = async () => {
-      if (!id) {
+    const fetchData = async () => {
+      if (!solutionId) {
         setLoading(false);
         return;
       }
-      
+
       try {
         setLoading(true);
-        console.log(`[SOLUTION_DATA] Buscando solução com ID`, { id, userId: user?.id, isAdmin });
-        
-        let query = supabase
+        log("Fetching solution data", { solutionId });
+
+        // Fetch solution
+        const { data: solutionData, error: solutionError } = await supabase
           .from("solutions")
           .select("*")
-          .eq("id", id as any);
-          
-        // Se não for um admin, só mostra soluções publicadas
-        if (!isAdmin) {
-          query = query.eq("published", true as any);
-        }
-        
-        const { data, error: fetchError } = await query.maybeSingle();
-        
-        if (fetchError) {
-          console.error("[SOLUTION_DATA] Erro ao buscar solução:", fetchError);
-          
-          // Se o erro for de registro não encontrado e o usuário não é admin,
-          // provavelmente está tentando acessar uma solução não publicada
-          if (fetchError.code === "PGRST116" && !isAdmin) {
-            toast({
-              title: "Solução não disponível",
-              description: "Esta solução não está disponível no momento.",
-              variant: "destructive"
-            });
-            navigate("/solutions");
-            return;
-          }
-          
-          throw fetchError;
-        }
-        
-        if (data) {
-          console.log("[SOLUTION_DATA] Dados da solução encontrados:", { solution: data, isAdmin });
-          setSolution(data as unknown as Solution);
-          
-          // Fetch progress for this solution and user if user is authenticated
-          if (user) {
-            try {
-              console.log("[SOLUTION_DATA] Buscando progresso para usuário:", { solutionId: id, userId: user.id });
-              
-              const { data: progressData, error: progressError } = await supabase
-                .from("progress")
-                .select("solution_id, is_completed, current_module, completed_modules, created_at, last_activity")
-                .eq("solution_id", id as any)
-                .eq("user_id", user.id as any)
-                .maybeSingle();
-                
-              if (progressError) {
-                console.error("[SOLUTION_DATA] Erro ao buscar progresso:", progressError);
-                // Não vamos fazer throw aqui pois não ter progresso não é um erro crítico
-              } else if (progressData) {
-                console.log("[SOLUTION_DATA] Dados de progresso encontrados:", { 
-                  progress: progressData,
-                  isCompleted: (progressData as any).is_completed,
-                  currentModule: (progressData as any).current_module
-                });
-                setProgress(progressData);
-              } else {
-                console.log("[SOLUTION_DATA] Nenhum progresso encontrado para esta solução - CORRETO", { 
-                  solutionId: id, 
-                  userId: user.id 
-                });
-                setProgress(null);
-              }
-            } catch (progressFetchError) {
-              console.error("[SOLUTION_DATA] Erro ao buscar progresso:", progressFetchError);
-              setProgress(null);
-            }
+          .eq("id", solutionId)
+          .single();
+
+        if (solutionError) throw solutionError;
+
+        setSolution(solutionData);
+
+        // Fetch progress if user is logged in
+        if (user) {
+          const { data: progressData, error: progressError } = await supabase
+            .from("progress")
+            .select("*")
+            .eq("user_id", user.id)
+            .eq("solution_id", solutionId)
+            .single();
+
+          if (progressError && progressError.code !== 'PGRST116') {
+            logError("Progress fetch error", progressError);
           } else {
-            console.log("[SOLUTION_DATA] Usuário não autenticado, não buscando progresso");
-            setProgress(null);
+            setProgress(progressData || null);
           }
-        } else {
-          console.log("[SOLUTION_DATA] Nenhuma solução encontrada com ID", { id, isAdmin });
-          setError("Solução não encontrada");
-          toast({
-            title: "Solução não encontrada",
-            description: isAdmin ? 
-              "Não foi possível encontrar a solução solicitada." :
-              "Esta solução não está disponível ou não foi publicada ainda.",
-            variant: "destructive"
-          });
         }
-      } catch (error: any) {
-        console.error("[SOLUTION_DATA] Erro em useSolutionData:", error);
-        setError(error.message || "Erro ao buscar a solução");
-        toast({
-          title: "Erro ao carregar solução",
-          description: error.message || "Não foi possível carregar os dados da solução.",
-          variant: "destructive"
-        });
+
+        log("Solution data loaded successfully");
+      } catch (err: any) {
+        logError("Error loading solution data", err);
+        setError(err.message);
       } finally {
         setLoading(false);
       }
     };
-    
-    fetchSolution();
-  }, [id, toast, user, navigate, isAdmin, profile?.user_roles?.name, profile?.role]);
 
-  return {
-    solution,
-    setSolution,
-    loading,
-    error,
-    progress
-  };
+    fetchData();
+  }, [solutionId, user, log, logError]);
+
+  return { solution, progress, loading, error };
 };
