@@ -5,11 +5,13 @@ import { useOptimizedProgress } from "@/hooks/optimized/useOptimizedProgress";
 import { logger } from "@/utils/logger";
 
 export const useOptimizedDashboard = () => {
-  // Usar hooks simplificados
+  // Usar hooks otimizados corrigidos
   const { 
     solutions, 
     loading: solutionsLoading, 
-    error: solutionsError
+    error: solutionsError,
+    cacheStatus: solutionsCacheStatus,
+    invalidateCache
   } = useOptimizedSolutions();
   
   const {
@@ -20,52 +22,64 @@ export const useOptimizedDashboard = () => {
     error: progressError
   } = useOptimizedProgress(solutions);
 
-  // Estado consolidado
+  // Estado consolidado de loading
   const isLoading = useMemo(() => 
     solutionsLoading || progressLoading
   , [solutionsLoading, progressLoading]);
 
-  // Tratamento de erro mais robusto
-  const error = useMemo(() => {
-    if (solutionsError && progressError) {
-      return `Erro nas soluções e progresso: ${solutionsError}, ${progressError}`;
-    }
-    return solutionsError || progressError;
-  }, [solutionsError, progressError]);
+  // Consolidar erros
+  const error = useMemo(() => 
+    solutionsError || progressError
+  , [solutionsError, progressError]);
 
-  // Totais com verificação de segurança
+  // Totais memoizados com logs detalhados
   const totals = useMemo(() => {
-    const safeActive = Array.isArray(active) ? active : [];
-    const safeCompleted = Array.isArray(completed) ? completed : [];
-    const safeRecommended = Array.isArray(recommended) ? recommended : [];
-
     const result = {
-      active: safeActive.length,
-      completed: safeCompleted.length,
-      recommended: safeRecommended.length,
-      total: safeActive.length + safeCompleted.length + safeRecommended.length
+      active: active.length,
+      completed: completed.length,
+      recommended: recommended.length,
+      total: active.length + completed.length + recommended.length
     };
 
-    logger.info('[DASHBOARD] Totais calculados:', result);
-    return result;
-  }, [active, completed, recommended]);
+    logger.info('[OPTIMIZED DASHBOARD] Totais calculados:', {
+      ...result,
+      solutionsCount: solutions.length,
+      isLoading,
+      hasError: !!error
+    });
 
-  // Garantir arrays válidos sempre
-  const safeData = useMemo(() => ({
-    active: Array.isArray(active) ? active : [],
-    completed: Array.isArray(completed) ? completed : [],
-    recommended: Array.isArray(recommended) ? recommended : []
-  }), [active, completed, recommended]);
+    return result;
+  }, [active.length, completed.length, recommended.length, solutions.length, isLoading, error]);
+
+  // Log de performance para monitoramento
+  useMemo(() => {
+    if (!isLoading) {
+      logger.info('[OPTIMIZED DASHBOARD] Dashboard carregado:', {
+        totalSolutions: totals.total,
+        active: totals.active,
+        completed: totals.completed,
+        recommended: totals.recommended,
+        cacheHit: solutionsCacheStatus.isCached,
+        cacheAge: solutionsCacheStatus.cacheAge,
+        hasError: !!error
+      });
+    }
+  }, [isLoading, totals, solutionsCacheStatus, error]);
 
   return {
-    ...safeData,
+    active,
+    completed,
+    recommended,
     isLoading,
     error,
     totals,
     hasData: totals.total > 0,
+    // Informações para debug e invalidação de cache
     performance: {
+      cacheStatus: solutionsCacheStatus,
+      totalQueries: 2, // solutions + progress
       optimized: true,
-      fallback: false
+      invalidateCache // Função para limpar cache se necessário
     }
   };
 };

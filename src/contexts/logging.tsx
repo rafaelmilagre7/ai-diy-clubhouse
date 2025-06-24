@@ -1,6 +1,6 @@
 
 import { createContext, useContext, ReactNode } from "react";
-import { useLogging as useLoggingHook } from "@/hooks/useLogging";
+import { useLogging as useLoggingHook, LoggingProvider as OriginalLoggingProvider } from "@/hooks/useLogging";
 
 export type LogData = {
   [key: string]: any;
@@ -37,7 +37,7 @@ export const useLogging = (): LoggingContextType => {
   };
 };
 
-// Agora usa o provider correto do hooks/useLogging.tsx
+// Implementação do provider redirecionada para o hooks/useLogging.tsx
 export const LoggingProvider = ({ children }: { children: ReactNode }) => {
-  return <>{children}</>;
+  return <OriginalLoggingProvider>{children}</OriginalLoggingProvider>;
 };

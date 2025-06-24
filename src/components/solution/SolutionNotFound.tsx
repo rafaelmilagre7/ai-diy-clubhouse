@@ -1,40 +1,26 @@
 
 import React from "react";
 import { Button } from "@/components/ui/button";
+import { ChevronLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { Home, ArrowLeft } from "lucide-react";
 
 export const SolutionNotFound = () => {
   const navigate = useNavigate();
-
+  
   return (
-    <div className="min-h-screen bg-neutral-900 flex items-center justify-center px-4">
-      <div className="text-center max-w-md">
-        <div className="text-8xl font-bold text-neutral-700 mb-4">404</div>
-        <h1 className="text-2xl font-bold text-neutral-100 mb-2">
-          Solução não encontrada
-        </h1>
-        <p className="text-neutral-400 mb-8">
-          A solução que você está procurando não existe ou foi removida.
-        </p>
-        <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <Button
-            onClick={() => navigate(-1)}
-            variant="outline"
-            className="flex items-center gap-2"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Voltar
-          </Button>
-          <Button
-            onClick={() => navigate("/dashboard")}
-            className="flex items-center gap-2 bg-viverblue hover:bg-viverblue/90"
-          >
-            <Home className="h-4 w-4" />
-            Ir para Dashboard
-          </Button>
-        </div>
-      </div>
+    <div className="text-center py-12">
+      <h3 className="text-lg font-medium">Solução não encontrada</h3>
+      <p className="text-muted-foreground mt-1">
+        A solução que você está procurando não existe ou foi removida.
+      </p>
+      <Button 
+        variant="link" 
+        className="mt-4"
+        onClick={() => navigate("/dashboard")}
+      >
+        <ChevronLeft className="mr-2 h-4 w-4" />
+        Voltar para o Dashboard
+      </Button>
     </div>
   );
 };

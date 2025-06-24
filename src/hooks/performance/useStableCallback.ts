@@ -1,16 +1,20 @@
 
 import { useCallback, useRef } from 'react';
 
-export function useStableCallback<T extends (...args: any[]) => any>(
+// Hook para criar callbacks estáveis que não causam re-renders
+export const useStableCallback = <T extends (...args: any[]) => any>(
   callback: T
-): T {
+): T => {
   const callbackRef = useRef<T>(callback);
   
-  // Atualizar a referência sempre que o callback mudar
+  // Atualizar a referência sem quebrar a estabilidade
   callbackRef.current = callback;
   
-  // Retornar um callback estável que sempre chama a versão mais recente
-  return useCallback(((...args: any[]) => {
-    return callbackRef.current(...args);
-  }) as T, []);
-}
+  // Retornar callback estável
+  const stableCallback = useCallback(
+    ((...args: Parameters<T>) => callbackRef.current(...args)) as T,
+    []
+  );
+  
+  return stableCallback;
+};
