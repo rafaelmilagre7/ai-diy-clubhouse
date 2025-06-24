@@ -1,230 +1,193 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useAuth } from '@/contexts/auth';
-import { supabase, Solution, Module, Progress } from '@/lib/supabase';
-import { useToast } from '@/hooks/use-toast';
-import { Button } from '@/components/ui/button';
-import { PlayCircle, CheckCircle, Award } from "lucide-react";
-import { SolutionContentSection } from '@/components/solution/SolutionContentSection';
+import { useSolutionData } from '@/hooks/useSolutionData';
+import { useModuleFetch } from '@/hooks/modules/useModuleFetch';
+import { useImplementationNavigation } from '@/hooks/implementation/useImplementationNavigation';
+import { ModuleContent } from '@/components/implementation/ModuleContent';
 import { SolutionHeaderSection } from '@/components/solution/SolutionHeaderSection';
-import { SolutionSidebar } from '@/components/solution/SolutionSidebar';
-import { Link } from 'react-router-dom';
-import { Card, CardContent } from '@/components/ui/card';
-import { Skeleton } from '@/components/ui/skeleton';
-import { SolutionCategory } from '@/lib/types/categoryTypes';
+import { SolutionContentSection } from '@/components/solution/SolutionContentSection';
+import LoadingScreen from '@/components/common/LoadingScreen';
+import { Button } from '@/components/ui/button';
+import { ArrowLeft, ArrowRight } from 'lucide-react';
+import { Progress } from '@/components/ui/progress';
+import { useLogging } from '@/hooks/useLogging';
 
-const getCategoryDisplayText = (category: SolutionCategory): string => {
-  switch (category) {
-    case 'Receita':
-      return "Receita";
-    case 'Operacional':
-      return "Operacional";
-    case 'Estratégia':
-      return "Estratégia";
-    default:
-      return String(category);
-  }
-};
-
-const getDifficultyText = (difficulty: string): string => {
-  switch (difficulty) {
-    case "easy":
-      return "Fácil";
-    case "medium":
-      return "Médio";
-    case "advanced":
-      return "Avançado";
-    default:
-      return difficulty;
-  }
-};
-
-const SolutionImplementationPage: React.FC = () => {
-  const { id } = useParams<{ id: string }>();
-  const { user } = useAuth();
-  const { toast } = useToast();
+const SolutionImplementation = () => {
+  const { id, moduleIdx } = useParams<{ id: string; moduleIdx?: string }>();
   const navigate = useNavigate();
-
-  const [solution, setSolution] = useState<Solution | null>(null);
-  const [progress, setProgress] = useState<any | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [initializing, setInitializing] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
+  const { log } = useLogging();
+  
+  // Detectar se estamos em modo wizard (tem moduleIdx)
+  const isWizardMode = moduleIdx !== undefined;
+  const currentModuleIndex = isWizardMode ? parseInt(moduleIdx!) : 0;
+  
+  // Buscar dados da solução
+  const { solution, loading: solutionLoading, error } = useSolutionData(id);
+  
+  // Buscar módulos da solução
+  const { modules, isLoading: modulesLoading } = useModuleFetch(solution?.id || null);
+  
+  // Navegação do wizard
+  const { handleComplete, handlePrevious } = useImplementationNavigation();
+  
+  const [hasInteracted, setHasInteracted] = useState(false);
+  
+  const loading = solutionLoading || modulesLoading;
+  const currentModule = modules[currentModuleIndex] || null;
+  
   useEffect(() => {
-    const fetchSolution = async () => {
-      if (!id) {
-        setLoading(false);
-        return;
-      }
-
-      try {
-        setLoading(true);
-
-        const { data, error } = await supabase
-          .from("solutions")
-          .select("*")
-          .eq("id", id as any)
-          .single();
-
-        if (error) {
-          throw error;
-        }
-
-        if (data) {
-          setSolution(data as any as Solution);
-
-          // Fetch progress for this solution and user
-          if (user) {
-            try {
-              const { data: progressData, error: progressError } = await supabase
-                .from("progress")
-                .select("solution_id, is_completed, current_module, completed_modules, created_at, last_activity")
-                .eq("solution_id", id as any)
-                .eq("user_id", user.id as any)
-                .single();
-
-              if (progressError) {
-                console.warn("Erro ao buscar progresso:", progressError);
-                setProgress(null); // Não é um erro crítico, então continua
-              } else if (progressData) {
-                setProgress(progressData);
-              } else {
-                setProgress(null);
-              }
-            } catch (progressFetchError: any) {
-              console.error("Erro ao buscar progresso:", progressFetchError);
-              setProgress(null);
-            }
-          } else {
-            setProgress(null);
-          }
-        } else {
-          setError("Solução não encontrada");
-          toast({
-            title: "Solução não encontrada",
-            description: "Não foi possível encontrar a solução solicitada.",
-            variant: "destructive"
-          });
-        }
-      } catch (error: any) {
-        setError(error.message || "Erro ao buscar a solução");
-        toast({
-          title: "Erro ao carregar solução",
-          description: error.message || "Não foi possível carregar os dados da solução.",
-          variant: "destructive"
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchSolution();
-  }, [id, toast, user, navigate]);
-
-  const startImplementation = async () => {
-    if (!user || !solution) return;
-
-    setInitializing(true);
-
-    try {
-      // Iniciar a implementação criando um registro de progresso
-      const { data: newProgress, error: progressError } = await supabase
-        .from("progress")
-        .insert({
-          user_id: user.id,
-          solution_id: solution.id,
-          current_module: 0,
-          is_completed: false,
-          completed_modules: [],
-          last_activity: new Date().toISOString(),
-        } as any)
-        .select()
-        .single();
-
-      if (progressError) {
-        throw progressError;
-      }
-
-      if (newProgress) {
-        setProgress(newProgress);
-        navigate(`/implement/${solution.id}/0`);
-      }
-    } catch (error: any) {
-      console.error("Erro ao iniciar implementação:", error);
-      toast({
-        title: "Erro ao iniciar implementação",
-        description: "Ocorreu um erro ao iniciar a implementação. Por favor, tente novamente.",
-        variant: "destructive"
+    if (solution && isWizardMode) {
+      log('Iniciando wizard de implementação', { 
+        solutionId: solution.id, 
+        moduleIndex: currentModuleIndex,
+        totalModules: modules.length 
       });
-    } finally {
-      setInitializing(false);
     }
-  };
-
-  const continueImplementation = () => {
-    if (!solution || !progress) return;
-    navigate(`/implement/${solution.id}/${progress.current_module}`);
-  };
+  }, [solution, isWizardMode, currentModuleIndex, modules.length, log]);
 
   if (loading) {
-    return (
-      <div className="container mx-auto p-6">
-        <Card className="bg-[#151823] border-white/5">
-          <CardContent className="p-6">
-            <div className="md:flex md:space-x-6">
-              <div className="md:w-2/3 space-y-6">
-                <div className="space-y-4 animate-pulse">
-                  <Skeleton className="h-12 w-full" />
-                  <Skeleton className="h-4 w-3/4" />
-                  <Skeleton className="h-4 w-1/2" />
-                  <Skeleton className="h-52 w-full rounded-xl" />
-                  <Skeleton className="h-24 w-full" />
-                </div>
-              </div>
-              <div className="md:w-1/3 space-y-6 hidden sm:block">
-                <Skeleton className="h-48 w-full" />
-                <Skeleton className="h-12 w-full" />
-                <Skeleton className="h-12 w-full" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    );
+    return <LoadingScreen />;
   }
 
   if (error || !solution) {
     return (
-      <div className="container mx-auto p-6">
-        <div className="text-red-500">Error: {error}</div>
+      <div className="container mx-auto px-4 py-8">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold mb-4">Solução não encontrada</h1>
+          <p className="text-muted-foreground mb-4">
+            Não foi possível carregar os dados desta solução.
+          </p>
+          <Button onClick={() => navigate('/solutions')}>
+            Voltar para Soluções
+          </Button>
+        </div>
       </div>
     );
   }
 
-  return (
-    <div className="container mx-auto p-6">
-      <Card className="bg-[#151823] border-white/5">
-        <CardContent className="p-6">
-          <div className="md:flex md:space-x-6">
-            <div className="md:w-2/3 space-y-6">
-              <SolutionHeaderSection solution={solution} />
-              <SolutionContentSection solution={solution} />
-            </div>
-            <div className="md:w-1/3">
-              <SolutionSidebar 
-                solution={solution} 
-                progress={progress}
-                startImplementation={startImplementation}
-                continueImplementation={continueImplementation}
-                initializing={initializing}
-              />
+  // Modo wizard - renderizar módulos
+  if (isWizardMode) {
+    if (modules.length === 0) {
+      return (
+        <div className="container mx-auto px-4 py-8">
+          <div className="text-center">
+            <h1 className="text-2xl font-bold mb-4">Implementação não disponível</h1>
+            <p className="text-muted-foreground mb-4">
+              Esta solução ainda não possui módulos de implementação configurados.
+            </p>
+            <Button onClick={() => navigate(`/solution/${id}`)}>
+              Voltar para Detalhes
+            </Button>
+          </div>
+        </div>
+      );
+    }
+
+    if (currentModuleIndex >= modules.length) {
+      // Implementação concluída
+      return (
+        <div className="container mx-auto px-4 py-8">
+          <div className="text-center">
+            <h1 className="text-2xl font-bold mb-4">🎉 Implementação Concluída!</h1>
+            <p className="text-muted-foreground mb-4">
+              Parabéns! Você completou todos os módulos desta solução.
+            </p>
+            <div className="space-x-4">
+              <Button onClick={() => navigate(`/solution/${id}`)}>
+                Ver Detalhes da Solução
+              </Button>
+              <Button variant="outline" onClick={() => navigate('/solutions')}>
+                Explorar Outras Soluções
+              </Button>
             </div>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      );
+    }
+
+    const progressPercentage = ((currentModuleIndex + 1) / modules.length) * 100;
+
+    return (
+      <div className="min-h-screen bg-background">
+        {/* Header do Wizard */}
+        <div className="border-b bg-card">
+          <div className="container mx-auto px-4 py-4">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-4">
+                <Button 
+                  variant="ghost" 
+                  size="icon"
+                  onClick={() => navigate(`/solution/${id}`)}
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                </Button>
+                <div>
+                  <h1 className="text-xl font-semibold">{solution.title}</h1>
+                  <p className="text-sm text-muted-foreground">
+                    Módulo {currentModuleIndex + 1} de {modules.length}
+                  </p>
+                </div>
+              </div>
+              
+              <div className="text-sm text-muted-foreground">
+                {Math.round(progressPercentage)}% concluído
+              </div>
+            </div>
+            
+            <Progress value={progressPercentage} className="w-full" />
+          </div>
+        </div>
+
+        {/* Conteúdo do Módulo */}
+        <div className="container mx-auto px-4 py-8">
+          <ModuleContent 
+            module={currentModule}
+            onComplete={handleComplete}
+            onError={(error) => {
+              log('Erro no módulo', { error, moduleId: currentModule?.id });
+            }}
+          />
+        </div>
+
+        {/* Navegação do Wizard */}
+        <div className="border-t bg-card">
+          <div className="container mx-auto px-4 py-4">
+            <div className="flex justify-between items-center">
+              <Button 
+                variant="outline"
+                onClick={handlePrevious}
+                disabled={currentModuleIndex === 0}
+              >
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Anterior
+              </Button>
+              
+              <div className="text-sm text-muted-foreground">
+                {currentModule?.title || `Módulo ${currentModuleIndex + 1}`}
+              </div>
+              
+              <Button 
+                onClick={handleComplete}
+                disabled={!hasInteracted && currentModule?.type !== 'landing' && currentModule?.type !== 'celebration'}
+              >
+                Próximo
+                <ArrowRight className="h-4 w-4 ml-2" />
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Modo página de detalhes - manter comportamento original
+  return (
+    <div className="min-h-screen bg-background">
+      <SolutionHeaderSection solution={solution} />
+      <SolutionContentSection solution={solution} />
     </div>
   );
 };
 
-export default SolutionImplementationPage;
+export default SolutionImplementation;

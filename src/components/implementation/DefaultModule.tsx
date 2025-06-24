@@ -11,9 +11,10 @@ import { useLogging } from "@/hooks/useLogging";
 interface DefaultModuleProps {
   module: Module;
   onComplete: () => void;
+  onInteraction?: () => void;
 }
 
-export const DefaultModule = ({ module, onComplete }: DefaultModuleProps) => {
+export const DefaultModule = ({ module, onComplete, onInteraction }: DefaultModuleProps) => {
   const [activeTab, setActiveTab] = useState('tools');
   const [hasInteracted, setHasInteracted] = useState(false);
   const { log } = useLogging();
@@ -22,6 +23,9 @@ export const DefaultModule = ({ module, onComplete }: DefaultModuleProps) => {
     if (!hasInteracted) {
       setHasInteracted(true);
       log("User interacted with module content", { moduleId: module.id });
+      if (onInteraction) {
+        onInteraction();
+      }
     }
   };
 

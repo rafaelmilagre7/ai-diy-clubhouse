@@ -1,3 +1,4 @@
+
 import React, { useEffect } from "react";
 import { Module } from "@/lib/supabase";
 import { LandingModule } from "./LandingModule";
@@ -10,28 +11,35 @@ interface ModuleContentProps {
   module: Module | null;
   onComplete: () => void;
   onError?: (error: any) => void;
+  onInteraction?: () => void;
 }
 
-export const ModuleContent = ({ module, onComplete, onError }: ModuleContentProps) => {
+export const ModuleContent = ({ module, onComplete, onError, onInteraction }: ModuleContentProps) => {
   const { log, logError } = useLogging();
   
-  // Mark landing and celebration modules as automatically interacted with
+  // Não fazer auto-complete aqui, deixar para os componentes individuais decidirem
   useEffect(() => {
-    if (module && shouldAutoComplete(module)) {
-      log("Auto-completing module", { module_id: module.id, module_type: module.type });
-      onComplete();
+    if (module) {
+      log("Renderizando conteúdo do módulo", { 
+        module_id: module.id, 
+        module_type: module.type,
+        module_title: module.title 
+      });
     }
-  }, [module, onComplete, log]);
+  }, [module, log]);
 
   if (!module) {
-    log("No module provided to ModuleContent");
-    return null;
+    log("Nenhum módulo fornecido para ModuleContent");
+    return (
+      <div className="p-8 text-center">
+        <p className="text-muted-foreground">Nenhum módulo disponível.</p>
+      </div>
+    );
   }
   
   try {
-    // Renderiza o conteúdo apropriado com base no tipo do módulo
-    log("Rendering module content", { module_type: module.type });
-    // Microanimação suave na troca de módulo (fade-in)
+    log("Renderizando módulo", { module_type: module.type });
+    
     return (
       <div className="animate-fade-in">
         {(() => {
@@ -41,13 +49,19 @@ export const ModuleContent = ({ module, onComplete, onError }: ModuleContentProp
             case "celebration":
               return <CelebrationModule module={module} onComplete={onComplete} />;
             default:
-              return <DefaultModule module={module} onComplete={onComplete} />;
+              return (
+                <DefaultModule 
+                  module={module} 
+                  onComplete={onComplete}
+                  onInteraction={onInteraction}
+                />
+              );
           }
         })()}
       </div>
     );
   } catch (error) {
-    logError("Error rendering module content", error);
+    logError("Erro ao renderizar conteúdo do módulo", error);
     if (onError) {
       onError(error);
     }
