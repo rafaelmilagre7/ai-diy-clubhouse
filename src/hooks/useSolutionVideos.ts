@@ -6,10 +6,13 @@ import { useLogging } from "@/hooks/useLogging";
 export interface SolutionVideo {
   id: string;
   name: string;
+  title: string;
   url: string;
   description?: string;
   thumbnail_url?: string;
   duration?: string;
+  duration_seconds?: number;
+  video_type?: string;
 }
 
 export const useSolutionVideos = (solutionId: string) => {
@@ -43,11 +46,14 @@ export const useSolutionVideos = (solutionId: string) => {
 
         const formattedVideos = (data || []).map((video: any) => ({
           id: video.id,
-          name: video.name,
+          name: video.name || video.title || 'Vídeo sem título',
+          title: video.title || video.name || 'Vídeo sem título',
           url: video.url,
           description: video.description,
           thumbnail_url: video.thumbnail_url,
-          duration: video.duration
+          duration: video.duration,
+          duration_seconds: video.duration_seconds,
+          video_type: video.video_type || 'youtube'
         }));
 
         setVideos(formattedVideos);
