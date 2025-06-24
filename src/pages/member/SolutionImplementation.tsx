@@ -1,192 +1,109 @@
 
-import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { useSolutionData } from '@/hooks/useSolutionData';
-import { useModuleFetch } from '@/hooks/modules/useModuleFetch';
-import { useImplementationNavigation } from '@/hooks/implementation/useImplementationNavigation';
-import { ModuleContent } from '@/components/implementation/ModuleContent';
-import { SolutionHeaderSection } from '@/components/solution/SolutionHeaderSection';
-import { SolutionContentSection } from '@/components/solution/SolutionContentSection';
-import LoadingScreen from '@/components/common/LoadingScreen';
-import { Button } from '@/components/ui/button';
-import { ArrowLeft, ArrowRight } from 'lucide-react';
-import { Progress } from '@/components/ui/progress';
-import { useLogging } from '@/hooks/useLogging';
+import { useParams, useLocation } from "react-router-dom";
+import LoadingScreen from "@/components/common/LoadingScreen";
+import { useSolutionData } from "@/hooks/useSolutionData";
+import { SolutionBackButton } from "@/components/solution/SolutionBackButton";
+import { SolutionTabsContent } from "@/components/solution/tabs/SolutionTabsContent";
+import { SolutionNotFound } from "@/components/solution/SolutionNotFound";
+import { useEffect } from "react";
+import { useLogging } from "@/hooks/useLogging";
+import { PageTransition } from "@/components/transitions/PageTransition";
+import { FadeTransition } from "@/components/transitions/FadeTransition";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
+import { Target, CheckCircle2 } from "lucide-react";
 
 const SolutionImplementation = () => {
-  const { id, moduleIdx } = useParams<{ id: string; moduleIdx?: string }>();
-  const navigate = useNavigate();
-  const { log } = useLogging();
+  const { id } = useParams<{ id: string }>();
+  const location = useLocation();
+  const { log, logError } = useLogging();
   
-  // Detectar se estamos em modo wizard (tem moduleIdx)
-  const isWizardMode = moduleIdx !== undefined;
-  const currentModuleIndex = isWizardMode ? parseInt(moduleIdx!) : 0;
+  // Fetch solution data with the updated hook that includes progress
+  const { solution, loading, error, progress } = useSolutionData(id);
   
-  // Buscar dados da solução
-  const { solution, loading: solutionLoading, error } = useSolutionData(id);
-  
-  // Buscar módulos da solução
-  const { modules, isLoading: modulesLoading } = useModuleFetch(solution?.id || null);
-  
-  // Navegação do wizard
-  const { handleComplete, handlePrevious } = useImplementationNavigation();
-  
-  const [hasInteracted, setHasInteracted] = useState(false);
-  
-  const loading = solutionLoading || modulesLoading;
-  const currentModule = modules[currentModuleIndex] || null;
-  
+  // Log page visit
   useEffect(() => {
-    if (solution && isWizardMode) {
-      log('Iniciando wizard de implementação', { 
-        solutionId: solution.id, 
-        moduleIndex: currentModuleIndex,
-        totalModules: modules.length 
+    if (solution) {
+      log("Solution implementation page visited", { 
+        solution_id: solution.id, 
+        solution_title: solution.title,
+        path: location.pathname
       });
     }
-  }, [solution, isWizardMode, currentModuleIndex, modules.length, log]);
-
+  }, [solution, location.pathname, log]);
+  
   if (loading) {
-    return <LoadingScreen />;
+    return <LoadingScreen message="Carregando implementação da solução..." />;
+  }
+  
+  if (!solution) {
+    logError("Solution not found", { id });
+    return <SolutionNotFound />;
   }
 
-  if (error || !solution) {
-    return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold mb-4">Solução não encontrada</h1>
-          <p className="text-muted-foreground mb-4">
-            Não foi possível carregar os dados desta solução.
-          </p>
-          <Button onClick={() => navigate('/solutions')}>
-            Voltar para Soluções
-          </Button>
-        </div>
-      </div>
-    );
-  }
-
-  // Modo wizard - renderizar módulos
-  if (isWizardMode) {
-    if (modules.length === 0) {
-      return (
-        <div className="container mx-auto px-4 py-8">
-          <div className="text-center">
-            <h1 className="text-2xl font-bold mb-4">Implementação não disponível</h1>
-            <p className="text-muted-foreground mb-4">
-              Esta solução ainda não possui módulos de implementação configurados.
-            </p>
-            <Button onClick={() => navigate(`/solution/${id}`)}>
-              Voltar para Detalhes
-            </Button>
-          </div>
-        </div>
-      );
-    }
-
-    if (currentModuleIndex >= modules.length) {
-      // Implementação concluída
-      return (
-        <div className="container mx-auto px-4 py-8">
-          <div className="text-center">
-            <h1 className="text-2xl font-bold mb-4">🎉 Implementação Concluída!</h1>
-            <p className="text-muted-foreground mb-4">
-              Parabéns! Você completou todos os módulos desta solução.
-            </p>
-            <div className="space-x-4">
-              <Button onClick={() => navigate(`/solution/${id}`)}>
-                Ver Detalhes da Solução
-              </Button>
-              <Button variant="outline" onClick={() => navigate('/solutions')}>
-                Explorar Outras Soluções
-              </Button>
-            </div>
-          </div>
-        </div>
-      );
-    }
-
-    const progressPercentage = ((currentModuleIndex + 1) / modules.length) * 100;
-
-    return (
-      <div className="min-h-screen bg-background">
-        {/* Header do Wizard */}
-        <div className="border-b bg-card">
-          <div className="container mx-auto px-4 py-4">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-4">
-                <Button 
-                  variant="ghost" 
-                  size="icon"
-                  onClick={() => navigate(`/solution/${id}`)}
-                >
-                  <ArrowLeft className="h-4 w-4" />
-                </Button>
-                <div>
-                  <h1 className="text-xl font-semibold">{solution.title}</h1>
-                  <p className="text-sm text-muted-foreground">
-                    Módulo {currentModuleIndex + 1} de {modules.length}
-                  </p>
-                </div>
-              </div>
-              
-              <div className="text-sm text-muted-foreground">
-                {Math.round(progressPercentage)}% concluído
-              </div>
+  const progressPercent = progress?.is_completed 
+    ? 100 
+    : Math.round(((progress?.current_module || 0) / 10) * 100);
+  
+  return (
+    <PageTransition>
+      <div className="max-w-6xl mx-auto pb-12">
+        <SolutionBackButton />
+        
+        {/* Implementation Header */}
+        <FadeTransition>
+          <div className="mb-8">
+            <div className="flex flex-wrap items-center gap-2 mb-4">
+              <Badge variant="outline" className="bg-viverblue/10 text-viverblue border-viverblue/30">
+                <Target className="h-3 w-3 mr-1" />
+                Implementação
+              </Badge>
+              <Badge variant="outline" className="bg-neutral-800 text-neutral-300 border-neutral-700">
+                {solution.category}
+              </Badge>
             </div>
             
-            <Progress value={progressPercentage} className="w-full" />
-          </div>
-        </div>
+            <h1 className="text-2xl md:text-3xl font-bold font-heading text-neutral-100 mb-4">
+              {solution.title}
+            </h1>
 
-        {/* Conteúdo do Módulo */}
-        <div className="container mx-auto px-4 py-8">
-          <ModuleContent 
-            module={currentModule}
-            onComplete={handleComplete}
-            onError={(error) => {
-              log('Erro no módulo', { error, moduleId: currentModule?.id });
-            }}
-          />
-        </div>
-
-        {/* Navegação do Wizard */}
-        <div className="border-t bg-card">
-          <div className="container mx-auto px-4 py-4">
-            <div className="flex justify-between items-center">
-              <Button 
-                variant="outline"
-                onClick={handlePrevious}
-                disabled={currentModuleIndex === 0}
-              >
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Anterior
-              </Button>
-              
-              <div className="text-sm text-muted-foreground">
-                {currentModule?.title || `Módulo ${currentModuleIndex + 1}`}
-              </div>
-              
-              <Button 
-                onClick={handleComplete}
-                disabled={!hasInteracted && currentModule?.type !== 'landing' && currentModule?.type !== 'celebration'}
-              >
-                Próximo
-                <ArrowRight className="h-4 w-4 ml-2" />
-              </Button>
-            </div>
+            {/* Progress Card */}
+            {progress && (
+              <Card className="bg-[#151823] border border-white/5">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-lg text-neutral-100 flex items-center gap-2">
+                    {progress.is_completed ? (
+                      <CheckCircle2 className="h-5 w-5 text-emerald-400" />
+                    ) : (
+                      <Target className="h-5 w-5 text-viverblue" />
+                    )}
+                    {progress.is_completed ? "Implementação Concluída" : "Progresso da Implementação"}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-neutral-400">Progresso</span>
+                      <span className="text-neutral-300 font-medium">{progressPercent}%</span>
+                    </div>
+                    <Progress 
+                      value={progressPercent} 
+                      className="h-2"
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+            )}
           </div>
-        </div>
+        </FadeTransition>
+        
+        {/* Implementation Tabs */}
+        <FadeTransition delay={0.2}>
+          <SolutionTabsContent solution={solution} />
+        </FadeTransition>
       </div>
-    );
-  }
-
-  // Modo página de detalhes - manter comportamento original
-  return (
-    <div className="min-h-screen bg-background">
-      <SolutionHeaderSection solution={solution} />
-      <SolutionContentSection solution={solution} />
-    </div>
+    </PageTransition>
   );
 };
 
