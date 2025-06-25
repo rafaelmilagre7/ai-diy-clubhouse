@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { ImageUpload } from '@/components/formacao/comum/ImageUpload';
+import { ImageUpload } from '@/components/common/ImageUpload';
 
 interface EditorProps {
   value: any;
