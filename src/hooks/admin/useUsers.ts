@@ -63,7 +63,7 @@ export const useUsers = () => {
         company_name: user.company_name,
         role: user.role,
         role_id: user.role_id,
-        user_roles: user.user_roles ? {
+        user_roles: user.user_roles && !Array.isArray(user.user_roles) ? {
           id: user.user_roles.id,
           name: user.user_roles.name,
           description: user.user_roles.description
