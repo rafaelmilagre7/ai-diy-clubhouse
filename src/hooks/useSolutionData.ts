@@ -13,9 +13,7 @@ export const useSolutionData = (id: string | undefined) => {
   const [progress, setProgress] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  
-  // Verificação correta se o usuário é admin
-  const isAdmin = profile?.user_roles?.name === 'admin' || profile?.role === 'admin';
+  const isAdmin = profile?.role === 'admin';
 
   useEffect(() => {
     const fetchSolution = async () => {
@@ -26,7 +24,7 @@ export const useSolutionData = (id: string | undefined) => {
       
       try {
         setLoading(true);
-        console.log(`[SOLUTION_DATA] Buscando solução com ID`, { id, userId: user?.id, isAdmin });
+        console.log(`[SOLUTION_DATA] Buscando solução com ID`, { id, userId: user?.id });
         
         let query = supabase
           .from("solutions")
@@ -59,7 +57,7 @@ export const useSolutionData = (id: string | undefined) => {
         }
         
         if (data) {
-          console.log("[SOLUTION_DATA] Dados da solução encontrados:", { solution: data, isAdmin });
+          console.log("[SOLUTION_DATA] Dados da solução encontrados:", { solution: data });
           setSolution(data as unknown as Solution);
           
           // Fetch progress for this solution and user if user is authenticated
@@ -100,13 +98,11 @@ export const useSolutionData = (id: string | undefined) => {
             setProgress(null);
           }
         } else {
-          console.log("[SOLUTION_DATA] Nenhuma solução encontrada com ID", { id, isAdmin });
+          console.log("[SOLUTION_DATA] Nenhuma solução encontrada com ID", { id });
           setError("Solução não encontrada");
           toast({
             title: "Solução não encontrada",
-            description: isAdmin ? 
-              "Não foi possível encontrar a solução solicitada." :
-              "Esta solução não está disponível ou não foi publicada ainda.",
+            description: "Não foi possível encontrar a solução solicitada.",
             variant: "destructive"
           });
         }
@@ -124,7 +120,7 @@ export const useSolutionData = (id: string | undefined) => {
     };
     
     fetchSolution();
-  }, [id, toast, user, navigate, isAdmin, profile?.user_roles?.name, profile?.role]);
+  }, [id, toast, user, navigate, isAdmin, profile?.role]);
 
   return {
     solution,

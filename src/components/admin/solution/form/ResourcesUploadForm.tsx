@@ -8,6 +8,8 @@ import { formatFileSize } from "./utils/resourceUtils";
 import { useResourcesManager } from "./hooks/useResourcesManager";
 import ResourceUploadCard from "./components/ResourceUploadCard";
 import ResourceList from "./components/ResourceList";
+import { supabase } from "@/lib/supabase";
+import { Resource } from "./types/ResourceTypes";
 
 interface ResourcesUploadFormProps {
   solutionId: string | null;
@@ -33,6 +35,116 @@ const ResourcesUploadForm: React.FC<ResourcesUploadFormProps> = ({
     handleUploadComplete,
     handleRemoveResource
   } = useResourcesManager(solutionId);
+
+  // Function to extract YouTube video ID
+  const getYouTubeVideoId = (url: string) => {
+    let videoId = "";
+    
+    if (url.includes("youtube.com/watch")) {
+      videoId = new URL(url).searchParams.get("v") || "";
+    } else if (url.includes("youtu.be/")) {
+      videoId = url.split("youtu.be/")[1]?.split("?")[0] || "";
+    } else if (url.includes("youtube.com/embed/")) {
+      videoId = url.split("youtube.com/embed/")[1]?.split("?")[0] || "";
+    }
+    
+    return videoId;
+  };
+
+  // Handle YouTube URL submission
+  const handleYoutubeUrlSubmit = async (url: string) => {
+    if (!solutionId) return;
+    
+    try {
+      const videoId = getYouTubeVideoId(url);
+      
+      if (!videoId) {
+        toast({
+          title: "URL inválido",
+          description: "Por favor, insira um URL válido do YouTube.",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      // Create embed URL
+      const embedUrl = `https://www.youtube.com/embed/${videoId}`;
+      
+      // Create resource entry
+      const newResource = {
+        solution_id: solutionId,
+        name: `Vídeo do YouTube (${videoId})`,
+        url: embedUrl,
+        type: "video",
+        format: "Vídeo do YouTube",
+        metadata: JSON.stringify({
+          title: `Vídeo do YouTube (${videoId})`,
+          description: "Vídeo do YouTube",
+          url: embedUrl,
+          type: "video",
+          format: "Vídeo do YouTube",
+          tags: ["youtube", "video"],
+          order: 0,
+          downloads: 0,
+          size: 0,
+          version: "1.0"
+        }),
+        size: 0
+      };
+      
+      const { data, error } = await supabase
+        .from("solution_resources")
+        .insert(newResource as any)
+        .select()
+        .single();
+        
+      if (error) throw error;
+      
+      // Add to resources list
+      if (data) {
+        const resource: Resource = {
+          id: (data as any).id,
+          name: (data as any).name,
+          url: (data as any).url,
+          type: "video",
+          format: (data as any).format,
+          solution_id: (data as any).solution_id,
+          metadata: {
+            title: `Vídeo do YouTube (${videoId})`,
+            description: "Vídeo do YouTube",
+            url: embedUrl,
+            type: "video",
+            format: "Vídeo do YouTube",
+            tags: ["youtube", "video"],
+            order: 0,
+            downloads: 0,
+            size: 0,
+            version: "1.0"
+          },
+          created_at: (data as any).created_at,
+          updated_at: (data as any).updated_at,
+          module_id: (data as any).module_id,
+          size: (data as any).size
+        };
+        
+        // Update resources state
+        setResources(prev => [...prev, resource]);
+      }
+      
+      toast({
+        title: "Vídeo adicionado",
+        description: "O vídeo do YouTube foi adicionado com sucesso.",
+      });
+      
+    } catch (error: any) {
+      console.error("Erro ao adicionar vídeo do YouTube:", error);
+      toast({
+        title: "Erro ao adicionar vídeo",
+        description: error.message || "Ocorreu um erro ao tentar adicionar o vídeo do YouTube.",
+        variant: "destructive",
+      });
+    }
+  };
 
   const saveAndContinue = async () => {
     if (!solutionId) return;
@@ -78,7 +190,8 @@ const ResourcesUploadForm: React.FC<ResourcesUploadFormProps> = ({
         <CardContent>
           <div className="mb-8">
             <ResourceUploadCard 
-              handleUploadComplete={handleUploadComplete}
+              handleUploadComplete={handleUploadComplete} 
+              handleYoutubeUrlSubmit={handleYoutubeUrlSubmit}
             />
           </div>
           

@@ -9,7 +9,6 @@ import { cn } from '@/lib/utils';
 interface LessonNPSFormProps {
   lessonId: string;
   className?: string;
-  onNPSSubmitted?: () => void;
 }
 
 const npsScores = [
@@ -26,7 +25,7 @@ const npsScores = [
   { value: 10, label: '10' },
 ];
 
-export const LessonNPSForm = ({ lessonId, className, onNPSSubmitted }: LessonNPSFormProps) => {
+export const LessonNPSForm = ({ lessonId, className }: LessonNPSFormProps) => {
   const { existingNPS, isLoading, submitNPS } = useLessonNPS({ lessonId });
   const [selectedScore, setSelectedScore] = useState<number | null>(null);
   const [feedback, setFeedback] = useState('');
@@ -40,27 +39,20 @@ export const LessonNPSForm = ({ lessonId, className, onNPSSubmitted }: LessonNPS
     }
   }, [existingNPS]);
 
-  const handleScoreChange = (score: number) => {
-    setSelectedScore(score);
-    setHasSubmitted(false);
-  };
-
   const handleSubmit = async () => {
     if (selectedScore === null) return;
     
     try {
       await submitNPS(selectedScore, feedback);
       setHasSubmitted(true);
-      
-      // Notificar o componente pai que o NPS foi enviado
-      if (onNPSSubmitted) {
-        setTimeout(() => {
-          onNPSSubmitted();
-        }, 1500); // Aguardar 1.5s para mostrar feedback
-      }
     } catch (error) {
       console.error('Erro ao enviar avaliação:', error);
     }
+  };
+
+  const handleScoreChange = (score: number) => {
+    setSelectedScore(score);
+    setHasSubmitted(false);
   };
 
   if (isLoading) {

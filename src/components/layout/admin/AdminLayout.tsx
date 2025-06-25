@@ -1,21 +1,20 @@
 
 import { useEffect, useState } from "react";
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
-import { useFastAuth } from "@/contexts/auth/FastAuthProvider";
+import { useAuth } from "@/contexts/auth";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { AdminSidebar } from "./AdminSidebar";
 import { AdminContent } from "./AdminContent";
 import { useSidebarControl } from "@/hooks/useSidebarControl";
 import { navigationCache } from "@/utils/navigationCache";
-import { getUserRoleName } from "@/lib/supabase/types";
 
 interface AdminLayoutProps {
   children?: React.ReactNode;
 }
 
 const AdminLayout = ({ children }: AdminLayoutProps) => {
-  const { user, profile, isLoading } = useFastAuth();
+  const { user, isAdmin, isLoading } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [isMounted, setIsMounted] = useState(false);
@@ -23,11 +22,8 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
   const [forceReady, setForceReady] = useState(false);
   const [optimisticLoad, setOptimisticLoad] = useState(false);
   
-  const maxRetries = 1;
+  const maxRetries = 1; // Reduzido de 2 para 1
   const { sidebarOpen, setSidebarOpen, isMobile } = useSidebarControl();
-  
-  const userRole = getUserRoleName(profile);
-  const isAdmin = userRole === 'admin';
 
   // Detectar navegação vinda do LMS
   const isComingFromLMS = location.state?.from?.startsWith?.('/formacao') || 
@@ -48,7 +44,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
 
   // OTIMIZAÇÃO 2: Timeout absoluto reduzido para 3 segundos
   useEffect(() => {
-    const timeoutDuration = isComingFromLMS ? 2000 : 3000;
+    const timeoutDuration = isComingFromLMS ? 2000 : 3000; // Mais rápido vindo do LMS
     
     const absoluteTimeout = setTimeout(() => {
       console.warn(`⚠️ [ADMIN-LAYOUT] Timeout de ${timeoutDuration/1000}s - forçando exibição`);
@@ -73,7 +69,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
     if (!isLoading) {
       if (!user) {
         console.warn("[SECURITY] No authenticated user - redirecting to login");
-        navigate("/auth", { replace: true });
+        navigate("/login", { replace: true });
         return;
       }
 
@@ -100,7 +96,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
   // OTIMIZAÇÃO 6: Timeout com retry reduzido
   useEffect(() => {
     if (isLoading && isMounted && !forceReady && !optimisticLoad) {
-      const retryTimeout = isComingFromLMS ? 1500 : 2000;
+      const retryTimeout = isComingFromLMS ? 1500 : 2000; // Mais rápido do LMS
       
       const timeoutId = setTimeout(() => {
         if (isLoading && retryCount < maxRetries && !forceReady) {
@@ -128,13 +124,14 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
           />
         )}
         
+        {/* OTIMIZAÇÃO 8: Skeleton simplificado para navegação rápida */}
         <div className="w-64 border-r bg-sidebar p-4 flex flex-col">
           <div className="space-y-4">
             <Skeleton className="h-8 w-full" />
             <Skeleton className="h-12 w-12 rounded-full mx-auto" />
             
             <div className="space-y-2">
-              {Array(4).fill(null).map((_, i) => (
+              {Array(4).fill(null).map((_, i) => ( // Reduzido de 6 para 4
                 <Skeleton key={i} className="h-9 w-full" />
               ))}
             </div>
@@ -144,8 +141,9 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
         <div className="flex-1 p-8">
           <div className="space-y-4">
             <Skeleton className="h-8 w-64" />
-            <Skeleton className="h-32 w-full" />
+            <Skeleton className="h-32 w-full" /> {/* Reduzido de h-64 para h-32 */}
             
+            {/* Feedback otimista para navegação do LMS */}
             {isComingFromLMS && (
               <div className="text-center text-viverblue text-sm">
                 ⚡ Retornando para área administrativa...
@@ -157,7 +155,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
     );
   }
 
-  // OTIMIZAÇÃO 8: Renderização com verificações reduzidas
+  // OTIMIZAÇÃO 9: Renderização com verificações reduzidas
   if (forceReady || optimisticLoad || (!isLoading && user && isAdmin)) {
     return (
       <div className="flex min-h-screen w-full bg-background">
@@ -184,7 +182,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
   }
 
   // Fallback rápido
-  navigate("/auth", { replace: true });
+  navigate("/login", { replace: true });
   return null;
 };
 

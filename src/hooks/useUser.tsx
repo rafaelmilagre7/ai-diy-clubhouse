@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
-import { useFastAuth } from "@/contexts/auth/FastAuthProvider";
+import { useAuth } from "@/contexts/auth";
 import { Profile } from "@/types/forumTypes";
 
 interface UseUserReturn {
@@ -12,7 +12,7 @@ interface UseUserReturn {
 }
 
 export const useUser = (): UseUserReturn => {
-  const { user } = useFastAuth();
+  const { user } = useAuth();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<any>(null);

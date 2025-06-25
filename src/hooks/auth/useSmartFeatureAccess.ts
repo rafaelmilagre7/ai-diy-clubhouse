@@ -1,6 +1,6 @@
 
 import { useQuery } from '@tanstack/react-query';
-import { useFastAuth } from '@/contexts/auth/FastAuthProvider';
+import { useAuth } from '@/contexts/auth';
 import { isFeatureEnabledForUser, APP_FEATURES } from '@/config/features';
 import { getUserRoleName } from '@/lib/supabase/types';
 
@@ -12,8 +12,14 @@ interface SmartFeatureAccessResult {
   isLoading: boolean;
 }
 
+/**
+ * Hook para verificar acesso a features inteligentes
+ * 
+ * Nota: Trilha de implementação foi removida na Fase 4.
+ * Este hook ainda funciona para outras features do sistema.
+ */
 export const useSmartFeatureAccess = (feature: string) => {
-  const { profile, user } = useFastAuth();
+  const { profile, user } = useAuth();
   const userRole = getUserRoleName(profile);
 
   return useQuery({

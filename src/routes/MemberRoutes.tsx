@@ -1,7 +1,8 @@
 
 import { RouteObject } from "react-router-dom";
-import { RobustProtectedRoutes } from '@/auth/RobustProtectedRoutes';
+import { ProtectedRoutes } from '@/auth/ProtectedRoutes';
 import MemberLayout from '@/components/layout/MemberLayout';
+import RootRedirect from '@/components/routing/RootRedirect';
 
 // Member pages
 import Dashboard from '@/pages/member/Dashboard';
@@ -39,10 +40,18 @@ import NotificationSettingsPage from '@/pages/profile/NotificationSettingsPage';
 // Função helper para criar rotas protegidas com MemberLayout
 const createProtectedRoute = (path: string, Component: React.ComponentType<any>) => ({
   path,
-  element: <RobustProtectedRoutes><MemberLayout><Component /></MemberLayout></RobustProtectedRoutes>
+  element: <ProtectedRoutes><MemberLayout><Component /></MemberLayout></ProtectedRoutes>
 });
 
+// Log para diagnóstico
+console.log("Carregando rotas de membros com RootRedirect corrigido");
+
 export const memberRoutes: RouteObject[] = [
+  // Rota raiz agora usa RootRedirect em vez de Dashboard direto
+  { 
+    path: "/", 
+    element: <RootRedirect />
+  },
   createProtectedRoute("/dashboard", Dashboard),
   
   createProtectedRoute("/solutions", Solutions),

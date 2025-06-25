@@ -16,16 +16,10 @@ import SetNewPassword from '@/pages/auth/SetNewPassword';
 import OnboardingPage from '@/pages/OnboardingPage';
 import RegisterPage from '@/pages/auth/RegisterPage';
 
-// Usar o redirect otimizado
-import FastRootRedirect from '@/components/routing/FastRootRedirect';
+// Layout base
+import BaseLayout from '@/components/layout/BaseLayout';
 
 export const AppRoutes = createBrowserRouter([
-  // Rota raiz com redirecionamento otimizado
-  {
-    path: "/",
-    element: <FastRootRedirect />
-  },
-
   // Rotas públicas
   ...publicRoutes,
 
@@ -56,7 +50,7 @@ export const AppRoutes = createBrowserRouter([
     element: <RegisterPage />
   },
 
-  // Rotas de membros (já usando RobustProtectedRoutes)
+  // Rotas de membros
   ...memberRoutes,
 
   // Rotas de admin

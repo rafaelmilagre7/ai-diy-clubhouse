@@ -9,13 +9,11 @@ export interface AuthContextType {
   isAdmin: boolean;
   isFormacao: boolean;
   isLoading: boolean;
-  error: string | null;
+  authError: Error | null;
   signIn: (email: string, password: string) => Promise<{ error?: Error }>;
-  signUp: (email: string, password: string, metadata?: any) => Promise<{ error?: Error }>;
   signOut: () => Promise<{ success: boolean; error?: Error | null }>;
   signInAsMember: (email: string, password: string) => Promise<{ error?: Error }>;
   signInAsAdmin: (email: string, password: string) => Promise<{ error?: Error }>;
-  refreshProfile: () => Promise<void>;
   setSession: React.Dispatch<React.SetStateAction<Session | null>>;
   setUser: React.Dispatch<React.SetStateAction<User | null>>;
   setProfile: React.Dispatch<React.SetStateAction<UserProfile | null>>;

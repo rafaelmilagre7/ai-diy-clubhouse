@@ -1,39 +1,29 @@
 
-import { RouterProvider } from "react-router-dom";
-import { AppRoutes } from "@/routes/AppRoutes";
-import { Toaster } from "@/components/ui/sonner";
-import { useEffect } from "react";
-import { useFastAuth } from "@/contexts/auth/FastAuthProvider";
-import { logger } from "@/utils/logger";
-import { useSecureSession } from "@/hooks/useSecureSession";
+import React, { useEffect, useState } from 'react';
+import { RouterProvider } from 'react-router-dom';
+import { useAuth } from '@/contexts/auth';
+import { useToast } from "@/hooks/use-toast"
+import { Toaster } from "@/components/ui/toaster"
+import { AppRoutes } from '@/routes/AppRoutes';
 
 function App() {
-  const { user, isLoading } = useFastAuth();
-  
-  // Ativar sessão segura
-  useSecureSession({
-    maxIdleTime: 60, // 60 minutos
-    checkInterval: 180, // 3 minutos
-    autoLogoutWarning: 15 // 15 minutos de aviso
-  });
+  const { user, isLoading: authLoading } = useAuth();
+  const { toast } = useToast()
 
   useEffect(() => {
-    logger.info('[APP] Inicialização da aplicação', {
-      hasUser: !!user,
-      isLoading,
-      timestamp: new Date().toISOString()
-    });
-  }, [user, isLoading]);
+    if (authLoading) {
+      console.log('[APP] Autenticação ainda carregando...');
+    } else if (user) {
+      console.log('[APP] Usuário autenticado:', user.email);
+    } else {
+      console.log('[APP] Nenhum usuário autenticado.');
+    }
+  }, [user, authLoading]);
 
   return (
     <>
       <RouterProvider router={AppRoutes} />
-      <Toaster 
-        position="top-right"
-        toastOptions={{
-          duration: 4000,
-        }}
-      />
+      <Toaster />
     </>
   );
 }

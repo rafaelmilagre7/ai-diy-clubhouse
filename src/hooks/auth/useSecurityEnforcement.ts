@@ -1,11 +1,14 @@
 
 import { useEffect } from 'react';
-import { useFastAuth } from '@/contexts/auth/FastAuthProvider';
+import { useAuth } from '@/contexts/auth';
 import { supabase } from '@/lib/supabase';
 import { logger } from '@/utils/logger';
 
+/**
+ * Hook para forçar verificações de segurança e logs de auditoria
+ */
 export const useSecurityEnforcement = () => {
-  const { user, isLoading } = useFastAuth();
+  const { user, isLoading } = useAuth();
 
   useEffect(() => {
     if (!isLoading && !user) {
