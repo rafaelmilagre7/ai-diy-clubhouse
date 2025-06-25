@@ -1,78 +1,65 @@
 
-import { createBrowserRouter, Navigate } from "react-router-dom";
-import { lazy, Suspense } from "react";
+import { createBrowserRouter } from "react-router-dom";
+import { lazy } from "react";
+import Layout from "@/components/layout/Layout";
 import { RouteProtection } from "@/components/routing/RouteProtection";
 import { SmartRedirect } from "@/components/routing/SmartRedirect";
-import Layout from "@/components/layout/Layout";
-import FormacaoLayout from "@/components/layout/formacao/FormacaoLayout";
-import LoadingScreen from "@/components/common/LoadingScreen";
 
-// Lazy load components
+// Lazy loading das páginas de autenticação
 const LoginPage = lazy(() => import("@/pages/auth/LoginPage"));
 const RegisterPage = lazy(() => import("@/pages/auth/RegisterPage"));
 const ResetPasswordPage = lazy(() => import("@/pages/auth/ResetPasswordPage"));
 const SetNewPasswordPage = lazy(() => import("@/pages/auth/SetNewPasswordPage"));
 const OnboardingPage = lazy(() => import("@/pages/auth/OnboardingPage"));
-const DashboardPage = lazy(() => import("@/pages/DashboardPage"));
-const ProfilePage = lazy(() => import("@/pages/member/Profile"));
-const SolutionsPage = lazy(() => import("@/pages/member/Solutions"));
-const SolutionDetailPage = lazy(() => import("@/pages/member/SolutionDetail"));
-const ToolsPage = lazy(() => import("@/pages/member/Tools"));
-const ToolDetailPage = lazy(() => import("@/pages/member/ToolDetail"));
-const LearningPage = lazy(() => import("@/pages/member/Learning"));
-const LearningCoursePage = lazy(() => import("@/pages/member/LearningCourse"));
-const LearningLessonPage = lazy(() => import("@/pages/member/LearningLesson"));
-const LearningCertificatesPage = lazy(() => import("@/pages/member/LearningCertificates"));
-const SuggestionsPage = lazy(() => import("@/pages/member/Suggestions"));
-const SuggestionDetailPage = lazy(() => import("@/pages/member/SuggestionDetail"));
-const EventsPage = lazy(() => import("@/pages/member/Events"));
-const BenefitsPage = lazy(() => import("@/pages/member/Benefits"));
 
-// Admin pages
+// Lazy loading das páginas dos membros
+const DashboardPage = lazy(() => import("@/pages/DashboardPage"));
+const Profile = lazy(() => import("@/pages/member/Profile"));
+const SolutionImplementation = lazy(() => import("@/pages/member/SolutionImplementation"));
+const SolutionDetails = lazy(() => import("@/pages/member/SolutionDetails"));
+const Tools = lazy(() => import("@/pages/member/Tools"));
+const ToolDetails = lazy(() => import("@/pages/member/ToolDetails"));
+const LearningPage = lazy(() => import("@/pages/member/learning/LearningPage"));
+const CourseDetails = lazy(() => import("@/pages/member/learning/CourseDetails"));
+const LessonView = lazy(() => import("@/pages/member/learning/LessonView"));
+const ImplementationTrail = lazy(() => import("@/pages/member/ImplementationTrail"));
+const Suggestions = lazy(() => import("@/pages/member/Suggestions"));
+const SuggestionDetail = lazy(() => import("@/pages/member/SuggestionDetail"));
+const Events = lazy(() => import("@/pages/member/Events"));
+const Benefits = lazy(() => import("@/pages/member/Benefits"));
+const LearningCertificates = lazy(() => import("@/pages/member/LearningCertificates"));
+
+// Lazy loading das páginas administrativas
 const AdminDashboard = lazy(() => import("@/pages/admin/AdminDashboard"));
 const AdminUsers = lazy(() => import("@/pages/admin/AdminUsers"));
-const AdminUserDetail = lazy(() => import("@/pages/admin/AdminUserDetail"));
-const AdminInvites = lazy(() => import("@/pages/admin/AdminInvites"));
-const AdminRoles = lazy(() => import("@/pages/admin/AdminRoles"));
-const AdminTools = lazy(() => import("@/pages/admin/AdminTools"));
 const AdminSolutions = lazy(() => import("@/pages/admin/AdminSolutions"));
-const AdminSolutionEditor = lazy(() => import("@/pages/admin/AdminSolutionEditor"));
-const AdminEvents = lazy(() => import("@/pages/admin/AdminEvents"));
+const AdminSolutionCreate = lazy(() => import("@/pages/admin/AdminSolutionCreate"));
+const AdminSolutionEdit = lazy(() => import("@/pages/admin/AdminSolutionEdit"));
+const AdminTools = lazy(() => import("@/pages/admin/AdminTools"));
+const AdminToolEdit = lazy(() => import("@/pages/admin/AdminToolEdit"));
 const AdminSuggestions = lazy(() => import("@/pages/admin/AdminSuggestions"));
-const AdminSuggestionDetail = lazy(() => import("@/pages/admin/AdminSuggestionDetail"));
+const AdminEvents = lazy(() => import("@/pages/admin/AdminEvents"));
 const AdminAnalytics = lazy(() => import("@/pages/admin/AdminAnalytics"));
-const AdminBenefits = lazy(() => import("@/pages/admin/AdminBenefits"));
-const AdminCommunications = lazy(() => import("@/pages/admin/AdminCommunications"));
 const AdminSecurity = lazy(() => import("@/pages/admin/AdminSecurity"));
+const AdminInvites = lazy(() => import("@/pages/admin/AdminInvites"));
 
-// Formacao pages
+// Lazy loading das páginas de formação
 const FormacaoDashboard = lazy(() => import("@/pages/formacao/FormacaoDashboard"));
-const FormacaoCursos = lazy(() => import("@/pages/formacao/FormacaoCursos"));
 const FormacaoAulas = lazy(() => import("@/pages/formacao/FormacaoAulas"));
-const FormacaoNovaAula = lazy(() => import("@/pages/formacao/FormacaoNovaAula"));
-const FormacaoMateriais = lazy(() => import("@/pages/formacao/FormacaoMateriais"));
-const FormacaoConfiguracoes = lazy(() => import("@/pages/formacao/FormacaoConfiguracoes"));
-
-// Component wrapper for suspense
-const SuspenseWrapper = ({ children }: { children: React.ReactNode }) => (
-  <Suspense fallback={<LoadingScreen message="Carregando página..." />}>
-    {children}
-  </Suspense>
-);
 
 export const AppRoutes = createBrowserRouter([
-  // Public routes
+  // Rota raiz com redirecionamento inteligente
   {
     path: "/",
     element: <SmartRedirect />
   },
+
+  // Rotas de autenticação (públicas)
   {
     path: "/login",
     element: (
       <RouteProtection level="public">
-        <SuspenseWrapper>
-          <LoginPage />
-        </SuspenseWrapper>
+        <LoginPage />
       </RouteProtection>
     )
   },
@@ -80,9 +67,7 @@ export const AppRoutes = createBrowserRouter([
     path: "/register",
     element: (
       <RouteProtection level="public">
-        <SuspenseWrapper>
-          <RegisterPage />
-        </SuspenseWrapper>
+        <RegisterPage />
       </RouteProtection>
     )
   },
@@ -90,9 +75,7 @@ export const AppRoutes = createBrowserRouter([
     path: "/reset-password",
     element: (
       <RouteProtection level="public">
-        <SuspenseWrapper>
-          <ResetPasswordPage />
-        </SuspenseWrapper>
+        <ResetPasswordPage />
       </RouteProtection>
     )
   },
@@ -100,9 +83,7 @@ export const AppRoutes = createBrowserRouter([
     path: "/set-new-password",
     element: (
       <RouteProtection level="public">
-        <SuspenseWrapper>
-          <SetNewPasswordPage />
-        </SuspenseWrapper>
+        <SetNewPasswordPage />
       </RouteProtection>
     )
   },
@@ -110,22 +91,18 @@ export const AppRoutes = createBrowserRouter([
     path: "/onboarding",
     element: (
       <RouteProtection level="authenticated">
-        <SuspenseWrapper>
-          <OnboardingPage />
-        </SuspenseWrapper>
+        <OnboardingPage />
       </RouteProtection>
     )
   },
 
-  // Member routes with Layout
+  // Rotas de membros (autenticadas)
   {
     path: "/dashboard",
     element: (
       <RouteProtection level="authenticated">
         <Layout>
-          <SuspenseWrapper>
-            <DashboardPage />
-          </SuspenseWrapper>
+          <DashboardPage />
         </Layout>
       </RouteProtection>
     )
@@ -135,21 +112,17 @@ export const AppRoutes = createBrowserRouter([
     element: (
       <RouteProtection level="authenticated">
         <Layout>
-          <SuspenseWrapper>
-            <ProfilePage />
-          </SuspenseWrapper>
+          <Profile />
         </Layout>
       </RouteProtection>
     )
   },
   {
-    path: "/solutions",
+    path: "/solutions/:id/implementation",
     element: (
       <RouteProtection level="authenticated">
         <Layout>
-          <SuspenseWrapper>
-            <SolutionsPage />
-          </SuspenseWrapper>
+          <SolutionImplementation />
         </Layout>
       </RouteProtection>
     )
@@ -159,9 +132,7 @@ export const AppRoutes = createBrowserRouter([
     element: (
       <RouteProtection level="authenticated">
         <Layout>
-          <SuspenseWrapper>
-            <SolutionDetailPage />
-          </SuspenseWrapper>
+          <SolutionDetails />
         </Layout>
       </RouteProtection>
     )
@@ -171,9 +142,7 @@ export const AppRoutes = createBrowserRouter([
     element: (
       <RouteProtection level="authenticated">
         <Layout>
-          <SuspenseWrapper>
-            <ToolsPage />
-          </SuspenseWrapper>
+          <Tools />
         </Layout>
       </RouteProtection>
     )
@@ -183,9 +152,7 @@ export const AppRoutes = createBrowserRouter([
     element: (
       <RouteProtection level="authenticated">
         <Layout>
-          <SuspenseWrapper>
-            <ToolDetailPage />
-          </SuspenseWrapper>
+          <ToolDetails />
         </Layout>
       </RouteProtection>
     )
@@ -195,9 +162,7 @@ export const AppRoutes = createBrowserRouter([
     element: (
       <RouteProtection level="authenticated">
         <Layout>
-          <SuspenseWrapper>
-            <LearningPage />
-          </SuspenseWrapper>
+          <LearningPage />
         </Layout>
       </RouteProtection>
     )
@@ -207,33 +172,27 @@ export const AppRoutes = createBrowserRouter([
     element: (
       <RouteProtection level="authenticated">
         <Layout>
-          <SuspenseWrapper>
-            <LearningCoursePage />
-          </SuspenseWrapper>
+          <CourseDetails />
         </Layout>
       </RouteProtection>
     )
   },
   {
-    path: "/learning/lessons/:id",
+    path: "/learning/courses/:courseId/lessons/:lessonId",
     element: (
       <RouteProtection level="authenticated">
         <Layout>
-          <SuspenseWrapper>
-            <LearningLessonPage />
-          </SuspenseWrapper>
+          <LessonView />
         </Layout>
       </RouteProtection>
     )
   },
   {
-    path: "/learning/certificates",
+    path: "/implementation-trail",
     element: (
       <RouteProtection level="authenticated">
         <Layout>
-          <SuspenseWrapper>
-            <LearningCertificatesPage />
-          </SuspenseWrapper>
+          <ImplementationTrail />
         </Layout>
       </RouteProtection>
     )
@@ -243,9 +202,7 @@ export const AppRoutes = createBrowserRouter([
     element: (
       <RouteProtection level="authenticated">
         <Layout>
-          <SuspenseWrapper>
-            <SuggestionsPage />
-          </SuspenseWrapper>
+          <Suggestions />
         </Layout>
       </RouteProtection>
     )
@@ -255,9 +212,7 @@ export const AppRoutes = createBrowserRouter([
     element: (
       <RouteProtection level="authenticated">
         <Layout>
-          <SuspenseWrapper>
-            <SuggestionDetailPage />
-          </SuspenseWrapper>
+          <SuggestionDetail />
         </Layout>
       </RouteProtection>
     )
@@ -267,9 +222,7 @@ export const AppRoutes = createBrowserRouter([
     element: (
       <RouteProtection level="authenticated">
         <Layout>
-          <SuspenseWrapper>
-            <EventsPage />
-          </SuspenseWrapper>
+          <Events />
         </Layout>
       </RouteProtection>
     )
@@ -279,24 +232,28 @@ export const AppRoutes = createBrowserRouter([
     element: (
       <RouteProtection level="authenticated">
         <Layout>
-          <SuspenseWrapper>
-            <BenefitsPage />
-          </SuspenseWrapper>
+          <Benefits />
+        </Layout>
+      </RouteProtection>
+    )
+  },
+  {
+    path: "/certificates",
+    element: (
+      <RouteProtection level="authenticated">
+        <Layout>
+          <LearningCertificates />
         </Layout>
       </RouteProtection>
     )
   },
 
-  // Admin routes
+  // Rotas administrativas
   {
     path: "/admin",
     element: (
       <RouteProtection level="admin">
-        <Layout>
-          <SuspenseWrapper>
-            <AdminDashboard />
-          </SuspenseWrapper>
-        </Layout>
+        <AdminDashboard />
       </RouteProtection>
     )
   },
@@ -304,59 +261,7 @@ export const AppRoutes = createBrowserRouter([
     path: "/admin/users",
     element: (
       <RouteProtection level="admin">
-        <Layout>
-          <SuspenseWrapper>
-            <AdminUsers />
-          </SuspenseWrapper>
-        </Layout>
-      </RouteProtection>
-    )
-  },
-  {
-    path: "/admin/users/:id",
-    element: (
-      <RouteProtection level="admin">
-        <Layout>
-          <SuspenseWrapper>
-            <AdminUserDetail />
-          </SuspenseWrapper>
-        </Layout>
-      </RouteProtection>
-    )
-  },
-  {
-    path: "/admin/invites",
-    element: (
-      <RouteProtection level="admin">
-        <Layout>
-          <SuspenseWrapper>
-            <AdminInvites />
-          </SuspenseWrapper>
-        </Layout>
-      </RouteProtection>
-    )
-  },
-  {
-    path: "/admin/roles",
-    element: (
-      <RouteProtection level="admin">
-        <Layout>
-          <SuspenseWrapper>
-            <AdminRoles />
-          </SuspenseWrapper>
-        </Layout>
-      </RouteProtection>
-    )
-  },
-  {
-    path: "/admin/tools",
-    element: (
-      <RouteProtection level="admin">
-        <Layout>
-          <SuspenseWrapper>
-            <AdminTools />
-          </SuspenseWrapper>
-        </Layout>
+        <AdminUsers />
       </RouteProtection>
     )
   },
@@ -364,35 +269,39 @@ export const AppRoutes = createBrowserRouter([
     path: "/admin/solutions",
     element: (
       <RouteProtection level="admin">
-        <Layout>
-          <SuspenseWrapper>
-            <AdminSolutions />
-          </SuspenseWrapper>
-        </Layout>
+        <AdminSolutions />
       </RouteProtection>
     )
   },
   {
-    path: "/admin/solutions/:id",
+    path: "/admin/solutions/create",
     element: (
       <RouteProtection level="admin">
-        <Layout>
-          <SuspenseWrapper>
-            <AdminSolutionEditor />
-          </SuspenseWrapper>
-        </Layout>
+        <AdminSolutionCreate />
       </RouteProtection>
     )
   },
   {
-    path: "/admin/events",
+    path: "/admin/solutions/:id/edit",
     element: (
       <RouteProtection level="admin">
-        <Layout>
-          <SuspenseWrapper>
-            <AdminEvents />
-          </SuspenseWrapper>
-        </Layout>
+        <AdminSolutionEdit />
+      </RouteProtection>
+    )
+  },
+  {
+    path: "/admin/tools",
+    element: (
+      <RouteProtection level="admin">
+        <AdminTools />
+      </RouteProtection>
+    )
+  },
+  {
+    path: "/admin/tools/:id/edit",
+    element: (
+      <RouteProtection level="admin">
+        <AdminToolEdit />
       </RouteProtection>
     )
   },
@@ -400,23 +309,15 @@ export const AppRoutes = createBrowserRouter([
     path: "/admin/suggestions",
     element: (
       <RouteProtection level="admin">
-        <Layout>
-          <SuspenseWrapper>
-            <AdminSuggestions />
-          </SuspenseWrapper>
-        </Layout>
+        <AdminSuggestions />
       </RouteProtection>
     )
   },
   {
-    path: "/admin/suggestions/:id",
+    path: "/admin/events",
     element: (
       <RouteProtection level="admin">
-        <Layout>
-          <SuspenseWrapper>
-            <AdminSuggestionDetail />
-          </SuspenseWrapper>
-        </Layout>
+        <AdminEvents />
       </RouteProtection>
     )
   },
@@ -424,35 +325,7 @@ export const AppRoutes = createBrowserRouter([
     path: "/admin/analytics",
     element: (
       <RouteProtection level="admin">
-        <Layout>
-          <SuspenseWrapper>
-            <AdminAnalytics />
-          </SuspenseWrapper>
-        </Layout>
-      </RouteProtection>
-    )
-  },
-  {
-    path: "/admin/benefits",
-    element: (
-      <RouteProtection level="admin">
-        <Layout>
-          <SuspenseWrapper>
-            <AdminBenefits />
-          </SuspenseWrapper>
-        </Layout>
-      </RouteProtection>
-    )
-  },
-  {
-    path: "/admin/communications",
-    element: (
-      <RouteProtection level="admin">
-        <Layout>
-          <SuspenseWrapper>
-            <AdminCommunications />
-          </SuspenseWrapper>
-        </Layout>
+        <AdminAnalytics />
       </RouteProtection>
     )
   },
@@ -460,37 +333,25 @@ export const AppRoutes = createBrowserRouter([
     path: "/admin/security",
     element: (
       <RouteProtection level="admin">
-        <Layout>
-          <SuspenseWrapper>
-            <AdminSecurity />
-          </SuspenseWrapper>
-        </Layout>
+        <AdminSecurity />
+      </RouteProtection>
+    )
+  },
+  {
+    path: "/admin/invites",
+    element: (
+      <RouteProtection level="admin">
+        <AdminInvites />
       </RouteProtection>
     )
   },
 
-  // Formacao routes
+  // Rotas de formação
   {
     path: "/formacao",
     element: (
       <RouteProtection level="formacao">
-        <FormacaoLayout>
-          <SuspenseWrapper>
-            <FormacaoDashboard />
-          </SuspenseWrapper>
-        </FormacaoLayout>
-      </RouteProtection>
-    )
-  },
-  {
-    path: "/formacao/cursos",
-    element: (
-      <RouteProtection level="formacao">
-        <FormacaoLayout>
-          <SuspenseWrapper>
-            <FormacaoCursos />
-          </SuspenseWrapper>
-        </FormacaoLayout>
+        <FormacaoDashboard />
       </RouteProtection>
     )
   },
@@ -498,54 +359,8 @@ export const AppRoutes = createBrowserRouter([
     path: "/formacao/aulas",
     element: (
       <RouteProtection level="formacao">
-        <FormacaoLayout>
-          <SuspenseWrapper>
-            <FormacaoAulas />
-          </SuspenseWrapper>
-        </FormacaoLayout>
+        <FormacaoAulas />
       </RouteProtection>
     )
-  },
-  {
-    path: "/formacao/aulas/nova",
-    element: (
-      <RouteProtection level="formacao">
-        <FormacaoLayout>
-          <SuspenseWrapper>
-            <FormacaoNovaAula />
-          </SuspenseWrapper>
-        </FormacaoLayout>
-      </RouteProtection>
-    )
-  },
-  {
-    path: "/formacao/materiais",
-    element: (
-      <RouteProtection level="formacao">
-        <FormacaoLayout>
-          <SuspenseWrapper>
-            <FormacaoMateriais />
-          </SuspenseWrapper>
-        </FormacaoLayout>
-      </RouteProtection>
-    )
-  },
-  {
-    path: "/formacao/configuracoes",
-    element: (
-      <RouteProtection level="formacao">
-        <FormacaoLayout>
-          <SuspenseWrapper>
-            <FormacaoConfiguracoes />
-          </SuspenseWrapper>
-        </FormacaoLayout>
-      </RouteProtection>
-    )
-  },
-
-  // Catch all - redirect to smart redirect
-  {
-    path: "*",
-    element: <SmartRedirect fallback="/dashboard" />
   }
 ]);
