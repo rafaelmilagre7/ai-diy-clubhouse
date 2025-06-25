@@ -52,7 +52,7 @@ export const OnboardingWizardContainer = ({ children }: OnboardingWizardContaine
     data: cleanData,
     updateData,
     initializeCleanData,
-    isLoading: isDataLoading
+    isInviteLoading // ← Usar a propriedade correta retornada pelo hook
   } = useCleanOnboardingData(inviteToken || undefined);
 
   const memberType = useMemo(() => cleanData.memberType || 'club', [cleanData.memberType]);
@@ -110,11 +110,11 @@ export const OnboardingWizardContainer = ({ children }: OnboardingWizardContaine
   });
 
   // ESTADO FINAL: só mostra loading se realmente necessário E por tempo limitado
-  const shouldShowLoading = isDataLoading && !hasSetup;
+  const shouldShowLoading = isInviteLoading && !hasSetup;
 
   logger.info('[WIZARD-CONTAINER] 🎨 Renderizando:', {
     memberType,
-    isDataLoading,
+    isInviteLoading, // ← Log da propriedade correta
     hasSetup,
     shouldShowLoading,
     dataFields: Object.keys(cleanData).length,
@@ -127,7 +127,7 @@ export const OnboardingWizardContainer = ({ children }: OnboardingWizardContaine
         ...wizardProps,
         data: { ...cleanData, inviteToken },
         memberType,
-        isLoading: shouldShowLoading
+        isLoading: shouldShowLoading // ← Passar a propriedade correta para o children
       })}
     </>
   );
