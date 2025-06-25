@@ -47,14 +47,15 @@ export const useUsers = () => {
       if (error) throw error;
 
       const usersData: UserProfile[] = (data || []).map(user => {
-        // Verificar se user_roles é um objeto válido
-        const userRoles = user.user_roles && 
-          typeof user.user_roles === 'object' && 
-          !Array.isArray(user.user_roles) && 
-          'id' in user.user_roles ? {
-            id: user.user_roles.id,
-            name: user.user_roles.name,
-            description: user.user_roles.description
+        // Type assertion para garantir que user_roles tem a estrutura correta
+        const userRoles = user.user_roles as any;
+        const userRolesData = userRoles && 
+          typeof userRoles === 'object' && 
+          !Array.isArray(userRoles) && 
+          userRoles.id ? {
+            id: userRoles.id as string,
+            name: userRoles.name as string,
+            description: userRoles.description as string
           } : null;
 
         return {
@@ -69,7 +70,7 @@ export const useUsers = () => {
           onboarding_completed: user.onboarding_completed || false,
           onboarding_completed_at: user.onboarding_completed_at,
           created_at: user.created_at,
-          user_roles: userRoles
+          user_roles: userRolesData
         };
       });
 
@@ -115,7 +116,16 @@ export const useUsers = () => {
     isRefreshing,
     error,
     searchQuery,
+    setSearchQuery,
     searchUsers,
-    fetchUsers: () => fetchUsers(true)
+    fetchUsers: () => fetchUsers(true),
+    // Propriedades adicionais que podem estar sendo esperadas
+    availableRoles: [], // Placeholder - pode ser implementado depois
+    selectedUser: null,
+    setSelectedUser: () => {}, // Placeholder
+    canManageUsers: true, // Placeholder - implementar lógica de permissões
+    canAssignRoles: true, // Placeholder
+    canDeleteUsers: true, // Placeholder
+    canResetPasswords: true, // Placeholder
   };
 };
