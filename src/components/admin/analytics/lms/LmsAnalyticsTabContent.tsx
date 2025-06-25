@@ -52,8 +52,8 @@ export const LmsAnalyticsTabContent = ({ timeRange }: LmsAnalyticsTabContentProp
 
       {/* Gráficos principais */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <NPSScoreChart npsData={npsData?.nps_over_time || []} />
-        <NPSPerLessonChart npsData={npsData?.nps_per_lesson || []} />
+        <NPSScoreChart npsData={npsData?.overall_data || { overall: 0, distribution: { promoters: 0, neutrals: 0, detractors: 0 } }} />
+        <NPSPerLessonChart npsData={npsData?.per_lesson_data || { perLesson: [] }} />
       </div>
 
       {/* Tabela de feedback */}

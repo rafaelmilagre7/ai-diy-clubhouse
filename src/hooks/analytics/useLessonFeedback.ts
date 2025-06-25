@@ -1,30 +1,32 @@
 
 import { useState, useEffect } from 'react';
 
-interface LessonFeedback {
+interface FeedbackData {
   id: string;
-  lesson_title: string;
-  user_name: string;
-  rating: number;
-  comment: string;
-  created_at: string;
+  lessonId: string;
+  lessonTitle: string;
+  score: number;
+  feedback: string;
+  createdAt: string;
+  userName: string;
 }
 
 export const useLessonFeedback = () => {
-  const [feedback, setFeedback] = useState<LessonFeedback[]>([]);
+  const [feedback, setFeedback] = useState<FeedbackData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     // Mock data
-    const mockFeedback: LessonFeedback[] = [
+    const mockFeedback: FeedbackData[] = [
       {
         id: '1',
-        lesson_title: 'Introdução ao AI',
-        user_name: 'João Silva',
-        rating: 5,
-        comment: 'Excelente aula!',
-        created_at: new Date().toISOString()
+        lessonId: '1',
+        lessonTitle: 'Introdução ao AI',
+        score: 5,
+        feedback: 'Excelente aula!',
+        createdAt: new Date().toISOString(),
+        userName: 'João Silva'
       }
     ];
 
