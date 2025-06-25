@@ -19,7 +19,6 @@ interface ErrorBoundaryProps {
   onError?: (error: Error, errorInfo: ErrorInfo) => void;
   maxRetries?: number;
   showDetails?: boolean;
-  resetOnLocationChange?: boolean;
 }
 
 export interface ErrorFallbackProps {
@@ -33,8 +32,6 @@ export interface ErrorFallbackProps {
 }
 
 class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
-  private retryTimeoutId: number | null = null;
-
   constructor(props: ErrorBoundaryProps) {
     super(props);
     this.state = {
@@ -60,7 +57,6 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
       error: error.message,
       stack: error.stack,
       componentStack: errorInfo.componentStack,
-      errorBoundary: 'ErrorBoundary'
     });
 
     // Atualizar estado com informações do erro
@@ -75,24 +71,7 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
     }
 
     // Toast de notificação
-    toast.error('Ocorreu um erro inesperado', {
-      description: 'A página será recarregada automaticamente.'
-    });
-  }
-
-  componentDidUpdate(prevProps: ErrorBoundaryProps) {
-    const { resetOnLocationChange } = this.props;
-    
-    // Reset automático quando a localização muda
-    if (resetOnLocationChange && this.state.hasError) {
-      const currentLocation = window.location.pathname;
-      const prevLocation = (window as any).__PREV_LOCATION__;
-      
-      if (currentLocation !== prevLocation) {
-        this.handleRetry();
-        (window as any).__PREV_LOCATION__ = currentLocation;
-      }
-    }
+    toast.error('Ocorreu um erro inesperado');
   }
 
   handleRetry = () => {
@@ -112,9 +91,7 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
         maxRetries 
       });
     } else {
-      toast.error('Número máximo de tentativas excedido', {
-        description: 'Redirecionando para a página inicial.'
-      });
+      toast.error('Número máximo de tentativas excedido');
       this.handleGoHome();
     }
   };
@@ -154,7 +131,6 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
 // Componente de fallback padrão
 const DefaultErrorFallback: React.FC<ErrorFallbackProps> = ({
   error,
-  errorInfo,
   onRetry,
   onGoHome,
   retryCount,

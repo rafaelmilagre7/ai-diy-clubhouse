@@ -1,6 +1,6 @@
 
 import { RouteObject } from "react-router-dom";
-import { SimpleProtectedRoutes } from '@/auth/SimpleProtectedRoutes';
+import { UnifiedProtectedRoutes } from '@/auth/UnifiedProtectedRoutes';
 import MemberLayout from '@/components/layout/MemberLayout';
 
 // Member pages
@@ -36,10 +36,10 @@ import NewTopic from '@/pages/member/community/NewTopic';
 // Profile pages
 import NotificationSettingsPage from '@/pages/profile/NotificationSettingsPage';
 
-// CORREÇÃO: Função helper para criar rotas protegidas SIMPLES
+// Função helper para criar rotas protegidas unificadas
 const createProtectedRoute = (path: string, Component: React.ComponentType<any>) => ({
   path,
-  element: <SimpleProtectedRoutes><MemberLayout><Component /></MemberLayout></SimpleProtectedRoutes>
+  element: <UnifiedProtectedRoutes><MemberLayout><Component /></MemberLayout></UnifiedProtectedRoutes>
 });
 
 export const memberRoutes: RouteObject[] = [

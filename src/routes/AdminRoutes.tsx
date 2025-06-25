@@ -1,56 +1,63 @@
 
 import { RouteObject } from "react-router-dom";
-import { ProtectedRoutes } from '@/auth/ProtectedRoutes';
+import { UnifiedProtectedRoutes } from '@/auth/UnifiedProtectedRoutes';
 import AdminLayout from '@/components/layout/admin/AdminLayout';
 
 // Admin pages
 import AdminDashboard from '@/pages/admin/AdminDashboard';
-import AdminUsers from '@/pages/admin/AdminUsers';
-import AdminTools from '@/pages/admin/AdminTools';
-import AdminToolEdit from '@/pages/admin/AdminToolEdit';
-import AdminSolutions from '@/pages/admin/AdminSolutions';
-import AdminSolutionCreate from '@/pages/admin/AdminSolutionCreate';
+import SolutionsList from '@/pages/admin/SolutionsList';
 import SolutionEditor from '@/pages/admin/SolutionEditor';
-import AdminAnalytics from '@/pages/admin/AdminAnalytics';
-import AdminSuggestions from '@/pages/admin/AdminSuggestions';
-import AdminEvents from '@/pages/admin/AdminEvents';
+import AdminTools from '@/pages/admin/AdminTools';
+import AdminUsers from '@/pages/admin/AdminUsers';
 import AdminRoles from '@/pages/admin/AdminRoles';
-import InvitesManagement from '@/pages/admin/invites/InvitesManagement';
-import WhatsAppDebug from '@/pages/admin/WhatsAppDebug';
-import EmailDebug from '@/pages/admin/EmailDebug';
+import AdminInvites from '@/pages/admin/AdminInvites';
+import AdminCourses from '@/pages/admin/AdminCourses';
+import CourseEditor from '@/pages/admin/CourseEditor';
+import LessonEditor from '@/pages/admin/LessonEditor';
+import AdminBenefits from '@/pages/admin/AdminBenefits';
+import AdminEvents from '@/pages/admin/AdminEvents';
+import AdminAnalytics from '@/pages/admin/AdminAnalytics';
 import AdminCommunications from '@/pages/admin/AdminCommunications';
-import SupabaseDiagnostics from '@/pages/admin/SupabaseDiagnostics';
 import AdminSecurity from '@/pages/admin/AdminSecurity';
 
-// Função helper para criar rotas protegidas com AdminLayout
+// Função helper para criar rotas protegidas de admin
 const createAdminRoute = (path: string, Component: React.ComponentType<any>) => ({
   path,
-  element: (
-    <ProtectedRoutes>
-      <AdminLayout>
-        <Component />
-      </AdminLayout>
-    </ProtectedRoutes>
-  )
+  element: <UnifiedProtectedRoutes requireAdmin><AdminLayout><Component /></AdminLayout></UnifiedProtectedRoutes>
 });
 
 export const adminRoutes: RouteObject[] = [
   createAdminRoute("/admin", AdminDashboard),
-  createAdminRoute("/admin/users", AdminUsers),
-  createAdminRoute("/admin/tools", AdminTools),
-  createAdminRoute("/admin/tools/new", AdminToolEdit),
-  createAdminRoute("/admin/tools/:id", AdminToolEdit),
-  createAdminRoute("/admin/solutions", AdminSolutions),
-  createAdminRoute("/admin/solutions/new", AdminSolutionCreate),
+  createAdminRoute("/admin/dashboard", AdminDashboard),
+  
+  // Solutions
+  createAdminRoute("/admin/solutions", SolutionsList),
+  createAdminRoute("/admin/solutions/new", SolutionEditor),
   createAdminRoute("/admin/solutions/:id", SolutionEditor),
-  createAdminRoute("/admin/analytics", AdminAnalytics),
-  createAdminRoute("/admin/suggestions", AdminSuggestions),
-  createAdminRoute("/admin/events", AdminEvents),
+  
+  // Tools
+  createAdminRoute("/admin/tools", AdminTools),
+  
+  // Users & Roles
+  createAdminRoute("/admin/users", AdminUsers),
   createAdminRoute("/admin/roles", AdminRoles),
-  createAdminRoute("/admin/invites", InvitesManagement),
+  createAdminRoute("/admin/invites", AdminInvites),
+  
+  // LMS
+  createAdminRoute("/admin/courses", AdminCourses),
+  createAdminRoute("/admin/courses/new", CourseEditor),
+  createAdminRoute("/admin/courses/:id", CourseEditor),
+  createAdminRoute("/admin/courses/:courseId/lessons/new", LessonEditor),
+  createAdminRoute("/admin/courses/:courseId/lessons/:lessonId", LessonEditor),
+  
+  // Benefits & Events
+  createAdminRoute("/admin/benefits", AdminBenefits),
+  createAdminRoute("/admin/events", AdminEvents),
+  
+  // Analytics & Communications
+  createAdminRoute("/admin/analytics", AdminAnalytics),
   createAdminRoute("/admin/communications", AdminCommunications),
+  
+  // Security
   createAdminRoute("/admin/security", AdminSecurity),
-  createAdminRoute("/admin/whatsapp-debug", WhatsAppDebug),
-  createAdminRoute("/admin/email-debug", EmailDebug),
-  createAdminRoute("/admin/diagnostics", SupabaseDiagnostics),
 ];

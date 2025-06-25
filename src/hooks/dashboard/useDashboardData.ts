@@ -2,99 +2,55 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/auth";
 import { supabase } from "@/lib/supabase";
-import { useToast } from "@/hooks/use-toast";
-import { Solution } from "@/lib/supabase";
-import { getUserRoleName } from "@/lib/supabase/types";
+import { Solution } from "@/lib/supabase/types";
+import { logger } from "@/utils/logger";
 
 export const useDashboardData = () => {
-  const { user, profile } = useAuth();
-  const { toast } = useToast();
+  const { user } = useAuth();
   const [loading, setLoading] = useState(true);
-  const [solutions, setSolutions] = useState<Solution[]>([]);
-  const [progressData, setProgressData] = useState<any[]>([]);
-  const [analyticsData, setAnalyticsData] = useState<any[]>([]);
-  const [profilesData, setProfilesData] = useState<any[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const isAdmin = getUserRoleName(profile) === 'admin';
+  const [solutions, setSolutions] = useState<Solution[]>([]);
 
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchSolutions = async () => {
+      if (!user) {
+        setLoading(false);
+        return;
+      }
+
       try {
         setLoading(true);
         setError(null);
-        
-        // Fetch solutions - filtrar apenas publicadas se não for admin
-        let query = supabase.from("solutions").select("*");
-        if (!isAdmin) {
-          query = query.eq("published", true as any);
-        }
-        
-        const { data: solutionsData, error: solutionsError } = await query;
-        
-        if (solutionsError) {
-          throw solutionsError;
-        }
-        
-        // Ensure solutions array is type-safe
-        setSolutions(solutionsData as any);
-        
-        // Fetch all progress data
-        const { data: progress, error: progressError } = await supabase
-          .from("progress")
-          .select("*");
-        
-        if (progressError) {
-          throw progressError;
-        }
-        
-        setProgressData(progress || []);
-        
-        // Fetch analytics data
-        const { data: analytics, error: analyticsError } = await supabase
-          .from("analytics")
+
+        logger.info('[DASHBOARD] Carregando soluções');
+
+        const { data, error: fetchError } = await supabase
+          .from("solutions")
           .select("*")
-          .order("created_at", { ascending: false })
-          .limit(50);
-        
-        if (analyticsError && !analyticsError.message.includes('does not exist')) {
-          console.warn("Erro ao buscar analytics:", analyticsError);
-        } else {
-          setAnalyticsData(analytics || []);
+          .eq("published", true)
+          .order("created_at", { ascending: false });
+
+        if (fetchError) {
+          throw fetchError;
         }
-        
-        // Fetch profiles data
-        const { data: profiles, error: profilesError } = await supabase
-          .from("profiles")
-          .select("*");
-        
-        if (profilesError) {
-          throw profilesError;
-        }
-        
-        setProfilesData(profiles || []);
-        
+
+        setSolutions(data || []);
+        logger.info('[DASHBOARD] Soluções carregadas', { count: data?.length || 0 });
+
       } catch (error: any) {
-        console.error("Erro no carregamento de dados do dashboard:", error);
-        setError(error.message || "Erro inesperado ao carregar dados");
-        toast({
-          title: "Erro ao carregar dados",
-          description: "Ocorreu um erro ao carregar os dados do dashboard.",
-          variant: "destructive",
-        });
+        logger.error('[DASHBOARD] Erro ao carregar soluções:', error);
+        setError(error.message || "Erro ao carregar dados");
       } finally {
         setLoading(false);
       }
     };
-    
-    fetchData();
-  }, [toast, isAdmin, getUserRoleName(profile)]);
-  
-  return { 
-    solutions, 
-    progressData, 
-    analyticsData,
-    profilesData,
-    loading, 
-    error 
+
+    fetchSolutions();
+  }, [user]);
+
+  return {
+    solutions,
+    loading,
+    error
   };
 };
