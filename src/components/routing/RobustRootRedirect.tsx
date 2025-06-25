@@ -6,7 +6,6 @@ import EnhancedLoadingScreen from "@/components/common/EnhancedLoadingScreen";
 import { useLoadingTimeoutEnhanced } from "@/hooks/useLoadingTimeoutEnhanced";
 import { logger } from "@/utils/logger";
 import { useState, useEffect } from "react";
-import { cleanupAuthState, recoverFromAuthError } from "@/utils/authCleanup";
 import { getUserRoleName } from "@/lib/supabase/types";
 
 const RobustRootRedirect = () => {
@@ -14,11 +13,12 @@ const RobustRootRedirect = () => {
   const { isRequired: onboardingRequired, isLoading: onboardingLoading } = useOnboardingRequired();
   const [retryCount, setRetryCount] = useState(0);
   const [hasError, setHasError] = useState(false);
+  const [forceRedirect, setForceRedirect] = useState(false);
   
   const totalLoading = authLoading || onboardingLoading;
   
-  // Timeout mais generoso para desenvolvimento
-  const timeoutMs = import.meta.env.DEV ? 20000 : 12000;
+  // Timeout reduzido para 6 segundos
+  const timeoutMs = 6000;
   
   const { hasTimedOut, retry } = useLoadingTimeoutEnhanced({
     isLoading: totalLoading,
@@ -30,15 +30,17 @@ const RobustRootRedirect = () => {
     }
   });
 
-  // Monitor de erros do auth mais permissivo
+  // Fallback de emergência - após 8 segundos, forçar redirecionamento
   useEffect(() => {
-    if (authError && !import.meta.env.DEV) {
-      logger.error("[ROOT-REDIRECT] Erro de auth detectado:", authError);
-      setHasError(true);
-    }
-  }, [authError]);
+    const emergencyTimeout = setTimeout(() => {
+      logger.warn("[ROOT-REDIRECT] Fallback de emergência - forçando redirecionamento");
+      setForceRedirect(true);
+    }, 8000);
 
-  // Log apenas em desenvolvimento para reduzir overhead
+    return () => clearTimeout(emergencyTimeout);
+  }, []);
+
+  // Log de desenvolvimento
   useEffect(() => {
     if (import.meta.env.DEV) {
       logger.info("[ROOT-REDIRECT] Estado atual:", {
@@ -51,10 +53,10 @@ const RobustRootRedirect = () => {
         retryCount,
         hasError,
         hasTimedOut,
-        authError
+        forceRedirect
       });
     }
-  }, [user, profile, authLoading, onboardingLoading, onboardingRequired, retryCount, hasError, hasTimedOut, authError]);
+  }, [user, profile, authLoading, onboardingLoading, onboardingRequired, retryCount, hasError, hasTimedOut, forceRedirect]);
 
   const handleRetry = () => {
     logger.info("[ROOT-REDIRECT] Tentativa de retry", { attempt: retryCount + 1 });
@@ -62,25 +64,50 @@ const RobustRootRedirect = () => {
     setHasError(false);
     retry();
     
-    // Reduzir tentativas máximas para evitar loops
+    // Máximo 1 retry para evitar loops
     if (retryCount >= 1) {
-      logger.warn("[ROOT-REDIRECT] Muitas tentativas, forçando limpeza");
-      handleForceExit();
+      logger.warn("[ROOT-REDIRECT] Muitas tentativas, forçando redirecionamento");
+      setForceRedirect(true);
     }
   };
 
   const handleForceExit = async () => {
     logger.info("[ROOT-REDIRECT] Forçando limpeza e redirecionamento");
-    await recoverFromAuthError();
+    // Limpar localStorage
+    Object.keys(localStorage).forEach(key => {
+      if (key.startsWith('supabase.auth.') || key.includes('sb-')) {
+        localStorage.removeItem(key);
+      }
+    });
+    window.location.href = '/auth';
   };
 
-  // Ser mais permissivo com erros em desenvolvimento
-  const shouldShowError = hasTimedOut || hasError || (authError && !import.meta.env.DEV);
+  // FORÇAR REDIRECIONAMENTO se timeout de emergência ou muitos erros
+  if (forceRedirect || retryCount >= 2) {
+    const userRole = profile ? getUserRoleName(profile) : null;
+    
+    if (user) {
+      if (userRole === 'admin') {
+        logger.info("[ROOT-REDIRECT] Redirecionamento forçado -> /admin");
+        return <Navigate to="/admin" replace />;
+      }
+      if (userRole === 'formacao') {
+        logger.info("[ROOT-REDIRECT] Redirecionamento forçado -> /formacao");
+        return <Navigate to="/formacao" replace />;
+      }
+      logger.info("[ROOT-REDIRECT] Redirecionamento forçado -> /dashboard");
+      return <Navigate to="/dashboard" replace />;
+    } else {
+      logger.info("[ROOT-REDIRECT] Redirecionamento forçado -> /auth");
+      return <Navigate to="/auth" replace />;
+    }
+  }
 
-  if (shouldShowError) {
+  // Mostrar erro apenas se timeout ou erro crítico
+  if (hasTimedOut || hasError) {
     return (
       <EnhancedLoadingScreen
-        message={authError ? `Erro de autenticação: ${authError}` : "Problema na verificação de acesso"}
+        message="Problema na verificação de acesso"
         context="root-redirect-error"
         isLoading={false}
         onRetry={handleRetry}
@@ -109,27 +136,6 @@ const RobustRootRedirect = () => {
   if (!user) {
     logger.info("[ROOT-REDIRECT] Sem usuário -> redirecionando para auth");
     return <Navigate to="/auth" replace />;
-  }
-
-  // Verificação de perfil mais relaxada
-  if (user && !profile) {
-    // Em desenvolvimento, ser mais permissivo
-    if (import.meta.env.DEV && retryCount < 1) {
-      return (
-        <EnhancedLoadingScreen
-          message="Carregando seu perfil..."
-          context="profile"
-          isLoading={true}
-          onRetry={handleRetry}
-        />
-      );
-    }
-    
-    // Se já tentou algumas vezes, continuar sem perfil ou redirecionar
-    if (retryCount >= 1) {
-      logger.warn("[ROOT-REDIRECT] Continuando sem perfil após tentativas");
-      return <Navigate to="/auth" replace />;
-    }
   }
 
   // Onboarding obrigatório

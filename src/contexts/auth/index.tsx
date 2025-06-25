@@ -24,15 +24,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   // Usar métodos de auth robustos
   const authMethods = useAuthMethods({ setIsLoading });
 
-  // Função para carregar perfil com retry - CORRIGIR assinatura
-  const loadUserProfile = async (userId: string, email?: string, retryCount = 0) => {
-    const maxRetries = 3;
-    
+  // Função simplificada para carregar perfil
+  const loadUserProfile = async (userId: string, email?: string) => {
     try {
       setProfileLoading(true);
       setError(null);
       
-      logger.info('Carregando perfil:', { userId, email, attempt: retryCount + 1 });
+      logger.info('Carregando perfil:', { userId, email });
       
       let userProfile = await fetchUserProfile(userId);
       
@@ -45,41 +43,29 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       if (userProfile) {
         setProfile(userProfile);
         logger.info('Perfil carregado com sucesso');
-      } else if (retryCount < maxRetries) {
-        // Retry com delay progressivo
-        const delay = (retryCount + 1) * 1000;
-        logger.warn('Tentativa de retry em', { delayMs: delay });
-        
-        setTimeout(() => {
-          loadUserProfile(userId, email, retryCount + 1);
-        }, delay);
-        return;
       } else {
-        throw new Error('Não foi possível carregar o perfil após várias tentativas');
+        logger.warn('Não foi possível carregar o perfil');
       }
       
     } catch (error) {
       logger.error('Erro ao carregar perfil:', error);
       setError(error instanceof Error ? error.message : 'Erro desconhecido');
-      
-      if (retryCount < maxRetries) {
-        const delay = (retryCount + 1) * 2000;
-        setTimeout(() => {
-          loadUserProfile(userId, email, retryCount + 1);
-        }, delay);
-      }
     } finally {
       setProfileLoading(false);
     }
   };
 
-  // Configurar listener de mudanças de auth
+  // Configurar listener de mudanças de auth - SIMPLIFICADO
   useEffect(() => {
     logger.info('Inicializando AuthProvider');
+    
+    let mounted = true;
     
     // Configurar listener de mudanças de auth
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        if (!mounted) return;
+        
         logger.info('Auth state changed:', { event, hasSession: !!session });
         
         setSession(session);
@@ -88,8 +74,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         if (event === 'SIGNED_IN' && session?.user) {
           // Usar setTimeout para evitar deadlocks
           setTimeout(() => {
-            loadUserProfile(session.user.id, session.user.email);
-          }, 0);
+            if (mounted) {
+              loadUserProfile(session.user.id, session.user.email);
+            }
+          }, 100);
         } else if (event === 'SIGNED_OUT') {
           setProfile(null);
           setError(null);
@@ -98,26 +86,57 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     );
 
     // Verificar sessão existente
-    supabase.auth.getSession().then(({ data: { session }, error }) => {
-      if (error) {
-        logger.error('Erro ao obter sessão:', error);
-        setError(error.message);
-      } else {
-        logger.info('Sessão inicial:', { hasSession: !!session });
-        setSession(session);
-        setUser(session?.user ?? null);
+    const initializeAuth = async () => {
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
         
-        if (session?.user) {
+        if (!mounted) return;
+        
+        if (error) {
+          logger.error('Erro ao obter sessão:', error);
+          setError(error.message);
+        } else {
+          logger.info('Sessão inicial:', { hasSession: !!session });
+          setSession(session);
+          setUser(session?.user ?? null);
+          
+          if (session?.user) {
+            setTimeout(() => {
+              if (mounted) {
+                loadUserProfile(session.user.id, session.user.email);
+              }
+            }, 100);
+          }
+        }
+      } catch (error) {
+        logger.error('Erro na inicialização:', error);
+        setError(error instanceof Error ? error.message : 'Erro na inicialização');
+      } finally {
+        if (mounted) {
+          // CRÍTICO: Sempre definir isLoading como false após timeout
           setTimeout(() => {
-            loadUserProfile(session.user.id, session.user.email);
-          }, 0);
+            if (mounted) {
+              setIsLoading(false);
+            }
+          }, 3000); // Máximo 3 segundos
         }
       }
-      setIsLoading(false);
-    });
+    };
+
+    initializeAuth();
+
+    // Fallback de emergência - força isLoading = false após 5 segundos
+    const emergencyTimeout = setTimeout(() => {
+      if (mounted) {
+        logger.warn('Fallback de emergência - forçando isLoading = false');
+        setIsLoading(false);
+      }
+    }, 5000);
 
     return () => {
+      mounted = false;
       subscription.unsubscribe();
+      clearTimeout(emergencyTimeout);
     };
   }, []);
 
