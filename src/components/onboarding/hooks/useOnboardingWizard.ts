@@ -1,8 +1,9 @@
 
-import { useState, useCallback, useRef, useEffect } from 'react';
+import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import { OnboardingData } from '../types/onboardingTypes';
 import { useOnboardingCompletion } from './useOnboardingCompletion';
 import { useOnboardingValidation } from './useOnboardingValidation';
+import { logger } from '@/utils/logger';
 
 interface UseOnboardingWizardProps {
   initialData: OnboardingData;
@@ -21,6 +22,12 @@ export const useOnboardingWizard = ({
 
   const isMountedRef = useRef(true);
   const autoSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const onDataChangeRef = useRef(onDataChange);
+
+  // Atualizar ref sem causar re-render
+  useEffect(() => {
+    onDataChangeRef.current = onDataChange;
+  }, [onDataChange]);
 
   const { completeOnboarding, isCompleting, completionError } = useOnboardingCompletion();
   const { validateStep, validationErrors, getFieldError } = useOnboardingValidation();
@@ -37,19 +44,23 @@ export const useOnboardingWizard = ({
     };
   }, []);
 
-  // Verificar se dados estão prontos
-  const isDataReady = useCallback(() => {
-    const hasBasicData = initialData.memberType && initialData.startedAt;
-    const hasRequiredFields = initialData.email || initialData.name;
+  // Verificar se dados estão prontos (memoizado para estabilidade)
+  const isDataReady = useMemo(() => {
+    const hasBasicData = !!(initialData.memberType && initialData.startedAt);
+    const hasRequiredFields = !!(initialData.email || initialData.name);
     return hasBasicData && hasRequiredFields;
-  }, [initialData]);
+  }, [initialData.memberType, initialData.startedAt, initialData.email, initialData.name]);
 
-  // Handler de mudança de dados com debounce
+  // Handler de mudança de dados com debounce (estável)
   const handleDataChange = useCallback((newData: Partial<OnboardingData>) => {
     try {
-      if (!isMountedRef.current) return;
+      if (!isMountedRef.current) {
+        logger.warn('[ONBOARDING-WIZARD] Componente desmontado - ignorando mudança');
+        return;
+      }
       
-      onDataChange(newData);
+      logger.info('[ONBOARDING-WIZARD] Dados alterados:', newData);
+      onDataChangeRef.current(newData);
       setHasUnsavedChanges(true);
       
       if (autoSaveTimeoutRef.current) {
@@ -60,56 +71,64 @@ export const useOnboardingWizard = ({
         if (isMountedRef.current) {
           setLastSaved(new Date());
           setHasUnsavedChanges(false);
+          logger.info('[ONBOARDING-WIZARD] Auto-save executado');
         }
       }, 1000);
     } catch (error) {
-      console.error('[ONBOARDING-WIZARD] Erro ao atualizar dados:', error);
+      logger.error('[ONBOARDING-WIZARD] Erro ao atualizar dados:', error);
     }
-  }, [onDataChange]);
+  }, []); // Sem dependências para garantir estabilidade
 
   const handleNext = useCallback(async () => {
     try {
       if (currentStep < totalSteps) {
-        if (isDataReady()) {
+        if (isDataReady) {
           const isValid = validateStep(currentStep, initialData, memberType);
           if (isValid) {
+            logger.info('[ONBOARDING-WIZARD] Avançando para próxima etapa:', currentStep + 1);
             setCurrentStep(prev => prev + 1);
+          } else {
+            logger.warn('[ONBOARDING-WIZARD] Validação falhou para etapa:', currentStep);
           }
         } else {
           // Para convites, permitir avanço na primeira etapa
           if (initialData.fromInvite && currentStep === 1) {
+            logger.info('[ONBOARDING-WIZARD] Avançando etapa 1 (convite)');
             setCurrentStep(prev => prev + 1);
+          } else {
+            logger.warn('[ONBOARDING-WIZARD] Dados não prontos para avanço');
           }
         }
       }
     } catch (error) {
-      console.error('[ONBOARDING-WIZARD] Erro ao avançar etapa:', error);
+      logger.error('[ONBOARDING-WIZARD] Erro ao avançar etapa:', error);
     }
   }, [currentStep, totalSteps, validateStep, initialData, memberType, isDataReady]);
 
   const handlePrevious = useCallback(() => {
     try {
       if (currentStep > 1) {
+        logger.info('[ONBOARDING-WIZARD] Voltando para etapa anterior:', currentStep - 1);
         setCurrentStep(prev => prev - 1);
       }
     } catch (error) {
-      console.error('[ONBOARDING-WIZARD] Erro ao voltar etapa:', error);
+      logger.error('[ONBOARDING-WIZARD] Erro ao voltar etapa:', error);
     }
   }, [currentStep]);
 
   const handleSubmit = useCallback(async () => {
     try {
-      console.log('[ONBOARDING-WIZARD] Iniciando finalização');
+      logger.info('[ONBOARDING-WIZARD] Iniciando finalização');
       await completeOnboarding(initialData, memberType);
     } catch (error) {
-      console.error('[ONBOARDING-WIZARD] Erro na finalização:', error);
+      logger.error('[ONBOARDING-WIZARD] Erro na finalização:', error);
       throw error;
     }
   }, [completeOnboarding, initialData, memberType]);
 
-  // Validação da etapa atual
-  const isCurrentStepValid = useCallback(() => {
-    if (!isDataReady()) return false;
+  // Validação da etapa atual (memoizada)
+  const isCurrentStepValid = useMemo(() => {
+    if (!isDataReady) return false;
     return validateStep(currentStep, initialData, memberType);
   }, [currentStep, initialData, memberType, validateStep, isDataReady]);
 
@@ -123,7 +142,7 @@ export const useOnboardingWizard = ({
     handlePrevious,
     handleDataChange,
     handleSubmit,
-    isCurrentStepValid: isCurrentStepValid(),
+    isCurrentStepValid,
     lastSaved,
     hasUnsavedChanges,
     completionError

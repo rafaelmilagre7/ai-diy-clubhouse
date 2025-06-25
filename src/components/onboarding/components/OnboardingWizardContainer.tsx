@@ -1,10 +1,11 @@
 
-import React, { useCallback, useMemo, useEffect } from 'react';
+import React, { useCallback, useMemo, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useOnboardingWizard } from '../hooks/useOnboardingWizard';
 import { useCleanOnboardingData } from '../hooks/useCleanOnboardingData';
 import { useOnboardingCleanup } from '../hooks/useOnboardingCleanup';
 import { InviteTokenManager } from '@/utils/inviteTokenManager';
+import { logger } from '@/utils/logger';
 
 interface OnboardingWizardContainerProps {
   children: (props: ReturnType<typeof useOnboardingWizard> & {
@@ -18,15 +19,18 @@ export const OnboardingWizardContainer = ({ children }: OnboardingWizardContaine
   const [searchParams] = useSearchParams();
   const { cleanupForInvite } = useOnboardingCleanup();
   
-  // Token ÚNICO - fonte única de verdade (pode ser null)
+  // Refs para dados estáveis
+  const inviteTokenRef = useRef<string | null>(null);
+  const isInitializedRef = useRef(false);
+  
+  // Token ÚNICO - fonte única de verdade (estável)
   const inviteToken = useMemo(() => {
-    return InviteTokenManager.getToken();
-  }, [searchParams]);
-
-  console.log('[WIZARD-CONTAINER] Token de convite:', {
-    hasToken: !!inviteToken,
-    tokenPreview: inviteToken ? inviteToken.substring(0, 8) + '***' : 'nenhum'
-  });
+    const token = InviteTokenManager.getToken();
+    if (token !== inviteTokenRef.current) {
+      inviteTokenRef.current = token;
+    }
+    return inviteTokenRef.current;
+  }, [searchParams.get('token')]); // Dependência específica para mudanças de URL
 
   const {
     data: cleanData,
@@ -37,9 +41,13 @@ export const OnboardingWizardContainer = ({ children }: OnboardingWizardContaine
 
   const memberType = useMemo(() => cleanData.memberType || 'club', [cleanData.memberType]);
   
-  // Inicialização SIMPLES
+  // Inicialização SIMPLES com proteção contra loops
   useEffect(() => {
-    console.log('[WIZARD-CONTAINER] Inicialização:', {
+    if (isInitializedRef.current) {
+      return; // Já foi inicializado
+    }
+    
+    logger.info('[WIZARD-CONTAINER] Inicialização:', {
       hasToken: !!inviteToken,
       memberType,
       hasEmail: !!cleanData.email
@@ -51,12 +59,13 @@ export const OnboardingWizardContainer = ({ children }: OnboardingWizardContaine
     }
 
     initializeCleanData();
-  }, [inviteToken, initializeCleanData, cleanupForInvite]);
+    isInitializedRef.current = true;
+  }, [inviteToken]); // Dependência mínima para evitar loops
 
   // Loading CRÍTICO: só para convites pendentes
   const isLoading = useMemo(() => {
-    const shouldLoad = inviteToken && isInviteLoading && !cleanData.email;
-    console.log('[WIZARD-CONTAINER] Loading status:', {
+    const shouldLoad = !!(inviteToken && isInviteLoading && !cleanData.email);
+    logger.info('[WIZARD-CONTAINER] Loading status:', {
       inviteToken: !!inviteToken,
       isInviteLoading,
       hasEmail: !!cleanData.email,
@@ -65,10 +74,14 @@ export const OnboardingWizardContainer = ({ children }: OnboardingWizardContaine
     return shouldLoad;
   }, [inviteToken, isInviteLoading, cleanData.email]);
 
+  // Callback estável com useRef
+  const updateDataRef = useRef(updateData);
+  updateDataRef.current = updateData;
+  
   const memoizedUpdateData = useCallback((newData: any) => {
     const dataWithToken = inviteToken ? { ...newData, inviteToken } : newData;
-    updateData(dataWithToken);
-  }, [updateData, inviteToken]);
+    updateDataRef.current(dataWithToken);
+  }, [inviteToken]); // Dependência mínima
 
   const wizardProps = useOnboardingWizard({
     initialData: cleanData,
@@ -76,11 +89,12 @@ export const OnboardingWizardContainer = ({ children }: OnboardingWizardContaine
     memberType
   });
 
-  console.log('[WIZARD-CONTAINER] Renderizando com dados:', {
+  logger.info('[WIZARD-CONTAINER] Renderizando com dados:', {
     memberType,
     isLoading,
     hasData: Object.keys(cleanData).length > 2,
-    dataKeys: Object.keys(cleanData)
+    dataKeys: Object.keys(cleanData),
+    isInitialized: isInitializedRef.current
   });
 
   return (
