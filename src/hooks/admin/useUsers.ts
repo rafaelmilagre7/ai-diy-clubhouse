@@ -46,24 +46,32 @@ export const useUsers = () => {
 
       if (error) throw error;
 
-      const usersData: UserProfile[] = (data || []).map(user => ({
-        id: user.id,
-        email: user.email,
-        name: user.name,
-        avatar_url: user.avatar_url,
-        company_name: user.company_name,
-        industry: user.industry,
-        role: user.role,
-        role_id: user.role_id,
-        onboarding_completed: user.onboarding_completed || false,
-        onboarding_completed_at: user.onboarding_completed_at,
-        created_at: user.created_at,
-        user_roles: user.user_roles && typeof user.user_roles === 'object' && !Array.isArray(user.user_roles) ? {
-          id: user.user_roles.id,
-          name: user.user_roles.name,
-          description: user.user_roles.description
-        } : null
-      }));
+      const usersData: UserProfile[] = (data || []).map(user => {
+        // Verificar se user_roles é um objeto válido
+        const userRoles = user.user_roles && 
+          typeof user.user_roles === 'object' && 
+          !Array.isArray(user.user_roles) && 
+          'id' in user.user_roles ? {
+            id: user.user_roles.id,
+            name: user.user_roles.name,
+            description: user.user_roles.description
+          } : null;
+
+        return {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          avatar_url: user.avatar_url,
+          company_name: user.company_name,
+          industry: user.industry,
+          role: user.role,
+          role_id: user.role_id,
+          onboarding_completed: user.onboarding_completed || false,
+          onboarding_completed_at: user.onboarding_completed_at,
+          created_at: user.created_at,
+          user_roles: userRoles
+        };
+      });
 
       setUsers(usersData);
       setFilteredUsers(usersData);
