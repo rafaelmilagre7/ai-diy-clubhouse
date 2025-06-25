@@ -1,209 +1,167 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
+import { tokenAudit } from '@/utils/tokenAuditLogger';
 import { logger } from '@/utils/logger';
 
-interface InviteRole {
-  id: string;
-  name: string;
-}
-
 interface InviteDetails {
-  token: string;
   email: string;
-  role: InviteRole;
-  created_at: string;
+  role: {
+    id: string;
+    name: string;
+    description: string;
+  };
   expires_at: string;
-  used_at: string | null;
+  created_at: string;
 }
 
-interface UseInviteFlowResult {
-  inviteDetails: InviteDetails | null;
-  isLoading: boolean;
-  error: string | null;
-}
-
-export const useInviteFlow = (inviteToken?: string): UseInviteFlowResult => {
+export const useInviteFlow = (token?: string) => {
   const [inviteDetails, setInviteDetails] = useState<InviteDetails | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!inviteToken || inviteToken.trim() === '') {
-      logger.info('[INVITE-FLOW] 🔍 Sem token de convite - modo onboarding normal');
+    if (!token) {
       setInviteDetails(null);
-      setIsLoading(false);
       setError(null);
       return;
     }
 
     const fetchInviteDetails = async () => {
-      const startTime = Date.now();
-      setIsLoading(true);
-      setError(null);
-
-      logger.info('[INVITE-FLOW] 🚀 Iniciando validação CORRIGIDA de convite:', { 
-        token: inviteToken.substring(0, 8) + '***',
-        tokenLength: inviteToken.length,
-        timestamp: new Date().toISOString()
-      });
-
-      // TIMEOUT REDUZIDO: máximo 500ms
-      const timeoutPromise = new Promise((_, reject) => {
-        setTimeout(() => reject(new Error('Timeout na validação do convite')), 500);
-      });
-
       try {
-        // PRIMEIRA CONSULTA: Busca CASE-INSENSITIVE
-        logger.info('[INVITE-FLOW] 📡 Consultando convite (case-insensitive)...');
+        setIsLoading(true);
+        setError(null);
         
-        const fetchPromise = supabase
+        // AUDITORIA: Token recebido para validação
+        tokenAudit.logStep('INVITE_VALIDATION_START', token, 'useInviteFlow', {
+          action: 'fetchInviteDetails'
+        });
+        
+        logger.info('[INVITE-FLOW] 🔍 Buscando detalhes do convite:', {
+          token: token.substring(0, 8) + '***',
+          tokenLength: token.length,
+          fullTokenForDebug: token // TEMPORÁRIO: log completo para debug
+        });
+
+        // QUERY EXATA - sem tolerância
+        const { data, error: supabaseError } = await supabase
           .from('invites')
-          .select('token, email, role_id, created_at, expires_at, used_at')
-          .ilike('token', inviteToken) // Case-insensitive
+          .select(`
+            email,
+            expires_at,
+            created_at,
+            used_at,
+            user_roles!inner(id, name, description)
+          `)
+          .eq('token', token) // BUSCA EXATA
           .maybeSingle();
 
-        const { data: inviteData, error: fetchError } = await Promise.race([fetchPromise, timeoutPromise]) as any;
+        // AUDITORIA: Resultado da query
+        tokenAudit.logStep('SUPABASE_QUERY_EXECUTED', token, 'supabase', {
+          hasResult: !!data,
+          error: supabaseError?.message,
+          queryType: 'exact_match'
+        });
 
-        const duration = Date.now() - startTime;
-        
-        if (fetchError) {
-          logger.error('[INVITE-FLOW] ❌ Erro na consulta case-insensitive:', {
-            error: fetchError.message,
-            code: fetchError.code,
-            details: fetchError.details,
-            duration: `${duration}ms`
+        if (supabaseError) {
+          logger.error('[INVITE-FLOW] ❌ Erro na query Supabase:', supabaseError, {
+            token: token.substring(0, 8) + '***',
+            tokenLength: token.length,
+            errorCode: supabaseError.code,
+            errorMessage: supabaseError.message,
+            auditReport: tokenAudit.generateAuditReport()
           });
+          throw new Error(`Erro na consulta: ${supabaseError.message}`);
+        }
 
-          // FALLBACK: Busca exata caso a case-insensitive falhe
-          logger.info('[INVITE-FLOW] 🔄 Tentando busca exata como fallback...');
-          const { data: exactData, error: exactError } = await supabase
+        if (!data) {
+          logger.warn('[INVITE-FLOW] ⚠️ Convite não encontrado com token exato:', {
+            token: token.substring(0, 8) + '***',
+            tokenLength: token.length,
+            searchType: 'exact_match',
+            auditReport: tokenAudit.generateAuditReport()
+          });
+          
+          // DIAGNÓSTICO: Buscar tokens similares para debug
+          const { data: similarTokens } = await supabase
             .from('invites')
-            .select('token, email, role_id, created_at, expires_at, used_at')
-            .eq('token', inviteToken)
-            .maybeSingle();
-
-          if (exactError || !exactData) {
-            setError(`Token de convite não encontrado ou inválido`);
-            return;
+            .select('token')
+            .limit(10);
+            
+          if (similarTokens) {
+            logger.info('[INVITE-FLOW] 🔍 Tokens existentes no banco (para debug):', {
+              requestedToken: token,
+              requestedLength: token.length,
+              existingTokens: similarTokens.map(t => ({
+                token: t.token.substring(0, 8) + '***',
+                length: t.token.length,
+                matches: t.token === token,
+                startsWith: t.token.startsWith(token) || token.startsWith(t.token)
+              }))
+            });
           }
           
-          // Usar dados da busca exata
-          Object.assign(inviteData || {}, exactData);
+          throw new Error('Convite não encontrado ou token inválido');
         }
 
-        if (!inviteData) {
-          logger.warn('[INVITE-FLOW] ⚠️ Convite não encontrado:', {
-            token: inviteToken.substring(0, 8) + '***',
-            duration: `${duration}ms`
+        // Verificar se já foi usado
+        if (data.used_at) {
+          logger.warn('[INVITE-FLOW] ⚠️ Convite já utilizado:', {
+            token: token.substring(0, 8) + '***',
+            usedAt: data.used_at
           });
-          setError('Token de convite não encontrado ou inválido');
-          return;
+          throw new Error('Convite já foi utilizado');
         }
 
-        logger.info('[INVITE-FLOW] ✅ Convite encontrado:', {
-          email: inviteData.email,
-          roleId: inviteData.role_id,
-          used_at: inviteData.used_at,
-          expires_at: inviteData.expires_at,
-          duration: `${duration}ms`
-        });
-
-        // VERIFICAÇÕES DE VALIDADE
+        // Verificar se expirou
         const now = new Date();
-        const expiresAt = new Date(inviteData.expires_at);
-        
+        const expiresAt = new Date(data.expires_at);
         if (now > expiresAt) {
-          logger.warn('[INVITE-FLOW] ⌛ Convite expirado:', {
-            expires_at: inviteData.expires_at,
-            current_time: now.toISOString()
+          logger.warn('[INVITE-FLOW] ⚠️ Convite expirado:', {
+            token: token.substring(0, 8) + '***',
+            expiresAt: data.expires_at,
+            now: now.toISOString()
           });
-          setError('Convite expirado');
-          return;
+          throw new Error('Convite expirado');
         }
 
-        if (inviteData.used_at !== null) {
-          logger.warn('[INVITE-FLOW] ✅ Convite já utilizado:', {
-            used_at: inviteData.used_at,
-            email: inviteData.email
-          });
-          setError('Convite já foi utilizado');
-          return;
-        }
-
-        // SEGUNDA CONSULTA: Buscar dados do role (com fallback robusto)
-        let roleData = null;
-        try {
-          logger.info('[INVITE-FLOW] 📡 Buscando dados do role...');
-          const { data: role, error: roleError } = await supabase
-            .from('user_roles')
-            .select('id, name')
-            .eq('id', inviteData.role_id)
-            .single();
-
-          if (roleError) {
-            logger.warn('[INVITE-FLOW] ⚠️ Erro ao buscar role (usando fallback):', roleError);
-          } else {
-            roleData = role;
-          }
-        } catch (roleErr) {
-          logger.warn('[INVITE-FLOW] ⚠️ Falha na consulta do role (usando fallback):', roleErr);
-        }
-
-        // Determinar role com fallback inteligente baseado no role_id
-        const finalRole: InviteRole = roleData ? {
-          id: roleData.id,
-          name: roleData.name
-        } : {
-          id: inviteData.role_id,
-          name: inviteData.role_id === 'formacao' ? 'Formação' : 'Membro Club'
+        // SUCESSO: Processar dados do convite
+        const inviteData: InviteDetails = {
+          email: data.email,
+          role: Array.isArray(data.user_roles) ? data.user_roles[0] : data.user_roles,
+          expires_at: data.expires_at,
+          created_at: data.created_at
         };
 
-        const finalDuration = Date.now() - startTime;
-        logger.info('[INVITE-FLOW] ✅ Convite VÁLIDO confirmado:', {
+        // AUDITORIA: Convite validado com sucesso
+        tokenAudit.logStep('INVITE_VALIDATED_SUCCESS', token, 'validation_success', {
           email: inviteData.email,
-          roleName: finalRole.name,
-          roleId: finalRole.id,
-          totalDuration: `${finalDuration}ms`
+          roleName: inviteData.role.name
         });
+
+        setInviteDetails(inviteData);
         
-        const inviteDetails: InviteDetails = {
-          token: inviteData.token,
+        logger.info('[INVITE-FLOW] ✅ Convite validado com sucesso:', {
+          token: token.substring(0, 8) + '***',
           email: inviteData.email,
-          role: finalRole,
-          created_at: inviteData.created_at,
-          expires_at: inviteData.expires_at,
-          used_at: inviteData.used_at
-        };
-        
-        setInviteDetails(inviteDetails);
+          roleName: inviteData.role.name,
+          auditSteps: tokenAudit.generateAuditReport().totalSteps
+        });
 
       } catch (err: any) {
-        const duration = Date.now() - startTime;
-        
-        if (err.message?.includes('Timeout')) {
-          logger.warn('[INVITE-FLOW] ⏰ Timeout após 500ms - liberando formulário para preenchimento manual');
-          setError('Validação demorou demais - preencha os dados manualmente');
-        } else {
-          logger.error('[INVITE-FLOW] 💥 Erro inesperado na validação:', {
-            error: err.message,
-            stack: err.stack,
-            token: inviteToken.substring(0, 8) + '***',
-            duration: `${duration}ms`
-          });
-          setError('Erro ao processar convite - preencha os dados manualmente');
-        }
+        logger.error('[INVITE-FLOW] ❌ Erro ao buscar convite:', err, {
+          token: token.substring(0, 8) + '***',
+          tokenLength: token.length,
+          auditReport: tokenAudit.generateAuditReport()
+        });
+        setError(err.message);
       } finally {
         setIsLoading(false);
       }
     };
 
     fetchInviteDetails();
-  }, [inviteToken]);
+  }, [token]);
 
-  return {
-    inviteDetails,
-    isLoading,
-    error
-  };
+  return { inviteDetails, isLoading, error };
 };

@@ -6,7 +6,9 @@ import { OnboardingStepRenderer } from './components/OnboardingStepRenderer';
 import { OnboardingWizardControls } from './components/OnboardingWizardControls';
 import { OnboardingProgress } from './OnboardingProgress';
 import { OnboardingLoadingState } from './components/OnboardingLoadingStates';
+import TokenDiagnosticReport from './components/TokenDiagnosticReport';
 import { useSimpleAuth } from '@/contexts/auth/SimpleAuthProvider';
+import { tokenAudit } from '@/utils/tokenAuditLogger';
 import { logger } from '@/utils/logger';
 
 const OnboardingWizard = () => {
@@ -16,8 +18,9 @@ const OnboardingWizard = () => {
   const inviteToken = searchParams.get('token');
   
   useEffect(() => {
-    logger.info('[ONBOARDING-WIZARD] Inicializando wizard', {
+    logger.info('[ONBOARDING-WIZARD] Inicializando wizard com auditoria:', {
       hasToken: !!inviteToken,
+      tokenLength: inviteToken?.length,
       userId: user?.id?.substring(0, 8) + '***' || 'none',
       hasProfile: !!profile,
       timestamp: new Date().toISOString()
@@ -41,12 +44,36 @@ const OnboardingWizard = () => {
               memberType
             } = wizardProps;
             
-            logger.info('[ONBOARDING-WIZARD] Renderizando wizard', {
+            // Verificar se houve erro de token
+            const auditReport = tokenAudit.generateAuditReport();
+            const hasTokenError = auditReport.corruptionDetected || (inviteToken && auditReport.totalSteps === 0);
+            
+            logger.info('[ONBOARDING-WIZARD] Renderizando wizard:', {
               currentStep,
               totalSteps,
               isLoading,
+              hasTokenError,
+              auditSteps: auditReport.totalSteps,
               component: 'OnboardingWizard'
             });
+
+            // Mostrar diagnóstico se houver erro de token
+            if (hasTokenError && inviteToken) {
+              return (
+                <div className="max-w-4xl mx-auto space-y-8">
+                  <div className="text-center mb-8">
+                    <h1 className="text-3xl font-bold text-white mb-2">Erro no Convite</h1>
+                    <p className="text-neutral-300">
+                      Detectamos um problema com o token do seu convite. Veja os detalhes abaixo:
+                    </p>
+                  </div>
+                  
+                  <TokenDiagnosticReport 
+                    onRetry={() => window.location.reload()} 
+                  />
+                </div>
+              );
+            }
 
             return (
               <>
