@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useLmsAnalyticsData } from '@/hooks/analytics/useLmsAnalyticsData';
 import { useNPSData } from '@/hooks/analytics/useNPSData';
@@ -15,7 +16,7 @@ interface LmsAnalyticsTabContentProps {
 }
 
 export const LmsAnalyticsTabContent = ({ timeRange }: LmsAnalyticsTabContentProps) => {
-  const { data, loading: dataLoading, error: dataError } = useLmsAnalyticsData({ timeRange });
+  const { data, loading: dataLoading, error: dataError } = useLmsAnalyticsData(timeRange);
   const { data: npsData, loading: npsLoading, error: npsError } = useNPSData({ timeRange });
   const { feedback, loading: feedbackLoading, error: feedbackError } = useLessonFeedback();
 
@@ -43,21 +44,21 @@ export const LmsAnalyticsTabContent = ({ timeRange }: LmsAnalyticsTabContentProp
     <div className="space-y-8">
       {/* Stats modernas */}
       <LmsStatCards
-        totalLessons={data.totalLessons}
-        completedLessons={data.completedLessons}
+        totalCourses={data.totalCourses}
+        totalStudents={data.totalStudents}
         avgNPS={avgNPS}
         totalResponses={totalResponses}
       />
 
       {/* Gráficos principais */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <NPSScoreChart data={npsData?.nps_over_time || []} />
-        <NPSPerLessonChart data={npsData?.nps_per_lesson || []} />
+        <NPSScoreChart npsData={npsData?.nps_over_time || []} />
+        <NPSPerLessonChart npsData={npsData?.nps_per_lesson || []} />
       </div>
 
       {/* Tabela de feedback */}
       <div>
-        <LessonFeedbackTable feedback={feedback} />
+        <LessonFeedbackTable feedbackData={feedback} />
       </div>
     </div>
   );

@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -15,6 +16,8 @@ import {
 import { cn } from '@/lib/utils';
 import { useAutoRecommendations } from '@/hooks/analytics/useAutoRecommendations';
 import LoadingScreen from '@/components/common/LoadingScreen';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
 interface AutoRecommendationsProps {
   timeRange: string;
@@ -87,7 +90,7 @@ export const AutoRecommendations: React.FC<AutoRecommendationsProps> = ({
               <div className="flex items-center gap-2">
                 <Clock className="h-4 w-4 text-gray-500" />
                 <span className="text-sm text-gray-500">
-                  Atualizado em {format(new Date(rec.updated_at), 'dd/MM/yyyy', { locale: require('date-fns/locale/pt-BR') })}
+                  Atualizado em {format(new Date(rec.updated_at), 'dd/MM/yyyy', { locale: ptBR })}
                 </span>
               </div>
               <div className="flex items-center gap-2">

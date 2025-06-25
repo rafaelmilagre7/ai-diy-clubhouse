@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -20,6 +21,13 @@ interface UserJourneyAnalysisProps {
   timeRange: string;
 }
 
+interface JourneyStepDisplay {
+  step: string;
+  users: number;
+  completion_rate: number;
+  average_time: string;
+}
+
 export const UserJourneyAnalysis: React.FC<UserJourneyAnalysisProps> = ({
   timeRange
 }) => {
@@ -39,11 +47,19 @@ export const UserJourneyAnalysis: React.FC<UserJourneyAnalysisProps> = ({
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-gray-600">{error}</p>
+          <p className="text-gray-600">Erro ao carregar dados da jornada</p>
         </CardContent>
       </Card>
     );
   }
+
+  // Converter dados para formato esperado pelo componente
+  const displayData: JourneyStepDisplay[] = journeyData?.map(step => ({
+    step: step.step,
+    users: step.users,
+    completion_rate: step.conversionRate,
+    average_time: step.avgTimeMinutes ? `${step.avgTimeMinutes} min` : 'N/A'
+  })) || [];
 
   return (
     <Card className="border-0 shadow-xl bg-white/80 backdrop-blur-sm">
@@ -57,7 +73,7 @@ export const UserJourneyAnalysis: React.FC<UserJourneyAnalysisProps> = ({
         </p>
       </CardHeader>
       <CardContent className="space-y-4">
-        {journeyData.map((step, index) => (
+        {displayData.map((step, index) => (
           <div 
             key={index} 
             className="flex items-center justify-between p-3 border border-gray-200 rounded-lg"
@@ -65,8 +81,8 @@ export const UserJourneyAnalysis: React.FC<UserJourneyAnalysisProps> = ({
             <div className="flex items-center gap-3">
               <div className="p-2 rounded-lg bg-gray-50">
                 {index === 0 && <Users className="h-4 w-4" />}
-                {index > 0 && index < journeyData.length - 1 && <ArrowRight className="h-4 w-4" />}
-                {index === journeyData.length - 1 && <Target className="h-4 w-4" />}
+                {index > 0 && index < displayData.length - 1 && <ArrowRight className="h-4 w-4" />}
+                {index === displayData.length - 1 && <Target className="h-4 w-4" />}
               </div>
               <div>
                 <p className="font-medium text-gray-900">{step.step}</p>
