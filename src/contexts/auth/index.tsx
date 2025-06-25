@@ -24,9 +24,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   // Usar métodos de auth robustos
   const authMethods = useAuthMethods({ setIsLoading });
 
-  // Função para carregar perfil com retry - CORRIGIR assinatura
+  // CORREÇÃO: Função para carregar perfil com limite rigoroso de retry
   const loadUserProfile = async (userId: string, email?: string, retryCount = 0) => {
-    const maxRetries = 3;
+    const maxRetries = 2; // REDUZIDO de 3 para 2
     
     try {
       setProfileLoading(true);
@@ -36,8 +36,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       
       let userProfile = await fetchUserProfile(userId);
       
-      // Se não encontrou perfil, tentar criar
-      if (!userProfile && email) {
+      // Se não encontrou perfil, tentar criar (apenas na primeira tentativa)
+      if (!userProfile && email && retryCount === 0) {
         logger.info('Perfil não encontrado, criando...');
         userProfile = await createUserProfileIfNeeded(userId, email);
       }
@@ -45,51 +45,61 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       if (userProfile) {
         setProfile(userProfile);
         logger.info('Perfil carregado com sucesso');
-      } else if (retryCount < maxRetries) {
-        // Retry com delay progressivo
-        const delay = (retryCount + 1) * 1000;
+        return;
+      } 
+      
+      // CORREÇÃO: Retry com limite mais rigoroso
+      if (retryCount < maxRetries) {
+        const delay = 1000; // FIXO em 1s ao invés de progressivo
         logger.warn('Tentativa de retry em', { delayMs: delay });
         
         setTimeout(() => {
           loadUserProfile(userId, email, retryCount + 1);
         }, delay);
         return;
-      } else {
-        throw new Error('Não foi possível carregar o perfil após várias tentativas');
-      }
+      } 
+      
+      // Se esgotou tentativas, falhar graciosamente
+      logger.warn('Máximo de tentativas atingido, continuando sem perfil');
+      setError('Não foi possível carregar o perfil completo');
       
     } catch (error) {
       logger.error('Erro ao carregar perfil:', error);
-      setError(error instanceof Error ? error.message : 'Erro desconhecido');
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       
-      if (retryCount < maxRetries) {
-        const delay = (retryCount + 1) * 2000;
-        setTimeout(() => {
-          loadUserProfile(userId, email, retryCount + 1);
-        }, delay);
+      // CORREÇÃO: Não fazer retry em caso de erro real
+      if (retryCount === 0) {
+        setError(errorMessage);
       }
     } finally {
       setProfileLoading(false);
     }
   };
 
-  // Configurar listener de mudanças de auth
+  // CORREÇÃO: Configurar listener de mudanças de auth mais simples
   useEffect(() => {
     logger.info('Inicializando AuthProvider');
     
+    let mounted = true;
+    let sessionCheckTimeout: NodeJS.Timeout;
+
     // Configurar listener de mudanças de auth
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        if (!mounted) return;
+        
         logger.info('Auth state changed:', { event, hasSession: !!session });
         
         setSession(session);
         setUser(session?.user ?? null);
         
         if (event === 'SIGNED_IN' && session?.user) {
-          // Usar setTimeout para evitar deadlocks
+          // CORREÇÃO: Usar setTimeout para evitar deadlocks, mas com delay menor
           setTimeout(() => {
-            loadUserProfile(session.user.id, session.user.email);
-          }, 0);
+            if (mounted) {
+              loadUserProfile(session.user.id, session.user.email);
+            }
+          }, 100); // REDUZIDO de 0 para 100ms para garantir estabilidade
         } else if (event === 'SIGNED_OUT') {
           setProfile(null);
           setError(null);
@@ -97,27 +107,57 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
     );
 
-    // Verificar sessão existente
-    supabase.auth.getSession().then(({ data: { session }, error }) => {
-      if (error) {
-        logger.error('Erro ao obter sessão:', error);
-        setError(error.message);
-      } else {
-        logger.info('Sessão inicial:', { hasSession: !!session });
-        setSession(session);
-        setUser(session?.user ?? null);
+    // CORREÇÃO: Verificar sessão existente com timeout
+    const checkInitialSession = async () => {
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
         
-        if (session?.user) {
-          setTimeout(() => {
-            loadUserProfile(session.user.id, session.user.email);
-          }, 0);
+        if (!mounted) return;
+        
+        if (error) {
+          logger.error('Erro ao obter sessão:', error);
+          setError(error.message);
+        } else {
+          logger.info('Sessão inicial:', { hasSession: !!session });
+          setSession(session);
+          setUser(session?.user ?? null);
+          
+          if (session?.user) {
+            setTimeout(() => {
+              if (mounted) {
+                loadUserProfile(session.user.id, session.user.email);
+              }
+            }, 200); // Delay ligeiramente maior para sessão inicial
+          }
+        }
+      } catch (error) {
+        logger.error('Erro inesperado ao verificar sessão:', error);
+        if (mounted) {
+          setError('Erro ao verificar autenticação');
+        }
+      } finally {
+        if (mounted) {
+          setIsLoading(false);
         }
       }
-      setIsLoading(false);
-    });
+    };
+
+    // CORREÇÃO: Timeout de 3s para verificação inicial
+    sessionCheckTimeout = setTimeout(() => {
+      if (mounted && isLoading) {
+        logger.warn('Timeout na verificação inicial, continuando');
+        setIsLoading(false);
+      }
+    }, 3000); // REDUZIDO de tempo indefinido para 3s
+
+    checkInitialSession();
 
     return () => {
+      mounted = false;
       subscription.unsubscribe();
+      if (sessionCheckTimeout) {
+        clearTimeout(sessionCheckTimeout);
+      }
     };
   }, []);
 

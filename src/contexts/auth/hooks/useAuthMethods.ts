@@ -50,7 +50,6 @@ export const useAuthMethods = ({ setIsLoading }: AuthMethodsParams) => {
     }
   };
 
-  // SignUp ROBUSTO com validação melhorada
   const signUp = async (
     email: string, 
     password: string, 
@@ -59,13 +58,13 @@ export const useAuthMethods = ({ setIsLoading }: AuthMethodsParams) => {
     try {
       setIsLoading(true);
       console.log('[AUTH-METHODS] Iniciando signup:', {
-        email: email.toLowerCase(), // MELHORIA 3: Normalizar email
+        email: email.toLowerCase(),
         hasInviteToken: !!options.inviteToken,
         userName: options.userData?.name
       });
 
       const { data, error } = await supabase.auth.signUp({
-        email: email.toLowerCase(), // MELHORIA 3: Normalizar email
+        email: email.toLowerCase(),
         password,
         options: {
           data: {
@@ -89,11 +88,9 @@ export const useAuthMethods = ({ setIsLoading }: AuthMethodsParams) => {
 
       console.log('[AUTH-METHODS] Usuário criado:', data.user.email);
 
-      // PROCESSAR CONVITE com validação robusta
       if (options.inviteToken) {
         console.log('[AUTH-METHODS] Processando convite');
         
-        // MELHORIA 5: Validação do token antes do processamento
         if (options.inviteToken.length < 10) {
           const tokenError = new Error('Token de convite inválido');
           console.error('[AUTH-METHODS] Token inválido');
@@ -110,21 +107,17 @@ export const useAuthMethods = ({ setIsLoading }: AuthMethodsParams) => {
         );
 
         if (inviteError || !inviteResult?.success) {
-          // Erro no convite = falha clara
           const errorMessage = inviteError?.message || inviteResult?.message || 'Erro ao processar convite';
           console.error('[AUTH-METHODS] Erro no convite:', errorMessage);
           toast.error('Erro ao processar convite: ' + errorMessage);
           
-          // MELHORIA 4: Usar limpeza específica para erro
           InviteTokenManager.clearTokenOnError();
           return { error: new Error(errorMessage) };
         }
 
-        // Sucesso no convite
         console.log('[AUTH-METHODS] Convite processado com sucesso');
         toast.success('Conta criada e convite aceito com sucesso!');
         
-        // MELHORIA 4: Usar limpeza específica para sucesso
         InviteTokenManager.clearTokenOnSuccess();
       } else {
         toast.success('Conta criada com sucesso!');
@@ -136,7 +129,6 @@ export const useAuthMethods = ({ setIsLoading }: AuthMethodsParams) => {
       console.error('[AUTH-METHODS] Erro inesperado no signup:', error);
       toast.error('Erro inesperado: ' + error.message);
       
-      // MELHORIA 4: Limpar token em caso de erro inesperado
       if (options.inviteToken) {
         InviteTokenManager.clearTokenOnError();
       }
@@ -147,26 +139,68 @@ export const useAuthMethods = ({ setIsLoading }: AuthMethodsParams) => {
     }
   };
 
+  // CORREÇÃO CRÍTICA: Logout com limpeza completa e robust
   const signOut = async () => {
     try {
       setIsLoading(true);
+      console.log('[AUTH-METHODS] Iniciando logout completo');
       
-      // MELHORIA 4: Limpar token no logout
+      // FASE 1: Limpeza completa de tokens de convite
       InviteTokenManager.clearTokenOnLogout();
       
-      const { error } = await supabase.auth.signOut();
-      
-      if (error) {
-        console.error('Erro no logout:', error);
-        toast.error('Erro ao fazer logout: ' + error.message);
-        return { success: false, error };
+      // FASE 2: Limpeza completa do localStorage
+      try {
+        const keysToRemove: string[] = [];
+        Object.keys(localStorage).forEach(key => {
+          if (key.startsWith('supabase.auth.') || key.includes('sb-') || key.includes('viver-ia')) {
+            keysToRemove.push(key);
+          }
+        });
+        
+        keysToRemove.forEach(key => {
+          localStorage.removeItem(key);
+          console.log('[AUTH-METHODS] Removida chave:', key);
+        });
+      } catch (storageError) {
+        console.warn('[AUTH-METHODS] Erro na limpeza do storage:', storageError);
       }
-
-      console.log('Logout realizado');
+      
+      // FASE 3: SignOut do Supabase com fallback
+      try {
+        await supabase.auth.signOut({ scope: 'global' });
+        console.log('[AUTH-METHODS] SignOut Supabase realizado');
+      } catch (signOutError) {
+        console.warn('[AUTH-METHODS] Erro no signOut Supabase, continuando:', signOutError);
+        // Continuar mesmo se o signOut falhar
+      }
+      
+      // FASE 4: Feedback e redirect forçado
       toast.success('Logout realizado com sucesso!');
+      console.log('[AUTH-METHODS] Logout completo, redirecionando');
+      
+      // Aguardar 100ms para garantir que o toast seja exibido
+      setTimeout(() => {
+        window.location.href = '/auth';
+      }, 100);
+      
       return { success: true, error: null };
     } catch (err) {
       const error = err instanceof Error ? err : new Error('Erro inesperado');
+      console.error('[AUTH-METHODS] Erro no logout:', error);
+      
+      // Mesmo com erro, forçar limpeza e redirect
+      try {
+        Object.keys(localStorage).forEach(key => {
+          if (key.startsWith('supabase.auth.') || key.includes('sb-')) {
+            localStorage.removeItem(key);
+          }
+        });
+      } catch {}
+      
+      setTimeout(() => {
+        window.location.href = '/auth';
+      }, 500);
+      
       return { success: false, error };
     } finally {
       setIsLoading(false);

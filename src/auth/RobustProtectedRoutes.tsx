@@ -24,27 +24,30 @@ export const RobustProtectedRoutes = ({ children, allowInviteFlow = false }: Rob
   const isInInviteFlow = InviteTokenManager.hasToken() || location.pathname.includes('/invite');
   const totalLoading = authLoading || onboardingLoading;
 
+  // CORREÇÃO: Timeout reduzido para 5s
   const { hasTimedOut, retry } = useLoadingTimeoutEnhanced({
     isLoading: totalLoading,
     context: 'protected-routes',
-    timeoutMs: 12000,
+    timeoutMs: 5000,
     onTimeout: () => {
       logger.error("[PROTECTED-ROUTES] Timeout na verificação de acesso");
       setHasError(true);
     }
   });
 
-  logger.info("[PROTECTED-ROUTES] Estado:", {
-    pathname: location.pathname,
-    hasUser: !!user,
-    authLoading,
-    onboardingLoading,
-    onboardingRequired,
-    allowInviteFlow,
-    isInInviteFlow,
-    hasError,
-    hasTimedOut
-  });
+  // CORREÇÃO: Log simplificado
+  if (import.meta.env.DEV) {
+    logger.info("[PROTECTED-ROUTES] Estado:", {
+      pathname: location.pathname,
+      hasUser: !!user,
+      totalLoading,
+      onboardingRequired,
+      allowInviteFlow,
+      isInInviteFlow,
+      hasError,
+      hasTimedOut
+    });
+  }
 
   const handleRetry = () => {
     logger.info("[PROTECTED-ROUTES] Tentativa de retry");
@@ -62,7 +65,7 @@ export const RobustProtectedRoutes = ({ children, allowInviteFlow = false }: Rob
     window.location.href = '/auth';
   };
 
-  // Se há timeout ou erro
+  // CORREÇÃO: Condições de erro mais específicas
   if (hasTimedOut || hasError) {
     return (
       <EnhancedLoadingScreen
@@ -76,7 +79,7 @@ export const RobustProtectedRoutes = ({ children, allowInviteFlow = false }: Rob
     );
   }
 
-  // Loading normal
+  // CORREÇÃO: Loading mais direto
   if (totalLoading) {
     return (
       <EnhancedLoadingScreen
