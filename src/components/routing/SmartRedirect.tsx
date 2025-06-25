@@ -16,6 +16,7 @@ export const SmartRedirect = ({ fallback = '/dashboard' }: SmartRedirectProps) =
     logger.info("[SMART-REDIRECT] Estado:", {
       hasUser: !!user,
       hasProfile: !!profile,
+      userRole: profile ? getUserRoleName(profile) : 'none',
       isLoading
     });
   }
@@ -36,10 +37,11 @@ export const SmartRedirect = ({ fallback = '/dashboard' }: SmartRedirectProps) =
   const userRole = getUserRoleName(profile);
   
   switch (userRole) {
-    case 'formacao':
-      return <Navigate to="/formacao" replace />;
     case 'admin':
       return <Navigate to="/admin" replace />;
+    case 'formacao':
+      return <Navigate to="/formacao" replace />;
+    case 'membro_club':
     default:
       return <Navigate to={fallback} replace />;
   }

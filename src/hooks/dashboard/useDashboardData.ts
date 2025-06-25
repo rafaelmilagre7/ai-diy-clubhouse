@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { Solution } from '@/lib/supabase';
-import { useDashboardProgress } from '../useDashboardProgress';
+import { supabase } from '@/lib/supabase';
 
 export interface Dashboard {
   active: Solution[];
@@ -17,7 +17,7 @@ export interface UserProgress {
   progressPercentage: number;
 }
 
-// Hook consolidado que unifica funcionalidades de dashboard
+// Hook consolidado que carrega dados do dashboard sem dependências circulares
 export const useDashboardData = () => {
   const [dashboard, setDashboard] = useState<Dashboard>({
     active: [],
@@ -27,27 +27,41 @@ export const useDashboardData = () => {
     error: null
   });
 
-  // Usar o hook de progresso consolidado
-  const { data: progressData, loading: progressLoading } = useDashboardProgress();
+  const [solutions, setSolutions] = useState<Solution[]>([]);
 
   useEffect(() => {
-    // Simular carregamento de dados do dashboard
     const loadDashboardData = async () => {
       try {
         setDashboard(prev => ({ ...prev, loading: true, error: null }));
         
-        // Aqui seria feita a chamada real para a API
-        // Por enquanto, usando dados do progressData se disponível
-        const mockData = {
-          active: progressData?.active || [],
-          completed: progressData?.completed || [],
-          recommended: progressData?.recommended || [],
+        // Carregar soluções do banco
+        const { data: solutionsData, error } = await supabase
+          .from('solutions')
+          .select('*')
+          .eq('published', true)
+          .order('created_at', { ascending: false });
+
+        if (error) {
+          throw error;
+        }
+
+        const solutionsList = solutionsData || [];
+        setSolutions(solutionsList);
+
+        // Dividir soluções em categorias
+        const active = solutionsList.slice(0, 3);
+        const completed: Solution[] = [];
+        const recommended = solutionsList.slice(0, 6);
+
+        setDashboard({
+          active,
+          completed,
+          recommended,
           loading: false,
           error: null
-        };
-
-        setDashboard(mockData);
+        });
       } catch (error) {
+        console.error('Erro ao carregar dashboard:', error);
         setDashboard(prev => ({
           ...prev,
           loading: false,
@@ -57,7 +71,7 @@ export const useDashboardData = () => {
     };
 
     loadDashboardData();
-  }, [progressData]);
+  }, []);
 
   const userProgress: UserProgress = {
     completedCount: dashboard.completed.length,
@@ -69,7 +83,8 @@ export const useDashboardData = () => {
   return {
     dashboard,
     userProgress,
-    loading: dashboard.loading || progressLoading,
+    solutions,
+    loading: dashboard.loading,
     error: dashboard.error,
     refetch: () => {
       // Implementar refetch se necessário

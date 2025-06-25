@@ -5,6 +5,7 @@ import { useAuth } from "@/contexts/auth";
 import LoadingScreen from "@/components/common/LoadingScreen";
 import { toast } from "sonner";
 import { logger } from "@/utils/logger";
+import { getUserRoleName } from "@/lib/supabase/types";
 
 export type ProtectionLevel = 'public' | 'authenticated' | 'admin' | 'formacao';
 
@@ -20,7 +21,7 @@ export const RouteProtection = ({
   fallbackPath = '/dashboard' 
 }: RouteProtectionProps) => {
   const location = useLocation();
-  const { user, isAdmin, isFormacao, isLoading } = useAuth();
+  const { user, profile, isLoading } = useAuth();
 
   // Log apenas em desenvolvimento
   if (import.meta.env.DEV) {
@@ -28,6 +29,8 @@ export const RouteProtection = ({
       pathname: location.pathname,
       level,
       hasUser: !!user,
+      hasProfile: !!profile,
+      userRole: profile ? getUserRoleName(profile) : 'none',
       isLoading
     });
   }
@@ -48,18 +51,38 @@ export const RouteProtection = ({
     return <Navigate to="/login" state={{ from: location.pathname }} replace />;
   }
 
+  // Se há usuário mas não há perfil, aguardar um pouco mais
+  if (user && !profile) {
+    return <LoadingScreen message="Carregando perfil..." />;
+  }
+
+  // Obter role do usuário
+  const userRole = getUserRoleName(profile);
+
   // Verificar permissão de admin
-  if (level === 'admin' && !isAdmin) {
+  if (level === 'admin' && userRole !== 'admin') {
     toast.error("Você não tem permissão para acessar esta área administrativa");
     return <Navigate to={fallbackPath} replace />;
   }
 
-  // Verificar permissão de formação
-  if (level === 'formacao' && !(isAdmin || isFormacao)) {
+  // Verificar permissão de formação (admin ou formacao)
+  if (level === 'formacao' && !(userRole === 'admin' || userRole === 'formacao')) {
     toast.error("Você não tem permissão para acessar esta área de formação");
     return <Navigate to={fallbackPath} replace />;
   }
 
-  // Renderizar conteúdo protegido
-  return <>{children}</>;
+  // Para rotas 'authenticated', aceitar qualquer usuário logado com perfil válido
+  // Isso inclui: admin, formacao, membro_club, etc.
+  if (level === 'authenticated' && user && profile) {
+    return <>{children}</>;
+  }
+
+  // Se chegou até aqui e tem usuário com perfil, permitir acesso
+  if (user && profile) {
+    return <>{children}</>;
+  }
+
+  // Fallback para casos não cobertos
+  logger.warn("[ROUTE-PROTECTION] Caso não coberto, redirecionando para login");
+  return <Navigate to="/login" replace />;
 };

@@ -6,6 +6,7 @@ import { fetchUserProfile, createUserProfileIfNeeded } from './utils/profileUtil
 import { useAuthMethods } from './hooks/useAuthMethods';
 import { AuthContextType } from './types';
 import { logger } from '@/utils/logger';
+import { getUserRoleName } from '@/lib/supabase/types';
 
 interface AuthProviderProps {
   children: ReactNode;
@@ -23,7 +24,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   // Usar métodos de auth
   const authMethods = useAuthMethods({ setIsLoading });
 
-  // CORREÇÃO: Função para limpeza completa de auth
+  // Função para limpeza completa de auth
   const cleanupAuthState = () => {
     setUser(null);
     setSession(null);  
@@ -31,7 +32,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setError(null);
   };
 
-  // CORREÇÃO: Função simplificada para carregar perfil (tentativa única)
+  // Função simplificada para carregar perfil
   const loadUserProfile = async (userId: string, email?: string) => {
     try {
       setError(null);
@@ -52,7 +53,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       
       if (userProfile) {
         setProfile(userProfile);
-        logger.info('[AUTH] Perfil carregado com sucesso');
+        logger.info('[AUTH] Perfil carregado com sucesso:', {
+          role: getUserRoleName(userProfile)
+        });
       } else {
         logger.warn('[AUTH] Continuando sem perfil de usuário');
       }
@@ -63,7 +66,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  // CORREÇÃO: Auth state listener simplificado e mais robusto
+  // Auth state listener simplificado e mais robusto
   useEffect(() => {
     logger.info('[AUTH] Inicializando AuthProvider');
     
@@ -81,7 +84,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setUser(session?.user ?? null);
         
         if (event === 'SIGNED_IN' && session?.user) {
-          // CORREÇÃO: Delay maior para evitar conflitos
+          // Delay para evitar conflitos
           setTimeout(() => {
             if (mounted) {
               loadUserProfile(session.user.id, session.user.email);
@@ -93,7 +96,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
     );
 
-    // CORREÇÃO: Verificar sessão inicial
+    // Verificar sessão inicial
     const checkInitialSession = async () => {
       try {
         const { data: { session }, error } = await supabase.auth.getSession();
@@ -130,7 +133,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
     };
 
-    // CORREÇÃO: Timeout aumentado para 8 segundos
+    // Timeout para finalizar loading
     initTimeout = setTimeout(() => {
       if (mounted && isLoading) {
         logger.warn('[AUTH] Timeout de inicialização (8s), finalizando loading');
@@ -156,6 +159,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
+  // Calcular isAdmin e isFormacao baseado no profile
+  const userRole = getUserRoleName(profile);
+  const isAdmin = userRole === 'admin';
+  const isFormacao = userRole === 'formacao';
+
   const contextValue: AuthContextType = {
     user,
     session,
@@ -163,8 +171,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     isLoading,
     error,
     refreshProfile,
-    isAdmin: profile?.user_roles?.name === 'admin',
-    isFormacao: profile?.user_roles?.name === 'formacao',
+    isAdmin,
+    isFormacao,
     setSession,
     setUser,
     setProfile,

@@ -9,7 +9,7 @@ import { ArrowRight, Clock, CheckCircle, Star } from "lucide-react";
 
 const Dashboard = () => {
   const navigate = useNavigate();
-  const { solutions, loading, error } = useDashboardData();
+  const { dashboard, solutions, loading, error } = useDashboardData();
 
   const handleSolutionClick = (solution: Solution) => {
     navigate(`/solution/${solution.id}`);
@@ -48,9 +48,7 @@ const Dashboard = () => {
     );
   }
 
-  const activeSolutions = solutions.filter(s => s.published);
-  const completedSolutions = []; // Implementar lógica de soluções completadas
-  const recommendedSolutions = activeSolutions.slice(0, 3);
+  const { active, completed, recommended } = dashboard;
 
   return (
     <div className="space-y-8">
@@ -69,7 +67,7 @@ const Dashboard = () => {
             <Clock className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{activeSolutions.length}</div>
+            <div className="text-2xl font-bold">{active.length}</div>
           </CardContent>
         </Card>
         
@@ -79,7 +77,7 @@ const Dashboard = () => {
             <CheckCircle className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{completedSolutions.length}</div>
+            <div className="text-2xl font-bold">{completed.length}</div>
           </CardContent>
         </Card>
         
@@ -89,40 +87,17 @@ const Dashboard = () => {
             <Star className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{recommendedSolutions.length}</div>
+            <div className="text-2xl font-bold">{recommended.length}</div>
           </CardContent>
         </Card>
       </div>
 
       {/* Soluções Recomendadas */}
-      <div>
-        <h2 className="text-xl font-semibold mb-4">Soluções Recomendadas</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {recommendedSolutions.map((solution) => (
-            <Card key={solution.id} className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => handleSolutionClick(solution)}>
-              <CardHeader>
-                <CardTitle className="text-lg">{solution.title}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground mb-4 line-clamp-2">
-                  {solution.description}
-                </p>
-                <Button variant="outline" className="w-full">
-                  Ver Solução
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </Button>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </div>
-
-      {/* Todas as Soluções */}
-      {activeSolutions.length > 3 && (
+      {recommended.length > 0 && (
         <div>
-          <h2 className="text-xl font-semibold mb-4">Todas as Soluções</h2>
+          <h2 className="text-xl font-semibold mb-4">Soluções Recomendadas</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {activeSolutions.slice(3).map((solution) => (
+            {recommended.slice(0, 3).map((solution) => (
               <Card key={solution.id} className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => handleSolutionClick(solution)}>
                 <CardHeader>
                   <CardTitle className="text-lg">{solution.title}</CardTitle>
@@ -140,6 +115,45 @@ const Dashboard = () => {
             ))}
           </div>
         </div>
+      )}
+
+      {/* Todas as Soluções */}
+      {solutions.length > 3 && (
+        <div>
+          <h2 className="text-xl font-semibold mb-4">Todas as Soluções</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {solutions.slice(3).map((solution) => (
+              <Card key={solution.id} className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => handleSolutionClick(solution)}>
+                <CardHeader>
+                  <CardTitle className="text-lg">{solution.title}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-muted-foreground mb-4 line-clamp-2">
+                    {solution.description}
+                  </p>
+                  <Button variant="outline" className="w-full">
+                    Ver Solução
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Button>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Estado vazio */}
+      {solutions.length === 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Nenhuma solução disponível</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-muted-foreground">
+              Novas soluções serão disponibilizadas em breve.
+            </p>
+          </CardContent>
+        </Card>
       )}
     </div>
   );
