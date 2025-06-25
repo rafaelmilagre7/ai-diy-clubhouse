@@ -59,7 +59,7 @@ const AuthLayout = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#0F111A] to-[#151823] p-4">
-      <Card className="w-full max-w-md bg-[#1A1E2E]/90 backdrop-blur-sm border-white/20">
+      <Card className="w-full max-w-md bg-[#1A1E2E]/90 backdrop-blur-sm border-white/20 shadow-2xl">
         <CardContent className="p-6">
           {message && (
             <Alert className="mb-4 bg-blue-500/10 border-blue-500/20">
@@ -72,20 +72,20 @@ const AuthLayout = () => {
             <TabsList className="grid w-full grid-cols-2 mb-6 bg-[#252842] border-white/10">
               <TabsTrigger 
                 value="login" 
-                className="data-[state=active]:bg-viverblue data-[state=active]:text-white text-neutral-300"
+                className="data-[state=active]:bg-viverblue data-[state=active]:text-white text-neutral-300 transition-all duration-200"
               >
                 Entrar
               </TabsTrigger>
               <TabsTrigger 
                 value="register"
-                className="data-[state=active]:bg-viverblue data-[state=active]:text-white text-neutral-300"
+                className="data-[state=active]:bg-viverblue data-[state=active]:text-white text-neutral-300 transition-all duration-200"
               >
                 Criar conta
               </TabsTrigger>
             </TabsList>
             
-            <TabsContent value="login">
-              <div className="space-y-4">
+            <TabsContent value="login" className="space-y-0">
+              <div className="space-y-6">
                 <div className="text-center space-y-2">
                   <h2 className="text-2xl font-bold text-white">
                     Entrar na conta
@@ -98,7 +98,7 @@ const AuthLayout = () => {
               </div>
             </TabsContent>
             
-            <TabsContent value="register">
+            <TabsContent value="register" className="space-y-0">
               <SimpleRegisterForm onSuccess={handleSuccess} />
             </TabsContent>
           </Tabs>
