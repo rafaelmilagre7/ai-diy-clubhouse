@@ -1,10 +1,12 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Plus, BookOpen, Users, Clock } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const FormacaoAulas = () => {
+  const navigate = useNavigate();
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-start">
@@ -15,7 +17,7 @@ const FormacaoAulas = () => {
           </p>
         </div>
         
-        <Button>
+        <Button onClick={() => navigate('/formacao/aulas/nova')}>
           <Plus className="mr-2 h-4 w-4" />
           Nova Aula
         </Button>

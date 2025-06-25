@@ -1,170 +1,204 @@
 
-import { createBrowserRouter } from "react-router-dom";
-import { RouteProtection } from "@/components/routing/RouteProtection";
-import { SmartRedirect } from "@/components/routing/SmartRedirect";
+import { Routes, Route, Navigate } from 'react-router-dom';
+import { Suspense, lazy } from 'react';
+import { RouteProtection } from '@/components/routing/RouteProtection';
+import { SmartRedirect } from '@/components/routing/SmartRedirect';
+import LoadingScreen from '@/components/common/LoadingScreen';
 
-// Layouts
-import AdminLayout from '@/components/layout/admin/AdminLayout';
-import MemberLayout from '@/components/layout/MemberLayout';
-import FormacaoLayout from '@/components/layout/formacao/FormacaoLayout';
+// Lazy load pages for better performance
+const LoginPage = lazy(() => import('@/pages/Login'));
+const RegisterPage = lazy(() => import('@/pages/Register'));
+const ResetPasswordPage = lazy(() => import('@/pages/ResetPassword'));
+const SetNewPasswordPage = lazy(() => import('@/pages/SetNewPassword'));
+const OnboardingPage = lazy(() => import('@/pages/Onboarding'));
+const DashboardPage = lazy(() => import('@/pages/Dashboard'));
+const ProfilePage = lazy(() => import('@/pages/Profile'));
+const ImplementationPage = lazy(() => import('@/pages/Implementation'));
+const SolutionPage = lazy(() => import('@/pages/Solution'));
+const ToolsPage = lazy(() => import('@/pages/Tools'));
+const ToolDetailPage = lazy(() => import('@/pages/ToolDetail'));
+const LearningPage = lazy(() => import('@/pages/Learning'));
+const LearningCoursePage = lazy(() => import('@/pages/LearningCourse'));
+const LearningLessonPage = lazy(() => import('@/pages/LearningLesson'));
+const ImplementationTrailPage = lazy(() => import('@/pages/ImplementationTrail'));
+const SuggestionsPage = lazy(() => import('@/pages/Suggestions'));
+const SuggestionDetailPage = lazy(() => import('@/pages/SuggestionDetail'));
+const CalendarPage = lazy(() => import('@/pages/Calendar'));
+const CommunityPage = lazy(() => import('@/pages/Community'));
+const CommunityTopicPage = lazy(() => import('@/pages/CommunityTopic'));
+const NotFound = lazy(() => import('@/pages/NotFound'));
 
-// Auth pages
-import AuthLayout from '@/components/auth/AuthLayout';
-import RegisterPage from '@/pages/auth/RegisterPage';
-import OnboardingPage from '@/pages/OnboardingPage';
+// Admin Pages
+const AdminLayout = lazy(() => import('@/components/layout/admin/AdminLayout'));
+const AdminDashboard = lazy(() => import('@/pages/admin/AdminDashboard'));
+const AdminUsers = lazy(() => import('@/pages/admin/AdminUsers'));
+const AdminTools = lazy(() => import('@/pages/admin/AdminTools'));
+const AdminSolutions = lazy(() => import('@/pages/admin/AdminSolutions'));
+const AdminSolutionEditor = lazy(() => import('@/pages/admin/AdminSolutionEditor'));
+const AdminAnalytics = lazy(() => import('@/pages/admin/AdminAnalytics'));
+const AdminSuggestions = lazy(() => import('@/pages/admin/AdminSuggestions'));
+const AdminSuggestionDetail = lazy(() => import('@/pages/admin/AdminSuggestionDetail'));
+const AdminEvents = lazy(() => import('@/pages/admin/AdminEvents'));
+const AdminRoles = lazy(() => import('@/pages/admin/AdminRoles'));
+const AdminInvites = lazy(() => import('@/pages/admin/AdminInvites'));
+const AdminCommunications = lazy(() => import('@/pages/admin/AdminCommunications'));
+const AdminSecurity = lazy(() => import('@/pages/admin/AdminSecurity'));
 
-// Admin pages
-import AdminDashboard from '@/pages/admin/AdminDashboard';
-import SolutionsList from '@/pages/admin/SolutionsList';
-import SolutionEditor from '@/pages/admin/SolutionEditor';
-import AdminTools from '@/pages/admin/AdminTools';
-import AdminUsers from '@/pages/admin/AdminUsers';
-import AdminRoles from '@/pages/admin/AdminRoles';
-import AdminInvites from '@/pages/admin/AdminInvites';
-import AdminAnalytics from '@/pages/admin/AdminAnalytics';
-import AdminCommunications from '@/pages/admin/AdminCommunications';
-import AdminSecurity from '@/pages/admin/AdminSecurity';
-import AdminBenefits from '@/pages/admin/AdminBenefits';
-import AdminEvents from '@/pages/admin/AdminEvents';
+// Formação/LMS Pages
+const FormacaoLayout = lazy(() => import('@/components/layout/formacao/FormacaoLayout'));
+const FormacaoDashboard = lazy(() => import('@/pages/formacao/FormacaoDashboard'));
+const FormacaoCursos = lazy(() => import('@/pages/formacao/FormacaoCursos'));
+const FormacaoAulas = lazy(() => import('@/pages/formacao/FormacaoAulas'));
+const FormacaoNovaAula = lazy(() => import('@/pages/formacao/FormacaoNovaAula'));
+const FormacaoMateriais = lazy(() => import('@/pages/formacao/FormacaoMateriais'));
+const FormacaoConfiguracoes = lazy(() => import('@/pages/formacao/FormacaoConfiguracoes'));
 
-// Member pages
-import Dashboard from '@/pages/member/Dashboard';
-import Solutions from '@/pages/member/Solutions';
-import Tools from '@/pages/member/Tools';
-import Profile from '@/pages/member/Profile';
-import EditProfile from '@/pages/member/EditProfile';
-import Benefits from '@/pages/member/Benefits';
-import Events from '@/pages/member/Events';
-import Suggestions from '@/pages/member/Suggestions';
+// Member Layout
+const MemberLayout = lazy(() => import('@/components/layout/MemberLayout'));
 
-// Profile sub-pages
-import NotificationSettingsPage from '@/pages/profile/NotificationSettingsPage';
+const PageLoader = ({ children }: { children: React.ReactNode }) => (
+  <Suspense fallback={<LoadingScreen />}>
+    {children}
+  </Suspense>
+);
 
-// Learning pages
-import LearningPage from '@/pages/member/learning/LearningPage';
-import CourseDetails from '@/pages/member/learning/CourseDetails';
-import LessonView from '@/pages/member/learning/LessonView';
-import MemberCertificates from '@/pages/member/learning/MemberCertificates';
+export const AppRoutes = () => {
+  return (
+    <Routes>
+      {/* Root redirect */}
+      <Route path="/" element={<SmartRedirect />} />
 
-// Formação pages
-import FormacaoDashboard from '@/pages/formacao/FormacaoDashboard';
-import FormacaoCursos from '@/pages/formacao/FormacaoCursos';
-import FormacaoModuloDetalhes from '@/pages/formacao/FormacaoModuloDetalhes';
-import FormacaoAulaDetalhes from '@/pages/formacao/FormacaoAulaDetalhes';
-import FormacaoAulas from '@/pages/formacao/FormacaoAulas';
-import FormacaoNovaAula from '@/pages/formacao/FormacaoNovaAula';
-import FormacaoMateriais from '@/pages/formacao/FormacaoMateriais';
-import FormacaoConfiguracoes from '@/pages/formacao/FormacaoConfiguracoes';
+      {/* Public Routes */}
+      <Route
+        path="/login"
+        element={
+          <RouteProtection level="public">
+            <PageLoader>
+              <LoginPage />
+            </PageLoader>
+          </RouteProtection>
+        }
+      />
+      <Route
+        path="/register"
+        element={
+          <RouteProtection level="public">
+            <PageLoader>
+              <RegisterPage />
+            </PageLoader>
+          </RouteProtection>
+        }
+      />
+      <Route
+        path="/reset-password"
+        element={
+          <RouteProtection level="public">
+            <PageLoader>
+              <ResetPasswordPage />
+            </PageLoader>
+          </RouteProtection>
+        }
+      />
+      <Route
+        path="/set-new-password"
+        element={
+          <RouteProtection level="public">
+            <PageLoader>
+              <SetNewPasswordPage />
+            </PageLoader>
+          </RouteProtection>
+        }
+      />
 
-// Error pages
-import NotFound from '@/pages/NotFound';
+      {/* Onboarding */}
+      <Route
+        path="/onboarding"
+        element={
+          <RouteProtection level="authenticated">
+            <PageLoader>
+              <OnboardingPage />
+            </PageLoader>
+          </RouteProtection>
+        }
+      />
 
-// Helper para criar rotas protegidas
-const createProtectedRoute = (
-  path: string, 
-  Component: React.ComponentType, 
-  Layout: React.ComponentType<{ children: React.ReactNode }>,
-  level: 'authenticated' | 'admin' | 'formacao' = 'authenticated'
-) => ({
-  path,
-  element: (
-    <RouteProtection level={level}>
-      <Layout>
-        <Component />
-      </Layout>
-    </RouteProtection>
-  )
-});
+      {/* Member Routes */}
+      <Route
+        path="/*"
+        element={
+          <RouteProtection level="authenticated">
+            <PageLoader>
+              <MemberLayout />
+            </PageLoader>
+          </RouteProtection>
+        }
+      >
+        <Route path="dashboard" element={<DashboardPage />} />
+        <Route path="profile" element={<ProfilePage />} />
+        <Route path="implementation/:slug" element={<ImplementationPage />} />
+        <Route path="implementation/:slug/step/:step" element={<ImplementationPage />} />
+        <Route path="solution/:slug" element={<SolutionPage />} />
+        <Route path="tools" element={<ToolsPage />} />
+        <Route path="tools/:toolId" element={<ToolDetailPage />} />
+        <Route path="learning" element={<LearningPage />} />
+        <Route path="learning/course/:courseId" element={<LearningCoursePage />} />
+        <Route path="learning/lesson/:lessonId" element={<LearningLessonPage />} />
+        <Route path="implementation-trail" element={<ImplementationTrailPage />} />
+        <Route path="suggestions" element={<SuggestionsPage />} />
+        <Route path="suggestions/:id" element={<SuggestionDetailPage />} />
+        <Route path="calendar" element={<CalendarPage />} />
+        <Route path="community" element={<CommunityPage />} />
+        <Route path="community/:categoryId" element={<CommunityPage />} />
+        <Route path="community/topic/:topicId" element={<CommunityTopicPage />} />
+      </Route>
 
-export const AppRoutes = createBrowserRouter([
-  // Rota raiz com redirecionamento inteligente
-  {
-    path: "/",
-    element: <SmartRedirect />
-  },
+      {/* Admin Routes */}
+      <Route
+        path="/admin/*"
+        element={
+          <RouteProtection level="admin">
+            <PageLoader>
+              <AdminLayout />
+            </PageLoader>
+          </RouteProtection>
+        }
+      >
+        <Route index element={<AdminDashboard />} />
+        <Route path="users" element={<AdminUsers />} />
+        <Route path="tools" element={<AdminTools />} />
+        <Route path="solutions" element={<AdminSolutions />} />
+        <Route path="solutions/:solutionId/editor" element={<AdminSolutionEditor />} />
+        <Route path="analytics" element={<AdminAnalytics />} />
+        <Route path="suggestions" element={<AdminSuggestions />} />
+        <Route path="suggestions/:id" element={<AdminSuggestionDetail />} />
+        <Route path="events" element={<AdminEvents />} />
+        <Route path="roles" element={<AdminRoles />} />
+        <Route path="invites" element={<AdminInvites />} />
+        <Route path="communications" element={<AdminCommunications />} />
+        <Route path="security" element={<AdminSecurity />} />
+      </Route>
 
-  // Rotas públicas de autenticação
-  {
-    path: "/login",
-    element: (
-      <RouteProtection level="public">
-        <AuthLayout />
-      </RouteProtection>
-    )
-  },
-  {
-    path: "/convite/:token",
-    element: (
-      <RouteProtection level="public">
-        <RegisterPage />
-      </RouteProtection>
-    )
-  },
-  {
-    path: "/invite/:token", 
-    element: (
-      <RouteProtection level="public">
-        <RegisterPage />
-      </RouteProtection>
-    )
-  },
-  {
-    path: "/onboarding",
-    element: (
-      <RouteProtection level="authenticated">
-        <OnboardingPage />
-      </RouteProtection>
-    )
-  },
+      {/* Formação/LMS Routes */}
+      <Route
+        path="/formacao/*"
+        element={
+          <RouteProtection level="formacao">
+            <PageLoader>
+              <FormacaoLayout />
+            </PageLoader>
+          </RouteProtection>
+        }
+      >
+        <Route index element={<FormacaoDashboard />} />
+        <Route path="cursos" element={<FormacaoCursos />} />
+        <Route path="aulas" element={<FormacaoAulas />} />
+        <Route path="aulas/nova" element={<FormacaoNovaAula />} />
+        <Route path="materiais" element={<FormacaoMateriais />} />
+        <Route path="configuracoes" element={<FormacaoConfiguracoes />} />
+      </Route>
 
-  // Rotas de membros (autenticadas)
-  createProtectedRoute("/dashboard", Dashboard, MemberLayout),
-  createProtectedRoute("/solutions", Solutions, MemberLayout),
-  createProtectedRoute("/tools", Tools, MemberLayout),
-  createProtectedRoute("/profile", Profile, MemberLayout),
-  createProtectedRoute("/profile/edit", EditProfile, MemberLayout),
-  createProtectedRoute("/profile/notifications", NotificationSettingsPage, MemberLayout),
-  createProtectedRoute("/benefits", Benefits, MemberLayout),
-  createProtectedRoute("/events", Events, MemberLayout),
-  createProtectedRoute("/suggestions", Suggestions, MemberLayout),
-
-  // Rotas de Learning (autenticadas)
-  createProtectedRoute("/learning", LearningPage, MemberLayout),
-  createProtectedRoute("/learning/course/:id", CourseDetails, MemberLayout),
-  createProtectedRoute("/learning/course/:courseId/lesson/:lessonId", LessonView, MemberLayout),
-  createProtectedRoute("/learning/certificates", MemberCertificates, MemberLayout),
-
-  // Rotas de admin (requer permissão admin)
-  createProtectedRoute("/admin", AdminDashboard, AdminLayout, 'admin'),
-  createProtectedRoute("/admin/dashboard", AdminDashboard, AdminLayout, 'admin'),
-  createProtectedRoute("/admin/solutions", SolutionsList, AdminLayout, 'admin'),
-  createProtectedRoute("/admin/solutions/new", SolutionEditor, AdminLayout, 'admin'),
-  createProtectedRoute("/admin/solutions/:id", SolutionEditor, AdminLayout, 'admin'),
-  createProtectedRoute("/admin/tools", AdminTools, AdminLayout, 'admin'),
-  createProtectedRoute("/admin/users", AdminUsers, AdminLayout, 'admin'),
-  createProtectedRoute("/admin/roles", AdminRoles, AdminLayout, 'admin'),
-  createProtectedRoute("/admin/invites", AdminInvites, AdminLayout, 'admin'),
-  createProtectedRoute("/admin/analytics", AdminAnalytics, AdminLayout, 'admin'),
-  createProtectedRoute("/admin/communications", AdminCommunications, AdminLayout, 'admin'),
-  createProtectedRoute("/admin/security", AdminSecurity, AdminLayout, 'admin'),
-  createProtectedRoute("/admin/benefits", AdminBenefits, AdminLayout, 'admin'),
-  createProtectedRoute("/admin/events", AdminEvents, AdminLayout, 'admin'),
-
-  // Rotas de formação (requer permissão formacao ou admin)
-  createProtectedRoute("/formacao", FormacaoDashboard, FormacaoLayout, 'formacao'),
-  createProtectedRoute("/formacao/cursos", FormacaoCursos, FormacaoLayout, 'formacao'),
-  createProtectedRoute("/formacao/cursos/:id/modulos", FormacaoModuloDetalhes, FormacaoLayout, 'formacao'),
-  createProtectedRoute("/formacao/modulos/:id/aulas", FormacaoAulaDetalhes, FormacaoLayout, 'formacao'),
-  createProtectedRoute("/formacao/aulas", FormacaoAulas, FormacaoLayout, 'formacao'),
-  createProtectedRoute("/formacao/aulas/nova", FormacaoNovaAula, FormacaoLayout, 'formacao'),
-  createProtectedRoute("/formacao/aulas/:id", FormacaoAulaDetalhes, FormacaoLayout, 'formacao'),
-  createProtectedRoute("/formacao/aulas/:id/editar", FormacaoAulaDetalhes, FormacaoLayout, 'formacao'),
-  createProtectedRoute("/formacao/materiais", FormacaoMateriais, FormacaoLayout, 'formacao'),
-  createProtectedRoute("/formacao/configuracoes", FormacaoConfiguracoes, FormacaoLayout, 'formacao'),
-
-  // Rota 404
-  {
-    path: "*",
-    element: <NotFound />
-  }
-]);
+      {/* 404 Page */}
+      <Route path="*" element={<NotFound />} />
+    </Routes>
+  );
+};
