@@ -1,81 +1,90 @@
 
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Loader2, UserPlus, CheckCircle, AlertCircle } from 'lucide-react';
-import { useAuth } from '@/contexts/auth';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useInviteFlow } from '@/hooks/useInviteFlow';
+import { useSimpleAuth } from '@/contexts/auth/SimpleAuthProvider';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Loader2, UserPlus, Mail, Calendar, Clock, CheckCircle } from 'lucide-react';
 import { InviteTokenManager } from '@/utils/inviteTokenManager';
-import RegisterForm from './RegisterForm';
+import LoadingScreen from '@/components/common/LoadingScreen';
+import { logger } from '@/utils/logger';
 
 const InviteAcceptPage = () => {
-  const { token: paramToken } = useParams();
   const navigate = useNavigate();
-  const { user } = useAuth();
-  const [showRegisterForm, setShowRegisterForm] = useState(false);
-
-  // Token único de múltiplas fontes
-  const inviteToken = paramToken || InviteTokenManager.getToken();
+  const [searchParams] = useSearchParams();
+  const { user } = useSimpleAuth();
   
-  const {
-    isLoading,
-    inviteDetails,
-    error,
-    isProcessing,
-    acceptInvite,
-    registerWithInvite
-  } = useInviteFlow(inviteToken);
+  // Token management - fonte única de verdade
+  const urlToken = searchParams.get('token');
+  const storedToken = InviteTokenManager.getToken();
+  const inviteToken = urlToken || storedToken;
 
-  console.log('[INVITE-ACCEPT-PAGE] Estado:', {
-    hasToken: !!inviteToken,
-    hasUser: !!user,
-    hasInviteDetails: !!inviteDetails,
-    isLoading,
-    error,
-    showRegisterForm
-  });
+  // CORRIGIDO: Usar apenas os campos que existem no hook
+  const { inviteDetails, isLoading, error } = useInviteFlow(inviteToken || undefined);
+  
+  const [isAccepting, setIsAccepting] = useState(false);
 
-  // Guardar token quando disponível
+  // Store token if found in URL
   useEffect(() => {
+    if (urlToken) {
+      InviteTokenManager.storeToken(urlToken);
+    }
+  }, [urlToken]);
+
+  // Auto-redirect se já estiver logado
+  useEffect(() => {
+    if (user && inviteDetails) {
+      logger.info('[INVITE-ACCEPT] Usuário já logado, redirecionando para onboarding');
+      navigate(`/onboarding?token=${inviteToken}`, { replace: true });
+    }
+  }, [user, inviteDetails, inviteToken, navigate]);
+
+  const handleAcceptInvite = async () => {
+    if (!inviteToken) return;
+    
+    setIsAccepting(true);
+    try {
+      // Armazenar token e redirecionar para onboarding
+      InviteTokenManager.storeToken(inviteToken);
+      navigate(`/onboarding?token=${inviteToken}`, { replace: true });
+    } catch (error) {
+      logger.error('[INVITE-ACCEPT] Erro ao aceitar convite:', error);
+    } finally {
+      setIsAccepting(false);
+    }
+  };
+
+  const handleLoginRedirect = () => {
     if (inviteToken) {
       InviteTokenManager.storeToken(inviteToken);
     }
-  }, [inviteToken]);
+    navigate('/auth', { state: { hasInvite: true } });
+  };
 
-  // Loading inicial
+  // Loading state
   if (isLoading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-[#0F111A] to-[#151823] flex items-center justify-center p-4">
-        <Card className="w-full max-w-md bg-[#1A1E2E]/80 backdrop-blur-sm border-white/10">
-          <CardContent className="flex flex-col items-center justify-center p-8 space-y-4">
-            <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
-            <p className="text-white/80">Carregando detalhes do convite...</p>
-          </CardContent>
-        </Card>
-      </div>
-    );
+    return <LoadingScreen message="Validando convite..." />;
   }
 
-  // Erro ao carregar convite
+  // Error state
   if (error || !inviteDetails) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-[#0F111A] to-[#151823] flex items-center justify-center p-4">
-        <Card className="w-full max-w-md bg-[#1A1E2E]/80 backdrop-blur-sm border-white/10">
+        <Card className="w-full max-w-md bg-[#1A1E2E] border-neutral-800">
           <CardHeader className="text-center">
-            <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
-            <CardTitle className="text-white">Convite Inválido</CardTitle>
-            <CardDescription className="text-white/60">
-              {error || 'Convite não encontrado ou expirado'}
-            </CardDescription>
+            <CardTitle className="text-red-400">Convite Inválido</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="text-center space-y-4">
+            <p className="text-neutral-300">
+              {error || 'Este convite não é válido ou pode ter expirado.'}
+            </p>
             <Button 
-              onClick={() => navigate('/login')} 
+              onClick={() => navigate('/auth')}
               className="w-full"
             >
-              Ir para Login
+              Voltar ao Login
             </Button>
           </CardContent>
         </Card>
@@ -83,123 +92,112 @@ const InviteAcceptPage = () => {
     );
   }
 
-  // Usuário logado - aceitar convite
-  if (user && !showRegisterForm) {
-    const userEmail = (user.email || '').toLowerCase();
-    const inviteEmail = inviteDetails.email.toLowerCase();
-    const emailMatches = userEmail === inviteEmail;
+  // CORRIGIDO: role agora é um objeto com id e name
+  const roleDisplayName = inviteDetails.role.name === 'formacao' ? 'Formação' : 
+                          inviteDetails.role.name === 'admin' ? 'Administrador' : 'Membro Club';
+  
+  const roleDescription = inviteDetails.role.name === 'formacao' 
+    ? 'Acesso para criar cursos e conteúdos educacionais'
+    : inviteDetails.role.name === 'admin'
+    ? 'Acesso administrativo completo à plataforma'
+    : 'Acesso aos cursos, soluções e comunidade';
 
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-[#0F111A] to-[#151823] flex items-center justify-center p-4">
-        <Card className="w-full max-w-md bg-[#1A1E2E]/80 backdrop-blur-sm border-white/10">
-          <CardHeader className="text-center">
-            <UserPlus className="h-12 w-12 text-blue-500 mx-auto mb-4" />
-            <CardTitle className="text-white">Aceitar Convite</CardTitle>
-            <CardDescription className="text-white/60">
-              Você foi convidado para {inviteDetails.role.description}
-            </CardDescription>
-          </CardHeader>
-          
-          <CardContent className="space-y-4">
-            <div className="bg-[#2A2E3E]/50 p-4 rounded-lg space-y-2">
-              <p className="text-sm text-white/60">Convite para:</p>
-              <p className="text-white font-medium">{inviteDetails.email}</p>
-              <p className="text-sm text-white/60">Papel:</p>
-              <p className="text-white font-medium">{inviteDetails.role.name}</p>
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-[#0F111A] to-[#151823] flex items-center justify-center p-4">
+      <Card className="w-full max-w-lg bg-[#1A1E2E] border-neutral-800">
+        <CardHeader className="text-center space-y-4">
+          <div className="mx-auto w-16 h-16 bg-viverblue/20 rounded-full flex items-center justify-center">
+            <UserPlus className="h-8 w-8 text-viverblue" />
+          </div>
+          <div>
+            <CardTitle className="text-2xl text-white">Você foi convidado!</CardTitle>
+            <p className="text-neutral-400 mt-2">
+              Bem-vindo ao Viver de IA Club
+            </p>
+          </div>
+        </CardHeader>
+
+        <CardContent className="space-y-6">
+          {/* Detalhes do Convite */}
+          <div className="space-y-4 p-4 bg-neutral-900/50 rounded-lg border border-neutral-800">
+            <div className="flex items-center gap-3">
+              <Mail className="h-5 w-5 text-viverblue" />
+              <div>
+                <p className="text-sm text-neutral-400">Email</p>
+                <p className="text-white font-medium">{inviteDetails.email}</p>
+              </div>
             </div>
 
-            {!emailMatches && (
-              <Alert variant="destructive">
-                <AlertCircle className="h-4 w-4" />
-                <AlertDescription>
-                  Este convite foi enviado para {inviteDetails.email}, mas você está logado como {user.email}
-                </AlertDescription>
-              </Alert>
-            )}
+            <div className="flex items-center gap-3">
+              <UserPlus className="h-5 w-5 text-viverblue" />
+              <div>
+                <p className="text-sm text-neutral-400">Tipo de Acesso</p>
+                <div className="flex items-center gap-2">
+                  <Badge variant="secondary" className="bg-viverblue/20 text-viverblue">
+                    {roleDisplayName}
+                  </Badge>
+                </div>
+                <p className="text-xs text-neutral-500 mt-1">
+                  {roleDescription}
+                </p>
+              </div>
+            </div>
 
-            <Button
-              onClick={async () => {
-                const result = await acceptInvite();
-                if (result.success) {
-                  if (result.requiresOnboarding) {
-                    navigate('/onboarding', { replace: true });
-                  } else {
-                    navigate('/dashboard', { replace: true });
-                  }
-                }
-              }}
-              disabled={!emailMatches || isProcessing}
-              className="w-full"
+            <div className="flex items-center gap-3">
+              <Clock className="h-5 w-5 text-viverblue" />
+              <div>
+                <p className="text-sm text-neutral-400">Validade</p>
+                <p className="text-white text-sm">
+                  {new Date(inviteDetails.expires_at).toLocaleDateString('pt-BR', {
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                  })}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Ações */}
+          <div className="space-y-3">
+            <Button 
+              onClick={handleAcceptInvite}
+              disabled={isAccepting}
+              className="w-full bg-viverblue hover:bg-viverblue/90 text-black font-semibold"
             >
-              {isProcessing ? (
+              {isAccepting ? (
                 <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Aceitando...
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Processando...
                 </>
               ) : (
                 <>
-                  <CheckCircle className="h-4 w-4 mr-2" />
+                  <CheckCircle className="mr-2 h-4 w-4" />
                   Aceitar Convite
                 </>
               )}
             </Button>
 
-            <Button
-              variant="outline"
-              onClick={() => navigate('/login')}
-              className="w-full"
-            >
-              Cancelar
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
-  // Usuário não logado ou modo registro
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-[#0F111A] to-[#151823] flex items-center justify-center p-4">
-      <Card className="w-full max-w-md bg-[#1A1E2E]/80 backdrop-blur-sm border-white/10">
-        <CardHeader className="text-center">
-          <UserPlus className="h-12 w-12 text-blue-500 mx-auto mb-4" />
-          <CardTitle className="text-white">Criar Conta</CardTitle>
-          <CardDescription className="text-white/60">
-            Complete seu registro para aceitar o convite
-          </CardDescription>
-        </CardHeader>
-        
-        <CardContent className="space-y-4">
-          <div className="bg-[#2A2E3E]/50 p-4 rounded-lg space-y-2">
-            <p className="text-sm text-white/60">Convite para:</p>
-            <p className="text-white font-medium">{inviteDetails.email}</p>
-            <p className="text-sm text-white/60">Papel:</p>
-            <p className="text-white font-medium">{inviteDetails.role.description}</p>
-          </div>
-
-          <RegisterForm
-            defaultEmail={inviteDetails.email}
-            inviteToken={inviteToken}
-            onSuccess={() => {
-              // Após registro bem-sucedido, redirecionar para onboarding
-              navigate('/onboarding', { replace: true });
-            }}
-            onError={(error) => {
-              console.error('[INVITE-ACCEPT-PAGE] Erro no registro:', error);
-            }}
-          />
-
-          <div className="text-center">
-            <p className="text-sm text-white/60">
-              Já tem uma conta?{' '}
-              <Button
-                variant="link"
-                onClick={() => navigate('/login')}
-                className="text-blue-400 hover:text-blue-300 p-0"
-              >
-                Fazer login
-              </Button>
-            </p>
+            {user ? (
+              <p className="text-center text-sm text-neutral-400">
+                Você será redirecionado para completar seu perfil
+              </p>
+            ) : (
+              <div className="space-y-2">
+                <Button 
+                  variant="outline" 
+                  onClick={handleLoginRedirect}
+                  className="w-full border-neutral-700 hover:bg-neutral-800"
+                >
+                  Já tenho conta - Fazer Login
+                </Button>
+                <p className="text-center text-xs text-neutral-500">
+                  Caso já tenha uma conta, faça login primeiro
+                </p>
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>

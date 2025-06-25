@@ -2,7 +2,6 @@
 import { useState, useCallback, useMemo, useEffect } from 'react';
 import { OnboardingData } from '../types/onboardingTypes';
 import { useSimpleAuth } from '@/contexts/auth/SimpleAuthProvider';
-import { getUserRoleName } from '@/lib/supabase/types';
 import { useInviteFlow } from '@/hooks/useInviteFlow';
 
 export const useCleanOnboardingData = (inviteToken?: string) => {
@@ -14,12 +13,15 @@ export const useCleanOnboardingData = (inviteToken?: string) => {
     startedAt: new Date().toISOString()
   });
 
-  // Dados do perfil memoizados
-  const profileData = useMemo(() => ({
-    roleName: getUserRoleName(profile),
-    name: profile?.name || '',
-    email: profile?.email || user?.email || ''
-  }), [profile, user?.email]);
+  // Dados do perfil memoizados - CORRIGIDO: role agora é string
+  const profileData = useMemo(() => {
+    const userRoleName = profile?.user_roles?.name || 'club';
+    return {
+      roleName: userRoleName,
+      name: profile?.name || '',
+      email: profile?.email || user?.email || ''
+    };
+  }, [profile, user?.email]);
 
   // CORREÇÃO CRÍTICA: Inicialização simplificada sem dependência de convite
   useEffect(() => {

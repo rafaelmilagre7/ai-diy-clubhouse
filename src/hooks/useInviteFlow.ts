@@ -1,13 +1,17 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
-import { UserRole } from '@/lib/supabase/types';
 import { logger } from '@/utils/logger';
+
+interface InviteRole {
+  id: string;
+  name: string;
+}
 
 interface InviteDetails {
   token: string;
   email: string;
-  role: UserRole;
+  role: InviteRole;
   created_at: string;
   expires_at: string;
   is_used: boolean;
@@ -84,7 +88,18 @@ export const useInviteFlow = (inviteToken?: string): UseInviteFlowResult => {
         }
 
         logger.info('[INVITE-FLOW] Convite válido encontrado');
-        setInviteDetails(data as InviteDetails);
+        
+        // Corrigir o tipo para ser compatível com InviteDetails
+        const inviteData: InviteDetails = {
+          token: data.token,
+          email: data.email,
+          role: Array.isArray(data.role) ? data.role[0] : data.role,
+          created_at: data.created_at,
+          expires_at: data.expires_at,
+          is_used: data.is_used
+        };
+        
+        setInviteDetails(inviteData);
 
       } catch (err) {
         logger.error('[INVITE-FLOW] Erro inesperado:', err);
