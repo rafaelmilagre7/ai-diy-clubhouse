@@ -14,12 +14,12 @@ interface PerformanceOptimizedDashboardProps {
   isLoading?: boolean;
 }
 
-// Wrapper otimizado para o dashboard principal usando DashboardLayout consolidado
+// Wrapper otimizado para o dashboard principal
 export const PerformanceOptimizedDashboard = memo<PerformanceOptimizedDashboardProps>((props) => {
   // Ativar preload inteligente
   usePreloadRoutes();
 
-  return <DashboardLayout {...props} optimized={true} />;
+  return <DashboardLayout {...props} />;
 });
 
 PerformanceOptimizedDashboard.displayName = 'PerformanceOptimizedDashboard';

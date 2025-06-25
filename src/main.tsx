@@ -8,13 +8,20 @@ import { LoggingProvider } from '@/hooks/useLogging';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from '@/components/ui/toaster';
 
-// Configurar QueryClient otimizado
+// Inicialização com validação de segurança
+import { securityValidator } from './utils/securityValidator';
+
+// Validar segurança antes de inicializar a aplicação
+if (import.meta.env.DEV) {
+  securityValidator.generateSecurityReport();
+}
+
+// Criar QueryClient
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: import.meta.env.DEV ? 1 * 60 * 1000 : 5 * 60 * 1000,
-      retry: import.meta.env.DEV ? 0 : 1,
-      refetchOnWindowFocus: false,
+      staleTime: 5 * 60 * 1000, // 5 minutos
+      retry: 1,
     },
   },
 });

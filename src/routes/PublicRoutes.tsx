@@ -1,6 +1,20 @@
 
 import { RouteObject } from "react-router-dom";
+import PublicRoute from '@/components/auth/PublicRoute';
 
-// Para uma plataforma apenas por convite, não precisamos de rotas públicas
-// O acesso é feito via convite ou login direto
-export const publicRoutes: RouteObject[] = [];
+// Páginas públicas
+import Auth from '@/pages/Auth';
+
+// Função helper para criar rotas públicas
+const createPublicRoute = (path: string, Component: React.ComponentType<any>) => ({
+  path,
+  element: (
+    <PublicRoute>
+      <Component />
+    </PublicRoute>
+  )
+});
+
+export const publicRoutes: RouteObject[] = [
+  createPublicRoute("/auth", Auth),
+];

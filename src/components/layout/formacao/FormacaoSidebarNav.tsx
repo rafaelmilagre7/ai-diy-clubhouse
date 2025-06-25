@@ -9,6 +9,7 @@ import {
   ArrowLeft,
   GraduationCap
 } from "lucide-react";
+import { AdminNavItem } from "../admin/AdminNavItem";
 import { cn } from "@/lib/utils";
 
 interface FormacaoSidebarNavProps {

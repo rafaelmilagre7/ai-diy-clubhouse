@@ -3,8 +3,6 @@ import { DashboardHeader } from "./DashboardHeader";
 import { RealStatsOverview } from "./RealStatsOverview";
 import { RealSystemActivity } from "./RealSystemActivity";
 import { UserDistributionChart } from "./UserDistributionChart";
-import { DashboardCharts } from "./DashboardCharts";
-import { RecentActivity } from "./RecentActivity";
 
 interface RealAdminDashboardLayoutProps {
   timeRange: string;
@@ -12,10 +10,6 @@ interface RealAdminDashboardLayoutProps {
   statsData: any;
   activityData: any;
   loading: boolean;
-  // Propriedades opcionais para compatibilidade com AdminDashboardLayout antigo
-  engagementData?: any[];
-  completionRateData?: any[];
-  recentActivities?: any[];
 }
 
 export const RealAdminDashboardLayout = ({
@@ -23,10 +17,7 @@ export const RealAdminDashboardLayout = ({
   setTimeRange,
   statsData,
   activityData,
-  loading,
-  engagementData = [],
-  completionRateData = [],
-  recentActivities = []
+  loading
 }: RealAdminDashboardLayoutProps) => {
   return (
     <div className="space-y-6">
@@ -45,19 +36,6 @@ export const RealAdminDashboardLayout = ({
           <UserDistributionChart data={statsData.usersByRole || []} loading={loading} />
         </div>
       </div>
-
-      {/* Seção adicional para compatibilidade com layout antigo */}
-      {(engagementData.length > 0 || completionRateData.length > 0) && (
-        <DashboardCharts 
-          engagementData={engagementData} 
-          completionRateData={completionRateData}
-          loading={loading}
-        />
-      )}
-
-      {recentActivities.length > 0 && (
-        <RecentActivity activities={recentActivities} loading={loading} />
-      )}
     </div>
   );
 };

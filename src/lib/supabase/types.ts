@@ -1,4 +1,3 @@
-
 import { Database } from './types/database.types';
 
 // Tipos de tabelas expandidos
@@ -18,10 +17,6 @@ export type LearningCourse = Database['public']['Tables']['learning_courses']['R
   module_count?: number;
   lesson_count?: number;
   is_restricted?: boolean;
-  all_lessons?: LearningLesson[]; // Adicionar esta propriedade
-  modules?: (LearningModule & {
-    lessons?: LearningLesson[];
-  })[];
 };
 export type LearningProgress = Database['public']['Tables']['learning_progress']['Row'];
 export type LearningResource = Database['public']['Tables']['learning_resources']['Row'] & {

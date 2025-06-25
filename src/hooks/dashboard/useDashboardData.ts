@@ -1,93 +1,100 @@
 
-import { useState, useEffect } from 'react';
-import { Solution } from '@/lib/supabase';
-import { supabase } from '@/lib/supabase';
+import { useState, useEffect } from "react";
+import { useAuth } from "@/contexts/auth";
+import { supabase } from "@/lib/supabase";
+import { useToast } from "@/hooks/use-toast";
+import { Solution } from "@/lib/supabase";
+import { getUserRoleName } from "@/lib/supabase/types";
 
-export interface Dashboard {
-  active: Solution[];
-  completed: Solution[];
-  recommended: Solution[];
-  loading: boolean;
-  error: string | null;
-}
-
-export interface UserProgress {
-  completedCount: number;
-  totalCount: number;
-  progressPercentage: number;
-}
-
-// Hook consolidado que carrega dados do dashboard sem dependências circulares
 export const useDashboardData = () => {
-  const [dashboard, setDashboard] = useState<Dashboard>({
-    active: [],
-    completed: [],
-    recommended: [],
-    loading: true,
-    error: null
-  });
-
+  const { user, profile } = useAuth();
+  const { toast } = useToast();
+  const [loading, setLoading] = useState(true);
   const [solutions, setSolutions] = useState<Solution[]>([]);
+  const [progressData, setProgressData] = useState<any[]>([]);
+  const [analyticsData, setAnalyticsData] = useState<any[]>([]);
+  const [profilesData, setProfilesData] = useState<any[]>([]);
+  const [error, setError] = useState<string | null>(null);
+  const isAdmin = getUserRoleName(profile) === 'admin';
 
   useEffect(() => {
-    const loadDashboardData = async () => {
+    const fetchData = async () => {
       try {
-        setDashboard(prev => ({ ...prev, loading: true, error: null }));
+        setLoading(true);
+        setError(null);
         
-        // Carregar soluções do banco
-        const { data: solutionsData, error } = await supabase
-          .from('solutions')
-          .select('*')
-          .eq('published', true)
-          .order('created_at', { ascending: false });
-
-        if (error) {
-          throw error;
+        // Fetch solutions - filtrar apenas publicadas se não for admin
+        let query = supabase.from("solutions").select("*");
+        if (!isAdmin) {
+          query = query.eq("published", true as any);
         }
-
-        const solutionsList = solutionsData || [];
-        setSolutions(solutionsList);
-
-        // Dividir soluções em categorias
-        const active = solutionsList.slice(0, 3);
-        const completed: Solution[] = [];
-        const recommended = solutionsList.slice(0, 6);
-
-        setDashboard({
-          active,
-          completed,
-          recommended,
-          loading: false,
-          error: null
+        
+        const { data: solutionsData, error: solutionsError } = await query;
+        
+        if (solutionsError) {
+          throw solutionsError;
+        }
+        
+        // Ensure solutions array is type-safe
+        setSolutions(solutionsData as any);
+        
+        // Fetch all progress data
+        const { data: progress, error: progressError } = await supabase
+          .from("progress")
+          .select("*");
+        
+        if (progressError) {
+          throw progressError;
+        }
+        
+        setProgressData(progress || []);
+        
+        // Fetch analytics data
+        const { data: analytics, error: analyticsError } = await supabase
+          .from("analytics")
+          .select("*")
+          .order("created_at", { ascending: false })
+          .limit(50);
+        
+        if (analyticsError && !analyticsError.message.includes('does not exist')) {
+          console.warn("Erro ao buscar analytics:", analyticsError);
+        } else {
+          setAnalyticsData(analytics || []);
+        }
+        
+        // Fetch profiles data
+        const { data: profiles, error: profilesError } = await supabase
+          .from("profiles")
+          .select("*");
+        
+        if (profilesError) {
+          throw profilesError;
+        }
+        
+        setProfilesData(profiles || []);
+        
+      } catch (error: any) {
+        console.error("Erro no carregamento de dados do dashboard:", error);
+        setError(error.message || "Erro inesperado ao carregar dados");
+        toast({
+          title: "Erro ao carregar dados",
+          description: "Ocorreu um erro ao carregar os dados do dashboard.",
+          variant: "destructive",
         });
-      } catch (error) {
-        console.error('Erro ao carregar dashboard:', error);
-        setDashboard(prev => ({
-          ...prev,
-          loading: false,
-          error: error instanceof Error ? error.message : 'Erro desconhecido'
-        }));
+      } finally {
+        setLoading(false);
       }
     };
-
-    loadDashboardData();
-  }, []);
-
-  const userProgress: UserProgress = {
-    completedCount: dashboard.completed.length,
-    totalCount: dashboard.active.length + dashboard.completed.length + dashboard.recommended.length,
-    progressPercentage: dashboard.completed.length > 0 ? 
-      Math.round((dashboard.completed.length / (dashboard.active.length + dashboard.completed.length)) * 100) : 0
-  };
-
-  return {
-    dashboard,
-    userProgress,
-    solutions,
-    loading: dashboard.loading,
-    error: dashboard.error,
-    refetch: () => {
-      // Implementar refetch se necessário
-    }
+    
+    fetchData();
+  }, [toast, isAdmin, getUserRoleName(profile)]);
+  
+  return { 
+    solutions, 
+    progressData, 
+    analyticsData,
+    profilesData,
+    loading, 
+    error 
   };
 };

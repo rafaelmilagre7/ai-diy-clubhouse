@@ -4,7 +4,6 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { GraduationCap, BookOpen, LucideIcon } from "lucide-react";
 
 interface EmptyCoursesStateProps {
-  activeTab?: string;
   title?: string;
   description?: string;
   action?: {
@@ -16,49 +15,25 @@ interface EmptyCoursesStateProps {
 }
 
 export const EmptyCoursesState = ({
-  activeTab = "all",
-  title,
-  description,
+  title = "Nenhum curso disponível",
+  description = "Não há cursos disponíveis no momento.",
   action,
   isAdmin = false
 }: EmptyCoursesStateProps) => {
-  const getMessage = () => {
-    if (title) return title;
-    
-    switch (activeTab) {
-      case "in-progress":
-        return "Você ainda não iniciou nenhum curso";
-      case "completed":
-        return "Você ainda não concluiu nenhum curso";
-      default:
-        return "Nenhum curso disponível no momento";
-    }
-  };
-
-  const getDescription = () => {
-    if (description) return description;
-    
-    switch (activeTab) {
-      case "in-progress":
-        return "Comece um curso para acompanhar seu progresso aqui.";
-      case "completed":
-        return "Continue aprendendo e conclua cursos para vê-los aqui.";
-      default:
-        return isAdmin 
-          ? "Acesse o painel de administração para criar e publicar novos cursos e aulas." 
-          : "Novos cursos serão disponibilizados em breve.";
-    }
-  };
-
   return (
     <Card className="w-full max-w-4xl mx-auto border border-dashed bg-background hover:bg-muted/50 transition-colors">
       <CardHeader className="flex flex-col items-center gap-1 pt-8">
         <div className="bg-primary/10 p-3 rounded-full">
           <GraduationCap className="h-10 w-10 text-primary" aria-hidden="true" />
         </div>
-        <CardTitle className="text-xl">{getMessage()}</CardTitle>
+        <CardTitle className="text-xl">{title}</CardTitle>
         <CardDescription className="text-center max-w-md">
-          {getDescription()}
+          {description}
+          {isAdmin && (
+            <div className="mt-2 text-sm">
+              Você tem permissão de administrador. Crie um novo curso para começar.
+            </div>
+          )}
         </CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col items-center pb-6">

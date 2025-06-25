@@ -1,7 +1,6 @@
 
 import React, { memo, useMemo } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
-import LoadingScreen from "./LoadingScreen";
 import { cn } from "@/lib/utils";
 
 interface SmartSkeletonProps {
@@ -10,7 +9,6 @@ interface SmartSkeletonProps {
   className?: string;
   animated?: boolean;
   variant?: "default" | "pulse" | "wave";
-  useLoadingScreen?: boolean;
 }
 
 // Componente memoizado para diferentes tipos de skeleton
@@ -19,21 +17,8 @@ const SmartSkeleton = memo<SmartSkeletonProps>(({
   count = 1, 
   className,
   animated = true,
-  variant = "default",
-  useLoadingScreen = false
+  variant = "default"
 }) => {
-  // Se useLoadingScreen=true, usar LoadingScreen consolidado
-  if (useLoadingScreen) {
-    return (
-      <LoadingScreen
-        message={`Carregando ${type === "dashboard" ? "dashboard" : "conteúdo"}`}
-        variant="skeleton"
-        fullScreen={false}
-        className={className}
-      />
-    );
-  }
-
   // Memoizar animação CSS baseada na variante
   const animationClass = useMemo(() => {
     if (!animated) return "";

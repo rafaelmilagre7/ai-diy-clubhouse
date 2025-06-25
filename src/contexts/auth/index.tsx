@@ -6,7 +6,6 @@ import { fetchUserProfile, createUserProfileIfNeeded } from './utils/profileUtil
 import { useAuthMethods } from './hooks/useAuthMethods';
 import { AuthContextType } from './types';
 import { logger } from '@/utils/logger';
-import { getUserRoleName } from '@/lib/supabase/types';
 
 interface AuthProviderProps {
   children: ReactNode;
@@ -19,160 +18,125 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [profileLoading, setProfileLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Usar métodos de auth
+  // Usar métodos de auth robustos
   const authMethods = useAuthMethods({ setIsLoading });
 
-  // Função para limpeza completa de auth
-  const cleanupAuthState = () => {
-    setUser(null);
-    setSession(null);  
-    setProfile(null);
-    setError(null);
-  };
-
-  // Função simplificada para carregar perfil
-  const loadUserProfile = async (userId: string, email?: string) => {
+  // Função para carregar perfil com retry - CORRIGIR assinatura
+  const loadUserProfile = async (userId: string, email?: string, retryCount = 0) => {
+    const maxRetries = 3;
+    
     try {
+      setProfileLoading(true);
       setError(null);
       
-      logger.info('[AUTH] Carregando perfil:', { userId: userId.substring(0, 8) + '***' });
+      logger.info('Carregando perfil:', { userId, email, attempt: retryCount + 1 });
       
       let userProfile = await fetchUserProfile(userId);
       
-      // Se não encontrou perfil, tentar criar apenas UMA vez
+      // Se não encontrou perfil, tentar criar
       if (!userProfile && email) {
-        logger.info('[AUTH] Criando perfil...');
-        try {
-          userProfile = await createUserProfileIfNeeded(userId, email);
-        } catch (createError) {
-          logger.warn('[AUTH] Falha ao criar perfil, continuando sem perfil');
-        }
+        logger.info('Perfil não encontrado, criando...');
+        userProfile = await createUserProfileIfNeeded(userId, email);
       }
       
       if (userProfile) {
         setProfile(userProfile);
-        logger.info('[AUTH] Perfil carregado com sucesso:', {
-          role: getUserRoleName(userProfile)
-        });
+        logger.info('Perfil carregado com sucesso');
+      } else if (retryCount < maxRetries) {
+        // Retry com delay progressivo
+        const delay = (retryCount + 1) * 1000;
+        logger.warn('Tentativa de retry em', { delayMs: delay });
+        
+        setTimeout(() => {
+          loadUserProfile(userId, email, retryCount + 1);
+        }, delay);
+        return;
       } else {
-        logger.warn('[AUTH] Continuando sem perfil de usuário');
+        throw new Error('Não foi possível carregar o perfil após várias tentativas');
       }
       
     } catch (error) {
-      logger.error('[AUTH] Erro ao carregar perfil:', error);
-      setProfile(null);
+      logger.error('Erro ao carregar perfil:', error);
+      setError(error instanceof Error ? error.message : 'Erro desconhecido');
+      
+      if (retryCount < maxRetries) {
+        const delay = (retryCount + 1) * 2000;
+        setTimeout(() => {
+          loadUserProfile(userId, email, retryCount + 1);
+        }, delay);
+      }
+    } finally {
+      setProfileLoading(false);
     }
   };
 
-  // Auth state listener simplificado e mais robusto
+  // Configurar listener de mudanças de auth
   useEffect(() => {
-    logger.info('[AUTH] Inicializando AuthProvider');
+    logger.info('Inicializando AuthProvider');
     
-    let mounted = true;
-    let initTimeout: NodeJS.Timeout;
-
     // Configurar listener de mudanças de auth
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        if (!mounted) return;
-        
-        logger.info('[AUTH] Auth state changed:', { event, hasSession: !!session });
+        logger.info('Auth state changed:', { event, hasSession: !!session });
         
         setSession(session);
         setUser(session?.user ?? null);
         
         if (event === 'SIGNED_IN' && session?.user) {
-          // Delay para evitar conflitos
+          // Usar setTimeout para evitar deadlocks
           setTimeout(() => {
-            if (mounted) {
-              loadUserProfile(session.user.id, session.user.email);
-            }
-          }, 500);
+            loadUserProfile(session.user.id, session.user.email);
+          }, 0);
         } else if (event === 'SIGNED_OUT') {
-          cleanupAuthState();
+          setProfile(null);
+          setError(null);
         }
       }
     );
 
-    // Verificar sessão inicial
-    const checkInitialSession = async () => {
-      try {
-        const { data: { session }, error } = await supabase.auth.getSession();
-        
-        if (!mounted) return;
-        
-        if (error) {
-          logger.error('[AUTH] Erro ao obter sessão:', error);
-          setError(error.message);
-          return;
-        }
-        
-        logger.info('[AUTH] Sessão inicial verificada:', { hasSession: !!session });
+    // Verificar sessão existente
+    supabase.auth.getSession().then(({ data: { session }, error }) => {
+      if (error) {
+        logger.error('Erro ao obter sessão:', error);
+        setError(error.message);
+      } else {
+        logger.info('Sessão inicial:', { hasSession: !!session });
         setSession(session);
         setUser(session?.user ?? null);
         
         if (session?.user) {
           setTimeout(() => {
-            if (mounted) {
-              loadUserProfile(session.user.id, session.user.email);
-            }
-          }, 1000);
-        }
-        
-      } catch (error) {
-        logger.error('[AUTH] Erro inesperado:', error);
-        if (mounted) {
-          setError('Erro ao verificar autenticação');
-        }
-      } finally {
-        if (mounted) {
-          setIsLoading(false);
+            loadUserProfile(session.user.id, session.user.email);
+          }, 0);
         }
       }
-    };
-
-    // Timeout para finalizar loading
-    initTimeout = setTimeout(() => {
-      if (mounted && isLoading) {
-        logger.warn('[AUTH] Timeout de inicialização (8s), finalizando loading');
-        setIsLoading(false);
-      }
-    }, 8000);
-
-    checkInitialSession();
+      setIsLoading(false);
+    });
 
     return () => {
-      mounted = false;
       subscription.unsubscribe();
-      if (initTimeout) {
-        clearTimeout(initTimeout);
-      }
     };
   }, []);
 
-  // Função de refresh manual otimizada
+  // Função de refresh manual
   const refreshProfile = async () => {
     if (user) {
       await loadUserProfile(user.id, user.email);
     }
   };
 
-  // Calcular isAdmin e isFormacao baseado no profile
-  const userRole = getUserRoleName(profile);
-  const isAdmin = userRole === 'admin';
-  const isFormacao = userRole === 'formacao';
-
   const contextValue: AuthContextType = {
     user,
     session,
     profile,
-    isLoading,
+    isLoading: isLoading || profileLoading,
     error,
     refreshProfile,
-    isAdmin,
-    isFormacao,
+    isAdmin: profile?.user_roles?.name === 'admin',
+    isFormacao: profile?.user_roles?.name === 'formacao',
     setSession,
     setUser,
     setProfile,

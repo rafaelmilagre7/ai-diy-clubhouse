@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback, memo, Suspense } from 'react';
 import { OnboardingWizardContainer } from './components/OnboardingWizardContainer';
 import { OnboardingWelcome } from './components/OnboardingWelcome';
@@ -5,7 +6,7 @@ import { OnboardingStepRenderer } from './components/OnboardingStepRenderer';
 import { OnboardingWizardControls } from './components/OnboardingWizardControls';
 import { OnboardingProgress } from './OnboardingProgress';
 import { OnboardingErrorBoundary } from './components/OnboardingErrorBoundary';
-import LoadingScreen from '@/components/common/LoadingScreen';
+import { OnboardingLoadingState } from './components/OnboardingLoadingStates';
 import { OnboardingErrorHandler } from './components/OnboardingErrorHandler';
 import { Card } from '@/components/ui/card';
 
@@ -28,11 +29,11 @@ const OnboardingWizard = memo(() => {
   if (showWelcome) {
     return (
       <OnboardingErrorBoundary>
-        <Suspense fallback={<LoadingScreen variant="onboarding" />}>
+        <Suspense fallback={<OnboardingLoadingState type="verification" />}>
           <OnboardingWizardContainer>
             {({ data, memberType, isLoading }) => {
               if (isLoading) {
-                return <LoadingScreen variant="onboarding" message="Configurando sua experiência personalizada..." />;
+                return <OnboardingLoadingState type="preparation" message="Configurando sua experiência personalizada..." />;
               }
 
               return (
@@ -52,7 +53,7 @@ const OnboardingWizard = memo(() => {
 
   return (
     <OnboardingErrorBoundary>
-      <Suspense fallback={<LoadingScreen variant="onboarding" />}>
+      <Suspense fallback={<OnboardingLoadingState type="initialization" />}>
         <OnboardingWizardContainer>
           {({
             currentStep,
@@ -73,13 +74,13 @@ const OnboardingWizard = memo(() => {
           }) => {
             // Loading com verificação básica
             if (isLoading) {
-              return <LoadingScreen variant="onboarding" message="Preparando onboarding personalizado..." />;
+              return <OnboardingLoadingState type="preparation" message="Preparando onboarding personalizado..." />;
             }
 
             // Verificação de dados mínimos
             const hasMinimalData = data.memberType && (data.email || data.name);
             if (!hasMinimalData) {
-              return <LoadingScreen variant="onboarding" message="Carregando suas informações..." />;
+              return <OnboardingLoadingState type="initialization" message="Carregando suas informações..." />;
             }
 
             // Erro de finalização

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import {
   Dialog,
@@ -12,7 +13,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
-import { ImageUpload } from '@/components/common/ImageUpload';
+import { ImageUpload } from '@/components/formacao/comum/ImageUpload';
 
 interface Curso {
   id?: string;

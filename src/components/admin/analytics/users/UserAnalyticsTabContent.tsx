@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useUserAnalyticsData } from '@/hooks/analytics/useUserAnalyticsData';
 import { useTopActiveUsers } from '@/hooks/analytics/useTopActiveUsers';
@@ -6,7 +7,7 @@ import { UserGrowthChart } from './UserGrowthChart';
 import { UserRoleDistributionChart } from './UserRoleDistributionChart';
 import { UserActivityByDayChart } from './UserActivityByDayChart';
 import { TopActiveUsersTable } from './TopActiveUsersTable';
-import LoadingScreen from '@/components/common/LoadingScreen';
+import { ModernLoadingState } from '../ModernLoadingState';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertTriangle } from 'lucide-react';
 
@@ -23,7 +24,7 @@ export const UserAnalyticsTabContent = ({ timeRange, role }: UserAnalyticsTabCon
   const error = dataError || usersError;
 
   if (loading) {
-    return <LoadingScreen variant="modern" type="full" fullScreen={false} />;
+    return <ModernLoadingState type="full" />;
   }
 
   if (error) {

@@ -2,37 +2,51 @@
 import { useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/auth';
-import { getUserRoleName } from '@/lib/supabase/types';
+import { InviteTokenManager } from '@/utils/inviteTokenManager';
+
+interface RedirectOptions {
+  requiresOnboarding?: boolean;
+  fromInvite?: boolean;
+  preserveToken?: boolean;
+}
 
 export const useIntelligentRedirect = () => {
   const navigate = useNavigate();
-  const { user, profile } = useAuth();
+  const { user } = useAuth();
 
-  const redirect = useCallback((fallback = '/dashboard') => {
-    if (!user) {
-      navigate('/login');
-      return;
+  const redirect = useCallback((options: RedirectOptions = {}) => {
+    const {
+      requiresOnboarding = false,
+      fromInvite = false,
+      preserveToken = false
+    } = options;
+
+    console.log('[INTELLIGENT-REDIRECT] Redirecionamento direto:', {
+      userId: user?.id,
+      requiresOnboarding,
+      fromInvite,
+      preserveToken
+    });
+
+    // Preservar token se necessário
+    if (preserveToken && fromInvite) {
+      const currentToken = new URLSearchParams(window.location.search).get('token');
+      if (currentToken) {
+        InviteTokenManager.storeToken(currentToken);
+      }
     }
 
-    if (!profile) {
-      navigate('/onboarding');
-      return;
+    // Redirecionamento DIRETO
+    if (requiresOnboarding) {
+      const storedToken = InviteTokenManager.getToken();
+      const destination = storedToken ? `/onboarding?token=${storedToken}` : '/onboarding';
+      navigate(destination);
+    } else {
+      // Limpar token quando não precisa mais
+      InviteTokenManager.clearToken();
+      navigate('/dashboard');
     }
-
-    const userRole = getUserRoleName(profile);
-    
-    switch (userRole) {
-      case 'formacao':
-        navigate('/formacao');
-        break;
-      case 'admin':
-        navigate('/admin');
-        break;
-      default:
-        navigate(fallback);
-        break;
-    }
-  }, [navigate, user, profile]);
+  }, [navigate, user]);
 
   return { redirect };
 };

@@ -1,174 +1,43 @@
 
+import { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { Solution } from "@/lib/supabase";
-import { useDashboardData } from "@/hooks/dashboard/useDashboardData";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowRight, Clock, CheckCircle, Star, GraduationCap } from "lucide-react";
+import { OptimizedDashboardLayout } from "@/components/dashboard/OptimizedDashboardLayout";
+import { useEnhancedDashboard } from "@/hooks/dashboard/useEnhancedDashboard";
+import { useStableCallback } from "@/hooks/performance/useStableCallback";
 
 const Dashboard = () => {
   const navigate = useNavigate();
-  const { dashboard, solutions, loading, error } = useDashboardData();
+  
+  // Hook híbrido com otimização + fallback automático
+  const {
+    active,
+    completed,
+    recommended,
+    isLoading,
+    error,
+    performance
+  } = useEnhancedDashboard();
 
-  const handleSolutionClick = (solution: Solution) => {
+  // Callback estável para navegação
+  const handleSolutionClick = useStableCallback((solution: Solution) => {
     navigate(`/solution/${solution.id}`);
-  };
+  });
 
-  if (loading) {
-    return (
-      <div className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <Card key={i}>
-              <CardHeader>
-                <Skeleton className="h-4 w-32" />
-                <Skeleton className="h-6 w-full" />
-              </CardHeader>
-              <CardContent>
-                <Skeleton className="h-20 w-full" />
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </div>
-    );
-  }
-
+  // Log de erro se houver (para monitoramento)
   if (error) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-red-500">Erro ao carregar dashboard</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-muted-foreground">{error}</p>
-        </CardContent>
-      </Card>
-    );
+    console.warn('[DASHBOARD] Erro detectado:', error);
   }
-
-  const { active, completed, recommended } = dashboard;
 
   return (
-    <div className="space-y-8">
-      <div>
-        <h1 className="text-3xl font-bold mb-2">Dashboard</h1>
-        <p className="text-muted-foreground">
-          Bem-vindo ao seu painel de controle do VIVER DE IA Club
-        </p>
-      </div>
-
-      {/* Stats rápidas */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Soluções Ativas</CardTitle>
-            <Clock className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{active.length}</div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Concluídas</CardTitle>
-            <CheckCircle className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{completed.length}</div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Recomendadas</CardTitle>
-            <Star className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{recommended.length}</div>
-          </CardContent>
-        </Card>
-
-        <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => navigate('/learning')}>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Cursos de IA</CardTitle>
-            <GraduationCap className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">Acessar</div>
-            <p className="text-xs text-muted-foreground">
-              Aprenda IA na prática
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Soluções Recomendadas */}
-      {recommended.length > 0 && (
-        <div>
-          <h2 className="text-xl font-semibold mb-4">Soluções Recomendadas</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {recommended.slice(0, 3).map((solution) => (
-              <Card key={solution.id} className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => handleSolutionClick(solution)}>
-                <CardHeader>
-                  <CardTitle className="text-lg">{solution.title}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-muted-foreground mb-4 line-clamp-2">
-                    {solution.description}
-                  </p>
-                  <Button variant="outline" className="w-full">
-                    Ver Solução
-                    <ArrowRight className="ml-2 h-4 w-4" />
-                  </Button>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Todas as Soluções */}
-      {solutions.length > 3 && (
-        <div>
-          <h2 className="text-xl font-semibold mb-4">Todas as Soluções</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {solutions.slice(3).map((solution) => (
-              <Card key={solution.id} className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => handleSolutionClick(solution)}>
-                <CardHeader>
-                  <CardTitle className="text-lg">{solution.title}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-muted-foreground mb-4 line-clamp-2">
-                    {solution.description}
-                  </p>
-                  <Button variant="outline" className="w-full">
-                    Ver Solução
-                    <ArrowRight className="ml-2 h-4 w-4" />
-                  </Button>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Estado vazio */}
-      {solutions.length === 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Nenhuma solução disponível</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-muted-foreground">
-              Novas soluções serão disponibilizadas em breve.
-            </p>
-          </CardContent>
-        </Card>
-      )}
-    </div>
+    <OptimizedDashboardLayout
+      active={active}
+      completed={completed}
+      recommended={recommended}
+      onSolutionClick={handleSolutionClick}
+      isLoading={isLoading}
+      performance={performance}
+    />
   );
 };
 

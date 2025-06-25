@@ -1,7 +1,9 @@
 
-import { AppRoutes } from './AppRoutes';
+import AppRoutes from './AppRoutes';
 
 export { AppRoutes };
-
-// Manter exports para compatibilidade, mas agora todos centralizam no AppRoutes
-export * from './AppRoutes';
+export * from './AuthRoutes';
+export * from './AdminRoutes';
+export * from './MemberRoutes';
+export * from './FormacaoRoutes';
+export * from './CertificateRoutes';

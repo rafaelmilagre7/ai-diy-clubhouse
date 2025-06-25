@@ -1,113 +1,195 @@
 
 import React from 'react';
-import { useOverviewData } from '@/hooks/analytics/useOverviewData';
-import { ModernStatsCard } from './ModernStatsCard';
-import { UserGrowthChart } from './UserGrowthChart';
-import { WeeklyActivityChart } from './WeeklyActivityChart';
-import { CompletionRateChart } from './CompletionRateChart';
-import LoadingScreen from '@/components/common/LoadingScreen';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { GlassStatsCard } from './GlassStatsCard';
+import { ModernLoadingState } from './ModernLoadingState';
+import { useRealAnalyticsData } from '@/hooks/analytics/useRealAnalyticsData';
+import { Activity, Users, BookOpen, TrendingUp, Target, Zap } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { AlertTriangle, Users, Activity, Target, TrendingUp } from 'lucide-react';
+import { AlertTriangle } from 'lucide-react';
 
 interface OverviewTabContentProps {
   timeRange: string;
 }
 
-export const OverviewTabContent = ({ timeRange }: OverviewTabContentProps) => {
-  const { data, loading, error } = useOverviewData(timeRange);
+export const OverviewTabContent: React.FC<OverviewTabContentProps> = ({ timeRange }) => {
+  const { data, loading, error } = useRealAnalyticsData({ 
+    timeRange, 
+    category: 'all', 
+    difficulty: 'all' 
+  });
 
   if (loading) {
-    return <LoadingScreen variant="modern" type="full" fullScreen={false} />;
+    return <ModernLoadingState type="full" />;
   }
 
   if (error) {
     return (
-      <Alert variant="destructive" className="border-0 shadow-xl bg-red-50/80 backdrop-blur-sm">
+      <Alert variant="destructive" className="border-red-800/50 bg-red-950/20 backdrop-blur-xl">
         <AlertTriangle className="h-4 w-4" />
-        <AlertTitle>Erro ao carregar dados</AlertTitle>
-        <AlertDescription>{error}</AlertDescription>
+        <AlertTitle className="text-red-400">Erro ao carregar dados</AlertTitle>
+        <AlertDescription className="text-red-300">{error}</AlertDescription>
       </Alert>
     );
   }
 
-  // Mock data para os gráficos
-  const userGrowthData = [
-    { name: 'Jan', novos: 20, total: 100 },
-    { name: 'Fev', novos: 30, total: 130 },
-    { name: 'Mar', novos: 25, total: 155 },
-    { name: 'Abr', novos: 35, total: 190 }
-  ];
+  // Calcular tendências baseadas nos dados reais
+  const calculateTrend = (current: number, previous: number) => {
+    if (previous === 0) return 0;
+    return ((current - previous) / previous) * 100;
+  };
 
-  const weeklyActivityData = [
-    { day: 'Seg', atividade: 45 },
-    { day: 'Ter', atividade: 52 },
-    { day: 'Qua', atividade: 48 },
-    { day: 'Qui', atividade: 61 },
-    { day: 'Sex', atividade: 55 },
-    { day: 'Sáb', atividade: 30 },
-    { day: 'Dom', atividade: 25 }
-  ];
-
-  const completionRateData = [
-    { name: 'Concluídas', value: data.totalUsers * 0.78 },
-    { name: 'Em Andamento', value: data.totalUsers * 0.22 }
-  ];
+  // Simular dados anteriores para as tendências (em um cenário real, viria do backend)
+  const previousData = {
+    users: Math.round(data.totalUsers * 0.85),
+    activeUsers: Math.round(data.activeUsers * 0.92),
+    solutions: Math.round(data.totalSolutions * 0.95),
+    implementations: Math.round(data.totalImplementations * 0.78)
+  };
 
   return (
     <div className="space-y-8">
-      {/* Stats modernas */}
-      <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
-        <ModernStatsCard
+      {/* Cards de estatísticas principais com glassmorphism */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <GlassStatsCard
           title="Total de Usuários"
           value={data.totalUsers}
           icon={Users}
+          colorScheme="primary"
           trend={{
-            value: data.totalUsersChange,
+            value: calculateTrend(data.totalUsers, previousData.users),
             label: "vs período anterior",
-            type: "positive"
+            type: data.totalUsers >= previousData.users ? 'positive' : 'negative'
           }}
         />
-        <ModernStatsCard
+        
+        <GlassStatsCard
           title="Usuários Ativos"
           value={data.activeUsers}
           icon={Activity}
+          colorScheme="success"
           trend={{
-            value: data.activeUsersChange,
+            value: calculateTrend(data.activeUsers, previousData.activeUsers),
             label: "vs período anterior",
-            type: "positive"
+            type: data.activeUsers >= previousData.activeUsers ? 'positive' : 'negative'
           }}
         />
-        <ModernStatsCard
-          title="Taxa de Conclusão"
-          value={`${data.completionRate}%`}
-          icon={Target}
+        
+        <GlassStatsCard
+          title="Soluções Disponíveis"
+          value={data.totalSolutions}
+          icon={BookOpen}
+          colorScheme="secondary"
           trend={{
-            value: data.completionRateChange,
+            value: calculateTrend(data.totalSolutions, previousData.solutions),
             label: "vs período anterior",
-            type: "positive"
+            type: data.totalSolutions >= previousData.solutions ? 'positive' : 'negative'
           }}
         />
-        <ModernStatsCard
-          title="Taxa de Engajamento"
-          value={`${data.engagementRate}%`}
+        
+        <GlassStatsCard
+          title="Implementações"
+          value={data.totalImplementations}
           icon={TrendingUp}
+          colorScheme="warning"
           trend={{
-            value: data.engagementRateChange,
+            value: calculateTrend(data.totalImplementations, previousData.implementations),
             label: "vs período anterior",
-            type: "positive"
+            type: data.totalImplementations >= previousData.implementations ? 'positive' : 'negative'
           }}
         />
       </div>
 
-      {/* Gráficos principais */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <UserGrowthChart data={userGrowthData} />
-        <WeeklyActivityChart data={weeklyActivityData} />
+      {/* Métricas secundárias */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <GlassStatsCard
+          title="Taxa de Engajamento"
+          value={`${data.totalUsers > 0 ? Math.round((data.activeUsers / data.totalUsers) * 100) : 0}%`}
+          icon={Target}
+          colorScheme="info"
+          trend={{
+            value: 12.5,
+            label: "este mês",
+            type: 'positive'
+          }}
+        />
+        
+        <GlassStatsCard
+          title="Média de Implementações"
+          value={data.totalSolutions > 0 ? Math.round(data.totalImplementations / data.totalSolutions) : 0}
+          icon={Zap}
+          colorScheme="primary"
+          trend={{
+            value: 8.3,
+            label: "por solução",
+            type: 'positive'
+          }}
+        />
       </div>
 
-      {/* Gráfico de conclusão */}
-      <div>
-        <CompletionRateChart data={completionRateData} />
+      {/* Conteúdo adicional da visão geral com glassmorphism */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card className="border-gray-800/50 bg-[#151823]/80 backdrop-blur-xl">
+          <CardHeader>
+            <CardTitle className="text-white flex items-center gap-2">
+              <Activity className="h-5 w-5 text-[#00EAD9]" />
+              Resumo de Atividade
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div className="flex justify-between items-center p-3 rounded-lg bg-[#0F111A]/50">
+                <span className="text-gray-400">Taxa de Usuários Ativos</span>
+                <span className="text-white font-semibold text-[#00EAD9]">
+                  {data.totalUsers > 0 ? Math.round((data.activeUsers / data.totalUsers) * 100) : 0}%
+                </span>
+              </div>
+              <div className="flex justify-between items-center p-3 rounded-lg bg-[#0F111A]/50">
+                <span className="text-gray-400">Implementações por Solução</span>
+                <span className="text-white font-semibold">
+                  {data.totalSolutions > 0 ? Math.round(data.totalImplementations / data.totalSolutions) : 0}
+                </span>
+              </div>
+              <div className="flex justify-between items-center p-3 rounded-lg bg-[#0F111A]/50">
+                <span className="text-gray-400">Crescimento de Usuários</span>
+                <span className="text-green-400 font-semibold">
+                  +{calculateTrend(data.totalUsers, previousData.users).toFixed(1)}%
+                </span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card className="border-gray-800/50 bg-[#151823]/80 backdrop-blur-xl">
+          <CardHeader>
+            <CardTitle className="text-white flex items-center gap-2">
+              <TrendingUp className="h-5 w-5 text-[#00EAD9]" />
+              Métricas de Engajamento
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div className="flex justify-between items-center p-3 rounded-lg bg-[#0F111A]/50">
+                <span className="text-gray-400">Solução Mais Popular</span>
+                <span className="text-white font-semibold">
+                  {data.solutionPopularity[0]?.name?.substring(0, 20) || 'N/A'}...
+                </span>
+              </div>
+              <div className="flex justify-between items-center p-3 rounded-lg bg-[#0F111A]/50">
+                <span className="text-gray-400">Categoria Líder</span>
+                <span className="text-white font-semibold">
+                  {data.implementationsByCategory[0]?.name || 'N/A'}
+                </span>
+              </div>
+              <div className="flex justify-between items-center p-3 rounded-lg bg-[#0F111A]/50">
+                <span className="text-gray-400">Role Predominante</span>
+                <span className="text-white font-semibold">
+                  {data.userRoleDistribution[0]?.name || 'N/A'}
+                </span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

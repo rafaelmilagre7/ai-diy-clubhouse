@@ -1,5 +1,4 @@
-
-import { useLocation } from "react-router-dom";
+import { useLocation, Link } from "react-router-dom";
 import { 
   BarChart3, 
   Users, 
@@ -14,7 +13,6 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { NavigationLink } from "@/components/navigation/NavigationLink";
 
 const navigationItems = [
   {
@@ -77,6 +75,21 @@ const navigationItems = [
     href: "/admin/security",
     icon: Shield,
   },
+  {
+    title: "WhatsApp Debug",
+    href: "/admin/whatsapp-debug",
+    icon: MessageSquare,
+  },
+  {
+    title: "Email Debug",
+    href: "/admin/email-debug",
+    icon: Mail,
+  },
+  {
+    title: "Diagnósticos",
+    href: "/admin/diagnostics",
+    icon: MessageSquare,
+  },
 ];
 
 interface AdminSidebarNavProps {
@@ -98,22 +111,25 @@ export const AdminSidebarNav = ({ sidebarOpen }: AdminSidebarNavProps) => {
           const active = isActive(item.href);
           
           return (
-            <NavigationLink
+            <Button
               key={item.href}
-              to={item.href}
+              variant="ghost"
               className={cn(
-                "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 group h-10",
+                "w-full justify-start gap-3 h-10 px-3 text-sm font-medium transition-all duration-200 rounded-lg group",
                 !sidebarOpen && "justify-center px-2",
                 active 
                   ? "bg-white/15 text-white shadow-lg border border-white/30" 
                   : "text-neutral-200 hover:text-white hover:bg-white/10 hover:shadow-md"
               )}
+              asChild
             >
-              <item.icon className="h-5 w-5 flex-shrink-0" />
-              {sidebarOpen && (
-                <span className="truncate">{item.title}</span>
-              )}
-            </NavigationLink>
+              <Link to={item.href}>
+                <item.icon className="h-5 w-5 flex-shrink-0" />
+                {sidebarOpen && (
+                  <span className="truncate">{item.title}</span>
+                )}
+              </Link>
+            </Button>
           );
         })}
       </div>

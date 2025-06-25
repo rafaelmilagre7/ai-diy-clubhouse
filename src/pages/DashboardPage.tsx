@@ -2,6 +2,7 @@
 import React from 'react';
 import { useAuth } from '@/contexts/auth';
 import { Navigate } from 'react-router-dom';
+import MemberLayout from '@/components/layout/MemberLayout';
 import Dashboard from '@/pages/member/Dashboard';
 
 const DashboardPage = () => {
@@ -19,7 +20,11 @@ const DashboardPage = () => {
     return <Navigate to="/login" replace />;
   }
 
-  return <Dashboard />;
+  return (
+    <MemberLayout>
+      <Dashboard />
+    </MemberLayout>
+  );
 };
 
 export default DashboardPage;

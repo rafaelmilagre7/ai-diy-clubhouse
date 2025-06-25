@@ -1,14 +1,15 @@
+
 import { supabase } from '@/lib/supabase';
 import { logger } from '@/utils/logger';
 
 /**
- * Limpeza COMPLETA do estado de autenticação com cache agressivo
+ * Limpeza completa do estado de autenticação
  */
 export const cleanupAuthState = async () => {
-  logger.info('Iniciando limpeza COMPLETA do estado de auth');
+  logger.info('Iniciando limpeza completa do estado de auth');
   
   try {
-    // 1. Tentar signOut global primeiro
+    // 1. Tentar signOut global
     try {
       await supabase.auth.signOut({ scope: 'global' });
       logger.info('SignOut global realizado');
@@ -16,156 +17,54 @@ export const cleanupAuthState = async () => {
       logger.warn('Erro no signOut, continuando limpeza:', { error });
     }
     
-    // 2. Limpar TODOS os storages possíveis
-    try {
-      // LocalStorage
-      const keysToRemove: string[] = [];
-      Object.keys(localStorage).forEach(key => {
-        if (key.startsWith('supabase.auth.') || 
-            key.includes('sb-') || 
-            key.includes('supabase') ||
-            key.includes('auth') ||
-            key.includes('session') ||
-            key.includes('user')) {
-          keysToRemove.push(key);
+    // 2. Limpar localStorage
+    const keysToRemove: string[] = [];
+    Object.keys(localStorage).forEach(key => {
+      if (key.startsWith('supabase.auth.') || key.includes('sb-')) {
+        keysToRemove.push(key);
+      }
+    });
+    
+    keysToRemove.forEach(key => {
+      localStorage.removeItem(key);
+      logger.debug('Removida chave:', { key });
+    });
+    
+    // 3. Limpar sessionStorage se existir
+    if (typeof sessionStorage !== 'undefined') {
+      Object.keys(sessionStorage).forEach(key => {
+        if (key.startsWith('supabase.auth.') || key.includes('sb-')) {
+          sessionStorage.removeItem(key);
         }
       });
-      
-      keysToRemove.forEach(key => {
-        localStorage.removeItem(key);
-        logger.debug('Removida chave localStorage:', { key });
-      });
-      
-      // SessionStorage
-      if (typeof sessionStorage !== 'undefined') {
-        Object.keys(sessionStorage).forEach(key => {
-          if (key.startsWith('supabase.auth.') || 
-              key.includes('sb-') || 
-              key.includes('supabase') ||
-              key.includes('auth') ||
-              key.includes('session') ||
-              key.includes('user')) {
-            sessionStorage.removeItem(key);
-            logger.debug('Removida chave sessionStorage:', { key });
-          }
-        });
-      }
-      
-      logger.info('Storage limpo com sucesso');
-    } catch (storageError) {
-      logger.warn('Erro na limpeza de storage:', { error: storageError });
     }
     
-    // 3. Limpar cache do browser (se suportado)
-    try {
-      if ('caches' in window) {
-        const cacheNames = await caches.keys();
-        await Promise.all(
-          cacheNames.map(cacheName => {
-            logger.debug('Limpando cache:', { cacheName });
-            return caches.delete(cacheName);
-          })
-        );
-        logger.info('Cache do browser limpo');
-      }
-    } catch (cacheError) {
-      logger.warn('Erro na limpeza de cache:', { error: cacheError });
-    }
-    
-    // 4. Desregistrar service workers problemáticos
-    try {
-      if ('serviceWorker' in navigator) {
-        const registrations = await navigator.serviceWorker.getRegistrations();
-        await Promise.all(
-          registrations.map(registration => {
-            logger.debug('Desregistrando service worker');
-            return registration.unregister();
-          })
-        );
-        logger.info('Service workers desregistrados');
-      }
-    } catch (swError) {
-      logger.warn('Erro na limpeza de service worker:', { error: swError });
-    }
-    
-    logger.info('Limpeza COMPLETA concluída com sucesso');
+    logger.info('Limpeza concluída com sucesso');
     
   } catch (error) {
-    logger.error('Erro durante limpeza completa:', error);
+    logger.error('Erro durante limpeza:', error);
   }
 };
 
 /**
- * Redirecionamento FORÇADO para login com limpeza de cache
+ * Função de recuperação de erro de auth
  */
-export const forceAuthRedirect = async () => {
-  logger.warn('Forçando redirecionamento para login com limpeza completa');
+export const recoverFromAuthError = async () => {
+  logger.warn('Iniciando recuperação de erro de auth');
   
-  // Limpeza completa primeiro
   await cleanupAuthState();
   
   // Aguardar um momento para garantir limpeza
-  await new Promise(resolve => setTimeout(resolve, 100));
+  await new Promise(resolve => setTimeout(resolve, 500));
   
-  // Redirecionamento FORÇADO usando replace
-  try {
-    window.location.replace('/login');
-  } catch (error) {
-    // Fallback se replace falhar
-    logger.warn('Fallback para href:', { error });
-    window.location.href = '/login';
-  }
+  // Redirecionar para auth
+  window.location.href = '/auth';
 };
 
 /**
- * Função para detectar e corrigir assets 404
+ * Função para forçar reload em caso de erro crítico
  */
-export const checkAndFixAssets = () => {
-  logger.info('Verificando integridade dos assets');
-  
-  // Verificar se CSS principal carregou
-  const stylesheets = document.querySelectorAll('link[rel="stylesheet"]');
-  let hasValidCSS = false;
-  
-  stylesheets.forEach(link => {
-    const href = (link as HTMLLinkElement).href;
-    if (href && !href.includes('404')) {
-      hasValidCSS = true;
-    }
-  });
-  
-  // Se CSS não carregou, forçar reload
-  if (!hasValidCSS || stylesheets.length === 0) {
-    logger.warn('Assets CSS com problema, forçando reload');
-    setTimeout(() => {
-      window.location.reload();
-    }, 500);
-    return false;
-  }
-  
-  return true;
-};
-
-/**
- * Função de recuperação COMPLETA de erro de auth
- */
-export const recoverFromAuthError = async () => {
-  logger.warn('Iniciando recuperação COMPLETA de erro de auth');
-  
-  // Limpeza total
-  await cleanupAuthState();
-  
-  // Verificar assets
-  const assetsOk = checkAndFixAssets();
-  
-  if (!assetsOk) {
-    logger.warn('Assets com problema, aguardando reload automático');
-    return;
-  }
-  
-  // Aguardar mais tempo para garantir limpeza
-  await new Promise(resolve => setTimeout(resolve, 1000));
-  
-  // Redirecionamento forçado
-  await forceAuthRedirect();
+export const forceReload = () => {
+  logger.warn('Forçando reload da página');
+  window.location.reload();
 };

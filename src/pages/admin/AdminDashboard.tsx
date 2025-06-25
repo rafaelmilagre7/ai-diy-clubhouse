@@ -3,8 +3,8 @@ import { useState } from "react";
 import { useRealAdminDashboardData } from "@/hooks/admin/useRealAdminDashboardData";
 import { RealAdminDashboardLayout } from "@/components/admin/dashboard/RealAdminDashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 import { logger } from "@/utils/logger";
-import LoadingScreen from "@/components/common/LoadingScreen";
 
 const AdminDashboard = () => {
   const [timeRange, setTimeRange] = useState('30d');
@@ -16,17 +16,37 @@ const AdminDashboard = () => {
       loading
     } = useRealAdminDashboardData(timeRange);
 
-    // Loading state otimizado usando LoadingScreen consolidado
+    // Loading state otimizado
     if (loading) {
       logger.debug('AdminDashboard loading state', { timeRange });
       
       return (
-        <LoadingScreen
-          message="Carregando dashboard administrativo"
-          variant="modern"
-          type="full"
-          fullScreen={false}
-        />
+        <div className="space-y-6">
+          <div className="flex justify-between items-center">
+            <Skeleton className="h-8 w-48" />
+            <Skeleton className="h-10 w-32" />
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <Card key={i}>
+                <CardHeader className="pb-2">
+                  <Skeleton className="h-4 w-24" />
+                </CardHeader>
+                <CardContent>
+                  <Skeleton className="h-8 w-16" />
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-2">
+              <Skeleton className="h-96 w-full" />
+            </div>
+            <div>
+              <Skeleton className="h-96 w-full" />
+            </div>
+          </div>
+        </div>
       );
     }
 

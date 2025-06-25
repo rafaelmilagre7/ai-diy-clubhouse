@@ -1,8 +1,8 @@
 
-import { BrowserRouter } from "react-router-dom";
+import { RouterProvider } from "react-router-dom";
 import { AppRoutes } from "@/routes/AppRoutes";
 import { Toaster } from "@/components/ui/sonner";
-import { useEffect, startTransition } from "react";
+import { useEffect } from "react";
 import { useAuth } from "@/contexts/auth";
 import { logger } from "@/utils/logger";
 import { useSecureSession } from "@/hooks/useSecureSession";
@@ -10,30 +10,24 @@ import { useSecureSession } from "@/hooks/useSecureSession";
 function App() {
   const { user, isLoading } = useAuth();
   
-  // Configuração de sessão segura mais relaxada para desenvolvimento
+  // Ativar sessão segura
   useSecureSession({
-    maxIdleTime: import.meta.env.DEV ? 120 : 60, // 2h dev, 1h prod
-    checkInterval: import.meta.env.DEV ? 300 : 180, // 5 min dev, 3 min prod  
-    autoLogoutWarning: 15
+    maxIdleTime: 60, // 60 minutos
+    checkInterval: 180, // 3 minutos
+    autoLogoutWarning: 15 // 15 minutos de aviso
   });
 
   useEffect(() => {
-    // Log simplificado para evitar overhead - wrapped em startTransition
-    if (import.meta.env.DEV) {
-      startTransition(() => {
-        logger.info('[APP] App initialized', {
-          hasUser: !!user,
-          isLoading
-        });
-      });
-    }
+    logger.info('[APP] Inicialização da aplicação', {
+      hasUser: !!user,
+      isLoading,
+      timestamp: new Date().toISOString()
+    });
   }, [user, isLoading]);
 
   return (
     <>
-      <BrowserRouter>
-        <AppRoutes />
-      </BrowserRouter>
+      <RouterProvider router={AppRoutes} />
       <Toaster 
         position="top-right"
         toastOptions={{
