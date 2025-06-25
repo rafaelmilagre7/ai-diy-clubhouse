@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useAuth } from '@/contexts/auth';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -8,7 +7,7 @@ import { useSuggestionDetails } from '@/hooks/suggestions/useSuggestionDetails';
 import { useAdminSuggestions } from '@/hooks/suggestions/useAdminSuggestions';
 import { DeleteSuggestionDialog } from '@/components/suggestions/details/DeleteSuggestionDialog';
 import { SuggestionDetailsHeader } from '@/components/suggestions/details/SuggestionDetailsHeader';
-import SuggestionLoadingState from '@/components/suggestions/states/SuggestionLoadingState';
+import SuggestionLoadingState from '@/components/suggestions/SuggestionLoadingState';
 import SuggestionErrorState from '@/components/suggestions/states/SuggestionErrorState';
 import { UserVote } from '@/types/suggestionTypes';
 

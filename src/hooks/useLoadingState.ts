@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 
 interface LoadingConfig {
@@ -50,10 +49,10 @@ export const useLoadingState = (config: LoadingConfig = {}): [LoadingState, Load
     isVerySlowLoading: false
   });
 
-  const timeoutRef = useRef<number | null>(null);
-  const minTimeRef = useRef<number | null>(null);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const minTimeRef = useRef<NodeJS.Timeout | null>(null);
   const startTimeRef = useRef<number | null>(null);
-  const durationRef = useRef<number | null>(null);
+  const durationRef = useRef<NodeJS.Timeout | null>(null);
 
   // Atualizar duração em tempo real
   useEffect(() => {
@@ -94,7 +93,7 @@ export const useLoadingState = (config: LoadingConfig = {}): [LoadingState, Load
       }));
 
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
-      timeoutRef.current = window.setTimeout(() => {
+      timeoutRef.current = setTimeout(() => {
         setState(prev => ({
           ...prev,
           hasTimedOut: true,
@@ -123,7 +122,7 @@ export const useLoadingState = (config: LoadingConfig = {}): [LoadingState, Load
       const remainingTime = Math.max(0, minLoadingTime - elapsedTime);
 
       if (minTimeRef.current) clearTimeout(minTimeRef.current);
-      minTimeRef.current = window.setTimeout(() => {
+      minTimeRef.current = setTimeout(() => {
         setState(prev => ({
           ...prev,
           isLoading: false,

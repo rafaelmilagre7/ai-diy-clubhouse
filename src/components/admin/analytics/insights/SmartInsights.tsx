@@ -4,10 +4,12 @@ import { Badge } from '@/components/ui/badge';
 import { Lightbulb, TrendingUp, Users, AlertTriangle, CheckCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useSmartInsights } from '@/hooks/analytics/useSmartInsights';
-import { ModernLoadingState } from '../ModernLoadingState';
+import LoadingScreen from '@/components/common/LoadingScreen';
+
 interface SmartInsightsProps {
   timeRange: string;
 }
+
 export const SmartInsights: React.FC<SmartInsightsProps> = ({
   timeRange
 }) => {
@@ -16,9 +18,11 @@ export const SmartInsights: React.FC<SmartInsightsProps> = ({
     loading,
     error
   } = useSmartInsights(timeRange);
+
   if (loading) {
-    return <ModernLoadingState type="stats" />;
+    return <LoadingScreen variant="modern" type="stats" fullScreen={false} />;
   }
+
   if (error) {
     return <Card className="border-0 shadow-xl bg-white/80 backdrop-blur-sm">
         <CardHeader>
@@ -32,6 +36,7 @@ export const SmartInsights: React.FC<SmartInsightsProps> = ({
         </CardContent>
       </Card>;
   }
+
   const getInsightIcon = (type: string) => {
     switch (type) {
       case 'opportunity':
@@ -46,6 +51,7 @@ export const SmartInsights: React.FC<SmartInsightsProps> = ({
         return <Users className="h-5 w-5 text-gray-600" />;
     }
   };
+
   const getImpactColor = (impact: string) => {
     switch (impact) {
       case 'high':
@@ -58,6 +64,7 @@ export const SmartInsights: React.FC<SmartInsightsProps> = ({
         return 'bg-gray-100 text-gray-800 border-gray-200';
     }
   };
+
   const getTypeColor = (type: string) => {
     switch (type) {
       case 'opportunity':
@@ -72,6 +79,7 @@ export const SmartInsights: React.FC<SmartInsightsProps> = ({
         return 'bg-gray-100 text-gray-800 border-gray-200';
     }
   };
+
   return <Card className="border-0 shadow-xl bg-white/80 backdrop-blur-sm">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
@@ -87,7 +95,7 @@ export const SmartInsights: React.FC<SmartInsightsProps> = ({
             <div className="flex items-start justify-between mb-3">
               <div className="flex items-center gap-2">
                 {getInsightIcon(insight.type)}
-                <h4 className="font-semibold text-gray-50">{insight.title}</h4>
+                <h4 className="font-semibold text-gray-900">{insight.title}</h4>
               </div>
               <div className="flex items-center gap-2">
                 <Badge className={cn("text-xs", getImpactColor(insight.impact))}>

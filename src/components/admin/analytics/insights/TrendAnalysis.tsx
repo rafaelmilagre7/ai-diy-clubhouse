@@ -1,8 +1,7 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { TrendingUp, TrendingDown, Minus, BarChart3, Users, Target } from 'lucide-react';
-import { ModernLoadingState } from '../ModernLoadingState';
+import LoadingScreen from '@/components/common/LoadingScreen';
 import { useTrendAnalysisData } from '@/hooks/analytics/insights/useTrendAnalysisData';
 
 interface TrendAnalysisProps {
@@ -13,7 +12,7 @@ export const TrendAnalysis: React.FC<TrendAnalysisProps> = ({ timeRange }) => {
   const { data: trends, isLoading, error } = useTrendAnalysisData(timeRange);
 
   if (isLoading) {
-    return <ModernLoadingState type="chart" />;
+    return <LoadingScreen variant="modern" type="chart" fullScreen={false} />;
   }
 
   if (error) {
