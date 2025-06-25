@@ -54,7 +54,7 @@ export const cleanupAuthState = async () => {
       
       logger.info('Storage limpo com sucesso');
     } catch (storageError) {
-      logger.warn('Erro na limpeza de storage:', storageError);
+      logger.warn('Erro na limpeza de storage:', { error: storageError });
     }
     
     // 3. Limpar cache do browser (se suportado)
@@ -63,14 +63,14 @@ export const cleanupAuthState = async () => {
         const cacheNames = await caches.keys();
         await Promise.all(
           cacheNames.map(cacheName => {
-            logger.debug('Limpando cache:', cacheName);
+            logger.debug('Limpando cache:', { cacheName });
             return caches.delete(cacheName);
           })
         );
         logger.info('Cache do browser limpo');
       }
     } catch (cacheError) {
-      logger.warn('Erro na limpeza de cache:', cacheError);
+      logger.warn('Erro na limpeza de cache:', { error: cacheError });
     }
     
     // 4. Desregistrar service workers problemáticos
@@ -86,7 +86,7 @@ export const cleanupAuthState = async () => {
         logger.info('Service workers desregistrados');
       }
     } catch (swError) {
-      logger.warn('Erro na limpeza de service worker:', swError);
+      logger.warn('Erro na limpeza de service worker:', { error: swError });
     }
     
     logger.info('Limpeza COMPLETA concluída com sucesso');
@@ -113,7 +113,7 @@ export const forceAuthRedirect = async () => {
     window.location.replace('/auth');
   } catch (error) {
     // Fallback se replace falhar
-    logger.warn('Fallback para href:', error);
+    logger.warn('Fallback para href:', { error });
     window.location.href = '/auth';
   }
 };
