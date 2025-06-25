@@ -6,6 +6,8 @@ import { logger } from '@/utils/logger';
 
 interface InviteDetails {
   email: string;
+  name?: string;
+  whatsapp_number?: string;
   role: {
     id: string;
     name: string;
@@ -37,30 +39,31 @@ export const useInviteFlow = (token?: string) => {
           action: 'fetchInviteDetails'
         });
         
-        logger.info('[INVITE-FLOW] 🔍 Buscando detalhes do convite:', {
+        logger.info('[INVITE-FLOW] 🔍 Buscando detalhes COMPLETOS do convite:', {
           token: token.substring(0, 8) + '***',
-          tokenLength: token.length,
-          fullTokenForDebug: token // TEMPORÁRIO: log completo para debug
+          tokenLength: token.length
         });
 
-        // QUERY EXATA - sem tolerância
+        // QUERY EXPANDIDA - buscar dados completos do convite
         const { data, error: supabaseError } = await supabase
           .from('invites')
           .select(`
             email,
+            name,
+            whatsapp_number,
             expires_at,
             created_at,
             used_at,
             user_roles!inner(id, name, description)
           `)
-          .eq('token', token) // BUSCA EXATA
+          .eq('token', token)
           .maybeSingle();
 
         // AUDITORIA: Resultado da query
         tokenAudit.logStep('SUPABASE_QUERY_EXECUTED', token, 'supabase', {
           hasResult: !!data,
           error: supabaseError?.message,
-          queryType: 'exact_match'
+          queryType: 'expanded_invite_data'
         });
 
         if (supabaseError) {
@@ -68,39 +71,16 @@ export const useInviteFlow = (token?: string) => {
             token: token.substring(0, 8) + '***',
             tokenLength: token.length,
             errorCode: supabaseError.code,
-            errorMessage: supabaseError.message,
-            auditReport: tokenAudit.generateAuditReport()
+            errorMessage: supabaseError.message
           });
           throw new Error(`Erro na consulta: ${supabaseError.message}`);
         }
 
         if (!data) {
-          logger.warn('[INVITE-FLOW] ⚠️ Convite não encontrado com token exato:', {
+          logger.warn('[INVITE-FLOW] ⚠️ Convite não encontrado:', {
             token: token.substring(0, 8) + '***',
-            tokenLength: token.length,
-            searchType: 'exact_match',
-            auditReport: tokenAudit.generateAuditReport()
+            tokenLength: token.length
           });
-          
-          // DIAGNÓSTICO: Buscar tokens similares para debug
-          const { data: similarTokens } = await supabase
-            .from('invites')
-            .select('token')
-            .limit(10);
-            
-          if (similarTokens) {
-            logger.info('[INVITE-FLOW] 🔍 Tokens existentes no banco (para debug):', {
-              requestedToken: token,
-              requestedLength: token.length,
-              existingTokens: similarTokens.map(t => ({
-                token: t.token.substring(0, 8) + '***',
-                length: t.token.length,
-                matches: t.token === token,
-                startsWith: t.token.startsWith(token) || token.startsWith(t.token)
-              }))
-            });
-          }
-          
           throw new Error('Convite não encontrado ou token inválido');
         }
 
@@ -125,9 +105,11 @@ export const useInviteFlow = (token?: string) => {
           throw new Error('Convite expirado');
         }
 
-        // SUCESSO: Processar dados do convite
+        // SUCESSO: Processar dados COMPLETOS do convite
         const inviteData: InviteDetails = {
           email: data.email,
+          name: data.name || undefined,
+          whatsapp_number: data.whatsapp_number || undefined,
           role: Array.isArray(data.user_roles) ? data.user_roles[0] : data.user_roles,
           expires_at: data.expires_at,
           created_at: data.created_at
@@ -136,23 +118,25 @@ export const useInviteFlow = (token?: string) => {
         // AUDITORIA: Convite validado com sucesso
         tokenAudit.logStep('INVITE_VALIDATED_SUCCESS', token, 'validation_success', {
           email: inviteData.email,
+          hasName: !!inviteData.name,
+          hasWhatsApp: !!inviteData.whatsapp_number,
           roleName: inviteData.role.name
         });
 
         setInviteDetails(inviteData);
         
-        logger.info('[INVITE-FLOW] ✅ Convite validado com sucesso:', {
+        logger.info('[INVITE-FLOW] ✅ Convite validado com dados COMPLETOS:', {
           token: token.substring(0, 8) + '***',
           email: inviteData.email,
-          roleName: inviteData.role.name,
-          auditSteps: tokenAudit.generateAuditReport().totalSteps
+          hasName: !!inviteData.name,
+          hasWhatsApp: !!inviteData.whatsapp_number,
+          roleName: inviteData.role.name
         });
 
       } catch (err: any) {
         logger.error('[INVITE-FLOW] ❌ Erro ao buscar convite:', err, {
           token: token.substring(0, 8) + '***',
-          tokenLength: token.length,
-          auditReport: tokenAudit.generateAuditReport()
+          tokenLength: token.length
         });
         setError(err.message);
       } finally {

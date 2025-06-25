@@ -13,6 +13,10 @@ interface OnboardingData {
   mainObjective: string;
   memberType: 'club' | 'formacao';
   inviteToken?: string;
+  // Campos de controle para readonly
+  isNameFromInvite?: boolean;
+  isEmailFromInvite?: boolean;
+  isPhoneFromInvite?: boolean;
 }
 
 interface UseCleanOnboardingDataResult {
@@ -30,7 +34,10 @@ const getInitialData = (): OnboardingData => ({
   position: '',
   experienceLevel: 'iniciante',
   mainObjective: '',
-  memberType: 'club'
+  memberType: 'club',
+  isNameFromInvite: false,
+  isEmailFromInvite: false,
+  isPhoneFromInvite: false
 });
 
 export const useCleanOnboardingData = (inviteToken?: string): UseCleanOnboardingDataResult => {
@@ -39,50 +46,48 @@ export const useCleanOnboardingData = (inviteToken?: string): UseCleanOnboarding
   
   const { inviteDetails, isLoading: isInviteLoading, error: inviteError } = useInviteFlow(inviteToken);
 
-  // INICIALIZAÇÃO ROBUSTA com timeout de segurança
+  // INICIALIZAÇÃO ROBUSTA com pré-preenchimento de dados do convite
   const initializeCleanData = useCallback(() => {
     if (hasInitialized) return;
     
     const startTime = Date.now();
-    logger.info('[CLEAN-DATA] 🚀 Inicializando dados limpos:', {
+    logger.info('[CLEAN-DATA] 🚀 Inicializando dados com PRÉ-PREENCHIMENTO:', {
       hasToken: !!inviteToken,
       hasDetails: !!inviteDetails,
       timestamp: new Date().toISOString()
     });
 
-    // TIMEOUT DE SEGURANÇA: máximo 2 segundos
-    const safetyTimeout = setTimeout(() => {
-      if (!hasInitialized) {
-        logger.warn('[CLEAN-DATA] ⏰ Timeout de segurança - inicializando com dados vazios', {
-          duration: `${Date.now() - startTime}ms`
-        });
-        setData(getInitialData());
-        setHasInitialized(true);
-      }
-    }, 2000);
-
     try {
       if (inviteToken && inviteDetails) {
-        // Dados do convite disponíveis
+        // PRÉ-PREENCHIMENTO: Dados do convite disponíveis
         const memberType = inviteDetails.role.name.toLowerCase().includes('formacao') ? 'formacao' : 'club';
         
         const inviteData: OnboardingData = {
           ...getInitialData(),
+          // CAMPOS CRÍTICOS PRÉ-PREENCHIDOS
           email: inviteDetails.email,
+          name: inviteDetails.name || '',
+          phone: inviteDetails.whatsapp_number || '',
           memberType,
-          inviteToken
+          inviteToken,
+          // CONTROLE DE READONLY
+          isEmailFromInvite: true, // E-mail sempre vem do convite
+          isNameFromInvite: !!inviteDetails.name,
+          isPhoneFromInvite: !!inviteDetails.whatsapp_number
         };
 
-        logger.info('[CLEAN-DATA] ✅ Dados do convite aplicados:', {
+        logger.info('[CLEAN-DATA] ✅ Dados PRÉ-PREENCHIDOS do convite:', {
           email: inviteDetails.email,
+          hasName: !!inviteDetails.name,
+          hasPhone: !!inviteDetails.whatsapp_number,
           memberType,
           duration: `${Date.now() - startTime}ms`
         });
 
         setData(inviteData);
       } else if (inviteToken && inviteError) {
-        // Erro na validação - permitir preenchimento manual
-        logger.warn('[CLEAN-DATA] ⚠️ Erro no convite - dados manuais:', {
+        // Erro na validação - dados básicos apenas
+        logger.warn('[CLEAN-DATA] ⚠️ Erro no convite - dados básicos:', {
           error: inviteError,
           token: inviteToken?.substring(0, 8) + '***'
         });
@@ -97,17 +102,15 @@ export const useCleanOnboardingData = (inviteToken?: string): UseCleanOnboarding
       }
 
       setHasInitialized(true);
-      clearTimeout(safetyTimeout);
 
     } catch (error) {
       logger.error('[CLEAN-DATA] ❌ Erro na inicialização:', error);
       setData(getInitialData());
       setHasInitialized(true);
-      clearTimeout(safetyTimeout);
     }
   }, [inviteToken, inviteDetails, inviteError, hasInitialized]);
 
-  // Auto-inicializar quando dados estão prontos ou erro ocorre
+  // Auto-inicializar quando dados estão prontos
   useEffect(() => {
     if (!hasInitialized && (!isInviteLoading || inviteError)) {
       initializeCleanData();
@@ -115,13 +118,40 @@ export const useCleanOnboardingData = (inviteToken?: string): UseCleanOnboarding
   }, [isInviteLoading, inviteError, hasInitialized, initializeCleanData]);
 
   const updateData = useCallback((newData: Partial<OnboardingData>) => {
-    logger.info('[CLEAN-DATA] 📝 Atualizando dados:', {
-      fields: Object.keys(newData),
+    // VALIDAÇÃO: Impedir alteração de campos críticos do convite
+    const filteredData = { ...newData };
+    
+    if (data.isEmailFromInvite && newData.email && newData.email !== data.email) {
+      logger.warn('[CLEAN-DATA] ⚠️ Tentativa de alterar e-mail do convite bloqueada:', {
+        originalEmail: data.email,
+        attemptedEmail: newData.email
+      });
+      delete filteredData.email;
+    }
+    
+    if (data.isNameFromInvite && newData.name && newData.name !== data.name) {
+      logger.warn('[CLEAN-DATA] ⚠️ Tentativa de alterar nome do convite bloqueada:', {
+        originalName: data.name,
+        attemptedName: newData.name
+      });
+      delete filteredData.name;
+    }
+    
+    if (data.isPhoneFromInvite && newData.phone && newData.phone !== data.phone) {
+      logger.warn('[CLEAN-DATA] ⚠️ Tentativa de alterar telefone do convite bloqueada:', {
+        originalPhone: data.phone,
+        attemptedPhone: newData.phone
+      });
+      delete filteredData.phone;
+    }
+    
+    logger.info('[CLEAN-DATA] 📝 Atualizando dados (com proteção):', {
+      fields: Object.keys(filteredData),
       hasToken: !!inviteToken
     });
     
-    setData(prev => ({ ...prev, ...newData }));
-  }, [inviteToken]);
+    setData(prev => ({ ...prev, ...filteredData }));
+  }, [inviteToken, data.email, data.name, data.phone, data.isEmailFromInvite, data.isNameFromInvite, data.isPhoneFromInvite]);
 
   return {
     data,
