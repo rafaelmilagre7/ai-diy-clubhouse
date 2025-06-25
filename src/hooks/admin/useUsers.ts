@@ -9,9 +9,10 @@ export const useUsers = () => {
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [loading, setLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<{ message: string } | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [filteredUsers, setFilteredUsers] = useState<UserProfile[]>([]);
+  const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
 
   const fetchUsers = async (isRefresh = false) => {
     try {
@@ -78,7 +79,7 @@ export const useUsers = () => {
       setFilteredUsers(usersData);
     } catch (error: any) {
       console.error('Erro ao buscar usuários:', error.message);
-      setError(error.message);
+      setError({ message: error.message });
       toast({
         title: 'Erro ao carregar usuários',
         description: 'Não foi possível carregar a lista de usuários.',
@@ -106,6 +107,21 @@ export const useUsers = () => {
     setFilteredUsers(filtered);
   };
 
+  // Funções que não recebem argumentos (para compatibilidade)
+  const refreshUsers = () => fetchUsers(true);
+  const deleteUser = (userId: string) => {
+    console.log('Delete user:', userId);
+    // Implementação da exclusão será adicionada posteriormente
+  };
+  const resetPassword = (userId: string) => {
+    console.log('Reset password for user:', userId);
+    // Implementação do reset de senha será adicionada posteriormente
+  };
+  const assignRole = (userId: string, roleId: string) => {
+    console.log('Assign role:', { userId, roleId });
+    // Implementação da atribuição de papel será adicionada posteriormente
+  };
+
   useEffect(() => {
     fetchUsers();
   }, []);
@@ -118,14 +134,17 @@ export const useUsers = () => {
     searchQuery,
     setSearchQuery,
     searchUsers,
-    fetchUsers: () => fetchUsers(true),
-    // Propriedades adicionais que podem estar sendo esperadas
+    fetchUsers: refreshUsers,
+    // Propriedades adicionais que estão sendo esperadas
     availableRoles: [], // Placeholder - pode ser implementado depois
-    selectedUser: null,
-    setSelectedUser: () => {}, // Placeholder
+    selectedUser,
+    setSelectedUser,
     canManageUsers: true, // Placeholder - implementar lógica de permissões
     canAssignRoles: true, // Placeholder
     canDeleteUsers: true, // Placeholder
     canResetPasswords: true, // Placeholder
+    deleteUser,
+    resetPassword,
+    assignRole,
   };
 };
