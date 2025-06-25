@@ -43,7 +43,6 @@ export const useOnboardingSubmission = () => {
       }
 
       logger.info('Onboarding concluído com sucesso', {
-        component: 'OnboardingSubmission',
         userId: user?.id,
         memberType
       });
@@ -56,10 +55,7 @@ export const useOnboardingSubmission = () => {
 
     } catch (error: any) {
       console.error('Erro ao finalizar onboarding:', error);
-      logger.error('Erro ao finalizar onboarding', error, {
-        component: 'OnboardingSubmission',
-        userId: user?.id
-      });
+      logger.error('Erro ao finalizar onboarding', error);
       toast.error('Erro ao finalizar onboarding. Tente novamente.');
     } finally {
       setIsSubmitting(false);

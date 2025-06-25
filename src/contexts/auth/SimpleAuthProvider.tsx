@@ -95,11 +95,11 @@ export const SimpleAuthProvider: React.FC<SimpleAuthProviderProps> = ({ children
         setSession(null);
         setProfile(null);
       }
-      return { error };
+      return { success: !error, error };
     } catch (err) {
       const error = err as Error;
       logger.error('Erro no signOut:', error);
-      return { error };
+      return { success: false, error };
     }
   };
 

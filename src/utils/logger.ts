@@ -10,32 +10,32 @@ class Logger {
   private logs: LogEntry[] = [];
   private maxLogs = 1000;
 
-  info(message: string, data?: any) {
-    this.log('info', message, data);
-    console.log(`[INFO] ${message}`, data);
+  info(message: string, data?: any, context?: any) {
+    this.log('info', message, data || context);
+    console.log(`[INFO] ${message}`, data || context);
   }
 
-  warn(message: string, data?: any) {
-    this.log('warn', message, data);
-    console.warn(`[WARN] ${message}`, data);
+  warn(message: string, data?: any, context?: any) {
+    this.log('warn', message, data || context);
+    console.warn(`[WARN] ${message}`, data || context);
   }
 
-  error(message: string, data?: any) {
-    this.log('error', message, data);
-    console.error(`[ERROR] ${message}`, data);
+  error(message: string, data?: any, context?: any) {
+    this.log('error', message, data || context);
+    console.error(`[ERROR] ${message}`, data || context);
   }
 
-  debug(message: string, data?: any) {
-    this.log('debug', message, data);
+  debug(message: string, data?: any, context?: any) {
+    this.log('debug', message, data || context);
     if (process.env.NODE_ENV === 'development') {
-      console.debug(`[DEBUG] ${message}`, data);
+      console.debug(`[DEBUG] ${message}`, data || context);
     }
   }
 
   // Método para compatibilidade com chamadas de 3 argumentos
-  security(message: string, data?: any) {
-    this.log('warn', `[SECURITY] ${message}`, data);
-    console.warn(`[SECURITY] ${message}`, data);
+  security(message: string, data?: any, context?: any) {
+    this.log('warn', `[SECURITY] ${message}`, data || context);
+    console.warn(`[SECURITY] ${message}`, data || context);
   }
 
   private log(level: LogEntry['level'], message: string, data?: any) {
