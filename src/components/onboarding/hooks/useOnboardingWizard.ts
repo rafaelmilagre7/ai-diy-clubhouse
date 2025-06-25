@@ -85,10 +85,10 @@ export const useOnboardingWizard = ({
         if (isDataReady) {
           const isValid = validateStep(currentStep, initialData, memberType);
           if (isValid) {
-            logger.info('[ONBOARDING-WIZARD] Avançando para próxima etapa:', currentStep + 1);
+            logger.info(`[ONBOARDING-WIZARD] Avançando para próxima etapa: ${currentStep + 1}`);
             setCurrentStep(prev => prev + 1);
           } else {
-            logger.warn('[ONBOARDING-WIZARD] Validação falhou para etapa:', currentStep);
+            logger.warn(`[ONBOARDING-WIZARD] Validação falhou para etapa: ${currentStep}`);
           }
         } else {
           // Para convites, permitir avanço na primeira etapa
@@ -108,7 +108,7 @@ export const useOnboardingWizard = ({
   const handlePrevious = useCallback(() => {
     try {
       if (currentStep > 1) {
-        logger.info('[ONBOARDING-WIZARD] Voltando para etapa anterior:', currentStep - 1);
+        logger.info(`[ONBOARDING-WIZARD] Voltando para etapa anterior: ${currentStep - 1}`);
         setCurrentStep(prev => prev - 1);
       }
     } catch (error) {
