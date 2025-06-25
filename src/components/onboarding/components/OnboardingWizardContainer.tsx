@@ -20,11 +20,11 @@ export const OnboardingWizardContainer = ({ children }: OnboardingWizardContaine
   const [searchParams] = useSearchParams();
   const { cleanupForInvite } = useOnboardingCleanup();
   
-  // Estado simplificado - sem refs complexos
-  const [isInitialized, setIsInitialized] = useState(false);
+  // Estado ultra-simples
   const [isLoading, setIsLoading] = useState(false);
+  const [hasInitialized, setHasInitialized] = useState(false);
   
-  // Token ÚNICO - fonte única de verdade
+  // Token único
   const inviteToken = useMemo(() => {
     return searchParams.get('token') || InviteTokenManager.getToken();
   }, [searchParams]);
@@ -38,53 +38,80 @@ export const OnboardingWizardContainer = ({ children }: OnboardingWizardContaine
 
   const memberType = useMemo(() => cleanData.memberType || 'club', [cleanData.memberType]);
   
-  // LÓGICA SIMPLIFICADA: Loading máximo de 500ms
+  // INICIALIZAÇÃO ULTRA-SIMPLES: máximo 500ms
   useEffect(() => {
-    if (isInitialized) return;
+    if (hasInitialized) return;
     
-    logger.info('[WIZARD-CONTAINER] Inicializando onboarding:', {
+    const startTime = Date.now();
+    logger.info('[WIZARD-CONTAINER] 🚀 Inicializando onboarding:', {
       hasToken: !!inviteToken,
       memberType,
-      hasEmail: !!cleanData.email
+      timestamp: new Date().toISOString()
     });
     
-    // Mostrar loading apenas se há token E ainda não tem dados básicos
-    const shouldLoad = !!(inviteToken && isInviteLoading && !cleanData.email);
-    setIsLoading(shouldLoad);
+    // Loading APENAS se há token E ainda carregando
+    const shouldShowLoading = !!(inviteToken && isInviteLoading && !cleanData.email);
     
-    if (shouldLoad) {
-      // Timeout agressivo de 500ms
+    if (shouldShowLoading) {
+      setIsLoading(true);
+      
+      // TIMEOUT AGRESSIVO: 500ms máximo
       const timeout = setTimeout(() => {
-        logger.warn('[WIZARD-CONTAINER] Timeout de 500ms - desbloqueando campos');
+        const duration = Date.now() - startTime;
+        logger.warn('[WIZARD-CONTAINER] ⏰ Timeout de 500ms - liberando formulário:', {
+          duration: `${duration}ms`,
+          hasToken: !!inviteToken,
+          hasEmail: !!cleanData.email
+        });
         setIsLoading(false);
+        setHasInitialized(true);
       }, 500);
       
       return () => clearTimeout(timeout);
     }
     
-    // Inicialização simples
-    if (inviteToken) {
-      InviteTokenManager.storeToken(inviteToken);
-      cleanupForInvite();
-    }
-
-    // Cache reset uma única vez
-    OnboardingCacheManager.clearAll();
-    
-    // Inicializar dados
+    // Sem loading necessário - inicializar imediatamente
     try {
+      if (inviteToken) {
+        InviteTokenManager.storeToken(inviteToken);
+        cleanupForInvite();
+        logger.info('[WIZARD-CONTAINER] 🔐 Token armazenado e limpeza executada');
+      }
+
+      OnboardingCacheManager.clearAll();
       initializeCleanData();
+      
+      logger.info('[WIZARD-CONTAINER] ✅ Inicialização completa:', {
+        duration: `${Date.now() - startTime}ms`,
+        hasToken: !!inviteToken,
+        memberType
+      });
+      
     } catch (error) {
-      logger.error('[WIZARD-CONTAINER] Erro na inicialização - continuando:', error);
+      logger.error('[WIZARD-CONTAINER] ❌ Erro na inicialização (continuando):', error);
     }
     
-    setIsInitialized(true);
+    setHasInitialized(true);
     setIsLoading(false);
-  }, [inviteToken, isInviteLoading, cleanData.email, isInitialized]);
+  }, [inviteToken, isInviteLoading, cleanData.email, hasInitialized]);
 
-  // Callback estável 
+  // Para de loading quando dados chegam
+  useEffect(() => {
+    if (isLoading && (cleanData.email || !isInviteLoading)) {
+      logger.info('[WIZARD-CONTAINER] 📥 Dados recebidos - parando loading:', {
+        hasEmail: !!cleanData.email,
+        isInviteLoading
+      });
+      setIsLoading(false);
+      setHasInitialized(true);
+    }
+  }, [cleanData.email, isInviteLoading, isLoading]);
+
   const memoizedUpdateData = useCallback((newData: any) => {
-    logger.info('[WIZARD-CONTAINER] Atualizando dados:', newData);
+    logger.info('[WIZARD-CONTAINER] 📝 Atualizando dados:', {
+      fields: Object.keys(newData),
+      hasToken: !!inviteToken
+    });
     const dataWithToken = inviteToken ? { ...newData, inviteToken } : newData;
     updateData(dataWithToken);
   }, [inviteToken, updateData]);
@@ -95,12 +122,12 @@ export const OnboardingWizardContainer = ({ children }: OnboardingWizardContaine
     memberType
   });
 
-  logger.info('[WIZARD-CONTAINER] Renderizando (SIMPLIFICADO):', {
+  logger.info('[WIZARD-CONTAINER] 🎨 Renderizando:', {
     memberType,
     isLoading,
+    hasInitialized,
     fieldsEnabled: !isLoading,
-    hasData: Object.keys(cleanData).length > 2,
-    isInitialized
+    dataKeys: Object.keys(cleanData).length
   });
 
   return (
