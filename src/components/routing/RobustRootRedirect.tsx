@@ -4,7 +4,6 @@ import { useSimpleAuth } from "@/contexts/auth/SimpleAuthProvider";
 import { useOnboardingRequired } from "@/hooks/useOnboardingRequired";
 import LoadingScreen from "@/components/common/LoadingScreen";
 import { logger } from "@/utils/logger";
-import { getUserRoleName } from "@/lib/supabase/types";
 
 const RobustRootRedirect = () => {
   const { user, profile, isLoading: authLoading, error: authError } = useSimpleAuth();
@@ -13,14 +12,15 @@ const RobustRootRedirect = () => {
   const totalLoading = authLoading || onboardingLoading;
 
   // Log detalhado do estado
-  logger.info("[ROOT-REDIRECT] Estado atual:", {
+  logger.info("[ROOT-REDIRECT] Estado atual (ONBOARDING OBRIGATÓRIO):", {
     hasUser: !!user,
     hasProfile: !!profile,
-    userRole: profile ? getUserRoleName(profile) : null,
+    userRole: profile?.user_roles?.name || null,
     authLoading,
     onboardingLoading,
     onboardingRequired,
-    authError
+    authError,
+    onboardingCompleted: profile?.onboarding_completed
   });
 
   // Erro de auth
@@ -60,14 +60,14 @@ const RobustRootRedirect = () => {
     return <LoadingScreen message="Carregando seu perfil..." />;
   }
 
-  // Onboarding obrigatório
+  // REGRA CRÍTICA: Onboarding obrigatório PARA TODOS (sem exceção de role)
   if (onboardingRequired) {
-    logger.info("[ROOT-REDIRECT] Onboarding obrigatório -> /onboarding");
+    logger.info("[ROOT-REDIRECT] Onboarding OBRIGATÓRIO -> /onboarding (SEM EXCEÇÕES)");
     return <Navigate to="/onboarding" replace />;
   }
 
-  // Determinar rota baseada no papel do usuário
-  const userRole = getUserRoleName(profile);
+  // Só após onboarding completo, determinar rota baseada no papel do usuário
+  const userRole = profile?.user_roles?.name;
   
   if (userRole === 'formacao') {
     logger.info("[ROOT-REDIRECT] Usuário formação -> /formacao");

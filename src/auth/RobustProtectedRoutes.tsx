@@ -20,7 +20,7 @@ export const RobustProtectedRoutes = ({ children, allowInviteFlow = false }: Rob
   const isInInviteFlow = InviteTokenManager.hasToken() || location.pathname.includes('/invite');
   const totalLoading = authLoading || onboardingLoading;
 
-  logger.info("[PROTECTED-ROUTES] Estado:", {
+  logger.info("[PROTECTED-ROUTES] Estado (ONBOARDING OBRIGATÓRIO):", {
     pathname: location.pathname,
     hasUser: !!user,
     authLoading,
@@ -41,15 +41,15 @@ export const RobustProtectedRoutes = ({ children, allowInviteFlow = false }: Rob
     return <Navigate to="/auth" state={{ from: location.pathname }} replace />;
   }
 
-  // Permitir fluxo de convite se configurado
-  if (allowInviteFlow && isInInviteFlow) {
-    logger.info("[PROTECTED-ROUTES] Fluxo de convite permitido");
+  // Permitir fluxo de convite se configurado E específico
+  if (allowInviteFlow && isInInviteFlow && location.pathname.includes('/onboarding')) {
+    logger.info("[PROTECTED-ROUTES] Fluxo de convite permitido APENAS para onboarding");
     return <>{children}</>;
   }
 
-  // Onboarding obrigatório
+  // REGRA CRÍTICA: Onboarding obrigatório PARA TODOS (sem exceção)
   if (onboardingRequired && location.pathname !== '/onboarding') {
-    logger.info("[PROTECTED-ROUTES] Redirecionando para onboarding");
+    logger.info("[PROTECTED-ROUTES] Redirecionando para onboarding OBRIGATÓRIO (sem exceções)");
     
     if (isInInviteFlow) {
       const currentToken = InviteTokenManager.getToken();
@@ -62,6 +62,6 @@ export const RobustProtectedRoutes = ({ children, allowInviteFlow = false }: Rob
     return <Navigate to="/onboarding" replace />;
   }
 
-  // Renderizar conteúdo protegido
+  // Renderizar conteúdo protegido apenas após onboarding completo
   return <>{children}</>;
 };

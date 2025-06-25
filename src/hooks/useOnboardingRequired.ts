@@ -1,7 +1,6 @@
 
 import { useState, useEffect } from 'react';
 import { useSimpleAuth } from '@/contexts/auth/SimpleAuthProvider';
-import { getUserRoleName } from '@/lib/supabase/types';
 import { logger } from '@/utils/logger';
 
 export const useOnboardingRequired = () => {
@@ -18,7 +17,7 @@ export const useOnboardingRequired = () => {
       }
 
       try {
-        logger.info('[ONBOARDING-REQUIRED] Verificando necessidade de onboarding:', {
+        logger.info('[ONBOARDING-REQUIRED] Verificação OBRIGATÓRIA para TODOS os usuários:', {
           userId: user.id.substring(0, 8) + '***',
           email: user.email,
           hasProfile: !!profile
@@ -33,26 +32,24 @@ export const useOnboardingRequired = () => {
           return;
         }
         
-        // Verificar se onboarding foi completado
+        // REGRA CRÍTICA: Verificar se onboarding foi completado (SEM EXCEÇÕES)
         const onboardingCompleted = profile?.onboarding_completed === true;
         
-        logger.info('[ONBOARDING-REQUIRED] Status do onboarding:', {
+        logger.info('[ONBOARDING-REQUIRED] Status do onboarding (SEM EXCEÇÕES):', {
           userId: user.id.substring(0, 8) + '***',
           onboardingCompleted,
-          userRole: getUserRoleName(profile)
+          profileOnboardingField: profile.onboarding_completed,
+          userRole: profile?.user_roles?.name || 'unknown'
         });
 
-        // Administradores podem pular onboarding
-        if (getUserRoleName(profile) === 'admin') {
-          logger.info('[ONBOARDING-REQUIRED] Admin detectado - onboarding opcional');
-          setIsRequired(false);
-          setHasCompleted(true);
-        } else if (onboardingCompleted) {
+        // MUDANÇA CRÍTICA: REMOVER TODA EXCEÇÃO PARA ADMIN
+        // TODOS os usuários devem completar onboarding, sem exceção
+        if (onboardingCompleted) {
           logger.info('[ONBOARDING-REQUIRED] Onboarding já completado');
           setIsRequired(false);
           setHasCompleted(true);
         } else {
-          logger.info('[ONBOARDING-REQUIRED] Onboarding OBRIGATÓRIO');
+          logger.info('[ONBOARDING-REQUIRED] Onboarding OBRIGATÓRIO (incluindo admins)');
           setIsRequired(true);
           setHasCompleted(false);
         }

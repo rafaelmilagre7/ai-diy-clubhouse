@@ -5,7 +5,6 @@ import { useSimpleAuth } from '@/contexts/auth/SimpleAuthProvider';
 import { useOnboardingRequired } from '@/hooks/useOnboardingRequired';
 import { useAdminPreview } from '@/hooks/useAdminPreview';
 import LoadingScreen from '@/components/common/LoadingScreen';
-import { getUserRoleName } from '@/lib/supabase/types';
 import { AdminPreviewBanner } from './AdminPreviewBanner';
 
 interface OnboardingLoaderProps {
@@ -19,10 +18,10 @@ export const OnboardingLoader = ({ children }: OnboardingLoaderProps) => {
   const { isRequired, isLoading: onboardingLoading, hasCompleted } = useOnboardingRequired();
   const { isAdminPreviewMode, isValidAdminAccess } = useAdminPreview();
 
-  const roleName = getUserRoleName(profile);
+  const roleName = profile?.user_roles?.name;
   const memberType = roleName === 'formacao' ? 'formacao' : 'club';
 
-  console.log('[OnboardingLoader] Estado:', {
+  console.log('[OnboardingLoader] Estado (ONBOARDING OBRIGATÓRIO):', {
     authLoading,
     onboardingLoading,
     user: !!user,
@@ -47,9 +46,9 @@ export const OnboardingLoader = ({ children }: OnboardingLoaderProps) => {
     return <Navigate to="/auth" replace />;
   }
 
-  // MODO ADMIN PREVIEW: Permitir acesso mesmo se onboarding já foi concluído
-  if (isAdminPreviewMode && isValidAdminAccess) {
-    console.log('[OnboardingLoader] Modo admin preview ativo - permitindo acesso');
+  // MODO ADMIN PREVIEW: Permitir acesso APENAS se já completou onboarding
+  if (isAdminPreviewMode && isValidAdminAccess && hasCompleted) {
+    console.log('[OnboardingLoader] Modo admin preview ativo - mas onboarding já completo');
     return (
       <>
         <AdminPreviewBanner />
@@ -60,7 +59,7 @@ export const OnboardingLoader = ({ children }: OnboardingLoaderProps) => {
     );
   }
 
-  // CORREÇÃO CRÍTICA: Se onboarding foi concluído, redirecionar para dashboard apropriado
+  // MUDANÇA CRÍTICA: Se onboarding foi concluído, redirecionar para dashboard
   if (hasCompleted && !isRequired) {
     console.log('[OnboardingLoader] Onboarding completo, redirecionando para dashboard');
     const redirectPath = memberType === 'formacao' ? '/formacao' : '/dashboard';
@@ -69,7 +68,7 @@ export const OnboardingLoader = ({ children }: OnboardingLoaderProps) => {
 
   // Se onboarding é necessário, renderizar wizard
   if (isRequired) {
-    console.log('[OnboardingLoader] Renderizando wizard de onboarding');
+    console.log('[OnboardingLoader] Renderizando wizard de onboarding OBRIGATÓRIO');
     return <>{children}</>;
   }
 
