@@ -42,52 +42,65 @@ export const OnboardingStepRenderer: React.FC<OnboardingStepRendererProps> = ({
     isLoading
   };
 
+  // Funções de navegação assíncronas vazias (serão controladas pelo container)
+  const handleNext = async (): Promise<void> => {
+    return Promise.resolve();
+  };
+
+  const handlePrev = async (): Promise<void> => {
+    return Promise.resolve();
+  };
+
+  const handleComplete = async (): Promise<void> => {
+    return Promise.resolve();
+  };
+
   switch (currentStep) {
     case 1:
       return (
         <OnboardingStep1
           {...stepProps}
-          onNext={() => {}}
-          onPrev={() => {}}
+          onNext={handleNext}
+          onPrev={handlePrev}
         />
       );
     case 2:
       return (
         <OnboardingStep2
           {...stepProps}
-          onNext={() => {}}
-          onPrev={() => {}}
+          onNext={handleNext}
+          onPrev={handlePrev}
         />
       );
     case 3:
       return (
         <OnboardingStep3
           {...stepProps}
-          onNext={() => {}}
-          onPrev={() => {}}
+          onNext={handleNext}
+          onPrev={handlePrev}
         />
       );
     case 4:
       return (
         <OnboardingStep4
           {...stepProps}
-          onNext={() => {}}
-          onPrev={() => {}}
+          onNext={handleNext}
+          onPrev={handlePrev}
         />
       );
     case 5:
       return (
         <OnboardingStep5
           {...stepProps}
-          onNext={() => {}}
-          onPrev={() => {}}
+          onNext={handleNext}
+          onPrev={handlePrev}
         />
       );
     case 6:
       return (
         <OnboardingFinal
           data={data}
-          onComplete={() => {}}
+          onComplete={handleComplete}
           memberType={memberType}
           isCompleting={false}
         />

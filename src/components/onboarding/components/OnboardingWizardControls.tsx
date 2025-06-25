@@ -6,9 +6,9 @@ import { ChevronLeft, ChevronRight, Loader2, CheckCircle } from 'lucide-react';
 interface OnboardingWizardControlsProps {
   currentStep: number;
   totalSteps: number;
-  onNext: () => void;
-  onPrevious: () => void;
-  onSubmit: () => void;
+  onNext: () => Promise<void>;
+  onPrevious: () => Promise<void>;
+  onSubmit: () => Promise<void>;
   isSubmitting: boolean;
   memberType: 'club' | 'formacao';
   lastSaved?: Date | null;
@@ -33,12 +33,16 @@ export const OnboardingWizardControls: React.FC<OnboardingWizardControlsProps> =
   const isFirstStep = currentStep === 1;
   const isLastStep = currentStep === totalSteps;
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (isLastStep) {
-      onSubmit();
+      await onSubmit();
     } else {
-      onNext();
+      await onNext();
     }
+  };
+
+  const handlePrevious = async () => {
+    await onPrevious();
   };
 
   return (
@@ -46,7 +50,7 @@ export const OnboardingWizardControls: React.FC<OnboardingWizardControlsProps> =
       {/* Botão Voltar */}
       <Button
         variant="outline"
-        onClick={onPrevious}
+        onClick={handlePrevious}
         disabled={isFirstStep || isSubmitting}
         className="flex items-center gap-2 h-10 px-4 bg-transparent border-white/20 text-white hover:bg-white/5 hover:border-white/30 disabled:opacity-50"
       >

@@ -79,7 +79,7 @@ export const useOnboardingWizard = ({
     }
   }, []); // Sem dependências para garantir estabilidade
 
-  const handleNext = useCallback(async () => {
+  const handleNext = useCallback(async (): Promise<void> => {
     try {
       if (currentStep < totalSteps) {
         if (isDataReady) {
@@ -100,29 +100,34 @@ export const useOnboardingWizard = ({
           }
         }
       }
+      return Promise.resolve();
     } catch (error) {
       logger.error('[ONBOARDING-WIZARD] Erro ao avançar etapa:', error);
+      return Promise.resolve();
     }
   }, [currentStep, totalSteps, validateStep, initialData, memberType, isDataReady]);
 
-  const handlePrevious = useCallback(() => {
+  const handlePrevious = useCallback(async (): Promise<void> => {
     try {
       if (currentStep > 1) {
         logger.info(`[ONBOARDING-WIZARD] Voltando para etapa anterior: ${currentStep - 1}`);
         setCurrentStep(prev => prev - 1);
       }
+      return Promise.resolve();
     } catch (error) {
       logger.error('[ONBOARDING-WIZARD] Erro ao voltar etapa:', error);
+      return Promise.resolve();
     }
   }, [currentStep]);
 
-  const handleSubmit = useCallback(async () => {
+  const handleSubmit = useCallback(async (): Promise<void> => {
     try {
       logger.info('[ONBOARDING-WIZARD] Iniciando finalização');
       await completeOnboarding(initialData, memberType);
+      return Promise.resolve();
     } catch (error) {
       logger.error('[ONBOARDING-WIZARD] Erro na finalização:', error);
-      throw error;
+      return Promise.resolve();
     }
   }, [completeOnboarding, initialData, memberType]);
 
