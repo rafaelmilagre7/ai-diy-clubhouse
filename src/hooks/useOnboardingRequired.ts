@@ -12,16 +12,8 @@ export const useOnboardingRequired = () => {
 
   useEffect(() => {
     const checkOnboardingRequirement = async () => {
-      // Se ainda está carregando auth, aguardar um pouco
-      if (authLoading) {
-        return;
-      }
-
-      // Se não há usuário, não precisa de onboarding
-      if (!user) {
-        setIsRequired(false);
-        setHasCompleted(false);
-        setIsLoading(false);
+      if (authLoading || !user) {
+        setIsLoading(true);
         return;
       }
 
@@ -32,12 +24,10 @@ export const useOnboardingRequired = () => {
           hasProfile: !!profile
         });
         
-        // SIMPLIFICADO: Se não há perfil após 2 segundos, assumir que não precisa onboarding
+        // Se não há perfil, aguardar um pouco mais
         if (!profile) {
-          logger.warn('[ONBOARDING-REQUIRED] Sem perfil - assumindo onboarding não necessário');
+          logger.warn('[ONBOARDING-REQUIRED] Aguardando carregamento do perfil...');
           setTimeout(() => {
-            setIsRequired(false);
-            setHasCompleted(true);
             setIsLoading(false);
           }, 2000);
           return;
@@ -45,16 +35,15 @@ export const useOnboardingRequired = () => {
         
         // Verificar se onboarding foi completado
         const onboardingCompleted = profile?.onboarding_completed === true;
-        const userRole = getUserRoleName(profile);
         
         logger.info('[ONBOARDING-REQUIRED] Status do onboarding:', {
           userId: user.id.substring(0, 8) + '***',
           onboardingCompleted,
-          userRole
+          userRole: getUserRoleName(profile)
         });
 
         // Administradores podem pular onboarding
-        if (userRole === 'admin') {
+        if (getUserRoleName(profile) === 'admin') {
           logger.info('[ONBOARDING-REQUIRED] Admin detectado - onboarding opcional');
           setIsRequired(false);
           setHasCompleted(true);
@@ -70,25 +59,15 @@ export const useOnboardingRequired = () => {
         
       } catch (error) {
         logger.error('[ONBOARDING-REQUIRED] Erro ao verificar onboarding:', error);
-        // SEGURANÇA: Em caso de erro, assumir que não precisa onboarding para evitar loop
-        setIsRequired(false);
-        setHasCompleted(true);
+        // SEGURANÇA: Em caso de erro, assumir que precisa fazer onboarding
+        setIsRequired(true);
+        setHasCompleted(false);
       } finally {
         setIsLoading(false);
       }
     };
 
-    // Timeout de emergência - máximo 4 segundos
-    const emergencyTimeout = setTimeout(() => {
-      logger.warn('[ONBOARDING-REQUIRED] Timeout de emergência');
-      setIsRequired(false);
-      setHasCompleted(true);
-      setIsLoading(false);
-    }, 4000);
-
     checkOnboardingRequirement();
-
-    return () => clearTimeout(emergencyTimeout);
   }, [user, profile, authLoading]);
 
   return {

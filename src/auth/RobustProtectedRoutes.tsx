@@ -8,7 +8,7 @@ import { SecurityProvider } from "@/contexts/auth/SecurityContext";
 import { InviteTokenManager } from "@/utils/inviteTokenManager";
 import { useLoadingTimeoutEnhanced } from "@/hooks/useLoadingTimeoutEnhanced";
 import { logger } from "@/utils/logger";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 
 interface RobustProtectedRoutesProps {
   children: ReactNode;
@@ -20,31 +20,19 @@ export const RobustProtectedRoutes = ({ children, allowInviteFlow = false }: Rob
   const { user, isLoading: authLoading } = useAuth();
   const { isRequired: onboardingRequired, isLoading: onboardingLoading } = useOnboardingRequired();
   const [hasError, setHasError] = useState(false);
-  const [forceRedirect, setForceRedirect] = useState(false);
 
   const isInInviteFlow = InviteTokenManager.hasToken() || location.pathname.includes('/invite');
   const totalLoading = authLoading || onboardingLoading;
 
-  // Timeout reduzido para 8 segundos
   const { hasTimedOut, retry } = useLoadingTimeoutEnhanced({
     isLoading: totalLoading,
     context: 'protected-routes',
-    timeoutMs: 8000,
+    timeoutMs: 12000,
     onTimeout: () => {
       logger.error("[PROTECTED-ROUTES] Timeout na verificação de acesso");
       setHasError(true);
     }
   });
-
-  // Fallback de emergência
-  useEffect(() => {
-    const emergencyTimeout = setTimeout(() => {
-      logger.warn("[PROTECTED-ROUTES] Fallback de emergência");
-      setForceRedirect(true);
-    }, 10000); // 10 segundos
-
-    return () => clearTimeout(emergencyTimeout);
-  }, []);
 
   logger.info("[PROTECTED-ROUTES] Estado:", {
     pathname: location.pathname,
@@ -55,8 +43,7 @@ export const RobustProtectedRoutes = ({ children, allowInviteFlow = false }: Rob
     allowInviteFlow,
     isInInviteFlow,
     hasError,
-    hasTimedOut,
-    forceRedirect
+    hasTimedOut
   });
 
   const handleRetry = () => {
@@ -74,15 +61,6 @@ export const RobustProtectedRoutes = ({ children, allowInviteFlow = false }: Rob
     });
     window.location.href = '/auth';
   };
-
-  // FORÇAR REDIRECIONAMENTO em caso de timeout crítico
-  if (forceRedirect) {
-    if (user) {
-      return <Navigate to="/dashboard" replace />;
-    } else {
-      return <Navigate to="/auth" replace />;
-    }
-  }
 
   // Se há timeout ou erro
   if (hasTimedOut || hasError) {
