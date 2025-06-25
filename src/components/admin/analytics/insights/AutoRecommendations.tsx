@@ -42,6 +42,43 @@ export const AutoRecommendations: React.FC<AutoRecommendationsProps> = ({
     // Aqui implementaria a lógica real de dismissal
   };
 
+  const getTypeIcon = (type: string) => {
+    switch (type) {
+      case 'performance':
+        return <TrendingUp className="h-5 w-5 text-blue-600" />;
+      case 'engagement':
+        return <Users className="h-5 w-5 text-green-600" />;
+      case 'user_experience':
+        return <Target className="h-5 w-5 text-purple-600" />;
+      case 'content':
+        return <CheckCircle className="h-5 w-5 text-orange-600" />;
+      default:
+        return <Lightbulb className="h-5 w-5 text-yellow-600" />;
+    }
+  };
+
+  const getPriorityBadge = (priority: number) => {
+    if (priority >= 8) {
+      return (
+        <Badge className="bg-red-100 text-red-800 border-red-200 text-xs">
+          ALTA
+        </Badge>
+      );
+    } else if (priority >= 5) {
+      return (
+        <Badge className="bg-yellow-100 text-yellow-800 border-yellow-200 text-xs">
+          MÉDIA
+        </Badge>
+      );
+    } else {
+      return (
+        <Badge className="bg-gray-100 text-gray-800 border-gray-200 text-xs">
+          BAIXA
+        </Badge>
+      );
+    }
+  };
+
   if (loading) {
     return <LoadingScreen variant="modern" type="stats" fullScreen={false} />;
   }
@@ -79,18 +116,10 @@ export const AutoRecommendations: React.FC<AutoRecommendationsProps> = ({
             <div key={rec.id} className="p-4 border border-gray-200 rounded-lg hover:shadow-md transition-shadow">
               <div className="flex items-start justify-between mb-3">
                 <div className="flex items-center gap-2">
-                  {rec.type === 'opportunity' && <TrendingUp className="h-5 w-5 text-blue-600" />}
-                  {rec.type === 'warning' && <AlertTriangle className="h-5 w-5 text-orange-600" />}
-                  {rec.type === 'success' && <CheckCircle className="h-5 w-5 text-green-600" />}
+                  {getTypeIcon(rec.type)}
                   <h4 className="font-semibold text-gray-900">{rec.title}</h4>
                 </div>
-                <Badge className={cn("text-xs", {
-                  "bg-green-100 text-green-800 border-green-200": rec.priority === 'high',
-                  "bg-yellow-100 text-yellow-800 border-yellow-200": rec.priority === 'medium',
-                  "bg-gray-100 text-gray-800 border-gray-200": rec.priority === 'low',
-                })}>
-                  {rec.priority.toUpperCase()}
-                </Badge>
+                {getPriorityBadge(rec.priority)}
               </div>
               
               <p className="mb-3 text-gray-600">{rec.description}</p>
@@ -99,7 +128,7 @@ export const AutoRecommendations: React.FC<AutoRecommendationsProps> = ({
                 <div className="flex items-center gap-2">
                   <Clock className="h-4 w-4 text-gray-500" />
                   <span className="text-sm text-gray-500">
-                    Atualizado em {format(new Date(rec.updated_at), 'dd/MM/yyyy', { locale: ptBR })}
+                    Atualizado em {format(new Date(rec.created_at), 'dd/MM/yyyy', { locale: ptBR })}
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
