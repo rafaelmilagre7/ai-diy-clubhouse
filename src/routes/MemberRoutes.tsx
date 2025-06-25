@@ -1,8 +1,7 @@
 
 import { RouteObject } from "react-router-dom";
-import { ProtectedRoutes } from '@/auth/ProtectedRoutes';
+import { RobustProtectedRoutes } from '@/auth/RobustProtectedRoutes';
 import MemberLayout from '@/components/layout/MemberLayout';
-import RootRedirect from '@/components/routing/RootRedirect';
 
 // Member pages
 import Dashboard from '@/pages/member/Dashboard';
@@ -40,18 +39,10 @@ import NotificationSettingsPage from '@/pages/profile/NotificationSettingsPage';
 // Função helper para criar rotas protegidas com MemberLayout
 const createProtectedRoute = (path: string, Component: React.ComponentType<any>) => ({
   path,
-  element: <ProtectedRoutes><MemberLayout><Component /></MemberLayout></ProtectedRoutes>
+  element: <RobustProtectedRoutes><MemberLayout><Component /></MemberLayout></RobustProtectedRoutes>
 });
 
-// Log para diagnóstico
-console.log("Carregando rotas de membros com RootRedirect corrigido");
-
 export const memberRoutes: RouteObject[] = [
-  // Rota raiz agora usa RootRedirect em vez de Dashboard direto
-  { 
-    path: "/", 
-    element: <RootRedirect />
-  },
   createProtectedRoute("/dashboard", Dashboard),
   
   createProtectedRoute("/solutions", Solutions),
@@ -61,12 +52,16 @@ export const memberRoutes: RouteObject[] = [
   createProtectedRoute("/profile", Profile),
   createProtectedRoute("/profile/edit", EditProfile),
   createProtectedRoute("/profile/notifications", NotificationSettingsPage),
+  
+  // Rota CAPA da solução (apenas informações)
   createProtectedRoute("/solution/:id", SolutionDetails),
   createProtectedRoute("/solution/:id/certificate", SolutionCertificate),
-  createProtectedRoute("/implement/:id/:moduleIdx", SolutionImplementation),
+  
+  // Rota INTERNA da implementação (com abas)
   createProtectedRoute("/implementation/:id", SolutionImplementation),
-  createProtectedRoute("/implementation/:id/:moduleIdx", SolutionImplementation),
   createProtectedRoute("/implementation/completed/:id", ImplementationCompleted),
+  
+  // Benefícios e eventos
   createProtectedRoute("/benefits", Benefits),
   createProtectedRoute("/events", Events),
   

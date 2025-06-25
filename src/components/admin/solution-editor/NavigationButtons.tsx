@@ -13,11 +13,6 @@ interface NavigationButtonsProps {
   saving: boolean;
 }
 
-/**
- * Componente de navegação entre etapas do editor de solução
- * Provê botões para avançar/retroceder nas etapas
- * Adapta-se ao contexto da etapa atual (última etapa mostra publicação)
- */
 const NavigationButtons: React.FC<NavigationButtonsProps> = ({
   currentStep,
   totalSteps,
@@ -30,9 +25,7 @@ const NavigationButtons: React.FC<NavigationButtonsProps> = ({
   const { toast } = useToast();
   
   const handleNext = () => {
-    // Primeiro salva os dados e depois avança
     onSave();
-    // Adicionamos um pequeno delay para garantir que o salvamento ocorra antes de avançar
     setTimeout(() => {
       onNext();
       toast({

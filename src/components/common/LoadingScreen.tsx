@@ -1,49 +1,60 @@
 
 import React from "react";
-import { LoadingState } from "./LoadingState";
+import { Loader2 } from "lucide-react";
 
 interface LoadingScreenProps {
   message?: string;
   showProgress?: boolean;
 }
 
-const LoadingScreen = ({ 
-  message = "Carregando...", 
+const LoadingScreen: React.FC<LoadingScreenProps> = ({ 
+  message = "Carregando...",
   showProgress = false 
-}: LoadingScreenProps) => {
+}) => {
+  const [progress, setProgress] = React.useState(0);
+  
+  // Simular progresso para melhor UX
+  React.useEffect(() => {
+    if (!showProgress) return;
+    
+    const interval = setInterval(() => {
+      setProgress(prev => {
+        if (prev >= 90) return prev; // Parar em 90% até terminar de fato
+        return prev + Math.random() * 15;
+      });
+    }, 200);
+    
+    return () => clearInterval(interval);
+  }, [showProgress]);
+
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-background">
-      <div className="flex flex-col items-center space-y-4">
-        {/* Logo animado */}
-        <div className="relative mb-4">
-          <div className="w-16 h-16 border-4 border-viverblue/30 border-t-viverblue rounded-full animate-spin"></div>
-          <div className="absolute inset-0 w-16 h-16 border-4 border-transparent border-r-viverblue/50 rounded-full animate-spin animate-reverse"></div>
+    <div className="flex flex-col items-center justify-center min-h-screen bg-background">
+      <div className="text-center space-y-4">
+        <div className="flex items-center justify-center">
+          <img
+            src="https://milagredigital.com/wp-content/uploads/2025/04/viverdeiaclub.avif"
+            alt="VIVER DE IA Club"
+            className="h-16 w-auto mb-4"
+          />
         </div>
         
-        {/* Mensagem principal */}
-        <div className="text-center">
-          <h2 className="text-xl font-semibold text-foreground mb-2">
-            VIVER DE IA Hub
-          </h2>
-          <p className="text-muted-foreground animate-pulse">
-            {message}
-          </p>
+        <div className="flex items-center justify-center space-x-2">
+          <Loader2 className="h-6 w-6 animate-spin text-primary" />
+          <span className="text-lg font-medium text-foreground">{message}</span>
         </div>
-
-        {/* Barra de progresso simulada se solicitada */}
+        
         {showProgress && (
-          <div className="w-64 bg-muted rounded-full h-2 overflow-hidden">
-            <div className="bg-viverblue h-full animate-pulse" style={{ width: '60%' }}></div>
+          <div className="w-64 bg-secondary rounded-full h-2">
+            <div 
+              className="bg-primary h-2 rounded-full transition-all duration-300 ease-out"
+              style={{ width: `${progress}%` }}
+            />
           </div>
         )}
-      </div>
-      
-      {/* Indicadores de status */}
-      <div className="absolute bottom-8 text-center text-xs text-muted-foreground">
-        <div className="flex items-center justify-center space-x-2">
-          <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-          <span>Sistema operacional</span>
-        </div>
+        
+        <p className="text-sm text-muted-foreground max-w-sm">
+          Configurando sua experiência personalizada...
+        </p>
       </div>
     </div>
   );

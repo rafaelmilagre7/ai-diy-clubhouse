@@ -1,184 +1,204 @@
 
+import React from "react";
 import { Solution } from "@/lib/supabase";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { PlayCircle, CheckCircle, Award } from "lucide-react";
+import { 
+  Play, 
+  Clock, 
+  Target, 
+  TrendingUp, 
+  Settings, 
+  BarChart,
+  FileText,
+  Wrench,
+  Video,
+  ArrowRight
+} from "lucide-react";
+import { useSolutionStats } from "@/hooks/useSolutionStats";
 import { useNavigate } from "react-router-dom";
-import { SolutionCategory } from "@/lib/types/categoryTypes";
-import { useEffect } from "react";
 
 interface SolutionSidebarProps {
   solution: Solution;
-  progress: any | null;
-  startImplementation: () => void;
-  continueImplementation: () => void;
+  progress?: any;
+  startImplementation?: () => Promise<any>;
+  continueImplementation?: () => void;
   initializing?: boolean;
 }
+
+const getDifficultyColor = (difficulty: string) => {
+  switch (difficulty) {
+    case "easy":
+      return "text-emerald-400 bg-emerald-400/10";
+    case "medium":
+      return "text-amber-400 bg-amber-400/10";
+    case "advanced":
+      return "text-rose-400 bg-rose-400/10";
+    default:
+      return "text-gray-400 bg-gray-400/10";
+  }
+};
+
+const getDifficultyLabel = (difficulty: string) => {
+  switch (difficulty) {
+    case "easy":
+      return "Fácil";
+    case "medium":
+      return "Médio";
+    case "advanced":
+      return "Avançado";
+    default:
+      return difficulty;
+  }
+};
+
+const getCategoryIcon = (category: string) => {
+  switch (category) {
+    case 'Receita':
+      return <TrendingUp className="h-4 w-4" />;
+    case 'Operacional':
+      return <Settings className="h-4 w-4" />;
+    case 'Estratégia':
+      return <BarChart className="h-4 w-4" />;
+    default:
+      return <Target className="h-4 w-4" />;
+  }
+};
 
 export const SolutionSidebar = ({ 
   solution, 
   progress, 
-  startImplementation,
-  continueImplementation,
-  initializing = false
+  startImplementation, 
+  continueImplementation, 
+  initializing 
 }: SolutionSidebarProps) => {
+  const { stats, loading: statsLoading } = useSolutionStats(solution.id);
   const navigate = useNavigate();
-  
-  // Log de depuração para identificar o problema
-  useEffect(() => {
-    console.log("[SOLUTION_SIDEBAR] Estado do progresso:", {
-      solutionId: solution.id,
-      progress: progress,
-      isCompleted: progress?.is_completed,
-      hasProgress: !!progress,
-      progressKeys: progress ? Object.keys(progress) : []
-    });
-  }, [progress, solution.id]);
-  
-  // Handler para o botão de implementação
-  const handleImplementation = () => {
-    console.log("[SOLUTION_SIDEBAR] Ação de implementação:", {
-      hasProgress: !!progress,
-      isCompleted: progress?.is_completed
-    });
-    
-    if (progress?.is_completed) {
-      navigate(`/implement/${solution.id}/0`);
-    } else if (progress) {
-      console.log("[SOLUTION_SIDEBAR] Chamando continueImplementation");
-      continueImplementation();
+
+  const handleImplementationClick = async () => {
+    if (progress?.is_completed || progress?.current_module > 0) {
+      // Se já há progresso, vai direto para a implementação
+      navigate(`/implementation/${solution.id}`);
+    } else if (startImplementation) {
+      // Se não há progresso, inicia a implementação
+      await startImplementation();
+      navigate(`/implementation/${solution.id}`);
     } else {
-      console.log("[SOLUTION_SIDEBAR] Chamando startImplementation");
-      startImplementation();
+      // Fallback - vai direto para implementação
+      navigate(`/implementation/${solution.id}`);
     }
   };
-  
-  // Função auxiliar para converter categoria para texto de exibição
-  const getCategoryDisplayText = (category: SolutionCategory): string => {
-    switch (category) {
-      case 'Receita':
-        return "Receita";
-      case 'Operacional':
-        return "Operacional";
-      case 'Estratégia':
-        return "Estratégia";
-      default:
-        return String(category);
-    }
+
+  const getButtonText = () => {
+    if (initializing) return "Iniciando...";
+    if (progress?.is_completed) return "Revisar Implementação";
+    if (progress?.current_module > 0) return "Continuar Implementação";
+    return "Implementar Solução";
   };
-  
+
+  const getButtonIcon = () => {
+    if (progress?.is_completed || progress?.current_module > 0) {
+      return <ArrowRight className="h-5 w-5 mr-2" />;
+    }
+    return <Play className="h-5 w-5 mr-2" />;
+  };
+
   return (
-    <div className="bg-[#151823] border border-white/5 p-6 rounded-lg shadow-sm space-y-6 hidden sm:block">
-      <div>
-        <h3 className="font-medium mb-2 text-neutral-100">Status de Implementação</h3>
-        {progress ? (
-          progress.is_completed ? (
-            <div className="flex items-center text-green-500">
-              <CheckCircle className="h-5 w-5 mr-2" />
-              <span>Implementação concluída</span>
-            </div>
-          ) : (
-            <div>
-              <p className="text-sm text-neutral-400">
-                Implementação em andamento
-              </p>
-            </div>
-          )
-        ) : (
-          <p className="text-sm text-neutral-400">
-            Implementação não iniciada
-          </p>
-        )}
-      </div>
-      
-      <div className="pt-4 border-t border-white/5">
-        {progress?.is_completed ? (
-          <div className="space-y-3">
-            <Button 
-              className="w-full bg-green-600 hover:bg-green-700"
-              onClick={() => navigate(`/solution/${solution.id}/certificate`)}
-            >
-              <Award className="mr-2 h-5 w-5" />
-              Ver Certificado
-            </Button>
-            <Button 
-              className="w-full" 
-              onClick={handleImplementation}
-              variant="outline"
-            >
-              <PlayCircle className="mr-2 h-5 w-5" />
-              Revisar Implementação
-            </Button>
-          </div>
-        ) : (
-          <Button 
-            className="w-full" 
-            onClick={handleImplementation} 
+    <div className="space-y-6">
+      {/* Botão de Implementar */}
+      <Card className="bg-gradient-to-br from-viverblue/20 to-viverblue/5 border border-viverblue/30">
+        <CardContent className="p-6">
+          <Button
+            onClick={handleImplementationClick}
             disabled={initializing}
+            className="w-full bg-viverblue hover:bg-viverblue/90 text-white font-medium py-3"
+            size="lg"
           >
-            <PlayCircle className="mr-2 h-5 w-5" />
-            {initializing ? 'Preparando...' : 
-             progress ? 'Continuar Implementação' : 'Implementar solução'}
+            {getButtonIcon()}
+            {getButtonText()}
           </Button>
-        )}
-      </div>
-      
-      <div className="pt-4 border-t border-white/5">
-        <h3 className="font-medium mb-2 text-neutral-100">Informações</h3>
-        <div className="space-y-2">
-          {solution.category && (
-            <div className="flex justify-between text-sm">
-              <span className="text-neutral-400">Categoria:</span>
-              <span className="font-medium text-neutral-200">
-                {getCategoryDisplayText(solution.category)}
-              </span>
-            </div>
-          )}
-          {solution.difficulty && (
-            <div className="flex justify-between text-sm">
-              <span className="text-neutral-400">Dificuldade:</span>
-              <span className="font-medium text-neutral-200">
-                {solution.difficulty === "easy" && "Fácil"}
-                {solution.difficulty === "medium" && "Médio"}
-                {solution.difficulty === "advanced" && "Avançado"}
-              </span>
-            </div>
-          )}
-          {/* estimated_time removido da interface Solution, só mostrar com fallback se existir */}
-          {"estimated_time" in solution && typeof (solution as any).estimated_time === "number" && (solution as any).estimated_time > 0 && (
-            <div className="flex justify-between text-sm">
-              <span className="text-neutral-400">Tempo estimado:</span>
-              <span className="font-medium text-neutral-200">
-                {(solution as any).estimated_time} minutos
-              </span>
-            </div>
-          )}
-          {/* success_rate também removido */}
-          {"success_rate" in solution && typeof (solution as any).success_rate === "number" && (solution as any).success_rate > 0 && (
-            <div className="flex justify-between text-sm">
-              <span className="text-neutral-400">Taxa de sucesso:</span>
-              <span className="font-medium text-neutral-200">
-                {(solution as any).success_rate}%
-              </span>
-            </div>
-          )}
-        </div>
-      </div>
-      
-      {solution.tags && solution.tags.length > 0 && (
-        <div className="pt-4 border-t border-white/5">
-          <h3 className="font-medium mb-2 text-neutral-100">Tags</h3>
-          <div className="flex flex-wrap gap-2">
-            {solution.tags.map((tag, index) => (
-              <span 
-                key={index}
-                className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-900/40 text-blue-200 border border-blue-700/30"
-              >
-                {tag}
-              </span>
-            ))}
+          <p className="text-xs text-neutral-400 mt-3 text-center">
+            {progress?.is_completed 
+              ? "Revise sua implementação completa"
+              : progress?.current_module > 0
+              ? "Continue de onde parou"
+              : "Comece agora a aplicar esta solução"
+            }
+          </p>
+        </CardContent>
+      </Card>
+
+      {/* Informações da Solução */}
+      <Card className="bg-[#151823] border border-white/5">
+        <CardHeader>
+          <CardTitle className="text-neutral-100 text-lg">
+            Detalhes da Solução
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {/* Categoria */}
+          <div className="flex items-center justify-between">
+            <span className="text-neutral-400 text-sm">Categoria</span>
+            <Badge variant="outline" className="bg-neutral-800 text-neutral-200 border-neutral-700 flex items-center gap-1">
+              {getCategoryIcon(solution.category)}
+              {solution.category}
+            </Badge>
           </div>
-        </div>
-      )}
+
+          {/* Dificuldade */}
+          <div className="flex items-center justify-between">
+            <span className="text-neutral-400 text-sm">Dificuldade</span>
+            <Badge 
+              variant="outline" 
+              className={`border-0 ${getDifficultyColor(solution.difficulty)}`}
+            >
+              {getDifficultyLabel(solution.difficulty)}
+            </Badge>
+          </div>
+
+          {/* Estatísticas de Conteúdo */}
+          {!statsLoading && (
+            <>
+              {stats.resourcesCount > 0 && (
+                <div className="flex items-center justify-between">
+                  <span className="text-neutral-400 text-sm flex items-center gap-2">
+                    <FileText className="h-4 w-4" />
+                    Recursos
+                  </span>
+                  <span className="text-emerald-400 font-medium">
+                    {stats.resourcesCount}
+                  </span>
+                </div>
+              )}
+
+              {stats.toolsCount > 0 && (
+                <div className="flex items-center justify-between">
+                  <span className="text-neutral-400 text-sm flex items-center gap-2">
+                    <Wrench className="h-4 w-4" />
+                    Ferramentas
+                  </span>
+                  <span className="text-amber-400 font-medium">
+                    {stats.toolsCount}
+                  </span>
+                </div>
+              )}
+
+              {stats.videosCount > 0 && (
+                <div className="flex items-center justify-between">
+                  <span className="text-neutral-400 text-sm flex items-center gap-2">
+                    <Video className="h-4 w-4" />
+                    Vídeos
+                  </span>
+                  <span className="text-purple-400 font-medium">
+                    {stats.videosCount}
+                  </span>
+                </div>
+              )}
+            </>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 };

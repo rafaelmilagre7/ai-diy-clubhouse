@@ -1,32 +1,41 @@
 
-import React, { useEffect, useState } from 'react';
-import { RouterProvider } from 'react-router-dom';
-import { useAuth } from '@/contexts/auth';
-import { useToast } from "@/hooks/use-toast"
-import { Toaster } from "@/components/ui/toaster"
-import { AppRoutes } from '@/routes/AppRoutes';
+import { RouterProvider } from "react-router-dom";
+import { AppRoutes } from "@/routes/AppRoutes";
+import { Toaster } from "@/components/ui/sonner";
+import { useEffect } from "react";
+import { useAuth } from "@/contexts/auth";
+import { logger } from "@/utils/logger";
+import { useSecureSession } from "@/hooks/useSecureSession";
 
 function App() {
-  const { user, isLoading: authLoading } = useAuth();
-  const { toast } = useToast()
-  const [logOnce, setLogOnce] = useState(false);
+  const { user, isLoading } = useAuth();
+  
+  // Configuração de sessão segura mais relaxada para desenvolvimento
+  useSecureSession({
+    maxIdleTime: import.meta.env.DEV ? 120 : 60, // 2h dev, 1h prod
+    checkInterval: import.meta.env.DEV ? 300 : 180, // 5 min dev, 3 min prod  
+    autoLogoutWarning: 15
+  });
 
   useEffect(() => {
-    // Log apenas uma vez para evitar spam
-    if (!logOnce && !authLoading) {
-      if (user) {
-        console.log('[APP] Usuário autenticado:', user.email);
-      } else {
-        console.log('[APP] Nenhum usuário autenticado.');
-      }
-      setLogOnce(true);
+    // Log simplificado para evitar overhead
+    if (import.meta.env.DEV) {
+      logger.info('[APP] App initialized', {
+        hasUser: !!user,
+        isLoading
+      });
     }
-  }, [user, authLoading, logOnce]);
+  }, [user, isLoading]);
 
   return (
     <>
       <RouterProvider router={AppRoutes} />
-      <Toaster />
+      <Toaster 
+        position="top-right"
+        toastOptions={{
+          duration: 4000,
+        }}
+      />
     </>
   );
 }

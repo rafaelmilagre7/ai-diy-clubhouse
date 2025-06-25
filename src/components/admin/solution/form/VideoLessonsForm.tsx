@@ -2,22 +2,11 @@
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { FileUpload } from "@/components/ui/file-upload";
-import { Save, Loader2, Play, Trash2, Plus, Youtube } from "lucide-react";
+import { Save, Loader2, Trash2, Video } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/lib/supabase";
-
-interface VideoResource {
-  id?: string;
-  name: string;
-  description?: string;
-  url: string;
-  thumbnail?: string;
-  metadata?: any;
-}
+import { extractPandaVideoInfo } from "@/lib/supabase/storage";
+import PandaVideoEmbed from "@/components/formacao/comum/PandaVideoEmbed";
 
 interface VideoLessonsFormProps {
   solutionId: string | null;
@@ -25,16 +14,36 @@ interface VideoLessonsFormProps {
   saving: boolean;
 }
 
+interface VideoResource {
+  id?: string;
+  name: string;
+  url: string;
+  type: "video";
+  metadata: {
+    title: string;
+    description: string;
+    url: string;
+    type: "video";
+    videoId: string;
+    embedUrl: string;
+    thumbnailUrl: string;
+    platform: "panda_video";
+  };
+  solution_id: string;
+}
+
 const VideoLessonsForm: React.FC<VideoLessonsFormProps> = ({
   solutionId,
   onSave,
   saving
 }) => {
+  const { toast } = useToast();
   const [videos, setVideos] = useState<VideoResource[]>([]);
   const [loading, setLoading] = useState(true);
   const [savingVideos, setSavingVideos] = useState(false);
-  const [youtubeUrl, setYoutubeUrl] = useState("");
-  const { toast } = useToast();
+  const [embedCode, setEmbedCode] = useState("");
+  const [videoTitle, setVideoTitle] = useState("");
+  const [videoDescription, setVideoDescription] = useState("");
 
   useEffect(() => {
     if (solutionId) {
@@ -46,42 +55,32 @@ const VideoLessonsForm: React.FC<VideoLessonsFormProps> = ({
 
   const fetchVideos = async () => {
     if (!solutionId) return;
-    
+
     try {
       setLoading(true);
-      
       const { data, error } = await supabase
-        .from("solution_resources")
-        .select("*")
-        .eq("solution_id", solutionId as any)
-        .eq("type", "video" as any)
-        .order("created_at");
-        
+        .from('solution_resources')
+        .select('*')
+        .eq('solution_id', solutionId as any)
+        .eq('type', 'video');
+
       if (error) throw error;
-      
-      if (data) {
-        const videoResources = (data as any[]).map((item: any) => {
-          const videoUrl = item.url;
-          const isYoutube = videoUrl.includes('youtube.com') || videoUrl.includes('youtu.be');
-          const metadata = item.metadata ? JSON.parse(item.metadata) : {};
-          
-          return {
-            id: item.id,
-            name: item.name,
-            description: item.format,
-            url: videoUrl,
-            thumbnail: isYoutube ? `https://img.youtube.com/vi/${getYouTubeVideoId(videoUrl)}/maxresdefault.jpg` : undefined,
-            metadata: metadata
-          };
-        });
-        
-        setVideos(videoResources);
-      }
+
+      const videoResources = (data || []).map((item: any) => ({
+        id: item.id,
+        name: item.name,
+        url: item.url,
+        type: "video" as const,
+        metadata: typeof item.metadata === 'string' ? JSON.parse(item.metadata) : item.metadata,
+        solution_id: item.solution_id
+      }));
+
+      setVideos(videoResources);
     } catch (error: any) {
-      console.error("Erro ao carregar vídeos:", error);
+      console.error("Erro ao buscar vídeos:", error);
       toast({
         title: "Erro ao carregar vídeos",
-        description: error.message || "Ocorreu um erro ao tentar carregar os vídeos.",
+        description: error.message || "Não foi possível carregar os vídeos.",
         variant: "destructive",
       });
     } finally {
@@ -89,109 +88,97 @@ const VideoLessonsForm: React.FC<VideoLessonsFormProps> = ({
     }
   };
 
-  const getYouTubeVideoId = (url: string) => {
-    let videoId = "";
-    
-    if (url.includes("youtube.com/watch")) {
-      videoId = new URL(url).searchParams.get("v") || "";
-    } else if (url.includes("youtu.be/")) {
-      videoId = url.split("youtu.be/")[1]?.split("?")[0] || "";
-    } else if (url.includes("youtube.com/embed/")) {
-      videoId = url.split("youtube.com/embed/")[1]?.split("?")[0] || "";
+  const addPandaVideo = async () => {
+    if (!solutionId || !embedCode.trim() || !videoTitle.trim()) {
+      toast({
+        title: "Campos obrigatórios",
+        description: "Preencha o título e o código de incorporação do vídeo.",
+        variant: "destructive",
+      });
+      return;
     }
-    
-    return videoId;
-  };
 
-  const addYouTubeVideo = async () => {
-    if (!solutionId || !youtubeUrl.trim()) return;
-    
     try {
-      const videoId = getYouTubeVideoId(youtubeUrl);
-      
-      if (!videoId) {
-        toast({
-          title: "URL inválido",
-          description: "Por favor, insira um URL válido do YouTube.",
-          variant: "destructive",
-        });
-        return;
+      setSavingVideos(true);
+
+      // Extrair informações do Panda Video
+      const videoInfo = extractPandaVideoInfo(embedCode);
+      if (!videoInfo || !videoInfo.videoId) {
+        throw new Error("Código de incorporação inválido. Certifique-se de que é um iframe do Panda Video.");
       }
-      
-      const embedUrl = `https://www.youtube.com/embed/${videoId}`;
-      const thumbnailUrl = `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
-      
+
+      const thumbnailUrl = `https://player.pandavideo.com.br/thumbnail/${videoInfo.videoId}.jpg`;
+
       const metadata = {
-        title: `Vídeo do YouTube (${videoId})`,
-        description: "Vídeo educacional do YouTube",
-        url: embedUrl,
-        type: "video",
-        format: "YouTube",
-        tags: ["youtube", "video", "educacao"],
-        order: videos.length,
-        downloads: 0,
-        size: 0,
-        version: "1.0",
-        thumbnail: thumbnailUrl
+        title: videoTitle,
+        description: videoDescription || `Vídeo educacional - ${videoTitle}`,
+        url: videoInfo.embedUrl,
+        type: "video" as const,
+        videoId: videoInfo.videoId,
+        embedUrl: videoInfo.embedUrl,
+        thumbnailUrl: thumbnailUrl,
+        platform: "panda_video" as const
       };
-      
-      const newResource = {
-        solution_id: solutionId,
-        name: `Vídeo do YouTube (${videoId})`,
-        url: embedUrl,
-        type: "video",
-        format: "YouTube",
-        metadata: JSON.stringify(metadata),
-        size: 0
-      };
-      
+
       const { data, error } = await supabase
-        .from("solution_resources")
-        .insert(newResource as any)
+        .from('solution_resources')
+        .insert({
+          solution_id: solutionId,
+          name: videoTitle,
+          url: videoInfo.embedUrl,
+          type: 'video',
+          metadata: JSON.stringify(metadata)
+        } as any)
         .select()
         .single();
-        
+
       if (error) throw error;
+
+      const newVideo: VideoResource = {
+        id: data.id,
+        name: videoTitle,
+        url: videoInfo.embedUrl,
+        type: "video",
+        metadata: metadata,
+        solution_id: solutionId
+      };
+
+      setVideos(prev => [...prev, newVideo]);
       
-      if (data) {
-        const newVideo: VideoResource = {
-          id: (data as any).id,
-          name: (data as any).name,
-          description: (data as any).format,
-          url: (data as any).url,
-          thumbnail: thumbnailUrl,
-          metadata: metadata
-        };
-        
-        setVideos([...videos, newVideo]);
-        setYoutubeUrl("");
-        
-        toast({
-          title: "Vídeo adicionado",
-          description: "O vídeo do YouTube foi adicionado com sucesso.",
-        });
-      }
+      // Limpar formulário
+      setEmbedCode("");
+      setVideoTitle("");
+      setVideoDescription("");
+
+      toast({
+        title: "Vídeo adicionado",
+        description: "O vídeo foi adicionado com sucesso.",
+      });
     } catch (error: any) {
       console.error("Erro ao adicionar vídeo:", error);
       toast({
         title: "Erro ao adicionar vídeo",
-        description: error.message || "Ocorreu um erro ao tentar adicionar o vídeo.",
+        description: error.message || "Ocorreu um erro ao adicionar o vídeo.",
         variant: "destructive",
       });
+    } finally {
+      setSavingVideos(false);
     }
   };
 
   const removeVideo = async (videoId: string) => {
     try {
+      setSavingVideos(true);
+
       const { error } = await supabase
-        .from("solution_resources")
+        .from('solution_resources')
         .delete()
-        .eq("id", videoId as any);
-        
+        .eq('id', videoId as any);
+
       if (error) throw error;
-      
-      setVideos(videos.filter(video => video.id !== videoId));
-      
+
+      setVideos(prev => prev.filter(video => video.id !== videoId));
+
       toast({
         title: "Vídeo removido",
         description: "O vídeo foi removido com sucesso.",
@@ -200,76 +187,18 @@ const VideoLessonsForm: React.FC<VideoLessonsFormProps> = ({
       console.error("Erro ao remover vídeo:", error);
       toast({
         title: "Erro ao remover vídeo",
-        description: error.message || "Ocorreu um erro ao tentar remover o vídeo.",
+        description: error.message || "Ocorreu um erro ao remover o vídeo.",
         variant: "destructive",
       });
-    }
-  };
-
-  const handleVideoUpload = async (url: string, fileName: string, fileSize: number) => {
-    if (!solutionId) return;
-    
-    try {
-      const metadata = {
-        title: fileName,
-        description: "Vídeo enviado diretamente",
-        url: url,
-        type: "video",
-        format: "MP4",
-        tags: ["video", "upload"],
-        order: videos.length,
-        downloads: 0,
-        size: fileSize,
-        version: "1.0"
-      };
-      
-      const newResource = {
-        solution_id: solutionId,
-        name: fileName,
-        url: url,
-        type: "video",
-        format: "MP4",
-        metadata: JSON.stringify(metadata),
-        size: fileSize
-      };
-      
-      const { data, error } = await supabase
-        .from("solution_resources")
-        .insert(newResource as any)
-        .select()
-        .single();
-        
-      if (error) throw error;
-      
-      if (data) {
-        const newVideo: VideoResource = {
-          id: (data as any).id,
-          name: (data as any).name,
-          description: (data as any).format,
-          url: (data as any).url,
-          metadata: metadata
-        };
-        
-        setVideos([...videos, newVideo]);
-        
-        toast({
-          title: "Vídeo enviado",
-          description: "O vídeo foi enviado com sucesso.",
-        });
-      }
-    } catch (error: any) {
-      console.error("Erro ao enviar vídeo:", error);
-      toast({
-        title: "Erro ao enviar vídeo",
-        description: error.message || "Ocorreu um erro ao tentar enviar o vídeo.",
-        variant: "destructive",
-      });
+    } finally {
+      setSavingVideos(false);
     }
   };
 
   const saveAndContinue = async () => {
     try {
       setSavingVideos(true);
+      
       onSave();
       
       toast({
@@ -300,75 +229,100 @@ const VideoLessonsForm: React.FC<VideoLessonsFormProps> = ({
     <div className="space-y-6">
       <Card className="border border-[#0ABAB5]/20">
         <CardHeader>
-          <CardTitle>Vídeos Educacionais</CardTitle>
+          <CardTitle>Vídeos Educacionais (Panda Video)</CardTitle>
           <CardDescription>
-            Adicione vídeos do YouTube ou faça upload de arquivos de vídeo para enriquecer o conteúdo da solução.
+            Adicione vídeos do Panda Video para complementar o aprendizado da solução.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          {/* YouTube URL Input */}
-          <div className="space-y-4">
-            <Label className="text-base font-medium">Adicionar vídeo do YouTube</Label>
-            <div className="flex gap-2">
-              <Input
-                placeholder="https://www.youtube.com/watch?v=..."
-                value={youtubeUrl}
-                onChange={(e) => setYoutubeUrl(e.target.value)}
-                className="flex-1"
+          {/* Formulário para adicionar vídeo */}
+          <div className="space-y-4 p-4 border border-dashed border-[#0ABAB5]/30 rounded-lg">
+            <div>
+              <label className="block text-sm font-medium mb-2">
+                Título do Vídeo *
+              </label>
+              <input
+                type="text"
+                value={videoTitle}
+                onChange={(e) => setVideoTitle(e.target.value)}
+                placeholder="Ex: Introdução ao tema"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#0ABAB5]"
               />
-              <Button onClick={addYouTubeVideo} disabled={!youtubeUrl.trim()}>
-                <Youtube className="mr-2 h-4 w-4" />
-                Adicionar
-              </Button>
             </div>
-          </div>
 
-          {/* File Upload */}
-          <div className="space-y-4">
-            <Label className="text-base font-medium">Upload de arquivo de vídeo</Label>
-            <FileUpload 
-              bucketName="solution_files" 
-              folder="videos" 
-              onUploadComplete={handleVideoUpload} 
-              accept="video/*" 
-              maxSize={100} 
-              buttonText="Upload de Vídeo" 
-              fieldLabel="Selecione um arquivo de vídeo (até 100MB)" 
+            <div>
+              <label className="block text-sm font-medium mb-2">
+                Descrição (opcional)
+              </label>
+              <textarea
+                value={videoDescription}
+                onChange={(e) => setVideoDescription(e.target.value)}
+                placeholder="Descrição do conteúdo do vídeo"
+                rows={2}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#0ABAB5]"
+              />
+            </div>
+
+            <PandaVideoEmbed
+              value={embedCode}
+              onChange={(embedCode, videoId, url, thumbnailUrl) => {
+                setEmbedCode(embedCode);
+              }}
+              label="Código de Incorporação do Panda Video *"
+              description="Cole o código iframe completo fornecido pelo Panda Video"
             />
+
+            <Button
+              onClick={addPandaVideo}
+              disabled={savingVideos || !videoTitle.trim() || !embedCode.trim()}
+              className="w-full bg-[#0ABAB5] hover:bg-[#0ABAB5]/90"
+            >
+              {savingVideos ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Adicionando...
+                </>
+              ) : (
+                <>
+                  <Video className="mr-2 h-4 w-4" />
+                  Adicionar Vídeo
+                </>
+              )}
+            </Button>
           </div>
 
-          {/* Video List */}
+          {/* Lista de vídeos adicionados */}
           {videos.length > 0 && (
             <div className="space-y-4">
-              <Label className="text-base font-medium">Vídeos adicionados</Label>
-              <div className="grid gap-4">
+              <h3 className="text-lg font-semibold">Vídeos Adicionados</h3>
+              <div className="space-y-3">
                 {videos.map((video) => (
-                  <div key={video.id} className="flex items-center gap-4 p-4 border rounded-lg">
-                    {video.thumbnail ? (
-                      <img 
-                        src={video.thumbnail} 
-                        alt={video.name} 
-                        className="w-20 h-12 object-cover rounded"
-                        onError={(e) => {
-                          (e.target as HTMLImageElement).style.display = 'none';
-                        }}
-                      />
-                    ) : (
-                      <div className="w-20 h-12 bg-gray-200 rounded flex items-center justify-center">
-                        <Play className="h-6 w-6 text-gray-400" />
+                  <div
+                    key={video.id}
+                    className="flex items-center justify-between p-4 border border-gray-200 rounded-lg bg-gray-50"
+                  >
+                    <div className="flex items-center space-x-4">
+                      {video.metadata.thumbnailUrl && (
+                        <img
+                          src={video.metadata.thumbnailUrl}
+                          alt={video.metadata.title}
+                          className="w-16 h-12 object-cover rounded"
+                        />
+                      )}
+                      <div>
+                        <h4 className="font-medium">{video.metadata.title}</h4>
+                        {video.metadata.description && (
+                          <p className="text-sm text-gray-600">{video.metadata.description}</p>
+                        )}
+                        <p className="text-xs text-gray-500">Panda Video</p>
                       </div>
-                    )}
-                    
-                    <div className="flex-1">
-                      <h4 className="font-medium">{video.name}</h4>
-                      <p className="text-sm text-muted-foreground">{video.description}</p>
                     </div>
-                    
                     <Button
-                      variant="ghost"
+                      variant="outline"
                       size="sm"
-                      onClick={() => video.id && removeVideo(video.id)}
-                      className="text-red-600 hover:text-red-700"
+                      onClick={() => removeVideo(video.id!)}
+                      disabled={savingVideos}
+                      className="text-red-600 hover:text-red-700 hover:bg-red-50"
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>

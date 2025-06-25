@@ -1,17 +1,21 @@
 
-import React from "react";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { AlertCircle } from "lucide-react";
+import React from 'react';
+import { Card, CardContent } from '@/components/ui/card';
+import { AlertTriangle } from 'lucide-react';
 
-const AuthError: React.FC = () => {
+const AuthError = () => {
   return (
-    <Alert variant="destructive" className="mb-4">
-      <AlertCircle className="h-4 w-4" />
-      <AlertTitle>Erro de autenticação</AlertTitle>
-      <AlertDescription>
-        Você precisa estar autenticado para editar soluções. Por favor, faça login novamente.
-      </AlertDescription>
-    </Alert>
+    <Card className="border-red-200 bg-red-50">
+      <CardContent className="p-4">
+        <div className="flex items-center gap-2 text-red-700">
+          <AlertTriangle className="h-5 w-5" />
+          <span className="font-medium">Acesso Restrito</span>
+        </div>
+        <p className="text-red-600 text-sm mt-1">
+          Você precisa estar logado como administrador para editar soluções.
+        </p>
+      </CardContent>
+    </Card>
   );
 };
 

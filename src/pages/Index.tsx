@@ -11,29 +11,33 @@ const Index = () => {
   const [isRedirecting, setIsRedirecting] = useState(false);
   const [progress, setProgress] = useState(0);
   
+  // Definir o título da página
   useDocumentTitle("Viver de IA Hub");
 
+  // Redirecionar automaticamente após verificar estado de autenticação
   useEffect(() => {
     let redirectTimer: number | null = null;
     let progressInterval: number | null = null;
     
-    // Reduzir delay para navegação mais rápida
+    // Só iniciar redirecionamento quando o estado de auth não estiver carregando
     if (!isLoading) {
-      console.log("Index: Iniciando redirecionamento otimizado");
+      console.log("Index: Estado de auth carregado, iniciando redirecionamento");
       setIsRedirecting(true);
       
+      // Verificar se já há uma sessão para redirecionamento mais rápido
       const hasUser = !!user;
-      const redirectDelay = hasUser ? 200 : 800; // Reduzido significativamente
+      const redirectDelay = hasUser ? 300 : 1500;
       
-      // Progresso mais rápido
+      // Atualizar barra de progresso
       progressInterval = window.setInterval(() => {
         setProgress(prev => {
-          const increment = 100 / (redirectDelay / 50);
+          const increment = 100 / (redirectDelay / 100);
           const newProgress = prev + increment;
           return newProgress > 100 ? 100 : newProgress;
         });
-      }, 50);
+      }, 100);
       
+      // Configurar o redirecionamento
       redirectTimer = window.setTimeout(() => {
         const targetRoute = hasUser ? '/dashboard' : '/auth';
         console.log("Index: Redirecionando para", targetRoute);
@@ -41,6 +45,7 @@ const Index = () => {
       }, redirectDelay);
     }
 
+    // Limpar intervalos e timers
     return () => {
       if (redirectTimer) clearTimeout(redirectTimer);
       if (progressInterval) clearInterval(progressInterval);
@@ -79,23 +84,31 @@ const Index = () => {
             <div className="overflow-hidden h-2 mb-4 text-xs flex rounded-full bg-gray-200 dark:bg-gray-700">
               <div 
                 style={{ width: `${progress}%` }} 
-                className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-gradient-to-r from-viverblue to-viverblue-light transition-all duration-200"
+                className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-gradient-to-r from-viverblue to-viverblue-light transition-all duration-300"
               ></div>
             </div>
           </div>
 
           <div className="mt-8 flex justify-center">
             <div className="inline-flex items-center px-5 py-3 border border-transparent text-base font-medium rounded-full shadow-md text-white bg-gradient-to-r from-viverblue to-viverblue-light hover:from-viverblue-dark hover:to-viverblue transition-all">
-              {isLoading ? 'Verificando...' : 
+              {isLoading ? 'Verificando autenticação...' : 
                isRedirecting ? 'Redirecionando...' : 
-               'Bem-vindo ao Hub'
+               'Bem-vindo ao VIVER DE IA Hub'
               }
             </div>
           </div>
+
+          {isLoading && (
+            <div className="mt-4 text-center">
+              <p className="text-sm text-gray-500 dark:text-gray-400 animate-pulse">
+                Carregando suas informações...
+              </p>
+            </div>
+          )}
           
           <div className="text-center mt-4">
             <p className="text-gray-500 dark:text-gray-400">
-              {isRedirecting ? "Carregando automaticamente..." : "Preparando experiência..."}
+              {isRedirecting ? "Redirecionando automaticamente..." : "Preparando sua experiência..."}
             </p>
           </div>
         </div>
