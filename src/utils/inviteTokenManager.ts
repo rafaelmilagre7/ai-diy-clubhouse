@@ -1,4 +1,3 @@
-
 import { extractTokenFromCurrentUrl } from './inviteRouting';
 
 /**
@@ -101,26 +100,47 @@ export class InviteTokenManager {
   }
 
   /**
-   * MELHORIA 4: Limpeza específica para sucesso no fluxo
+   * Limpar token após sucesso no registro/login
    */
   static clearTokenOnSuccess(): void {
-    console.log('[TOKEN-MANAGER] Limpando token após sucesso no fluxo');
-    this.clearToken();
+    try {
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem(TOKEN_KEY);
+        sessionStorage.removeItem(TOKEN_KEY);
+        console.log('[INVITE-TOKEN-MANAGER] ✅ Token limpo após sucesso');
+      }
+    } catch (error) {
+      console.warn('[INVITE-TOKEN-MANAGER] ⚠️ Erro ao limpar token (success):', error);
+    }
   }
 
   /**
-   * MELHORIA 4: Limpeza específica para erro no fluxo
+   * Limpar token após erro
    */
   static clearTokenOnError(): void {
-    console.log('[TOKEN-MANAGER] Limpando token após erro no fluxo');
-    this.clearToken();
+    try {
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem(TOKEN_KEY);
+        sessionStorage.removeItem(TOKEN_KEY);
+        console.log('[INVITE-TOKEN-MANAGER] ❌ Token limpo após erro');
+      }
+    } catch (error) {
+      console.warn('[INVITE-TOKEN-MANAGER] ⚠️ Erro ao limpar token (error):', error);
+    }
   }
 
   /**
-   * MELHORIA 4: Limpeza específica para logout
+   * Limpar token no logout
    */
   static clearTokenOnLogout(): void {
-    console.log('[TOKEN-MANAGER] Limpando token no logout');
-    this.clearToken();
+    try {
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem(TOKEN_KEY);
+        sessionStorage.removeItem(TOKEN_KEY);
+        console.log('[INVITE-TOKEN-MANAGER] 🚪 Token limpo no logout');
+      }
+    } catch (error) {
+      console.warn('[INVITE-TOKEN-MANAGER] ⚠️ Erro ao limpar token (logout):', error);
+    }
   }
 }

@@ -1,216 +1,213 @@
 
 import React, { useState } from 'react';
+import { Eye, EyeOff, Mail, User, Lock, UserPlus } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { EnhancedInput } from '@/components/ui/enhanced-input';
-import { UserPlus, Eye, EyeOff, Mail, User, Lock } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { useInviteRegistration } from '@/hooks/useInviteRegistration';
 
 interface InviteRegisterFormProps {
   email: string;
-  roleName: string;
-  onSubmit: (name: string, password: string) => Promise<any>;
-  isLoading?: boolean;
+  initialName?: string;
+  token: string;
+  onUserExists: () => void;
 }
 
-const InviteRegisterForm = ({ 
-  email, 
-  roleName, 
-  onSubmit, 
-  isLoading = false 
-}: InviteRegisterFormProps) => {
-  const [name, setName] = useState('');
+const InviteRegisterForm = ({ email, initialName = '', token, onUserExists }: InviteRegisterFormProps) => {
+  const [name, setName] = useState(initialName);
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [touched, setTouched] = useState<Record<string, boolean>>({});
 
-  const validateField = (fieldName: string, value: string) => {
-    switch (fieldName) {
-      case 'name':
-        if (!value.trim()) return 'Nome é obrigatório';
-        if (value.trim().length < 2) return 'Nome deve ter pelo menos 2 caracteres';
-        return '';
-      case 'password':
-        if (!value) return 'Senha é obrigatória';
-        if (value.length < 6) return 'Senha deve ter pelo menos 6 caracteres';
-        return '';
-      case 'confirmPassword':
-        if (!value) return 'Confirmação de senha é obrigatória';
-        if (value !== password) return 'Senhas não conferem';
-        return '';
-      default:
-        return '';
-    }
-  };
+  const { registerWithInvite, isRegistering } = useInviteRegistration();
 
-  const handleFieldChange = (fieldName: string, value: string) => {
-    // Atualizar valor
-    if (fieldName === 'name') setName(value);
-    if (fieldName === 'password') setPassword(value);
-    if (fieldName === 'confirmPassword') setConfirmPassword(value);
-
-    // Marcar como touched
-    setTouched(prev => ({ ...prev, [fieldName]: true }));
-
-    // Validar em tempo real se já foi touched
-    if (touched[fieldName] || value.length > 0) {
-      const error = validateField(fieldName, value);
-      setErrors(prev => ({
-        ...prev,
-        [fieldName]: error
-      }));
-    }
-  };
-
-  const validateForm = (): boolean => {
+  const validateForm = () => {
     const newErrors: Record<string, string> = {};
-    
-    const nameError = validateField('name', name);
-    const passwordError = validateField('password', password);
-    const confirmPasswordError = validateField('confirmPassword', confirmPassword);
 
-    if (nameError) newErrors.name = nameError;
-    if (passwordError) newErrors.password = passwordError;
-    if (confirmPasswordError) newErrors.confirmPassword = confirmPasswordError;
+    if (!name.trim()) {
+      newErrors.name = 'Nome é obrigatório';
+    }
+
+    if (!password) {
+      newErrors.password = 'Senha é obrigatória';
+    } else if (password.length < 6) {
+      newErrors.password = 'Senha deve ter pelo menos 6 caracteres';
+    }
+
+    if (!confirmPassword) {
+      newErrors.confirmPassword = 'Confirmação de senha é obrigatória';
+    } else if (password !== confirmPassword) {
+      newErrors.confirmPassword = 'Senhas não coincidem';
+    }
 
     setErrors(newErrors);
-    setTouched({ name: true, password: true, confirmPassword: true });
-    
     return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!validateForm()) return;
+    if (!validateForm()) {
+      return;
+    }
 
-    try {
-      await onSubmit(name.trim(), password);
-    } catch (error) {
-      console.error('Erro no formulário:', error);
+    const result = await registerWithInvite({
+      email,
+      name: name.trim(),
+      password,
+      token
+    });
+
+    if (result.error === 'user_exists') {
+      onUserExists();
     }
   };
 
-  const getRoleDisplayName = (role: string) => {
-    return role === 'formacao' ? 'Formação' : 'Membro do Clube';
-  };
-
   return (
-    <div className="min-h-screen bg-[#0F1419] flex items-center justify-center p-4">
-      <div className="w-full max-w-md space-y-8">
-        <div className="text-center space-y-4">
-          <div className="mx-auto w-16 h-16 bg-viverblue/20 rounded-full flex items-center justify-center">
+    <div className="min-h-screen bg-gradient-to-br from-[#0F111A] to-[#151823] flex items-center justify-center p-4">
+      <Card className="w-full max-w-md bg-[#1A1E2E] border-gray-800 shadow-2xl">
+        <CardHeader className="text-center pb-6">
+          <div className="mx-auto w-16 h-16 bg-viverblue/20 rounded-full flex items-center justify-center mb-4">
             <UserPlus className="w-8 h-8 text-viverblue" />
           </div>
-          
-          <h1 className="text-3xl font-bold text-white">
-            Bem-vindo!
-          </h1>
-          <p className="text-lg text-neutral-300">
-            Complete seu cadastro para começar
+          <CardTitle className="text-2xl font-bold text-white mb-2">
+            Criar sua Conta
+          </CardTitle>
+          <p className="text-neutral-300 text-sm">
+            Complete seu cadastro para acessar o <strong className="text-viverblue">Viver de IA</strong>
           </p>
-        </div>
-
-        <div className="bg-[#1A1E2E] rounded-xl border border-neutral-700 p-6 space-y-4">
-          <div className="flex items-center gap-3">
-            <Mail className="w-5 h-5 text-viverblue flex-shrink-0" />
-            <div className="min-w-0 flex-1">
-              <p className="text-sm font-medium text-neutral-300">
-                Email do convite
-              </p>
-              <p className="text-white text-sm break-all">
-                {email}
+        </CardHeader>
+        
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {/* Email (readonly) */}
+            <div className="space-y-2">
+              <Label htmlFor="email" className="text-white flex items-center gap-2">
+                <Mail className="w-4 h-4" />
+                E-mail
+              </Label>
+              <Input
+                id="email"
+                type="email"
+                value={email}
+                readOnly
+                className="bg-gray-700 border-gray-600 text-gray-300 cursor-not-allowed"
+              />
+              <p className="text-xs text-neutral-400">
+                E-mail do convite (não pode ser alterado)
               </p>
             </div>
-          </div>
-          
-          <div className="flex items-center gap-3">
-            <User className="w-5 h-5 text-viverblue flex-shrink-0" />
-            <div>
-              <p className="text-sm font-medium text-neutral-300">
-                Seu cargo
-              </p>
-              <span className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-viverblue/20 text-viverblue border border-viverblue/30">
-                {getRoleDisplayName(roleName)}
-              </span>
+
+            {/* Nome (editável) */}
+            <div className="space-y-2">
+              <Label htmlFor="name" className="text-white flex items-center gap-2">
+                <User className="w-4 h-4" />
+                Nome Completo
+              </Label>
+              <Input
+                id="name"
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Digite seu nome completo"
+                className="bg-[#0F111A] border-gray-700 text-white placeholder-neutral-400 focus:border-viverblue"
+              />
+              {errors.name && (
+                <p className="text-sm text-red-400">{errors.name}</p>
+              )}
             </div>
-          </div>
-        </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <EnhancedInput
-            label="Nome completo *"
-            type="text"
-            value={name}
-            onChange={(e) => handleFieldChange('name', e.target.value)}
-            placeholder="Digite seu nome completo"
-            disabled={isLoading}
-            error={errors.name}
-          />
-
-          <div className="relative">
-            <EnhancedInput
-              label="Senha *"
-              type={showPassword ? "text" : "password"}
-              value={password}
-              onChange={(e) => handleFieldChange('password', e.target.value)}
-              placeholder="Crie uma senha segura (mín. 6 caracteres)"
-              disabled={isLoading}
-              error={errors.password}
-            />
-            <button
-              type="button"
-              onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-4 top-10 text-neutral-400 hover:text-white transition-colors"
-              disabled={isLoading}
-              tabIndex={-1}
-            >
-              {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-            </button>
-          </div>
-
-          <EnhancedInput
-            label="Confirmar senha *"
-            type="password"
-            value={confirmPassword}
-            onChange={(e) => handleFieldChange('confirmPassword', e.target.value)}
-            placeholder="Digite a senha novamente"
-            disabled={isLoading}
-            error={errors.confirmPassword}
-          />
-
-          <Button
-            type="submit"
-            disabled={isLoading || Object.keys(errors).some(key => errors[key])}
-            className="w-full bg-viverblue hover:bg-viverblue/90 text-white font-semibold py-4 h-auto text-base transition-all duration-200 disabled:opacity-50"
-          >
-            {isLoading ? (
-              <div className="flex items-center gap-3">
-                <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent" />
-                <span>Criando sua conta...</span>
+            {/* Senha */}
+            <div className="space-y-2">
+              <Label htmlFor="password" className="text-white flex items-center gap-2">
+                <Lock className="w-4 h-4" />
+                Senha
+              </Label>
+              <div className="relative">
+                <Input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Digite sua senha"
+                  className="bg-[#0F111A] border-gray-700 text-white placeholder-neutral-400 focus:border-viverblue pr-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-neutral-400 hover:text-white"
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
               </div>
-            ) : (
-              <div className="flex items-center gap-2">
-                <Lock className="w-5 h-5" />
-                <span>Criar Conta e Aceitar Convite</span>
-              </div>
-            )}
-          </Button>
-        </form>
+              {errors.password && (
+                <p className="text-sm text-red-400">{errors.password}</p>
+              )}
+            </div>
 
-        <div className="text-center pt-4">
-          <p className="text-sm text-neutral-400">
-            Já tem uma conta?{' '}
-            <button 
-              onClick={() => window.location.href = '/login'}
-              className="text-viverblue hover:text-viverblue/80 underline font-medium transition-colors"
-              disabled={isLoading}
+            {/* Confirmar Senha */}
+            <div className="space-y-2">
+              <Label htmlFor="confirmPassword" className="text-white flex items-center gap-2">
+                <Lock className="w-4 h-4" />
+                Confirmar Senha
+              </Label>
+              <div className="relative">
+                <Input
+                  id="confirmPassword"
+                  type={showConfirmPassword ? "text" : "password"}
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  placeholder="Confirme sua senha"
+                  className="bg-[#0F111A] border-gray-700 text-white placeholder-neutral-400 focus:border-viverblue pr-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-neutral-400 hover:text-white"
+                >
+                  {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+              {errors.confirmPassword && (
+                <p className="text-sm text-red-400">{errors.confirmPassword}</p>
+              )}
+            </div>
+
+            {/* Botão de Submit */}
+            <Button 
+              type="submit"
+              disabled={isRegistering}
+              className="w-full bg-viverblue hover:bg-viverblue/90 text-white font-medium py-3 mt-6"
+              size="lg"
             >
-              Entre aqui
-            </button>
-          </p>
-        </div>
-      </div>
+              {isRegistering ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  Criando conta...
+                </>
+              ) : (
+                <>
+                  <UserPlus className="w-5 h-5 mr-2" />
+                  Criar Conta
+                </>
+              )}
+            </Button>
+          </form>
+
+          {/* Informações adicionais */}
+          <div className="mt-6 text-center space-y-2">
+            <p className="text-xs text-neutral-400">
+              Ao criar sua conta, você concorda com nossos termos de uso
+            </p>
+            <p className="text-xs text-neutral-500">
+              Token: {token.substring(0, 8)}***
+            </p>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };

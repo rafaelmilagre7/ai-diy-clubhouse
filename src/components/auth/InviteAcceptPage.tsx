@@ -1,103 +1,82 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useSearchParams, Navigate } from 'react-router-dom';
 import { useSimpleAuth } from '@/contexts/auth/SimpleAuthProvider';
+import { useInviteFlow } from '@/hooks/useInviteFlow';
 import { InviteTokenManager } from '@/utils/inviteTokenManager';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { UserPlus, Mail, Shield } from 'lucide-react';
+import InviteRegisterForm from './InviteRegisterForm';
+import InviteUserExistsScreen from './InviteUserExistsScreen';
+import InviteErrorScreen from './InviteErrorScreen';
+import LoadingScreen from '@/components/common/LoadingScreen';
+import { logger } from '@/utils/logger';
 
 const InviteAcceptPage = () => {
   const [searchParams] = useSearchParams();
-  const { user, isLoading } = useSimpleAuth();
+  const { user, isLoading: authLoading } = useSimpleAuth();
+  const [showUserExists, setShowUserExists] = useState(false);
   
   const inviteToken = searchParams.get('token');
-  
+  const { inviteDetails, isLoading: inviteLoading, error: inviteError } = useInviteFlow(inviteToken);
+
+  useEffect(() => {
+    logger.info('[INVITE-ACCEPT-PAGE] 🎯 Inicializando página de aceite:', {
+      hasToken: !!inviteToken,
+      hasUser: !!user,
+      authLoading,
+      inviteLoading,
+      hasInviteDetails: !!inviteDetails,
+      hasInviteError: !!inviteError
+    });
+  }, [inviteToken, user, authLoading, inviteLoading, inviteDetails, inviteError]);
+
   // Se não há token, redirecionar para login
   if (!inviteToken) {
+    logger.warn('[INVITE-ACCEPT-PAGE] ❌ Sem token - redirecionando para login');
     return <Navigate to="/login" replace />;
   }
-  
-  // Se usuário já está logado, redirecionar para onboarding
-  if (user && !isLoading) {
+
+  // Se usuário já está logado, armazenar token e redirecionar para onboarding
+  if (user && !authLoading) {
+    logger.info('[INVITE-ACCEPT-PAGE] ✅ Usuário logado - redirecionando para onboarding');
     InviteTokenManager.storeToken(inviteToken);
     return <Navigate to="/onboarding" replace />;
   }
-  
-  // Mostrar loading enquanto verifica autenticação
-  if (isLoading) {
+
+  // Loading states
+  if (authLoading || inviteLoading) {
+    return <LoadingScreen message="Verificando convite..." />;
+  }
+
+  // Erro no convite
+  if (inviteError || !inviteDetails) {
+    logger.error('[INVITE-ACCEPT-PAGE] ❌ Erro no convite:', inviteError);
     return (
-      <div className="min-h-screen bg-gradient-to-br from-[#0F111A] to-[#151823] flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-viverblue"></div>
-      </div>
+      <InviteErrorScreen 
+        error={inviteError || 'Convite não encontrado ou inválido'}
+        onRetry={() => window.location.reload()}
+      />
     );
   }
-  
-  const handleAcceptInvite = () => {
-    // Armazenar token e redirecionar para onboarding
-    InviteTokenManager.storeToken(inviteToken);
-    window.location.href = '/onboarding';
-  };
+
+  // Mostrar tela de usuário já existe
+  if (showUserExists) {
+    return <InviteUserExistsScreen email={inviteDetails.email} />;
+  }
+
+  // Mostrar formulário de criação de conta
+  logger.info('[INVITE-ACCEPT-PAGE] 🎨 Renderizando formulário de registro:', {
+    email: inviteDetails.email,
+    hasName: !!inviteDetails.name,
+    roleName: inviteDetails.role.name
+  });
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#0F111A] to-[#151823] flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
-        <Card className="bg-[#1A1E2E] border-gray-800 shadow-2xl">
-          <CardHeader className="text-center pb-6">
-            <div className="mx-auto w-16 h-16 bg-viverblue/20 rounded-full flex items-center justify-center mb-4">
-              <UserPlus className="w-8 h-8 text-viverblue" />
-            </div>
-            <CardTitle className="text-2xl font-bold text-white mb-2">
-              Você foi convidado!
-            </CardTitle>
-            <p className="text-neutral-300 text-sm">
-              Aceite seu convite para se juntar ao <strong className="text-viverblue">Viver de IA</strong>
-            </p>
-          </CardHeader>
-          
-          <CardContent className="space-y-6">
-            {/* Informações do convite */}
-            <div className="space-y-3">
-              <div className="flex items-center gap-3 p-3 bg-[#0F111A] rounded-lg border border-gray-700">
-                <Mail className="w-5 h-5 text-viverblue" />
-                <div>
-                  <p className="text-sm font-medium text-white">Convite Exclusivo</p>
-                  <p className="text-xs text-neutral-400">Acesso especial à plataforma</p>
-                </div>
-              </div>
-              
-              <div className="flex items-center gap-3 p-3 bg-[#0F111A] rounded-lg border border-gray-700">
-                <Shield className="w-5 h-5 text-green-400" />
-                <div>
-                  <p className="text-sm font-medium text-white">Seguro e Verificado</p>
-                  <p className="text-xs text-neutral-400">Token validado pelo sistema</p>
-                </div>
-              </div>
-            </div>
-            
-            {/* Botão de aceitar convite */}
-            <Button 
-              onClick={handleAcceptInvite}
-              className="w-full bg-viverblue hover:bg-viverblue/90 text-white font-medium py-3"
-              size="lg"
-            >
-              <UserPlus className="w-5 h-5 mr-2" />
-              Aceitar Convite
-            </Button>
-            
-            {/* Informações adicionais */}
-            <div className="text-center space-y-2">
-              <p className="text-xs text-neutral-400">
-                Ao aceitar, você será direcionado para completar seu cadastro
-              </p>
-              <p className="text-xs text-neutral-500">
-                Token: {inviteToken.substring(0, 8)}***
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    </div>
+    <InviteRegisterForm
+      email={inviteDetails.email}
+      initialName={inviteDetails.name}
+      token={inviteToken}
+      onUserExists={() => setShowUserExists(true)}
+    />
   );
 };
 
