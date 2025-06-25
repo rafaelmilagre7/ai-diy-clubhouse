@@ -17,7 +17,8 @@ export const SmartRedirect = ({ fallback = '/dashboard' }: SmartRedirectProps) =
       hasUser: !!user,
       hasProfile: !!profile,
       userRole: profile ? getUserRoleName(profile) : 'none',
-      isLoading
+      isLoading,
+      fallback
     });
   }
 
@@ -30,7 +31,7 @@ export const SmartRedirect = ({ fallback = '/dashboard' }: SmartRedirectProps) =
   }
 
   if (user && !profile) {
-    return <LoadingScreen message="Carregando perfil..." />;
+    return <Navigate to="/onboarding" replace />;
   }
 
   // Roteamento inteligente baseado no papel do usuário

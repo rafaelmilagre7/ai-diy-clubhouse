@@ -37,6 +37,9 @@ import Benefits from '@/pages/member/Benefits';
 import Events from '@/pages/member/Events';
 import Suggestions from '@/pages/member/Suggestions';
 
+// Profile sub-pages
+import NotificationSettingsPage from '@/pages/profile/NotificationSettingsPage';
+
 // Learning pages
 import LearningPage from '@/pages/member/learning/LearningPage';
 import CourseDetails from '@/pages/member/learning/CourseDetails';
@@ -116,6 +119,7 @@ export const AppRoutes = createBrowserRouter([
   createProtectedRoute("/tools", Tools, MemberLayout),
   createProtectedRoute("/profile", Profile, MemberLayout),
   createProtectedRoute("/profile/edit", EditProfile, MemberLayout),
+  createProtectedRoute("/profile/notifications", NotificationSettingsPage, MemberLayout),
   createProtectedRoute("/benefits", Benefits, MemberLayout),
   createProtectedRoute("/events", Events, MemberLayout),
   createProtectedRoute("/suggestions", Suggestions, MemberLayout),
