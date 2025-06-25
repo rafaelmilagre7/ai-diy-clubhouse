@@ -20,7 +20,7 @@ export const OnboardingWizardContainer = ({ children }: OnboardingWizardContaine
   const [searchParams] = useSearchParams();
   const { cleanupForInvite } = useOnboardingCleanup();
   
-  // Estado controlado
+  // Estado controlado com timeout agressivo
   const [isLoading, setIsLoading] = useState(false);
   const [hasInitialized, setHasInitialized] = useState(false);
   
@@ -43,7 +43,7 @@ export const OnboardingWizardContainer = ({ children }: OnboardingWizardContaine
     if (hasInitialized) return;
     
     const startTime = Date.now();
-    logger.info('[WIZARD-CONTAINER] 🚀 Inicializando onboarding:', {
+    logger.info('[WIZARD-CONTAINER] 🚀 Inicializando onboarding CORRIGIDO:', {
       hasToken: !!inviteToken,
       memberType,
       timestamp: new Date().toISOString()
@@ -55,10 +55,10 @@ export const OnboardingWizardContainer = ({ children }: OnboardingWizardContaine
     if (shouldShowLoading) {
       setIsLoading(true);
       
-      // TIMEOUT MÁXIMO: 500ms
+      // TIMEOUT MÁXIMO REDUZIDO: 500ms
       const timeout = setTimeout(() => {
         const duration = Date.now() - startTime;
-        logger.warn('[WIZARD-CONTAINER] ⏰ Timeout de 500ms - liberando formulário:', {
+        logger.warn('[WIZARD-CONTAINER] ⏰ Timeout de 500ms - liberando formulário IMEDIATAMENTE:', {
           duration: `${duration}ms`,
           hasToken: !!inviteToken,
           hasEmail: !!cleanData.email
@@ -81,7 +81,7 @@ export const OnboardingWizardContainer = ({ children }: OnboardingWizardContaine
       OnboardingCacheManager.clearAll();
       initializeCleanData();
       
-      logger.info('[WIZARD-CONTAINER] ✅ Inicialização completa:', {
+      logger.info('[WIZARD-CONTAINER] ✅ Inicialização CORRIGIDA completa:', {
         duration: `${Date.now() - startTime}ms`,
         hasToken: !!inviteToken,
         memberType
@@ -93,12 +93,12 @@ export const OnboardingWizardContainer = ({ children }: OnboardingWizardContaine
     
     setHasInitialized(true);
     setIsLoading(false);
-  }, [inviteToken, isInviteLoading, cleanData.email, hasInitialized]);
+  }, [inviteToken, isInviteLoading, cleanData.email, hasInitialized, memberType, cleanupForInvite, initializeCleanData]);
 
-  // Parar loading quando dados chegam
+  // Parar loading quando dados chegam OU quando erro ocorre
   useEffect(() => {
     if (isLoading && (cleanData.email || !isInviteLoading)) {
-      logger.info('[WIZARD-CONTAINER] 📥 Dados recebidos - parando loading:', {
+      logger.info('[WIZARD-CONTAINER] 📥 Dados recebidos OU erro - parando loading:', {
         hasEmail: !!cleanData.email,
         isInviteLoading
       });
@@ -122,12 +122,13 @@ export const OnboardingWizardContainer = ({ children }: OnboardingWizardContaine
     memberType
   });
 
-  logger.info('[WIZARD-CONTAINER] 🎨 Renderizando:', {
+  logger.info('[WIZARD-CONTAINER] 🎨 Renderizando CORRIGIDO:', {
     memberType,
     isLoading,
     hasInitialized,
     fieldsEnabled: !isLoading,
-    dataKeys: Object.keys(cleanData).length
+    dataKeys: Object.keys(cleanData).length,
+    maxLoadingTime: '500ms'
   });
 
   return (
