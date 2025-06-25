@@ -5,6 +5,7 @@ import App from "./App.tsx";
 import "./index.css";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { SimpleAuthProvider } from "@/contexts/auth/SimpleAuthProvider";
+import { LoggingProvider } from "@/hooks/useLogging";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -19,7 +20,9 @@ createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
       <SimpleAuthProvider>
-        <App />
+        <LoggingProvider>
+          <App />
+        </LoggingProvider>
       </SimpleAuthProvider>
     </QueryClientProvider>
   </StrictMode>

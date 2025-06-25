@@ -8,7 +8,7 @@ import { Search, Filter, ShieldAlert } from 'lucide-react';
 import LoadingScreen from '@/components/common/LoadingScreen';
 import { Solution } from '@/lib/supabase';
 import { useToolsData } from '@/hooks/useToolsData';
-import { useLogging } from '@/contexts/logging';
+import { useLogging } from '@/hooks/useLogging';
 import { useDocumentTitle } from '@/hooks/use-document-title';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
@@ -18,7 +18,7 @@ const Solutions = () => {
   // Definir título da página
   useDocumentTitle('Soluções | VIVER DE IA Club');
   
-  // Logger para depuração
+  // Logger principal do hooks/useLogging.tsx
   const { log } = useLogging();
   
   // Garantir que as ferramentas estejam corretamente configuradas, mas ignorar erros

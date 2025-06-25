@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { useEffect } from "react";
 import { useSimpleAuth } from "@/contexts/auth/SimpleAuthProvider";
 import { logger } from "@/utils/logger";
+import { LoggingErrorBoundary } from "@/components/common/LoggingErrorBoundary";
 
 function App() {
   const { user, isLoading, error } = useSimpleAuth();
@@ -47,7 +48,7 @@ function App() {
   console.log('[APP] Renderizando RouterProvider');
 
   return (
-    <>
+    <LoggingErrorBoundary>
       <RouterProvider router={AppRoutes} />
       <Toaster 
         position="top-right"
@@ -55,7 +56,7 @@ function App() {
           duration: 4000,
         }}
       />
-    </>
+    </LoggingErrorBoundary>
   );
 }
 
