@@ -3,7 +3,7 @@ import { FC, memo, useMemo } from "react";
 import { Solution } from "@/lib/supabase";
 import { ModernDashboardHeader } from "./ModernDashboardHeader";
 import { OptimizedKpiGrid } from "./OptimizedKpiGrid";
-import { useAuth } from "@/contexts/auth";
+import { useSimpleAuth } from "@/contexts/auth/SimpleAuthProvider";
 import { SolutionsGrid } from "./SolutionsGrid";
 import { NoSolutionsPlaceholder } from "./NoSolutionsPlaceholder";
 import { SolutionsGridLoader } from "./SolutionsGridLoader";
@@ -30,7 +30,16 @@ export const OptimizedDashboardLayout: FC<OptimizedDashboardLayoutProps> = memo(
   isLoading = false,
   performance
 }) => {
-  const { profile } = useAuth();
+  const { profile } = useSimpleAuth();
+
+  console.log('[OptimizedDashboardLayout] Renderizando com:', {
+    hasProfile: !!profile,
+    profileName: profile?.name,
+    isLoading,
+    activeCount: active?.length || 0,
+    completedCount: completed?.length || 0,
+    recommendedCount: recommended?.length || 0
+  });
 
   const userName = useMemo(() => 
     profile?.name?.split(" ")[0] || "Membro"

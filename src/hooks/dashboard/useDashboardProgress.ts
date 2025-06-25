@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { useAuth } from "@/contexts/auth";
+import { useSimpleAuth } from "@/contexts/auth/SimpleAuthProvider";
 import { supabase } from "@/lib/supabase";
 import { Solution } from "@/lib/supabase";
 
@@ -22,15 +22,21 @@ export interface Dashboard {
 }
 
 export const useDashboardProgress = () => {
-  const { user } = useAuth();
+  const { user } = useSimpleAuth();
   const [loading, setLoading] = useState(true);
   const [progress, setProgress] = useState<UserProgress[]>([]);
   const [solutions, setSolutions] = useState<Solution[]>([]);
   const [error, setError] = useState<string | null>(null);
 
+  console.log('[DASHBOARD-PROGRESS] Inicializando hook:', {
+    hasUser: !!user,
+    userId: user?.id?.substring(0, 8)
+  });
+
   useEffect(() => {
     const fetchData = async () => {
       if (!user) {
+        console.log('[DASHBOARD-PROGRESS] Sem usuário, não carregando dados');
         setLoading(false);
         return;
       }
@@ -38,6 +44,8 @@ export const useDashboardProgress = () => {
       try {
         setLoading(true);
         setError(null);
+
+        console.log('[DASHBOARD-PROGRESS] Carregando soluções e progresso...');
 
         // Buscar todas as soluções publicadas
         const { data: solutionsData, error: solutionsError } = await supabase
@@ -54,6 +62,11 @@ export const useDashboardProgress = () => {
           .eq("user_id", user.id as any);
 
         if (progressError) throw progressError;
+
+        console.log('[DASHBOARD-PROGRESS] Dados carregados:', {
+          solutionsCount: solutionsData?.length || 0,
+          progressCount: progressData?.length || 0
+        });
 
         setSolutions(solutionsData as any || []);
         setProgress(progressData as any || []);

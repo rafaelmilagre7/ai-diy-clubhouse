@@ -1,13 +1,13 @@
 
 import { useState, useEffect } from "react";
-import { useAuth } from "@/contexts/auth";
+import { useSimpleAuth } from "@/contexts/auth/SimpleAuthProvider";
 import { supabase } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
 import { Solution } from "@/lib/supabase";
 import { getUserRoleName } from "@/lib/supabase/types";
 
 export const useDashboardData = () => {
-  const { user, profile } = useAuth();
+  const { user, profile } = useSimpleAuth();
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
   const [solutions, setSolutions] = useState<Solution[]>([]);
@@ -17,11 +17,26 @@ export const useDashboardData = () => {
   const [error, setError] = useState<string | null>(null);
   const isAdmin = getUserRoleName(profile) === 'admin';
 
+  console.log('[DASHBOARD-DATA] Inicializando hook:', {
+    hasUser: !!user,
+    hasProfile: !!profile,
+    isAdmin,
+    userId: user?.id?.substring(0, 8)
+  });
+
   useEffect(() => {
     const fetchData = async () => {
+      if (!user) {
+        console.log('[DASHBOARD-DATA] Sem usuário, não carregando dados');
+        setLoading(false);
+        return;
+      }
+
       try {
         setLoading(true);
         setError(null);
+        
+        console.log('[DASHBOARD-DATA] Iniciando carregamento de dados...');
         
         // Fetch solutions - filtrar apenas publicadas se não for admin
         let query = supabase.from("solutions").select("*");
@@ -35,6 +50,8 @@ export const useDashboardData = () => {
           throw solutionsError;
         }
         
+        console.log('[DASHBOARD-DATA] Soluções carregadas:', solutionsData?.length || 0);
+        
         // Ensure solutions array is type-safe
         setSolutions(solutionsData as any);
         
@@ -47,6 +64,7 @@ export const useDashboardData = () => {
           throw progressError;
         }
         
+        console.log('[DASHBOARD-DATA] Progresso carregado:', progress?.length || 0);
         setProgressData(progress || []);
         
         // Fetch analytics data
@@ -71,7 +89,10 @@ export const useDashboardData = () => {
           throw profilesError;
         }
         
+        console.log('[DASHBOARD-DATA] Perfis carregados:', profiles?.length || 0);
         setProfilesData(profiles || []);
+        
+        console.log('[DASHBOARD-DATA] Todos os dados carregados com sucesso');
         
       } catch (error: any) {
         console.error("Erro no carregamento de dados do dashboard:", error);
@@ -87,7 +108,7 @@ export const useDashboardData = () => {
     };
     
     fetchData();
-  }, [toast, isAdmin, getUserRoleName(profile)]);
+  }, [toast, isAdmin, user?.id]);
   
   return { 
     solutions, 
