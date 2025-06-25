@@ -7,14 +7,29 @@ import { motion } from 'framer-motion';
 interface OnboardingProgressProps {
   currentStep: number;
   totalSteps: number;
-  stepTitles: string[];
+  memberType?: 'club' | 'formacao';
 }
+
+// Títulos das etapas baseados no memberType
+const getStepTitles = (memberType: 'club' | 'formacao' = 'club'): string[] => {
+  return [
+    'Informações Pessoais',
+    'Perfil Empresarial', 
+    'Maturidade em IA',
+    'Objetivos',
+    'Personalização',
+    'Finalização'
+  ];
+};
 
 const OnboardingProgress = memo<OnboardingProgressProps>(({ 
   currentStep, 
   totalSteps, 
-  stepTitles 
+  memberType = 'club'
 }) => {
+  // Gerar títulos baseado no memberType
+  const stepTitles = useMemo(() => getStepTitles(memberType), [memberType]);
+
   // Memoizar cálculos de progresso
   const progressPercentage = useMemo(() => {
     return Math.round((currentStep / totalSteps) * 100);

@@ -12,95 +12,84 @@ interface OnboardingStepRendererProps {
   currentStep: number;
   data: OnboardingData;
   onUpdateData: (newData: Partial<OnboardingData>) => void;
-  onNext: () => Promise<void>;
-  onPrev: () => void;
-  onComplete: () => Promise<void>;
   memberType: 'club' | 'formacao';
   validationErrors: Array<{ field: string; message: string }>;
   getFieldError: (field: string) => string | undefined;
-  isCompleting: boolean;
+  disabled?: boolean;
+  readOnly?: boolean;
+  isLoading?: boolean;
 }
 
 export const OnboardingStepRenderer: React.FC<OnboardingStepRendererProps> = ({
   currentStep,
   data,
   onUpdateData,
-  onNext,
-  onPrev,
-  onComplete,
   memberType,
   validationErrors,
   getFieldError,
-  isCompleting
+  disabled = false,
+  readOnly = false,
+  isLoading = false
 }) => {
+  const stepProps = {
+    data,
+    onUpdateData,
+    memberType,
+    validationErrors,
+    getFieldError,
+    disabled,
+    readOnly,
+    isLoading
+  };
+
   switch (currentStep) {
     case 1:
       return (
         <OnboardingStep1
-          data={data}
-          onUpdateData={onUpdateData}
-          onNext={onNext}
-          onPrev={onPrev}
-          memberType={memberType}
-          validationErrors={validationErrors}
-          getFieldError={getFieldError}
+          {...stepProps}
+          onNext={() => {}}
+          onPrev={() => {}}
         />
       );
     case 2:
       return (
         <OnboardingStep2
-          data={data}
-          onUpdateData={onUpdateData}
-          onNext={onNext}
-          onPrev={onPrev}
-          memberType={memberType}
-          validationErrors={validationErrors}
-          getFieldError={getFieldError}
+          {...stepProps}
+          onNext={() => {}}
+          onPrev={() => {}}
         />
       );
     case 3:
       return (
         <OnboardingStep3
-          data={data}
-          onUpdateData={onUpdateData}
-          onNext={onNext}
-          onPrev={onPrev}
-          memberType={memberType}
-          validationErrors={validationErrors}
-          getFieldError={getFieldError}
+          {...stepProps}
+          onNext={() => {}}
+          onPrev={() => {}}
         />
       );
     case 4:
       return (
         <OnboardingStep4
-          data={data}
-          onUpdateData={onUpdateData}
-          onNext={onNext}
-          onPrev={onPrev}
-          memberType={memberType}
-          validationErrors={validationErrors}
-          getFieldError={getFieldError}
+          {...stepProps}
+          onNext={() => {}}
+          onPrev={() => {}}
         />
       );
     case 5:
       return (
         <OnboardingStep5
-          data={data}
-          onUpdateData={onUpdateData}
-          onNext={onNext}
-          onPrev={onPrev}
-          memberType={memberType}
-          validationErrors={validationErrors}
-          getFieldError={getFieldError}
+          {...stepProps}
+          onNext={() => {}}
+          onPrev={() => {}}
         />
       );
     case 6:
       return (
         <OnboardingFinal
           data={data}
-          onComplete={onComplete}
+          onComplete={() => {}}
           memberType={memberType}
-          isCompleting={isCompleting}
+          isCompleting={false}
         />
       );
     default:

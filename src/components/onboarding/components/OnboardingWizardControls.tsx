@@ -3,45 +3,51 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight, Loader2, CheckCircle } from 'lucide-react';
 
-interface SyncStatus {
-  isSyncing: boolean;
-  lastSyncTime: string;
-  syncError: string;
-}
-
 interface OnboardingWizardControlsProps {
   currentStep: number;
   totalSteps: number;
   onNext: () => void;
-  onPrev: () => void;
-  canProceed: boolean;
-  isLoading?: boolean;
-  hasUnsavedChanges?: boolean;
+  onPrevious: () => void;
+  onSubmit: () => void;
+  isSubmitting: boolean;
+  memberType: 'club' | 'formacao';
   lastSaved?: Date | null;
-  syncStatus?: SyncStatus;
+  hasUnsavedChanges?: boolean;
+  completionError?: string | null;
+  canProceed?: boolean;
 }
 
 export const OnboardingWizardControls: React.FC<OnboardingWizardControlsProps> = ({
   currentStep,
   totalSteps,
   onNext,
-  onPrev,
-  canProceed,
-  isLoading = false,
-  hasUnsavedChanges = false,
+  onPrevious,
+  onSubmit,
+  isSubmitting,
+  memberType,
   lastSaved,
-  syncStatus
+  hasUnsavedChanges = false,
+  completionError,
+  canProceed = true
 }) => {
   const isFirstStep = currentStep === 1;
   const isLastStep = currentStep === totalSteps;
+
+  const handleNext = () => {
+    if (isLastStep) {
+      onSubmit();
+    } else {
+      onNext();
+    }
+  };
 
   return (
     <div className="flex items-center justify-between p-6 bg-[#151823] border border-white/10 rounded-xl">
       {/* Botão Voltar */}
       <Button
         variant="outline"
-        onClick={onPrev}
-        disabled={isFirstStep || isLoading}
+        onClick={onPrevious}
+        disabled={isFirstStep || isSubmitting}
         className="flex items-center gap-2 h-10 px-4 bg-transparent border-white/20 text-white hover:bg-white/5 hover:border-white/30 disabled:opacity-50"
       >
         <ChevronLeft className="w-4 h-4" />
@@ -68,20 +74,26 @@ export const OnboardingWizardControls: React.FC<OnboardingWizardControlsProps> =
           </p>
         )}
         
-        {!canProceed && !isLoading && !hasUnsavedChanges && (
+        {!canProceed && !isSubmitting && !hasUnsavedChanges && (
           <p className="text-xs text-red-400 bg-red-500/10 border border-red-500/20 px-2 py-0.5 rounded-full">
             Complete os campos obrigatórios
+          </p>
+        )}
+
+        {completionError && (
+          <p className="text-xs text-red-400 bg-red-500/10 border border-red-500/20 px-2 py-0.5 rounded-full">
+            {completionError}
           </p>
         )}
       </div>
 
       {/* Botão Próximo */}
       <Button
-        onClick={onNext}
-        disabled={!canProceed || isLoading}
+        onClick={handleNext}
+        disabled={!canProceed || isSubmitting}
         className="flex items-center gap-2 h-10 px-4 bg-viverblue hover:bg-viverblue/90 text-[#0F111A] font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
       >
-        {isLoading ? (
+        {isSubmitting ? (
           <>
             <Loader2 className="w-4 h-4 animate-spin" />
             {isLastStep ? 'Finalizando...' : 'Salvando...'}

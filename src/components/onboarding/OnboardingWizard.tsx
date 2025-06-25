@@ -93,7 +93,7 @@ const OnboardingWizard = () => {
                       </div>
                     }>
                       <OnboardingStepRenderer
-                        step={currentStep}
+                        currentStep={currentStep}
                         {...stepProps}
                       />
                     </Suspense>
@@ -103,7 +103,7 @@ const OnboardingWizard = () => {
                   <OnboardingWizardControls
                     currentStep={currentStep}
                     totalSteps={totalSteps}
-                    isCurrentStepValid={isCurrentStepValid}
+                    canProceed={isCurrentStepValid}
                     isSubmitting={isSubmitting}
                     onNext={handleNext}
                     onPrevious={handlePrevious}
