@@ -14,7 +14,7 @@ interface InviteDetails {
   role: InviteRole;
   created_at: string;
   expires_at: string;
-  used_at: string | null; // CORREÇÃO: usar used_at em vez de is_used
+  used_at: string | null;
 }
 
 interface UseInviteFlowResult {
@@ -153,7 +153,6 @@ export const useInviteFlow = (inviteToken?: string): UseInviteFlowResult => {
   return {
     inviteDetails,
     isLoading,
-    loading: isLoading, // Manter compatibilidade
     error
   };
 };

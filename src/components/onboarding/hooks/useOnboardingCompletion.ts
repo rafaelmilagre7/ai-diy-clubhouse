@@ -12,7 +12,7 @@ export const useOnboardingCompletion = () => {
   const [isCompleting, setIsCompleting] = useState(false);
   const [completionError, setCompletionError] = useState<string | null>(null);
   const navigate = useNavigate();
-  const { user, refreshProfile } = useSimpleAuth();
+  const { user } = useSimpleAuth();
   const { acceptInviteAndCompleteOnboarding } = useInviteAcceptance();
 
   const completeOnboarding = async (data: any, memberType: 'club' | 'formacao') => {
@@ -73,13 +73,11 @@ export const useOnboardingCompletion = () => {
           duration: `${Date.now() - startTime}ms`
         });
 
-        // Atualizar contexto
-        await refreshProfile();
-        
         toast.success('Onboarding concluído com sucesso!');
         
+        // Usar reload para garantir que o contexto seja atualizado
         setTimeout(() => {
-          navigate('/dashboard', { replace: true });
+          window.location.href = '/dashboard';
         }, 1500);
       }
 
