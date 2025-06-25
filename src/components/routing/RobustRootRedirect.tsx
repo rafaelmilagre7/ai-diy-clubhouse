@@ -6,21 +6,20 @@ import LoadingScreen from "@/components/common/LoadingScreen";
 import { logger } from "@/utils/logger";
 
 const RobustRootRedirect = () => {
-  const { user, profile, isLoading: authLoading, error: authError } = useSimpleAuth();
+  const { user, profile, isLoading: authLoading, error: authError, isAdmin } = useSimpleAuth();
   const { isRequired: onboardingRequired, isLoading: onboardingLoading } = useOnboardingRequired();
   
   const totalLoading = authLoading || onboardingLoading;
 
-  // Log detalhado do estado
-  logger.info("[ROOT-REDIRECT] Estado atual (ONBOARDING OBRIGATÓRIO):", {
+  logger.info("[ROOT-REDIRECT] Estado (FLUXO SIMPLIFICADO):", {
     hasUser: !!user,
     hasProfile: !!profile,
     userRole: profile?.user_roles?.name || null,
+    isAdmin,
     authLoading,
     onboardingLoading,
     onboardingRequired,
-    authError,
-    onboardingCompleted: profile?.onboarding_completed
+    authError
   });
 
   // Erro de auth
@@ -60,23 +59,24 @@ const RobustRootRedirect = () => {
     return <LoadingScreen message="Carregando seu perfil..." />;
   }
 
-  // REGRA CRÍTICA: Onboarding obrigatório PARA TODOS (sem exceção de role)
+  // FLUXO ADMIN SIMPLIFICADO: Admin vai direto para /admin
+  if (isAdmin) {
+    logger.info("[ROOT-REDIRECT] Admin -> /admin (sem onboarding)");
+    return <Navigate to="/admin" replace />;
+  }
+
+  // Para outros usuários: verificar onboarding
   if (onboardingRequired) {
-    logger.info("[ROOT-REDIRECT] Onboarding OBRIGATÓRIO -> /onboarding (SEM EXCEÇÕES)");
+    logger.info("[ROOT-REDIRECT] Onboarding obrigatório -> /onboarding");
     return <Navigate to="/onboarding" replace />;
   }
 
-  // Só após onboarding completo, determinar rota baseada no papel do usuário
+  // Determinar rota baseada no papel do usuário
   const userRole = profile?.user_roles?.name;
   
   if (userRole === 'formacao') {
     logger.info("[ROOT-REDIRECT] Usuário formação -> /formacao");
     return <Navigate to="/formacao" replace />;
-  }
-
-  if (userRole === 'admin') {
-    logger.info("[ROOT-REDIRECT] Usuário admin -> /admin");
-    return <Navigate to="/admin" replace />;
   }
 
   // Padrão = dashboard

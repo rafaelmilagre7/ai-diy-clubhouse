@@ -1,10 +1,9 @@
 
-import React, { useCallback, useMemo, useEffect, useRef } from 'react';
+import React, { useCallback, useMemo, useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useOnboardingWizard } from '../hooks/useOnboardingWizard';
 import { useCleanOnboardingData } from '../hooks/useCleanOnboardingData';
 import { useOnboardingCleanup } from '../hooks/useOnboardingCleanup';
-import { useLoadingTimeoutManager } from '@/hooks/useLoadingTimeoutManager';
 import { InviteTokenManager } from '@/utils/inviteTokenManager';
 import { OnboardingCacheManager } from '@/utils/onboardingCacheManager';
 import { logger } from '@/utils/logger';
@@ -21,19 +20,14 @@ export const OnboardingWizardContainer = ({ children }: OnboardingWizardContaine
   const [searchParams] = useSearchParams();
   const { cleanupForInvite } = useOnboardingCleanup();
   
-  // Refs para dados estáveis
-  const inviteTokenRef = useRef<string | null>(null);
-  const isInitializedRef = useRef(false);
-  const cacheResetRef = useRef(false);
+  // Estado simplificado - sem refs complexos
+  const [isInitialized, setIsInitialized] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   
-  // Token ÚNICO - fonte única de verdade (estável)
+  // Token ÚNICO - fonte única de verdade
   const inviteToken = useMemo(() => {
-    const token = InviteTokenManager.getToken();
-    if (token !== inviteTokenRef.current) {
-      inviteTokenRef.current = token;
-    }
-    return inviteTokenRef.current;
-  }, [searchParams.get('token')]); // Dependência específica para mudanças de URL
+    return searchParams.get('token') || InviteTokenManager.getToken();
+  }, [searchParams]);
 
   const {
     data: cleanData,
@@ -44,111 +38,56 @@ export const OnboardingWizardContainer = ({ children }: OnboardingWizardContaine
 
   const memberType = useMemo(() => cleanData.memberType || 'club', [cleanData.memberType]);
   
-  // CORREÇÃO CRÍTICA: Loading otimizado com timeout automático e promise safety
-  const rawIsLoading = useMemo(() => {
-    // NUNCA bloquear se não há token de convite
-    if (!inviteToken) {
-      logger.info('[WIZARD-CONTAINER] Sem token de convite - campos habilitados');
-      return false;
-    }
-
-    // NUNCA bloquear se já temos email (dados básicos carregados)
-    if (cleanData.email) {
-      logger.info('[WIZARD-CONTAINER] Dados básicos carregados - campos habilitados');
-      return false;
-    }
-
-    // Só mostrar loading se realmente está carregando dados de convite
-    const shouldLoad = !!(inviteToken && isInviteLoading);
-    
-    logger.info('[WIZARD-CONTAINER] Status de loading:', {
-      inviteToken: !!inviteToken,
-      isInviteLoading,
-      hasEmail: !!cleanData.email,
-      shouldLoad,
-      fieldsEnabled: !shouldLoad
-    });
-    
-    return shouldLoad;
-  }, [inviteToken, isInviteLoading, cleanData.email]);
-
-  // Timeout manager para forçar desbloqueio
-  const { shouldBeUnlocked, isForceUnlocked } = useLoadingTimeoutManager({
-    isLoading: rawIsLoading,
-    context: 'WizardContainer',
-    maxTimeoutMs: 1500, // 1.5 segundos máximo para container
-    onForceUnlock: () => {
-      logger.error('[WIZARD-CONTAINER] TIMEOUT FORÇADO - habilitando campos imediatamente');
-      // Cache reset em caso de timeout
-      if (!cacheResetRef.current) {
-        OnboardingCacheManager.clearAll();
-        cacheResetRef.current = true;
-      }
-    }
-  });
-
-  // LOADING FINAL com fallback agressivo
-  const isLoading = rawIsLoading && !shouldBeUnlocked && !isForceUnlocked;
-
-  // Cache reset inicial uma única vez
+  // LÓGICA SIMPLIFICADA: Loading máximo de 500ms
   useEffect(() => {
-    if (!cacheResetRef.current) {
-      logger.info('[WIZARD-CONTAINER] Executando cache reset inicial');
-      OnboardingCacheManager.clearAll();
-      cacheResetRef.current = true;
-    }
-  }, []);
-  
-  // Inicialização SIMPLES com proteção contra loops
-  useEffect(() => {
-    if (isInitializedRef.current) {
-      return; // Já foi inicializado
-    }
+    if (isInitialized) return;
     
-    logger.info('[WIZARD-CONTAINER] Inicialização:', {
+    logger.info('[WIZARD-CONTAINER] Inicializando onboarding:', {
       hasToken: !!inviteToken,
       memberType,
-      hasEmail: !!cleanData.email,
-      willEnableFields: !isLoading,
-      isForceUnlocked
+      hasEmail: !!cleanData.email
     });
     
+    // Mostrar loading apenas se há token E ainda não tem dados básicos
+    const shouldLoad = !!(inviteToken && isInviteLoading && !cleanData.email);
+    setIsLoading(shouldLoad);
+    
+    if (shouldLoad) {
+      // Timeout agressivo de 500ms
+      const timeout = setTimeout(() => {
+        logger.warn('[WIZARD-CONTAINER] Timeout de 500ms - desbloqueando campos');
+        setIsLoading(false);
+      }, 500);
+      
+      return () => clearTimeout(timeout);
+    }
+    
+    // Inicialização simples
     if (inviteToken) {
       InviteTokenManager.storeToken(inviteToken);
       cleanupForInvite();
     }
 
-    // PROMISE SAFETY: Try-catch em inicialização
+    // Cache reset uma única vez
+    OnboardingCacheManager.clearAll();
+    
+    // Inicializar dados
     try {
       initializeCleanData();
     } catch (error) {
-      logger.error('[WIZARD-CONTAINER] Erro na inicialização - forçando desbloqueio:', error);
-      // Em caso de erro, garantir que campos sejam habilitados
+      logger.error('[WIZARD-CONTAINER] Erro na inicialização - continuando:', error);
     }
     
-    isInitializedRef.current = true;
-  }, [inviteToken]); // Dependência mínima para evitar loops
+    setIsInitialized(true);
+    setIsLoading(false);
+  }, [inviteToken, isInviteLoading, cleanData.email, isInitialized]);
 
-  // Callback estável com useRef
-  const updateDataRef = useRef(updateData);
-  updateDataRef.current = updateData;
-  
+  // Callback estável 
   const memoizedUpdateData = useCallback((newData: any) => {
-    logger.info('[WIZARD-CONTAINER] Atualizando dados:', {
-      newData,
-      currentlyLoading: isLoading,
-      fieldsEnabled: !isLoading,
-      isForceUnlocked
-    });
-    
-    try {
-      const dataWithToken = inviteToken ? { ...newData, inviteToken } : newData;
-      updateDataRef.current(dataWithToken);
-    } catch (error) {
-      logger.error('[WIZARD-CONTAINER] Erro ao atualizar dados - continuando:', error);
-      // Não bloquear em caso de erro de atualização
-    }
-  }, [inviteToken, isLoading, isForceUnlocked]); // Incluir flags para logs
+    logger.info('[WIZARD-CONTAINER] Atualizando dados:', newData);
+    const dataWithToken = inviteToken ? { ...newData, inviteToken } : newData;
+    updateData(dataWithToken);
+  }, [inviteToken, updateData]);
 
   const wizardProps = useOnboardingWizard({
     initialData: cleanData,
@@ -156,17 +95,12 @@ export const OnboardingWizardContainer = ({ children }: OnboardingWizardContaine
     memberType
   });
 
-  logger.info('[WIZARD-CONTAINER] Renderizando com campos (TIMEOUT PROTECTION):', {
+  logger.info('[WIZARD-CONTAINER] Renderizando (SIMPLIFICADO):', {
     memberType,
     isLoading,
-    rawLoading: rawIsLoading,
-    shouldBeUnlocked,
-    isForceUnlocked,
     fieldsEnabled: !isLoading,
     hasData: Object.keys(cleanData).length > 2,
-    dataKeys: Object.keys(cleanData),
-    isInitialized: isInitializedRef.current,
-    cacheReset: cacheResetRef.current
+    isInitialized
   });
 
   return (
