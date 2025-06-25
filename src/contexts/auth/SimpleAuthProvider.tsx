@@ -42,13 +42,13 @@ export const SimpleAuthProvider: React.FC<SimpleAuthProviderProps> = ({ children
         .single();
 
       if (profileError) {
-        logger.error('Erro ao buscar perfil:', profileError);
+        logger.error('Erro ao buscar perfil', { error: profileError.message, userId });
         return null;
       }
 
       return profileData as any as UserProfile;
     } catch (error) {
-      logger.error('Erro crítico ao buscar perfil:', error);
+      logger.error('Erro crítico ao buscar perfil', { error: String(error), userId });
       return null;
     }
   };
@@ -65,19 +65,19 @@ export const SimpleAuthProvider: React.FC<SimpleAuthProviderProps> = ({ children
       });
 
       if (signInError) {
-        logger.error('Erro no login:', signInError);
+        logger.error('Erro no login', { error: signInError.message, email });
         setError(signInError.message);
         return { error: signInError };
       }
 
       if (data.user) {
-        logger.info('Login realizado:', data.user.email);
+        logger.info('Login realizado', { email: data.user.email });
       }
 
       return { error: null };
     } catch (err) {
       const error = err instanceof Error ? err : new Error('Erro inesperado');
-      logger.error('Erro inesperado no login:', error);
+      logger.error('Erro inesperado no login', { error: error.message, email });
       setError(error.message);
       return { error };
     } finally {
@@ -91,7 +91,7 @@ export const SimpleAuthProvider: React.FC<SimpleAuthProviderProps> = ({ children
       const { error } = await supabase.auth.signOut();
       
       if (error) {
-        logger.error('Erro no logout:', error);
+        logger.error('Erro no logout', { error: error.message });
         return { success: false, error };
       }
 
@@ -118,7 +118,7 @@ export const SimpleAuthProvider: React.FC<SimpleAuthProviderProps> = ({ children
         const { data: { session: initialSession }, error: sessionError } = await supabase.auth.getSession();
         
         if (sessionError) {
-          logger.error('Erro ao obter sessão:', sessionError);
+          logger.error('Erro ao obter sessão', { error: sessionError.message });
           setError(sessionError.message);
         } else if (mounted) {
           setSession(initialSession);
@@ -133,7 +133,7 @@ export const SimpleAuthProvider: React.FC<SimpleAuthProviderProps> = ({ children
           }
         }
       } catch (error) {
-        logger.error('Erro na inicialização de auth:', error);
+        logger.error('Erro na inicialização de auth', { error: String(error) });
         if (mounted) {
           setError(error instanceof Error ? error.message : 'Erro desconhecido');
         }
@@ -149,7 +149,7 @@ export const SimpleAuthProvider: React.FC<SimpleAuthProviderProps> = ({ children
       async (event, session) => {
         if (!mounted) return;
 
-        logger.info('Auth state changed:', { event, hasSession: !!session });
+        logger.info('Auth state changed', { event, hasSession: !!session });
         
         setSession(session);
         setUser(session?.user ?? null);

@@ -21,7 +21,7 @@ export const useInviteRegistration = () => {
     setIsRegistering(true);
     
     try {
-      logger.info('[INVITE-REGISTRATION] 🎯 Iniciando registro via convite:', {
+      logger.info('Iniciando registro via convite', {
         email: data.email,
         name: data.name,
         token: data.token.substring(0, 8) + '***'
@@ -31,7 +31,7 @@ export const useInviteRegistration = () => {
       const { data: existingUsers, error: searchError } = await supabase.auth.admin.listUsers();
       
       if (searchError) {
-        logger.error('[INVITE-REGISTRATION] ❌ Erro ao verificar usuários existentes:', searchError);
+        logger.error('Erro ao verificar usuários existentes', { error: searchError.message });
         toast.error('Erro ao verificar usuários existentes');
         return { 
           success: false, 
@@ -40,11 +40,11 @@ export const useInviteRegistration = () => {
         };
       }
 
-      // Verificar se algum usuário tem o email desejado
-      const existingUser = existingUsers.users.find(user => user.email === data.email);
+      // Verificar se algum usuário tem o email desejado - corrigir tipagem
+      const existingUser = existingUsers.users?.find((user: any) => user.email === data.email);
       
       if (existingUser) {
-        logger.warn('[INVITE-REGISTRATION] ⚠️ Email já existe no sistema');
+        logger.warn('Email já existe no sistema', { email: data.email });
         toast.error('Este e-mail já possui uma conta. Faça login ao invés de criar uma nova conta.');
         return { 
           success: false, 
@@ -54,7 +54,7 @@ export const useInviteRegistration = () => {
       }
 
       // 2. Criar conta no Supabase Auth
-      logger.info('[INVITE-REGISTRATION] 📝 Criando conta no Supabase Auth...');
+      logger.info('Criando conta no Supabase Auth', { email: data.email });
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: data.email,
         password: data.password,
@@ -68,7 +68,7 @@ export const useInviteRegistration = () => {
       });
 
       if (authError) {
-        logger.error('[INVITE-REGISTRATION] ❌ Erro na criação da conta:', authError);
+        logger.error('Erro na criação da conta', { error: authError.message });
         toast.error(`Erro ao criar conta: ${authError.message}`);
         return { 
           success: false, 
@@ -78,7 +78,7 @@ export const useInviteRegistration = () => {
       }
 
       if (!authData.user) {
-        logger.error('[INVITE-REGISTRATION] ❌ Usuário não foi criado');
+        logger.error('Usuário não foi criado', {});
         toast.error('Erro ao criar usuário');
         return { 
           success: false, 
@@ -87,13 +87,13 @@ export const useInviteRegistration = () => {
         };
       }
 
-      logger.info('[INVITE-REGISTRATION] ✅ Conta criada com sucesso:', {
+      logger.info('Conta criada com sucesso', {
         userId: authData.user.id,
         email: authData.user.email
       });
 
       // 3. Processar convite via RPC
-      logger.info('[INVITE-REGISTRATION] 🎫 Processando convite...');
+      logger.info('Processando convite', { token: data.token.substring(0, 8) + '***' });
       const { data: inviteResult, error: inviteError } = await supabase.rpc(
         'complete_invite_registration',
         {
@@ -104,7 +104,7 @@ export const useInviteRegistration = () => {
 
       if (inviteError || !inviteResult?.success) {
         const errorMessage = inviteError?.message || inviteResult?.message || 'Erro ao processar convite';
-        logger.error('[INVITE-REGISTRATION] ❌ Erro no processamento do convite:', errorMessage);
+        logger.error('Erro no processamento do convite', { error: errorMessage });
         toast.error(`Erro ao processar convite: ${errorMessage}`);
         return { 
           success: false, 
@@ -115,7 +115,7 @@ export const useInviteRegistration = () => {
 
       // 4. Atualizar nome se foi modificado
       if (data.name) {
-        logger.info('[INVITE-REGISTRATION] 📝 Atualizando nome do usuário...');
+        logger.info('Atualizando nome do usuário', { name: data.name });
         const { error: profileError } = await supabase
           .from('profiles')
           .update({ 
@@ -125,7 +125,7 @@ export const useInviteRegistration = () => {
           .eq('id', authData.user.id);
 
         if (profileError) {
-          logger.warn('[INVITE-REGISTRATION] ⚠️ Erro ao atualizar nome:', profileError);
+          logger.warn('Erro ao atualizar nome', { error: profileError.message });
           // Não falha o processo por causa disso
         }
       }
@@ -133,7 +133,7 @@ export const useInviteRegistration = () => {
       // 5. Limpar token e finalizar
       InviteTokenManager.clearTokenOnSuccess();
       
-      logger.info('[INVITE-REGISTRATION] 🎉 Registro via convite concluído com sucesso');
+      logger.info('Registro via convite concluído com sucesso', {});
       toast.success('Conta criada com sucesso! Bem-vindo(a) ao Viver de IA!');
       
       // Aguardar um pouco para o toast aparecer e depois navegar
@@ -144,7 +144,7 @@ export const useInviteRegistration = () => {
       return { success: true };
 
     } catch (error: any) {
-      logger.error('[INVITE-REGISTRATION] 💥 Erro inesperado:', error);
+      logger.error('Erro inesperado', { error: error.message });
       toast.error(`Erro inesperado: ${error.message}`);
       return { 
         success: false, 
