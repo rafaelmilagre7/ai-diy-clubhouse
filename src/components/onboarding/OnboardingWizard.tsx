@@ -23,8 +23,11 @@ const OnboardingWizard = memo(() => {
   const [showWelcome, setShowWelcome] = useState(true);
 
   const handleStartOnboarding = useCallback(() => {
+    console.log('[ONBOARDING-WIZARD] Iniciando onboarding - saindo do welcome');
     setShowWelcome(false);
   }, []);
+
+  console.log('[ONBOARDING-WIZARD] Renderizando:', { showWelcome });
 
   if (showWelcome) {
     return (
@@ -32,6 +35,13 @@ const OnboardingWizard = memo(() => {
         <Suspense fallback={<OnboardingLoadingState type="verification" />}>
           <OnboardingWizardContainer>
             {({ data, memberType, isLoading }) => {
+              console.log('[ONBOARDING-WIZARD-WELCOME] Estado:', {
+                isLoading,
+                memberType,
+                hasData: !!data,
+                fromInvite: (data as any)?.fromInvite
+              });
+
               if (isLoading) {
                 return <OnboardingLoadingState type="preparation" message="Configurando sua experiência personalizada..." />;
               }
@@ -72,19 +82,32 @@ const OnboardingWizard = memo(() => {
             totalSteps,
             completionError
           }) => {
+            console.log('[ONBOARDING-WIZARD-MAIN] Estado:', {
+              currentStep,
+              isSubmitting,
+              isLoading,
+              hasData: !!data,
+              memberType: data.memberType,
+              validationErrorsCount: validationErrors.length,
+              completionError: !!completionError
+            });
+
             // Loading com verificação básica
             if (isLoading) {
+              console.log('[ONBOARDING-WIZARD-MAIN] Mostrando loading - preparando dados');
               return <OnboardingLoadingState type="preparation" message="Preparando onboarding personalizado..." />;
             }
 
-            // Verificação de dados mínimos
-            const hasMinimalData = data.memberType && (data.email || data.name);
+            // Verificação de dados BÁSICOS (não muito restritiva)
+            const hasMinimalData = data.memberType;
             if (!hasMinimalData) {
+              console.log('[ONBOARDING-WIZARD-MAIN] Dados insuficientes, carregando...');
               return <OnboardingLoadingState type="initialization" message="Carregando suas informações..." />;
             }
 
             // Erro de finalização
             if (completionError) {
+              console.error('[ONBOARDING-WIZARD-MAIN] Erro de completion:', completionError);
               return (
                 <OnboardingErrorHandler
                   error={completionError}
@@ -95,6 +118,8 @@ const OnboardingWizard = memo(() => {
                 />
               );
             }
+
+            console.log('[ONBOARDING-WIZARD-MAIN] Renderizando wizard principal');
 
             return (
               <div className="min-h-screen bg-gradient-to-br from-[#0F111A] to-[#151823]">

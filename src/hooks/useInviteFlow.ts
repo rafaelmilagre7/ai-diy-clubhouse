@@ -1,264 +1,105 @@
 
-import { useState, useEffect, useCallback } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/contexts/auth';
-import { toast } from 'sonner';
+import { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabase';
+import { UserRole } from '@/lib/supabase/types';
+import { logger } from '@/utils/logger';
 
-export interface InviteDetails {
-  id: string;
+interface InviteDetails {
+  token: string;
   email: string;
-  role: {
-    id: string;
-    name: string;
-    description: string;
-  };
-  expires_at: string;
+  role: UserRole;
   created_at: string;
+  expires_at: string;
+  is_used: boolean;
 }
 
-export interface InviteFlowResult {
-  success: boolean;
-  message: string;
-  requiresOnboarding?: boolean;
+interface UseInviteFlowResult {
+  inviteDetails: InviteDetails | null;
+  isLoading: boolean;
+  error: string | null;
 }
 
-export const useInviteFlow = (token?: string) => {
-  const { user, signUp } = useAuth();
-  const [isLoading, setIsLoading] = useState(false);
+export const useInviteFlow = (inviteToken?: string): UseInviteFlowResult => {
   const [inviteDetails, setInviteDetails] = useState<InviteDetails | null>(null);
-  const [error, setError] = useState<string>('');
-  const [isProcessing, setIsProcessing] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const fetchInviteDetails = useCallback(async () => {
-    if (!token) {
+  useEffect(() => {
+    // CORREÇÃO CRÍTICA: Não executar se não há token válido
+    if (!inviteToken || inviteToken.trim() === '') {
+      logger.info('[INVITE-FLOW] Sem token de convite - não executando requisições');
       setInviteDetails(null);
-      setError('');
+      setIsLoading(false);
+      setError(null);
       return;
     }
 
-    try {
+    const fetchInviteDetails = async () => {
       setIsLoading(true);
-      setError('');
+      setError(null);
 
-      console.log('[INVITE-FLOW] Buscando detalhes do convite:', token);
+      try {
+        logger.info('[INVITE-FLOW] Buscando detalhes do convite:', { token: inviteToken.substring(0, 8) + '***' });
 
-      if (token.length < 10) {
-        throw new Error('Token de convite inválido');
-      }
+        const { data, error: fetchError } = await supabase
+          .from('invites')
+          .select(`
+            token,
+            email,
+            role:user_roles(id, name),
+            created_at,
+            expires_at,
+            is_used
+          `)
+          .eq('token', inviteToken)
+          .maybeSingle();
 
-      const { data: invites, error } = await supabase
-        .from('invites')
-        .select(`
-          id,
-          email,
-          role_id,
-          expires_at,
-          created_at,
-          used_at,
-          user_roles:role_id!inner(id, name, description)
-        `)
-        .eq('token', token)
-        .is('used_at', null)
-        .gt('expires_at', new Date().toISOString())
-        .maybeSingle();
-
-      if (error) {
-        console.error('[INVITE-FLOW] Erro na consulta:', error);
-        throw new Error('Erro ao consultar convite');
-      }
-
-      if (!invites) {
-        throw new Error('Convite não encontrado ou expirado');
-      }
-
-      if (!invites.email || !invites.user_roles) {
-        throw new Error('Dados do convite incompletos');
-      }
-
-      const roleData = Array.isArray(invites.user_roles) ? invites.user_roles[0] : invites.user_roles;
-      
-      const processedData: InviteDetails = {
-        id: invites.id,
-        email: invites.email.toLowerCase(),
-        role: {
-          id: roleData.id,
-          name: roleData.name,
-          description: roleData.description
-        },
-        expires_at: invites.expires_at,
-        created_at: invites.created_at
-      };
-
-      setInviteDetails(processedData);
-
-      console.log('[INVITE-FLOW] Detalhes carregados com sucesso:', {
-        email: processedData.email,
-        role: processedData.role.name
-      });
-
-    } catch (err: any) {
-      const errorMessage = err.message || 'Erro ao carregar convite';
-      console.error('[INVITE-FLOW] Erro capturado:', err);
-      setError(errorMessage);
-      setInviteDetails(null);
-      toast.error(errorMessage);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [token]);
-
-  const acceptInvite = useCallback(async (): Promise<InviteFlowResult> => {
-    if (!token || !user || !inviteDetails) {
-      return {
-        success: false,
-        message: 'Dados insuficientes para aceitar convite'
-      };
-    }
-
-    const userEmail = (user.email || '').toLowerCase();
-    const inviteEmail = inviteDetails.email.toLowerCase();
-    
-    if (userEmail !== inviteEmail) {
-      return {
-        success: false,
-        message: `Este convite foi enviado para ${inviteDetails.email}, mas você está logado como ${user.email}`
-      };
-    }
-
-    try {
-      setIsProcessing(true);
-      console.log('[INVITE-FLOW] Aceitando convite:', { token, userId: user.id });
-
-      const { data, error } = await supabase.rpc('accept_invite', {
-        p_token: token
-      });
-
-      console.log('[INVITE-FLOW] Resposta accept_invite:', { data, error });
-
-      if (error) {
-        console.error('[INVITE-FLOW] Erro RPC accept_invite:', error);
-        throw error;
-      }
-
-      if (data?.success) {
-        console.log('[INVITE-FLOW] Convite aceito com sucesso');
-        toast.success('Convite aceito com sucesso!');
-        return {
-          success: true,
-          message: data.message || 'Convite aceito com sucesso!',
-          requiresOnboarding: data.requires_onboarding
-        };
-      } else {
-        console.error('[INVITE-FLOW] Falha na aceitação:', data);
-        throw new Error(data?.message || 'Erro ao aceitar convite');
-      }
-
-    } catch (error: any) {
-      console.error('[INVITE-FLOW] Erro ao aceitar:', error);
-      const errorMessage = error.message || 'Erro ao aceitar convite';
-      toast.error(errorMessage);
-      return {
-        success: false,
-        message: errorMessage
-      };
-    } finally {
-      setIsProcessing(false);
-    }
-  }, [token, user, inviteDetails]);
-
-  const registerWithInvite = useCallback(async (
-    name: string,
-    password: string
-  ): Promise<InviteFlowResult> => {
-    if (!token || !inviteDetails) {
-      return {
-        success: false,
-        message: 'Dados insuficientes para registro'
-      };
-    }
-
-    try {
-      setIsProcessing(true);
-      console.log('[INVITE-FLOW] Iniciando registro com convite:', {
-        email: inviteDetails.email,
-        token,
-        name
-      });
-
-      // Primeiro, criar o usuário
-      const { error: signUpError } = await signUp(inviteDetails.email, password, {
-        inviteToken: token,
-        userData: { 
-          name: name || '',
-          invite_token: token 
+        if (fetchError) {
+          logger.error('[INVITE-FLOW] Erro ao buscar convite:', fetchError);
+          setError('Erro ao validar convite');
+          return;
         }
-      });
 
-      if (signUpError) {
-        console.error('[INVITE-FLOW] Erro no signUp:', signUpError);
-        throw signUpError;
+        if (!data) {
+          logger.warn('[INVITE-FLOW] Convite não encontrado');
+          setError('Convite não encontrado ou inválido');
+          return;
+        }
+
+        // Verificar se o convite não expirou
+        const now = new Date();
+        const expiresAt = new Date(data.expires_at);
+        
+        if (now > expiresAt) {
+          logger.warn('[INVITE-FLOW] Convite expirado');
+          setError('Convite expirado');
+          return;
+        }
+
+        // Verificar se já foi usado
+        if (data.is_used) {
+          logger.warn('[INVITE-FLOW] Convite já foi usado');
+          setError('Convite já foi utilizado');
+          return;
+        }
+
+        logger.info('[INVITE-FLOW] Convite válido encontrado');
+        setInviteDetails(data as InviteDetails);
+
+      } catch (err) {
+        logger.error('[INVITE-FLOW] Erro inesperado:', err);
+        setError('Erro ao processar convite');
+      } finally {
+        setIsLoading(false);
       }
+    };
 
-      console.log('[INVITE-FLOW] Registro completado, aguardando confirmação...');
-      
-      // Aguardar um pouco para garantir que o usuário foi criado
-      await new Promise(resolve => setTimeout(resolve, 2000));
-
-      // Verificar se o usuário foi criado e está logado
-      const { data: { user: newUser } } = await supabase.auth.getUser();
-      
-      if (!newUser) {
-        throw new Error('Usuário não foi criado corretamente');
-      }
-
-      console.log('[INVITE-FLOW] Usuário criado:', newUser.id);
-
-      // Agora tentar completar o registro do convite
-      const { data: completeData, error: completeError } = await supabase.rpc('complete_invite_registration', {
-        p_token: token,
-        p_user_id: newUser.id
-      });
-
-      console.log('[INVITE-FLOW] Resultado complete_invite_registration:', { completeData, completeError });
-
-      if (completeError) {
-        console.error('[INVITE-FLOW] Erro ao completar registro:', completeError);
-        // Não falhar aqui, pois o usuário já foi criado
-        console.warn('[INVITE-FLOW] Continuando apesar do erro na finalização');
-      }
-
-      toast.success('Conta criada com sucesso!');
-      
-      return {
-        success: true,
-        message: 'Conta criada com sucesso!',
-        requiresOnboarding: true
-      };
-
-    } catch (error: any) {
-      console.error('[INVITE-FLOW] Erro no registro:', error);
-      const errorMessage = error.message || 'Erro ao criar conta';
-      toast.error(errorMessage);
-      return {
-        success: false,
-        message: errorMessage
-      };
-    } finally {
-      setIsProcessing(false);
-    }
-  }, [token, inviteDetails, signUp]);
-
-  useEffect(() => {
     fetchInviteDetails();
-  }, [fetchInviteDetails]);
+  }, [inviteToken]);
 
   return {
-    isLoading,
     inviteDetails,
-    error,
-    isProcessing,
-    acceptInvite,
-    registerWithInvite,
-    refetch: fetchInviteDetails
+    isLoading,
+    error
   };
 };

@@ -18,10 +18,15 @@ export const OnboardingWizardContainer = ({ children }: OnboardingWizardContaine
   const [searchParams] = useSearchParams();
   const { cleanupForInvite } = useOnboardingCleanup();
   
-  // Token ÚNICO - fonte única de verdade
+  // Token ÚNICO - fonte única de verdade (pode ser null)
   const inviteToken = useMemo(() => {
     return InviteTokenManager.getToken();
   }, [searchParams]);
+
+  console.log('[WIZARD-CONTAINER] Token de convite:', {
+    hasToken: !!inviteToken,
+    tokenPreview: inviteToken ? inviteToken.substring(0, 8) + '***' : 'nenhum'
+  });
 
   const {
     data: cleanData,
@@ -32,9 +37,13 @@ export const OnboardingWizardContainer = ({ children }: OnboardingWizardContaine
 
   const memberType = useMemo(() => cleanData.memberType || 'club', [cleanData.memberType]);
   
-  // Inicialização SIMPLES sem estados complexos
+  // Inicialização SIMPLES
   useEffect(() => {
-    console.log('[WIZARD-CONTAINER] Inicialização simples');
+    console.log('[WIZARD-CONTAINER] Inicialização:', {
+      hasToken: !!inviteToken,
+      memberType,
+      hasEmail: !!cleanData.email
+    });
     
     if (inviteToken) {
       InviteTokenManager.storeToken(inviteToken);
@@ -44,10 +53,17 @@ export const OnboardingWizardContainer = ({ children }: OnboardingWizardContaine
     initializeCleanData();
   }, [inviteToken, initializeCleanData, cleanupForInvite]);
 
-  // Loading SIMPLIFICADO
+  // Loading CRÍTICO: só para convites pendentes
   const isLoading = useMemo(() => {
-    return !cleanData.memberType && isInviteLoading;
-  }, [cleanData.memberType, isInviteLoading]);
+    const shouldLoad = inviteToken && isInviteLoading && !cleanData.email;
+    console.log('[WIZARD-CONTAINER] Loading status:', {
+      inviteToken: !!inviteToken,
+      isInviteLoading,
+      hasEmail: !!cleanData.email,
+      shouldLoad
+    });
+    return shouldLoad;
+  }, [inviteToken, isInviteLoading, cleanData.email]);
 
   const memoizedUpdateData = useCallback((newData: any) => {
     const dataWithToken = inviteToken ? { ...newData, inviteToken } : newData;
@@ -58,6 +74,13 @@ export const OnboardingWizardContainer = ({ children }: OnboardingWizardContaine
     initialData: cleanData,
     onDataChange: memoizedUpdateData,
     memberType
+  });
+
+  console.log('[WIZARD-CONTAINER] Renderizando com dados:', {
+    memberType,
+    isLoading,
+    hasData: Object.keys(cleanData).length > 2,
+    dataKeys: Object.keys(cleanData)
   });
 
   return (
