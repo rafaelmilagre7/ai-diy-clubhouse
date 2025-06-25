@@ -1,10 +1,8 @@
-
 import React from 'react';
+import { useOverviewData } from '@/hooks/analytics/useOverviewData';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { GlassStatsCard } from './GlassStatsCard';
-import { ModernLoadingState } from './ModernLoadingState';
-import { useRealAnalyticsData } from '@/hooks/analytics/useRealAnalyticsData';
-import { Activity, Users, BookOpen, TrendingUp, Target, Zap } from 'lucide-react';
+import { TrendingUp, Users, Target, BarChart3 } from 'lucide-react';
+import LoadingScreen from '@/components/common/LoadingScreen';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertTriangle } from 'lucide-react';
 
@@ -12,181 +10,176 @@ interface OverviewTabContentProps {
   timeRange: string;
 }
 
-export const OverviewTabContent: React.FC<OverviewTabContentProps> = ({ timeRange }) => {
-  const { data, loading, error } = useRealAnalyticsData({ 
-    timeRange, 
-    category: 'all', 
-    difficulty: 'all' 
-  });
+export const OverviewTabContent = ({ timeRange }: OverviewTabContentProps) => {
+  const { data, loading, error } = useOverviewData({ timeRange });
 
   if (loading) {
-    return <ModernLoadingState type="full" />;
+    return <LoadingScreen variant="modern" type="full" fullScreen={false} />;
   }
 
   if (error) {
     return (
-      <Alert variant="destructive" className="border-red-800/50 bg-red-950/20 backdrop-blur-xl">
+      <Alert variant="destructive" className="border-0 shadow-xl bg-red-50/80 backdrop-blur-sm">
         <AlertTriangle className="h-4 w-4" />
-        <AlertTitle className="text-red-400">Erro ao carregar dados</AlertTitle>
-        <AlertDescription className="text-red-300">{error}</AlertDescription>
+        <AlertTitle>Erro ao carregar dados</AlertTitle>
+        <AlertDescription>{error}</AlertDescription>
       </Alert>
     );
   }
 
-  // Calcular tendências baseadas nos dados reais
-  const calculateTrend = (current: number, previous: number) => {
-    if (previous === 0) return 0;
-    return ((current - previous) / previous) * 100;
-  };
-
-  // Simular dados anteriores para as tendências (em um cenário real, viria do backend)
-  const previousData = {
-    users: Math.round(data.totalUsers * 0.85),
-    activeUsers: Math.round(data.activeUsers * 0.92),
-    solutions: Math.round(data.totalSolutions * 0.95),
-    implementations: Math.round(data.totalImplementations * 0.78)
-  };
+  const growthRate = data.totalUsersChange > 0 ? data.totalUsersChange : 0;
 
   return (
     <div className="space-y-8">
-      {/* Cards de estatísticas principais com glassmorphism */}
+      {/* Stats modernas */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <GlassStatsCard
-          title="Total de Usuários"
-          value={data.totalUsers}
-          icon={Users}
-          colorScheme="primary"
-          trend={{
-            value: calculateTrend(data.totalUsers, previousData.users),
-            label: "vs período anterior",
-            type: data.totalUsers >= previousData.users ? 'positive' : 'negative'
-          }}
-        />
-        
-        <GlassStatsCard
-          title="Usuários Ativos"
-          value={data.activeUsers}
-          icon={Activity}
-          colorScheme="success"
-          trend={{
-            value: calculateTrend(data.activeUsers, previousData.activeUsers),
-            label: "vs período anterior",
-            type: data.activeUsers >= previousData.activeUsers ? 'positive' : 'negative'
-          }}
-        />
-        
-        <GlassStatsCard
-          title="Soluções Disponíveis"
-          value={data.totalSolutions}
-          icon={BookOpen}
-          colorScheme="secondary"
-          trend={{
-            value: calculateTrend(data.totalSolutions, previousData.solutions),
-            label: "vs período anterior",
-            type: data.totalSolutions >= previousData.solutions ? 'positive' : 'negative'
-          }}
-        />
-        
-        <GlassStatsCard
-          title="Implementações"
-          value={data.totalImplementations}
-          icon={TrendingUp}
-          colorScheme="warning"
-          trend={{
-            value: calculateTrend(data.totalImplementations, previousData.implementations),
-            label: "vs período anterior",
-            type: data.totalImplementations >= previousData.implementations ? 'positive' : 'negative'
-          }}
-        />
-      </div>
-
-      {/* Métricas secundárias */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <GlassStatsCard
-          title="Taxa de Engajamento"
-          value={`${data.totalUsers > 0 ? Math.round((data.activeUsers / data.totalUsers) * 100) : 0}%`}
-          icon={Target}
-          colorScheme="info"
-          trend={{
-            value: 12.5,
-            label: "este mês",
-            type: 'positive'
-          }}
-        />
-        
-        <GlassStatsCard
-          title="Média de Implementações"
-          value={data.totalSolutions > 0 ? Math.round(data.totalImplementations / data.totalSolutions) : 0}
-          icon={Zap}
-          colorScheme="primary"
-          trend={{
-            value: 8.3,
-            label: "por solução",
-            type: 'positive'
-          }}
-        />
-      </div>
-
-      {/* Conteúdo adicional da visão geral com glassmorphism */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card className="border-gray-800/50 bg-[#151823]/80 backdrop-blur-xl">
+        <Card className="border-0 shadow-xl bg-white/80 backdrop-blur-sm">
           <CardHeader>
-            <CardTitle className="text-white flex items-center gap-2">
-              <Activity className="h-5 w-5 text-[#00EAD9]" />
-              Resumo de Atividade
-            </CardTitle>
+            <CardTitle className="text-sm font-medium">Usuários Ativos</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              <div className="flex justify-between items-center p-3 rounded-lg bg-[#0F111A]/50">
-                <span className="text-gray-400">Taxa de Usuários Ativos</span>
-                <span className="text-white font-semibold text-[#00EAD9]">
-                  {data.totalUsers > 0 ? Math.round((data.activeUsers / data.totalUsers) * 100) : 0}%
-                </span>
-              </div>
-              <div className="flex justify-between items-center p-3 rounded-lg bg-[#0F111A]/50">
-                <span className="text-gray-400">Implementações por Solução</span>
-                <span className="text-white font-semibold">
-                  {data.totalSolutions > 0 ? Math.round(data.totalImplementations / data.totalSolutions) : 0}
-                </span>
-              </div>
-              <div className="flex justify-between items-center p-3 rounded-lg bg-[#0F111A]/50">
-                <span className="text-gray-400">Crescimento de Usuários</span>
-                <span className="text-green-400 font-semibold">
-                  +{calculateTrend(data.totalUsers, previousData.users).toFixed(1)}%
-                </span>
-              </div>
+            <div className="text-2xl font-bold">{data.activeUsers}</div>
+            <div className="flex items-center text-sm text-muted-foreground">
+              <TrendingUp className="h-4 w-4 mr-2 text-green-500" />
+              <span>{data.activeUsersChange}%</span>
             </div>
           </CardContent>
         </Card>
-        
-        <Card className="border-gray-800/50 bg-[#151823]/80 backdrop-blur-xl">
+
+        <Card className="border-0 shadow-xl bg-white/80 backdrop-blur-sm">
           <CardHeader>
-            <CardTitle className="text-white flex items-center gap-2">
-              <TrendingUp className="h-5 w-5 text-[#00EAD9]" />
-              Métricas de Engajamento
-            </CardTitle>
+            <CardTitle className="text-sm font-medium">Total de Usuários</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              <div className="flex justify-between items-center p-3 rounded-lg bg-[#0F111A]/50">
-                <span className="text-gray-400">Solução Mais Popular</span>
-                <span className="text-white font-semibold">
-                  {data.solutionPopularity[0]?.name?.substring(0, 20) || 'N/A'}...
-                </span>
-              </div>
-              <div className="flex justify-between items-center p-3 rounded-lg bg-[#0F111A]/50">
-                <span className="text-gray-400">Categoria Líder</span>
-                <span className="text-white font-semibold">
-                  {data.implementationsByCategory[0]?.name || 'N/A'}
-                </span>
-              </div>
-              <div className="flex justify-between items-center p-3 rounded-lg bg-[#0F111A]/50">
-                <span className="text-gray-400">Role Predominante</span>
-                <span className="text-white font-semibold">
-                  {data.userRoleDistribution[0]?.name || 'N/A'}
-                </span>
-              </div>
+            <div className="text-2xl font-bold">{data.totalUsers}</div>
+            <div className="flex items-center text-sm text-muted-foreground">
+              <TrendingUp className="h-4 w-4 mr-2 text-green-500" />
+              <span>{growthRate}%</span>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-0 shadow-xl bg-white/80 backdrop-blur-sm">
+          <CardHeader>
+            <CardTitle className="text-sm font-medium">Taxa de Engajamento</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{data.engagementRate}%</div>
+            <div className="flex items-center text-sm text-muted-foreground">
+              <TrendingUp className="h-4 w-4 mr-2 text-green-500" />
+              <span>{data.engagementRateChange}%</span>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-0 shadow-xl bg-white/80 backdrop-blur-sm">
+          <CardHeader>
+            <CardTitle className="text-sm font-medium">Novas Implementações</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{data.newImplementations}</div>
+            <div className="flex items-center text-sm text-muted-foreground">
+              <TrendingUp className="h-4 w-4 mr-2 text-green-500" />
+              <span>{data.newImplementationsChange}%</span>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Gráficos principais */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card className="border-0 shadow-xl bg-white/80 backdrop-blur-sm">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Users className="h-5 w-5 text-blue-500" />
+              Crescimento de Usuários
+            </CardTitle>
+            <p className="text-sm text-gray-600">
+              Total de usuários ao longo do tempo
+            </p>
+          </CardHeader>
+          <CardContent>
+            {/* Placeholder para o gráfico de crescimento de usuários */}
+            <div className="h-64 flex items-center justify-center text-muted-foreground">
+              Gráfico de Crescimento de Usuários
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-0 shadow-xl bg-white/80 backdrop-blur-sm">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <BarChart3 className="h-5 w-5 text-blue-500" />
+              Implementações por Categoria
+            </CardTitle>
+            <p className="text-sm text-gray-600">
+              Distribuição de implementações por categoria
+            </p>
+          </CardHeader>
+          <CardContent>
+            {/* Placeholder para o gráfico de implementações por categoria */}
+            <div className="h-64 flex items-center justify-center text-muted-foreground">
+              Gráfico de Implementações por Categoria
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Métricas chave */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <Card className="border-0 shadow-xl bg-white/80 backdrop-blur-sm">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Target className="h-5 w-5 text-blue-500" />
+              Taxa de Conclusão de Metas
+            </CardTitle>
+            <p className="text-sm text-gray-600">
+              Percentual de metas concluídas
+            </p>
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold">{data.completionRate}%</div>
+            <div className="text-sm text-muted-foreground">
+              Aumento de {data.completionRateChange}% em relação ao período
+              anterior
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-0 shadow-xl bg-white/80 backdrop-blur-sm">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Users className="h-5 w-5 text-blue-500" />
+              Usuários Recorrentes
+            </CardTitle>
+            <p className="text-sm text-gray-600">
+              Usuários que retornam à plataforma
+            </p>
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold">{data.recurringUsers}</div>
+            <div className="text-sm text-muted-foreground">
+              Aumento de {data.recurringUsersChange}% em relação ao período
+              anterior
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-0 shadow-xl bg-white/80 backdrop-blur-sm">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <BarChart3 className="h-5 w-5 text-blue-500" />
+              Média de Implementações por Usuário
+            </CardTitle>
+            <p className="text-sm text-gray-600">
+              Número médio de implementações por usuário
+            </p>
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold">{data.avgImplementations}</div>
+            <div className="text-sm text-muted-foreground">
+              Aumento de {data.avgImplementationsChange}% em relação ao período
+              anterior
             </div>
           </CardContent>
         </Card>
