@@ -7,7 +7,7 @@ import { WeeklyActivityChart } from './WeeklyActivityChart';
 import { CompletionRateChart } from './CompletionRateChart';
 import LoadingScreen from '@/components/common/LoadingScreen';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { AlertTriangle } from 'lucide-react';
+import { AlertTriangle, Users, Activity, Target, TrendingUp } from 'lucide-react';
 
 interface OverviewTabContentProps {
   timeRange: string;
@@ -30,6 +30,29 @@ export const OverviewTabContent = ({ timeRange }: OverviewTabContentProps) => {
     );
   }
 
+  // Mock data para os gráficos
+  const userGrowthData = [
+    { name: 'Jan', novos: 20, total: 100 },
+    { name: 'Fev', novos: 30, total: 130 },
+    { name: 'Mar', novos: 25, total: 155 },
+    { name: 'Abr', novos: 35, total: 190 }
+  ];
+
+  const weeklyActivityData = [
+    { day: 'Seg', atividade: 45 },
+    { day: 'Ter', atividade: 52 },
+    { day: 'Qua', atividade: 48 },
+    { day: 'Qui', atividade: 61 },
+    { day: 'Sex', atividade: 55 },
+    { day: 'Sáb', atividade: 30 },
+    { day: 'Dom', atividade: 25 }
+  ];
+
+  const completionRateData = [
+    { name: 'Concluídas', value: data.totalUsers * 0.78 },
+    { name: 'Em Andamento', value: data.totalUsers * 0.22 }
+  ];
+
   return (
     <div className="space-y-8">
       {/* Stats modernas */}
@@ -37,42 +60,54 @@ export const OverviewTabContent = ({ timeRange }: OverviewTabContentProps) => {
         <ModernStatsCard
           title="Total de Usuários"
           value={data.totalUsers}
-          change={data.totalUsersChange}
-          icon="users"
-          trend="up"
+          icon={Users}
+          trend={{
+            value: data.totalUsersChange,
+            label: "vs período anterior",
+            type: "positive"
+          }}
         />
         <ModernStatsCard
           title="Usuários Ativos"
           value={data.activeUsers}
-          change={data.activeUsersChange}
-          icon="activity"
-          trend="up"
+          icon={Activity}
+          trend={{
+            value: data.activeUsersChange,
+            label: "vs período anterior",
+            type: "positive"
+          }}
         />
         <ModernStatsCard
           title="Taxa de Conclusão"
           value={`${data.completionRate}%`}
-          change={data.completionRateChange}
-          icon="target"
-          trend="up"
+          icon={Target}
+          trend={{
+            value: data.completionRateChange,
+            label: "vs período anterior",
+            type: "positive"
+          }}
         />
         <ModernStatsCard
           title="Taxa de Engajamento"
           value={`${data.engagementRate}%`}
-          change={data.engagementRateChange}
-          icon="trending-up"
-          trend="up"
+          icon={TrendingUp}
+          trend={{
+            value: data.engagementRateChange,
+            label: "vs período anterior",
+            type: "positive"
+          }}
         />
       </div>
 
       {/* Gráficos principais */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <UserGrowthChart />
-        <WeeklyActivityChart />
+        <UserGrowthChart data={userGrowthData} />
+        <WeeklyActivityChart data={weeklyActivityData} />
       </div>
 
       {/* Gráfico de conclusão */}
       <div>
-        <CompletionRateChart />
+        <CompletionRateChart data={completionRateData} />
       </div>
     </div>
   );
