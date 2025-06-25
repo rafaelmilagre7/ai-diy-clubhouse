@@ -2,7 +2,7 @@
 import { BrowserRouter } from "react-router-dom";
 import { AppRoutes } from "@/routes/AppRoutes";
 import { Toaster } from "@/components/ui/sonner";
-import { useEffect } from "react";
+import { useEffect, startTransition } from "react";
 import { useAuth } from "@/contexts/auth";
 import { logger } from "@/utils/logger";
 import { useSecureSession } from "@/hooks/useSecureSession";
@@ -18,11 +18,13 @@ function App() {
   });
 
   useEffect(() => {
-    // Log simplificado para evitar overhead
+    // Log simplificado para evitar overhead - wrapped em startTransition
     if (import.meta.env.DEV) {
-      logger.info('[APP] App initialized', {
-        hasUser: !!user,
-        isLoading
+      startTransition(() => {
+        logger.info('[APP] App initialized', {
+          hasUser: !!user,
+          isLoading
+        });
       });
     }
   }, [user, isLoading]);

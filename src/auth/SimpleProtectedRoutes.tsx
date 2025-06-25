@@ -1,6 +1,6 @@
 
 import { Navigate, useLocation, Outlet } from "react-router-dom";
-import { ReactNode } from "react";
+import { ReactNode, startTransition } from "react";
 import { useAuth } from "@/contexts/auth";
 import LoadingScreen from "@/components/common/LoadingScreen";
 import { logger } from "@/utils/logger";
@@ -13,12 +13,14 @@ export const SimpleProtectedRoutes = ({ children }: SimpleProtectedRoutesProps) 
   const location = useLocation();
   const { user, isLoading } = useAuth();
 
-  // Log apenas em desenvolvimento
+  // Log apenas em desenvolvimento - wrapped em startTransition
   if (import.meta.env.DEV) {
-    logger.info("[SIMPLE-PROTECTED] Estado:", {
-      pathname: location.pathname,
-      hasUser: !!user,
-      isLoading
+    startTransition(() => {
+      logger.info("[SIMPLE-PROTECTED] Estado:", {
+        pathname: location.pathname,
+        hasUser: !!user,
+        isLoading
+      });
     });
   }
 
@@ -27,9 +29,11 @@ export const SimpleProtectedRoutes = ({ children }: SimpleProtectedRoutesProps) 
     return <LoadingScreen message="Verificando acesso..." />;
   }
 
-  // Sem usuário = login
+  // Sem usuário = login - usar startTransition para navegação
   if (!user) {
-    logger.info("[SIMPLE-PROTECTED] Redirecionando para /login");
+    startTransition(() => {
+      logger.info("[SIMPLE-PROTECTED] Redirecionando para /login");
+    });
     return <Navigate to="/login" state={{ from: location.pathname }} replace />;
   }
 
