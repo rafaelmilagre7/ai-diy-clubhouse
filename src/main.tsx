@@ -8,27 +8,6 @@ import { LoggingProvider } from '@/hooks/useLogging';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from '@/components/ui/toaster';
 
-// CORREÇÃO: Inicialização com limpeza de cache em caso de erro
-import { checkAndFixAssets } from './utils/authCleanup';
-
-// Verificar assets na inicialização
-const initializeApp = () => {
-  console.log('[MAIN] Verificando integridade da aplicação');
-  
-  // Verificar se há problemas de assets
-  const assetsOk = checkAndFixAssets();
-  
-  if (!assetsOk) {
-    console.log('[MAIN] Problemas de assets detectados, correção automática iniciada');
-    return; // checkAndFixAssets já força reload se necessário
-  }
-  
-  console.log('[MAIN] Assets OK, iniciando aplicação');
-};
-
-// Executar verificação inicial
-initializeApp();
-
 // Configurar QueryClient otimizado
 const queryClient = new QueryClient({
   defaultOptions: {

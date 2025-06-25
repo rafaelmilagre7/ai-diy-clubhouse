@@ -6,7 +6,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AlertCircle } from 'lucide-react';
 import { useAuth } from '@/contexts/auth';
-import { checkAndFixAssets } from '@/utils/authCleanup';
 import LoginForm from './LoginForm';
 import SimpleRegisterForm from './SimpleRegisterForm';
 
@@ -17,38 +16,16 @@ const AuthLayout = () => {
   
   const [activeTab, setActiveTab] = useState('login');
   const [message, setMessage] = useState('');
-  const [assetsReady, setAssetsReady] = useState(false);
 
-  // CORREÇÃO: Verificar integridade dos assets na inicialização
+  // CORREÇÃO: Redirecionar usuário autenticado sem verificações complexas
   useEffect(() => {
-    const initializeAuth = () => {
-      console.log('[AUTH-LAYOUT] Verificando integridade dos assets');
-      
-      // Verificar se assets estão funcionando
-      const assetsOk = checkAndFixAssets();
-      
-      if (assetsOk) {
-        setAssetsReady(true);
-        console.log('[AUTH-LAYOUT] Assets OK, iniciando auth layout');
-      } else {
-        console.log('[AUTH-LAYOUT] Assets com problema, aguardando correção');
-        // checkAndFixAssets já força reload se necessário
-      }
-    };
-
-    // Pequeno delay para garantir que DOM carregou
-    setTimeout(initializeAuth, 100);
-  }, []);
-
-  // CORREÇÃO: Redirecionar usuário autenticado APENAS se assets estão OK
-  useEffect(() => {
-    if (!isLoading && user && assetsReady) {
+    if (!isLoading && user) {
       console.log('[AUTH-LAYOUT] Usuário logado detectado, redirecionando');
       
       const from = location.state?.from || '/dashboard';
       navigate(from, { replace: true });
     }
-  }, [user, isLoading, navigate, location.state, assetsReady]);
+  }, [user, isLoading, navigate, location.state]);
 
   const handleSuccess = () => {
     console.log('[AUTH-LAYOUT] Sucesso na autenticação');
@@ -57,14 +34,14 @@ const AuthLayout = () => {
     navigate(from, { replace: true });
   };
 
-  // CORREÇÃO: Mostrar loading se assets não estão prontos ou auth carregando
-  if (!assetsReady || isLoading) {
+  // CORREÇÃO: Loading simples e direto
+  if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#0F111A] to-[#151823] p-4">
         <Card className="w-full max-w-md bg-[#1A1E2E]/90 backdrop-blur-sm border-white/20">
           <CardContent className="p-6 text-center">
             <h2 className="text-xl font-semibold text-white mb-4">
-              {!assetsReady ? 'Verificando sistema...' : 'Carregando...'}
+              Carregando...
             </h2>
             <div className="flex justify-center">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-viverblue"></div>

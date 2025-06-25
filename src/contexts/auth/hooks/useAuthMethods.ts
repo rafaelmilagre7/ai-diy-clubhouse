@@ -2,7 +2,6 @@
 import { useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { logger } from '@/utils/logger';
-import { forceAuthRedirect, recoverFromAuthError } from '@/utils/authCleanup';
 
 interface UseAuthMethodsProps {
   setIsLoading: (loading: boolean) => void;
@@ -76,22 +75,32 @@ export const useAuthMethods = ({ setIsLoading }: UseAuthMethodsProps) => {
       setIsLoading(true);
       logger.info('[AUTH-METHODS] Iniciando logout SEGURO');
       
-      // CORREÇÃO: Usar o método de logout mais seguro
-      await recoverFromAuthError();
+      // Logout simples com Supabase
+      await supabase.auth.signOut({ scope: 'global' });
+      
+      // Limpeza básica de localStorage
+      Object.keys(localStorage).forEach(key => {
+        if (key.startsWith('supabase.auth.') || key.includes('sb-')) {
+          localStorage.removeItem(key);
+        }
+      });
+      
+      // Redirecionamento para /auth
+      window.location.href = '/auth';
       
       return { success: true };
 
     } catch (error: any) {
       logger.error('[AUTH-METHODS] Erro no logout, forçando saída:', error);
       
-      // CORREÇÃO: Mesmo com erro, forçar saída completa
-      try {
-        await forceAuthRedirect();
-      } catch (forceError) {
-        logger.error('Erro ao forçar saída:', forceError);
-        // Último recurso - reload da página
-        window.location.reload();
-      }
+      // Limpeza forçada e redirecionamento
+      Object.keys(localStorage).forEach(key => {
+        if (key.startsWith('supabase.auth.') || key.includes('sb-')) {
+          localStorage.removeItem(key);
+        }
+      });
+      
+      window.location.href = '/auth';
       
       return { success: false, error };
     } finally {

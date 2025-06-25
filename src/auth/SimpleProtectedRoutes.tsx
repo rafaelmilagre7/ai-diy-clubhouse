@@ -22,12 +22,12 @@ export const SimpleProtectedRoutes = ({ children }: SimpleProtectedRoutesProps) 
     });
   }
 
-  // Loading simples com timeout de 3s
+  // Loading simples
   if (isLoading) {
     return <LoadingScreen message="Verificando acesso..." />;
   }
 
-  // Sem usuário = login
+  // Sem usuário = auth (CORREÇÃO: usar /auth ao invés de /login)
   if (!user) {
     logger.info("[SIMPLE-PROTECTED] Redirecionando para /auth");
     return <Navigate to="/auth" state={{ from: location.pathname }} replace />;
