@@ -27,10 +27,22 @@ export const useInviteRegistration = () => {
         token: data.token.substring(0, 8) + '***'
       });
 
-      // 1. Verificar se o email já existe
-      const { data: existingUser } = await supabase.auth.admin.getUserByEmail(data.email);
+      // 1. Verificar se o email já existe - usando método alternativo
+      const { data: existingUsers, error: searchError } = await supabase.auth.admin.listUsers();
       
-      if (existingUser.user) {
+      if (searchError) {
+        logger.error('[INVITE-REGISTRATION] ❌ Erro ao verificar usuários existentes:', searchError);
+        toast.error('Erro ao verificar usuários existentes');
+        return { 
+          success: false, 
+          error: 'user_check_failed',
+          message: 'Erro ao verificar usuários existentes'
+        };
+      }
+
+      const existingUser = existingUsers.users.find(user => user.email === data.email);
+      
+      if (existingUser) {
         logger.warn('[INVITE-REGISTRATION] ⚠️ Email já existe no sistema');
         toast.error('Este e-mail já possui uma conta. Faça login ao invés de criar uma nova conta.');
         return { 

@@ -5,13 +5,13 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AlertCircle } from 'lucide-react';
-import { useAuth } from '@/contexts/auth';
+import { useSimpleAuth } from '@/contexts/auth/SimpleAuthProvider';
 import LoginForm from './LoginForm';
 import SimpleRegisterForm from './SimpleRegisterForm';
 
 const AuthLayout = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user } = useSimpleAuth();
   
   const [activeTab, setActiveTab] = useState('login');
   const [message, setMessage] = useState('');
@@ -25,11 +25,6 @@ const AuthLayout = () => {
       navigate('/dashboard');
     }
   }, [user, navigate]);
-
-  const handleSuccess = () => {
-    console.log('[AUTH-LAYOUT] Sucesso na autenticação, redirecionando para dashboard');
-    navigate('/dashboard');
-  };
 
   // Se usuário está logado, mostrar loading enquanto redireciona
   if (user) {
@@ -86,12 +81,12 @@ const AuthLayout = () => {
                     Acesse sua conta para continuar
                   </p>
                 </div>
-                <LoginForm onSuccess={handleSuccess} />
+                <LoginForm />
               </div>
             </TabsContent>
             
             <TabsContent value="register">
-              <SimpleRegisterForm onSuccess={handleSuccess} />
+              <SimpleRegisterForm />
             </TabsContent>
           </Tabs>
         </CardContent>

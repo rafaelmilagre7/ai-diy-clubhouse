@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useSimpleAuth } from '@/contexts/auth/SimpleAuthProvider';
@@ -5,17 +6,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Mail, Lock, Eye, EyeOff, Google } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, Chrome } from 'lucide-react';
 import { toast } from 'sonner';
-
-interface LoginFormProps {
-  onForgotPassword?: () => void;
-}
 
 const LoginForm = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { signIn, isSigningIn } = useSimpleAuth();
+  const { signIn, isLoading: isSigningIn } = useSimpleAuth();
   
   // Verificar se veio com email pré-preenchido do fluxo de convite
   const prefilledEmail = location.state?.email || '';
@@ -45,12 +42,15 @@ const LoginForm = () => {
 
     if (signInError) {
       setError(signInError.message);
+    } else {
+      navigate('/dashboard');
     }
   };
 
   const handleGoogleSignIn = () => {
     // Implementar a lógica de login com o Google aqui
     console.log('Login com o Google clicado');
+    toast.info('Login com Google será implementado em breve');
   };
 
   return (
@@ -120,10 +120,7 @@ const LoginForm = () => {
             Entrando...
           </>
         ) : (
-          <>
-            <LogIn className="w-4 h-4 mr-2" />
-            Entrar
-          </>
+          'Entrar'
         )}
       </Button>
 
@@ -153,7 +150,7 @@ const LoginForm = () => {
         className="w-full text-white hover:bg-gray-800 border-gray-700"
         onClick={handleGoogleSignIn}
       >
-        <Google className="w-4 h-4 mr-2" />
+        <Chrome className="w-4 h-4 mr-2" />
         Google
       </Button>
     </form>

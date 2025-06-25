@@ -1,10 +1,10 @@
 
 import React, { useState } from 'react';
-import { Eye, EyeOff, Mail, User, Lock, UserPlus } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Mail, User, Lock, Eye, EyeOff, UserPlus } from 'lucide-react';
 import { useInviteRegistration } from '@/hooks/useInviteRegistration';
 
 interface InviteRegisterFormProps {
@@ -20,37 +20,32 @@ const InviteRegisterForm = ({ email, initialName = '', token, onUserExists }: In
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [error, setError] = useState('');
 
   const { registerWithInvite, isRegistering } = useInviteRegistration();
 
-  const validateForm = () => {
-    const newErrors: Record<string, string> = {};
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
 
+    // Validações
     if (!name.trim()) {
-      newErrors.name = 'Nome é obrigatório';
+      setError('Por favor, insira seu nome.');
+      return;
     }
 
     if (!password) {
-      newErrors.password = 'Senha é obrigatória';
-    } else if (password.length < 6) {
-      newErrors.password = 'Senha deve ter pelo menos 6 caracteres';
+      setError('Por favor, insira uma senha.');
+      return;
     }
 
-    if (!confirmPassword) {
-      newErrors.confirmPassword = 'Confirmação de senha é obrigatória';
-    } else if (password !== confirmPassword) {
-      newErrors.confirmPassword = 'Senhas não coincidem';
+    if (password.length < 6) {
+      setError('A senha deve ter pelo menos 6 caracteres.');
+      return;
     }
 
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!validateForm()) {
+    if (password !== confirmPassword) {
+      setError('As senhas não coincidem.');
       return;
     }
 
@@ -61,8 +56,12 @@ const InviteRegisterForm = ({ email, initialName = '', token, onUserExists }: In
       token
     });
 
-    if (result.error === 'user_exists') {
-      onUserExists();
+    if (!result.success) {
+      if (result.error === 'user_exists') {
+        onUserExists();
+      } else {
+        setError(result.message || 'Erro ao criar conta');
+      }
     }
   };
 
@@ -74,16 +73,16 @@ const InviteRegisterForm = ({ email, initialName = '', token, onUserExists }: In
             <UserPlus className="w-8 h-8 text-viverblue" />
           </div>
           <CardTitle className="text-2xl font-bold text-white mb-2">
-            Criar sua Conta
+            Criar sua conta
           </CardTitle>
           <p className="text-neutral-300 text-sm">
-            Complete seu cadastro para acessar o <strong className="text-viverblue">Viver de IA</strong>
+            Você foi convidado para o <strong className="text-viverblue">Viver de IA</strong>
           </p>
         </CardHeader>
         
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Email (readonly) */}
+            {/* Email - Bloqueado */}
             <div className="space-y-2">
               <Label htmlFor="email" className="text-white flex items-center gap-2">
                 <Mail className="w-4 h-4" />
@@ -93,31 +92,29 @@ const InviteRegisterForm = ({ email, initialName = '', token, onUserExists }: In
                 id="email"
                 type="email"
                 value={email}
-                readOnly
-                className="bg-gray-700 border-gray-600 text-gray-300 cursor-not-allowed"
+                disabled
+                className="bg-gray-800 border-gray-700 text-gray-400 cursor-not-allowed"
               />
-              <p className="text-xs text-neutral-400">
-                E-mail do convite (não pode ser alterado)
+              <p className="text-xs text-neutral-500">
+                E-mail do convite (não editável)
               </p>
             </div>
 
-            {/* Nome (editável) */}
+            {/* Nome - Editável */}
             <div className="space-y-2">
               <Label htmlFor="name" className="text-white flex items-center gap-2">
                 <User className="w-4 h-4" />
-                Nome Completo
+                Nome completo
               </Label>
               <Input
                 id="name"
                 type="text"
+                placeholder="Digite seu nome completo"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="Digite seu nome completo"
                 className="bg-[#0F111A] border-gray-700 text-white placeholder-neutral-400 focus:border-viverblue"
+                required
               />
-              {errors.name && (
-                <p className="text-sm text-red-400">{errors.name}</p>
-              )}
             </div>
 
             {/* Senha */}
@@ -129,11 +126,12 @@ const InviteRegisterForm = ({ email, initialName = '', token, onUserExists }: In
               <div className="relative">
                 <Input
                   id="password"
-                  type={showPassword ? "text" : "password"}
+                  type={showPassword ? 'text' : 'password'}
+                  placeholder="Crie uma senha segura"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Digite sua senha"
                   className="bg-[#0F111A] border-gray-700 text-white placeholder-neutral-400 focus:border-viverblue pr-10"
+                  required
                 />
                 <button
                   type="button"
@@ -143,25 +141,23 @@ const InviteRegisterForm = ({ email, initialName = '', token, onUserExists }: In
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
-              {errors.password && (
-                <p className="text-sm text-red-400">{errors.password}</p>
-              )}
             </div>
 
             {/* Confirmar Senha */}
             <div className="space-y-2">
               <Label htmlFor="confirmPassword" className="text-white flex items-center gap-2">
                 <Lock className="w-4 h-4" />
-                Confirmar Senha
+                Confirmar senha
               </Label>
               <div className="relative">
                 <Input
                   id="confirmPassword"
-                  type={showConfirmPassword ? "text" : "password"}
+                  type={showConfirmPassword ? 'text' : 'password'}
+                  placeholder="Repita sua senha"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  placeholder="Confirme sua senha"
                   className="bg-[#0F111A] border-gray-700 text-white placeholder-neutral-400 focus:border-viverblue pr-10"
+                  required
                 />
                 <button
                   type="button"
@@ -171,16 +167,21 @@ const InviteRegisterForm = ({ email, initialName = '', token, onUserExists }: In
                   {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
-              {errors.confirmPassword && (
-                <p className="text-sm text-red-400">{errors.confirmPassword}</p>
-              )}
             </div>
 
-            {/* Botão de Submit */}
-            <Button 
+            {error && (
+              <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3">
+                <p className="text-sm text-red-300 text-center">
+                  {error}
+                </p>
+              </div>
+            )}
+
+            {/* Botão de Criar Conta */}
+            <Button
               type="submit"
               disabled={isRegistering}
-              className="w-full bg-viverblue hover:bg-viverblue/90 text-white font-medium py-3 mt-6"
+              className="w-full bg-viverblue hover:bg-viverblue/90 text-white font-medium py-3"
               size="lg"
             >
               {isRegistering ? (
@@ -190,20 +191,24 @@ const InviteRegisterForm = ({ email, initialName = '', token, onUserExists }: In
                 </>
               ) : (
                 <>
-                  <UserPlus className="w-5 h-5 mr-2" />
-                  Criar Conta
+                  <UserPlus className="w-4 h-4 mr-2" />
+                  Criar minha conta
                 </>
               )}
             </Button>
           </form>
-
+          
           {/* Informações adicionais */}
-          <div className="mt-6 text-center space-y-2">
+          <div className="mt-6 text-center">
             <p className="text-xs text-neutral-400">
-              Ao criar sua conta, você concorda com nossos termos de uso
-            </p>
-            <p className="text-xs text-neutral-500">
-              Token: {token.substring(0, 8)}***
+              Ao criar sua conta, você concorda com nossos{' '}
+              <a href="/terms" className="text-viverblue hover:underline">
+                Termos de Uso
+              </a>{' '}
+              e{' '}
+              <a href="/privacy" className="text-viverblue hover:underline">
+                Política de Privacidade
+              </a>
             </p>
           </div>
         </CardContent>

@@ -1,3 +1,4 @@
+
 import { extractTokenFromCurrentUrl } from './inviteRouting';
 
 /**
@@ -105,8 +106,8 @@ export class InviteTokenManager {
   static clearTokenOnSuccess(): void {
     try {
       if (typeof window !== 'undefined') {
-        localStorage.removeItem(TOKEN_KEY);
-        sessionStorage.removeItem(TOKEN_KEY);
+        localStorage.removeItem(this.TOKEN_KEY);
+        sessionStorage.removeItem(this.TOKEN_KEY);
         console.log('[INVITE-TOKEN-MANAGER] ✅ Token limpo após sucesso');
       }
     } catch (error) {
@@ -120,8 +121,8 @@ export class InviteTokenManager {
   static clearTokenOnError(): void {
     try {
       if (typeof window !== 'undefined') {
-        localStorage.removeItem(TOKEN_KEY);
-        sessionStorage.removeItem(TOKEN_KEY);
+        localStorage.removeItem(this.TOKEN_KEY);
+        sessionStorage.removeItem(this.TOKEN_KEY);
         console.log('[INVITE-TOKEN-MANAGER] ❌ Token limpo após erro');
       }
     } catch (error) {
@@ -135,8 +136,8 @@ export class InviteTokenManager {
   static clearTokenOnLogout(): void {
     try {
       if (typeof window !== 'undefined') {
-        localStorage.removeItem(TOKEN_KEY);
-        sessionStorage.removeItem(TOKEN_KEY);
+        localStorage.removeItem(this.TOKEN_KEY);
+        sessionStorage.removeItem(this.TOKEN_KEY);
         console.log('[INVITE-TOKEN-MANAGER] 🚪 Token limpo no logout');
       }
     } catch (error) {
