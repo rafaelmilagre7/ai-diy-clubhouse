@@ -1,6 +1,6 @@
 
 import { RouteObject } from "react-router-dom";
-import { SimpleProtectedRoutes } from '@/auth/SimpleProtectedRoutes';
+import { RobustProtectedRoutes } from '@/auth/RobustProtectedRoutes';
 import MemberLayout from '@/components/layout/MemberLayout';
 
 // Member pages
@@ -39,7 +39,7 @@ import NotificationSettingsPage from '@/pages/profile/NotificationSettingsPage';
 // Função helper para criar rotas protegidas com MemberLayout
 const createProtectedRoute = (path: string, Component: React.ComponentType<any>) => ({
   path,
-  element: <SimpleProtectedRoutes><MemberLayout><Component /></MemberLayout></SimpleProtectedRoutes>
+  element: <RobustProtectedRoutes><MemberLayout><Component /></MemberLayout></RobustProtectedRoutes>
 });
 
 export const memberRoutes: RouteObject[] = [

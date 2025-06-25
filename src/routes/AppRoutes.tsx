@@ -16,14 +16,14 @@ import SetNewPassword from '@/pages/auth/SetNewPassword';
 import OnboardingPage from '@/pages/OnboardingPage';
 import RegisterPage from '@/pages/auth/RegisterPage';
 
-// Usar o redirect simples
-import { SimpleAuthRedirect } from '@/components/routing/SimpleAuthRedirect';
+// Usar o redirect robusto
+import RobustRootRedirect from '@/components/routing/RobustRootRedirect';
 
 export const AppRoutes = createBrowserRouter([
-  // Rota raiz com redirecionamento simples
+  // Rota raiz com redirecionamento robusto
   {
     path: "/",
-    element: <SimpleAuthRedirect />
+    element: <RobustRootRedirect />
   },
 
   // Rotas públicas
@@ -56,7 +56,7 @@ export const AppRoutes = createBrowserRouter([
     element: <RegisterPage />
   },
 
-  // Rotas de membros (usando SimpleProtectedRoutes)
+  // Rotas de membros (já usando RobustProtectedRoutes)
   ...memberRoutes,
 
   // Rotas de admin

@@ -134,7 +134,11 @@ export const useOnboardingCompletion = () => {
       const errorMessage = error.message || 'Erro inesperado ao finalizar onboarding';
       setCompletionError(errorMessage);
       
-      logger.error('Erro ao finalizar onboarding', error);
+      logger.error('Erro ao finalizar onboarding', error, {
+        component: 'OnboardingCompletion',
+        userId: user.id,
+        memberType
+      });
       
       toast.error(`Erro: ${errorMessage}`, {
         duration: 8000

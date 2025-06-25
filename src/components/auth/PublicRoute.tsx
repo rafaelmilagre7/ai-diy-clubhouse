@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Navigate } from 'react-router-dom';
-import { useAuth } from '@/contexts/auth/SimpleAuthProvider';
+import { useAuth } from '@/contexts/auth';
 
 interface PublicRouteProps {
   children: React.ReactNode;

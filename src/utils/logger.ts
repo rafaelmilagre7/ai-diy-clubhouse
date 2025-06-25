@@ -1,66 +1,95 @@
 
-interface LogEntry {
-  level: 'info' | 'warn' | 'error' | 'debug';
-  message: string;
-  data?: any;
-  timestamp: Date;
+import { sanitizeData } from '@/components/security/DataSanitizer';
+
+/**
+ * Sistema de logging centralizado, seguro e otimizado.
+ * Previne vazamento de dados (data leakage).
+ */
+
+type LogLevel = 'debug' | 'info' | 'warn' | 'error' | 'security';
+
+interface LogContext {
+  component?: string;
+  [key: string]: any;
 }
 
+const isProduction = process.env.NODE_ENV === 'production';
+
 class Logger {
-  private logs: LogEntry[] = [];
-  private maxLogs = 1000;
+  private logLevel: LogLevel = isProduction ? 'warn' : 'debug';
 
-  info(message: string, data?: any, context?: any) {
-    this.log('info', message, data || context);
-    console.log(`[INFO] ${message}`, data || context);
+  private shouldLog(level: LogLevel): boolean {
+    const levels: Record<LogLevel, number> = {
+      debug: 0,
+      info: 1,
+      warn: 2,
+      error: 3,
+      security: 4,
+    };
+    return levels[level] >= levels[this.logLevel];
   }
 
-  warn(message: string, data?: any, context?: any) {
-    this.log('warn', message, data || context);
-    console.warn(`[WARN] ${message}`, data || context);
-  }
+  private log(level: LogLevel, message: string, context?: LogContext) {
+    if (!this.shouldLog(level)) return;
 
-  error(message: string, data?: any, context?: any) {
-    this.log('error', message, data || context);
-    console.error(`[ERROR] ${message}`, data || context);
-  }
-
-  debug(message: string, data?: any, context?: any) {
-    this.log('debug', message, data || context);
-    if (process.env.NODE_ENV === 'development') {
-      console.debug(`[DEBUG] ${message}`, data || context);
+    // Em produção, não fazemos log de `debug` e `info` no console.
+    if (isProduction && (level === 'debug' || level === 'info')) {
+      return;
     }
-  }
 
-  // Método para compatibilidade com chamadas de 3 argumentos
-  security(message: string, data?: any, context?: any) {
-    this.log('warn', `[SECURITY] ${message}`, data || context);
-    console.warn(`[SECURITY] ${message}`, data || context);
-  }
+    const sanitizedContext = context ? sanitizeData(context) : {};
+    const timestamp = new Date().toISOString();
+    
+    // Fallback para console.log se o método específico não existir
+    const logMethod = console[level] || console.log;
 
-  private log(level: LogEntry['level'], message: string, data?: any) {
-    const entry: LogEntry = {
-      level,
-      message,
-      data,
-      timestamp: new Date()
+    const levelIcons = {
+        debug: '🐛 [DEBUG]',
+        info: 'ℹ️ [INFO]',
+        warn: '⚠️ [WARN]',
+        error: '❌ [ERROR]',
+        security: '🔒 [SECURITY]'
     };
 
-    this.logs.push(entry);
-
-    // Manter apenas os últimos logs
-    if (this.logs.length > this.maxLogs) {
-      this.logs = this.logs.slice(-this.maxLogs);
-    }
+    logMethod(`${levelIcons[level]} ${message} @ ${timestamp}`, sanitizedContext);
   }
 
-  getLogs() {
-    return [...this.logs];
+  debug(message: string, context?: LogContext) {
+    this.log('debug', message, context);
   }
 
-  clearLogs() {
-    this.logs = [];
+  info(message: string, context?: LogContext) {
+    this.log('info', message, context);
+  }
+
+  warn(message: string, context?: LogContext) {
+    this.log('warn', message, context);
+  }
+
+  error(message: string, error?: any, context?: LogContext) {
+      const errorContext = {
+          ...context,
+          error: error ? { message: error.message, stack: error.stack } : undefined
+      };
+      this.log('error', message, errorContext);
+  }
+  
+  security(message: string, context?: LogContext) {
+      this.log('security', message, context);
   }
 }
 
 export const logger = new Logger();
+
+// Helpers para manter compatibilidade com código antigo.
+export const logPerformance = (operation: string, startTime: number) => {
+  if (isProduction) return;
+  const duration = Date.now() - startTime;
+  logger.info(`Performance: ${operation}`, { duration: `${duration}ms` });
+};
+
+export const logNetworkError = (operation: string, error: any) => {
+    logger.error(`Network error in ${operation}`, error, {
+        component: 'NETWORK'
+    });
+};

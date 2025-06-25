@@ -1,24 +1,40 @@
 
-import React from "react";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { RouterProvider } from "react-router-dom";
-import { Toaster } from "@/components/ui/toaster";
-
-import { SimpleAuthProvider } from "./contexts/auth/SimpleAuthProvider";
-import { AppRoutes } from "./routes/AppRoutes";
-
-const queryClient = new QueryClient();
+import { AppRoutes } from "@/routes/AppRoutes";
+import { Toaster } from "@/components/ui/sonner";
+import { useEffect } from "react";
+import { useAuth } from "@/contexts/auth";
+import { logger } from "@/utils/logger";
+import { useSecureSession } from "@/hooks/useSecureSession";
 
 function App() {
+  const { user, isLoading } = useAuth();
+  
+  // Ativar sessão segura
+  useSecureSession({
+    maxIdleTime: 60, // 60 minutos
+    checkInterval: 180, // 3 minutos
+    autoLogoutWarning: 15 // 15 minutos de aviso
+  });
+
+  useEffect(() => {
+    logger.info('[APP] Inicialização da aplicação', {
+      hasUser: !!user,
+      isLoading,
+      timestamp: new Date().toISOString()
+    });
+  }, [user, isLoading]);
+
   return (
-    <QueryClientProvider client={queryClient}>
-      <SimpleAuthProvider>
-        <RouterProvider router={AppRoutes} />
-        <Toaster />
-        <ReactQueryDevtools initialIsOpen={false} />
-      </SimpleAuthProvider>
-    </QueryClientProvider>
+    <>
+      <RouterProvider router={AppRoutes} />
+      <Toaster 
+        position="top-right"
+        toastOptions={{
+          duration: 4000,
+        }}
+      />
+    </>
   );
 }
 

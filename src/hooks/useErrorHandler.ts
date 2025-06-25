@@ -1,4 +1,3 @@
-
 import { useCallback } from 'react';
 import { toast } from 'sonner';
 import { logger } from '@/utils/logger';
@@ -28,7 +27,7 @@ export const useErrorHandler = () => {
     };
 
     // Log detalhado com o logger seguro
-    logger.error(`Error in ${context || 'Unknown'}`, { ...errorInfo, stack: error?.stack });
+    logger.error(`Error in ${context || 'Unknown'}`, error, { ...errorInfo, stack: error?.stack });
     
     return errorInfo;
   }, []);

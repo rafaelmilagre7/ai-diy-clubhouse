@@ -1,11 +1,8 @@
-
 import { Solution } from "@/lib/supabase";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { SolutionCategory } from "@/lib/types/categoryTypes";
 import { Clock, TrendingUp, Settings, BarChart } from "lucide-react";
-import { SolutionStatsBar } from "./SolutionStatsBar";
-import { useSolutionStats } from "@/hooks/useSolutionStats";
 
 interface SolutionHeaderSectionProps {
   solution: Solution;
@@ -25,8 +22,6 @@ const getDifficultyStyles = (difficulty: string) => {
 };
 
 export const SolutionHeaderSection = ({ solution }: SolutionHeaderSectionProps) => {
-  const { stats, loading: statsLoading } = useSolutionStats(solution.id);
-  
   // Função para obter o ícone adequado com base na categoria
   const getCategoryIcon = () => {
     if (solution.category === 'Receita') return <TrendingUp className="h-4 w-4 mr-1.5" />;
@@ -81,9 +76,6 @@ export const SolutionHeaderSection = ({ solution }: SolutionHeaderSectionProps) 
       <h1 className="text-2xl md:text-3xl font-bold font-heading text-neutral-100">
         {solution.title}
       </h1>
-
-      {/* Barra de estatísticas dinâmicas */}
-      <SolutionStatsBar stats={stats} loading={statsLoading} />
       
       {solution.thumbnail_url && (
         <div className="mt-6 relative overflow-hidden rounded-xl shadow-lg max-h-[400px]">
