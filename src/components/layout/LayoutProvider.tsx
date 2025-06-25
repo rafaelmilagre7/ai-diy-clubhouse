@@ -1,7 +1,7 @@
 
 import { useLocation } from "react-router-dom";
 import { ReactNode, memo } from "react";
-import { useAuth } from "@/contexts/auth";
+import { useAuth } from "@/contexts/auth/SimpleAuthProvider";
 import LoadingScreen from "@/components/common/LoadingScreen";
 import MemberLayout from "./MemberLayout";
 import FormacaoLayout from "./formacao/FormacaoLayout";
@@ -13,29 +13,20 @@ const LayoutProvider = memo(({ children }: { children: ReactNode }) => {
 
   const isFormacaoRoute = location.pathname.startsWith('/formacao');
 
-  console.log("[LAYOUT-PROVIDER] Estado:", {
-    hasUser: !!user,
-    isFormacao,
-    isAdmin,
-    isLoading,
-    currentPath: location.pathname,
-    isFormacaoRoute
-  });
-
-  // Aguardar carregamento completo
+  // Aguardar carregamento simples
   if (isLoading) {
     return (
       <PageTransitionWithFallback isVisible={true}>
-        <LoadingScreen message="Preparando interface..." />
+        <LoadingScreen message="Carregando..." />
       </PageTransitionWithFallback>
     );
   }
 
-  // Se não há usuário, mostrar loading (deve redirecionar via ProtectedRoutes)
+  // Se não há usuário, mostrar loading (deve redirecionar via SimpleProtectedRoutes)
   if (!user) {
     return (
       <PageTransitionWithFallback isVisible={true}>
-        <LoadingScreen message="Verificando autenticação..." />
+        <LoadingScreen message="Redirecionando..." />
       </PageTransitionWithFallback>
     );
   }

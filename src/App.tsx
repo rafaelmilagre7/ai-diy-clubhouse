@@ -5,7 +5,7 @@ import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { RouterProvider } from "react-router-dom";
 import { Toaster } from "@/components/ui/toaster";
 
-import { AuthProvider } from "./contexts/auth/index";
+import { SimpleAuthProvider } from "./contexts/auth/SimpleAuthProvider";
 import { AppRoutes } from "./routes/AppRoutes";
 
 const queryClient = new QueryClient();
@@ -13,11 +13,11 @@ const queryClient = new QueryClient();
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
+      <SimpleAuthProvider>
         <RouterProvider router={AppRoutes} />
         <Toaster />
         <ReactQueryDevtools initialIsOpen={false} />
-      </AuthProvider>
+      </SimpleAuthProvider>
     </QueryClientProvider>
   );
 }

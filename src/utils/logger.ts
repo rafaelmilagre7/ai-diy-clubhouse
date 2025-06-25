@@ -32,6 +32,12 @@ class Logger {
     }
   }
 
+  // Método para compatibilidade com chamadas de 3 argumentos
+  security(message: string, data?: any) {
+    this.log('warn', `[SECURITY] ${message}`, data);
+    console.warn(`[SECURITY] ${message}`, data);
+  }
+
   private log(level: LogEntry['level'], message: string, data?: any) {
     const entry: LogEntry = {
       level,
