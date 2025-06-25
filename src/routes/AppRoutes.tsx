@@ -9,7 +9,7 @@ import MemberLayout from '@/components/layout/MemberLayout';
 import FormacaoLayout from '@/components/layout/formacao/FormacaoLayout';
 
 // Auth pages
-import LoginPage from '@/pages/auth/LoginPage';
+import AuthLayout from '@/components/auth/AuthLayout';
 import RegisterPage from '@/pages/auth/RegisterPage';
 import OnboardingPage from '@/pages/OnboardingPage';
 
@@ -38,10 +38,10 @@ import Events from '@/pages/member/Events';
 import Suggestions from '@/pages/member/Suggestions';
 
 // Formação pages
-import FormacaoHome from '@/pages/formacao/FormacaoHome';
-import CursosPage from '@/pages/formacao/CursosPage';
-import ModulosPage from '@/pages/formacao/ModulosPage';
-import AulasPage from '@/pages/formacao/AulasPage';
+import FormacaoDashboard from '@/pages/formacao/FormacaoDashboard';
+import FormacaoCursos from '@/pages/formacao/FormacaoCursos';
+import FormacaoModuloDetalhes from '@/pages/formacao/FormacaoModuloDetalhes';
+import FormacaoAulaDetalhes from '@/pages/formacao/FormacaoAulaDetalhes';
 
 // Error pages
 import NotFound from '@/pages/NotFound';
@@ -75,7 +75,7 @@ export const AppRoutes = createBrowserRouter([
     path: "/login",
     element: (
       <RouteProtection level="public">
-        <LoginPage />
+        <AuthLayout />
       </RouteProtection>
     )
   },
@@ -131,10 +131,10 @@ export const AppRoutes = createBrowserRouter([
   createProtectedRoute("/admin/events", AdminEvents, AdminLayout, 'admin'),
 
   // Rotas de formação (requer permissão formacao ou admin)
-  createProtectedRoute("/formacao", FormacaoHome, FormacaoLayout, 'formacao'),
-  createProtectedRoute("/formacao/cursos", CursosPage, FormacaoLayout, 'formacao'),
-  createProtectedRoute("/formacao/cursos/:id/modulos", ModulosPage, FormacaoLayout, 'formacao'),
-  createProtectedRoute("/formacao/modulos/:id/aulas", AulasPage, FormacaoLayout, 'formacao'),
+  createProtectedRoute("/formacao", FormacaoDashboard, FormacaoLayout, 'formacao'),
+  createProtectedRoute("/formacao/cursos", FormacaoCursos, FormacaoLayout, 'formacao'),
+  createProtectedRoute("/formacao/cursos/:id/modulos", FormacaoModuloDetalhes, FormacaoLayout, 'formacao'),
+  createProtectedRoute("/formacao/modulos/:id/aulas", FormacaoAulaDetalhes, FormacaoLayout, 'formacao'),
 
   // Rota 404
   {
