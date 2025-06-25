@@ -1,182 +1,125 @@
 
-import React from 'react';
+import React, { Suspense, useMemo } from 'react';
 import { OnboardingWizardContainer } from './components/OnboardingWizardContainer';
 import { OnboardingStepRenderer } from './components/OnboardingStepRenderer';
-import { OnboardingLoader } from './components/OnboardingLoader';
-import { toast } from 'sonner';
+import { OnboardingWizardControls } from './components/OnboardingWizardControls';
+import { OnboardingProgress } from './OnboardingProgress';
+import { OnboardingFieldsDiagnostic } from './components/OnboardingFieldsDiagnostic';
+import { OnboardingLoadingState } from './components/OnboardingLoadingStates';
+import { Card, CardContent } from '@/components/ui/card';
 import { logger } from '@/utils/logger';
 
 const OnboardingWizard = () => {
-  console.log('[ONBOARDING-WIZARD] Componente principal renderizado');
-
-  const getErrorMessage = (error: any): string => {
-    if (typeof error === 'string') {
-      return error;
-    }
-    if (error && typeof error === 'object' && error.message) {
-      return error.message;
-    }
-    return 'Erro desconhecido';
-  };
-
-  const handleError = (error: any, context: string) => {
-    const errorMessage = getErrorMessage(error);
-    
-    logger.error(`[ONBOARDING-WIZARD] Erro em ${context}:`, error, {
-      component: 'OnboardingWizard',
-      context,
-      errorMessage,
-      errorStack: error?.stack
-    });
-    
-    toast.error(`Erro no onboarding: ${errorMessage}`);
-  };
-
   return (
-    <OnboardingLoader>
-      <div className="min-h-screen bg-gradient-to-br from-[#0F111A] to-[#151823] flex items-center justify-center p-4">
-        <div className="w-full max-w-4xl">
-          <OnboardingWizardContainer>
-            {({ 
-              currentStep, 
-              totalSteps, 
-              handleNext, 
-              handlePrevious, 
-              handleDataChange, 
-              handleSubmit, 
-              validationErrors, 
-              getFieldError, 
-              data, 
-              memberType, 
+    <div className="min-h-screen bg-gradient-to-br from-[#0F111A] to-[#151823] flex items-center justify-center p-4">
+      <div className="w-full max-w-4xl">
+        <OnboardingWizardContainer>
+          {({ 
+            currentStep, 
+            totalSteps, 
+            handleNext, 
+            handlePrevious, 
+            handleDataChange, 
+            handleSubmit, 
+            isCurrentStepValid, 
+            isSubmitting,
+            validationErrors,
+            getFieldError,
+            data, 
+            memberType, 
+            isLoading,
+            lastSaved,
+            hasUnsavedChanges,
+            completionError
+          }) => {
+            // Log crítico para diagnóstico
+            logger.info('[ONBOARDING-WIZARD] Renderizando wizard:', {
+              currentStep,
               isLoading,
-              isSubmitting,
-              completionError 
-            }) => {
-              console.log('[ONBOARDING-WIZARD] Renderizando wizard com dados:', {
-                currentStep,
-                totalSteps,
-                memberType,
-                isLoading,
-                isSubmitting,
-                hasData: !!data,
-                dataKeys: data ? Object.keys(data) : [],
-                hasErrors: validationErrors.length > 0,
-                completionError: completionError ? getErrorMessage(completionError) : null
-              });
+              fieldsEnabled: !isLoading,
+              hasData: !!data.email,
+              memberType,
+              dataKeys: Object.keys(data)
+            });
 
-              // Log específico para diagnosticar erro do admin
-              if (completionError) {
-                handleError(completionError, 'completion');
-              }
-
-              if (isLoading) {
-                console.log('[ONBOARDING-WIZARD] Exibindo loading...');
-                return (
-                  <div className="bg-[#1A1E2E] rounded-xl p-8 shadow-2xl border border-gray-800">
-                    <div className="text-center">
-                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#00EAD9] mx-auto mb-4"></div>
-                      <p className="text-white">Carregando onboarding...</p>
-                    </div>
-                  </div>
-                );
-              }
-
-              const handleNextWithLogging = async () => {
-                try {
-                  console.log('[ONBOARDING-WIZARD] Avançando para próxima etapa...');
-                  await handleNext();
-                  console.log('[ONBOARDING-WIZARD] Etapa avançada com sucesso');
-                } catch (error) {
-                  handleError(error, 'next_step');
-                }
-              };
-
-              const handlePrevWithLogging = () => {
-                try {
-                  console.log('[ONBOARDING-WIZARD] Voltando etapa...');
-                  handlePrevious();
-                  console.log('[ONBOARDING-WIZARD] Etapa anterior com sucesso');
-                } catch (error) {
-                  handleError(error, 'previous_step');
-                }
-              };
-
-              const handleCompleteWithLogging = async () => {
-                try {
-                  console.log('[ONBOARDING-WIZARD] Finalizando onboarding...');
-                  await handleSubmit();
-                  console.log('[ONBOARDING-WIZARD] Onboarding finalizado com sucesso');
-                } catch (error) {
-                  handleError(error, 'completion');
-                }
-              };
-
-              const handleDataChangeWithLogging = (newData: any) => {
-                try {
-                  console.log('[ONBOARDING-WIZARD] Atualizando dados:', Object.keys(newData));
-                  handleDataChange(newData);
-                } catch (error) {
-                  handleError(error, 'data_change');
-                }
-              };
-
+            // Se ainda está carregando dados essenciais, mostrar loading
+            if (isLoading) {
               return (
-                <div className="bg-[#1A1E2E] rounded-xl p-8 shadow-2xl border border-gray-800">
-                  {/* Header com progresso */}
-                  <div className="mb-8">
-                    <div className="flex justify-between items-center mb-4">
-                      <h1 className="text-2xl font-bold text-white">
-                        Configuração Inicial
-                      </h1>
-                      <div className="text-sm text-gray-400">
-                        Etapa {currentStep} de {totalSteps}
-                      </div>
-                    </div>
-                    
-                    {/* Barra de progresso */}
-                    <div className="w-full bg-gray-700 rounded-full h-2">
-                      <div 
-                        className="bg-[#00EAD9] h-2 rounded-full transition-all duration-300"
-                        style={{ width: `${(currentStep / totalSteps) * 100}%` }}
-                      />
-                    </div>
-                  </div>
+                <OnboardingLoadingState 
+                  type="initialization" 
+                  message="Carregando seus dados..."
+                />
+              );
+            }
 
-                  {/* Renderizar etapa atual */}
-                  <OnboardingStepRenderer
-                    currentStep={currentStep}
+            // Dados prontos para edição
+            const stepProps = useMemo(() => ({
+              data,
+              onUpdateData: handleDataChange,
+              memberType,
+              validationErrors,
+              getFieldError,
+              // CRÍTICO: Garantir que campos estejam sempre habilitados
+              disabled: false,
+              readOnly: false,
+              isLoading: false // Forçar campos habilitados
+            }), [data, handleDataChange, memberType, validationErrors, getFieldError]);
+
+            return (
+              <Card className="bg-[#1A1E2E]/90 backdrop-blur-sm border-white/20">
+                <CardContent className="p-8">
+                  {/* Diagnóstico em modo desenvolvimento */}
+                  <OnboardingFieldsDiagnostic
+                    isLoading={isLoading}
                     data={data}
-                    onUpdateData={handleDataChangeWithLogging}
-                    onNext={handleNextWithLogging}
-                    onPrev={handlePrevWithLogging}
-                    onComplete={handleCompleteWithLogging}
                     memberType={memberType}
-                    validationErrors={validationErrors}
-                    getFieldError={getFieldError}
-                    isCompleting={isSubmitting}
+                    inviteToken={data.inviteToken}
                   />
 
-                  {/* Debug info em desenvolvimento */}
-                  {process.env.NODE_ENV === 'development' && (
-                    <div className="mt-8 p-4 bg-gray-800 rounded-lg">
-                      <div className="text-xs text-gray-400">
-                        <div>Step: {currentStep}/{totalSteps}</div>
-                        <div>Member Type: {memberType}</div>
-                        <div>Data Keys: {data ? Object.keys(data).join(', ') : 'none'}</div>
-                        <div>Errors: {validationErrors.length}</div>
-                        {completionError && (
-                          <div>Completion Error: {getErrorMessage(completionError)}</div>
-                        )}
+                  {/* Progresso */}
+                  <div className="mb-8">
+                    <OnboardingProgress 
+                      currentStep={currentStep} 
+                      totalSteps={totalSteps} 
+                      memberType={memberType}
+                    />
+                  </div>
+
+                  {/* Conteúdo do Step */}
+                  <div className="mb-8">
+                    <Suspense fallback={
+                      <div className="flex items-center justify-center py-8">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-viverblue"></div>
                       </div>
-                    </div>
-                  )}
-                </div>
-              );
-            }}
-          </OnboardingWizardContainer>
-        </div>
+                    }>
+                      <OnboardingStepRenderer
+                        step={currentStep}
+                        {...stepProps}
+                      />
+                    </Suspense>
+                  </div>
+
+                  {/* Controles de Navegação */}
+                  <OnboardingWizardControls
+                    currentStep={currentStep}
+                    totalSteps={totalSteps}
+                    isCurrentStepValid={isCurrentStepValid}
+                    isSubmitting={isSubmitting}
+                    onNext={handleNext}
+                    onPrevious={handlePrevious}
+                    onSubmit={handleSubmit}
+                    memberType={memberType}
+                    lastSaved={lastSaved}
+                    hasUnsavedChanges={hasUnsavedChanges}
+                    completionError={completionError}
+                  />
+                </CardContent>
+              </Card>
+            );
+          }}
+        </OnboardingWizardContainer>
       </div>
-    </OnboardingLoader>
+    </div>
   );
 };
 

@@ -23,6 +23,9 @@ export const useCleanOnboardingData = (inviteToken?: string) => {
     roleName: 'club'
   });
 
+  // Timeout para loading máximo
+  const loadingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
   // Atualizar refs quando dados mudarem (sem causar re-render)
   useEffect(() => {
     if (user?.email && user.email !== userEmailRef.current) {
@@ -52,7 +55,7 @@ export const useCleanOnboardingData = (inviteToken?: string) => {
     return profileDataRef.current;
   }, [user?.email, profile?.name, profile?.user_roles?.name]);
 
-  // CORREÇÃO CRÍTICA: Inicialização simplificada com proteção contra loops
+  // CORREÇÃO CRÍTICA: Inicialização RÁPIDA com timeout de segurança
   useEffect(() => {
     // Proteção: só executar se temos dados mínimos necessários
     if (!user) {
@@ -60,7 +63,7 @@ export const useCleanOnboardingData = (inviteToken?: string) => {
       return;
     }
 
-    logger.info('[CLEAN-ONBOARDING] Inicializando dados:', {
+    logger.info('[CLEAN-ONBOARDING] Inicializando dados RAPIDAMENTE:', {
       hasInviteToken: !!inviteToken,
       hasInviteDetails: !!inviteDetails,
       inviteLoading,
@@ -68,10 +71,31 @@ export const useCleanOnboardingData = (inviteToken?: string) => {
       userEmail: profileData.email,
       userRole: profileData.roleName
     });
+
+    // TIMEOUT DE SEGURANÇA: Sempre inicializar dados após 2 segundos
+    if (loadingTimeoutRef.current) {
+      clearTimeout(loadingTimeoutRef.current);
+    }
+    
+    loadingTimeoutRef.current = setTimeout(() => {
+      logger.warn('[CLEAN-ONBOARDING] TIMEOUT - inicializando dados básicos para habilitar campos');
+      
+      if (!data.email && profileData.email) {
+        const fallbackData: OnboardingData = {
+          name: profileData.name,
+          email: profileData.email.toLowerCase(),
+          memberType: profileData.roleName === 'formacao' ? 'formacao' : 'club',
+          startedAt: new Date().toISOString(),
+          fromInvite: !!inviteToken
+        };
+        
+        setData(fallbackData);
+      }
+    }, 2000);
     
     // Fluxo COM convite válido
     if (inviteToken && inviteDetails && !inviteError) {
-      logger.info('[CLEAN-ONBOARDING] Aplicando dados do convite');
+      logger.info('[CLEAN-ONBOARDING] Aplicando dados do convite IMEDIATAMENTE');
       const inviteData: OnboardingData = {
         name: '',
         email: inviteDetails.email.toLowerCase(),
@@ -90,9 +114,9 @@ export const useCleanOnboardingData = (inviteToken?: string) => {
       return;
     }
 
-    // Fluxo SEM convite (admin ou usuário normal)
+    // Fluxo SEM convite (admin ou usuário normal) - INICIALIZAÇÃO IMEDIATA
     if (!inviteToken || inviteError) {
-      logger.info('[CLEAN-ONBOARDING] Aplicando dados do perfil atual (sem convite)');
+      logger.info('[CLEAN-ONBOARDING] Aplicando dados do perfil IMEDIATAMENTE (sem convite)');
       const memberType: 'club' | 'formacao' = profileData.roleName === 'formacao' ? 'formacao' : 'club';
       
       const regularData: OnboardingData = {
@@ -117,15 +141,33 @@ export const useCleanOnboardingData = (inviteToken?: string) => {
 
     // Aguardando dados do convite (só se não temos erro)
     if (inviteToken && inviteLoading && !inviteError) {
-      logger.info('[CLEAN-ONBOARDING] Aguardando dados do convite...');
-      // Não atualizar estado durante loading para evitar loops
+      logger.info('[CLEAN-ONBOARDING] Aguardando dados do convite com timeout...');
+      // Timeout já configurado acima para fallback
     }
+
+    return () => {
+      if (loadingTimeoutRef.current) {
+        clearTimeout(loadingTimeoutRef.current);
+      }
+    };
   }, [inviteToken, inviteDetails, inviteError, profileData.email, profileData.name, profileData.roleName, user?.id]);
 
-  // Loading OTIMIZADO: só mostra loading se realmente está carregando dados de convite
+  // Loading OTIMIZADO: só mostra loading se realmente necessário E por pouco tempo
   const isReallyLoading = useMemo(() => {
-    return !!(inviteToken && inviteLoading && !inviteError && !inviteDetails);
-  }, [inviteToken, inviteLoading, inviteError, inviteDetails]);
+    const loading = !!(inviteToken && inviteLoading && !inviteError && !inviteDetails && !data.email);
+    
+    if (loading) {
+      logger.info('[CLEAN-ONBOARDING] Loading ativo - aguardando dados de convite');
+    } else {
+      logger.info('[CLEAN-ONBOARDING] Loading DESATIVADO - campos habilitados:', {
+        hasInviteToken: !!inviteToken,
+        hasData: !!data.email,
+        reason: !inviteToken ? 'sem_convite' : data.email ? 'dados_carregados' : 'erro_ou_timeout'
+      });
+    }
+    
+    return loading;
+  }, [inviteToken, inviteLoading, inviteError, inviteDetails, data.email]);
 
   const updateData = useCallback((newData: Partial<OnboardingData>) => {
     logger.info('[CLEAN-ONBOARDING] Atualizando dados:', newData);
