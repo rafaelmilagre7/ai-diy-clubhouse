@@ -5,7 +5,7 @@ import { OnboardingWizardContainer } from './components/OnboardingWizardContaine
 import { OnboardingStepRenderer } from './components/OnboardingStepRenderer';
 import { OnboardingWizardControls } from './components/OnboardingWizardControls';
 import { OnboardingProgress } from './OnboardingProgress';
-import { OnboardingLoadingStates } from './components/OnboardingLoadingStates';
+import { OnboardingLoadingState } from './components/OnboardingLoadingStates';
 import { useSimpleAuth } from '@/contexts/auth/SimpleAuthProvider';
 import { logger } from '@/utils/logger';
 
@@ -29,7 +29,17 @@ const OnboardingWizard = () => {
       <div className="container mx-auto px-4 py-8">
         <OnboardingWizardContainer>
           {(wizardProps) => {
-            const { currentStep, totalSteps, isLoading } = wizardProps;
+            const { 
+              currentStep, 
+              totalSteps, 
+              isLoading, 
+              handleNext,
+              handlePrevious, 
+              handleSubmit,
+              handleDataChange,
+              data,
+              memberType
+            } = wizardProps;
             
             logger.info('[ONBOARDING-WIZARD] Renderizando wizard', {
               currentStep,
@@ -48,18 +58,26 @@ const OnboardingWizard = () => {
                   />
                   
                   {/* Loading States */}
-                  {isLoading && <OnboardingLoadingStates />}
+                  {isLoading && <OnboardingLoadingState />}
                   
                   {/* Step Content */}
                   {!isLoading && (
                     <div className="bg-[#1A1E2E] rounded-lg p-8 border border-gray-800">
-                      <OnboardingStepRenderer {...wizardProps} />
+                      <OnboardingStepRenderer 
+                        {...wizardProps}
+                        onUpdateData={handleDataChange}
+                      />
                     </div>
                   )}
                   
                   {/* Controls */}
                   {!isLoading && (
-                    <OnboardingWizardControls {...wizardProps} />
+                    <OnboardingWizardControls 
+                      {...wizardProps}
+                      onNext={handleNext}
+                      onPrevious={handlePrevious}
+                      onSubmit={handleSubmit}
+                    />
                   )}
                 </div>
               </>
