@@ -42,79 +42,59 @@ export const useInviteFlow = (inviteToken?: string): UseInviteFlowResult => {
       setIsLoading(true);
       setError(null);
 
-      logger.info('[INVITE-FLOW] 🚀 Iniciando validação CORRIGIDA de convite:', { 
+      logger.info('[INVITE-FLOW] 🚀 Iniciando validação SIMPLIFICADA de convite:', { 
         token: inviteToken.substring(0, 8) + '***',
         timestamp: new Date().toISOString()
       });
 
-      // TIMEOUT AGRESSIVO: máximo 800ms (aumentado para robustez)
+      // TIMEOUT REDUZIDO: máximo 500ms
       const timeoutPromise = new Promise((_, reject) => {
-        setTimeout(() => reject(new Error('Timeout na validação do convite')), 800);
+        setTimeout(() => reject(new Error('Timeout na validação do convite')), 500);
       });
 
       try {
-        // PRIMEIRA TENTATIVA: Consulta com JOIN simplificado
-        logger.info('[INVITE-FLOW] 📡 Tentativa 1: Consulta com JOIN simplificado');
+        // PRIMEIRA CONSULTA: Buscar dados básicos do convite
+        logger.info('[INVITE-FLOW] 📡 Consultando dados básicos do convite...');
         
         const fetchPromise = supabase
           .from('invites')
-          .select(`
-            token,
-            email,
-            role_id,
-            created_at,
-            expires_at,
-            used_at
-          `)
+          .select('token, email, role_id, created_at, expires_at, used_at')
           .eq('token', inviteToken)
           .maybeSingle();
 
         const { data: inviteData, error: fetchError } = await Promise.race([fetchPromise, timeoutPromise]) as any;
 
         const duration = Date.now() - startTime;
-        logger.info('[INVITE-FLOW] ⏱️ Consulta de convite finalizada:', { 
-          duration: `${duration}ms`,
-          hasData: !!inviteData,
-          hasError: !!fetchError,
-          token: inviteToken.substring(0, 8) + '***'
-        });
-
+        
         if (fetchError) {
-          logger.error('[INVITE-FLOW] ❌ Erro na consulta de convite:', fetchError);
-          setError('Erro ao validar convite');
+          logger.error('[INVITE-FLOW] ❌ Erro na consulta básica:', {
+            error: fetchError.message,
+            code: fetchError.code,
+            details: fetchError.details,
+            duration: `${duration}ms`
+          });
+          setError(`Erro na consulta: ${fetchError.message}`);
           return;
         }
 
         if (!inviteData) {
-          logger.warn('[INVITE-FLOW] ⚠️ Convite não encontrado:', {
-            token: inviteToken.substring(0, 8) + '***'
+          logger.warn('[INVITE-FLOW] ⚠️ Convite não encontrado na base de dados:', {
+            token: inviteToken.substring(0, 8) + '***',
+            duration: `${duration}ms`
           });
           setError('Convite não encontrado ou inválido');
           return;
         }
 
-        logger.info('[INVITE-FLOW] ✅ Dados básicos do convite encontrados:', {
+        logger.info('[INVITE-FLOW] ✅ Dados básicos encontrados:', {
           email: inviteData.email,
           roleId: inviteData.role_id,
           used_at: inviteData.used_at,
-          expires_at: inviteData.expires_at
+          expires_at: inviteData.expires_at,
+          duration: `${duration}ms`
         });
 
-        // SEGUNDA CONSULTA: Buscar dados do role separadamente
-        logger.info('[INVITE-FLOW] 📡 Tentativa 2: Buscar dados do role');
-        
-        const { data: roleData, error: roleError } = await supabase
-          .from('user_roles')
-          .select('id, name')
-          .eq('id', inviteData.role_id)
-          .single();
-
-        if (roleError) {
-          logger.error('[INVITE-FLOW] ⚠️ Erro ao buscar role (continuando):', roleError);
-          // Continuar mesmo sem dados do role
-        }
-
-        // Verificar se expirou
+        // VERIFICAÇÕES DE VALIDADE
         const now = new Date();
         const expiresAt = new Date(inviteData.expires_at);
         
@@ -127,9 +107,8 @@ export const useInviteFlow = (inviteToken?: string): UseInviteFlowResult => {
           return;
         }
 
-        // VERIFICAÇÃO CRÍTICA: Verificar se já foi usado
         if (inviteData.used_at !== null) {
-          logger.warn('[INVITE-FLOW] ✅ Convite já foi usado:', {
+          logger.warn('[INVITE-FLOW] ✅ Convite já utilizado:', {
             used_at: inviteData.used_at,
             email: inviteData.email
           });
@@ -137,7 +116,26 @@ export const useInviteFlow = (inviteToken?: string): UseInviteFlowResult => {
           return;
         }
 
-        // Montar dados finais
+        // SEGUNDA CONSULTA: Buscar dados do role (com fallback)
+        let roleData = null;
+        try {
+          logger.info('[INVITE-FLOW] 📡 Buscando dados do role...');
+          const { data: role, error: roleError } = await supabase
+            .from('user_roles')
+            .select('id, name')
+            .eq('id', inviteData.role_id)
+            .single();
+
+          if (roleError) {
+            logger.warn('[INVITE-FLOW] ⚠️ Erro ao buscar role (usando fallback):', roleError);
+          } else {
+            roleData = role;
+          }
+        } catch (roleErr) {
+          logger.warn('[INVITE-FLOW] ⚠️ Falha na consulta do role (usando fallback):', roleErr);
+        }
+
+        // Montar dados finais com fallback
         const finalRole: InviteRole = roleData ? {
           id: roleData.id,
           name: roleData.name
@@ -146,11 +144,12 @@ export const useInviteFlow = (inviteToken?: string): UseInviteFlowResult => {
           name: 'Membro' // Fallback
         };
 
-        logger.info('[INVITE-FLOW] ✅ Convite válido CONFIRMADO:', {
+        const finalDuration = Date.now() - startTime;
+        logger.info('[INVITE-FLOW] ✅ Convite VÁLIDO confirmado:', {
           email: inviteData.email,
           roleName: finalRole.name,
           roleId: finalRole.id,
-          duration: `${Date.now() - startTime}ms`
+          totalDuration: `${finalDuration}ms`
         });
         
         const inviteDetails: InviteDetails = {
@@ -168,22 +167,17 @@ export const useInviteFlow = (inviteToken?: string): UseInviteFlowResult => {
         const duration = Date.now() - startTime;
         
         if (err.message?.includes('Timeout')) {
-          logger.warn('[INVITE-FLOW] ⏰ Timeout após 800ms - continuando sem dados do convite');
-          setError('Timeout na validação - preencha os dados manualmente');
+          logger.warn('[INVITE-FLOW] ⏰ Timeout após 500ms - liberando formulário');
+          setError('Validação demorou demais - preencha os dados manualmente');
         } else {
           logger.error('[INVITE-FLOW] 💥 Erro inesperado na validação:', {
             error: err.message,
             stack: err.stack,
-            token: inviteToken.substring(0, 8) + '***'
+            token: inviteToken.substring(0, 8) + '***',
+            duration: `${duration}ms`
           });
           setError(`Erro ao processar convite: ${err.message}`);
         }
-        
-        logger.info('[INVITE-FLOW] 📊 Estatísticas do erro:', {
-          duration: `${duration}ms`,
-          errorType: err.message?.includes('Timeout') ? 'timeout' : 'unexpected',
-          token: inviteToken.substring(0, 8) + '***'
-        });
       } finally {
         setIsLoading(false);
       }

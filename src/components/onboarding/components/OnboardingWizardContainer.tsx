@@ -20,7 +20,7 @@ export const OnboardingWizardContainer = ({ children }: OnboardingWizardContaine
   const [searchParams] = useSearchParams();
   const { cleanupForInvite } = useOnboardingCleanup();
   
-  // Estado ultra-simples
+  // Estado controlado
   const [isLoading, setIsLoading] = useState(false);
   const [hasInitialized, setHasInitialized] = useState(false);
   
@@ -38,7 +38,7 @@ export const OnboardingWizardContainer = ({ children }: OnboardingWizardContaine
 
   const memberType = useMemo(() => cleanData.memberType || 'club', [cleanData.memberType]);
   
-  // INICIALIZAÇÃO ULTRA-SIMPLES: máximo 500ms
+  // INICIALIZAÇÃO COM TIMEOUT MÁXIMO DE 500MS
   useEffect(() => {
     if (hasInitialized) return;
     
@@ -49,13 +49,13 @@ export const OnboardingWizardContainer = ({ children }: OnboardingWizardContaine
       timestamp: new Date().toISOString()
     });
     
-    // Loading APENAS se há token E ainda carregando
+    // Determinar se deve mostrar loading
     const shouldShowLoading = !!(inviteToken && isInviteLoading && !cleanData.email);
     
     if (shouldShowLoading) {
       setIsLoading(true);
       
-      // TIMEOUT AGRESSIVO: 500ms máximo
+      // TIMEOUT MÁXIMO: 500ms
       const timeout = setTimeout(() => {
         const duration = Date.now() - startTime;
         logger.warn('[WIZARD-CONTAINER] ⏰ Timeout de 500ms - liberando formulário:', {
@@ -70,7 +70,7 @@ export const OnboardingWizardContainer = ({ children }: OnboardingWizardContaine
       return () => clearTimeout(timeout);
     }
     
-    // Sem loading necessário - inicializar imediatamente
+    // Inicializar imediatamente se sem loading
     try {
       if (inviteToken) {
         InviteTokenManager.storeToken(inviteToken);
@@ -95,7 +95,7 @@ export const OnboardingWizardContainer = ({ children }: OnboardingWizardContaine
     setIsLoading(false);
   }, [inviteToken, isInviteLoading, cleanData.email, hasInitialized]);
 
-  // Para de loading quando dados chegam
+  // Parar loading quando dados chegam
   useEffect(() => {
     if (isLoading && (cleanData.email || !isInviteLoading)) {
       logger.info('[WIZARD-CONTAINER] 📥 Dados recebidos - parando loading:', {

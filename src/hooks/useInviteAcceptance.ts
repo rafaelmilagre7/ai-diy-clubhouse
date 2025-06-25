@@ -27,36 +27,33 @@ export const useInviteAcceptance = () => {
         timestamp: new Date().toISOString()
       });
 
-      // 1. PRIMEIRO: Verificar se o convite ainda é válido antes de aceitar
+      // 1. VERIFICAÇÃO PRÉ-ACEITAÇÃO
       logger.info('[INVITE-ACCEPTANCE] 🔍 Verificação pré-aceitação...');
       const { data: preCheckData, error: preCheckError } = await supabase
         .from('invites')
-        .select(`
-          id,
-          token,
-          email,
-          role_id,
-          used_at,
-          expires_at
-        `)
+        .select('id, token, email, role_id, used_at, expires_at')
         .eq('token', token)
         .maybeSingle();
 
       if (preCheckError) {
+        logger.error('[INVITE-ACCEPTANCE] ❌ Erro na pré-verificação:', preCheckError);
         throw new Error(`Erro na verificação do convite: ${preCheckError.message}`);
       }
 
       if (!preCheckData) {
+        logger.error('[INVITE-ACCEPTANCE] ❌ Convite não encontrado na pré-verificação');
         throw new Error('Convite não encontrado');
       }
 
       if (preCheckData.used_at) {
+        logger.error('[INVITE-ACCEPTANCE] ❌ Convite já utilizado na pré-verificação');
         throw new Error('Convite já foi utilizado');
       }
 
       const now = new Date();
       const expiresAt = new Date(preCheckData.expires_at);
       if (now > expiresAt) {
+        logger.error('[INVITE-ACCEPTANCE] ❌ Convite expirado na pré-verificação');
         throw new Error('Convite expirado');
       }
 
@@ -66,14 +63,18 @@ export const useInviteAcceptance = () => {
         roleId: preCheckData.role_id
       });
 
-      // 2. Aceitar o convite via RPC
+      // 2. TENTAR ACEITAR VIA RPC
       logger.info('[INVITE-ACCEPTANCE] 📋 Executando RPC accept_invite...');
       const { data: acceptResult, error: acceptError } = await supabase.rpc('accept_invite', {
         p_token: token
       });
 
       if (acceptError) {
-        logger.error('[INVITE-ACCEPTANCE] ❌ Erro no RPC accept_invite:', acceptError);
+        logger.error('[INVITE-ACCEPTANCE] ❌ Erro no RPC accept_invite:', {
+          error: acceptError.message,
+          code: acceptError.code,
+          details: acceptError.details
+        });
         throw new Error(`Erro ao aceitar convite: ${acceptError.message}`);
       }
 
@@ -87,8 +88,8 @@ export const useInviteAcceptance = () => {
         duration: `${Date.now() - startTime}ms`
       });
 
-      // 3. Atualizar dados do perfil com informações do onboarding
-      logger.info('[INVITE-ACCEPTANCE] 📝 Atualizando perfil com dados do onboarding...');
+      // 3. ATUALIZAR DADOS DO PERFIL
+      logger.info('[INVITE-ACCEPTANCE] 📝 Atualizando perfil...');
       
       const currentUser = await supabase.auth.getUser();
       if (!currentUser.data.user?.id) {
@@ -106,13 +107,6 @@ export const useInviteAcceptance = () => {
         updated_at: new Date().toISOString()
       };
 
-      logger.info('[INVITE-ACCEPTANCE] 📊 Dados do perfil a serem atualizados:', {
-        userId: currentUser.data.user.id.substring(0, 8) + '***',
-        fields: Object.keys(profileUpdateData),
-        hasName: !!profileUpdateData.name,
-        hasPhone: !!profileUpdateData.phone
-      });
-
       const { error: updateError } = await supabase
         .from('profiles')
         .update(profileUpdateData)
@@ -125,8 +119,7 @@ export const useInviteAcceptance = () => {
 
       logger.info('[INVITE-ACCEPTANCE] 💾 Perfil atualizado com sucesso');
 
-      // 4. Verificar se o convite foi realmente marcado como usado
-      logger.info('[INVITE-ACCEPTANCE] 🔍 Verificação pós-aceitação...');
+      // 4. VERIFICAÇÃO PÓS-ACEITAÇÃO
       const { data: postCheckData } = await supabase
         .from('invites')
         .select('used_at')
@@ -138,23 +131,18 @@ export const useInviteAcceptance = () => {
         wasMarkedAsUsed: !!postCheckData?.used_at
       });
 
-      // 5. Limpar token e cache
+      // 5. LIMPAR TOKEN E FINALIZAR
       InviteTokenManager.clearTokenOnSuccess();
       
-      // 6. Mostrar sucesso e redirecionar
       const totalDuration = Date.now() - startTime;
       logger.info('[INVITE-ACCEPTANCE] 🎉 Processo completo COM SUCESSO:', {
         totalDuration: `${totalDuration}ms`,
-        redirecting: true,
-        finalCheck: {
-          conviteUsado: !!postCheckData?.used_at,
-          perfilAtualizado: true
-        }
+        conviteUsado: !!postCheckData?.used_at,
+        perfilAtualizado: true
       });
 
       toast.success('Bem-vindo(a) ao Viver de IA! Seu onboarding foi concluído com sucesso.');
       
-      // Aguardar um pouco para o toast aparecer, então redirecionar
       setTimeout(() => {
         navigate('/dashboard', { replace: true });
       }, 1500);
