@@ -3,7 +3,6 @@ import React, { useState, useEffect } from 'react';
 import { Loader2, AlertCircle, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { useGlobalLoading } from '@/hooks/useGlobalLoading';
 
 interface LoadingFallbackProps {
   message?: string;
@@ -18,7 +17,6 @@ export const LoadingFallback: React.FC<LoadingFallbackProps> = ({
   onForceComplete,
   variant = 'full'
 }) => {
-  const { loadingState, forceComplete } = useGlobalLoading();
   const [duration, setDuration] = useState(0);
   const [startTime] = useState(Date.now());
 
@@ -38,7 +36,7 @@ export const LoadingFallback: React.FC<LoadingFallbackProps> = ({
     if (onForceComplete) {
       onForceComplete();
     } else {
-      forceComplete();
+      window.location.reload();
     }
   };
 
@@ -105,19 +103,6 @@ export const LoadingFallback: React.FC<LoadingFallbackProps> = ({
                 </p>
               )}
             </div>
-
-            {/* Estados específicos de loading */}
-            {loadingState.auth && (
-              <div className="text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded">
-                Verificando autenticação...
-              </div>
-            )}
-            
-            {loadingState.data && (
-              <div className="text-xs text-green-600 bg-green-50 px-2 py-1 rounded">
-                Carregando dados...
-              </div>
-            )}
 
             {isVerySlowLoading && showForceButton && (
               <div className="flex flex-col space-y-2 w-full">

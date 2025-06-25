@@ -2,23 +2,23 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
-const FormacaoDashboard = () => {
+const FormacaoCourses = () => {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold">Dashboard Formação</h1>
+        <h1 className="text-3xl font-bold">Cursos de Formação</h1>
         <p className="text-muted-foreground">
-          Painel de controle para área de formação
+          Gerencie os cursos de formação
         </p>
       </div>
       
       <Card>
         <CardHeader>
-          <CardTitle>Área de Formação</CardTitle>
+          <CardTitle>Cursos</CardTitle>
         </CardHeader>
         <CardContent>
           <p className="text-muted-foreground">
-            Bem-vindo à área de formação da plataforma.
+            Lista de cursos em desenvolvimento...
           </p>
         </CardContent>
       </Card>
@@ -26,4 +26,4 @@ const FormacaoDashboard = () => {
   );
 };
 
-export default FormacaoDashboard;
+export default FormacaoCourses;

@@ -1,6 +1,6 @@
 
 import React, { Suspense, memo, useMemo } from "react";
-import { LoadingState } from "./LoadingState";
+import LoadingScreen from "./LoadingScreen";
 import { cn } from "@/lib/utils";
 
 interface OptimizedLoadingScreenProps {
@@ -32,30 +32,22 @@ const OptimizedLoadingScreen = memo<OptimizedLoadingScreenProps>(({
     return `${baseMessage}...`;
   }, [message]);
 
-  // Memoizar classes do container
-  const containerClasses = useMemo(() => cn(
-    "flex flex-col items-center justify-center",
-    fullScreen ? "min-h-screen" : "min-h-[400px]",
-    "bg-background",
-    className
-  ), [fullScreen, className]);
-
   return (
-    <div className={containerClasses}>
+    <div className={cn(fullScreen ? "min-h-screen" : "min-h-[400px]", className)}>
       <Suspense fallback={
         <div className="flex items-center justify-center">
           <div className="h-8 w-8 border-4 border-viverblue border-t-transparent rounded-full animate-spin" />
         </div>
       }>
-        <LoadingState
+        <LoadingScreen
           variant={variant}
           size={size}
           message={enhancedMessage}
-          fullScreen={false}
+          fullScreen={fullScreen}
         />
         
         {showProgress && (
-          <div className="mt-4 w-64">
+          <div className="fixed bottom-8 left-1/2 transform -translate-x-1/2 w-64">
             <div className="bg-muted rounded-full h-2 overflow-hidden">
               <div 
                 className="bg-viverblue h-full transition-all duration-300 ease-out"
