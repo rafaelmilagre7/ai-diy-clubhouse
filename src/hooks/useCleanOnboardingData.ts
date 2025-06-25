@@ -13,7 +13,6 @@ interface OnboardingData {
   mainObjective: string;
   memberType: 'club' | 'formacao';
   inviteToken?: string;
-  // ADICIONADO: Campos de controle para readonly
   isNameFromInvite?: boolean;
   isEmailFromInvite?: boolean;
   isPhoneFromInvite?: boolean;
@@ -23,7 +22,7 @@ interface UseCleanOnboardingDataResult {
   data: OnboardingData;
   updateData: (newData: Partial<OnboardingData>) => void;
   initializeCleanData: () => void;
-  isInviteLoading: boolean;
+  isLoading: boolean;
 }
 
 const getInitialData = (): OnboardingData => ({
@@ -42,126 +41,157 @@ const getInitialData = (): OnboardingData => ({
 
 export const useCleanOnboardingData = (inviteToken?: string): UseCleanOnboardingDataResult => {
   const [data, setData] = useState<OnboardingData>(getInitialData);
+  const [isLoading, setIsLoading] = useState(false);
   const [hasInitialized, setHasInitialized] = useState(false);
   
   const { inviteDetails, isLoading: isInviteLoading, error: inviteError } = useInviteFlow(inviteToken);
 
-  // INICIALIZAÇÃO ROBUSTA com pré-preenchimento de dados do convite
+  // TIMEOUT FAILSAFE: SEMPRE libera após 3 segundos
+  useEffect(() => {
+    if (isLoading) {
+      const failsafeTimeout = setTimeout(() => {
+        logger.warn('[CLEAN-DATA] ⏰ FAILSAFE: Liberando formulário após 3 segundos:', {
+          hasToken: !!inviteToken,
+          hasDetails: !!inviteDetails,
+          inviteError: !!inviteError
+        });
+        setIsLoading(false);
+        setHasInitialized(true);
+      }, 3000);
+
+      return () => clearTimeout(failsafeTimeout);
+    }
+  }, [isLoading, inviteToken, inviteDetails, inviteError]);
+
   const initializeCleanData = useCallback(() => {
-    if (hasInitialized) return;
+    if (hasInitialized) {
+      logger.info('[CLEAN-DATA] Já inicializado - ignorando');
+      return;
+    }
     
     const startTime = Date.now();
-    logger.info('[CLEAN-DATA] 🚀 Inicializando dados com PRÉ-PREENCHIMENTO:', {
+    logger.info('[CLEAN-DATA] 🚀 INICIANDO inicialização robusta:', {
       hasToken: !!inviteToken,
+      tokenLength: inviteToken?.length || 0,
       hasDetails: !!inviteDetails,
+      isInviteLoading,
+      inviteError: !!inviteError,
       timestamp: new Date().toISOString()
     });
 
     try {
-      if (inviteToken && inviteDetails) {
-        // PRÉ-PREENCHIMENTO: Dados do convite disponíveis
+      // CASO 1: Token válido COM dados do convite
+      if (inviteToken && inviteDetails && !inviteError) {
         const memberType = inviteDetails.role.name.toLowerCase().includes('formacao') ? 'formacao' : 'club';
         
         const inviteData: OnboardingData = {
           ...getInitialData(),
-          // CAMPOS CRÍTICOS PRÉ-PREENCHIDOS
           email: inviteDetails.email,
           name: inviteDetails.name || '',
           phone: inviteDetails.whatsapp_number || '',
           memberType,
           inviteToken,
-          // CONTROLE DE READONLY - CORRIGIDO
-          isEmailFromInvite: true, // E-mail sempre vem do convite
+          isEmailFromInvite: true,
           isNameFromInvite: !!inviteDetails.name,
           isPhoneFromInvite: !!inviteDetails.whatsapp_number
         };
 
-        logger.info('[CLEAN-DATA] ✅ Dados PRÉ-PREENCHIDOS do convite:', {
+        logger.info('[CLEAN-DATA] ✅ PRÉ-PREENCHIMENTO com dados do convite:', {
           email: inviteDetails.email,
           hasName: !!inviteDetails.name,
           hasPhone: !!inviteDetails.whatsapp_number,
           memberType,
-          flags: {
-            isEmailFromInvite: inviteData.isEmailFromInvite,
-            isNameFromInvite: inviteData.isNameFromInvite,
-            isPhoneFromInvite: inviteData.isPhoneFromInvite
-          },
           duration: `${Date.now() - startTime}ms`
         });
 
         setData(inviteData);
-      } else if (inviteToken && inviteError) {
-        // Erro na validação - dados básicos apenas
-        logger.warn('[CLEAN-DATA] ⚠️ Erro no convite - dados básicos:', {
+        setHasInitialized(true);
+        return;
+      }
+
+      // CASO 2: Token com erro OU sem dados - formulário normal
+      if (inviteToken && (inviteError || !inviteDetails)) {
+        logger.warn('[CLEAN-DATA] ⚠️ Convite com problema - formulário normal:', {
           error: inviteError,
+          hasDetails: !!inviteDetails,
           token: inviteToken?.substring(0, 8) + '***'
         });
+
         setData({
           ...getInitialData(),
           inviteToken
         });
-      } else {
-        // Modo normal (sem convite)
-        logger.info('[CLEAN-DATA] 👤 Modo normal (sem convite)');
-        setData(getInitialData());
+        setHasInitialized(true);
+        return;
       }
 
+      // CASO 3: Sem token - modo normal
+      logger.info('[CLEAN-DATA] 👤 Modo normal (sem convite)');
+      setData(getInitialData());
       setHasInitialized(true);
 
     } catch (error) {
-      logger.error('[CLEAN-DATA] ❌ Erro na inicialização:', error);
+      logger.error('[CLEAN-DATA] ❌ Erro na inicialização - fallback:', error);
       setData(getInitialData());
       setHasInitialized(true);
     }
   }, [inviteToken, inviteDetails, inviteError, hasInitialized]);
 
-  // Auto-inicializar quando dados estão prontos
+  // INICIALIZAÇÃO AUTOMÁTICA com lógica robusta
   useEffect(() => {
-    if (!hasInitialized && (!isInviteLoading || inviteError)) {
-      initializeCleanData();
+    if (hasInitialized) return;
+
+    // Se há token mas ainda está carregando, aguardar UM POUCO
+    if (inviteToken && isInviteLoading && !inviteError) {
+      if (!isLoading) {
+        logger.info('[CLEAN-DATA] 🔄 Aguardando dados do convite (máx 3s)...');
+        setIsLoading(true);
+      }
+      return;
     }
-  }, [isInviteLoading, inviteError, hasInitialized, initializeCleanData]);
+
+    // Se não há token OU loading terminou (com sucesso ou erro), inicializar
+    logger.info('[CLEAN-DATA] 🎯 Condições atendidas - inicializando:', {
+      hasToken: !!inviteToken,
+      isInviteLoading,
+      hasError: !!inviteError,
+      hasDetails: !!inviteDetails
+    });
+    
+    initializeCleanData();
+    setIsLoading(false);
+  }, [inviteToken, isInviteLoading, inviteError, inviteDetails, hasInitialized, initializeCleanData, isLoading]);
 
   const updateData = useCallback((newData: Partial<OnboardingData>) => {
-    // VALIDAÇÃO: Impedir alteração de campos críticos do convite
+    // Validação: Impedir alteração de campos protegidos
     const filteredData = { ...newData };
     
     if (data.isEmailFromInvite && newData.email && newData.email !== data.email) {
-      logger.warn('[CLEAN-DATA] ⚠️ Tentativa de alterar e-mail do convite bloqueada:', {
-        originalEmail: data.email,
-        attemptedEmail: newData.email
-      });
+      logger.warn('[CLEAN-DATA] ⚠️ Bloqueando alteração de e-mail do convite');
       delete filteredData.email;
     }
     
     if (data.isNameFromInvite && newData.name && newData.name !== data.name) {
-      logger.warn('[CLEAN-DATA] ⚠️ Tentativa de alterar nome do convite bloqueada:', {
-        originalName: data.name,
-        attemptedName: newData.name
-      });
+      logger.warn('[CLEAN-DATA] ⚠️ Bloqueando alteração de nome do convite');
       delete filteredData.name;
     }
     
     if (data.isPhoneFromInvite && newData.phone && newData.phone !== data.phone) {
-      logger.warn('[CLEAN-DATA] ⚠️ Tentativa de alterar telefone do convite bloqueada:', {
-        originalPhone: data.phone,
-        attemptedPhone: newData.phone
-      });
+      logger.warn('[CLEAN-DATA] ⚠️ Bloqueando alteração de telefone do convite');
       delete filteredData.phone;
     }
     
-    logger.info('[CLEAN-DATA] 📝 Atualizando dados (com proteção):', {
-      fields: Object.keys(filteredData),
-      hasToken: !!inviteToken
+    logger.info('[CLEAN-DATA] 📝 Atualizando dados:', {
+      fields: Object.keys(filteredData)
     });
     
     setData(prev => ({ ...prev, ...filteredData }));
-  }, [inviteToken, data.email, data.name, data.phone, data.isEmailFromInvite, data.isNameFromInvite, data.isPhoneFromInvite]);
+  }, [data.email, data.name, data.phone, data.isEmailFromInvite, data.isNameFromInvite, data.isPhoneFromInvite]);
 
   return {
     data,
     updateData,
     initializeCleanData,
-    isInviteLoading: isInviteLoading && !hasInitialized
+    isLoading: isLoading && !hasInitialized // Só mostra loading se não inicializou ainda
   };
 };

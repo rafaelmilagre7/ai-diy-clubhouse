@@ -18,7 +18,7 @@ const OnboardingWizard = () => {
   const inviteToken = searchParams.get('token');
   
   useEffect(() => {
-    logger.info('[ONBOARDING-WIZARD] Inicializando wizard com auditoria:', {
+    logger.info('[ONBOARDING-WIZARD] 🎯 Inicializando wizard com diagnóstico:', {
       hasToken: !!inviteToken,
       tokenLength: inviteToken?.length,
       userId: user?.id?.substring(0, 8) + '***' || 'none',
@@ -48,23 +48,23 @@ const OnboardingWizard = () => {
             const auditReport = tokenAudit.generateAuditReport();
             const hasTokenError = auditReport.corruptionDetected || (inviteToken && auditReport.totalSteps === 0);
             
-            logger.info('[ONBOARDING-WIZARD] Renderizando wizard:', {
+            logger.info('[ONBOARDING-WIZARD] 🎨 Renderizando wizard:', {
               currentStep,
               totalSteps,
               isLoading,
               hasTokenError,
               auditSteps: auditReport.totalSteps,
-              component: 'OnboardingWizard'
+              dataReady: !!(data?.email || data?.memberType)
             });
 
-            // Mostrar diagnóstico se houver erro de token
+            // Mostrar diagnóstico apenas se houver erro crítico de token
             if (hasTokenError && inviteToken) {
               return (
                 <div className="max-w-4xl mx-auto space-y-8">
                   <div className="text-center mb-8">
-                    <h1 className="text-3xl font-bold text-white mb-2">Erro no Convite</h1>
+                    <h1 className="text-3xl font-bold text-white mb-2">Problema no Convite</h1>
                     <p className="text-neutral-300">
-                      Detectamos um problema com o token do seu convite. Veja os detalhes abaixo:
+                      Detectamos um problema com seu convite. Veja os detalhes:
                     </p>
                   </div>
                   
@@ -76,38 +76,41 @@ const OnboardingWizard = () => {
             }
 
             return (
-              <>
-                <div className="max-w-4xl mx-auto space-y-8">
-                  {/* Progress Bar */}
-                  <OnboardingProgress 
-                    currentStep={currentStep} 
-                    totalSteps={totalSteps} 
+              <div className="max-w-4xl mx-auto space-y-8">
+                {/* Progress Bar */}
+                <OnboardingProgress 
+                  currentStep={currentStep} 
+                  totalSteps={totalSteps} 
+                />
+                
+                {/* Loading States - APENAS se realmente necessário */}
+                {isLoading && (
+                  <OnboardingLoadingState 
+                    type="initialization"
+                    message="Preparando sua experiência..."
                   />
-                  
-                  {/* Loading States */}
-                  {isLoading && <OnboardingLoadingState />}
-                  
-                  {/* Step Content */}
-                  {!isLoading && (
-                    <div className="bg-[#1A1E2E] rounded-lg p-8 border border-gray-800">
-                      <OnboardingStepRenderer 
-                        {...wizardProps}
-                        onUpdateData={handleDataChange}
-                      />
-                    </div>
-                  )}
-                  
-                  {/* Controls */}
-                  {!isLoading && (
-                    <OnboardingWizardControls 
+                )}
+                
+                {/* Step Content - SEMPRE mostrar após loading */}
+                {!isLoading && (
+                  <div className="bg-[#1A1E2E] rounded-lg p-8 border border-gray-800">
+                    <OnboardingStepRenderer 
                       {...wizardProps}
-                      onNext={handleNext}
-                      onPrevious={handlePrevious}
-                      onSubmit={handleSubmit}
+                      onUpdateData={handleDataChange}
                     />
-                  )}
-                </div>
-              </>
+                  </div>
+                )}
+                
+                {/* Controls - SEMPRE mostrar após loading */}
+                {!isLoading && (
+                  <OnboardingWizardControls 
+                    {...wizardProps}
+                    onNext={handleNext}
+                    onPrevious={handlePrevious}
+                    onSubmit={handleSubmit}
+                  />
+                )}
+              </div>
             );
           }}
         </OnboardingWizardContainer>

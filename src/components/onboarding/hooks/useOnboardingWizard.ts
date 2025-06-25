@@ -44,14 +44,19 @@ export const useOnboardingWizard = ({
     };
   }, []);
 
-  // Verificar se dados estão prontos (memoizado para estabilidade)
+  // Verificar se dados estão minimamente prontos
   const isDataReady = useMemo(() => {
-    const hasBasicData = !!(initialData.memberType && initialData.startedAt);
-    const hasRequiredFields = !!(initialData.email || initialData.name);
-    return hasBasicData && hasRequiredFields;
-  }, [initialData.memberType, initialData.startedAt, initialData.email, initialData.name]);
+    const hasBasicData = !!(initialData.memberType && (initialData.email || initialData.name));
+    logger.info('[ONBOARDING-WIZARD] Verificando dados:', {
+      hasBasicData,
+      memberType: initialData.memberType,
+      hasEmail: !!initialData.email,
+      hasName: !!initialData.name
+    });
+    return hasBasicData;
+  }, [initialData.memberType, initialData.email, initialData.name]);
 
-  // Handler de mudança de dados com debounce (estável)
+  // Handler de mudança de dados (estável)
   const handleDataChange = useCallback((newData: Partial<OnboardingData>) => {
     try {
       if (!isMountedRef.current) {
@@ -59,7 +64,10 @@ export const useOnboardingWizard = ({
         return;
       }
       
-      logger.info('[ONBOARDING-WIZARD] Dados alterados:', newData);
+      logger.info('[ONBOARDING-WIZARD] 📝 Dados alterados:', {
+        fields: Object.keys(newData)
+      });
+      
       onDataChangeRef.current(newData);
       setHasUnsavedChanges(true);
       
@@ -77,65 +85,62 @@ export const useOnboardingWizard = ({
     } catch (error) {
       logger.error('[ONBOARDING-WIZARD] Erro ao atualizar dados:', error);
     }
-  }, []); // Sem dependências para garantir estabilidade
+  }, []);
 
   const handleNext = useCallback(async (): Promise<void> => {
     try {
       if (currentStep < totalSteps) {
-        if (isDataReady) {
-          const isValid = validateStep(currentStep, initialData, memberType);
-          if (isValid) {
-            logger.info(`[ONBOARDING-WIZARD] Avançando para próxima etapa: ${currentStep + 1}`);
+        // Para primeira etapa, ser mais permissivo
+        if (currentStep === 1) {
+          if (initialData.email || initialData.name) {
+            logger.info('[ONBOARDING-WIZARD] ✅ Avançando etapa 1 (dados básicos OK)');
             setCurrentStep(prev => prev + 1);
           } else {
-            logger.warn(`[ONBOARDING-WIZARD] Validação falhou para etapa: ${currentStep}`);
+            logger.warn('[ONBOARDING-WIZARD] ⚠️ Etapa 1 - faltam dados básicos');
           }
         } else {
-          // Para convites, permitir avanço na primeira etapa
-          if (initialData.fromInvite && currentStep === 1) {
-            logger.info('[ONBOARDING-WIZARD] Avançando etapa 1 (convite)');
+          // Para outras etapas, validar normalmente
+          const isValid = validateStep(currentStep, initialData, memberType);
+          if (isValid) {
+            logger.info(`[ONBOARDING-WIZARD] ✅ Avançando para etapa: ${currentStep + 1}`);
             setCurrentStep(prev => prev + 1);
           } else {
-            logger.warn('[ONBOARDING-WIZARD] Dados não prontos para avanço');
+            logger.warn(`[ONBOARDING-WIZARD] ⚠️ Validação falhou para etapa: ${currentStep}`);
           }
         }
       }
-      return Promise.resolve();
     } catch (error) {
       logger.error('[ONBOARDING-WIZARD] Erro ao avançar etapa:', error);
-      return Promise.resolve();
     }
-  }, [currentStep, totalSteps, validateStep, initialData, memberType, isDataReady]);
+  }, [currentStep, totalSteps, validateStep, initialData, memberType]);
 
   const handlePrevious = useCallback(async (): Promise<void> => {
     try {
       if (currentStep > 1) {
-        logger.info(`[ONBOARDING-WIZARD] Voltando para etapa anterior: ${currentStep - 1}`);
+        logger.info(`[ONBOARDING-WIZARD] ⬅️ Voltando para etapa: ${currentStep - 1}`);
         setCurrentStep(prev => prev - 1);
       }
-      return Promise.resolve();
     } catch (error) {
       logger.error('[ONBOARDING-WIZARD] Erro ao voltar etapa:', error);
-      return Promise.resolve();
     }
   }, [currentStep]);
 
   const handleSubmit = useCallback(async (): Promise<void> => {
     try {
-      logger.info('[ONBOARDING-WIZARD] Iniciando finalização');
+      logger.info('[ONBOARDING-WIZARD] 🎯 Iniciando finalização');
       await completeOnboarding(initialData, memberType);
-      return Promise.resolve();
     } catch (error) {
       logger.error('[ONBOARDING-WIZARD] Erro na finalização:', error);
-      return Promise.resolve();
     }
   }, [completeOnboarding, initialData, memberType]);
 
-  // Validação da etapa atual (memoizada)
+  // Validação da etapa atual (mais permissiva)
   const isCurrentStepValid = useMemo(() => {
-    if (!isDataReady) return false;
+    if (currentStep === 1) {
+      return !!(initialData.email || initialData.name);
+    }
     return validateStep(currentStep, initialData, memberType);
-  }, [currentStep, initialData, memberType, validateStep, isDataReady]);
+  }, [currentStep, initialData, memberType, validateStep]);
 
   return {
     currentStep,

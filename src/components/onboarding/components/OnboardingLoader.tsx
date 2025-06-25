@@ -16,14 +16,14 @@ export const OnboardingLoader: React.FC<OnboardingLoaderProps> = ({ children }) 
   const { isRequired, isLoading: onboardingLoading } = useOnboardingRequired();
   const [forceShowContent, setForceShowContent] = useState(false);
 
-  // TIMEOUT SIMPLES: máximo 1 segundo de loading
+  // TIMEOUT AGRESSIVO: máximo 1 segundo
   useEffect(() => {
-    const timeout = setTimeout(() => {
-      logger.warn('[ONBOARDING-LOADER] Timeout de 1s - forçando exibição do conteúdo');
+    const aggressiveTimeout = setTimeout(() => {
+      logger.warn('[ONBOARDING-LOADER] ⏰ TIMEOUT 1s - forçando exibição do conteúdo');
       setForceShowContent(true);
     }, 1000);
 
-    return () => clearTimeout(timeout);
+    return () => clearTimeout(aggressiveTimeout);
   }, []);
 
   // BYPASS IMEDIATO PARA ADMIN
@@ -50,11 +50,11 @@ export const OnboardingLoader: React.FC<OnboardingLoaderProps> = ({ children }) 
     hasProfile: !!profile
   });
 
-  // Mostrar loading apenas se necessário E não passou do timeout
+  // DECISÃO: Mostrar loading apenas se necessário E dentro do timeout
   if (shouldShowLoading) {
-    return <LoadingScreen message="Verificando seu progresso..." />;
+    return <LoadingScreen message="Carregando onboarding..." />;
   }
 
-  // Mostrar conteúdo (onboarding)
+  // SEMPRE mostrar conteúdo após timeout
   return <>{children}</>;
 };
