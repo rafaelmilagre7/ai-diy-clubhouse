@@ -1,8 +1,7 @@
 
-import { SolutionCategory, CategoryDistribution, UserStats } from './types';
+import { CategoryData } from './types';
 
-// Default empty state for user stats
-export const DEFAULT_STATS: UserStats = {
+export const DEFAULT_STATS = {
   totalSolutions: 0,
   completedSolutions: 0,
   inProgressSolutions: 0,
@@ -19,19 +18,14 @@ export const DEFAULT_STATS: UserStats = {
     Operacional: { total: 0, completed: 0 },
     Estratégia: { total: 0, completed: 0 }
   },
-  recentActivity: [],
-  totalTimeSpent: 0,
-  avgTimePerSolution: 0,
-  lastActivity: null
+  recentActivity: []
 };
 
-// Calculate category distribution based on solutions and progress
 export const calculateCategoryDistribution = (
   solutions: any[],
   userProgress: any[]
-): CategoryDistribution => {
-  // Initialize category distribution
-  const categoryDistribution: CategoryDistribution = {
+): Record<string, CategoryData> => {
+  const distribution: Record<string, CategoryData> = {
     Receita: { total: 0, completed: 0 },
     Operacional: { total: 0, completed: 0 },
     Estratégia: { total: 0, completed: 0 }
@@ -39,50 +33,46 @@ export const calculateCategoryDistribution = (
 
   // Count solutions by category
   solutions.forEach(solution => {
-    const category = solution.category as SolutionCategory;
-    if (category in categoryDistribution) {
-      categoryDistribution[category].total++;
+    const category = solution.category || 'Operacional';
+    if (distribution[category]) {
+      distribution[category].total++;
     }
   });
 
   // Count completed solutions by category
-  if (userProgress.length > 0 && solutions.length > 0) {
-    // Create a map for faster lookups
-    const solutionMap = new Map(
-      solutions.map(s => [s.id, s.category as SolutionCategory])
-    );
-    
-    userProgress.forEach(progress => {
-      if (progress.is_completed && solutionMap.has(progress.solution_id)) {
-        const category = solutionMap.get(progress.solution_id) as SolutionCategory;
-        if (category in categoryDistribution) {
-          categoryDistribution[category].completed++;
-        }
+  userProgress.forEach(progress => {
+    if (progress.is_completed && progress.solution) {
+      const category = progress.solution.category || 'Operacional';
+      if (distribution[category]) {
+        distribution[category].completed++;
       }
-    });
-  }
+    }
+  });
 
-  return categoryDistribution;
+  return distribution;
 };
 
-// Calculate time metrics based on completed and in-progress solutions
 export const calculateTimeMetrics = (
   completedSolutions: number,
   inProgressSolutions: number
 ) => {
-  const totalTimeSpent = completedSolutions * 45 + inProgressSolutions * 20; // minutes
-  const avgTimePerSolution = completedSolutions > 0 
-    ? Math.round(totalTimeSpent / completedSolutions) 
-    : 0;
+  // Placeholder calculations - would need actual time tracking data
+  const totalTimeSpent = (completedSolutions * 45) + (inProgressSolutions * 20);
+  const avgTimePerSolution = completedSolutions > 0 ? Math.round(totalTimeSpent / completedSolutions) : 0;
 
-  return { totalTimeSpent, avgTimePerSolution };
+  return {
+    totalTimeSpent,
+    avgTimePerSolution
+  };
 };
 
-// Find the latest activity date from user progress
 export const findLatestActivity = (userProgress: any[]): string | null => {
-  return userProgress.length > 0 
-    ? userProgress.sort((a, b) => 
-        new Date(b.last_activity).getTime() - new Date(a.last_activity).getTime()
-      )[0].last_activity 
-    : null;
+  if (!userProgress || userProgress.length === 0) return null;
+
+  const activities = userProgress
+    .filter(p => p.last_activity)
+    .map(p => p.last_activity)
+    .sort((a, b) => new Date(b).getTime() - new Date(a).getTime());
+
+  return activities.length > 0 ? activities[0] : null;
 };

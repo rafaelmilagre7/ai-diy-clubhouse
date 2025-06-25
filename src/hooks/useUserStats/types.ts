@@ -1,17 +1,4 @@
 
-export type SolutionCategory = "Receita" | "Operacional" | "Estratégia";
-
-export interface CategoryCount {
-  total: number;
-  completed: number;
-}
-
-export interface CategoryDistribution {
-  Receita: CategoryCount;
-  Operacional: CategoryCount;
-  Estratégia: CategoryCount;
-}
-
 export interface UserStats {
   totalSolutions: number;
   completedSolutions: number;
@@ -24,15 +11,23 @@ export interface UserStats {
   completionRate: number;
   averageCompletionTime: number | null;
   activeDays: number;
-  categoryDistribution: CategoryDistribution;
-  recentActivity: {
+  categoryDistribution: {
+    [key: string]: {
+      total: number;
+      completed: number;
+    };
+  };
+  recentActivity: Array<{
     date: string;
     action: string;
     solution?: string;
-  }[];
+  }>;
   totalTimeSpent?: number;
   avgTimePerSolution?: number;
   lastActivity?: Date | null;
-  activeSolutions?: number;
-  achievements?: number;
+}
+
+export interface CategoryData {
+  total: number;
+  completed: number;
 }
