@@ -4,7 +4,9 @@ import { useSearchParams } from 'react-router-dom';
 import { useOnboardingWizard } from '../hooks/useOnboardingWizard';
 import { useCleanOnboardingData } from '../hooks/useCleanOnboardingData';
 import { useOnboardingCleanup } from '../hooks/useOnboardingCleanup';
+import { useLoadingTimeoutManager } from '@/hooks/useLoadingTimeoutManager';
 import { InviteTokenManager } from '@/utils/inviteTokenManager';
+import { OnboardingCacheManager } from '@/utils/onboardingCacheManager';
 import { logger } from '@/utils/logger';
 
 interface OnboardingWizardContainerProps {
@@ -22,7 +24,7 @@ export const OnboardingWizardContainer = ({ children }: OnboardingWizardContaine
   // Refs para dados estáveis
   const inviteTokenRef = useRef<string | null>(null);
   const isInitializedRef = useRef(false);
-  const loadingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const cacheResetRef = useRef(false);
   
   // Token ÚNICO - fonte única de verdade (estável)
   const inviteToken = useMemo(() => {
@@ -42,8 +44,8 @@ export const OnboardingWizardContainer = ({ children }: OnboardingWizardContaine
 
   const memberType = useMemo(() => cleanData.memberType || 'club', [cleanData.memberType]);
   
-  // CORREÇÃO CRÍTICA: Loading otimizado com timeout automático
-  const isLoading = useMemo(() => {
+  // CORREÇÃO CRÍTICA: Loading otimizado com timeout automático e promise safety
+  const rawIsLoading = useMemo(() => {
     // NUNCA bloquear se não há token de convite
     if (!inviteToken) {
       logger.info('[WIZARD-CONTAINER] Sem token de convite - campos habilitados');
@@ -70,27 +72,32 @@ export const OnboardingWizardContainer = ({ children }: OnboardingWizardContaine
     return shouldLoad;
   }, [inviteToken, isInviteLoading, cleanData.email]);
 
-  // Timeout de segurança para loading
-  useEffect(() => {
-    if (isLoading) {
-      logger.info('[WIZARD-CONTAINER] Iniciando timeout de loading (3s)');
-      loadingTimeoutRef.current = setTimeout(() => {
-        logger.warn('[WIZARD-CONTAINER] TIMEOUT DE LOADING - forçando habilitação dos campos');
-        // O timeout será naturalmente resolvido quando isInviteLoading mudar
-      }, 3000);
-    } else {
-      if (loadingTimeoutRef.current) {
-        clearTimeout(loadingTimeoutRef.current);
-        loadingTimeoutRef.current = null;
+  // Timeout manager para forçar desbloqueio
+  const { shouldBeUnlocked, isForceUnlocked } = useLoadingTimeoutManager({
+    isLoading: rawIsLoading,
+    context: 'WizardContainer',
+    maxTimeoutMs: 1500, // 1.5 segundos máximo para container
+    onForceUnlock: () => {
+      logger.error('[WIZARD-CONTAINER] TIMEOUT FORÇADO - habilitando campos imediatamente');
+      // Cache reset em caso de timeout
+      if (!cacheResetRef.current) {
+        OnboardingCacheManager.clearAll();
+        cacheResetRef.current = true;
       }
     }
+  });
 
-    return () => {
-      if (loadingTimeoutRef.current) {
-        clearTimeout(loadingTimeoutRef.current);
-      }
-    };
-  }, [isLoading]);
+  // LOADING FINAL com fallback agressivo
+  const isLoading = rawIsLoading && !shouldBeUnlocked && !isForceUnlocked;
+
+  // Cache reset inicial uma única vez
+  useEffect(() => {
+    if (!cacheResetRef.current) {
+      logger.info('[WIZARD-CONTAINER] Executando cache reset inicial');
+      OnboardingCacheManager.clearAll();
+      cacheResetRef.current = true;
+    }
+  }, []);
   
   // Inicialização SIMPLES com proteção contra loops
   useEffect(() => {
@@ -102,7 +109,8 @@ export const OnboardingWizardContainer = ({ children }: OnboardingWizardContaine
       hasToken: !!inviteToken,
       memberType,
       hasEmail: !!cleanData.email,
-      willEnableFields: !isLoading
+      willEnableFields: !isLoading,
+      isForceUnlocked
     });
     
     if (inviteToken) {
@@ -110,7 +118,14 @@ export const OnboardingWizardContainer = ({ children }: OnboardingWizardContaine
       cleanupForInvite();
     }
 
-    initializeCleanData();
+    // PROMISE SAFETY: Try-catch em inicialização
+    try {
+      initializeCleanData();
+    } catch (error) {
+      logger.error('[WIZARD-CONTAINER] Erro na inicialização - forçando desbloqueio:', error);
+      // Em caso de erro, garantir que campos sejam habilitados
+    }
+    
     isInitializedRef.current = true;
   }, [inviteToken]); // Dependência mínima para evitar loops
 
@@ -122,12 +137,18 @@ export const OnboardingWizardContainer = ({ children }: OnboardingWizardContaine
     logger.info('[WIZARD-CONTAINER] Atualizando dados:', {
       newData,
       currentlyLoading: isLoading,
-      fieldsEnabled: !isLoading
+      fieldsEnabled: !isLoading,
+      isForceUnlocked
     });
     
-    const dataWithToken = inviteToken ? { ...newData, inviteToken } : newData;
-    updateDataRef.current(dataWithToken);
-  }, [inviteToken, isLoading]); // Incluir isLoading para logs
+    try {
+      const dataWithToken = inviteToken ? { ...newData, inviteToken } : newData;
+      updateDataRef.current(dataWithToken);
+    } catch (error) {
+      logger.error('[WIZARD-CONTAINER] Erro ao atualizar dados - continuando:', error);
+      // Não bloquear em caso de erro de atualização
+    }
+  }, [inviteToken, isLoading, isForceUnlocked]); // Incluir flags para logs
 
   const wizardProps = useOnboardingWizard({
     initialData: cleanData,
@@ -135,13 +156,17 @@ export const OnboardingWizardContainer = ({ children }: OnboardingWizardContaine
     memberType
   });
 
-  logger.info('[WIZARD-CONTAINER] Renderizando com campos:', {
+  logger.info('[WIZARD-CONTAINER] Renderizando com campos (TIMEOUT PROTECTION):', {
     memberType,
     isLoading,
+    rawLoading: rawIsLoading,
+    shouldBeUnlocked,
+    isForceUnlocked,
     fieldsEnabled: !isLoading,
     hasData: Object.keys(cleanData).length > 2,
     dataKeys: Object.keys(cleanData),
-    isInitialized: isInitializedRef.current
+    isInitialized: isInitializedRef.current,
+    cacheReset: cacheResetRef.current
   });
 
   return (

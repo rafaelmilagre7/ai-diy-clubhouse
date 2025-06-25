@@ -1,111 +1,84 @@
 
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useSimpleAuth } from '@/contexts/auth/SimpleAuthProvider';
+import { useOnboardingRequired } from '@/hooks/useOnboardingRequired';
 import { logger } from '@/utils/logger';
-import { supabase } from '@/lib/supabase';
 
 export const useOnboardingDiagnostics = () => {
-  const { user, profile } = useSimpleAuth();
+  const diagnosticCountRef = useRef(0);
+  const lastStateRef = useRef<string>('');
+  
+  const { user, profile, isLoading: authLoading } = useSimpleAuth();
+  const { isRequired, isLoading: onboardingLoading, hasCompleted } = useOnboardingRequired();
 
   useEffect(() => {
-    const runDiagnostics = async () => {
-      if (!user) return;
+    const currentState = JSON.stringify({
+      authLoading,
+      onboardingLoading,
+      hasUser: !!user,
+      hasProfile: !!profile,
+      isRequired,
+      hasCompleted,
+      userEmail: user?.email?.substring(0, 10) + '***'
+    });
 
-      try {
-        logger.info('[ONBOARDING-DIAGNOSTICS] Executando diagnóstico completo:', {
-          userId: user.id.substring(0, 8) + '***',
-          email: user.email,
+    // Só fazer log se o estado mudou
+    if (currentState !== lastStateRef.current) {
+      diagnosticCountRef.current++;
+      lastStateRef.current = currentState;
+
+      logger.info(`[ONBOARDING-DIAGNOSTICS #${diagnosticCountRef.current}] Estado:`, {
+        authLoading,
+        onboardingLoading,
+        totalLoading: authLoading || onboardingLoading,
+        hasUser: !!user,
+        hasProfile: !!profile,
+        profileData: profile ? {
+          id: profile.id,
+          onboardingCompleted: profile.onboarding_completed,
+          userRole: profile.user_roles?.name
+        } : null,
+        isRequired,
+        hasCompleted,
+        userEmail: user?.email?.substring(0, 10) + '***',
+        timestamp: new Date().toISOString()
+      });
+
+      // ALERTA CRÍTICO: Loading há mais de 5 segundos
+      if (diagnosticCountRef.current > 20) {
+        logger.error('[ONBOARDING-DIAGNOSTICS] POSSÍVEL LOOP INFINITO DETECTADO - mais de 20 mudanças de estado');
+      }
+
+      // ALERTA: Estados inconsistentes
+      if (user && !profile && !authLoading) {
+        logger.error('[ONBOARDING-DIAGNOSTICS] ESTADO INCONSISTENTE: usuário sem perfil e não carregando');
+      }
+
+      if (profile && profile.onboarding_completed && isRequired) {
+        logger.error('[ONBOARDING-DIAGNOSTICS] ESTADO INCONSISTENTE: perfil completo mas onboarding requerido');
+      }
+    }
+  }, [authLoading, onboardingLoading, user, profile, isRequired, hasCompleted]);
+
+  // Diagnóstico de performance - executar a cada 3 segundos se ainda carregando
+  useEffect(() => {
+    if (authLoading || onboardingLoading) {
+      const interval = setInterval(() => {
+        logger.warn('[ONBOARDING-DIAGNOSTICS] AINDA CARREGANDO após 3s - estado atual:', {
+          authLoading,
+          onboardingLoading,
+          diagnosticCount: diagnosticCountRef.current,
+          hasUser: !!user,
           hasProfile: !!profile
         });
+      }, 3000);
 
-        // 1. Verificar dados do perfil
-        const { data: profileData, error: profileError } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', user.id)
-          .single();
+      return () => clearInterval(interval);
+    }
+  }, [authLoading, onboardingLoading, user, profile]);
 
-        if (profileError) {
-          logger.error('[ONBOARDING-DIAGNOSTICS] Erro ao buscar perfil:', profileError);
-        } else {
-          logger.info('[ONBOARDING-DIAGNOSTICS] Dados do perfil:', {
-            id: profileData.id.substring(0, 8) + '***',
-            email: profileData.email,
-            name: profileData.name,
-            role: profileData.role,
-            roleId: profileData.role_id,
-            onboardingCompleted: profileData.onboarding_completed,
-            onboardingCompletedAt: profileData.onboarding_completed_at,
-            createdAt: profileData.created_at
-          });
-        }
-
-        // 2. Verificar role
-        if (profileData?.role_id) {
-          const { data: roleData, error: roleError } = await supabase
-            .from('user_roles')
-            .select('*')
-            .eq('id', profileData.role_id)
-            .single();
-
-          if (roleError) {
-            logger.error('[ONBOARDING-DIAGNOSTICS] Erro ao buscar role:', roleError);
-          } else {
-            logger.info('[ONBOARDING-DIAGNOSTICS] Dados da role:', {
-              id: roleData.id,
-              name: roleData.name,
-              description: roleData.description,
-              isSystem: roleData.is_system
-            });
-          }
-        }
-
-        // 3. Testar acesso a solutions (limitado)
-        const { data: solutionsData, error: solutionsError } = await supabase
-          .from('solutions')
-          .select('id, title, is_published')
-          .limit(1);
-
-        logger.info('[ONBOARDING-DIAGNOSTICS] Teste de acesso a solutions:', {
-          success: !solutionsError,
-          error: solutionsError?.message,
-          dataCount: solutionsData?.length || 0
-        });
-
-        // 4. Testar acesso a tools (limitado)
-        const { data: toolsData, error: toolsError } = await supabase
-          .from('tools')
-          .select('id, name, is_active')
-          .limit(1);
-
-        logger.info('[ONBOARDING-DIAGNOSTICS] Teste de acesso a tools:', {
-          success: !toolsError,
-          error: toolsError?.message,
-          dataCount: toolsData?.length || 0
-        });
-
-        // 5. Verificar audit logs recentes
-        const { data: auditData, error: auditError } = await supabase
-          .from('audit_logs')
-          .select('event_type, action, details, timestamp')
-          .eq('user_id', user.id)
-          .order('timestamp', { ascending: false })
-          .limit(5);
-
-        logger.info('[ONBOARDING-DIAGNOSTICS] Audit logs recentes:', {
-          success: !auditError,
-          error: auditError?.message,
-          logsCount: auditData?.length || 0,
-          recentActions: auditData?.map(log => log.action) || []
-        });
-
-      } catch (error) {
-        logger.error('[ONBOARDING-DIAGNOSTICS] Erro no diagnóstico:', error);
-      }
-    };
-
-    // Executar diagnóstico após 1 segundo para permitir carregamento do perfil
-    const timer = setTimeout(runDiagnostics, 1000);
-    return () => clearTimeout(timer);
-  }, [user, profile]);
+  return {
+    diagnosticCount: diagnosticCountRef.current,
+    isInPossibleLoop: diagnosticCountRef.current > 20
+  };
 };
