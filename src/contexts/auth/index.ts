@@ -1,5 +1,4 @@
 
-
 // Export all utility functions
 export { fetchUserProfile } from './utils';
 // Removido: export { signOutUser } from './utils';
@@ -9,5 +8,4 @@ export { validateUserRole, isSuperAdmin } from './utils';
 export { AuthProvider, useAuth } from './index.tsx';
 
 // Export types
-export type { AuthContextType } from './types';
-
+export type { AuthContextType, SignUpOptions } from './types';
