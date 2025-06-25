@@ -89,20 +89,32 @@ export const useInvites = () => {
 
   const handleDeleteInvite = async (inviteId: string) => {
     try {
-      console.log("🗑️ useInvites: Deletando convite com cache otimizado:", inviteId);
+      console.log("🗑️ [USE-INVITES] Iniciando exclusão de convite:", {
+        inviteId,
+        timestamp: new Date().toISOString()
+      });
       
       // Update otimista - remover do cache imediatamente
       removeInviteFromCache(inviteId);
+      console.log("⚡ [USE-INVITES] Update otimista aplicado - convite removido da UI");
       
+      // Executar exclusão no backend
       await deleteInvite(inviteId);
+      console.log("✅ [USE-INVITES] Convite excluído com sucesso no backend");
       
       // Invalidar cache para garantir consistência
       await invalidateAllInviteData();
+      console.log("🔄 [USE-INVITES] Cache invalidado");
+      
+      // CORREÇÃO: Recarregar lista após invalidação do cache
+      await fetchInvites();
+      console.log("📋 [USE-INVITES] Lista de convites recarregada do backend");
       
     } catch (error) {
-      console.error("❌ useInvites: Erro ao deletar convite:", error);
+      console.error("❌ [USE-INVITES] Erro ao deletar convite:", error);
       
-      // Recarregar dados em caso de erro
+      // Recarregar dados em caso de erro para reverter update otimista
+      console.log("🔄 [USE-INVITES] Recarregando dados devido ao erro");
       await fetchInvites();
       throw error;
     }
