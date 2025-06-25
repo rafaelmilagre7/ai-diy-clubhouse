@@ -14,7 +14,7 @@ import {
   AlertTriangle 
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useAutoRecommendations } from '@/hooks/analytics/useAutoRecommendations';
+import { useAutoRecommendations } from '@/hooks/analytics/insights/useAutoRecommendations';
 import LoadingScreen from '@/components/common/LoadingScreen';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -27,12 +27,20 @@ export const AutoRecommendations: React.FC<AutoRecommendationsProps> = ({
   timeRange
 }) => {
   const {
-    recommendations,
-    loading,
-    error,
-    handleImplementRecommendation,
-    handleDismissRecommendation
+    data: recommendations,
+    isLoading: loading,
+    error
   } = useAutoRecommendations(timeRange);
+
+  const handleImplementRecommendation = (id: string) => {
+    console.log(`Implementando recomendação: ${id}`);
+    // Aqui implementaria a lógica real
+  };
+
+  const handleDismissRecommendation = (id: string) => {
+    console.log(`Ignorando recomendação: ${id}`);
+    // Aqui implementaria a lógica real de dismissal
+  };
 
   if (loading) {
     return <LoadingScreen variant="modern" type="stats" fullScreen={false} />;
@@ -48,7 +56,7 @@ export const AutoRecommendations: React.FC<AutoRecommendationsProps> = ({
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-gray-600">{error}</p>
+          <p className="text-gray-600">{typeof error === 'string' ? error : 'Erro ao carregar recomendações'}</p>
         </CardContent>
       </Card>
     );
@@ -66,52 +74,59 @@ export const AutoRecommendations: React.FC<AutoRecommendationsProps> = ({
         </p>
       </CardHeader>
       <CardContent className="space-y-4">
-        {recommendations.map(rec => (
-          <div key={rec.id} className="p-4 border border-gray-200 rounded-lg hover:shadow-md transition-shadow">
-            <div className="flex items-start justify-between mb-3">
-              <div className="flex items-center gap-2">
-                {rec.type === 'opportunity' && <TrendingUp className="h-5 w-5 text-blue-600" />}
-                {rec.type === 'warning' && <AlertTriangle className="h-5 w-5 text-orange-600" />}
-                {rec.type === 'success' && <CheckCircle className="h-5 w-5 text-green-600" />}
-                <h4 className="font-semibold text-gray-900">{rec.title}</h4>
+        {recommendations && recommendations.length > 0 ? (
+          recommendations.map(rec => (
+            <div key={rec.id} className="p-4 border border-gray-200 rounded-lg hover:shadow-md transition-shadow">
+              <div className="flex items-start justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  {rec.type === 'opportunity' && <TrendingUp className="h-5 w-5 text-blue-600" />}
+                  {rec.type === 'warning' && <AlertTriangle className="h-5 w-5 text-orange-600" />}
+                  {rec.type === 'success' && <CheckCircle className="h-5 w-5 text-green-600" />}
+                  <h4 className="font-semibold text-gray-900">{rec.title}</h4>
+                </div>
+                <Badge className={cn("text-xs", {
+                  "bg-green-100 text-green-800 border-green-200": rec.priority === 'high',
+                  "bg-yellow-100 text-yellow-800 border-yellow-200": rec.priority === 'medium',
+                  "bg-gray-100 text-gray-800 border-gray-200": rec.priority === 'low',
+                })}>
+                  {rec.priority.toUpperCase()}
+                </Badge>
               </div>
-              <Badge className={cn("text-xs", {
-                "bg-green-100 text-green-800 border-green-200": rec.priority === 'high',
-                "bg-yellow-100 text-yellow-800 border-yellow-200": rec.priority === 'medium',
-                "bg-gray-100 text-gray-800 border-gray-200": rec.priority === 'low',
-              })}>
-                {rec.priority.toUpperCase()}
-              </Badge>
+              
+              <p className="mb-3 text-gray-600">{rec.description}</p>
+              
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Clock className="h-4 w-4 text-gray-500" />
+                  <span className="text-sm text-gray-500">
+                    Atualizado em {format(new Date(rec.updated_at), 'dd/MM/yyyy', { locale: ptBR })}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => handleImplementRecommendation(rec.id)}
+                  >
+                    Implementar <ArrowRight className="ml-2 h-4 w-4" />
+                  </Button>
+                  <Button 
+                    variant="ghost" 
+                    size="sm"
+                    onClick={() => handleDismissRecommendation(rec.id)}
+                  >
+                    Ignorar
+                  </Button>
+                </div>
+              </div>
             </div>
-            
-            <p className="mb-3 text-gray-600">{rec.description}</p>
-            
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Clock className="h-4 w-4 text-gray-500" />
-                <span className="text-sm text-gray-500">
-                  Atualizado em {format(new Date(rec.updated_at), 'dd/MM/yyyy', { locale: ptBR })}
-                </span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => handleImplementRecommendation(rec.id)}
-                >
-                  Implementar <ArrowRight className="ml-2 h-4 w-4" />
-                </Button>
-                <Button 
-                  variant="ghost" 
-                  size="sm"
-                  onClick={() => handleDismissRecommendation(rec.id)}
-                >
-                  Ignorar
-                </Button>
-              </div>
-            </div>
+          ))
+        ) : (
+          <div className="text-center py-8 text-gray-500">
+            <Lightbulb className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+            <p>Nenhuma recomendação disponível no momento</p>
           </div>
-        ))}
+        )}
       </CardContent>
     </Card>
   );
