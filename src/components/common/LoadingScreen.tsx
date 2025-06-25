@@ -9,6 +9,9 @@ interface LoadingScreenProps {
   size?: "sm" | "md" | "lg";
   fullScreen?: boolean;
   className?: string;
+  showProgress?: boolean;
+  progressValue?: number;
+  optimized?: boolean;
 }
 
 const LoadingScreen: React.FC<LoadingScreenProps> = ({ 
@@ -16,13 +19,24 @@ const LoadingScreen: React.FC<LoadingScreenProps> = ({
   variant = "spinner",
   size = "md",
   fullScreen = true,
-  className
+  className,
+  showProgress = false,
+  progressValue = 0,
+  optimized = false
 }) => {
   const sizeClasses = {
     sm: "h-4 w-4",
     md: "h-6 w-6", 
     lg: "h-8 w-8"
   };
+
+  // Mensagem otimizada para VIVER DE IA quando optimized=true
+  const enhancedMessage = React.useMemo(() => {
+    if (optimized && message === "Carregando") {
+      return "Preparando sua experiência personalizada do VIVER DE IA Club...";
+    }
+    return message.endsWith("...") ? message : `${message}...`;
+  }, [message, optimized]);
 
   const containerClasses = cn(
     "flex flex-col items-center justify-center bg-background",
@@ -77,7 +91,7 @@ const LoadingScreen: React.FC<LoadingScreenProps> = ({
               />
             ))}
           </div>
-          <p className="text-sm text-muted-foreground">{message}</p>
+          <p className="text-sm text-muted-foreground">{enhancedMessage}</p>
         </div>
       </div>
     );
@@ -97,12 +111,26 @@ const LoadingScreen: React.FC<LoadingScreenProps> = ({
         
         <div className="flex items-center justify-center space-x-2">
           <Loader2 className={cn("animate-spin text-primary", sizeClasses[size])} />
-          <span className="text-lg font-medium text-foreground">{message}</span>
+          <span className="text-lg font-medium text-foreground">{enhancedMessage}</span>
         </div>
         
         <p className="text-sm text-muted-foreground">
           Aguarde um momento...
         </p>
+
+        {showProgress && (
+          <div className="w-64 mx-auto">
+            <div className="bg-muted rounded-full h-2 overflow-hidden">
+              <div 
+                className="bg-viverblue h-full transition-all duration-300 ease-out"
+                style={{ width: `${Math.min(100, Math.max(0, progressValue))}%` }}
+              />
+            </div>
+            <p className="text-xs text-muted-foreground mt-2 text-center">
+              {Math.round(progressValue)}% concluído
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -1,6 +1,6 @@
 
 import React, { Suspense, ComponentType, LazyExoticComponent } from 'react';
-import { Loader2 } from 'lucide-react';
+import LoadingScreen from './LoadingScreen';
 
 interface LazyComponentLoaderProps {
   Component: LazyExoticComponent<ComponentType<any>>;
@@ -8,16 +8,20 @@ interface LazyComponentLoaderProps {
   [key: string]: any;
 }
 
-// Loader universal para componentes lazy
+// Loader universal para componentes lazy usando LoadingScreen consolidado
 export const LazyComponentLoader: React.FC<LazyComponentLoaderProps> = ({ 
   Component, 
   fallback,
   ...props 
 }) => {
   const defaultFallback = (
-    <div className="flex items-center justify-center h-32">
-      <Loader2 className="h-6 w-6 animate-spin text-viverblue" />
-    </div>
+    <LoadingScreen
+      message="Carregando componente"
+      variant="spinner"
+      size="md"
+      fullScreen={false}
+      className="h-32"
+    />
   );
 
   return (
