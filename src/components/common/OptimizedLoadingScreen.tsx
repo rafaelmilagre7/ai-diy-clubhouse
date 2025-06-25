@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 
 interface OptimizedLoadingScreenProps {
   message?: string;
-  variant?: "spinner" | "skeleton" | "dots";
+  variant?: "spinner" | "skeleton" | "dots" | "modern" | "onboarding";
   size?: "sm" | "md" | "lg";
   fullScreen?: boolean;
   className?: string;

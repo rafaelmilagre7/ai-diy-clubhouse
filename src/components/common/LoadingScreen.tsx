@@ -1,17 +1,28 @@
 
 import React from "react";
-import { Loader2 } from "lucide-react";
+import { Loader2, AlertCircle, RefreshCw } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface LoadingScreenProps {
   message?: string;
-  variant?: "spinner" | "skeleton" | "dots";
+  variant?: "spinner" | "skeleton" | "dots" | "modern" | "onboarding";
   size?: "sm" | "md" | "lg";
   fullScreen?: boolean;
   className?: string;
   showProgress?: boolean;
   progressValue?: number;
   optimized?: boolean;
+  // Propriedades avançadas para variants modernas
+  type?: "stats" | "chart" | "table" | "full";
+  count?: number;
+  showForceButton?: boolean;
+  onForceComplete?: () => void;
+  duration?: number;
+  isSlowLoading?: boolean;
+  isVerySlowLoading?: boolean;
 }
 
 const LoadingScreen: React.FC<LoadingScreenProps> = ({ 
@@ -22,7 +33,14 @@ const LoadingScreen: React.FC<LoadingScreenProps> = ({
   className,
   showProgress = false,
   progressValue = 0,
-  optimized = false
+  optimized = false,
+  type = "full",
+  count = 4,
+  showForceButton = true,
+  onForceComplete,
+  duration = 0,
+  isSlowLoading = false,
+  isVerySlowLoading = false
 }) => {
   const sizeClasses = {
     sm: "h-4 w-4",
@@ -43,6 +61,144 @@ const LoadingScreen: React.FC<LoadingScreenProps> = ({
     fullScreen ? "min-h-screen" : "py-8",
     className
   );
+
+  // Variant moderna para analytics
+  if (variant === "modern") {
+    if (type === "stats") {
+      return (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {Array(count).fill(0).map((_, i) => (
+            <Card key={i} className="border-0 shadow-xl bg-white/80 backdrop-blur-sm">
+              <CardContent className="p-6">
+                <div className="animate-pulse space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-2 flex-1">
+                      <Skeleton className="h-4 w-3/4 bg-gradient-to-r from-gray-200 to-gray-300" />
+                      <Skeleton className="h-8 w-1/2 bg-gradient-to-r from-gray-200 to-gray-300" />
+                    </div>
+                    <Skeleton className="h-12 w-12 rounded-xl bg-gradient-to-r from-blue-200 to-purple-200" />
+                  </div>
+                  <Skeleton className="h-4 w-1/3 bg-gradient-to-r from-green-200 to-emerald-200" />
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      );
+    }
+
+    if (type === "chart") {
+      return (
+        <Card className="border-0 shadow-xl bg-white/80 backdrop-blur-sm">
+          <CardContent className="p-6">
+            <div className="animate-pulse space-y-6">
+              <div className="space-y-2">
+                <Skeleton className="h-6 w-1/3 bg-gradient-to-r from-blue-200 to-purple-200" />
+                <Skeleton className="h-4 w-1/2 bg-gradient-to-r from-gray-200 to-gray-300" />
+              </div>
+              <Skeleton className="h-[300px] w-full rounded-xl bg-gradient-to-br from-gray-100 to-gray-200" />
+            </div>
+          </CardContent>
+        </Card>
+      );
+    }
+
+    if (type === "table") {
+      return (
+        <Card className="border-0 shadow-xl bg-white/80 backdrop-blur-sm">
+          <CardContent className="p-6">
+            <div className="animate-pulse space-y-4">
+              <div className="space-y-2">
+                <Skeleton className="h-6 w-1/4 bg-gradient-to-r from-blue-200 to-purple-200" />
+                <Skeleton className="h-4 w-1/3 bg-gradient-to-r from-gray-200 to-gray-300" />
+              </div>
+              <div className="space-y-3">
+                {Array(5).fill(0).map((_, i) => (
+                  <div key={i} className="flex items-center space-x-4">
+                    <Skeleton className="h-10 w-10 rounded-full bg-gradient-to-r from-gray-200 to-gray-300" />
+                    <div className="flex-1 space-y-2">
+                      <Skeleton className="h-4 w-full bg-gradient-to-r from-gray-200 to-gray-300" />
+                      <Skeleton className="h-3 w-2/3 bg-gradient-to-r from-gray-100 to-gray-200" />
+                    </div>
+                    <Skeleton className="h-6 w-16 rounded-full bg-gradient-to-r from-blue-200 to-purple-200" />
+                  </div>
+                ))}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      );
+    }
+
+    // Full modern loading state
+    return (
+      <div className="space-y-8">
+        <LoadingScreen variant="modern" type="stats" count={4} fullScreen={false} />
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <LoadingScreen variant="modern" type="chart" fullScreen={false} />
+          <LoadingScreen variant="modern" type="chart" fullScreen={false} />
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <LoadingScreen variant="modern" type="chart" fullScreen={false} />
+          <LoadingScreen variant="modern" type="chart" fullScreen={false} />
+          <LoadingScreen variant="modern" type="chart" fullScreen={false} />
+        </div>
+      </div>
+    );
+  }
+
+  // Variant onboarding
+  if (variant === "onboarding") {
+    const onboardingConfigs = {
+      initialization: {
+        icon: <Loader2 className="w-8 h-8 text-viverblue animate-spin" />,
+        title: 'Inicializando Onboarding',
+        defaultMessage: 'Preparando sua experiência personalizada...'
+      },
+      preparation: {
+        icon: <Loader2 className="w-8 h-8 text-viverblue animate-pulse" />,
+        title: 'Configurando Experiência',
+        defaultMessage: 'Analisando seu perfil e preparando conteúdo...'
+      },
+      verification: {
+        icon: <Loader2 className="w-8 h-8 text-viverblue animate-bounce" />,
+        title: 'Verificando Dados',
+        defaultMessage: 'Validando informações do convite...'
+      },
+      completion: {
+        icon: <Loader2 className="w-8 h-8 text-viverblue animate-pulse" />,
+        title: 'Finalizando',
+        defaultMessage: 'Concluindo seu onboarding...'
+      }
+    };
+
+    const config = onboardingConfigs.initialization;
+
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-[#0F111A] to-[#151823] flex items-center justify-center p-4">
+        <Card className="w-full max-w-md bg-[#1A1E2E]/90 backdrop-blur-sm border-white/20">
+          <CardContent className="p-8 text-center space-y-6">
+            <div className="mx-auto w-16 h-16 bg-viverblue/20 rounded-full flex items-center justify-center">
+              {config.icon}
+            </div>
+            
+            <div className="space-y-2">
+              <h2 className="text-2xl font-bold text-white">
+                {config.title}
+              </h2>
+              <p className="text-neutral-300">
+                {message || config.defaultMessage}
+              </p>
+            </div>
+            
+            <div className="w-full bg-neutral-700 rounded-full h-2">
+              <div className="bg-viverblue h-2 rounded-full animate-pulse" style={{ width: '60%' }}></div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   if (variant === "skeleton") {
     return (
@@ -97,7 +253,27 @@ const LoadingScreen: React.FC<LoadingScreenProps> = ({
     );
   }
 
-  // Variant padrão: spinner
+  // Variant padrão: spinner com fallback avançado
+  const handleForceComplete = () => {
+    if (onForceComplete) {
+      onForceComplete();
+    } else {
+      window.location.reload();
+    }
+  };
+
+  const getLoadingMessage = () => {
+    if (isVerySlowLoading) {
+      return "Carregamento mais demorado que o esperado...";
+    }
+    
+    if (isSlowLoading) {
+      return "Aguarde, carregando dados...";
+    }
+    
+    return enhancedMessage;
+  };
+
   return (
     <div className={containerClasses}>
       <div className="text-center space-y-4 max-w-sm">
@@ -111,7 +287,7 @@ const LoadingScreen: React.FC<LoadingScreenProps> = ({
         
         <div className="flex items-center justify-center space-x-2">
           <Loader2 className={cn("animate-spin text-primary", sizeClasses[size])} />
-          <span className="text-lg font-medium text-foreground">{enhancedMessage}</span>
+          <span className="text-lg font-medium text-foreground">{getLoadingMessage()}</span>
         </div>
         
         <p className="text-sm text-muted-foreground">
@@ -129,6 +305,34 @@ const LoadingScreen: React.FC<LoadingScreenProps> = ({
             <p className="text-xs text-muted-foreground mt-2 text-center">
               {Math.round(progressValue)}% concluído
             </p>
+          </div>
+        )}
+
+        {duration > 2000 && (
+          <p className="text-xs text-muted-foreground">
+            {(duration / 1000).toFixed(1)}s decorridos
+          </p>
+        )}
+
+        {isVerySlowLoading && showForceButton && (
+          <div className="flex flex-col space-y-2 w-full">
+            <Button 
+              variant="outline" 
+              onClick={handleForceComplete}
+              className="w-full"
+            >
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Forçar carregamento
+            </Button>
+            
+            <Button 
+              variant="ghost" 
+              size="sm"
+              onClick={() => window.location.reload()}
+              className="w-full text-xs"
+            >
+              Recarregar página
+            </Button>
           </div>
         )}
       </div>

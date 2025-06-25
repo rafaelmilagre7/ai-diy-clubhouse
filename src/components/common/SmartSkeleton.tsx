@@ -1,3 +1,4 @@
+
 import React, { memo, useMemo } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import LoadingScreen from "./LoadingScreen";
@@ -21,11 +22,11 @@ const SmartSkeleton = memo<SmartSkeletonProps>(({
   variant = "default",
   useLoadingScreen = false
 }) => {
-  // Se useLoadingScreen=true e tipo dashboard, usar LoadingScreen consolidado
-  if (useLoadingScreen && type === "dashboard") {
+  // Se useLoadingScreen=true, usar LoadingScreen consolidado
+  if (useLoadingScreen) {
     return (
       <LoadingScreen
-        message="Carregando dashboard"
+        message={`Carregando ${type === "dashboard" ? "dashboard" : "conteúdo"}`}
         variant="skeleton"
         fullScreen={false}
         className={className}

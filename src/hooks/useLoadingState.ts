@@ -2,8 +2,8 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 
 interface LoadingConfig {
-  minLoadingTime?: number; // Tempo mínimo de loading em ms
-  timeout?: number; // Timeout para loading em ms
+  minLoadingTime?: number;
+  timeout?: number;
   showProgressBar?: boolean;
   retryCount?: number;
 }
@@ -14,6 +14,9 @@ interface LoadingState {
   hasTimedOut: boolean;
   retryAttempt: number;
   canRetry: boolean;
+  duration: number;
+  isSlowLoading: boolean;
+  isVerySlowLoading: boolean;
 }
 
 interface LoadingActions {
@@ -25,9 +28,10 @@ interface LoadingActions {
 }
 
 /**
- * Hook otimizado para gerenciar estados de loading com UX melhorada
+ * Hook consolidado para gerenciar estados de loading
+ * Substitui useOptimizedLoading com funcionalidades simplificadas
  */
-export const useOptimizedLoading = (config: LoadingConfig = {}): [LoadingState, LoadingActions] => {
+export const useLoadingState = (config: LoadingConfig = {}): [LoadingState, LoadingActions] => {
   const {
     minLoadingTime = 500,
     timeout = 30000,
@@ -40,14 +44,41 @@ export const useOptimizedLoading = (config: LoadingConfig = {}): [LoadingState, 
     progress: 0,
     hasTimedOut: false,
     retryAttempt: 0,
-    canRetry: true
+    canRetry: true,
+    duration: 0,
+    isSlowLoading: false,
+    isVerySlowLoading: false
   });
 
   const timeoutRef = useRef<number | null>(null);
   const minTimeRef = useRef<number | null>(null);
   const startTimeRef = useRef<number | null>(null);
+  const durationRef = useRef<number | null>(null);
 
-  // Memoizar ações para evitar re-criações
+  // Atualizar duração em tempo real
+  useEffect(() => {
+    if (state.isLoading && startTimeRef.current) {
+      durationRef.current = setInterval(() => {
+        const elapsed = Date.now() - startTimeRef.current!;
+        setState(prev => ({
+          ...prev,
+          duration: elapsed,
+          isSlowLoading: elapsed > 3000,
+          isVerySlowLoading: elapsed > 6000
+        }));
+      }, 500);
+    } else {
+      if (durationRef.current) {
+        clearInterval(durationRef.current);
+        durationRef.current = null;
+      }
+    }
+
+    return () => {
+      if (durationRef.current) clearInterval(durationRef.current);
+    };
+  }, [state.isLoading]);
+
   const actions = useMemo<LoadingActions>(() => ({
     startLoading: () => {
       startTimeRef.current = Date.now();
@@ -56,10 +87,12 @@ export const useOptimizedLoading = (config: LoadingConfig = {}): [LoadingState, 
         ...prev,
         isLoading: true,
         progress: showProgressBar ? 0 : prev.progress,
-        hasTimedOut: false
+        hasTimedOut: false,
+        duration: 0,
+        isSlowLoading: false,
+        isVerySlowLoading: false
       }));
 
-      // Configurar timeout
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
       timeoutRef.current = window.setTimeout(() => {
         setState(prev => ({
@@ -69,7 +102,6 @@ export const useOptimizedLoading = (config: LoadingConfig = {}): [LoadingState, 
         }));
       }, timeout);
 
-      // Simular progresso gradual se habilitado
       if (showProgressBar) {
         const progressInterval = setInterval(() => {
           setState(prev => {
@@ -90,7 +122,6 @@ export const useOptimizedLoading = (config: LoadingConfig = {}): [LoadingState, 
       const elapsedTime = startTimeRef.current ? Date.now() - startTimeRef.current : 0;
       const remainingTime = Math.max(0, minLoadingTime - elapsedTime);
 
-      // Garantir tempo mínimo de loading para evitar flashes
       if (minTimeRef.current) clearTimeout(minTimeRef.current);
       minTimeRef.current = window.setTimeout(() => {
         setState(prev => ({
@@ -100,7 +131,6 @@ export const useOptimizedLoading = (config: LoadingConfig = {}): [LoadingState, 
         }));
       }, remainingTime);
 
-      // Limpar timeout
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
         timeoutRef.current = null;
@@ -127,7 +157,10 @@ export const useOptimizedLoading = (config: LoadingConfig = {}): [LoadingState, 
           retryAttempt: prev.retryAttempt + 1,
           hasTimedOut: false,
           isLoading: true,
-          progress: showProgressBar ? 0 : prev.progress
+          progress: showProgressBar ? 0 : prev.progress,
+          duration: 0,
+          isSlowLoading: false,
+          isVerySlowLoading: false
         };
       });
     },
@@ -138,10 +171,12 @@ export const useOptimizedLoading = (config: LoadingConfig = {}): [LoadingState, 
         progress: 0,
         hasTimedOut: false,
         retryAttempt: 0,
-        canRetry: true
+        canRetry: true,
+        duration: 0,
+        isSlowLoading: false,
+        isVerySlowLoading: false
       });
       
-      // Limpar timers
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
         timeoutRef.current = null;
@@ -150,18 +185,20 @@ export const useOptimizedLoading = (config: LoadingConfig = {}): [LoadingState, 
         clearTimeout(minTimeRef.current);
         minTimeRef.current = null;
       }
+      if (durationRef.current) {
+        clearInterval(durationRef.current);
+        durationRef.current = null;
+      }
     }
   }), [minLoadingTime, timeout, showProgressBar, retryCount]);
 
-  // Cleanup on unmount
   useEffect(() => {
     return () => {
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
       if (minTimeRef.current) clearTimeout(minTimeRef.current);
+      if (durationRef.current) clearInterval(durationRef.current);
     };
   }, []);
 
   return [state, actions];
 };
-
-export default useOptimizedLoading;
