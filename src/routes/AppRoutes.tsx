@@ -3,6 +3,9 @@ import React, { lazy } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import { SmartRedirect } from '@/components/routing/SmartRedirect';
 import { SimpleProtectedRoutes } from '@/auth/SimpleProtectedRoutes';
+import MemberLayout from '@/components/layout/MemberLayout';
+import AdminLayout from '@/components/layout/AdminLayout';
+import FormacaoLayout from '@/components/layout/FormacaoLayout';
 
 // Auth pages
 const LoginPage = lazy(() => import('@/pages/auth/LoginPage'));
@@ -42,41 +45,40 @@ export const AppRoutes = () => {
       {/* Root redirect */}
       <Route path="/" element={<SmartRedirect />} />
 
-      {/* Auth routes */}
+      {/* Auth routes - sem layout */}
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
       <Route path="/reset-password" element={<ResetPasswordPage />} />
       <Route path="/set-new-password" element={<SetNewPasswordPage />} />
       <Route path="/onboarding" element={<OnboardingPage />} />
 
-      {/* Protected routes */}
+      {/* Member routes com MemberLayout */}
       <Route element={<SimpleProtectedRoutes />}>
-        {/* Member routes */}
-        <Route path="/dashboard" element={<DashboardPage />} />
-        <Route path="/profile" element={<Profile />} />
-        <Route path="/profile/*" element={<Profile />} />
-        <Route path="/solution/:id" element={<SolutionDetail />} />
-        <Route path="/suggestions" element={<Suggestions />} />
-        <Route path="/suggestions/:id" element={<SuggestionDetail />} />
-        <Route path="/tool/:id" element={<ToolDetail />} />
-        <Route path="/learning" element={<Learning />} />
-        <Route path="/learning/course/:id" element={<LearningCourse />} />
-        <Route path="/learning/lesson/:id" element={<LearningLesson />} />
-        <Route path="/learning/certificates" element={<LearningCertificates />} />
-        <Route path="/events" element={<Events />} />
-        <Route path="/benefits" element={<Benefits />} />
+        <Route path="/dashboard" element={<MemberLayout><DashboardPage /></MemberLayout>} />
+        <Route path="/profile" element={<MemberLayout><Profile /></MemberLayout>} />
+        <Route path="/profile/*" element={<MemberLayout><Profile /></MemberLayout>} />
+        <Route path="/solution/:id" element={<MemberLayout><SolutionDetail /></MemberLayout>} />
+        <Route path="/suggestions" element={<MemberLayout><Suggestions /></MemberLayout>} />
+        <Route path="/suggestions/:id" element={<MemberLayout><SuggestionDetail /></MemberLayout>} />
+        <Route path="/tool/:id" element={<MemberLayout><ToolDetail /></MemberLayout>} />
+        <Route path="/learning" element={<MemberLayout><Learning /></MemberLayout>} />
+        <Route path="/learning/course/:id" element={<MemberLayout><LearningCourse /></MemberLayout>} />
+        <Route path="/learning/lesson/:id" element={<MemberLayout><LearningLesson /></MemberLayout>} />
+        <Route path="/learning/certificates" element={<MemberLayout><LearningCertificates /></MemberLayout>} />
+        <Route path="/events" element={<MemberLayout><Events /></MemberLayout>} />
+        <Route path="/benefits" element={<MemberLayout><Benefits /></MemberLayout>} />
 
-        {/* Admin routes */}
-        <Route path="/admin" element={<AdminDashboard />} />
-        <Route path="/admin/users" element={<AdminUsers />} />
-        <Route path="/admin/users/:id" element={<AdminUserDetail />} />
-        <Route path="/admin/solutions" element={<AdminSolutions />} />
-        <Route path="/admin/solutions/:id" element={<AdminSolutionEditor />} />
-        <Route path="/admin/suggestions" element={<AdminSuggestions />} />
+        {/* Admin routes com AdminLayout */}
+        <Route path="/admin" element={<AdminLayout><AdminDashboard /></AdminLayout>} />
+        <Route path="/admin/users" element={<AdminLayout><AdminUsers /></AdminLayout>} />
+        <Route path="/admin/users/:id" element={<AdminLayout><AdminUserDetail /></AdminLayout>} />
+        <Route path="/admin/solutions" element={<AdminLayout><AdminSolutions /></AdminLayout>} />
+        <Route path="/admin/solutions/:id" element={<AdminLayout><AdminSolutionEditor /></AdminLayout>} />
+        <Route path="/admin/suggestions" element={<AdminLayout><AdminSuggestions /></AdminLayout>} />
 
-        {/* Formacao routes */}
-        <Route path="/formacao" element={<FormacaoAulas />} />
-        <Route path="/formacao/aulas" element={<FormacaoAulas />} />
+        {/* Formacao routes com FormacaoLayout */}
+        <Route path="/formacao" element={<FormacaoLayout><FormacaoAulas /></FormacaoLayout>} />
+        <Route path="/formacao/aulas" element={<FormacaoLayout><FormacaoAulas /></FormacaoLayout>} />
       </Route>
     </Routes>
   );
