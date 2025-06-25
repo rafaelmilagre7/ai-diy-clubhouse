@@ -1,4 +1,3 @@
-
 import { supabase } from '@/lib/supabase';
 import { logger } from '@/utils/logger';
 
@@ -97,10 +96,10 @@ export const cleanupAuthState = async () => {
 };
 
 /**
- * Redirecionamento FORÇADO para auth com limpeza de cache
+ * Redirecionamento FORÇADO para login com limpeza de cache
  */
 export const forceAuthRedirect = async () => {
-  logger.warn('Forçando redirecionamento para auth com limpeza completa');
+  logger.warn('Forçando redirecionamento para login com limpeza completa');
   
   // Limpeza completa primeiro
   await cleanupAuthState();
@@ -110,11 +109,11 @@ export const forceAuthRedirect = async () => {
   
   // Redirecionamento FORÇADO usando replace
   try {
-    window.location.replace('/auth');
+    window.location.replace('/login');
   } catch (error) {
     // Fallback se replace falhar
     logger.warn('Fallback para href:', { error });
-    window.location.href = '/auth';
+    window.location.href = '/login';
   }
 };
 

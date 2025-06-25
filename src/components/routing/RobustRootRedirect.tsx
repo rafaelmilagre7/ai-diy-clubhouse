@@ -70,7 +70,7 @@ const RobustRootRedirect = () => {
       console.warn('Erro na limpeza:', error);
     }
     
-    window.location.href = '/auth';
+    window.location.href = '/login';
   };
 
   // CORREÇÃO: Condições de erro mais específicas
@@ -103,8 +103,8 @@ const RobustRootRedirect = () => {
 
   // CORREÇÃO: Verificações mais diretas sem retry complexo
   if (!user) {
-    logger.info("[ROOT-REDIRECT] Sem usuário -> auth");
-    return <Navigate to="/auth" replace />;
+    logger.info("[ROOT-REDIRECT] Sem usuário -> login");
+    return <Navigate to="/login" replace />;
   }
 
   if (user && !profile) {

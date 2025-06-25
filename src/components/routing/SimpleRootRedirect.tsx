@@ -22,9 +22,9 @@ const SimpleRootRedirect = () => {
     return <LoadingScreen message="Carregando..." />;
   }
 
-  // Sem usuário = auth (CORREÇÃO: usar /auth ao invés de /login)
+  // Sem usuário = login
   if (!user) {
-    return <Navigate to="/auth" replace />;
+    return <Navigate to="/login" replace />;
   }
 
   // Com usuário mas sem perfil = aguardar um pouco

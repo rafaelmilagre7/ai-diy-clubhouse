@@ -16,5 +16,5 @@ const createPublicRoute = (path: string, Component: React.ComponentType<any>) =>
 });
 
 export const publicRoutes: RouteObject[] = [
-  createPublicRoute("/auth", Auth),
+  createPublicRoute("/login", Auth),
 ];

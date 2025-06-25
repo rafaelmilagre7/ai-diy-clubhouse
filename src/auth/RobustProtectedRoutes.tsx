@@ -1,4 +1,3 @@
-
 import { Navigate, useLocation } from "react-router-dom";
 import { ReactNode } from "react";
 import { useAuth } from "@/contexts/auth";
@@ -62,7 +61,7 @@ export const RobustProtectedRoutes = ({ children, allowInviteFlow = false }: Rob
         localStorage.removeItem(key);
       }
     });
-    window.location.href = '/auth';
+    window.location.href = '/login';
   };
 
   // CORREÇÃO: Condições de erro mais específicas
@@ -94,7 +93,7 @@ export const RobustProtectedRoutes = ({ children, allowInviteFlow = false }: Rob
   // Sem usuário = login
   if (!user) {
     logger.info("[PROTECTED-ROUTES] Sem usuário -> login");
-    return <Navigate to="/auth" state={{ from: location.pathname }} replace />;
+    return <Navigate to="/login" state={{ from: location.pathname }} replace />;
   }
 
   // Permitir fluxo de convite se configurado

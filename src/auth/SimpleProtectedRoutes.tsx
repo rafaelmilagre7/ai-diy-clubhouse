@@ -27,10 +27,10 @@ export const SimpleProtectedRoutes = ({ children }: SimpleProtectedRoutesProps) 
     return <LoadingScreen message="Verificando acesso..." />;
   }
 
-  // Sem usuário = auth (CORREÇÃO: usar /auth ao invés de /login)
+  // Sem usuário = login
   if (!user) {
-    logger.info("[SIMPLE-PROTECTED] Redirecionando para /auth");
-    return <Navigate to="/auth" state={{ from: location.pathname }} replace />;
+    logger.info("[SIMPLE-PROTECTED] Redirecionando para /login");
+    return <Navigate to="/login" state={{ from: location.pathname }} replace />;
   }
 
   // Renderizar conteúdo protegido

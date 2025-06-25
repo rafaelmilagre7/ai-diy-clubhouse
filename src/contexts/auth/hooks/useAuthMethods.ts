@@ -85,8 +85,8 @@ export const useAuthMethods = ({ setIsLoading }: UseAuthMethodsProps) => {
         }
       });
       
-      // Redirecionamento para /auth
-      window.location.href = '/auth';
+      // Redirecionamento para /login
+      window.location.href = '/login';
       
       return { success: true };
 
@@ -100,7 +100,7 @@ export const useAuthMethods = ({ setIsLoading }: UseAuthMethodsProps) => {
         }
       });
       
-      window.location.href = '/auth';
+      window.location.href = '/login';
       
       return { success: false, error };
     } finally {
