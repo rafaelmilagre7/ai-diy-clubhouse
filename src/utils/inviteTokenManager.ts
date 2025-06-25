@@ -17,8 +17,8 @@ export class InviteTokenManager {
       const expiryTime = Date.now() + (60 * 60 * 1000); // 1 hora
       
       if (typeof window !== 'undefined' && window.localStorage) {
-        localStorage.setItem(this.TOKEN_KEY, token);
-        localStorage.setItem(this.EXPIRY_KEY, expiryTime.toString());
+        localStorage.setItem(InviteTokenManager.TOKEN_KEY, token);
+        localStorage.setItem(InviteTokenManager.EXPIRY_KEY, expiryTime.toString());
         console.log('[TOKEN-MANAGER] Token armazenado com segurança');
       }
     } catch (error) {
@@ -53,8 +53,8 @@ export class InviteTokenManager {
 
       // SEGUNDA prioridade: Storage (se válido)
       if (typeof window !== 'undefined' && window.localStorage) {
-        const token = localStorage.getItem(this.TOKEN_KEY);
-        const expiry = localStorage.getItem(this.EXPIRY_KEY);
+        const token = localStorage.getItem(InviteTokenManager.TOKEN_KEY);
+        const expiry = localStorage.getItem(InviteTokenManager.EXPIRY_KEY);
 
         if (!token || !expiry) {
           return null;
@@ -63,7 +63,7 @@ export class InviteTokenManager {
         // Verificar se não expirou
         if (Date.now() > parseInt(expiry)) {
           console.log('[TOKEN-MANAGER] Token expirado, limpando automaticamente');
-          this.clearToken();
+          InviteTokenManager.clearToken();
           return null;
         }
 
@@ -82,7 +82,7 @@ export class InviteTokenManager {
    * Verificar se há token disponível
    */
   static hasToken(): boolean {
-    return this.getToken() !== null;
+    return InviteTokenManager.getToken() !== null;
   }
 
   /**
@@ -91,8 +91,8 @@ export class InviteTokenManager {
   static clearToken(): void {
     try {
       if (typeof window !== 'undefined' && window.localStorage) {
-        localStorage.removeItem(this.TOKEN_KEY);
-        localStorage.removeItem(this.EXPIRY_KEY);
+        localStorage.removeItem(InviteTokenManager.TOKEN_KEY);
+        localStorage.removeItem(InviteTokenManager.EXPIRY_KEY);
         console.log('[TOKEN-MANAGER] Token limpo completamente');
       }
     } catch (error) {
@@ -106,8 +106,8 @@ export class InviteTokenManager {
   static clearTokenOnSuccess(): void {
     try {
       if (typeof window !== 'undefined') {
-        localStorage.removeItem(this.TOKEN_KEY);
-        sessionStorage.removeItem(this.TOKEN_KEY);
+        localStorage.removeItem(InviteTokenManager.TOKEN_KEY);
+        sessionStorage.removeItem(InviteTokenManager.TOKEN_KEY);
         console.log('[INVITE-TOKEN-MANAGER] ✅ Token limpo após sucesso');
       }
     } catch (error) {
@@ -121,8 +121,8 @@ export class InviteTokenManager {
   static clearTokenOnError(): void {
     try {
       if (typeof window !== 'undefined') {
-        localStorage.removeItem(this.TOKEN_KEY);
-        sessionStorage.removeItem(this.TOKEN_KEY);
+        localStorage.removeItem(InviteTokenManager.TOKEN_KEY);
+        sessionStorage.removeItem(InviteTokenManager.TOKEN_KEY);
         console.log('[INVITE-TOKEN-MANAGER] ❌ Token limpo após erro');
       }
     } catch (error) {
@@ -136,8 +136,8 @@ export class InviteTokenManager {
   static clearTokenOnLogout(): void {
     try {
       if (typeof window !== 'undefined') {
-        localStorage.removeItem(this.TOKEN_KEY);
-        sessionStorage.removeItem(this.TOKEN_KEY);
+        localStorage.removeItem(InviteTokenManager.TOKEN_KEY);
+        sessionStorage.removeItem(InviteTokenManager.TOKEN_KEY);
         console.log('[INVITE-TOKEN-MANAGER] 🚪 Token limpo no logout');
       }
     } catch (error) {

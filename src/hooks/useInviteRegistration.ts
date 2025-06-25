@@ -27,7 +27,7 @@ export const useInviteRegistration = () => {
         token: data.token.substring(0, 8) + '***'
       });
 
-      // 1. Verificar se o email já existe - usando método alternativo
+      // 1. Verificar se o email já existe usando listUsers
       const { data: existingUsers, error: searchError } = await supabase.auth.admin.listUsers();
       
       if (searchError) {
@@ -40,6 +40,7 @@ export const useInviteRegistration = () => {
         };
       }
 
+      // Verificar se algum usuário tem o email desejado
       const existingUser = existingUsers.users.find(user => user.email === data.email);
       
       if (existingUser) {

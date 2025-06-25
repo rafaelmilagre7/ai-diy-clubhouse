@@ -12,6 +12,7 @@ interface SimpleAuthContextType {
   error: string | null;
   isAdmin: boolean;
   isFormacao: boolean;
+  signIn: (email: string, password: string) => Promise<{ error?: Error | null }>;
   signOut: () => Promise<{ success: boolean; error?: Error | null }>;
 }
 
@@ -49,6 +50,38 @@ export const SimpleAuthProvider: React.FC<SimpleAuthProviderProps> = ({ children
     } catch (error) {
       logger.error('Erro crítico ao buscar perfil:', error);
       return null;
+    }
+  };
+
+  // Função de signIn
+  const signIn = async (email: string, password: string) => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      
+      const { data, error: signInError } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
+
+      if (signInError) {
+        logger.error('Erro no login:', signInError);
+        setError(signInError.message);
+        return { error: signInError };
+      }
+
+      if (data.user) {
+        logger.info('Login realizado:', data.user.email);
+      }
+
+      return { error: null };
+    } catch (err) {
+      const error = err instanceof Error ? err : new Error('Erro inesperado');
+      logger.error('Erro inesperado no login:', error);
+      setError(error.message);
+      return { error };
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -156,6 +189,7 @@ export const SimpleAuthProvider: React.FC<SimpleAuthProviderProps> = ({ children
     error,
     isAdmin,
     isFormacao,
+    signIn,
     signOut
   };
 
