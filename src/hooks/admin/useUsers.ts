@@ -56,14 +56,18 @@ export const useUsers = () => {
 
       if (error) throw error;
 
-      const usersData = (data || []).map(user => ({
+      const usersData: User[] = (data || []).map(user => ({
         id: user.id,
         email: user.email,
         name: user.name,
         company_name: user.company_name,
         role: user.role,
         role_id: user.role_id,
-        user_roles: user.user_roles,
+        user_roles: user.user_roles ? {
+          id: user.user_roles.id,
+          name: user.user_roles.name,
+          description: user.user_roles.description
+        } : null,
         created_at: user.created_at
       }));
 

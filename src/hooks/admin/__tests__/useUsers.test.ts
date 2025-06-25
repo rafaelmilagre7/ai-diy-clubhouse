@@ -14,10 +14,10 @@ jest.mock('@/lib/supabase', () => ({
   },
 }));
 
-// Mock do hook usePermissions
-jest.mock('@/hooks/auth/usePermissions', () => ({
-  usePermissions: () => ({
-    hasPermission: jest.fn(() => true),
+// Mock do toast
+jest.mock('@/hooks/use-toast', () => ({
+  useToast: () => ({
+    toast: jest.fn(),
   }),
 }));
 
@@ -28,9 +28,8 @@ describe('useUsers', () => {
     expect(result.current.users).toEqual([]);
     expect(result.current.loading).toBe(true);
     expect(result.current.searchQuery).toBe('');
-    expect(result.current.selectedUser).toBe(null);
-    expect(result.current.canManageUsers).toBe(true);
-    expect(result.current.canAssignRoles).toBe(true);
+    expect(result.current.isRefreshing).toBe(false);
+    expect(result.current.error).toBe(null);
   });
 
   it('loads users data on mount', async () => {
@@ -38,5 +37,15 @@ describe('useUsers', () => {
     
     // Verificamos se o supabase.from foi chamado com o parâmetro correto
     expect(supabase.from).toHaveBeenCalledWith('profiles');
+  });
+
+  it('searches users correctly', async () => {
+    const { result } = renderHook(() => useUsers());
+    
+    act(() => {
+      result.current.searchUsers('test');
+    });
+    
+    expect(result.current.searchQuery).toBe('test');
   });
 });
