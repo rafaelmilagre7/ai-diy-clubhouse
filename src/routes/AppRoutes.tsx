@@ -16,14 +16,14 @@ import SetNewPassword from '@/pages/auth/SetNewPassword';
 import OnboardingPage from '@/pages/OnboardingPage';
 import RegisterPage from '@/pages/auth/RegisterPage';
 
-// Usar o redirect robusto
-import RobustRootRedirect from '@/components/routing/RobustRootRedirect';
+// Usar o redirect otimizado
+import FastRootRedirect from '@/components/routing/FastRootRedirect';
 
 export const AppRoutes = createBrowserRouter([
-  // Rota raiz com redirecionamento robusto
+  // Rota raiz com redirecionamento otimizado
   {
     path: "/",
-    element: <RobustRootRedirect />
+    element: <FastRootRedirect />
   },
 
   // Rotas públicas
