@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -54,7 +53,7 @@ const AdminUsersV2 = () => {
           <div>
             <h1 className="text-3xl font-bold">Gerenciar Usuários</h1>
             <p className="text-muted-foreground">
-              Erro ao carregar usuários: {error}
+              Erro ao carregar usuários: {error.message}
             </p>
           </div>
           <Button onClick={handleRefresh} className="gap-2">
