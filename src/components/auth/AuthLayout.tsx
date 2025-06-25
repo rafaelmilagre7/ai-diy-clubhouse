@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -11,34 +11,41 @@ import SimpleRegisterForm from './SimpleRegisterForm';
 
 const AuthLayout = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const location = useLocation();
+  const { user, isLoading } = useAuth();
   
   const [activeTab, setActiveTab] = useState('login');
   const [message, setMessage] = useState('');
 
   console.log('[AUTH-LAYOUT] Renderizando para usuário:', user ? user.email : 'não logado');
 
-  // Redirecionar usuário autenticado
+  // CORREÇÃO: Redirecionar usuário autenticado com verificação
   useEffect(() => {
-    if (user) {
-      console.log('[AUTH-LAYOUT] Usuário logado detectado, redirecionando para dashboard');
-      navigate('/dashboard');
+    if (!isLoading && user) {
+      console.log('[AUTH-LAYOUT] Usuário logado detectado, redirecionando');
+      
+      // Verificar se há uma rota de origem
+      const from = location.state?.from || '/dashboard';
+      navigate(from, { replace: true });
     }
-  }, [user, navigate]);
+  }, [user, isLoading, navigate, location.state]);
 
   const handleSuccess = () => {
-    console.log('[AUTH-LAYOUT] Sucesso na autenticação, redirecionando para dashboard');
-    navigate('/dashboard');
+    console.log('[AUTH-LAYOUT] Sucesso na autenticação');
+    
+    // Verificar se há uma rota de origem
+    const from = location.state?.from || '/dashboard';
+    navigate(from, { replace: true });
   };
 
-  // Se usuário está logado, mostrar loading enquanto redireciona
-  if (user) {
+  // CORREÇÃO: Mostrar loading apenas se auth ainda está carregando
+  if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#0F111A] to-[#151823] p-4">
         <Card className="w-full max-w-md bg-[#1A1E2E]/90 backdrop-blur-sm border-white/20">
           <CardContent className="p-6 text-center">
             <h2 className="text-xl font-semibold text-white mb-4">
-              Redirecionando...
+              Carregando...
             </h2>
             <div className="flex justify-center">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-viverblue"></div>
@@ -47,6 +54,11 @@ const AuthLayout = () => {
         </Card>
       </div>
     );
+  }
+
+  // CORREÇÃO: Se usuário está logado, não mostrar a tela de auth
+  if (user) {
+    return null;
   }
 
   return (

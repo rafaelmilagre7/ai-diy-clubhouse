@@ -23,7 +23,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   // Usar métodos de auth
   const authMethods = useAuthMethods({ setIsLoading });
 
-  // CORREÇÃO: Função simplificada para carregar perfil (1 tentativa apenas)
+  // CORREÇÃO: Função para limpeza completa de auth
+  const cleanupAuthState = () => {
+    setUser(null);
+    setSession(null);  
+    setProfile(null);
+    setError(null);
+  };
+
+  // CORREÇÃO: Função simplificada para carregar perfil (sem retry infinito)
   const loadUserProfile = async (userId: string, email?: string) => {
     try {
       setError(null);
@@ -32,27 +40,31 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       
       let userProfile = await fetchUserProfile(userId);
       
-      // Se não encontrou perfil, tentar criar uma única vez
+      // Se não encontrou perfil, tentar criar apenas UMA vez
       if (!userProfile && email) {
         logger.info('[AUTH] Criando perfil...');
-        userProfile = await createUserProfileIfNeeded(userId, email);
+        try {
+          userProfile = await createUserProfileIfNeeded(userId, email);
+        } catch (createError) {
+          logger.warn('[AUTH] Falha ao criar perfil, continuando sem perfil');
+        }
       }
       
       if (userProfile) {
         setProfile(userProfile);
         logger.info('[AUTH] Perfil carregado com sucesso');
       } else {
-        logger.warn('[AUTH] Perfil não encontrado, continuando sem perfil');
+        logger.warn('[AUTH] Continuando sem perfil de usuário');
       }
       
     } catch (error) {
       logger.error('[AUTH] Erro ao carregar perfil:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Erro ao carregar perfil';
-      setError(errorMessage);
+      // CORREÇÃO: Não definir erro como crítico, apenas continuar
+      setProfile(null);
     }
   };
 
-  // CORREÇÃO: Auth state listener simplificado
+  // CORREÇÃO: Auth state listener otimizado
   useEffect(() => {
     logger.info('[AUTH] Inicializando AuthProvider');
     
@@ -70,20 +82,20 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setUser(session?.user ?? null);
         
         if (event === 'SIGNED_IN' && session?.user) {
-          // CORREÇÃO: Delay mínimo para evitar deadlock
+          // CORREÇÃO: Pequeno delay para evitar conflitos
           setTimeout(() => {
             if (mounted) {
               loadUserProfile(session.user.id, session.user.email);
             }
           }, 100);
         } else if (event === 'SIGNED_OUT') {
-          setProfile(null);
-          setError(null);
+          // CORREÇÃO: Limpeza completa no logout
+          cleanupAuthState();
         }
       }
     );
 
-    // CORREÇÃO: Verificar sessão inicial com timeout rigoroso
+    // CORREÇÃO: Verificar sessão inicial com timeout reduzido
     const checkInitialSession = async () => {
       try {
         const { data: { session }, error } = await supabase.auth.getSession();
@@ -120,13 +132,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
     };
 
-    // CORREÇÃO: Timeout de inicialização de 2s (mais agressivo)
+    // CORREÇÃO: Timeout de inicialização mais agressivo (1.5s)
     initTimeout = setTimeout(() => {
       if (mounted && isLoading) {
-        logger.warn('[AUTH] Timeout de inicialização, continuando');
+        logger.warn('[AUTH] Timeout de inicialização, finalizando loading');
         setIsLoading(false);
       }
-    }, 2000);
+    }, 1500);
 
     checkInitialSession();
 
@@ -139,7 +151,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     };
   }, []);
 
-  // Função de refresh manual
+  // CORREÇÃO: Função de refresh manual otimizada
   const refreshProfile = async () => {
     if (user) {
       await loadUserProfile(user.id, user.email);
