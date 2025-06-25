@@ -10,59 +10,46 @@ import { formacaoRoutes } from "./FormacaoRoutes";
 // Páginas de erro
 import NotFound from '@/pages/NotFound';
 
-// Páginas existentes para rotas específicas
-import ResetPassword from '@/pages/auth/ResetPassword';
-import SetNewPassword from '@/pages/auth/SetNewPassword';
-import OnboardingPage from '@/pages/OnboardingPage';
+// Páginas específicas para convites
 import RegisterPage from '@/pages/auth/RegisterPage';
+import OnboardingPage from '@/pages/OnboardingPage';
 
-// CORREÇÃO: Usar redirect EMERGENCIAL simplificado
-import EmergencyRootRedirect from '@/components/routing/EmergencyRootRedirect';
+// Redirecionamento raiz simplificado
+import SimpleRootRedirect from '@/components/routing/SimpleRootRedirect';
 
 export const AppRoutes = createBrowserRouter([
-  // Rota raiz com redirecionamento EMERGENCIAL
+  // Rota raiz com redirecionamento baseado em auth
   {
     path: "/",
-    element: <EmergencyRootRedirect />
+    element: <SimpleRootRedirect />
   },
 
-  // Rotas públicas
-  ...publicRoutes,
-
-  // Rotas de autenticação
+  // Rotas de autenticação (incluindo /login)
   ...authRoutes,
 
-  // Rotas específicas de auth
-  {
-    path: "/reset-password",
-    element: <ResetPassword />
-  },
-  {
-    path: "/set-new-password", 
-    element: <SetNewPassword />
-  },
-  {
-    path: "/onboarding",
-    element: <OnboardingPage />
-  },
-
-  // Rotas de convite
+  // Rotas de convite (acesso principal da plataforma)
   {
     path: "/convite/:token",
     element: <RegisterPage />
   },
   {
-    path: "/invite/:token",
+    path: "/invite/:token", 
     element: <RegisterPage />
   },
 
-  // Rotas de membros
+  // Onboarding para novos usuários
+  {
+    path: "/onboarding",
+    element: <OnboardingPage />
+  },
+
+  // Rotas de membros (protegidas)
   ...memberRoutes,
 
-  // Rotas de admin
+  // Rotas de admin (protegidas)
   ...adminRoutes,
 
-  // Rotas de formação
+  // Rotas de formação (protegidas)
   ...formacaoRoutes,
 
   // Rotas de certificados

@@ -8,7 +8,7 @@ import { getUserRoleName } from "@/lib/supabase/types";
 const SimpleRootRedirect = () => {
   const { user, profile, isLoading } = useAuth();
 
-  // Log simplificado
+  // Log apenas em desenvolvimento
   if (import.meta.env.DEV) {
     logger.info("[SIMPLE-ROOT] Estado:", {
       hasUser: !!user,
@@ -19,7 +19,7 @@ const SimpleRootRedirect = () => {
 
   // Loading simples
   if (isLoading) {
-    return <LoadingScreen message="Carregando..." />;
+    return <LoadingScreen message="Verificando acesso..." />;
   }
 
   // Sem usuário = login
@@ -27,12 +27,12 @@ const SimpleRootRedirect = () => {
     return <Navigate to="/login" replace />;
   }
 
-  // Com usuário mas sem perfil = aguardar um pouco
+  // Com usuário mas sem perfil = aguardar
   if (user && !profile) {
     return <LoadingScreen message="Carregando perfil..." />;
   }
 
-  // Roteamento baseado no papel
+  // Roteamento baseado no papel do usuário
   const userRole = getUserRoleName(profile);
   
   if (userRole === 'formacao') {
@@ -43,7 +43,7 @@ const SimpleRootRedirect = () => {
     return <Navigate to="/admin" replace />;
   }
 
-  // Padrão = dashboard
+  // Padrão = dashboard (membros)
   return <Navigate to="/dashboard" replace />;
 };
 
