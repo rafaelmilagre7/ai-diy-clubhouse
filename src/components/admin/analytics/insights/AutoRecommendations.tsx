@@ -128,7 +128,7 @@ export const AutoRecommendations: React.FC<AutoRecommendationsProps> = ({
                 <div className="flex items-center gap-2">
                   <Clock className="h-4 w-4 text-gray-500" />
                   <span className="text-sm text-gray-500">
-                    Atualizado em {format(new Date(rec.created_at), 'dd/MM/yyyy', { locale: ptBR })}
+                    Gerado automaticamente
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
