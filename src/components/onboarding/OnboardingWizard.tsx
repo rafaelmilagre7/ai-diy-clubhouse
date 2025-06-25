@@ -9,15 +9,27 @@ import { logger } from '@/utils/logger';
 const OnboardingWizard = () => {
   console.log('[ONBOARDING-WIZARD] Componente principal renderizado');
 
+  const getErrorMessage = (error: any): string => {
+    if (typeof error === 'string') {
+      return error;
+    }
+    if (error && typeof error === 'object' && error.message) {
+      return error.message;
+    }
+    return 'Erro desconhecido';
+  };
+
   const handleError = (error: any, context: string) => {
+    const errorMessage = getErrorMessage(error);
+    
     logger.error(`[ONBOARDING-WIZARD] Erro em ${context}:`, error, {
       component: 'OnboardingWizard',
       context,
-      errorMessage: error?.message,
+      errorMessage,
       errorStack: error?.stack
     });
     
-    toast.error(`Erro no onboarding: ${error?.message || 'Erro desconhecido'}`);
+    toast.error(`Erro no onboarding: ${errorMessage}`);
   };
 
   return (
@@ -49,7 +61,7 @@ const OnboardingWizard = () => {
                 hasData: !!data,
                 dataKeys: data ? Object.keys(data) : [],
                 hasErrors: validationErrors.length > 0,
-                completionError: completionError?.message
+                completionError: completionError ? getErrorMessage(completionError) : null
               });
 
               // Log específico para diagnosticar erro do admin
@@ -152,6 +164,9 @@ const OnboardingWizard = () => {
                         <div>Member Type: {memberType}</div>
                         <div>Data Keys: {data ? Object.keys(data).join(', ') : 'none'}</div>
                         <div>Errors: {validationErrors.length}</div>
+                        {completionError && (
+                          <div>Completion Error: {getErrorMessage(completionError)}</div>
+                        )}
                       </div>
                     </div>
                   )}

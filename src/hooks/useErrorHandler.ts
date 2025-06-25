@@ -1,6 +1,8 @@
+
 import { useCallback } from 'react';
 import { toast } from 'sonner';
 import { logger } from '@/utils/logger';
+import { ErrorUtils } from '@/utils/errorUtils';
 
 interface ErrorHandlerOptions {
   showToast?: boolean;
@@ -19,7 +21,7 @@ interface ErrorInfo {
 export const useErrorHandler = () => {
   const logError = useCallback((error: any, context?: string, details?: any) => {
     const errorInfo: ErrorInfo = {
-      message: error instanceof Error ? error.message : String(error),
+      message: ErrorUtils.getMessage(error),
       code: error?.code,
       details,
       timestamp: new Date().toISOString(),
@@ -27,7 +29,7 @@ export const useErrorHandler = () => {
     };
 
     // Log detalhado com o logger seguro
-    logger.error(`Error in ${context || 'Unknown'}`, error, { ...errorInfo, stack: error?.stack });
+    logger.error(`Error in ${context || 'Unknown'}`, error, ErrorUtils.formatForLog(error, context));
     
     return errorInfo;
   }, []);
@@ -50,11 +52,11 @@ export const useErrorHandler = () => {
       // Personalizar mensagem baseada no tipo de erro
       let userMessage = 'Ocorreu um erro inesperado';
       
-      if (error?.message?.includes('network') || error?.message?.includes('fetch')) {
+      if (ErrorUtils.isNetworkError(error)) {
         userMessage = 'Problema de conexão. Verifique sua internet.';
-      } else if (error?.message?.includes('permission') || error?.message?.includes('unauthorized')) {
+      } else if (ErrorUtils.isPermissionError(error)) {
         userMessage = 'Você não tem permissão para esta ação.';
-      } else if (error?.message?.includes('validation') || error?.message?.includes('required')) {
+      } else if (ErrorUtils.isValidationError(error)) {
         userMessage = 'Dados inválidos. Verifique os campos obrigatórios.';
       } else if (errorInfo.message && errorInfo.message.length < 100) {
         userMessage = errorInfo.message;
