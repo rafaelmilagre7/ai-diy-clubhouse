@@ -17,7 +17,7 @@ interface LmsAnalyticsTabContentProps {
 
 export const LmsAnalyticsTabContent = ({ timeRange }: LmsAnalyticsTabContentProps) => {
   const { data, loading: dataLoading, error: dataError } = useLmsAnalyticsData(timeRange);
-  const { data: npsData, loading: npsLoading, error: npsError } = useNPSData({ timeRange });
+  const { data: npsData, loading: npsLoading, error: npsError } = useNPSData(timeRange);
   const { feedback, loading: feedbackLoading, error: feedbackError } = useLessonFeedback();
 
   const loading = dataLoading || npsLoading || feedbackLoading;
@@ -52,13 +52,22 @@ export const LmsAnalyticsTabContent = ({ timeRange }: LmsAnalyticsTabContentProp
 
       {/* Gráficos principais */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <NPSScoreChart npsData={npsData?.overall_data || { overall: 0, distribution: { promoters: 0, neutrals: 0, detractors: 0 } }} />
-        <NPSPerLessonChart npsData={npsData?.per_lesson_data || { perLesson: [] }} />
+        <NPSScoreChart 
+          npsData={npsData?.overall_data || { overall: 0, distribution: { promoters: 0, neutrals: 0, detractors: 0 } }} 
+          isLoading={npsLoading}
+        />
+        <NPSPerLessonChart 
+          npsData={npsData?.per_lesson_data || { perLesson: [] }} 
+          isLoading={npsLoading}
+        />
       </div>
 
       {/* Tabela de feedback */}
       <div>
-        <LessonFeedbackTable feedbackData={feedback} />
+        <LessonFeedbackTable 
+          feedbackData={feedback} 
+          isLoading={feedbackLoading}
+        />
       </div>
     </div>
   );

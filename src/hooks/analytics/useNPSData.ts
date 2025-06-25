@@ -28,7 +28,7 @@ interface NPSData {
   per_lesson_data: NPSPerLessonData;
 }
 
-export const useNPSData = ({ timeRange }: { timeRange: string }) => {
+export const useNPSData = (timeRange: string) => {
   const [data, setData] = useState<NPSData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

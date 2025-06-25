@@ -17,6 +17,7 @@ interface OverviewData {
   engagementRateChange: number;
   recurringUsers: number;
   recurringUsersChange: number;
+  avgImplementations: number;
   avgImplementationsChange: number;
 }
 
@@ -37,7 +38,8 @@ export const useOverviewData = (timeRange: string) => {
     engagementRateChange: 4,
     recurringUsers: 45,
     recurringUsersChange: 8,
-    avgImplementationsChange: 3
+    avgImplementations: 3.5,
+    avgImplementationsChange: 0.5
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -60,7 +62,8 @@ export const useOverviewData = (timeRange: string) => {
       engagementRateChange: 4,
       recurringUsers: timeRange === '7d' ? 45 : timeRange === '30d' ? 135 : 450,
       recurringUsersChange: timeRange === '7d' ? 8 : timeRange === '30d' ? 18 : 65,
-      avgImplementationsChange: 3
+      avgImplementations: timeRange === '7d' ? 3.5 : timeRange === '30d' ? 4.2 : 5.8,
+      avgImplementationsChange: timeRange === '7d' ? 0.5 : timeRange === '30d' ? 0.8 : 1.2
     };
 
     setTimeout(() => {
