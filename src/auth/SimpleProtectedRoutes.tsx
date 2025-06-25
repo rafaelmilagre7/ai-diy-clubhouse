@@ -1,12 +1,12 @@
 
-import { Navigate, useLocation } from "react-router-dom";
+import { Navigate, useLocation, Outlet } from "react-router-dom";
 import { ReactNode } from "react";
 import { useAuth } from "@/contexts/auth";
 import LoadingScreen from "@/components/common/LoadingScreen";
 import { logger } from "@/utils/logger";
 
 interface SimpleProtectedRoutesProps {
-  children: ReactNode;
+  children?: ReactNode;
 }
 
 export const SimpleProtectedRoutes = ({ children }: SimpleProtectedRoutesProps) => {
@@ -34,5 +34,5 @@ export const SimpleProtectedRoutes = ({ children }: SimpleProtectedRoutesProps) 
   }
 
   // Renderizar conteúdo protegido
-  return <>{children}</>;
+  return children ? <>{children}</> : <Outlet />;
 };
