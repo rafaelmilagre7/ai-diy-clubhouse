@@ -26,7 +26,6 @@ function App() {
     });
   }, [user, isLoading, error]);
 
-  // Se há erro crítico, mostrar
   if (error) {
     console.error('[APP] Erro crítico na aplicação:', error);
     return (

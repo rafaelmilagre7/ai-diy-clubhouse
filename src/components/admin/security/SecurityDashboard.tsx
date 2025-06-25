@@ -1,14 +1,13 @@
 
 import React from 'react';
-import { useAuth } from '@/contexts/auth';
+import { useSimpleAuth } from '@/contexts/auth/SimpleAuthProvider';
 import { RLSPhase3Dashboard } from './RLSPhase3Dashboard';
 import { Card, CardContent } from '@/components/ui/card';
 import { Shield, AlertTriangle } from 'lucide-react';
 
 export const SecurityDashboard = () => {
-  const { isAdmin, user } = useAuth();
+  const { isAdmin, user } = useSimpleAuth();
 
-  // Se não for admin, mostrar acesso negado
   if (!isAdmin) {
     return (
       <Card>
@@ -25,10 +24,8 @@ export const SecurityDashboard = () => {
     );
   }
 
-  // Se for admin, renderizar o dashboard da Fase 3
   return (
     <div className="space-y-6">
-      {/* Banner de identificação da Fase 3 */}
       <div className="bg-gradient-to-r from-green-600 to-blue-600 rounded-lg p-4 text-white">
         <div className="flex items-center gap-3">
           <Shield className="h-6 w-6" />
@@ -43,7 +40,6 @@ export const SecurityDashboard = () => {
         </div>
       </div>
 
-      {/* Dashboard da Fase 3 */}
       <RLSPhase3Dashboard />
     </div>
   );

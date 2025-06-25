@@ -1,18 +1,15 @@
 
 import { ReactNode } from "react";
 import { Navigate, useLocation } from "react-router-dom";
-import { useAuth } from "@/contexts/auth";
+import { useSimpleAuth } from "@/contexts/auth/SimpleAuthProvider";
 import LoadingScreen from "@/components/common/LoadingScreen";
 
 interface AdminProtectedRoutesProps {
   children: ReactNode;
 }
 
-/**
- * AdminProtectedRoutes protege rotas que requerem privilégios de administrador
- */
 const AdminProtectedRoutes = ({ children }: AdminProtectedRoutesProps) => {
-  const { user, isAdmin, isLoading } = useAuth();
+  const { user, isAdmin, isLoading } = useSimpleAuth();
   const location = useLocation();
 
   if (isLoading) {

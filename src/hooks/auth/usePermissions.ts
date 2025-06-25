@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
-import { useAuth } from '@/contexts/auth';
+import { useSimpleAuth } from '@/contexts/auth/SimpleAuthProvider';
 
 export interface Permission {
   id: string;
@@ -26,13 +26,10 @@ export const usePermissions = () => {
   const [roles, setRoles] = useState<Role[]>([]);
   const [userPermissions, setUserPermissions] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
-  const { user, isAdmin } = useAuth();
+  const { user, isAdmin } = useSimpleAuth();
 
   const hasPermission = (permissionCode: string): boolean => {
-    // Admin tem todas as permissões
     if (isAdmin) return true;
-    
-    // Verificar se o usuário tem a permissão específica
     return userPermissions.includes(permissionCode) || userPermissions.includes('admin.all');
   };
 

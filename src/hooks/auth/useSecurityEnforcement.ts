@@ -1,18 +1,14 @@
 
 import { useEffect } from 'react';
-import { useAuth } from '@/contexts/auth';
+import { useSimpleAuth } from '@/contexts/auth/SimpleAuthProvider';
 import { supabase } from '@/lib/supabase';
 import { logger } from '@/utils/logger';
 
-/**
- * Hook para forçar verificações de segurança e logs de auditoria
- */
 export const useSecurityEnforcement = () => {
-  const { user, isLoading } = useAuth();
+  const { user, isLoading } = useSimpleAuth();
 
   useEffect(() => {
     if (!isLoading && !user) {
-      // Log de tentativa de acesso não autorizado
       logger.warn('[SECURITY] Tentativa de acesso sem autenticação detectada', {
         timestamp: new Date().toISOString(),
         url: window.location.href,
@@ -22,7 +18,6 @@ export const useSecurityEnforcement = () => {
     }
   }, [user, isLoading]);
 
-  // Função para logar acessos críticos a dados
   const logDataAccess = async (tableName: string, operation: string, resourceId?: string) => {
     if (!user) return;
 
@@ -33,12 +28,10 @@ export const useSecurityEnforcement = () => {
         p_resource_id: resourceId
       });
     } catch (error) {
-      // Falhar silenciosamente para não quebrar a experiência do usuário
       logger.error('[SECURITY] Erro ao registrar log de auditoria:', error);
     }
   };
 
-  // Função para verificar permissões antes de operações críticas
   const enforceUserDataAccess = (dataUserId: string, operation: string = 'read') => {
     if (!user) {
       logger.error('[SECURITY] Tentativa de acesso a dados sem autenticação', {

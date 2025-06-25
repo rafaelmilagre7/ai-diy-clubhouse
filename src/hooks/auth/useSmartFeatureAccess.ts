@@ -1,6 +1,6 @@
 
 import { useQuery } from '@tanstack/react-query';
-import { useAuth } from '@/contexts/auth';
+import { useSimpleAuth } from '@/contexts/auth/SimpleAuthProvider';
 import { isFeatureEnabledForUser, APP_FEATURES } from '@/config/features';
 import { getUserRoleName } from '@/lib/supabase/types';
 
@@ -12,20 +12,13 @@ interface SmartFeatureAccessResult {
   isLoading: boolean;
 }
 
-/**
- * Hook para verificar acesso a features inteligentes
- * 
- * Nota: Trilha de implementação foi removida na Fase 4.
- * Este hook ainda funciona para outras features do sistema.
- */
 export const useSmartFeatureAccess = (feature: string) => {
-  const { profile, user } = useAuth();
+  const { profile, user } = useSimpleAuth();
   const userRole = getUserRoleName(profile);
 
   return useQuery({
     queryKey: ['smart-feature-access', feature, user?.id, userRole],
     queryFn: async (): Promise<SmartFeatureAccessResult> => {
-      // Verificar se a feature existe na configuração
       if (!(feature in APP_FEATURES)) {
         return {
           hasAccess: false,
@@ -36,7 +29,6 @@ export const useSmartFeatureAccess = (feature: string) => {
         };
       }
 
-      // Verificar se a feature está habilitada globalmente
       const featureConfig = APP_FEATURES[feature];
       if (!featureConfig?.enabled) {
         return {
@@ -48,7 +40,6 @@ export const useSmartFeatureAccess = (feature: string) => {
         };
       }
 
-      // Verificar acesso baseado no papel do usuário
       const hasRoleAccess = isFeatureEnabledForUser(feature, userRole);
       
       return {
@@ -60,7 +51,7 @@ export const useSmartFeatureAccess = (feature: string) => {
       };
     },
     enabled: !!user && !!profile,
-    staleTime: 5 * 60 * 1000, // 5 minutos
+    staleTime: 5 * 60 * 1000,
     refetchOnWindowFocus: false
   });
 };

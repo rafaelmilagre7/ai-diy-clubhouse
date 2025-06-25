@@ -1,4 +1,7 @@
 
+// MIGRAÇÃO TEMPORÁRIA: Redirecionando useAuth para useSimpleAuth
+// Este arquivo será usado durante a transição para evitar quebras
+
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase, UserProfile } from '@/lib/supabase';
@@ -7,12 +10,16 @@ import { useAuthMethods } from './hooks/useAuthMethods';
 import { AuthContextType } from './types';
 import { logger } from '@/utils/logger';
 
+// IMPORTAR O NOVO CONTEXTO
+import { useSimpleAuth } from './SimpleAuthProvider';
+
 interface AuthProviderProps {
   children: ReactNode;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+// PROVIDER LEGACY - mantido para compatibilidade temporária
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
@@ -24,7 +31,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   // Usar métodos de auth robustos
   const authMethods = useAuthMethods({ setIsLoading });
 
-  // Função para carregar perfil com retry - CORRIGIR assinatura
+  // Função para carregar perfil com retry
   const loadUserProfile = async (userId: string, email?: string, retryCount = 0) => {
     const maxRetries = 3;
     
@@ -36,7 +43,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       
       let userProfile = await fetchUserProfile(userId);
       
-      // Se não encontrou perfil, tentar criar
       if (!userProfile && email) {
         logger.info('Perfil não encontrado, criando...');
         userProfile = await createUserProfileIfNeeded(userId, email);
@@ -46,7 +52,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setProfile(userProfile);
         logger.info('Perfil carregado com sucesso');
       } else if (retryCount < maxRetries) {
-        // Retry com delay progressivo
         const delay = (retryCount + 1) * 1000;
         logger.warn('Tentativa de retry em', { delayMs: delay });
         
@@ -73,11 +78,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  // Configurar listener de mudanças de auth
   useEffect(() => {
-    logger.info('Inicializando AuthProvider');
+    logger.info('Inicializando AuthProvider LEGACY');
     
-    // Configurar listener de mudanças de auth
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         logger.info('Auth state changed:', { event, hasSession: !!session });
@@ -86,7 +89,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setUser(session?.user ?? null);
         
         if (event === 'SIGNED_IN' && session?.user) {
-          // Usar setTimeout para evitar deadlocks
           setTimeout(() => {
             loadUserProfile(session.user.id, session.user.email);
           }, 0);
@@ -97,7 +99,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
     );
 
-    // Verificar sessão existente
     supabase.auth.getSession().then(({ data: { session }, error }) => {
       if (error) {
         logger.error('Erro ao obter sessão:', error);
@@ -121,7 +122,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     };
   }, []);
 
-  // Função de refresh manual
   const refreshProfile = async () => {
     if (user) {
       await loadUserProfile(user.id, user.email);
@@ -151,10 +151,35 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   );
 };
 
+// HOOK PRINCIPAL - MIGRAÇÃO PARA useSimpleAuth
 export const useAuth = (): AuthContextType => {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
+  logger.warn('[MIGRATION] useAuth está sendo redirecionado para useSimpleAuth');
+  
+  // Usar o novo contexto
+  const simpleAuth = useSimpleAuth();
+  
+  // Adaptar para interface legacy
+  return {
+    user: simpleAuth.user,
+    session: simpleAuth.session,
+    profile: simpleAuth.profile,
+    isLoading: simpleAuth.isLoading,
+    error: simpleAuth.error,
+    isAdmin: simpleAuth.isAdmin,
+    isFormacao: simpleAuth.isFormacao,
+    refreshProfile: async () => {}, // Método vazio para compatibilidade
+    setSession: () => {},
+    setUser: () => {},
+    setProfile: () => {},
+    setIsLoading: () => {},
+    signIn: async () => ({ error: null }),
+    signUp: async () => ({ error: null }),
+    signOut: simpleAuth.signOut,
+    signInAsMember: async () => ({ error: null }),
+    signInAsAdmin: async () => ({ error: null }),
+    isSigningIn: false
+  } as AuthContextType;
 };
+
+// Exportar também o novo hook para migração gradual
+export { useSimpleAuth } from './SimpleAuthProvider';

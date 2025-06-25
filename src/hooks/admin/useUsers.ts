@@ -32,7 +32,6 @@ export const useUsers = () => {
   const [error, setError] = useState<Error | null>(null);
   const { toast } = useToast();
 
-  // Permissões básicas - podem ser expandidas conforme necessário
   const canManageUsers = true;
   const canAssignRoles = true;
   const canDeleteUsers = true;
