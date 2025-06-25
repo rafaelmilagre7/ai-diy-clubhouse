@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { logger } from '@/utils/logger';
-import { cleanupAuthState } from '@/utils/authCleanup';
+import { forceAuthRedirect, recoverFromAuthError } from '@/utils/authCleanup';
 
 interface UseAuthMethodsProps {
   setIsLoading: (loading: boolean) => void;
@@ -16,12 +16,7 @@ export const useAuthMethods = ({ setIsLoading }: UseAuthMethodsProps) => {
       setIsLoading(true);
       setAuthError(null);
       
-      // CORREÇÃO: Limpeza prévia antes do login
-      try {
-        await cleanupAuthState();
-      } catch (error) {
-        logger.warn('Erro na limpeza prévia, continuando:', error);
-      }
+      logger.info('[AUTH-METHODS] Iniciando login');
       
       const { data, error } = await supabase.auth.signInWithPassword({
         email: email.trim(),
@@ -79,31 +74,25 @@ export const useAuthMethods = ({ setIsLoading }: UseAuthMethodsProps) => {
   const signOut = async () => {
     try {
       setIsLoading(true);
-      logger.info('[AUTH-METHODS] Iniciando logout');
+      logger.info('[AUTH-METHODS] Iniciando logout SEGURO');
       
-      // CORREÇÃO: Limpeza completa durante logout
-      await cleanupAuthState();
-      
-      logger.info('[AUTH-METHODS] Logout realizado com sucesso');
-      
-      // CORREÇÃO: Forçar redirecionamento para auth
-      setTimeout(() => {
-        window.location.href = '/auth';
-      }, 100);
+      // CORREÇÃO: Usar o método de logout mais seguro
+      await recoverFromAuthError();
       
       return { success: true };
 
     } catch (error: any) {
-      logger.error('[AUTH-METHODS] Erro no logout:', error);
+      logger.error('[AUTH-METHODS] Erro no logout, forçando saída:', error);
       
-      // CORREÇÃO: Mesmo com erro, forçar limpeza e redirecionamento
+      // CORREÇÃO: Mesmo com erro, forçar saída completa
       try {
-        await cleanupAuthState();
-      } catch (cleanupError) {
-        logger.warn('Erro na limpeza de emergência:', cleanupError);
+        await forceAuthRedirect();
+      } catch (forceError) {
+        logger.error('Erro ao forçar saída:', forceError);
+        // Último recurso - reload da página
+        window.location.reload();
       }
       
-      window.location.href = '/auth';
       return { success: false, error };
     } finally {
       setIsLoading(false);

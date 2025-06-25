@@ -6,6 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AlertCircle } from 'lucide-react';
 import { useAuth } from '@/contexts/auth';
+import { checkAndFixAssets } from '@/utils/authCleanup';
 import LoginForm from './LoginForm';
 import SimpleRegisterForm from './SimpleRegisterForm';
 
@@ -16,36 +17,54 @@ const AuthLayout = () => {
   
   const [activeTab, setActiveTab] = useState('login');
   const [message, setMessage] = useState('');
+  const [assetsReady, setAssetsReady] = useState(false);
 
-  console.log('[AUTH-LAYOUT] Renderizando para usuário:', user ? user.email : 'não logado');
-
-  // CORREÇÃO: Redirecionar usuário autenticado com verificação
+  // CORREÇÃO: Verificar integridade dos assets na inicialização
   useEffect(() => {
-    if (!isLoading && user) {
+    const initializeAuth = () => {
+      console.log('[AUTH-LAYOUT] Verificando integridade dos assets');
+      
+      // Verificar se assets estão funcionando
+      const assetsOk = checkAndFixAssets();
+      
+      if (assetsOk) {
+        setAssetsReady(true);
+        console.log('[AUTH-LAYOUT] Assets OK, iniciando auth layout');
+      } else {
+        console.log('[AUTH-LAYOUT] Assets com problema, aguardando correção');
+        // checkAndFixAssets já força reload se necessário
+      }
+    };
+
+    // Pequeno delay para garantir que DOM carregou
+    setTimeout(initializeAuth, 100);
+  }, []);
+
+  // CORREÇÃO: Redirecionar usuário autenticado APENAS se assets estão OK
+  useEffect(() => {
+    if (!isLoading && user && assetsReady) {
       console.log('[AUTH-LAYOUT] Usuário logado detectado, redirecionando');
       
-      // Verificar se há uma rota de origem
       const from = location.state?.from || '/dashboard';
       navigate(from, { replace: true });
     }
-  }, [user, isLoading, navigate, location.state]);
+  }, [user, isLoading, navigate, location.state, assetsReady]);
 
   const handleSuccess = () => {
     console.log('[AUTH-LAYOUT] Sucesso na autenticação');
     
-    // Verificar se há uma rota de origem
     const from = location.state?.from || '/dashboard';
     navigate(from, { replace: true });
   };
 
-  // CORREÇÃO: Mostrar loading apenas se auth ainda está carregando
-  if (isLoading) {
+  // CORREÇÃO: Mostrar loading se assets não estão prontos ou auth carregando
+  if (!assetsReady || isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#0F111A] to-[#151823] p-4">
         <Card className="w-full max-w-md bg-[#1A1E2E]/90 backdrop-blur-sm border-white/20">
           <CardContent className="p-6 text-center">
             <h2 className="text-xl font-semibold text-white mb-4">
-              Carregando...
+              {!assetsReady ? 'Verificando sistema...' : 'Carregando...'}
             </h2>
             <div className="flex justify-center">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-viverblue"></div>

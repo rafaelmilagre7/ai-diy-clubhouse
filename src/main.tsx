@@ -8,24 +8,34 @@ import { LoggingProvider } from '@/hooks/useLogging';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from '@/components/ui/toaster';
 
-// Inicialização otimizada para desenvolvimento
-import { securityValidator } from './utils/securityValidator';
+// CORREÇÃO: Inicialização com limpeza de cache em caso de erro
+import { checkAndFixAssets } from './utils/authCleanup';
 
-// Validar segurança de forma não-bloqueante
-if (import.meta.env.DEV) {
-  // Executar validação de forma assíncrona para não bloquear inicialização
-  setTimeout(() => {
-    securityValidator.generateSecurityReport();
-  }, 2000);
-}
+// Verificar assets na inicialização
+const initializeApp = () => {
+  console.log('[MAIN] Verificando integridade da aplicação');
+  
+  // Verificar se há problemas de assets
+  const assetsOk = checkAndFixAssets();
+  
+  if (!assetsOk) {
+    console.log('[MAIN] Problemas de assets detectados, correção automática iniciada');
+    return; // checkAndFixAssets já força reload se necessário
+  }
+  
+  console.log('[MAIN] Assets OK, iniciando aplicação');
+};
 
-// Configurar QueryClient mais leve para desenvolvimento
+// Executar verificação inicial
+initializeApp();
+
+// Configurar QueryClient otimizado
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: import.meta.env.DEV ? 1 * 60 * 1000 : 5 * 60 * 1000, // 1 min dev, 5 min prod
-      retry: import.meta.env.DEV ? 0 : 1, // Sem retry em dev
-      refetchOnWindowFocus: false, // Evitar refetch desnecessário
+      staleTime: import.meta.env.DEV ? 1 * 60 * 1000 : 5 * 60 * 1000,
+      retry: import.meta.env.DEV ? 0 : 1,
+      refetchOnWindowFocus: false,
     },
   },
 });
