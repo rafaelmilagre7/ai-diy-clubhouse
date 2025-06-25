@@ -51,6 +51,10 @@ import FormacaoDashboard from '@/pages/formacao/FormacaoDashboard';
 import FormacaoCursos from '@/pages/formacao/FormacaoCursos';
 import FormacaoModuloDetalhes from '@/pages/formacao/FormacaoModuloDetalhes';
 import FormacaoAulaDetalhes from '@/pages/formacao/FormacaoAulaDetalhes';
+import FormacaoAulas from '@/pages/formacao/FormacaoAulas';
+import FormacaoNovaAula from '@/pages/formacao/FormacaoNovaAula';
+import FormacaoMateriais from '@/pages/formacao/FormacaoMateriais';
+import FormacaoConfiguracoes from '@/pages/formacao/FormacaoConfiguracoes';
 
 // Error pages
 import NotFound from '@/pages/NotFound';
@@ -151,6 +155,12 @@ export const AppRoutes = createBrowserRouter([
   createProtectedRoute("/formacao/cursos", FormacaoCursos, FormacaoLayout, 'formacao'),
   createProtectedRoute("/formacao/cursos/:id/modulos", FormacaoModuloDetalhes, FormacaoLayout, 'formacao'),
   createProtectedRoute("/formacao/modulos/:id/aulas", FormacaoAulaDetalhes, FormacaoLayout, 'formacao'),
+  createProtectedRoute("/formacao/aulas", FormacaoAulas, FormacaoLayout, 'formacao'),
+  createProtectedRoute("/formacao/aulas/nova", FormacaoNovaAula, FormacaoLayout, 'formacao'),
+  createProtectedRoute("/formacao/aulas/:id", FormacaoAulaDetalhes, FormacaoLayout, 'formacao'),
+  createProtectedRoute("/formacao/aulas/:id/editar", FormacaoAulaDetalhes, FormacaoLayout, 'formacao'),
+  createProtectedRoute("/formacao/materiais", FormacaoMateriais, FormacaoLayout, 'formacao'),
+  createProtectedRoute("/formacao/configuracoes", FormacaoConfiguracoes, FormacaoLayout, 'formacao'),
 
   // Rota 404
   {
