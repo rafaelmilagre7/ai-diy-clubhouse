@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Navigate } from 'react-router-dom';
-import { useAuth } from '@/contexts/auth';
+import { useAuth } from '@/contexts/auth/SimpleAuthProvider';
 import { useSimpleOnboarding } from '@/hooks/useSimpleOnboarding';
 import LoadingScreen from '@/components/common/LoadingScreen';
 import { getUserRoleName } from '@/lib/supabase/types';

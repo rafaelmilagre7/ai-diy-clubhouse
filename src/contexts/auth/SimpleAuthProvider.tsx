@@ -67,6 +67,16 @@ export const SimpleAuthProvider: React.FC<SimpleAuthProviderProps> = ({ children
     }
   };
 
+  // Implementar signInAsMember (mesma lógica que signIn para compatibilidade)
+  const signInAsMember = async (email: string, password: string) => {
+    return await signIn(email, password);
+  };
+
+  // Implementar signInAsAdmin (mesma lógica que signIn para compatibilidade)
+  const signInAsAdmin = async (email: string, password: string) => {
+    return await signIn(email, password);
+  };
+
   const signUp = async (email: string, password: string, metadata?: any) => {
     try {
       setError(null);
@@ -161,6 +171,8 @@ export const SimpleAuthProvider: React.FC<SimpleAuthProviderProps> = ({ children
     isAdmin: profile?.user_roles?.name === 'admin',
     isFormacao: profile?.user_roles?.name === 'formacao',
     signIn,
+    signInAsMember,
+    signInAsAdmin,
     signUp,
     signOut,
     setSession,

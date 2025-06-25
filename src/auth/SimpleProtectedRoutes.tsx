@@ -1,7 +1,7 @@
 
 import { Navigate, useLocation } from "react-router-dom";
 import { ReactNode } from "react";
-import { useAuth } from "@/contexts/auth";
+import { useAuth } from "@/contexts/auth/SimpleAuthProvider";
 import { useSimpleOnboarding } from "@/hooks/useSimpleOnboarding";
 import LoadingScreen from "@/components/common/LoadingScreen";
 import { logger } from "@/utils/logger";
