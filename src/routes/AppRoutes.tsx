@@ -33,9 +33,16 @@ const Benefits = lazy(() => import('@/pages/member/Benefits'));
 const AdminDashboard = lazy(() => import('@/pages/admin/AdminDashboard'));
 const AdminUsers = lazy(() => import('@/pages/admin/AdminUsers'));
 const AdminUserDetail = lazy(() => import('@/pages/admin/AdminUserDetail'));
+const AdminTools = lazy(() => import('@/pages/admin/AdminTools'));
 const AdminSolutions = lazy(() => import('@/pages/admin/AdminSolutions'));
 const AdminSuggestions = lazy(() => import('@/pages/admin/AdminSuggestions'));
 const AdminSolutionEditor = lazy(() => import('@/pages/admin/AdminSolutionEditor'));
+const AdminAnalytics = lazy(() => import('@/pages/admin/AdminAnalytics'));
+const AdminEvents = lazy(() => import('@/pages/admin/AdminEvents'));
+const AdminRoles = lazy(() => import('@/pages/admin/AdminRoles'));
+const AdminInvites = lazy(() => import('@/pages/admin/AdminInvites'));
+const AdminCommunications = lazy(() => import('@/pages/admin/AdminCommunications'));
+const AdminSecurity = lazy(() => import('@/pages/admin/AdminSecurity'));
 
 // Formacao pages
 const FormacaoAulas = lazy(() => import('@/pages/formacao/FormacaoAulas'));
@@ -75,9 +82,16 @@ export const AppRoutes = () => {
           <Route path="/admin" element={<AdminLayout><AdminDashboard /></AdminLayout>} />
           <Route path="/admin/users" element={<AdminLayout><AdminUsers /></AdminLayout>} />
           <Route path="/admin/users/:id" element={<AdminLayout><AdminUserDetail /></AdminLayout>} />
+          <Route path="/admin/tools" element={<AdminLayout><AdminTools /></AdminLayout>} />
           <Route path="/admin/solutions" element={<AdminLayout><AdminSolutions /></AdminLayout>} />
           <Route path="/admin/solutions/:id" element={<AdminLayout><AdminSolutionEditor /></AdminLayout>} />
           <Route path="/admin/suggestions" element={<AdminLayout><AdminSuggestions /></AdminLayout>} />
+          <Route path="/admin/analytics" element={<AdminLayout><AdminAnalytics /></AdminLayout>} />
+          <Route path="/admin/events" element={<AdminLayout><AdminEvents /></AdminLayout>} />
+          <Route path="/admin/roles" element={<AdminLayout><AdminRoles /></AdminLayout>} />
+          <Route path="/admin/invites" element={<AdminLayout><AdminInvites /></AdminLayout>} />
+          <Route path="/admin/communications" element={<AdminLayout><AdminCommunications /></AdminLayout>} />
+          <Route path="/admin/security" element={<AdminLayout><AdminSecurity /></AdminLayout>} />
 
           {/* Formacao routes com FormacaoLayout */}
           <Route path="/formacao" element={<FormacaoLayout><FormacaoAulas /></FormacaoLayout>} />
