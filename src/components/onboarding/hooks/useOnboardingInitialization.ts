@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { useAuth } from '@/contexts/auth';
+import { useSimpleAuth } from '@/contexts/auth/SimpleAuthProvider';
 import { OnboardingData } from '../types/onboardingTypes';
 import { getUserRoleName } from '@/lib/supabase/types';
 import { useSearchParams } from 'react-router-dom';
@@ -9,7 +9,7 @@ export const useOnboardingInitialization = (
   data: OnboardingData,
   updateData: (newData: Partial<OnboardingData>) => void
 ) => {
-  const { user, profile } = useAuth();
+  const { user, profile } = useSimpleAuth();
   const [searchParams] = useSearchParams();
   const [isLoading, setIsLoading] = useState(true);
 
@@ -37,7 +37,12 @@ export const useOnboardingInitialization = (
             memberType,
             startedAt: new Date().toISOString(),
             fromInvite: true,
-            inviteToken: inviteToken
+            inviteToken: inviteToken,
+            
+            // ADICIONADO: Inicializar flags de controle
+            isEmailFromInvite: false,
+            isNameFromInvite: false,
+            isPhoneFromInvite: false
           };
           
           console.log('[ONBOARDING-INIT] Dados limpos para convite:', {
@@ -56,7 +61,11 @@ export const useOnboardingInitialization = (
               name: profile?.name || '',
               email: profile?.email || user?.email || '',
               memberType,
-              startedAt: new Date().toISOString()
+              startedAt: new Date().toISOString(),
+              // ADICIONADO: Inicializar flags como false para usuários normais
+              isEmailFromInvite: false,
+              isNameFromInvite: false,
+              isPhoneFromInvite: false
             };
             
             updateData(regularData);

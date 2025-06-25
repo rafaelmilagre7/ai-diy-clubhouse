@@ -13,7 +13,7 @@ interface OnboardingData {
   mainObjective: string;
   memberType: 'club' | 'formacao';
   inviteToken?: string;
-  // Campos de controle para readonly
+  // ADICIONADO: Campos de controle para readonly
   isNameFromInvite?: boolean;
   isEmailFromInvite?: boolean;
   isPhoneFromInvite?: boolean;
@@ -70,7 +70,7 @@ export const useCleanOnboardingData = (inviteToken?: string): UseCleanOnboarding
           phone: inviteDetails.whatsapp_number || '',
           memberType,
           inviteToken,
-          // CONTROLE DE READONLY
+          // CONTROLE DE READONLY - CORRIGIDO
           isEmailFromInvite: true, // E-mail sempre vem do convite
           isNameFromInvite: !!inviteDetails.name,
           isPhoneFromInvite: !!inviteDetails.whatsapp_number
@@ -81,6 +81,11 @@ export const useCleanOnboardingData = (inviteToken?: string): UseCleanOnboarding
           hasName: !!inviteDetails.name,
           hasPhone: !!inviteDetails.whatsapp_number,
           memberType,
+          flags: {
+            isEmailFromInvite: inviteData.isEmailFromInvite,
+            isNameFromInvite: inviteData.isNameFromInvite,
+            isPhoneFromInvite: inviteData.isPhoneFromInvite
+          },
           duration: `${Date.now() - startTime}ms`
         });
 
