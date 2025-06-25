@@ -1,10 +1,10 @@
 
-import { useAuth } from '@/contexts/auth';
+import { useFastAuth } from '@/contexts/auth/FastAuthProvider';
 import { isFeatureEnabledForUser, APP_FEATURES } from '@/config/features';
 import { getUserRoleName } from '@/lib/supabase/types';
 
 export const useFeatureAccess = () => {
-  const { profile } = useAuth();
+  const { profile } = useFastAuth();
   const userRole = getUserRoleName(profile);
 
   const hasFeatureAccess = (featureName: string) => {

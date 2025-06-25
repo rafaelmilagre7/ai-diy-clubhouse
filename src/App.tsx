@@ -3,12 +3,12 @@ import { RouterProvider } from "react-router-dom";
 import { AppRoutes } from "@/routes/AppRoutes";
 import { Toaster } from "@/components/ui/sonner";
 import { useEffect } from "react";
-import { useAuth } from "@/contexts/auth";
+import { useFastAuth } from "@/contexts/auth/FastAuthProvider";
 import { logger } from "@/utils/logger";
 import { useSecureSession } from "@/hooks/useSecureSession";
 
 function App() {
-  const { user, isLoading } = useAuth();
+  const { user, isLoading } = useFastAuth();
   
   // Ativar sessão segura
   useSecureSession({

@@ -1,14 +1,14 @@
 
 import React from 'react';
 import { Navigate } from 'react-router-dom';
-import { useAuth } from '@/contexts/auth';
+import { useFastAuth } from '@/contexts/auth/FastAuthProvider';
 
 interface PublicRouteProps {
   children: React.ReactNode;
 }
 
 const PublicRoute: React.FC<PublicRouteProps> = ({ children }) => {
-  const { user, isLoading } = useAuth();
+  const { user, isLoading } = useFastAuth();
   
   // Se estiver carregando, mostra nada ou um indicador de carregamento
   if (isLoading) {

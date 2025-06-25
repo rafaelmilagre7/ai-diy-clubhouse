@@ -1,6 +1,6 @@
 
 import React, { memo, useMemo, useCallback } from "react";
-import { useAuth } from "@/contexts/auth";
+import { useFastAuth } from "@/contexts/auth/FastAuthProvider";
 import BaseLayout from "./BaseLayout";
 import { MemberSidebar } from "./member/MemberSidebar";
 import { MemberContent } from "./member/MemberContent";
@@ -12,7 +12,7 @@ interface MemberLayoutProps {
 }
 
 const MemberLayout = memo<MemberLayoutProps>(({ children }) => {
-  const { profile, signOut } = useAuth();
+  const { profile, signOut } = useFastAuth();
   const { sidebarOpen, setSidebarOpen, toggleSidebar, isMobile } = useSidebarControl();
 
   // Log apenas em desenvolvimento

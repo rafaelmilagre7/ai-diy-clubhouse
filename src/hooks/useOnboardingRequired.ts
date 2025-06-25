@@ -1,11 +1,11 @@
 
 import { useState, useEffect } from 'react';
-import { useAuth } from '@/contexts/auth';
+import { useFastAuth } from '@/contexts/auth/FastAuthProvider';
 import { getUserRoleName } from '@/lib/supabase/types';
 import { logger } from '@/utils/logger';
 
 export const useOnboardingRequired = () => {
-  const { user, profile, isLoading: authLoading } = useAuth();
+  const { user, profile, isLoading: authLoading } = useFastAuth();
   const [isLoading, setIsLoading] = useState(true);
   const [isRequired, setIsRequired] = useState(false);
   const [hasCompleted, setHasCompleted] = useState(false);

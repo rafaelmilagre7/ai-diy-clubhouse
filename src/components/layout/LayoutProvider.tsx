@@ -1,17 +1,21 @@
 
 import { useLocation } from "react-router-dom";
 import { ReactNode, memo } from "react";
-import { useAuth } from "@/contexts/auth";
+import { useFastAuth } from "@/contexts/auth/FastAuthProvider";
 import LoadingScreen from "@/components/common/LoadingScreen";
 import MemberLayout from "./MemberLayout";
 import FormacaoLayout from "./formacao/FormacaoLayout";
 import { PageTransitionWithFallback } from "@/components/transitions/PageTransitionWithFallback";
+import { getUserRoleName } from "@/lib/supabase/types";
 
 const LayoutProvider = memo(({ children }: { children: ReactNode }) => {
-  const { user, isFormacao, isAdmin, isLoading } = useAuth();
+  const { user, profile, isLoading } = useFastAuth();
   const location = useLocation();
 
   const isFormacaoRoute = location.pathname.startsWith('/formacao');
+  const userRole = getUserRoleName(profile);
+  const isFormacao = userRole === 'formacao';
+  const isAdmin = userRole === 'admin';
 
   console.log("[LAYOUT-PROVIDER] Estado:", {
     hasUser: !!user,
