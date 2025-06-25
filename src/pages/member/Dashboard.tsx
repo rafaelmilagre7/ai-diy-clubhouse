@@ -5,7 +5,7 @@ import { useDashboardData } from "@/hooks/dashboard/useDashboardData";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowRight, Clock, CheckCircle, Star } from "lucide-react";
+import { ArrowRight, Clock, CheckCircle, Star, GraduationCap } from "lucide-react";
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -60,7 +60,7 @@ const Dashboard = () => {
       </div>
 
       {/* Stats rápidas */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium">Soluções Ativas</CardTitle>
@@ -88,6 +88,19 @@ const Dashboard = () => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{recommended.length}</div>
+          </CardContent>
+        </Card>
+
+        <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => navigate('/learning')}>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium">Cursos de IA</CardTitle>
+            <GraduationCap className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">Acessar</div>
+            <p className="text-xs text-muted-foreground">
+              Aprenda IA na prática
+            </p>
           </CardContent>
         </Card>
       </div>

@@ -37,6 +37,12 @@ import Benefits from '@/pages/member/Benefits';
 import Events from '@/pages/member/Events';
 import Suggestions from '@/pages/member/Suggestions';
 
+// Learning pages
+import LearningPage from '@/pages/member/learning/LearningPage';
+import CourseDetails from '@/pages/member/learning/CourseDetails';
+import LessonView from '@/pages/member/learning/LessonView';
+import MemberCertificates from '@/pages/member/learning/MemberCertificates';
+
 // Formação pages
 import FormacaoDashboard from '@/pages/formacao/FormacaoDashboard';
 import FormacaoCursos from '@/pages/formacao/FormacaoCursos';
@@ -113,6 +119,12 @@ export const AppRoutes = createBrowserRouter([
   createProtectedRoute("/benefits", Benefits, MemberLayout),
   createProtectedRoute("/events", Events, MemberLayout),
   createProtectedRoute("/suggestions", Suggestions, MemberLayout),
+
+  // Rotas de Learning (autenticadas)
+  createProtectedRoute("/learning", LearningPage, MemberLayout),
+  createProtectedRoute("/learning/course/:id", CourseDetails, MemberLayout),
+  createProtectedRoute("/learning/course/:courseId/lesson/:lessonId", LessonView, MemberLayout),
+  createProtectedRoute("/learning/certificates", MemberCertificates, MemberLayout),
 
   // Rotas de admin (requer permissão admin)
   createProtectedRoute("/admin", AdminDashboard, AdminLayout, 'admin'),
