@@ -16,14 +16,14 @@ import SetNewPassword from '@/pages/auth/SetNewPassword';
 import OnboardingPage from '@/pages/OnboardingPage';
 import RegisterPage from '@/pages/auth/RegisterPage';
 
-// CORREÇÃO: Usar o redirect SIMPLES
-import SimpleRootRedirect from '@/components/routing/SimpleRootRedirect';
+// CORREÇÃO: Usar redirect EMERGENCIAL simplificado
+import EmergencyRootRedirect from '@/components/routing/EmergencyRootRedirect';
 
 export const AppRoutes = createBrowserRouter([
-  // Rota raiz com redirecionamento SIMPLES
+  // Rota raiz com redirecionamento EMERGENCIAL
   {
     path: "/",
-    element: <SimpleRootRedirect />
+    element: <EmergencyRootRedirect />
   },
 
   // Rotas públicas
@@ -56,7 +56,7 @@ export const AppRoutes = createBrowserRouter([
     element: <RegisterPage />
   },
 
-  // Rotas de membros (usando componentes SIMPLES)
+  // Rotas de membros
   ...memberRoutes,
 
   // Rotas de admin

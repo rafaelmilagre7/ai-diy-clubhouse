@@ -31,7 +31,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setError(null);
   };
 
-  // CORREÇÃO: Função simplificada para carregar perfil (sem retry infinito)
+  // CORREÇÃO: Função simplificada para carregar perfil (tentativa única)
   const loadUserProfile = async (userId: string, email?: string) => {
     try {
       setError(null);
@@ -59,12 +59,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       
     } catch (error) {
       logger.error('[AUTH] Erro ao carregar perfil:', error);
-      // CORREÇÃO: Não definir erro como crítico, apenas continuar
       setProfile(null);
     }
   };
 
-  // CORREÇÃO: Auth state listener otimizado
+  // CORREÇÃO: Auth state listener simplificado e mais robusto
   useEffect(() => {
     logger.info('[AUTH] Inicializando AuthProvider');
     
@@ -82,20 +81,19 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setUser(session?.user ?? null);
         
         if (event === 'SIGNED_IN' && session?.user) {
-          // CORREÇÃO: Pequeno delay para evitar conflitos
+          // CORREÇÃO: Delay maior para evitar conflitos
           setTimeout(() => {
             if (mounted) {
               loadUserProfile(session.user.id, session.user.email);
             }
-          }, 100);
+          }, 500);
         } else if (event === 'SIGNED_OUT') {
-          // CORREÇÃO: Limpeza completa no logout
           cleanupAuthState();
         }
       }
     );
 
-    // CORREÇÃO: Verificar sessão inicial com timeout reduzido
+    // CORREÇÃO: Verificar sessão inicial
     const checkInitialSession = async () => {
       try {
         const { data: { session }, error } = await supabase.auth.getSession();
@@ -117,7 +115,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             if (mounted) {
               loadUserProfile(session.user.id, session.user.email);
             }
-          }, 200);
+          }, 1000);
         }
         
       } catch (error) {
@@ -132,13 +130,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
     };
 
-    // CORREÇÃO: Timeout de inicialização mais agressivo (1.5s)
+    // CORREÇÃO: Timeout aumentado para 8 segundos
     initTimeout = setTimeout(() => {
       if (mounted && isLoading) {
-        logger.warn('[AUTH] Timeout de inicialização, finalizando loading');
+        logger.warn('[AUTH] Timeout de inicialização (8s), finalizando loading');
         setIsLoading(false);
       }
-    }, 1500);
+    }, 8000);
 
     checkInitialSession();
 
@@ -151,7 +149,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     };
   }, []);
 
-  // CORREÇÃO: Função de refresh manual otimizada
+  // Função de refresh manual otimizada
   const refreshProfile = async () => {
     if (user) {
       await loadUserProfile(user.id, user.email);
