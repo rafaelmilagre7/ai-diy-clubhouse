@@ -162,7 +162,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setUser,
     setProfile,
     setIsLoading,
-    ...authMethods
+    signIn: authMethods.signIn,
+    signUp: authMethods.signUp,
+    signOut: authMethods.signOut,
+    signInAsMember: authMethods.signInAsMember,
+    signInAsAdmin: authMethods.signInAsAdmin,
   };
 
   return (
