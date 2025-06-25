@@ -15,7 +15,7 @@ interface SmartTimeoutReturn {
 }
 
 export const useSmartTimeout = (config: SmartTimeoutConfig): SmartTimeoutReturn => {
-  const timeoutsRef = useRef<Map<number, NodeJS.Timeout>>(new Map());
+  const timeoutsRef = useRef<Map<number, number>>(new Map());
   
   const startTimeout = useCallback((type: 'auth' | 'profile' | 'onboarding', callback: () => void): number => {
     const timeouts = {
@@ -27,7 +27,7 @@ export const useSmartTimeout = (config: SmartTimeoutConfig): SmartTimeoutReturn 
     const delay = timeouts[type];
     const timeoutId = Date.now();
     
-    const timeout = setTimeout(() => {
+    const timeout = window.setTimeout(() => {
       logger.warn(`[SMART-TIMEOUT] ${config.context} - ${type} timeout (${delay}ms)`);
       timeoutsRef.current.delete(timeoutId);
       callback();
@@ -39,16 +39,16 @@ export const useSmartTimeout = (config: SmartTimeoutConfig): SmartTimeoutReturn 
     return timeoutId;
   }, [config]);
 
-  const clearTimeout = useCallback((timeoutId: number | null) => {
+  const clearTimeoutFn = useCallback((timeoutId: number | null) => {
     if (!timeoutId || !timeoutsRef.current.has(timeoutId)) return;
     
     const timeout = timeoutsRef.current.get(timeoutId);
     if (timeout) {
-      clearTimeout(timeout);
+      window.clearTimeout(timeout);
       timeoutsRef.current.delete(timeoutId);
       logger.info(`[SMART-TIMEOUT] ${config.context} - timeout limpo`, { timeoutId });
     }
   }, [config.context]);
 
-  return { startTimeout, clearTimeout };
+  return { startTimeout, clearTimeout: clearTimeoutFn };
 };
