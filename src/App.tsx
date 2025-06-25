@@ -9,16 +9,19 @@ import { AppRoutes } from '@/routes/AppRoutes';
 function App() {
   const { user, isLoading: authLoading } = useAuth();
   const { toast } = useToast()
+  const [logOnce, setLogOnce] = useState(false);
 
   useEffect(() => {
-    if (authLoading) {
-      console.log('[APP] Autenticação ainda carregando...');
-    } else if (user) {
-      console.log('[APP] Usuário autenticado:', user.email);
-    } else {
-      console.log('[APP] Nenhum usuário autenticado.');
+    // Log apenas uma vez para evitar spam
+    if (!logOnce && !authLoading) {
+      if (user) {
+        console.log('[APP] Usuário autenticado:', user.email);
+      } else {
+        console.log('[APP] Nenhum usuário autenticado.');
+      }
+      setLogOnce(true);
     }
-  }, [user, authLoading]);
+  }, [user, authLoading, logOnce]);
 
   return (
     <>

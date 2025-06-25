@@ -1,256 +1,181 @@
 
-import React, { createContext, useContext, useEffect, useState } from 'react';
-import { User, Session } from '@supabase/supabase-js';
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
+import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
 import { UserProfile } from '@/lib/supabase';
+import { AuthContextType } from './types';
 import { useAuthMethods } from './hooks/useAuthMethods';
+import { fetchUserProfile } from './utils';
 
-const AuthContext = createContext<{
-  user: User | null;
-  session: Session | null;
-  profile: UserProfile | null;
-  isAdmin: boolean;
-  isFormacao: boolean;
-  isLoading: boolean;
-  authError: Error | null;
-  signIn: (email: string, password: string) => Promise<{ error: any }>;
-  signUp: (email: string, password: string, metadata?: any) => Promise<{ error: any }>;
-  signOut: () => Promise<{ success: boolean; error: any }>;
-  signInAsMember: (email: string, password: string) => Promise<{ error: any }>;
-  signInAsAdmin: (email: string, password: string) => Promise<{ error: any }>;
-  setUser: (user: User | null) => void;
-  setSession: (session: Session | null) => void;
-  setProfile: (profile: UserProfile | null) => void;
-  setIsLoading: (loading: boolean) => void;
-} | undefined>(undefined);
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
-};
+// Cache simples para perfis
+const profileCache = new Map<string, { profile: UserProfile; timestamp: number }>();
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutos
 
-interface AuthProviderProps {
-  children: React.ReactNode;
-}
-
-export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [session, setSession] = useState<Session | null>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [authError, setAuthError] = useState<Error | null>(null);
+  
+  // Refs para controle de estado
+  const initializationRef = useRef(false);
+  const profileFetchRef = useRef<string>('');
 
-  const { signIn, signOut, signInAsMember, signInAsAdmin } = useAuthMethods({
-    setIsLoading,
-  });
+  // Auth methods
+  const authMethods = useAuthMethods({ setIsLoading });
 
-  // Função signUp adicionada
-  const signUp = async (email: string, password: string, metadata?: any) => {
+  // Função para buscar perfil com cache
+  const fetchProfileWithCache = async (userId: string) => {
     try {
-      setIsLoading(true);
-      const redirectUrl = `${window.location.origin}/`;
-      
-      const { error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          emailRedirectTo: redirectUrl,
-          data: metadata || {}
-        }
-      });
-      
-      return { error };
-    } catch (error: any) {
-      console.error('[AUTH] Erro no signUp:', error);
-      return { error };
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // CORREÇÃO: Verificar admin baseado na role_id do banco
-  const isAdmin = React.useMemo(() => {
-    if (!profile) return false;
-    
-    // Verificar se tem role de admin via user_roles
-    if (profile.user_roles?.name === 'admin') {
-      console.log(`[AUTH] Usuário ${profile.email} identificado como admin via role_id`);
-      return true;
-    }
-    
-    // Verificar se tem permissões de admin
-    if (profile.user_roles?.permissions?.all === true) {
-      console.log(`[AUTH] Usuário ${profile.email} identificado como admin via permissions`);
-      return true;
-    }
-    
-    console.log(`[AUTH] Usuário ${profile.email} não é admin`, {
-      role_id: profile.role_id,
-      user_roles: profile.user_roles
-    });
-    return false;
-  }, [profile]);
-
-  const isFormacao = profile?.user_roles?.name === 'formacao';
-
-  // Função para carregar perfil de forma simplificada
-  const loadUserProfile = async (userId: string) => {
-    try {
-      console.log(`[AUTH] Carregando perfil para usuário: ${userId}`);
-      
-      const { data, error } = await supabase
-        .from('profiles')
-        .select(`
-          *,
-          user_roles:role_id (
-            id,
-            name,
-            description,
-            permissions,
-            is_system
-          )
-        `)
-        .eq('id', userId as any)
-        .single();
-
-      if (error) {
-        console.error('[AUTH] Erro ao carregar perfil:', error);
-        throw error;
+      // Verificar cache primeiro
+      const cached = profileCache.get(userId);
+      if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
+        console.log('[AUTH] Cache hit para perfil:', userId);
+        setProfile(cached.profile);
+        return cached.profile;
       }
 
-      if (data) {
-        const profileData = {
-          ...data as any,
-          email: (data as any).email || user?.email || '',
-        } as any;
-        
-        console.log(`[AUTH] Perfil carregado:`, {
-          email: profileData.email,
-          role_id: profileData.role_id,
-          user_roles: profileData.user_roles
+      // Evitar múltiplas chamadas simultâneas
+      if (profileFetchRef.current === userId) {
+        return;
+      }
+      profileFetchRef.current = userId;
+
+      console.log('[AUTH] Buscando perfil para:', userId);
+      const userProfile = await fetchUserProfile(userId);
+      
+      if (userProfile) {
+        // Atualizar cache
+        profileCache.set(userId, {
+          profile: userProfile,
+          timestamp: Date.now()
         });
-        
-        setProfile(profileData);
+        setProfile(userProfile);
+        console.log('[AUTH] Perfil carregado e cached:', userProfile.email);
       }
+      
+      return userProfile;
     } catch (error) {
-      console.error('[AUTH] Erro ao carregar perfil:', error);
-      if (user?.email) {
-        // Perfil mínimo para usuários sem dados completos
-        setProfile({
-          id: userId,
-          email: user.email,
-          name: null,
-          avatar_url: null,
-          company_name: null,
-          industry: null,
-          role_id: null,
-          role: 'member' as any,
-          created_at: new Date().toISOString(),
-          onboarding_completed: false,
-          onboarding_completed_at: null,
-        } as any);
-      }
+      console.error('[AUTH] Erro ao buscar perfil:', error);
+      setAuthError(error as Error);
+    } finally {
+      profileFetchRef.current = '';
     }
   };
 
-  // Inicialização simplificada
+  // Inicialização da autenticação
   useEffect(() => {
-    console.log('[AUTH] Inicializando autenticação');
-    
-    let mounted = true;
+    if (initializationRef.current) return;
+    initializationRef.current = true;
 
     const initializeAuth = async () => {
       try {
-        // 1. Buscar sessão atual
-        const { data: { session }, error } = await supabase.auth.getSession();
+        console.log('[AUTH] Inicializando autenticação...');
+
+        // Configurar listener primeiro
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(
+          async (event, currentSession) => {
+            console.log('[AUTH] Estado mudou:', event);
+            
+            setSession(currentSession);
+            setUser(currentSession?.user ?? null);
+            
+            if (event === 'SIGNED_IN' && currentSession?.user) {
+              // Buscar perfil com delay mínimo para evitar race conditions
+              setTimeout(() => {
+                fetchProfileWithCache(currentSession.user.id);
+              }, 100);
+            } else if (event === 'SIGNED_OUT') {
+              setProfile(null);
+              setAuthError(null);
+              // Limpar cache no logout
+              profileCache.clear();
+            }
+          }
+        );
+
+        // Verificar sessão atual
+        const { data: { session: currentSession }, error } = await supabase.auth.getSession();
         
         if (error) {
-          console.error('[AUTH] Erro ao buscar sessão:', error);
-          setAuthError(error);
+          throw error;
         }
 
-        if (!mounted) return;
-
-        // 2. Atualizar estados da sessão
-        setSession(session);
-        setUser(session?.user || null);
-
-        // 3. Se há usuário, carregar perfil
-        if (session?.user) {
-          await loadUserProfile(session.user.id);
+        if (currentSession?.user) {
+          console.log('[AUTH] Sessão existente encontrada');
+          setSession(currentSession);
+          setUser(currentSession.user);
+          
+          // Buscar perfil para sessão existente
+          await fetchProfileWithCache(currentSession.user.id);
         }
 
-        // 4. Marcar como carregado apenas no final
-        if (mounted) {
-          setIsLoading(false);
-        }
+        // Cleanup function
+        return () => subscription.unsubscribe();
+        
       } catch (error) {
         console.error('[AUTH] Erro na inicialização:', error);
-        if (mounted) {
-          setAuthError(error as Error);
+        setAuthError(error as Error);
+      } finally {
+        // Timeout de segurança para loading
+        setTimeout(() => {
           setIsLoading(false);
-        }
+        }, 3000); // Reduzido de 15s para 3s
       }
     };
 
-    // Configurar listener de mudanças de auth
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        console.log(`[AUTH] Evento: ${event}`);
-        
-        if (!mounted) return;
-
-        setSession(session);
-        setUser(session?.user || null);
-        
-        if (event === 'SIGNED_IN' && session?.user) {
-          // Defer para evitar deadlocks
-          setTimeout(() => {
-            if (mounted) {
-              loadUserProfile(session.user.id);
-            }
-          }, 0);
-        } else if (event === 'SIGNED_OUT') {
-          setProfile(null);
-          setAuthError(null);
-        }
-      }
-    );
-
-    // Inicializar
-    initializeAuth();
-
+    const cleanup = initializeAuth();
+    
     return () => {
-      mounted = false;
-      subscription.unsubscribe();
+      cleanup.then(fn => fn && fn());
     };
   }, []);
 
-  const value = {
-    user,
+  // Timeout adicional de segurança
+  useEffect(() => {
+    const safetyTimeout = setTimeout(() => {
+      if (isLoading) {
+        console.warn('[AUTH] Timeout de segurança - forçando fim do loading');
+        setIsLoading(false);
+      }
+    }, 5000); // 5 segundos máximo
+
+    return () => clearTimeout(safetyTimeout);
+  }, [isLoading]);
+
+  // Computar propriedades derivadas
+  const isAdmin = profile?.user_roles?.name === 'admin';
+  const isFormacao = profile?.user_roles?.name === 'formacao';
+
+  const contextValue: AuthContextType = {
     session,
+    user,
     profile,
     isAdmin,
     isFormacao,
     isLoading,
     authError,
-    signIn,
-    signUp,
-    signOut,
-    signInAsMember,
-    signInAsAdmin,
-    setUser,
     setSession,
+    setUser,
     setProfile,
     setIsLoading,
+    ...authMethods
   };
 
   return (
-    <AuthContext.Provider value={value}>
+    <AuthContext.Provider value={contextValue}>
       {children}
     </AuthContext.Provider>
   );
+};
+
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (context === undefined) {
+    throw new Error('useAuth deve ser usado dentro de um AuthProvider');
+  }
+  return context;
 };
