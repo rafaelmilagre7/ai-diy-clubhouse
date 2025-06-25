@@ -1,36 +1,51 @@
 
-import { createBrowserRouter } from "react-router-dom";
-import { Suspense, lazy } from "react";
+import { createBrowserRouter, Navigate } from "react-router-dom";
+import { lazy, Suspense } from "react";
 import { RouteProtection } from "@/components/routing/RouteProtection";
 import { SmartRedirect } from "@/components/routing/SmartRedirect";
+import Layout from "@/components/layout/Layout";
+import FormacaoLayout from "@/components/layout/formacao/FormacaoLayout";
 import LoadingScreen from "@/components/common/LoadingScreen";
 
-// Lazy load pages for better performance
+// Lazy load components
 const LoginPage = lazy(() => import("@/pages/auth/LoginPage"));
 const RegisterPage = lazy(() => import("@/pages/auth/RegisterPage"));
-const ResetPassword = lazy(() => import("@/pages/auth/ResetPassword"));
-const SetNewPassword = lazy(() => import("@/pages/auth/SetNewPassword"));
-const OnboardingPage = lazy(() => import("@/pages/OnboardingPage"));
+const ResetPasswordPage = lazy(() => import("@/pages/auth/ResetPasswordPage"));
+const SetNewPasswordPage = lazy(() => import("@/pages/auth/SetNewPasswordPage"));
+const OnboardingPage = lazy(() => import("@/pages/auth/OnboardingPage"));
 const DashboardPage = lazy(() => import("@/pages/DashboardPage"));
+const ProfilePage = lazy(() => import("@/pages/member/Profile"));
+const SolutionsPage = lazy(() => import("@/pages/member/Solutions"));
+const SolutionDetailPage = lazy(() => import("@/pages/member/SolutionDetail"));
+const ToolsPage = lazy(() => import("@/pages/member/Tools"));
+const ToolDetailPage = lazy(() => import("@/pages/member/ToolDetail"));
+const LearningPage = lazy(() => import("@/pages/member/Learning"));
+const LearningCoursePage = lazy(() => import("@/pages/member/LearningCourse"));
+const LearningLessonPage = lazy(() => import("@/pages/member/LearningLesson"));
+const LearningCertificatesPage = lazy(() => import("@/pages/member/LearningCertificates"));
+const SuggestionsPage = lazy(() => import("@/pages/member/Suggestions"));
+const SuggestionDetailPage = lazy(() => import("@/pages/member/SuggestionDetail"));
+const EventsPage = lazy(() => import("@/pages/member/Events"));
+const BenefitsPage = lazy(() => import("@/pages/member/Benefits"));
 
-// Member Layout and Pages
-const Layout = lazy(() => import("@/components/layout/Layout"));
-
-// Admin Pages
+// Admin pages
 const AdminDashboard = lazy(() => import("@/pages/admin/AdminDashboard"));
 const AdminUsers = lazy(() => import("@/pages/admin/AdminUsers"));
+const AdminUserDetail = lazy(() => import("@/pages/admin/AdminUserDetail"));
+const AdminInvites = lazy(() => import("@/pages/admin/AdminInvites"));
+const AdminRoles = lazy(() => import("@/pages/admin/AdminRoles"));
 const AdminTools = lazy(() => import("@/pages/admin/AdminTools"));
 const AdminSolutions = lazy(() => import("@/pages/admin/AdminSolutions"));
-const AdminAnalytics = lazy(() => import("@/pages/admin/AdminAnalytics"));
+const AdminSolutionEditor = lazy(() => import("@/pages/admin/AdminSolutionEditor"));
+const AdminEvents = lazy(() => import("@/pages/admin/AdminEvents"));
 const AdminSuggestions = lazy(() => import("@/pages/admin/AdminSuggestions"));
 const AdminSuggestionDetail = lazy(() => import("@/pages/admin/AdminSuggestionDetail"));
-const AdminEvents = lazy(() => import("@/pages/admin/AdminEvents"));
-const AdminRoles = lazy(() => import("@/pages/admin/AdminRoles"));
-const AdminInvites = lazy(() => import("@/pages/admin/AdminInvites"));
+const AdminAnalytics = lazy(() => import("@/pages/admin/AdminAnalytics"));
+const AdminBenefits = lazy(() => import("@/pages/admin/AdminBenefits"));
 const AdminCommunications = lazy(() => import("@/pages/admin/AdminCommunications"));
 const AdminSecurity = lazy(() => import("@/pages/admin/AdminSecurity"));
 
-// Formação/LMS Pages
+// Formacao pages
 const FormacaoDashboard = lazy(() => import("@/pages/formacao/FormacaoDashboard"));
 const FormacaoCursos = lazy(() => import("@/pages/formacao/FormacaoCursos"));
 const FormacaoAulas = lazy(() => import("@/pages/formacao/FormacaoAulas"));
@@ -38,293 +53,499 @@ const FormacaoNovaAula = lazy(() => import("@/pages/formacao/FormacaoNovaAula"))
 const FormacaoMateriais = lazy(() => import("@/pages/formacao/FormacaoMateriais"));
 const FormacaoConfiguracoes = lazy(() => import("@/pages/formacao/FormacaoConfiguracoes"));
 
-const PageLoader = ({ children }: { children: React.ReactNode }) => (
-  <Suspense fallback={<LoadingScreen />}>
+// Component wrapper for suspense
+const SuspenseWrapper = ({ children }: { children: React.ReactNode }) => (
+  <Suspense fallback={<LoadingScreen message="Carregando página..." />}>
     {children}
   </Suspense>
 );
 
 export const AppRoutes = createBrowserRouter([
+  // Public routes
   {
     path: "/",
-    element: <SmartRedirect />,
+    element: <SmartRedirect />
   },
   {
     path: "/login",
     element: (
       <RouteProtection level="public">
-        <PageLoader>
+        <SuspenseWrapper>
           <LoginPage />
-        </PageLoader>
+        </SuspenseWrapper>
       </RouteProtection>
-    ),
+    )
   },
   {
     path: "/register",
     element: (
       <RouteProtection level="public">
-        <PageLoader>
+        <SuspenseWrapper>
           <RegisterPage />
-        </PageLoader>
+        </SuspenseWrapper>
       </RouteProtection>
-    ),
+    )
   },
   {
     path: "/reset-password",
     element: (
       <RouteProtection level="public">
-        <PageLoader>
-          <ResetPassword />
-        </PageLoader>
+        <SuspenseWrapper>
+          <ResetPasswordPage />
+        </SuspenseWrapper>
       </RouteProtection>
-    ),
+    )
   },
   {
     path: "/set-new-password",
     element: (
       <RouteProtection level="public">
-        <PageLoader>
-          <SetNewPassword />
-        </PageLoader>
+        <SuspenseWrapper>
+          <SetNewPasswordPage />
+        </SuspenseWrapper>
       </RouteProtection>
-    ),
+    )
   },
   {
     path: "/onboarding",
     element: (
       <RouteProtection level="authenticated">
-        <PageLoader>
+        <SuspenseWrapper>
           <OnboardingPage />
-        </PageLoader>
+        </SuspenseWrapper>
       </RouteProtection>
-    ),
+    )
   },
+
+  // Member routes with Layout
   {
     path: "/dashboard",
     element: (
       <RouteProtection level="authenticated">
-        <PageLoader>
-          <Layout>
+        <Layout>
+          <SuspenseWrapper>
             <DashboardPage />
-          </Layout>
-        </PageLoader>
+          </SuspenseWrapper>
+        </Layout>
       </RouteProtection>
-    ),
+    )
   },
+  {
+    path: "/profile",
+    element: (
+      <RouteProtection level="authenticated">
+        <Layout>
+          <SuspenseWrapper>
+            <ProfilePage />
+          </SuspenseWrapper>
+        </Layout>
+      </RouteProtection>
+    )
+  },
+  {
+    path: "/solutions",
+    element: (
+      <RouteProtection level="authenticated">
+        <Layout>
+          <SuspenseWrapper>
+            <SolutionsPage />
+          </SuspenseWrapper>
+        </Layout>
+      </RouteProtection>
+    )
+  },
+  {
+    path: "/solutions/:id",
+    element: (
+      <RouteProtection level="authenticated">
+        <Layout>
+          <SuspenseWrapper>
+            <SolutionDetailPage />
+          </SuspenseWrapper>
+        </Layout>
+      </RouteProtection>
+    )
+  },
+  {
+    path: "/tools",
+    element: (
+      <RouteProtection level="authenticated">
+        <Layout>
+          <SuspenseWrapper>
+            <ToolsPage />
+          </SuspenseWrapper>
+        </Layout>
+      </RouteProtection>
+    )
+  },
+  {
+    path: "/tools/:id",
+    element: (
+      <RouteProtection level="authenticated">
+        <Layout>
+          <SuspenseWrapper>
+            <ToolDetailPage />
+          </SuspenseWrapper>
+        </Layout>
+      </RouteProtection>
+    )
+  },
+  {
+    path: "/learning",
+    element: (
+      <RouteProtection level="authenticated">
+        <Layout>
+          <SuspenseWrapper>
+            <LearningPage />
+          </SuspenseWrapper>
+        </Layout>
+      </RouteProtection>
+    )
+  },
+  {
+    path: "/learning/courses/:id",
+    element: (
+      <RouteProtection level="authenticated">
+        <Layout>
+          <SuspenseWrapper>
+            <LearningCoursePage />
+          </SuspenseWrapper>
+        </Layout>
+      </RouteProtection>
+    )
+  },
+  {
+    path: "/learning/lessons/:id",
+    element: (
+      <RouteProtection level="authenticated">
+        <Layout>
+          <SuspenseWrapper>
+            <LearningLessonPage />
+          </SuspenseWrapper>
+        </Layout>
+      </RouteProtection>
+    )
+  },
+  {
+    path: "/learning/certificates",
+    element: (
+      <RouteProtection level="authenticated">
+        <Layout>
+          <SuspenseWrapper>
+            <LearningCertificatesPage />
+          </SuspenseWrapper>
+        </Layout>
+      </RouteProtection>
+    )
+  },
+  {
+    path: "/suggestions",
+    element: (
+      <RouteProtection level="authenticated">
+        <Layout>
+          <SuspenseWrapper>
+            <SuggestionsPage />
+          </SuspenseWrapper>
+        </Layout>
+      </RouteProtection>
+    )
+  },
+  {
+    path: "/suggestions/:id",
+    element: (
+      <RouteProtection level="authenticated">
+        <Layout>
+          <SuspenseWrapper>
+            <SuggestionDetailPage />
+          </SuspenseWrapper>
+        </Layout>
+      </RouteProtection>
+    )
+  },
+  {
+    path: "/events",
+    element: (
+      <RouteProtection level="authenticated">
+        <Layout>
+          <SuspenseWrapper>
+            <EventsPage />
+          </SuspenseWrapper>
+        </Layout>
+      </RouteProtection>
+    )
+  },
+  {
+    path: "/benefits",
+    element: (
+      <RouteProtection level="authenticated">
+        <Layout>
+          <SuspenseWrapper>
+            <BenefitsPage />
+          </SuspenseWrapper>
+        </Layout>
+      </RouteProtection>
+    )
+  },
+
+  // Admin routes
   {
     path: "/admin",
     element: (
       <RouteProtection level="admin">
-        <PageLoader>
-          <Layout>
+        <Layout>
+          <SuspenseWrapper>
             <AdminDashboard />
-          </Layout>
-        </PageLoader>
+          </SuspenseWrapper>
+        </Layout>
       </RouteProtection>
-    ),
+    )
   },
   {
     path: "/admin/users",
     element: (
       <RouteProtection level="admin">
-        <PageLoader>
-          <Layout>
+        <Layout>
+          <SuspenseWrapper>
             <AdminUsers />
-          </Layout>
-        </PageLoader>
+          </SuspenseWrapper>
+        </Layout>
       </RouteProtection>
-    ),
+    )
   },
   {
-    path: "/admin/tools",
+    path: "/admin/users/:id",
     element: (
       <RouteProtection level="admin">
-        <PageLoader>
-          <Layout>
-            <AdminTools />
-          </Layout>
-        </PageLoader>
+        <Layout>
+          <SuspenseWrapper>
+            <AdminUserDetail />
+          </SuspenseWrapper>
+        </Layout>
       </RouteProtection>
-    ),
-  },
-  {
-    path: "/admin/solutions",
-    element: (
-      <RouteProtection level="admin">
-        <PageLoader>
-          <Layout>
-            <AdminSolutions />
-          </Layout>
-        </PageLoader>
-      </RouteProtection>
-    ),
-  },
-  {
-    path: "/admin/analytics",
-    element: (
-      <RouteProtection level="admin">
-        <PageLoader>
-          <Layout>
-            <AdminAnalytics />
-          </Layout>
-        </PageLoader>
-      </RouteProtection>
-    ),
-  },
-  {
-    path: "/admin/suggestions",
-    element: (
-      <RouteProtection level="admin">
-        <PageLoader>
-          <Layout>
-            <AdminSuggestions />
-          </Layout>
-        </PageLoader>
-      </RouteProtection>
-    ),
-  },
-  {
-    path: "/admin/suggestions/:id",
-    element: (
-      <RouteProtection level="admin">
-        <PageLoader>
-          <Layout>
-            <AdminSuggestionDetail />
-          </Layout>
-        </PageLoader>
-      </RouteProtection>
-    ),
-  },
-  {
-    path: "/admin/events",
-    element: (
-      <RouteProtection level="admin">
-        <PageLoader>
-          <Layout>
-            <AdminEvents />
-          </Layout>
-        </PageLoader>
-      </RouteProtection>
-    ),
-  },
-  {
-    path: "/admin/roles",
-    element: (
-      <RouteProtection level="admin">
-        <PageLoader>
-          <Layout>
-            <AdminRoles />
-          </Layout>
-        </PageLoader>
-      </RouteProtection>
-    ),
+    )
   },
   {
     path: "/admin/invites",
     element: (
       <RouteProtection level="admin">
-        <PageLoader>
-          <Layout>
+        <Layout>
+          <SuspenseWrapper>
             <AdminInvites />
-          </Layout>
-        </PageLoader>
+          </SuspenseWrapper>
+        </Layout>
       </RouteProtection>
-    ),
+    )
+  },
+  {
+    path: "/admin/roles",
+    element: (
+      <RouteProtection level="admin">
+        <Layout>
+          <SuspenseWrapper>
+            <AdminRoles />
+          </SuspenseWrapper>
+        </Layout>
+      </RouteProtection>
+    )
+  },
+  {
+    path: "/admin/tools",
+    element: (
+      <RouteProtection level="admin">
+        <Layout>
+          <SuspenseWrapper>
+            <AdminTools />
+          </SuspenseWrapper>
+        </Layout>
+      </RouteProtection>
+    )
+  },
+  {
+    path: "/admin/solutions",
+    element: (
+      <RouteProtection level="admin">
+        <Layout>
+          <SuspenseWrapper>
+            <AdminSolutions />
+          </SuspenseWrapper>
+        </Layout>
+      </RouteProtection>
+    )
+  },
+  {
+    path: "/admin/solutions/:id",
+    element: (
+      <RouteProtection level="admin">
+        <Layout>
+          <SuspenseWrapper>
+            <AdminSolutionEditor />
+          </SuspenseWrapper>
+        </Layout>
+      </RouteProtection>
+    )
+  },
+  {
+    path: "/admin/events",
+    element: (
+      <RouteProtection level="admin">
+        <Layout>
+          <SuspenseWrapper>
+            <AdminEvents />
+          </SuspenseWrapper>
+        </Layout>
+      </RouteProtection>
+    )
+  },
+  {
+    path: "/admin/suggestions",
+    element: (
+      <RouteProtection level="admin">
+        <Layout>
+          <SuspenseWrapper>
+            <AdminSuggestions />
+          </SuspenseWrapper>
+        </Layout>
+      </RouteProtection>
+    )
+  },
+  {
+    path: "/admin/suggestions/:id",
+    element: (
+      <RouteProtection level="admin">
+        <Layout>
+          <SuspenseWrapper>
+            <AdminSuggestionDetail />
+          </SuspenseWrapper>
+        </Layout>
+      </RouteProtection>
+    )
+  },
+  {
+    path: "/admin/analytics",
+    element: (
+      <RouteProtection level="admin">
+        <Layout>
+          <SuspenseWrapper>
+            <AdminAnalytics />
+          </SuspenseWrapper>
+        </Layout>
+      </RouteProtection>
+    )
+  },
+  {
+    path: "/admin/benefits",
+    element: (
+      <RouteProtection level="admin">
+        <Layout>
+          <SuspenseWrapper>
+            <AdminBenefits />
+          </SuspenseWrapper>
+        </Layout>
+      </RouteProtection>
+    )
   },
   {
     path: "/admin/communications",
     element: (
       <RouteProtection level="admin">
-        <PageLoader>
-          <Layout>
+        <Layout>
+          <SuspenseWrapper>
             <AdminCommunications />
-          </Layout>
-        </PageLoader>
+          </SuspenseWrapper>
+        </Layout>
       </RouteProtection>
-    ),
+    )
   },
   {
     path: "/admin/security",
     element: (
       <RouteProtection level="admin">
-        <PageLoader>
-          <Layout>
+        <Layout>
+          <SuspenseWrapper>
             <AdminSecurity />
-          </Layout>
-        </PageLoader>
+          </SuspenseWrapper>
+        </Layout>
       </RouteProtection>
-    ),
+    )
   },
+
+  // Formacao routes
   {
     path: "/formacao",
     element: (
       <RouteProtection level="formacao">
-        <PageLoader>
-          <Layout>
+        <FormacaoLayout>
+          <SuspenseWrapper>
             <FormacaoDashboard />
-          </Layout>
-        </PageLoader>
+          </SuspenseWrapper>
+        </FormacaoLayout>
       </RouteProtection>
-    ),
+    )
   },
   {
     path: "/formacao/cursos",
     element: (
       <RouteProtection level="formacao">
-        <PageLoader>
-          <Layout>
+        <FormacaoLayout>
+          <SuspenseWrapper>
             <FormacaoCursos />
-          </Layout>
-        </PageLoader>
+          </SuspenseWrapper>
+        </FormacaoLayout>
       </RouteProtection>
-    ),
+    )
   },
   {
     path: "/formacao/aulas",
     element: (
       <RouteProtection level="formacao">
-        <PageLoader>
-          <Layout>
+        <FormacaoLayout>
+          <SuspenseWrapper>
             <FormacaoAulas />
-          </Layout>
-        </PageLoader>
+          </SuspenseWrapper>
+        </FormacaoLayout>
       </RouteProtection>
-    ),
+    )
   },
   {
     path: "/formacao/aulas/nova",
     element: (
       <RouteProtection level="formacao">
-        <PageLoader>
-          <Layout>
+        <FormacaoLayout>
+          <SuspenseWrapper>
             <FormacaoNovaAula />
-          </Layout>
-        </PageLoader>
+          </SuspenseWrapper>
+        </FormacaoLayout>
       </RouteProtection>
-    ),
+    )
   },
   {
     path: "/formacao/materiais",
     element: (
       <RouteProtection level="formacao">
-        <PageLoader>
-          <Layout>
+        <FormacaoLayout>
+          <SuspenseWrapper>
             <FormacaoMateriais />
-          </Layout>
-        </PageLoader>
+          </SuspenseWrapper>
+        </FormacaoLayout>
       </RouteProtection>
-    ),
+    )
   },
   {
     path: "/formacao/configuracoes",
     element: (
       <RouteProtection level="formacao">
-        <PageLoader>
-          <Layout>
+        <FormacaoLayout>
+          <SuspenseWrapper>
             <FormacaoConfiguracoes />
-          </Layout>
-        </PageLoader>
+          </SuspenseWrapper>
+        </FormacaoLayout>
       </RouteProtection>
-    ),
+    )
   },
+
+  // Catch all - redirect to smart redirect
+  {
+    path: "*",
+    element: <SmartRedirect fallback="/dashboard" />
+  }
 ]);

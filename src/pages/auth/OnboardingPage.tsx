@@ -2,8 +2,8 @@
 import React from 'react';
 import AuthLayout from '@/components/auth/AuthLayout';
 
-const RegisterPage = () => {
+const OnboardingPage = () => {
   return <AuthLayout />;
 };
 
-export default RegisterPage;
+export default OnboardingPage;
