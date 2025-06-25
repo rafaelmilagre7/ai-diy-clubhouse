@@ -3,10 +3,7 @@ import React from "react";
 import { Solution } from "@/lib/supabase";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { 
-  Play, 
-  Clock, 
   Target, 
   TrendingUp, 
   Settings, 
@@ -16,7 +13,6 @@ import {
   Video
 } from "lucide-react";
 import { useSolutionStats } from "@/hooks/useSolutionStats";
-import { useNavigate } from "react-router-dom";
 
 interface SolutionSidebarProps {
   solution: Solution;
@@ -63,31 +59,9 @@ const getCategoryIcon = (category: string) => {
 
 export const SolutionSidebar = ({ solution }: SolutionSidebarProps) => {
   const { stats, loading: statsLoading } = useSolutionStats(solution.id);
-  const navigate = useNavigate();
-
-  const handleStartImplementation = () => {
-    navigate(`/implementation/${solution.id}/0`);
-  };
 
   return (
     <div className="space-y-6">
-      {/* Botão de Implementar */}
-      <Card className="bg-gradient-to-br from-viverblue/20 to-viverblue/5 border border-viverblue/30">
-        <CardContent className="p-6">
-          <Button
-            onClick={handleStartImplementation}
-            className="w-full bg-viverblue hover:bg-viverblue/90 text-white font-medium py-3"
-            size="lg"
-          >
-            <Play className="h-5 w-5 mr-2" />
-            Implementar Solução
-          </Button>
-          <p className="text-xs text-neutral-400 mt-3 text-center">
-            Comece agora a aplicar esta solução no seu contexto
-          </p>
-        </CardContent>
-      </Card>
-
       {/* Informações da Solução */}
       <Card className="bg-[#151823] border border-white/5">
         <CardHeader>

@@ -1,42 +1,24 @@
 
+import React from "react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { RouterProvider } from "react-router-dom";
-import { AppRoutes } from "@/routes/AppRoutes";
-import { Toaster } from "@/components/ui/sonner";
-import { useEffect } from "react";
-import { useAuth } from "@/contexts/auth";
-import { logger } from "@/utils/logger";
-import { useSecureSession } from "@/hooks/useSecureSession";
+import { Toaster } from "@/components/ui/toaster";
+
+import { AuthProvider } from "./contexts/auth/index";
+import { AppRoutes } from "./routes/AppRoutes";
+
+const queryClient = new QueryClient();
 
 function App() {
-  const { user, isLoading } = useAuth();
-  
-  // Configuração de sessão segura mais relaxada para desenvolvimento
-  useSecureSession({
-    maxIdleTime: import.meta.env.DEV ? 120 : 60, // 2h dev, 1h prod
-    checkInterval: import.meta.env.DEV ? 300 : 180, // 5 min dev, 3 min prod  
-    autoLogoutWarning: 15
-  });
-
-  useEffect(() => {
-    // Log simplificado para evitar overhead
-    if (import.meta.env.DEV) {
-      logger.info('[APP] App initialized', {
-        hasUser: !!user,
-        isLoading
-      });
-    }
-  }, [user, isLoading]);
-
   return (
-    <>
-      <RouterProvider router={AppRoutes} />
-      <Toaster 
-        position="top-right"
-        toastOptions={{
-          duration: 4000,
-        }}
-      />
-    </>
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <RouterProvider router={AppRoutes} />
+        <Toaster />
+        <ReactQueryDevtools initialIsOpen={false} />
+      </AuthProvider>
+    </QueryClientProvider>
   );
 }
 

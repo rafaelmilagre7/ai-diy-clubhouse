@@ -4,74 +4,59 @@ import { useOptimizedDashboard } from "./useOptimizedDashboard";
 import { useDashboardData } from "./useDashboardData";
 import { logger } from "@/utils/logger";
 
-// CORREÇÃO: Hook híbrido simplificado
 export const useEnhancedDashboard = () => {
-  // Tentar usar versão otimizada primeiro
   const optimized = useOptimizedDashboard();
-  
-  // Fallback para versão original
   const fallback = useDashboardData();
 
-  // CORREÇÃO: Lógica de fallback mais simples
+  // Lógica de fallback simplificada
   const shouldUseFallback = useMemo(() => {
-    // Se otimizado tem erro crítico, usar fallback
-    if (optimized.error && !optimized.isLoading) {
-      logger.warn('[ENHANCED] Usando fallback devido a erro', { error: optimized.error });
+    // Se há erro crítico no otimizado e não está carregando
+    if (optimized.error && !optimized.isLoading && optimized.totals.total === 0) {
+      logger.warn('[ENHANCED] Usando fallback devido a erro:', optimized.error);
       return true;
     }
-    
     return false;
-  }, [optimized.error, optimized.isLoading]);
+  }, [optimized.error, optimized.isLoading, optimized.totals.total]);
 
-  // CORREÇÃO: Sempre retornar dados válidos
   return useMemo(() => {
     if (shouldUseFallback) {
+      // Usar dados do fallback
       const { solutions, loading, error } = fallback;
+      const safeSolutions = Array.isArray(solutions) ? solutions : [];
       
-      const fallbackResult = {
+      return {
         active: [],
         completed: [],
-        recommended: solutions || [],
+        recommended: safeSolutions,
         isLoading: loading,
         error,
         totals: {
           active: 0,
           completed: 0,
-          recommended: solutions ? solutions.length : 0,
-          total: solutions ? solutions.length : 0
+          recommended: safeSolutions.length,
+          total: safeSolutions.length
         },
-        hasData: solutions ? solutions.length > 0 : false,
+        hasData: safeSolutions.length > 0,
         performance: {
           optimized: false,
           fallback: true
         }
       };
-      
-      logger.info('[ENHANCED] Retornando dados do fallback');
-      return fallbackResult;
     }
     
-    // CORREÇÃO: Garantir que sempre retorna dados válidos
-    const optimizedResult = {
-      active: optimized.active || [],
-      completed: optimized.completed || [],
-      recommended: optimized.recommended || [],
-      isLoading: optimized.isLoading || false,
-      error: optimized.error || null,
-      totals: optimized.totals || {
-        active: 0,
-        completed: 0,
-        recommended: 0,
-        total: 0
-      },
-      hasData: optimized.hasData || false,
+    // Usar dados otimizados
+    return {
+      active: optimized.active,
+      completed: optimized.completed,
+      recommended: optimized.recommended,
+      isLoading: optimized.isLoading,
+      error: optimized.error,
+      totals: optimized.totals,
+      hasData: optimized.hasData,
       performance: {
-        ...optimized.performance,
+        optimized: true,
         fallback: false
       }
     };
-    
-    logger.info('[ENHANCED] Retornando dados otimizados');
-    return optimizedResult;
   }, [shouldUseFallback, optimized, fallback]);
 };

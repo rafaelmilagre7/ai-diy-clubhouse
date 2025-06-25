@@ -3,7 +3,8 @@ import { SUPABASE_CONFIG } from '@/config/app';
 import { logger } from './logger';
 
 /**
- * Validador de Segurança Otimizado - Configuração mais leve para desenvolvimento
+ * Validador de Segurança Inteligente - Sistema Adaptativo por Ambiente
+ * Garante que não há credenciais expostas no código com validação contextual
  */
 
 interface SecurityValidationResult {
@@ -27,7 +28,7 @@ export class SecurityValidator {
   }
   
   /**
-   * Validação otimizada com menos overhead em desenvolvimento
+   * Validação completa de segurança com inteligência de ambiente
    */
   validateApplicationSecurity(): SecurityValidationResult {
     const issues: string[] = [];
@@ -48,23 +49,24 @@ export class SecurityValidator {
       };
     }
     
-    // Em desenvolvimento, validação mais relaxada
-    if (import.meta.env.DEV) {
-      return {
-        isSecure: true,
-        level: 'LOW',
-        issues: [],
-        recommendations: ['Ambiente de desenvolvimento - validações relaxadas'],
-        environment: 'Desenvolvimento'
-      };
-    }
-    
     // Outros ambientes: validação contextual
     if (!supabaseValidation.isValid) {
       issues.push(`Credenciais do Supabase não configuradas no ambiente ${environment}`);
       recommendations.push('Configure VITE_SUPABASE_URL e VITE_SUPABASE_ANON_KEY no .env.local');
       level = environment === 'Produção' ? 'CRITICAL' : 'HIGH';
     }
+    
+    // Verificar se não há credenciais hardcoded (apenas em ambientes não-Lovable)
+    this.checkForHardcodedCredentials(issues, recommendations, environment);
+    
+    // Validar ambiente de execução
+    if (import.meta.env.PROD && !SUPABASE_CONFIG.isConfigured()) {
+      issues.push('Aplicação em produção sem credenciais configuradas');
+      level = 'CRITICAL';
+    }
+    
+    // Verificar headers de segurança
+    this.validateSecurityHeaders(issues, recommendations, environment);
     
     const isSecure = issues.length === 0;
     
@@ -78,33 +80,68 @@ export class SecurityValidator {
   }
   
   /**
-   * Relatório otimizado que não bloqueia inicialização
+   * Verificação inteligente de credenciais hardcoded
    */
-  generateSecurityReport(): void {
-    // Executar de forma assíncrona em desenvolvimento
-    if (import.meta.env.DEV) {
-      setTimeout(() => {
-        const validation = this.validateApplicationSecurity();
-        
-        logger.info('🔒 [SEGURANÇA] Validação otimizada', {
-          isSecure: validation.isSecure,
-          level: validation.level,
-          environment: validation.environment,
-          developmentMode: true
-        });
-        
-        if (validation.issues.length > 0) {
-          logger.warn(`🚨 [SEGURANÇA] Problemas detectados:`, validation.issues);
-        }
-      }, 100); // Delay mínimo para não bloquear
+  private checkForHardcodedCredentials(
+    issues: string[], 
+    recommendations: string[], 
+    environment: string
+  ): void {
+    // Pular verificação no ambiente Lovable
+    if (SUPABASE_CONFIG.isLovableEnvironment()) {
       return;
     }
     
-    // Execução síncrona apenas em produção
+    // Esta verificação agora é mais inteligente
+    const hasValidEnvVars = import.meta.env.VITE_SUPABASE_URL && 
+                           import.meta.env.VITE_SUPABASE_ANON_KEY;
+    
+    const hasConfiguredValues = SUPABASE_CONFIG.url && SUPABASE_CONFIG.anonKey;
+    
+    // Se tem valores configurados mas não tem env vars, pode ser hardcoded
+    if (hasConfiguredValues && !hasValidEnvVars && environment !== 'Lovable') {
+      issues.push('Possíveis credenciais hardcoded detectadas');
+      recommendations.push('Mova todas as credenciais para variáveis de ambiente');
+    }
+  }
+  
+  /**
+   * Validar headers de segurança por ambiente
+   */
+  private validateSecurityHeaders(
+    issues: string[], 
+    recommendations: string[], 
+    environment: string
+  ): void {
+    if (environment === 'Produção') {
+      recommendations.push('Implementar Content Security Policy (CSP)');
+      recommendations.push('Configurar headers HSTS em produção');
+    }
+  }
+  
+  /**
+   * Relatório de segurança contextual
+   */
+  generateSecurityReport(): void {
+    if (!import.meta.env.DEV) return;
+    
     const validation = this.validateApplicationSecurity();
+    
+    logger.info('🔒 [RELATÓRIO DE SEGURANÇA] Validação inteligente por ambiente', {
+      isSecure: validation.isSecure,
+      level: validation.level,
+      issuesCount: validation.issues.length,
+      recommendationsCount: validation.recommendations.length,
+      environment: validation.environment,
+      autoConfigured: SUPABASE_CONFIG.isLovableEnvironment()
+    });
     
     if (validation.issues.length > 0) {
       logger.warn(`🚨 [SEGURANÇA] Problemas detectados no ambiente ${validation.environment}:`, validation.issues);
+    }
+    
+    if (validation.recommendations.length > 0) {
+      logger.info(`💡 [SEGURANÇA] Recomendações para ${validation.environment}:`, validation.recommendations);
     }
     
     if (validation.isSecure) {
@@ -113,18 +150,16 @@ export class SecurityValidator {
   }
   
   /**
-   * Monitoramento otimizado para desenvolvimento
+   * Monitoramento adaptativo por ambiente
    */
   startContinuousMonitoring(): void {
     if (!import.meta.env.DEV) return;
     
-    // Executar validação inicial de forma não-bloqueante
-    setTimeout(() => {
-      this.generateSecurityReport();
-    }, 1000);
+    // Executar validação inicial
+    this.generateSecurityReport();
     
-    // Monitoramento muito mais espaçado em desenvolvimento
-    const interval = 15 * 60 * 1000; // 15 minutos
+    // Monitoramento periódico adaptativo
+    const interval = SUPABASE_CONFIG.isLovableEnvironment() ? 10 * 60 * 1000 : 5 * 60 * 1000;
     
     setInterval(() => {
       const validation = this.validateApplicationSecurity();
@@ -138,10 +173,7 @@ export class SecurityValidator {
 // Instância singleton para uso global
 export const securityValidator = SecurityValidator.getInstance();
 
-// Auto-inicialização otimizada
+// Auto-inicialização do monitoramento em desenvolvimento
 if (import.meta.env.DEV) {
-  // Executar de forma não-bloqueante em desenvolvimento
-  setTimeout(() => {
-    securityValidator.startContinuousMonitoring();
-  }, 5000); // 5 segundos de delay
+  securityValidator.startContinuousMonitoring();
 }

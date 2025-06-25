@@ -5,12 +5,14 @@ import { useLogging } from "@/hooks/useLogging";
 
 export interface SolutionVideo {
   id: string;
+  name: string;
   title: string;
   url: string;
   description?: string;
-  video_type: string;
   thumbnail_url?: string;
+  duration?: string;
   duration_seconds?: number;
+  video_type?: string;
 }
 
 export const useSolutionVideos = (solutionId: string) => {
@@ -30,7 +32,6 @@ export const useSolutionVideos = (solutionId: string) => {
         setLoading(true);
         log("Buscando vídeos da solução", { solutionId });
 
-        // Buscar vídeos associados à solução através dos recursos
         const { data, error } = await supabase
           .from("solution_resources")
           .select("*")
@@ -45,12 +46,14 @@ export const useSolutionVideos = (solutionId: string) => {
 
         const formattedVideos = (data || []).map((video: any) => ({
           id: video.id,
-          title: video.name,
+          name: video.name || video.title || 'Vídeo sem título',
+          title: video.title || video.name || 'Vídeo sem título',
           url: video.url,
           description: video.description,
-          video_type: video.format || "youtube",
           thumbnail_url: video.thumbnail_url,
-          duration_seconds: video.duration_seconds
+          duration: video.duration,
+          duration_seconds: video.duration_seconds,
+          video_type: video.video_type || 'youtube'
         }));
 
         setVideos(formattedVideos);
