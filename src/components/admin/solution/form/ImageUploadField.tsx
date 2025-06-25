@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from "react";
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
-import { FileUpload } from "@/components/ui/file-upload";
+import { ImageUpload } from "@/components/common/ImageUpload";
 import { Card, CardContent } from "@/components/ui/card";
 import { Image as ImageIcon, X } from "lucide-react";
 import { Control } from "react-hook-form";
@@ -66,19 +66,15 @@ const ImageUploadField: React.FC<ImageUploadFieldProps> = ({
                     </Card>
                   </div>
                 ) : (
-                  <FileUpload
-                    bucketName="solution_files"
-                    folder="thumbnails"
-                    onUploadComplete={(url) => {
-                      // Atualizar o campo do formulário com a URL da imagem
+                  <ImageUpload
+                    value={field.value as string}
+                    onChange={(url) => {
                       field.onChange(url);
-                      // Atualizar o preview
                       setImagePreview(url);
                     }}
-                    accept="image/*"
-                    buttonText="Upload de Imagem"
-                    fieldLabel=""
-                    maxSize={5} // 5MB
+                    bucketName="solution_files"
+                    folderPath="thumbnails"
+                    maxSizeMB={5}
                   />
                 )}
               </div>

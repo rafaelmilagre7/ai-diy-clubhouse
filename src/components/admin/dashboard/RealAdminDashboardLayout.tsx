@@ -61,6 +61,3 @@ export const RealAdminDashboardLayout = ({
     </div>
   );
 };
-
-// Exportar também como AdminDashboardLayout para compatibilidade
-export { RealAdminDashboardLayout as AdminDashboardLayout };
