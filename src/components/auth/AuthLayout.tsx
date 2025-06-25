@@ -1,10 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card, CardContent } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { AlertCircle } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/contexts/auth';
 import LoginForm from './LoginForm';
 import SimpleRegisterForm from './SimpleRegisterForm';
@@ -13,8 +10,7 @@ const AuthLayout = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   
-  const [activeTab, setActiveTab] = useState('login');
-  const [message, setMessage] = useState('');
+  const [showRegister, setShowRegister] = useState(false);
 
   console.log('[AUTH-LAYOUT] Renderizando para usuário:', user ? user.email : 'não logado');
 
@@ -31,17 +27,21 @@ const AuthLayout = () => {
     navigate('/dashboard');
   };
 
+  const toggleMode = () => {
+    setShowRegister(!showRegister);
+  };
+
   // Se usuário está logado, mostrar loading enquanto redireciona
   if (user) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#0F111A] to-[#151823] p-4">
-        <Card className="w-full max-w-md bg-[#1A1E2E]/90 backdrop-blur-sm border-white/20">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 p-4">
+        <Card className="w-full max-w-md">
           <CardContent className="p-6 text-center">
-            <h2 className="text-xl font-semibold text-white mb-4">
+            <h2 className="text-xl font-semibold mb-4">
               Redirecionando...
             </h2>
             <div className="flex justify-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-viverblue"></div>
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
             </div>
           </CardContent>
         </Card>
@@ -50,50 +50,38 @@ const AuthLayout = () => {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#0F111A] to-[#151823] p-4">
-      <Card className="w-full max-w-md bg-[#1A1E2E]/90 backdrop-blur-sm border-white/20">
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 p-4">
+      <Card className="w-full max-w-md">
+        <CardHeader className="text-center">
+          <CardTitle className="text-2xl font-bold">
+            {showRegister ? 'Criar Conta' : 'Entrar'}
+          </CardTitle>
+          <p className="text-gray-600 dark:text-gray-400">
+            {showRegister 
+              ? 'Cadastre-se para acessar a plataforma'
+              : 'Faça login para continuar'
+            }
+          </p>
+        </CardHeader>
+        
         <CardContent className="p-6">
-          {message && (
-            <Alert className="mb-4 bg-blue-500/10 border-blue-500/20">
-              <AlertCircle className="h-4 w-4 text-blue-400" />
-              <AlertDescription className="text-blue-400">{message}</AlertDescription>
-            </Alert>
+          {showRegister ? (
+            <SimpleRegisterForm onSuccess={handleSuccess} />
+          ) : (
+            <LoginForm onSuccess={handleSuccess} />
           )}
           
-          <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid w-full grid-cols-2 mb-6 bg-[#252842] border-white/10">
-              <TabsTrigger 
-                value="login" 
-                className="data-[state=active]:bg-viverblue data-[state=active]:text-white text-neutral-300"
-              >
-                Entrar
-              </TabsTrigger>
-              <TabsTrigger 
-                value="register"
-                className="data-[state=active]:bg-viverblue data-[state=active]:text-white text-neutral-300"
-              >
-                Criar conta
-              </TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="login">
-              <div className="space-y-4">
-                <div className="text-center space-y-2">
-                  <h2 className="text-2xl font-bold text-white">
-                    Entrar na conta
-                  </h2>
-                  <p className="text-neutral-300">
-                    Acesse sua conta para continuar
-                  </p>
-                </div>
-                <LoginForm onSuccess={handleSuccess} />
-              </div>
-            </TabsContent>
-            
-            <TabsContent value="register">
-              <SimpleRegisterForm onSuccess={handleSuccess} />
-            </TabsContent>
-          </Tabs>
+          <div className="mt-6 text-center">
+            <button
+              onClick={toggleMode}
+              className="text-blue-600 hover:text-blue-800 font-medium"
+            >
+              {showRegister 
+                ? 'Já tem uma conta? Faça login'
+                : 'Não tem conta? Cadastre-se'
+              }
+            </button>
+          </div>
         </CardContent>
       </Card>
     </div>
