@@ -53,7 +53,9 @@ export const useCleanOnboardingData = (inviteToken?: string): UseCleanOnboarding
     // TIMEOUT DE SEGURANÇA: máximo 2 segundos
     const safetyTimeout = setTimeout(() => {
       if (!hasInitialized) {
-        logger.warn('[CLEAN-DATA] ⏰ Timeout de segurança - inicializando com dados vazios');
+        logger.warn('[CLEAN-DATA] ⏰ Timeout de segurança - inicializando com dados vazios', {
+          duration: `${Date.now() - startTime}ms`
+        });
         setData(getInitialData());
         setHasInitialized(true);
       }
@@ -80,7 +82,10 @@ export const useCleanOnboardingData = (inviteToken?: string): UseCleanOnboarding
         setData(inviteData);
       } else if (inviteToken && inviteError) {
         // Erro na validação - permitir preenchimento manual
-        logger.warn('[CLEAN-DATA] ⚠️ Erro no convite - dados manuais:', inviteError);
+        logger.warn('[CLEAN-DATA] ⚠️ Erro no convite - dados manuais:', {
+          error: inviteError,
+          token: inviteToken?.substring(0, 8) + '***'
+        });
         setData({
           ...getInitialData(),
           inviteToken
