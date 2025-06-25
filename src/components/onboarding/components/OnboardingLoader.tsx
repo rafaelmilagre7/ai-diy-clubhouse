@@ -4,6 +4,7 @@ import { Navigate } from 'react-router-dom';
 import { useSimpleAuth } from '@/contexts/auth/SimpleAuthProvider';
 import { useOnboardingRequired } from '@/hooks/useOnboardingRequired';
 import { useAdminPreview } from '@/hooks/useAdminPreview';
+import { useOnboardingDiagnostics } from '@/hooks/useOnboardingDiagnostics';
 import LoadingScreen from '@/components/common/LoadingScreen';
 import { AdminPreviewBanner } from './AdminPreviewBanner';
 
@@ -17,11 +18,14 @@ export const OnboardingLoader = ({ children }: OnboardingLoaderProps) => {
   const { user, profile, isLoading: authLoading } = useSimpleAuth();
   const { isRequired, isLoading: onboardingLoading, hasCompleted } = useOnboardingRequired();
   const { isAdminPreviewMode, isValidAdminAccess } = useAdminPreview();
+  
+  // DIAGNÓSTICO CRÍTICO: Executar para usuários com problemas
+  useOnboardingDiagnostics();
 
   const roleName = profile?.user_roles?.name;
   const memberType = roleName === 'formacao' ? 'formacao' : 'club';
 
-  console.log('[OnboardingLoader] Estado (ONBOARDING OBRIGATÓRIO):', {
+  console.log('[OnboardingLoader] Estado (ONBOARDING OBRIGATÓRIO + DIAGNÓSTICO):', {
     authLoading,
     onboardingLoading,
     user: !!user,
@@ -31,7 +35,8 @@ export const OnboardingLoader = ({ children }: OnboardingLoaderProps) => {
     memberType,
     roleName,
     isAdminPreviewMode,
-    profileOnboardingCompleted: profile?.onboarding_completed
+    profileOnboardingCompleted: profile?.onboarding_completed,
+    userEmail: user?.email
   });
 
   // Mostrar loading enquanto carrega
@@ -68,7 +73,7 @@ export const OnboardingLoader = ({ children }: OnboardingLoaderProps) => {
 
   // Se onboarding é necessário, renderizar wizard
   if (isRequired) {
-    console.log('[OnboardingLoader] Renderizando wizard de onboarding OBRIGATÓRIO');
+    console.log('[OnboardingLoader] Renderizando wizard de onboarding OBRIGATÓRIO (com diagnóstico ativo)');
     return <>{children}</>;
   }
 
