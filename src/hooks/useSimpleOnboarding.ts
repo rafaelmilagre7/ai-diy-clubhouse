@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { useAuth } from '@/contexts/auth';
+import { useAuth } from '@/contexts/auth/SimpleAuthProvider';
 import { getUserRoleName } from '@/lib/supabase/types';
 import { logger } from '@/utils/logger';
 
