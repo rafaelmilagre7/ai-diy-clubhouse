@@ -141,10 +141,10 @@ class AsyncErrorBoundary extends Component<AsyncErrorBoundaryProps, AsyncErrorBo
           onGoHome={this.handleGoHome}
           retryCount={this.state.retryCount}
           maxRetries={maxRetries}
+          showDetails={true}
           title={title}
           description={description}
           variant="detailed"
-          showDetails={true}
         />
       );
     }

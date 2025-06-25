@@ -12,6 +12,16 @@ interface State {
   error?: Error;
 }
 
+export interface ErrorFallbackProps {
+  error: Error | null;
+  errorInfo: ErrorInfo | null;
+  onRetry: () => void;
+  onGoHome: () => void;
+  retryCount: number;
+  maxRetries: number;
+  showDetails?: boolean;
+}
+
 class ErrorBoundary extends Component<Props, State> {
   public state: State = {
     hasError: false
