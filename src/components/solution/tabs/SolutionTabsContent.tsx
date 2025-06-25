@@ -6,9 +6,7 @@ import { OverviewTab } from "./OverviewTab";
 import { ResourcesTab } from "./ResourcesTab";
 import { ToolsTab } from "./ToolsTab";
 import { VideosTab } from "./VideosTab";
-import { CommentsTab } from "./CommentsTab";
-import { CompletionTab } from "./CompletionTab";
-import { BookOpen, FileText, Wrench, Video, MessageSquare, CheckCircle } from "lucide-react";
+import { BookOpen, FileText, Wrench, Video } from "lucide-react";
 import { useSolutionStats } from "@/hooks/useSolutionStats";
 
 interface SolutionTabsContentProps {
@@ -27,7 +25,7 @@ export const SolutionTabsContent = ({ solution }: SolutionTabsContentProps) => {
   return (
     <div className="w-full">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-3 md:grid-cols-6 mb-6">
+        <TabsList className="grid w-full grid-cols-4 mb-6">
           <TabsTrigger value="overview" className="flex items-center gap-2">
             <BookOpen className="h-4 w-4" />
             <span className="hidden sm:inline">Visão Geral</span>
@@ -50,14 +48,6 @@ export const SolutionTabsContent = ({ solution }: SolutionTabsContentProps) => {
               Vídeos{getTabCounter(stats.videosCount)}
             </span>
           </TabsTrigger>
-          <TabsTrigger value="comments" className="flex items-center gap-2">
-            <MessageSquare className="h-4 w-4" />
-            <span className="hidden sm:inline">Comentários</span>
-          </TabsTrigger>
-          <TabsTrigger value="completion" className="flex items-center gap-2">
-            <CheckCircle className="h-4 w-4" />
-            <span className="hidden sm:inline">Concluir</span>
-          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="mt-0">
@@ -74,14 +64,6 @@ export const SolutionTabsContent = ({ solution }: SolutionTabsContentProps) => {
 
         <TabsContent value="videos" className="mt-0">
           <VideosTab solution={solution} />
-        </TabsContent>
-
-        <TabsContent value="comments" className="mt-0">
-          <CommentsTab solution={solution} />
-        </TabsContent>
-
-        <TabsContent value="completion" className="mt-0">
-          <CompletionTab solution={solution} />
         </TabsContent>
       </Tabs>
     </div>

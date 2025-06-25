@@ -5,15 +5,12 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ExternalLink, Wrench, Star } from "lucide-react";
 import { SolutionTool } from "@/hooks/useSolutionTools";
-import { useToolImage } from "@/hooks/useToolImage";
 
 interface ToolItemProps {
   tool: SolutionTool;
 }
 
 export const ToolItem = ({ tool }: ToolItemProps) => {
-  const { logoUrl, loading } = useToolImage({ toolName: tool.tool_name });
-
   const formatToolName = (name: string) => {
     return name.charAt(0).toUpperCase() + name.slice(1);
   };
@@ -26,42 +23,13 @@ export const ToolItem = ({ tool }: ToolItemProps) => {
     window.open(tool.tool_url, "_blank");
   };
 
-  const renderToolIcon = () => {
-    if (logoUrl && !loading) {
-      return (
-        <div className="bg-white h-10 w-10 rounded-lg flex items-center justify-center overflow-hidden">
-          <img 
-            src={logoUrl} 
-            alt={`Logo ${tool.tool_name}`}
-            className="h-full w-full object-contain"
-            onError={(e) => {
-              // Fallback para ícone genérico em caso de erro
-              e.currentTarget.style.display = 'none';
-              const fallback = e.currentTarget.parentElement?.querySelector('.fallback-icon');
-              if (fallback) {
-                fallback.classList.remove('hidden');
-              }
-            }}
-          />
-          <div className="fallback-icon hidden bg-viverblue/20 text-viverblue h-10 w-10 rounded-lg flex items-center justify-center font-semibold">
-            {getToolInitial(tool.tool_name)}
-          </div>
-        </div>
-      );
-    }
-
-    return (
-      <div className="bg-viverblue/20 text-viverblue h-10 w-10 rounded-lg flex items-center justify-center font-semibold">
-        {loading ? <Wrench className="h-5 w-5" /> : getToolInitial(tool.tool_name)}
-      </div>
-    );
-  };
-
   return (
     <Card className="bg-[#151823] border border-white/5">
       <CardContent className="p-4">
         <div className="flex items-start gap-3 mb-4">
-          {renderToolIcon()}
+          <div className="bg-viverblue/20 text-viverblue h-10 w-10 rounded-lg flex items-center justify-center font-semibold">
+            <Wrench className="h-5 w-5" />
+          </div>
           
           <div className="flex-1">
             <div className="flex items-start justify-between gap-2 mb-2">

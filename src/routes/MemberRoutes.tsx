@@ -52,16 +52,12 @@ export const memberRoutes: RouteObject[] = [
   createProtectedRoute("/profile", Profile),
   createProtectedRoute("/profile/edit", EditProfile),
   createProtectedRoute("/profile/notifications", NotificationSettingsPage),
-  
-  // Rota CAPA da solução (apenas informações)
   createProtectedRoute("/solution/:id", SolutionDetails),
   createProtectedRoute("/solution/:id/certificate", SolutionCertificate),
-  
-  // Rota INTERNA da implementação (com abas)
+  createProtectedRoute("/implement/:id/:moduleIdx", SolutionImplementation),
   createProtectedRoute("/implementation/:id", SolutionImplementation),
+  createProtectedRoute("/implementation/:id/:moduleIdx", SolutionImplementation),
   createProtectedRoute("/implementation/completed/:id", ImplementationCompleted),
-  
-  // Benefícios e eventos
   createProtectedRoute("/benefits", Benefits),
   createProtectedRoute("/events", Events),
   
