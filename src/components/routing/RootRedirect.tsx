@@ -1,11 +1,11 @@
 
 import { Navigate } from "react-router-dom";
-import { useAuth } from "@/contexts/auth";
+import { useSimpleAuth } from "@/contexts/auth/SimpleAuthProvider";
 import { useOnboardingRequired } from "@/hooks/useOnboardingRequired";
 import LoadingScreen from "@/components/common/LoadingScreen";
 
 const RootRedirect = () => {
-  const { user, profile, isLoading: authLoading } = useAuth();
+  const { user, profile, isLoading: authLoading } = useSimpleAuth();
   const { isRequired: onboardingRequired, isLoading: onboardingLoading } = useOnboardingRequired();
   
   console.log("[ROOT-REDIRECT] Estado:", {
@@ -24,7 +24,7 @@ const RootRedirect = () => {
   // Sem usuário = login
   if (!user) {
     console.log("[ROOT-REDIRECT] Sem usuário -> login");
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/auth" replace />;
   }
   
   // Sem perfil = aguardar (mas sem complexidade)

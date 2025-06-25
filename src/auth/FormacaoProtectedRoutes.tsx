@@ -1,7 +1,7 @@
 
 import { Navigate, useLocation } from "react-router-dom";
 import { useEffect, useState, useRef, ReactNode } from "react";
-import { useAuth } from "@/contexts/auth";
+import { useSimpleAuth } from "@/contexts/auth/SimpleAuthProvider";
 import LoadingScreen from "@/components/common/LoadingScreen";
 import { toast } from "sonner";
 
@@ -10,7 +10,7 @@ interface FormacaoProtectedRoutesProps {
 }
 
 export const FormacaoProtectedRoutes = ({ children }: FormacaoProtectedRoutesProps) => {
-  const { user, isAdmin, isFormacao, isLoading } = useAuth();
+  const { user, isAdmin, isFormacao, isLoading } = useSimpleAuth();
   const location = useLocation();
   const [loadingTimeout, setLoadingTimeout] = useState(false);
   const timeoutRef = useRef<number | null>(null);
@@ -43,7 +43,7 @@ export const FormacaoProtectedRoutes = ({ children }: FormacaoProtectedRoutesPro
   // Se o usuário não estiver autenticado, redireciona para a página de login
   if (!user) {
     toast.error("Por favor, faça login para acessar esta página");
-    return <Navigate to="/login" state={{ from: location }} replace />;
+    return <Navigate to="/auth" state={{ from: location }} replace />;
   }
 
   // Se o usuário não for admin ou formacao, redireciona para o dashboard

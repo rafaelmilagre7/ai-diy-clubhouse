@@ -1,7 +1,7 @@
 
 import { Navigate, useLocation } from "react-router-dom";
 import { ReactNode } from "react";
-import { useAuth } from "@/contexts/auth";
+import { useSimpleAuth } from "@/contexts/auth/SimpleAuthProvider";
 import { useOnboardingRequired } from "@/hooks/useOnboardingRequired";
 import LoadingScreen from "@/components/common/LoadingScreen";
 import { SecurityProvider } from "@/contexts/auth/SecurityContext";
@@ -14,7 +14,7 @@ interface ProtectedRoutesProps {
 
 export const ProtectedRoutes = ({ children, allowInviteFlow = false }: ProtectedRoutesProps) => {
   const location = useLocation();
-  const { user, isLoading: authLoading } = useAuth();
+  const { user, isLoading: authLoading } = useSimpleAuth();
   const { isRequired: onboardingRequired, isLoading: onboardingLoading } = useOnboardingRequired();
 
   // Detecção SIMPLES de fluxo de convite
@@ -37,7 +37,7 @@ export const ProtectedRoutes = ({ children, allowInviteFlow = false }: Protected
 
   // Sem usuário = login
   if (!user) {
-    return <Navigate to="/login" state={{ from: location.pathname }} replace />;
+    return <Navigate to="/auth" state={{ from: location.pathname }} replace />;
   }
 
   // Permitir fluxo de convite se configurado

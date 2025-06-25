@@ -1,14 +1,14 @@
 
 import { useLocation } from "react-router-dom";
 import { ReactNode, memo } from "react";
-import { useAuth } from "@/contexts/auth";
+import { useSimpleAuth } from "@/contexts/auth/SimpleAuthProvider";
 import LoadingScreen from "@/components/common/LoadingScreen";
 import MemberLayout from "./MemberLayout";
 import FormacaoLayout from "./formacao/FormacaoLayout";
 import { PageTransitionWithFallback } from "@/components/transitions/PageTransitionWithFallback";
 
 const LayoutProvider = memo(({ children }: { children: ReactNode }) => {
-  const { user, isFormacao, isAdmin, isLoading } = useAuth();
+  const { user, isFormacao, isAdmin, isLoading } = useSimpleAuth();
   const location = useLocation();
 
   const isFormacaoRoute = location.pathname.startsWith('/formacao');

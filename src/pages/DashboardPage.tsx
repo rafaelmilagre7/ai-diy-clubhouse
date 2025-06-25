@@ -1,12 +1,12 @@
 
 import React from 'react';
-import { useAuth } from '@/contexts/auth';
+import { useSimpleAuth } from '@/contexts/auth/SimpleAuthProvider';
 import { Navigate } from 'react-router-dom';
 import MemberLayout from '@/components/layout/MemberLayout';
 import Dashboard from '@/pages/member/Dashboard';
 
 const DashboardPage = () => {
-  const { user, isLoading } = useAuth();
+  const { user, isLoading } = useSimpleAuth();
 
   if (isLoading) {
     return (
@@ -17,7 +17,7 @@ const DashboardPage = () => {
   }
 
   if (!user) {
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/auth" replace />;
   }
 
   return (

@@ -173,3 +173,7 @@ export const useSimpleAuth = (): SimpleAuthContextType => {
   }
   return context;
 };
+
+// ALIAS TEMPORÁRIO PARA COMPATIBILIDADE
+// Permite que componentes usando useAuth continuem funcionando
+export const useAuth = useSimpleAuth;

@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Navigate } from 'react-router-dom';
-import { useAuth } from '@/contexts/auth';
+import { useSimpleAuth } from '@/contexts/auth/SimpleAuthProvider';
 import { useOnboardingRequired } from '@/hooks/useOnboardingRequired';
 import { useAdminPreview } from '@/hooks/useAdminPreview';
 import LoadingScreen from '@/components/common/LoadingScreen';
@@ -15,7 +15,7 @@ interface OnboardingLoaderProps {
 export const OnboardingLoader = ({ children }: OnboardingLoaderProps) => {
   console.log('[OnboardingLoader] Renderizando');
   
-  const { user, profile, isLoading: authLoading } = useAuth();
+  const { user, profile, isLoading: authLoading } = useSimpleAuth();
   const { isRequired, isLoading: onboardingLoading, hasCompleted } = useOnboardingRequired();
   const { isAdminPreviewMode, isValidAdminAccess } = useAdminPreview();
 
@@ -44,7 +44,7 @@ export const OnboardingLoader = ({ children }: OnboardingLoaderProps) => {
   // Se não está autenticado, redirecionar para login
   if (!user) {
     console.log('[OnboardingLoader] Redirecionando para login');
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/auth" replace />;
   }
 
   // MODO ADMIN PREVIEW: Permitir acesso mesmo se onboarding já foi concluído

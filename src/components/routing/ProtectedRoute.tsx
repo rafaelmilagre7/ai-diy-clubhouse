@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
-import { useAuth } from "@/contexts/auth";
+import { useSimpleAuth } from "@/contexts/auth/SimpleAuthProvider";
 import LoadingScreen from "@/components/common/LoadingScreen";
 import { toast } from "sonner";
 
@@ -16,7 +16,7 @@ const ProtectedRoute = ({
   requireAdmin = false,
   requiredRole
 }: ProtectedRouteProps) => {
-  const { user, isAdmin, isLoading } = useAuth();
+  const { user, isAdmin, isLoading } = useSimpleAuth();
   const location = useLocation();
   
   // Se estiver carregando, mostra tela de loading
@@ -26,7 +26,7 @@ const ProtectedRoute = ({
 
   // Se não houver usuário autenticado, redireciona para login
   if (!user) {
-    return <Navigate to="/login" state={{ from: location }} replace />;
+    return <Navigate to="/auth" state={{ from: location }} replace />;
   }
   
   // Verificar se requer admin e usuário não é admin
