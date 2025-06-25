@@ -26,6 +26,7 @@ export const useInviteFlow = (token?: string) => {
     if (!token) {
       setInviteDetails(null);
       setError(null);
+      setIsLoading(false);
       return;
     }
 
@@ -39,13 +40,17 @@ export const useInviteFlow = (token?: string) => {
           action: 'fetchInviteDetails'
         });
         
-        logger.info('[INVITE-FLOW] 🔍 Buscando detalhes COMPLETOS do convite:', {
+        logger.info('[INVITE-FLOW] 🔍 Buscando detalhes do convite com timeout', {
           token: token.substring(0, 8) + '***',
           tokenLength: token.length
         });
 
-        // QUERY EXPANDIDA - buscar dados completos do convite
-        const { data, error: supabaseError } = await supabase
+        // TIMEOUT AGRESSIVO para a query
+        const timeoutPromise = new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('Timeout na busca do convite')), 3000)
+        );
+
+        const queryPromise = supabase
           .from('invites')
           .select(`
             email,
@@ -59,6 +64,11 @@ export const useInviteFlow = (token?: string) => {
           .eq('token', token)
           .maybeSingle();
 
+        const { data, error: supabaseError } = await Promise.race([
+          queryPromise,
+          timeoutPromise
+        ]) as any;
+
         // AUDITORIA: Resultado da query
         tokenAudit.logStep('SUPABASE_QUERY_EXECUTED', token, 'supabase', {
           hasResult: !!data,
@@ -67,7 +77,7 @@ export const useInviteFlow = (token?: string) => {
         });
 
         if (supabaseError) {
-          logger.error('[INVITE-FLOW] ❌ Erro na query Supabase:', supabaseError, {
+          logger.error('[INVITE-FLOW] ❌ Erro na query Supabase', supabaseError, {
             token: token.substring(0, 8) + '***',
             tokenLength: token.length,
             errorCode: supabaseError.code,
@@ -77,7 +87,7 @@ export const useInviteFlow = (token?: string) => {
         }
 
         if (!data) {
-          logger.warn('[INVITE-FLOW] ⚠️ Convite não encontrado:', {
+          logger.warn('[INVITE-FLOW] ⚠️ Convite não encontrado', {
             token: token.substring(0, 8) + '***',
             tokenLength: token.length
           });
@@ -86,7 +96,7 @@ export const useInviteFlow = (token?: string) => {
 
         // Verificar se já foi usado
         if (data.used_at) {
-          logger.warn('[INVITE-FLOW] ⚠️ Convite já utilizado:', {
+          logger.warn('[INVITE-FLOW] ⚠️ Convite já utilizado', {
             token: token.substring(0, 8) + '***',
             usedAt: data.used_at
           });
@@ -97,7 +107,7 @@ export const useInviteFlow = (token?: string) => {
         const now = new Date();
         const expiresAt = new Date(data.expires_at);
         if (now > expiresAt) {
-          logger.warn('[INVITE-FLOW] ⚠️ Convite expirado:', {
+          logger.warn('[INVITE-FLOW] ⚠️ Convite expirado', {
             token: token.substring(0, 8) + '***',
             expiresAt: data.expires_at,
             now: now.toISOString()
@@ -125,7 +135,7 @@ export const useInviteFlow = (token?: string) => {
 
         setInviteDetails(inviteData);
         
-        logger.info('[INVITE-FLOW] ✅ Convite validado com dados COMPLETOS:', {
+        logger.info('[INVITE-FLOW] ✅ Convite validado com dados COMPLETOS', {
           token: token.substring(0, 8) + '***',
           email: inviteData.email,
           hasName: !!inviteData.name,
@@ -134,7 +144,7 @@ export const useInviteFlow = (token?: string) => {
         });
 
       } catch (err: any) {
-        logger.error('[INVITE-FLOW] ❌ Erro ao buscar convite:', err, {
+        logger.error('[INVITE-FLOW] ❌ Erro ao buscar convite', err, {
           token: token.substring(0, 8) + '***',
           tokenLength: token.length
         });
@@ -144,8 +154,23 @@ export const useInviteFlow = (token?: string) => {
       }
     };
 
+    // TIMEOUT ABSOLUTO: sempre libera após 4 segundos
+    const absoluteTimeout = setTimeout(() => {
+      if (isLoading) {
+        logger.error('[INVITE-FLOW] 🚨 TIMEOUT ABSOLUTO - liberando após 4s', {
+          token: token.substring(0, 8) + '***'
+        });
+        setIsLoading(false);
+        if (!error && !inviteDetails) {
+          setError('Timeout na verificação do convite');
+        }
+      }
+    }, 4000);
+
     fetchInviteDetails();
-  }, [token]);
+
+    return () => clearTimeout(absoluteTimeout);
+  }, [token, isLoading, error, inviteDetails]);
 
   return { inviteDetails, isLoading, error };
 };

@@ -11,13 +11,35 @@ export const useOnboardingRequired = () => {
 
   useEffect(() => {
     const checkOnboardingRequirement = async () => {
+      // TIMEOUT AGRESSIVO: máximo 2 segundos
+      const timeout = setTimeout(() => {
+        logger.warn('[ONBOARDING-REQUIRED] ⏰ TIMEOUT 2s - assumindo onboarding necessário', {
+          hasUser: !!user,
+          hasProfile: !!profile,
+          authLoading
+        });
+        
+        if (!user) {
+          setIsRequired(false);
+          setHasCompleted(false);
+        } else {
+          // Se há usuário mas não conseguiu determinar, assumir que precisa
+          setIsRequired(true);
+          setHasCompleted(false);
+        }
+        setIsLoading(false);
+      }, 2000);
+
       if (authLoading || !user) {
-        setIsLoading(true);
-        return;
+        logger.info('[ONBOARDING-REQUIRED] Aguardando auth ou usuário', {
+          authLoading,
+          hasUser: !!user
+        });
+        return () => clearTimeout(timeout);
       }
 
       try {
-        logger.info('[ONBOARDING-REQUIRED] Verificação simplificada:', {
+        logger.info('[ONBOARDING-REQUIRED] 🔍 Verificação RÁPIDA de onboarding', {
           userId: user.id.substring(0, 8) + '***',
           email: user.email,
           hasProfile: !!profile
@@ -26,31 +48,32 @@ export const useOnboardingRequired = () => {
         // MUDANÇA CRÍTICA: Admin nunca precisa de onboarding
         const userRole = profile?.user_roles?.name;
         if (userRole === 'admin') {
-          logger.info('[ONBOARDING-REQUIRED] Admin detectado - dispensando onboarding');
+          logger.info('[ONBOARDING-REQUIRED] 👑 Admin detectado - dispensando onboarding', {});
           setIsRequired(false);
           setHasCompleted(true);
           setIsLoading(false);
+          clearTimeout(timeout);
           return;
         }
         
-        // Se não há perfil, aguardar máximo 1 segundo
+        // Se não há perfil, aguardar apenas 500ms adicionais
         if (!profile) {
-          logger.warn('[ONBOARDING-REQUIRED] Aguardando perfil por 1s...');
+          logger.warn('[ONBOARDING-REQUIRED] ⏳ Aguardando perfil por 500ms...', {});
           setTimeout(() => {
             if (!profile) {
-              logger.warn('[ONBOARDING-REQUIRED] Timeout - assumindo onboarding necessário');
+              logger.warn('[ONBOARDING-REQUIRED] ⚠️ Timeout perfil - assumindo onboarding necessário', {});
               setIsRequired(true);
               setHasCompleted(false);
               setIsLoading(false);
             }
-          }, 1000);
-          return;
+          }, 500);
+          return () => clearTimeout(timeout);
         }
         
         // Para outros usuários, verificar se completaram
         const onboardingCompleted = profile?.onboarding_completed === true;
         
-        logger.info('[ONBOARDING-REQUIRED] Status para usuário não-admin:', {
+        logger.info('[ONBOARDING-REQUIRED] ✅ Status determinado para usuário não-admin', {
           userId: user.id.substring(0, 8) + '***',
           onboardingCompleted,
           userRole
@@ -58,14 +81,18 @@ export const useOnboardingRequired = () => {
 
         setIsRequired(!onboardingCompleted);
         setHasCompleted(onboardingCompleted);
+        setIsLoading(false);
+        clearTimeout(timeout);
         
       } catch (error) {
-        logger.error('[ONBOARDING-REQUIRED] Erro - assumindo onboarding necessário:', error);
+        logger.error('[ONBOARDING-REQUIRED] ❌ Erro - assumindo onboarding necessário', error);
         setIsRequired(true);
         setHasCompleted(false);
-      } finally {
         setIsLoading(false);
+        clearTimeout(timeout);
       }
+
+      return () => clearTimeout(timeout);
     };
 
     checkOnboardingRequirement();

@@ -1,35 +1,50 @@
 
-import React from "react";
-import { Loader2 } from "lucide-react";
+import React, { useState, useEffect } from 'react';
+import { Loader2, AlertTriangle } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 interface LoadingScreenProps {
   message?: string;
-  showProgress?: boolean;
+  showEmergencyButton?: boolean;
+  emergencyAction?: () => void;
 }
 
 const LoadingScreen: React.FC<LoadingScreenProps> = ({ 
   message = "Carregando...",
-  showProgress = false 
+  showEmergencyButton = true,
+  emergencyAction
 }) => {
-  const [progress, setProgress] = React.useState(0);
-  
-  // Simular progresso para melhor UX
-  React.useEffect(() => {
-    if (!showProgress) return;
+  const [duration, setDuration] = useState(0);
+  const [showButton, setShowButton] = useState(false);
+
+  useEffect(() => {
+    const startTime = Date.now();
     
     const interval = setInterval(() => {
-      setProgress(prev => {
-        if (prev >= 90) return prev; // Parar em 90% até terminar de fato
-        return prev + Math.random() * 15;
-      });
-    }, 200);
-    
+      const elapsed = Date.now() - startTime;
+      setDuration(elapsed);
+      
+      // Mostrar botão de emergência após 5 segundos
+      if (elapsed > 5000 && showEmergencyButton) {
+        setShowButton(true);
+      }
+    }, 100);
+
     return () => clearInterval(interval);
-  }, [showProgress]);
+  }, [showEmergencyButton]);
+
+  const handleEmergencyAction = () => {
+    if (emergencyAction) {
+      emergencyAction();
+    } else {
+      // Ação padrão: recarregar página
+      window.location.reload();
+    }
+  };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-background">
-      <div className="text-center space-y-4">
+    <div className="min-h-screen bg-gradient-to-br from-[#0F111A] to-[#151823] flex items-center justify-center">
+      <div className="text-center space-y-4 max-w-sm">
         <div className="flex items-center justify-center">
           <img
             src="https://milagredigital.com/wp-content/uploads/2025/04/viverdeiaclub.avif"
@@ -39,22 +54,49 @@ const LoadingScreen: React.FC<LoadingScreenProps> = ({
         </div>
         
         <div className="flex items-center justify-center space-x-2">
-          <Loader2 className="h-6 w-6 animate-spin text-primary" />
-          <span className="text-lg font-medium text-foreground">{message}</span>
+          <Loader2 className="h-6 w-6 animate-spin text-viverblue" />
+          <span className="text-lg font-medium text-white">{message}</span>
         </div>
         
-        {showProgress && (
-          <div className="w-64 bg-secondary rounded-full h-2">
-            <div 
-              className="bg-primary h-2 rounded-full transition-all duration-300 ease-out"
-              style={{ width: `${progress}%` }}
-            />
+        {/* Barra de progresso visual */}
+        <div className="w-64 bg-gray-700 rounded-full h-2">
+          <div 
+            className="bg-viverblue h-2 rounded-full transition-all duration-300 ease-out"
+            style={{ width: `${Math.min((duration / 8000) * 100, 100)}%` }}
+          />
+        </div>
+        
+        <p className="text-sm text-neutral-300">
+          {duration < 3000 ? 'Configurando sua experiência...' :
+           duration < 6000 ? 'Carregando seus dados...' :
+           'Quase pronto...'}
+        </p>
+
+        {/* Botão de emergência */}
+        {showButton && (
+          <div className="mt-6 space-y-3">
+            <div className="flex items-center justify-center space-x-2 text-orange-400">
+              <AlertTriangle className="h-4 w-4" />
+              <span className="text-sm">Carregamento demorado</span>
+            </div>
+            
+            <Button 
+              onClick={handleEmergencyAction}
+              variant="outline"
+              size="sm"
+              className="border-orange-400 text-orange-400 hover:bg-orange-400 hover:text-white"
+            >
+              Forçar Carregamento
+            </Button>
           </div>
         )}
-        
-        <p className="text-sm text-muted-foreground max-w-sm">
-          Configurando sua experiência personalizada...
-        </p>
+
+        {/* Debug info em desenvolvimento */}
+        {import.meta.env.DEV && (
+          <p className="text-xs text-neutral-500 mt-4">
+            {duration}ms
+          </p>
+        )}
       </div>
     </div>
   );
