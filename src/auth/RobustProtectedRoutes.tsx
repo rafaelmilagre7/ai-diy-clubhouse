@@ -1,14 +1,11 @@
 
 import { Navigate, useLocation } from "react-router-dom";
 import { ReactNode } from "react";
-import { useAuth } from "@/contexts/auth";
+import { useSimpleAuth } from "@/contexts/auth/SimpleAuthProvider";
 import { useOnboardingRequired } from "@/hooks/useOnboardingRequired";
-import EnhancedLoadingScreen from "@/components/common/EnhancedLoadingScreen";
-import { SecurityProvider } from "@/contexts/auth/SecurityContext";
+import LoadingScreen from "@/components/common/LoadingScreen";
 import { InviteTokenManager } from "@/utils/inviteTokenManager";
-import { useLoadingTimeoutEnhanced } from "@/hooks/useLoadingTimeoutEnhanced";
 import { logger } from "@/utils/logger";
-import { useState } from "react";
 
 interface RobustProtectedRoutesProps {
   children: ReactNode;
@@ -17,22 +14,11 @@ interface RobustProtectedRoutesProps {
 
 export const RobustProtectedRoutes = ({ children, allowInviteFlow = false }: RobustProtectedRoutesProps) => {
   const location = useLocation();
-  const { user, isLoading: authLoading } = useAuth();
+  const { user, isLoading: authLoading } = useSimpleAuth();
   const { isRequired: onboardingRequired, isLoading: onboardingLoading } = useOnboardingRequired();
-  const [hasError, setHasError] = useState(false);
 
   const isInInviteFlow = InviteTokenManager.hasToken() || location.pathname.includes('/invite');
   const totalLoading = authLoading || onboardingLoading;
-
-  const { hasTimedOut, retry } = useLoadingTimeoutEnhanced({
-    isLoading: totalLoading,
-    context: 'protected-routes',
-    timeoutMs: 12000,
-    onTimeout: () => {
-      logger.error("[PROTECTED-ROUTES] Timeout na verificação de acesso");
-      setHasError(true);
-    }
-  });
 
   logger.info("[PROTECTED-ROUTES] Estado:", {
     pathname: location.pathname,
@@ -41,51 +27,12 @@ export const RobustProtectedRoutes = ({ children, allowInviteFlow = false }: Rob
     onboardingLoading,
     onboardingRequired,
     allowInviteFlow,
-    isInInviteFlow,
-    hasError,
-    hasTimedOut
+    isInInviteFlow
   });
 
-  const handleRetry = () => {
-    logger.info("[PROTECTED-ROUTES] Tentativa de retry");
-    setHasError(false);
-    retry();
-  };
-
-  const handleForceExit = () => {
-    logger.warn("[PROTECTED-ROUTES] Forçando logout");
-    Object.keys(localStorage).forEach(key => {
-      if (key.startsWith('supabase.auth.') || key.includes('sb-')) {
-        localStorage.removeItem(key);
-      }
-    });
-    window.location.href = '/auth';
-  };
-
-  // Se há timeout ou erro
-  if (hasTimedOut || hasError) {
-    return (
-      <EnhancedLoadingScreen
-        message="Problema na verificação de segurança"
-        context="protected-routes-error"
-        isLoading={false}
-        onRetry={handleRetry}
-        onForceExit={handleForceExit}
-        showProgress={false}
-      />
-    );
-  }
-
-  // Loading normal
+  // Loading
   if (totalLoading) {
-    return (
-      <EnhancedLoadingScreen
-        message="Verificando credenciais..."
-        context="protected-routes"
-        isLoading={true}
-        onRetry={handleRetry}
-      />
-    );
+    return <LoadingScreen message="Verificando credenciais..." />;
   }
 
   // Sem usuário = login
@@ -97,18 +44,13 @@ export const RobustProtectedRoutes = ({ children, allowInviteFlow = false }: Rob
   // Permitir fluxo de convite se configurado
   if (allowInviteFlow && isInInviteFlow) {
     logger.info("[PROTECTED-ROUTES] Fluxo de convite permitido");
-    return (
-      <SecurityProvider>
-        {children}
-      </SecurityProvider>
-    );
+    return <>{children}</>;
   }
 
-  // Onboarding obrigatório (exceto se já estiver na rota)
+  // Onboarding obrigatório
   if (onboardingRequired && location.pathname !== '/onboarding') {
     logger.info("[PROTECTED-ROUTES] Redirecionando para onboarding");
     
-    // Preservar token se em fluxo de convite
     if (isInInviteFlow) {
       const currentToken = InviteTokenManager.getToken();
       if (currentToken) {
@@ -121,9 +63,5 @@ export const RobustProtectedRoutes = ({ children, allowInviteFlow = false }: Rob
   }
 
   // Renderizar conteúdo protegido
-  return (
-    <SecurityProvider>
-      {children}
-    </SecurityProvider>
-  );
+  return <>{children}</>;
 };

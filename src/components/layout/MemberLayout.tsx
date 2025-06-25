@@ -1,6 +1,6 @@
 
 import React, { memo, useMemo, useCallback } from "react";
-import { useAuth } from "@/contexts/auth";
+import { useSimpleAuth } from "@/contexts/auth/SimpleAuthProvider";
 import BaseLayout from "./BaseLayout";
 import { MemberSidebar } from "./member/MemberSidebar";
 import { MemberContent } from "./member/MemberContent";
@@ -12,19 +12,8 @@ interface MemberLayoutProps {
 }
 
 const MemberLayout = memo<MemberLayoutProps>(({ children }) => {
-  const { profile, signOut } = useAuth();
+  const { profile, signOut } = useSimpleAuth();
   const { sidebarOpen, setSidebarOpen, toggleSidebar, isMobile } = useSidebarControl();
-
-  // Log apenas em desenvolvimento
-  if (process.env.NODE_ENV === 'development') {
-    console.log('[MemberLayout] Renderizando com:', {
-      profile: !!profile,
-      profileName: profile?.name,
-      hasChildren: !!children,
-      sidebarOpen,
-      isMobile
-    });
-  }
 
   // Memoizar função para obter iniciais
   const getInitials = useCallback((name: string | null) => {
@@ -37,19 +26,19 @@ const MemberLayout = memo<MemberLayoutProps>(({ children }) => {
       .substring(0, 2);
   }, []);
 
-  // Memoizar handler de signOut com tratamento seguro
+  // Memoizar handler de signOut
   const handleSignOut = useCallback(async () => {
     try {
       const result = await signOut();
       if (result.success) {
         toast.success("Logout realizado com sucesso");
+        // Redirecionar para auth
+        window.location.href = '/auth';
       } else {
         toast.error("Erro ao fazer logout");
       }
     } catch (error) {
-      if (process.env.NODE_ENV === 'development') {
-        console.error('[MemberLayout] Erro no signOut:', error);
-      }
+      console.error('[MemberLayout] Erro no signOut:', error);
       toast.error("Erro ao fazer logout");
     }
   }, [signOut]);
@@ -61,53 +50,33 @@ const MemberLayout = memo<MemberLayoutProps>(({ children }) => {
     avatar: profile?.avatar_url
   }), [profile?.name, profile?.email, profile?.avatar_url]);
 
-  try {
-    return (
-      <>
-        {/* Backdrop para mobile quando sidebar aberto */}
-        {isMobile && sidebarOpen && (
-          <div 
-            className="fixed inset-0 bg-black/50 z-40 md:hidden"
-            onClick={() => setSidebarOpen(false)}
-            aria-label="Fechar menu"
-          />
-        )}
-        
-        <BaseLayout
-          variant="member"
-          sidebarComponent={MemberSidebar}
-          contentComponent={MemberContent}
-          onSignOut={handleSignOut}
-          profileName={profileData.name}
-          profileEmail={profileData.email}
-          profileAvatar={profileData.avatar}
-          getInitials={getInitials}
-          sidebarOpen={sidebarOpen}
-          setSidebarOpen={setSidebarOpen}
-        >
-          {children}
-        </BaseLayout>
-      </>
-    );
-  } catch (error) {
-    if (process.env.NODE_ENV === 'development') {
-      console.error('[MemberLayout] Erro ao renderizar:', error);
-    }
-    return (
-      <div className="flex h-screen bg-background items-center justify-center">
-        <div className="text-center">
-          <h2 className="text-xl font-semibold mb-2">Erro no Layout do Membro</h2>
-          <p className="text-muted-foreground">Ocorreu um erro ao carregar a interface.</p>
-          <button 
-            onClick={() => window.location.reload()} 
-            className="mt-4 px-4 py-2 bg-primary text-primary-foreground rounded"
-          >
-            Recarregar Página
-          </button>
-        </div>
-      </div>
-    );
-  }
+  return (
+    <>
+      {/* Backdrop para mobile quando sidebar aberto */}
+      {isMobile && sidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-black/50 z-40 md:hidden"
+          onClick={() => setSidebarOpen(false)}
+          aria-label="Fechar menu"
+        />
+      )}
+      
+      <BaseLayout
+        variant="member"
+        sidebarComponent={MemberSidebar}
+        contentComponent={MemberContent}
+        onSignOut={handleSignOut}
+        profileName={profileData.name}
+        profileEmail={profileData.email}
+        profileAvatar={profileData.avatar}
+        getInitials={getInitials}
+        sidebarOpen={sidebarOpen}
+        setSidebarOpen={setSidebarOpen}
+      >
+        {children}
+      </BaseLayout>
+    </>
+  );
 });
 
 MemberLayout.displayName = 'MemberLayout';

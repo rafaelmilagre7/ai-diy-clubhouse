@@ -1,101 +1,51 @@
 
 import { Navigate } from "react-router-dom";
-import { useAuth } from "@/contexts/auth";
+import { useSimpleAuth } from "@/contexts/auth/SimpleAuthProvider";
 import { useOnboardingRequired } from "@/hooks/useOnboardingRequired";
-import EnhancedLoadingScreen from "@/components/common/EnhancedLoadingScreen";
-import { useLoadingTimeoutEnhanced } from "@/hooks/useLoadingTimeoutEnhanced";
+import LoadingScreen from "@/components/common/LoadingScreen";
 import { logger } from "@/utils/logger";
-import { useState, useEffect } from "react";
-import { cleanupAuthState, recoverFromAuthError } from "@/utils/authCleanup";
 import { getUserRoleName } from "@/lib/supabase/types";
 
 const RobustRootRedirect = () => {
-  const { user, profile, isLoading: authLoading, error: authError } = useAuth();
+  const { user, profile, isLoading: authLoading, error: authError } = useSimpleAuth();
   const { isRequired: onboardingRequired, isLoading: onboardingLoading } = useOnboardingRequired();
-  const [retryCount, setRetryCount] = useState(0);
-  const [hasError, setHasError] = useState(false);
   
   const totalLoading = authLoading || onboardingLoading;
-  
-  const { hasTimedOut, retry } = useLoadingTimeoutEnhanced({
-    isLoading: totalLoading,
-    context: 'root-redirect',
-    timeoutMs: 12000,
-    onTimeout: () => {
-      logger.error("[ROOT-REDIRECT] Timeout na verificação inicial");
-      setHasError(true);
-    }
-  });
-
-  // Monitor de erros do auth
-  useEffect(() => {
-    if (authError) {
-      logger.error("[ROOT-REDIRECT] Erro de auth detectado:", authError);
-      setHasError(true);
-    }
-  }, [authError]);
 
   // Log detalhado do estado
-  useEffect(() => {
-    logger.info("[ROOT-REDIRECT] Estado atual:", {
-      hasUser: !!user,
-      hasProfile: !!profile,
-      userRole: profile ? getUserRoleName(profile) : null,
-      authLoading,
-      onboardingLoading,
-      onboardingRequired,
-      retryCount,
-      hasError,
-      hasTimedOut,
-      authError
-    });
-  }, [user, profile, authLoading, onboardingLoading, onboardingRequired, retryCount, hasError, hasTimedOut, authError]);
+  logger.info("[ROOT-REDIRECT] Estado atual:", {
+    hasUser: !!user,
+    hasProfile: !!profile,
+    userRole: profile ? getUserRoleName(profile) : null,
+    authLoading,
+    onboardingLoading,
+    onboardingRequired,
+    authError
+  });
 
-  const handleRetry = () => {
-    logger.info("[ROOT-REDIRECT] Tentativa de retry", { attempt: retryCount + 1 });
-    setRetryCount(prev => prev + 1);
-    setHasError(false);
-    retry();
-    
-    // Se já tentou 3 vezes, forçar limpeza
-    if (retryCount >= 2) {
-      logger.warn("[ROOT-REDIRECT] Muitas tentativas, forçando limpeza");
-      handleForceExit();
-    }
-  };
-
-  const handleForceExit = async () => {
-    logger.info("[ROOT-REDIRECT] Forçando limpeza e redirecionamento");
-    await recoverFromAuthError();
-  };
-
-  // Se há timeout, erro de auth ou erro geral, mostrar tela de erro
-  if (hasTimedOut || hasError || authError) {
+  // Erro de auth
+  if (authError) {
+    logger.error("[ROOT-REDIRECT] Erro de auth:", authError);
     return (
-      <EnhancedLoadingScreen
-        message={authError ? `Erro de autenticação: ${authError}` : "Problema na verificação de acesso"}
-        context="root-redirect-error"
-        isLoading={false}
-        onRetry={handleRetry}
-        onForceExit={handleForceExit}
-        showProgress={false}
-      />
+      <div className="min-h-screen bg-gradient-to-br from-[#0F111A] to-[#151823] flex items-center justify-center">
+        <div className="text-center text-white p-8">
+          <h2 className="text-xl font-bold mb-4">Erro de Autenticação</h2>
+          <p className="text-gray-300 mb-6">{authError}</p>
+          <button
+            onClick={() => window.location.href = '/auth'}
+            className="bg-[#0ABAB5] text-white px-6 py-2 rounded-lg hover:bg-[#089a96] transition-colors"
+          >
+            Ir para Login
+          </button>
+        </div>
+      </div>
     );
   }
 
   // Loading normal
   if (totalLoading) {
-    const loadingContext = authLoading ? 'auth' : 'onboarding';
     const loadingMessage = authLoading ? 'Verificando suas credenciais...' : 'Verificando seu progresso...';
-    
-    return (
-      <EnhancedLoadingScreen
-        message={loadingMessage}
-        context={loadingContext}
-        isLoading={true}
-        onRetry={handleRetry}
-      />
-    );
+    return <LoadingScreen message={loadingMessage} />;
   }
 
   // Sem usuário = login
@@ -104,23 +54,10 @@ const RobustRootRedirect = () => {
     return <Navigate to="/auth" replace />;
   }
 
-  // Verificação de perfil mais robusta
+  // Aguardar perfil
   if (user && !profile) {
-    logger.warn("[ROOT-REDIRECT] Usuário sem perfil válido");
-    
-    // Se já tentou algumas vezes, forçar recriação
-    if (retryCount >= 2) {
-      return <Navigate to="/auth" replace />;
-    }
-    
-    return (
-      <EnhancedLoadingScreen
-        message="Carregando seu perfil..."
-        context="profile"
-        isLoading={true}
-        onRetry={handleRetry}
-      />
-    );
+    logger.warn("[ROOT-REDIRECT] Aguardando perfil do usuário");
+    return <LoadingScreen message="Carregando seu perfil..." />;
   }
 
   // Onboarding obrigatório

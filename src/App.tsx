@@ -3,19 +3,11 @@ import { RouterProvider } from "react-router-dom";
 import { AppRoutes } from "@/routes/AppRoutes";
 import { Toaster } from "@/components/ui/sonner";
 import { useEffect } from "react";
-import { useAuth } from "@/contexts/auth";
+import { useSimpleAuth } from "@/contexts/auth/SimpleAuthProvider";
 import { logger } from "@/utils/logger";
-import { useSecureSession } from "@/hooks/useSecureSession";
 
 function App() {
-  const { user, isLoading } = useAuth();
-  
-  // Ativar sessão segura
-  useSecureSession({
-    maxIdleTime: 60, // 60 minutos
-    checkInterval: 180, // 3 minutos
-    autoLogoutWarning: 15 // 15 minutos de aviso
-  });
+  const { user, isLoading } = useSimpleAuth();
 
   useEffect(() => {
     logger.info('[APP] Inicialização da aplicação', {
