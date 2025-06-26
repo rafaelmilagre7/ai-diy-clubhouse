@@ -3,19 +3,9 @@ import { Navigate } from "react-router-dom";
 import { useSimpleAuth } from "@/contexts/auth/SimpleAuthProvider";
 
 const SimpleRootRedirect = () => {
-  const { user, profile, isLoading, isAdmin } = useSimpleAuth();
+  const { user, profile, isAdmin } = useSimpleAuth();
   
-  // Mostrar loading apenas enquanto verifica auth inicial
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-[#0F111A] to-[#151823] flex items-center justify-center">
-        <div className="text-center text-white">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-viverblue mx-auto mb-4"></div>
-          <p>Carregando...</p>
-        </div>
-      </div>
-    );
-  }
+  // SEM verificação de loading - ser direto
   
   // Sem usuário = login direto
   if (!user) {

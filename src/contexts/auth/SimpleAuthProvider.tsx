@@ -26,10 +26,10 @@ export const SimpleAuthProvider: React.FC<SimpleAuthProviderProps> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false); // Iniciar como FALSE para evitar loop
   const [error, setError] = useState<string | null>(null);
 
-  // Carregar perfil do usuário apenas quando necessário
+  // Carregar perfil apenas quando necessário
   const loadProfile = async (userId: string) => {
     try {
       const { data, error } = await supabase
@@ -60,36 +60,7 @@ export const SimpleAuthProvider: React.FC<SimpleAuthProviderProps> = ({ children
   useEffect(() => {
     let mounted = true;
 
-    const initAuth = async () => {
-      try {
-        // Verificar sessão uma única vez na inicialização
-        const { data: { session }, error } = await supabase.auth.getSession();
-        
-        if (!mounted) return;
-
-        if (error) {
-          console.error('Erro na sessão:', error);
-          setError(error.message);
-        } else {
-          setSession(session);
-          setUser(session?.user ?? null);
-
-          // Carregar perfil apenas se há usuário
-          if (session?.user) {
-            await loadProfile(session.user.id);
-          }
-        }
-        
-        setIsLoading(false);
-      } catch (err) {
-        if (mounted) {
-          console.error('Erro ao inicializar auth:', err);
-          setIsLoading(false);
-        }
-      }
-    };
-
-    // Listener simples para mudanças de auth
+    // Listener simples para mudanças de auth - SEM carregamento inicial
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         if (!mounted) return;
@@ -107,7 +78,16 @@ export const SimpleAuthProvider: React.FC<SimpleAuthProviderProps> = ({ children
       }
     );
 
-    initAuth();
+    // Verificar sessão APENAS uma vez, sem loading
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!mounted) return;
+      
+      if (session?.user) {
+        setSession(session);
+        setUser(session.user);
+        loadProfile(session.user.id);
+      }
+    });
 
     return () => {
       mounted = false;
@@ -118,6 +98,8 @@ export const SimpleAuthProvider: React.FC<SimpleAuthProviderProps> = ({ children
   const signIn = async (email: string, password: string) => {
     try {
       setError(null);
+      setIsLoading(true);
+      
       const { error } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -125,13 +107,16 @@ export const SimpleAuthProvider: React.FC<SimpleAuthProviderProps> = ({ children
       
       if (error) {
         setError(error.message);
+        setIsLoading(false);
         return { error };
       }
       
+      // O onAuthStateChange vai lidar com o resto
       return {};
     } catch (err) {
       const error = err as Error;
       setError(error.message);
+      setIsLoading(false);
       return { error };
     }
   };
