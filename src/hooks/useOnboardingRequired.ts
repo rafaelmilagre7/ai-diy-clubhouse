@@ -1,106 +1,43 @@
 
 import { useState, useEffect } from 'react';
-import { useSimpleAuth } from '@/contexts/auth/SimpleAuthProvider';
+import AuthManager from '@/services/AuthManager';
 import { logger } from '@/utils/logger';
 
 export const useOnboardingRequired = () => {
-  const { user, profile, isLoading: authLoading } = useSimpleAuth();
-  const [isLoading, setIsLoading] = useState(true);
-  const [isRequired, setIsRequired] = useState(false);
-  const [hasCompleted, setHasCompleted] = useState(false);
+  const authManager = AuthManager.getInstance();
+  const [state, setState] = useState(() => {
+    const currentState = authManager.getState();
+    return {
+      isRequired: currentState.onboardingRequired,
+      hasCompleted: !currentState.onboardingRequired,
+      isLoading: currentState.isLoading
+    };
+  });
 
   useEffect(() => {
-    const checkOnboardingRequirement = async () => {
-      // TIMEOUT AGRESSIVO: máximo 2 segundos
-      const timeout = setTimeout(() => {
-        logger.warn('[ONBOARDING-REQUIRED] ⏰ TIMEOUT 2s - assumindo onboarding necessário', {
-          hasUser: !!user,
-          hasProfile: !!profile,
-          authLoading
-        });
-        
-        if (!user) {
-          setIsRequired(false);
-          setHasCompleted(false);
-        } else {
-          // Se há usuário mas não conseguiu determinar, assumir que precisa
-          setIsRequired(true);
-          setHasCompleted(false);
-        }
-        setIsLoading(false);
-      }, 2000);
+    logger.info('[ONBOARDING-REQUIRED] 🔗 Conectando ao AuthManager');
 
-      if (authLoading || !user) {
-        logger.info('[ONBOARDING-REQUIRED] Aguardando auth ou usuário', {
-          authLoading,
-          hasUser: !!user
-        });
-        return () => clearTimeout(timeout);
-      }
+    const unsubscribe = authManager.on('stateChanged', (authState) => {
+      logger.info('[ONBOARDING-REQUIRED] 📡 Estado atualizado via AuthManager:', {
+        onboardingRequired: authState.onboardingRequired,
+        isAdmin: authState.isAdmin,
+        hasUser: !!authState.user
+      });
 
-      try {
-        logger.info('[ONBOARDING-REQUIRED] 🔍 Verificação RÁPIDA de onboarding', {
-          userId: user.id.substring(0, 8) + '***',
-          email: user.email,
-          hasProfile: !!profile
-        });
-        
-        // MUDANÇA CRÍTICA: Admin nunca precisa de onboarding
-        const userRole = profile?.user_roles?.name;
-        if (userRole === 'admin') {
-          logger.info('[ONBOARDING-REQUIRED] 👑 Admin detectado - dispensando onboarding', {});
-          setIsRequired(false);
-          setHasCompleted(true);
-          setIsLoading(false);
-          clearTimeout(timeout);
-          return;
-        }
-        
-        // Se não há perfil, aguardar apenas 500ms adicionais
-        if (!profile) {
-          logger.warn('[ONBOARDING-REQUIRED] ⏳ Aguardando perfil por 500ms...', {});
-          setTimeout(() => {
-            if (!profile) {
-              logger.warn('[ONBOARDING-REQUIRED] ⚠️ Timeout perfil - assumindo onboarding necessário', {});
-              setIsRequired(true);
-              setHasCompleted(false);
-              setIsLoading(false);
-            }
-          }, 500);
-          return () => clearTimeout(timeout);
-        }
-        
-        // Para outros usuários, verificar se completaram
-        const onboardingCompleted = profile?.onboarding_completed === true;
-        
-        logger.info('[ONBOARDING-REQUIRED] ✅ Status determinado para usuário não-admin', {
-          userId: user.id.substring(0, 8) + '***',
-          onboardingCompleted,
-          userRole
-        });
+      setState({
+        isRequired: authState.onboardingRequired,
+        hasCompleted: !authState.onboardingRequired,
+        isLoading: authState.isLoading
+      });
+    });
 
-        setIsRequired(!onboardingCompleted);
-        setHasCompleted(onboardingCompleted);
-        setIsLoading(false);
-        clearTimeout(timeout);
-        
-      } catch (error) {
-        logger.error('[ONBOARDING-REQUIRED] ❌ Erro - assumindo onboarding necessário', error);
-        setIsRequired(true);
-        setHasCompleted(false);
-        setIsLoading(false);
-        clearTimeout(timeout);
-      }
+    // Initialize if needed
+    if (!authManager.isInitialized()) {
+      authManager.initialize();
+    }
 
-      return () => clearTimeout(timeout);
-    };
+    return unsubscribe;
+  }, [authManager]);
 
-    checkOnboardingRequirement();
-  }, [user, profile, authLoading]);
-
-  return {
-    isRequired,
-    hasCompleted,
-    isLoading
-  };
+  return state;
 };

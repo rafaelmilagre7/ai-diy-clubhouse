@@ -1,96 +1,118 @@
 
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { logger } from '@/utils/logger';
+import AuthManager from '@/services/AuthManager';
 
 interface UseLoadingTimeoutEnhancedProps {
   isLoading: boolean;
   timeoutMs?: number;
-  onTimeout?: () => void;
   context?: string;
+  onTimeout?: () => void;
 }
 
-export const useLoadingTimeoutEnhanced = ({ 
-  isLoading, 
-  timeoutMs = 15000, // 15 segundos 
-  onTimeout,
-  context = 'unknown'
+export const useLoadingTimeoutEnhanced = ({
+  isLoading,
+  timeoutMs = 3000, // Reduzido para 3s
+  context = 'generic',
+  onTimeout
 }: UseLoadingTimeoutEnhancedProps) => {
   const [hasTimedOut, setHasTimedOut] = useState(false);
   const [loadingProgress, setLoadingProgress] = useState(0);
+  const [loadingDuration, setLoadingDuration] = useState(0);
+  const [isLoadingTooLong, setIsLoadingTooLong] = useState(false);
+  
+  const startTimeRef = useRef<number>(Date.now());
+  const intervalRef = useRef<number | null>(null);
   const timeoutRef = useRef<number | null>(null);
-  const progressRef = useRef<number | null>(null);
-  const loadingStartTime = useRef<number | null>(null);
 
-  const forceTimeout = useCallback(() => {
-    logger.error(`[TIMEOUT-ENHANCED] Forçando timeout para contexto: ${context}`);
-    setHasTimedOut(true);
-    if (onTimeout) {
-      onTimeout();
-    }
-  }, [onTimeout, context]);
+  // Integrar com AuthManager para contextos de auth
+  const authManager = AuthManager.getInstance();
 
   useEffect(() => {
-    if (isLoading && !hasTimedOut) {
-      // Marcar início do loading
-      if (!loadingStartTime.current) {
-        loadingStartTime.current = Date.now();
-        logger.info(`[TIMEOUT-ENHANCED] Iniciando loading para: ${context}`);
-      }
+    if (isLoading) {
+      startTimeRef.current = Date.now();
+      setHasTimedOut(false);
+      setLoadingProgress(0);
+      setIsLoadingTooLong(false);
 
-      // Simular progresso visual
-      progressRef.current = window.setInterval(() => {
-        setLoadingProgress(prev => {
-          const newProgress = Math.min(prev + Math.random() * 5, 85); // Máximo 85%
-          return newProgress;
-        });
-      }, 500);
+      // Progress simulation OTIMIZADO
+      intervalRef.current = window.setInterval(() => {
+        const elapsed = Date.now() - startTimeRef.current;
+        setLoadingDuration(elapsed);
+        
+        // Progress mais realista
+        const progress = Math.min((elapsed / timeoutMs) * 90, 90);
+        setLoadingProgress(progress);
+        
+        // Warning após 2s
+        if (elapsed > 2000 && !isLoadingTooLong) {
+          setIsLoadingTooLong(true);
+        }
+      }, 100);
 
-      // Configurar timeout
+      // Timeout OTIMIZADO
       timeoutRef.current = window.setTimeout(() => {
-        logger.warn(`[TIMEOUT-ENHANCED] Timeout de ${timeoutMs}ms atingido para: ${context}`);
-        forceTimeout();
+        logger.warn(`[LOADING-TIMEOUT-ENHANCED] ⏰ Timeout ${context} após ${timeoutMs}ms`);
+        
+        setHasTimedOut(true);
+        setLoadingProgress(100);
+        
+        if (onTimeout) {
+          onTimeout();
+        }
+        
+        // Para contextos de auth, usar AuthManager
+        if (context === 'auth' || context === 'onboarding') {
+          if (!authManager.isInitialized()) {
+            logger.warn('[LOADING-TIMEOUT-ENHANCED] 🔄 Forçando inicialização AuthManager');
+            authManager.initialize();
+          }
+        }
       }, timeoutMs);
     } else {
-      // Limpar timers quando parar de carregar
+      // Cleanup quando para de carregar
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
         timeoutRef.current = null;
       }
-      if (progressRef.current) {
-        clearInterval(progressRef.current);
-        progressRef.current = null;
-      }
       
-      if (!isLoading && !hasTimedOut) {
-        setLoadingProgress(100);
-        loadingStartTime.current = null;
-        logger.info(`[TIMEOUT-ENHANCED] Loading concluído para: ${context}`);
-      }
+      setLoadingProgress(100);
+      const finalDuration = Date.now() - startTimeRef.current;
+      setLoadingDuration(finalDuration);
+      
+      logger.info(`[LOADING-TIMEOUT-ENHANCED] ✅ Loading concluído para ${context} em ${finalDuration}ms`);
     }
 
     return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
-      if (progressRef.current) clearInterval(progressRef.current);
     };
-  }, [isLoading, timeoutMs, forceTimeout, context, hasTimedOut]);
+  }, [isLoading, timeoutMs, context, onTimeout, authManager, isLoadingTooLong]);
 
-  const loadingDuration = loadingStartTime.current 
-    ? Date.now() - loadingStartTime.current 
-    : 0;
-
-  const retry = useCallback(() => {
-    logger.info(`[TIMEOUT-ENHANCED] Tentativa de retry para: ${context}`);
+  const retry = () => {
+    logger.info(`[LOADING-TIMEOUT-ENHANCED] 🔄 Retry solicitado para ${context}`);
     setHasTimedOut(false);
     setLoadingProgress(0);
-    loadingStartTime.current = null;
-  }, [context]);
+    setLoadingDuration(0);
+    setIsLoadingTooLong(false);
+    startTimeRef.current = Date.now();
+    
+    // Para contextos de auth, reinicializar AuthManager
+    if (context === 'auth' || context === 'onboarding') {
+      logger.info('[LOADING-TIMEOUT-ENHANCED] 🔄 Reinicializando AuthManager');
+      authManager.initialize();
+    }
+  };
 
   return {
     hasTimedOut,
-    loadingDuration,
     loadingProgress,
-    isLoadingTooLong: loadingDuration > timeoutMs * 0.7, // 70% do timeout
-    retry,
-    forceTimeout
+    loadingDuration,
+    isLoadingTooLong,
+    retry
   };
 };

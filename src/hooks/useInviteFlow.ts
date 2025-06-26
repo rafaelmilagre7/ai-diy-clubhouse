@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { tokenAudit } from '@/utils/tokenAuditLogger';
 import { logger } from '@/utils/logger';
+import AuthManager from '@/services/AuthManager';
 
 interface InviteDetails {
   email: string;
@@ -23,9 +24,21 @@ export const useInviteFlow = (token?: string) => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    // Se não há token, limpar estado e retornar
     if (!token) {
       setInviteDetails(null);
       setError(null);
+      setIsLoading(false);
+      return;
+    }
+
+    // Verificar se AuthManager já tem detalhes do convite
+    const authManager = AuthManager.getInstance();
+    const authState = authManager.getState();
+    
+    if (authState.hasInviteToken && authState.inviteDetails) {
+      logger.info('[INVITE-FLOW] 🔄 Usando detalhes do AuthManager');
+      setInviteDetails(authState.inviteDetails);
       setIsLoading(false);
       return;
     }
@@ -35,19 +48,18 @@ export const useInviteFlow = (token?: string) => {
         setIsLoading(true);
         setError(null);
         
-        // AUDITORIA: Token recebido para validação
         tokenAudit.logStep('INVITE_VALIDATION_START', token, 'useInviteFlow', {
           action: 'fetchInviteDetails'
         });
         
-        logger.info('[INVITE-FLOW] 🔍 Buscando detalhes do convite com timeout', {
+        logger.info('[INVITE-FLOW] 🔍 Buscando detalhes do convite com timeout OTIMIZADO', {
           token: token.substring(0, 8) + '***',
           tokenLength: token.length
         });
 
-        // TIMEOUT AGRESSIVO para a query
+        // TIMEOUT MAIS AGRESSIVO: 2 segundos
         const timeoutPromise = new Promise((_, reject) =>
-          setTimeout(() => reject(new Error('Timeout na busca do convite')), 3000)
+          setTimeout(() => reject(new Error('Timeout na busca do convite')), 2000)
         );
 
         const queryPromise = supabase
@@ -69,7 +81,6 @@ export const useInviteFlow = (token?: string) => {
           timeoutPromise
         ]) as any;
 
-        // AUDITORIA: Resultado da query
         tokenAudit.logStep('SUPABASE_QUERY_EXECUTED', token, 'supabase', {
           hasResult: !!data,
           error: supabaseError?.message,
@@ -77,29 +88,18 @@ export const useInviteFlow = (token?: string) => {
         });
 
         if (supabaseError) {
-          logger.error('[INVITE-FLOW] ❌ Erro na query Supabase', supabaseError, {
-            token: token.substring(0, 8) + '***',
-            tokenLength: token.length,
-            errorCode: supabaseError.code,
-            errorMessage: supabaseError.message
-          });
+          logger.error('[INVITE-FLOW] ❌ Erro na query Supabase', supabaseError);
           throw new Error(`Erro na consulta: ${supabaseError.message}`);
         }
 
         if (!data) {
-          logger.warn('[INVITE-FLOW] ⚠️ Convite não encontrado', {
-            token: token.substring(0, 8) + '***',
-            tokenLength: token.length
-          });
+          logger.warn('[INVITE-FLOW] ⚠️ Convite não encontrado');
           throw new Error('Convite não encontrado ou token inválido');
         }
 
         // Verificar se já foi usado
         if (data.used_at) {
-          logger.warn('[INVITE-FLOW] ⚠️ Convite já utilizado', {
-            token: token.substring(0, 8) + '***',
-            usedAt: data.used_at
-          });
+          logger.warn('[INVITE-FLOW] ⚠️ Convite já utilizado');
           throw new Error('Convite já foi utilizado');
         }
 
@@ -107,11 +107,7 @@ export const useInviteFlow = (token?: string) => {
         const now = new Date();
         const expiresAt = new Date(data.expires_at);
         if (now > expiresAt) {
-          logger.warn('[INVITE-FLOW] ⚠️ Convite expirado', {
-            token: token.substring(0, 8) + '***',
-            expiresAt: data.expires_at,
-            now: now.toISOString()
-          });
+          logger.warn('[INVITE-FLOW] ⚠️ Convite expirado');
           throw new Error('Convite expirado');
         }
 
@@ -125,7 +121,6 @@ export const useInviteFlow = (token?: string) => {
           created_at: data.created_at
         };
 
-        // AUDITORIA: Convite validado com sucesso
         tokenAudit.logStep('INVITE_VALIDATED_SUCCESS', token, 'validation_success', {
           email: inviteData.email,
           hasName: !!inviteData.name,
@@ -135,37 +130,30 @@ export const useInviteFlow = (token?: string) => {
 
         setInviteDetails(inviteData);
         
-        logger.info('[INVITE-FLOW] ✅ Convite validado com dados COMPLETOS', {
+        logger.info('[INVITE-FLOW] ✅ Convite validado OTIMIZADO', {
           token: token.substring(0, 8) + '***',
           email: inviteData.email,
-          hasName: !!inviteData.name,
-          hasWhatsApp: !!inviteData.whatsapp_number,
           roleName: inviteData.role.name
         });
 
       } catch (err: any) {
-        logger.error('[INVITE-FLOW] ❌ Erro ao buscar convite', err, {
-          token: token.substring(0, 8) + '***',
-          tokenLength: token.length
-        });
+        logger.error('[INVITE-FLOW] ❌ Erro ao buscar convite', err);
         setError(err.message);
       } finally {
         setIsLoading(false);
       }
     };
 
-    // TIMEOUT ABSOLUTO: sempre libera após 4 segundos
+    // TIMEOUT ABSOLUTO MAIS AGRESSIVO: 3 segundos
     const absoluteTimeout = setTimeout(() => {
       if (isLoading) {
-        logger.error('[INVITE-FLOW] 🚨 TIMEOUT ABSOLUTO - liberando após 4s', {
-          token: token.substring(0, 8) + '***'
-        });
+        logger.error('[INVITE-FLOW] 🚨 TIMEOUT ABSOLUTO - liberando após 3s');
         setIsLoading(false);
         if (!error && !inviteDetails) {
           setError('Timeout na verificação do convite');
         }
       }
-    }, 4000);
+    }, 3000);
 
     fetchInviteDetails();
 
