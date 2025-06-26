@@ -16,9 +16,10 @@ export type UserRole = Database['public']['Tables']['user_roles']['Row'];
 export type PermissionDefinition = Database['public']['Tables']['permission_definitions']['Row'];
 export type RolePermission = Database['public']['Tables']['role_permissions']['Row'];
 export type ImplementationCheckpoint = Database['public']['Tables']['implementation_checkpoints']['Row'];
+export type SolutionResource = Database['public']['Tables']['solution_resources']['Row'];
+export type Tool = Database['public']['Tables']['tools']['Row'];
 export type AuditLog = Database['public']['Tables']['audit_logs']['Row'];
 export type Event = Database['public']['Tables']['events']['Row'];
-export type Tool = Database['public']['Tables']['tools']['Row'];
 
 // Tipo UserProfile com role join
 export type UserProfile = Database['public']['Tables']['profiles']['Row'] & {

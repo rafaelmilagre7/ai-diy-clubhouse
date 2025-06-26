@@ -148,16 +148,16 @@ const ResourceFormDialog: React.FC<ResourceFormDialogProps> = ({
           <div className="grid gap-2">
             <Label>Upload de Arquivo</Label>
             <FileUpload
-              bucketName="solution_files"
+              bucketName="SOLUTION_FILES"
               folder="documents"
-              onUploadComplete={(url, fileName, fileSize) => {
+              onUploadComplete={(url: string, fileName?: string, fileSize?: number) => {
                 setNewResource({
                   ...newResource,
-                  title: fileName,
+                  title: fileName || newResource.title,
                   url: url,
-                  type: detectFileType(fileName),
-                  format: getFileFormatName(fileName),
-                  size: fileSize
+                  type: detectFileType(fileName || ''),
+                  format: getFileFormatName(fileName || ''),
+                  size: fileSize || 0
                 });
               }}
               accept="*"
