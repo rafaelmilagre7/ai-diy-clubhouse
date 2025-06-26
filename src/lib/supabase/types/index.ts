@@ -61,6 +61,7 @@ export type Analytics = Database['public']['Tables']['analytics']['Row'];
 
 // Onboarding types
 export type QuickOnboarding = Database['public']['Tables']['quick_onboarding']['Row'];
+export type OnboardingSync = Database['public']['Tables']['onboarding_sync']['Row'];
 
 // Invite types (if they exist in your database)
 export type Invite = any; // Define based on your actual schema
