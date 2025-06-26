@@ -47,6 +47,17 @@ export const ImplementationTrailTabs = ({ trail }: ImplementationTrailTabsProps)
   const totalSolutions = trail.priority1.length + trail.priority2.length + trail.priority3.length;
   const totalLessons = trail.recommended_lessons?.length || 0;
 
+  // Mapear recommended_lessons para incluir propriedades obrigatórias
+  const mappedLessons = (trail.recommended_lessons || []).map(lesson => ({
+    ...lesson,
+    // Propriedades obrigatórias do tipo RecommendedLesson
+    id: lesson.lessonId, // Usar lessonId como id
+    description: lesson.justification || '', // Usar justification como description
+    duration: 30, // Valor padrão para duração em minutos
+    members_quantity: 0, // Valor padrão para quantidade de membros
+    is_free: true // Valor padrão para indicar se é gratuito
+  }));
+
   return (
     <div className="space-y-6 animate-fade-in">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
@@ -87,7 +98,7 @@ export const ImplementationTrailTabs = ({ trail }: ImplementationTrailTabsProps)
         </TabsContent>
 
         <TabsContent value="lessons" className="mt-6">
-          <LessonsTab lessons={trail.recommended_lessons || []} />
+          <LessonsTab lessons={mappedLessons} />
         </TabsContent>
       </Tabs>
     </div>
