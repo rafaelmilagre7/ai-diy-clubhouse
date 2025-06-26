@@ -16,7 +16,6 @@ const DashboardPage = () => {
     );
   }
 
-  // CORRIGIDO: Redirecionar para /login (NOVO PADRÃO)
   if (!user) {
     return <Navigate to="/login" replace />;
   }

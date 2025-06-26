@@ -23,3 +23,12 @@ export {
   deleteForumTopic,
   deleteForumPost
 } from './rpc';
+
+// Funções de role helpers
+export const isAdminRole = (profile: any): boolean => {
+  return profile?.user_roles?.name === 'admin';
+};
+
+export const isFormacaoRole = (profile: any): boolean => {
+  return profile?.user_roles?.name === 'formacao';
+};

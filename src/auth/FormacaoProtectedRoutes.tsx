@@ -25,7 +25,7 @@ export const FormacaoProtectedRoutes = ({ children }: FormacaoProtectedRoutesPro
       
       timeoutRef.current = window.setTimeout(() => {
         setLoadingTimeout(true);
-      }, 5000); // 5 segundos para maior tolerância
+      }, 3000); // Reduzido para 3 segundos
     }
     
     return () => {
@@ -35,12 +35,12 @@ export const FormacaoProtectedRoutes = ({ children }: FormacaoProtectedRoutesPro
     };
   }, [isLoading, loadingTimeout]);
 
-  // Mostrar tela de carregamento enquanto verifica autenticação (mas apenas se o timeout não foi excedido)
+  // Mostrar tela de carregamento enquanto verifica autenticação
   if (isLoading && !loadingTimeout) {
-    return <LoadingScreen message="Verificando permissões de acesso..." />;
+    return <LoadingScreen message="Verificando permissões..." />;
   }
 
-  // Se o usuário não estiver autenticado, redireciona para a página de login (NOVO PADRÃO: /login)
+  // Se o usuário não estiver autenticado, redireciona para login
   if (!user) {
     toast.error("Por favor, faça login para acessar esta página");
     return <Navigate to="/login" state={{ from: location }} replace />;
