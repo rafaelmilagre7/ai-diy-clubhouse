@@ -1,16 +1,20 @@
 
 import { User } from '@supabase/supabase-js';
 
-interface InviteDetails {
+// Interface unificada para InviteDetails - resolve conflito de tipos
+export interface InviteDetails {
   email: string;
-  role_id: string;
-  token: string;
+  role_id?: string;
+  token?: string;
   name?: string;
+  whatsapp_number?: string;
   role: {
     id: string;
     name: string;
     description?: string;
   };
+  expires_at?: string;
+  created_at?: string;
 }
 
 interface HandleInviteFlowParams {
@@ -22,12 +26,30 @@ interface HandleInviteFlowParams {
 
 class AuthManager {
   private static instance: AuthManager;
+  private state = {
+    hasInviteToken: false,
+    inviteDetails: null as InviteDetails | null
+  };
 
   static getInstance(): AuthManager {
     if (!AuthManager.instance) {
       AuthManager.instance = new AuthManager();
     }
     return AuthManager.instance;
+  }
+
+  getState() {
+    return this.state;
+  }
+
+  setInviteDetails(details: InviteDetails) {
+    this.state.inviteDetails = details;
+    this.state.hasInviteToken = true;
+  }
+
+  clearInviteDetails() {
+    this.state.inviteDetails = null;
+    this.state.hasInviteToken = false;
   }
 
   async handleInviteFlow(params: HandleInviteFlowParams): Promise<string | null> {
