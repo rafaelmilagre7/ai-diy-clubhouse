@@ -17,14 +17,13 @@ const LoginForm = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
 
-  // Redirecionar se já estiver logado (mas só após o componente estar montado)
+  // Se já estiver logado, redirecionar SEM MOSTRAR LOADING
   useEffect(() => {
     if (user) {
-      navigate('/dashboard');
+      navigate('/', { replace: true });
     }
   }, [user, navigate]);
 
-  // Sempre mostrar o formulário primeiro
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
@@ -52,6 +51,7 @@ const LoginForm = () => {
     toast.info('Login com Google será implementado em breve');
   };
 
+  // SEMPRE MOSTRAR O FORMULÁRIO - SEM VERIFICAÇÕES DE LOADING
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="space-y-2">

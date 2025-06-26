@@ -15,29 +15,29 @@ export type Database = {
           id: string
           email: string
           name: string
-          avatar_url: string | null
-          company_name: string | null
-          industry: string | null
-          role_id: string | null
-          role: string | null
+          avatar_url: string
+          company_name: string
+          industry: string
+          role_id: string
+          role: string
           created_at: string
           onboarding_completed: boolean
-          onboarding_completed_at: string | null
+          onboarding_completed_at: string
           referrals_count: number
           successful_referrals_count: number
         }
         Insert: {
           id: string
           email: string
-          name: string
-          avatar_url?: string | null
-          company_name?: string | null
-          industry?: string | null
-          role_id?: string | null
-          role?: string | null
+          name?: string
+          avatar_url?: string
+          company_name?: string
+          industry?: string
+          role_id?: string
+          role?: string
           created_at?: string
           onboarding_completed?: boolean
-          onboarding_completed_at?: string | null
+          onboarding_completed_at?: string
           referrals_count?: number
           successful_referrals_count?: number
         }
@@ -45,14 +45,14 @@ export type Database = {
           id?: string
           email?: string
           name?: string
-          avatar_url?: string | null
-          company_name?: string | null
-          industry?: string | null
-          role_id?: string | null
-          role?: string | null
+          avatar_url?: string
+          company_name?: string
+          industry?: string
+          role_id?: string
+          role?: string
           created_at?: string
           onboarding_completed?: boolean
-          onboarding_completed_at?: string | null
+          onboarding_completed_at?: string
           referrals_count?: number
           successful_referrals_count?: number
         }
@@ -62,26 +62,68 @@ export type Database = {
         Row: {
           id: string
           name: string
-          description: string | null
-          permissions: Json | null
+          description: string
+          permissions: Json
           is_system: boolean
           created_at: string
         }
         Insert: {
           id?: string
           name: string
-          description?: string | null
-          permissions?: Json | null
+          description?: string
+          permissions?: Json
           is_system?: boolean
           created_at?: string
         }
         Update: {
           id?: string
           name?: string
-          description?: string | null
-          permissions?: Json | null
+          description?: string
+          permissions?: Json
           is_system?: boolean
           created_at?: string
+        }
+        Relationships: []
+      }
+      audit_logs: {
+        Row: {
+          id: string
+          user_id: string | null
+          event_type: string
+          action: string
+          resource_id: string | null
+          timestamp: string
+          details: Json
+          severity: string | null
+          ip_address: string | null
+          user_agent: string | null
+          session_id: string | null
+        }
+        Insert: {
+          id?: string
+          user_id?: string | null
+          event_type: string
+          action: string
+          resource_id?: string | null
+          timestamp?: string
+          details?: Json
+          severity?: string | null
+          ip_address?: string | null
+          user_agent?: string | null
+          session_id?: string | null
+        }
+        Update: {
+          id?: string
+          user_id?: string | null
+          event_type?: string
+          action?: string
+          resource_id?: string | null
+          timestamp?: string
+          details?: Json
+          severity?: string | null
+          ip_address?: string | null
+          user_agent?: string | null
+          session_id?: string | null
         }
         Relationships: []
       }
@@ -93,8 +135,8 @@ export type Database = {
           slug: string
           cover_image_url: string | null
           published: boolean
-          order_index: number
           created_by: string | null
+          order_index: number
           created_at: string
           updated_at: string
         }
@@ -105,8 +147,8 @@ export type Database = {
           slug: string
           cover_image_url?: string | null
           published?: boolean
-          order_index?: number
           created_by?: string | null
+          order_index?: number
           created_at?: string
           updated_at?: string
         }
@@ -117,8 +159,8 @@ export type Database = {
           slug?: string
           cover_image_url?: string | null
           published?: boolean
-          order_index?: number
           created_by?: string | null
+          order_index?: number
           created_at?: string
           updated_at?: string
         }
@@ -225,10 +267,10 @@ export type Database = {
           video_id: string | null
           thumbnail_url: string | null
           duration_seconds: number | null
+          order_index: number
           video_file_path: string | null
           video_file_name: string | null
           file_size_bytes: number | null
-          order_index: number
           created_at: string
         }
         Insert: {
@@ -241,10 +283,10 @@ export type Database = {
           video_id?: string | null
           thumbnail_url?: string | null
           duration_seconds?: number | null
+          order_index?: number
           video_file_path?: string | null
           video_file_name?: string | null
           file_size_bytes?: number | null
-          order_index?: number
           created_at?: string
         }
         Update: {
@@ -257,10 +299,10 @@ export type Database = {
           video_id?: string | null
           thumbnail_url?: string | null
           duration_seconds?: number | null
+          order_index?: number
           video_file_path?: string | null
           video_file_name?: string | null
           file_size_bytes?: number | null
-          order_index?: number
           created_at?: string
         }
         Relationships: []
@@ -374,8 +416,8 @@ export type Database = {
           user_id: string
           content: string
           parent_id: string | null
-          likes_count: number
           is_hidden: boolean
+          likes_count: number
           created_at: string
           updated_at: string
         }
@@ -385,8 +427,8 @@ export type Database = {
           user_id: string
           content: string
           parent_id?: string | null
-          likes_count?: number
           is_hidden?: boolean
+          likes_count?: number
           created_at?: string
           updated_at?: string
         }
@@ -396,116 +438,8 @@ export type Database = {
           user_id?: string
           content?: string
           parent_id?: string | null
-          likes_count?: number
           is_hidden?: boolean
-          created_at?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
-      course_access_control: {
-        Row: {
-          id: string
-          course_id: string
-          role_id: string
-          created_at: string
-        }
-        Insert: {
-          id?: string
-          course_id: string
-          role_id: string
-          created_at?: string
-        }
-        Update: {
-          id?: string
-          course_id?: string
-          role_id?: string
-          created_at?: string
-        }
-        Relationships: []
-      }
-      permission_definitions: {
-        Row: {
-          id: string
-          code: string
-          name: string
-          description: string | null
-          created_at: string
-        }
-        Insert: {
-          id?: string
-          code: string
-          name: string
-          description?: string | null
-          created_at?: string
-        }
-        Update: {
-          id?: string
-          code?: string
-          name?: string
-          description?: string | null
-          created_at?: string
-        }
-        Relationships: []
-      }
-      role_permissions: {
-        Row: {
-          id: string
-          role_id: string
-          permission_id: string
-          created_at: string
-        }
-        Insert: {
-          id?: string
-          role_id: string
-          permission_id: string
-          created_at?: string
-        }
-        Update: {
-          id?: string
-          role_id?: string
-          permission_id?: string
-          created_at?: string
-        }
-        Relationships: []
-      }
-      progress: {
-        Row: {
-          id: string
-          user_id: string
-          solution_id: string
-          is_completed: boolean
-          current_module: number | null
-          completed_modules: number[] | null
-          completion_percentage: number | null
-          started_at: string | null
-          completed_at: string | null
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          user_id: string
-          solution_id: string
-          is_completed?: boolean
-          current_module?: number | null
-          completed_modules?: number[] | null
-          completion_percentage?: number | null
-          started_at?: string | null
-          completed_at?: string | null
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          user_id?: string
-          solution_id?: string
-          is_completed?: boolean
-          current_module?: number | null
-          completed_modules?: number[] | null
-          completion_percentage?: number | null
-          started_at?: string | null
-          completed_at?: string | null
+          likes_count?: number
           created_at?: string
           updated_at?: string
         }
@@ -515,7 +449,7 @@ export type Database = {
         Row: {
           id: string
           title: string
-          description: string | null
+          description: string
           category: string
           difficulty: string
           published: boolean
@@ -525,7 +459,7 @@ export type Database = {
         Insert: {
           id?: string
           title: string
-          description?: string | null
+          description: string
           category: string
           difficulty: string
           published?: boolean
@@ -535,10 +469,43 @@ export type Database = {
         Update: {
           id?: string
           title?: string
-          description?: string | null
+          description?: string
           category?: string
           difficulty?: string
           published?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      tools: {
+        Row: {
+          id: string
+          name: string
+          description: string
+          category: string
+          url: string
+          logo_url: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          description: string
+          category: string
+          url: string
+          logo_url?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          description?: string
+          category?: string
+          url?: string
+          logo_url?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -554,6 +521,7 @@ export type Database = {
           location_link: string | null
           physical_location: string | null
           cover_image_url: string | null
+          created_by: string
           is_recurring: boolean
           recurrence_pattern: string | null
           recurrence_interval: number | null
@@ -561,7 +529,6 @@ export type Database = {
           recurrence_count: number | null
           recurrence_end_date: string | null
           parent_event_id: string | null
-          created_by: string
           created_at: string
         }
         Insert: {
@@ -573,6 +540,7 @@ export type Database = {
           location_link?: string | null
           physical_location?: string | null
           cover_image_url?: string | null
+          created_by: string
           is_recurring?: boolean
           recurrence_pattern?: string | null
           recurrence_interval?: number | null
@@ -580,7 +548,6 @@ export type Database = {
           recurrence_count?: number | null
           recurrence_end_date?: string | null
           parent_event_id?: string | null
-          created_by: string
           created_at?: string
         }
         Update: {
@@ -592,6 +559,7 @@ export type Database = {
           location_link?: string | null
           physical_location?: string | null
           cover_image_url?: string | null
+          created_by?: string
           is_recurring?: boolean
           recurrence_pattern?: string | null
           recurrence_interval?: number | null
@@ -599,7 +567,6 @@ export type Database = {
           recurrence_count?: number | null
           recurrence_end_date?: string | null
           parent_event_id?: string | null
-          created_by?: string
           created_at?: string
         }
         Relationships: []
@@ -688,9 +655,7 @@ export type TablesUpdate<
     : never
 
 export type Enums<
-  PublicEnumNameOrOptions extends
-    | keyof Database["public"]["Enums"]
-    | { schema: keyof Database },
+  PublicEnumNameOrOptions extends keyof Database["public"]["Enums"] | { schema: keyof Database },
   EnumName extends PublicEnumNameOrOptions extends { schema: keyof Database }
     ? keyof Database[PublicEnumNameOrOptions["schema"]]["Enums"]
     : never = never,

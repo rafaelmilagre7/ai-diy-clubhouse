@@ -26,10 +26,10 @@ export const SimpleAuthProvider: React.FC<SimpleAuthProviderProps> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false); // COMEÇAR COMO FALSE
   const [error, setError] = useState<string | null>(null);
 
-  // Carregar perfil apenas quando necessário
+  // Função para carregar perfil
   const loadProfile = async (userId: string) => {
     try {
       const { data, error } = await supabase
@@ -60,23 +60,12 @@ export const SimpleAuthProvider: React.FC<SimpleAuthProviderProps> = ({ children
   useEffect(() => {
     let mounted = true;
 
-    // Verificar sessão atual UMA VEZ
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!mounted) return;
-      
-      if (session?.user) {
-        setSession(session);
-        setUser(session.user);
-        loadProfile(session.user.id);
-      }
-    });
-
-    // Listener para mudanças de auth
+    // Setup do listener de mudanças de auth
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         if (!mounted) return;
 
-        console.log('Auth state changed:', event);
+        console.log('[SIMPLE-AUTH] Auth state changed:', event);
         
         setSession(session);
         setUser(session?.user ?? null);
@@ -89,11 +78,22 @@ export const SimpleAuthProvider: React.FC<SimpleAuthProviderProps> = ({ children
       }
     );
 
+    // Verificar sessão inicial UMA ÚNICA VEZ
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!mounted) return;
+      
+      if (session?.user) {
+        setSession(session);
+        setUser(session.user);
+        loadProfile(session.user.id);
+      }
+    });
+
     return () => {
       mounted = false;
       subscription.unsubscribe();
     };
-  }, []);
+  }, []); // Array vazio - executar apenas uma vez
 
   const signIn = async (email: string, password: string) => {
     try {

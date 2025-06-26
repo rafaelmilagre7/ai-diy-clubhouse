@@ -12,25 +12,25 @@ const SimpleRootRedirect = () => {
     userRole: profile?.user_roles?.name
   });
   
-  // Sem usuário = login direto
+  // SEM USUÁRIO = LOGIN DIRETO (SEM LOADING)
   if (!user) {
     console.log("[SIMPLE-ROOT-REDIRECT] Sem usuário -> /login");
     return <Navigate to="/login" replace />;
   }
   
-  // Admin = admin dashboard
+  // ADMIN = ADMIN DASHBOARD
   if (isAdmin) {
     console.log("[SIMPLE-ROOT-REDIRECT] Admin -> /admin");
     return <Navigate to="/admin" replace />;
   }
   
-  // Formação = área de formação
+  // FORMAÇÃO = ÁREA DE FORMAÇÃO
   if (profile?.user_roles?.name === 'formacao') {
     console.log("[SIMPLE-ROOT-REDIRECT] Formação -> /formacao");
     return <Navigate to="/formacao" replace />;
   }
   
-  // Padrão = dashboard do membro
+  // PADRÃO = DASHBOARD DO MEMBRO
   console.log("[SIMPLE-ROOT-REDIRECT] Membro -> /dashboard");
   return <Navigate to="/dashboard" replace />;
 };
