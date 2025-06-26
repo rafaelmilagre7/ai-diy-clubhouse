@@ -1,4 +1,5 @@
 
+
 import { Database } from './database.types';
 
 // Export all database types
@@ -45,13 +46,14 @@ export type ForumCategory = Database['public']['Tables']['forum_categories']['Ro
 
 // Event types
 export type Event = Database['public']['Tables']['events']['Row'];
-export type EventAccessControl = any; // Define based on your actual schema
+export type EventAccessControl = Database['public']['Tables']['event_access_control']['Row'];
 
 // Role and permission types
 export type UserRole = Database['public']['Tables']['user_roles']['Row'];
 export type PermissionDefinition = Database['public']['Tables']['permission_definitions']['Row'];
 export type RolePermission = Database['public']['Tables']['role_permissions']['Row'];
 export type CourseAccessControl = Database['public']['Tables']['course_access_control']['Row'];
+export type BenefitAccessControl = Database['public']['Tables']['benefit_access_control']['Row'];
 
 // Analytics and audit types
 export type AuditLog = Database['public']['Tables']['audit_logs']['Row'];
@@ -84,3 +86,4 @@ export const isAdminRole = (profile: any): boolean => {
 export const isFormacaoRole = (profile: any): boolean => {
   return profile?.user_roles?.name === 'formacao';
 };
+

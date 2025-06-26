@@ -1,4 +1,5 @@
 
+
 import { User } from '@supabase/supabase-js';
 
 // Unified interface for InviteDetails - resolves conflict
@@ -118,7 +119,7 @@ class AuthManager {
   }
 
   async handleInviteFlow(params: HandleInviteFlowParams): Promise<string | null> {
-    const { token, inviteEmail, currentUser } = params;
+    const { token, inviteEmail, currentUser, inviteDetails } = params;
 
     try {
       // If user is not logged in, redirect to login with invite token
@@ -141,3 +142,4 @@ class AuthManager {
 }
 
 export default AuthManager;
+
