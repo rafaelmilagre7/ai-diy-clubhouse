@@ -3,11 +3,11 @@ export type Json =
   | string
   | number
   | boolean
-  | null
+  | null  
   | { [key: string]: Json | undefined }
   | Json[]
 
-export type Database = {
+export interface Database {
   public: {
     Tables: {
       profiles: {
@@ -28,7 +28,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
-          id: string
+          id?: string
           email: string
           name: string
           avatar_url?: string
@@ -149,6 +149,8 @@ export type Database = {
           location_link: string
           physical_location: string
           cover_image_url: string
+          created_by: string
+          created_at: string
           is_recurring: boolean
           recurrence_pattern: string
           recurrence_interval: number
@@ -156,8 +158,6 @@ export type Database = {
           recurrence_count: number
           recurrence_end_date: string
           parent_event_id: string
-          created_by: string
-          created_at: string
         }
         Insert: {
           id?: string
@@ -168,6 +168,8 @@ export type Database = {
           location_link?: string
           physical_location?: string
           cover_image_url?: string
+          created_by: string
+          created_at?: string
           is_recurring?: boolean
           recurrence_pattern?: string
           recurrence_interval?: number
@@ -175,8 +177,6 @@ export type Database = {
           recurrence_count?: number
           recurrence_end_date?: string
           parent_event_id?: string
-          created_by: string
-          created_at?: string
         }
         Update: {
           id?: string
@@ -187,6 +187,8 @@ export type Database = {
           location_link?: string
           physical_location?: string
           cover_image_url?: string
+          created_by?: string
+          created_at?: string
           is_recurring?: boolean
           recurrence_pattern?: string
           recurrence_interval?: number
@@ -194,8 +196,6 @@ export type Database = {
           recurrence_count?: number
           recurrence_end_date?: string
           parent_event_id?: string
-          created_by?: string
-          created_at?: string
         }
         Relationships: []
       }
@@ -270,11 +270,11 @@ export type Database = {
           action: string
           resource_id: string
           details: Json
-          severity: string
-          timestamp: string
           ip_address: string
           user_agent: string
           session_id: string
+          timestamp: string
+          severity: string
         }
         Insert: {
           id?: string
@@ -283,11 +283,11 @@ export type Database = {
           action: string
           resource_id?: string
           details?: Json
-          severity?: string
-          timestamp?: string
           ip_address?: string
           user_agent?: string
           session_id?: string
+          timestamp?: string
+          severity?: string
         }
         Update: {
           id?: string
@@ -296,11 +296,11 @@ export type Database = {
           action?: string
           resource_id?: string
           details?: Json
-          severity?: string
-          timestamp?: string
           ip_address?: string
           user_agent?: string
           session_id?: string
+          timestamp?: string
+          severity?: string
         }
         Relationships: []
       }
@@ -349,9 +349,9 @@ export type Database = {
           course_id: string
           title: string
           description: string
-          cover_image_url: string
-          published: boolean
           order_index: number
+          published: boolean
+          cover_image_url: string
           created_at: string
           updated_at: string
         }
@@ -360,9 +360,9 @@ export type Database = {
           course_id: string
           title: string
           description?: string
-          cover_image_url?: string
-          published?: boolean
           order_index?: number
+          published?: boolean
+          cover_image_url?: string
           created_at?: string
           updated_at?: string
         }
@@ -371,9 +371,9 @@ export type Database = {
           course_id?: string
           title?: string
           description?: string
-          cover_image_url?: string
-          published?: boolean
           order_index?: number
+          published?: boolean
+          cover_image_url?: string
           created_at?: string
           updated_at?: string
         }
@@ -386,11 +386,11 @@ export type Database = {
           title: string
           description: string
           content: Json
-          cover_image_url: string
-          published: boolean
           order_index: number
           estimated_time_minutes: number
           difficulty_level: string
+          published: boolean
+          cover_image_url: string
           ai_assistant_enabled: boolean
           ai_assistant_id: string
           ai_assistant_prompt: string
@@ -403,11 +403,11 @@ export type Database = {
           title: string
           description?: string
           content?: Json
-          cover_image_url?: string
-          published?: boolean
           order_index?: number
           estimated_time_minutes?: number
           difficulty_level?: string
+          published?: boolean
+          cover_image_url?: string
           ai_assistant_enabled?: boolean
           ai_assistant_id?: string
           ai_assistant_prompt?: string
@@ -420,11 +420,11 @@ export type Database = {
           title?: string
           description?: string
           content?: Json
-          cover_image_url?: string
-          published?: boolean
           order_index?: number
           estimated_time_minutes?: number
           difficulty_level?: string
+          published?: boolean
+          cover_image_url?: string
           ai_assistant_enabled?: boolean
           ai_assistant_id?: string
           ai_assistant_prompt?: string
@@ -592,8 +592,8 @@ export type Database = {
       learning_comments: {
         Row: {
           id: string
-          user_id: string
           lesson_id: string
+          user_id: string
           content: string
           parent_id: string
           likes_count: number
@@ -603,8 +603,8 @@ export type Database = {
         }
         Insert: {
           id?: string
-          user_id: string
           lesson_id: string
+          user_id: string
           content: string
           parent_id?: string
           likes_count?: number
@@ -614,8 +614,8 @@ export type Database = {
         }
         Update: {
           id?: string
-          user_id?: string
           lesson_id?: string
+          user_id?: string
           content?: string
           parent_id?: string
           likes_count?: number
@@ -630,11 +630,11 @@ export type Database = {
           id: string
           user_id: string
           solution_id: string
-          completed_modules: Json
+          module_id: string
+          progress_percentage: number
           is_completed: boolean
-          completion_percentage: number
-          started_at: string
           completed_at: string
+          data: Json
           created_at: string
           updated_at: string
         }
@@ -642,11 +642,11 @@ export type Database = {
           id?: string
           user_id: string
           solution_id: string
-          completed_modules?: Json
+          module_id?: string
+          progress_percentage?: number
           is_completed?: boolean
-          completion_percentage?: number
-          started_at?: string
           completed_at?: string
+          data?: Json
           created_at?: string
           updated_at?: string
         }
@@ -654,11 +654,11 @@ export type Database = {
           id?: string
           user_id?: string
           solution_id?: string
-          completed_modules?: Json
+          module_id?: string
+          progress_percentage?: number
           is_completed?: boolean
-          completion_percentage?: number
-          started_at?: string
           completed_at?: string
+          data?: Json
           created_at?: string
           updated_at?: string
         }
@@ -671,25 +671,33 @@ export type Database = {
           description: string
           category: string
           difficulty: string
-          estimated_time: string
-          cover_image_url: string
+          estimated_time_hours: number
           is_published: boolean
           created_by: string
           created_at: string
           updated_at: string
+          cover_image_url: string
+          tags: string[]
+          requirements: Json
+          outcomes: Json
+          metrics: Json
         }
         Insert: {
           id?: string
           title: string
-          description: string
-          category: string
+          description?: string
+          category?: string
           difficulty?: string
-          estimated_time?: string
-          cover_image_url?: string
+          estimated_time_hours?: number
           is_published?: boolean
-          created_by: string
+          created_by?: string
           created_at?: string
           updated_at?: string
+          cover_image_url?: string
+          tags?: string[]
+          requirements?: Json
+          outcomes?: Json
+          metrics?: Json
         }
         Update: {
           id?: string
@@ -697,12 +705,16 @@ export type Database = {
           description?: string
           category?: string
           difficulty?: string
-          estimated_time?: string
-          cover_image_url?: string
+          estimated_time_hours?: number
           is_published?: boolean
           created_by?: string
           created_at?: string
           updated_at?: string
+          cover_image_url?: string
+          tags?: string[]
+          requirements?: Json
+          outcomes?: Json
+          metrics?: Json
         }
         Relationships: []
       }
@@ -752,35 +764,59 @@ export type Database = {
         Row: {
           id: string
           name: string
-          description: string
           category: string
+          description: string
           official_url: string
-          logo_url: string
-          is_active: boolean
+          tags: string[]
+          has_member_benefit: boolean
+          benefit_title: string
+          benefit_description: string
+          benefit_link: string
+          is_access_restricted: boolean
+          has_access: boolean
           created_at: string
           updated_at: string
+          logo_url: string
+          pricing_info: Json
+          features: Json
         }
         Insert: {
           id?: string
           name: string
-          description: string
           category: string
+          description?: string
           official_url: string
-          logo_url?: string
-          is_active?: boolean
+          tags?: string[]
+          has_member_benefit?: boolean
+          benefit_title?: string
+          benefit_description?: string
+          benefit_link?: string
+          is_access_restricted?: boolean
+          has_access?: boolean
           created_at?: string
           updated_at?: string
+          logo_url?: string
+          pricing_info?: Json
+          features?: Json
         }
         Update: {
           id?: string
           name?: string
-          description?: string
           category?: string
+          description?: string
           official_url?: string
-          logo_url?: string
-          is_active?: boolean
+          tags?: string[]
+          has_member_benefit?: boolean
+          benefit_title?: string
+          benefit_description?: string
+          benefit_link?: string
+          is_access_restricted?: boolean
+          has_access?: boolean
           created_at?: string
           updated_at?: string
+          logo_url?: string
+          pricing_info?: Json
+          features?: Json
         }
         Relationships: []
       }
@@ -788,22 +824,22 @@ export type Database = {
         Row: {
           id: string
           solution_id: string
-          checkpoint_order: number
           description: string
+          checkpoint_order: number
           created_at: string
         }
         Insert: {
           id?: string
           solution_id?: string
-          checkpoint_order: number
           description: string
+          checkpoint_order: number
           created_at?: string
         }
         Update: {
           id?: string
           solution_id?: string
-          checkpoint_order?: number
           description?: string
+          checkpoint_order?: number
           created_at?: string
         }
         Relationships: []
@@ -812,32 +848,35 @@ export type Database = {
         Row: {
           id: string
           solution_id: string
-          name: string
+          title: string
+          type: string
+          url: string
           description: string
-          file_url: string
-          file_type: string
-          file_size: number
+          file_size_bytes: number
           created_at: string
+          updated_at: string
         }
         Insert: {
           id?: string
           solution_id: string
-          name: string
+          title: string
+          type: string
+          url: string
           description?: string
-          file_url: string
-          file_type: string
-          file_size?: number
+          file_size_bytes?: number
           created_at?: string
+          updated_at?: string
         }
         Update: {
           id?: string
           solution_id?: string
-          name?: string
+          title?: string
+          type?: string
+          url?: string
           description?: string
-          file_url?: string
-          file_type?: string
-          file_size?: number
+          file_size_bytes?: number
           created_at?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -847,21 +886,30 @@ export type Database = {
           solution_id: string
           tool_id: string
           is_required: boolean
+          usage_context: string
+          order_index: number
           created_at: string
+          updated_at: string
         }
         Insert: {
           id?: string
           solution_id: string
           tool_id: string
           is_required?: boolean
+          usage_context?: string
+          order_index?: number
           created_at?: string
+          updated_at?: string
         }
         Update: {
           id?: string
           solution_id?: string
           tool_id?: string
           is_required?: boolean
+          usage_context?: string
+          order_index?: number
           created_at?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -904,45 +952,45 @@ export type Database = {
       forum_topics: {
         Row: {
           id: string
-          user_id: string
           category_id: string
+          user_id: string
           title: string
           content: string
+          view_count: number
+          reply_count: number
           is_pinned: boolean
           is_locked: boolean
           is_solved: boolean
-          view_count: number
-          reply_count: number
           last_activity_at: string
           created_at: string
           updated_at: string
         }
         Insert: {
           id?: string
-          user_id: string
           category_id: string
+          user_id: string
           title: string
           content: string
+          view_count?: number
+          reply_count?: number
           is_pinned?: boolean
           is_locked?: boolean
           is_solved?: boolean
-          view_count?: number
-          reply_count?: number
           last_activity_at?: string
           created_at?: string
           updated_at?: string
         }
         Update: {
           id?: string
-          user_id?: string
           category_id?: string
+          user_id?: string
           title?: string
           content?: string
+          view_count?: number
+          reply_count?: number
           is_pinned?: boolean
           is_locked?: boolean
           is_solved?: boolean
-          view_count?: number
-          reply_count?: number
           last_activity_at?: string
           created_at?: string
           updated_at?: string
@@ -952,10 +1000,10 @@ export type Database = {
       forum_posts: {
         Row: {
           id: string
-          user_id: string
           topic_id: string
-          parent_id: string
+          user_id: string
           content: string
+          parent_id: string
           is_solution: boolean
           is_hidden: boolean
           created_at: string
@@ -963,10 +1011,10 @@ export type Database = {
         }
         Insert: {
           id?: string
-          user_id: string
           topic_id: string
-          parent_id?: string
+          user_id: string
           content: string
+          parent_id?: string
           is_solution?: boolean
           is_hidden?: boolean
           created_at?: string
@@ -974,10 +1022,10 @@ export type Database = {
         }
         Update: {
           id?: string
-          user_id?: string
           topic_id?: string
-          parent_id?: string
+          user_id?: string
           content?: string
+          parent_id?: string
           is_solution?: boolean
           is_hidden?: boolean
           created_at?: string
@@ -988,22 +1036,22 @@ export type Database = {
       forum_reactions: {
         Row: {
           id: string
-          user_id: string
           post_id: string
+          user_id: string
           reaction_type: string
           created_at: string
         }
         Insert: {
           id?: string
-          user_id: string
           post_id: string
+          user_id: string
           reaction_type: string
           created_at?: string
         }
         Update: {
           id?: string
-          user_id?: string
           post_id?: string
+          user_id?: string
           reaction_type?: string
           created_at?: string
         }
@@ -1013,8 +1061,70 @@ export type Database = {
         Row: {
           id: string
           user_id: string
+          checkpoint_id: string
+          is_completed: boolean
+          completed_at: string
+          notes: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          checkpoint_id: string
+          is_completed?: boolean
+          completed_at?: string
+          notes?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          checkpoint_id?: string
+          is_completed?: boolean
+          completed_at?: string
+          notes?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      analytics: {
+        Row: {
+          id: string
+          user_id: string
+          event_type: string
+          solution_id: string
           module_id: string
-          checklist_data: Json
+          event_data: Json
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          event_type: string
+          solution_id?: string
+          module_id?: string
+          event_data?: Json
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          event_type?: string
+          solution_id?: string
+          module_id?: string
+          event_data?: Json
+          created_at?: string
+        }
+        Relationships: []
+      }
+      quick_onboarding: {
+        Row: {
+          id: string
+          user_id: string
+          data: Json
           is_completed: boolean
           created_at: string
           updated_at: string
@@ -1022,8 +1132,7 @@ export type Database = {
         Insert: {
           id?: string
           user_id: string
-          module_id: string
-          checklist_data?: Json
+          data?: Json
           is_completed?: boolean
           created_at?: string
           updated_at?: string
@@ -1031,8 +1140,7 @@ export type Database = {
         Update: {
           id?: string
           user_id?: string
-          module_id?: string
-          checklist_data?: Json
+          data?: Json
           is_completed?: boolean
           created_at?: string
           updated_at?: string
@@ -1050,7 +1158,7 @@ export type Database = {
           offset_count?: number
           search_query?: string
         }
-        Returns: Array<{
+        Returns: {
           id: string
           email: string
           name: string
@@ -1061,7 +1169,7 @@ export type Database = {
           company_name: string
           industry: string
           created_at: string
-        }>
+        }[]
       }
       is_admin: {
         Args: Record<PropertyKey, never>
@@ -1115,83 +1223,3 @@ export type Database = {
     }
   }
 }
-
-export type Tables<
-  PublicTableNameOrOptions extends
-    | keyof (Database["public"]["Tables"] & Database["public"]["Views"])
-    | { schema: keyof Database },
-  TableName extends PublicTableNameOrOptions extends { schema: keyof Database }
-    ? keyof (Database[PublicTableNameOrOptions["schema"]]["Tables"] &
-        Database[PublicTableNameOrOptions["schema"]]["Views"])
-    : never = never,
-> = PublicTableNameOrOptions extends { schema: keyof Database }
-  ? (Database[PublicTableNameOrOptions["schema"]]["Tables"] &
-      Database[PublicTableNameOrOptions["schema"]]["Views"])[TableName] extends {
-      Row: infer R
-    }
-    ? R
-    : never
-  : PublicTableNameOrOptions extends keyof (Database["public"]["Tables"] &
-        Database["public"]["Views"])
-    ? (Database["public"]["Tables"] &
-        Database["public"]["Views"])[PublicTableNameOrOptions] extends {
-        Row: infer R
-      }
-      ? R
-      : never
-    : never
-
-export type TablesInsert<
-  PublicTableNameOrOptions extends
-    | keyof Database["public"]["Tables"]
-    | { schema: keyof Database },
-  TableName extends PublicTableNameOrOptions extends { schema: keyof Database }
-    ? keyof Database[PublicTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
-> = PublicTableNameOrOptions extends { schema: keyof Database }
-  ? Database[PublicTableNameOrOptions["schema"]]["Tables"][TableName] extends {
-      Insert: infer I
-    }
-    ? I
-    : never
-  : PublicTableNameOrOptions extends keyof Database["public"]["Tables"]
-    ? Database["public"]["Tables"][PublicTableNameOrOptions] extends {
-        Insert: infer I
-      }
-      ? I
-      : never
-    : never
-
-export type TablesUpdate<
-  PublicTableNameOrOptions extends
-    | keyof Database["public"]["Tables"]
-    | { schema: keyof Database },
-  TableName extends PublicTableNameOrOptions extends { schema: keyof Database }
-    ? keyof Database[PublicTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
-> = PublicTableNameOrOptions extends { schema: keyof Database }
-  ? Database[PublicTableNameOrOptions["schema"]]["Tables"][TableName] extends {
-      Update: infer U
-    }
-    ? U
-    : never
-  : PublicTableNameOrOptions extends keyof Database["public"]["Tables"]
-    ? Database["public"]["Tables"][PublicTableNameOrOptions] extends {
-        Update: infer U
-      }
-      ? U
-      : never
-    : never
-
-export type Enums<
-  PublicEnumNameOrOptions extends
-    | keyof Database["public"]["Enums"]
-    | { schema: keyof Database },
-  EnumName extends PublicEnumNameOrOptions extends { schema: keyof Database }
-    ? keyof Database[PublicEnumNameOrOptions["schema"]]["Enums"]
-    : never = never,
-> = PublicEnumNameOrOptions extends { schema: keyof Database }
-  ? Database[PublicEnumNameOrOptions["schema"]]["Enums"][EnumName]
-  : PublicEnumNameOrOptions extends keyof Database["public"]["Enums"]
-    ? Database["public"]["Enums"][PublicEnumNameOrOptions]
-    : never
