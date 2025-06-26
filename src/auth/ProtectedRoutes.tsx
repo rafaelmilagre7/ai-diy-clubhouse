@@ -35,9 +35,9 @@ export const ProtectedRoutes = ({ children, allowInviteFlow = false }: Protected
     return <LoadingScreen message="Verificando credenciais..." />;
   }
 
-  // Sem usuário = login
+  // Sem usuário = login (NOVO PADRÃO: /login)
   if (!user) {
-    return <Navigate to="/auth" state={{ from: location.pathname }} replace />;
+    return <Navigate to="/login" state={{ from: location.pathname }} replace />;
   }
 
   // Permitir fluxo de convite se configurado

@@ -69,7 +69,7 @@ const RobustRootRedirect = () => {
           
           <div className="space-y-3">
             <Button
-              onClick={() => window.location.href = '/auth'}
+              onClick={() => window.location.href = '/login'}
               className="w-full bg-[#0ABAB5] text-white hover:bg-[#089a96]"
             >
               Ir para Login
@@ -112,7 +112,7 @@ const RobustRootRedirect = () => {
           <p className="text-gray-300 mb-6">{authError}</p>
           <div className="space-y-3">
             <Button
-              onClick={() => window.location.href = '/auth'}
+              onClick={() => window.location.href = '/login'}
               className="bg-[#0ABAB5] text-white px-6 py-2 rounded-lg hover:bg-[#089a96] transition-colors"
             >
               Ir para Login
@@ -138,10 +138,10 @@ const RobustRootRedirect = () => {
 
   // LÓGICA DE REDIRECIONAMENTO FORÇADA OU NORMAL
   
-  // Sem usuário = login
+  // Sem usuário = login (NOVO PADRÃO: /login)
   if (!user) {
-    logger.info('[ROOT-REDIRECT] 🔓 Sem usuário -> redirecionando para auth');
-    return <Navigate to="/auth" replace />;
+    logger.info('[ROOT-REDIRECT] 🔓 Sem usuário -> redirecionando para /login');
+    return <Navigate to="/login" replace />;
   }
 
   // Aguardar perfil apenas se não forçou

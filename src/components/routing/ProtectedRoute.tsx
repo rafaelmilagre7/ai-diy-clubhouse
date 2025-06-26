@@ -24,9 +24,9 @@ const ProtectedRoute = ({
     return <LoadingScreen message="Verificando sua autenticação..." />;
   }
 
-  // Se não houver usuário autenticado, redireciona para login
+  // Se não houver usuário autenticado, redireciona para login (NOVO PADRÃO: /login)
   if (!user) {
-    return <Navigate to="/auth" state={{ from: location }} replace />;
+    return <Navigate to="/login" state={{ from: location }} replace />;
   }
   
   // Verificar se requer admin e usuário não é admin

@@ -35,10 +35,10 @@ export const RobustProtectedRoutes = ({ children, allowInviteFlow = false }: Rob
     return <LoadingScreen message="Verificando credenciais..." />;
   }
 
-  // Sem usuário = login
+  // Sem usuário = login (NOVO PADRÃO: /login)
   if (!user) {
-    logger.info("[PROTECTED-ROUTES] Sem usuário -> login");
-    return <Navigate to="/auth" state={{ from: location.pathname }} replace />;
+    logger.info("[PROTECTED-ROUTES] Sem usuário -> /login");
+    return <Navigate to="/login" state={{ from: location.pathname }} replace />;
   }
 
   // Permitir fluxo de convite se configurado E específico

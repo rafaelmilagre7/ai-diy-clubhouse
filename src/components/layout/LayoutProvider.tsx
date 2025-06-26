@@ -31,7 +31,7 @@ const LayoutProvider = memo(({ children }: { children: ReactNode }) => {
     );
   }
 
-  // Se não há usuário, mostrar loading (deve redirecionar via ProtectedRoutes)
+  // Se não há usuário, mostrar loading (deve redirecionar via ProtectedRoutes para /login)
   if (!user) {
     return (
       <PageTransitionWithFallback isVisible={true}>

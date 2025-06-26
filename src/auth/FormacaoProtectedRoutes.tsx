@@ -40,10 +40,10 @@ export const FormacaoProtectedRoutes = ({ children }: FormacaoProtectedRoutesPro
     return <LoadingScreen message="Verificando permissões de acesso..." />;
   }
 
-  // Se o usuário não estiver autenticado, redireciona para a página de login
+  // Se o usuário não estiver autenticado, redireciona para a página de login (NOVO PADRÃO: /login)
   if (!user) {
     toast.error("Por favor, faça login para acessar esta página");
-    return <Navigate to="/auth" state={{ from: location }} replace />;
+    return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
   // Se o usuário não for admin ou formacao, redireciona para o dashboard
