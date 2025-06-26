@@ -1,11 +1,10 @@
 
-
 import { Database } from './database.types';
 
 // Export all database types
 export * from './database.types';
 
-// Main table row types
+// Main table row types with enhanced UserProfile
 export type UserProfile = Database['public']['Tables']['profiles']['Row'] & {
   user_roles?: {
     id: string;
@@ -26,18 +25,18 @@ export type LearningResource = Database['public']['Tables']['learning_resources'
 export type LearningCertificate = Database['public']['Tables']['learning_certificates']['Row'];
 export type LearningComment = Database['public']['Tables']['learning_comments']['Row'];
 
-// Solution types
-export type Solution = Database['public']['Tables']['solutions']['Row'];
-export type Module = Database['public']['Tables']['modules']['Row'];
-export type Progress = Database['public']['Tables']['progress']['Row'];
-export type UserChecklist = Database['public']['Tables']['user_checklists']['Row'];
-export type SolutionResource = Database['public']['Tables']['solution_resources']['Row'];
-export type SolutionTool = Database['public']['Tables']['solution_tools']['Row'];
-export type ImplementationCheckpoint = Database['public']['Tables']['implementation_checkpoints']['Row'];
+// Solution types (if they exist in your database)
+export type Solution = any; // Define based on your actual schema
+export type Module = any; // Define based on your actual schema
+export type Progress = any; // Define based on your actual schema
+export type UserChecklist = any; // Define based on your actual schema
+export type SolutionResource = any; // Define based on your actual schema
+export type SolutionTool = any; // Define based on your actual schema
+export type ImplementationCheckpoint = any; // Define based on your actual schema
 
-// Tool types
-export type Tool = Database['public']['Tables']['tools']['Row'];
-export type ToolCategory = Database['public']['Tables']['tool_categories']['Row'];
+// Tool types (if they exist in your database)
+export type Tool = any; // Define based on your actual schema
+export type ToolCategory = any; // Define based on your actual schema
 
 // Forum types
 export type ForumTopic = Database['public']['Tables']['forum_topics']['Row'];
@@ -50,21 +49,21 @@ export type EventAccessControl = Database['public']['Tables']['event_access_cont
 
 // Role and permission types
 export type UserRole = Database['public']['Tables']['user_roles']['Row'];
-export type PermissionDefinition = Database['public']['Tables']['permission_definitions']['Row'];
-export type RolePermission = Database['public']['Tables']['role_permissions']['Row'];
+export type PermissionDefinition = any; // Define based on your actual schema
+export type RolePermission = any; // Define based on your actual schema
 export type CourseAccessControl = Database['public']['Tables']['course_access_control']['Row'];
 
 // Analytics and audit types
 export type AuditLog = Database['public']['Tables']['audit_logs']['Row'];
 export type Analytics = Database['public']['Tables']['analytics']['Row'];
 
-// Invite types
-export type Invite = Database['public']['Tables']['invites']['Row'];
-export type InviteDelivery = Database['public']['Tables']['invite_deliveries']['Row'];
+// Invite types (if they exist in your database)
+export type Invite = any; // Define based on your actual schema
+export type InviteDelivery = any; // Define based on your actual schema
 
 // Communication types
 export type AdminCommunication = Database['public']['Tables']['admin_communications']['Row'];
-export type NotificationPreference = Database['public']['Tables']['notification_preferences']['Row'];
+export type NotificationPreference = any; // Define based on your actual schema
 
 // Utility function to get user role name safely
 export const getUserRoleName = (profile: UserProfile | null): string => {
@@ -85,4 +84,3 @@ export const isAdminRole = (profile: any): boolean => {
 export const isFormacaoRole = (profile: any): boolean => {
   return profile?.user_roles?.name === 'formacao';
 };
-

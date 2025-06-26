@@ -1,7 +1,7 @@
 
 import { User } from '@supabase/supabase-js';
 
-// Interface unificada para InviteDetails - resolve conflito de tipos
+// Unified interface for InviteDetails - resolves conflict
 export interface InviteDetails {
   email: string;
   role_id: string;
@@ -141,4 +141,3 @@ class AuthManager {
 }
 
 export default AuthManager;
-

@@ -19,6 +19,7 @@ describe('UserRoleDialog', () => {
     company_name: 'Test Company',
     industry: 'Technology',
     created_at: '2024-01-01T00:00:00Z',
+    updated_at: '2024-01-01T00:00:00Z',
     onboarding_completed: true,
     onboarding_completed_at: '2024-01-01T00:00:00Z',
     referrals_count: 0,
