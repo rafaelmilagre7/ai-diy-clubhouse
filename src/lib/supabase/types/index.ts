@@ -1,5 +1,4 @@
 
-
 import { Database } from './database.types';
 
 // Tipos de tabelas principais
@@ -59,4 +58,3 @@ export const getUserRoleName = (profile: UserProfile | null): string => {
 
 // Re-exportar tipos do database
 export * from './database.types';
-

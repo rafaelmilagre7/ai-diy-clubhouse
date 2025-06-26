@@ -1,5 +1,4 @@
 
-
 import { supabase } from './client';
 
 /**
@@ -24,11 +23,6 @@ export const incrementTopicReplies = async (topicId: string) => {
   });
 };
 
-// Helper function to call RPC functions correctly
-export const callRpcFunction = async (functionName: 'create_storage_public_policy' | 'increment_topic_replies' | 'increment_topic_views', params: any = {}) => {
-  return await supabase.rpc(functionName as any, params);
-};
-
 export const deleteForumTopic = async (topicId: string) => {
   return await supabase.rpc('delete_forum_topic', {
     topic_id: topicId
@@ -41,3 +35,20 @@ export const deleteForumPost = async (postId: string) => {
   });
 };
 
+// Helper function to call RPC functions correctly
+export const callRpcFunction = async (
+  functionName: 'create_storage_public_policy' | 'increment_topic_replies' | 'increment_topic_views' | 'delete_forum_topic' | 'delete_forum_post', 
+  params: any = {}
+) => {
+  return await supabase.rpc(functionName as any, params);
+};
+
+// For backward compatibility, create a more flexible version that handles other RPC calls
+export const callSupabaseRpc = async (functionName: string, params: any = {}) => {
+  try {
+    return await supabase.rpc(functionName as any, params);
+  } catch (error) {
+    console.error(`Error calling RPC function ${functionName}:`, error);
+    throw error;
+  }
+};

@@ -15,14 +15,14 @@ export type Database = {
           id: string
           email: string
           name: string
-          avatar_url: string
-          company_name: string
-          industry: string
+          avatar_url: string | null
+          company_name: string | null
+          industry: string | null
           role_id: string
           role: string
           created_at: string
           onboarding_completed: boolean
-          onboarding_completed_at: string
+          onboarding_completed_at: string | null
           referrals_count: number
           successful_referrals_count: number
         }
@@ -30,14 +30,14 @@ export type Database = {
           id?: string
           email: string
           name?: string
-          avatar_url?: string
-          company_name?: string
-          industry?: string
+          avatar_url?: string | null
+          company_name?: string | null
+          industry?: string | null
           role_id?: string
           role?: string
           created_at?: string
           onboarding_completed?: boolean
-          onboarding_completed_at?: string
+          onboarding_completed_at?: string | null
           referrals_count?: number
           successful_referrals_count?: number
         }
@@ -45,16 +45,91 @@ export type Database = {
           id?: string
           email?: string
           name?: string
-          avatar_url?: string
-          company_name?: string
-          industry?: string
+          avatar_url?: string | null
+          company_name?: string | null
+          industry?: string | null
           role_id?: string
           role?: string
           created_at?: string
           onboarding_completed?: boolean
-          onboarding_completed_at?: string
+          onboarding_completed_at?: string | null
           referrals_count?: number
           successful_referrals_count?: number
+        }
+        Relationships: []
+      }
+      learning_courses: {
+        Row: {
+          id: string
+          title: string
+          description: string | null
+          slug: string
+          cover_image_url: string | null
+          published: boolean
+          order_index: number
+          created_by: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          title: string
+          description?: string | null
+          slug: string
+          cover_image_url?: string | null
+          published?: boolean
+          order_index?: number
+          created_by?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          title?: string
+          description?: string | null
+          slug?: string
+          cover_image_url?: string | null
+          published?: boolean
+          order_index?: number
+          created_by?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      learning_modules: {
+        Row: {
+          id: string
+          course_id: string
+          title: string
+          description: string | null
+          order_index: number
+          published: boolean
+          cover_image_url: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          course_id: string
+          title: string
+          description?: string | null
+          order_index?: number
+          published?: boolean
+          cover_image_url?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          course_id?: string
+          title?: string
+          description?: string | null
+          order_index?: number
+          published?: boolean
+          cover_image_url?: string | null
+          created_at?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -66,11 +141,11 @@ export type Database = {
           description: string | null
           content: Json | null
           order_index: number
-          estimated_time_minutes: number | null
-          difficulty_level: string | null
-          published: boolean | null
+          estimated_time_minutes: number
+          difficulty_level: string
           cover_image_url: string | null
-          ai_assistant_enabled: boolean | null
+          published: boolean
+          ai_assistant_enabled: boolean
           ai_assistant_id: string | null
           ai_assistant_prompt: string | null
           created_at: string
@@ -83,11 +158,11 @@ export type Database = {
           description?: string | null
           content?: Json | null
           order_index?: number
-          estimated_time_minutes?: number | null
-          difficulty_level?: string | null
-          published?: boolean | null
+          estimated_time_minutes?: number
+          difficulty_level?: string
           cover_image_url?: string | null
-          ai_assistant_enabled?: boolean | null
+          published?: boolean
+          ai_assistant_enabled?: boolean
           ai_assistant_id?: string | null
           ai_assistant_prompt?: string | null
           created_at?: string
@@ -100,11 +175,11 @@ export type Database = {
           description?: string | null
           content?: Json | null
           order_index?: number
-          estimated_time_minutes?: number | null
-          difficulty_level?: string | null
-          published?: boolean | null
+          estimated_time_minutes?: number
+          difficulty_level?: string
           cover_image_url?: string | null
-          ai_assistant_enabled?: boolean | null
+          published?: boolean
+          ai_assistant_enabled?: boolean
           ai_assistant_id?: string | null
           ai_assistant_prompt?: string | null
           created_at?: string
@@ -119,14 +194,14 @@ export type Database = {
           title: string
           description: string | null
           url: string
-          video_type: string | null
+          video_type: string
           video_id: string | null
-          thumbnail_url: string | null
-          duration_seconds: number | null
-          order_index: number
           video_file_path: string | null
           video_file_name: string | null
           file_size_bytes: number | null
+          duration_seconds: number | null
+          thumbnail_url: string | null
+          order_index: number
           created_at: string
         }
         Insert: {
@@ -135,14 +210,14 @@ export type Database = {
           title: string
           description?: string | null
           url: string
-          video_type?: string | null
+          video_type?: string
           video_id?: string | null
-          thumbnail_url?: string | null
-          duration_seconds?: number | null
-          order_index?: number
           video_file_path?: string | null
           video_file_name?: string | null
           file_size_bytes?: number | null
+          duration_seconds?: number | null
+          thumbnail_url?: string | null
+          order_index?: number
           created_at?: string
         }
         Update: {
@@ -151,90 +226,15 @@ export type Database = {
           title?: string
           description?: string | null
           url?: string
-          video_type?: string | null
+          video_type?: string
           video_id?: string | null
-          thumbnail_url?: string | null
-          duration_seconds?: number | null
-          order_index?: number
           video_file_path?: string | null
           video_file_name?: string | null
           file_size_bytes?: number | null
-          created_at?: string
-        }
-        Relationships: []
-      }
-      learning_modules: {
-        Row: {
-          id: string
-          course_id: string
-          title: string
-          description: string | null
-          order_index: number
-          published: boolean | null
-          cover_image_url: string | null
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          course_id: string
-          title: string
-          description?: string | null
+          duration_seconds?: number | null
+          thumbnail_url?: string | null
           order_index?: number
-          published?: boolean | null
-          cover_image_url?: string | null
           created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          course_id?: string
-          title?: string
-          description?: string | null
-          order_index?: number
-          published?: boolean | null
-          cover_image_url?: string | null
-          created_at?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
-      learning_courses: {
-        Row: {
-          id: string
-          title: string
-          description: string | null
-          slug: string
-          cover_image_url: string | null
-          published: boolean | null
-          order_index: number | null
-          created_by: string | null
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          title: string
-          description?: string | null
-          slug: string
-          cover_image_url?: string | null
-          published?: boolean | null
-          order_index?: number | null
-          created_by?: string | null
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          title?: string
-          description?: string | null
-          slug?: string
-          cover_image_url?: string | null
-          published?: boolean | null
-          order_index?: number | null
-          created_by?: string | null
-          created_at?: string
-          updated_at?: string
         }
         Relationships: []
       }
@@ -243,11 +243,11 @@ export type Database = {
           id: string
           user_id: string
           lesson_id: string
-          progress_percentage: number | null
-          video_progress: Json | null
+          progress_percentage: number
+          video_progress: Json
           started_at: string
           completed_at: string | null
-          last_position_seconds: number | null
+          last_position_seconds: number
           notes: string | null
           created_at: string
           updated_at: string
@@ -256,11 +256,11 @@ export type Database = {
           id?: string
           user_id: string
           lesson_id: string
-          progress_percentage?: number | null
-          video_progress?: Json | null
+          progress_percentage?: number
+          video_progress?: Json
           started_at?: string
           completed_at?: string | null
-          last_position_seconds?: number | null
+          last_position_seconds?: number
           notes?: string | null
           created_at?: string
           updated_at?: string
@@ -269,11 +269,11 @@ export type Database = {
           id?: string
           user_id?: string
           lesson_id?: string
-          progress_percentage?: number | null
-          video_progress?: Json | null
+          progress_percentage?: number
+          video_progress?: Json
           started_at?: string
           completed_at?: string | null
-          last_position_seconds?: number | null
+          last_position_seconds?: number
           notes?: string | null
           created_at?: string
           updated_at?: string
@@ -323,9 +323,11 @@ export type Database = {
           description: string | null
           category: string
           difficulty: string
-          estimated_time_hours: number | null
+          estimated_time_hours: number
           thumbnail_url: string | null
-          published: boolean | null
+          featured_image_url: string | null
+          tags: string[] | null
+          published: boolean
           created_by: string | null
           created_at: string
           updated_at: string
@@ -336,9 +338,11 @@ export type Database = {
           description?: string | null
           category: string
           difficulty: string
-          estimated_time_hours?: number | null
+          estimated_time_hours?: number
           thumbnail_url?: string | null
-          published?: boolean | null
+          featured_image_url?: string | null
+          tags?: string[] | null
+          published?: boolean
           created_by?: string | null
           created_at?: string
           updated_at?: string
@@ -349,9 +353,11 @@ export type Database = {
           description?: string | null
           category?: string
           difficulty?: string
-          estimated_time_hours?: number | null
+          estimated_time_hours?: number
           thumbnail_url?: string | null
-          published?: boolean | null
+          featured_image_url?: string | null
+          tags?: string[] | null
+          published?: boolean
           created_by?: string | null
           created_at?: string
           updated_at?: string
@@ -363,11 +369,10 @@ export type Database = {
           id: string
           solution_id: string
           title: string
-          description: string | null
           type: string
-          module_order: number
           content: Json
-          estimated_time_minutes: number | null
+          module_order: number
+          estimated_time_minutes: number
           metrics: Json | null
           certificate_template: Json | null
           created_at: string
@@ -377,11 +382,10 @@ export type Database = {
           id?: string
           solution_id: string
           title: string
-          description?: string | null
           type: string
-          module_order: number
           content: Json
-          estimated_time_minutes?: number | null
+          module_order: number
+          estimated_time_minutes?: number
           metrics?: Json | null
           certificate_template?: Json | null
           created_at?: string
@@ -391,11 +395,10 @@ export type Database = {
           id?: string
           solution_id?: string
           title?: string
-          description?: string | null
           type?: string
-          module_order?: number
           content?: Json
-          estimated_time_minutes?: number | null
+          module_order?: number
+          estimated_time_minutes?: number
           metrics?: Json | null
           certificate_template?: Json | null
           created_at?: string
@@ -409,11 +412,8 @@ export type Database = {
           user_id: string
           solution_id: string
           module_id: string | null
-          is_completed: boolean | null
-          completion_percentage: number | null
-          started_at: string | null
+          is_completed: boolean
           completed_at: string | null
-          notes: string | null
           created_at: string
           updated_at: string
         }
@@ -422,11 +422,8 @@ export type Database = {
           user_id: string
           solution_id: string
           module_id?: string | null
-          is_completed?: boolean | null
-          completion_percentage?: number | null
-          started_at?: string | null
+          is_completed?: boolean
           completed_at?: string | null
-          notes?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -435,109 +432,31 @@ export type Database = {
           user_id?: string
           solution_id?: string
           module_id?: string | null
-          is_completed?: boolean | null
-          completion_percentage?: number | null
-          started_at?: string | null
+          is_completed?: boolean
           completed_at?: string | null
-          notes?: string | null
           created_at?: string
           updated_at?: string
         }
         Relationships: []
       }
-      solution_resources: {
+      course_access_control: {
         Row: {
           id: string
-          solution_id: string
-          title: string
-          description: string | null
-          url: string
-          type: string
-          format: string | null
-          size: number | null
-          tags: string[] | null
-          created_at: string
-          updated_at: string
+          course_id: string | null
+          role_id: string | null
+          created_at: string | null
         }
         Insert: {
           id?: string
-          solution_id: string
-          title: string
-          description?: string | null
-          url: string
-          type: string
-          format?: string | null
-          size?: number | null
-          tags?: string[] | null
-          created_at?: string
-          updated_at?: string
+          course_id?: string | null
+          role_id?: string | null
+          created_at?: string | null
         }
         Update: {
           id?: string
-          solution_id?: string
-          title?: string
-          description?: string | null
-          url?: string
-          type?: string
-          format?: string | null
-          size?: number | null
-          tags?: string[] | null
-          created_at?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
-      solution_tools: {
-        Row: {
-          id: string
-          solution_id: string
-          tool_name: string
-          tool_url: string | null
-          is_required: boolean | null
-          created_at: string
-        }
-        Insert: {
-          id?: string
-          solution_id: string
-          tool_name: string
-          tool_url?: string | null
-          is_required?: boolean | null
-          created_at?: string
-        }
-        Update: {
-          id?: string
-          solution_id?: string
-          tool_name?: string
-          tool_url?: string | null
-          is_required?: boolean | null
-          created_at?: string
-        }
-        Relationships: []
-      }
-      user_checklists: {
-        Row: {
-          id: string
-          user_id: string
-          solution_id: string
-          checked_items: Json
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          user_id: string
-          solution_id: string
-          checked_items: Json
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          user_id?: string
-          solution_id?: string
-          checked_items?: Json
-          created_at?: string
-          updated_at?: string
+          course_id?: string | null
+          role_id?: string | null
+          created_at?: string | null
         }
         Relationships: []
       }
@@ -619,48 +538,6 @@ export type Database = {
         }
         Relationships: []
       }
-      course_access_control: {
-        Row: {
-          id: string
-          course_id: string | null
-          role_id: string | null
-          created_at: string | null
-        }
-        Insert: {
-          id?: string
-          course_id?: string | null
-          role_id?: string | null
-          created_at?: string | null
-        }
-        Update: {
-          id?: string
-          course_id?: string | null
-          role_id?: string | null
-          created_at?: string | null
-        }
-        Relationships: []
-      }
-      benefit_access_control: {
-        Row: {
-          id: string
-          tool_id: string
-          role_id: string
-          created_at: string
-        }
-        Insert: {
-          id?: string
-          tool_id: string
-          role_id: string
-          created_at?: string
-        }
-        Update: {
-          id?: string
-          tool_id?: string
-          role_id?: string
-          created_at?: string
-        }
-        Relationships: []
-      }
       implementation_checkpoints: {
         Row: {
           id: string
@@ -685,111 +562,207 @@ export type Database = {
         }
         Relationships: []
       }
+      solution_resources: {
+        Row: {
+          id: string
+          solution_id: string
+          name: string
+          url: string
+          type: string
+          format: string | null
+          size: number | null
+          metadata: Json | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          solution_id: string
+          name: string
+          url: string
+          type: string
+          format?: string | null
+          size?: number | null
+          metadata?: Json | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          solution_id?: string
+          name?: string
+          url?: string
+          type?: string
+          format?: string | null
+          size?: number | null
+          metadata?: Json | null
+          created_at?: string
+        }
+        Relationships: []
+      }
+      solution_tools: {
+        Row: {
+          id: string
+          solution_id: string
+          tool_id: string
+          order_index: number
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          solution_id: string
+          tool_id: string
+          order_index?: number
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          solution_id?: string
+          tool_id?: string
+          order_index?: number
+          created_at?: string
+        }
+        Relationships: []
+      }
+      user_checklists: {
+        Row: {
+          id: string
+          user_id: string
+          solution_id: string
+          checked_items: Json
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          solution_id: string
+          checked_items: Json
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          solution_id?: string
+          checked_items?: Json
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      tools: {
+        Row: {
+          id: string
+          name: string
+          description: string | null
+          category: string
+          logo_url: string | null
+          website_url: string | null
+          affiliate_url: string | null
+          pricing_model: string | null
+          rating: number | null
+          is_featured: boolean
+          tags: string[] | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          description?: string | null
+          category: string
+          logo_url?: string | null
+          website_url?: string | null
+          affiliate_url?: string | null
+          pricing_model?: string | null
+          rating?: number | null
+          is_featured?: boolean
+          tags?: string[] | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          description?: string | null
+          category?: string
+          logo_url?: string | null
+          website_url?: string | null
+          affiliate_url?: string | null
+          pricing_model?: string | null
+          rating?: number | null
+          is_featured?: boolean
+          tags?: string[] | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      benefit_access_control: {
+        Row: {
+          id: string
+          tool_id: string
+          role_id: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          tool_id: string
+          role_id: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          tool_id?: string
+          role_id?: string
+          created_at?: string
+        }
+        Relationships: []
+      }
       forum_topics: {
         Row: {
           id: string
+          category_id: string
+          user_id: string
           title: string
           content: string
-          user_id: string
-          category_id: string
-          view_count: number
-          reply_count: number
           is_pinned: boolean
           is_locked: boolean
           is_solved: boolean | null
+          view_count: number
+          reply_count: number
+          last_activity_at: string
           created_at: string
           updated_at: string
-          last_activity_at: string
         }
         Insert: {
           id?: string
+          category_id: string
+          user_id: string
           title: string
           content: string
-          user_id: string
-          category_id: string
-          view_count?: number
-          reply_count?: number
           is_pinned?: boolean
           is_locked?: boolean
           is_solved?: boolean | null
+          view_count?: number
+          reply_count?: number
+          last_activity_at?: string
           created_at?: string
           updated_at?: string
-          last_activity_at?: string
         }
         Update: {
           id?: string
+          category_id?: string
+          user_id?: string
           title?: string
           content?: string
-          user_id?: string
-          category_id?: string
-          view_count?: number
-          reply_count?: number
           is_pinned?: boolean
           is_locked?: boolean
           is_solved?: boolean | null
-          created_at?: string
-          updated_at?: string
+          view_count?: number
+          reply_count?: number
           last_activity_at?: string
-        }
-        Relationships: []
-      }
-      forum_posts: {
-        Row: {
-          id: string
-          topic_id: string
-          user_id: string
-          content: string
-          parent_id: string | null
-          is_solution: boolean
-          is_hidden: boolean
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          topic_id: string
-          user_id: string
-          content: string
-          parent_id?: string | null
-          is_solution?: boolean
-          is_hidden?: boolean
           created_at?: string
           updated_at?: string
-        }
-        Update: {
-          id?: string
-          topic_id?: string
-          user_id?: string
-          content?: string
-          parent_id?: string | null
-          is_solution?: boolean
-          is_hidden?: boolean
-          created_at?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
-      forum_reactions: {
-        Row: {
-          id: string
-          post_id: string
-          user_id: string
-          reaction_type: string
-          created_at: string
-        }
-        Insert: {
-          id?: string
-          post_id: string
-          user_id: string
-          reaction_type: string
-          created_at?: string
-        }
-        Update: {
-          id?: string
-          post_id?: string
-          user_id?: string
-          reaction_type?: string
-          created_at?: string
         }
         Relationships: []
       }
@@ -829,48 +802,63 @@ export type Database = {
         }
         Relationships: []
       }
-      tools: {
+      forum_posts: {
         Row: {
           id: string
-          name: string
-          description: string | null
-          url: string | null
-          logo_url: string | null
-          category: string | null
-          pricing_model: string | null
-          has_member_benefit: boolean | null
-          benefit_type: string | null
-          benefit_description: string | null
+          topic_id: string
+          user_id: string
+          parent_id: string | null
+          content: string
+          is_solution: boolean
+          is_hidden: boolean
           created_at: string
           updated_at: string
         }
         Insert: {
           id?: string
-          name: string
-          description?: string | null
-          url?: string | null
-          logo_url?: string | null
-          category?: string | null
-          pricing_model?: string | null
-          has_member_benefit?: boolean | null
-          benefit_type?: string | null
-          benefit_description?: string | null
+          topic_id: string
+          user_id: string
+          parent_id?: string | null
+          content: string
+          is_solution?: boolean
+          is_hidden?: boolean
           created_at?: string
           updated_at?: string
         }
         Update: {
           id?: string
-          name?: string
-          description?: string | null
-          url?: string | null
-          logo_url?: string | null
-          category?: string | null
-          pricing_model?: string | null
-          has_member_benefit?: boolean | null
-          benefit_type?: string | null
-          benefit_description?: string | null
+          topic_id?: string
+          user_id?: string
+          parent_id?: string | null
+          content?: string
+          is_solution?: boolean
+          is_hidden?: boolean
           created_at?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      forum_reactions: {
+        Row: {
+          id: string
+          post_id: string
+          user_id: string
+          reaction_type: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          post_id: string
+          user_id: string
+          reaction_type: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          post_id?: string
+          user_id?: string
+          reaction_type?: string
+          created_at?: string
         }
         Relationships: []
       }
@@ -913,6 +901,36 @@ export type Database = {
           session_id?: string | null
           severity?: string | null
           timestamp?: string | null
+        }
+        Relationships: []
+      }
+      analytics: {
+        Row: {
+          id: string
+          user_id: string
+          event_type: string
+          solution_id: string | null
+          module_id: string | null
+          event_data: Json | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          event_type: string
+          solution_id?: string | null
+          module_id?: string | null
+          event_data?: Json | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          event_type?: string
+          solution_id?: string | null
+          module_id?: string | null
+          event_data?: Json | null
+          created_at?: string
         }
         Relationships: []
       }
@@ -977,7 +995,9 @@ export type Database = {
         Relationships: []
       }
     }
-    Views: {}
+    Views: {
+      [_ in never]: never
+    }
     Functions: {
       create_storage_public_policy: {
         Args: {
@@ -985,20 +1005,116 @@ export type Database = {
         }
         Returns: boolean
       }
-      increment_topic_replies: {
-        Args: {
-          topic_id: string
-        }
-        Returns: undefined
-      }
       increment_topic_views: {
         Args: {
           topic_id: string
         }
         Returns: undefined
       }
+      increment_topic_replies: {
+        Args: {
+          topic_id: string
+        }
+        Returns: undefined
+      }
+      delete_forum_topic: {
+        Args: {
+          topic_id: string
+        }
+        Returns: Json
+      }
+      delete_forum_post: {
+        Args: {
+          post_id: string
+        }
+        Returns: Json
+      }
     }
-    Enums: {}
-    CompositeTypes: {}
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
   }
 }
+
+export type Tables<
+  PublicTableNameOrOptions extends
+    | keyof (Database["public"]["Tables"] & Database["public"]["Views"])
+    | { schema: keyof Database },
+  TableName extends PublicTableNameOrOptions extends { schema: keyof Database }
+    ? keyof (Database[PublicTableNameOrOptions["schema"]]["Tables"] &
+        Database[PublicTableNameOrOptions["schema"]]["Views"])
+    : never = never,
+> = PublicTableNameOrOptions extends { schema: keyof Database }
+  ? (Database[PublicTableNameOrOptions["schema"]]["Tables"] &
+      Database[PublicTableNameOrOptions["schema"]]["Views"])[TableName] extends {
+      Row: infer R
+    }
+    ? R
+    : never
+  : PublicTableNameOrOptions extends keyof (Database["public"]["Tables"] &
+        Database["public"]["Views"])
+    ? (Database["public"]["Tables"] &
+        Database["public"]["Views"])[PublicTableNameOrOptions] extends {
+        Row: infer R
+      }
+      ? R
+      : never
+    : never
+
+export type TablesInsert<
+  PublicTableNameOrOptions extends
+    | keyof Database["public"]["Tables"]
+    | { schema: keyof Database },
+  TableName extends PublicTableNameOrOptions extends { schema: keyof Database }
+    ? keyof Database[PublicTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
+> = PublicTableNameOrOptions extends { schema: keyof Database }
+  ? Database[PublicTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Insert: infer I
+    }
+    ? I
+    : never
+  : PublicTableNameOrOptions extends keyof Database["public"]["Tables"]
+    ? Database["public"]["Tables"][PublicTableNameOrOptions] extends {
+        Insert: infer I
+      }
+      ? I
+      : never
+    : never
+
+export type TablesUpdate<
+  PublicTableNameOrOptions extends
+    | keyof Database["public"]["Tables"]
+    | { schema: keyof Database },
+  TableName extends PublicTableNameOrOptions extends { schema: keyof Database }
+    ? keyof Database[PublicTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
+> = PublicTableNameOrOptions extends { schema: keyof Database }
+  ? Database[PublicTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Update: infer U
+    }
+    ? U
+    : never
+  : PublicTableNameOrOptions extends keyof Database["public"]["Tables"]
+    ? Database["public"]["Tables"][PublicTableNameOrOptions] extends {
+        Update: infer U
+      }
+      ? U
+      : never
+    : never
+
+export type Enums<
+  PublicEnumNameOrOptions extends
+    | keyof Database["public"]["Enums"]
+    | { schema: keyof Database },
+  EnumName extends PublicEnumNameOrOptions extends { schema: keyof Database }
+    ? keyof Database[PublicEnumNameOrOptions["schema"]]["Enums"]
+    : never = never,
+> = PublicEnumNameOrOptions extends { schema: keyof Database }
+  ? Database[PublicEnumNameOrOptions["schema"]]["Enums"][EnumName]
+  : PublicEnumNameOrOptions extends keyof Database["public"]["Enums"]
+    ? Database["public"]["Enums"][PublicEnumNameOrOptions]
+    : never

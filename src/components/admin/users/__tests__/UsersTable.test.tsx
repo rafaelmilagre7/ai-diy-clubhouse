@@ -11,6 +11,7 @@ describe('UsersTable', () => {
       email: 'test@example.com',
       name: 'Test User',
       role_id: 'membro-club-role-id',
+      role: 'membro_club',
       user_roles: {
         id: 'membro-club-role-id',
         name: 'membro_club'
@@ -21,6 +22,8 @@ describe('UsersTable', () => {
       created_at: '2024-01-01T00:00:00Z',
       onboarding_completed: true,
       onboarding_completed_at: '2024-01-01T00:00:00Z',
+      referrals_count: 0,
+      successful_referrals_count: 0,
     },
   ];
 
