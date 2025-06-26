@@ -29,7 +29,7 @@ export const SimpleAuthProvider: React.FC<SimpleAuthProviderProps> = ({ children
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Carregar perfil do usuário
+  // Carregar perfil do usuário apenas quando necessário
   const loadProfile = async (userId: string) => {
     try {
       const { data, error } = await supabase
@@ -58,35 +58,44 @@ export const SimpleAuthProvider: React.FC<SimpleAuthProviderProps> = ({ children
   };
 
   useEffect(() => {
-    // Verificar sessão atual
-    const checkSession = async () => {
+    let mounted = true;
+
+    const initAuth = async () => {
       try {
+        // Verificar sessão uma única vez na inicialização
         const { data: { session }, error } = await supabase.auth.getSession();
         
+        if (!mounted) return;
+
         if (error) {
+          console.error('Erro na sessão:', error);
           setError(error.message);
-          setIsLoading(false);
-          return;
-        }
+        } else {
+          setSession(session);
+          setUser(session?.user ?? null);
 
-        setSession(session);
-        setUser(session?.user ?? null);
-
-        if (session?.user) {
-          await loadProfile(session.user.id);
+          // Carregar perfil apenas se há usuário
+          if (session?.user) {
+            await loadProfile(session.user.id);
+          }
         }
         
         setIsLoading(false);
       } catch (err) {
-        console.error('Erro ao verificar sessão:', err);
-        setError('Erro ao verificar autenticação');
-        setIsLoading(false);
+        if (mounted) {
+          console.error('Erro ao inicializar auth:', err);
+          setIsLoading(false);
+        }
       }
     };
 
-    // Listener para mudanças de auth
+    // Listener simples para mudanças de auth
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        if (!mounted) return;
+
+        console.log('Auth state changed:', event);
+        
         setSession(session);
         setUser(session?.user ?? null);
         
@@ -95,35 +104,35 @@ export const SimpleAuthProvider: React.FC<SimpleAuthProviderProps> = ({ children
         } else if (event === 'SIGNED_OUT') {
           setProfile(null);
         }
-        
-        setIsLoading(false);
       }
     );
 
-    checkSession();
+    initAuth();
 
     return () => {
+      mounted = false;
       subscription.unsubscribe();
     };
   }, []);
 
   const signIn = async (email: string, password: string) => {
     try {
-      setIsLoading(true);
+      setError(null);
       const { error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
       
       if (error) {
+        setError(error.message);
         return { error };
       }
       
       return {};
     } catch (err) {
-      return { error: err as Error };
-    } finally {
-      setIsLoading(false);
+      const error = err as Error;
+      setError(error.message);
+      return { error };
     }
   };
 
@@ -175,5 +184,4 @@ export const useSimpleAuth = (): SimpleAuthContextType => {
   return context;
 };
 
-// Alias para compatibilidade
 export const useAuth = useSimpleAuth;

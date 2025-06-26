@@ -5,7 +5,7 @@ import { useSimpleAuth } from "@/contexts/auth/SimpleAuthProvider";
 const SimpleRootRedirect = () => {
   const { user, profile, isLoading, isAdmin } = useSimpleAuth();
   
-  // Loading básico
+  // Mostrar loading apenas enquanto verifica auth inicial
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-[#0F111A] to-[#151823] flex items-center justify-center">
@@ -17,22 +17,22 @@ const SimpleRootRedirect = () => {
     );
   }
   
-  // Sem usuário = login
+  // Sem usuário = login direto
   if (!user) {
     return <Navigate to="/login" replace />;
   }
   
-  // Admin vai direto para admin
+  // Admin = admin dashboard
   if (isAdmin) {
     return <Navigate to="/admin" replace />;
   }
   
-  // Formação vai para área específica
+  // Formação = área de formação
   if (profile?.user_roles?.name === 'formacao') {
     return <Navigate to="/formacao" replace />;
   }
   
-  // Padrão = dashboard
+  // Padrão = dashboard do membro
   return <Navigate to="/dashboard" replace />;
 };
 
