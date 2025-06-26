@@ -5,6 +5,12 @@ interface InviteDetails {
   email: string;
   role_id: string;
   token: string;
+  name?: string;
+  role: {
+    id: string;
+    name: string;
+    description?: string;
+  };
 }
 
 interface HandleInviteFlowParams {

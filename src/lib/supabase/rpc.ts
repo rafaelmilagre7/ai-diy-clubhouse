@@ -35,9 +35,17 @@ export const deleteForumPost = async (postId: string) => {
   });
 };
 
+export const auditRoleAssignments = async (userId: string, action: string, details?: any) => {
+  return await supabase.rpc('audit_role_assignments', {
+    user_id: userId,
+    action: action,
+    details: details || {}
+  });
+};
+
 // Helper function to call RPC functions correctly
 export const callRpcFunction = async (
-  functionName: 'create_storage_public_policy' | 'increment_topic_replies' | 'increment_topic_views' | 'delete_forum_topic' | 'delete_forum_post', 
+  functionName: 'create_storage_public_policy' | 'increment_topic_replies' | 'increment_topic_views' | 'delete_forum_topic' | 'delete_forum_post' | 'audit_role_assignments', 
   params: any = {}
 ) => {
   return await supabase.rpc(functionName as any, params);

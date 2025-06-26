@@ -1,80 +1,99 @@
 
-import React from 'react';
-import { Label } from '@/components/ui/label';
-import { FileUpload } from '@/components/ui/file-upload';
+import React, { useState, useRef } from 'react';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { User, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { getInitials } from '@/utils/user';
+import { Camera, Upload, X } from 'lucide-react';
+import { FileUpload } from '@/components/ui/file-upload';
+import { useToast } from '@/hooks/use-toast';
 
 interface ProfilePictureUploadProps {
-  value?: string;
-  onChange: (url: string) => void;
+  currentImageUrl?: string;
+  onImageUpload: (imageUrl: string) => void;
   userName?: string;
 }
 
-export const ProfilePictureUpload: React.FC<ProfilePictureUploadProps> = ({
-  value,
-  onChange,
-  userName
+const ProfilePictureUpload: React.FC<ProfilePictureUploadProps> = ({
+  currentImageUrl,
+  onImageUpload,
+  userName = 'Usuário',
 }) => {
-  const handleRemove = () => {
-    onChange('');
+  const [isUploading, setIsUploading] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState<string | undefined>(currentImageUrl);
+  const { toast } = useToast();
+
+  const handleUploadComplete = async (url: string) => {
+    try {
+      setIsUploading(false);
+      setPreviewUrl(url);
+      onImageUpload(url);
+      
+      toast({
+        title: "Sucesso!",
+        description: "Foto de perfil atualizada com sucesso.",
+      });
+    } catch (error) {
+      console.error('Erro ao processar upload:', error);
+      toast({
+        title: "Erro",
+        description: "Falha ao atualizar a foto de perfil.",
+        variant: "destructive",
+      });
+    }
   };
 
-  const handleUpload = (url: string) => {
-    onChange(url);
+  const handleRemoveImage = () => {
+    setPreviewUrl(undefined);
+    onImageUpload('');
+  };
+
+  const getInitials = (name: string) => {
+    return name
+      .split(' ')
+      .map(word => word.charAt(0))
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
   };
 
   return (
-    <div className="space-y-4">
-      <Label className="text-slate-200">
-        Foto de Perfil (Opcional)
-      </Label>
-      
-      <div className="flex flex-col items-center space-y-4">
-        {value ? (
-          <div className="relative">
-            <Avatar className="w-24 h-24">
-              <AvatarImage src={value} alt="Foto de perfil" />
-              <AvatarFallback className="bg-viverblue/20 text-viverblue text-lg">
-                {getInitials(userName)}
-              </AvatarFallback>
-            </Avatar>
-            <Button
-              type="button"
-              size="icon"
-              variant="destructive"
-              className="absolute -top-2 -right-2 h-6 w-6 rounded-full"
-              onClick={handleRemove}
-            >
-              <X className="h-3 w-3" />
-            </Button>
-          </div>
-        ) : (
-          <Avatar className="w-24 h-24 border-2 border-dashed border-white/20">
-            <AvatarFallback className="bg-[#151823] text-slate-400">
-              <User className="w-8 h-8" />
-            </AvatarFallback>
-          </Avatar>
-        )}
-
-        {!value && (
-          <FileUpload
-            bucketName="profile_images"
-            folder={`avatars`}
-            onUploadComplete={handleUpload}
-            accept="image/*"
-            maxSize={5} // 5MB
-            buttonText="Enviar Foto"
-            fieldLabel=""
-          />
+    <div className="flex flex-col items-center space-y-4">
+      <div className="relative">
+        <Avatar className="w-24 h-24 border-4 border-white shadow-lg">
+          <AvatarImage src={previewUrl} alt={userName} />
+          <AvatarFallback className="text-lg font-semibold bg-gradient-to-br from-blue-500 to-purple-600 text-white">
+            {getInitials(userName)}
+          </AvatarFallback>
+        </Avatar>
+        
+        {previewUrl && (
+          <Button
+            size="sm"
+            variant="destructive"
+            className="absolute -top-2 -right-2 rounded-full w-6 h-6 p-0"
+            onClick={handleRemoveImage}
+          >
+            <X className="w-3 h-3" />
+          </Button>
         )}
       </div>
-      
-      <p className="text-xs text-slate-400 text-center">
-        Você pode adicionar ou alterar sua foto depois no perfil
-      </p>
+
+      <div className="flex flex-col items-center space-y-2">
+        <FileUpload
+          bucketName="PROFILE_IMAGES"
+          folder="avatars"
+          onUploadComplete={handleUploadComplete}
+          accept="image/*"
+          maxSize={5}
+          buttonText={previewUrl ? "Alterar Foto" : "Adicionar Foto"}
+          fieldLabel=""
+        />
+        
+        <p className="text-xs text-gray-500 text-center">
+          Formatos suportados: JPG, PNG, GIF (máx. 5MB)
+        </p>
+      </div>
     </div>
   );
 };
+
+export default ProfilePictureUpload;
