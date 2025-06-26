@@ -4,6 +4,7 @@ import { getUserRoleName } from '@/lib/supabase/types';
 
 /**
  * Fetch user profile from Supabase com join para user_roles
+ * CORREÇÃO: Agora usa a foreign key estabelecida entre profiles.role_id e user_roles.id
  */
 export const fetchUserProfile = async (userId: string): Promise<UserProfile | null> => {
   try {
