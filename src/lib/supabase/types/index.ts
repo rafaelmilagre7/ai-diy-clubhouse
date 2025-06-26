@@ -53,8 +53,8 @@ export type PermissionDefinition = Database['public']['Tables']['permission_defi
 export type RolePermission = Database['public']['Tables']['role_permissions']['Row'];
 export type CourseAccessControl = Database['public']['Tables']['course_access_control']['Row'];
 
-// Analytics and audit types (if they exist in your database)
-export type AuditLog = any; // Define based on your actual schema
+// Analytics and audit types
+export type AuditLog = Database['public']['Tables']['audit_logs']['Row'];
 export type Analytics = any; // Define based on your actual schema
 
 // Invite types (if they exist in your database)
