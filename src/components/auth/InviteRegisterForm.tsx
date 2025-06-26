@@ -1,11 +1,19 @@
 
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Mail, User, Lock, Eye, EyeOff, UserPlus } from 'lucide-react';
-import { useInviteRegistration } from '@/hooks/useInviteRegistration';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Mail, User, Lock, UserPlus, Info } from 'lucide-react';
+import { useForm } from 'react-hook-form';
+import { yupResolver } from '@hookform/resolvers/yup';
+import * as yup from 'yup';
+import { supabase } from '@/lib/supabase';
+import { InviteTokenManager } from '@/utils/inviteTokenManager';
+import { logger } from '@/utils/logger';
+import { toast } from 'sonner';
 
 interface InviteRegisterFormProps {
   email: string;
@@ -14,202 +22,222 @@ interface InviteRegisterFormProps {
   onUserExists: () => void;
 }
 
-const InviteRegisterForm = ({ email, initialName = '', token, onUserExists }: InviteRegisterFormProps) => {
-  const [name, setName] = useState(initialName);
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [error, setError] = useState('');
+const schema = yup.object().shape({
+  name: yup.string().required('Nome é obrigatório'),
+  email: yup.string().email('E-mail inválido').required('E-mail é obrigatório'),
+  password: yup.string().min(8, 'Senha deve ter no mínimo 8 caracteres').required('Senha é obrigatória'),
+  confirmPassword: yup.string()
+    .oneOf([yup.ref('password')], 'Senhas não coincidem')
+    .required('Confirme sua senha')
+});
 
-  const { registerWithInvite, isRegistering } = useInviteRegistration();
+const InviteRegisterForm = ({ email, initialName, token, onUserExists }: InviteRegisterFormProps) => {
+  const navigate = useNavigate();
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
-
-    // Validações
-    if (!name.trim()) {
-      setError('Por favor, insira seu nome.');
-      return;
+  const { register, handleSubmit, formState: { errors }, watch } = useForm({
+    resolver: yupResolver(schema),
+    defaultValues: {
+      name: initialName || '',
+      email: email, // E-mail pré-preenchido e deve ser readonly
+      password: '',
+      confirmPassword: ''
     }
+  });
 
-    if (!password) {
-      setError('Por favor, insira uma senha.');
-      return;
-    }
+  const watchedEmail = watch('email');
 
-    if (password.length < 6) {
-      setError('A senha deve ter pelo menos 6 caracteres.');
-      return;
-    }
+  const onSubmit = async (data: any) => {
+    try {
+      setIsLoading(true);
+      setError(null);
 
-    if (password !== confirmPassword) {
-      setError('As senhas não coincidem.');
-      return;
-    }
-
-    const result = await registerWithInvite({
-      email,
-      name: name.trim(),
-      password,
-      token
-    });
-
-    if (!result.success) {
-      if (result.error === 'user_exists') {
-        onUserExists();
-      } else {
-        setError(result.message || 'Erro ao criar conta');
+      // VALIDAÇÃO CRÍTICA: E-mail deve ser exatamente o do convite
+      if (data.email !== email) {
+        setError(`Este convite só pode ser usado com o e-mail ${email}. Por favor, use o e-mail correto.`);
+        return;
       }
+
+      logger.info('[INVITE-REGISTER] 📝 Tentativa de registro:', {
+        email: data.email,
+        hasName: !!data.name,
+        token: token.substring(0, 8) + '***'
+      });
+
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email: data.email,
+        password: data.password,
+        options: {
+          data: {
+            name: data.name,
+            invite_token: token
+          },
+          emailRedirectTo: `${window.location.origin}/onboarding?token=${token}&invite=true`
+        }
+      });
+
+      if (authError) {
+        logger.error('[INVITE-REGISTER] ❌ Erro no registro:', authError);
+        
+        // Tratar caso de usuário já existente
+        if (authError.message.includes('already registered') || authError.message.includes('already exists')) {
+          logger.info('[INVITE-REGISTER] 👤 Usuário já existe - mostrando tela específica');
+          onUserExists();
+          return;
+        }
+        
+        throw authError;
+      }
+
+      if (authData.user) {
+        logger.info('[INVITE-REGISTER] ✅ Registro bem-sucedido:', {
+          userId: authData.user.id,
+          email: authData.user.email
+        });
+
+        // Armazenar token para o onboarding
+        InviteTokenManager.storeToken(token);
+        
+        toast.success('Conta criada com sucesso! Redirecionando...');
+        
+        // Redirecionar para onboarding de convite
+        navigate(`/onboarding?token=${token}&invite=true`);
+      }
+
+    } catch (error: any) {
+      logger.error('[INVITE-REGISTER] ❌ Erro no registro:', error);
+      setError(error.message || 'Erro ao criar conta. Tente novamente.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#0F111A] to-[#151823] flex items-center justify-center p-4">
-      <Card className="w-full max-w-md bg-[#1A1E2E] border-gray-800 shadow-2xl">
-        <CardHeader className="text-center pb-6">
-          <div className="mx-auto w-16 h-16 bg-viverblue/20 rounded-full flex items-center justify-center mb-4">
+    <div className="min-h-screen bg-gradient-to-br from-background to-[#151823] flex items-center justify-center p-4">
+      <Card className="w-full max-w-md">
+        <CardHeader className="text-center space-y-4">
+          <div className="mx-auto w-16 h-16 bg-viverblue/20 rounded-full flex items-center justify-center">
             <UserPlus className="w-8 h-8 text-viverblue" />
           </div>
-          <CardTitle className="text-2xl font-bold text-white mb-2">
-            Criar sua conta
-          </CardTitle>
-          <p className="text-neutral-300 text-sm">
-            Você foi convidado para o <strong className="text-viverblue">Viver de IA</strong>
-          </p>
+          <div>
+            <CardTitle className="text-2xl">Criar Sua Conta</CardTitle>
+            <p className="text-sm text-neutral-400 mt-2">
+              Você foi convidado para se juntar à plataforma
+            </p>
+          </div>
         </CardHeader>
         
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Email - Bloqueado */}
+        <CardContent className="space-y-6">
+          {/* Alert informativo sobre o e-mail */}
+          <Alert>
+            <Info className="h-4 w-4" />
+            <AlertDescription className="text-sm">
+              Este convite foi enviado para <strong className="text-viverblue">{email}</strong>. 
+              Use exatamente este e-mail para criar sua conta.
+            </AlertDescription>
+          </Alert>
+
+          {error && (
+            <Alert variant="destructive">
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
+
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+            {/* Nome */}
             <div className="space-y-2">
-              <Label htmlFor="email" className="text-white flex items-center gap-2">
-                <Mail className="w-4 h-4" />
-                E-mail
-              </Label>
-              <Input
-                id="email"
-                type="email"
-                value={email}
-                disabled
-                className="bg-gray-800 border-gray-700 text-gray-400 cursor-not-allowed"
-              />
-              <p className="text-xs text-neutral-500">
-                E-mail do convite (não editável)
-              </p>
+              <Label htmlFor="name">Nome Completo</Label>
+              <div className="relative">
+                <User className="absolute left-3 top-3 h-4 w-4 text-neutral-400" />
+                <Input
+                  id="name"
+                  {...register('name')}
+                  placeholder="Seu nome completo"
+                  className="pl-10"
+                  disabled={isLoading}
+                />
+              </div>
+              {errors.name && (
+                <p className="text-sm text-red-500">{errors.name.message}</p>
+              )}
             </div>
 
-            {/* Nome - Editável */}
+            {/* E-mail (readonly) */}
             <div className="space-y-2">
-              <Label htmlFor="name" className="text-white flex items-center gap-2">
-                <User className="w-4 h-4" />
-                Nome completo
-              </Label>
-              <Input
-                id="name"
-                type="text"
-                placeholder="Digite seu nome completo"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                className="bg-[#0F111A] border-gray-700 text-white placeholder-neutral-400 focus:border-viverblue"
-                required
-              />
+              <Label htmlFor="email">E-mail do Convite</Label>
+              <div className="relative">
+                <Mail className="absolute left-3 top-3 h-4 w-4 text-neutral-400" />
+                <Input
+                  id="email"
+                  {...register('email')}
+                  type="email"
+                  className="pl-10 bg-neutral-50 text-neutral-600"
+                  disabled={true} // Sempre disabled - não pode ser alterado
+                />
+              </div>
+              {watchedEmail !== email && (
+                <p className="text-sm text-red-500">
+                  Este convite só funciona com o e-mail {email}
+                </p>
+              )}
             </div>
 
             {/* Senha */}
             <div className="space-y-2">
-              <Label htmlFor="password" className="text-white flex items-center gap-2">
-                <Lock className="w-4 h-4" />
-                Senha
-              </Label>
+              <Label htmlFor="password">Senha</Label>
               <div className="relative">
+                <Lock className="absolute left-3 top-3 h-4 w-4 text-neutral-400" />
                 <Input
                   id="password"
-                  type={showPassword ? 'text' : 'password'}
-                  placeholder="Crie uma senha segura"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="bg-[#0F111A] border-gray-700 text-white placeholder-neutral-400 focus:border-viverblue pr-10"
-                  required
+                  {...register('password')}
+                  type="password"
+                  placeholder="Mínimo 8 caracteres"
+                  className="pl-10"
+                  disabled={isLoading}
                 />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-neutral-400 hover:text-white"
-                >
-                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </button>
               </div>
+              {errors.password && (
+                <p className="text-sm text-red-500">{errors.password.message}</p>
+              )}
             </div>
 
             {/* Confirmar Senha */}
             <div className="space-y-2">
-              <Label htmlFor="confirmPassword" className="text-white flex items-center gap-2">
-                <Lock className="w-4 h-4" />
-                Confirmar senha
-              </Label>
+              <Label htmlFor="confirmPassword">Confirmar Senha</Label>
               <div className="relative">
+                <Lock className="absolute left-3 top-3 h-4 w-4 text-neutral-400" />
                 <Input
                   id="confirmPassword"
-                  type={showConfirmPassword ? 'text' : 'password'}
-                  placeholder="Repita sua senha"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="bg-[#0F111A] border-gray-700 text-white placeholder-neutral-400 focus:border-viverblue pr-10"
-                  required
+                  {...register('confirmPassword')}
+                  type="password"
+                  placeholder="Confirme sua senha"
+                  className="pl-10"
+                  disabled={isLoading}
                 />
-                <button
-                  type="button"
-                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-neutral-400 hover:text-white"
-                >
-                  {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </button>
               </div>
+              {errors.confirmPassword && (
+                <p className="text-sm text-red-500">{errors.confirmPassword.message}</p>
+              )}
             </div>
 
-            {error && (
-              <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3">
-                <p className="text-sm text-red-300 text-center">
-                  {error}
-                </p>
-              </div>
-            )}
-
-            {/* Botão de Criar Conta */}
             <Button
               type="submit"
-              disabled={isRegistering}
-              className="w-full bg-viverblue hover:bg-viverblue/90 text-white font-medium py-3"
-              size="lg"
+              disabled={isLoading || watchedEmail !== email}
+              className="w-full bg-viverblue hover:bg-viverblue/80"
             >
-              {isRegistering ? (
-                <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                  Criando conta...
-                </>
-              ) : (
-                <>
-                  <UserPlus className="w-4 h-4 mr-2" />
-                  Criar minha conta
-                </>
-              )}
+              {isLoading ? 'Criando conta...' : 'Criar Conta e Aceitar Convite'}
             </Button>
           </form>
-          
-          {/* Informações adicionais */}
-          <div className="mt-6 text-center">
-            <p className="text-xs text-neutral-400">
-              Ao criar sua conta, você concorda com nossos{' '}
-              <a href="/terms" className="text-viverblue hover:underline">
-                Termos de Uso
-              </a>{' '}
-              e{' '}
-              <a href="/privacy" className="text-viverblue hover:underline">
-                Política de Privacidade
-              </a>
-            </p>
+
+          <div className="text-center text-sm text-neutral-400">
+            Já tem uma conta?{' '}
+            <button 
+              onClick={() => navigate(`/login?invite=true&token=${token}`)}
+              className="text-viverblue hover:underline"
+            >
+              Fazer login
+            </button>
           </div>
         </CardContent>
       </Card>

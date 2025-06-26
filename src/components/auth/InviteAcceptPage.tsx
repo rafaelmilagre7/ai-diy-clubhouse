@@ -15,19 +15,26 @@ const InviteAcceptPage = () => {
   const { user, isLoading: authLoading } = useSimpleAuth();
   const [showUserExists, setShowUserExists] = useState(false);
   
-  const inviteToken = searchParams.get('token');
+  // Buscar token de diferentes fontes - OTIMIZADO
+  const tokenFromUrl = searchParams.get('token');
+  const tokenFromStorage = InviteTokenManager.getToken();
+  const inviteToken = tokenFromUrl || tokenFromStorage;
+  
   const { inviteDetails, isLoading: inviteLoading, error: inviteError } = useInviteFlow(inviteToken);
 
   useEffect(() => {
-    logger.info('[INVITE-ACCEPT-PAGE] 🎯 Inicializando página de aceite:', {
-      hasToken: !!inviteToken,
+    logger.info('[INVITE-ACCEPT-PAGE] 🎯 Página de aceite carregada:', {
+      hasTokenFromUrl: !!tokenFromUrl,
+      hasTokenFromStorage: !!tokenFromStorage,
       hasUser: !!user,
       authLoading,
       inviteLoading,
       hasInviteDetails: !!inviteDetails,
-      hasInviteError: !!inviteError
+      hasInviteError: !!inviteError,
+      userEmail: user?.email,
+      inviteEmail: inviteDetails?.email
     });
-  }, [inviteToken, user, authLoading, inviteLoading, inviteDetails, inviteError]);
+  }, [tokenFromUrl, tokenFromStorage, user, authLoading, inviteLoading, inviteDetails, inviteError]);
 
   // Se não há token, redirecionar para login
   if (!inviteToken) {
@@ -35,11 +42,17 @@ const InviteAcceptPage = () => {
     return <Navigate to="/login" replace />;
   }
 
-  // Se usuário já está logado, armazenar token e redirecionar para onboarding
-  if (user && !authLoading) {
-    logger.info('[INVITE-ACCEPT-PAGE] ✅ Usuário logado - redirecionando para onboarding');
+  // Se usuário já está logado com e-mail correto, redirecionar para onboarding
+  if (user && inviteDetails && user.email === inviteDetails.email && !authLoading) {
+    logger.info('[INVITE-ACCEPT-PAGE] ✅ Usuário logado com e-mail correto - indo para onboarding');
     InviteTokenManager.storeToken(inviteToken);
-    return <Navigate to="/onboarding" replace />;
+    return <Navigate to={`/onboarding?token=${inviteToken}&invite=true`} replace />;
+  }
+
+  // Se usuário logado com e-mail diferente, redirecionar para interceptor
+  if (user && inviteDetails && user.email !== inviteDetails.email && !authLoading) {
+    logger.warn('[INVITE-ACCEPT-PAGE] ⚠️ E-mail diferente - redirecionando para interceptor');
+    return <Navigate to={`/convite/${inviteToken}`} replace />;
   }
 
   // Loading states
@@ -63,7 +76,7 @@ const InviteAcceptPage = () => {
     return <InviteUserExistsScreen email={inviteDetails.email} />;
   }
 
-  // Mostrar formulário de criação de conta
+  // Mostrar formulário de registro para convite
   logger.info('[INVITE-ACCEPT-PAGE] 🎨 Renderizando formulário de registro:', {
     email: inviteDetails.email,
     hasName: !!inviteDetails.name,

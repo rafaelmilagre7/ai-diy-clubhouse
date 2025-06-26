@@ -1,24 +1,35 @@
 
 import React from 'react';
-import { useParams } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import AuthLayout from '@/components/auth/AuthLayout';
 import InviteAcceptPage from '@/components/auth/InviteAcceptPage';
 import { InviteTokenManager } from '@/utils/inviteTokenManager';
+import { logger } from '@/utils/logger';
 
 const RegisterPage = () => {
-  const { token: paramToken } = useParams();
+  const [searchParams] = useSearchParams();
   
-  // FONTE ÚNICA DE TOKEN - suporta tanto /convite/:token quanto /invite/:token
-  const inviteToken = paramToken || InviteTokenManager.getToken();
+  // Buscar token de diferentes fontes - SIMPLIFICADO
+  const tokenFromUrl = searchParams.get('token');
+  const tokenFromStorage = InviteTokenManager.getToken();
+  const inviteToken = tokenFromUrl || tokenFromStorage;
+  
+  // Verificar se é fluxo de convite
+  const isInviteFlow = searchParams.get('invite') === 'true' || !!inviteToken;
 
-  console.log('[REGISTER-PAGE] Token detectado:', !!inviteToken, 'Rota atual:', window.location.pathname);
+  logger.info('[REGISTER-PAGE] 📝 Renderizando página:', {
+    hasTokenFromUrl: !!tokenFromUrl,
+    hasTokenFromStorage: !!tokenFromStorage,
+    isInviteFlow,
+    pathname: window.location.pathname
+  });
 
-  // Se há um token de convite, mostrar a página específica de convite
-  if (inviteToken) {
+  // Se é fluxo de convite E tem token, mostrar página específica de convite
+  if (isInviteFlow && inviteToken) {
     return <InviteAcceptPage />;
   }
 
-  // Caso contrário, mostrar o AuthLayout normal
+  // Caso contrário, mostrar AuthLayout normal
   return <AuthLayout />;
 };
 
