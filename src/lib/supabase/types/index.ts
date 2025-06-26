@@ -8,12 +8,9 @@ export type LearningModule = Database['public']['Tables']['learning_modules']['R
 export type LearningCourse = Database['public']['Tables']['learning_courses']['Row'];
 export type LearningProgress = Database['public']['Tables']['learning_progress']['Row'];
 export type LearningResource = Database['public']['Tables']['learning_resources']['Row'];
-export type LearningLessonTool = Database['public']['Tables']['learning_lesson_tools']['Row'];
-export type LearningComment = Database['public']['Tables']['learning_comments']['Row'];
-export type CourseAccessControl = Database['public']['Tables']['course_access_control']['Row'];
-export type PermissionDefinition = Database['public']['Tables']['permission_definitions']['Row'];
-export type RolePermission = Database['public']['Tables']['role_permissions']['Row'];
 export type Solution = Database['public']['Tables']['solutions']['Row'];
+export type Progress = Database['public']['Tables']['progress']['Row'];
+export type CourseAccessControl = Database['public']['Tables']['course_access_control']['Row'];
 
 // Tipo UserProfile com role join
 export type UserProfile = Database['public']['Tables']['profiles']['Row'] & {

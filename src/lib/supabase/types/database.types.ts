@@ -7,7 +7,7 @@ export type Json =
   | { [key: string]: Json | undefined }
   | Json[]
 
-export type Database = {
+export interface Database {
   public: {
     Tables: {
       profiles: {
@@ -15,29 +15,29 @@ export type Database = {
           id: string
           email: string
           name: string
-          avatar_url: string
-          company_name: string
-          industry: string
-          role_id: string
+          avatar_url: string | null
+          company_name: string | null
+          industry: string | null
+          role_id: string | null
           role: string
           created_at: string
           onboarding_completed: boolean
-          onboarding_completed_at: string
+          onboarding_completed_at: string | null
           referrals_count: number
           successful_referrals_count: number
         }
         Insert: {
           id: string
           email: string
-          name?: string
-          avatar_url?: string
-          company_name?: string
-          industry?: string
-          role_id?: string
+          name: string
+          avatar_url?: string | null
+          company_name?: string | null
+          industry?: string | null
+          role_id?: string | null
           role?: string
           created_at?: string
           onboarding_completed?: boolean
-          onboarding_completed_at?: string
+          onboarding_completed_at?: string | null
           referrals_count?: number
           successful_referrals_count?: number
         }
@@ -45,14 +45,14 @@ export type Database = {
           id?: string
           email?: string
           name?: string
-          avatar_url?: string
-          company_name?: string
-          industry?: string
-          role_id?: string
+          avatar_url?: string | null
+          company_name?: string | null
+          industry?: string | null
+          role_id?: string | null
           role?: string
           created_at?: string
           onboarding_completed?: boolean
-          onboarding_completed_at?: string
+          onboarding_completed_at?: string | null
           referrals_count?: number
           successful_referrals_count?: number
         }
@@ -62,25 +62,127 @@ export type Database = {
         Row: {
           id: string
           name: string
-          description: string
-          permissions: Json
+          description: string | null
+          permissions: Json | null
           is_system: boolean
           created_at: string
         }
         Insert: {
           id?: string
           name: string
-          description?: string
-          permissions?: Json
+          description?: string | null
+          permissions?: Json | null
           is_system?: boolean
           created_at?: string
         }
         Update: {
           id?: string
           name?: string
-          description?: string
-          permissions?: Json
+          description?: string | null
+          permissions?: Json | null
           is_system?: boolean
+          created_at?: string
+        }
+        Relationships: []
+      }
+      solutions: {
+        Row: {
+          id: string
+          title: string
+          description: string | null
+          category: string
+          difficulty: string
+          estimated_time_hours: number | null
+          is_published: boolean
+          created_at: string
+          updated_at: string
+          created_by: string | null
+          cover_image_url: string | null
+          tags: string[] | null
+        }
+        Insert: {
+          id?: string
+          title: string
+          description?: string | null
+          category: string
+          difficulty: string
+          estimated_time_hours?: number | null
+          is_published?: boolean
+          created_at?: string
+          updated_at?: string
+          created_by?: string | null
+          cover_image_url?: string | null
+          tags?: string[] | null
+        }
+        Update: {
+          id?: string
+          title?: string
+          description?: string | null
+          category?: string
+          difficulty?: string
+          estimated_time_hours?: number | null
+          is_published?: boolean
+          created_at?: string
+          updated_at?: string
+          created_by?: string | null
+          cover_image_url?: string | null
+          tags?: string[] | null
+        }
+        Relationships: []
+      }
+      progress: {
+        Row: {
+          id: string
+          user_id: string
+          solution_id: string
+          is_completed: boolean
+          progress_percentage: number
+          last_activity: string
+          completed_at: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          solution_id: string
+          is_completed?: boolean
+          progress_percentage?: number
+          last_activity?: string
+          completed_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          solution_id?: string
+          is_completed?: boolean
+          progress_percentage?: number
+          last_activity?: string
+          completed_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      course_access_control: {
+        Row: {
+          id: string
+          course_id: string
+          role_id: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          course_id: string
+          role_id: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          course_id?: string
+          role_id?: string
           created_at?: string
         }
         Relationships: []
@@ -92,12 +194,12 @@ export type Database = {
           event_type: string
           action: string
           resource_id: string | null
+          details: Json | null
           timestamp: string
-          details: Json
-          severity: string | null
           ip_address: string | null
           user_agent: string | null
           session_id: string | null
+          severity: string | null
         }
         Insert: {
           id?: string
@@ -105,12 +207,12 @@ export type Database = {
           event_type: string
           action: string
           resource_id?: string | null
+          details?: Json | null
           timestamp?: string
-          details?: Json
-          severity?: string | null
           ip_address?: string | null
           user_agent?: string | null
           session_id?: string | null
+          severity?: string | null
         }
         Update: {
           id?: string
@@ -118,12 +220,12 @@ export type Database = {
           event_type?: string
           action?: string
           resource_id?: string | null
+          details?: Json | null
           timestamp?: string
-          details?: Json
-          severity?: string | null
           ip_address?: string | null
           user_agent?: string | null
           session_id?: string | null
+          severity?: string | null
         }
         Relationships: []
       }
@@ -132,37 +234,37 @@ export type Database = {
           id: string
           title: string
           description: string | null
-          slug: string
           cover_image_url: string | null
           published: boolean
           created_by: string | null
-          order_index: number
           created_at: string
           updated_at: string
+          order_index: number
+          slug: string
         }
         Insert: {
           id?: string
           title: string
           description?: string | null
-          slug: string
           cover_image_url?: string | null
           published?: boolean
           created_by?: string | null
-          order_index?: number
           created_at?: string
           updated_at?: string
+          order_index?: number
+          slug: string
         }
         Update: {
           id?: string
           title?: string
           description?: string | null
-          slug?: string
           cover_image_url?: string | null
           published?: boolean
           created_by?: string | null
-          order_index?: number
           created_at?: string
           updated_at?: string
+          order_index?: number
+          slug?: string
         }
         Relationships: []
       }
@@ -172,9 +274,9 @@ export type Database = {
           course_id: string
           title: string
           description: string | null
-          order_index: number
-          published: boolean
           cover_image_url: string | null
+          published: boolean
+          order_index: number
           created_at: string
           updated_at: string
         }
@@ -183,9 +285,9 @@ export type Database = {
           course_id: string
           title: string
           description?: string | null
-          order_index?: number
-          published?: boolean
           cover_image_url?: string | null
+          published?: boolean
+          order_index?: number
           created_at?: string
           updated_at?: string
         }
@@ -194,9 +296,9 @@ export type Database = {
           course_id?: string
           title?: string
           description?: string | null
-          order_index?: number
-          published?: boolean
           cover_image_url?: string | null
+          published?: boolean
+          order_index?: number
           created_at?: string
           updated_at?: string
         }
@@ -209,9 +311,9 @@ export type Database = {
           title: string
           description: string | null
           content: Json | null
-          order_index: number
-          published: boolean
           cover_image_url: string | null
+          published: boolean
+          order_index: number
           estimated_time_minutes: number
           difficulty_level: string
           ai_assistant_enabled: boolean
@@ -226,9 +328,9 @@ export type Database = {
           title: string
           description?: string | null
           content?: Json | null
-          order_index?: number
-          published?: boolean
           cover_image_url?: string | null
+          published?: boolean
+          order_index?: number
           estimated_time_minutes?: number
           difficulty_level?: string
           ai_assistant_enabled?: boolean
@@ -243,9 +345,9 @@ export type Database = {
           title?: string
           description?: string | null
           content?: Json | null
-          order_index?: number
-          published?: boolean
           cover_image_url?: string | null
+          published?: boolean
+          order_index?: number
           estimated_time_minutes?: number
           difficulty_level?: string
           ai_assistant_enabled?: boolean
@@ -267,10 +369,10 @@ export type Database = {
           video_id: string | null
           thumbnail_url: string | null
           duration_seconds: number | null
-          order_index: number
           video_file_path: string | null
           video_file_name: string | null
           file_size_bytes: number | null
+          order_index: number
           created_at: string
         }
         Insert: {
@@ -283,10 +385,10 @@ export type Database = {
           video_id?: string | null
           thumbnail_url?: string | null
           duration_seconds?: number | null
-          order_index?: number
           video_file_path?: string | null
           video_file_name?: string | null
           file_size_bytes?: number | null
+          order_index?: number
           created_at?: string
         }
         Update: {
@@ -299,10 +401,10 @@ export type Database = {
           video_id?: string | null
           thumbnail_url?: string | null
           duration_seconds?: number | null
-          order_index?: number
           video_file_path?: string | null
           video_file_name?: string | null
           file_size_bytes?: number | null
+          order_index?: number
           created_at?: string
         }
         Relationships: []
@@ -316,10 +418,10 @@ export type Database = {
           video_progress: Json
           started_at: string
           completed_at: string | null
-          last_position_seconds: number
-          notes: string | null
-          created_at: string
+          last_position_seconds: number | null
           updated_at: string
+          created_at: string
+          notes: string | null
         }
         Insert: {
           id?: string
@@ -329,10 +431,10 @@ export type Database = {
           video_progress?: Json
           started_at?: string
           completed_at?: string | null
-          last_position_seconds?: number
-          notes?: string | null
-          created_at?: string
+          last_position_seconds?: number | null
           updated_at?: string
+          created_at?: string
+          notes?: string | null
         }
         Update: {
           id?: string
@@ -342,10 +444,10 @@ export type Database = {
           video_progress?: Json
           started_at?: string
           completed_at?: string | null
-          last_position_seconds?: number
-          notes?: string | null
-          created_at?: string
+          last_position_seconds?: number | null
           updated_at?: string
+          created_at?: string
+          notes?: string | null
         }
         Relationships: []
       }
@@ -385,132 +487,6 @@ export type Database = {
         }
         Relationships: []
       }
-      learning_lesson_tools: {
-        Row: {
-          id: string
-          lesson_id: string
-          tool_id: string
-          order_index: number
-          created_at: string
-        }
-        Insert: {
-          id?: string
-          lesson_id: string
-          tool_id: string
-          order_index?: number
-          created_at?: string
-        }
-        Update: {
-          id?: string
-          lesson_id?: string
-          tool_id?: string
-          order_index?: number
-          created_at?: string
-        }
-        Relationships: []
-      }
-      learning_comments: {
-        Row: {
-          id: string
-          lesson_id: string
-          user_id: string
-          content: string
-          parent_id: string | null
-          is_hidden: boolean
-          likes_count: number
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          lesson_id: string
-          user_id: string
-          content: string
-          parent_id?: string | null
-          is_hidden?: boolean
-          likes_count?: number
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          lesson_id?: string
-          user_id?: string
-          content?: string
-          parent_id?: string | null
-          is_hidden?: boolean
-          likes_count?: number
-          created_at?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
-      solutions: {
-        Row: {
-          id: string
-          title: string
-          description: string
-          category: string
-          difficulty: string
-          published: boolean
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          title: string
-          description: string
-          category: string
-          difficulty: string
-          published?: boolean
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          title?: string
-          description?: string
-          category?: string
-          difficulty?: string
-          published?: boolean
-          created_at?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
-      tools: {
-        Row: {
-          id: string
-          name: string
-          description: string
-          category: string
-          url: string
-          logo_url: string | null
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          name: string
-          description: string
-          category: string
-          url: string
-          logo_url?: string | null
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          name?: string
-          description?: string
-          category?: string
-          url?: string
-          logo_url?: string | null
-          created_at?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
       events: {
         Row: {
           id: string
@@ -521,7 +497,6 @@ export type Database = {
           location_link: string | null
           physical_location: string | null
           cover_image_url: string | null
-          created_by: string
           is_recurring: boolean
           recurrence_pattern: string | null
           recurrence_interval: number | null
@@ -529,6 +504,7 @@ export type Database = {
           recurrence_count: number | null
           recurrence_end_date: string | null
           parent_event_id: string | null
+          created_by: string
           created_at: string
         }
         Insert: {
@@ -540,7 +516,6 @@ export type Database = {
           location_link?: string | null
           physical_location?: string | null
           cover_image_url?: string | null
-          created_by: string
           is_recurring?: boolean
           recurrence_pattern?: string | null
           recurrence_interval?: number | null
@@ -548,6 +523,7 @@ export type Database = {
           recurrence_count?: number | null
           recurrence_end_date?: string | null
           parent_event_id?: string | null
+          created_by: string
           created_at?: string
         }
         Update: {
@@ -559,7 +535,6 @@ export type Database = {
           location_link?: string | null
           physical_location?: string | null
           cover_image_url?: string | null
-          created_by?: string
           is_recurring?: boolean
           recurrence_pattern?: string | null
           recurrence_interval?: number | null
@@ -567,6 +542,7 @@ export type Database = {
           recurrence_count?: number | null
           recurrence_end_date?: string | null
           parent_event_id?: string | null
+          created_by?: string
           created_at?: string
         }
         Relationships: []
@@ -586,81 +562,3 @@ export type Database = {
     }
   }
 }
-
-export type Tables<
-  PublicTableNameOrOptions extends
-    | keyof (Database["public"]["Tables"] & Database["public"]["Views"])
-    | { schema: keyof Database },
-  TableName extends PublicTableNameOrOptions extends { schema: keyof Database }
-    ? keyof (Database[PublicTableNameOrOptions["schema"]]["Tables"] &
-        Database[PublicTableNameOrOptions["schema"]]["Views"])
-    : never = never,
-> = PublicTableNameOrOptions extends { schema: keyof Database }
-  ? (Database[PublicTableNameOrOptions["schema"]]["Tables"] &
-      Database[PublicTableNameOrOptions["schema"]]["Views"])[TableName] extends {
-      Row: infer R
-    }
-    ? R
-    : never
-  : PublicTableNameOrOptions extends keyof (Database["public"]["Tables"] &
-        Database["public"]["Views"])
-    ? (Database["public"]["Tables"] &
-        Database["public"]["Views"])[PublicTableNameOrOptions] extends {
-        Row: infer R
-      }
-      ? R
-      : never
-    : never
-
-export type TablesInsert<
-  PublicTableNameOrOptions extends
-    | keyof Database["public"]["Tables"]
-    | { schema: keyof Database },
-  TableName extends PublicTableNameOrOptions extends { schema: keyof Database }
-    ? keyof Database[PublicTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
-> = PublicTableNameOrOptions extends { schema: keyof Database }
-  ? Database[PublicTableNameOrOptions["schema"]]["Tables"][TableName] extends {
-      Insert: infer I
-    }
-    ? I
-    : never
-  : PublicTableNameOrOptions extends keyof Database["public"]["Tables"]
-    ? Database["public"]["Tables"][PublicTableNameOrOptions] extends {
-        Insert: infer I
-      }
-      ? I
-      : never
-    : never
-
-export type TablesUpdate<
-  PublicTableNameOrOptions extends
-    | keyof Database["public"]["Tables"]
-    | { schema: keyof Database },
-  TableName extends PublicTableNameOrOptions extends { schema: keyof Database }
-    ? keyof Database[PublicTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
-> = PublicTableNameOrOptions extends { schema: keyof Database }
-  ? Database[PublicTableNameOrOptions["schema"]]["Tables"][TableName] extends {
-      Update: infer U
-    }
-    ? U
-    : never
-  : PublicTableNameOrOptions extends keyof Database["public"]["Tables"]
-    ? Database["public"]["Tables"][PublicTableNameOrOptions] extends {
-        Update: infer U
-      }
-      ? U
-      : never
-    : never
-
-export type Enums<
-  PublicEnumNameOrOptions extends keyof Database["public"]["Enums"] | { schema: keyof Database },
-  EnumName extends PublicEnumNameOrOptions extends { schema: keyof Database }
-    ? keyof Database[PublicEnumNameOrOptions["schema"]]["Enums"]
-    : never = never,
-> = PublicEnumNameOrOptions extends { schema: keyof Database }
-  ? Database[PublicEnumNameOrOptions["schema"]]["Enums"][EnumName]
-  : PublicEnumNameOrOptions extends keyof Database["public"]["Enums"]
-    ? Database["public"]["Enums"][PublicEnumNameOrOptions]
-    : never
