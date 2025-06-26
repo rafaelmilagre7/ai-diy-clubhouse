@@ -1,22 +1,8 @@
+
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { UserProfile } from '@/lib/supabase';
-import { logger } from '@/utils/logger';
-import AuthManager from '@/services/AuthManager';
-
-// Interface alinhada com AuthManager
-interface AuthState {
-  user: User | null;
-  session: Session | null;
-  profile: UserProfile | null;
-  isLoading: boolean;
-  error: string | null;
-  isAdmin: boolean;
-  isFormacao: boolean;
-  onboardingRequired: boolean;
-  hasInviteToken: boolean;
-  inviteDetails: any | null;
-}
+import { supabase } from '@/lib/supabase';
 
 interface SimpleAuthContextType {
   user: User | null;
@@ -37,127 +23,140 @@ interface SimpleAuthProviderProps {
 }
 
 export const SimpleAuthProvider: React.FC<SimpleAuthProviderProps> = ({ children }) => {
-  const [authState, setAuthState] = useState<AuthState>(() => {
-    const initialState = AuthManager.getInstance().getState();
-    console.log('[DEBUG-SIMPLE-AUTH] 🎬 Estado inicial do provider:', {
-      hasUser: !!initialState.user,
-      hasProfile: !!initialState.profile,
-      isLoading: initialState.isLoading,
-      isAdmin: initialState.isAdmin,
-      error: initialState.error
-    });
-    
-    // Garantir que todas as propriedades existem
-    return {
-      user: initialState.user,
-      session: initialState.session || null,
-      profile: initialState.profile,
-      isLoading: initialState.isLoading,
-      error: initialState.error || null,
-      isAdmin: initialState.isAdmin,
-      isFormacao: initialState.isFormacao,
-      onboardingRequired: initialState.onboardingRequired,
-      hasInviteToken: initialState.hasInviteToken,
-      inviteDetails: initialState.inviteDetails
-    };
-  });
-  
+  const [user, setUser] = useState<User | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
+  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Carregar perfil do usuário
+  const loadProfile = async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select(`
+          *,
+          user_roles:role_id (
+            id,
+            name,
+            description,
+            permissions
+          )
+        `)
+        .eq('id', userId)
+        .single();
+
+      if (error) {
+        console.error('Erro ao carregar perfil:', error);
+        return;
+      }
+
+      setProfile(data as UserProfile);
+    } catch (err) {
+      console.error('Erro inesperado ao carregar perfil:', err);
+    }
+  };
+
   useEffect(() => {
-    const authManager = AuthManager.getInstance();
-    
-    logger.info('[SIMPLE-AUTH-PROVIDER] 🔄 Inicializando com AuthManager');
-    console.log('[DEBUG-SIMPLE-AUTH] 🔄 Inicializando provider...');
-    
-    const handleStateChanged = (newState) => {
-      console.log('[DEBUG-SIMPLE-AUTH] 📡 Estado atualizado via AuthManager:', {
-        hasUser: !!newState.user,
-        hasProfile: !!newState.profile,
-        isLoading: newState.isLoading,
-        isAdmin: newState.isAdmin,
-        error: newState.error,
-        timestamp: new Date().toISOString()
-      });
-      
-      // Garantir que todas as propriedades existem
-      setAuthState({
-        user: newState.user,
-        session: newState.session || null,
-        profile: newState.profile,
-        isLoading: newState.isLoading,
-        error: newState.error || null,
-        isAdmin: newState.isAdmin,
-        isFormacao: newState.isFormacao,
-        onboardingRequired: newState.onboardingRequired,
-        hasInviteToken: newState.hasInviteToken,
-        inviteDetails: newState.inviteDetails
-      });
-    };
-    
-    // Subscribe to state changes
-    const unsubscribe = authManager.on('stateChanged', handleStateChanged);
-    
-    // Initialize AuthManager
-    const initializeAuth = async () => {
+    // Verificar sessão atual
+    const checkSession = async () => {
       try {
-        console.log('[DEBUG-SIMPLE-AUTH] 🚀 Forçando inicialização do AuthManager');
-        await authManager.initialize();
+        const { data: { session }, error } = await supabase.auth.getSession();
         
-        const currentState = authManager.getState();
-        console.log('[DEBUG-SIMPLE-AUTH] ✅ AuthManager inicializado. Estado atual:', {
-          hasUser: !!currentState.user,
-          hasProfile: !!currentState.profile,
-          isLoading: currentState.isLoading,
-          isAdmin: currentState.isAdmin,
-          error: currentState.error
-        });
-        
-        setAuthState({
-          user: currentState.user,
-          session: currentState.session || null,
-          profile: currentState.profile,
-          isLoading: currentState.isLoading,
-          error: currentState.error || null,
-          isAdmin: currentState.isAdmin,
-          isFormacao: currentState.isFormacao,
-          onboardingRequired: currentState.onboardingRequired,
-          hasInviteToken: currentState.hasInviteToken,
-          inviteDetails: currentState.inviteDetails
-        });
-        
-      } catch (error) {
-        console.error('[DEBUG-SIMPLE-AUTH] ❌ Erro na inicialização:', error);
-        logger.error('[SIMPLE-AUTH-PROVIDER] Erro na inicialização', error);
-        setAuthState(prev => ({ ...prev, isLoading: false, error: (error as Error).message }));
+        if (error) {
+          setError(error.message);
+          return;
+        }
+
+        setSession(session);
+        setUser(session?.user ?? null);
+
+        if (session?.user) {
+          await loadProfile(session.user.id);
+        }
+      } catch (err) {
+        console.error('Erro ao verificar sessão:', err);
+        setError('Erro ao verificar autenticação');
+      } finally {
+        setIsLoading(false);
       }
     };
 
-    // Inicializar imediatamente
-    initializeAuth();
-    
+    // Listener para mudanças de auth
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        setSession(session);
+        setUser(session?.user ?? null);
+        
+        if (event === 'SIGNED_IN' && session?.user) {
+          await loadProfile(session.user.id);
+        } else if (event === 'SIGNED_OUT') {
+          setProfile(null);
+        }
+        
+        setIsLoading(false);
+      }
+    );
+
+    checkSession();
+
     return () => {
-      authManager.off('stateChanged', handleStateChanged);
+      subscription.unsubscribe();
     };
   }, []);
 
-  const contextValue: SimpleAuthContextType = {
-    user: authState.user,
-    session: authState.session,
-    profile: authState.profile,
-    isLoading: authState.isLoading,
-    error: authState.error,
-    isAdmin: authState.isAdmin,
-    isFormacao: authState.isFormacao,
-    signIn: AuthManager.getInstance().signIn.bind(AuthManager.getInstance()),
-    signOut: AuthManager.getInstance().signOut.bind(AuthManager.getInstance())
+  const signIn = async (email: string, password: string) => {
+    try {
+      setIsLoading(true);
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      
+      if (error) {
+        return { error };
+      }
+      
+      return {};
+    } catch (err) {
+      return { error: err as Error };
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  console.log('[DEBUG-SIMPLE-AUTH] 📊 Renderizando provider com estado:', {
-    isLoading: authState.isLoading,
-    hasUser: !!authState.user,
-    hasProfile: !!authState.profile,
-    error: authState.error,
-    isAdmin: authState.isAdmin
-  });
+  const signOut = async () => {
+    try {
+      const { error } = await supabase.auth.signOut();
+      
+      if (error) {
+        return { success: false, error };
+      }
+      
+      setUser(null);
+      setProfile(null);
+      setSession(null);
+      
+      return { success: true };
+    } catch (err) {
+      return { success: false, error: err as Error };
+    }
+  };
+
+  const isAdmin = profile?.user_roles?.name === 'admin';
+  const isFormacao = profile?.user_roles?.name === 'formacao';
+
+  const contextValue: SimpleAuthContextType = {
+    user,
+    session,
+    profile,
+    isLoading,
+    error,
+    isAdmin,
+    isFormacao,
+    signIn,
+    signOut
+  };
 
   return (
     <SimpleAuthContext.Provider value={contextValue}>
@@ -169,11 +168,10 @@ export const SimpleAuthProvider: React.FC<SimpleAuthProviderProps> = ({ children
 export const useSimpleAuth = (): SimpleAuthContextType => {
   const context = useContext(SimpleAuthContext);
   if (context === undefined) {
-    console.error('[DEBUG-SIMPLE-AUTH] 💥 useSimpleAuth usado fora do provider!');
     throw new Error('useSimpleAuth must be used within a SimpleAuthProvider');
   }
   return context;
 };
 
-// ALIAS TEMPORÁRIO PARA COMPATIBILIDADE
+// Alias para compatibilidade
 export const useAuth = useSimpleAuth;
