@@ -1,13 +1,12 @@
-
+import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
-import { UserProfile, getUserRoleName, isAdminRole } from '@/lib/supabase/types';
-import { InviteTokenManager } from '@/utils/inviteTokenManager';
+import { UserProfile } from '@/lib/supabase';
 import { logger } from '@/utils/logger';
-import { toast } from 'sonner';
+import { InviteTokenManager } from '@/utils/inviteTokenManager';
 
 interface AuthState {
-  user: any | null;
-  session: any | null;
+  user: User | null;
+  session: Session | null;
   profile: UserProfile | null;
   isLoading: boolean;
   error: string | null;
@@ -18,30 +17,29 @@ interface AuthState {
   inviteDetails: any | null;
 }
 
-interface InviteFlowParams {
-  token: string;
-  inviteEmail: string;
-  currentUser: any | null;
-  inviteDetails: any;
-}
+type AuthEvent = 'stateChanged';
 
-class AuthManager {
+export class AuthManager {
   private static instance: AuthManager;
-  private state: AuthState = {
-    user: null,
-    session: null,
-    profile: null,
-    isLoading: true,
-    error: null,
-    isAdmin: false,
-    isFormacao: false,
-    onboardingRequired: false,
-    hasInviteToken: false,
-    inviteDetails: null
-  };
+  private state: AuthState;
+  private eventListeners: Map<string, ((state: AuthState) => void)[]> = new Map();
+  private sessionListener: any = null;
+  public isInitialized: boolean = false;
 
-  private listeners: Set<(state: AuthState) => void> = new Set();
-  public isInitialized = false;
+  private constructor() {
+    this.state = {
+      user: null,
+      session: null,
+      profile: null,
+      isLoading: true,
+      error: null,
+      isAdmin: false,
+      isFormacao: false,
+      onboardingRequired: false,
+      hasInviteToken: false,
+      inviteDetails: null
+    };
+  }
 
   static getInstance(): AuthManager {
     if (!AuthManager.instance) {
@@ -50,234 +48,288 @@ class AuthManager {
     return AuthManager.instance;
   }
 
-  private constructor() {
-    this.initialize();
-  }
-
-  async initialize() {
-    if (this.isInitialized) return;
-
-    try {
-      logger.info('[AUTH-MANAGER] 🚀 Inicializando AuthManager');
-      
-      const { data: { session } } = await supabase.auth.getSession();
-      await this.updateAuthState(session?.user || null, session);
-      
-      supabase.auth.onAuthStateChange(async (event, session) => {
-        logger.info('[AUTH-MANAGER] 🔄 Estado de autenticação mudou', { event });
-        await this.updateAuthState(session?.user || null, session);
-      });
-
-      this.isInitialized = true;
-      logger.info('[AUTH-MANAGER] ✅ AuthManager inicializado');
-    } catch (error) {
-      logger.error('[AUTH-MANAGER] ❌ Erro na inicialização', error);
-      this.setState({ isLoading: false, error: (error as Error).message });
+  private emit(event: string, state: AuthState): void {
+    const listeners = this.eventListeners.get(event);
+    if (listeners) {
+      listeners.forEach(listener => listener(state));
     }
   }
 
-  private async updateAuthState(user: any, session: any = null) {
-    this.setState({ isLoading: true, error: null });
-
-    try {
-      if (!user) {
-        this.setState({
-          user: null,
-          session: null,
-          profile: null,
-          isAdmin: false,
-          isFormacao: false,
-          onboardingRequired: false,
-          isLoading: false,
-          error: null
-        });
-        return;
-      }
-
-      const profile = await this.fetchUserProfile(user.id);
-      const roleName = getUserRoleName(profile);
-      const isAdmin = isAdminRole(profile);
-      const isFormacao = roleName === 'formacao';
-      
-      // CORREÇÃO: Usar profile?.onboarding_completed ao invés de user_roles_id
-      const onboardingRequired = !isAdmin && (!profile?.onboarding_completed);
-
-      this.setState({
-        user,
-        session,
-        profile,
-        isAdmin,
-        isFormacao,
-        onboardingRequired,
-        isLoading: false,
-        error: null
-      });
-
-      logger.info('[AUTH-MANAGER] 📊 Estado atualizado', {
-        userId: user.id.substring(0, 8) + '***',
-        hasProfile: !!profile,
-        roleName,
-        isAdmin,
-        onboardingRequired
-      });
-
-    } catch (error) {
-      logger.error('[AUTH-MANAGER] ❌ Erro ao atualizar estado', error);
-      this.setState({ isLoading: false, error: (error as Error).message });
+  on(event: string, callback: (state: AuthState) => void): () => void {
+    if (!this.eventListeners.has(event)) {
+      this.eventListeners.set(event, []);
     }
-  }
+    this.eventListeners.get(event)?.push(callback);
 
-  private async fetchUserProfile(userId: string): Promise<UserProfile | null> {
-    const { data, error } = await supabase
-      .from('profiles')
-      .select(`
-        *,
-        user_roles (
-          id,
-          name,
-          description
-        )
-      `)
-      .eq('id', userId)
-      .single();
-
-    if (error) {
-      logger.error('[AUTH-MANAGER] ❌ Erro ao buscar perfil', error);
-      return null;
-    }
-
-    return data;
-  }
-
-  /**
-   * NOVO: Método para processar fluxo de convite
-   */
-  async handleInviteFlow({ token, inviteEmail, currentUser, inviteDetails }: InviteFlowParams): Promise<string | null> {
-    logger.info('[AUTH-MANAGER] 🎯 Processando fluxo de convite', {
-      hasCurrentUser: !!currentUser,
-      inviteEmail,
-      currentUserEmail: currentUser?.email
-    });
-
-    // Armazenar token sempre
-    InviteTokenManager.storeToken(token, inviteDetails);
-
-    // Caso 1: Usuário não autenticado
-    if (!currentUser) {
-      logger.info('[AUTH-MANAGER] 👤 Usuário não autenticado - indo para login');
-      return `/login?invite=true&token=${token}`;
-    }
-
-    // Caso 2: Usuário autenticado com e-mail correto
-    if (currentUser.email === inviteEmail) {
-      logger.info('[AUTH-MANAGER] ✅ E-mail correto - indo para onboarding');
-      return `/onboarding?token=${token}&invite=true`;
-    }
-
-    // Caso 3: E-mail diferente - handled by InviteEmailMismatchScreen
-    logger.warn('[AUTH-MANAGER] ⚠️ E-mail diferente - permanecendo no interceptor');
-    return null;
-  }
-
-  /**
-   * NOVO: Método signIn
-   */
-  async signIn(email: string, password: string): Promise<{ error?: Error | null }> {
-    try {
-      this.setState({ isLoading: true, error: null });
-      
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password
-      });
-
-      if (error) {
-        logger.error('[AUTH-MANAGER] Erro no login:', error);
-        toast.error('Erro no login: ' + error.message);
-        this.setState({ isLoading: false, error: error.message });
-        return { error };
-      }
-
-      if (data.user) {
-        logger.info('[AUTH-MANAGER] Login realizado:', data.user.email);
-        toast.success('Login realizado com sucesso!');
-      }
-
-      return { error: null };
-    } catch (err) {
-      const error = err instanceof Error ? err : new Error('Erro inesperado');
-      this.setState({ isLoading: false, error: error.message });
-      toast.error('Erro inesperado: ' + error.message);
-      return { error };
-    }
-  }
-
-  /**
-   * NOVO: Método signOut
-   */
-  async signOut(): Promise<{ success: boolean; error?: Error | null }> {
-    try {
-      this.setState({ isLoading: true, error: null });
-      
-      // Limpar token no logout
-      InviteTokenManager.clearTokenOnLogout();
-      
-      const { error } = await supabase.auth.signOut();
-      
-      if (error) {
-        logger.error('[AUTH-MANAGER] Erro no logout:', error);
-        toast.error('Erro ao fazer logout: ' + error.message);
-        this.setState({ isLoading: false, error: error.message });
-        return { success: false, error };
-      }
-
-      logger.info('[AUTH-MANAGER] Logout realizado');
-      toast.success('Logout realizado com sucesso!');
-      return { success: true, error: null };
-    } catch (err) {
-      const error = err instanceof Error ? err : new Error('Erro inesperado');
-      this.setState({ isLoading: false, error: error.message });
-      return { success: false, error };
-    }
-  }
-
-  getRedirectPath(): string {
-    const { user, profile, isAdmin, onboardingRequired } = this.state;
-
-    if (!user) return '/login';
-    
-    // Admin sempre vai direto para /admin
-    if (isAdmin) return '/admin';
-    
-    // Se onboarding é obrigatório, ir para onboarding
-    if (onboardingRequired) return '/onboarding';
-    
-    // Usuário normal vai para dashboard
-    return '/dashboard';
-  }
-
-  getState(): AuthState {
-    return { ...this.state };
-  }
-
-  private setState(updates: Partial<AuthState>) {
-    this.state = { ...this.state, ...updates };
-    this.notifyListeners();
-  }
-
-  private notifyListeners() {
-    this.listeners.forEach(listener => listener(this.state));
-  }
-
-  on(event: 'stateChanged', listener: (state: AuthState) => void) {
-    this.listeners.add(listener);
     return () => {
-      this.listeners.delete(listener);
+      this.off(event, callback);
     };
   }
 
-  off(listener: (state: AuthState) => void) {
-    this.listeners.delete(listener);
+  off(event: string, callback: (state: AuthState) => void): void {
+    const listeners = this.eventListeners.get(event);
+    if (listeners) {
+      const index = listeners.indexOf(callback);
+      if (index > -1) {
+        listeners.splice(index, 1);
+      }
+    }
+  }
+
+  private setState(newState: Partial<AuthState>): void {
+    this.state = { ...this.state, ...newState };
+    this.emit('stateChanged', this.state);
+  }
+
+  getState(): AuthState {
+    return this.state;
+  }
+
+  async initialize(): Promise<void> {
+    if (this.isInitialized) {
+      logger.warn('AuthManager já inicializado', { component: 'AuthManager', action: 'initialize' });
+      return;
+    }
+
+    this.isInitialized = true;
+    await this.setupSessionListener();
+  }
+
+  private async setupSessionListener(): Promise<void> {
+    supabase.auth.onAuthStateChange(async (event, session) => {
+      logger.info(`Evento de autenticação recebido: ${event}`, { component: 'AuthManager', action: 'setupSessionListener', event });
+      await this.handleAuthStateChange(event, session);
+    });
+
+    // Load initial session
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session) {
+      await this.handleAuthStateChange('INITIAL_SESSION', session);
+    } else {
+      this.setState({ isLoading: false });
+    }
+  }
+
+  private async loadUserProfile(user: User): Promise<UserProfile | null> {
+    try {
+      const { data: profile, error } = await supabase
+        .from('user_profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+
+      if (error) {
+        logger.error('Erro ao carregar perfil de usuário', error, { component: 'AuthManager', action: 'loadUserProfile', userId: user.id });
+        return null;
+      }
+
+      return profile as UserProfile;
+    } catch (error) {
+      logger.error('Erro inesperado ao carregar perfil de usuário', error, { component: 'AuthManager', action: 'loadUserProfile', userId: user.id });
+      return null;
+    }
+  }
+
+  private determineOnboardingRequired(user: User, profile: UserProfile | null): boolean {
+    if (!profile) {
+      logger.warn('Perfil de usuário não encontrado, forçando onboarding', { component: 'AuthManager', action: 'determineOnboardingRequired', userId: user.id });
+      return true;
+    }
+
+    const requiredFields = [
+      'name',
+      'phone',
+      'document',
+      'address',
+      'city',
+      'state',
+      'country',
+      'zipcode'
+    ];
+
+    const hasMissingFields = requiredFields.some(field => !profile[field]);
+
+    if (hasMissingFields) {
+      logger.warn('Campos obrigatórios ausentes no perfil, forçando onboarding', { component: 'AuthManager', action: 'determineOnboardingRequired', userId: user.id, missingFields: requiredFields.filter(field => !profile[field]) });
+      return true;
+    }
+
+    return false;
+  }
+
+  private async handleAuthStateChange(event: string, session: Session | null): Promise<void> {
+    this.setState({ isLoading: true });
+
+    if (session) {
+      const user = session.user;
+      const profile = await this.loadUserProfile(user);
+      const onboardingRequired = this.determineOnboardingRequired(user, profile);
+      const isAdmin = profile?.user_roles?.name === 'admin';
+      const isFormacao = profile?.user_roles?.name === 'formacao';
+
+      logger.info('Sessão detectada', { 
+        component: 'AuthManager', 
+        action: 'handleAuthStateChange',
+        userId: user.id,
+        isAdmin,
+        isFormacao,
+        onboardingRequired,
+        hasProfile: !!profile
+      });
+
+      this.setState({
+        user: user,
+        session: session,
+        profile: profile,
+        isAdmin: isAdmin,
+        isFormacao: isFormacao,
+        onboardingRequired: onboardingRequired,
+        isLoading: false,
+        error: null
+      });
+    } else {
+      logger.info('Nenhuma sessão detectada - usuário fez logout ou sessão expirou', { component: 'AuthManager', action: 'handleAuthStateChange' });
+      this.setState({
+        user: null,
+        session: null,
+        profile: null,
+        isAdmin: false,
+        isFormacao: false,
+        onboardingRequired: false,
+        isLoading: false,
+        error: null
+      });
+    }
+  }
+
+  async signIn(email: string, password: string): Promise<{ error?: Error | null }> {
+    try {
+      logger.info('Tentativa de login', { 
+        component: 'AuthManager', 
+        action: 'signIn',
+        email: email.substring(0, 3) + '***' 
+      });
+
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) {
+        logger.error('Erro no login', error, { 
+          component: 'AuthManager', 
+          action: 'signIn',
+          email: email.substring(0, 3) + '***' 
+        });
+        return { error };
+      }
+
+      logger.info('Login realizado com sucesso', { 
+        component: 'AuthManager', 
+        action: 'signIn',
+        userId: data.user?.id?.substring(0, 8) + '***' 
+      });
+
+      return { error: null };
+    } catch (error) {
+      logger.error('Erro inesperado no login', error, { 
+        component: 'AuthManager', 
+        action: 'signIn' 
+      });
+      return { error: error as Error };
+    }
+  }
+
+  async signOut(): Promise<{ success: boolean; error?: Error | null }> {
+    try {
+      logger.info('Tentativa de logout', { 
+        component: 'AuthManager', 
+        action: 'signOut' 
+      });
+
+      // Limpar tokens de convite
+      InviteTokenManager.clearTokenOnLogout();
+
+      const { error } = await supabase.auth.signOut();
+
+      if (error) {
+        logger.error('Erro no logout', error, { 
+          component: 'AuthManager', 
+          action: 'signOut' 
+        });
+        return { success: false, error };
+      }
+
+      logger.info('Logout realizado com sucesso', { 
+        component: 'AuthManager', 
+        action: 'signOut' 
+      });
+
+      return { success: true, error: null };
+    } catch (error) {
+      logger.error('Erro inesperado no logout', error, { 
+        component: 'AuthManager', 
+        action: 'signOut' 
+      });
+      return { success: false, error: error as Error };
+    }
+  }
+
+  async handleInviteFlow({ token, inviteEmail, currentUser, inviteDetails }: {
+    token: string;
+    inviteEmail: string;
+    currentUser: User | null;
+    inviteDetails: any;
+  }): Promise<string | null> {
+    try {
+      logger.info('Processando fluxo de convite', { 
+        component: 'AuthManager', 
+        action: 'handleInviteFlow',
+        hasUser: !!currentUser,
+        inviteEmail: inviteEmail.substring(0, 3) + '***',
+        token: token.substring(0, 8) + '***'
+      });
+
+      // Armazenar token
+      InviteTokenManager.storeToken(token, inviteDetails);
+
+      // Se não há usuário logado, redirecionar para registro
+      if (!currentUser) {
+        logger.info('Usuário não logado - redirecionando para registro', { 
+          component: 'AuthManager', 
+          action: 'handleInviteFlow',
+          redirectTo: '/register'
+        });
+        return `/register?token=${token}&invite=true`;
+      }
+
+      // Se usuário logado com e-mail correto, redirecionar para onboarding
+      if (currentUser.email === inviteEmail) {
+        logger.info('E-mail correto - redirecionando para onboarding', { 
+          component: 'AuthManager', 
+          action: 'handleInviteFlow',
+          redirectTo: '/onboarding'
+        });
+        return `/onboarding?token=${token}&invite=true`;
+      }
+
+      // Se e-mail diferente, permanecer na tela de mismatch
+      logger.warn('E-mail diferente - permanecendo na tela de mismatch', { 
+        component: 'AuthManager', 
+        action: 'handleInviteFlow',
+        currentEmail: currentUser.email?.substring(0, 3) + '***',
+        inviteEmail: inviteEmail.substring(0, 3) + '***'
+      });
+      return null;
+
+    } catch (error) {
+      logger.error('Erro no processamento do fluxo de convite', error, { 
+        component: 'AuthManager', 
+        action: 'handleInviteFlow',
+        token: token.substring(0, 8) + '***'
+      });
+      return null;
+    }
   }
 }
 
