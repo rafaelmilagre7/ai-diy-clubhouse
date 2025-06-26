@@ -30,11 +30,16 @@ export const SimpleAuthProvider: React.FC<SimpleAuthProviderProps> = ({ children
   useEffect(() => {
     const authManager = AuthManager.getInstance();
     
-    logger.info('[SIMPLE-AUTH-PROVIDER] 🔄 Inicializando com AuthManager CORRIGIDO');
+    logger.info('[SIMPLE-AUTH-PROVIDER] 🔄 Inicializando com AuthManager CORRIGIDO', {
+      component: 'SimpleAuthProvider',
+      action: 'initialize'
+    });
     
     // Subscribe to state changes
     const unsubscribe = authManager.on('stateChanged', (newState) => {
-      logger.info('[SIMPLE-AUTH-PROVIDER] 📡 Estado atualizado via AuthManager:', {
+      logger.info('[SIMPLE-AUTH-PROVIDER] 📡 Estado atualizado via AuthManager', {
+        component: 'SimpleAuthProvider',
+        action: 'state_changed',
         hasUser: !!newState.user,
         isLoading: newState.isLoading,
         isAdmin: newState.isAdmin,
@@ -47,12 +52,17 @@ export const SimpleAuthProvider: React.FC<SimpleAuthProviderProps> = ({ children
     // Initialize AuthManager
     const initializeAuth = async () => {
       try {
-        logger.info('[SIMPLE-AUTH-PROVIDER] 🚀 Forçando inicialização do AuthManager');
+        logger.info('[SIMPLE-AUTH-PROVIDER] 🚀 Forçando inicialização do AuthManager', {
+          component: 'SimpleAuthProvider',
+          action: 'force_initialize'
+        });
         await authManager.initialize();
         
         // Atualizar estado após inicialização
         const currentState = authManager.getState();
-        logger.info('[SIMPLE-AUTH-PROVIDER] ✅ AuthManager inicializado:', {
+        logger.info('[SIMPLE-AUTH-PROVIDER] ✅ AuthManager inicializado', {
+          component: 'SimpleAuthProvider',
+          action: 'initialize_complete',
           hasUser: !!currentState.user,
           isLoading: currentState.isLoading,
           isAdmin: currentState.isAdmin
@@ -60,7 +70,10 @@ export const SimpleAuthProvider: React.FC<SimpleAuthProviderProps> = ({ children
         setAuthState(currentState);
         
       } catch (error) {
-        logger.error('[SIMPLE-AUTH-PROVIDER] ❌ Erro na inicialização:', error);
+        logger.error('[SIMPLE-AUTH-PROVIDER] ❌ Erro na inicialização', error, {
+          component: 'SimpleAuthProvider',
+          action: 'initialize_error'
+        });
         // Garantir que loading seja resetado mesmo em erro
         setAuthState(prev => ({ ...prev, isLoading: false, error: (error as Error).message }));
       }
@@ -84,7 +97,9 @@ export const SimpleAuthProvider: React.FC<SimpleAuthProviderProps> = ({ children
     signOut: AuthManager.getInstance().signOut.bind(AuthManager.getInstance())
   };
 
-  logger.info('[SIMPLE-AUTH-PROVIDER] 📊 Renderizando com estado:', {
+  logger.info('[SIMPLE-AUTH-PROVIDER] 📊 Renderizando com estado', {
+    component: 'SimpleAuthProvider',
+    action: 'render',
     isLoading: authState.isLoading,
     hasUser: !!authState.user,
     hasProfile: !!authState.profile,

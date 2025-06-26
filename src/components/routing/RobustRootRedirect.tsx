@@ -13,11 +13,16 @@ const RobustRootRedirect = () => {
   useEffect(() => {
     const authManager = AuthManager.getInstance();
     
-    logger.info('[ROOT-REDIRECT] 🔗 Conectando ao AuthManager CORRIGIDO');
+    logger.info('[ROOT-REDIRECT] 🔗 Conectando ao AuthManager CORRIGIDO', {
+      component: 'RobustRootRedirect',
+      action: 'connect_auth_manager'
+    });
 
     // Subscribe to auth state changes
     const unsubscribe = authManager.on('stateChanged', (newState) => {
-      logger.info('[ROOT-REDIRECT] 📡 Estado atualizado via AuthManager:', {
+      logger.info('[ROOT-REDIRECT] 📡 Estado atualizado via AuthManager', {
+        component: 'RobustRootRedirect',
+        action: 'state_updated',
         hasUser: !!newState.user,
         isAdmin: newState.isAdmin,
         isLoading: newState.isLoading,
@@ -29,10 +34,16 @@ const RobustRootRedirect = () => {
 
     // Handle timeout - emergência apenas após timeout do AuthManager
     const timeoutUnsubscribe = authManager.on('timeout', () => {
-      logger.warn('[ROOT-REDIRECT] 🚨 Timeout do AuthManager detectado');
+      logger.warn('[ROOT-REDIRECT] 🚨 Timeout do AuthManager detectado', {
+        component: 'RobustRootRedirect',
+        action: 'auth_manager_timeout'
+      });
       setTimeout(() => {
         if (authState.isLoading) {
-          logger.error('[ROOT-REDIRECT] 🚨 Ativando modo emergência após timeout');
+          logger.error('[ROOT-REDIRECT] 🚨 Ativando modo emergência após timeout', {
+            component: 'RobustRootRedirect',
+            action: 'emergency_mode_activated'
+          });
           setEmergencyMode(true);
         }
       }, 2000); // 2s após timeout do AuthManager
@@ -41,12 +52,18 @@ const RobustRootRedirect = () => {
     // Force initialization if not already initialized
     const initializeIfNeeded = async () => {
       if (!authManager.isInitialized()) {
-        logger.info('[ROOT-REDIRECT] 🚀 Inicializando AuthManager');
+        logger.info('[ROOT-REDIRECT] 🚀 Inicializando AuthManager', {
+          component: 'RobustRootRedirect',
+          action: 'initialize_auth_manager'
+        });
         try {
           await authManager.initialize();
           setAuthState(authManager.getState());
         } catch (error) {
-          logger.error('[ROOT-REDIRECT] ❌ Erro na inicialização:', error);
+          logger.error('[ROOT-REDIRECT] ❌ Erro na inicialização', error, {
+            component: 'RobustRootRedirect',
+            action: 'initialize_error'
+          });
           setAuthState(prev => ({ ...prev, isLoading: false, error: (error as Error).message }));
         }
       } else {
@@ -96,7 +113,11 @@ const RobustRootRedirect = () => {
 
   // Erro de auth persistente
   if (authState.error && !authState.isLoading) {
-    logger.error('[ROOT-REDIRECT] ❌ Erro persistente:', authState.error);
+    logger.error('[ROOT-REDIRECT] ❌ Erro persistente', new Error(authState.error), {
+      component: 'RobustRootRedirect',
+      action: 'persistent_error',
+      error: authState.error
+    });
     return (
       <div className="min-h-screen bg-gradient-to-br from-[#0F111A] to-[#151823] flex items-center justify-center">
         <div className="text-center text-white p-8">
@@ -130,7 +151,9 @@ const RobustRootRedirect = () => {
   // LÓGICA DE REDIRECIONAMENTO usando AuthManager
   const redirectPath = AuthManager.getInstance().getRedirectPath();
   
-  logger.info('[ROOT-REDIRECT] 🎯 Redirecionamento determinado pelo AuthManager:', {
+  logger.info('[ROOT-REDIRECT] 🎯 Redirecionamento determinado pelo AuthManager', {
+    component: 'RobustRootRedirect',
+    action: 'redirect_determined',
     path: redirectPath,
     hasUser: !!authState.user,
     isAdmin: authState.isAdmin,

@@ -16,10 +16,15 @@ export const useCleanOnboardingData = () => {
   });
 
   useEffect(() => {
-    logger.info('[CLEAN-ONBOARDING-DATA] 🔗 Conectando ao AuthManager');
+    logger.info('[CLEAN-ONBOARDING-DATA] 🔗 Conectando ao AuthManager', {
+      component: 'useCleanOnboardingData',
+      action: 'connect_auth_manager'
+    });
 
     const unsubscribe = authManager.on('stateChanged', (authState) => {
-      logger.info('[CLEAN-ONBOARDING-DATA] 📡 Dados limpos atualizados:', {
+      logger.info('[CLEAN-ONBOARDING-DATA] 📡 Dados limpos atualizados', {
+        component: 'useCleanOnboardingData',
+        action: 'data_updated',
         hasUser: !!authState.user,
         hasProfile: !!authState.profile,
         shouldShowOnboarding: authState.onboardingRequired

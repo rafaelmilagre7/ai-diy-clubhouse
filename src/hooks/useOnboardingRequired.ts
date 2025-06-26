@@ -15,10 +15,15 @@ export const useOnboardingRequired = () => {
   });
 
   useEffect(() => {
-    logger.info('[ONBOARDING-REQUIRED] 🔗 Conectando ao AuthManager');
+    logger.info('[ONBOARDING-REQUIRED] 🔗 Conectando ao AuthManager', {
+      component: 'useOnboardingRequired',
+      action: 'connect_auth_manager'
+    });
 
     const unsubscribe = authManager.on('stateChanged', (authState) => {
-      logger.info('[ONBOARDING-REQUIRED] 📡 Estado atualizado via AuthManager:', {
+      logger.info('[ONBOARDING-REQUIRED] 📡 Estado atualizado via AuthManager', {
+        component: 'useOnboardingRequired',
+        action: 'state_updated',
         onboardingRequired: authState.onboardingRequired,
         isAdmin: authState.isAdmin,
         hasUser: !!authState.user

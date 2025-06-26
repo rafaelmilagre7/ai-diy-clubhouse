@@ -37,7 +37,10 @@ export const useInviteFlow = (token?: string) => {
     const authState = authManager.getState();
     
     if (authState.hasInviteToken && authState.inviteDetails) {
-      logger.info('[INVITE-FLOW] 🔄 Usando detalhes do AuthManager');
+      logger.info('[INVITE-FLOW] 🔄 Usando detalhes do AuthManager', {
+        component: 'useInviteFlow',
+        action: 'use_auth_manager_details'
+      });
       setInviteDetails(authState.inviteDetails);
       setIsLoading(false);
       return;
@@ -53,6 +56,8 @@ export const useInviteFlow = (token?: string) => {
         });
         
         logger.info('[INVITE-FLOW] 🔍 Buscando detalhes do convite com timeout OTIMIZADO', {
+          component: 'useInviteFlow',
+          action: 'fetch_invite_details',
           token: token.substring(0, 8) + '***',
           tokenLength: token.length
         });
@@ -88,18 +93,27 @@ export const useInviteFlow = (token?: string) => {
         });
 
         if (supabaseError) {
-          logger.error('[INVITE-FLOW] ❌ Erro na query Supabase', supabaseError);
+          logger.error('[INVITE-FLOW] ❌ Erro na query Supabase', supabaseError, {
+            component: 'useInviteFlow',
+            action: 'supabase_query_error'
+          });
           throw new Error(`Erro na consulta: ${supabaseError.message}`);
         }
 
         if (!data) {
-          logger.warn('[INVITE-FLOW] ⚠️ Convite não encontrado');
+          logger.warn('[INVITE-FLOW] ⚠️ Convite não encontrado', {
+            component: 'useInviteFlow',
+            action: 'invite_not_found'
+          });
           throw new Error('Convite não encontrado ou token inválido');
         }
 
         // Verificar se já foi usado
         if (data.used_at) {
-          logger.warn('[INVITE-FLOW] ⚠️ Convite já utilizado');
+          logger.warn('[INVITE-FLOW] ⚠️ Convite já utilizado', {
+            component: 'useInviteFlow',
+            action: 'invite_already_used'
+          });
           throw new Error('Convite já foi utilizado');
         }
 
@@ -107,7 +121,10 @@ export const useInviteFlow = (token?: string) => {
         const now = new Date();
         const expiresAt = new Date(data.expires_at);
         if (now > expiresAt) {
-          logger.warn('[INVITE-FLOW] ⚠️ Convite expirado');
+          logger.warn('[INVITE-FLOW] ⚠️ Convite expirado', {
+            component: 'useInviteFlow',
+            action: 'invite_expired'
+          });
           throw new Error('Convite expirado');
         }
 
@@ -131,13 +148,18 @@ export const useInviteFlow = (token?: string) => {
         setInviteDetails(inviteData);
         
         logger.info('[INVITE-FLOW] ✅ Convite validado OTIMIZADO', {
+          component: 'useInviteFlow',
+          action: 'invite_validated',
           token: token.substring(0, 8) + '***',
           email: inviteData.email,
           roleName: inviteData.role.name
         });
 
       } catch (err: any) {
-        logger.error('[INVITE-FLOW] ❌ Erro ao buscar convite', err);
+        logger.error('[INVITE-FLOW] ❌ Erro ao buscar convite', err, {
+          component: 'useInviteFlow',
+          action: 'fetch_invite_error'
+        });
         setError(err.message);
       } finally {
         setIsLoading(false);
@@ -147,7 +169,10 @@ export const useInviteFlow = (token?: string) => {
     // TIMEOUT ABSOLUTO MAIS AGRESSIVO: 3 segundos
     const absoluteTimeout = setTimeout(() => {
       if (isLoading) {
-        logger.error('[INVITE-FLOW] 🚨 TIMEOUT ABSOLUTO - liberando após 3s');
+        logger.error('[INVITE-FLOW] 🚨 TIMEOUT ABSOLUTO - liberando após 3s', {
+          component: 'useInviteFlow',
+          action: 'absolute_timeout'
+        });
         setIsLoading(false);
         if (!error && !inviteDetails) {
           setError('Timeout na verificação do convite');
