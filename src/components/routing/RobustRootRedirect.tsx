@@ -9,7 +9,7 @@ import { logger } from "@/utils/logger";
 import { useEffect } from "react";
 
 const RobustRootRedirect = () => {
-  const { user, profile, isLoading: authLoading } = useSimpleAuth();
+  const { user, profile, isLoading: authLoading, isAdmin } = useSimpleAuth();
   const { isRequired: onboardingRequired, isLoading: onboardingLoading } = useOnboardingRequired();
   
   const totalLoading = authLoading || onboardingLoading;
@@ -30,7 +30,6 @@ const RobustRootRedirect = () => {
     }
   });
 
-  // CORRIGIDO: Usar apenas evento "stateChanged" suportado
   useEffect(() => {
     const authManager = AuthManager.getInstance();
     
@@ -40,7 +39,9 @@ const RobustRootRedirect = () => {
         action: 'auth_state_updated',
         hasUser: !!authState.user,
         isLoading: authState.isLoading,
-        onboardingRequired: authState.onboardingRequired
+        isAdmin: authState.isAdmin,
+        onboardingRequired: authState.onboardingRequired,
+        userRole: authState.profile?.user_roles?.name
       });
     });
 
@@ -54,7 +55,9 @@ const RobustRootRedirect = () => {
     onboardingLoading,
     onboardingRequired,
     totalLoading,
-    hasTimedOut
+    hasTimedOut,
+    isAdmin,
+    userRole: profile?.user_roles?.name
   });
   
   // Tratamento de timeout
@@ -100,7 +103,6 @@ const RobustRootRedirect = () => {
     return <LoadingScreen message="Verificando seu acesso..." />;
   }
   
-  // CORRIGIDO: Usar método getRedirectPath() que existe no AuthManager
   if (!user) {
     logger.info("[ROBUST-ROOT-REDIRECT] Sem usuário -> login");
     return <Navigate to="/login" replace />;
@@ -112,7 +114,16 @@ const RobustRootRedirect = () => {
     return <LoadingScreen message="Carregando perfil..." />;
   }
   
-  // CORRIGIDO: Usar AuthManager.getRedirectPath() em vez de método inexistente
+  // CORREÇÃO CRÍTICA: Admin bypass total do onboarding
+  if (isAdmin) {
+    logger.info("[ROBUST-ROOT-REDIRECT] 👑 ADMIN detectado - Redirecionando para /admin", {
+      userId: user.id.substring(0, 8) + '***',
+      userRole: profile?.user_roles?.name
+    });
+    return <Navigate to="/admin" replace />;
+  }
+  
+  // Usar AuthManager.getRedirectPath() para outros casos
   const authManager = AuthManager.getInstance();
   const redirectPath = authManager.getRedirectPath();
   
@@ -121,6 +132,7 @@ const RobustRootRedirect = () => {
     hasUser: !!user,
     hasProfile: !!profile,
     onboardingRequired,
+    isAdmin,
     roleName: profile?.user_roles?.name
   });
   

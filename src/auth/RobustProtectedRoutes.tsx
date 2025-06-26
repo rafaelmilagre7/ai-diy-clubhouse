@@ -14,20 +14,21 @@ interface RobustProtectedRoutesProps {
 
 export const RobustProtectedRoutes = ({ children, allowInviteFlow = false }: RobustProtectedRoutesProps) => {
   const location = useLocation();
-  const { user, isLoading: authLoading } = useSimpleAuth();
+  const { user, isAdmin, isLoading: authLoading } = useSimpleAuth();
   const { isRequired: onboardingRequired, isLoading: onboardingLoading } = useOnboardingRequired();
 
   const isInInviteFlow = InviteTokenManager.hasToken() || location.pathname.includes('/invite');
   const totalLoading = authLoading || onboardingLoading;
 
-  logger.info("[PROTECTED-ROUTES] Estado (ONBOARDING OBRIGATÓRIO):", {
+  logger.info("[PROTECTED-ROUTES] Estado atual:", {
     pathname: location.pathname,
     hasUser: !!user,
     authLoading,
     onboardingLoading,
     onboardingRequired,
     allowInviteFlow,
-    isInInviteFlow
+    isInInviteFlow,
+    isAdmin
   });
 
   // Loading
@@ -35,10 +36,19 @@ export const RobustProtectedRoutes = ({ children, allowInviteFlow = false }: Rob
     return <LoadingScreen message="Verificando credenciais..." />;
   }
 
-  // Sem usuário = login (NOVO PADRÃO: /login)
+  // Sem usuário = login
   if (!user) {
     logger.info("[PROTECTED-ROUTES] Sem usuário -> /login");
     return <Navigate to="/login" state={{ from: location.pathname }} replace />;
+  }
+
+  // CORREÇÃO CRÍTICA: Admin bypass total - nunca bloquear admin
+  if (isAdmin) {
+    logger.info("[PROTECTED-ROUTES] 👑 ADMIN detectado - Acesso total liberado", {
+      pathname: location.pathname,
+      userId: user.id.substring(0, 8) + '***'
+    });
+    return <>{children}</>;
   }
 
   // Permitir fluxo de convite se configurado E específico
@@ -47,9 +57,12 @@ export const RobustProtectedRoutes = ({ children, allowInviteFlow = false }: Rob
     return <>{children}</>;
   }
 
-  // REGRA CRÍTICA: Onboarding obrigatório PARA TODOS (sem exceção)
+  // REGRA: Onboarding obrigatório PARA USUÁRIOS COMUNS (não admin)
   if (onboardingRequired && location.pathname !== '/onboarding') {
-    logger.info("[PROTECTED-ROUTES] Redirecionando para onboarding OBRIGATÓRIO (sem exceções)");
+    logger.info("[PROTECTED-ROUTES] Redirecionando usuário comum para onboarding obrigatório", {
+      userId: user.id.substring(0, 8) + '***',
+      isAdmin
+    });
     
     if (isInInviteFlow) {
       const currentToken = InviteTokenManager.getToken();
@@ -62,6 +75,6 @@ export const RobustProtectedRoutes = ({ children, allowInviteFlow = false }: Rob
     return <Navigate to="/onboarding" replace />;
   }
 
-  // Renderizar conteúdo protegido apenas após onboarding completo
+  // Renderizar conteúdo protegido
   return <>{children}</>;
 };
