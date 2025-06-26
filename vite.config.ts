@@ -19,22 +19,22 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
-  // Configuração de variáveis de ambiente para Supabase
-  define: {
-    // Garantir que as variáveis de ambiente do Supabase estejam disponíveis
-    'import.meta.env.VITE_SUPABASE_URL': JSON.stringify(process.env.VITE_SUPABASE_URL),
-    'import.meta.env.VITE_SUPABASE_ANON_KEY': JSON.stringify(process.env.VITE_SUPABASE_ANON_KEY),
-  },
   build: {
     sourcemap: false,
-    minify: 'esbuild', // Usar esbuild ao invés de terser
+    minify: 'esbuild',
     rollupOptions: {
       output: {
         manualChunks: {
           vendor: ['react', 'react-dom'],
           ui: ['@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu'],
+          supabase: ['@supabase/supabase-js'],
         }
       }
     }
+  },
+  // Definir variáveis de ambiente como constantes de build
+  define: {
+    __SUPABASE_URL__: JSON.stringify('https://zotzvtepvpnkcoobdubt.supabase.co'),
+    __SUPABASE_ANON_KEY__: JSON.stringify('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpvdHp2dGVwdnBua2Nvb2JkdWJ0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQzNzgzODAsImV4cCI6MjA1OTk1NDM4MH0.dxjPkqTPnK8gjjxJbooPX5_kpu3INciLeDpuU8dszHQ')
   }
 }));

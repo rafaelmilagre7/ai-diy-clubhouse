@@ -1,11 +1,12 @@
 
+import { ENV_CONFIG } from '@/config/env-validation';
+
 /**
  * Configurações centralizadas do Supabase
  */
-
 export const SUPABASE_CONFIG = {
-  url: import.meta.env.VITE_SUPABASE_URL,
-  anonKey: import.meta.env.VITE_SUPABASE_ANON_KEY,
+  url: ENV_CONFIG.SUPABASE_URL,
+  anonKey: ENV_CONFIG.SUPABASE_ANON_KEY,
   
   isConfigured(): boolean {
     return !!(this.url && this.anonKey);

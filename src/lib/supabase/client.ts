@@ -1,13 +1,21 @@
 
 import { createClient } from '@supabase/supabase-js';
 import { Database } from './types/database.types';
+import { ENV_CONFIG } from '@/config/env-validation';
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+// Usar configuração validada
+const supabaseUrl = ENV_CONFIG.SUPABASE_URL;
+const supabaseAnonKey = ENV_CONFIG.SUPABASE_ANON_KEY;
 
+// Validação adicional
 if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error('Missing Supabase environment variables');
+  throw new Error('Configuração do Supabase incompleta. Verifique as variáveis de ambiente.');
 }
+
+console.log('🔗 Conectando ao Supabase:', {
+  url: supabaseUrl.substring(0, 30) + '...',
+  hasKey: !!supabaseAnonKey
+});
 
 export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey);
 
