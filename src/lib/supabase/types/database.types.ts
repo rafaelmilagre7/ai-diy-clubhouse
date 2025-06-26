@@ -28,13 +28,13 @@ export type Database = {
           updated_at: string
         }
         Insert: {
-          id?: string
+          id: string
           email: string
-          name?: string
+          name: string
           avatar_url?: string
           company_name?: string
           industry?: string
-          role_id?: string
+          role_id: string
           role?: string
           created_at?: string
           onboarding_completed?: boolean
@@ -65,16 +65,16 @@ export type Database = {
         Row: {
           id: string
           name: string
-          description?: string
-          permissions?: Json
-          is_system?: boolean
+          description: string | null
+          permissions: Json
+          is_system: boolean
           created_at: string
           updated_at: string
         }
         Insert: {
           id?: string
           name: string
-          description?: string
+          description?: string | null
           permissions?: Json
           is_system?: boolean
           created_at?: string
@@ -83,7 +83,7 @@ export type Database = {
         Update: {
           id?: string
           name?: string
-          description?: string
+          description?: string | null
           permissions?: Json
           is_system?: boolean
           created_at?: string
@@ -96,7 +96,7 @@ export type Database = {
           id: string
           code: string
           name: string
-          description?: string
+          description: string | null
           category: string
           created_at: string
           updated_at: string
@@ -105,7 +105,7 @@ export type Database = {
           id?: string
           code: string
           name: string
-          description?: string
+          description?: string | null
           category: string
           created_at?: string
           updated_at?: string
@@ -114,7 +114,7 @@ export type Database = {
           id?: string
           code?: string
           name?: string
-          description?: string
+          description?: string | null
           category?: string
           created_at?: string
           updated_at?: string
@@ -142,40 +142,121 @@ export type Database = {
         }
         Relationships: []
       }
+      events: {
+        Row: {
+          id: string
+          title: string
+          description: string | null
+          start_time: string
+          end_time: string
+          location_link: string | null
+          physical_location: string | null
+          cover_image_url: string | null
+          created_at: string
+          created_by: string
+          is_recurring: boolean
+          recurrence_pattern: string | null
+          recurrence_interval: number | null
+          recurrence_day: number | null
+          recurrence_count: number | null
+          recurrence_end_date: string | null
+          parent_event_id: string | null
+        }
+        Insert: {
+          id?: string
+          title: string
+          description?: string | null
+          start_time: string
+          end_time: string
+          location_link?: string | null
+          physical_location?: string | null
+          cover_image_url?: string | null
+          created_at?: string
+          created_by: string
+          is_recurring?: boolean
+          recurrence_pattern?: string | null
+          recurrence_interval?: number | null
+          recurrence_day?: number | null
+          recurrence_count?: number | null
+          recurrence_end_date?: string | null
+          parent_event_id?: string | null
+        }
+        Update: {
+          id?: string
+          title?: string
+          description?: string | null
+          start_time?: string
+          end_time?: string
+          location_link?: string | null
+          physical_location?: string | null
+          cover_image_url?: string | null
+          created_at?: string
+          created_by?: string
+          is_recurring?: boolean
+          recurrence_pattern?: string | null
+          recurrence_interval?: number | null
+          recurrence_day?: number | null
+          recurrence_count?: number | null
+          recurrence_end_date?: string | null
+          parent_event_id?: string | null
+        }
+        Relationships: []
+      }
+      course_access_control: {
+        Row: {
+          id: string
+          course_id: string
+          role_id: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          course_id: string
+          role_id: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          course_id?: string
+          role_id?: string
+          created_at?: string
+        }
+        Relationships: []
+      }
       learning_courses: {
         Row: {
           id: string
           title: string
-          description?: string
+          description: string | null
           slug: string
-          cover_image_url?: string
+          cover_image_url: string | null
           published: boolean
           order_index: number
-          created_by?: string
+          created_by: string | null
           created_at: string
           updated_at: string
         }
         Insert: {
           id?: string
           title: string
-          description?: string
+          description?: string | null
           slug: string
-          cover_image_url?: string
+          cover_image_url?: string | null
           published?: boolean
           order_index?: number
-          created_by?: string
+          created_by?: string | null
           created_at?: string
           updated_at?: string
         }
         Update: {
           id?: string
           title?: string
-          description?: string
+          description?: string | null
           slug?: string
-          cover_image_url?: string
+          cover_image_url?: string | null
           published?: boolean
           order_index?: number
-          created_by?: string
+          created_by?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -186,10 +267,10 @@ export type Database = {
           id: string
           course_id: string
           title: string
-          description?: string
+          description: string | null
           order_index: number
+          cover_image_url: string | null
           published: boolean
-          cover_image_url?: string
           created_at: string
           updated_at: string
         }
@@ -197,10 +278,10 @@ export type Database = {
           id?: string
           course_id: string
           title: string
-          description?: string
+          description?: string | null
           order_index?: number
+          cover_image_url?: string | null
           published?: boolean
-          cover_image_url?: string
           created_at?: string
           updated_at?: string
         }
@@ -208,10 +289,10 @@ export type Database = {
           id?: string
           course_id?: string
           title?: string
-          description?: string
+          description?: string | null
           order_index?: number
+          cover_image_url?: string | null
           published?: boolean
-          cover_image_url?: string
           created_at?: string
           updated_at?: string
         }
@@ -222,16 +303,16 @@ export type Database = {
           id: string
           module_id: string
           title: string
-          description?: string
-          content?: Json
+          description: string | null
+          content: Json | null
           order_index: number
+          cover_image_url: string | null
           published: boolean
-          cover_image_url?: string
           estimated_time_minutes: number
           difficulty_level: string
           ai_assistant_enabled: boolean
-          ai_assistant_id?: string
-          ai_assistant_prompt?: string
+          ai_assistant_prompt: string | null
+          ai_assistant_id: string | null
           created_at: string
           updated_at: string
         }
@@ -239,16 +320,16 @@ export type Database = {
           id?: string
           module_id: string
           title: string
-          description?: string
-          content?: Json
+          description?: string | null
+          content?: Json | null
           order_index?: number
+          cover_image_url?: string | null
           published?: boolean
-          cover_image_url?: string
           estimated_time_minutes?: number
           difficulty_level?: string
           ai_assistant_enabled?: boolean
-          ai_assistant_id?: string
-          ai_assistant_prompt?: string
+          ai_assistant_prompt?: string | null
+          ai_assistant_id?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -256,16 +337,16 @@ export type Database = {
           id?: string
           module_id?: string
           title?: string
-          description?: string
-          content?: Json
+          description?: string | null
+          content?: Json | null
           order_index?: number
+          cover_image_url?: string | null
           published?: boolean
-          cover_image_url?: string
           estimated_time_minutes?: number
           difficulty_level?: string
           ai_assistant_enabled?: boolean
-          ai_assistant_id?: string
-          ai_assistant_prompt?: string
+          ai_assistant_prompt?: string | null
+          ai_assistant_id?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -276,48 +357,48 @@ export type Database = {
           id: string
           lesson_id: string
           title: string
-          description?: string
+          description: string | null
           url: string
           video_type: string
-          video_id?: string
-          thumbnail_url?: string
-          duration_seconds?: number
+          video_id: string | null
+          thumbnail_url: string | null
+          duration_seconds: number | null
           order_index: number
-          video_file_path?: string
-          video_file_name?: string
-          file_size_bytes?: number
+          video_file_path: string | null
+          video_file_name: string | null
+          file_size_bytes: number | null
           created_at: string
         }
         Insert: {
           id?: string
           lesson_id: string
           title: string
-          description?: string
+          description?: string | null
           url: string
           video_type?: string
-          video_id?: string
-          thumbnail_url?: string
-          duration_seconds?: number
+          video_id?: string | null
+          thumbnail_url?: string | null
+          duration_seconds?: number | null
           order_index?: number
-          video_file_path?: string
-          video_file_name?: string
-          file_size_bytes?: number
+          video_file_path?: string | null
+          video_file_name?: string | null
+          file_size_bytes?: number | null
           created_at?: string
         }
         Update: {
           id?: string
           lesson_id?: string
           title?: string
-          description?: string
+          description?: string | null
           url?: string
           video_type?: string
-          video_id?: string
-          thumbnail_url?: string
-          duration_seconds?: number
+          video_id?: string | null
+          thumbnail_url?: string | null
+          duration_seconds?: number | null
           order_index?: number
-          video_file_path?: string
-          video_file_name?: string
-          file_size_bytes?: number
+          video_file_path?: string | null
+          video_file_name?: string | null
+          file_size_bytes?: number | null
           created_at?: string
         }
         Relationships: []
@@ -330,9 +411,9 @@ export type Database = {
           progress_percentage: number
           video_progress: Json
           started_at: string
-          completed_at?: string
+          completed_at: string | null
           last_position_seconds: number
-          notes?: string
+          notes: string | null
           created_at: string
           updated_at: string
         }
@@ -343,9 +424,9 @@ export type Database = {
           progress_percentage?: number
           video_progress?: Json
           started_at?: string
-          completed_at?: string
+          completed_at?: string | null
           last_position_seconds?: number
-          notes?: string
+          notes?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -356,9 +437,9 @@ export type Database = {
           progress_percentage?: number
           video_progress?: Json
           started_at?: string
-          completed_at?: string
+          completed_at?: string | null
           last_position_seconds?: number
-          notes?: string
+          notes?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -367,34 +448,34 @@ export type Database = {
       learning_resources: {
         Row: {
           id: string
-          lesson_id?: string
+          lesson_id: string | null
           name: string
-          description?: string
+          description: string | null
           file_url: string
-          file_type?: string
-          file_size_bytes?: number
+          file_type: string | null
+          file_size_bytes: number | null
           order_index: number
           created_at: string
         }
         Insert: {
           id?: string
-          lesson_id?: string
+          lesson_id?: string | null
           name: string
-          description?: string
+          description?: string | null
           file_url: string
-          file_type?: string
-          file_size_bytes?: number
+          file_type?: string | null
+          file_size_bytes?: number | null
           order_index?: number
           created_at?: string
         }
         Update: {
           id?: string
-          lesson_id?: string
+          lesson_id?: string | null
           name?: string
-          description?: string
+          description?: string | null
           file_url?: string
-          file_type?: string
-          file_size_bytes?: number
+          file_type?: string | null
+          file_size_bytes?: number | null
           order_index?: number
           created_at?: string
         }
@@ -405,7 +486,7 @@ export type Database = {
           id: string
           user_id: string
           course_id: string
-          certificate_url?: string
+          certificate_url: string | null
           issued_at: string
           created_at: string
         }
@@ -413,7 +494,7 @@ export type Database = {
           id?: string
           user_id: string
           course_id: string
-          certificate_url?: string
+          certificate_url?: string | null
           issued_at?: string
           created_at?: string
         }
@@ -421,7 +502,7 @@ export type Database = {
           id?: string
           user_id?: string
           course_id?: string
-          certificate_url?: string
+          certificate_url?: string | null
           issued_at?: string
           created_at?: string
         }
@@ -430,10 +511,10 @@ export type Database = {
       learning_comments: {
         Row: {
           id: string
-          lesson_id: string
           user_id: string
+          lesson_id: string
+          parent_id: string | null
           content: string
-          parent_id?: string
           likes_count: number
           is_hidden: boolean
           created_at: string
@@ -441,10 +522,10 @@ export type Database = {
         }
         Insert: {
           id?: string
-          lesson_id: string
           user_id: string
+          lesson_id: string
+          parent_id?: string | null
           content: string
-          parent_id?: string
           likes_count?: number
           is_hidden?: boolean
           created_at?: string
@@ -452,12 +533,51 @@ export type Database = {
         }
         Update: {
           id?: string
-          lesson_id?: string
           user_id?: string
+          lesson_id?: string
+          parent_id?: string | null
           content?: string
-          parent_id?: string
           likes_count?: number
           is_hidden?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      progress: {
+        Row: {
+          id: string
+          user_id: string
+          solution_id: string
+          module_id: string | null
+          is_completed: boolean
+          completed_at: string | null
+          progress_data: Json
+          last_activity: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          solution_id: string
+          module_id?: string | null
+          is_completed?: boolean
+          completed_at?: string | null
+          progress_data?: Json
+          last_activity?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          solution_id?: string
+          module_id?: string | null
+          is_completed?: boolean
+          completed_at?: string | null
+          progress_data?: Json
+          last_activity?: string
           created_at?: string
           updated_at?: string
         }
@@ -467,26 +587,26 @@ export type Database = {
         Row: {
           id: string
           title: string
-          description?: string
+          description: string
           category: string
           difficulty: string
           estimated_time_minutes: number
-          published: boolean
-          cover_image_url?: string
-          created_by?: string
+          cover_image_url: string | null
+          is_published: boolean
+          created_by: string
           created_at: string
           updated_at: string
         }
         Insert: {
           id?: string
           title: string
-          description?: string
+          description: string
           category: string
           difficulty: string
           estimated_time_minutes?: number
-          published?: boolean
-          cover_image_url?: string
-          created_by?: string
+          cover_image_url?: string | null
+          is_published?: boolean
+          created_by: string
           created_at?: string
           updated_at?: string
         }
@@ -497,8 +617,8 @@ export type Database = {
           category?: string
           difficulty?: string
           estimated_time_minutes?: number
-          published?: boolean
-          cover_image_url?: string
+          cover_image_url?: string | null
+          is_published?: boolean
           created_by?: string
           created_at?: string
           updated_at?: string
@@ -514,8 +634,8 @@ export type Database = {
           content: Json
           module_order: number
           estimated_time_minutes: number
-          metrics?: Json
-          certificate_template?: Json
+          metrics: Json
+          certificate_template: Json
           created_at: string
           updated_at: string
         }
@@ -547,40 +667,37 @@ export type Database = {
         }
         Relationships: []
       }
-      progress: {
+      tools: {
         Row: {
           id: string
-          user_id: string
-          solution_id?: string
-          module_id?: string
-          is_completed: boolean
-          completed_at?: string
-          last_activity: string
-          progress_percentage: number
+          name: string
+          description: string
+          category: string
+          logo_url: string | null
+          official_url: string
+          is_active: boolean
           created_at: string
           updated_at: string
         }
         Insert: {
           id?: string
-          user_id: string
-          solution_id?: string
-          module_id?: string
-          is_completed?: boolean
-          completed_at?: string
-          last_activity?: string
-          progress_percentage?: number
+          name: string
+          description: string
+          category: string
+          logo_url?: string | null
+          official_url: string
+          is_active?: boolean
           created_at?: string
           updated_at?: string
         }
         Update: {
           id?: string
-          user_id?: string
-          solution_id?: string
-          module_id?: string
-          is_completed?: boolean
-          completed_at?: string
-          last_activity?: string
-          progress_percentage?: number
+          name?: string
+          description?: string
+          category?: string
+          logo_url?: string | null
+          official_url?: string
+          is_active?: boolean
           created_at?: string
           updated_at?: string
         }
@@ -589,21 +706,21 @@ export type Database = {
       implementation_checkpoints: {
         Row: {
           id: string
-          solution_id?: string
+          solution_id: string | null
           description: string
           checkpoint_order: number
           created_at: string
         }
         Insert: {
           id?: string
-          solution_id?: string
+          solution_id?: string | null
           description: string
           checkpoint_order: number
           created_at?: string
         }
         Update: {
           id?: string
-          solution_id?: string
+          solution_id?: string | null
           description?: string
           checkpoint_order?: number
           created_at?: string
@@ -615,10 +732,10 @@ export type Database = {
           id: string
           solution_id: string
           name: string
-          description?: string
+          description: string | null
           file_url: string
-          file_type?: string
-          file_size_bytes?: number
+          file_type: string
+          file_size_bytes: number | null
           order_index: number
           created_at: string
           updated_at: string
@@ -627,10 +744,10 @@ export type Database = {
           id?: string
           solution_id: string
           name: string
-          description?: string
+          description?: string | null
           file_url: string
-          file_type?: string
-          file_size_bytes?: number
+          file_type: string
+          file_size_bytes?: number | null
           order_index?: number
           created_at?: string
           updated_at?: string
@@ -639,10 +756,10 @@ export type Database = {
           id?: string
           solution_id?: string
           name?: string
-          description?: string
+          description?: string | null
           file_url?: string
           file_type?: string
-          file_size_bytes?: number
+          file_size_bytes?: number | null
           order_index?: number
           created_at?: string
           updated_at?: string
@@ -654,7 +771,6 @@ export type Database = {
           id: string
           solution_id: string
           tool_id: string
-          is_required: boolean
           order_index: number
           created_at: string
         }
@@ -662,7 +778,6 @@ export type Database = {
           id?: string
           solution_id: string
           tool_id: string
-          is_required?: boolean
           order_index?: number
           created_at?: string
         }
@@ -670,63 +785,8 @@ export type Database = {
           id?: string
           solution_id?: string
           tool_id?: string
-          is_required?: boolean
           order_index?: number
           created_at?: string
-        }
-        Relationships: []
-      }
-      tools: {
-        Row: {
-          id: string
-          name: string
-          description?: string
-          category: string
-          official_url: string
-          logo_url?: string
-          tags?: string[]
-          is_active: boolean
-          has_member_benefit: boolean
-          benefit_title?: string
-          benefit_description?: string
-          benefit_link?: string
-          is_access_restricted: boolean
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          name: string
-          description?: string
-          category: string
-          official_url: string
-          logo_url?: string
-          tags?: string[]
-          is_active?: boolean
-          has_member_benefit?: boolean
-          benefit_title?: string
-          benefit_description?: string
-          benefit_link?: string
-          is_access_restricted?: boolean
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          name?: string
-          description?: string
-          category?: string
-          official_url?: string
-          logo_url?: string
-          tags?: string[]
-          is_active?: boolean
-          has_member_benefit?: boolean
-          benefit_title?: string
-          benefit_description?: string
-          benefit_link?: string
-          is_access_restricted?: boolean
-          created_at?: string
-          updated_at?: string
         }
         Relationships: []
       }
@@ -734,9 +794,9 @@ export type Database = {
         Row: {
           id: string
           name: string
-          description?: string
+          description: string | null
           slug: string
-          icon?: string
+          icon: string | null
           order_index: number
           is_active: boolean
           created_at: string
@@ -745,9 +805,9 @@ export type Database = {
         Insert: {
           id?: string
           name: string
-          description?: string
+          description?: string | null
           slug: string
-          icon?: string
+          icon?: string | null
           order_index?: number
           is_active?: boolean
           created_at?: string
@@ -756,9 +816,9 @@ export type Database = {
         Update: {
           id?: string
           name?: string
-          description?: string
+          description?: string | null
           slug?: string
-          icon?: string
+          icon?: string | null
           order_index?: number
           is_active?: boolean
           created_at?: string
@@ -777,7 +837,7 @@ export type Database = {
           reply_count: number
           is_pinned: boolean
           is_locked: boolean
-          is_solved?: boolean
+          is_solved: boolean | null
           last_activity_at: string
           created_at: string
           updated_at: string
@@ -792,7 +852,7 @@ export type Database = {
           reply_count?: number
           is_pinned?: boolean
           is_locked?: boolean
-          is_solved?: boolean
+          is_solved?: boolean | null
           last_activity_at?: string
           created_at?: string
           updated_at?: string
@@ -807,7 +867,7 @@ export type Database = {
           reply_count?: number
           is_pinned?: boolean
           is_locked?: boolean
-          is_solved?: boolean
+          is_solved?: boolean | null
           last_activity_at?: string
           created_at?: string
           updated_at?: string
@@ -819,8 +879,8 @@ export type Database = {
           id: string
           topic_id: string
           user_id: string
+          parent_id: string | null
           content: string
-          parent_id?: string
           is_solution: boolean
           is_hidden: boolean
           created_at: string
@@ -830,8 +890,8 @@ export type Database = {
           id?: string
           topic_id: string
           user_id: string
+          parent_id?: string | null
           content: string
-          parent_id?: string
           is_solution?: boolean
           is_hidden?: boolean
           created_at?: string
@@ -841,8 +901,8 @@ export type Database = {
           id?: string
           topic_id?: string
           user_id?: string
+          parent_id?: string | null
           content?: string
-          parent_id?: string
           is_solution?: boolean
           is_hidden?: boolean
           created_at?: string
@@ -851,75 +911,74 @@ export type Database = {
         Relationships: []
       }
     }
-    Views: {}
+    Views: {
+      [_ in never]: never
+    }
     Functions: {
-      get_user_permissions: {
-        Args: { user_id: string }
-        Returns: string[]
-      }
-      get_users_with_roles: {
+      increment_topic_views: {
         Args: {
-          limit_count?: number
-          offset_count?: number
-          search_query?: string
+          topic_id: string
         }
-        Returns: {
-          id: string
-          email: string
-          name: string
-          avatar_url: string
-          role: string
-          role_id: string
-          user_roles: Json
-          company_name: string
-          industry: string
-          created_at: string
-        }[]
+        Returns: undefined
+      }
+      increment_topic_replies: {
+        Args: {
+          topic_id: string
+        }
+        Returns: undefined
+      }
+      delete_forum_topic: {
+        Args: {
+          topic_id: string
+        }
+        Returns: Json
+      }
+      delete_forum_post: {
+        Args: {
+          post_id: string
+        }
+        Returns: Json
       }
       audit_role_assignments: {
         Args: {
           user_id: string
-          action: string
-          details?: Json
+          action_type: string
+          target_user_id?: string
+          role_id?: string
+          role_name?: string
+          permission_id?: string
+          permission_code?: string
+          old_value?: string
+          new_value?: string
+          ip_address?: string
         }
-        Returns: void
+        Returns: string
       }
       create_storage_public_policy: {
-        Args: { bucket_name: string }
+        Args: {
+          bucket_name: string
+        }
         Returns: boolean
       }
-      increment_topic_replies: {
-        Args: { topic_id: string }
-        Returns: void
-      }
-      increment_topic_views: {
-        Args: { topic_id: string }
-        Returns: void
-      }
-      delete_forum_topic: {
-        Args: { topic_id: string }
-        Returns: void
-      }
-      delete_forum_post: {
-        Args: { post_id: string }
-        Returns: void
-      }
-      call_supabase_rpc: {
-        Args: {
-          function_name: string
-          params?: Json
-        }
+      setup_learning_storage_buckets: {
+        Args: Record<PropertyKey, never>
         Returns: Json
       }
     }
-    Enums: {}
-    CompositeTypes: {}
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
   }
 }
 
+type PublicSchema = Database[Extract<keyof Database, "public">]
+
 export type Tables<
   PublicTableNameOrOptions extends
-    | keyof (Database["public"]["Tables"] & Database["public"]["Views"])
+    | keyof (PublicSchema["Tables"] & PublicSchema["Views"])
     | { schema: keyof Database },
   TableName extends PublicTableNameOrOptions extends { schema: keyof Database }
     ? keyof (Database[PublicTableNameOrOptions["schema"]]["Tables"] &
@@ -932,10 +991,10 @@ export type Tables<
     }
     ? R
     : never
-  : PublicTableNameOrOptions extends keyof (Database["public"]["Tables"] &
-        Database["public"]["Views"])
-    ? (Database["public"]["Tables"] &
-        Database["public"]["Views"])[PublicTableNameOrOptions] extends {
+  : PublicTableNameOrOptions extends keyof (PublicSchema["Tables"] &
+        PublicSchema["Views"])
+    ? (PublicSchema["Tables"] &
+        PublicSchema["Views"])[PublicTableNameOrOptions] extends {
         Row: infer R
       }
       ? R
@@ -944,7 +1003,7 @@ export type Tables<
 
 export type TablesInsert<
   PublicTableNameOrOptions extends
-    | keyof Database["public"]["Tables"]
+    | keyof PublicSchema["Tables"]
     | { schema: keyof Database },
   TableName extends PublicTableNameOrOptions extends { schema: keyof Database }
     ? keyof Database[PublicTableNameOrOptions["schema"]]["Tables"]
@@ -955,8 +1014,8 @@ export type TablesInsert<
     }
     ? I
     : never
-  : PublicTableNameOrOptions extends keyof Database["public"]["Tables"]
-    ? Database["public"]["Tables"][PublicTableNameOrOptions] extends {
+  : PublicTableNameOrOptions extends keyof PublicSchema["Tables"]
+    ? PublicSchema["Tables"][PublicTableNameOrOptions] extends {
         Insert: infer I
       }
       ? I
@@ -965,7 +1024,7 @@ export type TablesInsert<
 
 export type TablesUpdate<
   PublicTableNameOrOptions extends
-    | keyof Database["public"]["Tables"]
+    | keyof PublicSchema["Tables"]
     | { schema: keyof Database },
   TableName extends PublicTableNameOrOptions extends { schema: keyof Database }
     ? keyof Database[PublicTableNameOrOptions["schema"]]["Tables"]
@@ -976,8 +1035,8 @@ export type TablesUpdate<
     }
     ? U
     : never
-  : PublicTableNameOrOptions extends keyof Database["public"]["Tables"]
-    ? Database["public"]["Tables"][PublicTableNameOrOptions] extends {
+  : PublicTableNameOrOptions extends keyof PublicSchema["Tables"]
+    ? PublicSchema["Tables"][PublicTableNameOrOptions] extends {
         Update: infer U
       }
       ? U
@@ -986,13 +1045,13 @@ export type TablesUpdate<
 
 export type Enums<
   PublicEnumNameOrOptions extends
-    | keyof Database["public"]["Enums"]
+    | keyof PublicSchema["Enums"]
     | { schema: keyof Database },
   EnumName extends PublicEnumNameOrOptions extends { schema: keyof Database }
     ? keyof Database[PublicEnumNameOrOptions["schema"]]["Enums"]
     : never = never,
 > = PublicEnumNameOrOptions extends { schema: keyof Database }
   ? Database[PublicEnumNameOrOptions["schema"]]["Enums"][EnumName]
-  : PublicEnumNameOrOptions extends keyof Database["public"]["Enums"]
-    ? Database["public"]["Enums"][PublicEnumNameOrOptions]
+  : PublicEnumNameOrOptions extends keyof PublicSchema["Enums"]
+    ? PublicSchema["Enums"][PublicEnumNameOrOptions]
     : never

@@ -43,15 +43,15 @@ export type ForumTopic = Database['public']['Tables']['forum_topics']['Row'];
 export type ForumPost = Database['public']['Tables']['forum_posts']['Row'];
 export type ForumCategory = Database['public']['Tables']['forum_categories']['Row'];
 
-// Event types (if they exist in your database)
-export type Event = any; // Define based on your actual schema
+// Event types
+export type Event = Database['public']['Tables']['events']['Row'];
 export type EventAccessControl = any; // Define based on your actual schema
 
 // Role and permission types
 export type UserRole = Database['public']['Tables']['user_roles']['Row'];
 export type PermissionDefinition = Database['public']['Tables']['permission_definitions']['Row'];
 export type RolePermission = Database['public']['Tables']['role_permissions']['Row'];
-export type CourseAccessControl = any; // Define based on your actual schema
+export type CourseAccessControl = Database['public']['Tables']['course_access_control']['Row'];
 
 // Analytics and audit types (if they exist in your database)
 export type AuditLog = any; // Define based on your actual schema
