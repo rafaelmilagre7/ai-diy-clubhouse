@@ -11,27 +11,16 @@ export const createStoragePublicPolicy = async (bucketName: string) => {
   });
 };
 
-export const incrementTopicViews = async (topicId: string) => {
-  return await supabase.rpc('increment_topic_views', {
-    topic_id: topicId
-  });
-};
-
 export const incrementTopicReplies = async (topicId: string) => {
   return await supabase.rpc('increment_topic_replies', {
     topic_id: topicId
   });
 };
 
-export const deleteForumTopic = async (topicId: string) => {
-  return await supabase.rpc('delete_forum_topic', {
-    topic_id: topicId
-  });
-};
-
-export const deleteForumPost = async (postId: string) => {
-  return await supabase.rpc('delete_forum_post', {
-    post_id: postId
+export const completeInviteRegistration = async (inviteToken: string, userData: any) => {
+  return await supabase.rpc('complete_invite_registration', {
+    invite_token: inviteToken,
+    user_data: userData
   });
 };
 

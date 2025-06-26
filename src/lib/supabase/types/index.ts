@@ -1,5 +1,4 @@
 
-
 import { Database } from './database.types';
 
 // Export all database types
@@ -30,49 +29,17 @@ export type LearningComment = Database['public']['Tables']['learning_comments'][
 export type Solution = Database['public']['Tables']['solutions']['Row'];
 export type Module = Database['public']['Tables']['modules']['Row'];
 export type Progress = Database['public']['Tables']['progress']['Row'];
-export type UserChecklist = Database['public']['Tables']['user_checklists']['Row'];
-export type SolutionResource = Database['public']['Tables']['solution_resources']['Row'];
-export type SolutionTool = Database['public']['Tables']['solution_tools']['Row'];
-export type ImplementationCheckpoint = Database['public']['Tables']['implementation_checkpoints']['Row'];
-
-// Tool types
 export type Tool = Database['public']['Tables']['tools']['Row'];
-export type ToolCategory = any; // Define based on your actual schema
 
-// Forum types
-export type ForumTopic = Database['public']['Tables']['forum_topics']['Row'];
-export type ForumPost = Database['public']['Tables']['forum_posts']['Row'];
-export type ForumCategory = Database['public']['Tables']['forum_categories']['Row'];
-export type ForumReaction = Database['public']['Tables']['forum_reactions']['Row'];
-
-// Event types
-export type Event = Database['public']['Tables']['events']['Row'];
-export type EventAccessControl = Database['public']['Tables']['event_access_control']['Row'];
-
-// Role and permission types
-export type UserRole = Database['public']['Tables']['user_roles']['Row'];
-export type PermissionDefinition = Database['public']['Tables']['permission_definitions']['Row'];
-export type RolePermission = Database['public']['Tables']['role_permissions']['Row'];
-export type CourseAccessControl = Database['public']['Tables']['course_access_control']['Row'];
-export type BenefitAccessControl = Database['public']['Tables']['benefit_access_control']['Row'];
-
-// Analytics and audit types
-export type AuditLog = Database['public']['Tables']['audit_logs']['Row'];
+// Analytics types
 export type Analytics = Database['public']['Tables']['analytics']['Row'];
-
-// Onboarding types
-export type QuickOnboarding = Database['public']['Tables']['quick_onboarding']['Row'];
-export type OnboardingSync = Database['public']['Tables']['onboarding_sync']['Row'];
 export type OnboardingAnalytics = Database['public']['Tables']['onboarding_analytics']['Row'];
+export type OnboardingSync = Database['public']['Tables']['onboarding_sync']['Row'];
 export type NotificationPreferences = Database['public']['Tables']['notification_preferences']['Row'];
+export type QuickOnboarding = Database['public']['Tables']['quick_onboarding']['Row'];
 
-// Invite types (if they exist in your database)
-export type Invite = any; // Define based on your actual schema
-export type InviteDelivery = any; // Define based on your actual schema
-
-// Communication types (if they exist in your database)
-export type AdminCommunication = any; // Define based on your actual schema
-export type NotificationPreference = any; // Define based on your actual schema
+// User role types
+export type UserRole = Database['public']['Tables']['user_roles']['Row'];
 
 // Utility function to get user role name safely
 export const getUserRoleName = (profile: UserProfile | null): string => {
@@ -93,4 +60,3 @@ export const isAdminRole = (profile: any): boolean => {
 export const isFormacaoRole = (profile: any): boolean => {
   return profile?.user_roles?.name === 'formacao';
 };
-
