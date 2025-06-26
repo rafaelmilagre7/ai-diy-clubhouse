@@ -37,7 +37,9 @@ const RobustRootRedirect = () => {
       });
     });
 
-    return unsubscribe;
+    return () => {
+      authManager.off('stateChanged', unsubscribe);
+    };
   }, []);
 
   logger.info("[ROBUST-ROOT-REDIRECT] 📊 Estado atual:", {

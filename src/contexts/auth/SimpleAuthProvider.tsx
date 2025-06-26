@@ -135,7 +135,9 @@ export const SimpleAuthProvider: React.FC<SimpleAuthProviderProps> = ({ children
     // Inicializar imediatamente
     initializeAuth();
     
-    return unsubscribe;
+    return () => {
+      authManager.off('stateChanged', unsubscribe);
+    };
   }, []);
 
   const contextValue: SimpleAuthContextType = {

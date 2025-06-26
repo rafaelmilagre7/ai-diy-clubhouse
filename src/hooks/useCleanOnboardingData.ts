@@ -44,7 +44,9 @@ export const useCleanOnboardingData = () => {
       authManager.initialize();
     }
 
-    return unsubscribe;
+    return () => {
+      authManager.off('stateChanged', unsubscribe);
+    };
   }, [authManager]);
 
   return cleanData;

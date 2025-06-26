@@ -56,7 +56,9 @@ export const useOnboardingRequired = () => {
       authManager.initialize();
     }
 
-    return unsubscribe;
+    return () => {
+      authManager.off('stateChanged', unsubscribe);
+    };
   }, [authManager]);
 
   logger.debug('[ONBOARDING-REQUIRED] 📊 Estado atual:', {
