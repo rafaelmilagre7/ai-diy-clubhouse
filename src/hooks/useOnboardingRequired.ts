@@ -39,8 +39,8 @@ export const useOnboardingRequired = () => {
     });
 
     // Initialize if needed
-    // CORRIGIDO: Usar método público isInitialized()
-    if (!authManager.isInitialized()) {
+    // CORRIGIDO: Usar propriedade pública isInitialized
+    if (!authManager.isInitialized) {
       authManager.initialize();
     }
 

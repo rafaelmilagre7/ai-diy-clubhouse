@@ -69,8 +69,8 @@ export const useLoadingTimeoutEnhanced = ({
         
         // Para contextos de auth, usar AuthManager
         if (context === 'auth' || context === 'onboarding') {
-          // CORRIGIDO: Usar método público isInitialized()
-          if (!authManager.isInitialized()) {
+          // CORRIGIDO: Usar propriedade pública isInitialized
+          if (!authManager.isInitialized) {
             logger.warn({
               message: 'Forçando inicialização AuthManager',
               component: 'useLoadingTimeoutEnhanced',
