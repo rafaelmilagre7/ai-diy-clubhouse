@@ -20,13 +20,14 @@ export type SolutionResource = Database['public']['Tables']['solution_resources'
 export type SolutionTool = Database['public']['Tables']['solution_tools']['Row'];
 export type UserChecklist = Database['public']['Tables']['user_checklists']['Row'];
 export type Tool = Database['public']['Tables']['tools']['Row'];
-export type BenefitAccessControl = Database['public']['Tables']['benefit_access_control']['Row'] | null;
+export type BenefitAccessControl = Database['public']['Tables']['benefit_access_control']['Row'];
 export type ForumTopic = Database['public']['Tables']['forum_topics']['Row'];
-export type ForumCategory = Database['public']['Tables']['forum_categories']['Row'] | null;
+export type ForumCategory = Database['public']['Tables']['forum_categories']['Row'];
 export type ForumPost = Database['public']['Tables']['forum_posts']['Row'];
-export type ForumReaction = Database['public']['Tables']['forum_reactions']['Row'] | null;
 export type AuditLog = Database['public']['Tables']['audit_logs']['Row'];
 export type Event = Database['public']['Tables']['events']['Row'];
+export type Analytics = Database['public']['Tables']['analytics']['Row'];
+export type Invite = Database['public']['Tables']['invites']['Row'];
 
 // Tipo UserProfile com role join
 export type UserProfile = Database['public']['Tables']['profiles']['Row'] & {
