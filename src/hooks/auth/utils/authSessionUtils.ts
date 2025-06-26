@@ -1,90 +1,122 @@
 
-import { supabase } from '@/lib/supabase';
-import { UserProfile } from '@/lib/supabase';
+import { supabase, UserProfile } from '@/lib/supabase';
+import { logger } from '@/utils/logger';
 
-export const validateUserSession = async () => {
-  try {
-    const { data: { session }, error } = await supabase.auth.getSession();
-    
-    if (error) {
-      console.error('Erro ao validar sessão:', error);
-      return { session: null, user: null };
-    }
-    
-    return { 
-      session, 
-      user: session?.user || null 
-    };
-  } catch (error) {
-    console.error('Erro crítico na validação:', error);
-    return { session: null, user: null };
-  }
-};
-
+/**
+ * Busca o perfil do usuário de forma segura com tratamento de erros
+ */
 export const fetchUserProfileSecurely = async (userId: string): Promise<UserProfile | null> => {
   try {
-    const { data: profile, error } = await supabase
-      .from('profiles')
-      .select(`
-        *,
-        user_roles (*)
-      `)
-      .eq('id', userId as any)
-      .single();
+    logger.info(`[AUTH-SESSION] Buscando perfil para usuário: ${userId.substring(0, 8)}***`);
     
+    const { data, error } = await supabase
+      .from('profiles') // CORREÇÃO: Usar 'profiles' ao invés de 'user_profiles'
+      .select(`
+        id,
+        email,
+        name,
+        role_id,
+        avatar_url,
+        company_name,
+        industry,
+        created_at,
+        onboarding_completed,
+        onboarding_completed_at,
+        user_roles:role_id (
+          id,
+          name,
+          description,
+          permissions,
+          is_system
+        )
+      `)
+      .eq('id', userId)
+      .single();
+
     if (error) {
-      console.error('Erro ao buscar perfil:', error);
+      logger.error('[AUTH-SESSION] Erro ao buscar perfil:', error);
       return null;
     }
     
-    return profile as any;
-  } catch (error) {
-    console.error('Erro crítico ao buscar perfil:', error);
-    return null;
-  }
-};
-
-export const processUserProfile = async (
-  userId: string,
-  userEmail?: string,
-  userName?: string
-): Promise<UserProfile | null> => {
-  try {
-    let profile = await fetchUserProfileSecurely(userId);
-    
-    // Se não há perfil, criar um básico
-    if (!profile && userEmail) {
-      console.log('Criando perfil para novo usuário:', userEmail);
-      
-      const { data: newProfile, error: createError } = await supabase
-        .from('profiles')
-        .insert({
-          id: userId,
-          email: userEmail,
-          name: userName || userEmail.split('@')[0],
-          created_at: new Date().toISOString()
-        } as any)
-        .select(`
-          *,
-          user_roles (*)
-        `)
-        .single();
-      
-      if (createError) {
-        console.error('Erro ao criar perfil:', createError);
-        return null;
-      }
-      
-      profile = newProfile as unknown as UserProfile;
+    if (!data) {
+      logger.warn(`[AUTH-SESSION] Nenhum perfil encontrado para o usuário ${userId.substring(0, 8)}***`);
+      return null;
     }
     
-    return profile;
+    logger.info('[AUTH-SESSION] Perfil encontrado com sucesso');
+    return data as UserProfile;
+    
   } catch (error) {
-    console.error('Erro no processamento:', error);
+    logger.error('[AUTH-SESSION] Erro inesperado ao buscar perfil:', error);
     return null;
   }
 };
 
-export const clearProfileCache = () => {
-  // Cache removido - função vazia para compatibilidade
+/**
+ * Cria um perfil de usuário se não existir
+ */
+export const createUserProfileSecurely = async (
+  userId: string, 
+  email: string, 
+  name?: string
+): Promise<UserProfile | null> => {
+  try {
+    logger.info(`[AUTH-SESSION] Criando perfil para usuário: ${email}`);
+    
+    // Buscar role_id padrão para membro_club
+    const { data: defaultRole } = await supabase
+      .from('user_roles')
+      .select('id')
+      .eq('name', 'membro_club')
+      .single();
+    
+    const defaultRoleId = defaultRole?.id || null;
+    
+    const { data: newProfile, error: insertError } = await supabase
+      .from('profiles') // CORREÇÃO: Usar 'profiles' ao invés de 'user_profiles'
+      .upsert({
+        id: userId,
+        email,
+        name: name || 'Usuário',
+        role_id: defaultRoleId,
+        created_at: new Date().toISOString(),
+        avatar_url: null,
+        company_name: null,
+        industry: null,
+        onboarding_completed: false,
+        onboarding_completed_at: null
+      })
+      .select(`
+        id,
+        email,
+        name,
+        role_id,
+        avatar_url,
+        company_name,
+        industry,
+        created_at,
+        onboarding_completed,
+        onboarding_completed_at,
+        user_roles:role_id (
+          id,
+          name,
+          description,
+          permissions,
+          is_system
+        )
+      `)
+      .single();
+      
+    if (insertError) {
+      logger.error('[AUTH-SESSION] Erro ao criar perfil:', insertError);
+      return null;
+    }
+    
+    logger.info('[AUTH-SESSION] Perfil criado com sucesso');
+    return newProfile as UserProfile;
+    
+  } catch (error) {
+    logger.error('[AUTH-SESSION] Erro inesperado ao criar perfil:', error);
+    return null;
+  }
 };

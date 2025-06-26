@@ -1,4 +1,3 @@
-
 export type Json =
   | string
   | number
@@ -19,12 +18,10 @@ export type Database = {
           company_name: string | null
           industry: string | null
           role_id: string | null
-          role: string | null // Campo legado - mantido para compatibilidade
+          role?: string | null // Campo legado para compatibilidade
           created_at: string
           onboarding_completed: boolean
           onboarding_completed_at: string | null
-          referrals_count: number | null
-          successful_referrals_count: number | null
         }
         Insert: {
           id: string
@@ -38,8 +35,6 @@ export type Database = {
           created_at?: string
           onboarding_completed?: boolean
           onboarding_completed_at?: string | null
-          referrals_count?: number | null
-          successful_referrals_count?: number | null
         }
         Update: {
           id?: string
@@ -53,8 +48,6 @@ export type Database = {
           created_at?: string
           onboarding_completed?: boolean
           onboarding_completed_at?: string | null
-          referrals_count?: number | null
-          successful_referrals_count?: number | null
         }
         Relationships: [
           {
@@ -96,245 +89,45 @@ export type Database = {
         }
         Relationships: []
       }
-      solutions: {
-        Row: {
-          id: string
-          title: string
-          description: string
-          slug: string
-          thumbnail_url: string | null
-          published: boolean
-          created_at: string
-          updated_at: string
-          category: string
-          difficulty: string
-          tags: string[] | null
-          related_solutions: string[] | null
-          implementation_steps: Json | null
-          checklist_items: Json | null
-          completion_requirements: Json | null
-        }
-        Insert: {
-          id?: string
-          title: string
-          description: string
-          slug: string
-          thumbnail_url?: string | null
-          published?: boolean
-          created_at?: string
-          updated_at?: string
-          category: string
-          difficulty: string
-          tags?: string[] | null
-          related_solutions?: string[] | null
-          implementation_steps?: Json | null
-          checklist_items?: Json | null
-          completion_requirements?: Json | null
-        }
-        Update: {
-          id?: string
-          title?: string
-          description?: string
-          slug?: string
-          thumbnail_url?: string | null
-          published?: boolean
-          created_at?: string
-          updated_at?: string
-          category?: string
-          difficulty?: string
-          tags?: string[] | null
-          related_solutions?: string[] | null
-          implementation_steps?: Json | null
-          checklist_items?: Json | null
-          completion_requirements?: Json | null
-        }
-        Relationships: []
-      }
-      progress: {
-        Row: {
-          id: string
-          user_id: string
-          solution_id: string
-          current_module: number
-          is_completed: boolean
-          completed_modules: number[]
-          completed_at: string | null
-          last_activity: string
-          created_at: string
-        }
-        Insert: {
-          id?: string
-          user_id: string
-          solution_id: string
-          current_module?: number
-          is_completed?: boolean  
-          completed_modules?: number[]
-          completed_at?: string | null
-          last_activity?: string
-          created_at?: string
-        }
-        Update: {
-          id?: string
-          user_id?: string
-          solution_id?: string
-          current_module?: number
-          is_completed?: boolean
-          completed_modules?: number[]
-          completed_at?: string | null
-          last_activity?: string
-          created_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "progress_solution_id_fkey"
-            columns: ["solution_id"]
-            isOneToOne: false
-            referencedRelation: "solutions"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "progress_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          }
-        ]
-      }
-      learning_courses: {
-        Row: {
-          id: string
-          title: string
-          description: string | null
-          slug: string
-          cover_image_url: string | null
-          published: boolean
-          created_by: string | null
-          order_index: number
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          title: string
-          description?: string | null
-          slug: string
-          cover_image_url?: string | null
-          published?: boolean
-          created_by?: string | null
-          order_index?: number
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          title?: string
-          description?: string | null
-          slug?: string
-          cover_image_url?: string | null
-          published?: boolean
-          created_by?: string | null
-          order_index?: number
-          created_at?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
-      learning_modules: {
-        Row: {
-          id: string
-          course_id: string
-          title: string
-          description: string | null
-          order_index: number
-          published: boolean
-          cover_image_url: string | null
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          course_id: string
-          title: string
-          description?: string | null
-          order_index?: number
-          published?: boolean
-          cover_image_url?: string | null
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          course_id?: string
-          title?: string
-          description?: string | null
-          order_index?: number
-          published?: boolean
-          cover_image_url?: string | null
-          created_at?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "learning_modules_course_id_fkey"
-            columns: ["course_id"]
-            isOneToOne: false
-            referencedRelation: "learning_courses"
-            referencedColumns: ["id"]
-          }
-        ]
-      }
       learning_lessons: {
         Row: {
           id: string
           module_id: string
           title: string
           description: string | null
+          order_index: number | null
           content: Json | null
-          order_index: number
-          published: boolean
-          cover_image_url: string | null
-          estimated_time_minutes: number
-          difficulty_level: string
-          ai_assistant_enabled: boolean
-          ai_assistant_prompt: string | null
-          ai_assistant_id: string | null
+          video_url: string | null
+          duration_seconds: number | null
           created_at: string
           updated_at: string
+          ai_assistant_id: string | null
         }
         Insert: {
           id?: string
           module_id: string
           title: string
           description?: string | null
+          order_index?: number | null
           content?: Json | null
-          order_index?: number
-          published?: boolean
-          cover_image_url?: string | null
-          estimated_time_minutes?: number
-          difficulty_level?: string
-          ai_assistant_enabled?: boolean
-          ai_assistant_prompt?: string | null
-          ai_assistant_id?: string | null
+          video_url?: string | null
+          duration_seconds?: number | null
           created_at?: string
           updated_at?: string
+          ai_assistant_id?: string | null
         }
         Update: {
           id?: string
           module_id?: string
           title?: string
           description?: string | null
+          order_index?: number | null
           content?: Json | null
-          order_index?: number
-          published?: boolean
-          cover_image_url?: string | null
-          estimated_time_minutes?: number
-          difficulty_level?: string
-          ai_assistant_enabled?: boolean
-          ai_assistant_prompt?: string | null
-          ai_assistant_id?: string | null
+          video_url?: string | null
+          duration_seconds?: number | null
           created_at?: string
           updated_at?: string
+          ai_assistant_id?: string | null
         }
         Relationships: [
           {
@@ -350,50 +143,53 @@ export type Database = {
         Row: {
           id: string
           lesson_id: string
-          title: string
+          title: string | null
           description: string | null
-          url: string
-          thumbnail_url: string | null
+          url: string | null
+          type: string | null
+          file_name: string | null
+          file_path: string | null
+          file_size: number | null
           duration_seconds: number | null
-          created_at: string
-          order_index: number
-          video_type: string
-          video_file_path: string | null
-          video_file_name: string | null
-          file_size_bytes: number | null
           video_id: string | null
+          thumbnail_url: string | null
+          order_index: number | null
+          created_at: string
+          updated_at: string
         }
         Insert: {
           id?: string
           lesson_id: string
-          title: string
+          title?: string | null
           description?: string | null
-          url: string
-          thumbnail_url?: string | null
+          url?: string | null
+          type?: string | null
+          file_name?: string | null
+          file_path?: string | null
+          file_size?: number | null
           duration_seconds?: number | null
-          created_at?: string
-          order_index?: number
-          video_type?: string
-          video_file_path?: string | null
-          video_file_name?: string | null
-          file_size_bytes?: number | null
           video_id?: string | null
+          thumbnail_url?: string | null
+          order_index?: number | null
+          created_at?: string
+          updated_at?: string
         }
         Update: {
           id?: string
           lesson_id?: string
-          title?: string
+          title?: string | null
           description?: string | null
-          url?: string
-          thumbnail_url?: string | null
+          url?: string | null
+          type?: string | null
+          file_name?: string | null
+          file_path?: string | null
+          file_size?: number | null
           duration_seconds?: number | null
-          created_at?: string
-          order_index?: number
-          video_type?: string
-          video_file_path?: string | null
-          video_file_name?: string | null
-          file_size_bytes?: number | null
           video_id?: string | null
+          thumbnail_url?: string | null
+          order_index?: number | null
+          created_at?: string
+          updated_at?: string
         }
         Relationships: [
           {
@@ -405,45 +201,113 @@ export type Database = {
           }
         ]
       }
+      learning_modules: {
+        Row: {
+          id: string
+          course_id: string
+          title: string
+          description: string | null
+          order_index: number | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          course_id: string
+          title: string
+          description?: string | null
+          order_index?: number | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          course_id?: string
+          title?: string
+          description?: string | null
+          order_index?: number | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "learning_modules_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "learning_courses"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      learning_courses: {
+        Row: {
+          id: string
+          title: string
+          description: string | null
+          image_url: string | null
+          is_restricted: boolean | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          title: string
+          description?: string | null
+          image_url?: string | null
+          is_restricted?: boolean | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          title?: string
+          description?: string | null
+          image_url?: string | null
+          is_restricted?: boolean | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       learning_progress: {
         Row: {
           id: string
           user_id: string
           lesson_id: string
           progress_percentage: number
-          video_progress: Json
+          video_progress: Json | null
           started_at: string
           completed_at: string | null
-          last_position_seconds: number
-          updated_at: string
-          created_at: string
+          last_position_seconds: number | null
           notes: string | null
+          created_at: string
+          updated_at: string
         }
         Insert: {
           id?: string
           user_id: string
           lesson_id: string
-          progress_percentage?: number
-          video_progress?: Json
+          progress_percentage: number
+          video_progress?: Json | null
           started_at?: string
           completed_at?: string | null
-          last_position_seconds?: number
-          updated_at?: string
-          created_at?: string
+          last_position_seconds?: number | null
           notes?: string | null
+          created_at?: string
+          updated_at?: string
         }
         Update: {
           id?: string
           user_id?: string
           lesson_id?: string
           progress_percentage?: number
-          video_progress?: Json
+          video_progress?: Json | null
           started_at?: string
           completed_at?: string | null
-          last_position_seconds?: number
-          updated_at?: string
-          created_at?: string
+          last_position_seconds?: number | null
           notes?: string | null
+          created_at?: string
+          updated_at?: string
         }
         Relationships: [
           {
@@ -466,35 +330,41 @@ export type Database = {
         Row: {
           id: string
           lesson_id: string | null
-          name: string
+          title: string
           description: string | null
-          file_url: string
-          file_type: string | null
-          file_size_bytes: number | null
-          order_index: number
+          url: string | null
+          type: string | null
+          file_name: string | null
+          file_path: string | null
+          file_size: number | null
           created_at: string
+          updated_at: string
         }
         Insert: {
           id?: string
           lesson_id?: string | null
-          name: string
+          title: string
           description?: string | null
-          file_url: string
-          file_type?: string | null
-          file_size_bytes?: number | null
-          order_index?: number
+          url?: string | null
+          type?: string | null
+          file_name?: string | null
+          file_path?: string | null
+          file_size?: number | null
           created_at?: string
+          updated_at?: string
         }
         Update: {
           id?: string
           lesson_id?: string | null
-          name?: string
+          title?: string
           description?: string | null
-          file_url?: string
-          file_type?: string | null
-          file_size_bytes?: number | null
-          order_index?: number
+          url?: string | null
+          type?: string | null
+          file_name?: string | null
+          file_path?: string | null
+          file_size?: number | null
           created_at?: string
+          updated_at?: string
         }
         Relationships: [
           {
@@ -506,15 +376,44 @@ export type Database = {
           }
         ]
       }
+      learning_lesson_tools: {
+        Row: {
+          id: string
+          lesson_id: string
+          tool_id: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          lesson_id: string
+          tool_id: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          lesson_id?: string
+          tool_id?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "learning_lesson_tools_lesson_id_fkey"
+            columns: ["lesson_id"]
+            isOneToOne: false
+            referencedRelation: "learning_lessons"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       learning_comments: {
         Row: {
           id: string
-          user_id: string  
+          user_id: string
           lesson_id: string
-          content: string
-          parent_id: string | null
-          likes_count: number
-          is_hidden: boolean
+          comment: string
           created_at: string
           updated_at: string
         }
@@ -522,10 +421,7 @@ export type Database = {
           id?: string
           user_id: string
           lesson_id: string
-          content: string
-          parent_id?: string | null
-          likes_count?: number
-          is_hidden?: boolean
+          comment: string
           created_at?: string
           updated_at?: string
         }
@@ -533,10 +429,7 @@ export type Database = {
           id?: string
           user_id?: string
           lesson_id?: string
-          content?: string
-          parent_id?: string | null
-          likes_count?: number
-          is_hidden?: boolean
+          comment?: string
           created_at?: string
           updated_at?: string
         }
@@ -550,83 +443,6 @@ export type Database = {
           },
           {
             foreignKeyName: "learning_comments_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          }
-        ]  
-      }
-      learning_lesson_tools: {
-        Row: {
-          id: string
-          lesson_id: string
-          tool_id: string
-          order_index: number
-          created_at: string
-        }
-        Insert: {
-          id?: string
-          lesson_id: string
-          tool_id: string
-          order_index?: number
-          created_at?: string
-        }
-        Update: {
-          id?: string
-          lesson_id?: string
-          tool_id?: string
-          order_index?: number
-          created_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "learning_lesson_tools_lesson_id_fkey"
-            columns: ["lesson_id"]
-            isOneToOne: false
-            referencedRelation: "learning_lessons"
-            referencedColumns: ["id"]
-          }
-        ]
-      }
-      learning_lesson_nps: {
-        Row: {
-          id: string
-          user_id: string
-          lesson_id: string
-          score: number
-          feedback: string | null
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          user_id: string
-          lesson_id: string
-          score: number
-          feedback?: string | null
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          user_id?: string
-          lesson_id?: string
-          score?: number
-          feedback?: string | null
-          created_at?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "learning_lesson_nps_lesson_id_fkey"
-            columns: ["lesson_id"]
-            isOneToOne: false
-            referencedRelation: "learning_lessons"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "learning_lesson_nps_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
