@@ -18,6 +18,10 @@ export type RolePermission = Database['public']['Tables']['role_permissions']['R
 export type ImplementationCheckpoint = Database['public']['Tables']['implementation_checkpoints']['Row'];
 export type SolutionResource = Database['public']['Tables']['solution_resources']['Row'];
 export type Tool = Database['public']['Tables']['tools']['Row'];
+export type BenefitAccessControl = Database['public']['Tables']['benefit_access_control']['Row'];
+export type ForumTopic = Database['public']['Tables']['forum_topics']['Row'];
+export type ForumCategory = Database['public']['Tables']['forum_categories']['Row'];
+export type ForumPost = Database['public']['Tables']['forum_posts']['Row'];
 export type AuditLog = Database['public']['Tables']['audit_logs']['Row'];
 export type Event = Database['public']['Tables']['events']['Row'];
 

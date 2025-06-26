@@ -1,3 +1,4 @@
+
 import React from "react";
 import { UseFormReturn } from "react-hook-form";
 import { ResourceFormValues } from "../hooks/useResourcesFormData";
@@ -5,7 +6,7 @@ import { formatFileSize } from "../utils/resourceUtils";
 import { useResourceMaterialsTab } from "../hooks/useResourceMaterialsTab";
 import MaterialUploadSection from "./MaterialUploadSection";
 import MaterialsList from "./MaterialsList";
-import { createStoragePublicPolicy } from "@/lib/supabase/rpc";
+import { supabase } from "@/lib/supabase";
 import { useEffect, useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -33,14 +34,14 @@ const ResourceMaterialsTab: React.FC<ResourceMaterialsTabProps> = ({
   useEffect(() => {
     const checkBucket = async () => {
       try {
-        const { success, error } = await createStoragePublicPolicy('solution_files');
+        // Tentar criar o bucket via RPC function
+        const { data, error } = await supabase.rpc('create_storage_public_policy', {
+          bucket_name: 'solution_files'
+        });
         
-        if (success) {
-          console.log('Bucket solution_files verificado/criado com sucesso');
-          setBucketReady(true);
-        } else {
+        if (error) {
           console.error('Erro ao verificar/criar bucket solution_files:', error);
-          setBucketError(error || 'Erro desconhecido ao preparar o armazenamento');
+          setBucketError(error.message || 'Erro desconhecido ao preparar o armazenamento');
           
           // Notificar o usuário sobre problemas com o armazenamento
           toast({
@@ -48,6 +49,9 @@ const ResourceMaterialsTab: React.FC<ResourceMaterialsTabProps> = ({
             description: "Houve um problema ao preparar o armazenamento. Uploads podem não funcionar corretamente.",
             variant: "destructive",
           });
+        } else {
+          console.log('Bucket solution_files verificado/criado com sucesso');
+          setBucketReady(true);
         }
       } catch (err: any) {
         console.error('Exceção ao verificar bucket:', err);

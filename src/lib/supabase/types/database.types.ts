@@ -15,29 +15,29 @@ export type Database = {
           id: string
           email: string
           name: string
-          avatar_url: string | null
-          company_name: string | null
-          industry: string | null
+          avatar_url: string
+          company_name: string
+          industry: string
           role_id: string
           role: string
           created_at: string
           onboarding_completed: boolean
-          onboarding_completed_at: string | null
+          onboarding_completed_at: string
           referrals_count: number
           successful_referrals_count: number
         }
         Insert: {
-          id: string
+          id?: string
           email: string
-          name: string
-          avatar_url?: string | null
-          company_name?: string | null
-          industry?: string | null
-          role_id: string
+          name?: string
+          avatar_url?: string
+          company_name?: string
+          industry?: string
+          role_id?: string
           role?: string
           created_at?: string
           onboarding_completed?: boolean
-          onboarding_completed_at?: string | null
+          onboarding_completed_at?: string
           referrals_count?: number
           successful_referrals_count?: number
         }
@@ -45,14 +45,14 @@ export type Database = {
           id?: string
           email?: string
           name?: string
-          avatar_url?: string | null
-          company_name?: string | null
-          industry?: string | null
+          avatar_url?: string
+          company_name?: string
+          industry?: string
           role_id?: string
           role?: string
           created_at?: string
           onboarding_completed?: boolean
-          onboarding_completed_at?: string | null
+          onboarding_completed_at?: string
           referrals_count?: number
           successful_referrals_count?: number
         }
@@ -62,53 +62,53 @@ export type Database = {
         Row: {
           id: string
           title: string
-          description: string | null
+          description: string
+          content: Json
           module_id: string
           order_index: number
-          content: Json | null
           published: boolean
-          cover_image_url: string | null
+          created_at: string
+          updated_at: string
           estimated_time_minutes: number
           difficulty_level: string
           ai_assistant_enabled: boolean
-          ai_assistant_prompt: string | null
-          ai_assistant_id: string | null
-          created_at: string
-          updated_at: string
+          ai_assistant_prompt: string
+          ai_assistant_id: string
+          cover_image_url: string
         }
         Insert: {
           id?: string
           title: string
-          description?: string | null
+          description?: string
+          content?: Json
           module_id: string
           order_index?: number
-          content?: Json | null
           published?: boolean
-          cover_image_url?: string | null
+          created_at?: string
+          updated_at?: string
           estimated_time_minutes?: number
           difficulty_level?: string
           ai_assistant_enabled?: boolean
-          ai_assistant_prompt?: string | null
-          ai_assistant_id?: string | null
-          created_at?: string
-          updated_at?: string
+          ai_assistant_prompt?: string
+          ai_assistant_id?: string
+          cover_image_url?: string
         }
         Update: {
           id?: string
           title?: string
-          description?: string | null
+          description?: string
+          content?: Json
           module_id?: string
           order_index?: number
-          content?: Json | null
           published?: boolean
-          cover_image_url?: string | null
+          created_at?: string
+          updated_at?: string
           estimated_time_minutes?: number
           difficulty_level?: string
           ai_assistant_enabled?: boolean
-          ai_assistant_prompt?: string | null
-          ai_assistant_id?: string | null
-          created_at?: string
-          updated_at?: string
+          ai_assistant_prompt?: string
+          ai_assistant_id?: string
+          cover_image_url?: string
         }
         Relationships: []
       }
@@ -117,85 +117,85 @@ export type Database = {
           id: string
           lesson_id: string
           title: string
-          description: string | null
+          description: string
           url: string
           video_type: string
-          video_id: string | null
-          thumbnail_url: string | null
-          duration_seconds: number | null
+          video_id: string
+          thumbnail_url: string
+          duration_seconds: number
           order_index: number
-          video_file_path: string | null
-          video_file_name: string | null
-          file_size_bytes: number | null
           created_at: string
+          video_file_path: string
+          video_file_name: string
+          file_size_bytes: number
         }
         Insert: {
           id?: string
           lesson_id: string
           title: string
-          description?: string | null
+          description?: string
           url: string
           video_type?: string
-          video_id?: string | null
-          thumbnail_url?: string | null
-          duration_seconds?: number | null
+          video_id?: string
+          thumbnail_url?: string
+          duration_seconds?: number
           order_index?: number
-          video_file_path?: string | null
-          video_file_name?: string | null
-          file_size_bytes?: number | null
           created_at?: string
+          video_file_path?: string
+          video_file_name?: string
+          file_size_bytes?: number
         }
         Update: {
           id?: string
           lesson_id?: string
           title?: string
-          description?: string | null
+          description?: string
           url?: string
           video_type?: string
-          video_id?: string | null
-          thumbnail_url?: string | null
-          duration_seconds?: number | null
+          video_id?: string
+          thumbnail_url?: string
+          duration_seconds?: number
           order_index?: number
-          video_file_path?: string | null
-          video_file_name?: string | null
-          file_size_bytes?: number | null
           created_at?: string
+          video_file_path?: string
+          video_file_name?: string
+          file_size_bytes?: number
         }
         Relationships: []
       }
       learning_modules: {
         Row: {
           id: string
-          course_id: string
           title: string
-          description: string | null
+          description: string
+          course_id: string
           order_index: number
           published: boolean
-          cover_image_url: string | null
           created_at: string
           updated_at: string
+          cover_image_url: string
         }
         Insert: {
           id?: string
-          course_id: string
           title: string
-          description?: string | null
+          description?: string
+          course_id: string
           order_index?: number
           published?: boolean
-          cover_image_url?: string | null
           created_at?: string
           updated_at?: string
+          cover_image_url?: string
         }
         Update: {
           id?: string
-          course_id?: string
           title?: string
-          description?: string | null
+          description?: string
+          course_id?: string
           order_index?: number
           published?: boolean
-          cover_image_url?: string | null
           created_at?: string
           updated_at?: string
+          cover_image_url?: string
         }
         Relationships: []
       }
@@ -203,36 +203,36 @@ export type Database = {
         Row: {
           id: string
           title: string
-          description: string | null
+          description: string
           slug: string
-          cover_image_url: string | null
+          cover_image_url: string
           published: boolean
           order_index: number
-          created_by: string | null
+          created_by: string
           created_at: string
           updated_at: string
         }
         Insert: {
           id?: string
           title: string
-          description?: string | null
+          description?: string
           slug: string
-          cover_image_url?: string | null
+          cover_image_url?: string
           published?: boolean
           order_index?: number
-          created_by?: string | null
+          created_by?: string
           created_at?: string
           updated_at?: string
         }
         Update: {
           id?: string
           title?: string
-          description?: string | null
+          description?: string
           slug?: string
-          cover_image_url?: string | null
+          cover_image_url?: string
           published?: boolean
           order_index?: number
-          created_by?: string | null
+          created_by?: string
           created_at?: string
           updated_at?: string
         }
@@ -246,11 +246,11 @@ export type Database = {
           progress_percentage: number
           video_progress: Json
           started_at: string
-          completed_at: string | null
+          completed_at: string
           last_position_seconds: number
-          notes: string | null
-          created_at: string
           updated_at: string
+          created_at: string
+          notes: string
         }
         Insert: {
           id?: string
@@ -259,11 +259,11 @@ export type Database = {
           progress_percentage?: number
           video_progress?: Json
           started_at?: string
-          completed_at?: string | null
+          completed_at?: string
           last_position_seconds?: number
-          notes?: string | null
-          created_at?: string
           updated_at?: string
+          created_at?: string
+          notes?: string
         }
         Update: {
           id?: string
@@ -272,45 +272,45 @@ export type Database = {
           progress_percentage?: number
           video_progress?: Json
           started_at?: string
-          completed_at?: string | null
+          completed_at?: string
           last_position_seconds?: number
-          notes?: string | null
-          created_at?: string
           updated_at?: string
+          created_at?: string
+          notes?: string
         }
         Relationships: []
       }
       learning_resources: {
         Row: {
           id: string
-          lesson_id: string | null
           name: string
-          description: string | null
+          description: string
           file_url: string
-          file_type: string | null
-          file_size_bytes: number | null
+          file_type: string
+          file_size_bytes: number
+          lesson_id: string
           order_index: number
           created_at: string
         }
         Insert: {
           id?: string
-          lesson_id?: string | null
           name: string
-          description?: string | null
+          description?: string
           file_url: string
-          file_type?: string | null
-          file_size_bytes?: number | null
+          file_type?: string
+          file_size_bytes?: number
+          lesson_id?: string
           order_index?: number
           created_at?: string
         }
         Update: {
           id?: string
-          lesson_id?: string | null
           name?: string
-          description?: string | null
+          description?: string
           file_url?: string
-          file_type?: string | null
-          file_size_bytes?: number | null
+          file_type?: string
+          file_size_bytes?: number
+          lesson_id?: string
           order_index?: number
           created_at?: string
         }
@@ -320,84 +320,90 @@ export type Database = {
         Row: {
           id: string
           title: string
-          description: string | null
+          description: string
           category: string
           difficulty: string
-          thumbnail_url: string | null
-          video_url: string | null
+          estimated_time_minutes: number
           published: boolean
           created_at: string
           updated_at: string
-          created_by: string | null
-          tags: string[] | null
+          created_by: string
+          thumbnail_url: string
+          video_url: string
+          tags: string[]
+          metrics: Json
         }
         Insert: {
           id?: string
           title: string
-          description?: string | null
+          description?: string
           category: string
-          difficulty: string
-          thumbnail_url?: string | null
-          video_url?: string | null
+          difficulty?: string
+          estimated_time_minutes?: number
           published?: boolean
           created_at?: string
           updated_at?: string
-          created_by?: string | null
-          tags?: string[] | null
+          created_by?: string
+          thumbnail_url?: string
+          video_url?: string
+          tags?: string[]
+          metrics?: Json
         }
         Update: {
           id?: string
           title?: string
-          description?: string | null
+          description?: string
           category?: string
           difficulty?: string
-          thumbnail_url?: string | null
-          video_url?: string | null
+          estimated_time_minutes?: number
           published?: boolean
           created_at?: string
           updated_at?: string
-          created_by?: string | null
-          tags?: string[] | null
+          created_by?: string
+          thumbnail_url?: string
+          video_url?: string
+          tags?: string[]
+          metrics?: Json
         }
         Relationships: []
       }
       modules: {
         Row: {
           id: string
-          solution_id: string
           title: string
           type: string
           content: Json
+          solution_id: string
           module_order: number
           estimated_time_minutes: number
-          metrics: Json | null
-          certificate_template: Json | null
+          metrics: Json
+          certificate_template: Json
           created_at: string
           updated_at: string
         }
         Insert: {
           id?: string
-          solution_id: string
           title: string
           type: string
           content: Json
+          solution_id: string
           module_order: number
           estimated_time_minutes?: number
-          metrics?: Json | null
-          certificate_template?: Json | null
+          metrics?: Json
+          certificate_template?: Json
           created_at?: string
           updated_at?: string
         }
         Update: {
           id?: string
-          solution_id?: string
           title?: string
           type?: string
           content?: Json
+          solution_id?: string
           module_order?: number
           estimated_time_minutes?: number
-          metrics?: Json | null
-          certificate_template?: Json | null
+          metrics?: Json
+          certificate_template?: Json
           created_at?: string
           updated_at?: string
         }
@@ -408,11 +414,10 @@ export type Database = {
           id: string
           user_id: string
           solution_id: string
-          module_id: string | null
+          module_id: string
           progress_percentage: number
           is_completed: boolean
-          started_at: string
-          completed_at: string | null
+          completed_at: string
           created_at: string
           updated_at: string
         }
@@ -420,11 +425,10 @@ export type Database = {
           id?: string
           user_id: string
           solution_id: string
-          module_id?: string | null
+          module_id?: string
           progress_percentage?: number
           is_completed?: boolean
-          started_at?: string
-          completed_at?: string | null
+          completed_at?: string
           created_at?: string
           updated_at?: string
         }
@@ -432,11 +436,10 @@ export type Database = {
           id?: string
           user_id?: string
           solution_id?: string
-          module_id?: string | null
+          module_id?: string
           progress_percentage?: number
           is_completed?: boolean
-          started_at?: string
-          completed_at?: string | null
+          completed_at?: string
           created_at?: string
           updated_at?: string
         }
@@ -445,20 +448,20 @@ export type Database = {
       course_access_control: {
         Row: {
           id: string
-          course_id: string | null
-          role_id: string | null
+          course_id: string
+          role_id: string
           created_at: string
         }
         Insert: {
           id?: string
-          course_id?: string | null
-          role_id?: string | null
+          course_id: string
+          role_id: string
           created_at?: string
         }
         Update: {
           id?: string
-          course_id?: string | null
-          role_id?: string | null
+          course_id?: string
+          role_id?: string
           created_at?: string
         }
         Relationships: []
@@ -467,8 +470,8 @@ export type Database = {
         Row: {
           id: string
           name: string
-          description: string | null
-          permissions: Json | null
+          description: string
+          permissions: Json
           is_system: boolean
           created_at: string
           updated_at: string
@@ -476,8 +479,8 @@ export type Database = {
         Insert: {
           id?: string
           name: string
-          description?: string | null
-          permissions?: Json | null
+          description?: string
+          permissions?: Json
           is_system?: boolean
           created_at?: string
           updated_at?: string
@@ -485,8 +488,8 @@ export type Database = {
         Update: {
           id?: string
           name?: string
-          description?: string | null
-          permissions?: Json | null
+          description?: string
+          permissions?: Json
           is_system?: boolean
           created_at?: string
           updated_at?: string
@@ -498,7 +501,7 @@ export type Database = {
           id: string
           code: string
           name: string
-          description: string | null
+          description: string
           category: string
           created_at: string
         }
@@ -506,15 +509,15 @@ export type Database = {
           id?: string
           code: string
           name: string
-          description?: string | null
-          category: string
+          description?: string
+          category?: string
           created_at?: string
         }
         Update: {
           id?: string
           code?: string
           name?: string
-          description?: string | null
+          description?: string
           category?: string
           created_at?: string
         }
@@ -544,21 +547,21 @@ export type Database = {
       implementation_checkpoints: {
         Row: {
           id: string
-          solution_id: string | null
+          solution_id: string
           description: string
           checkpoint_order: number
           created_at: string
         }
         Insert: {
           id?: string
-          solution_id?: string | null
+          solution_id: string
           description: string
           checkpoint_order: number
           created_at?: string
         }
         Update: {
           id?: string
-          solution_id?: string | null
+          solution_id?: string
           description?: string
           checkpoint_order?: number
           created_at?: string
@@ -572,9 +575,10 @@ export type Database = {
           name: string
           url: string
           type: string
-          format: string | null
-          size: number | null
-          metadata: Json | null
+          format: string
+          metadata: Json
+          size: number
+          module_id: string
           created_at: string
           updated_at: string
         }
@@ -584,9 +588,10 @@ export type Database = {
           name: string
           url: string
           type: string
-          format?: string | null
-          size?: number | null
-          metadata?: Json | null
+          format?: string
+          metadata?: Json
+          size?: number
+          module_id?: string
           created_at?: string
           updated_at?: string
         }
@@ -596,9 +601,10 @@ export type Database = {
           name?: string
           url?: string
           type?: string
-          format?: string | null
-          size?: number | null
-          metadata?: Json | null
+          format?: string
+          metadata?: Json
+          size?: number
+          module_id?: string
           created_at?: string
           updated_at?: string
         }
@@ -608,42 +614,189 @@ export type Database = {
         Row: {
           id: string
           name: string
-          description: string | null
+          description: string
           category: string
-          url: string | null
-          logo_url: string | null
+          url: string
+          logo_url: string
+          tags: string[]
+          is_featured: boolean
+          created_at: string
+          updated_at: string
+          benefit_title: string
+          benefit_description: string
+          benefit_link: string
+          benefit_active: boolean
+        }
+        Insert: {
+          id?: string
+          name: string
+          description?: string
+          category: string
+          url: string
+          logo_url?: string
+          tags?: string[]
+          is_featured?: boolean
+          created_at?: string
+          updated_at?: string
+          benefit_title?: string
+          benefit_description?: string
+          benefit_link?: string
+          benefit_active?: boolean
+        }
+        Update: {
+          id?: string
+          name?: string
+          description?: string
+          category?: string
+          url?: string
+          logo_url?: string
+          tags?: string[]
+          is_featured?: boolean
+          created_at?: string
+          updated_at?: string
+          benefit_title?: string
+          benefit_description?: string
+          benefit_link?: string
+          benefit_active?: boolean
+        }
+        Relationships: []
+      }
+      benefit_access_control: {
+        Row: {
+          id: string
+          tool_id: string
+          role_id: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          tool_id: string
+          role_id: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          tool_id?: string
+          role_id?: string
+          created_at?: string
+        }
+        Relationships: []
+      }
+      forum_topics: {
+        Row: {
+          id: string
+          title: string
+          content: string
+          user_id: string
+          category_id: string
+          is_pinned: boolean
+          is_locked: boolean
+          is_solved: boolean
+          view_count: number
+          reply_count: number
+          created_at: string
+          updated_at: string
+          last_activity_at: string
+        }
+        Insert: {
+          id?: string
+          title: string
+          content: string
+          user_id: string
+          category_id: string
+          is_pinned?: boolean
+          is_locked?: boolean
+          is_solved?: boolean
+          view_count?: number
+          reply_count?: number
+          created_at?: string
+          updated_at?: string
+          last_activity_at?: string
+        }
+        Update: {
+          id?: string
+          title?: string
+          content?: string
+          user_id?: string
+          category_id?: string
+          is_pinned?: boolean
+          is_locked?: boolean
+          is_solved?: boolean
+          view_count?: number
+          reply_count?: number
+          created_at?: string
+          updated_at?: string
+          last_activity_at?: string
+        }
+        Relationships: []
+      }
+      forum_categories: {
+        Row: {
+          id: string
+          name: string
+          description: string
+          slug: string
+          icon: string
+          order_index: number
           is_active: boolean
-          tags: string[] | null
-          member_benefit: Json | null
-          video_tutorials: Json | null
           created_at: string
           updated_at: string
         }
         Insert: {
           id?: string
           name: string
-          description?: string | null
-          category: string
-          url?: string | null
-          logo_url?: string | null
+          description?: string
+          slug: string
+          icon?: string
+          order_index?: number
           is_active?: boolean
-          tags?: string[] | null
-          member_benefit?: Json | null
-          video_tutorials?: Json | null
           created_at?: string
           updated_at?: string
         }
         Update: {
           id?: string
           name?: string
-          description?: string | null
-          category?: string
-          url?: string | null
-          logo_url?: string | null
+          description?: string
+          slug?: string
+          icon?: string
+          order_index?: number
           is_active?: boolean
-          tags?: string[] | null
-          member_benefit?: Json | null
-          video_tutorials?: Json | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      forum_posts: {
+        Row: {
+          id: string
+          topic_id: string
+          user_id: string
+          content: string
+          parent_id: string
+          is_solution: boolean
+          is_hidden: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          topic_id: string
+          user_id: string
+          content: string
+          parent_id?: string
+          is_solution?: boolean
+          is_hidden?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          topic_id?: string
+          user_id?: string
+          content?: string
+          parent_id?: string
+          is_solution?: boolean
+          is_hidden?: boolean
           created_at?: string
           updated_at?: string
         }
@@ -652,42 +805,42 @@ export type Database = {
       audit_logs: {
         Row: {
           id: string
-          user_id: string | null
+          user_id: string
           event_type: string
           action: string
-          resource_id: string | null
-          details: Json | null
-          ip_address: string | null
-          user_agent: string | null
-          session_id: string | null
-          severity: string | null
+          resource_id: string
+          details: Json
+          severity: string
           timestamp: string
+          session_id: string
+          user_agent: string
+          ip_address: string
         }
         Insert: {
           id?: string
-          user_id?: string | null
+          user_id?: string
           event_type: string
           action: string
-          resource_id?: string | null
-          details?: Json | null
-          ip_address?: string | null
-          user_agent?: string | null
-          session_id?: string | null
-          severity?: string | null
+          resource_id?: string
+          details?: Json
+          severity?: string
           timestamp?: string
+          session_id?: string
+          user_agent?: string
+          ip_address?: string
         }
         Update: {
           id?: string
-          user_id?: string | null
+          user_id?: string
           event_type?: string
           action?: string
-          resource_id?: string | null
-          details?: Json | null
-          ip_address?: string | null
-          user_agent?: string | null
-          session_id?: string | null
-          severity?: string | null
+          resource_id?: string
+          details?: Json
+          severity?: string
           timestamp?: string
+          session_id?: string
+          user_agent?: string
+          ip_address?: string
         }
         Relationships: []
       }
@@ -695,58 +848,58 @@ export type Database = {
         Row: {
           id: string
           title: string
-          description: string | null
+          description: string
           start_time: string
           end_time: string
-          location_link: string | null
-          physical_location: string | null
-          cover_image_url: string | null
-          is_recurring: boolean
-          recurrence_pattern: string | null
-          recurrence_interval: number | null
-          recurrence_day: number | null
-          recurrence_count: number | null
-          recurrence_end_date: string | null
-          parent_event_id: string | null
+          location_link: string
+          physical_location: string
+          cover_image_url: string
           created_by: string
+          is_recurring: boolean
+          recurrence_pattern: string
+          recurrence_interval: number
+          recurrence_day: number
+          recurrence_count: number
+          recurrence_end_date: string
+          parent_event_id: string
           created_at: string
         }
         Insert: {
           id?: string
           title: string
-          description?: string | null
+          description?: string
           start_time: string
           end_time: string
-          location_link?: string | null
-          physical_location?: string | null
-          cover_image_url?: string | null
-          is_recurring?: boolean
-          recurrence_pattern?: string | null
-          recurrence_interval?: number | null
-          recurrence_day?: number | null
-          recurrence_count?: number | null
-          recurrence_end_date?: string | null
-          parent_event_id?: string | null
+          location_link?: string
+          physical_location?: string
+          cover_image_url?: string
           created_by: string
+          is_recurring?: boolean
+          recurrence_pattern?: string
+          recurrence_interval?: number
+          recurrence_day?: number
+          recurrence_count?: number
+          recurrence_end_date?: string
+          parent_event_id?: string
           created_at?: string
         }
         Update: {
           id?: string
           title?: string
-          description?: string | null
+          description?: string
           start_time?: string
           end_time?: string
-          location_link?: string | null
-          physical_location?: string | null
-          cover_image_url?: string | null
-          is_recurring?: boolean
-          recurrence_pattern?: string | null
-          recurrence_interval?: number | null
-          recurrence_day?: number | null
-          recurrence_count?: number | null
-          recurrence_end_date?: string | null
-          parent_event_id?: string | null
+          location_link?: string
+          physical_location?: string
+          cover_image_url?: string
           created_by?: string
+          is_recurring?: boolean
+          recurrence_pattern?: string
+          recurrence_interval?: number
+          recurrence_day?: number
+          recurrence_count?: number
+          recurrence_end_date?: string
+          parent_event_id?: string
           created_at?: string
         }
         Relationships: []
@@ -756,7 +909,16 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      create_storage_public_policy: {
+        Args: {
+          bucket_name: string
+        }
+        Returns: {
+          success: boolean
+          error?: string
+        }
+      }
+      [_ in string]: never
     }
     Enums: {
       [_ in never]: never
