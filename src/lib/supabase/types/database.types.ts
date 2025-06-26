@@ -1,4 +1,5 @@
 
+
 export type Json =
   | string
   | number
@@ -28,9 +29,9 @@ export type Database = {
           successful_referrals_count: number
         }
         Insert: {
-          id: string
+          id?: string
           email: string
-          name: string
+          name?: string
           avatar_url?: string
           company_name?: string
           industry?: string
@@ -273,8 +274,8 @@ export type Database = {
           ip_address: string | null
           user_agent: string | null
           session_id: string | null
-          timestamp: string
           severity: string | null
+          timestamp: string
         }
         Insert: {
           id?: string
@@ -286,8 +287,8 @@ export type Database = {
           ip_address?: string | null
           user_agent?: string | null
           session_id?: string | null
-          timestamp?: string
           severity?: string | null
+          timestamp?: string
         }
         Update: {
           id?: string
@@ -299,8 +300,8 @@ export type Database = {
           ip_address?: string | null
           user_agent?: string | null
           session_id?: string | null
-          timestamp?: string
           severity?: string | null
+          timestamp?: string
         }
         Relationships: []
       }
@@ -349,9 +350,9 @@ export type Database = {
           course_id: string
           title: string
           description: string | null
+          cover_image_url: string | null
           order_index: number
           published: boolean
-          cover_image_url: string | null
           created_at: string
           updated_at: string
         }
@@ -360,9 +361,9 @@ export type Database = {
           course_id: string
           title: string
           description?: string | null
+          cover_image_url?: string | null
           order_index?: number
           published?: boolean
-          cover_image_url?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -371,9 +372,9 @@ export type Database = {
           course_id?: string
           title?: string
           description?: string | null
+          cover_image_url?: string | null
           order_index?: number
           published?: boolean
-          cover_image_url?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -386,11 +387,11 @@ export type Database = {
           title: string
           description: string | null
           content: Json | null
-          order_index: number
-          published: boolean
           cover_image_url: string | null
+          order_index: number
           estimated_time_minutes: number
           difficulty_level: string
+          published: boolean
           ai_assistant_enabled: boolean
           ai_assistant_id: string | null
           ai_assistant_prompt: string | null
@@ -403,11 +404,11 @@ export type Database = {
           title: string
           description?: string | null
           content?: Json | null
-          order_index?: number
-          published?: boolean
           cover_image_url?: string | null
+          order_index?: number
           estimated_time_minutes?: number
           difficulty_level?: string
+          published?: boolean
           ai_assistant_enabled?: boolean
           ai_assistant_id?: string | null
           ai_assistant_prompt?: string | null
@@ -420,11 +421,11 @@ export type Database = {
           title?: string
           description?: string | null
           content?: Json | null
-          order_index?: number
-          published?: boolean
           cover_image_url?: string | null
+          order_index?: number
           estimated_time_minutes?: number
           difficulty_level?: string
+          published?: boolean
           ai_assistant_enabled?: boolean
           ai_assistant_id?: string | null
           ai_assistant_prompt?: string | null
@@ -444,10 +445,10 @@ export type Database = {
           video_id: string | null
           thumbnail_url: string | null
           duration_seconds: number | null
+          order_index: number
           video_file_path: string | null
           video_file_name: string | null
           file_size_bytes: number | null
-          order_index: number
           created_at: string
         }
         Insert: {
@@ -460,10 +461,10 @@ export type Database = {
           video_id?: string | null
           thumbnail_url?: string | null
           duration_seconds?: number | null
+          order_index?: number
           video_file_path?: string | null
           video_file_name?: string | null
           file_size_bytes?: number | null
-          order_index?: number
           created_at?: string
         }
         Update: {
@@ -476,10 +477,10 @@ export type Database = {
           video_id?: string | null
           thumbnail_url?: string | null
           duration_seconds?: number | null
+          order_index?: number
           video_file_path?: string | null
           video_file_name?: string | null
           file_size_bytes?: number | null
-          order_index?: number
           created_at?: string
         }
         Relationships: []
@@ -493,7 +494,7 @@ export type Database = {
           video_progress: Json
           started_at: string
           completed_at: string | null
-          last_position_seconds: number
+          last_position_seconds: number | null
           notes: string | null
           created_at: string
           updated_at: string
@@ -506,7 +507,7 @@ export type Database = {
           video_progress?: Json
           started_at?: string
           completed_at?: string | null
-          last_position_seconds?: number
+          last_position_seconds?: number | null
           notes?: string | null
           created_at?: string
           updated_at?: string
@@ -519,7 +520,7 @@ export type Database = {
           video_progress?: Json
           started_at?: string
           completed_at?: string | null
-          last_position_seconds?: number
+          last_position_seconds?: number | null
           notes?: string | null
           created_at?: string
           updated_at?: string
@@ -631,8 +632,8 @@ export type Database = {
           user_id: string
           solution_id: string
           is_completed: boolean
+          progress_percentage: number
           completed_at: string | null
-          progress_data: Json
           created_at: string
           updated_at: string
         }
@@ -641,8 +642,8 @@ export type Database = {
           user_id: string
           solution_id: string
           is_completed?: boolean
+          progress_percentage?: number
           completed_at?: string | null
-          progress_data?: Json
           created_at?: string
           updated_at?: string
         }
@@ -651,8 +652,8 @@ export type Database = {
           user_id?: string
           solution_id?: string
           is_completed?: boolean
+          progress_percentage?: number
           completed_at?: string | null
-          progress_data?: Json
           created_at?: string
           updated_at?: string
         }
@@ -663,43 +664,37 @@ export type Database = {
           id: string
           title: string
           description: string
+          thumbnail_url: string | null
           category: string
-          difficulty_level: string
-          estimated_time_hours: number
-          tags: string[]
-          cover_image_url: string | null
-          is_published: boolean
+          difficulty: string
+          estimated_time: string | null
+          published: boolean
           created_at: string
           updated_at: string
-          created_by: string
         }
         Insert: {
           id?: string
           title: string
           description: string
+          thumbnail_url?: string | null
           category: string
-          difficulty_level: string
-          estimated_time_hours: number
-          tags?: string[]
-          cover_image_url?: string | null
-          is_published?: boolean
+          difficulty: string
+          estimated_time?: string | null
+          published?: boolean
           created_at?: string
           updated_at?: string
-          created_by: string
         }
         Update: {
           id?: string
           title?: string
           description?: string
+          thumbnail_url?: string | null
           category?: string
-          difficulty_level?: string
-          estimated_time_hours?: number
-          tags?: string[]
-          cover_image_url?: string | null
-          is_published?: boolean
+          difficulty?: string
+          estimated_time?: string | null
+          published?: boolean
           created_at?: string
           updated_at?: string
-          created_by?: string
         }
         Relationships: []
       }
@@ -751,12 +746,9 @@ export type Database = {
           name: string
           description: string
           category: string
-          website_url: string | null
           logo_url: string | null
-          pricing_model: string | null
-          rating: number | null
-          tags: string[]
-          is_featured: boolean
+          official_url: string | null
+          is_active: boolean
           created_at: string
           updated_at: string
         }
@@ -765,12 +757,9 @@ export type Database = {
           name: string
           description: string
           category: string
-          website_url?: string | null
           logo_url?: string | null
-          pricing_model?: string | null
-          rating?: number | null
-          tags?: string[]
-          is_featured?: boolean
+          official_url?: string | null
+          is_active?: boolean
           created_at?: string
           updated_at?: string
         }
@@ -779,12 +768,9 @@ export type Database = {
           name?: string
           description?: string
           category?: string
-          website_url?: string | null
           logo_url?: string | null
-          pricing_model?: string | null
-          rating?: number | null
-          tags?: string[]
-          is_featured?: boolean
+          official_url?: string | null
+          is_active?: boolean
           created_at?: string
           updated_at?: string
         }
@@ -822,9 +808,7 @@ export type Database = {
           description: string | null
           file_url: string
           file_type: string
-          file_size_bytes: number | null
           created_at: string
-          updated_at: string
         }
         Insert: {
           id?: string
@@ -833,9 +817,7 @@ export type Database = {
           description?: string | null
           file_url: string
           file_type: string
-          file_size_bytes?: number | null
           created_at?: string
-          updated_at?: string
         }
         Update: {
           id?: string
@@ -844,9 +826,7 @@ export type Database = {
           description?: string | null
           file_url?: string
           file_type?: string
-          file_size_bytes?: number | null
           created_at?: string
-          updated_at?: string
         }
         Relationships: []
       }
@@ -855,22 +835,22 @@ export type Database = {
           id: string
           solution_id: string
           tool_id: string
+          is_required: boolean
           created_at: string
-          updated_at: string
         }
         Insert: {
           id?: string
           solution_id: string
           tool_id: string
+          is_required?: boolean
           created_at?: string
-          updated_at?: string
         }
         Update: {
           id?: string
           solution_id?: string
           tool_id?: string
+          is_required?: boolean
           created_at?: string
-          updated_at?: string
         }
         Relationships: []
       }
@@ -1022,33 +1002,30 @@ export type Database = {
         Row: {
           id: string
           user_id: string
-          solution_id: string
-          checkpoint_id: string
-          is_completed: boolean
-          completed_at: string | null
-          notes: string | null
+          module_id: string
+          checklist_data: Json
+          completed_items: string[]
+          completion_percentage: number
           created_at: string
           updated_at: string
         }
         Insert: {
           id?: string
           user_id: string
-          solution_id: string
-          checkpoint_id: string
-          is_completed?: boolean
-          completed_at?: string | null
-          notes?: string | null
+          module_id: string
+          checklist_data: Json
+          completed_items?: string[]
+          completion_percentage?: number
           created_at?: string
           updated_at?: string
         }
         Update: {
           id?: string
           user_id?: string
-          solution_id?: string
-          checkpoint_id?: string
-          is_completed?: boolean
-          completed_at?: string | null
-          notes?: string | null
+          module_id?: string
+          checklist_data?: Json
+          completed_items?: string[]
+          completion_percentage?: number
           created_at?: string
           updated_at?: string
         }
@@ -1087,87 +1064,27 @@ export type Database = {
       quick_onboarding: {
         Row: {
           id: string
-          user_id: string | null
-          name: string | null
-          email: string | null
-          phone: string | null
-          linkedin: string | null
-          instagram: string | null
-          country: string | null
-          state: string | null
-          city: string | null
-          company_name: string | null
-          company_website: string | null
-          current_position: string | null
-          company_sector: string | null
-          company_size: string | null
-          annual_revenue: string | null
-          primary_goal: string | null
-          business_challenges: string[] | null
-          ai_knowledge_level: number | null
-          nps_score: number | null
-          weekly_availability: string | null
-          networking_interests: string[] | null
-          phone_country_code: string | null
-          is_completed: boolean | null
-          created_at: string | null
-          updated_at: string | null
+          user_id: string
+          data: Json
+          completed: boolean
+          created_at: string
+          updated_at: string
         }
         Insert: {
           id?: string
-          user_id?: string | null
-          name?: string | null
-          email?: string | null
-          phone?: string | null
-          linkedin?: string | null
-          instagram?: string | null
-          country?: string | null
-          state?: string | null
-          city?: string | null
-          company_name?: string | null
-          company_website?: string | null
-          current_position?: string | null
-          company_sector?: string | null
-          company_size?: string | null
-          annual_revenue?: string | null
-          primary_goal?: string | null
-          business_challenges?: string[] | null
-          ai_knowledge_level?: number | null
-          nps_score?: number | null
-          weekly_availability?: string | null
-          networking_interests?: string[] | null
-          phone_country_code?: string | null
-          is_completed?: boolean | null
-          created_at?: string | null
-          updated_at?: string | null
+          user_id: string
+          data: Json
+          completed?: boolean
+          created_at?: string
+          updated_at?: string
         }
         Update: {
           id?: string
-          user_id?: string | null
-          name?: string | null
-          email?: string | null
-          phone?: string | null
-          linkedin?: string | null
-          instagram?: string | null
-          country?: string | null
-          state?: string | null
-          city?: string | null
-          company_name?: string | null
-          company_website?: string | null
-          current_position?: string | null
-          company_sector?: string | null
-          company_size?: string | null
-          annual_revenue?: string | null
-          primary_goal?: string | null
-          business_challenges?: string[] | null
-          ai_knowledge_level?: number | null
-          nps_score?: number | null
-          weekly_availability?: string | null
-          networking_interests?: string[] | null
-          phone_country_code?: string | null
-          is_completed?: boolean | null
-          created_at?: string | null
-          updated_at?: string | null
+          user_id?: string
+          data?: Json
+          completed?: boolean
+          created_at?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -1177,92 +1094,111 @@ export type Database = {
           user_id: string
           data: Json
           updated_at: string
-          created_at: string
         }
         Insert: {
           id?: string
           user_id: string
           data: Json
           updated_at?: string
-          created_at?: string
         }
         Update: {
           id?: string
           user_id?: string
           data?: Json
           updated_at?: string
+        }
+        Relationships: []
+      }
+      onboarding_analytics: {
+        Row: {
+          id: string
+          user_id: string
+          event_type: string
+          step_number: number | null
+          field_name: string | null
+          error_message: string | null
+          metadata: Json | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          event_type: string
+          step_number?: number | null
+          field_name?: string | null
+          error_message?: string | null
+          metadata?: Json | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          event_type?: string
+          step_number?: number | null
+          field_name?: string | null
+          error_message?: string | null
+          metadata?: Json | null
           created_at?: string
         }
         Relationships: []
       }
+      notification_preferences: {
+        Row: {
+          id: string
+          user_id: string
+          email_enabled: boolean
+          whatsapp_enabled: boolean
+          admin_communications_inapp: boolean
+          admin_communications_email: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          email_enabled?: boolean
+          whatsapp_enabled?: boolean
+          admin_communications_inapp?: boolean
+          admin_communications_email?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          email_enabled?: boolean
+          whatsapp_enabled?: boolean
+          admin_communications_inapp?: boolean
+          admin_communications_email?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
-    Views: {}
+    Views: {
+      [_ in never]: never
+    }
     Functions: {
       audit_role_assignments: {
         Args: Record<PropertyKey, never>
-        Returns: Json
-      }
-      get_users_with_roles: {
-        Args: {
-          limit_count?: number
-          offset_count?: number
-          search_query?: string
-        }
         Returns: {
           id: string
-          email: string
-          name: string
-          avatar_url: string
-          role: string
-          role_id: string
-          user_roles: Json
-          company_name: string
-          industry: string
-          created_at: string
+          user_id: string
+          old_role: string | null
+          new_role: string | null
+          changed_by: string | null
+          changed_at: string
+          reason: string | null
         }[]
       }
-      is_admin: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
-      is_user_admin: {
-        Args: {
-          user_id?: string
-        }
-        Returns: boolean
-      }
-      can_access_course: {
-        Args: {
-          user_id: string
-          course_id: string
-        }
-        Returns: boolean
-      }
-      increment_topic_views: {
-        Args: {
-          topic_id: string
-        }
-        Returns: undefined
-      }
-      increment_topic_replies: {
-        Args: {
-          topic_id: string
-        }
-        Returns: undefined
-      }
-      create_storage_public_policy: {
-        Args: {
-          bucket_name: string
-        }
-        Returns: boolean
-      }
-      setup_learning_storage_buckets: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
     }
-    Enums: {}
-    CompositeTypes: {}
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
   }
 }
 
@@ -1345,3 +1281,4 @@ export type Enums<
   : PublicEnumNameOrOptions extends keyof Database["public"]["Enums"]
     ? Database["public"]["Enums"][PublicEnumNameOrOptions]
     : never
+

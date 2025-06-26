@@ -1,4 +1,5 @@
 
+
 import { Database } from './database.types';
 
 // Export all database types
@@ -62,6 +63,8 @@ export type Analytics = Database['public']['Tables']['analytics']['Row'];
 // Onboarding types
 export type QuickOnboarding = Database['public']['Tables']['quick_onboarding']['Row'];
 export type OnboardingSync = Database['public']['Tables']['onboarding_sync']['Row'];
+export type OnboardingAnalytics = Database['public']['Tables']['onboarding_analytics']['Row'];
+export type NotificationPreferences = Database['public']['Tables']['notification_preferences']['Row'];
 
 // Invite types (if they exist in your database)
 export type Invite = any; // Define based on your actual schema
@@ -90,3 +93,4 @@ export const isAdminRole = (profile: any): boolean => {
 export const isFormacaoRole = (profile: any): boolean => {
   return profile?.user_roles?.name === 'formacao';
 };
+
