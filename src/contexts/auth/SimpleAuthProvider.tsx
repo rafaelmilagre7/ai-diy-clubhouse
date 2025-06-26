@@ -4,7 +4,20 @@ import { User, Session } from '@supabase/supabase-js';
 import { UserProfile } from '@/lib/supabase';
 import { logger } from '@/utils/logger';
 import AuthManager from '@/services/AuthManager';
-import { AuthState } from '@/types/authTypes';
+
+// Interface alinhada com AuthManager
+interface AuthState {
+  user: User | null;
+  session: Session | null;
+  profile: UserProfile | null;
+  isLoading: boolean;
+  error: string | null;
+  isAdmin: boolean;
+  isFormacao: boolean;
+  onboardingRequired: boolean;
+  hasInviteToken: boolean;
+  inviteDetails: any | null;
+}
 
 interface SimpleAuthContextType {
   user: User | null;
@@ -25,7 +38,22 @@ interface SimpleAuthProviderProps {
 }
 
 export const SimpleAuthProvider: React.FC<SimpleAuthProviderProps> = ({ children }) => {
-  const [authState, setAuthState] = useState<AuthState>(() => AuthManager.getInstance().getState());
+  const [authState, setAuthState] = useState<AuthState>(() => {
+    const initialState = AuthManager.getInstance().getState();
+    // Garantir que todas as propriedades existem
+    return {
+      user: initialState.user,
+      session: initialState.session || null,
+      profile: initialState.profile,
+      isLoading: initialState.isLoading,
+      error: initialState.error || null,
+      isAdmin: initialState.isAdmin,
+      isFormacao: initialState.isFormacao,
+      onboardingRequired: initialState.onboardingRequired,
+      hasInviteToken: initialState.hasInviteToken,
+      inviteDetails: initialState.inviteDetails
+    };
+  });
   
   useEffect(() => {
     const authManager = AuthManager.getInstance();
@@ -46,7 +74,20 @@ export const SimpleAuthProvider: React.FC<SimpleAuthProviderProps> = ({ children
         error: newState.error,
         timestamp: new Date().toISOString()
       });
-      setAuthState(newState);
+      
+      // Garantir que todas as propriedades existem
+      setAuthState({
+        user: newState.user,
+        session: newState.session || null,
+        profile: newState.profile,
+        isLoading: newState.isLoading,
+        error: newState.error || null,
+        isAdmin: newState.isAdmin,
+        isFormacao: newState.isFormacao,
+        onboardingRequired: newState.onboardingRequired,
+        hasInviteToken: newState.hasInviteToken,
+        inviteDetails: newState.inviteDetails
+      });
     });
     
     // Initialize AuthManager
@@ -67,7 +108,19 @@ export const SimpleAuthProvider: React.FC<SimpleAuthProviderProps> = ({ children
           isLoading: currentState.isLoading,
           isAdmin: currentState.isAdmin
         });
-        setAuthState(currentState);
+        
+        setAuthState({
+          user: currentState.user,
+          session: currentState.session || null,
+          profile: currentState.profile,
+          isLoading: currentState.isLoading,
+          error: currentState.error || null,
+          isAdmin: currentState.isAdmin,
+          isFormacao: currentState.isFormacao,
+          onboardingRequired: currentState.onboardingRequired,
+          hasInviteToken: currentState.hasInviteToken,
+          inviteDetails: currentState.inviteDetails
+        });
         
       } catch (error) {
         logger.error('[SIMPLE-AUTH-PROVIDER] ❌ Erro na inicialização', error, {

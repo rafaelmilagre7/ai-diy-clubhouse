@@ -3,11 +3,14 @@ import { supabase } from '@/lib/supabase';
 import { UserProfile, getUserRoleName, isAdminRole } from '@/lib/supabase/types';
 import { InviteTokenManager } from '@/utils/inviteTokenManager';
 import { logger } from '@/utils/logger';
+import { toast } from 'sonner';
 
 interface AuthState {
   user: any | null;
+  session: any | null;
   profile: UserProfile | null;
   isLoading: boolean;
+  error: string | null;
   isAdmin: boolean;
   isFormacao: boolean;
   onboardingRequired: boolean;
@@ -26,8 +29,10 @@ class AuthManager {
   private static instance: AuthManager;
   private state: AuthState = {
     user: null,
+    session: null,
     profile: null,
     isLoading: true,
+    error: null,
     isAdmin: false,
     isFormacao: false,
     onboardingRequired: false,
@@ -56,33 +61,35 @@ class AuthManager {
       logger.info('[AUTH-MANAGER] 🚀 Inicializando AuthManager');
       
       const { data: { session } } = await supabase.auth.getSession();
-      await this.updateAuthState(session?.user || null);
+      await this.updateAuthState(session?.user || null, session);
       
       supabase.auth.onAuthStateChange(async (event, session) => {
         logger.info('[AUTH-MANAGER] 🔄 Estado de autenticação mudou', { event });
-        await this.updateAuthState(session?.user || null);
+        await this.updateAuthState(session?.user || null, session);
       });
 
       this.isInitialized = true;
       logger.info('[AUTH-MANAGER] ✅ AuthManager inicializado');
     } catch (error) {
       logger.error('[AUTH-MANAGER] ❌ Erro na inicialização', error);
-      this.setState({ isLoading: false });
+      this.setState({ isLoading: false, error: (error as Error).message });
     }
   }
 
-  private async updateAuthState(user: any) {
-    this.setState({ isLoading: true });
+  private async updateAuthState(user: any, session: any = null) {
+    this.setState({ isLoading: true, error: null });
 
     try {
       if (!user) {
         this.setState({
           user: null,
+          session: null,
           profile: null,
           isAdmin: false,
           isFormacao: false,
           onboardingRequired: false,
-          isLoading: false
+          isLoading: false,
+          error: null
         });
         return;
       }
@@ -97,11 +104,13 @@ class AuthManager {
 
       this.setState({
         user,
+        session,
         profile,
         isAdmin,
         isFormacao,
         onboardingRequired,
-        isLoading: false
+        isLoading: false,
+        error: null
       });
 
       logger.info('[AUTH-MANAGER] 📊 Estado atualizado', {
@@ -114,7 +123,7 @@ class AuthManager {
 
     } catch (error) {
       logger.error('[AUTH-MANAGER] ❌ Erro ao atualizar estado', error);
-      this.setState({ isLoading: false });
+      this.setState({ isLoading: false, error: (error as Error).message });
     }
   }
 
@@ -170,6 +179,68 @@ class AuthManager {
     return null;
   }
 
+  /**
+   * NOVO: Método signIn
+   */
+  async signIn(email: string, password: string): Promise<{ error?: Error | null }> {
+    try {
+      this.setState({ isLoading: true, error: null });
+      
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
+
+      if (error) {
+        logger.error('[AUTH-MANAGER] Erro no login:', error);
+        toast.error('Erro no login: ' + error.message);
+        this.setState({ isLoading: false, error: error.message });
+        return { error };
+      }
+
+      if (data.user) {
+        logger.info('[AUTH-MANAGER] Login realizado:', data.user.email);
+        toast.success('Login realizado com sucesso!');
+      }
+
+      return { error: null };
+    } catch (err) {
+      const error = err instanceof Error ? err : new Error('Erro inesperado');
+      this.setState({ isLoading: false, error: error.message });
+      toast.error('Erro inesperado: ' + error.message);
+      return { error };
+    }
+  }
+
+  /**
+   * NOVO: Método signOut
+   */
+  async signOut(): Promise<{ success: boolean; error?: Error | null }> {
+    try {
+      this.setState({ isLoading: true, error: null });
+      
+      // Limpar token no logout
+      InviteTokenManager.clearTokenOnLogout();
+      
+      const { error } = await supabase.auth.signOut();
+      
+      if (error) {
+        logger.error('[AUTH-MANAGER] Erro no logout:', error);
+        toast.error('Erro ao fazer logout: ' + error.message);
+        this.setState({ isLoading: false, error: error.message });
+        return { success: false, error };
+      }
+
+      logger.info('[AUTH-MANAGER] Logout realizado');
+      toast.success('Logout realizado com sucesso!');
+      return { success: true, error: null };
+    } catch (err) {
+      const error = err instanceof Error ? err : new Error('Erro inesperado');
+      this.setState({ isLoading: false, error: error.message });
+      return { success: false, error };
+    }
+  }
+
   getRedirectPath(): string {
     const { user, profile, isAdmin, onboardingRequired } = this.state;
 
@@ -200,7 +271,9 @@ class AuthManager {
 
   on(event: 'stateChanged', listener: (state: AuthState) => void) {
     this.listeners.add(listener);
-    return () => this.listeners.delete(listener);
+    return () => {
+      this.listeners.delete(listener);
+    };
   }
 
   off(listener: (state: AuthState) => void) {

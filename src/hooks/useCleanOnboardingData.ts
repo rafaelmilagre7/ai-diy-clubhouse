@@ -38,6 +38,12 @@ export const useCleanOnboardingData = () => {
       });
     });
 
+    // Initialize if needed
+    if (!authManager.isInitialized) {
+      logger.info('[CLEAN-ONBOARDING-DATA] 🚀 Forçando inicialização do AuthManager');
+      authManager.initialize();
+    }
+
     return unsubscribe;
   }, [authManager]);
 
