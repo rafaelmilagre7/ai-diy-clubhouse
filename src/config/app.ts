@@ -133,6 +133,11 @@ class SupabaseConfigManager implements SupabaseConfig {
     }
     return 'https://app.viverdeia.ai'; // Fallback para produção
   }
+
+  // NOVO: Método getAppUrl para compatibilidade
+  public getAppUrl(): string {
+    return this.getAppDomain();
+  }
 }
 
 export const SUPABASE_CONFIG = new SupabaseConfigManager();
@@ -140,6 +145,7 @@ export const SUPABASE_CONFIG = new SupabaseConfigManager();
 // APP_CONFIG para compatibilidade com código existente
 export const APP_CONFIG = {
   getAppDomain: () => SUPABASE_CONFIG.getAppDomain(),
+  getAppUrl: () => SUPABASE_CONFIG.getAppUrl(), // NOVO: Adicionado método getAppUrl
   supabaseUrl: SUPABASE_CONFIG.url,
   supabaseAnonKey: SUPABASE_CONFIG.anonKey,
   isLovableEnvironment: () => SUPABASE_CONFIG.isLovableEnvironment(),

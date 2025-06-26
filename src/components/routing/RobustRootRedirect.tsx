@@ -1,200 +1,129 @@
 
 import { Navigate } from "react-router-dom";
-import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
+import { useSimpleAuth } from "@/contexts/auth/SimpleAuthProvider";
+import { useOnboardingRequired } from "@/hooks/useOnboardingRequired";  
 import LoadingScreen from "@/components/common/LoadingScreen";
 import AuthManager from "@/services/AuthManager";
+import { useLoadingTimeoutEnhanced } from "@/hooks/useLoadingTimeoutEnhanced";
 import { logger } from "@/utils/logger";
+import { useEffect } from "react";
 
 const RobustRootRedirect = () => {
-  const [authState, setAuthState] = useState(() => AuthManager.getInstance().getState());
-  const [emergencyMode, setEmergencyMode] = useState(false);
+  const { user, profile, isLoading: authLoading } = useSimpleAuth();
+  const { isRequired: onboardingRequired, isLoading: onboardingLoading } = useOnboardingRequired();
+  
+  const totalLoading = authLoading || onboardingLoading;
+  
+  // Enhanced loading com timeout robusto
+  const { hasTimedOut, retry } = useLoadingTimeoutEnhanced({
+    isLoading: totalLoading,
+    timeoutMs: 5000, // 5 segundos
+    context: 'root_redirect',
+    onTimeout: () => {
+      logger.warn('[ROBUST-ROOT-REDIRECT] ⏰ Timeout no carregamento inicial', {
+        component: 'RobustRootRedirect',
+        action: 'loading_timeout',
+        authLoading,
+        onboardingLoading,
+        totalLoading
+      });
+    }
+  });
 
+  // CORRIGIDO: Usar apenas evento "stateChanged" suportado
   useEffect(() => {
     const authManager = AuthManager.getInstance();
     
-    logger.info('[ROOT-REDIRECT] 🚀 Inicializando redirecionamento robusto', {
-      component: 'RobustRootRedirect',
-      action: 'initialize',
-      initialState: {
+    const unsubscribe = authManager.on('stateChanged', (authState) => {
+      logger.info('[ROBUST-ROOT-REDIRECT] 📡 Estado AuthManager atualizado', {
+        component: 'RobustRootRedirect',
+        action: 'auth_state_updated',
         hasUser: !!authState.user,
         isLoading: authState.isLoading,
-        error: authState.error
-      }
-    });
-
-    // Subscribe to auth state changes
-    const unsubscribe = authManager.on('stateChanged', (newState) => {
-      logger.info('[ROOT-REDIRECT] 📡 Estado atualizado via AuthManager', {
-        component: 'RobustRootRedirect',
-        action: 'state_updated',
-        hasUser: !!newState.user,
-        isAdmin: newState.isAdmin,
-        isLoading: newState.isLoading,
-        onboardingRequired: newState.onboardingRequired,
-        error: newState.error
+        onboardingRequired: authState.onboardingRequired
       });
-      setAuthState(newState);
     });
 
-    // Handle timeout - emergência apenas após timeout do AuthManager
-    const timeoutUnsubscribe = authManager.on('timeout', () => {
-      logger.warn('[ROOT-REDIRECT] ⏰ Timeout do AuthManager detectado', {
-        component: 'RobustRootRedirect',
-        action: 'auth_manager_timeout'
-      });
-      setTimeout(() => {
-        if (authState.isLoading) {
-          logger.error('[ROOT-REDIRECT] 🚨 Ativando modo emergência após timeout', {
-            component: 'RobustRootRedirect',
-            action: 'emergency_mode_activated'
-          });
-          setEmergencyMode(true);
-        }
-      }, 2000);
-    });
-
-    // Force initialization if not already initialized
-    const initializeIfNeeded = async () => {
-      if (!authManager.isInitialized()) {
-        logger.info('[ROOT-REDIRECT] 🔄 Inicializando AuthManager', {
-          component: 'RobustRootRedirect',
-          action: 'initialize_auth_manager'
-        });
-        try {
-          await authManager.initialize();
-          setAuthState(authManager.getState());
-          
-          logger.info('[ROOT-REDIRECT] ✅ AuthManager inicializado com sucesso', {
-            component: 'RobustRootRedirect',
-            action: 'auth_manager_initialized',
-            finalState: {
-              hasUser: !!authManager.getState().user,
-              isLoading: authManager.getState().isLoading
-            }
-          });
-          
-        } catch (error) {
-          logger.error('[ROOT-REDIRECT] ❌ Erro na inicialização do AuthManager', {
-            component: 'RobustRootRedirect',
-            action: 'initialize_error',
-            error: error instanceof Error ? error.message : 'Erro desconhecido'
-          });
-          setAuthState(prev => ({ ...prev, isLoading: false, error: (error as Error).message }));
-        }
-      } else {
-        // Se já inicializado, garantir que temos o estado atual
-        const currentState = authManager.getState();
-        logger.info('[ROOT-REDIRECT] ℹ️ AuthManager já inicializado', {
-          component: 'RobustRootRedirect',
-          action: 'already_initialized',
-          currentState: {
-            hasUser: !!currentState.user,
-            isLoading: currentState.isLoading
-          }
-        });
-        setAuthState(currentState);
-      }
-    };
-
-    initializeIfNeeded();
-
-    return () => {
-      unsubscribe();
-      timeoutUnsubscribe();
-    };
+    return unsubscribe;
   }, []);
 
-  // MODO DE EMERGÊNCIA (apenas após timeout + delay)
-  if (emergencyMode) {
-    logger.error('[ROOT-REDIRECT] 🚨 Renderizando modo de emergência', {
-      component: 'RobustRootRedirect',
-      action: 'render_emergency_mode'
-    });
-
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-[#0F111A] to-[#151823] flex items-center justify-center">
-        <div className="text-center text-white p-8 max-w-lg">
-          <h2 className="text-2xl font-bold mb-4">🚨 Modo de Emergência</h2>
-          <p className="text-gray-300 mb-6">
-            O sistema de autenticação não conseguiu inicializar. Tente uma dessas opções:
-          </p>
-          
-          <div className="space-y-3">
-            <Button
-              onClick={() => window.location.href = '/login'}
-              className="w-full bg-[#0ABAB5] text-white hover:bg-[#089a96]"
-            >
-              Ir para Login
-            </Button>
-            
-            <Button
-              onClick={() => window.location.reload()}
-              variant="ghost"
-              className="w-full"
-            >
-              Recarregar Página
-            </Button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Erro de auth persistente
-  if (authState.error && !authState.isLoading) {
-    logger.error('[ROOT-REDIRECT] ❌ Erro persistente detectado', {
-      component: 'RobustRootRedirect',
-      action: 'persistent_error',
-      error: authState.error
-    });
-
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-[#0F111A] to-[#151823] flex items-center justify-center">
-        <div className="text-center text-white p-8">
-          <h2 className="text-xl font-bold mb-4">❌ Erro de Configuração</h2>
-          <p className="text-gray-300 mb-4">{authState.error}</p>
-          <div className="space-y-3">
-            <Button
-              onClick={() => window.location.href = '/login'}
-              className="bg-[#0ABAB5] text-white px-6 py-2 rounded-lg hover:bg-[#089a96] transition-colors"
-            >
-              Ir para Login
-            </Button>
-            <Button
-              onClick={() => window.location.reload()}
-              variant="ghost"
-              className="w-full"
-            >
-              Tentar Novamente
-            </Button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Loading - com timeout visual
-  if (authState.isLoading) {
-    logger.info('[ROOT-REDIRECT] ⏳ Renderizando estado de carregamento', {
-      component: 'RobustRootRedirect',
-      action: 'render_loading'
-    });
-    return <LoadingScreen message="Inicializando aplicação..." />;
-  }
-
-  // LÓGICA DE REDIRECIONAMENTO usando AuthManager
-  const redirectPath = AuthManager.getInstance().getRedirectPath();
-  
-  logger.info('[ROOT-REDIRECT] 🎯 Redirecionamento determinado', {
-    component: 'RobustRootRedirect',
-    action: 'redirect_determined',
-    path: redirectPath,
-    hasUser: !!authState.user,
-    isAdmin: authState.isAdmin,
-    onboardingRequired: authState.onboardingRequired
+  logger.info("[ROBUST-ROOT-REDIRECT] 📊 Estado atual:", {
+    hasUser: !!user,
+    hasProfile: !!profile,
+    authLoading,
+    onboardingLoading,
+    onboardingRequired,
+    totalLoading,
+    hasTimedOut
   });
-
+  
+  // Tratamento de timeout
+  if (hasTimedOut) {
+    logger.error('[ROBUST-ROOT-REDIRECT] 🚨 TIMEOUT CRÍTICO - Forçando recuperação', {
+      component: 'RobustRootRedirect',
+      action: 'critical_timeout'
+    });
+    
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-background to-[#151823] flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <div className="text-red-400 text-xl font-semibold">
+            ⚠️ Tempo limite atingido
+          </div>
+          <div className="text-neutral-300">
+            A aplicação está demorando para carregar
+          </div>
+          <div className="space-y-2">
+            <button 
+              onClick={retry}
+              className="bg-viverblue hover:bg-viverblue/80 text-white px-6 py-3 rounded-lg font-medium"
+            >
+              🔄 Tentar Novamente
+            </button>
+            <div className="text-sm text-neutral-400">
+              ou{" "}
+              <button 
+                onClick={() => window.location.href = '/login'}
+                className="text-viverblue hover:underline"
+              >
+                ir para login
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+  
+  // Loading normal - aguardar sem complexidade
+  if (totalLoading) {
+    return <LoadingScreen message="Verificando seu acesso..." />;
+  }
+  
+  // CORRIGIDO: Usar método getRedirectPath() que existe no AuthManager
+  if (!user) {
+    logger.info("[ROBUST-ROOT-REDIRECT] Sem usuário -> login");
+    return <Navigate to="/login" replace />;
+  }
+  
+  // Aguardar perfil se necessário
+  if (user && !profile) {
+    logger.info("[ROBUST-ROOT-REDIRECT] Aguardando perfil...");
+    return <LoadingScreen message="Carregando perfil..." />;
+  }
+  
+  // CORRIGIDO: Usar AuthManager.getRedirectPath() em vez de método inexistente
+  const authManager = AuthManager.getInstance();
+  const redirectPath = authManager.getRedirectPath();
+  
+  logger.info("[ROBUST-ROOT-REDIRECT] Redirecionamento calculado", {
+    redirectPath,
+    hasUser: !!user,
+    hasProfile: !!profile,
+    onboardingRequired,
+    roleName: profile?.user_roles?.name
+  });
+  
   return <Navigate to={redirectPath} replace />;
 };
 
