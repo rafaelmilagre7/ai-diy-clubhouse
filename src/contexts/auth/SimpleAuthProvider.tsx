@@ -51,8 +51,8 @@ export const SimpleAuthProvider: React.FC<SimpleAuthProviderProps> = ({ children
         return;
       }
 
-      // Cast the data to UserProfile type
-      setProfile(data as UserProfile);
+      // Cast the data to UserProfile type with proper type conversion
+      setProfile(data as unknown as UserProfile);
     } catch (err) {
       console.error('Erro inesperado ao carregar perfil:', err);
     }
@@ -170,3 +170,4 @@ export const useSimpleAuth = (): SimpleAuthContextType => {
 };
 
 export const useAuth = useSimpleAuth;
+
