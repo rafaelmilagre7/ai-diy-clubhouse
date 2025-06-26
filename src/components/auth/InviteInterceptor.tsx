@@ -18,7 +18,7 @@ const InviteInterceptor = () => {
   const [isProcessing, setIsProcessing] = useState(false);
 
   useEffect(() => {
-    logger.info('[INVITE-INTERCEPTOR] 🎯 Iniciando interceptação:', {
+    logger.info('[INVITE-INTERCEPTOR] 🎯 Iniciando interceptação', {
       hasToken: !!token,
       hasUser: !!user,
       userEmail: user?.email,
@@ -49,11 +49,11 @@ const InviteInterceptor = () => {
         });
 
         if (redirectPath) {
-          logger.info('[INVITE-INTERCEPTOR] 🚀 Redirecionando para:', redirectPath);
+          logger.info('[INVITE-INTERCEPTOR] 🚀 Redirecionando para', { redirectPath });
           navigate(redirectPath, { replace: true });
         }
       } catch (error) {
-        logger.error('[INVITE-INTERCEPTOR] ❌ Erro no processamento:', error);
+        logger.error('[INVITE-INTERCEPTOR] ❌ Erro no processamento', error);
       } finally {
         setIsProcessing(false);
       }
@@ -80,7 +80,7 @@ const InviteInterceptor = () => {
 
   // Erro no convite
   if (inviteError || !inviteDetails) {
-    logger.error('[INVITE-INTERCEPTOR] ❌ Erro nos detalhes do convite:', inviteError);
+    logger.error('[INVITE-INTERCEPTOR] ❌ Erro nos detalhes do convite', { error: inviteError });
     return (
       <InviteErrorScreen 
         error={inviteError || 'Convite não encontrado ou expirado'}
@@ -91,7 +91,7 @@ const InviteInterceptor = () => {
 
   // Usuário autenticado com e-mail diferente
   if (user && user.email !== inviteDetails.email) {
-    logger.warn('[INVITE-INTERCEPTOR] ⚠️ E-mail incorreto:', {
+    logger.warn('[INVITE-INTERCEPTOR] ⚠️ E-mail incorreto', {
       userEmail: user.email,
       inviteEmail: inviteDetails.email
     });
