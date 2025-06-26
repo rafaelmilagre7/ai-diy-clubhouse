@@ -21,10 +21,10 @@ const RootRedirect = () => {
     return <LoadingScreen message="Verificando seu acesso..." />;
   }
   
-  // Sem usuário = login
+  // CORRIGIDO: Sem usuário = login (NOVO PADRÃO: /login)
   if (!user) {
     console.log("[ROOT-REDIRECT] Sem usuário -> login");
-    return <Navigate to="/auth" replace />;
+    return <Navigate to="/login" replace />;
   }
   
   // Sem perfil = aguardar (mas sem complexidade)

@@ -74,7 +74,8 @@ const EnhancedLoadingScreen: React.FC<EnhancedLoadingScreenProps> = ({
     if (onForceExit) {
       onForceExit();
     } else {
-      navigate('/auth', { replace: true });
+      // CORRIGIDO: Redirecionar para /login (NOVO PADRÃO)
+      navigate('/login', { replace: true });
     }
   };
 

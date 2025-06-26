@@ -10,7 +10,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { ArrowLeft } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
-import { useAuth } from '@/contexts/auth';
+import { useSimpleAuth } from '@/contexts/auth/SimpleAuthProvider';
 import { useSuggestionCreation } from '@/hooks/suggestions/useSuggestionCreation';
 import { useCategories } from '@/hooks/suggestions/useCategories';
 
@@ -22,7 +22,8 @@ type FormValues = {
 
 const NewSuggestionPage = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  // CORRIGIDO: Usar useSimpleAuth em vez de useAuth
+  const { user } = useSimpleAuth();
   const { isSubmitting, submitSuggestion } = useSuggestionCreation();
   const { categories: categoriesList } = useCategories();
   
@@ -70,7 +71,8 @@ const NewSuggestionPage = () => {
             </CardDescription>
           </CardHeader>
           <CardFooter>
-            <Button onClick={() => navigate('/auth')}>
+            {/* CORRIGIDO: Redirecionar para /login (NOVO PADRÃO) */}
+            <Button onClick={() => navigate('/login')}>
               Fazer Login
             </Button>
           </CardFooter>
