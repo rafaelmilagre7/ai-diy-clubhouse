@@ -52,7 +52,8 @@ export const useLoadingTimeoutEnhanced = ({
 
       // Timeout OTIMIZADO
       timeoutRef.current = window.setTimeout(() => {
-        logger.warn('[LOADING-TIMEOUT-ENHANCED] ⏰ Timeout após tempo limite', {
+        logger.warn({
+          message: 'Timeout após tempo limite',
           component: 'useLoadingTimeoutEnhanced',
           action: 'timeout',
           context,
@@ -68,8 +69,10 @@ export const useLoadingTimeoutEnhanced = ({
         
         // Para contextos de auth, usar AuthManager
         if (context === 'auth' || context === 'onboarding') {
+          // CORRIGIDO: Usar método público isInitialized()
           if (!authManager.isInitialized()) {
-            logger.warn('[LOADING-TIMEOUT-ENHANCED] 🔄 Forçando inicialização AuthManager', {
+            logger.warn({
+              message: 'Forçando inicialização AuthManager',
               component: 'useLoadingTimeoutEnhanced',
               action: 'force_auth_manager_init',
               context
@@ -93,7 +96,8 @@ export const useLoadingTimeoutEnhanced = ({
       const finalDuration = Date.now() - startTimeRef.current;
       setLoadingDuration(finalDuration);
       
-      logger.info('[LOADING-TIMEOUT-ENHANCED] ✅ Loading concluído', {
+      logger.info({
+        message: 'Loading concluído',
         component: 'useLoadingTimeoutEnhanced',
         action: 'loading_complete',
         context,
@@ -108,7 +112,8 @@ export const useLoadingTimeoutEnhanced = ({
   }, [isLoading, timeoutMs, context, onTimeout, authManager, isLoadingTooLong]);
 
   const retry = () => {
-    logger.info('[LOADING-TIMEOUT-ENHANCED] 🔄 Retry solicitado', {
+    logger.info({
+      message: 'Retry solicitado',
       component: 'useLoadingTimeoutEnhanced',
       action: 'retry',
       context
@@ -121,7 +126,8 @@ export const useLoadingTimeoutEnhanced = ({
     
     // Para contextos de auth, reinicializar AuthManager
     if (context === 'auth' || context === 'onboarding') {
-      logger.info('[LOADING-TIMEOUT-ENHANCED] 🔄 Reinicializando AuthManager', {
+      logger.info({
+        message: 'Reinicializando AuthManager',
         component: 'useLoadingTimeoutEnhanced',
         action: 'reinitialize_auth_manager',
         context

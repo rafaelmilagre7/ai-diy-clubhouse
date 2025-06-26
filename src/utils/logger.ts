@@ -29,7 +29,7 @@ class Logger {
     return levels[level] >= levels[this.logLevel];
   }
 
-  private log(level: LogLevel, message: string, context?: LogContext) {
+  private log(level: LogLevel, message: string | LogContext, context?: LogContext) {
     if (!this.shouldLog(level)) return;
 
     // Em produção, não fazemos log de `debug` e `info` no console.
@@ -37,7 +37,22 @@ class Logger {
       return;
     }
 
-    const sanitizedContext = context ? sanitizeData(context) : {};
+    let logMessage: string;
+    let logContext: LogContext = {};
+
+    // Se message é um objeto, extrair a mensagem e contexto
+    if (typeof message === 'object' && message !== null) {
+      logMessage = message.message || 'Log estruturado';
+      logContext = { ...message };
+      delete logContext.message; // Remove message do contexto para evitar duplicação
+    } else {
+      logMessage = message as string;
+    }
+
+    // Combinar contextos se ambos existirem
+    const finalContext = context ? { ...logContext, ...context } : logContext;
+    const sanitizedContext = Object.keys(finalContext).length > 0 ? sanitizeData(finalContext) : {};
+    
     const timestamp = new Date().toISOString();
     
     // Fallback para console.log se o método específico não existir
@@ -51,22 +66,26 @@ class Logger {
         security: '🔒 [SECURITY]'
     };
 
-    logMethod(`${levelIcons[level]} ${message} @ ${timestamp}`, sanitizedContext);
+    if (Object.keys(sanitizedContext).length > 0) {
+      logMethod(`${levelIcons[level]} ${logMessage} @ ${timestamp}`, sanitizedContext);
+    } else {
+      logMethod(`${levelIcons[level]} ${logMessage} @ ${timestamp}`);
+    }
   }
 
-  debug(message: string, context?: LogContext) {
+  debug(message: string | LogContext, context?: LogContext) {
     this.log('debug', message, context);
   }
 
-  info(message: string, context?: LogContext) {
+  info(message: string | LogContext, context?: LogContext) {
     this.log('info', message, context);
   }
 
-  warn(message: string, context?: LogContext) {
+  warn(message: string | LogContext, context?: LogContext) {
     this.log('warn', message, context);
   }
 
-  error(message: string, error?: any, context?: LogContext) {
+  error(message: string | LogContext, error?: any, context?: LogContext) {
       const errorContext = {
           ...context,
           error: error ? { message: error.message, stack: error.stack } : undefined
@@ -74,7 +93,7 @@ class Logger {
       this.log('error', message, errorContext);
   }
   
-  security(message: string, context?: LogContext) {
+  security(message: string | LogContext, context?: LogContext) {
       this.log('security', message, context);
   }
 }
