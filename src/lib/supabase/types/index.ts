@@ -22,6 +22,7 @@ export type BenefitAccessControl = Database['public']['Tables']['benefit_access_
 export type ForumTopic = Database['public']['Tables']['forum_topics']['Row'];
 export type ForumCategory = Database['public']['Tables']['forum_categories']['Row'];
 export type ForumPost = Database['public']['Tables']['forum_posts']['Row'];
+export type ForumReaction = Database['public']['Tables']['forum_reactions']['Row'];
 export type AuditLog = Database['public']['Tables']['audit_logs']['Row'];
 export type Event = Database['public']['Tables']['events']['Row'];
 
@@ -32,7 +33,7 @@ export type UserProfile = Database['public']['Tables']['profiles']['Row'] & {
     name: string;
     description?: string;
     permissions?: any;
-    is_system?: boolean;
+    is_system?: boolean;    
   } | null;
 };
 

@@ -61,54 +61,54 @@ export type Database = {
       learning_lessons: {
         Row: {
           id: string
+          module_id: string
           title: string
           description: string
-          content: Json
-          module_id: string
           order_index: number
+          content: Json
           published: boolean
+          cover_image_url: string
+          difficulty_level: string
+          estimated_time_minutes: number
+          ai_assistant_enabled: boolean
+          ai_assistant_id: string
+          ai_assistant_prompt: string
           created_at: string
           updated_at: string
-          estimated_time_minutes: number
-          difficulty_level: string
-          ai_assistant_enabled: boolean
-          ai_assistant_prompt: string
-          ai_assistant_id: string
-          cover_image_url: string
         }
         Insert: {
           id?: string
+          module_id: string
           title: string
           description?: string
-          content?: Json
-          module_id: string
           order_index?: number
+          content?: Json
           published?: boolean
+          cover_image_url?: string
+          difficulty_level?: string
+          estimated_time_minutes?: number
+          ai_assistant_enabled?: boolean
+          ai_assistant_id?: string
+          ai_assistant_prompt?: string
           created_at?: string
           updated_at?: string
-          estimated_time_minutes?: number
-          difficulty_level?: string
-          ai_assistant_enabled?: boolean
-          ai_assistant_prompt?: string
-          ai_assistant_id?: string
-          cover_image_url?: string
         }
         Update: {
           id?: string
+          module_id?: string
           title?: string
           description?: string
-          content?: Json
-          module_id?: string
           order_index?: number
+          content?: Json
           published?: boolean
+          cover_image_url?: string
+          difficulty_level?: string
+          estimated_time_minutes?: number
+          ai_assistant_enabled?: boolean
+          ai_assistant_id?: string
+          ai_assistant_prompt?: string
           created_at?: string
           updated_at?: string
-          estimated_time_minutes?: number
-          difficulty_level?: string
-          ai_assistant_enabled?: boolean
-          ai_assistant_prompt?: string
-          ai_assistant_id?: string
-          cover_image_url?: string
         }
         Relationships: []
       }
@@ -121,13 +121,13 @@ export type Database = {
           url: string
           video_type: string
           video_id: string
-          thumbnail_url: string
-          duration_seconds: number
-          order_index: number
-          created_at: string
           video_file_path: string
           video_file_name: string
           file_size_bytes: number
+          duration_seconds: number
+          thumbnail_url: string
+          order_index: number
+          created_at: string
         }
         Insert: {
           id?: string
@@ -137,13 +137,13 @@ export type Database = {
           url: string
           video_type?: string
           video_id?: string
-          thumbnail_url?: string
-          duration_seconds?: number
-          order_index?: number
-          created_at?: string
           video_file_path?: string
           video_file_name?: string
           file_size_bytes?: number
+          duration_seconds?: number
+          thumbnail_url?: string
+          order_index?: number
+          created_at?: string
         }
         Update: {
           id?: string
@@ -153,49 +153,49 @@ export type Database = {
           url?: string
           video_type?: string
           video_id?: string
-          thumbnail_url?: string
-          duration_seconds?: number
-          order_index?: number
-          created_at?: string
           video_file_path?: string
           video_file_name?: string
           file_size_bytes?: number
+          duration_seconds?: number
+          thumbnail_url?: string
+          order_index?: number
+          created_at?: string
         }
         Relationships: []
       }
       learning_modules: {
         Row: {
           id: string
+          course_id: string
           title: string
           description: string
-          course_id: string
           order_index: number
           published: boolean
+          cover_image_url: string
           created_at: string
           updated_at: string
-          cover_image_url: string
         }
         Insert: {
           id?: string
+          course_id: string
           title: string
           description?: string
-          course_id: string
           order_index?: number
           published?: boolean
+          cover_image_url?: string
           created_at?: string
           updated_at?: string
-          cover_image_url?: string
         }
         Update: {
           id?: string
+          course_id?: string
           title?: string
           description?: string
-          course_id?: string
           order_index?: number
           published?: boolean
+          cover_image_url?: string
           created_at?: string
           updated_at?: string
-          cover_image_url?: string
         }
         Relationships: []
       }
@@ -283,34 +283,34 @@ export type Database = {
       learning_resources: {
         Row: {
           id: string
+          lesson_id: string
           name: string
           description: string
           file_url: string
           file_type: string
           file_size_bytes: number
-          lesson_id: string
           order_index: number
           created_at: string
         }
         Insert: {
           id?: string
+          lesson_id?: string
           name: string
           description?: string
           file_url: string
           file_type?: string
           file_size_bytes?: number
-          lesson_id?: string
           order_index?: number
           created_at?: string
         }
         Update: {
           id?: string
+          lesson_id?: string
           name?: string
           description?: string
           file_url?: string
           file_type?: string
           file_size_bytes?: number
-          lesson_id?: string
           order_index?: number
           created_at?: string
         }
@@ -322,58 +322,52 @@ export type Database = {
           title: string
           description: string
           category: string
-          difficulty: string
+          thumbnail_url: string
           estimated_time_minutes: number
-          published: boolean
+          difficulty_level: string
+          tags: string[]
           created_at: string
           updated_at: string
+          published: boolean
           created_by: string
-          thumbnail_url: string
-          video_url: string
-          tags: string[]
-          metrics: Json
         }
         Insert: {
           id?: string
           title: string
           description?: string
           category: string
-          difficulty?: string
+          thumbnail_url?: string
           estimated_time_minutes?: number
-          published?: boolean
+          difficulty_level?: string
+          tags?: string[]
           created_at?: string
           updated_at?: string
+          published?: boolean
           created_by?: string
-          thumbnail_url?: string
-          video_url?: string
-          tags?: string[]
-          metrics?: Json
         }
         Update: {
           id?: string
           title?: string
           description?: string
           category?: string
-          difficulty?: string
+          thumbnail_url?: string
           estimated_time_minutes?: number
-          published?: boolean
+          difficulty_level?: string
+          tags?: string[]
           created_at?: string
           updated_at?: string
+          published?: boolean
           created_by?: string
-          thumbnail_url?: string
-          video_url?: string
-          tags?: string[]
-          metrics?: Json
         }
         Relationships: []
       }
       modules: {
         Row: {
           id: string
+          solution_id: string
           title: string
           type: string
           content: Json
-          solution_id: string
           module_order: number
           estimated_time_minutes: number
           metrics: Json
@@ -383,10 +377,10 @@ export type Database = {
         }
         Insert: {
           id?: string
+          solution_id: string
           title: string
           type: string
-          content: Json
-          solution_id: string
+          content?: Json
           module_order: number
           estimated_time_minutes?: number
           metrics?: Json
@@ -396,10 +390,10 @@ export type Database = {
         }
         Update: {
           id?: string
+          solution_id?: string
           title?: string
           type?: string
           content?: Json
-          solution_id?: string
           module_order?: number
           estimated_time_minutes?: number
           metrics?: Json
@@ -415,8 +409,9 @@ export type Database = {
           user_id: string
           solution_id: string
           module_id: string
-          progress_percentage: number
           is_completed: boolean
+          progress_data: Json
+          started_at: string
           completed_at: string
           created_at: string
           updated_at: string
@@ -426,8 +421,9 @@ export type Database = {
           user_id: string
           solution_id: string
           module_id?: string
-          progress_percentage?: number
           is_completed?: boolean
+          progress_data?: Json
+          started_at?: string
           completed_at?: string
           created_at?: string
           updated_at?: string
@@ -437,8 +433,9 @@ export type Database = {
           user_id?: string
           solution_id?: string
           module_id?: string
-          progress_percentage?: number
           is_completed?: boolean
+          progress_data?: Json
+          started_at?: string
           completed_at?: string
           created_at?: string
           updated_at?: string
@@ -454,8 +451,8 @@ export type Database = {
         }
         Insert: {
           id?: string
-          course_id: string
-          role_id: string
+          course_id?: string
+          role_id?: string
           created_at?: string
         }
         Update: {
@@ -504,6 +501,7 @@ export type Database = {
           description: string
           category: string
           created_at: string
+          updated_at: string
         }
         Insert: {
           id?: string
@@ -512,6 +510,7 @@ export type Database = {
           description?: string
           category?: string
           created_at?: string
+          updated_at?: string
         }
         Update: {
           id?: string
@@ -520,6 +519,7 @@ export type Database = {
           description?: string
           category?: string
           created_at?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -554,7 +554,7 @@ export type Database = {
         }
         Insert: {
           id?: string
-          solution_id: string
+          solution_id?: string
           description: string
           checkpoint_order: number
           created_at?: string
@@ -576,9 +576,8 @@ export type Database = {
           url: string
           type: string
           format: string
-          metadata: Json
+          metadata: string
           size: number
-          module_id: string
           created_at: string
           updated_at: string
         }
@@ -587,11 +586,10 @@ export type Database = {
           solution_id: string
           name: string
           url: string
-          type: string
+          type?: string
           format?: string
-          metadata?: Json
+          metadata?: string
           size?: number
-          module_id?: string
           created_at?: string
           updated_at?: string
         }
@@ -602,9 +600,8 @@ export type Database = {
           url?: string
           type?: string
           format?: string
-          metadata?: Json
+          metadata?: string
           size?: number
-          module_id?: string
           created_at?: string
           updated_at?: string
         }
@@ -616,48 +613,42 @@ export type Database = {
           name: string
           description: string
           category: string
-          url: string
           logo_url: string
+          website_url: string
+          tutorial_video_url: string
+          pricing_model: string
+          rating: number
           tags: string[]
-          is_featured: boolean
           created_at: string
           updated_at: string
-          benefit_title: string
-          benefit_description: string
-          benefit_link: string
-          benefit_active: boolean
         }
         Insert: {
           id?: string
           name: string
           description?: string
-          category: string
-          url: string
+          category?: string
           logo_url?: string
+          website_url?: string
+          tutorial_video_url?: string
+          pricing_model?: string
+          rating?: number
           tags?: string[]
-          is_featured?: boolean
           created_at?: string
           updated_at?: string
-          benefit_title?: string
-          benefit_description?: string
-          benefit_link?: string
-          benefit_active?: boolean
         }
         Update: {
           id?: string
           name?: string
           description?: string
           category?: string
-          url?: string
           logo_url?: string
+          website_url?: string
+          tutorial_video_url?: string
+          pricing_model?: string
+          rating?: number
           tags?: string[]
-          is_featured?: boolean
           created_at?: string
           updated_at?: string
-          benefit_title?: string
-          benefit_description?: string
-          benefit_link?: string
-          benefit_active?: boolean
         }
         Relationships: []
       }
@@ -685,48 +676,48 @@ export type Database = {
       forum_topics: {
         Row: {
           id: string
+          category_id: string
+          user_id: string
           title: string
           content: string
-          user_id: string
-          category_id: string
           is_pinned: boolean
           is_locked: boolean
           is_solved: boolean
           view_count: number
           reply_count: number
+          last_activity_at: string
           created_at: string
           updated_at: string
-          last_activity_at: string
         }
         Insert: {
           id?: string
+          category_id: string
+          user_id: string
           title: string
           content: string
-          user_id: string
-          category_id: string
           is_pinned?: boolean
           is_locked?: boolean
           is_solved?: boolean
           view_count?: number
           reply_count?: number
+          last_activity_at?: string
           created_at?: string
           updated_at?: string
-          last_activity_at?: string
         }
         Update: {
           id?: string
+          category_id?: string
+          user_id?: string
           title?: string
           content?: string
-          user_id?: string
-          category_id?: string
           is_pinned?: boolean
           is_locked?: boolean
           is_solved?: boolean
           view_count?: number
           reply_count?: number
+          last_activity_at?: string
           created_at?: string
           updated_at?: string
-          last_activity_at?: string
         }
         Relationships: []
       }
@@ -771,8 +762,8 @@ export type Database = {
           id: string
           topic_id: string
           user_id: string
-          content: string
           parent_id: string
+          content: string
           is_solution: boolean
           is_hidden: boolean
           created_at: string
@@ -782,8 +773,8 @@ export type Database = {
           id?: string
           topic_id: string
           user_id: string
-          content: string
           parent_id?: string
+          content: string
           is_solution?: boolean
           is_hidden?: boolean
           created_at?: string
@@ -793,12 +784,36 @@ export type Database = {
           id?: string
           topic_id?: string
           user_id?: string
-          content?: string
           parent_id?: string
+          content?: string
           is_solution?: boolean
           is_hidden?: boolean
           created_at?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      forum_reactions: {
+        Row: {
+          id: string
+          post_id: string
+          user_id: string
+          reaction_type: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          post_id: string
+          user_id: string
+          reaction_type: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          post_id?: string
+          user_id?: string
+          reaction_type?: string
+          created_at?: string
         }
         Relationships: []
       }
@@ -811,10 +826,10 @@ export type Database = {
           resource_id: string
           details: Json
           severity: string
-          timestamp: string
-          session_id: string
-          user_agent: string
           ip_address: string
+          user_agent: string
+          session_id: string
+          timestamp: string
         }
         Insert: {
           id?: string
@@ -824,10 +839,10 @@ export type Database = {
           resource_id?: string
           details?: Json
           severity?: string
-          timestamp?: string
-          session_id?: string
-          user_agent?: string
           ip_address?: string
+          user_agent?: string
+          session_id?: string
+          timestamp?: string
         }
         Update: {
           id?: string
@@ -837,10 +852,10 @@ export type Database = {
           resource_id?: string
           details?: Json
           severity?: string
-          timestamp?: string
-          session_id?: string
-          user_agent?: string
           ip_address?: string
+          user_agent?: string
+          session_id?: string
+          timestamp?: string
         }
         Relationships: []
       }
@@ -854,7 +869,6 @@ export type Database = {
           location_link: string
           physical_location: string
           cover_image_url: string
-          created_by: string
           is_recurring: boolean
           recurrence_pattern: string
           recurrence_interval: number
@@ -862,6 +876,7 @@ export type Database = {
           recurrence_count: number
           recurrence_end_date: string
           parent_event_id: string
+          created_by: string
           created_at: string
         }
         Insert: {
@@ -873,7 +888,6 @@ export type Database = {
           location_link?: string
           physical_location?: string
           cover_image_url?: string
-          created_by: string
           is_recurring?: boolean
           recurrence_pattern?: string
           recurrence_interval?: number
@@ -881,6 +895,7 @@ export type Database = {
           recurrence_count?: number
           recurrence_end_date?: string
           parent_event_id?: string
+          created_by: string
           created_at?: string
         }
         Update: {
@@ -892,7 +907,6 @@ export type Database = {
           location_link?: string
           physical_location?: string
           cover_image_url?: string
-          created_by?: string
           is_recurring?: boolean
           recurrence_pattern?: string
           recurrence_interval?: number
@@ -900,6 +914,7 @@ export type Database = {
           recurrence_count?: number
           recurrence_end_date?: string
           parent_event_id?: string
+          created_by?: string
           created_at?: string
         }
         Relationships: []
@@ -913,12 +928,20 @@ export type Database = {
         Args: {
           bucket_name: string
         }
-        Returns: {
-          success: boolean
-          error?: string
-        }
+        Returns: boolean
       }
-      [_ in string]: never
+      increment_topic_replies: {
+        Args: {
+          topic_id: string
+        }
+        Returns: void
+      }
+      increment_topic_views: {
+        Args: {
+          topic_id: string
+        }
+        Returns: void
+      }
     }
     Enums: {
       [_ in never]: never

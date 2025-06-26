@@ -23,6 +23,11 @@ export const incrementTopicReplies = async (topicId: string) => {
   });
 };
 
+// Helper function to call RPC functions correctly
+export const callRpcFunction = async (functionName: string, params: any = {}) => {
+  return await supabase.rpc(functionName as any, params);
+};
+
 export const deleteForumTopic = async (topicId: string) => {
   return await supabase.rpc('delete_forum_topic', {
     topic_id: topicId

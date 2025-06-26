@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { FormField, FormItem, FormLabel, FormControl, FormDescription, FormMessage } from '@/components/ui/form';
 import { FileUpload } from '@/components/ui/file-upload';
@@ -5,8 +6,8 @@ import { UseFormReturn } from 'react-hook-form';
 import { ToolFormValues } from '../../types/toolFormTypes';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { X } from 'lucide-react';
-import { Label, Upload } from '@/components/ui/label';
+import { X, Upload } from 'lucide-react';
+import { Label } from '@/components/ui/label';
 
 interface LogoUploadProps {
   form: UseFormReturn<ToolFormValues>;
