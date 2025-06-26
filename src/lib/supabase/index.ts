@@ -21,7 +21,8 @@ export {
   incrementTopicViews,
   incrementTopicReplies,
   deleteForumTopic,
-  deleteForumPost
+  deleteForumPost,
+  auditRoleAssignments
 } from './rpc';
 
 // Tipos principais re-exportados
@@ -29,12 +30,22 @@ export type {
   LearningCourse,
   LearningModule, 
   LearningLesson,
+  LearningLessonVideo,
   LearningResource,
   UserProfile,
   Solution,
+  Module,
+  Tool,
+  UserChecklist,
   CourseAccessControl,
   PermissionDefinition,
-  RolePermission
+  RolePermission,
+  AuditLog,
+  Event,
+  Progress,
+  SolutionResource,
+  SolutionTool,
+  ImplementationCheckpoint
 } from './types';
 
 // Funções de role helpers
