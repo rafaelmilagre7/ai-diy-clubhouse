@@ -17,17 +17,17 @@ export const useDashboardData = () => {
   const [error, setError] = useState<string | null>(null);
   const isAdmin = getUserRoleName(profile) === 'admin';
 
-  console.log('[DASHBOARD-DATA] Inicializando hook:', {
+  console.log('[DEBUG-DASHBOARD-DATA] 🎬 Inicializando hook:', {
     hasUser: !!user,
     hasProfile: !!profile,
     isAdmin,
-    userId: user?.id?.substring(0, 8)
+    userId: user?.id?.substring(0, 8) + '***'
   });
 
   useEffect(() => {
     const fetchData = async () => {
       if (!user) {
-        console.log('[DASHBOARD-DATA] Sem usuário, não carregando dados');
+        console.log('[DEBUG-DASHBOARD-DATA] ❌ Sem usuário, não carregando dados');
         setLoading(false);
         return;
       }
@@ -36,9 +36,10 @@ export const useDashboardData = () => {
         setLoading(true);
         setError(null);
         
-        console.log('[DASHBOARD-DATA] Iniciando carregamento de dados...');
+        console.log('[DEBUG-DASHBOARD-DATA] 🚀 Iniciando carregamento de dados...');
         
         // Fetch solutions - filtrar apenas publicadas se não for admin
+        console.log('[DEBUG-DASHBOARD-DATA] 📋 Carregando soluções...');
         let query = supabase.from("solutions").select("*");
         if (!isAdmin) {
           query = query.eq("published", true as any);
@@ -47,27 +48,36 @@ export const useDashboardData = () => {
         const { data: solutionsData, error: solutionsError } = await query;
         
         if (solutionsError) {
+          console.error('[DEBUG-DASHBOARD-DATA] ❌ Erro ao carregar soluções:', solutionsError);
           throw solutionsError;
         }
         
-        console.log('[DASHBOARD-DATA] Soluções carregadas:', solutionsData?.length || 0);
+        console.log('[DEBUG-DASHBOARD-DATA] ✅ Soluções carregadas:', {
+          count: solutionsData?.length || 0,
+          isAdmin,
+          firstSolution: solutionsData?.[0]?.title
+        });
         
-        // Ensure solutions array is type-safe
         setSolutions(solutionsData as any);
         
         // Fetch all progress data
+        console.log('[DEBUG-DASHBOARD-DATA] 📈 Carregando progresso...');
         const { data: progress, error: progressError } = await supabase
           .from("progress")
           .select("*");
         
         if (progressError) {
+          console.error('[DEBUG-DASHBOARD-DATA] ❌ Erro ao carregar progresso:', progressError);
           throw progressError;
         }
         
-        console.log('[DASHBOARD-DATA] Progresso carregado:', progress?.length || 0);
+        console.log('[DEBUG-DASHBOARD-DATA] ✅ Progresso carregado:', {
+          count: progress?.length || 0
+        });
         setProgressData(progress || []);
         
         // Fetch analytics data
+        console.log('[DEBUG-DASHBOARD-DATA] 📊 Carregando analytics...');
         const { data: analytics, error: analyticsError } = await supabase
           .from("analytics")
           .select("*")
@@ -75,28 +85,36 @@ export const useDashboardData = () => {
           .limit(50);
         
         if (analyticsError && !analyticsError.message.includes('does not exist')) {
-          console.warn("Erro ao buscar analytics:", analyticsError);
+          console.error('[DEBUG-DASHBOARD-DATA] ⚠️ Erro ao carregar analytics:', analyticsError);
         } else {
+          console.log('[DEBUG-DASHBOARD-DATA] ✅ Analytics carregado:', {
+            count: analytics?.length || 0
+          });
           setAnalyticsData(analytics || []);
         }
         
         // Fetch profiles data
+        console.log('[DEBUG-DASHBOARD-DATA] 👥 Carregando perfis...');
         const { data: profiles, error: profilesError } = await supabase
           .from("profiles")
           .select("*");
         
         if (profilesError) {
+          console.error('[DEBUG-DASHBOARD-DATA] ❌ Erro ao carregar perfis:', profilesError);
           throw profilesError;
         }
         
-        console.log('[DASHBOARD-DATA] Perfis carregados:', profiles?.length || 0);
+        console.log('[DEBUG-DASHBOARD-DATA] ✅ Perfis carregados:', {
+          count: profiles?.length || 0
+        });
         setProfilesData(profiles || []);
         
-        console.log('[DASHBOARD-DATA] Todos os dados carregados com sucesso');
+        console.log('[DEBUG-DASHBOARD-DATA] 🎉 Todos os dados carregados com sucesso');
         
       } catch (error: any) {
-        console.error("Erro no carregamento de dados do dashboard:", error);
-        setError(error.message || "Erro inesperado ao carregar dados");
+        console.error("[DEBUG-DASHBOARD-DATA] 💥 Erro no carregamento de dados:", error);
+        const errorMessage = error.message || "Erro inesperado ao carregar dados";
+        setError(errorMessage);
         toast({
           title: "Erro ao carregar dados",
           description: "Ocorreu um erro ao carregar os dados do dashboard.",
@@ -104,6 +122,7 @@ export const useDashboardData = () => {
         });
       } finally {
         setLoading(false);
+        console.log('[DEBUG-DASHBOARD-DATA] 🏁 Carregamento finalizado');
       }
     };
     
