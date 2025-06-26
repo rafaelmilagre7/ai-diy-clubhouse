@@ -1,32 +1,17 @@
 
-// Definição dos buckets de armazenamento
-export const STORAGE_BUCKETS = {
-  // Buckets para o LMS - usando nomes normalizados
-  LEARNING_MATERIALS: 'learning_materials',
-  COURSE_IMAGES: 'course_images', 
-  LEARNING_VIDEOS: 'learning_videos',
-  SOLUTION_FILES: 'solution_files',
-  LESSON_IMAGES: 'lesson_images',
-  
-  // Buckets para eventos
-  EVENT_IMAGES: 'event_images',
-  
-  // Bucket de fallback para emergências
-  FALLBACK: 'general_storage'
-};
+/**
+ * Configurações centralizadas do Supabase
+ */
 
-// Limites de tamanho de upload (em MB)
-export const MAX_UPLOAD_SIZES = {
-  IMAGE: 5,       // 5MB para imagens
-  DOCUMENT: 25,   // 25MB para documentos  
-  VIDEO: 200,     // 200MB para vídeos
-  AVATAR: 2       // 2MB para avatares
-};
-
-// Tipos de arquivo aceitos por categoria
-export const ACCEPTED_FILE_TYPES = {
-  IMAGES: 'image/*',
-  DOCUMENTS: '.pdf,.doc,.docx,.txt,.rtf',
-  VIDEOS: 'video/*',
-  ALL: '*/*'
+export const SUPABASE_CONFIG = {
+  url: import.meta.env.VITE_SUPABASE_URL,
+  anonKey: import.meta.env.VITE_SUPABASE_ANON_KEY,
+  
+  isConfigured(): boolean {
+    return !!(this.url && this.anonKey);
+  },
+  
+  getStorageUrl(bucket: string, path: string): string {
+    return `${this.url}/storage/v1/object/public/${bucket}/${path}`;
+  }
 };

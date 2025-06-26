@@ -84,6 +84,9 @@ export const ensureBucketExists = async (bucketName: string): Promise<boolean> =
   }
 };
 
+// Alias para compatibilidade com código existente
+export const ensureStorageBucketExists = ensureBucketExists;
+
 // Função para extrair informações de vídeo do Panda Video
 export const extractPandaVideoInfo = (url: string): { videoId: string; embedUrl: string } | null => {
   try {
