@@ -1,4 +1,5 @@
 
+
 import { supabase } from './client';
 
 /**
@@ -24,7 +25,7 @@ export const incrementTopicReplies = async (topicId: string) => {
 };
 
 // Helper function to call RPC functions correctly
-export const callRpcFunction = async (functionName: string, params: any = {}) => {
+export const callRpcFunction = async (functionName: 'create_storage_public_policy' | 'increment_topic_replies' | 'increment_topic_views', params: any = {}) => {
   return await supabase.rpc(functionName as any, params);
 };
 
@@ -39,3 +40,4 @@ export const deleteForumPost = async (postId: string) => {
     post_id: postId
   });
 };
+

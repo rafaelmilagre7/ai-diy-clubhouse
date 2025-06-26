@@ -1,4 +1,5 @@
 
+
 import { Database } from './database.types';
 
 // Tipos de tabelas principais
@@ -17,6 +18,8 @@ export type PermissionDefinition = Database['public']['Tables']['permission_defi
 export type RolePermission = Database['public']['Tables']['role_permissions']['Row'];
 export type ImplementationCheckpoint = Database['public']['Tables']['implementation_checkpoints']['Row'];
 export type SolutionResource = Database['public']['Tables']['solution_resources']['Row'];
+export type SolutionTool = Database['public']['Tables']['solution_tools']['Row'];
+export type UserChecklist = Database['public']['Tables']['user_checklists']['Row'];
 export type Tool = Database['public']['Tables']['tools']['Row'];
 export type BenefitAccessControl = Database['public']['Tables']['benefit_access_control']['Row'];
 export type ForumTopic = Database['public']['Tables']['forum_topics']['Row'];
@@ -56,3 +59,4 @@ export const getUserRoleName = (profile: UserProfile | null): string => {
 
 // Re-exportar tipos do database
 export * from './database.types';
+
