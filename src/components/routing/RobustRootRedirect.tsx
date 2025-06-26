@@ -1,4 +1,3 @@
-
 import { Navigate } from "react-router-dom";
 import { useSimpleAuth } from "@/contexts/auth/SimpleAuthProvider";
 import { useOnboardingRequired } from "@/hooks/useOnboardingRequired";  
@@ -27,6 +26,7 @@ const RobustRootRedirect = () => {
   useEffect(() => {
     const authManager = AuthManager.getInstance();
     
+    // CORREÇÃO: passar função que aceita AuthState como argumento
     const unsubscribe = authManager.on('stateChanged', (authState) => {
       logger.info('[ROBUST-ROOT-REDIRECT] 📡 Estado AuthManager atualizado:', {
         hasUser: !!authState.user,
