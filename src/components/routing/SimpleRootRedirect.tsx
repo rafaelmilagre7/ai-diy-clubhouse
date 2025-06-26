@@ -5,7 +5,7 @@ import { useSimpleAuth } from "@/contexts/auth/SimpleAuthProvider";
 const SimpleRootRedirect = () => {
   const { user, profile, isLoading, isAdmin } = useSimpleAuth();
   
-  // Loading simples - máximo 2 segundos
+  // Loading básico
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-[#0F111A] to-[#151823] flex items-center justify-center">

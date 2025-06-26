@@ -1,7 +1,7 @@
 
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { User, Session } from '@supabase/supabase-js';
-import { UserProfile } from '@/lib/supabase';
+import { UserProfile } from '@/lib/supabase/types';
 import { supabase } from '@/lib/supabase';
 
 interface SimpleAuthContextType {
@@ -65,6 +65,7 @@ export const SimpleAuthProvider: React.FC<SimpleAuthProviderProps> = ({ children
         
         if (error) {
           setError(error.message);
+          setIsLoading(false);
           return;
         }
 
@@ -74,10 +75,11 @@ export const SimpleAuthProvider: React.FC<SimpleAuthProviderProps> = ({ children
         if (session?.user) {
           await loadProfile(session.user.id);
         }
+        
+        setIsLoading(false);
       } catch (err) {
         console.error('Erro ao verificar sessão:', err);
         setError('Erro ao verificar autenticação');
-      } finally {
         setIsLoading(false);
       }
     };
