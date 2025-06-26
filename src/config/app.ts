@@ -10,6 +10,11 @@ interface SupabaseConfig {
   isLovableEnvironment: () => boolean;
   getCredentials: () => SupabaseCredentials;
   getSafeConfig: () => { hasUrl: boolean; hasKey: boolean; environment: string };
+  // Novos métodos para compatibilidade
+  validate: () => { isValid: boolean; environment: string };
+  isConfigured: () => boolean;
+  url: string;
+  anonKey: string;
 }
 
 class SupabaseConfigManager implements SupabaseConfig {
@@ -99,6 +104,45 @@ class SupabaseConfigManager implements SupabaseConfig {
       environment: this.isLovableEnvironment() ? 'Lovable' : 'Custom'
     };
   }
+
+  // Novos métodos para compatibilidade
+  public validate(): { isValid: boolean; environment: string } {
+    const hasCredentials = !!(this.credentials?.url && this.credentials?.anonKey);
+    return {
+      isValid: hasCredentials,
+      environment: this.isLovableEnvironment() ? 'Lovable' : 'Custom'
+    };
+  }
+
+  public isConfigured(): boolean {
+    return !!(this.credentials?.url && this.credentials?.anonKey);
+  }
+
+  public get url(): string {
+    return this.credentials?.url || '';
+  }
+
+  public get anonKey(): string {
+    return this.credentials?.anonKey || '';
+  }
+
+  // Método para obter domínio da aplicação
+  public getAppDomain(): string {
+    if (typeof window !== 'undefined') {
+      return `${window.location.protocol}//${window.location.host}`;
+    }
+    return 'https://app.viverdeia.ai'; // Fallback para produção
+  }
 }
 
 export const SUPABASE_CONFIG = new SupabaseConfigManager();
+
+// APP_CONFIG para compatibilidade com código existente
+export const APP_CONFIG = {
+  getAppDomain: () => SUPABASE_CONFIG.getAppDomain(),
+  supabaseUrl: SUPABASE_CONFIG.url,
+  supabaseAnonKey: SUPABASE_CONFIG.anonKey,
+  isLovableEnvironment: () => SUPABASE_CONFIG.isLovableEnvironment(),
+  validate: () => SUPABASE_CONFIG.validate(),
+  isConfigured: () => SUPABASE_CONFIG.isConfigured()
+};
