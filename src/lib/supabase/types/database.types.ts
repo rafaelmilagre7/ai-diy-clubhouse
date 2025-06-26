@@ -15,29 +15,29 @@ export type Database = {
           id: string
           email: string
           name: string
-          avatar_url: string | null
-          company_name: string | null
-          industry: string | null
+          avatar_url: string
+          company_name: string
+          industry: string
           role_id: string
           role?: string
           created_at: string
           onboarding_completed: boolean
-          onboarding_completed_at: string | null
+          onboarding_completed_at: string
           referrals_count: number
           successful_referrals_count: number
         }
         Insert: {
-          id?: string
+          id: string
           email: string
-          name?: string
-          avatar_url?: string | null
-          company_name?: string | null
-          industry?: string | null
+          name: string
+          avatar_url?: string
+          company_name?: string
+          industry?: string
           role_id?: string
           role?: string
           created_at?: string
           onboarding_completed?: boolean
-          onboarding_completed_at?: string | null
+          onboarding_completed_at?: string
           referrals_count?: number
           successful_referrals_count?: number
         }
@@ -45,14 +45,14 @@ export type Database = {
           id?: string
           email?: string
           name?: string
-          avatar_url?: string | null
-          company_name?: string | null
-          industry?: string | null
+          avatar_url?: string
+          company_name?: string
+          industry?: string
           role_id?: string
           role?: string
           created_at?: string
           onboarding_completed?: boolean
-          onboarding_completed_at?: string | null
+          onboarding_completed_at?: string
           referrals_count?: number
           successful_referrals_count?: number
         }
@@ -62,8 +62,8 @@ export type Database = {
         Row: {
           id: string
           name: string
-          description: string | null
-          permissions: Json | null
+          description: string
+          permissions: Json
           is_system: boolean
           created_at: string
           updated_at: string
@@ -71,8 +71,8 @@ export type Database = {
         Insert: {
           id?: string
           name: string
-          description?: string | null
-          permissions?: Json | null
+          description?: string
+          permissions?: Json
           is_system?: boolean
           created_at?: string
           updated_at?: string
@@ -80,11 +80,59 @@ export type Database = {
         Update: {
           id?: string
           name?: string
-          description?: string | null
-          permissions?: Json | null
+          description?: string
+          permissions?: Json
           is_system?: boolean
           created_at?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      permission_definitions: {
+        Row: {
+          id: string
+          code: string
+          name: string
+          description: string
+          category: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          code: string
+          name: string
+          description?: string
+          category: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          code?: string
+          name?: string
+          description?: string
+          category?: string
+          created_at?: string
+        }
+        Relationships: []
+      }
+      role_permissions: {
+        Row: {
+          id: string
+          role_id: string
+          permission_id: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          role_id: string
+          permission_id: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          role_id?: string
+          permission_id?: string
+          created_at?: string
         }
         Relationships: []
       }
@@ -92,36 +140,36 @@ export type Database = {
         Row: {
           id: string
           title: string
-          description: string | null
+          description: string
           slug: string
-          cover_image_url: string | null
+          cover_image_url: string
           published: boolean
+          created_by: string
           order_index: number
-          created_by: string | null
           created_at: string
           updated_at: string
         }
         Insert: {
           id?: string
           title: string
-          description?: string | null
+          description?: string
           slug: string
-          cover_image_url?: string | null
+          cover_image_url?: string
           published?: boolean
+          created_by?: string
           order_index?: number
-          created_by?: string | null
           created_at?: string
           updated_at?: string
         }
         Update: {
           id?: string
           title?: string
-          description?: string | null
+          description?: string
           slug?: string
-          cover_image_url?: string | null
+          cover_image_url?: string
           published?: boolean
+          created_by?: string
           order_index?: number
-          created_by?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -132,10 +180,10 @@ export type Database = {
           id: string
           course_id: string
           title: string
-          description: string | null
-          order_index: number
+          description: string
+          cover_image_url: string
           published: boolean
-          cover_image_url: string | null
+          order_index: number
           created_at: string
           updated_at: string
         }
@@ -143,10 +191,10 @@ export type Database = {
           id?: string
           course_id: string
           title: string
-          description?: string | null
-          order_index?: number
+          description?: string
+          cover_image_url?: string
           published?: boolean
-          cover_image_url?: string | null
+          order_index?: number
           created_at?: string
           updated_at?: string
         }
@@ -154,10 +202,10 @@ export type Database = {
           id?: string
           course_id?: string
           title?: string
-          description?: string | null
-          order_index?: number
+          description?: string
+          cover_image_url?: string
           published?: boolean
-          cover_image_url?: string | null
+          order_index?: number
           created_at?: string
           updated_at?: string
         }
@@ -168,16 +216,16 @@ export type Database = {
           id: string
           module_id: string
           title: string
-          description: string | null
-          content: Json | null
-          order_index: number
+          description: string
+          content: Json
+          cover_image_url: string
           published: boolean
+          order_index: number
           estimated_time_minutes: number
           difficulty_level: string
-          cover_image_url: string | null
           ai_assistant_enabled: boolean
-          ai_assistant_id: string | null
-          ai_assistant_prompt: string | null
+          ai_assistant_prompt: string
+          ai_assistant_id: string
           created_at: string
           updated_at: string
         }
@@ -185,16 +233,16 @@ export type Database = {
           id?: string
           module_id: string
           title: string
-          description?: string | null
-          content?: Json | null
-          order_index?: number
+          description?: string
+          content?: Json
+          cover_image_url?: string
           published?: boolean
+          order_index?: number
           estimated_time_minutes?: number
           difficulty_level?: string
-          cover_image_url?: string | null
           ai_assistant_enabled?: boolean
-          ai_assistant_id?: string | null
-          ai_assistant_prompt?: string | null
+          ai_assistant_prompt?: string
+          ai_assistant_id?: string
           created_at?: string
           updated_at?: string
         }
@@ -202,16 +250,16 @@ export type Database = {
           id?: string
           module_id?: string
           title?: string
-          description?: string | null
-          content?: Json | null
-          order_index?: number
+          description?: string
+          content?: Json
+          cover_image_url?: string
           published?: boolean
+          order_index?: number
           estimated_time_minutes?: number
           difficulty_level?: string
-          cover_image_url?: string | null
           ai_assistant_enabled?: boolean
-          ai_assistant_id?: string | null
-          ai_assistant_prompt?: string | null
+          ai_assistant_prompt?: string
+          ai_assistant_id?: string
           created_at?: string
           updated_at?: string
         }
@@ -222,15 +270,15 @@ export type Database = {
           id: string
           lesson_id: string
           title: string
-          description: string | null
+          description: string
           url: string
           video_type: string
-          video_id: string | null
-          video_file_path: string | null
-          video_file_name: string | null
-          file_size_bytes: number | null
-          duration_seconds: number | null
-          thumbnail_url: string | null
+          video_id: string
+          thumbnail_url: string
+          duration_seconds: number
+          video_file_path: string
+          video_file_name: string
+          file_size_bytes: number
           order_index: number
           created_at: string
         }
@@ -238,15 +286,15 @@ export type Database = {
           id?: string
           lesson_id: string
           title: string
-          description?: string | null
+          description?: string
           url: string
           video_type?: string
-          video_id?: string | null
-          video_file_path?: string | null
-          video_file_name?: string | null
-          file_size_bytes?: number | null
-          duration_seconds?: number | null
-          thumbnail_url?: string | null
+          video_id?: string
+          thumbnail_url?: string
+          duration_seconds?: number
+          video_file_path?: string
+          video_file_name?: string
+          file_size_bytes?: number
           order_index?: number
           created_at?: string
         }
@@ -254,15 +302,15 @@ export type Database = {
           id?: string
           lesson_id?: string
           title?: string
-          description?: string | null
+          description?: string
           url?: string
           video_type?: string
-          video_id?: string | null
-          video_file_path?: string | null
-          video_file_name?: string | null
-          file_size_bytes?: number | null
-          duration_seconds?: number | null
-          thumbnail_url?: string | null
+          video_id?: string
+          thumbnail_url?: string
+          duration_seconds?: number
+          video_file_path?: string
+          video_file_name?: string
+          file_size_bytes?: number
           order_index?: number
           created_at?: string
         }
@@ -276,11 +324,11 @@ export type Database = {
           progress_percentage: number
           video_progress: Json
           started_at: string
-          completed_at: string | null
+          completed_at: string
           last_position_seconds: number
-          notes: string | null
-          created_at: string
           updated_at: string
+          created_at: string
+          notes: string
         }
         Insert: {
           id?: string
@@ -289,11 +337,11 @@ export type Database = {
           progress_percentage?: number
           video_progress?: Json
           started_at?: string
-          completed_at?: string | null
+          completed_at?: string
           last_position_seconds?: number
-          notes?: string | null
-          created_at?: string
           updated_at?: string
+          created_at?: string
+          notes?: string
         }
         Update: {
           id?: string
@@ -302,45 +350,45 @@ export type Database = {
           progress_percentage?: number
           video_progress?: Json
           started_at?: string
-          completed_at?: string | null
+          completed_at?: string
           last_position_seconds?: number
-          notes?: string | null
-          created_at?: string
           updated_at?: string
+          created_at?: string
+          notes?: string
         }
         Relationships: []
       }
       learning_resources: {
         Row: {
           id: string
-          lesson_id: string | null
+          lesson_id: string
           name: string
-          description: string | null
+          description: string
           file_url: string
-          file_type: string | null
-          file_size_bytes: number | null
+          file_type: string
+          file_size_bytes: number
           order_index: number
           created_at: string
         }
         Insert: {
           id?: string
-          lesson_id?: string | null
+          lesson_id?: string
           name: string
-          description?: string | null
+          description?: string
           file_url: string
-          file_type?: string | null
-          file_size_bytes?: number | null
+          file_type?: string
+          file_size_bytes?: number
           order_index?: number
           created_at?: string
         }
         Update: {
           id?: string
-          lesson_id?: string | null
+          lesson_id?: string
           name?: string
-          description?: string | null
+          description?: string
           file_url?: string
-          file_type?: string | null
-          file_size_bytes?: number | null
+          file_type?: string
+          file_size_bytes?: number
           order_index?: number
           created_at?: string
         }
@@ -370,59 +418,557 @@ export type Database = {
         }
         Relationships: []
       }
-      learning_comments: {
+      course_access_control: {
         Row: {
           id: string
-          lesson_id: string
+          course_id: string
+          role_id: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          course_id?: string
+          role_id?: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          course_id?: string
+          role_id?: string
+          created_at?: string
+        }
+        Relationships: []
+      }
+      audit_logs: {
+        Row: {
+          id: string
+          user_id: string
+          event_type: string
+          action: string
+          resource_id: string
+          details: Json
+          severity: string
+          timestamp: string
+          ip_address: string
+          user_agent: string
+          session_id: string
+        }
+        Insert: {
+          id?: string
+          user_id?: string
+          event_type: string
+          action: string
+          resource_id?: string
+          details?: Json
+          severity?: string
+          timestamp?: string
+          ip_address?: string
+          user_agent?: string
+          session_id?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          event_type?: string
+          action?: string
+          resource_id?: string
+          details?: Json
+          severity?: string
+          timestamp?: string
+          ip_address?: string
+          user_agent?: string
+          session_id?: string
+        }
+        Relationships: []
+      }
+      solutions: {
+        Row: {
+          id: string
+          title: string
+          description: string
+          category: string
+          difficulty: string
+          cover_image_url: string
+          published: boolean
+          created_by: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          title: string
+          description?: string
+          category: string
+          difficulty?: string
+          cover_image_url?: string
+          published?: boolean
+          created_by?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          title?: string
+          description?: string
+          category?: string
+          difficulty?: string
+          cover_image_url?: string
+          published?: boolean
+          created_by?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      modules: {
+        Row: {
+          id: string
+          solution_id: string
+          title: string
+          type: string
+          content: Json
+          module_order: number
+          estimated_time_minutes: number
+          metrics: Json
+          certificate_template: Json
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          solution_id: string
+          title: string
+          type: string
+          content: Json
+          module_order: number
+          estimated_time_minutes?: number
+          metrics?: Json
+          certificate_template?: Json
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          solution_id?: string
+          title?: string
+          type?: string
+          content?: Json
+          module_order?: number
+          estimated_time_minutes?: number
+          metrics?: Json
+          certificate_template?: Json
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      progress: {
+        Row: {
+          id: string
+          user_id: string
+          solution_id: string
+          module_id: string
+          is_completed: boolean
+          completion_percentage: number
+          started_at: string
+          completed_at: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          solution_id?: string
+          module_id?: string
+          is_completed?: boolean
+          completion_percentage?: number
+          started_at?: string
+          completed_at?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          solution_id?: string
+          module_id?: string
+          is_completed?: boolean
+          completion_percentage?: number
+          started_at?: string
+          completed_at?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      tools: {
+        Row: {
+          id: string
+          name: string
+          description: string
+          category: string
+          logo_url: string
+          official_url: string
+          is_active: boolean
+          member_benefit: Json
+          video_tutorials: Json
+          tags: string[]
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          description?: string
+          category: string
+          logo_url?: string
+          official_url?: string
+          is_active?: boolean
+          member_benefit?: Json
+          video_tutorials?: Json
+          tags?: string[]
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          description?: string
+          category?: string
+          logo_url?: string
+          official_url?: string
+          is_active?: boolean
+          member_benefit?: Json
+          video_tutorials?: Json
+          tags?: string[]
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      events: {
+        Row: {
+          id: string
+          title: string
+          description: string
+          start_time: string
+          end_time: string
+          location_link: string
+          physical_location: string
+          cover_image_url: string
+          created_by: string
+          is_recurring: boolean
+          recurrence_pattern: string
+          recurrence_interval: number
+          recurrence_day: number
+          recurrence_count: number
+          recurrence_end_date: string
+          parent_event_id: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          title: string
+          description?: string
+          start_time: string
+          end_time: string
+          location_link?: string
+          physical_location?: string
+          cover_image_url?: string
+          created_by: string
+          is_recurring?: boolean
+          recurrence_pattern?: string
+          recurrence_interval?: number
+          recurrence_day?: number
+          recurrence_count?: number
+          recurrence_end_date?: string
+          parent_event_id?: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          title?: string
+          description?: string
+          start_time?: string
+          end_time?: string
+          location_link?: string
+          physical_location?: string
+          cover_image_url?: string
+          created_by?: string
+          is_recurring?: boolean
+          recurrence_pattern?: string
+          recurrence_interval?: number
+          recurrence_day?: number
+          recurrence_count?: number
+          recurrence_end_date?: string
+          parent_event_id?: string
+          created_at?: string
+        }
+        Relationships: []
+      }
+      user_checklists: {
+        Row: {
+          id: string
+          user_id: string
+          module_id: string
+          checklist_data: Json
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          module_id: string
+          checklist_data?: Json
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          module_id?: string
+          checklist_data?: Json
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      implementation_checkpoints: {
+        Row: {
+          id: string
+          solution_id: string
+          description: string
+          checkpoint_order: number
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          solution_id?: string
+          description: string
+          checkpoint_order: number
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          solution_id?: string
+          description?: string
+          checkpoint_order?: number
+          created_at?: string
+        }
+        Relationships: []
+      }
+      solution_resources: {
+        Row: {
+          id: string
+          solution_id: string
+          title: string
+          description: string
+          file_url: string
+          file_type: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          solution_id: string
+          title: string
+          description?: string
+          file_url: string
+          file_type: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          solution_id?: string
+          title?: string
+          description?: string
+          file_url?: string
+          file_type?: string
+          created_at?: string
+        }
+        Relationships: []
+      }
+      solution_tools: {
+        Row: {
+          id: string
+          solution_id: string
+          tool_id: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          solution_id: string
+          tool_id: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          solution_id?: string
+          tool_id?: string
+          created_at?: string
+        }
+        Relationships: []
+      }
+      benefit_access_control: {
+        Row: {
+          id: string
+          tool_id: string
+          role_id: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          tool_id: string
+          role_id: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          tool_id?: string
+          role_id?: string
+          created_at?: string
+        }
+        Relationships: []
+      }
+      forum_topics: {
+        Row: {
+          id: string
+          title: string
+          content: string
+          user_id: string
+          category_id: string
+          is_pinned: boolean
+          is_locked: boolean
+          is_solved: boolean
+          view_count: number
+          reply_count: number
+          last_activity_at: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          title: string
+          content: string
+          user_id: string
+          category_id: string
+          is_pinned?: boolean
+          is_locked?: boolean
+          is_solved?: boolean
+          view_count?: number
+          reply_count?: number
+          last_activity_at?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          title?: string
+          content?: string
+          user_id?: string
+          category_id?: string
+          is_pinned?: boolean
+          is_locked?: boolean
+          is_solved?: boolean
+          view_count?: number
+          reply_count?: number
+          last_activity_at?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      forum_categories: {
+        Row: {
+          id: string
+          name: string
+          description: string
+          slug: string
+          icon: string
+          order_index: number
+          is_active: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          description?: string
+          slug: string
+          icon?: string
+          order_index?: number
+          is_active?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          description?: string
+          slug?: string
+          icon?: string
+          order_index?: number
+          is_active?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      forum_posts: {
+        Row: {
+          id: string
+          topic_id: string
           user_id: string
           content: string
-          parent_id: string | null
-          likes_count: number
+          parent_id: string
+          is_solution: boolean
           is_hidden: boolean
           created_at: string
           updated_at: string
         }
         Insert: {
           id?: string
-          lesson_id: string
+          topic_id: string
           user_id: string
           content: string
-          parent_id?: string | null
-          likes_count?: number
+          parent_id?: string
+          is_solution?: boolean
           is_hidden?: boolean
           created_at?: string
           updated_at?: string
         }
         Update: {
           id?: string
-          lesson_id?: string
+          topic_id?: string
           user_id?: string
           content?: string
-          parent_id?: string | null
-          likes_count?: number
+          parent_id?: string
+          is_solution?: boolean
           is_hidden?: boolean
           created_at?: string
           updated_at?: string
         }
         Relationships: []
       }
-      course_access_control: {
+      forum_reactions: {
         Row: {
           id: string
-          course_id: string | null
-          role_id: string | null
+          post_id: string
+          user_id: string
+          reaction_type: string
           created_at: string
         }
         Insert: {
           id?: string
-          course_id?: string | null
-          role_id?: string | null
+          post_id: string
+          user_id: string
+          reaction_type: string
           created_at?: string
         }
         Update: {
           id?: string
-          course_id?: string | null
-          role_id?: string | null
+          post_id?: string
+          user_id?: string
+          reaction_type?: string
           created_at?: string
         }
         Relationships: []
@@ -460,486 +1006,51 @@ export type Database = {
         }
         Relationships: []
       }
-      // Additional tables that are referenced in the code
-      progress: {
-        Row: {
-          id: string
-          user_id: string
-          solution_id: string
-          module_id: string | null
-          progress_percentage: number
-          is_completed: boolean
-          completed_at: string | null
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          user_id: string
-          solution_id: string
-          module_id?: string | null
-          progress_percentage?: number
-          is_completed?: boolean
-          completed_at?: string | null
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          user_id?: string
-          solution_id?: string
-          module_id?: string | null
-          progress_percentage?: number
-          is_completed?: boolean
-          completed_at?: string | null
-          created_at?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
-      events: {
-        Row: {
-          id: string
-          title: string
-          description: string | null
-          start_time: string
-          end_time: string
-          location_link: string | null
-          physical_location: string | null
-          cover_image_url: string | null
-          is_recurring: boolean
-          recurrence_pattern: string | null
-          recurrence_interval: number | null
-          recurrence_day: number | null
-          recurrence_count: number | null
-          recurrence_end_date: string | null
-          parent_event_id: string | null
-          created_by: string
-          created_at: string
-        }
-        Insert: {
-          id?: string
-          title: string
-          description?: string | null
-          start_time: string
-          end_time: string
-          location_link?: string | null
-          physical_location?: string | null
-          cover_image_url?: string | null
-          is_recurring?: boolean
-          recurrence_pattern?: string | null
-          recurrence_interval?: number | null
-          recurrence_day?: number | null
-          recurrence_count?: number | null
-          recurrence_end_date?: string | null
-          parent_event_id?: string | null
-          created_by: string
-          created_at?: string
-        }
-        Update: {
-          id?: string
-          title?: string
-          description?: string | null
-          start_time?: string
-          end_time?: string
-          location_link?: string | null
-          physical_location?: string | null
-          cover_image_url?: string | null
-          is_recurring?: boolean
-          recurrence_pattern?: string | null
-          recurrence_interval?: number | null
-          recurrence_day?: number | null
-          recurrence_count?: number | null
-          recurrence_end_date?: string | null
-          parent_event_id?: string | null
-          created_by?: string
-          created_at?: string
-        }
-        Relationships: []
-      }
-      solutions: {
-        Row: {
-          id: string
-          title: string
-          description: string | null
-          category: string
-          difficulty: string
-          estimated_time_hours: number
-          cover_image_url: string | null
-          published: boolean
-          created_by: string
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          title: string
-          description?: string | null
-          category: string
-          difficulty: string
-          estimated_time_hours?: number
-          cover_image_url?: string | null
-          published?: boolean
-          created_by: string
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          title?: string
-          description?: string | null
-          category?: string
-          difficulty?: string
-          estimated_time_hours?: number
-          cover_image_url?: string | null
-          published?: boolean
-          created_by?: string
-          created_at?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
-      modules: {
-        Row: {
-          id: string
-          solution_id: string
-          title: string
-          type: string
-          content: Json
-          module_order: number
-          estimated_time_minutes: number
-          metrics: Json | null
-          certificate_template: Json | null
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          solution_id: string
-          title: string
-          type: string
-          content?: Json
-          module_order: number
-          estimated_time_minutes?: number
-          metrics?: Json | null
-          certificate_template?: Json | null
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          solution_id?: string
-          title?: string
-          type?: string
-          content?: Json
-          module_order?: number
-          estimated_time_minutes?: number
-          metrics?: Json | null
-          certificate_template?: Json | null
-          created_at?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
-      tools: {
-        Row: {
-          id: string
-          name: string
-          description: string | null
-          category: string
-          website_url: string | null
-          pricing_model: string | null
-          has_member_benefit: boolean
-          benefit_type: string | null
-          benefit_description: string | null
-          benefit_link: string | null
-          logo_url: string | null
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          name: string
-          description?: string | null
-          category: string
-          website_url?: string | null
-          pricing_model?: string | null
-          has_member_benefit?: boolean
-          benefit_type?: string | null
-          benefit_description?: string | null
-          benefit_link?: string | null
-          logo_url?: string | null
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          name?: string
-          description?: string | null
-          category?: string
-          website_url?: string | null
-          pricing_model?: string | null
-          has_member_benefit?: boolean
-          benefit_type?: string | null
-          benefit_description?: string | null
-          benefit_link?: string | null
-          logo_url?: string | null
-          created_at?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
-      audit_logs: {
-        Row: {
-          id: string
-          user_id: string | null
-          event_type: string
-          action: string
-          resource_id: string | null
-          details: Json | null
-          ip_address: string | null
-          user_agent: string | null
-          session_id: string | null
-          severity: string | null
-          timestamp: string
-        }
-        Insert: {
-          id?: string
-          user_id?: string | null
-          event_type: string
-          action: string
-          resource_id?: string | null
-          details?: Json | null
-          ip_address?: string | null
-          user_agent?: string | null
-          session_id?: string | null
-          severity?: string | null
-          timestamp?: string
-        }
-        Update: {
-          id?: string
-          user_id?: string | null
-          event_type?: string
-          action?: string
-          resource_id?: string | null
-          details?: Json | null
-          ip_address?: string | null
-          user_agent?: string | null
-          session_id?: string | null
-          severity?: string | null
-          timestamp?: string
-        }
-        Relationships: []
-      }
-      solution_resources: {
-        Row: {
-          id: string
-          solution_id: string
-          name: string
-          type: string
-          url: string | null
-          format: string | null
-          created_at: string
-        }
-        Insert: {
-          id?: string
-          solution_id: string
-          name: string
-          type: string
-          url?: string | null
-          format?: string | null
-          created_at?: string
-        }
-        Update: {
-          id?: string
-          solution_id?: string
-          name?: string
-          type?: string
-          url?: string | null
-          format?: string | null
-          created_at?: string
-        }
-        Relationships: []
-      }
-      solution_tools: {
-        Row: {
-          id: string
-          solution_id: string
-          tool_name: string
-          tool_url: string | null
-          is_required: boolean
-          created_at: string
-        }
-        Insert: {
-          id?: string
-          solution_id: string
-          tool_name: string
-          tool_url?: string | null
-          is_required?: boolean
-          created_at?: string
-        }
-        Update: {
-          id?: string
-          solution_id?: string
-          tool_name?: string
-          tool_url?: string | null
-          is_required?: boolean
-          created_at?: string
-        }
-        Relationships: []
-      }
-      user_checklists: {
-        Row: {
-          id: string
-          user_id: string
-          solution_id: string
-          checkpoint_id: string
-          is_completed: boolean
-          completed_at: string | null
-          created_at: string
-        }
-        Insert: {
-          id?: string
-          user_id: string
-          solution_id: string
-          checkpoint_id: string
-          is_completed?: boolean
-          completed_at?: string | null
-          created_at?: string
-        }
-        Update: {
-          id?: string
-          user_id?: string
-          solution_id?: string
-          checkpoint_id?: string
-          is_completed?: boolean
-          completed_at?: string | null
-          created_at?: string
-        }
-        Relationships: []
-      }
-      implementation_checkpoints: {
-        Row: {
-          id: string
-          solution_id: string | null
-          checkpoint_order: number
-          description: string
-          created_at: string
-        }
-        Insert: {
-          id?: string
-          solution_id?: string | null
-          checkpoint_order: number
-          description: string
-          created_at?: string
-        }
-        Update: {
-          id?: string
-          solution_id?: string | null
-          checkpoint_order?: number
-          description?: string
-          created_at?: string
-        }
-        Relationships: []
-      }
-      forum_topics: {
-        Row: {
-          id: string
-          category_id: string
-          user_id: string
-          title: string
-          content: string
-          is_pinned: boolean
-          is_locked: boolean
-          is_solved: boolean | null
-          view_count: number
-          reply_count: number
-          last_activity_at: string
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          category_id: string
-          user_id: string
-          title: string
-          content: string
-          is_pinned?: boolean
-          is_locked?: boolean
-          is_solved?: boolean | null
-          view_count?: number
-          reply_count?: number
-          last_activity_at?: string
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          category_id?: string
-          user_id?: string
-          title?: string
-          content?: string
-          is_pinned?: boolean
-          is_locked?: boolean
-          is_solved?: boolean | null
-          view_count?: number
-          reply_count?: number
-          last_activity_at?: string
-          created_at?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
-      forum_posts: {
-        Row: {
-          id: string
-          topic_id: string
-          user_id: string
-          content: string
-          parent_id: string | null
-          is_solution: boolean
-          is_hidden: boolean
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          topic_id: string
-          user_id: string
-          content: string
-          parent_id?: string | null
-          is_solution?: boolean
-          is_hidden?: boolean
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          topic_id?: string
-          user_id?: string
-          content?: string
-          parent_id?: string | null
-          is_solution?: boolean
-          is_hidden?: boolean
-          created_at?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
     }
-    Views: {}
+    Views: {
+      [_ in never]: never
+    }
     Functions: {
+      get_user_permissions: {
+        Args: {
+          user_id: string
+        }
+        Returns: string[]
+      }
+      get_users_with_roles: {
+        Args: {
+          limit_count?: number
+          offset_count?: number
+          search_query?: string
+        }
+        Returns: {
+          id: string
+          email: string
+          name: string
+          avatar_url: string
+          role: string
+          role_id: string
+          user_roles: Json
+          company_name: string
+          industry: string
+          created_at: string
+        }[]
+      }
       audit_role_assignments: {
         Args: {
           user_id: string
           action: string
           details?: Json
         }
-        Returns: undefined
+        Returns: void
       }
     }
-    Enums: {}
-    CompositeTypes: {}
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
   }
 }
 
