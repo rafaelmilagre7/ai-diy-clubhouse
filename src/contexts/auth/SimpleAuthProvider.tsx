@@ -30,27 +30,44 @@ export const SimpleAuthProvider: React.FC<SimpleAuthProviderProps> = ({ children
   useEffect(() => {
     const authManager = AuthManager.getInstance();
     
-    logger.info('[SIMPLE-AUTH-PROVIDER] 🔄 Inicializando com AuthManager');
+    logger.info('[SIMPLE-AUTH-PROVIDER] 🔄 Inicializando com AuthManager CORRIGIDO');
     
     // Subscribe to state changes
     const unsubscribe = authManager.on('stateChanged', (newState) => {
-      logger.info('[SIMPLE-AUTH-PROVIDER] 📡 Estado atualizado:', {
+      logger.info('[SIMPLE-AUTH-PROVIDER] 📡 Estado atualizado via AuthManager:', {
         hasUser: !!newState.user,
         isLoading: newState.isLoading,
-        isAdmin: newState.isAdmin
+        isAdmin: newState.isAdmin,
+        error: newState.error,
+        timestamp: new Date().toISOString()
       });
       setAuthState(newState);
     });
     
-    // Initialize if not already initialized
-    if (!authManager.isInitialized()) {
-      authManager.initialize().catch(error => {
-        logger.error('[SIMPLE-AUTH-PROVIDER] Erro na inicialização:', error);
-      });
-    } else {
-      // If already initialized, update to current state
-      setAuthState(authManager.getState());
-    }
+    // Initialize AuthManager
+    const initializeAuth = async () => {
+      try {
+        logger.info('[SIMPLE-AUTH-PROVIDER] 🚀 Forçando inicialização do AuthManager');
+        await authManager.initialize();
+        
+        // Atualizar estado após inicialização
+        const currentState = authManager.getState();
+        logger.info('[SIMPLE-AUTH-PROVIDER] ✅ AuthManager inicializado:', {
+          hasUser: !!currentState.user,
+          isLoading: currentState.isLoading,
+          isAdmin: currentState.isAdmin
+        });
+        setAuthState(currentState);
+        
+      } catch (error) {
+        logger.error('[SIMPLE-AUTH-PROVIDER] ❌ Erro na inicialização:', error);
+        // Garantir que loading seja resetado mesmo em erro
+        setAuthState(prev => ({ ...prev, isLoading: false, error: (error as Error).message }));
+      }
+    };
+
+    // Inicializar imediatamente
+    initializeAuth();
     
     return unsubscribe;
   }, []);
@@ -66,6 +83,13 @@ export const SimpleAuthProvider: React.FC<SimpleAuthProviderProps> = ({ children
     signIn: AuthManager.getInstance().signIn.bind(AuthManager.getInstance()),
     signOut: AuthManager.getInstance().signOut.bind(AuthManager.getInstance())
   };
+
+  logger.info('[SIMPLE-AUTH-PROVIDER] 📊 Renderizando com estado:', {
+    isLoading: authState.isLoading,
+    hasUser: !!authState.user,
+    hasProfile: !!authState.profile,
+    error: authState.error
+  });
 
   return (
     <SimpleAuthContext.Provider value={contextValue}>
