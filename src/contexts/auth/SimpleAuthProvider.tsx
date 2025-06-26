@@ -26,7 +26,7 @@ export const SimpleAuthProvider: React.FC<SimpleAuthProviderProps> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [isLoading, setIsLoading] = useState(false); // Iniciar como FALSE para evitar loop
+  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // Carregar perfil apenas quando necessário
@@ -60,7 +60,18 @@ export const SimpleAuthProvider: React.FC<SimpleAuthProviderProps> = ({ children
   useEffect(() => {
     let mounted = true;
 
-    // Listener simples para mudanças de auth - SEM carregamento inicial
+    // Verificar sessão atual UMA VEZ
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!mounted) return;
+      
+      if (session?.user) {
+        setSession(session);
+        setUser(session.user);
+        loadProfile(session.user.id);
+      }
+    });
+
+    // Listener para mudanças de auth
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         if (!mounted) return;
@@ -77,17 +88,6 @@ export const SimpleAuthProvider: React.FC<SimpleAuthProviderProps> = ({ children
         }
       }
     );
-
-    // Verificar sessão APENAS uma vez, sem loading
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!mounted) return;
-      
-      if (session?.user) {
-        setSession(session);
-        setUser(session.user);
-        loadProfile(session.user.id);
-      }
-    });
 
     return () => {
       mounted = false;
@@ -107,17 +107,16 @@ export const SimpleAuthProvider: React.FC<SimpleAuthProviderProps> = ({ children
       
       if (error) {
         setError(error.message);
-        setIsLoading(false);
         return { error };
       }
       
-      // O onAuthStateChange vai lidar com o resto
       return {};
     } catch (err) {
       const error = err as Error;
       setError(error.message);
-      setIsLoading(false);
       return { error };
+    } finally {
+      setIsLoading(false);
     }
   };
 

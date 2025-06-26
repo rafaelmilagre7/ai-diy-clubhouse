@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSimpleAuth } from '@/contexts/auth/SimpleAuthProvider';
 import { Button } from '@/components/ui/button';
@@ -17,12 +17,14 @@ const LoginForm = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
 
-  // Se já está logado, redirecionar IMEDIATAMENTE
-  if (user) {
-    navigate('/dashboard');
-    return null;
-  }
+  // Redirecionar se já estiver logado (mas só após o componente estar montado)
+  useEffect(() => {
+    if (user) {
+      navigate('/dashboard');
+    }
+  }, [user, navigate]);
 
+  // Sempre mostrar o formulário primeiro
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
@@ -39,7 +41,7 @@ const LoginForm = () => {
         setError(signInError.message);
       } else {
         toast.success('Login realizado com sucesso!');
-        // O redirecionamento será automático via SimpleRootRedirect
+        // Redirecionar será automático via useEffect
       }
     } catch (err) {
       setError('Erro inesperado ao fazer login');

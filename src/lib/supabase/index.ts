@@ -24,6 +24,19 @@ export {
   deleteForumPost
 } from './rpc';
 
+// Tipos principais re-exportados
+export type { 
+  LearningCourse,
+  LearningModule, 
+  LearningLesson,
+  LearningResource,
+  UserProfile,
+  Solution,
+  CourseAccessControl,
+  PermissionDefinition,
+  RolePermission
+} from './types';
+
 // Funções de role helpers
 export const isAdminRole = (profile: any): boolean => {
   return profile?.user_roles?.name === 'admin';

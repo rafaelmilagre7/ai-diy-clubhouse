@@ -1,20 +1,21 @@
 
 import { Database } from './database.types';
 
-// Tipos de tabelas
+// Tipos de tabelas principais
 export type LearningLesson = Database['public']['Tables']['learning_lessons']['Row'];
 export type LearningLessonVideo = Database['public']['Tables']['learning_lesson_videos']['Row'];
 export type LearningModule = Database['public']['Tables']['learning_modules']['Row'];
 export type LearningCourse = Database['public']['Tables']['learning_courses']['Row'];
 export type LearningProgress = Database['public']['Tables']['learning_progress']['Row'];
-export type LearningResource = Database['public']['Tables']['learning_resources']['Row'] & {
-  // lesson_id agora pode ser null para recursos da biblioteca
-  lesson_id: string | null;
-};
+export type LearningResource = Database['public']['Tables']['learning_resources']['Row'];
 export type LearningLessonTool = Database['public']['Tables']['learning_lesson_tools']['Row'];
 export type LearningComment = Database['public']['Tables']['learning_comments']['Row'];
+export type CourseAccessControl = Database['public']['Tables']['course_access_control']['Row'];
+export type PermissionDefinition = Database['public']['Tables']['permission_definitions']['Row'];
+export type RolePermission = Database['public']['Tables']['role_permissions']['Row'];
+export type Solution = Database['public']['Tables']['solutions']['Row'];
 
-// CORREÇÃO: Tipo UserProfile referenciando a tabela 'profiles' correta
+// Tipo UserProfile com role join
 export type UserProfile = Database['public']['Tables']['profiles']['Row'] & {
   user_roles?: {
     id: string;
@@ -42,5 +43,5 @@ export const getUserRoleName = (profile: UserProfile | null): string => {
   return 'member';
 };
 
-// Outros tipos existentes
+// Re-exportar tipos do database
 export * from './database.types';
