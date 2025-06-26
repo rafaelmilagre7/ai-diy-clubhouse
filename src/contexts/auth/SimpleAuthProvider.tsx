@@ -63,7 +63,7 @@ export const SimpleAuthProvider: React.FC<SimpleAuthProviderProps> = ({ children
       action: 'initialize'
     });
     
-    // Subscribe to state changes
+    // Subscribe to state changes - CORREÇÃO: passar função que aceita AuthState
     const unsubscribe = authManager.on('stateChanged', (newState) => {
       logger.info('[SIMPLE-AUTH-PROVIDER] 📡 Estado atualizado via AuthManager', {
         component: 'SimpleAuthProvider',

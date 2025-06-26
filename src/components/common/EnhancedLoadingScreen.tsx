@@ -25,14 +25,9 @@ const EnhancedLoadingScreen: React.FC<EnhancedLoadingScreenProps> = ({
 }) => {
   const navigate = useNavigate();
   const [debugInfo, setDebugInfo] = useState<string[]>([]);
+  const [loadingDuration, setLoadingDuration] = useState(0);
   
-  const { 
-    hasTimedOut, 
-    loadingProgress, 
-    loadingDuration,
-    isLoadingTooLong,
-    retry 
-  } = useLoadingTimeoutEnhanced({
+  const { hasTimedOut, retry } = useLoadingTimeoutEnhanced({
     isLoading,
     timeoutMs: 15000, // 15 segundos
     context,
@@ -40,6 +35,21 @@ const EnhancedLoadingScreen: React.FC<EnhancedLoadingScreenProps> = ({
       setDebugInfo(prev => [...prev, `Timeout atingido após ${loadingDuration}ms`]);
     }
   });
+
+  // Calcular duração do loading localmente
+  useEffect(() => {
+    if (!isLoading) {
+      setLoadingDuration(0);
+      return;
+    }
+
+    const startTime = Date.now();
+    const interval = setInterval(() => {
+      setLoadingDuration(Date.now() - startTime);
+    }, 100);
+
+    return () => clearInterval(interval);
+  }, [isLoading]);
 
   // Debug info em tempo real
   useEffect(() => {
@@ -57,6 +67,7 @@ const EnhancedLoadingScreen: React.FC<EnhancedLoadingScreenProps> = ({
 
   const handleRetry = () => {
     setDebugInfo([]);
+    setLoadingDuration(0);
     retry();
     if (onRetry) {
       onRetry();
@@ -74,7 +85,6 @@ const EnhancedLoadingScreen: React.FC<EnhancedLoadingScreenProps> = ({
     if (onForceExit) {
       onForceExit();
     } else {
-      // CORRIGIDO: Redirecionar para /login (NOVO PADRÃO)
       navigate('/login', { replace: true });
     }
   };
@@ -138,6 +148,9 @@ const EnhancedLoadingScreen: React.FC<EnhancedLoadingScreenProps> = ({
       </div>
     );
   }
+
+  const loadingProgress = Math.min((loadingDuration / 10000) * 100, 95); // Progresso baseado em 10s
+  const isLoadingTooLong = loadingDuration > 8000; // 8 segundos
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-background">

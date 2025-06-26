@@ -21,6 +21,7 @@ export const useCleanOnboardingData = () => {
       action: 'connect_auth_manager'
     });
 
+    // CORREÇÃO: passar função que aceita AuthState como argumento
     const unsubscribe = authManager.on('stateChanged', (authState) => {
       logger.info('[CLEAN-ONBOARDING-DATA] 📡 Dados limpos atualizados', {
         component: 'useCleanOnboardingData',

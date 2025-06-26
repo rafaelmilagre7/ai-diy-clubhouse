@@ -17,6 +17,7 @@ export const useOnboardingRequired = () => {
   useEffect(() => {
     logger.info('[ONBOARDING-REQUIRED] 🔗 Conectando ao AuthManager');
 
+    // CORREÇÃO: passar função que aceita AuthState como argumento
     const unsubscribe = authManager.on('stateChanged', (authState) => {
       // CORREÇÃO CRÍTICA: Admin NUNCA precisa de onboarding
       if (authState.isAdmin) {
