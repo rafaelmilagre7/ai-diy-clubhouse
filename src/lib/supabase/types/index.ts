@@ -1,5 +1,4 @@
 
-
 import { Database } from './database.types';
 
 // Export all database types
@@ -30,7 +29,7 @@ export type LearningComment = Database['public']['Tables']['learning_comments'][
 export type Solution = Database['public']['Tables']['solutions']['Row'];
 export type Module = Database['public']['Tables']['modules']['Row'];
 export type Progress = Database['public']['Tables']['progress']['Row'];
-export type UserChecklist = any; // Define based on your actual schema
+export type UserChecklist = Database['public']['Tables']['user_checklists']['Row'];
 export type SolutionResource = Database['public']['Tables']['solution_resources']['Row'];
 export type SolutionTool = Database['public']['Tables']['solution_tools']['Row'];
 export type ImplementationCheckpoint = Database['public']['Tables']['implementation_checkpoints']['Row'];
@@ -43,6 +42,7 @@ export type ToolCategory = any; // Define based on your actual schema
 export type ForumTopic = Database['public']['Tables']['forum_topics']['Row'];
 export type ForumPost = Database['public']['Tables']['forum_posts']['Row'];
 export type ForumCategory = Database['public']['Tables']['forum_categories']['Row'];
+export type ForumReaction = Database['public']['Tables']['forum_reactions']['Row'];
 
 // Event types
 export type Event = Database['public']['Tables']['events']['Row'];
@@ -86,4 +86,3 @@ export const isAdminRole = (profile: any): boolean => {
 export const isFormacaoRole = (profile: any): boolean => {
   return profile?.user_roles?.name === 'formacao';
 };
-
