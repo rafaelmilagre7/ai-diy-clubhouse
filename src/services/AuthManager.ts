@@ -1,18 +1,25 @@
-import { createClient } from '@supabase/supabase-js';
-import { User, Session } from '@supabase/supabase-js';
-import { UserProfile } from '@/lib/supabase';
-import { AuthState, AuthManagerEvents, AuthEventType, AuthEventHandler } from '@/types/authTypes';
-import { logger } from '@/utils/logger';
-import { InviteTokenManager } from '@/utils/inviteTokenManager';
 
-class AuthManager {
-  private static instance: AuthManager;
-  private supabase = createClient(
-    import.meta.env.VITE_SUPABASE_URL,
-    import.meta.env.VITE_SUPABASE_ANON_KEY
-  );
-  
-  private state: AuthState = {
+import { supabase } from '@/lib/supabase/client';
+import { User, Session } from '@supabase/supabase-js';
+import { UserProfile, isAdminRole } from '@/lib/supabase';
+import { InviteTokenManager } from '@/utils/inviteTokenManager';
+import { logger } from '@/utils/logger';
+import { AuthState, AuthManagerEvents, AuthEventType, AuthEventHandler } from '@/types/authTypes';
+
+type EventMap = {
+  [K in AuthEventType]: AuthEventHandler<K>[];
+};
+
+export class AuthManager {
+  private static instance: AuthManager | null = null;
+  private eventListeners: EventMap = {
+    stateChanged: [],
+    error: [],
+    timeout: []
+  };
+
+  public isInitialized: boolean = false;
+  private currentState: AuthState = {
     user: null,
     session: null,
     profile: null,
@@ -24,18 +31,8 @@ class AuthManager {
     hasInviteToken: false,
     inviteDetails: null
   };
-  
-  private listeners: Map<AuthEventType, Set<AuthEventHandler<any>>> = new Map();
-  
-  // CORRIGIDO: Propriedade pública
-  public isInitialized: boolean = false;
-  private initializationPromise: Promise<void> | null = null;
-  private redirectLoopCount = 0;
-  private readonly MAX_REDIRECTS = 3;
 
-  private constructor() {
-    this.setupAuthListener();
-  }
+  private constructor() {}
 
   static getInstance(): AuthManager {
     if (!AuthManager.instance) {
@@ -44,293 +41,195 @@ class AuthManager {
     return AuthManager.instance;
   }
 
-  async initialize(): Promise<void> {
-    if (this.initializationPromise) {
-      return this.initializationPromise;
-    }
-
-    this.initializationPromise = this._initialize();
-    return this.initializationPromise;
+  getState(): AuthState {
+    return { ...this.currentState };
   }
 
-  private async _initialize(): Promise<void> {
+  private emit<T extends AuthEventType>(event: T, data: Parameters<AuthEventHandler<T>>[0]) {
+    const handlers = this.eventListeners[event] as AuthEventHandler<T>[];
+    handlers.forEach(handler => {
+      try {
+        handler(data);
+      } catch (error) {
+        logger.error(`Error in ${event} handler:`, error);
+      }
+    });
+  }
+
+  on<T extends AuthEventType>(event: T, handler: AuthEventHandler<T>): () => void {
+    this.eventListeners[event].push(handler as any);
+    
+    return () => {
+      const handlers = this.eventListeners[event];
+      const index = handlers.indexOf(handler as any);
+      if (index > -1) {
+        handlers.splice(index, 1);
+      }
+    };
+  }
+
+  private setState(newState: Partial<AuthState>) {
+    this.currentState = { ...this.currentState, ...newState };
+    this.emit('stateChanged', this.currentState);
+    
+    logger.info('[AUTH-MANAGER] Estado atualizado:', {
+      component: 'AuthManager',
+      action: 'state_updated',
+      hasUser: !!this.currentState.user,
+      isAdmin: this.currentState.isAdmin,
+      onboardingRequired: this.currentState.onboardingRequired,
+      isLoading: this.currentState.isLoading
+    });
+  }
+
+  async initialize(): Promise<void> {
     if (this.isInitialized) {
-      logger.info('[AUTH-MANAGER] ✅ Já inicializado - retornando estado atual');
+      logger.info('[AUTH-MANAGER] Já inicializado, ignorando');
       return;
     }
 
     try {
-      logger.info('[AUTH-MANAGER] 🚀 Inicializando AuthManager');
+      logger.info('[AUTH-MANAGER] 🚀 Inicializando AuthManager OTIMIZADO');
       
       this.setState({ isLoading: true, error: null });
 
-      const { data: { session }, error } = await this.supabase.auth.getSession();
+      // Setup auth state listener PRIMEIRO
+      supabase.auth.onAuthStateChange(async (event, session) => {
+        logger.info('[AUTH-MANAGER] 📡 Auth state change:', { event, hasSession: !!session });
+        
+        if (event === 'SIGNED_IN' && session) {
+          await this.handleSignIn(session);
+        } else if (event === 'SIGNED_OUT') {
+          await this.handleSignOut();
+        }
+      });
+
+      // Verificar sessão existente
+      const { data: { session }, error } = await supabase.auth.getSession();
       
       if (error) {
-        throw error;
+        logger.error('[AUTH-MANAGER] Erro ao obter sessão:', error);
+        this.setState({ error: error.message, isLoading: false });
+        return;
       }
 
-      if (session?.user) {
-        logger.info('[AUTH-MANAGER] 👤 Sessão encontrada', {
-          userId: session.user.id.substring(0, 8) + '***',
-          email: session.user.email
-        });
-        
-        await this.handleAuthStateChange('SIGNED_IN', session);
+      if (session) {
+        await this.handleSignIn(session);
       } else {
-        logger.info('[AUTH-MANAGER] 🚫 Nenhuma sessão encontrada');
+        // Verificar token de convite mesmo sem sessão
+        const hasInviteToken = InviteTokenManager.hasToken();
         this.setState({ 
-          isLoading: false, 
-          user: null, 
-          session: null, 
-          profile: null,
-          isAdmin: false,
-          isFormacao: false,
-          onboardingRequired: false
+          isLoading: false,
+          hasInviteToken,
+          inviteDetails: null // CORRIGIDO: Removido método inexistente
         });
       }
 
       this.isInitialized = true;
       logger.info('[AUTH-MANAGER] ✅ Inicialização concluída');
-      
+
     } catch (error) {
-      logger.error('[AUTH-MANAGER] ❌ Erro na inicialização', error);
+      logger.error('[AUTH-MANAGER] ❌ Erro na inicialização:', error);
       this.setState({ 
-        isLoading: false, 
-        error: error instanceof Error ? error.message : 'Erro desconhecido' 
+        error: error instanceof Error ? error.message : 'Erro na inicialização',
+        isLoading: false 
       });
-      throw error;
+      this.emit('error', error as Error);
     }
   }
 
-  private setupAuthListener(): void {
-    this.supabase.auth.onAuthStateChange(async (event, session) => {
-      logger.info('[AUTH-MANAGER] 📡 onAuthStateChange', { event, hasSession: !!session });
+  private async handleSignIn(session: Session): Promise<void> {
+    try {
+      logger.info('[AUTH-MANAGER] 👤 Processando sign in');
       
-      setTimeout(() => {
-        this.handleAuthStateChange(event, session);
-      }, 0);
+      this.setState({ 
+        session, 
+        user: session.user,
+        isLoading: true 
+      });
+
+      // Buscar perfil do usuário
+      const profile = await this.fetchUserProfile(session.user.id);
+      
+      if (profile) {
+        const isAdmin = isAdminRole(profile);
+        
+        // CORREÇÃO CRÍTICA: Admin bypass total do onboarding
+        const onboardingRequired = !isAdmin && !profile.onboarding_completed;
+        
+        logger.info('[AUTH-MANAGER] 👑 Status do usuário:', {
+          isAdmin,
+          onboardingCompleted: profile.onboarding_completed,
+          onboardingRequired,
+          roleName: profile.user_roles?.name
+        });
+
+        this.setState({
+          profile,
+          isAdmin,
+          isFormacao: profile.user_roles?.name === 'formacao',
+          onboardingRequired,
+          isLoading: false,
+          error: null
+        });
+      } else {
+        logger.warn('[AUTH-MANAGER] ⚠️ Perfil não encontrado para usuário');
+        this.setState({ 
+          onboardingRequired: true, // Usuário sem perfil precisa de onboarding
+          isLoading: false 
+        });
+      }
+
+    } catch (error) {
+      logger.error('[AUTH-MANAGER] ❌ Erro no handleSignIn:', error);
+      this.setState({ 
+        error: error instanceof Error ? error.message : 'Erro ao processar login',
+        isLoading: false 
+      });
+    }
+  }
+
+  private async handleSignOut(): Promise<void> {
+    logger.info('[AUTH-MANAGER] 🚪 Processando sign out');
+    
+    // Limpar token de convite no logout
+    InviteTokenManager.clearTokenOnLogout();
+    
+    this.setState({
+      user: null,
+      session: null,
+      profile: null,
+      isAdmin: false,
+      isFormacao: false,
+      onboardingRequired: false,
+      hasInviteToken: false,
+      inviteDetails: null,
+      isLoading: false,
+      error: null
     });
   }
 
-  private async handleAuthStateChange(event: string, session: Session | null): Promise<void> {
-    try {
-      this.setState({ isLoading: true });
-
-      if (event === 'SIGNED_OUT' || !session?.user) {
-        logger.info('[AUTH-MANAGER] 🚪 Usuário deslogado');
-        this.setState({
-          user: null,
-          session: null,
-          profile: null,
-          isLoading: false,
-          error: null,
-          isAdmin: false,
-          isFormacao: false,
-          onboardingRequired: false,
-          hasInviteToken: false,
-          inviteDetails: null
-        });
-        return;
-      }
-
-      if (event === 'SIGNED_IN' && session?.user) {
-        logger.info('[AUTH-MANAGER] 🔑 Processando login do usuário', {
-          userId: session.user.id.substring(0, 8) + '***',
-          email: session.user.email
-        });
-
-        // Buscar perfil do usuário
-        const profile = await this.fetchUserProfile(session.user.id);
-        
-        // Determinar roles
-        const isAdmin = this.determineIsAdmin(profile);
-        const isFormacao = this.determineIsFormacao(profile);
-        
-        // CORREÇÃO CRÍTICA: Admin bypass total do onboarding
-        let onboardingRequired = false;
-        if (!isAdmin) {
-          onboardingRequired = this.determineOnboardingRequired(profile);
-        }
-
-        // Verificar convite
-        const hasInviteToken = InviteTokenManager.hasToken();
-        let inviteDetails = null;
-        if (hasInviteToken) {
-          try {
-            inviteDetails = InviteTokenManager.getStoredInviteDetails();
-          } catch (error) {
-            logger.warn('[AUTH-MANAGER] ⚠️ Erro ao recuperar detalhes do convite', error);
-          }
-        }
-
-        logger.info('[AUTH-MANAGER] 📊 Estado calculado:', {
-          userId: session.user.id.substring(0, 8) + '***',
-          isAdmin,
-          isFormacao,
-          onboardingRequired,
-          hasInviteToken,
-          roleName: profile?.user_roles?.name
-        });
-
-        // CORREÇÃO CRÍTICA: Log específico para admin
-        if (isAdmin) {
-          logger.info('[AUTH-MANAGER] 👑 ADMIN DETECTADO - Bypass total do onboarding', {
-            userId: session.user.id.substring(0, 8) + '***',
-            onboardingRequired: false,
-            profileOnboardingCompleted: profile?.onboarding_completed
-          });
-        }
-
-        this.setState({
-          user: session.user,
-          session,
-          profile,
-          isLoading: false,
-          error: null,
-          isAdmin,
-          isFormacao,
-          onboardingRequired,
-          hasInviteToken,
-          inviteDetails
-        });
-      }
-      
-    } catch (error) {
-      logger.error('[AUTH-MANAGER] ❌ Erro no handleAuthStateChange', error);
-      this.setState({
-        isLoading: false,
-        error: error instanceof Error ? error.message : 'Erro na autenticação'
-      });
-    }
-  }
-
+  // CORREÇÃO: Implementação direta sem import inexistente
   private async fetchUserProfile(userId: string): Promise<UserProfile | null> {
     try {
-      const { data, error } = await this.supabase
+      const { data, error } = await supabase
         .from('profiles')
         .select(`
           *,
-          user_roles (
-            id,
-            name,
-            description
-          )
+          user_roles!inner(id, name, description)
         `)
         .eq('id', userId)
         .single();
 
       if (error) {
-        logger.warn('[AUTH-MANAGER] ⚠️ Erro ao buscar perfil', error);
+        logger.error('[AUTH-MANAGER] Erro ao buscar perfil:', error);
         return null;
       }
 
-      return data as UserProfile;
+      return data;
     } catch (error) {
-      logger.error('[AUTH-MANAGER] ❌ Erro na busca do perfil', error);
+      logger.error('[AUTH-MANAGER] Erro na consulta do perfil:', error);
       return null;
-    }
-  }
-
-  private determineIsAdmin(profile: UserProfile | null): boolean {
-    return profile?.user_roles?.name === 'Admin';
-  }
-
-  private determineIsFormacao(profile: UserProfile | null): boolean {
-    return profile?.user_roles?.name === 'Formação';
-  }
-
-  private determineOnboardingRequired(profile: UserProfile | null): boolean {
-    if (!profile) return true;
-    
-    // Se onboarding_completed está explicitamente marcado como true
-    if (profile.onboarding_completed === true) {
-      return false;
-    }
-    
-    // Se onboarding_completed está explicitamente marcado como false ou null
-    if (profile.onboarding_completed === false || profile.onboarding_completed === null) {
-      return true;
-    }
-    
-    // Fallback: verificar campos essenciais
-    const hasEssentialFields = !!(
-      profile.company_name && 
-      profile.industry && 
-      profile.full_name
-    );
-    
-    return !hasEssentialFields;
-  }
-
-  getRedirectPath(): string {
-    const currentState = this.getState();
-    
-    // PROTEÇÃO: Loop de redirecionamento
-    if (this.redirectLoopCount >= this.MAX_REDIRECTS) {
-      logger.error('[AUTH-MANAGER] 🔄 Loop de redirecionamento detectado - forçando /dashboard');
-      this.redirectLoopCount = 0;
-      return '/dashboard';
-    }
-    
-    this.redirectLoopCount++;
-    
-    // CORREÇÃO CRÍTICA: Admin vai direto para /admin
-    if (currentState.isAdmin) {
-      logger.info('[AUTH-MANAGER] 👑 Admin detectado - redirecionando para /admin');
-      this.redirectLoopCount = 0;
-      return '/admin';
-    }
-    
-    // Formação vai para /formacao
-    if (currentState.isFormacao) {
-      logger.info('[AUTH-MANAGER] 🎓 Formação detectado - redirecionando para /formacao');
-      this.redirectLoopCount = 0;
-      return '/formacao';
-    }
-    
-    // Onboarding obrigatório para usuários comuns
-    if (currentState.onboardingRequired) {
-      logger.info('[AUTH-MANAGER] 📝 Onboarding obrigatório - redirecionando para /onboarding');
-      this.redirectLoopCount = 0;
-      
-      // Preservar token se necessário
-      if (currentState.hasInviteToken) {
-        const token = InviteTokenManager.getToken();
-        return token ? `/onboarding?token=${token}` : '/onboarding';
-      }
-      
-      return '/onboarding';
-    }
-    
-    // Default: dashboard
-    logger.info('[AUTH-MANAGER] 🏠 Redirecionamento padrão - /dashboard');
-    this.redirectLoopCount = 0;
-    return '/dashboard';
-  }
-
-  on<T extends AuthEventType>(event: T, handler: AuthEventHandler<T>): () => void {
-    if (!this.listeners.has(event)) {
-      this.listeners.set(event, new Set());
-    }
-    
-    this.listeners.get(event)!.add(handler);
-    
-    return () => {
-      this.listeners.get(event)?.delete(handler);
-    };
-  }
-
-  private emit<T extends AuthEventType>(event: T, data: Parameters<AuthEventHandler<T>>[0]): void {
-    const handlers = this.listeners.get(event);
-    if (handlers) {
-      handlers.forEach(handler => {
-        try {
-          handler(data);
-        } catch (error) {
-          logger.error(`[AUTH-MANAGER] Erro no handler do evento ${event}`, error);
-        }
-      });
     }
   }
 
@@ -338,20 +237,20 @@ class AuthManager {
     try {
       this.setState({ isLoading: true, error: null });
       
-      const { error } = await this.supabase.auth.signInWithPassword({
+      const { error } = await supabase.auth.signInWithPassword({
         email,
         password
       });
-      
+
       if (error) {
-        this.setState({ isLoading: false, error: error.message });
+        this.setState({ error: error.message, isLoading: false });
         return { error };
       }
-      
+
       return {};
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Erro no login';
-      this.setState({ isLoading: false, error: errorMessage });
+      this.setState({ error: errorMessage, isLoading: false });
       return { error: error as Error };
     }
   }
@@ -360,42 +259,83 @@ class AuthManager {
     try {
       this.setState({ isLoading: true });
       
-      const { error } = await this.supabase.auth.signOut();
+      const { error } = await supabase.auth.signOut();
       
       if (error) {
-        this.setState({ isLoading: false, error: error.message });
+        this.setState({ error: error.message, isLoading: false });
         return { success: false, error };
       }
-      
-      // Limpar estado
-      this.setState({
-        user: null,
-        session: null,
-        profile: null,
-        isLoading: false,
-        error: null,
-        isAdmin: false,
-        isFormacao: false,
-        onboardingRequired: false,
-        hasInviteToken: false,
-        inviteDetails: null
-      });
-      
+
+      // handleSignOut será chamado automaticamente pelo onAuthStateChange
       return { success: true };
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro no logout';
-      this.setState({ isLoading: false, error: errorMessage });
+      this.setState({ 
+        error: error instanceof Error ? error.message : 'Erro no logout',
+        isLoading: false 
+      });
       return { success: false, error: error as Error };
     }
   }
 
-  getState(): AuthState {
-    return { ...this.state };
+  // NOVA FUNÇÃO: Calcular redirecionamento baseado no estado
+  getRedirectPath(): string {
+    const state = this.getState();
+    
+    if (!state.user) {
+      return '/login';
+    }
+    
+    // CORREÇÃO CRÍTICA: Admin bypass total
+    if (state.isAdmin) {
+      logger.info('[AUTH-MANAGER] 👑 Admin detectado - redirecionando para /admin');
+      return '/admin';
+    }
+    
+    if (state.onboardingRequired) {
+      logger.info('[AUTH-MANAGER] Onboarding obrigatório detectado');
+      return '/onboarding';
+    }
+    
+    if (state.profile?.user_roles?.name === 'formacao') {
+      return '/formacao';
+    }
+    
+    return '/dashboard';
   }
 
-  private setState(updates: Partial<AuthState>): void {
-    this.state = { ...this.state, ...updates };
-    this.emit('stateChanged', this.state);
+  // NOVA FUNÇÃO: Atualizar perfil após onboarding
+  async updateProfileAfterOnboarding(updates: Partial<UserProfile>): Promise<void> {
+    if (!this.currentState.user) return;
+    
+    try {
+      // CORRIGIDO: Usar 'name' em vez de 'full_name'
+      const { data, error } = await supabase
+        .from('profiles')
+        .update({
+          ...updates,
+          onboarding_completed: true,
+          onboarding_completed_at: new Date().toISOString()
+        })
+        .eq('id', this.currentState.user.id)
+        .select(`
+          *,
+          user_roles!inner(id, name, description)
+        `)
+        .single();
+
+      if (error) throw error;
+
+      // Atualizar estado local
+      this.setState({
+        profile: data,
+        onboardingRequired: false
+      });
+
+      logger.info('[AUTH-MANAGER] ✅ Perfil atualizado após onboarding');
+    } catch (error) {
+      logger.error('[AUTH-MANAGER] ❌ Erro ao atualizar perfil:', error);
+      throw error;
+    }
   }
 }
 
