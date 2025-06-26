@@ -26,8 +26,8 @@ const RobustRootRedirect = () => {
   useEffect(() => {
     const authManager = AuthManager.getInstance();
     
-    // CORREÇÃO: passar função que aceita AuthState como argumento
-    const unsubscribe = authManager.on('stateChanged', (authState) => {
+    // CORREÇÃO: criar função handler que aceita AuthState como argumento
+    const handleStateChanged = (authState) => {
       logger.info('[ROBUST-ROOT-REDIRECT] 📡 Estado AuthManager atualizado:', {
         hasUser: !!authState.user,
         isLoading: authState.isLoading,
@@ -35,10 +35,12 @@ const RobustRootRedirect = () => {
         onboardingRequired: authState.onboardingRequired,
         userRole: authState.profile?.user_roles?.name
       });
-    });
+    };
+
+    const unsubscribe = authManager.on('stateChanged', handleStateChanged);
 
     return () => {
-      authManager.off('stateChanged', unsubscribe);
+      authManager.off('stateChanged', handleStateChanged);
     };
   }, []);
 

@@ -17,8 +17,8 @@ export const useOnboardingRequired = () => {
   useEffect(() => {
     logger.info('[ONBOARDING-REQUIRED] 🔗 Conectando ao AuthManager');
 
-    // CORREÇÃO: passar função que aceita AuthState como argumento
-    const unsubscribe = authManager.on('stateChanged', (authState) => {
+    // CORREÇÃO: criar função handler que aceita AuthState como argumento
+    const handleStateChanged = (authState) => {
       // CORREÇÃO CRÍTICA: Admin NUNCA precisa de onboarding
       if (authState.isAdmin) {
         logger.info('[ONBOARDING-REQUIRED] 👑 ADMIN DETECTADO - Onboarding dispensado', {
@@ -49,7 +49,9 @@ export const useOnboardingRequired = () => {
         hasCompleted: !authState.onboardingRequired,
         isLoading: authState.isLoading
       });
-    });
+    };
+
+    const unsubscribe = authManager.on('stateChanged', handleStateChanged);
 
     // Initialize if needed
     if (!authManager.isInitialized) {
@@ -58,7 +60,7 @@ export const useOnboardingRequired = () => {
     }
 
     return () => {
-      authManager.off('stateChanged', unsubscribe);
+      authManager.off('stateChanged', handleStateChanged);
     };
   }, [authManager]);
 

@@ -63,8 +63,8 @@ export const SimpleAuthProvider: React.FC<SimpleAuthProviderProps> = ({ children
       action: 'initialize'
     });
     
-    // Subscribe to state changes - CORREÇÃO: passar função que aceita AuthState
-    const unsubscribe = authManager.on('stateChanged', (newState) => {
+    // CORREÇÃO: criar função handler que aceita AuthState como argumento
+    const handleStateChanged = (newState) => {
       logger.info('[SIMPLE-AUTH-PROVIDER] 📡 Estado atualizado via AuthManager', {
         component: 'SimpleAuthProvider',
         action: 'state_changed',
@@ -88,7 +88,10 @@ export const SimpleAuthProvider: React.FC<SimpleAuthProviderProps> = ({ children
         hasInviteToken: newState.hasInviteToken,
         inviteDetails: newState.inviteDetails
       });
-    });
+    };
+    
+    // Subscribe to state changes com função handler
+    const unsubscribe = authManager.on('stateChanged', handleStateChanged);
     
     // Initialize AuthManager
     const initializeAuth = async () => {
@@ -136,7 +139,7 @@ export const SimpleAuthProvider: React.FC<SimpleAuthProviderProps> = ({ children
     initializeAuth();
     
     return () => {
-      authManager.off('stateChanged', unsubscribe);
+      authManager.off('stateChanged', handleStateChanged);
     };
   }, []);
 

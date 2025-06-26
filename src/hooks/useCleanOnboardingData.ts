@@ -21,8 +21,8 @@ export const useCleanOnboardingData = () => {
       action: 'connect_auth_manager'
     });
 
-    // CORREÇÃO: passar função que aceita AuthState como argumento
-    const unsubscribe = authManager.on('stateChanged', (authState) => {
+    // CORREÇÃO: criar função handler que aceita AuthState como argumento
+    const handleStateChanged = (authState) => {
       logger.info('[CLEAN-ONBOARDING-DATA] 📡 Dados limpos atualizados', {
         component: 'useCleanOnboardingData',
         action: 'data_updated',
@@ -37,7 +37,9 @@ export const useCleanOnboardingData = () => {
         isLoading: authState.isLoading,
         shouldShowOnboarding: authState.onboardingRequired
       });
-    });
+    };
+
+    const unsubscribe = authManager.on('stateChanged', handleStateChanged);
 
     // Initialize if needed
     if (!authManager.isInitialized) {
@@ -46,7 +48,7 @@ export const useCleanOnboardingData = () => {
     }
 
     return () => {
-      authManager.off('stateChanged', unsubscribe);
+      authManager.off('stateChanged', handleStateChanged);
     };
   }, [authManager]);
 
