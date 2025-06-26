@@ -22,7 +22,8 @@ export {
   incrementTopicReplies,
   deleteForumTopic,
   deleteForumPost,
-  auditRoleAssignments
+  auditRoleAssignments,
+  callSupabaseRpc
 } from './rpc';
 
 // Tipos principais re-exportados

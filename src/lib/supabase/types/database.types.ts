@@ -33,7 +33,7 @@ export type Database = {
           avatar_url?: string
           company_name?: string
           industry?: string
-          role_id?: string
+          role_id: string
           role?: string
           created_at?: string
           onboarding_completed?: boolean
@@ -66,7 +66,6 @@ export type Database = {
           permissions: Json
           is_system: boolean
           created_at: string
-          updated_at: string
         }
         Insert: {
           id?: string
@@ -75,7 +74,6 @@ export type Database = {
           permissions?: Json
           is_system?: boolean
           created_at?: string
-          updated_at?: string
         }
         Update: {
           id?: string
@@ -84,7 +82,6 @@ export type Database = {
           permissions?: Json
           is_system?: boolean
           created_at?: string
-          updated_at?: string
         }
         Relationships: []
       }
@@ -102,7 +99,7 @@ export type Database = {
           code: string
           name: string
           description?: string
-          category: string
+          category?: string
           created_at?: string
         }
         Update: {
@@ -144,8 +141,8 @@ export type Database = {
           slug: string
           cover_image_url: string
           published: boolean
-          created_by: string
           order_index: number
+          created_by: string
           created_at: string
           updated_at: string
         }
@@ -156,8 +153,8 @@ export type Database = {
           slug: string
           cover_image_url?: string
           published?: boolean
-          created_by?: string
           order_index?: number
+          created_by?: string
           created_at?: string
           updated_at?: string
         }
@@ -168,8 +165,8 @@ export type Database = {
           slug?: string
           cover_image_url?: string
           published?: boolean
-          created_by?: string
           order_index?: number
+          created_by?: string
           created_at?: string
           updated_at?: string
         }
@@ -181,9 +178,9 @@ export type Database = {
           course_id: string
           title: string
           description: string
-          cover_image_url: string
-          published: boolean
           order_index: number
+          published: boolean
+          cover_image_url: string
           created_at: string
           updated_at: string
         }
@@ -192,9 +189,9 @@ export type Database = {
           course_id: string
           title: string
           description?: string
-          cover_image_url?: string
-          published?: boolean
           order_index?: number
+          published?: boolean
+          cover_image_url?: string
           created_at?: string
           updated_at?: string
         }
@@ -203,9 +200,9 @@ export type Database = {
           course_id?: string
           title?: string
           description?: string
-          cover_image_url?: string
-          published?: boolean
           order_index?: number
+          published?: boolean
+          cover_image_url?: string
           created_at?: string
           updated_at?: string
         }
@@ -218,14 +215,14 @@ export type Database = {
           title: string
           description: string
           content: Json
-          cover_image_url: string
-          published: boolean
           order_index: number
-          estimated_time_minutes: number
+          published: boolean
+          cover_image_url: string
           difficulty_level: string
+          estimated_time_minutes: number
           ai_assistant_enabled: boolean
-          ai_assistant_prompt: string
           ai_assistant_id: string
+          ai_assistant_prompt: string
           created_at: string
           updated_at: string
         }
@@ -235,14 +232,14 @@ export type Database = {
           title: string
           description?: string
           content?: Json
-          cover_image_url?: string
-          published?: boolean
           order_index?: number
-          estimated_time_minutes?: number
+          published?: boolean
+          cover_image_url?: string
           difficulty_level?: string
+          estimated_time_minutes?: number
           ai_assistant_enabled?: boolean
-          ai_assistant_prompt?: string
           ai_assistant_id?: string
+          ai_assistant_prompt?: string
           created_at?: string
           updated_at?: string
         }
@@ -252,14 +249,14 @@ export type Database = {
           title?: string
           description?: string
           content?: Json
-          cover_image_url?: string
-          published?: boolean
           order_index?: number
-          estimated_time_minutes?: number
+          published?: boolean
+          cover_image_url?: string
           difficulty_level?: string
+          estimated_time_minutes?: number
           ai_assistant_enabled?: boolean
-          ai_assistant_prompt?: string
           ai_assistant_id?: string
+          ai_assistant_prompt?: string
           created_at?: string
           updated_at?: string
         }
@@ -326,9 +323,9 @@ export type Database = {
           started_at: string
           completed_at: string
           last_position_seconds: number
-          updated_at: string
-          created_at: string
           notes: string
+          created_at: string
+          updated_at: string
         }
         Insert: {
           id?: string
@@ -339,9 +336,9 @@ export type Database = {
           started_at?: string
           completed_at?: string
           last_position_seconds?: number
-          updated_at?: string
-          created_at?: string
           notes?: string
+          created_at?: string
+          updated_at?: string
         }
         Update: {
           id?: string
@@ -352,9 +349,9 @@ export type Database = {
           started_at?: string
           completed_at?: string
           last_position_seconds?: number
-          updated_at?: string
-          created_at?: string
           notes?: string
+          created_at?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -418,6 +415,252 @@ export type Database = {
         }
         Relationships: []
       }
+      analytics: {
+        Row: {
+          id: string
+          user_id: string
+          event_type: string
+          event_data: Json
+          solution_id: string
+          module_id: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          event_type: string
+          event_data?: Json
+          solution_id?: string
+          module_id?: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          event_type?: string
+          event_data?: Json
+          solution_id?: string
+          module_id?: string
+          created_at?: string
+        }
+        Relationships: []
+      }
+      solutions: {
+        Row: {
+          id: string
+          title: string
+          description: string
+          category: string
+          difficulty_level: string
+          estimated_time_hours: number
+          cover_image_url: string
+          published: boolean
+          created_by: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          title: string
+          description?: string
+          category: string
+          difficulty_level?: string
+          estimated_time_hours?: number
+          cover_image_url?: string
+          published?: boolean
+          created_by?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          title?: string
+          description?: string
+          category?: string
+          difficulty_level?: string
+          estimated_time_hours?: number
+          cover_image_url?: string
+          published?: boolean
+          created_by?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      modules: {
+        Row: {
+          id: string
+          solution_id: string
+          title: string
+          content: Json
+          type: string
+          module_order: number
+          estimated_time_minutes: number
+          metrics: Json
+          certificate_template: Json
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          solution_id: string
+          title: string
+          content: Json
+          type: string
+          module_order: number
+          estimated_time_minutes?: number
+          metrics?: Json
+          certificate_template?: Json
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          solution_id?: string
+          title?: string
+          content?: Json
+          type?: string
+          module_order?: number
+          estimated_time_minutes?: number
+          metrics?: Json
+          certificate_template?: Json
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      progress: {
+        Row: {
+          id: string
+          user_id: string
+          solution_id: string
+          module_id: string
+          is_completed: boolean
+          completed_at: string
+          progress_data: Json
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          solution_id: string
+          module_id?: string
+          is_completed?: boolean
+          completed_at?: string
+          progress_data?: Json
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          solution_id?: string
+          module_id?: string
+          is_completed?: boolean
+          completed_at?: string
+          progress_data?: Json
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      tools: {
+        Row: {
+          id: string
+          name: string
+          description: string
+          category: string
+          url: string
+          image_url: string
+          is_featured: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          description?: string
+          category: string
+          url: string
+          image_url?: string
+          is_featured?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          description?: string
+          category?: string
+          url?: string
+          image_url?: string
+          is_featured?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      user_checklists: {
+        Row: {
+          id: string
+          user_id: string
+          solution_id: string
+          module_id: string
+          checkpoint_id: string
+          is_completed: boolean
+          completed_at: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          solution_id: string
+          module_id: string
+          checkpoint_id: string
+          is_completed?: boolean
+          completed_at?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          solution_id?: string
+          module_id?: string
+          checkpoint_id?: string
+          is_completed?: boolean
+          completed_at?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      implementation_checkpoints: {
+        Row: {
+          id: string
+          solution_id: string
+          description: string
+          checkpoint_order: number
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          solution_id?: string
+          description: string
+          checkpoint_order: number
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          solution_id?: string
+          description?: string
+          checkpoint_order?: number
+          created_at?: string
+        }
+        Relationships: []
+      }
       course_access_control: {
         Row: {
           id: string
@@ -449,9 +692,9 @@ export type Database = {
           details: Json
           severity: string
           timestamp: string
-          ip_address: string
-          user_agent: string
           session_id: string
+          user_agent: string
+          ip_address: string
         }
         Insert: {
           id?: string
@@ -462,9 +705,9 @@ export type Database = {
           details?: Json
           severity?: string
           timestamp?: string
-          ip_address?: string
-          user_agent?: string
           session_id?: string
+          user_agent?: string
+          ip_address?: string
         }
         Update: {
           id?: string
@@ -475,174 +718,9 @@ export type Database = {
           details?: Json
           severity?: string
           timestamp?: string
-          ip_address?: string
-          user_agent?: string
           session_id?: string
-        }
-        Relationships: []
-      }
-      solutions: {
-        Row: {
-          id: string
-          title: string
-          description: string
-          category: string
-          difficulty: string
-          cover_image_url: string
-          published: boolean
-          created_by: string
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          title: string
-          description?: string
-          category: string
-          difficulty?: string
-          cover_image_url?: string
-          published?: boolean
-          created_by?: string
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          title?: string
-          description?: string
-          category?: string
-          difficulty?: string
-          cover_image_url?: string
-          published?: boolean
-          created_by?: string
-          created_at?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
-      modules: {
-        Row: {
-          id: string
-          solution_id: string
-          title: string
-          type: string
-          content: Json
-          module_order: number
-          estimated_time_minutes: number
-          metrics: Json
-          certificate_template: Json
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          solution_id: string
-          title: string
-          type: string
-          content: Json
-          module_order: number
-          estimated_time_minutes?: number
-          metrics?: Json
-          certificate_template?: Json
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          solution_id?: string
-          title?: string
-          type?: string
-          content?: Json
-          module_order?: number
-          estimated_time_minutes?: number
-          metrics?: Json
-          certificate_template?: Json
-          created_at?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
-      progress: {
-        Row: {
-          id: string
-          user_id: string
-          solution_id: string
-          module_id: string
-          is_completed: boolean
-          completion_percentage: number
-          started_at: string
-          completed_at: string
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          user_id: string
-          solution_id?: string
-          module_id?: string
-          is_completed?: boolean
-          completion_percentage?: number
-          started_at?: string
-          completed_at?: string
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          user_id?: string
-          solution_id?: string
-          module_id?: string
-          is_completed?: boolean
-          completion_percentage?: number
-          started_at?: string
-          completed_at?: string
-          created_at?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
-      tools: {
-        Row: {
-          id: string
-          name: string
-          description: string
-          category: string
-          logo_url: string
-          official_url: string
-          is_active: boolean
-          member_benefit: Json
-          video_tutorials: Json
-          tags: string[]
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          name: string
-          description?: string
-          category: string
-          logo_url?: string
-          official_url?: string
-          is_active?: boolean
-          member_benefit?: Json
-          video_tutorials?: Json
-          tags?: string[]
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          name?: string
-          description?: string
-          category?: string
-          logo_url?: string
-          official_url?: string
-          is_active?: boolean
-          member_benefit?: Json
-          video_tutorials?: Json
-          tags?: string[]
-          created_at?: string
-          updated_at?: string
+          user_agent?: string
+          ip_address?: string
         }
         Relationships: []
       }
@@ -656,7 +734,6 @@ export type Database = {
           location_link: string
           physical_location: string
           cover_image_url: string
-          created_by: string
           is_recurring: boolean
           recurrence_pattern: string
           recurrence_interval: number
@@ -664,6 +741,7 @@ export type Database = {
           recurrence_count: number
           recurrence_end_date: string
           parent_event_id: string
+          created_by: string
           created_at: string
         }
         Insert: {
@@ -675,7 +753,6 @@ export type Database = {
           location_link?: string
           physical_location?: string
           cover_image_url?: string
-          created_by: string
           is_recurring?: boolean
           recurrence_pattern?: string
           recurrence_interval?: number
@@ -683,6 +760,7 @@ export type Database = {
           recurrence_count?: number
           recurrence_end_date?: string
           parent_event_id?: string
+          created_by: string
           created_at?: string
         }
         Update: {
@@ -694,7 +772,6 @@ export type Database = {
           location_link?: string
           physical_location?: string
           cover_image_url?: string
-          created_by?: string
           is_recurring?: boolean
           recurrence_pattern?: string
           recurrence_interval?: number
@@ -702,57 +779,7 @@ export type Database = {
           recurrence_count?: number
           recurrence_end_date?: string
           parent_event_id?: string
-          created_at?: string
-        }
-        Relationships: []
-      }
-      user_checklists: {
-        Row: {
-          id: string
-          user_id: string
-          module_id: string
-          checklist_data: Json
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          user_id: string
-          module_id: string
-          checklist_data?: Json
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          user_id?: string
-          module_id?: string
-          checklist_data?: Json
-          created_at?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
-      implementation_checkpoints: {
-        Row: {
-          id: string
-          solution_id: string
-          description: string
-          checkpoint_order: number
-          created_at: string
-        }
-        Insert: {
-          id?: string
-          solution_id?: string
-          description: string
-          checkpoint_order: number
-          created_at?: string
-        }
-        Update: {
-          id?: string
-          solution_id?: string
-          description?: string
-          checkpoint_order?: number
+          created_by?: string
           created_at?: string
         }
         Relationships: []
@@ -761,28 +788,34 @@ export type Database = {
         Row: {
           id: string
           solution_id: string
-          title: string
+          name: string
           description: string
           file_url: string
           file_type: string
+          file_size_bytes: number
+          order_index: number
           created_at: string
         }
         Insert: {
           id?: string
           solution_id: string
-          title: string
+          name: string
           description?: string
           file_url: string
-          file_type: string
+          file_type?: string
+          file_size_bytes?: number
+          order_index?: number
           created_at?: string
         }
         Update: {
           id?: string
           solution_id?: string
-          title?: string
+          name?: string
           description?: string
           file_url?: string
           file_type?: string
+          file_size_bytes?: number
+          order_index?: number
           created_at?: string
         }
         Relationships: []
@@ -792,39 +825,21 @@ export type Database = {
           id: string
           solution_id: string
           tool_id: string
+          order_index: number
           created_at: string
         }
         Insert: {
           id?: string
           solution_id: string
           tool_id: string
+          order_index?: number
           created_at?: string
         }
         Update: {
           id?: string
           solution_id?: string
           tool_id?: string
-          created_at?: string
-        }
-        Relationships: []
-      }
-      benefit_access_control: {
-        Row: {
-          id: string
-          tool_id: string
-          role_id: string
-          created_at: string
-        }
-        Insert: {
-          id?: string
-          tool_id: string
-          role_id: string
-          created_at?: string
-        }
-        Update: {
-          id?: string
-          tool_id?: string
-          role_id?: string
+          order_index?: number
           created_at?: string
         }
         Relationships: []
@@ -832,10 +847,10 @@ export type Database = {
       forum_topics: {
         Row: {
           id: string
+          category_id: string
+          user_id: string
           title: string
           content: string
-          user_id: string
-          category_id: string
           is_pinned: boolean
           is_locked: boolean
           is_solved: boolean
@@ -847,10 +862,10 @@ export type Database = {
         }
         Insert: {
           id?: string
+          category_id: string
+          user_id: string
           title: string
           content: string
-          user_id: string
-          category_id: string
           is_pinned?: boolean
           is_locked?: boolean
           is_solved?: boolean
@@ -862,52 +877,16 @@ export type Database = {
         }
         Update: {
           id?: string
+          category_id?: string
+          user_id?: string
           title?: string
           content?: string
-          user_id?: string
-          category_id?: string
           is_pinned?: boolean
           is_locked?: boolean
           is_solved?: boolean
           view_count?: number
           reply_count?: number
           last_activity_at?: string
-          created_at?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
-      forum_categories: {
-        Row: {
-          id: string
-          name: string
-          description: string
-          slug: string
-          icon: string
-          order_index: number
-          is_active: boolean
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          name: string
-          description?: string
-          slug: string
-          icon?: string
-          order_index?: number
-          is_active?: boolean
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          name?: string
-          description?: string
-          slug?: string
-          icon?: string
-          order_index?: number
-          is_active?: boolean
           created_at?: string
           updated_at?: string
         }
@@ -918,8 +897,8 @@ export type Database = {
           id: string
           topic_id: string
           user_id: string
-          content: string
           parent_id: string
+          content: string
           is_solution: boolean
           is_hidden: boolean
           created_at: string
@@ -929,8 +908,8 @@ export type Database = {
           id?: string
           topic_id: string
           user_id: string
-          content: string
           parent_id?: string
+          content: string
           is_solution?: boolean
           is_hidden?: boolean
           created_at?: string
@@ -940,36 +919,12 @@ export type Database = {
           id?: string
           topic_id?: string
           user_id?: string
-          content?: string
           parent_id?: string
+          content?: string
           is_solution?: boolean
           is_hidden?: boolean
           created_at?: string
           updated_at?: string
-        }
-        Relationships: []
-      }
-      forum_reactions: {
-        Row: {
-          id: string
-          post_id: string
-          user_id: string
-          reaction_type: string
-          created_at: string
-        }
-        Insert: {
-          id?: string
-          post_id: string
-          user_id: string
-          reaction_type: string
-          created_at?: string
-        }
-        Update: {
-          id?: string
-          post_id?: string
-          user_id?: string
-          reaction_type?: string
-          created_at?: string
         }
         Relationships: []
       }
@@ -1023,7 +978,7 @@ export type Database = {
           offset_count?: number
           search_query?: string
         }
-        Returns: {
+        Returns: Array<{
           id: string
           email: string
           name: string
@@ -1034,7 +989,7 @@ export type Database = {
           company_name: string
           industry: string
           created_at: string
-        }[]
+        }>
       }
       audit_role_assignments: {
         Args: {
@@ -1042,7 +997,37 @@ export type Database = {
           action: string
           details?: Json
         }
+        Returns: string
+      }
+      create_storage_public_policy: {
+        Args: {
+          bucket_name: string
+        }
+        Returns: boolean
+      }
+      increment_topic_replies: {
+        Args: {
+          topic_id: string
+        }
         Returns: void
+      }
+      increment_topic_views: {
+        Args: {
+          topic_id: string
+        }
+        Returns: void
+      }
+      delete_forum_topic: {
+        Args: {
+          topic_id: string
+        }
+        Returns: Json
+      }
+      delete_forum_post: {
+        Args: {
+          post_id: string
+        }
+        Returns: Json
       }
     }
     Enums: {

@@ -43,17 +43,7 @@ export const auditRoleAssignments = async (userId: string, action: string, detai
   });
 };
 
-// Helper function to call RPC functions correctly with proper typing
-export const callRpcFunction = async (
-  functionName: 'create_storage_public_policy' | 'increment_topic_replies' | 'increment_topic_views' | 'delete_forum_topic' | 'delete_forum_post' | 'audit_role_assignments', 
-  params: Record<string, any> = {}
-) => {
-  const { data, error } = await supabase.rpc(functionName as any, params);
-  if (error) throw error;
-  return data;
-};
-
-// For backward compatibility, create a more flexible version that handles other RPC calls
+// Helper function to call any RPC function with proper error handling
 export const callSupabaseRpc = async (functionName: string, params: Record<string, any> = {}) => {
   try {
     const { data, error } = await supabase.rpc(functionName as any, params);
