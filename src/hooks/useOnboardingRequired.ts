@@ -15,20 +15,32 @@ export const useOnboardingRequired = () => {
   });
 
   useEffect(() => {
-    logger.info({
-      message: 'Conectando ao AuthManager',
-      component: 'useOnboardingRequired',
-      action: 'connect_auth_manager'
-    });
+    logger.info('[ONBOARDING-REQUIRED] 🔗 Conectando ao AuthManager');
 
     const unsubscribe = authManager.on('stateChanged', (authState) => {
-      logger.info({
-        message: 'Estado atualizado via AuthManager',
-        component: 'useOnboardingRequired',
-        action: 'state_updated',
+      // CORREÇÃO CRÍTICA: Admin NUNCA precisa de onboarding
+      if (authState.isAdmin) {
+        logger.info('[ONBOARDING-REQUIRED] 👑 ADMIN DETECTADO - Onboarding dispensado', {
+          userId: authState.user?.id?.substring(0, 8) + '***' || 'none',
+          isAdmin: authState.isAdmin,
+          originalOnboardingRequired: authState.onboardingRequired
+        });
+
+        setState({
+          isRequired: false, // SEMPRE false para admin
+          hasCompleted: true, // SEMPRE true para admin
+          isLoading: authState.isLoading
+        });
+        return;
+      }
+
+      // Para não-admin, usar o estado normal
+      logger.info('[ONBOARDING-REQUIRED] 📊 Estado atualizado via AuthManager:', {
         onboardingRequired: authState.onboardingRequired,
         isAdmin: authState.isAdmin,
-        hasUser: !!authState.user
+        hasUser: !!authState.user,
+        isLoading: authState.isLoading,
+        userRole: authState.profile?.user_roles?.name
       });
 
       setState({
@@ -39,13 +51,19 @@ export const useOnboardingRequired = () => {
     });
 
     // Initialize if needed
-    // CORRIGIDO: Usar propriedade pública isInitialized
     if (!authManager.isInitialized) {
+      logger.info('[ONBOARDING-REQUIRED] 🚀 Forçando inicialização do AuthManager');
       authManager.initialize();
     }
 
     return unsubscribe;
   }, [authManager]);
+
+  logger.debug('[ONBOARDING-REQUIRED] 📊 Estado atual:', {
+    isRequired: state.isRequired,
+    hasCompleted: state.hasCompleted,
+    isLoading: state.isLoading
+  });
 
   return state;
 };

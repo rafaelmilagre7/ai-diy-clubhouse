@@ -20,7 +20,7 @@ export const RobustProtectedRoutes = ({ children, allowInviteFlow = false }: Rob
   const isInInviteFlow = InviteTokenManager.hasToken() || location.pathname.includes('/invite');
   const totalLoading = authLoading || onboardingLoading;
 
-  logger.info("[PROTECTED-ROUTES] Estado atual:", {
+  logger.info("[ROBUST-PROTECTED-ROUTES] Estado atual:", {
     pathname: location.pathname,
     hasUser: !!user,
     authLoading,
@@ -38,30 +38,34 @@ export const RobustProtectedRoutes = ({ children, allowInviteFlow = false }: Rob
 
   // Sem usuário = login
   if (!user) {
-    logger.info("[PROTECTED-ROUTES] Sem usuário -> /login");
+    logger.info("[ROBUST-PROTECTED-ROUTES] Sem usuário -> /login");
     return <Navigate to="/login" state={{ from: location.pathname }} replace />;
   }
 
-  // CORREÇÃO CRÍTICA: Admin bypass total - nunca bloquear admin
+  // CORREÇÃO CRÍTICA: Admin bypass ABSOLUTO - nunca bloquear admin
   if (isAdmin) {
-    logger.info("[PROTECTED-ROUTES] 👑 ADMIN detectado - Acesso total liberado", {
+    logger.info("[ROBUST-PROTECTED-ROUTES] 👑 ADMIN detectado - Acesso total liberado", {
       pathname: location.pathname,
-      userId: user.id.substring(0, 8) + '***'
+      userId: user.id.substring(0, 8) + '***',
+      onboardingRequired: onboardingRequired,
+      bypassReason: 'ADMIN_ABSOLUTE_BYPASS'
     });
     return <>{children}</>;
   }
 
   // Permitir fluxo de convite se configurado E específico
   if (allowInviteFlow && isInInviteFlow && location.pathname.includes('/onboarding')) {
-    logger.info("[PROTECTED-ROUTES] Fluxo de convite permitido APENAS para onboarding");
+    logger.info("[ROBUST-PROTECTED-ROUTES] Fluxo de convite permitido APENAS para onboarding");
     return <>{children}</>;
   }
 
   // REGRA: Onboarding obrigatório PARA USUÁRIOS COMUNS (não admin)
   if (onboardingRequired && location.pathname !== '/onboarding') {
-    logger.info("[PROTECTED-ROUTES] Redirecionando usuário comum para onboarding obrigatório", {
+    logger.info("[ROBUST-PROTECTED-ROUTES] Redirecionando usuário comum para onboarding obrigatório", {
       userId: user.id.substring(0, 8) + '***',
-      isAdmin
+      isAdmin,
+      pathname: location.pathname,
+      reason: 'ONBOARDING_REQUIRED_NON_ADMIN'
     });
     
     if (isInInviteFlow) {

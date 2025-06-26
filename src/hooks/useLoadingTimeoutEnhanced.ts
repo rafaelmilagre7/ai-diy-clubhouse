@@ -12,7 +12,7 @@ interface UseLoadingTimeoutEnhancedProps {
 
 export const useLoadingTimeoutEnhanced = ({
   isLoading,
-  timeoutMs = 3000, // Reduzido para 3s
+  timeoutMs = 3000,
   context = 'generic',
   onTimeout
 }: UseLoadingTimeoutEnhancedProps) => {
@@ -52,12 +52,10 @@ export const useLoadingTimeoutEnhanced = ({
 
       // Timeout OTIMIZADO
       timeoutRef.current = window.setTimeout(() => {
-        logger.warn({
-          message: 'Timeout após tempo limite',
-          component: 'useLoadingTimeoutEnhanced',
-          action: 'timeout',
+        logger.warn('[LOADING-TIMEOUT] ⏰ Timeout atingido:', {
           context,
-          duration: `${timeoutMs}ms`
+          duration: `${timeoutMs}ms`,
+          component: 'useLoadingTimeoutEnhanced'
         });
         
         setHasTimedOut(true);
@@ -68,14 +66,11 @@ export const useLoadingTimeoutEnhanced = ({
         }
         
         // Para contextos de auth, usar AuthManager
-        if (context === 'auth' || context === 'onboarding') {
-          // CORRIGIDO: Usar propriedade pública isInitialized
+        if (context === 'auth' || context === 'onboarding' || context === 'root_redirect') {
           if (!authManager.isInitialized) {
-            logger.warn({
-              message: 'Forçando inicialização AuthManager',
-              component: 'useLoadingTimeoutEnhanced',
-              action: 'force_auth_manager_init',
-              context
+            logger.warn('[LOADING-TIMEOUT] 🔄 Forçando inicialização AuthManager:', {
+              context,
+              component: 'useLoadingTimeoutEnhanced'
             });
             authManager.initialize();
           }
@@ -96,12 +91,10 @@ export const useLoadingTimeoutEnhanced = ({
       const finalDuration = Date.now() - startTimeRef.current;
       setLoadingDuration(finalDuration);
       
-      logger.info({
-        message: 'Loading concluído',
-        component: 'useLoadingTimeoutEnhanced',
-        action: 'loading_complete',
+      logger.info('[LOADING-TIMEOUT] ✅ Loading concluído:', {
         context,
-        duration: `${finalDuration}ms`
+        duration: `${finalDuration}ms`,
+        component: 'useLoadingTimeoutEnhanced'
       });
     }
 
@@ -112,11 +105,9 @@ export const useLoadingTimeoutEnhanced = ({
   }, [isLoading, timeoutMs, context, onTimeout, authManager, isLoadingTooLong]);
 
   const retry = () => {
-    logger.info({
-      message: 'Retry solicitado',
-      component: 'useLoadingTimeoutEnhanced',
-      action: 'retry',
-      context
+    logger.info('[LOADING-TIMEOUT] 🔄 Retry solicitado:', {
+      context,
+      component: 'useLoadingTimeoutEnhanced'
     });
     setHasTimedOut(false);
     setLoadingProgress(0);
@@ -125,12 +116,10 @@ export const useLoadingTimeoutEnhanced = ({
     startTimeRef.current = Date.now();
     
     // Para contextos de auth, reinicializar AuthManager
-    if (context === 'auth' || context === 'onboarding') {
-      logger.info({
-        message: 'Reinicializando AuthManager',
-        component: 'useLoadingTimeoutEnhanced',
-        action: 'reinitialize_auth_manager',
-        context
+    if (context === 'auth' || context === 'onboarding' || context === 'root_redirect') {
+      logger.info('[LOADING-TIMEOUT] 🚀 Reinicializando AuthManager:', {
+        context,
+        component: 'useLoadingTimeoutEnhanced'
       });
       authManager.initialize();
     }

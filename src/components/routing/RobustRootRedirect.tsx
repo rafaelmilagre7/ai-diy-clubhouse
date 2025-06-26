@@ -17,16 +17,10 @@ const RobustRootRedirect = () => {
   // Enhanced loading com timeout robusto
   const { hasTimedOut, retry } = useLoadingTimeoutEnhanced({
     isLoading: totalLoading,
-    timeoutMs: 5000, // 5 segundos
+    timeoutMs: 5000,
     context: 'root_redirect',
     onTimeout: () => {
-      logger.warn('[ROBUST-ROOT-REDIRECT] ⏰ Timeout no carregamento inicial', {
-        component: 'RobustRootRedirect',
-        action: 'loading_timeout',
-        authLoading,
-        onboardingLoading,
-        totalLoading
-      });
+      logger.warn('[ROBUST-ROOT-REDIRECT] ⏰ Timeout no carregamento inicial');
     }
   });
 
@@ -34,9 +28,7 @@ const RobustRootRedirect = () => {
     const authManager = AuthManager.getInstance();
     
     const unsubscribe = authManager.on('stateChanged', (authState) => {
-      logger.info('[ROBUST-ROOT-REDIRECT] 📡 Estado AuthManager atualizado', {
-        component: 'RobustRootRedirect',
-        action: 'auth_state_updated',
+      logger.info('[ROBUST-ROOT-REDIRECT] 📡 Estado AuthManager atualizado:', {
         hasUser: !!authState.user,
         isLoading: authState.isLoading,
         isAdmin: authState.isAdmin,
@@ -62,10 +54,7 @@ const RobustRootRedirect = () => {
   
   // Tratamento de timeout
   if (hasTimedOut) {
-    logger.error('[ROBUST-ROOT-REDIRECT] 🚨 TIMEOUT CRÍTICO - Forçando recuperação', {
-      component: 'RobustRootRedirect',
-      action: 'critical_timeout'
-    });
+    logger.error('[ROBUST-ROOT-REDIRECT] 🚨 TIMEOUT CRÍTICO - Forçando recuperação');
     
     return (
       <div className="min-h-screen bg-gradient-to-br from-background to-[#151823] flex items-center justify-center">
@@ -108,32 +97,35 @@ const RobustRootRedirect = () => {
     return <Navigate to="/login" replace />;
   }
   
-  // Aguardar perfil se necessário
+  // CORREÇÃO CRÍTICA: Admin bypass ABSOLUTO - primeira prioridade
+  if (isAdmin) {
+    logger.info("[ROBUST-ROOT-REDIRECT] 👑 ADMIN DETECTADO - Redirecionamento direto para /admin", {
+      userId: user.id.substring(0, 8) + '***',
+      userRole: profile?.user_roles?.name,
+      onboardingRequired: onboardingRequired,
+      bypassReason: 'ADMIN_PRIORITY_ABSOLUTE'
+    });
+    return <Navigate to="/admin" replace />;
+  }
+  
+  // Aguardar perfil se necessário (só para não-admin)
   if (user && !profile) {
     logger.info("[ROBUST-ROOT-REDIRECT] Aguardando perfil...");
     return <LoadingScreen message="Carregando perfil..." />;
   }
   
-  // CORREÇÃO CRÍTICA: Admin bypass total do onboarding
-  if (isAdmin) {
-    logger.info("[ROBUST-ROOT-REDIRECT] 👑 ADMIN detectado - Redirecionando para /admin", {
-      userId: user.id.substring(0, 8) + '***',
-      userRole: profile?.user_roles?.name
-    });
-    return <Navigate to="/admin" replace />;
-  }
-  
-  // Usar AuthManager.getRedirectPath() para outros casos
+  // Usar AuthManager.getRedirectPath() para outros casos (não-admin)
   const authManager = AuthManager.getInstance();
   const redirectPath = authManager.getRedirectPath();
   
-  logger.info("[ROBUST-ROOT-REDIRECT] Redirecionamento calculado", {
+  logger.info("[ROBUST-ROOT-REDIRECT] Redirecionamento calculado:", {
     redirectPath,
     hasUser: !!user,
     hasProfile: !!profile,
     onboardingRequired,
     isAdmin,
-    roleName: profile?.user_roles?.name
+    roleName: profile?.user_roles?.name,
+    reason: isAdmin ? 'ADMIN_BYPASS' : 'NORMAL_FLOW'
   });
   
   return <Navigate to={redirectPath} replace />;
