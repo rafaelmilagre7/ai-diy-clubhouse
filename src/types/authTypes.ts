@@ -19,6 +19,8 @@ export interface AuthManagerEvents {
   stateChanged: (state: AuthState) => void;
   error: (error: Error) => void;
   timeout: () => void;
+  // Index signature para compatibilidade com BrowserEventEmitter
+  [event: string]: (...args: any[]) => void;
 }
 
 export type AuthEventType = keyof AuthManagerEvents;

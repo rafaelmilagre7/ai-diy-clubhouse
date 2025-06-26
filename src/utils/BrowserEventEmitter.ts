@@ -15,7 +15,7 @@ export class BrowserEventEmitter<T extends Record<string, (...args: any[]) => vo
     }
     
     const eventListeners = this.listeners.get(event)!;
-    eventListeners.add(callback);
+    eventListeners.add(callback as (...args: any[]) => void);
     
     // Retorna função de cleanup
     return () => this.off(event, callback);
@@ -27,7 +27,7 @@ export class BrowserEventEmitter<T extends Record<string, (...args: any[]) => vo
   off<K extends keyof T>(event: K, callback: T[K]): void {
     const eventListeners = this.listeners.get(event);
     if (eventListeners) {
-      eventListeners.delete(callback);
+      eventListeners.delete(callback as (...args: any[]) => void);
       
       // Limpa o Set se não há mais listeners
       if (eventListeners.size === 0) {
