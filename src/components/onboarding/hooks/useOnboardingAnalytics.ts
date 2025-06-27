@@ -1,6 +1,6 @@
 
 import { useCallback } from 'react';
-import { useAuth } from '@/contexts/auth';
+import { useSimpleAuth } from '@/contexts/auth/SimpleAuthProvider';
 import { supabase } from '@/lib/supabase';
 import { useErrorHandler } from '@/hooks/useErrorHandler';
 
@@ -13,7 +13,7 @@ interface OnboardingEvent {
 }
 
 export const useOnboardingAnalytics = () => {
-  const { user } = useAuth();
+  const { user } = useSimpleAuth();
   const { handleError } = useErrorHandler();
 
   const trackEvent = useCallback(async (event: OnboardingEvent) => {

@@ -1,6 +1,6 @@
 
 import { useState, useEffect, useCallback } from 'react';
-import { useAuth } from '@/contexts/auth';
+import { useSimpleAuth } from '@/contexts/auth/SimpleAuthProvider';
 import { supabase } from '@/lib/supabase';
 import { OnboardingData } from '../types/onboardingTypes';
 import { useErrorHandler } from '@/hooks/useErrorHandler';
@@ -16,7 +16,7 @@ const MAX_RETRIES = 3;
 const RETRY_DELAYS = [1000, 3000, 5000]; // Backoff exponencial
 
 export const useCloudSync = () => {
-  const { user } = useAuth();
+  const { user } = useSimpleAuth();
   const { handleError } = useErrorHandler();
   const [syncStatus, setSyncStatus] = useState<CloudSyncStatus>({
     isSyncing: false,

@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { UserProfile } from '@/lib/supabase';
@@ -27,6 +26,7 @@ interface SimpleAuthContextType {
   error: string | null;
   isAdmin: boolean;
   isFormacao: boolean;
+  refreshProfile: () => Promise<void>;
   signIn: (email: string, password: string) => Promise<{ error?: Error | null }>;
   signOut: () => Promise<{ success: boolean; error?: Error | null }>;
 }
@@ -143,6 +143,11 @@ export const SimpleAuthProvider: React.FC<SimpleAuthProviderProps> = ({ children
     };
   }, []);
 
+  const refreshProfile = async () => {
+    const authManager = AuthManager.getInstance();
+    await authManager.initialize();
+  };
+
   const contextValue: SimpleAuthContextType = {
     user: authState.user,
     session: authState.session,
@@ -151,6 +156,7 @@ export const SimpleAuthProvider: React.FC<SimpleAuthProviderProps> = ({ children
     error: authState.error,
     isAdmin: authState.isAdmin,
     isFormacao: authState.isFormacao,
+    refreshProfile,
     signIn: AuthManager.getInstance().signIn.bind(AuthManager.getInstance()),
     signOut: AuthManager.getInstance().signOut.bind(AuthManager.getInstance())
   };

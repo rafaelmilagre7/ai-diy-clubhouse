@@ -1256,8 +1256,67 @@ export interface Database {
         };
         Relationships: [];
       };
+      onboarding_sync: {
+        Row: {
+          id: string;
+          user_id: string;
+          data: any;
+          updated_at: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          data: any;
+          updated_at?: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          data?: any;
+          updated_at?: string;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      onboarding_analytics: {
+        Row: {
+          id: string;
+          user_id: string;
+          event_type: string;
+          step_number: number | null;
+          field_name: string | null;
+          error_message: string | null;
+          metadata: any;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          event_type: string;
+          step_number?: number | null;
+          field_name?: string | null;
+          error_message?: string | null;
+          metadata?: any;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          event_type?: string;
+          step_number?: number | null;
+          field_name?: string | null;
+          error_message?: string | null;
+          metadata?: any;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
     };
-    Views: {};
+    Views: {
+      [_ in never]: never;
+    };
     Functions: {
       audit_role_assignments: {
         Args: Record<string, never>;
@@ -1376,7 +1435,11 @@ export interface Database {
         }[];
       };
     };
-    Enums: {};
-    CompositeTypes: {};
+    Enums: {
+      [_ in never]: never;
+    };
+    CompositeTypes: {
+      [_ in never]: never;
+    };
   };
 }
