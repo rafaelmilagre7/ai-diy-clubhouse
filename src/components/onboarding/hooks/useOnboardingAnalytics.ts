@@ -32,7 +32,7 @@ export const useOnboardingAnalytics = () => {
 
       const { error } = await supabase
         .from('onboarding_analytics')
-        .insert(analyticsData as any);
+        .insert(analyticsData);
 
       if (error) throw error;
 

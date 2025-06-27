@@ -9,7 +9,7 @@ import { toast } from 'sonner';
  * Componente para interceptar e processar convites via URL
  * Funciona automaticamente quando há um parâmetro 'invite' na URL
  */
-export const InviteInterceptor = () => {
+const InviteInterceptor = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { user, profile, refreshProfile } = useSimpleAuth();
@@ -66,3 +66,5 @@ export const InviteInterceptor = () => {
   // Componente não renderiza nada visualmente
   return null;
 };
+
+export default InviteInterceptor;

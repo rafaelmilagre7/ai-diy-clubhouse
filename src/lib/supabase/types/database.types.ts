@@ -1285,9 +1285,9 @@ export interface Database {
           id: string;
           user_id: string;
           event_type: string;
-          step_number: number | null;
-          field_name: string | null;
-          error_message: string | null;
+          step_number?: number;
+          field_name?: string;
+          error_message?: string;
           metadata: any;
           created_at: string;
         };
@@ -1295,9 +1295,9 @@ export interface Database {
           id?: string;
           user_id: string;
           event_type: string;
-          step_number?: number | null;
-          field_name?: string | null;
-          error_message?: string | null;
+          step_number?: number;
+          field_name?: string;
+          error_message?: string;
           metadata?: any;
           created_at?: string;
         };
@@ -1305,9 +1305,9 @@ export interface Database {
           id?: string;
           user_id?: string;
           event_type?: string;
-          step_number?: number | null;
-          field_name?: string | null;
-          error_message?: string | null;
+          step_number?: number;
+          field_name?: string;
+          error_message?: string;
           metadata?: any;
           created_at?: string;
         };
@@ -1421,7 +1421,10 @@ export interface Database {
           invite_token: string;
           user_id: string;
         };
-        Returns: Record<string, any>;
+        Returns: {
+          status: string;
+          message: string;
+        };
       };
       validate_profile_roles: {
         Args: Record<string, never>;
