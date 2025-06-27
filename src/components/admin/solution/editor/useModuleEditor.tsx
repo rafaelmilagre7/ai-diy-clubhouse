@@ -3,6 +3,7 @@ import { useState } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { Module } from "@/lib/supabase";
 import { validateModule } from "./utils/moduleValidation";
+import { Json } from "@/lib/supabase/types";
 
 export type BlockType =
   | "header"
@@ -24,22 +25,32 @@ export type BlockType =
 export interface ContentBlock {
   id: string;
   type: BlockType;
-  data: Record<string, any>;
+  data: { [key: string]: Json | undefined };
+}
+
+interface ModuleContent {
+  blocks: ContentBlock[];
 }
 
 // Helper function to safely parse content
-const parseContent = (content: any): { blocks: ContentBlock[] } => {
+const parseContent = (content: Json): ModuleContent => {
   if (!content) return { blocks: [] };
   
   // If content is already an object with blocks
-  if (typeof content === 'object' && content.blocks && Array.isArray(content.blocks)) {
-    return content;
+  if (typeof content === 'object' && content !== null && !Array.isArray(content) && 'blocks' in content) {
+    const contentObj = content as { blocks?: unknown };
+    if (Array.isArray(contentObj.blocks)) {
+      return { blocks: contentObj.blocks as ContentBlock[] };
+    }
   }
   
   // If content is a string, try to parse it
   if (typeof content === 'string') {
     try {
-      return JSON.parse(content);
+      const parsed = JSON.parse(content);
+      if (parsed && typeof parsed === 'object' && Array.isArray(parsed.blocks)) {
+        return { blocks: parsed.blocks };
+      }
     } catch {
       return { blocks: [] };
     }
@@ -123,7 +134,7 @@ export const useModuleEditor = (initialModule: Module) => {
     });
   };
 
-  const getDefaultDataForType = (type: BlockType): Record<string, any> => {
+  const getDefaultDataForType = (type: BlockType): { [key: string]: Json | undefined } => {
     switch (type) {
       case "header":
         return { text: "", level: 2 };
@@ -171,7 +182,7 @@ export const useModuleEditor = (initialModule: Module) => {
       const updatedModule: Module = {
         ...initialModule,
         title,
-        content,
+        content: content as Json,
         updated_at: new Date().toISOString(),
       };
 
