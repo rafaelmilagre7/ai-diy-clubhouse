@@ -1,7 +1,6 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { logger } from '@/utils/logger';
-import AuthManager from '@/services/AuthManager';
 
 interface UseLoadingTimeoutEnhancedProps {
   isLoading: boolean;
@@ -18,42 +17,28 @@ export const useLoadingTimeoutEnhanced = ({
 }: UseLoadingTimeoutEnhancedProps) => {
   const [hasTimedOut, setHasTimedOut] = useState(false);
 
-  const retry = useCallback(() => {
-    logger.info('[LOADING-TIMEOUT-ENHANCED] 🔄 Retry iniciado', {
-      context,
-      action: 'retry'
-    });
-    
-    setHasTimedOut(false);
-    
-    // Forçar reinicialização do AuthManager
-    const authManager = AuthManager.getInstance();
-    if (!authManager.isInitialized) {
-      authManager.initialize().catch(error => {
-        logger.error('[LOADING-TIMEOUT-ENHANCED] ❌ Erro no retry', error);
-      });
-    }
-  }, [context]);
-
   useEffect(() => {
     if (!isLoading) {
       setHasTimedOut(false);
       return;
     }
 
-    const timeout = setTimeout(() => {
-      logger.warn('[LOADING-TIMEOUT-ENHANCED] ⏰ Timeout atingido', {
-        context,
-        timeoutMs,
-        action: 'timeout_reached'
-      });
-      
+    const timer = setTimeout(() => {
+      logger.warn(`[LOADING-TIMEOUT-ENHANCED] Timeout atingido para contexto: ${context}`);
       setHasTimedOut(true);
       onTimeout?.();
     }, timeoutMs);
 
-    return () => clearTimeout(timeout);
+    return () => clearTimeout(timer);
   }, [isLoading, timeoutMs, context, onTimeout]);
 
-  return { hasTimedOut, retry };
+  const retry = useCallback(() => {
+    logger.info(`[LOADING-TIMEOUT-ENHANCED] Retry solicitado para contexto: ${context}`);
+    setHasTimedOut(false);
+  }, [context]);
+
+  return {
+    hasTimedOut,
+    retry
+  };
 };

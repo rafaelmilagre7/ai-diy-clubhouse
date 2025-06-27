@@ -1,6 +1,7 @@
+
 import { Navigate } from "react-router-dom";
 import { useSimpleAuth } from "@/contexts/auth/SimpleAuthProvider";
-import { useOnboardingRequired } from "@/hooks/useOnboardingRequired";  
+import { useOnboardingRequired } from "@/hooks/useOnboardingRequired";
 import LoadingScreen from "@/components/common/LoadingScreen";
 import AuthManager from "@/services/AuthManager";
 import { useLoadingTimeoutEnhanced } from "@/hooks/useLoadingTimeoutEnhanced";
@@ -13,22 +14,20 @@ const RobustRootRedirect = () => {
   
   const totalLoading = authLoading || onboardingLoading;
   
-  // Enhanced loading com timeout robusto
   const { hasTimedOut, retry } = useLoadingTimeoutEnhanced({
     isLoading: totalLoading,
     timeoutMs: 5000,
     context: 'root_redirect',
     onTimeout: () => {
-      logger.warn('[ROBUST-ROOT-REDIRECT] ⏰ Timeout no carregamento inicial');
+      logger.warn('[ROBUST-ROOT-REDIRECT] Timeout no carregamento inicial');
     }
   });
 
   useEffect(() => {
     const authManager = AuthManager.getInstance();
     
-    // CORREÇÃO: criar função handler que aceita AuthState como argumento
-    const handleStateChanged = (authState) => {
-      logger.info('[ROBUST-ROOT-REDIRECT] 📡 Estado AuthManager atualizado:', {
+    const handleStateChanged = (authState: any) => {
+      logger.info('[ROBUST-ROOT-REDIRECT] Estado AuthManager atualizado:', {
         hasUser: !!authState.user,
         isLoading: authState.isLoading,
         isAdmin: authState.isAdmin,
@@ -40,11 +39,11 @@ const RobustRootRedirect = () => {
     const unsubscribe = authManager.on('stateChanged', handleStateChanged);
 
     return () => {
-      authManager.off('stateChanged', handleStateChanged);
+      unsubscribe();
     };
   }, []);
 
-  logger.info("[ROBUST-ROOT-REDIRECT] 📊 Estado atual:", {
+  logger.info("[ROBUST-ROOT-REDIRECT] Estado atual:", {
     hasUser: !!user,
     hasProfile: !!profile,
     authLoading,
@@ -56,9 +55,8 @@ const RobustRootRedirect = () => {
     userRole: profile?.user_roles?.name
   });
   
-  // Tratamento de timeout
   if (hasTimedOut) {
-    logger.error('[ROBUST-ROOT-REDIRECT] 🚨 TIMEOUT CRÍTICO - Forçando recuperação');
+    logger.error('[ROBUST-ROOT-REDIRECT] TIMEOUT CRÍTICO - Forçando recuperação');
     
     return (
       <div className="min-h-screen bg-gradient-to-br from-background to-[#151823] flex items-center justify-center">
@@ -91,7 +89,6 @@ const RobustRootRedirect = () => {
     );
   }
   
-  // Loading normal - aguardar sem complexidade
   if (totalLoading) {
     return <LoadingScreen message="Verificando seu acesso..." />;
   }
@@ -101,9 +98,8 @@ const RobustRootRedirect = () => {
     return <Navigate to="/login" replace />;
   }
   
-  // CORREÇÃO CRÍTICA: Admin bypass ABSOLUTO - primeira prioridade
   if (isAdmin) {
-    logger.info("[ROBUST-ROOT-REDIRECT] 👑 ADMIN DETECTADO - Redirecionamento direto para /admin", {
+    logger.info("[ROBUST-ROOT-REDIRECT] ADMIN DETECTADO - Redirecionamento direto para /admin", {
       userId: user.id.substring(0, 8) + '***',
       userRole: profile?.user_roles?.name,
       onboardingRequired: onboardingRequired,
@@ -112,13 +108,11 @@ const RobustRootRedirect = () => {
     return <Navigate to="/admin" replace />;
   }
   
-  // Aguardar perfil se necessário (só para não-admin)
   if (user && !profile) {
     logger.info("[ROBUST-ROOT-REDIRECT] Aguardando perfil...");
     return <LoadingScreen message="Carregando perfil..." />;
   }
   
-  // Usar AuthManager.getRedirectPath() para outros casos (não-admin)
   const authManager = AuthManager.getInstance();
   const redirectPath = authManager.getRedirectPath();
   
