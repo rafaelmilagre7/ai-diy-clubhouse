@@ -27,7 +27,7 @@ export const ModuleContentTools = ({ module }: ModuleContentToolsProps) => {
       const { data: solutionTools, error: toolsError } = await supabase
         .from("solution_tools")
         .select("*")
-        .eq("solution_id", module.solution_id as any);
+        .eq("solution_id", module.solution_id);
       
       if (toolsError) {
         logError("Erro ao buscar ferramentas da solução", toolsError);
@@ -36,13 +36,13 @@ export const ModuleContentTools = ({ module }: ModuleContentToolsProps) => {
       
       // Para cada ferramenta da solução, buscar informações detalhadas
       const toolsWithDetails = await Promise.all(
-        ((solutionTools as any) || []).map(async (solutionTool: any) => {
+        (solutionTools || []).map(async (solutionTool: any) => {
           try {
             // Buscar informações detalhadas da ferramenta pelo nome
             const { data: toolDetails, error: detailsError } = await supabase
               .from("tools")
               .select("*")
-              .ilike("name", solutionTool.tool_name as any)
+              .ilike("name", solutionTool.tool_name)
               .maybeSingle();
             
             if (detailsError) {
@@ -105,7 +105,7 @@ export const ModuleContentTools = ({ module }: ModuleContentToolsProps) => {
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-        {(tools as any).map((tool: any) => (
+        {tools.map((tool: any) => (
           <ToolItem 
             key={tool.id} 
             toolName={tool.tool_name}
@@ -113,7 +113,7 @@ export const ModuleContentTools = ({ module }: ModuleContentToolsProps) => {
             toolId={tool.details?.id}
             isRequired={tool.is_required} 
             hasBenefit={tool.details?.has_member_benefit}
-            benefitType={tool.details?.benefit_type as any}
+            benefitType={tool.details?.benefit_type}
           />
         ))}
       </div>

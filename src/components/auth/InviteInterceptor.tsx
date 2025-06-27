@@ -1,113 +1,68 @@
 
-import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useEffect } from 'react';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useSimpleAuth } from '@/contexts/auth/SimpleAuthProvider';
-import { useInviteFlow } from '@/hooks/useInviteFlow';
-import { InviteTokenManager } from '@/utils/inviteTokenManager';
-import LoadingScreen from '@/components/common/LoadingScreen';
-import InviteErrorScreen from './InviteErrorScreen';
-import InviteEmailMismatchScreen from './InviteEmailMismatchScreen';
-import AuthManager from '@/services/AuthManager';
-import { logger } from '@/utils/logger';
+import { supabase } from '@/lib/supabase';
+import { toast } from 'sonner';
 
-const InviteInterceptor = () => {
-  const { token } = useParams<{ token: string }>();
+/**
+ * Componente para interceptar e processar convites via URL
+ * Funciona automaticamente quando há um parâmetro 'invite' na URL
+ */
+export const InviteInterceptor = () => {
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { user, isLoading: authLoading } = useSimpleAuth();
-  const { inviteDetails, isLoading: inviteLoading, error: inviteError } = useInviteFlow(token);
-  const [isProcessing, setIsProcessing] = useState(false);
-
+  const { user, profile, refreshProfile } = useSimpleAuth();
+  
   useEffect(() => {
-    logger.info('[INVITE-INTERCEPTOR] 🎯 Iniciando interceptação', {
-      hasToken: !!token,
-      hasUser: !!user,
-      userEmail: user?.email,
-      authLoading,
-      inviteLoading,
-      hasInviteDetails: !!inviteDetails,
-      hasError: !!inviteError
-    });
-  }, [token, user, authLoading, inviteLoading, inviteDetails, inviteError]);
-
-  useEffect(() => {
-    // Aguardar carregamentos completos antes de processar
-    if (authLoading || inviteLoading || isProcessing) return;
-    
-    // Se há erro no convite, não processar
-    if (inviteError || !inviteDetails || !token) return;
-
-    const processInviteFlow = async () => {
-      setIsProcessing(true);
+    const processInvite = async () => {
+      const inviteToken = searchParams.get('invite');
       
+      if (!inviteToken || !user) {
+        return;
+      }
+
+      console.log('🎫 [INVITE-INTERCEPTOR] Processando convite:', inviteToken);
+
       try {
-        const authManager = AuthManager.getInstance();
-        const redirectPath = await authManager.handleInviteFlow({
-          token,
-          inviteEmail: inviteDetails.email,
-          currentUser: user,
-          inviteDetails
+        // Usar a função RPC do Supabase para processar o convite
+        const { data, error } = await supabase.rpc('use_invite', {
+          invite_token: inviteToken,
+          user_id: user.id
         });
 
-        if (redirectPath) {
-          logger.info('[INVITE-INTERCEPTOR] 🚀 Redirecionando para', { redirectPath });
-          navigate(redirectPath, { replace: true });
+        if (error) {
+          console.error('❌ [INVITE-INTERCEPTOR] Erro ao processar convite:', error);
+          toast.error('Erro ao processar convite: ' + error.message);
+          return;
         }
+
+        console.log('✅ [INVITE-INTERCEPTOR] Resposta:', data);
+
+        if (data.status === 'success') {
+          // Atualizar o perfil do usuário para refletir o novo papel
+          await refreshProfile();
+          
+          toast.success('Convite aplicado com sucesso! Bem-vindo(a)!');
+          
+          // Limpar o parâmetro da URL
+          const newUrl = new URL(window.location.href);
+          newUrl.searchParams.delete('invite');
+          navigate(newUrl.pathname + newUrl.search, { replace: true });
+          
+        } else {
+          toast.error(data.message || 'Não foi possível processar o convite');
+        }
+
       } catch (error) {
-        logger.error('[INVITE-INTERCEPTOR] ❌ Erro no processamento', error);
-      } finally {
-        setIsProcessing(false);
+        console.error('❌ [INVITE-INTERCEPTOR] Erro inesperado:', error);
+        toast.error('Erro inesperado ao processar convite');
       }
     };
 
-    processInviteFlow();
-  }, [authLoading, inviteLoading, inviteError, inviteDetails, token, user, navigate, isProcessing]);
+    processInvite();
+  }, [searchParams, user, navigate, refreshProfile]);
 
-  // Loading states
-  if (authLoading || inviteLoading || isProcessing) {
-    return <LoadingScreen message="Processando convite..." />;
-  }
-
-  // Token inválido ou não encontrado
-  if (!token) {
-    logger.error('[INVITE-INTERCEPTOR] ❌ Token não encontrado na URL');
-    return (
-      <InviteErrorScreen 
-        error="Link de convite inválido"
-        onRetry={() => window.location.reload()}
-      />
-    );
-  }
-
-  // Erro no convite
-  if (inviteError || !inviteDetails) {
-    logger.error('[INVITE-INTERCEPTOR] ❌ Erro nos detalhes do convite', { error: inviteError });
-    return (
-      <InviteErrorScreen 
-        error={inviteError || 'Convite não encontrado ou expirado'}
-        onRetry={() => window.location.reload()}
-      />
-    );
-  }
-
-  // Usuário autenticado com e-mail diferente
-  if (user && user.email !== inviteDetails.email) {
-    logger.warn('[INVITE-INTERCEPTOR] ⚠️ E-mail incorreto', {
-      userEmail: user.email,
-      inviteEmail: inviteDetails.email
-    });
-    
-    return (
-      <InviteEmailMismatchScreen
-        inviteEmail={inviteDetails.email}
-        currentEmail={user.email}
-        token={token}
-      />
-    );
-  }
-
-  // Fallback - este ponto não deveria ser alcançado normalmente
-  logger.warn('[INVITE-INTERCEPTOR] ⚠️ Estado inesperado - redirecionando para login');
-  return <LoadingScreen message="Redirecionando..." />;
+  // Componente não renderiza nada visualmente
+  return null;
 };
-
-export default InviteInterceptor;

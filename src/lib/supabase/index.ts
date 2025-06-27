@@ -13,7 +13,6 @@ export {
   ensureBucketExists,
   extractPandaVideoInfo,
   uploadFileWithFallback
-  // Adicione outras funções que precisam ser exportadas
 } from './storage';
 
 // Exportação explícita das funções de RPC
@@ -22,8 +21,8 @@ export {
   incrementTopicViews,
   incrementTopicReplies,
   deleteForumTopic,
-  deleteForumPost
-  // Adicionar outras funções de RPC conforme necessário
+  deleteForumPost,
+  getUserRoleName
 } from './rpc';
 
 // Exportação explícita das funções de parsing JSON
