@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/auth";
@@ -7,7 +6,7 @@ import { LearningLesson } from "@/lib/supabase";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
-import { AulaDetails } from "@/components/formacao/aulas/AulaDetails";
+import AulaDetails from "@/components/formacao/aulas/AulaDetails";
 import { AulaDeleteDialog } from "@/components/formacao/aulas/AulaDeleteDialog";
 
 const FormacaoAulaDetalhes = () => {
