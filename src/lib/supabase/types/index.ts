@@ -15,6 +15,14 @@ export type UserProfile = Database['public']['Tables']['profiles']['Row'] & {
   } | null;
 };
 
+// Progress type
+export type Progress = Database['public']['Tables']['progress']['Row'];
+
+// Solutions and Modules
+export type Solution = Database['public']['Tables']['solutions']['Row'];
+export type Module = Database['public']['Tables']['modules']['Row'];
+export type Tool = Database['public']['Tables']['tools']['Row'];
+
 // Learning Management System types
 export type LearningCourse = Database['public']['Tables']['learning_courses']['Row'];
 export type LearningModule = Database['public']['Tables']['learning_modules']['Row'];
@@ -51,6 +59,47 @@ export type NotificationPreferences = Database['public']['Tables']['notification
 // Onboarding types
 export type OnboardingSync = Database['public']['Tables']['onboarding_sync']['Row'];
 export type QuickOnboarding = Database['public']['Tables']['quick_onboarding']['Row'];
+
+// Invitation types
+export type Invite = Database['public']['Tables']['invites']['Row'];
+
+// Additional types for implementation system
+export type SolutionResource = {
+  id: string;
+  solution_id: string;
+  name: string;
+  description?: string;
+  file_url: string;
+  file_type?: string;
+  order_index: number;
+  created_at: string;
+};
+
+export type SolutionTool = {
+  id: string;
+  solution_id: string;
+  tool_id: string;
+  is_required: boolean;
+  order_index: number;
+  created_at: string;
+};
+
+export type UserChecklist = {
+  id: string;
+  user_id: string;
+  solution_id: string;
+  checklist_items: Record<string, boolean>;
+  created_at: string;
+  updated_at: string;
+};
+
+export type ImplementationCheckpoint = {
+  id: string;
+  solution_id: string;
+  checkpoint_order: number;
+  description: string;
+  created_at: string;
+};
 
 // Utility function to get user role name safely
 export const getUserRoleName = (profile: UserProfile | null): string => {
