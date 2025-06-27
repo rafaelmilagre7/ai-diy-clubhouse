@@ -15,11 +15,34 @@ interface ModulesListProps {
   isLoading: boolean;
 }
 
+// Helper function to safely parse content blocks
+const getContentBlocks = (content: any): any[] => {
+  if (!content) return [];
+  
+  // If content is already an object with blocks
+  if (typeof content === 'object' && content.blocks && Array.isArray(content.blocks)) {
+    return content.blocks;
+  }
+  
+  // If content is a string, try to parse it
+  if (typeof content === 'string') {
+    try {
+      const parsed = JSON.parse(content);
+      return parsed.blocks || [];
+    } catch {
+      return [];
+    }
+  }
+  
+  return [];
+};
+
 const ModulesList = ({ modules, onEditModule, onPreview, isLoading }: ModulesListProps) => {
   // Função para obter o ícone apropriado com base no status do módulo
   const getModuleStatusIcon = (module: Module) => {
     // Verificar se o módulo tem conteúdo significativo
-    const hasContent = module.content?.blocks && module.content.blocks.length > 0;
+    const blocks = getContentBlocks(module.content);
+    const hasContent = blocks.length > 0;
     
     if (!hasContent) {
       return <XCircle className="h-5 w-5 text-red-500" />;
@@ -83,11 +106,11 @@ const ModulesList = ({ modules, onEditModule, onPreview, isLoading }: ModulesLis
                     <p className="text-sm text-muted-foreground mt-1">
                       {getModuleTypeDescription(item.type)}
                     </p>
-                    {item.module?.content?.blocks && (
+                    {item.module && (
                       <div className="flex items-center gap-1 mt-1">
                         <Clock className="h-3 w-3 text-muted-foreground" />
                         <span className="text-xs text-muted-foreground">
-                          {item.module.content.blocks.length} blocos de conteúdo
+                          {getContentBlocks(item.module.content).length} blocos de conteúdo
                         </span>
                       </div>
                     )}

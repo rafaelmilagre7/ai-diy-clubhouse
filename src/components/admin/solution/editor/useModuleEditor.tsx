@@ -27,14 +27,32 @@ export interface ContentBlock {
   data: Record<string, any>;
 }
 
+// Helper function to safely parse content
+const parseContent = (content: any): { blocks: ContentBlock[] } => {
+  if (!content) return { blocks: [] };
+  
+  // If content is already an object with blocks
+  if (typeof content === 'object' && content.blocks && Array.isArray(content.blocks)) {
+    return content;
+  }
+  
+  // If content is a string, try to parse it
+  if (typeof content === 'string') {
+    try {
+      return JSON.parse(content);
+    } catch {
+      return { blocks: [] };
+    }
+  }
+  
+  return { blocks: [] };
+};
+
 export const useModuleEditor = (initialModule: Module) => {
   const [title, setTitle] = useState(initialModule.title);
   const [activeTab, setActiveTab] = useState("editor");
   const [content, setContent] = useState(() => {
-    if (initialModule.content && initialModule.content.blocks) {
-      return initialModule.content;
-    }
-    return { blocks: [] };
+    return parseContent(initialModule.content);
   });
 
   const getContentBlocks = (): ContentBlock[] => {
