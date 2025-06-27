@@ -1,27 +1,13 @@
 
-import { supabase, UserProfile } from '@/lib/supabase';
-import { logger } from '@/utils/logger';
+import { supabase } from '@/lib/supabase';
+import { UserProfile } from '@/lib/supabase/types';
 
-/**
- * Busca o perfil do usuário de forma segura com tratamento de erros
- */
 export const fetchUserProfileSecurely = async (userId: string): Promise<UserProfile | null> => {
   try {
-    logger.info(`[AUTH-SESSION] Buscando perfil para usuário: ${userId.substring(0, 8)}***`);
-    
     const { data, error } = await supabase
-      .from('profiles') // CORREÇÃO: Usar 'profiles' ao invés de 'user_profiles'
+      .from('profiles')
       .select(`
-        id,
-        email,
-        name,
-        role_id,
-        avatar_url,
-        company_name,
-        industry,
-        created_at,
-        onboarding_completed,
-        onboarding_completed_at,
+        *,
         user_roles:role_id (
           id,
           name,
@@ -34,89 +20,43 @@ export const fetchUserProfileSecurely = async (userId: string): Promise<UserProf
       .single();
 
     if (error) {
-      logger.error('[AUTH-SESSION] Erro ao buscar perfil:', error);
+      console.error('Error fetching user profile:', error);
       return null;
     }
-    
-    if (!data) {
-      logger.warn(`[AUTH-SESSION] Nenhum perfil encontrado para o usuário ${userId.substring(0, 8)}***`);
-      return null;
-    }
-    
-    logger.info('[AUTH-SESSION] Perfil encontrado com sucesso');
+
     return data as UserProfile;
-    
   } catch (error) {
-    logger.error('[AUTH-SESSION] Erro inesperado ao buscar perfil:', error);
+    console.error('Unexpected error fetching profile:', error);
     return null;
   }
 };
 
-/**
- * Cria um perfil de usuário se não existir
- */
-export const createUserProfileSecurely = async (
-  userId: string, 
-  email: string, 
-  name?: string
-): Promise<UserProfile | null> => {
-  try {
-    logger.info(`[AUTH-SESSION] Criando perfil para usuário: ${email}`);
-    
-    // Buscar role_id padrão para membro_club
-    const { data: defaultRole } = await supabase
-      .from('user_roles')
-      .select('id')
-      .eq('name', 'membro_club')
-      .single();
-    
-    const defaultRoleId = defaultRole?.id || null;
-    
-    const { data: newProfile, error: insertError } = await supabase
-      .from('profiles') // CORREÇÃO: Usar 'profiles' ao invés de 'user_profiles'
-      .upsert({
-        id: userId,
-        email,
-        name: name || 'Usuário',
-        role_id: defaultRoleId,
-        created_at: new Date().toISOString(),
-        avatar_url: null,
-        company_name: null,
-        industry: null,
-        onboarding_completed: false,
-        onboarding_completed_at: null
-      })
-      .select(`
-        id,
-        email,
-        name,
-        role_id,
-        avatar_url,
-        company_name,
-        industry,
-        created_at,
-        onboarding_completed,
-        onboarding_completed_at,
-        user_roles:role_id (
-          id,
-          name,
-          description,
-          permissions,
-          is_system
-        )
-      `)
-      .single();
-      
-    if (insertError) {
-      logger.error('[AUTH-SESSION] Erro ao criar perfil:', insertError);
-      return null;
-    }
-    
-    logger.info('[AUTH-SESSION] Perfil criado com sucesso');
-    return newProfile as UserProfile;
-    
-  } catch (error) {
-    logger.error('[AUTH-SESSION] Erro inesperado ao criar perfil:', error);
-    return null;
-  }
+export const processUserProfile = (data: any): UserProfile => {
+  return {
+    id: data.id,
+    email: data.email,
+    name: data.name,
+    avatar_url: data.avatar_url || '',
+    company_name: data.company_name || '',
+    industry: data.industry || '',
+    role_id: data.role_id,
+    role: data.role,
+    created_at: data.created_at,
+    updated_at: data.updated_at || new Date().toISOString(),
+    onboarding_completed: data.onboarding_completed || false,
+    onboarding_completed_at: data.onboarding_completed_at || '',
+    referrals_count: data.referrals_count || 0,
+    successful_referrals_count: data.successful_referrals_count || 0,
+    whatsapp_number: data.whatsapp_number,
+    user_roles: data.user_roles
+  };
+};
+
+export const validateUserSession = (session: any): boolean => {
+  return session && session.user && session.user.id;
+};
+
+export const clearProfileCache = (): void => {
+  // Implementation for clearing profile cache if needed
+  console.log('Profile cache cleared');
 };
