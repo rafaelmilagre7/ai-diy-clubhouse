@@ -1,4 +1,5 @@
 
+
 import { Database } from './database.types';
 
 // Export all database types
@@ -92,3 +93,4 @@ export const isAdminRole = (profile: any): boolean => {
 export const isFormacaoRole = (profile: any): boolean => {
   return profile?.user_roles?.name === 'formacao';
 };
+

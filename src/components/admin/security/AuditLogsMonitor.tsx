@@ -4,16 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Activity, User, Clock, Database } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
-
-interface AuditLog {
-  id: string;
-  user_id?: string;
-  event_type: string;
-  action: string;
-  timestamp: string;
-  severity?: string;
-  details?: any;
-}
+import { AuditLog } from '@/lib/supabase/types';
 
 export const AuditLogsMonitor = () => {
   const [logs, setLogs] = useState<AuditLog[]>([]);
@@ -29,7 +20,21 @@ export const AuditLogsMonitor = () => {
           .limit(20);
 
         if (auditLogs) {
-          setLogs(auditLogs);
+          // Ensure all required properties are present
+          const validatedLogs: AuditLog[] = auditLogs.map(log => ({
+            id: log.id,
+            user_id: log.user_id || null,
+            event_type: log.event_type,
+            action: log.action,
+            resource_id: log.resource_id || null,
+            details: log.details || null,
+            severity: log.severity || null,
+            timestamp: log.timestamp || new Date().toISOString(),
+            session_id: log.session_id || null,
+            user_agent: log.user_agent || null,
+            ip_address: log.ip_address || null,
+          }));
+          setLogs(validatedLogs);
         }
       } catch (error) {
         console.error('Erro ao carregar logs de auditoria:', error);
@@ -59,7 +64,7 @@ export const AuditLogsMonitor = () => {
     }
   };
 
-  const getSeverityBadge = (severity?: string) => {
+  const getSeverityBadge = (severity?: string | null) => {
     switch (severity) {
       case 'high':
         return <Badge variant="destructive" className="text-xs">Alto</Badge>;
