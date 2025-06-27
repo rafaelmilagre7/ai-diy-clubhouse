@@ -24,22 +24,33 @@ export type LearningProgress = Database['public']['Tables']['learning_progress']
 export type LearningResource = Database['public']['Tables']['learning_resources']['Row'];
 export type LearningCertificate = Database['public']['Tables']['learning_certificates']['Row'];
 export type LearningComment = Database['public']['Tables']['learning_comments']['Row'];
+export type LearningLessonNps = Database['public']['Tables']['learning_lesson_nps']['Row'];
 
-// Solution types
-export type Solution = Database['public']['Tables']['solutions']['Row'];
-export type Module = Database['public']['Tables']['modules']['Row'];
-export type Progress = Database['public']['Tables']['progress']['Row'];
-export type Tool = Database['public']['Tables']['tools']['Row'];
+// Event types
+export type Event = Database['public']['Tables']['events']['Row'];
+export type EventAccessControl = Database['public']['Tables']['event_access_control']['Row'];
+
+// Access control types
+export type CourseAccessControl = Database['public']['Tables']['course_access_control']['Row'];
+export type BenefitAccessControl = Database['public']['Tables']['benefit_access_control']['Row'];
+
+// Permission types
+export type PermissionDefinition = Database['public']['Tables']['permission_definitions']['Row'];
+export type RolePermission = Database['public']['Tables']['role_permissions']['Row'];
 
 // Analytics types
-export type Analytics = Database['public']['Tables']['analytics']['Row'];
 export type OnboardingAnalytics = Database['public']['Tables']['onboarding_analytics']['Row'];
-export type OnboardingSync = Database['public']['Tables']['onboarding_sync']['Row'];
-export type NotificationPreferences = Database['public']['Tables']['notification_preferences']['Row'];
-export type QuickOnboarding = Database['public']['Tables']['quick_onboarding']['Row'];
+export type AuditLog = Database['public']['Tables']['audit_logs']['Row'];
 
 // User role types
 export type UserRole = Database['public']['Tables']['user_roles']['Row'];
+
+// Notification types
+export type NotificationPreferences = Database['public']['Tables']['notification_preferences']['Row'];
+
+// Onboarding types
+export type OnboardingSync = Database['public']['Tables']['onboarding_sync']['Row'];
+export type QuickOnboarding = Database['public']['Tables']['quick_onboarding']['Row'];
 
 // Utility function to get user role name safely
 export const getUserRoleName = (profile: UserProfile | null): string => {
