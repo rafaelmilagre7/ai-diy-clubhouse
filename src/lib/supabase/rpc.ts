@@ -1,5 +1,6 @@
 
 import { supabase } from './client';
+import { UserProfile } from './types';
 
 /**
  * Cria uma política pública para um bucket de armazenamento
@@ -129,4 +130,23 @@ export async function deleteForumPost(postId: string): Promise<{ success: boolea
     console.error("Erro ao excluir post:", error);
     return { success: false, error: error.message };
   }
+}
+
+/**
+ * Obtém o nome do papel do usuário a partir do perfil
+ */
+export function getUserRoleName(profile: UserProfile): string {
+  if (!profile) return '';
+  
+  // Verificar se existe user_roles e tem name
+  if (profile.user_roles && typeof profile.user_roles === 'object' && 'name' in profile.user_roles) {
+    return (profile.user_roles as any).name || '';
+  }
+  
+  // Fallback para role direto no profile (se existir)
+  if (profile.role) {
+    return profile.role;
+  }
+  
+  return '';
 }
