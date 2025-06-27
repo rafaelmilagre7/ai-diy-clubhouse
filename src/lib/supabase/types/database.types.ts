@@ -7,7 +7,7 @@ export type Json =
   | { [key: string]: Json | undefined }
   | Json[]
 
-export interface Database {
+export type Database = {
   public: {
     Tables: {
       admin_communications: {
@@ -22,12 +22,12 @@ export interface Database {
           delivery_channels: string[]
           target_roles: string[]
           scheduled_for: string | null
+          sent_at: string | null
           created_at: string
           created_by: string
-          sent_at: string | null
-          metadata: Json
           updated_at: string
           email_subject: string | null
+          metadata: Json
         }
         Insert: {
           id?: string
@@ -40,11 +40,12 @@ export interface Database {
           delivery_channels?: string[]
           target_roles: string[]
           scheduled_for?: string | null
-          created_by: string
           sent_at?: string | null
-          metadata?: Json
+          created_at?: string
+          created_by: string
           updated_at?: string
           email_subject?: string | null
+          metadata?: Json
         }
         Update: {
           id?: string
@@ -57,11 +58,12 @@ export interface Database {
           delivery_channels?: string[]
           target_roles?: string[]
           scheduled_for?: string | null
-          created_by?: string
           sent_at?: string | null
-          metadata?: Json
+          created_at?: string
+          created_by?: string
           updated_at?: string
           email_subject?: string | null
+          metadata?: Json
         }
         Relationships: []
       }
@@ -69,8 +71,13 @@ export interface Database {
         Row: {
           id: string
           email: string
-          name: string
+          name: string | null
           role_id: string | null
+          user_roles: {
+            id: string
+            name: string
+            description?: string
+          } | null
           avatar_url: string | null
           company_name: string | null
           industry: string | null
@@ -94,22 +101,15 @@ export interface Database {
           networking_interests: string[] | null
           phone_country_code: string | null
           role: string | null
-          onboarding_completed: boolean
+          onboarding_completed: boolean | null
           onboarding_completed_at: string | null
           referrals_count: number
           successful_referrals_count: number
-          user_roles: {
-            id: string
-            name: string
-            description?: string
-            permissions?: Json
-            is_system?: boolean
-          } | null
         }
         Insert: {
           id: string
           email: string
-          name: string
+          name?: string | null
           role_id?: string | null
           avatar_url?: string | null
           company_name?: string | null
@@ -134,7 +134,7 @@ export interface Database {
           networking_interests?: string[] | null
           phone_country_code?: string | null
           role?: string | null
-          onboarding_completed?: boolean
+          onboarding_completed?: boolean | null
           onboarding_completed_at?: string | null
           referrals_count?: number
           successful_referrals_count?: number
@@ -142,7 +142,7 @@ export interface Database {
         Update: {
           id?: string
           email?: string
-          name?: string
+          name?: string | null
           role_id?: string | null
           avatar_url?: string | null
           company_name?: string | null
@@ -167,10 +167,43 @@ export interface Database {
           networking_interests?: string[] | null
           phone_country_code?: string | null
           role?: string | null
-          onboarding_completed?: boolean
+          onboarding_completed?: boolean | null
           onboarding_completed_at?: string | null
           referrals_count?: number
           successful_referrals_count?: number
+        }
+        Relationships: []
+      }
+      progress: {
+        Row: {
+          id: string
+          user_id: string
+          solution_id: string
+          is_completed: boolean
+          progress_percentage: number
+          created_at: string
+          completed_at: string | null
+          last_activity: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          solution_id: string
+          is_completed?: boolean
+          progress_percentage?: number
+          created_at?: string
+          completed_at?: string | null
+          last_activity?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          solution_id?: string
+          is_completed?: boolean
+          progress_percentage?: number
+          created_at?: string
+          completed_at?: string | null
+          last_activity?: string
         }
         Relationships: []
       }
@@ -207,111 +240,65 @@ export interface Database {
         }
         Relationships: []
       }
-      onboarding_analytics: {
+      analytics: {
         Row: {
           id: string
           user_id: string
           event_type: string
-          step_number: number | null
-          field_name: string | null
-          error_message: string | null
-          metadata: Json
+          event_data: Json | null
+          solution_id: string | null
+          module_id: string | null
           created_at: string
         }
         Insert: {
           id?: string
           user_id: string
           event_type: string
-          step_number?: number | null
-          field_name?: string | null
-          error_message?: string | null
-          metadata?: Json
+          event_data?: Json | null
+          solution_id?: string | null
+          module_id?: string | null
           created_at?: string
         }
         Update: {
           id?: string
           user_id?: string
           event_type?: string
-          step_number?: number | null
-          field_name?: string | null
-          error_message?: string | null
-          metadata?: Json
+          event_data?: Json | null
+          solution_id?: string | null
+          module_id?: string | null
+          created_at?: string
+        }
+        Relationships: []
+      }
+      onboarding_analytics: {
+        Row: {
+          id: string
+          user_id: string
+          event_type: string
+          event_data: Json
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          event_type: string
+          event_data?: Json
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          event_type?: string
+          event_data?: Json
           created_at?: string
         }
         Relationships: []
       }
     }
-    Views: {}
+    Views: {
+      [_ in never]: never
+    }
     Functions: {
-      audit_role_assignments: {
-        Args: Record<PropertyKey, never>
-        Returns: {
-          user_id: string
-          email: string
-          name: string
-          role_name: string
-          assigned_at: string
-          issues: string[]
-        }[]
-      }
-      can_access_benefit: {
-        Args: {
-          user_id: string
-          tool_id: string
-        }
-        Returns: boolean
-      }
-      can_access_course: {
-        Args: {
-          user_id: string
-          course_id: string
-        }
-        Returns: boolean
-      }
-      check_solution_certificate_eligibility: {
-        Args: {
-          p_user_id: string
-          p_solution_id: string
-        }
-        Returns: boolean
-      }
-      create_invite: {
-        Args: {
-          p_email: string
-          p_role_id: string
-          p_expires_in?: string
-          p_notes?: string
-        }
-        Returns: Json
-      }
-      create_storage_public_policy: {
-        Args: {
-          bucket_name: string
-        }
-        Returns: boolean
-      }
-      complete_invite_registration: {
-        Args: {
-          p_token: string
-          p_user_id: string
-        }
-        Returns: {
-          success: boolean
-          message: string
-        }
-      }
-      delete_forum_post: {
-        Args: {
-          post_id: string
-        }
-        Returns: Json
-      }
-      delete_forum_topic: {
-        Args: {
-          topic_id: string
-        }
-        Returns: Json
-      }
       get_users_with_roles: {
         Args: {
           limit_count?: number
@@ -331,64 +318,116 @@ export interface Database {
           created_at: string
         }[]
       }
-      has_role: {
+      complete_invite_registration: {
         Args: {
-          role_name: string
+          p_token: string
+          p_user_id: string
         }
-        Returns: boolean
-      }
-      is_admin: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
-      log_security_access: {
-        Args: {
-          action: string
-          resource: string
+        Returns: {
           success: boolean
+          message: string
         }
-        Returns: void
       }
       reset_analytics_data_enhanced: {
         Args: Record<PropertyKey, never>
         Returns: {
           success: boolean
           message: string
-          backupRecords: number
+          backupRecords?: number
         }
       }
-      sync_profile_roles: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
-      use_invite: {
+      create_storage_public_policy: {
         Args: {
-          invite_token: string
-          user_id: string
-        }
-        Returns: Json
-      }
-      user_has_permission: {
-        Args: {
-          user_id: string
-          permission_code: string
+          bucket_name: string
         }
         Returns: boolean
-      }
-      validate_profile_roles: {
-        Args: Record<PropertyKey, never>
-        Returns: {
-          id: string
-          email: string
-          name: string
-          role_name: string
-          role_id: string
-          issues: string[]
-          created_at: string
-        }[]
       }
     }
-    Enums: {}
-    CompositeTypes: {}
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
   }
 }
+
+export type Tables<
+  PublicTableNameOrOptions extends
+    | keyof (Database["public"]["Tables"] & Database["public"]["Views"])
+    | { schema: keyof Database },
+  TableName extends PublicTableNameOrOptions extends { schema: keyof Database }
+    ? keyof (Database[PublicTableNameOrOptions["schema"]]["Tables"] &
+        Database[PublicTableNameOrOptions["schema"]]["Views"])
+    : never = never,
+> = PublicTableNameOrOptions extends { schema: keyof Database }
+  ? (Database[PublicTableNameOrOptions["schema"]]["Tables"] &
+      Database[PublicTableNameOrOptions["schema"]]["Views"])[TableName] extends {
+      Row: infer R
+    }
+    ? R
+    : never
+  : PublicTableNameOrOptions extends keyof (Database["public"]["Tables"] &
+        Database["public"]["Views"])
+    ? (Database["public"]["Tables"] &
+        Database["public"]["Views"])[PublicTableNameOrOptions] extends {
+        Row: infer R
+      }
+      ? R
+      : never
+    : never
+
+export type TablesInsert<
+  PublicTableNameOrOptions extends
+    | keyof Database["public"]["Tables"]
+    | { schema: keyof Database },
+  TableName extends PublicTableNameOrOptions extends { schema: keyof Database }
+    ? keyof Database[PublicTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
+> = PublicTableNameOrOptions extends { schema: keyof Database }
+  ? Database[PublicTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Insert: infer I
+    }
+    ? I
+    : never
+  : PublicTableNameOrOptions extends keyof Database["public"]["Tables"]
+    ? Database["public"]["Tables"][PublicTableNameOrOptions] extends {
+        Insert: infer I
+      }
+      ? I
+      : never
+    : never
+
+export type TablesUpdate<
+  PublicTableNameOrOptions extends
+    | keyof Database["public"]["Tables"]
+    | { schema: keyof Database },
+  TableName extends PublicTableNameOrOptions extends { schema: keyof Database }
+    ? keyof Database[PublicTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
+> = PublicTableNameOrOptions extends { schema: keyof Database }
+  ? Database[PublicTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Update: infer U
+    }
+    ? U
+    : never
+  : PublicTableNameOrOptions extends keyof Database["public"]["Tables"]
+    ? Database["public"]["Tables"][PublicTableNameOrOptions] extends {
+        Update: infer U
+      }
+      ? U
+      : never
+    : never
+
+export type Enums<
+  PublicEnumNameOrOptions extends
+    | keyof Database["public"]["Enums"]
+    | { schema: keyof Database },
+  EnumName extends PublicEnumNameOrOptions extends { schema: keyof Database }
+    ? keyof Database[PublicEnumNameOrOptions["schema"]]["Enums"]
+    : never = never,
+> = PublicEnumNameOrOptions extends { schema: keyof Database }
+  ? Database[PublicEnumNameOrOptions["schema"]]["Enums"][EnumName]
+  : PublicEnumNameOrOptions extends keyof Database["public"]["Enums"]
+    ? Database["public"]["Enums"][PublicEnumNameOrOptions]
+    : never

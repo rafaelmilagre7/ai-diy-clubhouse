@@ -45,6 +45,10 @@ export type Tool = Database['public']['Tables']['tools']['Row'];
 export type ImplementationCheckpoint = Database['public']['Tables']['implementation_checkpoints']['Row'];
 export type SolutionResource = Database['public']['Tables']['solution_resources']['Row'];
 
+// Tipos de analytics e notificações
+export type Analytics = Database['public']['Tables']['analytics']['Row'];
+export type NotificationPreferences = Database['public']['Tables']['notification_preferences']['Row'];
+
 // Tipos de funções RPC
 export type AuditResult = Database['public']['Functions']['audit_role_assignments']['Returns'][0];
 export type SyncResult = Database['public']['Functions']['sync_profile_roles']['Returns'];
@@ -53,3 +57,8 @@ export type ValidationResult = Database['public']['Functions']['validate_profile
 // Re-exportação das definições de tipos base
 export * from './database.types';
 export * from './events';
+
+// Utilitário para type casting seguro
+export const safeSupabaseQuery = <T = any>(query: Promise<any>): Promise<{ data: T | null; error: any }> => {
+  return query.catch((error: any) => ({ data: null, error }));
+};
