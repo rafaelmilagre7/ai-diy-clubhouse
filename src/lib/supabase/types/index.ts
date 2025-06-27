@@ -67,6 +67,12 @@ export type SolutionResource = Database['public']['Tables']['solution_resources'
 export type SolutionTool = Database['public']['Tables']['solution_tools']['Row'];
 export type UserChecklist = Database['public']['Tables']['user_checklists']['Row'];
 
+// Onboarding types
+export type OnboardingSync = Database['public']['Tables']['onboarding_sync']['Row'];
+
+// Analytics type
+export type Analytics = Database['public']['Tables']['analytics']['Row'];
+
 // Utility function to get user role name safely
 export const getUserRoleName = (profile: UserProfile | null): string => {
   if (!profile) return 'guest';
