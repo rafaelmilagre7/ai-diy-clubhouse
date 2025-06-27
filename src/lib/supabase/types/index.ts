@@ -63,18 +63,11 @@ export type QuickOnboarding = Database['public']['Tables']['quick_onboarding']['
 // Invitation types
 export type Invite = Database['public']['Tables']['invites']['Row'];
 
-// Additional types for implementation system
-export type SolutionResource = {
-  id: string;
-  solution_id: string;
-  name: string;
-  description?: string;
-  file_url: string;
-  file_type?: string;
-  order_index: number;
-  created_at: string;
-};
+// Implementation types
+export type ImplementationCheckpoint = Database['public']['Tables']['implementation_checkpoints']['Row'];
+export type SolutionResource = Database['public']['Tables']['solution_resources']['Row'];
 
+// Additional types for implementation system
 export type SolutionTool = {
   id: string;
   solution_id: string;
@@ -91,14 +84,6 @@ export type UserChecklist = {
   checklist_items: Record<string, boolean>;
   created_at: string;
   updated_at: string;
-};
-
-export type ImplementationCheckpoint = {
-  id: string;
-  solution_id: string;
-  checkpoint_order: number;
-  description: string;
-  created_at: string;
 };
 
 // Utility function to get user role name safely
