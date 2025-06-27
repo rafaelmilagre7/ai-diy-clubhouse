@@ -1,101 +1,83 @@
 
-import React from "react";
-import { CourseCard } from "./CourseCard";
-import { 
-  Carousel, 
-  CarouselContent, 
-  CarouselItem, 
-  CarouselNext, 
-  CarouselPrevious 
-} from "@/components/ui/carousel";
-import { LearningCourse } from "@/lib/supabase";
-import { cn } from "@/lib/utils";
+import React from 'react';
+import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { LearningCourse } from '@/lib/supabase';
+import { safeJsonParseObject } from '@/lib/supabase';
 
 interface CourseCarouselProps {
-  title: string;
   courses: LearningCourse[];
-  className?: string;
-  userProgress?: any[];
-  showEmptyMessage?: boolean;
+  onCourseClick: (course: LearningCourse) => void;
 }
 
-export const CourseCarousel: React.FC<CourseCarouselProps> = ({
-  title,
-  courses = [],
-  className,
-  userProgress = [],
-  showEmptyMessage = true
-}) => {
-  // Verificar se há cursos para exibir
-  const hasCourses = courses && courses.length > 0;
-
-  // Calcular progresso para cada curso
-  const calculateProgress = (courseId: string): number => {
-    if (!userProgress || userProgress.length === 0) return 0;
-    
-    const courseProgress = userProgress.filter(p => {
-      return p.lesson && p.lesson.module && p.lesson.module.course_id === courseId;
-    });
-    
-    if (courseProgress.length === 0) return 0;
-    
-    const completedLessons = courseProgress.filter(p => p.completed_at).length;
-    return Math.round((completedLessons / courseProgress.length) * 100);
-  };
-
-  if (!hasCourses && showEmptyMessage) {
+export const CourseCarousel = ({ courses, onCourseClick }: CourseCarouselProps) => {
+  if (!courses || courses.length === 0) {
     return (
-      <div className={cn("my-8", className)}>
-        <h2 className="text-2xl font-semibold mb-6 px-1">{title}</h2>
-        <p className="text-muted-foreground text-center py-8">
-          Nenhum curso disponível nesta categoria
-        </p>
+      <div className="text-center py-8">
+        <p className="text-muted-foreground">Nenhum curso disponível no momento.</p>
       </div>
     );
   }
 
-  if (!hasCourses) {
-    return null;
-  }
-
   return (
-    <div className={cn("my-8", className)}>
-      <h2 className="text-2xl font-semibold mb-6 px-1">{title}</h2>
-      
-      <div className="relative">
-        <Carousel
-          opts={{
-            align: "start",
-            loop: courses.length > 3,
-          }}
-          className="w-full"
-        >
-          <CarouselContent className="-ml-4">
-            {courses.map((course) => (
-              <CarouselItem 
-                key={course.id} 
-                className="pl-4 md:basis-1/3 lg:basis-1/4 xl:basis-1/5"
-              >
-                <CourseCard 
-                  id={course.id}
-                  title={course.title}
-                  description={course.description || ""}
-                  imageUrl={course.cover_image_url}
-                  progress={calculateProgress(course.id)}
-                  moduleCount={course.module_count}
-                  lessonCount={course.lesson_count}
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {courses.map((course) => {
+        // CORREÇÃO: Parse seguro de dados JSON se necessário
+        const courseData = safeJsonParseObject(course, course);
+        
+        return (
+          <Card 
+            key={course.id} 
+            className="cursor-pointer hover:shadow-lg transition-shadow duration-200 group"
+            onClick={() => onCourseClick(course)}
+          >
+            {course.cover_image_url && (
+              <div className="aspect-video relative overflow-hidden rounded-t-lg">
+                <img 
+                  src={course.cover_image_url} 
+                  alt={course.title}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
                 />
-              </CarouselItem>
-            ))}
-          </CarouselContent>
-          <CarouselPrevious 
-            className="left-0 bg-black/30 text-white border-none hover:bg-black/60" 
-          />
-          <CarouselNext 
-            className="right-0 bg-black/30 text-white border-none hover:bg-black/60" 
-          />
-        </Carousel>
-      </div>
+              </div>
+            )}
+            
+            <CardContent className="p-4 space-y-3">
+              <div className="flex items-center justify-between">
+                <Badge variant={course.published ? "default" : "secondary"}>
+                  {course.published ? "Disponível" : "Em breve"}
+                </Badge>
+                {courseData.module_count && (
+                  <span className="text-sm text-muted-foreground">
+                    {courseData.module_count} módulos
+                  </span>
+                )}
+              </div>
+              
+              <div>
+                <h3 className="font-semibold text-lg group-hover:text-primary transition-colors">
+                  {course.title}
+                </h3>
+                {course.description && (
+                  <p className="text-muted-foreground text-sm mt-1 line-clamp-2">
+                    {course.description}
+                  </p>
+                )}
+              </div>
+              
+              {courseData.lesson_count && (
+                <div className="flex items-center justify-between text-sm text-muted-foreground">
+                  <span>{courseData.lesson_count} aulas</span>
+                  {courseData.is_restricted && (
+                    <Badge variant="outline" className="text-xs">
+                      Restrito
+                    </Badge>
+                  )}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        );
+      })}
     </div>
   );
 };

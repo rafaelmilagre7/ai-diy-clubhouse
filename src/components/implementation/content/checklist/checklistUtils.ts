@@ -1,5 +1,6 @@
 
 import { Solution, UserChecklist } from "@/lib/supabase";
+import { safeJsonParseObject, extractJsonArray } from "@/utils/jsonUtils";
 import { toast } from "sonner";
 
 export interface ChecklistItem {
@@ -10,28 +11,33 @@ export interface ChecklistItem {
 }
 
 /**
- * Extrai checklist de uma solução.
- * Agora retorna vazio se não há checklist.
+ * Extrai checklist de uma solução usando parsing seguro de JSON.
  */
 export const extractChecklistFromSolution = (solution: Solution): ChecklistItem[] => {
-  // Suporte legado: caso o checklist venha dentro de implementation_steps/checklist_items
-  if ((solution as any).checklist && Array.isArray((solution as any).checklist)) {
-    // legacy, não existe mais oficialmente
-    return (solution as any).checklist.map((item: any, index: number) => ({
+  // CORREÇÃO: Parse seguro do campo checklist_items
+  const checklistItems = extractJsonArray(solution.checklist_items, []);
+  
+  if (checklistItems.length > 0) {
+    return checklistItems.map((item: any, index: number) => ({
       id: item.id || `checklist-${index}`,
       title: item.title || item.text || "Item sem título",
       description: item.description,
       checked: false
     }));
   }
-  if ((solution as any).checklist_items && Array.isArray((solution as any).checklist_items)) {
-    return (solution as any).checklist_items.map((item: any, index: number) => ({
-      id: item.id || `checklist-${index}`,
-      title: item.title || item.text || "Item sem título",
-      description: item.description,
+
+  // Fallback para implementation_steps se não há checklist_items
+  const implementationSteps = extractJsonArray(solution.implementation_steps, []);
+  
+  if (implementationSteps.length > 0) {
+    return implementationSteps.map((step: any, index: number) => ({
+      id: step.id || `step-${index}`,
+      title: step.title || step.text || "Passo sem título",
+      description: step.description,
       checked: false
     }));
   }
+
   return [];
 };
 
@@ -50,12 +56,17 @@ export const applyUserProgress = (
   if (!userProgress || !userProgress.checked_items) {
     return initialChecklist;
   }
+  
+  // CORREÇÃO: Parse seguro do JSON checked_items
+  const checkedItems = safeJsonParseObject(userProgress.checked_items, {});
+  
   const updatedChecklist = { ...initialChecklist };
-  Object.keys(userProgress.checked_items).forEach(itemId => {
+  Object.keys(checkedItems).forEach(itemId => {
     if (updatedChecklist.hasOwnProperty(itemId)) {
-      updatedChecklist[itemId] = userProgress.checked_items[itemId];
+      updatedChecklist[itemId] = Boolean(checkedItems[itemId]);
     }
   });
+  
   return updatedChecklist;
 };
 

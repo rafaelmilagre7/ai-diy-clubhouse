@@ -1,3 +1,4 @@
+
 import { Database } from './types/database.types';
 
 // Tipos de tabelas expandidos
@@ -54,6 +55,34 @@ export interface UserProfile {
   created_at: string;
   onboarding_completed: boolean;
   onboarding_completed_at: string | null;
+  updated_at: string | null;
+  phone: string | null;
+  instagram: string | null;
+  linkedin: string | null;
+  state: string | null;
+  city: string | null;
+  birth_date: string | null;
+  curiosity: string | null;
+  company_website: string | null;
+  business_sector: string | null;
+  company_size: string | null;
+  annual_revenue: string | null;
+  position: string | null;
+  has_implemented_ai: string | null;
+  ai_tools_used: string[] | null;
+  ai_knowledge_level: string | null;
+  daily_tools: string[] | null;
+  who_will_implement: string | null;
+  main_objective: string | null;
+  area_to_impact: string | null;
+  expected_result_90_days: string | null;
+  ai_implementation_budget: string | null;
+  weekly_learning_time: string | null;
+  content_preference: string[] | null;
+  wants_networking: string | null;
+  best_days: string[] | null;
+  best_periods: string[] | null;
+  accepts_case_study: string | null;
 }
 
 // Função utilitária para obter o nome da role
@@ -182,3 +211,34 @@ export interface LearningLessonNps {
   created_at: string;
   updated_at: string;
 }
+
+// Função utilitária para parsing seguro de JSON
+export const safeJsonParse = <T = any>(jsonString: string | null | undefined, fallback: T): T => {
+  if (!jsonString || typeof jsonString !== 'string') {
+    return fallback;
+  }
+  
+  try {
+    return JSON.parse(jsonString);
+  } catch (error) {
+    console.warn('Erro ao fazer parse de JSON:', error);
+    return fallback;
+  }
+};
+
+// Função utilitária para parsing seguro de JSON objects
+export const safeJsonParseObject = (jsonData: any, fallback: any = {}): any => {
+  if (jsonData === null || jsonData === undefined) {
+    return fallback;
+  }
+  
+  if (typeof jsonData === 'object') {
+    return jsonData;
+  }
+  
+  if (typeof jsonData === 'string') {
+    return safeJsonParse(jsonData, fallback);
+  }
+  
+  return fallback;
+};
