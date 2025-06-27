@@ -657,9 +657,9 @@ export interface Database {
           ai_assistant_prompt: string | null
           created_at: string
           updated_at: string
-          videos: Json | null
-          resources: Json | null
-          module: Json | null
+          videos: any[] | null
+          resources: any[] | null
+          module: { course_id: string; title: string } | null
         }
         Insert: {
           id?: string
@@ -677,9 +677,9 @@ export interface Database {
           ai_assistant_prompt?: string | null
           created_at?: string
           updated_at?: string
-          videos?: Json | null
-          resources?: Json | null
-          module?: Json | null
+          videos?: any[] | null
+          resources?: any[] | null
+          module?: { course_id: string; title: string } | null
         }
         Update: {
           id?: string
@@ -697,9 +697,9 @@ export interface Database {
           ai_assistant_prompt?: string | null
           created_at?: string
           updated_at?: string
-          videos?: Json | null
-          resources?: Json | null
-          module?: Json | null
+          videos?: any[] | null
+          resources?: any[] | null
+          module?: { course_id: string; title: string } | null
         }
         Relationships: []
       }
@@ -922,6 +922,36 @@ export interface Database {
           event_data?: Json | null
           timestamp?: string
           session_id?: string | null
+        }
+        Relationships: []
+      }
+      onboarding_sync: {
+        Row: {
+          id: string
+          user_id: string
+          onboarding_data: Json
+          sync_status: string
+          last_synced_at: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          onboarding_data: Json
+          sync_status?: string
+          last_synced_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          onboarding_data?: Json
+          sync_status?: string
+          last_synced_at?: string | null
+          created_at?: string
+          updated_at?: string
         }
         Relationships: []
       }

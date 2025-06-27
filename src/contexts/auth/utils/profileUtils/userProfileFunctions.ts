@@ -1,4 +1,3 @@
-
 import { supabase, UserProfile } from '@/lib/supabase';
 import { getUserRoleName } from '@/lib/supabase/types';
 
@@ -185,5 +184,71 @@ const createFallbackProfile = (
     created_at: new Date().toISOString(),
     onboarding_completed: false,
     onboarding_completed_at: null
+  };
+};
+
+/**
+ * Helper function to create a properly typed UserProfile
+ */
+const createUserProfile = (data: any): UserProfile => {
+  return {
+    id: data.id || '',
+    email: data.email || '',
+    name: data.name || '',
+    avatar_url: data.avatar_url || null,
+    company_name: data.company_name || null,
+    industry: data.industry || null,
+    role_id: data.role_id || '',
+    role: data.role || null,
+    created_at: data.created_at || new Date().toISOString(),
+    updated_at: data.updated_at || new Date().toISOString(),
+    onboarding_completed: data.onboarding_completed || false,
+    onboarding_completed_at: data.onboarding_completed_at || null,
+    referrals_count: data.referrals_count || 0,
+    successful_referrals_count: data.successful_referrals_count || 0,
+    whatsapp_number: data.whatsapp_number || null,
+    user_roles: data.user_roles || null
+  };
+};
+
+/**
+ * Process user profile data
+ */
+export const processUserProfile = (profileData: any): UserProfile => {
+  return createUserProfile(profileData);
+};
+
+/**
+ * Process invite user profile data
+ */
+export const processInviteUserProfile = (profileData: any): UserProfile => {
+  return createUserProfile(profileData);
+};
+
+/**
+ * Create a mock profile
+ */
+export const createMockProfile = (overrides: Partial<UserProfile> = {}): UserProfile => {
+  return {
+    id: 'mock-user-id',
+    email: 'mock@example.com',
+    name: 'Mock User',
+    role_id: 'mock-role-id',
+    user_roles: {
+      id: 'mock-role-id',
+      name: 'member'
+    },
+    avatar_url: null,
+    company_name: null,
+    industry: null,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+    onboarding_completed: false,
+    onboarding_completed_at: null,
+    referrals_count: 0,
+    successful_referrals_count: 0,
+    whatsapp_number: null,
+    role: null,
+    ...overrides
   };
 };
