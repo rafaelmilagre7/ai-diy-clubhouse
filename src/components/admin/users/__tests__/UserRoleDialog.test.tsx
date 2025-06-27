@@ -1,4 +1,5 @@
 
+
 import { render } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { UserRoleDialog } from '../UserRoleDialog';
@@ -22,6 +23,7 @@ describe('UserRoleDialog', () => {
     updated_at: '2024-01-01T00:00:00Z',
     onboarding_completed: true,
     onboarding_completed_at: '2024-01-01T00:00:00Z',
+    whatsapp_number: null,
     referrals_count: 0,
     successful_referrals_count: 0,
   };
@@ -94,3 +96,4 @@ describe('UserRoleDialog', () => {
     expect(mockProps.onUpdateRole).toHaveBeenCalled();
   });
 });
+

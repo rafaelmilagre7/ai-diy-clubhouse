@@ -1,4 +1,5 @@
 
+
 import { render, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { UsersTable } from '../UsersTable';
@@ -23,6 +24,7 @@ describe('UsersTable', () => {
       updated_at: '2024-01-01T00:00:00Z',
       onboarding_completed: true,
       onboarding_completed_at: '2024-01-01T00:00:00Z',
+      whatsapp_number: null,
       referrals_count: 0,
       successful_referrals_count: 0,
     },
@@ -110,3 +112,4 @@ describe('UsersTable', () => {
     expect(mockProps.onRefresh).toBeDefined();
   });
 });
+

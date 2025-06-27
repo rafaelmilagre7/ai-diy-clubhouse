@@ -1,4 +1,5 @@
 
+
 import { Database } from './database.types';
 
 // Export all database types
@@ -38,6 +39,7 @@ export type LearningLessonNps = Database['public']['Tables']['learning_lesson_np
 export type ForumCategory = Database['public']['Tables']['forum_categories']['Row'];
 export type ForumTopic = Database['public']['Tables']['forum_topics']['Row'];
 export type ForumPost = Database['public']['Tables']['forum_posts']['Row'];
+export type ForumReaction = Database['public']['Tables']['forum_reactions']['Row'];
 
 // Event types
 export type Event = Database['public']['Tables']['events']['Row'];
@@ -107,3 +109,4 @@ export const isAdminRole = (profile: any): boolean => {
 export const isFormacaoRole = (profile: any): boolean => {
   return profile?.user_roles?.name === 'formacao';
 };
+
