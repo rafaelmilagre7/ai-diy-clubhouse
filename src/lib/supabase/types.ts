@@ -1,72 +1,184 @@
-
-
 import { Database } from './types/database.types';
 
-// Tipos de tabelas principais
-export type UserProfile = Database['public']['Tables']['profiles']['Row'] & {
-  user_roles?: {
-    id: string;
-    name: string;
-    description?: string;
-    permissions?: any;
-    is_system?: boolean;
-  } | null;
+// Tipos de tabelas expandidos
+export type LearningLesson = Database['public']['Tables']['learning_lessons']['Row'] & {
+  videos?: LearningLessonVideo[];
+  resources?: LearningResource[];
+  module?: LearningModule & {
+    course_id?: string;
+    learning_courses?: LearningCourse;
+  };
+  ai_assistant_id?: string | null;
 };
 
-// Função helper para obter o nome do role do usuário de forma type-safe
+export type LearningLessonVideo = Database['public']['Tables']['learning_lesson_videos']['Row'];
+export type LearningModule = Database['public']['Tables']['learning_modules']['Row'];
+export type LearningCourse = Database['public']['Tables']['learning_courses']['Row'] & {
+  module_count?: number;
+  lesson_count?: number;
+  is_restricted?: boolean;
+};
+export type LearningProgress = Database['public']['Tables']['learning_progress']['Row'];
+export type LearningResource = Database['public']['Tables']['learning_resources']['Row'] & {
+  // lesson_id agora pode ser null para recursos da biblioteca
+  lesson_id: string | null;
+};
+export type LearningLessonTool = Database['public']['Tables']['learning_lesson_tools']['Row'];
+export type LearningComment = Database['public']['Tables']['learning_comments']['Row'];
+
+// Outros tipos existentes
+export * from './types/database.types';
+
+// Interface para dados de role do usuário
+export interface UserRoleData {
+  id: string;
+  name: string;
+  description?: string;
+  permissions?: any;
+  is_system?: boolean;
+}
+
+// Enum para tipos de roles conhecidos (compatibilidade)
+export type UserRole = 'admin' | 'formacao' | 'membro_club';
+
+export interface UserProfile {
+  id: string;
+  email: string;
+  name: string | null;
+  avatar_url: string | null;
+  company_name: string | null;
+  industry: string | null;
+  role_id: string | null; // Campo principal para roles
+  role?: UserRole; // Campo legado - deprecado, mas mantido para compatibilidade
+  user_roles?: UserRoleData | null; // Dados da role via join
+  created_at: string;
+  onboarding_completed: boolean;
+  onboarding_completed_at: string | null;
+}
+
+// Função utilitária para obter o nome da role
 export const getUserRoleName = (profile: UserProfile | null): string => {
-  if (!profile) return 'guest';
+  if (!profile) return 'member';
   
-  // Verificar se user_roles está disponível via JOIN
-  if (profile.user_roles && typeof profile.user_roles === 'object' && 'name' in profile.user_roles) {
-    return profile.user_roles.name || 'member';
+  // Priorizar user_roles (novo sistema)
+  if (profile.user_roles?.name) {
+    return profile.user_roles.name;
+  }
+  
+  // Fallback para campo legado durante migração
+  if (profile.role) {
+    // CORREÇÃO: Log de deprecação para monitoramento
+    if (process.env.NODE_ENV !== 'production') {
+      console.warn('⚠️ [DEPRECATED] Usando profile.role (legado). Migre para role_id/user_roles.', {
+        profileId: profile.id.substring(0, 8) + '***',
+        legacyRole: profile.role,
+        hasRoleId: !!profile.role_id,
+        hasUserRoles: !!profile.user_roles
+      });
+    }
+    return profile.role;
   }
   
   return 'member';
 };
 
-// Re-exportar tipos do database
-export * from './types/database.types';
+// Função utilitária para verificar se é admin
+export const isAdminRole = (profile: UserProfile | null): boolean => {
+  const roleName = getUserRoleName(profile);
+  return roleName === 'admin';
+};
 
-// Export all the specific types that components need
-export type LearningCourse = Database['public']['Tables']['learning_courses']['Row'];
-export type LearningModule = Database['public']['Tables']['learning_modules']['Row'];
-export type LearningLesson = Database['public']['Tables']['learning_lessons']['Row'];
-export type LearningLessonVideo = Database['public']['Tables']['learning_lesson_videos']['Row'];
-export type LearningProgress = Database['public']['Tables']['learning_progress']['Row'];
-export type LearningResource = Database['public']['Tables']['learning_resources']['Row'];
-export type LearningCertificate = Database['public']['Tables']['learning_certificates']['Row'];
-export type LearningComment = Database['public']['Tables']['learning_comments']['Row'];
-export type LearningLessonNps = Database['public']['Tables']['learning_lesson_nps']['Row'];
+// Função utilitária para verificar se é formação
+export const isFormacaoRole = (profile: UserProfile | null): boolean => {
+  const roleName = getUserRoleName(profile);
+  return roleName === 'formacao';
+};
 
-export type ForumCategory = Database['public']['Tables']['forum_categories']['Row'];
-export type ForumTopic = Database['public']['Tables']['forum_topics']['Row'];
-export type ForumPost = Database['public']['Tables']['forum_posts']['Row'];
-export type ForumReaction = Database['public']['Tables']['forum_reactions']['Row'];
+// CORREÇÃO: Interface Solution unificada baseada no schema REAL do banco
+export interface Solution {
+  id: string;
+  title: string;
+  description: string;
+  slug: string;
+  thumbnail_url?: string;
+  published: boolean;
+  created_at: string;
+  updated_at: string;
+  // Campos que existem no banco conforme schema
+  category: 'Receita' | 'Operacional' | 'Estratégia';
+  difficulty: string;
+  tags?: string[];
+  related_solutions?: string[];
+  implementation_steps?: any[];
+  checklist_items?: any[];
+  completion_requirements?: any;
+}
 
-export type Solution = Database['public']['Tables']['solutions']['Row'];
-export type Module = Database['public']['Tables']['modules']['Row'];
-export type Tool = Database['public']['Tables']['tools']['Row'];
-export type Progress = Database['public']['Tables']['progress']['Row'];
+export interface Module {
+  id: string;
+  solution_id: string;
+  title: string;
+  description?: string;
+  order: number;
+  module_order?: number;
+  type: string;
+  content?: any;
+  created_at: string;
+  updated_at: string;
+  completed?: boolean;
+}
 
-export type Event = Database['public']['Tables']['events']['Row'];
-export type EventAccessControl = Database['public']['Tables']['event_access_control']['Row'];
+export interface Progress {
+  id: string;
+  user_id: string;
+  solution_id: string;
+  current_module: number;
+  is_completed: boolean;
+  completed_modules: number[];
+  completed_at?: string;
+  last_activity: string;
+  created_at: string;
+}
 
-export type CourseAccessControl = Database['public']['Tables']['course_access_control']['Row'];
-export type BenefitAccessControl = Database['public']['Tables']['benefit_access_control']['Row'];
+export interface UserChecklist {
+  id: string;
+  user_id: string;
+  solution_id: string;
+  checked_items: Record<string, boolean>;
+  created_at: string;
+  updated_at: string;
+}
 
-export type PermissionDefinition = Database['public']['Tables']['permission_definitions']['Row'];
-export type RolePermission = Database['public']['Tables']['role_permissions']['Row'];
+export interface LearningCertificate {
+  id: string;
+  user_id: string;
+  course_id: string;
+  certificate_url: string | null;
+  created_at: string;
+  issued_at: string;
+}
 
-export type AuditLog = Database['public']['Tables']['audit_logs']['Row'];
-export type UserRole = Database['public']['Tables']['user_roles']['Row'];
-export type Invite = Database['public']['Tables']['invites']['Row'];
+export interface VideoFormValues {
+  id?: string;
+  title?: string;
+  description?: string;
+  url?: string;
+  type?: string;
+  fileName?: string;
+  filePath?: string;
+  fileSize?: number;
+  duration_seconds?: number;
+  video_id?: string;
+  thumbnail_url?: string;
+  order_index?: number;
+}
 
-export type ImplementationCheckpoint = Database['public']['Tables']['implementation_checkpoints']['Row'];
-export type SolutionResource = Database['public']['Tables']['solution_resources']['Row'];
-export type SolutionTool = Database['public']['Tables']['solution_tools']['Row'];
-export type UserChecklist = Database['public']['Tables']['user_checklists']['Row'];
-
-export type OnboardingSync = Database['public']['Tables']['onboarding_sync']['Row'];
-export type Analytics = Database['public']['Tables']['analytics']['Row'];
-
+export interface LearningLessonNps {
+  id: string;
+  user_id: string;
+  lesson_id: string;
+  score: number;
+  feedback: string | null;
+  created_at: string;
+  updated_at: string;
+}

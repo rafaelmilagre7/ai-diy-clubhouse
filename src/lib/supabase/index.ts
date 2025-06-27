@@ -13,6 +13,7 @@ export {
   ensureBucketExists,
   extractPandaVideoInfo,
   uploadFileWithFallback
+  // Adicione outras funções que precisam ser exportadas
 } from './storage';
 
 // Exportação explícita das funções de RPC
@@ -21,39 +22,6 @@ export {
   incrementTopicViews,
   incrementTopicReplies,
   deleteForumTopic,
-  deleteForumPost,
-  auditRoleAssignments,
-  callSupabaseRpc
+  deleteForumPost
+  // Adicionar outras funções de RPC conforme necessário
 } from './rpc';
-
-// Tipos principais re-exportados
-export type { 
-  LearningCourse,
-  LearningModule, 
-  LearningLesson,
-  LearningLessonVideo,
-  LearningResource,
-  UserProfile,
-  Solution,
-  Module,
-  Tool,
-  UserChecklist,
-  CourseAccessControl,
-  PermissionDefinition,
-  RolePermission,
-  AuditLog,
-  Event,
-  Progress,
-  SolutionResource,
-  SolutionTool,
-  ImplementationCheckpoint
-} from './types';
-
-// Funções de role helpers
-export const isAdminRole = (profile: any): boolean => {
-  return profile?.user_roles?.name === 'admin';
-};
-
-export const isFormacaoRole = (profile: any): boolean => {
-  return profile?.user_roles?.name === 'formacao';
-};

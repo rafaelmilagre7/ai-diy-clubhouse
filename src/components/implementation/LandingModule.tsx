@@ -10,14 +10,6 @@ interface LandingModuleProps {
 }
 
 export const LandingModule = ({ module, onComplete }: LandingModuleProps) => {
-  // Safe content rendering helper
-  const renderContent = (content: any) => {
-    if (typeof content === 'string') {
-      return content;
-    }
-    return '';
-  };
-
   return (
     <div className="text-center space-y-8 py-12">
       <div className="bg-gradient-to-r from-viverblue/10 to-viverblue/5 rounded-lg p-8">
@@ -37,7 +29,7 @@ export const LandingModule = ({ module, onComplete }: LandingModuleProps) => {
 
         {module.content && (
           <div className="prose prose-sm max-w-none text-muted-foreground mb-8">
-            <div dangerouslySetInnerHTML={{ __html: renderContent(module.content) }} />
+            <div dangerouslySetInnerHTML={{ __html: module.content }} />
           </div>
         )}
 

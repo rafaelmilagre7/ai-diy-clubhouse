@@ -1,8 +1,23 @@
 
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { User, Session } from '@supabase/supabase-js';
-import { UserProfile } from '@/lib/supabase/types';
-import { supabase } from '@/lib/supabase';
+import { UserProfile } from '@/lib/supabase';
+import { logger } from '@/utils/logger';
+import AuthManager from '@/services/AuthManager';
+
+// Interface alinhada com AuthManager
+interface AuthState {
+  user: User | null;
+  session: Session | null;
+  profile: UserProfile | null;
+  isLoading: boolean;
+  error: string | null;
+  isAdmin: boolean;
+  isFormacao: boolean;
+  onboardingRequired: boolean;
+  hasInviteToken: boolean;
+  inviteDetails: any | null;
+}
 
 interface SimpleAuthContextType {
   user: User | null;
@@ -23,136 +38,131 @@ interface SimpleAuthProviderProps {
 }
 
 export const SimpleAuthProvider: React.FC<SimpleAuthProviderProps> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
-  const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [isLoading, setIsLoading] = useState(false); // COMEÇAR COMO FALSE
-  const [error, setError] = useState<string | null>(null);
-
-  // Função para carregar perfil
-  const loadProfile = async (userId: string) => {
-    try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select(`
-          *,
-          user_roles:role_id (
-            id,
-            name,
-            description,
-            permissions
-          )
-        `)
-        .eq('id', userId)
-        .single();
-
-      if (error) {
-        console.error('Erro ao carregar perfil:', error);
-        return;
-      }
-
-      // Cast the data to UserProfile type with proper type conversion
-      setProfile(data as unknown as UserProfile);
-    } catch (err) {
-      console.error('Erro inesperado ao carregar perfil:', err);
-    }
-  };
-
-  useEffect(() => {
-    let mounted = true;
-
-    // Setup do listener de mudanças de auth
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        if (!mounted) return;
-
-        console.log('[SIMPLE-AUTH] Auth state changed:', event);
-        
-        setSession(session);
-        setUser(session?.user ?? null);
-        
-        if (event === 'SIGNED_IN' && session?.user) {
-          await loadProfile(session.user.id);
-        } else if (event === 'SIGNED_OUT') {
-          setProfile(null);
-        }
-      }
-    );
-
-    // Verificar sessão inicial UMA ÚNICA VEZ
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!mounted) return;
-      
-      if (session?.user) {
-        setSession(session);
-        setUser(session.user);
-        loadProfile(session.user.id);
-      }
-    });
-
-    return () => {
-      mounted = false;
-      subscription.unsubscribe();
+  const [authState, setAuthState] = useState<AuthState>(() => {
+    const initialState = AuthManager.getInstance().getState();
+    // Garantir que todas as propriedades existem
+    return {
+      user: initialState.user,
+      session: initialState.session || null,
+      profile: initialState.profile,
+      isLoading: initialState.isLoading,
+      error: initialState.error || null,
+      isAdmin: initialState.isAdmin,
+      isFormacao: initialState.isFormacao,
+      onboardingRequired: initialState.onboardingRequired,
+      hasInviteToken: initialState.hasInviteToken,
+      inviteDetails: initialState.inviteDetails
     };
-  }, []); // Array vazio - executar apenas uma vez
-
-  const signIn = async (email: string, password: string) => {
-    try {
-      setError(null);
-      setIsLoading(true);
-      
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
+  });
+  
+  useEffect(() => {
+    const authManager = AuthManager.getInstance();
+    
+    logger.info('[SIMPLE-AUTH-PROVIDER] 🔄 Inicializando com AuthManager CORRIGIDO', {
+      component: 'SimpleAuthProvider',
+      action: 'initialize'
+    });
+    
+    // CORREÇÃO: criar função handler que aceita AuthState como argumento
+    const handleStateChanged = (newState) => {
+      logger.info('[SIMPLE-AUTH-PROVIDER] 📡 Estado atualizado via AuthManager', {
+        component: 'SimpleAuthProvider',
+        action: 'state_changed',
+        hasUser: !!newState.user,
+        isLoading: newState.isLoading,
+        isAdmin: newState.isAdmin,
+        error: newState.error,
+        timestamp: new Date().toISOString()
       });
       
-      if (error) {
-        setError(error.message);
-        return { error };
+      // Garantir que todas as propriedades existem
+      setAuthState({
+        user: newState.user,
+        session: newState.session || null,
+        profile: newState.profile,
+        isLoading: newState.isLoading,
+        error: newState.error || null,
+        isAdmin: newState.isAdmin,
+        isFormacao: newState.isFormacao,
+        onboardingRequired: newState.onboardingRequired,
+        hasInviteToken: newState.hasInviteToken,
+        inviteDetails: newState.inviteDetails
+      });
+    };
+    
+    // Subscribe to state changes com função handler
+    const unsubscribe = authManager.on('stateChanged', handleStateChanged);
+    
+    // Initialize AuthManager
+    const initializeAuth = async () => {
+      try {
+        logger.info('[SIMPLE-AUTH-PROVIDER] 🚀 Forçando inicialização do AuthManager', {
+          component: 'SimpleAuthProvider',
+          action: 'force_initialize'
+        });
+        await authManager.initialize();
+        
+        // Atualizar estado após inicialização
+        const currentState = authManager.getState();
+        logger.info('[SIMPLE-AUTH-PROVIDER] ✅ AuthManager inicializado', {
+          component: 'SimpleAuthProvider',
+          action: 'initialize_complete',
+          hasUser: !!currentState.user,
+          isLoading: currentState.isLoading,
+          isAdmin: currentState.isAdmin
+        });
+        
+        setAuthState({
+          user: currentState.user,
+          session: currentState.session || null,
+          profile: currentState.profile,
+          isLoading: currentState.isLoading,
+          error: currentState.error || null,
+          isAdmin: currentState.isAdmin,
+          isFormacao: currentState.isFormacao,
+          onboardingRequired: currentState.onboardingRequired,
+          hasInviteToken: currentState.hasInviteToken,
+          inviteDetails: currentState.inviteDetails
+        });
+        
+      } catch (error) {
+        logger.error('[SIMPLE-AUTH-PROVIDER] ❌ Erro na inicialização', error, {
+          component: 'SimpleAuthProvider',
+          action: 'initialize_error'
+        });
+        // Garantir que loading seja resetado mesmo em erro
+        setAuthState(prev => ({ ...prev, isLoading: false, error: (error as Error).message }));
       }
-      
-      return {};
-    } catch (err) {
-      const error = err as Error;
-      setError(error.message);
-      return { error };
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    };
 
-  const signOut = async () => {
-    try {
-      const { error } = await supabase.auth.signOut();
-      
-      if (error) {
-        return { success: false, error };
-      }
-      
-      setUser(null);
-      setProfile(null);
-      setSession(null);
-      
-      return { success: true };
-    } catch (err) {
-      return { success: false, error: err as Error };
-    }
-  };
-
-  const isAdmin = profile?.user_roles?.name === 'admin';
-  const isFormacao = profile?.user_roles?.name === 'formacao';
+    // Inicializar imediatamente
+    initializeAuth();
+    
+    return () => {
+      authManager.off('stateChanged', handleStateChanged);
+    };
+  }, []);
 
   const contextValue: SimpleAuthContextType = {
-    user,
-    session,
-    profile,
-    isLoading,
-    error,
-    isAdmin,
-    isFormacao,
-    signIn,
-    signOut
+    user: authState.user,
+    session: authState.session,
+    profile: authState.profile,
+    isLoading: authState.isLoading,
+    error: authState.error,
+    isAdmin: authState.isAdmin,
+    isFormacao: authState.isFormacao,
+    signIn: AuthManager.getInstance().signIn.bind(AuthManager.getInstance()),
+    signOut: AuthManager.getInstance().signOut.bind(AuthManager.getInstance())
   };
+
+  logger.info('[SIMPLE-AUTH-PROVIDER] 📊 Renderizando com estado', {
+    component: 'SimpleAuthProvider',
+    action: 'render',
+    isLoading: authState.isLoading,
+    hasUser: !!authState.user,
+    hasProfile: !!authState.profile,
+    error: authState.error
+  });
 
   return (
     <SimpleAuthContext.Provider value={contextValue}>
@@ -169,5 +179,5 @@ export const useSimpleAuth = (): SimpleAuthContextType => {
   return context;
 };
 
+// ALIAS TEMPORÁRIO PARA COMPATIBILIDADE
 export const useAuth = useSimpleAuth;
-

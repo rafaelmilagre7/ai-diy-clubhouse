@@ -17,9 +17,17 @@ export const useDashboardData = () => {
   const [error, setError] = useState<string | null>(null);
   const isAdmin = getUserRoleName(profile) === 'admin';
 
+  console.log('[DASHBOARD-DATA] Inicializando hook:', {
+    hasUser: !!user,
+    hasProfile: !!profile,
+    isAdmin,
+    userId: user?.id?.substring(0, 8)
+  });
+
   useEffect(() => {
     const fetchData = async () => {
       if (!user) {
+        console.log('[DASHBOARD-DATA] Sem usuário, não carregando dados');
         setLoading(false);
         return;
       }
@@ -27,6 +35,8 @@ export const useDashboardData = () => {
       try {
         setLoading(true);
         setError(null);
+        
+        console.log('[DASHBOARD-DATA] Iniciando carregamento de dados...');
         
         // Fetch solutions - filtrar apenas publicadas se não for admin
         let query = supabase.from("solutions").select("*");
@@ -40,6 +50,9 @@ export const useDashboardData = () => {
           throw solutionsError;
         }
         
+        console.log('[DASHBOARD-DATA] Soluções carregadas:', solutionsData?.length || 0);
+        
+        // Ensure solutions array is type-safe
         setSolutions(solutionsData as any);
         
         // Fetch all progress data
@@ -51,6 +64,7 @@ export const useDashboardData = () => {
           throw progressError;
         }
         
+        console.log('[DASHBOARD-DATA] Progresso carregado:', progress?.length || 0);
         setProgressData(progress || []);
         
         // Fetch analytics data
@@ -61,7 +75,7 @@ export const useDashboardData = () => {
           .limit(50);
         
         if (analyticsError && !analyticsError.message.includes('does not exist')) {
-          console.error('Analytics error:', analyticsError);
+          console.warn("Erro ao buscar analytics:", analyticsError);
         } else {
           setAnalyticsData(analytics || []);
         }
@@ -75,12 +89,14 @@ export const useDashboardData = () => {
           throw profilesError;
         }
         
+        console.log('[DASHBOARD-DATA] Perfis carregados:', profiles?.length || 0);
         setProfilesData(profiles || []);
         
+        console.log('[DASHBOARD-DATA] Todos os dados carregados com sucesso');
+        
       } catch (error: any) {
-        console.error("Dashboard data error:", error);
-        const errorMessage = error.message || "Erro inesperado ao carregar dados";
-        setError(errorMessage);
+        console.error("Erro no carregamento de dados do dashboard:", error);
+        setError(error.message || "Erro inesperado ao carregar dados");
         toast({
           title: "Erro ao carregar dados",
           description: "Ocorreu um erro ao carregar os dados do dashboard.",

@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
-import { useSimpleAuth } from "@/contexts/auth/SimpleAuthProvider";
+import { useAuth } from "@/contexts/auth";
 import { useQueryClient } from "@tanstack/react-query";
 
 interface ReplyFormProps {
@@ -16,7 +16,7 @@ interface ReplyFormProps {
 export const ReplyForm = ({ topicId, parentId, onSuccess }: ReplyFormProps) => {
   const [content, setContent] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { user } = useSimpleAuth();
+  const { user } = useAuth();
   const queryClient = useQueryClient();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -42,22 +42,18 @@ export const ReplyForm = ({ topicId, parentId, onSuccess }: ReplyFormProps) => {
           user_id: user.id,
           content: content.trim(),
           ...(parentId && { parent_id: parentId })
-        });
+        } as any);
         
       if (error) throw error;
       
-      // Safely call the RPC function
-      try {
-        await supabase.rpc('increment_topic_replies', { topic_id: topicId });
-      } catch (rpcError) {
-        console.warn('RPC call failed, but post was created:', rpcError);
-      }
+      // Atualiza o contador de respostas no tópico
+      await supabase.rpc('increment_topic_replies', { topic_id: topicId });
       
       // Atualiza a data de última atividade
       await supabase
         .from("forum_topics")
-        .update({ last_activity_at: new Date().toISOString() })
-        .eq("id", topicId);
+        .update({ last_activity_at: new Date().toISOString() } as any)
+        .eq("id", topicId as any);
       
       setContent("");
       toast.success("Resposta enviada com sucesso!");

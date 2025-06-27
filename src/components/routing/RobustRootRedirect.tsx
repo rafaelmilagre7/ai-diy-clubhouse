@@ -1,27 +1,24 @@
-
 import { Navigate } from "react-router-dom";
 import { useSimpleAuth } from "@/contexts/auth/SimpleAuthProvider";
-import { useOnboardingRequired } from "@/hooks/useOnboardingRequired";
+import { useOnboardingRequired } from "@/hooks/useOnboardingRequired";  
 import LoadingScreen from "@/components/common/LoadingScreen";
 import AuthManager from "@/services/AuthManager";
 import { useLoadingTimeoutEnhanced } from "@/hooks/useLoadingTimeoutEnhanced";
 import { logger } from "@/utils/logger";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 
 const RobustRootRedirect = () => {
   const { user, profile, isLoading: authLoading, isAdmin } = useSimpleAuth();
   const { isRequired: onboardingRequired, isLoading: onboardingLoading } = useOnboardingRequired();
-  const [forceShowContent, setForceShowContent] = useState(false);
   
   const totalLoading = authLoading || onboardingLoading;
   
   // Enhanced loading com timeout robusto
   const { hasTimedOut, retry } = useLoadingTimeoutEnhanced({
     isLoading: totalLoading,
-    timeoutMs: 8000, // Aumentado para 8 segundos
+    timeoutMs: 5000,
     context: 'root_redirect',
     onTimeout: () => {
-      console.error('[DEBUG-ROOT-REDIRECT] ⏰ TIMEOUT - Carregamento demorou mais que 8s');
       logger.warn('[ROBUST-ROOT-REDIRECT] ⏰ Timeout no carregamento inicial');
     }
   });
@@ -29,10 +26,10 @@ const RobustRootRedirect = () => {
   useEffect(() => {
     const authManager = AuthManager.getInstance();
     
+    // CORREÇÃO: criar função handler que aceita AuthState como argumento
     const handleStateChanged = (authState) => {
-      console.log('[DEBUG-ROOT-REDIRECT] 📡 Estado AuthManager atualizado:', {
+      logger.info('[ROBUST-ROOT-REDIRECT] 📡 Estado AuthManager atualizado:', {
         hasUser: !!authState.user,
-        hasProfile: !!authState.profile,
         isLoading: authState.isLoading,
         isAdmin: authState.isAdmin,
         onboardingRequired: authState.onboardingRequired,
@@ -47,8 +44,7 @@ const RobustRootRedirect = () => {
     };
   }, []);
 
-  // Log detalhado do estado atual
-  console.log("[DEBUG-ROOT-REDIRECT] 📊 Estado atual:", {
+  logger.info("[ROBUST-ROOT-REDIRECT] 📊 Estado atual:", {
     hasUser: !!user,
     hasProfile: !!profile,
     authLoading,
@@ -57,53 +53,33 @@ const RobustRootRedirect = () => {
     totalLoading,
     hasTimedOut,
     isAdmin,
-    userRole: profile?.user_roles?.name,
-    forceShowContent
+    userRole: profile?.user_roles?.name
   });
   
-  // Tratamento de timeout com opções de recovery
-  if (hasTimedOut && !forceShowContent) {
-    console.error('[DEBUG-ROOT-REDIRECT] 🚨 TIMEOUT CRÍTICO - Mostrando tela de recovery');
+  // Tratamento de timeout
+  if (hasTimedOut) {
+    logger.error('[ROBUST-ROOT-REDIRECT] 🚨 TIMEOUT CRÍTICO - Forçando recuperação');
     
     return (
       <div className="min-h-screen bg-gradient-to-br from-background to-[#151823] flex items-center justify-center">
-        <div className="text-center space-y-6 max-w-md">
-          <div className="text-red-400 text-2xl font-bold">
-            ⚠️ Carregamento demorado
+        <div className="text-center space-y-4">
+          <div className="text-red-400 text-xl font-semibold">
+            ⚠️ Tempo limite atingido
           </div>
-          <div className="text-neutral-300 space-y-2">
-            <p>A aplicação está demorando para carregar.</p>
-            <p className="text-sm text-neutral-400">
-              Estado atual: {user ? 'Usuário logado' : 'Sem usuário'}, 
-              {profile ? 'Perfil carregado' : 'Perfil não carregado'}
-            </p>
+          <div className="text-neutral-300">
+            A aplicação está demorando para carregar
           </div>
-          <div className="space-y-3">
+          <div className="space-y-2">
             <button 
-              onClick={() => {
-                console.log('[DEBUG-ROOT-REDIRECT] 🔄 Forçando continuação...');
-                setForceShowContent(true);
-              }}
-              className="block w-full bg-viverblue hover:bg-viverblue/80 text-white px-6 py-3 rounded-lg font-medium"
-            >
-              🚀 Continuar mesmo assim
-            </button>
-            <button 
-              onClick={() => {
-                console.log('[DEBUG-ROOT-REDIRECT] 🔄 Tentando novamente...');
-                retry();
-              }}
-              className="block w-full bg-gray-600 hover:bg-gray-500 text-white px-6 py-3 rounded-lg font-medium"
+              onClick={retry}
+              className="bg-viverblue hover:bg-viverblue/80 text-white px-6 py-3 rounded-lg font-medium"
             >
               🔄 Tentar Novamente
             </button>
             <div className="text-sm text-neutral-400">
               ou{" "}
               <button 
-                onClick={() => {
-                  console.log('[DEBUG-ROOT-REDIRECT] 🔄 Redirecionando para login...');
-                  window.location.href = '/login';
-                }}
+                onClick={() => window.location.href = '/login'}
                 className="text-viverblue hover:underline"
               >
                 ir para login
@@ -116,32 +92,28 @@ const RobustRootRedirect = () => {
   }
   
   // Loading normal - aguardar sem complexidade
-  if (totalLoading && !forceShowContent) {
-    console.log('[DEBUG-ROOT-REDIRECT] ⏳ Aguardando carregamento...');
+  if (totalLoading) {
     return <LoadingScreen message="Verificando seu acesso..." />;
   }
   
   if (!user) {
-    console.log("[DEBUG-ROOT-REDIRECT] 👤 Sem usuário -> redirecionando para login");
     logger.info("[ROBUST-ROOT-REDIRECT] Sem usuário -> login");
     return <Navigate to="/login" replace />;
   }
   
   // CORREÇÃO CRÍTICA: Admin bypass ABSOLUTO - primeira prioridade
   if (isAdmin) {
-    console.log("[DEBUG-ROOT-REDIRECT] 👑 ADMIN DETECTADO - Redirecionamento direto para /admin", {
+    logger.info("[ROBUST-ROOT-REDIRECT] 👑 ADMIN DETECTADO - Redirecionamento direto para /admin", {
       userId: user.id.substring(0, 8) + '***',
       userRole: profile?.user_roles?.name,
       onboardingRequired: onboardingRequired,
       bypassReason: 'ADMIN_PRIORITY_ABSOLUTE'
     });
-    logger.info("[ROBUST-ROOT-REDIRECT] 👑 ADMIN DETECTADO - Redirecionamento direto para /admin");
     return <Navigate to="/admin" replace />;
   }
   
   // Aguardar perfil se necessário (só para não-admin)
-  if (user && !profile && !forceShowContent) {
-    console.log("[DEBUG-ROOT-REDIRECT] ⏳ Aguardando perfil...");
+  if (user && !profile) {
     logger.info("[ROBUST-ROOT-REDIRECT] Aguardando perfil...");
     return <LoadingScreen message="Carregando perfil..." />;
   }
@@ -150,7 +122,7 @@ const RobustRootRedirect = () => {
   const authManager = AuthManager.getInstance();
   const redirectPath = authManager.getRedirectPath();
   
-  console.log("[DEBUG-ROOT-REDIRECT] 🎯 Redirecionamento calculado:", {
+  logger.info("[ROBUST-ROOT-REDIRECT] Redirecionamento calculado:", {
     redirectPath,
     hasUser: !!user,
     hasProfile: !!profile,
@@ -158,11 +130,6 @@ const RobustRootRedirect = () => {
     isAdmin,
     roleName: profile?.user_roles?.name,
     reason: isAdmin ? 'ADMIN_BYPASS' : 'NORMAL_FLOW'
-  });
-  
-  logger.info("[ROBUST-ROOT-REDIRECT] Redirecionamento calculado:", {
-    redirectPath,
-    roleName: profile?.user_roles?.name
   });
   
   return <Navigate to={redirectPath} replace />;

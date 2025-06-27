@@ -1,96 +1,145 @@
 
-import React from "react";
-import { Module } from "@/lib/supabase";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Play, Clock, Video } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { Module, Solution, supabase } from "@/lib/supabase";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useLogging } from "@/hooks/useLogging";
+import { YoutubeEmbed } from "@/components/common/YoutubeEmbed";
+
+interface Video {
+  title?: string;
+  description?: string;
+  url?: string;
+  youtube_id?: string;
+}
 
 interface ModuleContentVideosProps {
   module: Module;
 }
 
-// Helper function to safely parse JSON content
-const parseVideos = (content: any): any[] => {
-  if (!content) return [];
-  
-  // If it's already an array
-  if (Array.isArray(content)) {
-    return content;
-  }
-  
-  // If it's an object with videos property
-  if (typeof content === 'object' && content.videos) {
-    return Array.isArray(content.videos) ? content.videos : [];
-  }
-  
-  return [];
-};
+export const ModuleContentVideos: React.FC<ModuleContentVideosProps> = ({ module }) => {
+  const [videos, setVideos] = useState<Video[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { log, logError } = useLogging();
 
-export const ModuleContentVideos = ({ module }: ModuleContentVideosProps) => {
-  const videos = parseVideos(module.content);
+  useEffect(() => {
+    const fetchVideos = async () => {
+      try {
+        setLoading(true);
 
-  if (!videos.length) {
+        // Checar vídeos dentro do conteúdo do módulo
+        if (module.content && module.content.videos && Array.isArray(module.content.videos)) {
+          setVideos(module.content.videos);
+          log("Found videos in module content", { count: module.content.videos.length });
+        } else {
+          // Buscar vídeos na tabela solution_resources associados à solução deste módulo
+          const { data: resourcesData, error: resourcesError } = await supabase
+            .from("solution_resources")
+            .select("*")
+            .eq("solution_id", module.solution_id as any)
+            .eq("type", "video" as any);
+
+          if (resourcesError) {
+            logError("Error fetching video resources:", resourcesError);
+            setVideos([]);
+          } else if (resourcesData && resourcesData.length > 0) {
+            const videoResources = (resourcesData as any).map((resource: any) => ({
+              title: resource.name,
+              description: resource.format || "",
+              url: resource.url,
+              youtube_id: resource.url && resource.url.includes("youtube.com/embed/")
+                ? resource.url.split("youtube.com/embed/")[1]?.split("?")[0]
+                : null
+            }));
+            setVideos(videoResources);
+            log("Found videos in resources", { count: videoResources.length });
+          } else {
+            log("No videos found in module content or resources", {
+              module_id: module.id,
+              solution_id: module.solution_id
+            });
+            setVideos([]);
+          }
+        }
+      } catch (err) {
+        logError("Error loading videos:", err);
+        setVideos([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchVideos();
+  }, [module, logError, log]);
+
+  // Extract YouTube ID from URL
+  const getYouTubeId = (url: string): string | null => {
+    try {
+      const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+      const match = url.match(regExp);
+      return (match && match[2].length === 11) ? match[2] : null;
+    } catch (error) {
+      logError("Error extracting YouTube ID:", error);
+      return null;
+    }
+  };
+
+  if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center py-12 text-center">
-        <Video className="h-12 w-12 text-muted-foreground/50 mb-4" />
-        <h3 className="text-lg font-medium mb-2">Sem vídeos disponíveis</h3>
-        <p className="text-muted-foreground max-w-md">
-          Esta solução não possui vídeos educacionais no momento.
-        </p>
+      <div className="space-y-4 mt-8">
+        <h3 className="text-lg font-semibold">Vídeos</h3>
+        {[1, 2].map((i) => (
+          <div key={i} className="space-y-2">
+            <Skeleton className="h-52 w-full rounded-md" />
+            <Skeleton className="h-5 w-3/4" />
+            <Skeleton className="h-4 w-1/2" />
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  if (videos.length === 0) {
+    return (
+      <div className="text-center py-12">
+        <p className="text-muted-foreground">Nenhum vídeo disponível para esta solução.</p>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h3 className="text-lg font-semibold mb-2">Vídeos Educacionais</h3>
-        <p className="text-muted-foreground">
-          Assista aos vídeos para aprender como implementar esta solução.
-        </p>
-      </div>
-
-      <div className="grid gap-4">
-        {videos.map((video: any, index: number) => (
-          <Card key={video.id || index} className="group hover:shadow-md transition-shadow">
-            <CardHeader className="pb-3">
-              <div className="flex gap-4">
-                <div className="relative flex-shrink-0">
-                  <div className="w-16 h-16 bg-muted rounded-lg flex items-center justify-center group-hover:bg-primary/10 transition-colors">
-                    <Play className="h-6 w-6 text-muted-foreground group-hover:text-primary" />
-                  </div>
+    <div className="space-y-8 mt-8">
+      <h3 className="text-lg font-semibold">Vídeos</h3>
+      <div className="space-y-8">
+        {videos.map((video, index) => {
+          log("Processing video", { video, index });
+          const youtubeId = video.youtube_id || (video.url ? getYouTubeId(video.url) : null);
+          if (!youtubeId && !video.url) {
+            log("Skipping video - no youtube_id or url", { video });
+            return null;
+          }
+          return (
+            <div key={index} className="space-y-2">
+              {youtubeId ? (
+                <YoutubeEmbed youtubeId={youtubeId} title={video.title} />
+              ) : video.url ? (
+                <div className="aspect-video rounded-md overflow-hidden">
+                  <video
+                    src={video.url}
+                    controls
+                    className="w-full h-full"
+                    title={video.title || `Vídeo ${index + 1}`}
+                  />
                 </div>
-                <div className="flex-1 min-w-0">
-                  <CardTitle className="text-base mb-1 line-clamp-2">
-                    {video.title || `Vídeo ${index + 1}`}
-                  </CardTitle>
-                  {video.description && (
-                    <p className="text-sm text-muted-foreground line-clamp-2">
-                      {video.description}
-                    </p>
-                  )}
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className="pt-0">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Clock className="h-4 w-4" />
-                  <span>{video.duration || "Duração não informada"}</span>
-                </div>
-                <button 
-                  className="text-primary hover:text-primary/80 font-medium text-sm"
-                  onClick={() => {
-                    if (video.url) {
-                      window.open(video.url, '_blank');
-                    }
-                  }}
-                >
-                  Assistir →
-                </button>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+              ) : null}
+              {video.title && (
+                <h4 className="font-medium text-lg mt-2">{video.title}</h4>
+              )}
+              {video.description && (
+                <p className="text-muted-foreground">{video.description}</p>
+              )}
+            </div>
+          );
+        })}
       </div>
     </div>
   );

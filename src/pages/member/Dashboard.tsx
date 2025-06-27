@@ -6,10 +6,25 @@ import { OptimizedDashboardLayout } from "@/components/dashboard/OptimizedDashbo
 import { useEnhancedDashboard } from "@/hooks/dashboard/useEnhancedDashboard";
 import { useStableCallback } from "@/hooks/performance/useStableCallback";
 import { useSimpleAuth } from "@/contexts/auth/SimpleAuthProvider";
+import { useOnboardingGuard } from "@/hooks/auth/useOnboardingGuard";
 
 const Dashboard = () => {
   const navigate = useNavigate();
-  const { user, isLoading: authLoading } = useSimpleAuth();
+  const { user, profile, isLoading: authLoading } = useSimpleAuth();
+  
+  // PROTEÇÃO CRÍTICA: Garantir onboarding obrigatório
+  const { isBlocked, isLoading: guardLoading } = useOnboardingGuard();
+  
+  console.log('[DASHBOARD] Estado de autenticação:', {
+    hasUser: !!user,
+    hasProfile: !!profile,
+    authLoading,
+    guardLoading,
+    isBlocked,
+    profileName: profile?.name,
+    onboardingCompleted: profile?.onboarding_completed,
+    userId: user?.id?.substring(0, 8)
+  });
 
   // Hook híbrido com otimização + fallback automático
   const {
@@ -21,18 +36,45 @@ const Dashboard = () => {
     performance
   } = useEnhancedDashboard();
 
+  console.log('[DASHBOARD] Estado dos dados:', {
+    isLoading,
+    hasError: !!error,
+    activeCount: active?.length || 0,
+    completedCount: completed?.length || 0,
+    recommendedCount: recommended?.length || 0,
+    performance: performance?.optimized ? 'optimized' : 'fallback'
+  });
+
   // Callback estável para navegação
   const handleSolutionClick = useStableCallback((solution: Solution) => {
+    console.log('[DASHBOARD] Navegando para solução:', solution.id);
     navigate(`/solution/${solution.id}`);
   });
 
-  // Loading simples
-  if (authLoading || isLoading) {
+  // Log de erro se houver (para monitoramento)
+  if (error) {
+    console.warn('[DASHBOARD] Erro detectado:', error);
+  }
+
+  // Se ainda está carregando auth ou guard, mostrar loading
+  if (authLoading || guardLoading) {
+    console.log('[DASHBOARD] Aguardando autenticação/validação...');
     return (
-      <div className="min-h-screen bg-gradient-to-br from-[#0F111A] to-[#151823] flex items-center justify-center">
-        <div className="text-center text-white">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-viverblue mx-auto mb-4"></div>
-          <p>Carregando dashboard...</p>
+      <div className="space-y-8 md:pt-2">
+        <div className="text-center py-8">
+          <div className="text-white">Carregando dashboard...</div>
+        </div>
+      </div>
+    );
+  }
+
+  // Se está bloqueado pelo onboarding guard, não renderizar
+  if (isBlocked) {
+    console.warn('[DASHBOARD] Acesso bloqueado - onboarding obrigatório');
+    return (
+      <div className="space-y-8 md:pt-2">
+        <div className="text-center py-8">
+          <div className="text-white">Redirecionando para onboarding...</div>
         </div>
       </div>
     );
@@ -40,30 +82,17 @@ const Dashboard = () => {
 
   // Se não há usuário, não renderizar
   if (!user) {
+    console.warn('[DASHBOARD] Usuário não autenticado');
     return (
-      <div className="text-center py-8">
-        <p className="text-white">Redirecionando para login...</p>
-      </div>
-    );
-  }
-
-  // Se há erro nos dados do dashboard
-  if (error) {
-    return (
-      <div className="text-center py-8">
-        <div className="text-white bg-red-500/20 border border-red-500/30 rounded-lg p-6 max-w-md mx-auto">
-          <h3 className="text-lg font-semibold mb-2">Erro ao Carregar Dashboard</h3>
-          <p className="text-sm text-red-100 mb-4">{error}</p>
-          <button 
-            onClick={() => window.location.reload()}
-            className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg"
-          >
-            Recarregar Página
-          </button>
+      <div className="space-y-8 md:pt-2">
+        <div className="text-center py-8">
+          <div className="text-white">Redirecionando...</div>
         </div>
       </div>
     );
   }
+
+  console.log('[DASHBOARD] Renderizando dashboard principal - onboarding validado');
 
   return (
     <OptimizedDashboardLayout

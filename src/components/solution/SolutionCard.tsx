@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Solution } from '@/lib/supabase';
@@ -6,7 +5,7 @@ import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { BarChart, TrendingUp, Settings, Zap } from 'lucide-react';
-import { SolutionCategory, mapLegacyCategory } from '@/lib/types/categoryTypes';
+import { SolutionCategory } from '@/lib/types/categoryTypes';
 
 interface SolutionCardProps {
   solution: Solution;
@@ -54,11 +53,6 @@ export const SolutionCard: React.FC<SolutionCardProps> = ({ solution }) => {
         };
     }
   };
-
-  // Safely convert solution category to SolutionCategory type
-  const normalizedCategory = mapLegacyCategory(solution.category);
-  const categoryDetails = getCategoryDetails(normalizedCategory);
-
   return (
     <Link to={`/solution/${solution.id}`} className="block">
       <Card className="h-full overflow-hidden transition-shadow hover:shadow-md bg-[#151823] border-neutral-700">
@@ -78,11 +72,11 @@ export const SolutionCard: React.FC<SolutionCardProps> = ({ solution }) => {
             <div className="absolute inset-0 bg-gradient-to-t from-[#0F111A] via-transparent to-transparent opacity-70"></div>
             <Badge 
               variant="outline"
-              className={`absolute top-2 left-2 ${categoryDetails.color}`}
+              className={`absolute top-2 left-2 ${getCategoryDetails(solution.category).color}`}
             >
               <span className="flex items-center">
-                {categoryDetails.icon}
-                <span className="ml-1">{categoryDetails.name}</span>
+                {getCategoryDetails(solution.category).icon}
+                <span className="ml-1">{getCategoryDetails(solution.category).name}</span>
               </span>
             </Badge>
           </div>
@@ -97,8 +91,8 @@ export const SolutionCard: React.FC<SolutionCardProps> = ({ solution }) => {
         </CardContent>
         <CardFooter className="p-4 pt-0 flex gap-2 flex-wrap justify-between text-xs text-neutral-400">
           <div className="flex items-center">
-            {categoryDetails.icon}
-            <span className="ml-1">{categoryDetails.name}</span>
+            {getCategoryDetails(solution.category).icon}
+            <span className="ml-1">{getCategoryDetails(solution.category).name}</span>
           </div>
           <Badge
             variant="outline"
@@ -112,6 +106,7 @@ export const SolutionCard: React.FC<SolutionCardProps> = ({ solution }) => {
               ? "Avançado"
               : solution.difficulty}
           </Badge>
+          {/* Campo success_rate não existe mais na Solution. Se necessário restaurar, adicionar no schema */}
         </CardFooter>
       </Card>
     </Link>

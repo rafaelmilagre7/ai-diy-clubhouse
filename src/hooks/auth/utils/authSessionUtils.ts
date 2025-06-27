@@ -1,62 +1,90 @@
 
 import { supabase } from '@/lib/supabase';
-import { UserProfile } from '@/lib/supabase/types';
+import { UserProfile } from '@/lib/supabase';
+
+export const validateUserSession = async () => {
+  try {
+    const { data: { session }, error } = await supabase.auth.getSession();
+    
+    if (error) {
+      console.error('Erro ao validar sessão:', error);
+      return { session: null, user: null };
+    }
+    
+    return { 
+      session, 
+      user: session?.user || null 
+    };
+  } catch (error) {
+    console.error('Erro crítico na validação:', error);
+    return { session: null, user: null };
+  }
+};
 
 export const fetchUserProfileSecurely = async (userId: string): Promise<UserProfile | null> => {
   try {
-    const { data, error } = await supabase
+    const { data: profile, error } = await supabase
       .from('profiles')
       .select(`
         *,
-        user_roles:role_id (
-          id,
-          name,
-          description,
-          permissions,
-          is_system
-        )
+        user_roles (*)
       `)
-      .eq('id', userId)
+      .eq('id', userId as any)
       .single();
-
+    
     if (error) {
-      console.error('Error fetching user profile:', error);
+      console.error('Erro ao buscar perfil:', error);
       return null;
     }
-
-    return data as UserProfile;
+    
+    return profile as any;
   } catch (error) {
-    console.error('Unexpected error fetching profile:', error);
+    console.error('Erro crítico ao buscar perfil:', error);
     return null;
   }
 };
 
-export const processUserProfile = (data: any): UserProfile => {
-  return {
-    id: data.id,
-    email: data.email,
-    name: data.name,
-    avatar_url: data.avatar_url || '',
-    company_name: data.company_name || '',
-    industry: data.industry || '',
-    role_id: data.role_id,
-    role: data.role,
-    created_at: data.created_at,
-    updated_at: data.updated_at || new Date().toISOString(),
-    onboarding_completed: data.onboarding_completed || false,
-    onboarding_completed_at: data.onboarding_completed_at || '',
-    referrals_count: data.referrals_count || 0,
-    successful_referrals_count: data.successful_referrals_count || 0,
-    whatsapp_number: data.whatsapp_number,
-    user_roles: data.user_roles
-  };
+export const processUserProfile = async (
+  userId: string,
+  userEmail?: string,
+  userName?: string
+): Promise<UserProfile | null> => {
+  try {
+    let profile = await fetchUserProfileSecurely(userId);
+    
+    // Se não há perfil, criar um básico
+    if (!profile && userEmail) {
+      console.log('Criando perfil para novo usuário:', userEmail);
+      
+      const { data: newProfile, error: createError } = await supabase
+        .from('profiles')
+        .insert({
+          id: userId,
+          email: userEmail,
+          name: userName || userEmail.split('@')[0],
+          created_at: new Date().toISOString()
+        } as any)
+        .select(`
+          *,
+          user_roles (*)
+        `)
+        .single();
+      
+      if (createError) {
+        console.error('Erro ao criar perfil:', createError);
+        return null;
+      }
+      
+      profile = newProfile as unknown as UserProfile;
+    }
+    
+    return profile;
+  } catch (error) {
+    console.error('Erro no processamento:', error);
+    return null;
+  }
 };
 
-export const validateUserSession = (session: any): boolean => {
-  return session && session.user && session.user.id;
-};
-
-export const clearProfileCache = (): void => {
-  // Implementation for clearing profile cache if needed
-  console.log('Profile cache cleared');
+export const clearProfileCache = () => {
+  // Cache removido - função vazia para compatibilidade
 };

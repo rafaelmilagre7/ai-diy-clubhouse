@@ -1,77 +1,32 @@
 
-import { ENV_CONFIG } from '@/config/env-validation';
-
-/**
- * Configurações centralizadas do Supabase
- */
-export const SUPABASE_CONFIG = {
-  url: ENV_CONFIG.SUPABASE_URL,
-  anonKey: ENV_CONFIG.SUPABASE_ANON_KEY,
-  
-  isConfigured(): boolean {
-    return !!(this.url && this.anonKey);
-  },
-  
-  getStorageUrl(bucket: string, path: string): string {
-    return `${this.url}/storage/v1/object/public/${bucket}/${path}`;
-  }
-};
-
-/**
- * Configuração centralizada dos buckets de storage
- */
+// Definição dos buckets de armazenamento
 export const STORAGE_BUCKETS = {
-  // Avatars e imagens de perfil
-  PROFILE_IMAGES: 'profile_images',
-  AVATARS: 'avatars',
+  // Buckets para o LMS - usando nomes normalizados
+  LEARNING_MATERIALS: 'learning_materials',
+  COURSE_IMAGES: 'course_images', 
+  LEARNING_VIDEOS: 'learning_videos',
+  SOLUTION_FILES: 'solution_files',
+  LESSON_IMAGES: 'lesson_images',
   
-  // Ferramentas e logos
-  TOOL_LOGOS: 'tool_logos',
-  
-  // Eventos
+  // Buckets para eventos
   EVENT_IMAGES: 'event_images',
   
-  // Learning/Formação
-  LEARNING_MATERIALS: 'learning_materials',
-  LEARNING_VIDEOS: 'learning_videos',
-  COURSE_IMAGES: 'course_images',
-  
-  // Soluções
-  SOLUTION_FILES: 'solution_files',
-  
-  // Uploads gerais
-  UPLOADS: 'uploads',
-  PUBLIC: 'public',
-  
-  // Mídia
-  IMAGES: 'images',
-  VIDEOS: 'videos',
-  DOCUMENTS: 'documents'
-} as const;
+  // Bucket de fallback para emergências
+  FALLBACK: 'general_storage'
+};
 
-/**
- * Lista de todos os buckets para facilitar iteração
- */
-export const ALL_STORAGE_BUCKETS = Object.values(STORAGE_BUCKETS);
+// Limites de tamanho de upload (em MB)
+export const MAX_UPLOAD_SIZES = {
+  IMAGE: 5,       // 5MB para imagens
+  DOCUMENT: 25,   // 25MB para documentos  
+  VIDEO: 200,     // 200MB para vídeos
+  AVATAR: 2       // 2MB para avatares
+};
 
-/**
- * Configurações específicas por bucket
- */
-export const BUCKET_CONFIG = {
-  [STORAGE_BUCKETS.PROFILE_IMAGES]: {
-    maxSize: 5, // 5MB
-    allowedTypes: ['image/*']
-  },
-  [STORAGE_BUCKETS.TOOL_LOGOS]: {
-    maxSize: 2, // 2MB
-    allowedTypes: ['image/*']
-  },
-  [STORAGE_BUCKETS.LEARNING_VIDEOS]: {
-    maxSize: 300, // 300MB
-    allowedTypes: ['video/*']
-  },
-  [STORAGE_BUCKETS.SOLUTION_FILES]: {
-    maxSize: 25, // 25MB
-    allowedTypes: ['*']
-  }
-} as const;
+// Tipos de arquivo aceitos por categoria
+export const ACCEPTED_FILE_TYPES = {
+  IMAGES: 'image/*',
+  DOCUMENTS: '.pdf,.doc,.docx,.txt,.rtf',
+  VIDEOS: 'video/*',
+  ALL: '*/*'
+};

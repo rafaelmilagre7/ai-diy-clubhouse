@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { useSimpleAuth } from "@/contexts/auth/SimpleAuthProvider"; // CORREÇÃO: usar SimpleAuth
+import { useAuth } from "@/contexts/auth";
 import { supabase } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
 import { useUserStats } from "@/hooks/useUserStats";
@@ -71,7 +71,7 @@ const executeWithRetry = async <T>(
 };
 
 export const useProfileData = () => {
-  const { user, profile } = useSimpleAuth(); // CORREÇÃO: usar SimpleAuth
+  const { user, profile } = useAuth();
   const { toast } = useToast();
   const { stats, loading: statsLoading } = useUserStats();
   

@@ -3,7 +3,6 @@ import { useState } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { Module } from "@/lib/supabase";
 import { validateModule } from "./utils/moduleValidation";
-import { Json } from "@/lib/supabase/types";
 
 export type BlockType =
   | "header"
@@ -25,45 +24,17 @@ export type BlockType =
 export interface ContentBlock {
   id: string;
   type: BlockType;
-  data: { [key: string]: Json | undefined };
+  data: Record<string, any>;
 }
-
-interface ModuleContent {
-  blocks: ContentBlock[];
-}
-
-// Helper function to safely parse content
-const parseContent = (content: Json): ModuleContent => {
-  if (!content) return { blocks: [] };
-  
-  // If content is already an object with blocks
-  if (typeof content === 'object' && content !== null && !Array.isArray(content) && 'blocks' in content) {
-    const contentObj = content as { blocks?: unknown };
-    if (Array.isArray(contentObj.blocks)) {
-      return { blocks: contentObj.blocks as ContentBlock[] };
-    }
-  }
-  
-  // If content is a string, try to parse it
-  if (typeof content === 'string') {
-    try {
-      const parsed = JSON.parse(content);
-      if (parsed && typeof parsed === 'object' && Array.isArray(parsed.blocks)) {
-        return { blocks: parsed.blocks };
-      }
-    } catch {
-      return { blocks: [] };
-    }
-  }
-  
-  return { blocks: [] };
-};
 
 export const useModuleEditor = (initialModule: Module) => {
   const [title, setTitle] = useState(initialModule.title);
   const [activeTab, setActiveTab] = useState("editor");
   const [content, setContent] = useState(() => {
-    return parseContent(initialModule.content);
+    if (initialModule.content && initialModule.content.blocks) {
+      return initialModule.content;
+    }
+    return { blocks: [] };
   });
 
   const getContentBlocks = (): ContentBlock[] => {
@@ -134,7 +105,7 @@ export const useModuleEditor = (initialModule: Module) => {
     });
   };
 
-  const getDefaultDataForType = (type: BlockType): { [key: string]: Json | undefined } => {
+  const getDefaultDataForType = (type: BlockType): Record<string, any> => {
     switch (type) {
       case "header":
         return { text: "", level: 2 };
@@ -182,7 +153,7 @@ export const useModuleEditor = (initialModule: Module) => {
       const updatedModule: Module = {
         ...initialModule,
         title,
-        content: JSON.parse(JSON.stringify(content)) as Json,
+        content,
         updated_at: new Date().toISOString(),
       };
 

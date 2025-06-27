@@ -7,7 +7,8 @@ import { RecursosList } from "@/components/formacao/materiais/RecursosList";
 import { RecursoFormDialog } from "@/components/formacao/materiais/RecursoFormDialog";
 import { supabase } from "@/lib/supabase";
 import { LearningResource } from "@/lib/supabase/types";
-import { useSimpleAuth } from "@/contexts/auth/SimpleAuthProvider";
+import { useAuth } from "@/contexts/auth";
+import { isAdminRole, isFormacaoRole } from "@/lib/supabase";
 import { toast } from "sonner";
 
 const FormacaoMateriais = () => {
@@ -16,10 +17,10 @@ const FormacaoMateriais = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [showDialog, setShowDialog] = useState(false);
   const [editingRecurso, setEditingRecurso] = useState<LearningResource | null>(null);
-  const { isAdmin, isFormacao } = useSimpleAuth();
+  const { profile } = useAuth();
 
   // Verificar se o usuário tem permissão para administrar
-  const canManage = isAdmin || isFormacao;
+  const isAdmin = isAdminRole(profile) || isFormacaoRole(profile);
 
   // Buscar recursos da biblioteca (lesson_id IS NULL)
   const fetchRecursos = async () => {
@@ -116,7 +117,7 @@ const FormacaoMateriais = () => {
               Gerencie materiais de apoio e recursos educacionais
             </p>
           </div>
-          {canManage && (
+          {isAdmin && (
             <Button onClick={handleNewMaterial}>
               <Plus className="h-4 w-4 mr-2" />
               Novo Material
@@ -141,7 +142,7 @@ const FormacaoMateriais = () => {
           loading={loading}
           onEdit={handleEdit}
           onDelete={handleDelete}
-          isAdmin={canManage}
+          isAdmin={isAdmin}
         />
 
         {/* Dialog de Formulário */}

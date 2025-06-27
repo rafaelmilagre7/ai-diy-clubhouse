@@ -5,20 +5,17 @@ import { tokenAudit } from '@/utils/tokenAuditLogger';
 import { logger } from '@/utils/logger';
 import AuthManager from '@/services/AuthManager';
 
-// Use the same interface as AuthManager to avoid conflicts
 interface InviteDetails {
   email: string;
-  role_id: string;
-  token: string;
   name?: string;
   whatsapp_number?: string;
   role: {
     id: string;
     name: string;
-    description?: string;
+    description: string;
   };
-  expires_at?: string;
-  created_at?: string;
+  expires_at: string;
+  created_at: string;
 }
 
 export const useInviteFlow = (token?: string) => {
@@ -79,8 +76,6 @@ export const useInviteFlow = (token?: string) => {
             expires_at,
             created_at,
             used_at,
-            token,
-            role_id,
             user_roles!inner(id, name, description)
           `)
           .eq('token', token)
@@ -136,8 +131,6 @@ export const useInviteFlow = (token?: string) => {
         // SUCESSO: Processar dados COMPLETOS do convite
         const inviteData: InviteDetails = {
           email: data.email,
-          role_id: data.role_id,
-          token: data.token,
           name: data.name || undefined,
           whatsapp_number: data.whatsapp_number || undefined,
           role: Array.isArray(data.user_roles) ? data.user_roles[0] : data.user_roles,

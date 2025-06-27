@@ -1,7 +1,8 @@
 
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useSimpleAuth } from '@/contexts/auth/SimpleAuthProvider';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -10,50 +11,59 @@ import { toast } from 'sonner';
 
 const LoginForm = () => {
   const navigate = useNavigate();
-  const { signIn, user, isLoading } = useSimpleAuth();
+  const location = useLocation();
+  const { signIn, isLoading: isSigningIn } = useSimpleAuth();
   
-  const [email, setEmail] = useState('');
+  // Verificar se veio com email pré-preenchido do fluxo de convite
+  const prefilledEmail = location.state?.email || '';
+  const conviteMessage = location.state?.message || '';
+  
+  const [email, setEmail] = useState(prefilledEmail);
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
 
-  // Se já estiver logado, redirecionar SEM MOSTRAR LOADING
+  // Mostrar mensagem do convite se houver
   useEffect(() => {
-    if (user) {
-      navigate('/', { replace: true });
+    if (conviteMessage) {
+      toast.info(conviteMessage);
     }
-  }, [user, navigate]);
+  }, [conviteMessage]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
 
     if (!email || !password) {
       setError('Por favor, preencha todos os campos.');
       return;
     }
 
-    try {
-      const { error: signInError } = await signIn(email, password);
+    const { error: signInError } = await signIn(email, password);
 
-      if (signInError) {
-        setError(signInError.message);
-      } else {
-        toast.success('Login realizado com sucesso!');
-        // Redirecionar será automático via useEffect
-      }
-    } catch (err) {
-      setError('Erro inesperado ao fazer login');
+    if (signInError) {
+      setError(signInError.message);
+    } else {
+      navigate('/dashboard');
     }
   };
 
   const handleGoogleSignIn = () => {
+    // Implementar a lógica de login com o Google aqui
+    console.log('Login com o Google clicado');
     toast.info('Login com Google será implementado em breve');
   };
 
-  // SEMPRE MOSTRAR O FORMULÁRIO - SEM VERIFICAÇÕES DE LOADING
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+      {/* Mensagem especial se veio do fluxo de convite */}
+      {conviteMessage && (
+        <div className="bg-orange-500/10 border border-orange-500/20 rounded-lg p-3 mb-4">
+          <p className="text-sm text-orange-300 text-center">
+            {conviteMessage}
+          </p>
+        </div>
+      )}
+
       <div className="space-y-2">
         <Label htmlFor="email" className="text-white flex items-center gap-2">
           <Mail className="w-4 h-4" />
@@ -66,7 +76,6 @@ const LoginForm = () => {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           className="bg-[#0F111A] border-gray-700 text-white placeholder-neutral-400 focus:border-viverblue"
-          disabled={isLoading}
         />
       </div>
 
@@ -83,13 +92,11 @@ const LoginForm = () => {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             className="bg-[#0F111A] border-gray-700 text-white placeholder-neutral-400 focus:border-viverblue pr-10"
-            disabled={isLoading}
           />
           <button
             type="button"
             onClick={() => setShowPassword(!showPassword)}
             className="absolute right-3 top-1/2 transform -translate-y-1/2 text-neutral-400 hover:text-white"
-            disabled={isLoading}
           >
             {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
           </button>
@@ -104,10 +111,10 @@ const LoginForm = () => {
 
       <Button
         type="submit"
-        disabled={isLoading}
+        disabled={isSigningIn}
         className="w-full bg-viverblue hover:bg-viverblue/90 text-white font-medium py-3"
       >
-        {isLoading ? (
+        {isSigningIn ? (
           <>
             <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
             Entrando...
@@ -131,7 +138,7 @@ const LoginForm = () => {
           <div className="w-full border-t border-gray-700"></div>
         </div>
         <div className="relative flex justify-center text-xs uppercase">
-          <span className="bg-[#1A1E2E] px-2 text-neutral-500">
+          <span className="bg-[#1A1E2E] dark:bg-gray-900 px-2 text-neutral-500">
             Ou continue com
           </span>
         </div>
@@ -142,7 +149,6 @@ const LoginForm = () => {
         variant="outline"
         className="w-full text-white hover:bg-gray-800 border-gray-700"
         onClick={handleGoogleSignIn}
-        disabled={isLoading}
       >
         <Chrome className="w-4 h-4 mr-2" />
         Google

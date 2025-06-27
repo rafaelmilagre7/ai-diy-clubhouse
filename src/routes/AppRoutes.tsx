@@ -1,4 +1,3 @@
-
 import { createBrowserRouter } from "react-router-dom";
 import { authRoutes } from "./AuthRoutes";
 import { memberRoutes } from "./MemberRoutes";
@@ -10,20 +9,21 @@ import { formacaoRoutes } from "./FormacaoRoutes";
 // Páginas de erro
 import NotFound from '@/pages/NotFound';
 
-// Páginas específicas
+// Páginas existentes para rotas específicas
 import ResetPassword from '@/pages/auth/ResetPassword';
 import SetNewPassword from '@/pages/auth/SetNewPassword';
 import OnboardingPage from '@/pages/OnboardingPage';
+import RegisterPage from '@/pages/auth/RegisterPage';
 import InviteInterceptor from '@/components/auth/InviteInterceptor';
 
-// USAR O REDIRECT SIMPLES
-import SimpleRootRedirect from '@/components/routing/SimpleRootRedirect';
+// Usar o redirect robusto
+import RobustRootRedirect from '@/components/routing/RobustRootRedirect';
 
 export const AppRoutes = createBrowserRouter([
-  // Rota raiz com redirecionamento SIMPLES
+  // Rota raiz com redirecionamento robusto
   {
     path: "/",
-    element: <SimpleRootRedirect />
+    element: <RobustRootRedirect />
   },
 
   // Rotas públicas
@@ -46,7 +46,7 @@ export const AppRoutes = createBrowserRouter([
     element: <OnboardingPage />
   },
 
-  // Rotas de convite
+  // Rotas de convite - NOVO FLUXO COM INTERCEPTOR
   {
     path: "/convite/:token",
     element: <InviteInterceptor />
@@ -56,7 +56,7 @@ export const AppRoutes = createBrowserRouter([
     element: <InviteInterceptor />
   },
 
-  // Rotas de membros
+  // Rotas de membros (já usando RobustProtectedRoutes)
   ...memberRoutes,
 
   // Rotas de admin

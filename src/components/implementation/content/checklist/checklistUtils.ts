@@ -50,25 +50,10 @@ export const applyUserProgress = (
   if (!userProgress || !userProgress.checked_items) {
     return initialChecklist;
   }
-  
-  // Safe JSON parsing
-  let checkedItems: Record<string, boolean> = {};
-  
-  if (typeof userProgress.checked_items === 'string') {
-    try {
-      checkedItems = JSON.parse(userProgress.checked_items);
-    } catch (error) {
-      console.error('Failed to parse checked_items:', error);
-      return initialChecklist;
-    }
-  } else if (typeof userProgress.checked_items === 'object' && userProgress.checked_items !== null) {
-    checkedItems = userProgress.checked_items as Record<string, boolean>;
-  }
-  
   const updatedChecklist = { ...initialChecklist };
-  Object.keys(checkedItems).forEach(itemId => {
+  Object.keys(userProgress.checked_items).forEach(itemId => {
     if (updatedChecklist.hasOwnProperty(itemId)) {
-      updatedChecklist[itemId] = checkedItems[itemId];
+      updatedChecklist[itemId] = userProgress.checked_items[itemId];
     }
   });
   return updatedChecklist;

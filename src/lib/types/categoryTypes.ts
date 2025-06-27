@@ -5,11 +5,8 @@ export type SolutionCategory = "Receita" | "Operacional" | "Estratégia";
 // Mapeamento de categorias antigas para novas (para compatibilidade)
 export const categoryMapping: Record<string, SolutionCategory> = {
   'revenue': 'Receita',
-  'operational': 'Operacional', 
-  'strategy': 'Estratégia',
-  'Receita': 'Receita',
-  'Operacional': 'Operacional',
-  'Estratégia': 'Estratégia'
+  'operational': 'Operacional',
+  'strategy': 'Estratégia'
 };
 
 // Função de utilidade para converter categorias antigas para novas
@@ -36,10 +33,4 @@ export const getCategoryDisplayName = (category: SolutionCategory | string): str
     default:
       return String(category);
   }
-};
-
-// Helper function for safe category handling
-export const safeCategoryConversion = (category: string): SolutionCategory => {
-  if (!category) return 'Operacional';
-  return mapLegacyCategory(category);
 };

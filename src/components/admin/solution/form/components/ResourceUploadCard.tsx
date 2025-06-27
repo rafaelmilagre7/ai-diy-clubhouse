@@ -16,10 +16,10 @@ const ResourceUploadCard: React.FC<ResourceUploadCardProps> = ({
 }) => {
   const [uploadError, setUploadError] = React.useState<string | null>(null);
 
-  const handleUpload = async (url: string, fileName?: string, fileSize?: number) => {
+  const handleUpload = async (url: string, fileName: string, fileSize: number) => {
     try {
       setUploadError(null);
-      await handleUploadComplete(url, fileName || '', fileSize || 0);
+      await handleUploadComplete(url, fileName, fileSize);
     } catch (error: any) {
       setUploadError(error.message || "Erro ao processar o arquivo após o upload");
     }
@@ -56,7 +56,7 @@ const ResourceUploadCard: React.FC<ResourceUploadCardProps> = ({
         
         <div className="p-6 rounded-md bg-gray-50 dark:bg-gray-800">
           <FileUpload 
-            bucketName="SOLUTION_FILES" 
+            bucketName="solution_files" 
             folder="documents" 
             onUploadComplete={handleUpload} 
             accept="*" 

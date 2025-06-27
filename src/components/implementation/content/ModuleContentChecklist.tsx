@@ -15,32 +15,8 @@ interface ModuleContentChecklistProps {
   module: Module;
 }
 
-// Helper function to safely parse checklist from content
-const parseChecklist = (content: any): any[] => {
-  if (!content) return [];
-  
-  // If content is an object with checklist property
-  if (typeof content === 'object' && content.checklist) {
-    return Array.isArray(content.checklist) ? content.checklist : [];
-  }
-  
-  // If content is a string, try to parse it
-  if (typeof content === 'string') {
-    try {
-      const parsed = JSON.parse(content);
-      if (parsed && parsed.checklist && Array.isArray(parsed.checklist)) {
-        return parsed.checklist;
-      }
-    } catch {
-      return [];
-    }
-  }
-  
-  return [];
-};
-
 export const ModuleContentChecklist = ({ module }: ModuleContentChecklistProps) => {
-  const checklist = parseChecklist(module.content);
+  const checklist = module.content?.checklist || [];
   const [checked, setChecked] = useState<string[]>([]);
 
   const handleCheck = (id: string) => {

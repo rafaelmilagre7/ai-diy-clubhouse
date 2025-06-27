@@ -7,9 +7,6 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { SimpleAuthProvider } from "@/contexts/auth/SimpleAuthProvider";
 import { LoggingProvider } from "@/hooks/useLogging";
 
-// Importar validação de ambiente
-import "@/config/env-validation";
-
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
