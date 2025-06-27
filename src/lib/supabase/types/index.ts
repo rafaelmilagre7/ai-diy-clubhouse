@@ -34,6 +34,11 @@ export type LearningCertificate = Database['public']['Tables']['learning_certifi
 export type LearningComment = Database['public']['Tables']['learning_comments']['Row'];
 export type LearningLessonNps = Database['public']['Tables']['learning_lesson_nps']['Row'];
 
+// Forum types
+export type ForumCategory = Database['public']['Tables']['forum_categories']['Row'];
+export type ForumTopic = Database['public']['Tables']['forum_topics']['Row'];
+export type ForumPost = Database['public']['Tables']['forum_posts']['Row'];
+
 // Event types
 export type Event = Database['public']['Tables']['events']['Row'];
 export type EventAccessControl = Database['public']['Tables']['event_access_control']['Row'];
@@ -52,9 +57,6 @@ export type AuditLog = Database['public']['Tables']['audit_logs']['Row'];
 
 // User role types
 export type UserRole = Database['public']['Tables']['user_roles']['Row'];
-
-// Notification types
-export type NotificationPreferences = Database['public']['Tables']['notification_preferences']['Row'];
 
 // Onboarding types
 export type OnboardingSync = Database['public']['Tables']['onboarding_sync']['Row'];
