@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
-import { useAuth } from "@/contexts/auth";
+import { useSimpleAuth } from "@/contexts/auth/SimpleAuthProvider";
 import { useQueryClient } from "@tanstack/react-query";
 
 interface ReplyFormProps {
@@ -16,7 +16,7 @@ interface ReplyFormProps {
 export const ReplyForm = ({ topicId, parentId, onSuccess }: ReplyFormProps) => {
   const [content, setContent] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { user } = useAuth();
+  const { user } = useSimpleAuth();
   const queryClient = useQueryClient();
 
   const handleSubmit = async (e: React.FormEvent) => {

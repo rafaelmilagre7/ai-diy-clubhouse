@@ -43,6 +43,11 @@ export const CourseCarousel: React.FC<CourseCarouselProps> = ({
     return Math.round((completedLessons / courseProgress.length) * 100);
   };
 
+  // Helper function to safely get course properties
+  const getCourseProperty = (course: any, property: string, defaultValue: any = 0) => {
+    return course[property] !== undefined ? course[property] : defaultValue;
+  };
+
   if (!hasCourses && showEmptyMessage) {
     return (
       <div className={cn("my-8", className)}>
@@ -82,8 +87,8 @@ export const CourseCarousel: React.FC<CourseCarouselProps> = ({
                   description={course.description || ""}
                   imageUrl={course.cover_image_url}
                   progress={calculateProgress(course.id)}
-                  moduleCount={course.module_count}
-                  lessonCount={course.lesson_count}
+                  moduleCount={getCourseProperty(course, 'module_count', 0)}
+                  lessonCount={getCourseProperty(course, 'lesson_count', 0)}
                 />
               </CarouselItem>
             ))}

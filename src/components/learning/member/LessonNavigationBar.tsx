@@ -22,6 +22,14 @@ const getModuleTitle = (moduleData: any): string => {
   if (typeof moduleData === 'object' && moduleData.title) {
     return moduleData.title;
   }
+  if (typeof moduleData === 'string') {
+    try {
+      const parsed = JSON.parse(moduleData);
+      return parsed.title || '';
+    } catch {
+      return '';
+    }
+  }
   return '';
 };
 
