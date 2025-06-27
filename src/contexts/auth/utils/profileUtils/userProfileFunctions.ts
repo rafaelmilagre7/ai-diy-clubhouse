@@ -20,8 +20,29 @@ export const fetchUserProfile = async (userId: string): Promise<UserProfile | nu
         company_name,
         industry,
         created_at,
+        updated_at,
+        phone,
+        instagram,
+        linkedin,
+        state,
+        city,
+        company_website,
+        current_position,
+        company_sector,
+        company_size,
+        annual_revenue,
+        primary_goal,
+        business_challenges,
+        ai_knowledge_level,
+        nps_score,
+        weekly_availability,
+        networking_interests,
+        phone_country_code,
+        role,
         onboarding_completed,
         onboarding_completed_at,
+        referrals_count,
+        successful_referrals_count,
         user_roles:role_id (
           id,
           name,
@@ -34,13 +55,12 @@ export const fetchUserProfile = async (userId: string): Promise<UserProfile | nu
       .single();
 
     if (error) {
-      // Handle infinite recursion policy error specially
       if (error.message.includes('infinite recursion')) {
         console.warn('Detectada recursão infinita na política. Tentando criar perfil como solução alternativa.');
         return null;
       }
       console.error('Error fetching user profile:', error);
-      return null; // Retornar null ao invés de lançar erro
+      return null;
     }
     
     if (!data) {
@@ -58,8 +78,29 @@ export const fetchUserProfile = async (userId: string): Promise<UserProfile | nu
       company_name: (data as any).company_name,
       industry: (data as any).industry,
       created_at: (data as any).created_at,
+      updated_at: (data as any).updated_at || (data as any).created_at,
+      phone: (data as any).phone,
+      instagram: (data as any).instagram,
+      linkedin: (data as any).linkedin,
+      state: (data as any).state,
+      city: (data as any).city,
+      company_website: (data as any).company_website,
+      current_position: (data as any).current_position,
+      company_sector: (data as any).company_sector,
+      company_size: (data as any).company_size,
+      annual_revenue: (data as any).annual_revenue,
+      primary_goal: (data as any).primary_goal,
+      business_challenges: (data as any).business_challenges,
+      ai_knowledge_level: (data as any).ai_knowledge_level,
+      nps_score: (data as any).nps_score,
+      weekly_availability: (data as any).weekly_availability,
+      networking_interests: (data as any).networking_interests,
+      phone_country_code: (data as any).phone_country_code,
+      role: (data as any).role,
       onboarding_completed: (data as any).onboarding_completed,
       onboarding_completed_at: (data as any).onboarding_completed_at,
+      referrals_count: (data as any).referrals_count || 0,
+      successful_referrals_count: (data as any).successful_referrals_count || 0,
       user_roles: (data as any).user_roles as any
     };
     
@@ -67,7 +108,7 @@ export const fetchUserProfile = async (userId: string): Promise<UserProfile | nu
     return profile;
   } catch (error) {
     console.error('Unexpected error fetching profile:', error);
-    return null; // Retornar null ao invés de lançar erro
+    return null;
   }
 };
 
@@ -100,11 +141,32 @@ export const createUserProfileIfNeeded = async (
         name,
         role_id: defaultRoleId,
         created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
         avatar_url: null,
         company_name: null,
         industry: null,
+        phone: null,
+        instagram: null,
+        linkedin: null,
+        state: null,
+        city: null,
+        company_website: null,
+        current_position: null,
+        company_sector: null,
+        company_size: null,
+        annual_revenue: null,
+        primary_goal: null,
+        business_challenges: null,
+        ai_knowledge_level: null,
+        nps_score: null,
+        weekly_availability: null,
+        networking_interests: null,
+        phone_country_code: null,
+        role: null,
         onboarding_completed: false,
-        onboarding_completed_at: null
+        onboarding_completed_at: null,
+        referrals_count: 0,
+        successful_referrals_count: 0
       } as any)
       .select(`
         id,
@@ -115,8 +177,29 @@ export const createUserProfileIfNeeded = async (
         company_name,
         industry,
         created_at,
+        updated_at,
+        phone,
+        instagram,
+        linkedin,
+        state,
+        city,
+        company_website,
+        current_position,
+        company_sector,
+        company_size,
+        annual_revenue,
+        primary_goal,
+        business_challenges,
+        ai_knowledge_level,
+        nps_score,
+        weekly_availability,
+        networking_interests,
+        phone_country_code,
+        role,
         onboarding_completed,
         onboarding_completed_at,
+        referrals_count,
+        successful_referrals_count,
         user_roles:role_id (
           id,
           name,
@@ -128,7 +211,6 @@ export const createUserProfileIfNeeded = async (
       .single();
       
     if (insertError) {
-      // If insertion fails due to policies, try using fallback
       if (insertError.message.includes('policy') || insertError.message.includes('permission denied')) {
         console.warn('Erro de política ao criar perfil. Continuando com perfil alternativo:', insertError);
         return createFallbackProfile(userId, email, name, defaultRoleId);
@@ -148,8 +230,29 @@ export const createUserProfileIfNeeded = async (
       company_name: (newProfile as any).company_name,
       industry: (newProfile as any).industry,
       created_at: (newProfile as any).created_at,
+      updated_at: (newProfile as any).updated_at,
+      phone: (newProfile as any).phone,
+      instagram: (newProfile as any).instagram,
+      linkedin: (newProfile as any).linkedin,
+      state: (newProfile as any).state,
+      city: (newProfile as any).city,
+      company_website: (newProfile as any).company_website,
+      current_position: (newProfile as any).current_position,
+      company_sector: (newProfile as any).company_sector,
+      company_size: (newProfile as any).company_size,
+      annual_revenue: (newProfile as any).annual_revenue,
+      primary_goal: (newProfile as any).primary_goal,
+      business_challenges: (newProfile as any).business_challenges,
+      ai_knowledge_level: (newProfile as any).ai_knowledge_level,
+      nps_score: (newProfile as any).nps_score,
+      weekly_availability: (newProfile as any).weekly_availability,
+      networking_interests: (newProfile as any).networking_interests,
+      phone_country_code: (newProfile as any).phone_country_code,
+      role: (newProfile as any).role,
       onboarding_completed: (newProfile as any).onboarding_completed,
       onboarding_completed_at: (newProfile as any).onboarding_completed_at,
+      referrals_count: (newProfile as any).referrals_count || 0,
+      successful_referrals_count: (newProfile as any).successful_referrals_count || 0,
       user_roles: (newProfile as any).user_roles as any
     };
     
@@ -157,7 +260,6 @@ export const createUserProfileIfNeeded = async (
     return profile;
   } catch (error) {
     console.error('Erro inesperado ao criar perfil:', error);
-    // Return minimal profile in case of error to not block application
     return createFallbackProfile(userId, email, name, null);
   }
 };
@@ -182,7 +284,28 @@ const createFallbackProfile = (
     company_name: null,
     industry: null,
     created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+    phone: null,
+    instagram: null,
+    linkedin: null,
+    state: null,
+    city: null,
+    company_website: null,
+    current_position: null,
+    company_sector: null,
+    company_size: null,
+    annual_revenue: null,
+    primary_goal: null,
+    business_challenges: null,
+    ai_knowledge_level: null,
+    nps_score: null,
+    weekly_availability: null,
+    networking_interests: null,
+    phone_country_code: null,
+    role: null,
     onboarding_completed: false,
-    onboarding_completed_at: null
+    onboarding_completed_at: null,
+    referrals_count: 0,
+    successful_referrals_count: 0
   };
 };
