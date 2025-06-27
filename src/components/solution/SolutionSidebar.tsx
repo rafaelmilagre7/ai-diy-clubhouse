@@ -1,183 +1,113 @@
 
-import { Solution } from "@/lib/supabase";
-import { Button } from "@/components/ui/button";
-import { PlayCircle, CheckCircle, Award } from "lucide-react";
-import { useNavigate } from "react-router-dom";
-import { SolutionCategory } from "@/lib/types/categoryTypes";
-import { useEffect } from "react";
+import React from 'react';
+import { Solution } from '@/lib/supabase';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Clock, Target, Zap, TrendingUp, Settings, BarChart } from 'lucide-react';
+import { mapLegacyCategory, getCategoryDisplayName } from '@/lib/types/categoryTypes';
 
 interface SolutionSidebarProps {
   solution: Solution;
-  progress: any | null;
-  startImplementation: () => void;
-  continueImplementation: () => void;
-  initializing?: boolean;
 }
 
-export const SolutionSidebar = ({ 
-  solution, 
-  progress, 
-  startImplementation,
-  continueImplementation,
-  initializing = false
-}: SolutionSidebarProps) => {
-  const navigate = useNavigate();
-  
-  // Log de depuração para identificar o problema
-  useEffect(() => {
-    console.log("[SOLUTION_SIDEBAR] Estado do progresso:", {
-      solutionId: solution.id,
-      progress: progress,
-      isCompleted: progress?.is_completed,
-      hasProgress: !!progress,
-      progressKeys: progress ? Object.keys(progress) : []
-    });
-  }, [progress, solution.id]);
-  
-  // Handler para o botão de implementação
-  const handleImplementation = () => {
-    console.log("[SOLUTION_SIDEBAR] Ação de implementação:", {
-      hasProgress: !!progress,
-      isCompleted: progress?.is_completed
-    });
-    
-    if (progress?.is_completed) {
-      navigate(`/implement/${solution.id}/0`);
-    } else if (progress) {
-      console.log("[SOLUTION_SIDEBAR] Chamando continueImplementation");
-      continueImplementation();
-    } else {
-      console.log("[SOLUTION_SIDEBAR] Chamando startImplementation");
-      startImplementation();
-    }
-  };
-  
-  // Função auxiliar para converter categoria para texto de exibição
-  const getCategoryDisplayText = (category: SolutionCategory): string => {
-    switch (category) {
+export const SolutionSidebar: React.FC<SolutionSidebarProps> = ({ solution }) => {
+  // Safely convert solution category to SolutionCategory type
+  const normalizedCategory = mapLegacyCategory(solution.category);
+  const categoryDisplayName = getCategoryDisplayName(normalizedCategory);
+
+  const getCategoryIcon = () => {
+    switch (normalizedCategory) {
       case 'Receita':
-        return "Receita";
+        return <TrendingUp className="h-4 w-4 text-green-400" />;
       case 'Operacional':
-        return "Operacional";
+        return <Settings className="h-4 w-4 text-blue-400" />;
       case 'Estratégia':
-        return "Estratégia";
+        return <BarChart className="h-4 w-4 text-purple-400" />;
       default:
-        return String(category);
+        return <Zap className="h-4 w-4 text-gray-400" />;
     }
   };
-  
+
+  const getDifficultyColor = (difficulty: string) => {
+    switch (difficulty) {
+      case 'easy':
+        return 'bg-green-100 text-green-800 border-green-300';
+      case 'medium':
+        return 'bg-yellow-100 text-yellow-800 border-yellow-300';
+      case 'advanced':
+        return 'bg-red-100 text-red-800 border-red-300';
+      default:
+        return 'bg-gray-100 text-gray-800 border-gray-300';
+    }
+  };
+
+  const getDifficultyLabel = (difficulty: string) => {
+    switch (difficulty) {
+      case 'easy':
+        return 'Fácil';
+      case 'medium':
+        return 'Médio';
+      case 'advanced':
+        return 'Avançado';
+      default:
+        return difficulty;
+    }
+  };
+
   return (
-    <div className="bg-[#151823] border border-white/5 p-6 rounded-lg shadow-sm space-y-6 hidden sm:block">
-      <div>
-        <h3 className="font-medium mb-2 text-neutral-100">Status de Implementação</h3>
-        {progress ? (
-          progress.is_completed ? (
-            <div className="flex items-center text-green-500">
-              <CheckCircle className="h-5 w-5 mr-2" />
-              <span>Implementação concluída</span>
-            </div>
-          ) : (
-            <div>
-              <p className="text-sm text-neutral-400">
-                Implementação em andamento
-              </p>
-            </div>
-          )
-        ) : (
-          <p className="text-sm text-neutral-400">
-            Implementação não iniciada
-          </p>
-        )}
-      </div>
-      
-      <div className="pt-4 border-t border-white/5">
-        {progress?.is_completed ? (
-          <div className="space-y-3">
-            <Button 
-              className="w-full bg-green-600 hover:bg-green-700"
-              onClick={() => navigate(`/solution/${solution.id}/certificate`)}
-            >
-              <Award className="mr-2 h-5 w-5" />
-              Ver Certificado
-            </Button>
-            <Button 
-              className="w-full" 
-              onClick={handleImplementation}
-              variant="outline"
-            >
-              <PlayCircle className="mr-2 h-5 w-5" />
-              Revisar Implementação
-            </Button>
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Target className="h-5 w-5" />
+            Detalhes da Solução
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center justify-between">
+            <span className="text-sm font-medium">Categoria:</span>
+            <Badge variant="outline" className="flex items-center gap-1">
+              {getCategoryIcon()}
+              {categoryDisplayName}
+            </Badge>
           </div>
-        ) : (
-          <Button 
-            className="w-full" 
-            onClick={handleImplementation} 
-            disabled={initializing}
-          >
-            <PlayCircle className="mr-2 h-5 w-5" />
-            {initializing ? 'Preparando...' : 
-             progress ? 'Continuar Implementação' : 'Implementar solução'}
-          </Button>
-        )}
-      </div>
-      
-      <div className="pt-4 border-t border-white/5">
-        <h3 className="font-medium mb-2 text-neutral-100">Informações</h3>
-        <div className="space-y-2">
-          {solution.category && (
-            <div className="flex justify-between text-sm">
-              <span className="text-neutral-400">Categoria:</span>
-              <span className="font-medium text-neutral-200">
-                {getCategoryDisplayText(solution.category)}
-              </span>
+          
+          <div className="flex items-center justify-between">
+            <span className="text-sm font-medium">Dificuldade:</span>
+            <Badge 
+              variant="outline" 
+              className={getDifficultyColor(solution.difficulty)}
+            >
+              {getDifficultyLabel(solution.difficulty)}
+            </Badge>
+          </div>
+          
+          <div className="flex items-center justify-between">
+            <span className="text-sm font-medium">Tempo estimado:</span>
+            <div className="flex items-center gap-1 text-sm">
+              <Clock className="h-4 w-4" />
+              {solution.estimated_time_hours}h
             </div>
-          )}
-          {solution.difficulty && (
-            <div className="flex justify-between text-sm">
-              <span className="text-neutral-400">Dificuldade:</span>
-              <span className="font-medium text-neutral-200">
-                {solution.difficulty === "easy" && "Fácil"}
-                {solution.difficulty === "medium" && "Médio"}
-                {solution.difficulty === "advanced" && "Avançado"}
-              </span>
-            </div>
-          )}
-          {/* estimated_time removido da interface Solution, só mostrar com fallback se existir */}
-          {"estimated_time" in solution && typeof (solution as any).estimated_time === "number" && (solution as any).estimated_time > 0 && (
-            <div className="flex justify-between text-sm">
-              <span className="text-neutral-400">Tempo estimado:</span>
-              <span className="font-medium text-neutral-200">
-                {(solution as any).estimated_time} minutos
-              </span>
-            </div>
-          )}
-          {/* success_rate também removido */}
-          {"success_rate" in solution && typeof (solution as any).success_rate === "number" && (solution as any).success_rate > 0 && (
-            <div className="flex justify-between text-sm">
-              <span className="text-neutral-400">Taxa de sucesso:</span>
-              <span className="font-medium text-neutral-200">
-                {(solution as any).success_rate}%
-              </span>
-            </div>
-          )}
-        </div>
-      </div>
-      
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Tags section if available */}
       {solution.tags && solution.tags.length > 0 && (
-        <div className="pt-4 border-t border-white/5">
-          <h3 className="font-medium mb-2 text-neutral-100">Tags</h3>
-          <div className="flex flex-wrap gap-2">
-            {solution.tags.map((tag, index) => (
-              <span 
-                key={index}
-                className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-900/40 text-blue-200 border border-blue-700/30"
-              >
-                {tag}
-              </span>
-            ))}
-          </div>
-        </div>
+        <Card>
+          <CardHeader>
+            <CardTitle>Tags</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-wrap gap-2">
+              {solution.tags.map((tag, index) => (
+                <Badge key={index} variant="secondary" className="text-xs">
+                  {tag}
+                </Badge>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
       )}
     </div>
   );

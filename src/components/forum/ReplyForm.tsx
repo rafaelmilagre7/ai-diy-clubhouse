@@ -42,18 +42,22 @@ export const ReplyForm = ({ topicId, parentId, onSuccess }: ReplyFormProps) => {
           user_id: user.id,
           content: content.trim(),
           ...(parentId && { parent_id: parentId })
-        } as any);
+        });
         
       if (error) throw error;
       
-      // Atualiza o contador de respostas no tópico
-      await supabase.rpc('increment_topic_replies', { topic_id: topicId });
+      // Safely call the RPC function
+      try {
+        await supabase.rpc('increment_topic_replies', { topic_id: topicId });
+      } catch (rpcError) {
+        console.warn('RPC call failed, but post was created:', rpcError);
+      }
       
       // Atualiza a data de última atividade
       await supabase
         .from("forum_topics")
-        .update({ last_activity_at: new Date().toISOString() } as any)
-        .eq("id", topicId as any);
+        .update({ last_activity_at: new Date().toISOString() })
+        .eq("id", topicId);
       
       setContent("");
       toast.success("Resposta enviada com sucesso!");

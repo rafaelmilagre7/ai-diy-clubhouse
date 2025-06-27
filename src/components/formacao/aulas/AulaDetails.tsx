@@ -1,197 +1,234 @@
 
-import { useState } from "react";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Pencil, ArrowLeft, FileText, Trash2 } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
-import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
-import { LearningLesson, LearningResource } from "@/lib/supabase";
-import { PublishLessonButton } from "./PublishLessonButton";
+import React from 'react';
+import { LearningLesson, LearningLessonVideo, LearningResource } from '@/lib/supabase/types';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Clock, Play, FileText, Edit } from 'lucide-react';
 
 interface AulaDetailsProps {
-  aula: LearningLesson;
-  onEditClick: () => void;
-  onDeleteClick: () => void;
+  lesson: LearningLesson;
+  videos: LearningLessonVideo[];
+  resources: LearningResource[];
+  onEdit?: () => void;
 }
 
-export const AulaDetails = ({ aula, onEditClick, onDeleteClick }: AulaDetailsProps) => {
-  const navigate = useNavigate();
-  const [isPublished, setIsPublished] = useState(aula.published || false);
-  const [activeTab, setActiveTab] = useState("details");
-  
-  const handlePublishChange = (published: boolean) => {
-    setIsPublished(published);
-  };
-  
-  const formattedDate = aula.created_at 
-    ? format(new Date(aula.created_at), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })
-    : "Data desconhecida";
-    
-  // Calcula o total de vídeos - verificando se existe a propriedade
-  const totalVideos = aula.videos?.length || 0;
-  // Calcula o total de recursos - verificando se existe a propriedade
-  const totalRecursos = aula.resources?.length || 0;
-  
-  // Função para gerar o caminho para a visualização de membro
-  const getPreviewPath = () => {
-    // Estrutura esperada: /formacao/aulas/view/:cursoId/:aulaId
-    // Primeiro precisamos encontrar o curso através do módulo
-    if (aula.module?.course_id) {
-      return `/formacao/aulas/view/${aula.module.course_id}/${aula.id}`;
+// Helper function to safely extract data from JSON
+const safeGetFromJson = (json: any, key: string): any => {
+  if (!json) return null;
+  if (typeof json === 'object' && json[key] !== undefined) {
+    return json[key];
+  }
+  return null;
+};
+
+// Helper function to safely get array length from JSON
+const safeGetArrayLength = (json: any): number => {
+  if (!json) return 0;
+  if (Array.isArray(json)) return json.length;
+  if (typeof json === 'object' && json.length !== undefined) return json.length;
+  return 0;
+};
+
+// Helper function to safely map over JSON array
+const safeMapJson = (json: any, callback: (item: any, index: number) => any): any[] => {
+  if (!json) return [];
+  if (Array.isArray(json)) return json.map(callback);
+  return [];
+};
+
+export const AulaDetails: React.FC<AulaDetailsProps> = ({
+  lesson,
+  videos,
+  resources,
+  onEdit
+}) => {
+  // Safely extract module information
+  const moduleTitle = safeGetFromJson(lesson.module, 'title') || 'Módulo';
+  const courseName = safeGetFromJson(lesson.module, 'course_id') || 'Curso';
+
+  // Get difficulty label
+  const getDifficultyLabel = (level: string | null) => {
+    switch (level) {
+      case 'beginner':
+        return 'Iniciante';
+      case 'intermediate':
+        return 'Intermediário';
+      case 'advanced':
+        return 'Avançado';
+      default:
+        return 'Não definido';
     }
-    // Fallback se não tiver o course_id
-    return `/formacao/aulas/view/preview/${aula.id}`;
   };
-  
+
+  // Get difficulty color
+  const getDifficultyColor = (level: string | null) => {
+    switch (level) {
+      case 'beginner':
+        return 'bg-green-100 text-green-800 border-green-300';
+      case 'intermediate':
+        return 'bg-yellow-100 text-yellow-800 border-yellow-300';
+      case 'advanced':
+        return 'bg-red-100 text-red-800 border-red-300';
+      default:
+        return 'bg-gray-100 text-gray-800 border-gray-300';
+    }
+  };
+
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <Button variant="outline" size="sm" onClick={() => navigate(-1)}>
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Voltar
-        </Button>
-        
-        <div className="flex space-x-2">
-          <Button variant="outline" size="sm" onClick={onEditClick}>
-            <Pencil className="h-4 w-4 mr-1" />
+      {/* Header */}
+      <div className="flex justify-between items-start">
+        <div>
+          <h1 className="text-2xl font-bold mb-2">{lesson.title}</h1>
+          <div className="flex items-center gap-4 text-sm text-muted-foreground">
+            <span>{moduleTitle}</span>
+            <span>•</span>
+            <span>{courseName}</span>
+          </div>
+        </div>
+        {onEdit && (
+          <Button onClick={onEdit} variant="outline" size="sm">
+            <Edit className="h-4 w-4 mr-2" />
             Editar
           </Button>
-          
-          <Button variant="outline" size="sm" onClick={onDeleteClick} className="text-destructive">
-            <Trash2 className="h-4 w-4 mr-1" />
-            Excluir
-          </Button>
-          
-          <PublishLessonButton 
-            lessonId={aula.id}
-            isPublished={isPublished}
-            onPublishChange={handlePublishChange}
-          />
-        </div>
+        )}
       </div>
-      
-      {aula.cover_image_url && (
-        <div className="relative aspect-video w-full overflow-hidden rounded-lg">
-          <img 
-            src={aula.cover_image_url} 
-            alt={aula.title} 
-            className="h-full w-full object-cover" 
-          />
-        </div>
-      )}
-      
+
+      {/* Lesson Info */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-2xl">{aula.title}</CardTitle>
-          <CardDescription>
-            Criado em {formattedDate} • 
-            {isPublished ? " Publicado" : " Não publicado"} •
-            {aula.estimated_time_minutes ? ` ${aula.estimated_time_minutes} minutos` : " Duração não definida"}
-          </CardDescription>
+          <CardTitle>Informações da Aula</CardTitle>
         </CardHeader>
-        
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <CardContent>
-            <TabsList className="mb-4">
-              <TabsTrigger value="details">Detalhes</TabsTrigger>
-              <TabsTrigger value="videos">Vídeos ({totalVideos})</TabsTrigger>
-              <TabsTrigger value="resources">Recursos ({totalRecursos})</TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="details" className="space-y-4">
-              <div>
-                <h3 className="text-lg font-semibold mb-2">Descrição</h3>
-                {aula.description ? (
-                  <p className="text-muted-foreground">{aula.description}</p>
-                ) : (
-                  <p className="text-sm text-muted-foreground italic">Nenhuma descrição disponível.</p>
-                )}
-              </div>
-              
-              <div>
-                <h3 className="text-lg font-semibold mb-2">Conteúdo</h3>
-                {aula.content ? (
-                  <div className="prose max-w-none">
-                    <pre className="text-sm overflow-auto p-2 bg-muted rounded-md">
-                      {JSON.stringify(aula.content, null, 2)}
-                    </pre>
-                  </div>
-                ) : (
-                  <p className="text-sm text-muted-foreground italic">Nenhum conteúdo disponível.</p>
-                )}
-              </div>
-            </TabsContent>
-            
-            <TabsContent value="videos" className="space-y-4">
-              {aula.videos && aula.videos.length > 0 ? (
-                <div className="grid gap-4 sm:grid-cols-2">
-                  {aula.videos.map((video, index) => (
-                    <Card key={video.id || index}>
-                      <CardHeader className="p-4">
-                        <CardTitle className="text-base">{video.title || `Vídeo ${index + 1}`}</CardTitle>
-                      </CardHeader>
-                      <CardContent className="p-4 pt-0">
-                        {video.thumbnail_url ? (
-                          <div className="aspect-video w-full overflow-hidden rounded-md">
-                            <img 
-                              src={video.thumbnail_url} 
-                              alt={video.title || `Thumbnail do vídeo ${index + 1}`}
-                              className="h-full w-full object-cover" 
-                            />
-                          </div>
-                        ) : (
-                          <div className="aspect-video w-full bg-muted flex items-center justify-center rounded-md">
-                            <FileText className="h-12 w-12 text-muted-foreground" />
-                          </div>
-                        )}
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-sm text-muted-foreground italic">Nenhum vídeo disponível.</p>
-              )}
-            </TabsContent>
-            
-            <TabsContent value="resources" className="space-y-4">
-              {aula.resources && aula.resources.length > 0 ? (
-                <ul className="space-y-2">
-                  {aula.resources.map((resource, index) => (
-                    <li key={resource.id || index} className="flex items-center justify-between p-2 border rounded-md">
-                      <span>{resource.name}</span>
-                      <Button variant="ghost" size="sm" asChild>
-                        <a href={resource.file_url} target="_blank" rel="noopener noreferrer">
-                          Download
-                        </a>
-                      </Button>
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="text-sm text-muted-foreground italic">Nenhum recurso disponível.</p>
-              )}
-            </TabsContent>
-          </CardContent>
-        </Tabs>
-        
-        <CardFooter className="flex justify-between">
-          <Button variant="outline" size="sm" asChild>
-            <Link to={`/formacao/modulos/${aula.module_id}`}>
-              Ver módulo
-            </Link>
-          </Button>
-          
-          {isPublished && (
-            <Button variant="outline" size="sm" asChild>
-              <Link to={getPreviewPath()}>
-                Visualizar como membro
-              </Link>
-            </Button>
+        <CardContent className="space-y-4">
+          {lesson.description && (
+            <div>
+              <h4 className="font-medium mb-2">Descrição</h4>
+              <p className="text-muted-foreground">{lesson.description}</p>
+            </div>
           )}
-        </CardFooter>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="flex items-center gap-2">
+              <Clock className="h-4 w-4 text-muted-foreground" />
+              <span className="text-sm">
+                {lesson.estimated_time_minutes || 0} minutos
+              </span>
+            </div>
+
+            <div>
+              <Badge 
+                variant="outline" 
+                className={getDifficultyColor(lesson.difficulty_level)}
+              >
+                {getDifficultyLabel(lesson.difficulty_level)}
+              </Badge>
+            </div>
+
+            <div>
+              <Badge variant={lesson.published ? "default" : "secondary"}>
+                {lesson.published ? "Publicada" : "Rascunho"}
+              </Badge>
+            </div>
+          </div>
+
+          {lesson.ai_assistant_enabled && (
+            <div className="p-3 bg-blue-50 border border-blue-200 rounded-md">
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                <span className="text-sm font-medium text-blue-900">
+                  Assistente de IA habilitado
+                </span>
+              </div>
+              {lesson.ai_assistant_id && (
+                <p className="text-xs text-blue-700 mt-1">
+                  ID: {lesson.ai_assistant_id}
+                </p>
+              )}
+            </div>
+          )}
+        </CardContent>
       </Card>
+
+      {/* Videos */}
+      {videos.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Play className="h-5 w-5" />
+              Vídeos ({videos.length})
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {videos.map((video, index) => (
+                <div key={video.id} className="flex items-center justify-between p-3 border rounded-md">
+                  <div className="flex-1">
+                    <h5 className="font-medium">{video.title}</h5>
+                    {video.description && (
+                      <p className="text-sm text-muted-foreground mt-1">
+                        {video.description}
+                      </p>
+                    )}
+                    <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
+                      <span>Tipo: {video.video_type || 'YouTube'}</span>
+                      {video.duration_seconds && (
+                        <span>
+                          Duração: {Math.ceil(video.duration_seconds / 60)} min
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <div className="text-sm text-muted-foreground">
+                    #{index + 1}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Resources */}
+      {resources.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <FileText className="h-5 w-5" />
+              Recursos ({resources.length})
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {resources.map((resource, index) => (
+                <div key={resource.id} className="flex items-center justify-between p-3 border rounded-md">
+                  <div className="flex-1">
+                    <h5 className="font-medium">{resource.name}</h5>
+                    {resource.description && (
+                      <p className="text-sm text-muted-foreground mt-1">
+                        {resource.description}
+                      </p>
+                    )}
+                    <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
+                      <span>Tipo: {resource.file_type || 'Arquivo'}</span>
+                      {resource.file_size_bytes && (
+                        <span>
+                          Tamanho: {Math.ceil(resource.file_size_bytes / 1024)}KB
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <div className="text-sm text-muted-foreground">
+                    #{index + 1}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 };
+
+export default AulaDetails;
