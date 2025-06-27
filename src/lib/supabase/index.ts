@@ -25,3 +25,12 @@ export {
   deleteForumPost
   // Adicionar outras funções de RPC conforme necessário
 } from './rpc';
+
+// Exportação explícita das funções de parsing JSON
+export {
+  safeJsonParse,
+  safeJsonParseObject,
+  safeJsonStringify,
+  extractJsonArray,
+  extractJsonObject
+} from '../utils/jsonUtils';

@@ -3,7 +3,7 @@ import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { LearningCourse } from '@/lib/supabase';
-import { safeJsonParseObject } from '@/lib/supabase';
+import { safeJsonParseObject } from '@/utils/jsonUtils';
 
 interface CourseCarouselProps {
   courses: LearningCourse[];

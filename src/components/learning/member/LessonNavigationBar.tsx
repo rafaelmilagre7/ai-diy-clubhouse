@@ -3,7 +3,7 @@ import React from 'react';
 import { ChevronLeft, ChevronRight, Home } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { LearningLesson } from '@/lib/supabase';
-import { safeJsonParseObject } from '@/lib/supabase';
+import { safeJsonParseObject } from '@/utils/jsonUtils';
 
 interface LessonNavigationBarProps {
   lesson: LearningLesson;

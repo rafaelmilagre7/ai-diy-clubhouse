@@ -41,6 +41,15 @@ export type AdminCommunication = Database['public']['Tables']['admin_communicati
 // Tipos de ferramentas
 export type Tool = Database['public']['Tables']['tools']['Row'];
 
+// Tipos de implementação
+export type ImplementationCheckpoint = Database['public']['Tables']['implementation_checkpoints']['Row'];
+export type SolutionResource = Database['public']['Tables']['solution_resources']['Row'];
+
+// Tipos de funções RPC
+export type AuditResult = Database['public']['Functions']['audit_role_assignments']['Returns'][0];
+export type SyncResult = Database['public']['Functions']['sync_profile_roles']['Returns'];
+export type ValidationResult = Database['public']['Functions']['validate_profile_roles']['Returns'][0];
+
 // Re-exportação das definições de tipos base
 export * from './database.types';
 export * from './events';
