@@ -182,7 +182,7 @@ export const useModuleEditor = (initialModule: Module) => {
       const updatedModule: Module = {
         ...initialModule,
         title,
-        content: content as Json,
+        content: JSON.parse(JSON.stringify(content)) as Json,
         updated_at: new Date().toISOString(),
       };
 
