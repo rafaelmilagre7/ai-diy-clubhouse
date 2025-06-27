@@ -1,5 +1,4 @@
 
-
 import { Database } from './database.types';
 
 // Export all database types
@@ -54,15 +53,10 @@ export type PermissionDefinition = Database['public']['Tables']['permission_defi
 export type RolePermission = Database['public']['Tables']['role_permissions']['Row'];
 
 // Analytics types
-export type OnboardingAnalytics = Database['public']['Tables']['onboarding_analytics']['Row'];
 export type AuditLog = Database['public']['Tables']['audit_logs']['Row'];
 
 // User role types
 export type UserRole = Database['public']['Tables']['user_roles']['Row'];
-
-// Onboarding types
-export type OnboardingSync = Database['public']['Tables']['onboarding_sync']['Row'];
-export type QuickOnboarding = Database['public']['Tables']['quick_onboarding']['Row'];
 
 // Invitation types
 export type Invite = Database['public']['Tables']['invites']['Row'];
@@ -70,25 +64,8 @@ export type Invite = Database['public']['Tables']['invites']['Row'];
 // Implementation types
 export type ImplementationCheckpoint = Database['public']['Tables']['implementation_checkpoints']['Row'];
 export type SolutionResource = Database['public']['Tables']['solution_resources']['Row'];
-
-// Additional types for implementation system
-export type SolutionTool = {
-  id: string;
-  solution_id: string;
-  tool_id: string;
-  is_required: boolean;
-  order_index: number;
-  created_at: string;
-};
-
-export type UserChecklist = {
-  id: string;
-  user_id: string;
-  solution_id: string;
-  checklist_items: Record<string, boolean>;
-  created_at: string;
-  updated_at: string;
-};
+export type SolutionTool = Database['public']['Tables']['solution_tools']['Row'];
+export type UserChecklist = Database['public']['Tables']['user_checklists']['Row'];
 
 // Utility function to get user role name safely
 export const getUserRoleName = (profile: UserProfile | null): string => {
@@ -109,4 +86,3 @@ export const isAdminRole = (profile: any): boolean => {
 export const isFormacaoRole = (profile: any): boolean => {
   return profile?.user_roles?.name === 'formacao';
 };
-
