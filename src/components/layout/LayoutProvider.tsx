@@ -7,7 +7,11 @@ import { MemberLayout } from "./MemberLayout";
 import FormacaoLayout from "./formacao/FormacaoLayout";
 import { PageTransitionWithFallback } from "@/components/transitions/PageTransitionWithFallback";
 
-const LayoutProvider = memo(({ children }: { children: ReactNode }) => {
+interface LayoutProviderProps {
+  children: ReactNode;
+}
+
+const LayoutProvider = memo(({ children }: LayoutProviderProps) => {
   const { user, isFormacao, isAdmin, isLoading } = useSimpleAuth();
   const location = useLocation();
 

@@ -11,12 +11,14 @@ export interface UserProfile {
   created_at: string;
   updated_at: string;
   onboarding_completed: boolean;
+  onboarding_completed_at?: string;
   birth_date?: string;
   curiosity?: string;
   business_sector?: string;
   position?: string;
   primary_goal?: string;
   weekly_availability?: string;
+  weekly_learning_time?: string;
   networking_interests?: string[];
   nps_score?: number;
   country?: string;
@@ -44,6 +46,10 @@ export interface UserProfile {
   area_to_impact?: string;
   expected_result_90_days?: string;
   ai_implementation_budget?: string;
+  content_preference?: string[];
+  wants_networking?: boolean;
+  best_days?: string[];
+  best_periods?: string[];
   user_roles?: {
     id: string;
     name: string;

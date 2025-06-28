@@ -4,7 +4,8 @@
 
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { User, Session } from '@supabase/supabase-js';
-import { supabase, UserProfile } from '@/lib/supabase';
+import { supabase } from '@/lib/supabase';
+import { UserProfile } from '@/types/userProfile';
 import { fetchUserProfile, createUserProfileIfNeeded } from './utils/profileUtils/userProfileFunctions';
 import { useAuthMethods } from './hooks/useAuthMethods';
 import { AuthContextType } from './types';
