@@ -53,7 +53,7 @@ export * from './database.types';
 export * from './events';
 
 // Função utilitária movida para arquivo separado
-export { getUserRoleName } from './getUserRoleName';
+export { getUserRoleName } from './getUserroleName';
 
 // Utilitário para type casting seguro
 export const safeSupabaseQuery = <T = any>(query: Promise<any>): Promise<{ data: T | null; error: any }> => {
