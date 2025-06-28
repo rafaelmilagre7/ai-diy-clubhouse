@@ -4,7 +4,11 @@
 
 export { 
   fetchUserProfile,
-  createUserProfileIfNeeded
+  createUserProfileIfNeeded,
+  getUserProfile,
+  createUserProfile,
+  updateUserProfile,
+  deleteUserProfile
 } from './profileUtils/userProfileFunctions';
 
 export { 

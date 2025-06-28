@@ -2,6 +2,110 @@
 import { supabase } from '@/lib/supabase';
 import { UserProfile } from '@/lib/supabase';
 
+export const fetchUserProfile = async (userId: string): Promise<UserProfile | null> => {
+  try {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select(`
+        *,
+        user_roles (
+          id,
+          name,
+          description
+        )
+      `)
+      .eq('id', userId)
+      .single();
+
+    if (error) throw error;
+    return data;
+  } catch (error) {
+    console.error('Erro ao buscar perfil:', error);
+    return null;
+  }
+};
+
+export const createUserProfileIfNeeded = async (userId: string, email?: string): Promise<UserProfile | null> => {
+  try {
+    // Primeiro tenta buscar o perfil existente
+    let userProfile = await fetchUserProfile(userId);
+    
+    if (!userProfile && email) {
+      // Se não existe, cria um novo
+      const profileData = {
+        id: userId,
+        email: email,
+        name: null,
+        avatar_url: null,
+        company_name: null,
+        industry: null,
+        role_id: null,
+        phone: null,
+        instagram: null,
+        linkedin: null,
+        state: null,
+        city: null,
+        company_website: null,
+        company_size: null,
+        annual_revenue: null,
+        ai_knowledge_level: null,
+        position: null,
+        onboarding_completed: false,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
+
+      const { data, error } = await supabase
+        .from('profiles')
+        .insert(profileData)
+        .select(`
+          *,
+          user_roles (
+            id,
+            name,
+            description
+          )
+        `)
+        .single();
+
+      if (error) throw error;
+      userProfile = data;
+    }
+    
+    return userProfile;
+  } catch (error) {
+    console.error('Erro ao criar perfil:', error);
+    return null;
+  }
+};
+
+export const updateUserProfile = async (userId: string, updates: Partial<UserProfile>): Promise<UserProfile | null> => {
+  try {
+    const updateData = {
+      ...updates,
+      position: updates.position,
+      updated_at: new Date().toISOString()
+    };
+
+    const { data, error } = await supabase
+      .from('profiles')
+      .update(updateData)
+      .eq('id', userId)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  } catch (error) {
+    console.error('Erro ao atualizar perfil:', error);
+    return null;
+  }
+};
+
+export const getUserProfile = async (userId: string): Promise<UserProfile | null> => {
+  return fetchUserProfile(userId);
+};
+
 export const createUserProfile = async (userData: Partial<UserProfile>): Promise<UserProfile | null> => {
   try {
     const profileData = {
@@ -21,7 +125,7 @@ export const createUserProfile = async (userData: Partial<UserProfile>): Promise
       company_size: userData.company_size,
       annual_revenue: userData.annual_revenue,
       ai_knowledge_level: userData.ai_knowledge_level,
-      position: userData.position, // Usar 'position' ao invés de 'current_position'
+      position: userData.position,
       onboarding_completed: userData.onboarding_completed || false,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
@@ -37,55 +141,6 @@ export const createUserProfile = async (userData: Partial<UserProfile>): Promise
     return data;
   } catch (error) {
     console.error('Erro ao criar perfil:', error);
-    return null;
-  }
-};
-
-export const updateUserProfile = async (userId: string, updates: Partial<UserProfile>): Promise<UserProfile | null> => {
-  try {
-    const updateData = {
-      ...updates,
-      position: updates.position, // Garantir que usa 'position'
-      updated_at: new Date().toISOString()
-    };
-
-    // Remover campos que não existem na tabela
-    delete (updateData as any).current_position;
-
-    const { data, error } = await supabase
-      .from('profiles')
-      .update(updateData)
-      .eq('id', userId)
-      .select()
-      .single();
-
-    if (error) throw error;
-    return data;
-  } catch (error) {
-    console.error('Erro ao atualizar perfil:', error);
-    return null;
-  }
-};
-
-export const getUserProfile = async (userId: string): Promise<UserProfile | null> => {
-  try {
-    const { data, error } = await supabase
-      .from('profiles')
-      .select(`
-        *,
-        user_roles (
-          id,
-          name,
-          description
-        )
-      `)
-      .eq('id', userId)
-      .single();
-
-    if (error) throw error;
-    return data;
-  } catch (error) {
-    console.error('Erro ao buscar perfil:', error);
     return null;
   }
 };
