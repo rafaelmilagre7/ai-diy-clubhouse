@@ -17,30 +17,50 @@ export const useInviteCleanup = () => {
     try {
       setIsLoading(true);
       
-      console.log('🧹 [INVITE CLEANUP] Iniciando limpeza com backup automático');
+      console.log('🧹 [INVITE CLEANUP] Iniciando limpeza manual');
       
-      // Usar a nova função SQL aprimorada
-      const { data, error } = await supabase.rpc('cleanup_expired_invites_enhanced');
+      // Buscar convites expirados
+      const { data: expiredInvites, error: selectError } = await supabase
+        .from('invites')
+        .select('id, email')
+        .lt('expires_at', new Date().toISOString())
+        .is('used_at', null);
 
-      if (error) {
-        console.error('❌ Erro na limpeza de convites:', error);
-        throw error;
-      }
+      if (selectError) throw selectError;
 
-      if (!data) {
-        throw new Error('Resposta vazia da função de limpeza');
-      }
+      const expiredCount = expiredInvites?.length || 0;
 
-      console.log('📋 Resultado da limpeza:', data);
+      // Criar backup antes de deletar
+      if (expiredCount > 0) {
+        const { error: backupError } = await supabase
+          .from('invite_backups')
+          .insert(
+            expiredInvites.map(invite => ({
+              original_invite_id: invite.id,
+              email: invite.email,
+              backup_reason: 'cleanup_expired',
+              backup_data: { cleaned_at: new Date().toISOString() }
+            }))
+          );
 
-      if (!data.success) {
-        throw new Error(data.message || 'Erro na limpeza de convites');
+        if (backupError) {
+          console.warn('Erro ao criar backup:', backupError);
+        }
+
+        // Deletar convites expirados
+        const { error: deleteError } = await supabase
+          .from('invites')
+          .delete()
+          .lt('expires_at', new Date().toISOString())
+          .is('used_at', null);
+
+        if (deleteError) throw deleteError;
       }
 
       const result: InviteCleanupStats = {
-        expiredInvites: data.expired_invites || 0,
-        deletedInvites: data.deleted_invites || 0,
-        cleanupTimestamp: data.cleanup_timestamp || new Date().toISOString()
+        expiredInvites: expiredCount,
+        deletedInvites: expiredCount,
+        cleanupTimestamp: new Date().toISOString()
       };
 
       setStats(result);

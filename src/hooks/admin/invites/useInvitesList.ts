@@ -22,8 +22,6 @@ export const useInvitesList = () => {
           used_at,
           created_at,
           created_by,
-          last_sent_at,
-          send_attempts,
           notes,
           whatsapp_number,
           user_roles:role_id!inner(id, name, description)
@@ -33,12 +31,15 @@ export const useInvitesList = () => {
       if (error) throw error;
 
       // Mapear os dados para garantir compatibilidade com o tipo Invite
-      const mappedInvites: Invite[] = data?.map(invite => ({
+      const mappedInvites: Invite[] = (data || []).map(invite => ({
         ...invite,
+        // Adicionar campos padrão que podem estar ausentes
+        last_sent_at: null,
+        send_attempts: 0,
         // Se user_roles for um array, pegar o primeiro item; se for objeto, usar diretamente
         role: Array.isArray(invite.user_roles) ? invite.user_roles[0] : invite.user_roles,
         user_roles: Array.isArray(invite.user_roles) ? invite.user_roles[0] : invite.user_roles
-      })) || [];
+      }));
 
       setInvites(mappedInvites);
     } catch (error) {

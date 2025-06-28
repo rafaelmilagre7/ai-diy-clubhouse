@@ -30,27 +30,29 @@ export const useInviteAudit = (timeRange: string = '30d') => {
     recentActions: []
   });
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const fetchAuditData = async () => {
     try {
       setLoading(true);
+      setError(null);
       
       // Calcular data de início
       const now = new Date();
       const daysBack = timeRange === '7d' ? 7 : timeRange === '30d' ? 30 : 90;
       const startDate = new Date(now.getTime() - (daysBack * 24 * 60 * 60 * 1000));
 
-      // Buscar logs de auditoria relacionados a convites
+      // Buscar logs de auditoria relacionados a convites usando a tabela audit_logs
       const { data: auditLogs, error } = await supabase
         .from('audit_logs')
         .select('*')
-        .ilike('action', '%invite%')
+        .or('action.ilike.%invite%,event_type.ilike.%invite%')
         .gte('timestamp', startDate.toISOString())
         .order('timestamp', { ascending: false });
 
       if (error) {
         console.error('Erro ao buscar logs de auditoria:', error);
-        // Continuar com dados simulados em caso de erro
+        throw error;
       }
 
       const logs = auditLogs || [];
@@ -102,15 +104,28 @@ export const useInviteAudit = (timeRange: string = '30d') => {
 
     } catch (error: any) {
       console.error("Erro ao carregar dados de auditoria:", error);
+      setError(error.message);
       toast.error("Erro ao carregar dados de auditoria");
     } finally {
       setLoading(false);
     }
   };
 
+  const runAudit = async () => {
+    await fetchAuditData();
+  };
+
   useEffect(() => {
     fetchAuditData();
   }, [timeRange]);
 
-  return { metrics, loading, fetchAuditData };
+  return { 
+    metrics, 
+    loading, 
+    error,
+    fetchAuditData, 
+    runAudit,
+    isLoading: loading,
+    isAuditing: loading
+  };
 };
