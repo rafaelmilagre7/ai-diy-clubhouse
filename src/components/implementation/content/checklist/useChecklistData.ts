@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { Module, Solution, supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/auth";
 import { useLogging } from "@/hooks/useLogging";
-import { ChecklistItem, extractChecklistFromSolution, initializeUserChecklist, handleChecklistError } from "./checklistUtils";
+import { ChecklistItem, extractChecklistFromSolution, initializeUserChecklist } from "./checklistUtils";
 
 export const useChecklistData = (module: Module) => {
   const [solution, setSolution] = useState<Solution | null>(null);
@@ -48,6 +48,8 @@ export const useChecklistData = (module: Module) => {
         // Extract checklist items from solution
         const extractedChecklist = extractChecklistFromSolution(solutionData);
         
+        let finalChecklist = extractedChecklist;
+        
         // If no items in solution checklist, try fetching from implementation_checkpoints
         if (extractedChecklist.length === 0) {
           const { data: checkpointData, error: checkpointError } = await supabase
@@ -59,22 +61,18 @@ export const useChecklistData = (module: Module) => {
           if (checkpointError) {
             logError("Error fetching checkpoints:", checkpointError);
           } else if (checkpointData && checkpointData.length > 0) {
-            const checkpointChecklist: ChecklistItem[] = (checkpointData as any).map((item: any) => ({
+            finalChecklist = (checkpointData as any).map((item: any) => ({
               id: item.id,
               title: item.description,
               checked: false
             }));
-            
-            setChecklist(checkpointChecklist);
           } else {
             log("No checklist or implementation_checkpoints found", { solutionId: solutionData.id });
-            setChecklist([]);
           }
-        } else {
-          setChecklist(extractedChecklist);
         }
         
-        let finalChecklist = checklist.length > 0 ? checklist : extractedChecklist;
+        setChecklist(finalChecklist);
+        
         // Initialize user checklist state
         const initialUserChecklist = initializeUserChecklist(finalChecklist);
         

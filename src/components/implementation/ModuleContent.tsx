@@ -1,9 +1,9 @@
 
 import React, { useEffect } from "react";
 import { Module } from "@/lib/supabase";
-import { LandingModule } from "./LandingModule";
-import { CelebrationModule } from "./CelebrationModule";
-import { DefaultModule } from "./DefaultModule";
+import LandingModule from "./LandingModule";
+import CelebrationModule from "./CelebrationModule";
+import DefaultModule from "./DefaultModule";
 import { shouldAutoComplete } from "./content/ContentManager";
 import { useLogging } from "@/hooks/useLogging";
 

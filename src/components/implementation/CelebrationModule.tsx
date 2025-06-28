@@ -1,8 +1,13 @@
 
 import React, { useEffect } from "react";
 import { Module } from "@/lib/supabase";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Trophy, CheckCircle2, Sparkles, ArrowRight } from "lucide-react";
+import { CheckCircle, Download, Share2 } from "lucide-react";
+import { shouldAutoComplete } from "./content/ContentManager";
+import { useLogging } from "@/hooks/useLogging";
+import { Badge } from "@/components/ui/badge";
+import { safeJsonParseObject } from "@/lib/supabase/types";
 
 interface CelebrationModuleProps {
   module: Module;
@@ -10,63 +15,85 @@ interface CelebrationModuleProps {
 }
 
 export const CelebrationModule = ({ module, onComplete }: CelebrationModuleProps) => {
+  const { log } = useLogging();
   
-  // Auto-complete após alguns segundos
   useEffect(() => {
-    const timer = setTimeout(() => {
-      onComplete();
-    }, 3000);
+    // Auto-complete celebration module after viewing
+    if (shouldAutoComplete(module.type)) {
+      const timer = setTimeout(() => {
+        log("Auto-completing celebration module", { module_id: module.id });
+        onComplete();
+      }, 2000);
 
-    return () => clearTimeout(timer);
-  }, [onComplete]);
+      return () => clearTimeout(timer);
+    }
+  }, [module, onComplete, log]);
+
+  const handleDownloadCertificate = () => {
+    log("User requested certificate download", { module_id: module.id });
+    // Certificate download logic would go here
+  };
+
+  const handleShareSuccess = () => {
+    log("User shared success", { module_id: module.id });
+    // Share success logic would go here
+  };
+
+  // Parse content safely
+  const content = safeJsonParseObject(module.content, {});
+  const description = content.description || "Parabéns! Você concluiu esta implementação com sucesso.";
 
   return (
-    <div className="text-center space-y-8 py-12">
-      <div className="bg-gradient-to-r from-green-500/10 to-emerald-500/10 rounded-lg p-8">
-        <div className="flex justify-center mb-6">
-          <div className="relative">
-            <div className="bg-green-500/20 rounded-full p-6">
-              <Trophy className="h-16 w-16 text-green-500" />
-            </div>
-            <Sparkles className="h-8 w-8 absolute -top-2 -right-2 text-yellow-500 animate-pulse" />
-          </div>
+    <div className="max-w-2xl mx-auto text-center space-y-8 py-8">
+      <div className="space-y-4">
+        <div className="mx-auto w-20 h-20 bg-green-100 rounded-full flex items-center justify-center">
+          <CheckCircle className="w-12 h-12 text-green-600" />
         </div>
         
-        <h1 className="text-3xl font-bold mb-4 text-green-700">
-          {module.title || "Parabéns! Implementação Concluída!"}
-        </h1>
-        
-        <div className="flex justify-center mb-6">
-          <CheckCircle2 className="h-12 w-12 text-green-500 animate-bounce" />
+        <div className="space-y-2">
+          <h1 className="text-3xl font-bold text-gray-900">{module.title}</h1>
+          <div dangerouslySetInnerHTML={{ __html: String(description) }} className="text-lg text-gray-600" />
         </div>
 
-        {module.description && (
-          <p className="text-lg text-muted-foreground mb-6 max-w-2xl mx-auto">
-            {module.description}
-          </p>
-        )}
-
-        {module.content && (
-          <div className="prose prose-sm max-w-none text-muted-foreground mb-8">
-            <div dangerouslySetInnerHTML={{ __html: module.content }} />
-          </div>
-        )}
-
-        <div className="space-y-4">
-          <p className="text-sm text-muted-foreground">
-            Redirecionando automaticamente em alguns segundos...
-          </p>
-          
-          <Button 
-            onClick={onComplete}
-            size="lg"
-            className="flex items-center gap-2"
-          >
-            Finalizar Agora
-            <ArrowRight className="h-5 w-5" />
-          </Button>
-        </div>
+        <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+          Implementação Concluída
+        </Badge>
       </div>
+
+      <Card>
+        <CardContent className="p-6 space-y-4">
+          <h3 className="text-xl font-semibold">Próximos passos</h3>
+          
+          <div className="grid gap-3">
+            <Button 
+              onClick={handleDownloadCertificate}
+              className="w-full"
+              variant="outline"
+            >
+              <Download className="mr-2 h-4 w-4" />
+              Baixar Certificado
+            </Button>
+            
+            <Button 
+              onClick={handleShareSuccess}
+              className="w-full"
+              variant="outline"
+            >
+              <Share2 className="mr-2 h-4 w-4" />
+              Compartilhar Conquista
+            </Button>
+            
+            <Button 
+              onClick={onComplete} 
+              className="w-full bg-[#0ABAB5] hover:bg-[#0ABAB5]/90"
+            >
+              Finalizar
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };
+
+export default CelebrationModule;

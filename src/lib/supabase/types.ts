@@ -7,12 +7,14 @@ export type LearningLesson = Database['public']['Tables']['learning_lessons']['R
   videos?: LearningLessonVideo[];
   module?: LearningModule;
   ai_assistant_id?: string;
+  estimated_duration_minutes?: number;
 };
 
 export type LearningLessonVideo = Database['public']['Tables']['learning_lesson_videos']['Row'];
 export type LearningModule = Database['public']['Tables']['learning_modules']['Row'];
 export type LearningCourse = Database['public']['Tables']['learning_courses']['Row'];
 export type LearningResource = Database['public']['Tables']['learning_resources']['Row'];
+export type LearningProgress = Database['public']['Tables']['learning_progress']['Row'];
 
 // Tipos específicos do sistema
 export type Solution = Database['public']['Tables']['solutions']['Row'];
@@ -24,7 +26,9 @@ export type UserProfile = Database['public']['Tables']['profiles']['Row'] & {
   };
 };
 export type UserRole = Database['public']['Tables']['user_roles']['Row'];
-export type Module = Database['public']['Tables']['modules']['Row'];
+export type Module = Database['public']['Tables']['modules']['Row'] & {
+  description?: string;
+};
 export type Tool = Database['public']['Tables']['tools']['Row'] & {
   status?: boolean;
   official_url?: string;
@@ -49,6 +53,7 @@ export interface SimplifiedSolution {
   slug?: string;
   created_at: string;
   updated_at: string;
+  tags?: string[];
 }
 
 export interface SimplifiedTool {

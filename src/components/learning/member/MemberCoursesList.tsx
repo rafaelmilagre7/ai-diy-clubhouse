@@ -1,116 +1,90 @@
+import React, { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Clock, Users, BookOpenCheck } from "lucide-react";
+import { LearningCourse } from "@/lib/supabase/types";
+import { supabase } from "@/lib/supabase";
+import { useAuth } from "@/contexts/auth";
 
-import React from 'react';
-import { LearningCourse } from '@/lib/supabase';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Play, BookOpen, Clock } from 'lucide-react';
-import { Link } from 'react-router-dom';
+const MemberCoursesList = () => {
+  const [courses, setCourses] = useState<LearningCourse[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
 
-interface MemberCoursesListProps {
-  courses: LearningCourse[];
-  userProgress?: any[];
-}
+  useEffect(() => {
+    const fetchCourses = async () => {
+      setLoading(true);
+      try {
+        const { data, error } = await supabase
+          .from('learning_courses')
+          .select('*');
 
-export const MemberCoursesList = ({ courses, userProgress = [] }: MemberCoursesListProps) => {
-  
-  const getCourseProgress = (courseId: string) => {
-    return 0;
-  };
+        if (error) {
+          console.error("Erro ao buscar cursos:", error);
+          return;
+        }
 
-  const isCompleted = (courseId: string) => {
-    return false;
-  };
+        setCourses(data || []);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  if (!courses || courses.length === 0) {
+    fetchCourses();
+  }, []);
+
+  const publishedCourses = courses.filter(course => course.published);
+
+  if (loading) {
+    return <p>Carregando cursos...</p>;
+  }
+
+  if (publishedCourses.length === 0) {
     return (
-      <div className="text-center py-12">
-        <BookOpen className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-        <h3 className="text-lg font-medium mb-2">Nenhum curso disponível</h3>
-        <p className="text-muted-foreground">
-          Novos cursos serão adicionados em breve.
-        </p>
-      </div>
+      <Card className="w-full">
+        <CardHeader>
+          <CardTitle>Nenhum curso disponível</CardTitle>
+          <CardDescription>
+            No momento, não há cursos disponíveis para membros.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <BookOpenCheck className="w-16 h-16 mx-auto text-muted-foreground" />
+          <p className="text-center text-muted-foreground">
+            Volte mais tarde para conferir os cursos disponíveis.
+          </p>
+        </CardContent>
+      </Card>
     );
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {courses.map((course) => {
-        const progress = getCourseProgress(course.id);
-        const completed = isCompleted(course.id);
-        
-        return (
-          <Card key={course.id} className="group hover:shadow-lg transition-all duration-200">
-            <div className="aspect-video relative overflow-hidden rounded-t-lg bg-gradient-to-br from-primary/90 to-primary/60 flex items-center justify-center">
-              <div className="text-center text-white">
-                <BookOpen className="h-8 w-8 mx-auto mb-2" />
-                <span className="font-semibold">{course.title}</span>
-              </div>
-              
-              <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                <Button 
-                  variant="secondary" 
-                  size="sm"
-                  className="bg-white/90 text-primary hover:bg-white"
-                  asChild
-                >
-                  <Link to={`/learning/course/${course.id}`}>
-                    <Play className="h-4 w-4 mr-2" />
-                    {completed ? 'Revisar' : progress > 0 ? 'Continuar' : 'Começar'}
-                  </Link>
-                </Button>
-              </div>
+    <div className="grid sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      {publishedCourses.map((course) => (
+        <Card key={course.id} className="bg-cardBgColor text-cardTextColor">
+          <CardHeader>
+            <CardTitle>{course.title}</CardTitle>
+            <CardDescription>{course.description}</CardDescription>
+          </CardHeader>
+          <CardContent className="flex flex-col gap-3">
+            <div className="flex items-center gap-2">
+              <Users className="w-4 h-4" />
+              <span>0 alunos</span>
             </div>
-            
-            <CardHeader className="pb-3">
-              <div className="flex items-center justify-between">
-                <Badge variant={course.is_published ? "default" : "secondary"}>
-                  {course.is_published ? "Disponível" : "Em breve"}
-                </Badge>
-                {completed && (
-                  <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-                    Concluído
-                  </Badge>
-                )}
-              </div>
-              <CardTitle className="line-clamp-2 group-hover:text-primary transition-colors">
-                {course.title}
-              </CardTitle>
-            </CardHeader>
-            
-            <CardContent className="pt-0">
-              {course.description && (
-                <p className="text-muted-foreground text-sm mb-4 line-clamp-2">
-                  {course.description}
-                </p>
-              )}
-              
-              <div className="flex items-center justify-between text-sm text-muted-foreground mb-4">
-                <div className="flex items-center">
-                  <Clock className="h-4 w-4 mr-1" />
-                  <span>Auto-ritmo</span>
-                </div>
-              </div>
-              
-              {progress > 0 && (
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Progresso</span>
-                    <span className="font-medium">{progress}%</span>
-                  </div>
-                  <div className="w-full bg-muted rounded-full h-2">
-                    <div 
-                      className="bg-primary h-2 rounded-full transition-all duration-300" 
-                      style={{ width: `${progress}%` }}
-                    />
-                  </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        );
-      })}
+            <div className="flex items-center gap-2">
+              <Clock className="w-4 h-4" />
+              <span>{course.estimated_hours} horas</span>
+            </div>
+            <Button asChild>
+              <Link to={`/formacao/cursos/${course.id}`}>Acessar curso</Link>
+            </Button>
+          </CardContent>
+        </Card>
+      ))}
     </div>
   );
 };
+
+export default MemberCoursesList;
