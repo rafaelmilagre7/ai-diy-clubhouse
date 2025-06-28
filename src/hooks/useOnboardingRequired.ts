@@ -1,70 +1,61 @@
 
 import { useState, useEffect } from 'react';
-import AuthManager from '@/services/AuthManager';
+import { useSimpleAuth } from '@/contexts/auth/SimpleAuthProvider';
+import { OnboardingValidator } from '@/utils/onboardingValidator';
 import { logger } from '@/utils/logger';
 
 export const useOnboardingRequired = () => {
-  const authManager = AuthManager.getInstance();
-  const [state, setState] = useState(() => {
-    const currentState = authManager.getState();
-    return {
-      isRequired: currentState.onboardingRequired,
-      hasCompleted: !currentState.onboardingRequired,
-      isLoading: currentState.isLoading
-    };
+  const { user, profile, isLoading: authLoading, isAdmin } = useSimpleAuth();
+  const [state, setState] = useState({
+    isRequired: false,
+    hasCompleted: false,
+    isLoading: true
   });
 
   useEffect(() => {
-    logger.info('[ONBOARDING-REQUIRED] 🔗 Conectando ao AuthManager');
+    logger.info('[ONBOARDING-REQUIRED] 📊 Atualizando estado baseado em SimpleAuth');
 
-    // CORREÇÃO: criar função handler que aceita AuthState como argumento
-    const handleStateChanged = (authState) => {
-      // CORREÇÃO CRÍTICA: Admin NUNCA precisa de onboarding
-      if (authState.isAdmin) {
-        logger.info('[ONBOARDING-REQUIRED] 👑 ADMIN DETECTADO - Onboarding dispensado', {
-          userId: authState.user?.id?.substring(0, 8) + '***' || 'none',
-          isAdmin: authState.isAdmin,
-          originalOnboardingRequired: authState.onboardingRequired
-        });
+    // Se ainda está carregando auth, manter loading
+    if (authLoading) {
+      setState(prev => ({ ...prev, isLoading: true }));
+      return;
+    }
 
-        setState({
-          isRequired: false, // SEMPRE false para admin
-          hasCompleted: true, // SEMPRE true para admin
-          isLoading: authState.isLoading
-        });
-        return;
-      }
-
-      // Para não-admin, usar o estado normal
-      logger.info('[ONBOARDING-REQUIRED] 📊 Estado atualizado via AuthManager:', {
-        onboardingRequired: authState.onboardingRequired,
-        isAdmin: authState.isAdmin,
-        hasUser: !!authState.user,
-        isLoading: authState.isLoading,
-        userRole: authState.profile?.user_roles?.name
+    // CORREÇÃO CRÍTICA: Admin NUNCA precisa de onboarding
+    if (isAdmin) {
+      logger.info('[ONBOARDING-REQUIRED] 👑 ADMIN DETECTADO - Onboarding dispensado', {
+        userId: user?.id?.substring(0, 8) + '***' || 'none',
+        isAdmin: isAdmin,
+        profileCompleted: profile?.onboarding_completed
       });
 
       setState({
-        isRequired: authState.onboardingRequired,
-        hasCompleted: !authState.onboardingRequired,
-        isLoading: authState.isLoading
+        isRequired: false, // SEMPRE false para admin
+        hasCompleted: true, // SEMPRE true para admin
+        isLoading: false
       });
-    };
-
-    // CORREÇÃO PRINCIPAL: usar o unsubscribe retornado pelo método 'on'
-    const unsubscribe = authManager.on('stateChanged', handleStateChanged);
-
-    // Initialize if needed
-    if (!authManager.isInitialized) {
-      logger.info('[ONBOARDING-REQUIRED] 🚀 Forçando inicialização do AuthManager');
-      authManager.initialize();
+      return;
     }
 
-    return () => {
-      // CORREÇÃO: usar unsubscribe em vez de authManager.off
-      unsubscribe();
-    };
-  }, [authManager]);
+    // Para não-admin, usar validação normal
+    const isRequired = OnboardingValidator.isRequired(profile);
+    const hasCompleted = OnboardingValidator.isCompleted(profile);
+
+    logger.info('[ONBOARDING-REQUIRED] 📊 Estado atualizado:', {
+      isRequired,
+      hasCompleted,
+      isAdmin,
+      hasUser: !!user,
+      userRole: profile?.user_roles?.name,
+      onboardingCompleted: profile?.onboarding_completed
+    });
+
+    setState({
+      isRequired,
+      hasCompleted,
+      isLoading: false
+    });
+  }, [user, profile, authLoading, isAdmin]);
 
   logger.debug('[ONBOARDING-REQUIRED] 📊 Estado atual:', {
     isRequired: state.isRequired,
