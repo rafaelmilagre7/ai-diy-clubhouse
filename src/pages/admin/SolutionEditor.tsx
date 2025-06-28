@@ -105,7 +105,7 @@ const SolutionEditor = () => {
           <SolutionEditorTabs 
             activeTab={activeTab}
             setActiveTab={setActiveTab}
-            solution={solution}
+            solution={solution as any}
             currentValues={currentValues}
             onSubmit={onSubmit}
             saving={saving}

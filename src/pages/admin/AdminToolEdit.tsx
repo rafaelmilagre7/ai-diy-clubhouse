@@ -38,7 +38,7 @@ const AdminToolEdit = () => {
       if (result.success) {
         handleSaveSuccess();
       }
-      return result;
+      return { success: result.success, data: result.data };
     } catch (error) {
       console.error('Erro ao salvar ferramenta:', error);
       return { success: false, error: 'Erro ao salvar ferramenta' };
