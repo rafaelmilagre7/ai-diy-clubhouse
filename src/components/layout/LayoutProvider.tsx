@@ -3,7 +3,7 @@ import { useLocation } from "react-router-dom";
 import { ReactNode, memo } from "react";
 import { useSimpleAuth } from "@/contexts/auth/SimpleAuthProvider";
 import LoadingScreen from "@/components/common/LoadingScreen";
-import MemberLayout from "./MemberLayout";
+import { MemberLayout } from "./MemberLayout";
 import FormacaoLayout from "./formacao/FormacaoLayout";
 import { PageTransitionWithFallback } from "@/components/transitions/PageTransitionWithFallback";
 

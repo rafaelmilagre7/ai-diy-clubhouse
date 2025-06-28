@@ -1,5 +1,6 @@
-import { supabase } from '@/lib/supabase';
-import { UserProfile } from '@/lib/supabase';
+
+import { supabase } from '@/integrations/supabase/client';
+import { UserProfile } from '@/types/userProfile';
 
 export const fetchUserProfile = async (userId: string): Promise<UserProfile | null> => {
   try {
@@ -7,7 +8,7 @@ export const fetchUserProfile = async (userId: string): Promise<UserProfile | nu
       .from('profiles')
       .select(`
         *,
-        user_roles:user_roles(
+        user_roles (
           id,
           name,
           description
@@ -17,168 +18,138 @@ export const fetchUserProfile = async (userId: string): Promise<UserProfile | nu
       .single();
 
     if (error) {
-      console.error('Erro ao buscar perfil:', error);
+      console.error('Error fetching user profile:', error);
       return null;
     }
 
-    // Convert to UserProfile with proper type handling and all required fields
-    return {
+    if (!data) {
+      return null;
+    }
+
+    // Map the database response to our UserProfile type
+    const profile: UserProfile = {
       id: data.id,
       email: data.email || '',
       name: data.name || '',
-      avatar_url: data.avatar_url,
-      company_name: data.company_name,
-      industry: data.industry,
-      role_id: data.role_id,
-      role: data.role || 'member',
+      avatar_url: data.avatar_url || '',
+      company_name: data.company_name || '',
+      industry: data.industry || '',
+      role_id: data.role_id || '',
+      role: data.role || '',
       created_at: data.created_at,
       updated_at: data.updated_at,
       onboarding_completed: data.onboarding_completed || false,
-      onboarding_completed_at: data.onboarding_completed_at,
-      
-      // Required fields with defaults
-      birth_date: data.birth_date || null,
-      curiosity: data.curiosity || null,
-      business_sector: data.business_sector || null,
-      position: data.position || null,
-      company_size: data.company_size || null,
-      annual_revenue: data.annual_revenue || null,
-      primary_goal: data.primary_goal || null,
-      business_challenges: data.business_challenges || [],
-      ai_knowledge_level: data.ai_knowledge_level || null,
-      weekly_availability: data.weekly_availability || null,
-      networking_interests: data.networking_interests || [],
-      nps_score: data.nps_score || null,
-      country: data.country || null,
-      state: data.state || null,
-      city: data.city || null,
-      phone: data.phone || null,
-      phone_country_code: data.phone_country_code || '+55',
-      linkedin: data.linkedin || null,
-      instagram: data.instagram || null,
-      current_position: data.current_position || null,
-      company_website: data.company_website || null,
-      accepts_marketing: data.accepts_marketing || null,
-      accepts_case_study: data.accepts_case_study || null,
-      
-      // Additional required fields
-      has_implemented_ai: data.has_implemented_ai || null,
-      ai_tools_used: data.ai_tools_used || [],
-      daily_tools: data.daily_tools || [],
-      who_will_implement: data.who_will_implement || null,
-      implementation_timeline: data.implementation_timeline || null,
-      team_size: data.team_size || null,
-      main_challenges: data.main_challenges || [],
-      success_metrics: data.success_metrics || [],
-      learning_preferences: data.learning_preferences || [],
-      time_investment: data.time_investment || null,
-      budget_range: data.budget_range || null,
-      technical_level: data.technical_level || null,
-      support_needs: data.support_needs || [],
-      
-      user_roles: data.user_roles ? {
-        id: data.user_roles.id,
-        name: data.user_roles.name,
-        description: data.user_roles.description
-      } : null
-    } as UserProfile;
+      birth_date: data.birth_date,
+      curiosity: data.curiosity,
+      business_sector: data.business_sector,
+      position: data.position,
+      primary_goal: data.primary_goal,
+      weekly_availability: data.weekly_availability,
+      networking_interests: data.networking_interests,
+      nps_score: data.nps_score,
+      country: data.country,
+      state: data.state,
+      city: data.city,
+      phone: data.phone,
+      phone_country_code: data.phone_country_code,
+      linkedin: data.linkedin,
+      instagram: data.instagram,
+      current_position: data.current_position,
+      accepts_marketing: data.accepts_marketing,
+      accepts_case_study: data.accepts_case_study,
+      company_website: data.company_website,
+      has_implemented_ai: data.has_implemented_ai,
+      ai_tools_used: data.ai_tools_used,
+      daily_tools: data.daily_tools,
+      who_will_implement: data.who_will_implement,
+      implementation_timeline: data.implementation_timeline,
+      team_size: data.team_size,
+      annual_revenue: data.annual_revenue,
+      company_size: data.company_size,
+      ai_knowledge_level: data.ai_knowledge_level,
+      business_challenges: data.business_challenges,
+      main_objective: data.main_objective,
+      area_to_impact: data.area_to_impact,
+      expected_result_90_days: data.expected_result_90_days,
+      ai_implementation_budget: data.ai_implementation_budget,
+      user_roles: data.user_roles
+    };
+
+    return profile;
   } catch (error) {
-    console.error('Erro na busca do perfil:', error);
+    console.error('Error in fetchUserProfile:', error);
     return null;
   }
 };
 
-export const createUserProfileIfNeeded = async (userId: string, userData?: any): Promise<UserProfile | null> => {
+export const getUserProfile = fetchUserProfile;
+
+export const createUserProfile = async (userId: string, email: string, name?: string): Promise<UserProfile | null> => {
   try {
-    // Verificar se o perfil já existe
-    const existingProfile = await fetchUserProfile(userId);
-    if (existingProfile) {
-      return existingProfile;
-    }
-
-    // Criar novo perfil
-    const profileData = {
-      id: userId,
-      email: userData?.email || '',
-      name: userData?.name || '',
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    };
-
     const { data, error } = await supabase
       .from('profiles')
-      .insert([profileData])
-      .select()
+      .insert({
+        id: userId,
+        email,
+        name: name || null,
+        onboarding_completed: false
+      })
+      .select(`
+        *,
+        user_roles (
+          id,
+          name,
+          description
+        )
+      `)
       .single();
 
     if (error) {
-      console.error('Erro ao criar perfil:', error);
+      console.error('Error creating user profile:', error);
       return null;
     }
 
-    return await fetchUserProfile(userId);
+    return data as UserProfile;
   } catch (error) {
-    console.error('Erro ao criar perfil:', error);
+    console.error('Error in createUserProfile:', error);
     return null;
   }
 };
 
-export const getUserProfile = async (userId: string): Promise<UserProfile | null> => {
-  return await fetchUserProfile(userId);
-};
-
-export const createUserProfile = async (userId: string, profileData: Partial<UserProfile>): Promise<UserProfile | null> => {
-  try {
-    const insertData = {
-      id: userId,
-      email: profileData.email || '',
-      name: profileData.name || '',
-      avatar_url: profileData.avatar_url,
-      company_name: profileData.company_name,
-      industry: profileData.industry,
-      role_id: profileData.role_id,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    };
-
-    const { data, error } = await supabase
-      .from('profiles')
-      .insert([insertData])
-      .select()
-      .single();
-
-    if (error) {
-      console.error('Erro ao criar perfil:', error);
-      return null;
-    }
-
-    return await fetchUserProfile(userId);
-  } catch (error) {
-    console.error('Erro ao criar perfil:', error);
-    return null;
+export const createUserProfileIfNeeded = async (userId: string, email: string, name?: string): Promise<UserProfile | null> => {
+  let profile = await fetchUserProfile(userId);
+  
+  if (!profile) {
+    profile = await createUserProfile(userId, email, name);
   }
+  
+  return profile;
 };
 
 export const updateUserProfile = async (userId: string, updates: Partial<UserProfile>): Promise<UserProfile | null> => {
   try {
     const { data, error } = await supabase
       .from('profiles')
-      .update({
-        ...updates,
-        updated_at: new Date().toISOString(),
-      })
+      .update(updates)
       .eq('id', userId)
-      .select()
+      .select(`
+        *,
+        user_roles (
+          id,
+          name,
+          description
+        )
+      `)
       .single();
 
     if (error) {
-      console.error('Erro ao atualizar perfil:', error);
+      console.error('Error updating user profile:', error);
       return null;
     }
 
-    return await fetchUserProfile(userId);
+    return data as UserProfile;
   } catch (error) {
-    console.error('Erro ao atualizar perfil:', error);
+    console.error('Error in updateUserProfile:', error);
     return null;
   }
 };
@@ -191,46 +162,13 @@ export const deleteUserProfile = async (userId: string): Promise<boolean> => {
       .eq('id', userId);
 
     if (error) {
-      console.error('Erro ao deletar perfil:', error);
+      console.error('Error deleting user profile:', error);
       return false;
     }
 
     return true;
   } catch (error) {
-    console.error('Erro ao deletar perfil:', error);
-    return false;
-  }
-};
-
-// Função auxiliar para lidar com roles
-export const assignRoleToUser = async (userId: string, roleName: string): Promise<boolean> => {
-  try {
-    // Buscar o role_id baseado no nome
-    const { data: roleData, error: roleError } = await supabase
-      .from('user_roles')
-      .select('id')
-      .eq('name', roleName)
-      .single();
-
-    if (roleError || !roleData) {
-      console.error('Role não encontrado:', roleName);
-      return false;
-    }
-
-    // Atualizar o perfil com o novo role_id
-    const { error: updateError } = await supabase
-      .from('profiles')
-      .update({ role_id: roleData.id })
-      .eq('id', userId);
-
-    if (updateError) {
-      console.error('Erro ao atualizar role do usuário:', updateError);
-      return false;
-    }
-
-    return true;
-  } catch (error) {
-    console.error('Erro ao atribuir role:', error);
+    console.error('Error in deleteUserProfile:', error);
     return false;
   }
 };

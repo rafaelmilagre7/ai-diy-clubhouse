@@ -1,6 +1,6 @@
 
 import { Session, User } from '@supabase/supabase-js';
-import { UserProfile } from '@/lib/supabase';
+import { UserProfile } from '@/types/userProfile';
 
 export interface AuthContextType {
   session: Session | null;
@@ -20,4 +20,5 @@ export interface AuthContextType {
   setUser: React.Dispatch<React.SetStateAction<User | null>>;
   setProfile: React.Dispatch<React.SetStateAction<UserProfile | null>>;
   setIsLoading: React.Dispatch<React.SetStateAction<boolean>>;
+  isSigningIn: boolean;
 }

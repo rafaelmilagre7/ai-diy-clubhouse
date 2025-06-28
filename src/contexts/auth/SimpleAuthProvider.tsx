@@ -3,7 +3,8 @@ import React, { createContext, useContext, useEffect, useState, ReactNode } from
 import { supabase } from '@/integrations/supabase/client';
 import { User, Session } from '@supabase/supabase-js';
 import { toast } from 'sonner';
-import { fetchUserProfile, UserProfile } from './utils/profileUtils/userProfileFunctions';
+import { fetchUserProfile } from './utils/profileUtils/userProfileFunctions';
+import { UserProfile } from '@/types/userProfile';
 
 export interface SimpleAuthContextType {
   user: User | null;

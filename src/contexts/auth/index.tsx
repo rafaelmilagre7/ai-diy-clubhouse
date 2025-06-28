@@ -164,7 +164,7 @@ export const useAuth = (): AuthContextType => {
     session: simpleAuth.session,
     profile: simpleAuth.profile,
     isLoading: simpleAuth.isLoading,
-    error: simpleAuth.error,
+    error: simpleAuth.error?.message || null,
     isAdmin: simpleAuth.isAdmin,
     isFormacao: simpleAuth.isFormacao,
     refreshProfile: async () => {}, // Método vazio para compatibilidade
@@ -172,12 +172,12 @@ export const useAuth = (): AuthContextType => {
     setUser: () => {},
     setProfile: () => {},
     setIsLoading: () => {},
-    signIn: async () => ({ error: null }),
-    signUp: async () => ({ error: null }),
+    signIn: async () => ({ error: undefined }),
+    signUp: async () => ({ error: undefined }),
     signOut: simpleAuth.signOut,
-    signInAsMember: async () => ({ error: null }),
-    signInAsAdmin: async () => ({ error: null }),
-    isSigningIn: false
+    signInAsMember: async () => ({ error: undefined }),
+    signInAsAdmin: async () => ({ error: undefined }),
+    isSigningIn: simpleAuth.isSigningIn
   } as AuthContextType;
 };
 

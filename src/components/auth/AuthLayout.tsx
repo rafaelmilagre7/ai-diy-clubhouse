@@ -6,7 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AlertCircle } from 'lucide-react';
 import { useSimpleAuth } from '@/contexts/auth/SimpleAuthProvider';
-import LoginForm from './LoginForm';
+import { LoginForm } from './LoginForm';
 import SimpleRegisterForm from './SimpleRegisterForm';
 
 const AuthLayout = () => {
