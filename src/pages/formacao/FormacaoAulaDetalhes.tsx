@@ -1,7 +1,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { useAuth } from "@/contexts/auth";
+import { useSimpleAuth } from "@/contexts/auth/SimpleAuthProvider";
 import { supabase } from "@/lib/supabase";
 import { LearningLesson } from "@/lib/supabase";
 import { toast } from "sonner";
@@ -13,7 +13,7 @@ import { AulaDeleteDialog } from "@/components/formacao/aulas/AulaDeleteDialog";
 const FormacaoAulaDetalhes = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { profile } = useAuth();
+  const { user } = useSimpleAuth();
   
   const [aula, setAula] = useState<LearningLesson | null>(null);
   const [loading, setLoading] = useState(true);
@@ -49,26 +49,15 @@ const FormacaoAulaDetalhes = () => {
       
       // Mapear dados para o formato LearningLesson esperado
       const mappedAula: LearningLesson = {
-        id: data.id,
-        module_id: data.module_id,
-        title: data.title,
-        description: data.description,
-        content: data.content,
-        order_index: data.order_index,
-        is_published: data.is_published || false,
-        published: data.is_published || false, // Map is_published to published
-        created_at: data.created_at,
-        updated_at: data.updated_at,
-        estimated_duration_minutes: data.estimated_duration_minutes || 0,
+        ...data,
+        // Map is_published to published for compatibility
+        published: data.is_published || false,
+        // Add missing optional fields with defaults
         difficulty_level: data.difficulty_level || 'beginner',
-        ai_assistant_enabled: !!data.ai_assistant_id || false,
-        ai_assistant_id: data.ai_assistant_id || null,
         ai_assistant_prompt: data.ai_assistant_prompt || null,
-        cover_image_url: data.cover_image_url || null,
-        // Add missing required fields with defaults
-        lesson_type: data.lesson_type || 'video',
         video_url: '', // Default empty string
         video_duration_seconds: 0, // Default to 0
+        cover_image_url: data.cover_image_url || null,
         // Add related data
         videos: data.videos || [],
         resources: data.resources || [],

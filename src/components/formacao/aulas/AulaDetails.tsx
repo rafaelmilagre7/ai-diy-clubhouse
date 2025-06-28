@@ -102,7 +102,7 @@ const AulaDetails = ({ aula }: AulaDetailsProps) => {
               {/* Get prompt from content if available */}
               {(content.ai_assistant_prompt || aula.ai_assistant_prompt) && (
                 <p className="text-sm text-blue-600 mt-2">
-                  Prompt: {content.ai_assistant_prompt || aula.ai_assistant_prompt}
+                  Prompt: {content.ai_assistant_prompt || aula.ai_assistant_prompt || ''}
                 </p>
               )}
             </div>

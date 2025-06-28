@@ -1,13 +1,37 @@
-
 import { Database } from './database.types';
 
 // Tipos de tabelas principais (apenas tabelas que existem)
-export type LearningLesson = Database['public']['Tables']['learning_lessons']['Row'];
-export type LearningLessonVideo = Database['public']['Tables']['learning_lesson_videos']['Row'];
-export type LearningModule = Database['public']['Tables']['learning_modules']['Row'];
-export type LearningCourse = Database['public']['Tables']['learning_courses']['Row'];
-export type LearningResource = Database['public']['Tables']['learning_resources']['Row'];
-export type LearningComment = Database['public']['Tables']['learning_comments']['Row'];
+export type LearningLessonRow = Database['public']['Tables']['learning_lessons']['Row'];
+export type LearningLessonVideoRow = Database['public']['Tables']['learning_lesson_videos']['Row'];
+export type LearningModuleRow = Database['public']['Tables']['learning_modules']['Row'];
+export type LearningCourseRow = Database['public']['Tables']['learning_courses']['Row'];
+export type LearningResourceRow = Database['public']['Tables']['learning_resources']['Row'];
+export type LearningCommentRow = Database['public']['Tables']['learning_comments']['Row'];
+
+// Enhanced LearningLesson type that matches database structure
+export interface LearningLesson extends LearningLessonRow {
+  // Add computed/optional fields for compatibility
+  published?: boolean;
+  difficulty_level?: string;
+  ai_assistant_prompt?: string;
+  video_url?: string;
+  video_duration_seconds?: number;
+  cover_image_url?: string;
+  // Related data
+  videos?: LearningLessonVideoRow[];
+  resources?: LearningResourceRow[];
+  module?: LearningModule;
+}
+
+// Enhanced LearningModule type
+export interface LearningModule extends LearningModuleRow {
+  course?: LearningCourse;
+}
+
+export type LearningLessonVideo = LearningLessonVideoRow;
+export type LearningCourse = LearningCourseRow;
+export type LearningResource = LearningResourceRow;
+export type LearningComment = LearningCommentRow;
 
 // Tipos específicos do sistema
 export type UserProfile = Database['public']['Tables']['profiles']['Row'];
