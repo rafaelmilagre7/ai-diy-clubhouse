@@ -29,6 +29,15 @@ export const RealStatsOverview = ({ data, loading }: RealStatsOverviewProps) => 
     );
   }
 
+  // Debug: mostrar dados no console
+  console.log('[REAL-STATS] Dados recebidos:', {
+    totalUsers: data.totalUsers,
+    totalSolutions: data.totalSolutions,
+    totalLearningLessons: data.totalLearningLessons,
+    completedImplementations: data.completedImplementations,
+    usersByRole: data.usersByRole
+  });
+
   // Função para formatar o tempo médio
   const formatTime = (minutes: number) => {
     if (minutes < 60) {
@@ -51,10 +60,32 @@ export const RealStatsOverview = ({ data, loading }: RealStatsOverviewProps) => 
     return "blue";
   };
 
+  // Se não há dados, mostrar mensagem informativa
+  if (data.totalUsers === 0 && data.totalSolutions === 0) {
+    return (
+      <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
+        <div className="col-span-full bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+          <p className="text-yellow-800 text-sm">
+            <strong>Aviso:</strong> Nenhum dado foi encontrado no banco. Verifique as permissões RLS ou se há dados nas tabelas.
+          </p>
+        </div>
+        {[...Array(8)].map((_, i) => (
+          <StatCard
+            key={i}
+            title="Sem dados"
+            value="0"
+            icon={<Users className="h-5 w-5" />}
+            colorScheme="blue"
+          />
+        ))}
+      </div>
+    );
+  }
+
   return (
     <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
       <StatCard
-        title="Novos Membros"
+        title="Total de Usuários"
         value={data.totalUsers}
         icon={<Users className="h-5 w-5" />}
         percentageChange={data.lastMonthGrowth}
