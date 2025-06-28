@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Clock, Edit2, Eye, AlertCircle, CheckCircle, XCircle } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { moduleTypes } from "./moduleTypes";
+import { ModuleContent } from "@/lib/supabase/types";
 
 interface ModulesListProps {
   modules: Module[];
@@ -19,7 +20,13 @@ const ModulesList = ({ modules, onEditModule, onPreview, isLoading }: ModulesLis
   // Função para obter o ícone apropriado com base no status do módulo
   const getModuleStatusIcon = (module: Module) => {
     // Verificar se o módulo tem conteúdo significativo
-    const hasContent = module.content?.blocks && module.content.blocks.length > 0;
+    let hasContent = false;
+    try {
+      const content = module.content as ModuleContent;
+      hasContent = content && content.blocks && content.blocks.length > 0;
+    } catch (error) {
+      hasContent = false;
+    }
     
     if (!hasContent) {
       return <XCircle className="h-5 w-5 text-red-500" />;
@@ -32,6 +39,15 @@ const ModulesList = ({ modules, onEditModule, onPreview, isLoading }: ModulesLis
   const getModuleTypeDescription = (type: string) => {
     const moduleType = moduleTypes.find(m => m.type === type);
     return moduleType?.description || "";
+  };
+
+  const getBlockCount = (module: Module): number => {
+    try {
+      const content = module.content as ModuleContent;
+      return content?.blocks?.length || 0;
+    } catch (error) {
+      return 0;
+    }
   };
 
   // Criar um array de todos os tipos de módulos para exibir inclusive os que não existem ainda
@@ -83,11 +99,11 @@ const ModulesList = ({ modules, onEditModule, onPreview, isLoading }: ModulesLis
                     <p className="text-sm text-muted-foreground mt-1">
                       {getModuleTypeDescription(item.type)}
                     </p>
-                    {item.module?.content?.blocks && (
+                    {item.module && (
                       <div className="flex items-center gap-1 mt-1">
                         <Clock className="h-3 w-3 text-muted-foreground" />
                         <span className="text-xs text-muted-foreground">
-                          {item.module.content.blocks.length} blocos de conteúdo
+                          {getBlockCount(item.module)} blocos de conteúdo
                         </span>
                       </div>
                     )}

@@ -27,3 +27,18 @@ export const calculateProgress = (items: ChecklistItem[]): number => {
   const completed = items.filter(item => item.completed).length;
   return Math.round((completed / items.length) * 100);
 };
+
+// Additional utility functions for compatibility
+export const extractChecklistFromSolution = (solution: any): ChecklistItem[] => {
+  // Mock implementation
+  return [];
+};
+
+export const initializeUserChecklist = (userId: string, solutionId: string): Promise<ChecklistItem[]> => {
+  // Mock implementation
+  return Promise.resolve([]);
+};
+
+export const handleChecklistError = (error: any): void => {
+  console.error('Checklist error:', error);
+};

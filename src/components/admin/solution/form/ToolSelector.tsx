@@ -6,6 +6,7 @@ import { useToolSelector } from "./hooks/useToolSelector";
 import { SearchBox } from "./components/SearchBox";
 import { SelectedToolsList } from "./components/SelectedToolsList";
 import { AvailableToolsList } from "./components/AvailableToolsList";
+import { Tool } from "@/lib/supabase/types";
 
 interface ToolSelectorProps {
   value: SelectedTool[];
@@ -25,14 +26,17 @@ export const ToolSelector: React.FC<ToolSelectorProps> = ({ value, onChange }) =
   } = useToolSelector(value, onChange);
 
   // Convert tools to the format expected by AvailableToolsList
-  const toolsForList = filteredTools.map(tool => ({
+  const toolsForList: Tool[] = filteredTools.map(tool => ({
     ...tool,
     status: tool.is_active,
-    official_url: tool.url,
+    official_url: tool.url || '',
     tags: [],
     benefit_link: null,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString()
+    created_at: tool.created_at,
+    updated_at: tool.updated_at,
+    benefit_title: tool.benefit_title || null,
+    benefit_description: tool.benefit_description || null,
+    benefit_discount_percentage: tool.benefit_discount_percentage || null
   }));
 
   return (

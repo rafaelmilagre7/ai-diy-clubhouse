@@ -5,12 +5,14 @@ import { createMockUserProfile } from '@/__tests__/utils/mockUserProfile';
 
 describe('UsersTable', () => {
   const mockUsers = [
-    createMockUserProfile()
+    createMockUserProfile({ id: '1', name: 'User 1', email: 'user1@example.com' }),
+    createMockUserProfile({ id: '2', name: 'User 2', email: 'user2@example.com' }),
   ];
 
   const defaultProps = {
     users: mockUsers,
     loading: false,
+    canAssignRoles: true,
     canEditRoles: true,
     canDeleteUsers: true,
     canResetPasswords: true,
@@ -23,7 +25,14 @@ describe('UsersTable', () => {
 
   it('renders users correctly', () => {
     render(<UsersTable {...defaultProps} />);
-    expect(screen.getByText('Test User')).toBeInTheDocument();
-    expect(screen.getByText('test@example.com')).toBeInTheDocument();
+    
+    expect(screen.getByText('User 1')).toBeInTheDocument();
+    expect(screen.getByText('User 2')).toBeInTheDocument();
+  });
+
+  it('shows loading state', () => {
+    render(<UsersTable {...defaultProps} loading={true} />);
+    
+    expect(screen.getByText('Carregando usuários...')).toBeInTheDocument();
   });
 });

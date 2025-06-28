@@ -7,10 +7,6 @@ export const createMockUserProfile = (overrides: Partial<UserProfile> = {}): Use
     email: 'test@example.com',
     name: 'Test User',
     role_id: 'test-role-id',
-    user_roles: {
-      id: 'test-role-id', 
-      name: 'member'
-    },
     avatar_url: null,
     company_name: 'Test Company',
     industry: 'Technology',
@@ -53,6 +49,11 @@ export const createMockUserProfile = (overrides: Partial<UserProfile> = {}): Use
     notifications_enabled: true,
     marketing_emails_enabled: true,
     role: null,
+    user_roles: {
+      id: 'test-role-id', 
+      name: 'member',
+      description: 'Test member role'
+    },
     ...overrides,
   };
 };

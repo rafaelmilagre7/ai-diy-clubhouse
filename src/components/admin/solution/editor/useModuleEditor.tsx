@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { v4 as uuidv4 } from "uuid";
-import { Module } from "@/lib/supabase";
+import { Module, ModuleContent, ContentBlock } from "@/lib/supabase";
 import { validateModule } from "./utils/moduleValidation";
 
 export type BlockType =
@@ -21,18 +21,17 @@ export type BlockType =
   | "tips"
   | "cta";
 
-export interface ContentBlock {
-  id: string;
-  type: BlockType;
-  data: Record<string, any>;
-}
-
 export const useModuleEditor = (initialModule: Module) => {
   const [title, setTitle] = useState(initialModule.title);
   const [activeTab, setActiveTab] = useState("editor");
   const [content, setContent] = useState(() => {
-    if (initialModule.content && initialModule.content.blocks) {
-      return initialModule.content;
+    try {
+      const moduleContent = initialModule.content as ModuleContent;
+      if (moduleContent && moduleContent.blocks) {
+        return moduleContent;
+      }
+    } catch (error) {
+      console.warn("Error parsing module content:", error);
     }
     return { blocks: [] };
   });
@@ -49,7 +48,6 @@ export const useModuleEditor = (initialModule: Module) => {
     };
 
     setContent((prev) => ({
-      ...prev,
       blocks: [...(prev.blocks || []), newBlock],
     }));
   };
@@ -65,7 +63,6 @@ export const useModuleEditor = (initialModule: Module) => {
         };
       }
       return {
-        ...prev,
         blocks: updatedBlocks
       };
     });
@@ -77,7 +74,6 @@ export const useModuleEditor = (initialModule: Module) => {
       const updatedBlocks = [...(prev.blocks || [])];
       updatedBlocks.splice(index, 1);
       return {
-        ...prev,
         blocks: updatedBlocks
       };
     });
@@ -99,7 +95,6 @@ export const useModuleEditor = (initialModule: Module) => {
       }
       
       return {
-        ...prev,
         blocks,
       };
     });
