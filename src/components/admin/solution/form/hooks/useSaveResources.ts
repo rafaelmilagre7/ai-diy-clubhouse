@@ -30,9 +30,9 @@ export function useSaveResources() {
         .from('solution_resources')
         .upsert({
           solution_id: solutionId,
-          type: 'resources',
-          name: 'Solution Resources',
-          url: JSON.stringify(resourcesData),
+          resource_type: 'resources',
+          title: 'Solution Resources',
+          external_url: JSON.stringify(resourcesData),
           updated_at: new Date().toISOString()
         });
       

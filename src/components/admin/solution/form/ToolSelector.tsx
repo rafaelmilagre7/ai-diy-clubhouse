@@ -24,6 +24,17 @@ export const ToolSelector: React.FC<ToolSelectorProps> = ({ value, onChange }) =
     handleToggleRequired
   } = useToolSelector(value, onChange);
 
+  // Convert tools to the format expected by AvailableToolsList
+  const toolsForList = filteredTools.map(tool => ({
+    ...tool,
+    status: tool.is_active,
+    official_url: tool.url,
+    tags: [],
+    benefit_link: null,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  }));
+
   return (
     <div className="space-y-6">
       {value.length > 0 && (
@@ -45,7 +56,7 @@ export const ToolSelector: React.FC<ToolSelectorProps> = ({ value, onChange }) =
           </div>
         ) : (
           <AvailableToolsList
-            tools={filteredTools}
+            tools={toolsForList}
             selectedToolIds={selectedToolIds}
             onToolSelect={handleToolSelect}
             onToolDeselect={handleToolDeselect}

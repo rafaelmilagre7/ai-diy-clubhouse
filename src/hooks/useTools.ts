@@ -2,18 +2,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { useSimpleAuth } from '@/contexts/auth/SimpleAuthProvider';
-
-// Simplified tool type
-interface SimplifiedTool {
-  id: string;
-  name: string;
-  description: string;
-  category: string;
-  url?: string;
-  logo_url?: string;
-  is_active: boolean;
-  has_member_benefit?: boolean;
-}
+import { Tool } from '@/lib/supabase/types';
 
 export const useTools = (options?: { 
   checkAccessRestrictions?: boolean;
@@ -26,7 +15,7 @@ export const useTools = (options?: {
     ...options
   };
 
-  const query = useQuery<SimplifiedTool[], Error>({
+  const query = useQuery<Tool[], Error>({
     queryKey: ['tools', user?.id, opts.categoryFilter, opts.benefitsOnly],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -49,7 +38,7 @@ export const useTools = (options?: {
         filteredData = filteredData.filter(tool => tool.has_member_benefit);
       }
 
-      return filteredData as SimplifiedTool[];
+      return filteredData as Tool[];
     },
     staleTime: 5 * 60 * 1000
   });

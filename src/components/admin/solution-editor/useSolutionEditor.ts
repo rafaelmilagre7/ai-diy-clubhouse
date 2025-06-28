@@ -31,10 +31,10 @@ export const useSolutionEditor = (id: string | undefined, user: any) => {
         title: solution.title,
         description: solution.description,
         category: solution.category as "Receita" | "Operacional" | "Estratégia",
-        difficulty: solution.difficulty as "easy" | "medium" | "advanced",
-        thumbnail_url: solution.thumbnail_url || "",
-        published: solution.published,
-        slug: solution.slug,
+        difficulty: (solution.difficulty || solution.difficulty_level) as "easy" | "medium" | "advanced",
+        thumbnail_url: solution.thumbnail_url || solution.cover_image_url || "",
+        published: solution.published || solution.is_published || false,
+        slug: solution.slug || "",
       }
     : defaultValues;
 
