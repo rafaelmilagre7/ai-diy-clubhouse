@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { v4 as uuidv4 } from "uuid";
-import { Module, ModuleContent, ContentBlock } from "@/lib/supabase";
+import { Module, ModuleContent, ContentBlock, safeJsonParseObject } from "@/lib/supabase";
 import { validateModule } from "./utils/moduleValidation";
 
 export type BlockType =
@@ -26,7 +26,7 @@ export const useModuleEditor = (initialModule: Module) => {
   const [activeTab, setActiveTab] = useState("editor");
   const [content, setContent] = useState(() => {
     try {
-      const moduleContent = initialModule.content as ModuleContent;
+      const moduleContent = safeJsonParseObject(initialModule.content, { blocks: [] }) as ModuleContent;
       if (moduleContent && moduleContent.blocks) {
         return moduleContent;
       }
@@ -148,7 +148,7 @@ export const useModuleEditor = (initialModule: Module) => {
       const updatedModule: Module = {
         ...initialModule,
         title,
-        content,
+        content: content as any, // Safe cast to Json
         updated_at: new Date().toISOString(),
       };
 

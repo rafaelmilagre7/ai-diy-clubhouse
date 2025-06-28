@@ -6,6 +6,7 @@ export type LearningLesson = Database['public']['Tables']['learning_lessons']['R
   resources?: LearningResource[];
   videos?: LearningLessonVideo[];
   module?: LearningModule;
+  ai_assistant_id?: string;
 };
 
 export type LearningLessonVideo = Database['public']['Tables']['learning_lesson_videos']['Row'];
@@ -29,6 +30,9 @@ export type Tool = Database['public']['Tables']['tools']['Row'] & {
   official_url?: string;
   tags?: string[];
   benefit_link?: string | null;
+  benefit_title?: string | null;
+  benefit_description?: string | null;
+  benefit_discount_percentage?: number | null;
 };
 export type SolutionResource = Database['public']['Tables']['solution_resources']['Row'];
 
@@ -80,4 +84,34 @@ export * from './database.types';
 // Utilitário para type casting seguro
 export const safeSupabaseQuery = <T = any>(query: Promise<any>): Promise<{ data: T | null; error: any }> => {
   return query.catch((error: any) => ({ data: null, error }));
+};
+
+// Safe JSON parsing utilities
+export const safeJsonParseObject = (value: any, fallback: any = {}) => {
+  if (typeof value === 'object' && value !== null) {
+    return value;
+  }
+  if (typeof value === 'string') {
+    try {
+      return JSON.parse(value);
+    } catch {
+      return fallback;
+    }
+  }
+  return fallback;
+};
+
+export const safeJsonParseArray = (value: any, fallback: any[] = []) => {
+  if (Array.isArray(value)) {
+    return value;
+  }
+  if (typeof value === 'string') {
+    try {
+      const parsed = JSON.parse(value);
+      return Array.isArray(parsed) ? parsed : fallback;
+    } catch {
+      return fallback;
+    }
+  }
+  return fallback;
 };

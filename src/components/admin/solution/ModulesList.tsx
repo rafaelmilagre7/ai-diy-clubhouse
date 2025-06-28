@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Clock, Edit2, Eye, AlertCircle, CheckCircle, XCircle } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { moduleTypes } from "./moduleTypes";
-import { ModuleContent } from "@/lib/supabase/types";
+import { ModuleContent, safeJsonParseObject } from "@/lib/supabase/types";
 
 interface ModulesListProps {
   modules: Module[];
@@ -22,7 +22,7 @@ const ModulesList = ({ modules, onEditModule, onPreview, isLoading }: ModulesLis
     // Verificar se o módulo tem conteúdo significativo
     let hasContent = false;
     try {
-      const content = module.content as ModuleContent;
+      const content = safeJsonParseObject(module.content, { blocks: [] }) as ModuleContent;
       hasContent = content && content.blocks && content.blocks.length > 0;
     } catch (error) {
       hasContent = false;
@@ -43,7 +43,7 @@ const ModulesList = ({ modules, onEditModule, onPreview, isLoading }: ModulesLis
 
   const getBlockCount = (module: Module): number => {
     try {
-      const content = module.content as ModuleContent;
+      const content = safeJsonParseObject(module.content, { blocks: [] }) as ModuleContent;
       return content?.blocks?.length || 0;
     } catch (error) {
       return 0;
@@ -74,36 +74,37 @@ const ModulesList = ({ modules, onEditModule, onPreview, isLoading }: ModulesLis
   return (
     <ScrollArea className="max-h-[500px] pr-4">
       <div className="space-y-3">
-        {allModuleTypes.map((item) => {
-          const moduleIndex = item.exists ? modules.findIndex(m => m.type === item.type) : -1;
+        {moduleTypes.map((type) => {
+          const existingModule = modules.find(m => m.type === type.type);
+          const moduleIndex = existingModule ? modules.findIndex(m => m.type === type.type) : -1;
           
           return (
             <Card 
-              key={item.id}
+              key={type.type}
               className={`transition-all ${
-                item.exists ? "hover:border-[#0ABAB5]/60" : "opacity-60 hover:opacity-100"
+                existingModule ? "hover:border-[#0ABAB5]/60" : "opacity-60 hover:opacity-100"
               }`}
             >
               <CardContent className="p-4 flex justify-between items-center">
                 <div className="flex items-start gap-3">
                   <div className="mt-1">
-                    {item.exists ? getModuleStatusIcon(item.module!) : <AlertCircle className="h-5 w-5 text-amber-500" />}
+                    {existingModule ? getModuleStatusIcon(existingModule) : <AlertCircle className="h-5 w-5 text-amber-500" />}
                   </div>
                   <div>
                     <div className="flex items-center gap-2">
-                      <h3 className="font-medium">{item.title}</h3>
+                      <h3 className="font-medium">{existingModule?.title || type.title}</h3>
                       <Badge variant="outline" className="text-xs">
-                        Módulo {item.order + 1}
+                        Módulo {type.order + 1}
                       </Badge>
                     </div>
                     <p className="text-sm text-muted-foreground mt-1">
-                      {getModuleTypeDescription(item.type)}
+                      {getModuleTypeDescription(type.type)}
                     </p>
-                    {item.module && (
+                    {existingModule && (
                       <div className="flex items-center gap-1 mt-1">
                         <Clock className="h-3 w-3 text-muted-foreground" />
                         <span className="text-xs text-muted-foreground">
-                          {getBlockCount(item.module)} blocos de conteúdo
+                          {getBlockCount(existingModule)} blocos de conteúdo
                         </span>
                       </div>
                     )}
@@ -111,12 +112,12 @@ const ModulesList = ({ modules, onEditModule, onPreview, isLoading }: ModulesLis
                 </div>
                 <Button 
                   size="sm" 
-                  variant={item.exists ? "default" : "outline"}
+                  variant={existingModule ? "default" : "outline"}
                   onClick={() => onEditModule(moduleIndex)}
-                  className={item.exists ? "bg-[#0ABAB5] hover:bg-[#0ABAB5]/90" : ""}
+                  className={existingModule ? "bg-[#0ABAB5] hover:bg-[#0ABAB5]/90" : ""}
                 >
                   <Edit2 className="h-4 w-4 mr-1" />
-                  {item.exists ? "Editar" : "Criar"}
+                  {existingModule ? "Editar" : "Criar"}
                 </Button>
               </CardContent>
             </Card>

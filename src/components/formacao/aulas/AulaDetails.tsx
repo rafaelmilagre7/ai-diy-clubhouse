@@ -58,9 +58,9 @@ const AulaDetails = ({ aula }: AulaDetailsProps) => {
               >
                 {getDifficultyLabel(difficultyLevel)}
               </Badge>
-              {/* Corrigido: usar is_published que existe no schema */}
-              <Badge variant={aula.is_published ? "default" : "secondary"}>
-                {aula.is_published ? "Publicada" : "Rascunho"}
+              {/* Corrigido: usar published que existe no schema */}
+              <Badge variant={aula.published ? "default" : "secondary"}>
+                {aula.published ? "Publicada" : "Rascunho"}
               </Badge>
             </div>
           </div>
@@ -92,7 +92,7 @@ const AulaDetails = ({ aula }: AulaDetailsProps) => {
             </div>
           </div>
 
-          {/* Corrigido: usar ai_assistant_id que existe no schema */}
+          {/* Corrigido: usar ai_assistant_id do extended type */}
           {aula.ai_assistant_id && (
             <div className="bg-blue-50 p-3 rounded-lg">
               <h4 className="font-medium text-blue-900 mb-1">Assistente de IA Ativo</h4>

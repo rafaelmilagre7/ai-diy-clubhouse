@@ -1,215 +1,187 @@
 
 import React, { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabase';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Search, Plus, Edit, Eye, EyeOff } from 'lucide-react';
-import { supabase } from '@/lib/supabase';
-import { useToast } from '@/hooks/use-toast';
-import { Link } from 'react-router-dom';
-import { LearningCourse } from '@/lib/supabase/types';
+import { Plus, Eye, Users, Clock, BookOpen } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
+
+interface CourseData {
+  id: string;
+  title: string;
+  description: string;
+  published: boolean;
+  created_at: string;
+  updated_at: string;
+  cover_image_url: string;
+  instructor_id: string;
+  category: string;
+  difficulty_level: string;
+  estimated_hours: number;
+}
 
 const CursosList = () => {
-  const [courses, setCourses] = useState<LearningCourse[]>([]);
+  const [cursos, setCursos] = useState<CourseData[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [categoryFilter, setCategoryFilter] = useState('all');
-  const [statusFilter, setStatusFilter] = useState('all');
-  const { toast } = useToast();
+  const navigate = useNavigate();
 
   useEffect(() => {
-    fetchCourses();
+    fetchCursos();
   }, []);
 
-  const fetchCourses = async () => {
+  const fetchCursos = async () => {
     try {
+      setLoading(true);
       const { data, error } = await supabase
         .from('learning_courses')
         .select('*')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setCourses(data || []);
+
+      // Map the data to match our CourseData interface
+      const mappedData: CourseData[] = data.map(course => ({
+        id: course.id,
+        title: course.title,
+        description: course.description || '',
+        published: course.published || false,
+        created_at: course.created_at,
+        updated_at: course.updated_at,
+        cover_image_url: course.cover_image_url || '',
+        instructor_id: course.created_by || '',
+        category: 'Geral',
+        difficulty_level: 'Intermediário',
+        estimated_hours: 0
+      }));
+
+      setCursos(mappedData);
     } catch (error: any) {
-      console.error('Erro ao carregar cursos:', error);
-      toast({
-        title: "Erro ao carregar cursos",
-        description: error.message,
-        variant: "destructive",
-      });
+      console.error('Erro ao buscar cursos:', error);
+      toast.error('Erro ao carregar cursos');
     } finally {
       setLoading(false);
     }
   };
 
-  const togglePublishStatus = async (course: LearningCourse) => {
+  const handleStatusToggle = async (curso: CourseData) => {
     try {
       const { error } = await supabase
         .from('learning_courses')
-        .update({ published: !course.published })
-        .eq('id', course.id);
+        .update({ published: !curso.published })
+        .eq('id', curso.id);
 
       if (error) throw error;
 
-      setCourses(courses.map(c => 
-        c.id === course.id 
+      setCursos(cursos.map(c => 
+        c.id === curso.id 
           ? { ...c, published: !c.published }
           : c
       ));
 
-      toast({
-        title: course.published ? "Curso despublicado" : "Curso publicado",
-        description: `O curso "${course.title}" foi ${course.published ? 'despublicado' : 'publicado'} com sucesso.`,
-      });
+      toast.success(`Curso ${curso.published ? 'despublicado' : 'publicado'} com sucesso!`);
     } catch (error: any) {
       console.error('Erro ao alterar status:', error);
-      toast({
-        title: "Erro ao alterar status",
-        description: error.message,
-        variant: "destructive",
-      });
+      toast.error('Erro ao alterar status do curso');
     }
   };
 
-  const filteredCourses = courses.filter(course => {
-    const matchesSearch = course.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         course.description.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesCategory = categoryFilter === 'all' || course.category === categoryFilter;
-    const matchesStatus = statusFilter === 'all' || 
-                         (statusFilter === 'published' && course.published) ||
-                         (statusFilter === 'draft' && !course.published);
-    
-    return matchesSearch && matchesCategory && matchesStatus;
-  });
+  const getStatusBadge = (published: boolean) => {
+    return published ? (
+      <Badge variant="default" className="bg-green-500">
+        Publicado
+      </Badge>
+    ) : (
+      <Badge variant="secondary">
+        Rascunho
+      </Badge>
+    );
+  };
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center min-h-[200px]">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#0ABAB5]"></div>
+      <div className="flex justify-center items-center py-8">
+        <div className="animate-spin h-8 w-8 border-4 border-[#0ABAB5] border-t-transparent rounded-full"></div>
       </div>
     );
   }
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+      <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold">Gerenciar Cursos</h1>
-          <p className="text-muted-foreground">
-            Crie e gerencie cursos educacionais da plataforma
-          </p>
+          <h2 className="text-2xl font-bold">Cursos</h2>
+          <p className="text-gray-600">Gerencie seus cursos de formação</p>
         </div>
-        
-        <Link to="/formacao/cursos/novo">
-          <Button>
-            <Plus className="h-4 w-4 mr-2" />
-            Novo Curso
-          </Button>
-        </Link>
+        <Button 
+          onClick={() => navigate('/formacao/cursos/novo')}
+          className="bg-[#0ABAB5] hover:bg-[#0ABAB5]/90"
+        >
+          <Plus className="mr-2 h-4 w-4" />
+          Novo Curso
+        </Button>
       </div>
 
-      {/* Filters */}
-      <Card>
-        <CardContent className="p-4">
-          <div className="flex flex-col md:flex-row gap-4">
-            <div className="flex-1">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Buscar cursos..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
-            </div>
-            
-            <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-              <SelectTrigger className="w-full md:w-[200px]">
-                <SelectValue placeholder="Categoria" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todas as categorias</SelectItem>
-                <SelectItem value="IA">Inteligência Artificial</SelectItem>
-                <SelectItem value="Automacao">Automação</SelectItem>
-                <SelectItem value="Marketing">Marketing</SelectItem>
-                <SelectItem value="Vendas">Vendas</SelectItem>
-              </SelectContent>
-            </Select>
-            
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-full md:w-[150px]">
-                <SelectValue placeholder="Status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos</SelectItem>
-                <SelectItem value="published">Publicados</SelectItem>
-                <SelectItem value="draft">Rascunhos</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Courses Grid */}
-      {filteredCourses.length === 0 ? (
+      {cursos.length === 0 ? (
         <Card>
           <CardContent className="p-8 text-center">
-            <p className="text-muted-foreground">Nenhum curso encontrado.</p>
-            <Link to="/formacao/cursos/novo">
-              <Button className="mt-4">
-                <Plus className="h-4 w-4 mr-2" />
-                Criar Primeiro Curso
-              </Button>
-            </Link>
+            <BookOpen className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">Nenhum curso encontrado</h3>
+            <p className="text-gray-500 mb-4">Comece criando seu primeiro curso de formação.</p>
+            <Button 
+              onClick={() => navigate('/formacao/cursos/novo')}
+              className="bg-[#0ABAB5] hover:bg-[#0ABAB5]/90"
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              Criar Primeiro Curso
+            </Button>
           </CardContent>
         </Card>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredCourses.map((course) => (
-            <Card key={course.id} className="group hover:shadow-lg transition-shadow">
+          {cursos.map((curso) => (
+            <Card key={curso.id} className="hover:shadow-lg transition-shadow">
               <CardHeader className="pb-3">
-                <div className="flex items-start justify-between">
-                  <Badge variant={course.published ? "default" : "secondary"}>
-                    {course.published ? "Publicado" : "Rascunho"}
-                  </Badge>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => togglePublishStatus(course)}
-                  >
-                    {course.published ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </Button>
+                <div className="flex justify-between items-start">
+                  <CardTitle className="text-lg line-clamp-2">{curso.title}</CardTitle>
+                  {getStatusBadge(curso.published)}
                 </div>
-                <CardTitle className="text-lg line-clamp-2">{course.title}</CardTitle>
               </CardHeader>
-              
-              <CardContent className="pt-0">
-                <p className="text-sm text-muted-foreground line-clamp-3 mb-4">
-                  {course.description}
+              <CardContent className="space-y-4">
+                <p className="text-sm text-gray-600 line-clamp-3">
+                  {curso.description}
                 </p>
                 
-                <div className="flex items-center justify-between text-xs text-muted-foreground mb-4">
-                  <span>Categoria: {course.category || 'Não definido'}</span>
-                  <span>{course.estimated_hours || 0}h</span>
+                <div className="flex items-center gap-4 text-sm text-gray-500">
+                  <div className="flex items-center gap-1">
+                    <Users className="h-4 w-4" />
+                    <span>0 alunos</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Clock className="h-4 w-4" />
+                    <span>{curso.estimated_hours}h</span>
+                  </div>
                 </div>
-                
+
                 <div className="flex gap-2">
-                  <Link to={`/formacao/cursos/${course.id}/editar`} className="flex-1">
-                    <Button variant="outline" size="sm" className="w-full">
-                      <Edit className="h-4 w-4 mr-2" />
-                      Editar
-                    </Button>
-                  </Link>
-                  <Link to={`/formacao/cursos/${course.id}`} className="flex-1">
-                    <Button size="sm" className="w-full">
-                      <Eye className="h-4 w-4 mr-2" />
-                      Ver
-                    </Button>
-                  </Link>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => navigate(`/formacao/cursos/${curso.id}`)}
+                    className="flex-1"
+                  >
+                    <Eye className="mr-2 h-4 w-4" />
+                    Ver
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => handleStatusToggle(curso)}
+                    className="flex-1"
+                  >
+                    {curso.published ? 'Despublicar' : 'Publicar'}
+                  </Button>
                 </div>
               </CardContent>
             </Card>
