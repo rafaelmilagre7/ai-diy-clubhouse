@@ -6,5 +6,18 @@ export const useLogging = () => {
     console.log(`[${new Date().toISOString()}] ${message}`, data);
   }, []);
 
-  return { log };
+  const logError = useCallback((message: string, error?: any) => {
+    console.error(`[${new Date().toISOString()}] ERROR: ${message}`, error);
+  }, []);
+
+  const logWarning = useCallback((message: string, data?: any) => {
+    console.warn(`[${new Date().toISOString()}] WARNING: ${message}`, data);
+  }, []);
+
+  return { log, logError, logWarning };
+};
+
+// Simple provider component that doesn't do anything special
+export const LoggingProvider = ({ children }: { children: React.ReactNode }) => {
+  return <>{children}</>;
 };

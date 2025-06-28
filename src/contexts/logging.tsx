@@ -1,6 +1,6 @@
 
 import { createContext, useContext, ReactNode } from "react";
-import { useLogging as useLoggingHook, LoggingProvider as OriginalLoggingProvider } from "@/hooks/useLogging";
+import { useLogging as useLoggingHook } from "@/hooks/useLogging";
 
 export type LogData = {
   [key: string]: any;
@@ -34,5 +34,5 @@ export const useLogging = (): LoggingContextType => {
 };
 
 export const LoggingProvider = ({ children }: { children: ReactNode }) => {
-  return <OriginalLoggingProvider>{children}</OriginalLoggingProvider>;
+  return <>{children}</>;
 };

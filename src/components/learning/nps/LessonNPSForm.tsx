@@ -9,9 +9,10 @@ import { Star } from "lucide-react";
 
 interface LessonNPSFormProps {
   lessonId: string;
+  onNPSSubmitted?: () => void;
 }
 
-export const LessonNPSForm = ({ lessonId }: LessonNPSFormProps) => {
+export const LessonNPSForm = ({ lessonId, onNPSSubmitted }: LessonNPSFormProps) => {
   const { user } = useSimpleAuth();
   const [rating, setRating] = useState<number>(0);
   const [feedback, setFeedback] = useState("");
@@ -39,6 +40,7 @@ export const LessonNPSForm = ({ lessonId }: LessonNPSFormProps) => {
     if (success) {
       setRating(0);
       setFeedback("");
+      onNPSSubmitted?.();
     }
   };
 

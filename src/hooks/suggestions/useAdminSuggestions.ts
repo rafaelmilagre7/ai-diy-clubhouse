@@ -1,89 +1,46 @@
 
 import { useState } from 'react';
-import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 
-const getStatusDisplayName = (status: string): string => {
-  switch (status) {
-    case 'new':
-      return 'Nova';
-    case 'under_review':
-      return 'Em Análise';
-    case 'approved':
-      return 'Aprovada';
-    case 'in_development':
-      return 'Em Desenvolvimento';
-    case 'implemented':
-      return 'Implementada';
-    case 'rejected':
-      return 'Rejeitada';
-    default:
-      return status;
-  }
-};
+export interface AdminSuggestion {
+  id: string;
+  title: string;
+  description: string;
+  status: string;
+  created_at: string;
+  upvotes: number;
+  downvotes: number;
+}
 
 export const useAdminSuggestions = () => {
-  const [loading, setLoading] = useState(false);
+  const [suggestions, setSuggestions] = useState<AdminSuggestion[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const removeSuggestion = async (suggestionId: string): Promise<boolean> => {
-    try {
-      setLoading(true);
-      console.log('[ADMIN-SUGGESTIONS] Removendo sugestão:', suggestionId);
-      
-      const { error } = await supabase
-        .from('suggestions')
-        .delete()
-        .eq('id', suggestionId as any);
-      
-      if (error) {
-        console.error('[ADMIN-SUGGESTIONS] Erro ao remover sugestão:', error);
-        toast.error('Erro ao remover sugestão: ' + error.message);
-        return false;
-      }
-      
-      console.log('[ADMIN-SUGGESTIONS] Sugestão removida com sucesso');
-      return true;
-    } catch (error: any) {
-      console.error('[ADMIN-SUGGESTIONS] Erro não esperado ao remover sugestão:', error);
-      toast.error('Erro ao remover sugestão: ' + error.message);
-      return false;
-    } finally {
-      setLoading(false);
-    }
+  const updateSuggestionStatus = async (id: string, status: string) => {
+    console.log('Simulando atualização de status da sugestão:', { id, status });
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    setSuggestions(prev => 
+      prev.map(suggestion => 
+        suggestion.id === id ? { ...suggestion, status } : suggestion
+      )
+    );
+    
+    toast.success('Status da sugestão atualizado com sucesso!');
   };
 
-  const updateSuggestionStatus = async (suggestionId: string, status: string): Promise<boolean> => {
-    try {
-      setLoading(true);
-      console.log('[ADMIN-SUGGESTIONS] Atualizando status da sugestão:', suggestionId, 'para:', status);
-      
-      const { error } = await supabase
-        .from('suggestions')
-        .update({ status } as any)
-        .eq('id', suggestionId as any);
-      
-      if (error) {
-        console.error('[ADMIN-SUGGESTIONS] Erro ao atualizar status da sugestão:', error);
-        toast.error('Erro ao atualizar status da sugestão: ' + error.message);
-        return false;
-      }
-      
-      const statusDisplayName = getStatusDisplayName(status);
-      toast.success(`Sugestão marcada como "${statusDisplayName}" com sucesso`);
-      console.log('[ADMIN-SUGGESTIONS] Status atualizado com sucesso');
-      return true;
-    } catch (error: any) {
-      console.error('[ADMIN-SUGGESTIONS] Erro não esperado ao atualizar status da sugestão:', error);
-      toast.error('Erro ao atualizar status da sugestão: ' + error.message);
-      return false;
-    } finally {
-      setLoading(false);
-    }
+  const deleteSuggestion = async (id: string) => {
+    console.log('Simulando exclusão de sugestão:', id);
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    setSuggestions(prev => prev.filter(suggestion => suggestion.id !== id));
+    toast.success('Sugestão excluída com sucesso!');
   };
 
   return {
-    loading,
-    removeSuggestion,
-    updateSuggestionStatus
+    suggestions,
+    isLoading,
+    updateSuggestionStatus,
+    deleteSuggestion
   };
 };

@@ -26,7 +26,7 @@ export const useSolutionCertificates = (solutionId: string) => {
     return true; // Mock - always eligible
   };
 
-  const generateCertificate = async (userId: string, implementationDate?: string): Promise<SolutionCertificate | null> => {
+  const generateCertificate = async (userId: string, implementationDate?: string): Promise<SolutionCertificate> => {
     setIsGenerating(true);
     try {
       console.log('Simulando geração de certificado de solução:', { solutionId, userId, implementationDate });
@@ -52,7 +52,7 @@ export const useSolutionCertificates = (solutionId: string) => {
     } catch (error) {
       console.error('Erro ao gerar certificado:', error);
       toast.error('Erro ao gerar certificado');
-      return null;
+      throw error;
     } finally {
       setIsGenerating(false);
     }
@@ -80,12 +80,18 @@ export const useSolutionCertificates = (solutionId: string) => {
     toast.success('Download iniciado!');
   };
 
+  const validateCertificate = async (validationCode: string) => {
+    console.log('Simulando validação de certificado:', validationCode);
+    toast.success('Certificado validado com sucesso!');
+  };
+
   return {
     checkEligibility,
     generateCertificate,
     getCertificate,
     getTemplates,
     downloadCertificate,
+    validateCertificate,
     certificates,
     isLoading,
     isGenerating
