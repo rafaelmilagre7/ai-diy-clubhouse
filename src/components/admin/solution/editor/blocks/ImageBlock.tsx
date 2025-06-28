@@ -47,7 +47,7 @@ const ImageBlock: React.FC<ImageBlockProps> = ({ data, onChange }) => {
       setUploading(true);
       setUploadProgress(0);
       
-      // Corrigir: usar apenas 3 argumentos conforme esperado pela função
+      // Usar apenas 3 argumentos conforme esperado pela função
       const result = await uploadFileToStorage(
         file,
         "solution_files",
@@ -57,7 +57,7 @@ const ImageBlock: React.FC<ImageBlockProps> = ({ data, onChange }) => {
       // Corrigir: acessar a URL corretamente do resultado
       onChange({ 
         ...data, 
-        url: result.url || result.publicUrl || '',
+        url: result.url || '',
         alt: data.alt || file.name
       });
       
