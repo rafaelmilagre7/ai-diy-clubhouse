@@ -1,254 +1,221 @@
 
-import { useState, useEffect, useCallback } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
+import { useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
-export interface InviteCampaign {
+interface Campaign {
   id: string;
   name: string;
   description?: string;
-  status: 'draft' | 'active' | 'paused' | 'completed';
-  targetRole: string;
-  targetRoleName?: string;
-  emailTemplate: string;
-  whatsappTemplate?: string;
-  scheduledFor?: string;
-  channels: ('email' | 'whatsapp')[];
-  segmentation: {
-    industry?: string[];
-    companySize?: string[];
-    location?: string[];
-  };
-  followUpRules: {
-    enabled: boolean;
-    intervals: number[]; // dias
-    maxAttempts: number;
-  };
-  metrics: {
-    totalInvites: number;
-    sent: number;
-    delivered: number;
-    opened: number;
-    clicked: number;
-    registered: number;
-    conversionRate: number;
-  };
-  createdAt: string;
-  createdBy: string;
-  updatedAt: string;
-}
-
-export interface CreateCampaignParams {
-  name: string;
-  description?: string;
-  targetRole: string;
-  emailTemplate: string;
-  whatsappTemplate?: string;
-  scheduledFor?: string;
-  channels: ('email' | 'whatsapp')[];
-  segmentation: {
-    industry?: string[];
-    companySize?: string[];
-    location?: string[];
-  };
-  followUpRules: {
-    enabled: boolean;
-    intervals: number[];
-    maxAttempts: number;
-  };
+  status: string;
+  target_role_id?: string;
+  user_roles?: { name: string };
+  email_template: string;
+  whatsapp_template?: string;
+  scheduled_for?: string;
+  channels: string[];
+  segmentation: any;
+  follow_up_rules: any;
+  campaign_invites?: Array<{ invite_id: string }>;
+  created_at: string;
+  created_by: string;
+  updated_at: string;
 }
 
 export const useCampaignManagement = () => {
-  const [campaigns, setCampaigns] = useState<InviteCampaign[]>([]);
+  const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
+  const [updating, setUpdating] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
-  const fetchCampaigns = useCallback(async () => {
+  const fetchCampaigns = async () => {
     try {
       setLoading(true);
       
-      // Buscar campanhas reais do banco de dados
-      const { data: campaignsData, error: campaignsError } = await supabase
+      // Buscar campanhas sem joins complexos para evitar erros de tipo
+      const { data: campaignsData, error } = await supabase
         .from('invite_campaigns')
-        .select(`
-          *,
-          user_roles:target_role_id(name),
-          campaign_invites(
-            invite_id,
-            invites(id, used_at, created_at)
-          )
-        `)
+        .select('*')
         .order('created_at', { ascending: false });
 
-      if (campaignsError) {
-        console.error("Erro ao buscar campanhas:", campaignsError);
-        toast.error("Erro ao carregar campanhas");
-        setCampaigns([]);
+      if (error) {
+        console.error('Erro ao buscar campanhas:', error);
+        toast.error('Erro ao carregar campanhas');
         return;
       }
 
-      // Processar campanhas reais (sem dados fictícios)
-      const processedCampaigns = campaignsData?.map(campaign => {
-        const totalInvites = campaign.campaign_invites?.length || 0;
-        const conversions = campaign.campaign_invites?.filter(
-          ci => ci.invites?.used_at
-        ).length || 0;
-        
-        return {
-          id: campaign.id,
-          name: campaign.name,
-          description: campaign.description,
-          status: campaign.status,
-          targetRole: campaign.target_role_id,
-          targetRoleName: campaign.user_roles?.name,
-          emailTemplate: campaign.email_template,
-          whatsappTemplate: campaign.whatsapp_template,
-          scheduledFor: campaign.scheduled_for,
-          channels: campaign.channels || ['email'],
-          segmentation: campaign.segmentation || {},
-          followUpRules: campaign.follow_up_rules || {
-            enabled: false,
-            intervals: [],
-            maxAttempts: 1
-          },
-          metrics: {
-            totalInvites,
-            sent: totalInvites, // Todos os convites da campanha foram enviados
-            delivered: 0, // Calcular baseado em invite_deliveries
-            opened: 0, // Calcular baseado em invite_analytics_events
-            clicked: 0, // Calcular baseado em invite_analytics_events
-            registered: conversions,
-            conversionRate: totalInvites > 0 ? (conversions / totalInvites) * 100 : 0
-          },
-          createdAt: campaign.created_at,
-          createdBy: campaign.created_by,
-          updatedAt: campaign.updated_at
-        };
-      }) || [];
+      // Buscar dados relacionados separadamente
+      const campaignsWithRelations = await Promise.all(
+        (campaignsData || []).map(async (campaign) => {
+          // Buscar role information
+          let userRoles = null;
+          if (campaign.target_role_id) {
+            const { data: roleData } = await supabase
+              .from('user_roles')
+              .select('name')
+              .eq('id', campaign.target_role_id)
+              .single();
+            userRoles = roleData;
+          }
 
-      setCampaigns(processedCampaigns);
+          // Buscar campaign invites
+          const { data: invitesData } = await supabase
+            .from('campaign_invites')
+            .select('invite_id')
+            .eq('campaign_id', campaign.id);
+
+          return {
+            ...campaign,
+            user_roles: userRoles,
+            campaign_invites: invitesData || []
+          } as Campaign;
+        })
+      );
+
+      setCampaigns(campaignsWithRelations);
     } catch (error: any) {
-      console.error("Erro ao buscar campanhas:", error);
-      toast.error("Erro ao carregar campanhas");
-      setCampaigns([]);
+      console.error('Erro ao buscar campanhas:', error);
+      toast.error('Erro ao carregar campanhas');
     } finally {
       setLoading(false);
     }
-  }, []);
+  };
 
-  const createCampaign = async (params: CreateCampaignParams): Promise<string | null> => {
+  const createCampaign = async (campaignData: Partial<Campaign>) => {
     try {
       setCreating(true);
       
       const { data, error } = await supabase
         .from('invite_campaigns')
         .insert([{
-          name: params.name,
-          description: params.description,
-          target_role_id: params.targetRole,
-          email_template: params.emailTemplate,
-          whatsapp_template: params.whatsappTemplate,
-          scheduled_for: params.scheduledFor,
-          channels: params.channels,
-          segmentation: params.segmentation,
-          follow_up_rules: params.followUpRules,
-          status: 'draft',
+          name: campaignData.name,
+          description: campaignData.description,
+          status: campaignData.status || 'draft',
+          target_role_id: campaignData.target_role_id,
+          email_template: campaignData.email_template,
+          whatsapp_template: campaignData.whatsapp_template,
+          channels: campaignData.channels || ['email'],
+          segmentation: campaignData.segmentation || {},
+          follow_up_rules: campaignData.follow_up_rules || { enabled: false },
+          scheduled_for: campaignData.scheduled_for,
           created_by: (await supabase.auth.getUser()).data.user?.id
         }])
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Erro ao criar campanha:', error);
+        toast.error('Erro ao criar campanha');
+        return null;
+      }
 
-      toast.success("Campanha criada com sucesso!");
+      toast.success('Campanha criada com sucesso!');
       await fetchCampaigns();
-      
-      return data.id;
+      return data;
     } catch (error: any) {
-      console.error("Erro ao criar campanha:", error);
-      toast.error("Erro ao criar campanha");
+      console.error('Erro ao criar campanha:', error);
+      toast.error('Erro ao criar campanha');
       return null;
     } finally {
       setCreating(false);
     }
   };
 
-  const updateCampaignStatus = async (campaignId: string, status: InviteCampaign['status']) => {
+  const updateCampaign = async (campaignId: string, updates: Partial<Campaign>) => {
     try {
+      setUpdating(true);
+      
       const { error } = await supabase
         .from('invite_campaigns')
-        .update({ status, updated_at: new Date().toISOString() })
+        .update(updates)
         .eq('id', campaignId);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Erro ao atualizar campanha:', error);
+        toast.error('Erro ao atualizar campanha');
+        return false;
+      }
 
-      toast.success(`Campanha ${status === 'active' ? 'ativada' : status === 'paused' ? 'pausada' : 'atualizada'} com sucesso!`);
+      toast.success('Campanha atualizada com sucesso!');
       await fetchCampaigns();
+      return true;
     } catch (error: any) {
-      console.error("Erro ao atualizar status da campanha:", error);
-      toast.error("Erro ao atualizar campanha");
+      console.error('Erro ao atualizar campanha:', error);
+      toast.error('Erro ao atualizar campanha');
+      return false;
+    } finally {
+      setUpdating(false);
     }
   };
 
   const deleteCampaign = async (campaignId: string) => {
     try {
+      setDeleting(true);
+      
+      // Deletar campaign_invites relacionados primeiro
+      await supabase
+        .from('campaign_invites')
+        .delete()
+        .eq('campaign_id', campaignId);
+
+      // Deletar a campanha
       const { error } = await supabase
         .from('invite_campaigns')
         .delete()
         .eq('id', campaignId);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Erro ao deletar campanha:', error);
+        toast.error('Erro ao deletar campanha');
+        return false;
+      }
 
-      toast.success("Campanha excluída com sucesso!");
+      toast.success('Campanha deletada com sucesso!');
       await fetchCampaigns();
+      return true;
     } catch (error: any) {
-      console.error("Erro ao excluir campanha:", error);
-      toast.error("Erro ao excluir campanha");
+      console.error('Erro ao deletar campanha:', error);
+      toast.error('Erro ao deletar campanha');
+      return false;
+    } finally {
+      setDeleting(false);
     }
   };
 
-  const duplicateCampaign = async (campaignId: string) => {
+  const launchCampaign = async (campaignId: string) => {
     try {
-      const originalCampaign = campaigns.find(c => c.id === campaignId);
-      if (!originalCampaign) return;
-
-      const { error } = await supabase
-        .from('invite_campaigns')
-        .insert([{
-          name: `${originalCampaign.name} (Cópia)`,
-          description: originalCampaign.description,
-          target_role_id: originalCampaign.targetRole,
-          email_template: originalCampaign.emailTemplate,
-          whatsapp_template: originalCampaign.whatsappTemplate,
-          channels: originalCampaign.channels,
-          segmentation: originalCampaign.segmentation,
-          follow_up_rules: originalCampaign.followUpRules,
-          status: 'draft',
-          created_by: (await supabase.auth.getUser()).data.user?.id
-        }]);
-
-      if (error) throw error;
-
-      toast.success("Campanha duplicada com sucesso!");
-      await fetchCampaigns();
+      const success = await updateCampaign(campaignId, { 
+        status: 'active',
+        scheduled_for: new Date().toISOString()
+      });
+      
+      if (success) {
+        toast.success('Campanha lançada com sucesso!');
+      }
+      
+      return success;
     } catch (error: any) {
-      console.error("Erro ao duplicar campanha:", error);
-      toast.error("Erro ao duplicar campanha");
+      console.error('Erro ao lançar campanha:', error);
+      toast.error('Erro ao lançar campanha');
+      return false;
     }
   };
 
   useEffect(() => {
     fetchCampaigns();
-  }, [fetchCampaigns]);
+  }, []);
 
   return {
     campaigns,
     loading,
     creating,
-    fetchCampaigns,
+    updating,
+    deleting,
     createCampaign,
-    updateCampaignStatus,
+    updateCampaign,
     deleteCampaign,
-    duplicateCampaign
+    launchCampaign,
+    fetchCampaigns
   };
 };

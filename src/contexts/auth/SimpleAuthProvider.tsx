@@ -43,7 +43,8 @@ export const SimpleAuthProvider: React.FC<SimpleAuthProviderProps> = ({ children
           *,
           user_roles:user_roles(
             id,
-            role_name
+            name,
+            description
           )
         `)
         .eq('id', userId)
@@ -67,16 +68,20 @@ export const SimpleAuthProvider: React.FC<SimpleAuthProviderProps> = ({ children
 
     if (newSession?.user) {
       const profileData = await fetchUserProfile(newSession.user.id);
-      setProfile(profileData);
       
-      const roleName = profileData?.user_roles?.role_name;
-      setIsAdmin(roleName === 'admin');
-      setIsFormacao(roleName === 'formacao');
-      
-      log('Usuário autenticado:', { 
-        userId: newSession.user.id.substring(0, 8) + '***',
-        role: roleName 
-      });
+      // Type assertion para compatibilidade, mas mantendo segurança
+      if (profileData) {
+        setProfile(profileData as UserProfile);
+        
+        const roleName = profileData.user_roles?.name;
+        setIsAdmin(roleName === 'admin');
+        setIsFormacao(roleName === 'formacao');
+        
+        log('Usuário autenticado:', { 
+          userId: newSession.user.id.substring(0, 8) + '***',
+          role: roleName 
+        });
+      }
     } else {
       setProfile(null);
       setIsAdmin(false);

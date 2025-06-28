@@ -1,243 +1,193 @@
 
-import { useState, useCallback } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
-export interface AdvancedAnalyticsData {
-  funnel: {
+interface AdvancedInviteAnalytics {
+  totalInvites: number;
+  usedInvites: number;
+  pendingInvites: number;
+  expiredInvites: number;
+  conversionRate: number;
+  averageTimeToAccept: number;
+  channelPerformance: Array<{
+    channel: string;
     sent: number;
     delivered: number;
     opened: number;
     clicked: number;
-    registered: number;
-    active: number;
-  };
-  conversion: {
-    email: {
-      conversionRate: number;
-      avgAcceptanceTime: number;
-      cost: number;
-      roi: number;
-    };
-    whatsapp: {
-      conversionRate: number;
-      avgAcceptanceTime: number;
-      cost: number;
-      roi: number;
-    };
-  };
-  timeAnalysis: number[];
-  roleSegmentation: Array<{
-    roleId: string;
-    roleName: string;
     conversionRate: number;
-    avgOnboardingTime: number;
-    retentionRate: number;
+  }>;
+  timeBasedAnalytics: Array<{
+    period: string;
+    invitesSent: number;
+    acceptanceRate: number;
+  }>;
+  roleBasedAnalytics: Array<{
+    roleName: string;
+    totalInvites: number;
+    acceptedInvites: number;
+    conversionRate: number;
   }>;
 }
 
-export const useAdvancedInviteAnalytics = () => {
-  const [data, setData] = useState<AdvancedAnalyticsData>({
-    funnel: {
-      sent: 0,
-      delivered: 0,
-      opened: 0,
-      clicked: 0,
-      registered: 0,
-      active: 0
-    },
-    conversion: {
-      email: {
-        conversionRate: 0,
-        avgAcceptanceTime: 0,
-        cost: 0,
-        roi: 0
-      },
-      whatsapp: {
-        conversionRate: 0,
-        avgAcceptanceTime: 0,
-        cost: 0,
-        roi: 0
-      }
-    },
-    timeAnalysis: [],
-    roleSegmentation: []
+export const useAdvancedInviteAnalytics = (timeRange: string = '30d') => {
+  const [analytics, setAnalytics] = useState<AdvancedInviteAnalytics>({
+    totalInvites: 0,
+    usedInvites: 0,
+    pendingInvites: 0,
+    expiredInvites: 0,
+    conversionRate: 0,
+    averageTimeToAccept: 0,
+    channelPerformance: [],
+    timeBasedAnalytics: [],
+    roleBasedAnalytics: []
   });
   
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
 
-  const fetchAnalytics = useCallback(async () => {
+  const fetchAnalytics = async () => {
     try {
       setLoading(true);
 
-      // Buscar dados básicos dos convites
-      const { data: invitesData, error: invitesError } = await supabase
+      // Calcular data de início baseada no timeRange
+      const now = new Date();
+      const daysBack = timeRange === '7d' ? 7 : timeRange === '30d' ? 30 : 90;
+      const startDate = new Date(now.getTime() - (daysBack * 24 * 60 * 60 * 1000));
+
+      // Buscar convites básicos
+      const { data: invites, error: invitesError } = await supabase
         .from('invites')
         .select(`
           id,
           email,
           created_at,
           used_at,
-          role_id,
-          user_roles!inner(id, name),
-          invite_deliveries(
-            id,
-            channel,
-            status,
-            sent_at,
-            delivered_at,
-            opened_at,
-            clicked_at
-          ),
-          invite_analytics_events(
-            id,
-            event_type,
-            channel,
-            timestamp
-          )
-        `);
+          expires_at,
+          user_roles:user_roles(name)
+        `)
+        .gte('created_at', startDate.toISOString())
+        .order('created_at', { ascending: false });
 
-      if (invitesError) throw invitesError;
+      if (invitesError) {
+        console.error('Erro ao buscar convites:', invitesError);
+        toast.error('Erro ao carregar dados de convites');
+        return;
+      }
 
-      // Calcular métricas do funil
-      const totalSent = invitesData?.length || 0;
-      const delivered = invitesData?.filter(invite => 
-        invite.invite_deliveries?.some(d => d.status === 'delivered')
-      ).length || 0;
-      
-      const opened = invitesData?.filter(invite =>
-        invite.invite_analytics_events?.some(e => e.event_type === 'opened')
-      ).length || 0;
-      
-      const clicked = invitesData?.filter(invite =>
-        invite.invite_analytics_events?.some(e => e.event_type === 'clicked')
-      ).length || 0;
-      
-      const registered = invitesData?.filter(invite => invite.used_at).length || 0;
-      
-      // Para usuários ativos, precisaríamos de dados adicionais
-      const active = Math.floor(registered * 0.8); // Estimativa
+      const allInvites = invites || [];
+      const totalInvites = allInvites.length;
+      const usedInvites = allInvites.filter(invite => invite.used_at !== null).length;
+      const expiredInvites = allInvites.filter(invite => 
+        invite.used_at === null && new Date(invite.expires_at) < now
+      ).length;
+      const pendingInvites = totalInvites - usedInvites - expiredInvites;
+      const conversionRate = totalInvites > 0 ? (usedInvites / totalInvites) * 100 : 0;
 
-      // Calcular conversão por canal
-      const emailInvites = invitesData?.filter(invite =>
-        invite.invite_deliveries?.some(d => d.channel === 'email')
-      ) || [];
-      
-      const whatsappInvites = invitesData?.filter(invite =>
-        invite.invite_deliveries?.some(d => d.channel === 'whatsapp')
-      ) || [];
-
-      const emailConversion = emailInvites.length > 0 
-        ? (emailInvites.filter(inv => inv.used_at).length / emailInvites.length) * 100
-        : 0;
-        
-      const whatsappConversion = whatsappInvites.length > 0
-        ? (whatsappInvites.filter(inv => inv.used_at).length / whatsappInvites.length) * 100
+      // Calcular tempo médio para aceitar
+      const acceptedInvites = allInvites.filter(invite => invite.used_at);
+      const averageTimeToAccept = acceptedInvites.length > 0 
+        ? acceptedInvites.reduce((sum, invite) => {
+            const createdAt = new Date(invite.created_at);
+            const usedAt = new Date(invite.used_at!);
+            return sum + (usedAt.getTime() - createdAt.getTime());
+          }, 0) / acceptedInvites.length / (24 * 60 * 60 * 1000) // em dias
         : 0;
 
-      // Análise por role
-      const roleStats = new Map();
-      
-      invitesData?.forEach(invite => {
-        // Corrigir o acesso à propriedade user_roles
-        const userRole = Array.isArray(invite.user_roles) ? invite.user_roles[0] : invite.user_roles;
-        const roleName = userRole?.name || 'Unknown';
-        
-        if (!roleStats.has(roleName)) {
-          roleStats.set(roleName, {
-            roleId: invite.role_id,
-            roleName,
-            total: 0,
-            converted: 0,
-            totalTime: 0,
-            timeCount: 0
-          });
-        }
-        
-        const stats = roleStats.get(roleName);
-        stats.total++;
-        
-        if (invite.used_at) {
-          stats.converted++;
-          // Calcular tempo de onboarding (estimativa)
-          const createdAt = new Date(invite.created_at);
-          const usedAt = new Date(invite.used_at);
-          const timeDiff = (usedAt.getTime() - createdAt.getTime()) / (1000 * 60 * 60); // em horas
-          stats.totalTime += timeDiff;
-          stats.timeCount++;
-        }
-      });
+      // Buscar dados de delivery (simplificado - sem joins complexos)
+      const { data: deliveries } = await supabase
+        .from('invite_deliveries')
+        .select('*')
+        .gte('created_at', startDate.toISOString());
 
-      const roleSegmentation = Array.from(roleStats.values()).map(stats => ({
-        roleId: stats.roleId,
-        roleName: stats.roleName,
-        conversionRate: stats.total > 0 ? (stats.converted / stats.total) * 100 : 0,
-        avgOnboardingTime: stats.timeCount > 0 ? stats.totalTime / stats.timeCount : 0,
-        retentionRate: Math.random() * 40 + 60 // Estimativa entre 60-100%
-      }));
-
-      // Análise temporal (horários ótimos)
-      const timeAnalysis = Array.from({ length: 24 }, (_, hour) => {
-        const hourEvents = invitesData?.filter(invite =>
-          invite.invite_analytics_events?.some(e => {
-            const eventHour = new Date(e.timestamp).getHours();
-            return eventHour === hour && e.event_type === 'opened';
-          })
-        ).length || 0;
+      // Processar performance por canal
+      const channelPerformance = ['email', 'whatsapp'].map(channel => {
+        const channelDeliveries = deliveries?.filter(d => d.channel === channel) || [];
+        const sent = channelDeliveries.length;
+        const delivered = channelDeliveries.filter(d => d.delivered_at).length;
+        const opened = channelDeliveries.filter(d => d.opened_at).length;
+        const clicked = channelDeliveries.filter(d => d.clicked_at).length;
         
-        return hourEvents;
-      });
-
-      // Encontrar horários ótimos (top 6)
-      const optimalHours = timeAnalysis
-        .map((count, hour) => ({ hour, count }))
-        .sort((a, b) => b.count - a.count)
-        .slice(0, 6)
-        .map(item => item.hour);
-
-      setData({
-        funnel: {
-          sent: totalSent,
+        return {
+          channel,
+          sent,
           delivered,
           opened,
           clicked,
-          registered,
-          active
-        },
-        conversion: {
-          email: {
-            conversionRate: emailConversion,
-            avgAcceptanceTime: 24,
-            cost: 0.15,
-            roi: 5.2
-          },
-          whatsapp: {
-            conversionRate: whatsappConversion,
-            avgAcceptanceTime: 2,
-            cost: 0.05,
-            roi: 8.1
-          }
-        },
-        timeAnalysis: optimalHours,
-        roleSegmentation
+          conversionRate: sent > 0 ? (clicked / sent) * 100 : 0
+        };
+      });
+
+      // Análise baseada em roles
+      const roleBasedAnalytics = allInvites.reduce((acc: any[], invite) => {
+        const roleName = invite.user_roles?.name || 'Sem role';
+        const existing = acc.find(item => item.roleName === roleName);
+        
+        if (existing) {
+          existing.totalInvites++;
+          if (invite.used_at) existing.acceptedInvites++;
+        } else {
+          acc.push({
+            roleName,
+            totalInvites: 1,
+            acceptedInvites: invite.used_at ? 1 : 0,
+            conversionRate: 0
+          });
+        }
+        return acc;
+      }, []);
+
+      // Calcular taxa de conversão por role
+      roleBasedAnalytics.forEach(role => {
+        role.conversionRate = role.totalInvites > 0 
+          ? (role.acceptedInvites / role.totalInvites) * 100 
+          : 0;
+      });
+
+      // Análise temporal (últimos 7 dias)
+      const timeBasedAnalytics = [];
+      for (let i = 6; i >= 0; i--) {
+        const date = new Date(now.getTime() - (i * 24 * 60 * 60 * 1000));
+        const dayStart = new Date(date.setHours(0, 0, 0, 0));
+        const dayEnd = new Date(date.setHours(23, 59, 59, 999));
+        
+        const dayInvites = allInvites.filter(invite => {
+          const inviteDate = new Date(invite.created_at);
+          return inviteDate >= dayStart && inviteDate <= dayEnd;
+        });
+        
+        const dayAccepted = dayInvites.filter(invite => invite.used_at).length;
+        
+        timeBasedAnalytics.push({
+          period: dayStart.toLocaleDateString('pt-BR', { month: 'short', day: 'numeric' }),
+          invitesSent: dayInvites.length,
+          acceptanceRate: dayInvites.length > 0 ? (dayAccepted / dayInvites.length) * 100 : 0
+        });
+      }
+
+      setAnalytics({
+        totalInvites,
+        usedInvites,
+        pendingInvites,
+        expiredInvites,
+        conversionRate,
+        averageTimeToAccept,
+        channelPerformance,
+        timeBasedAnalytics,
+        roleBasedAnalytics
       });
 
     } catch (error: any) {
-      console.error('Erro ao carregar analytics avançados:', error);
-      toast.error('Erro ao carregar dados de analytics');
+      console.error("Erro ao carregar analytics avançados:", error);
+      toast.error("Erro ao carregar dados de analytics");
     } finally {
       setLoading(false);
     }
-  }, []);
-
-  const refresh = useCallback(async () => {
-    await fetchAnalytics();
-  }, [fetchAnalytics]);
-
-  return {
-    data,
-    loading,
-    refresh,
-    fetchAnalytics
   };
+
+  useEffect(() => {
+    fetchAnalytics();
+  }, [timeRange]);
+
+  return { analytics, loading, fetchAnalytics };
 };
