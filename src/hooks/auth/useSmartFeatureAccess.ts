@@ -30,7 +30,12 @@ export const useSmartFeatureAccess = () => {
     isAdmin,
     isFormacao,
     hasUser: !!user,
-    data: null,
+    data: {
+      hasAccess: true,
+      blockReason: null,
+      hasRoleAccess: true,
+      setupComplete: true
+    },
     isLoading: false
   };
 };

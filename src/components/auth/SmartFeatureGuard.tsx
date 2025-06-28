@@ -17,7 +17,7 @@ export const SmartFeatureGuard: React.FC<SmartFeatureGuardProps> = ({
   showPreview = true,
   fallback
 }) => {
-  const { data: accessData, isLoading } = useSmartFeatureAccess(feature);
+  const { data: accessData, isLoading } = useSmartFeatureAccess();
 
   if (isLoading) {
     return (

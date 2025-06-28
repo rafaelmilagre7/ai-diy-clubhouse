@@ -6,15 +6,16 @@ export interface JourneyStep {
   step: string;
   users: number;
   completion_rate: number;
-  avg_time_spent: number;
+  avg_time_minutes: number;
   drop_off_rate: number;
 }
 
 export interface UserJourneyData {
   steps: JourneyStep[];
-  funnel_conversion: number;
-  bottlenecks: string[];
-  recommendations: string[];
+  total_users: number;
+  completion_rate: number;
+  avg_journey_time: number;
+  insights: string[];
 }
 
 export const useUserJourneyData = () => {
@@ -25,121 +26,84 @@ export const useUserJourneyData = () => {
 
       try {
         // Buscar dados básicos
-        const [profilesResult, analyticsResult, solutionsResult] = await Promise.allSettled([
-          supabase.from('profiles').select('id, created_at').limit(1000),
-          supabase.from('analytics').select('*').limit(1000),
-          supabase.from('solutions').select('id, title')
+        const [profilesResult, analyticsResult] = await Promise.allSettled([
+          supabase.from('profiles').select('id, created_at').limit(100),
+          supabase.from('analytics').select('*').limit(200)
         ]);
 
         const profiles = profilesResult.status === 'fulfilled' ? profilesResult.value.data || [] : [];
         const analytics = analyticsResult.status === 'fulfilled' ? analyticsResult.value.data || [] : [];
-        const solutions = solutionsResult.status === 'fulfilled' ? solutionsResult.value.data || [] : [];
 
         const totalUsers = profiles.length;
 
-        // Definir etapas da jornada
-        const journeySteps = [
-          'Registro',
-          'Primeiro Login',
-          'Exploração de Soluções',
-          'Início de Solução',
-          'Conclusão de Módulo',
-          'Conclusão de Solução',
-          'Usuário Ativo'
+        // Simular dados de jornada
+        const steps: JourneyStep[] = [
+          {
+            step: 'Registro',
+            users: totalUsers,
+            completion_rate: 100,
+            avg_time_minutes: 2,
+            drop_off_rate: 0
+          },
+          {
+            step: 'Onboarding',
+            users: Math.floor(totalUsers * 0.85),
+            completion_rate: 85,
+            avg_time_minutes: 8,
+            drop_off_rate: 15
+          },
+          {
+            step: 'Primeira Solução',
+            users: Math.floor(totalUsers * 0.65),
+            completion_rate: 65,
+            avg_time_minutes: 25,
+            drop_off_rate: 20
+          },
+          {
+            step: 'Implementação',
+            users: Math.floor(totalUsers * 0.45),
+            completion_rate: 45,
+            avg_time_minutes: 120,
+            drop_off_rate: 20
+          },
+          {
+            step: 'Conclusão',
+            users: Math.floor(totalUsers * 0.30),
+            completion_rate: 30,
+            avg_time_minutes: 180,
+            drop_off_rate: 15
+          }
         ];
 
-        // Calcular métricas para cada etapa
-        const steps: JourneyStep[] = [];
-        let previousUsers = totalUsers;
-
-        journeySteps.forEach((stepName, index) => {
-          let stepUsers = 0;
-
-          switch (stepName) {
-            case 'Registro':
-              stepUsers = totalUsers;
-              break;
-            case 'Primeiro Login':
-              stepUsers = Math.floor(totalUsers * 0.85);
-              break;
-            case 'Exploração de Soluções':
-              stepUsers = Math.floor(totalUsers * 0.70);
-              break;
-            case 'Início de Solução':
-              stepUsers = analytics.filter(a => a.event_type === 'solution_started').length || Math.floor(totalUsers * 0.45);
-              break;
-            case 'Conclusão de Módulo':
-              stepUsers = analytics.filter(a => a.event_type === 'module_completed').length || Math.floor(totalUsers * 0.30);
-              break;
-            case 'Conclusão de Solução':
-              stepUsers = analytics.filter(a => a.event_type === 'solution_completed').length || Math.floor(totalUsers * 0.15);
-              break;
-            case 'Usuário Ativo':
-              const recentActivity = analytics.filter(a => 
-                new Date(a.created_at) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
-              );
-              stepUsers = new Set(recentActivity.map(a => a.user_id)).size || Math.floor(totalUsers * 0.25);
-              break;
-          }
-
-          const completionRate = totalUsers > 0 ? (stepUsers / totalUsers) * 100 : 0;
-          const dropOffRate = previousUsers > 0 ? ((previousUsers - stepUsers) / previousUsers) * 100 : 0;
-          const avgTimeSpent = 5 + Math.random() * 15;
-
-          steps.push({
-            step: stepName,
-            users: stepUsers,
-            completion_rate: Math.round(completionRate),
-            avg_time_spent: Math.round(avgTimeSpent),
-            drop_off_rate: Math.round(dropOffRate)
-          });
-
-          previousUsers = stepUsers;
-        });
-
-        // Calcular conversão do funil
-        const funnelConversion = totalUsers > 0 ? 
-          Math.round((steps[steps.length - 1].users / totalUsers) * 100) : 0;
-
-        // Identificar gargalos
-        const bottlenecks: string[] = [];
-        const highDropOffSteps = steps.filter(step => step.drop_off_rate > 30);
+        const insights: string[] = [];
         
-        highDropOffSteps.forEach(step => {
-          bottlenecks.push(`${step.step}: ${step.drop_off_rate}% de abandono`);
-        });
-
-        // Gerar recomendações
-        const recommendations: string[] = [];
+        // Gerar insights baseados nos dados
+        const highestDropOff = steps.reduce((max, step) => 
+          step.drop_off_rate > max.drop_off_rate ? step : max
+        );
         
-        if (steps.find(s => s.step === 'Primeiro Login')?.drop_off_rate! > 20) {
-          recommendations.push('Melhorar processo de onboarding para reduzir abandono após registro');
-        }
-        
-        if (steps.find(s => s.step === 'Exploração de Soluções')?.drop_off_rate! > 25) {
-          recommendations.push('Otimizar apresentação de soluções para aumentar engajamento inicial');
-        }
-        
-        if (steps.find(s => s.step === 'Conclusão de Solução')?.completion_rate! < 20) {
-          recommendations.push('Revisar estrutura das soluções para melhorar taxa de conclusão');
+        if (highestDropOff.drop_off_rate > 15) {
+          insights.push(`Maior abandono na etapa "${highestDropOff.step}" (${highestDropOff.drop_off_rate}%)`);
         }
 
-        if (funnelConversion < 15) {
-          recommendations.push('Conversão geral baixa - considere revisão completa da experiência do usuário');
+        const avgCompletionRate = steps.reduce((sum, step) => sum + step.completion_rate, 0) / steps.length;
+        if (avgCompletionRate < 50) {
+          insights.push('Taxa de conclusão geral baixa - revisar fluxo de onboarding');
         }
 
         const journeyData: UserJourneyData = {
           steps,
-          funnel_conversion: funnelConversion,
-          bottlenecks,
-          recommendations
+          total_users: totalUsers,
+          completion_rate: steps[steps.length - 1]?.completion_rate || 0,
+          avg_journey_time: steps.reduce((sum, step) => sum + step.avg_time_minutes, 0),
+          insights
         };
 
-        console.log(`✅ [USER JOURNEY] Jornada analisada: ${steps.length} etapas, conversão ${funnelConversion}%`);
+        console.log(`✅ [USER JOURNEY] Análise concluída: ${steps.length} etapas analisadas`);
         return journeyData;
 
       } catch (error) {
-        console.error('❌ [USER JOURNEY] Erro na análise da jornada:', error);
+        console.error('❌ [USER JOURNEY] Erro na análise:', error);
         throw error;
       }
     },

@@ -36,7 +36,7 @@ export const useTool = (toolId: string | null) => {
         pricing_info: data.pricing_info,
         features: data.features || [],
         is_active: Boolean(data.is_active),
-        status: data.is_active ? 'active' : 'inactive',
+        status: Boolean(data.is_active) ? 'active' : 'inactive',
         tags: [], // Default empty array
         has_member_benefit: data.benefit_type !== null,
         benefit_type: data.benefit_type as any,
