@@ -189,3 +189,11 @@ export const getUserRoleName = (profile: UserProfile): string => {
 
 // Solution category type
 export type SolutionCategory = 'Receita' | 'Operacional' | 'Estratégia';
+
+// Safe category type conversion
+export const safeSolutionCategory = (category: string): SolutionCategory => {
+  if (['Receita', 'Operacional', 'Estratégia'].includes(category)) {
+    return category as SolutionCategory;
+  }
+  return 'Receita'; // Default fallback
+};

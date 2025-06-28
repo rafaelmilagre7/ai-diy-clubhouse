@@ -32,10 +32,10 @@ export const useLmsAnalyticsData = (timeRange: string): LmsAnalyticsResult => {
   const startDate = useTimeRange(timeRange);
   
   // Buscar dados de NPS
-  const npsResult = useNpsData(startDate);
+  const npsResult = useNpsData();
   
   // Buscar estatísticas gerais
-  const statsResult = useStatsData(startDate, npsResult?.stats?.overall || 0);
+  const statsResult = useStatsData();
   
   // Log de erros (sem toast para não ser intrusivo)
   if (npsResult.error) {
@@ -56,13 +56,13 @@ export const useLmsAnalyticsData = (timeRange: string): LmsAnalyticsResult => {
   const courseProgress = statsResult?.stats?.totalLessons > 0 ? [
     {
       name: 'Cursos em Andamento',
-      completed: Math.floor((statsResult.stats.completionRate / 100) * statsResult.stats.totalStudents),
+      completed: Math.floor((statsResult.stats.avgCompletionRate / 100) * statsResult.stats.totalStudents),
       total: statsResult.stats.totalStudents
     }
   ] : [];
 
   // Processar NPS scores por aula
-  const npsScores = npsResult?.stats?.perLesson?.slice(0, 5).map(lesson => ({
+  const npsScores = npsResult?.data?.npsData?.perLesson?.slice(0, 5).map(lesson => ({
     lesson: lesson.lessonTitle,
     score: lesson.npsScore,
     responses: lesson.responseCount
@@ -72,10 +72,10 @@ export const useLmsAnalyticsData = (timeRange: string): LmsAnalyticsResult => {
     totalCourses: statsResult?.stats?.totalLessons || 0,
     totalStudents: statsResult?.stats?.totalStudents || 0,
     averageCompletionTime: 45, // Pode ser calculado se tivermos dados de tempo
-    completionRate: statsResult?.stats?.completionRate || 0,
+    completionRate: statsResult?.stats?.avgCompletionRate || 0,
     courseProgress,
     npsScores,
-    isLoading: npsResult.loading || statsResult.loading,
+    isLoading: npsResult.isLoading || statsResult.loading,
     refresh
   };
 };

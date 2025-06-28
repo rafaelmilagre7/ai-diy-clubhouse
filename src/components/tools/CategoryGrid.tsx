@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Card, CardContent } from "@/components/ui/card";
@@ -6,9 +7,11 @@ import { SimplifiedTool } from '@/lib/supabase/types';
 
 interface CategoryGridProps {
   tools: SimplifiedTool[];
+  selectedCategory?: string | null;
+  onCategoryChange?: (category: string | null) => void;
 }
 
-export const CategoryGrid = ({ tools }: CategoryGridProps) => {
+export const CategoryGrid = ({ tools, selectedCategory, onCategoryChange }: CategoryGridProps) => {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
       {tools.map((tool) => (
