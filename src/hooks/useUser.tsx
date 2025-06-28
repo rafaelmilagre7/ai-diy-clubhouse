@@ -2,7 +2,15 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { useSimpleAuth } from "@/contexts/auth/SimpleAuthProvider";
-import { Profile } from "@/types/forumTypes";
+
+interface Profile {
+  id: string;
+  name: string;
+  email: string;
+  avatar_url?: string;
+  created_at: string;
+  updated_at: string;
+}
 
 interface UseUserReturn {
   profile: Profile | null;

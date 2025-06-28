@@ -52,11 +52,8 @@ export const useUserStats = () => {
           .eq('user_id', user.id as any)
           .not('completed_at', 'is', null);
 
-        // Buscar certificados
-        const { data: certificatesData } = await supabase
-          .from('learning_certificates')
-          .select('*')
-          .eq('user_id', user.id as any);
+        // Mock certificates data since table doesn't exist
+        const certificates: any[] = [];
 
         // Buscar posts no fórum
         const { data: forumData } = await supabase
@@ -73,7 +70,6 @@ export const useUserStats = () => {
 
         const progress = (progressData as any) || [];
         const lessons = (lessonsData as any) || [];
-        const certificates = (certificatesData as any) || [];
         const forumPosts = (forumData as any) || [];
 
         const totalSolutions = progress.length;

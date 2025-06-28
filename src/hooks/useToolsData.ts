@@ -24,7 +24,31 @@ export const useToolsData = () => {
           throw fetchError;
         }
 
-        setTools((data as any) || []);
+        // Transform data to match Tool interface
+        const transformedTools = (data || []).map((tool: any) => ({
+          id: tool.id,
+          name: tool.name,
+          description: tool.description,
+          category: tool.category,
+          logo_url: tool.logo_url,
+          is_active: tool.is_active || true,
+          status: tool.is_active || true,
+          created_at: tool.created_at,
+          updated_at: tool.updated_at,
+          official_url: tool.url || '',
+          tags: [],
+          benefit_title: tool.benefit_title,
+          benefit_type: tool.benefit_type || 'discount',
+          benefit_description: tool.benefit_description,
+          benefit_link: tool.benefit_url,
+          benefit_discount_percentage: null,
+          has_member_benefit: Boolean(tool.benefit_title),
+          features: tool.features || [],
+          pricing_info: tool.pricing_info,
+          has_valid_logo: !!tool.logo_url
+        }));
+
+        setTools(transformedTools);
       } catch (err: any) {
         setError(err.message || 'Erro ao carregar ferramentas');
         console.error('Erro ao buscar ferramentas:', err);
