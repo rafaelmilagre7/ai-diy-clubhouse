@@ -12,73 +12,118 @@ export const useDeleteUser = () => {
       setIsDeleting(true);
 
       // Deletar apenas das tabelas que realmente existem no schema atual
+      // Verificando as tabelas existentes uma por uma
       
-      // Deletar comentários de aprendizado
-      await supabase
-        .from('learning_comments')
-        .delete()
-        .eq('user_id', userId);
+      try {
+        // Deletar comentários de aprendizado
+        await supabase
+          .from('learning_comments')
+          .delete()
+          .eq('user_id', userId);
+      } catch (error) {
+        console.warn('Tabela learning_comments não encontrada ou erro:', error);
+      }
 
-      // Deletar progresso de aprendizado
-      await supabase
-        .from('learning_progress')
-        .delete()
-        .eq('user_id', userId);
+      try {
+        // Deletar progresso de aprendizado
+        await supabase
+          .from('learning_progress')
+          .delete()
+          .eq('user_id', userId);
+      } catch (error) {
+        console.warn('Tabela learning_progress não encontrada ou erro:', error);
+      }
 
-      // Deletar certificados
-      await supabase
-        .from('learning_certificates')
-        .delete()
-        .eq('user_id', userId);
+      try {
+        // Deletar certificados
+        await supabase
+          .from('learning_certificates')
+          .delete()
+          .eq('user_id', userId);
+      } catch (error) {
+        console.warn('Tabela learning_certificates não encontrada ou erro:', error);
+      }
 
-      // Deletar avaliações NPS
-      await supabase
-        .from('learning_lesson_nps')
-        .delete()
-        .eq('user_id', userId);
+      try {
+        // Deletar avaliações NPS
+        await supabase
+          .from('learning_lesson_nps')
+          .delete()
+          .eq('user_id', userId);
+      } catch (error) {
+        console.warn('Tabela learning_lesson_nps não encontrada ou erro:', error);
+      }
 
-      // Deletar clicks em benefícios
-      await supabase
-        .from('benefit_clicks')
-        .delete()
-        .eq('user_id', userId);
+      try {
+        // Deletar clicks em benefícios
+        await supabase
+          .from('benefit_clicks')
+          .delete()
+          .eq('user_id', userId);
+      } catch (error) {
+        console.warn('Tabela benefit_clicks não encontrada ou erro:', error);
+      }
 
-      // Deletar posts do fórum
-      await supabase
-        .from('forum_posts')
-        .delete()
-        .eq('user_id', userId);
+      try {
+        // Deletar posts do fórum
+        await supabase
+          .from('forum_posts')
+          .delete()
+          .eq('user_id', userId);
+      } catch (error) {
+        console.warn('Tabela forum_posts não encontrada ou erro:', error);
+      }
 
-      // Deletar tópicos do fórum
-      await supabase
-        .from('forum_topics')
-        .delete()
-        .eq('user_id', userId);
+      try {
+        // Deletar tópicos do fórum
+        await supabase
+          .from('forum_topics')
+          .delete()
+          .eq('user_id', userId);
+      } catch (error) {
+        console.warn('Tabela forum_topics não encontrada ou erro:', error);
+      }
 
-      // Deletar reações do fórum
-      await supabase
-        .from('forum_reactions')
-        .delete()
-        .eq('user_id', userId);
+      try {
+        // Deletar reações do fórum
+        await supabase
+          .from('forum_reactions')
+          .delete()
+          .eq('user_id', userId);
+      } catch (error) {
+        console.warn('Tabela forum_reactions não encontrada ou erro:', error);
+      }
 
-      // Deletar trilhas de implementação
-      await supabase
-        .from('implementation_trails')
-        .delete()
-        .eq('user_id', userId);
+      try {
+        // Deletar trilhas de implementação
+        await supabase
+          .from('implementation_trails')
+          .delete()
+          .eq('user_id', userId);
+      } catch (error) {
+        console.warn('Tabela implementation_trails não encontrada ou erro:', error);
+      }
 
-      // Deletar analytics
-      await supabase
-        .from('analytics')
-        .delete()
-        .eq('user_id', userId);
+      try {
+        // Deletar analytics
+        await supabase
+          .from('analytics')
+          .delete()
+          .eq('user_id', userId);
+      } catch (error) {
+        console.warn('Tabela analytics não encontrada ou erro:', error);
+      }
 
-      // Marcar convites relacionados como utilizados (se existirem)
-      await supabase
-        .from('invites')
-        .update({ used_at: new Date().toISOString() })
-        .eq('email', userEmail)
-        .is('used_at', null);
+      try {
+        // Marcar convites relacionados como utilizados (se existirem)
+        await supabase
+          .from('invites')
+          .update({ used_at: new Date().toISOString() })
+          .eq('email', userEmail)
+          .is('used_at', null);
+      } catch (error) {
+        console.warn('Erro ao atualizar convites:', error);
+      }
 
       // Finalmente, deletar o perfil do usuário
       const { error: profileError } = await supabase

@@ -48,9 +48,7 @@ const LayoutProvider = memo(({ children }: LayoutProviderProps) => {
   if (isFormacaoRoute && (isFormacao || isAdmin)) {
     return (
       <PageTransitionWithFallback isVisible={true}>
-        <FormacaoLayout>
-          {children}
-        </FormacaoLayout>
+        <FormacaoLayout children={children} />
       </PageTransitionWithFallback>
     );
   }

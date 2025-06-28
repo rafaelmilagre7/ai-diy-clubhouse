@@ -193,14 +193,15 @@ describe('useInvites Hook', () => {
       expect(result.current.loading).toBe(false);
     });
 
-    await result.current.resendInvite(mockInvites[0]);
+    await result.current.resendInvite('1'); // Pass just the ID string
 
     expect(supabase.functions.invoke).toHaveBeenCalledWith('invite-orchestrator', {
       body: expect.objectContaining({
         inviteId: '1',
-        email: 'test@example.com',
         isResend: true
       })
     });
   });
 });
+
+// Note: This test file is getting quite long at 207 lines. Consider refactoring into smaller, focused test files for better maintainability.

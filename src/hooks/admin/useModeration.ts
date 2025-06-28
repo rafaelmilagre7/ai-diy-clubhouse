@@ -17,6 +17,13 @@ export interface ModerationReport {
   reviewed_by?: string;
 }
 
+export interface ModerationActionRequest {
+  action_type: 'pin' | 'unpin' | 'lock' | 'unlock' | 'hide' | 'unhide' | 'delete';
+  topic_id?: string;
+  post_id?: string;
+  reason: string;
+}
+
 export const useModeration = () => {
   const { isAdmin } = useSimpleAuth();
   const [reports, setReports] = useState<ModerationReport[]>([]);
@@ -84,6 +91,69 @@ export const useModeration = () => {
     }
   };
 
+  const performModerationAction = async (actionRequest: ModerationActionRequest) => {
+    try {
+      const { action_type, topic_id, post_id, reason } = actionRequest;
+      
+      // Simular ação de moderação já que não temos as tabelas necessárias
+      console.log(`Ação de moderação simulada:`, {
+        action_type,
+        topic_id,
+        post_id,
+        reason
+      });
+
+      // Se for uma ação em tópico
+      if (topic_id) {
+        switch (action_type) {
+          case 'pin':
+          case 'unpin':
+            await supabase
+              .from('forum_topics')
+              .update({ is_pinned: action_type === 'pin' })
+              .eq('id', topic_id);
+            break;
+          case 'lock':
+          case 'unlock':
+            await supabase
+              .from('forum_topics')
+              .update({ is_locked: action_type === 'lock' })
+              .eq('id', topic_id);
+            break;
+          case 'delete':
+            await supabase
+              .from('forum_topics')
+              .delete()
+              .eq('id', topic_id);
+            break;
+        }
+      }
+
+      // Se for uma ação em post
+      if (post_id) {
+        switch (action_type) {
+          case 'hide':
+          case 'unhide':
+            await supabase
+              .from('forum_posts')
+              .update({ is_hidden: action_type === 'hide' })
+              .eq('id', post_id);
+            break;
+          case 'delete':
+            await supabase
+              .from('forum_posts')
+              .delete()
+              .eq('id', post_id);
+            break;
+        }
+      }
+
+    } catch (error: any) {
+      console.error('Erro ao executar ação de moderação:', error);
+      throw error;
+    }
+  };
+
   useEffect(() => {
     fetchReports();
   }, [isAdmin]);
@@ -93,6 +163,7 @@ export const useModeration = () => {
     loading,
     error,
     refetch: fetchReports,
-    updateReportStatus
+    updateReportStatus,
+    performModerationAction
   };
 };
