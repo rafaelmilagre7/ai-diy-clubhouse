@@ -40,6 +40,7 @@ export type Database = {
           delivery_channels?: string[]
           target_roles: string[]
           scheduled_for?: string | null
+          created_at?: string
           created_by: string
           sent_at?: string | null
           updated_at?: string
@@ -57,6 +58,7 @@ export type Database = {
           delivery_channels?: string[]
           target_roles?: string[]
           scheduled_for?: string | null
+          created_at?: string
           created_by?: string
           sent_at?: string | null
           updated_at?: string
@@ -105,7 +107,7 @@ export type Database = {
           location_link: string | null
           physical_location: string | null
           cover_image_url: string | null
-          is_recurring: boolean | null
+          is_recurring: boolean
           recurrence_pattern: string | null
           recurrence_interval: number | null
           recurrence_day: number | null
@@ -124,7 +126,7 @@ export type Database = {
           location_link?: string | null
           physical_location?: string | null
           cover_image_url?: string | null
-          is_recurring?: boolean | null
+          is_recurring?: boolean
           recurrence_pattern?: string | null
           recurrence_interval?: number | null
           recurrence_day?: number | null
@@ -143,7 +145,7 @@ export type Database = {
           location_link?: string | null
           physical_location?: string | null
           cover_image_url?: string | null
-          is_recurring?: boolean | null
+          is_recurring?: boolean
           recurrence_pattern?: string | null
           recurrence_interval?: number | null
           recurrence_day?: number | null
@@ -161,8 +163,8 @@ export type Database = {
           user_id: string
           email_enabled: boolean
           whatsapp_enabled: boolean
-          admin_communications_inapp: boolean | null
-          admin_communications_email: boolean | null
+          admin_communications_inapp: boolean
+          admin_communications_email: boolean
           created_at: string
           updated_at: string
         }
@@ -171,8 +173,8 @@ export type Database = {
           user_id: string
           email_enabled?: boolean
           whatsapp_enabled?: boolean
-          admin_communications_inapp?: boolean | null
-          admin_communications_email?: boolean | null
+          admin_communications_inapp?: boolean
+          admin_communications_email?: boolean
           created_at?: string
           updated_at?: string
         }
@@ -181,8 +183,8 @@ export type Database = {
           user_id?: string
           email_enabled?: boolean
           whatsapp_enabled?: boolean
-          admin_communications_inapp?: boolean | null
-          admin_communications_email?: boolean | null
+          admin_communications_inapp?: boolean
+          admin_communications_email?: boolean
           created_at?: string
           updated_at?: string
         }
@@ -193,11 +195,11 @@ export type Database = {
           id: string
           email: string
           name: string | null
-          role_id: string | null
-          role: string | null
           avatar_url: string | null
           company_name: string | null
           industry: string | null
+          role_id: string | null
+          role: string | null
           created_at: string
           updated_at: string
           phone: string | null
@@ -206,7 +208,6 @@ export type Database = {
           state: string | null
           city: string | null
           company_website: string | null
-          company_sector: string | null
           company_size: string | null
           annual_revenue: string | null
           primary_goal: string | null
@@ -216,20 +217,24 @@ export type Database = {
           weekly_availability: string | null
           networking_interests: string[] | null
           phone_country_code: string | null
-          onboarding_completed: boolean | null
+          onboarding_completed: boolean
           onboarding_completed_at: string | null
-          referrals_count: number | null
-          successful_referrals_count: number | null
+          referrals_count: number
+          successful_referrals_count: number
+          user_roles: {
+            id: string
+            name: string
+          } | null
         }
         Insert: {
           id: string
           email: string
           name?: string | null
-          role_id?: string | null
-          role?: string | null
           avatar_url?: string | null
           company_name?: string | null
           industry?: string | null
+          role_id?: string | null
+          role?: string | null
           created_at?: string
           updated_at?: string
           phone?: string | null
@@ -238,7 +243,6 @@ export type Database = {
           state?: string | null
           city?: string | null
           company_website?: string | null
-          company_sector?: string | null
           company_size?: string | null
           annual_revenue?: string | null
           primary_goal?: string | null
@@ -248,20 +252,20 @@ export type Database = {
           weekly_availability?: string | null
           networking_interests?: string[] | null
           phone_country_code?: string | null
-          onboarding_completed?: boolean | null
+          onboarding_completed?: boolean
           onboarding_completed_at?: string | null
-          referrals_count?: number | null
-          successful_referrals_count?: number | null
+          referrals_count?: number
+          successful_referrals_count?: number
         }
         Update: {
           id?: string
           email?: string
           name?: string | null
-          role_id?: string | null
-          role?: string | null
           avatar_url?: string | null
           company_name?: string | null
           industry?: string | null
+          role_id?: string | null
+          role?: string | null
           created_at?: string
           updated_at?: string
           phone?: string | null
@@ -270,7 +274,6 @@ export type Database = {
           state?: string | null
           city?: string | null
           company_website?: string | null
-          company_sector?: string | null
           company_size?: string | null
           annual_revenue?: string | null
           primary_goal?: string | null
@@ -280,10 +283,10 @@ export type Database = {
           weekly_availability?: string | null
           networking_interests?: string[] | null
           phone_country_code?: string | null
-          onboarding_completed?: boolean | null
+          onboarding_completed?: boolean
           onboarding_completed_at?: string | null
-          referrals_count?: number | null
-          successful_referrals_count?: number | null
+          referrals_count?: number
+          successful_referrals_count?: number
         }
         Relationships: []
       }
@@ -294,10 +297,10 @@ export type Database = {
           solution_id: string
           module_id: string | null
           is_completed: boolean
-          completion_date: string | null
-          progress_percentage: number
+          completed_at: string | null
           created_at: string
           updated_at: string
+          notes: string | null
         }
         Insert: {
           id?: string
@@ -305,10 +308,10 @@ export type Database = {
           solution_id: string
           module_id?: string | null
           is_completed?: boolean
-          completion_date?: string | null
-          progress_percentage?: number
+          completed_at?: string | null
           created_at?: string
           updated_at?: string
+          notes?: string | null
         }
         Update: {
           id?: string
@@ -316,10 +319,10 @@ export type Database = {
           solution_id?: string
           module_id?: string | null
           is_completed?: boolean
-          completion_date?: string | null
-          progress_percentage?: number
+          completed_at?: string | null
           created_at?: string
           updated_at?: string
+          notes?: string | null
         }
         Relationships: []
       }
@@ -328,8 +331,8 @@ export type Database = {
           id: string
           name: string
           description: string | null
-          permissions: Json | null
-          is_system: boolean | null
+          permissions: Json
+          is_system: boolean
           created_at: string
           updated_at: string
         }
@@ -337,8 +340,8 @@ export type Database = {
           id?: string
           name: string
           description?: string | null
-          permissions?: Json | null
-          is_system?: boolean | null
+          permissions?: Json
+          is_system?: boolean
           created_at?: string
           updated_at?: string
         }
@@ -346,10 +349,70 @@ export type Database = {
           id?: string
           name?: string
           description?: string | null
-          permissions?: Json | null
-          is_system?: boolean | null
+          permissions?: Json
+          is_system?: boolean
           created_at?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      learning_courses: {
+        Row: {
+          id: string
+          title: string
+          description: string | null
+          slug: string
+          cover_image_url: string | null
+          published: boolean
+          order_index: number
+          created_by: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          title: string
+          description?: string | null
+          slug: string
+          cover_image_url?: string | null
+          published?: boolean
+          order_index?: number
+          created_by?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          title?: string
+          description?: string | null
+          slug?: string
+          cover_image_url?: string | null
+          published?: boolean
+          order_index?: number
+          created_by?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      course_access_control: {
+        Row: {
+          id: string
+          course_id: string
+          role_id: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          course_id: string
+          role_id: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          course_id?: string
+          role_id?: string
+          created_at?: string
         }
         Relationships: []
       }
@@ -358,24 +421,24 @@ export type Database = {
           id: string
           user_id: string
           step: string
-          event_type: string
-          event_data: Json | null
+          action: string
+          data: Json | null
           created_at: string
         }
         Insert: {
           id?: string
           user_id: string
           step: string
-          event_type: string
-          event_data?: Json | null
+          action: string
+          data?: Json | null
           created_at?: string
         }
         Update: {
           id?: string
           user_id?: string
           step?: string
-          event_type?: string
-          event_data?: Json | null
+          action?: string
+          data?: Json | null
           created_at?: string
         }
         Relationships: []
@@ -385,28 +448,28 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      complete_invite_registration: {
-        Args: {
-          p_token: string
-          p_user_id: string
-        }
-        Returns: {
-          success: boolean
-          message: string
-        }
+      get_user_role_name: {
+        Args: { user_id: string }
+        Returns: string
       }
-      reset_analytics_data_enhanced: {
-        Args: Record<PropertyKey, never>
-        Returns: {
-          success: boolean
-          message: string
-          backupRecords?: number
-        }
+      increment_topic_views: {
+        Args: { topic_id: string }
+        Returns: undefined
+      }
+      increment_topic_replies: {
+        Args: { topic_id: string }
+        Returns: undefined
+      }
+      delete_forum_topic: {
+        Args: { topic_id: string }
+        Returns: Json
+      }
+      delete_forum_post: {
+        Args: { post_id: string }
+        Returns: Json
       }
       create_storage_public_policy: {
-        Args: {
-          bucket_name: string
-        }
+        Args: { bucket_name: string }
         Returns: boolean
       }
     }

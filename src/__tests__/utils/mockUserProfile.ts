@@ -22,7 +22,6 @@ export const createMockUserProfile = (overrides: Partial<UserProfile> = {}): Use
     state: null,
     city: null,
     company_website: null,
-    company_sector: null,
     company_size: null,
     annual_revenue: null,
     primary_goal: null,

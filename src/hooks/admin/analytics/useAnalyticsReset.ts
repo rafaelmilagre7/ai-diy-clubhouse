@@ -6,6 +6,13 @@ import { toast } from 'sonner';
 export const useAnalyticsReset = () => {
   const [isResetting, setIsResetting] = useState(false);
   const [resetProgress, setResetProgress] = useState(0);
+  const [resetStats, setResetStats] = useState<{
+    recordsDeleted: number;
+    lastResetDate: Date | null;
+  }>({
+    recordsDeleted: 0,
+    lastResetDate: null
+  });
 
   const resetAnalyticsData = async () => {
     setIsResetting(true);
@@ -33,6 +40,10 @@ export const useAnalyticsReset = () => {
         
         if (isValidResult(data) && data.success) {
           setResetProgress(100);
+          setResetStats({
+            recordsDeleted: data.backupRecords || 0,
+            lastResetDate: new Date()
+          });
           toast.success(data.message || 'Dados resetados com sucesso!');
           
           if (data.backupRecords) {
@@ -57,6 +68,10 @@ export const useAnalyticsReset = () => {
         }
         
         setResetProgress(100);
+        setResetStats({
+          recordsDeleted: 1,
+          lastResetDate: new Date()
+        });
         toast.success('Dados de analytics resetados com sucesso!');
       }
       
@@ -69,9 +84,18 @@ export const useAnalyticsReset = () => {
     }
   };
 
+  const clearResetStats = () => {
+    setResetStats({
+      recordsDeleted: 0,
+      lastResetDate: null
+    });
+  };
+
   return {
     resetAnalyticsData,
     isResetting,
-    resetProgress
+    resetProgress,
+    resetStats,
+    clearResetStats
   };
 };

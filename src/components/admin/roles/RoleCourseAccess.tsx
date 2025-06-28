@@ -26,10 +26,10 @@ export const RoleCourseAccess = ({ roleId, roleName }: RoleCourseAccessProps) =>
 
   const fetchCourses = async () => {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('learning_courses')
         .select('*')
-        .eq('published', true as any)
+        .eq('published', true)
         .order('title');
 
       if (error) throw error;
@@ -48,10 +48,10 @@ export const RoleCourseAccess = ({ roleId, roleName }: RoleCourseAccessProps) =>
 
   const fetchRoleAccess = async () => {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('course_access_control')
         .select('course_id')
-        .eq('role_id', roleId as any);
+        .eq('role_id', roleId);
 
       if (error) throw error;
       
@@ -79,10 +79,10 @@ export const RoleCourseAccess = ({ roleId, roleName }: RoleCourseAccessProps) =>
     setSaving(true);
     try {
       // Remover acessos existentes
-      const { error: deleteError } = await supabase
+      const { error: deleteError } = await (supabase as any)
         .from('course_access_control')
         .delete()
-        .eq('role_id', roleId as any);
+        .eq('role_id', roleId);
 
       if (deleteError) throw deleteError;
 
@@ -93,9 +93,9 @@ export const RoleCourseAccess = ({ roleId, roleName }: RoleCourseAccessProps) =>
           course_id: courseId
         }));
 
-        const { error: insertError } = await supabase
+        const { error: insertError } = await (supabase as any)
           .from('course_access_control')
-          .insert(accessRecords as any);
+          .insert(accessRecords);
 
         if (insertError) throw insertError;
       }
