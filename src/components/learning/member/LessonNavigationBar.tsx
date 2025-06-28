@@ -38,7 +38,7 @@ export const LessonNavigationBar = ({
 }: LessonNavigationBarProps) => {
   const moduleName = lesson?.module?.title || 'Módulo';
   
-  // CORREÇÃO: Parse seguro do conteúdo JSON
+  // Parse seguro do conteúdo JSON
   const content = lesson ? safeJsonParseObject(lesson.content, {}) : {};
   const estimatedTime = lesson?.estimated_time_minutes || content.estimatedTime || 0;
 
