@@ -40,7 +40,8 @@ export const LessonNavigationBar = ({
   
   // Parse seguro do conteúdo JSON
   const content = lesson ? safeJsonParseObject(lesson.content, {}) : {};
-  const estimatedTime = lesson?.estimated_time_minutes || content.estimatedTime || 0;
+  // Corrigido: usar estimated_duration_minutes que existe no schema
+  const estimatedTime = lesson?.estimated_duration_minutes || content.estimatedTime || 0;
 
   return (
     <div className="sticky top-0 z-40 bg-background border-b border-border px-4 py-3">

@@ -13,9 +13,9 @@ interface LessonItemProps {
 export const LessonItem = ({ lesson, courseId, isCompleted, videos = [] }: LessonItemProps) => {
   // Calcular a duração total dos vídeos em minutos
   const calculateDuration = (): number => {
-    // Usar estimated_time_minutes que existe no schema
-    if (videos.length === 0 && lesson.estimated_time_minutes) {
-      return lesson.estimated_time_minutes;
+    // Usar estimated_duration_minutes que existe no schema
+    if (videos.length === 0 && lesson.estimated_duration_minutes) {
+      return lesson.estimated_duration_minutes;
     }
     
     let totalSeconds = 0;
@@ -25,8 +25,8 @@ export const LessonItem = ({ lesson, courseId, isCompleted, videos = [] }: Lesso
       }
     });
     
-    // Usar estimated_time_minutes correto
-    return totalSeconds > 0 ? Math.ceil(totalSeconds / 60) : (lesson.estimated_time_minutes || 0);
+    // Usar estimated_duration_minutes correto
+    return totalSeconds > 0 ? Math.ceil(totalSeconds / 60) : (lesson.estimated_duration_minutes || 0);
   };
   
   const duration = calculateDuration();

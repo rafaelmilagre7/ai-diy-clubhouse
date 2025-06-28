@@ -51,6 +51,7 @@ export const useOnboardingRequired = () => {
       });
     };
 
+    // CORREÇÃO PRINCIPAL: usar o unsubscribe retornado pelo método 'on'
     const unsubscribe = authManager.on('stateChanged', handleStateChanged);
 
     // Initialize if needed
@@ -60,7 +61,8 @@ export const useOnboardingRequired = () => {
     }
 
     return () => {
-      authManager.off('stateChanged', handleStateChanged);
+      // CORREÇÃO: usar unsubscribe em vez de authManager.off
+      unsubscribe();
     };
   }, [authManager]);
 
