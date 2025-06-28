@@ -3,7 +3,7 @@ import React from 'react';
 import { Outlet, Navigate } from 'react-router-dom';
 import { useSimpleAuth } from '@/contexts/auth/SimpleAuthProvider';
 import { Sidebar } from '@/components/ui/sidebar/sidebar';
-import { SidebarProvider } from '@/components/ui/sidebar/sidebar-provider';
+import { SidebarProvider } from '@/components/ui/sidebar/provider';
 import { MemberSidebarContent } from '@/components/ui/sidebar/member-sidebar-content';
 import LoadingScreen from '@/components/common/LoadingScreen';
 
