@@ -25,7 +25,6 @@ export const createMockUserProfile = (overrides: Partial<UserProfile> = {}): Use
     company_size: null,
     annual_revenue: null,
     ai_knowledge_level: null,
-    nps_score: null,
     weekly_availability: null,
     networking_interests: null,
     phone_country_code: null,

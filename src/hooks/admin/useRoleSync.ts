@@ -26,12 +26,14 @@ interface SyncResult {
   total_profiles: number;
   profiles_corrected: number;
   message: string;
+  status: 'success' | 'error' | 'warning' | 'info';
 }
 
 export const useRoleSync = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [issues, setIssues] = useState<RoleIssue[]>([]);
   const [auditData, setAuditData] = useState<AuditResult | null>(null);
+  const [syncResults, setSyncResults] = useState<SyncResult[]>([]);
 
   const validateRoles = async () => {
     try {
@@ -112,14 +114,22 @@ export const useRoleSync = () => {
       console.log('Resultado da sincronização:', data);
       
       if (data) {
+        const result: SyncResult = {
+          ...(data as any),
+          status: 'success'
+        };
+        
+        setSyncResults(prev => [...prev, result]);
         toast.success(`🔄 ${(data as any).message}`);
         
         // Revalidar após sincronização para atualizar dados
         console.log('Revalidando após sincronização...');
         await Promise.all([validateRoles(), auditRoles()]);
+        
+        return result;
       }
       
-      return data as SyncResult;
+      return null;
     } catch (error) {
       console.error('Erro ao sincronizar roles:', error);
       toast.error('Erro ao sincronizar roles do sistema');
@@ -133,6 +143,14 @@ export const useRoleSync = () => {
     try {
       setIsLoading(true);
       toast.info('🔍 Executando diagnóstico completo do sistema...');
+      
+      setSyncResults(prev => [...prev, {
+        success: true,
+        total_profiles: 0,
+        profiles_corrected: 0,
+        message: 'Iniciando diagnóstico completo...',
+        status: 'info'
+      }]);
       
       // Executar auditoria e validação em paralelo
       const [auditResult, validationResult] = await Promise.all([
@@ -164,13 +182,19 @@ export const useRoleSync = () => {
     }
   };
 
+  const clearResults = () => {
+    setSyncResults([]);
+  };
+
   return {
     isLoading,
     issues,
     auditData,
+    syncResults,
     validateRoles,
     auditRoles,
     syncRoles,
-    runFullDiagnostic
+    runFullDiagnostic,
+    clearResults
   };
 };
