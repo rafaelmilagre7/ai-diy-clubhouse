@@ -1,8 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
-import { useAuth } from "@/contexts/auth";
-import { LearningLesson } from "@/lib/supabase/types";
+import { useSimpleAuth } from "@/contexts/auth/SimpleAuthProvider";
 
 interface UseLessonDataProps {
   lessonId?: string;
@@ -10,8 +9,8 @@ interface UseLessonDataProps {
 }
 
 export const useLessonData = ({ lessonId, courseId }: UseLessonDataProps) => {
-  const { user } = useAuth();
-  const [lesson, setLesson] = useState<LearningLesson | null>(null);
+  const { user } = useSimpleAuth();
+  const [lesson, setLesson] = useState<any | null>(null);
   const [resources, setResources] = useState<any[]>([]);
   const [videos, setVideos] = useState<any[]>([]);
   const [courseInfo, setCourseInfo] = useState<any>(null);
@@ -35,8 +34,8 @@ export const useLessonData = ({ lessonId, courseId }: UseLessonDataProps) => {
         const { data: lessonData, error: lessonError } = await supabase
           .from("learning_lessons")
           .select("*")
-          .eq("id", lessonId as any)
-          .eq("published", true as any)
+          .eq("id", lessonId)
+          .eq("published", true)
           .single();
 
         if (lessonError) {
@@ -44,8 +43,8 @@ export const useLessonData = ({ lessonId, courseId }: UseLessonDataProps) => {
           throw new Error("Aula não encontrada");
         }
 
-        setLesson(lessonData as any);
-        console.log("✅ Aula carregada:", (lessonData as any)?.title);
+        setLesson(lessonData);
+        console.log("✅ Aula carregada:", lessonData?.title);
 
         // 2. Buscar dados do módulo
         const { data: moduleInfo, error: moduleError } = await supabase
@@ -54,7 +53,7 @@ export const useLessonData = ({ lessonId, courseId }: UseLessonDataProps) => {
             *,
             course:learning_courses(*)
           `)
-          .eq("id", (lessonData as any).module_id as any)
+          .eq("id", lessonData.module_id)
           .single();
 
         if (moduleError) {
@@ -65,14 +64,14 @@ export const useLessonData = ({ lessonId, courseId }: UseLessonDataProps) => {
             course: (moduleInfo as any).course
           });
           setCourseInfo((moduleInfo as any).course);
-          console.log("✅ Módulo carregado:", (moduleInfo as any)?.title);
+          console.log("✅ Módulo carregado:", moduleInfo?.title);
         }
 
         // 3. Buscar recursos da aula
         const { data: resourcesData, error: resourcesError } = await supabase
           .from("learning_resources")
           .select("*")
-          .eq("lesson_id", lessonId as any)
+          .eq("lesson_id", lessonId)
           .order("order_index", { ascending: true });
 
         if (resourcesError) {
@@ -86,7 +85,7 @@ export const useLessonData = ({ lessonId, courseId }: UseLessonDataProps) => {
         const { data: videosData, error: videosError } = await supabase
           .from("learning_lesson_videos")
           .select("*")
-          .eq("lesson_id", lessonId as any)
+          .eq("lesson_id", lessonId)
           .order("order_index", { ascending: true });
 
         if (videosError) {
@@ -112,8 +111,8 @@ export const useLessonData = ({ lessonId, courseId }: UseLessonDataProps) => {
                 course_id
               )
             `)
-            .eq("learning_modules.course_id", courseId as any)
-            .eq("published", true as any)
+            .eq("learning_modules.course_id", courseId)
+            .eq("published", true)
             .order("learning_modules.order_index", { ascending: true })
             .order("order_index", { ascending: true });
 

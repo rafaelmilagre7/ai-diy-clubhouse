@@ -1,7 +1,7 @@
 
 import { Database } from './database.types';
 
-// Tipos de tabelas principais (removendo referências a tabelas inexistentes)
+// Tipos de tabelas principais (apenas tabelas que existem)
 export type LearningLesson = Database['public']['Tables']['learning_lessons']['Row'];
 export type LearningLessonVideo = Database['public']['Tables']['learning_lesson_videos']['Row'];
 export type LearningModule = Database['public']['Tables']['learning_modules']['Row'];

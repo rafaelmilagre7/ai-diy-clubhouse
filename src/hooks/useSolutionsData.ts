@@ -9,7 +9,7 @@ interface SimpleSolution {
   description: string;
   category: string;
   estimated_time_hours: number;
-  cover_image_url: string;
+  cover_image_url: string | null;
   created_at: string;
   updated_at: string;
   published: boolean;
@@ -84,8 +84,10 @@ export const useSolutionsData = () => {
         setLoading(true);
         setError(null);
 
-        // Query otimizada com RLS habilitado
-        let query = supabase.from("solutions").select("*");
+        // Query otimizada com apenas campos necessários
+        let query = supabase
+          .from("solutions")
+          .select("id, title, description, category, estimated_time_hours, cover_image_url, created_at, updated_at, published");
 
         // Se não for admin, mostrar apenas soluções publicadas
         if (!profile || profile.user_roles?.name !== 'admin') {
@@ -99,10 +101,18 @@ export const useSolutionsData = () => {
           throw fetchError;
         }
 
-        // Validar dados antes de definir no estado
-        const validSolutions = (data || []).filter(solution => 
-          solution && typeof solution.id === 'string'
-        );
+        // Transformar dados para SimpleSolution
+        const validSolutions: SimpleSolution[] = (data || []).map(solution => ({
+          id: solution.id,
+          title: solution.title,
+          description: solution.description,
+          category: solution.category,
+          estimated_time_hours: solution.estimated_time_hours,
+          cover_image_url: solution.cover_image_url,
+          created_at: solution.created_at,
+          updated_at: solution.updated_at,
+          published: solution.published
+        }));
 
         // Atualizar cache
         solutionsCache.set(cacheKey, {

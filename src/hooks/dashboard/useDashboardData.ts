@@ -19,19 +19,10 @@ export const useDashboardData = () => {
     queryKey: ['dashboard-data'],
     queryFn: async (): Promise<DashboardData> => {
       try {
-        // Buscar soluções básicas (sem campo 'difficulty' que não existe)
+        // Buscar soluções básicas
         const { data: solutions, error: solutionsError } = await supabase
           .from('solutions')
-          .select(`
-            id,
-            title,
-            description,
-            category,
-            estimated_time_hours,
-            cover_image_url,
-            created_at,
-            updated_at
-          `)
+          .select('id, title, description, category, estimated_time_hours, cover_image_url, created_at, updated_at')
           .eq('published', true)
           .order('created_at', { ascending: false })
           .limit(10);
