@@ -1,7 +1,6 @@
-
 import { RouteObject } from "react-router-dom";
 import { RobustProtectedRoutes } from '@/auth/RobustProtectedRoutes';
-import MemberLayout from '@/components/layout/MemberLayout';
+import { MemberLayout } from '@/components/layout/MemberLayout';
 
 // Member pages
 import Dashboard from '@/pages/member/Dashboard';
