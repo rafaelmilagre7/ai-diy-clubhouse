@@ -5,17 +5,22 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 interface PlaceholderTabContentProps {
   title: string;
   description: string;
+  timeRange?: string;
 }
 
 export const PlaceholderTabContent: React.FC<PlaceholderTabContentProps> = ({
   title,
-  description
+  description,
+  timeRange
 }) => {
   return (
     <Card>
       <CardHeader>
         <CardTitle>{title}</CardTitle>
-        <CardDescription>{description}</CardDescription>
+        <CardDescription>
+          {description}
+          {timeRange && ` (Período: ${timeRange})`}
+        </CardDescription>
       </CardHeader>
       <CardContent>
         <p className="text-muted-foreground">

@@ -27,23 +27,17 @@ export interface AdminDashboardReturn {
   activityData: AdminDashboardData['recentActivity'];
 }
 
-export const useAdminDashboard = (): AdminDashboardReturn => {
+export const useAdminDashboard = (timeRange?: string): AdminDashboardReturn => {
   const { data, isLoading, error, refetch } = useQuery({
-    queryKey: ['admin-dashboard'],
+    queryKey: ['admin-dashboard', timeRange],
     queryFn: async (): Promise<AdminDashboardData> => {
       try {
-        // Get basic counts
-        const { count: totalUsers } = await supabase
-          .from('profiles')
-          .select('id', { count: 'exact', head: true });
-
-        const { count: totalSolutions } = await supabase
-          .from('solutions')
-          .select('id', { count: 'exact', head: true });
-
-        const { count: totalTools } = await supabase
-          .from('tools')
-          .select('id', { count: 'exact', head: true });
+        // Get basic counts using head requests to avoid type issues
+        const [usersResult, solutionsResult, toolsResult] = await Promise.all([
+          supabase.from('profiles').select('*', { count: 'exact', head: true }),
+          supabase.from('solutions').select('*', { count: 'exact', head: true }),
+          supabase.from('tools').select('*', { count: 'exact', head: true })
+        ]);
 
         // Mock recent activity for now
         const recentActivity = [
@@ -58,9 +52,9 @@ export const useAdminDashboard = (): AdminDashboardReturn => {
 
         return {
           stats: {
-            totalUsers: totalUsers || 0,
-            totalSolutions: totalSolutions || 0,
-            totalTools: totalTools || 0,
+            totalUsers: usersResult.count || 0,
+            totalSolutions: solutionsResult.count || 0,
+            totalTools: toolsResult.count || 0,
             activeSessions: 0
           },
           recentActivity
