@@ -39,19 +39,26 @@ const InviteInterceptor = () => {
 
         console.log('✅ [INVITE-INTERCEPTOR] Resposta:', data);
 
-        if (data.status === 'success') {
-          // Atualizar o perfil do usuário para refletir o novo papel
-          await refreshProfile();
+        // Verificar se data existe e tem o status
+        if (data && typeof data === 'object' && 'status' in data) {
+          const response = data as { status: string; message?: string };
           
-          toast.success('Convite aplicado com sucesso! Bem-vindo(a)!');
-          
-          // Limpar o parâmetro da URL
-          const newUrl = new URL(window.location.href);
-          newUrl.searchParams.delete('invite');
-          navigate(newUrl.pathname + newUrl.search, { replace: true });
-          
+          if (response.status === 'success') {
+            // Atualizar o perfil do usuário para refletir o novo papel
+            await refreshProfile();
+            
+            toast.success('Convite aplicado com sucesso! Bem-vindo(a)!');
+            
+            // Limpar o parâmetro da URL
+            const newUrl = new URL(window.location.href);
+            newUrl.searchParams.delete('invite');
+            navigate(newUrl.pathname + newUrl.search, { replace: true });
+            
+          } else {
+            toast.error(response.message || 'Não foi possível processar o convite');
+          }
         } else {
-          toast.error(data.message || 'Não foi possível processar o convite');
+          toast.error('Resposta inválida do servidor');
         }
 
       } catch (error) {

@@ -33,7 +33,7 @@ export const NotificationPreferences = () => {
     if (!user) return;
     
     try {
-      // Usar a tabela correta com cast para any para contornar erro de tipos
+      // Usar cast para any para contornar erro de tipos
       const { data, error } = await (supabase as any)
         .from('notification_preferences')
         .select('*')
@@ -60,7 +60,7 @@ export const NotificationPreferences = () => {
     try {
       const updatedPrefs = { ...preferences, ...newPrefs };
       
-      // Usar a tabela correta com cast para any para contornar erro de tipos
+      // Usar cast para any para contornar erro de tipos
       const { error } = await (supabase as any)
         .from('notification_preferences')
         .upsert({

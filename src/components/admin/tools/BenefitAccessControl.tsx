@@ -47,7 +47,7 @@ export function BenefitAccessControl({
         .order('name');
 
       if (error) throw error;
-      setRoles((data as any) || []);
+      setRoles(data || []);
     } catch (err) {
       console.error('Erro ao buscar papéis:', err);
       toast.error('Erro ao carregar papéis');
@@ -61,15 +61,15 @@ export function BenefitAccessControl({
 
     try {
       setIsLoading(true);
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('benefit_access_control')
         .select('role_id')
-        .eq('tool_id', tool.id as any);
+        .eq('tool_id', tool.id);
 
       if (error) throw error;
       
       // Extrair IDs de papéis permitidos
-      setAllowedRoles((data || []).map(item => (item as any).role_id));
+      setAllowedRoles((data || []).map((item: any) => item.role_id));
     } catch (err) {
       console.error('Erro ao buscar acesso ao benefício:', err);
       toast.error('Erro ao carregar configurações de acesso');
@@ -86,23 +86,23 @@ export function BenefitAccessControl({
     try {
       if (isChecked) {
         // Adicionar acesso
-        const { error } = await supabase
+        const { error } = await (supabase as any)
           .from('benefit_access_control')
           .insert({ 
             tool_id: tool.id, 
             role_id: roleId 
-          } as any);
+          });
           
         if (error) throw error;
         setAllowedRoles(prev => [...prev, roleId]);
         toast.success('Acesso concedido ao papel');
       } else {
         // Remover acesso
-        const { error } = await supabase
+        const { error } = await (supabase as any)
           .from('benefit_access_control')
           .delete()
-          .eq('tool_id', tool.id as any)
-          .eq('role_id', roleId as any);
+          .eq('tool_id', tool.id)
+          .eq('role_id', roleId);
           
         if (error) throw error;
         setAllowedRoles(prev => prev.filter(id => id !== roleId));

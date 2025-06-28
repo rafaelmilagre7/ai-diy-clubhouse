@@ -41,10 +41,10 @@ export const AdminToolList = ({ refreshTrigger }: AdminToolListProps) => {
 
   const handleDelete = async (id: string) => {
     try {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('tools')
         .delete()
-        .eq('id', id as any);
+        .eq('id', id);
 
       if (error) throw error;
       
