@@ -2,6 +2,7 @@
 import { User, Session } from '@supabase/supabase-js';
 import { supabase, UserProfile } from '@/lib/supabase';
 import { logger } from '@/utils/logger';
+import { fetchUserProfile } from '@/contexts/auth/utils';
 
 interface AuthState {
   user: User | null;
@@ -13,13 +14,18 @@ interface AuthState {
   isFormacao: boolean;
 }
 
-type AuthStateListener = (state: AuthState) => void;
+type AuthEventCallback = (state: AuthState) => void;
 
 class AuthManager {
   private static instance: AuthManager;
   private state: AuthState;
-  private listeners: Set<AuthStateListener> = new Set();
-  private initPromise: Promise<void> | null = null;
+  private callbacks: Set<AuthEventCallback> = new Set();
+  private initializationPromise: Promise<void> | null = null;
+  private retryCount = 0;
+  private maxRetries = 3;
+  private lastInitTime = 0;
+  private circuitBreakerOpen = false;
+  private circuitBreakerTimeout = 10000; // 10 segundos
 
   private constructor() {
     this.state = {
@@ -40,271 +46,230 @@ class AuthManager {
     return AuthManager.instance;
   }
 
-  getState(): AuthState {
-    return this.state;
-  }
-
-  on(event: 'stateChanged', listener: AuthStateListener) {
-    this.listeners.add(listener);
-    return () => this.listeners.delete(listener);
-  }
-
-  private setState(newState: Partial<AuthState>) {
-    this.state = { ...this.state, ...newState };
-    this.listeners.forEach(listener => listener(this.state));
-  }
+  // Debounce para evitar inicializações múltiplas
+  private debounceInitialize = (() => {
+    let timeoutId: NodeJS.Timeout;
+    return (callback: () => void, delay: number) => {
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(callback, delay);
+    };
+  })();
 
   async initialize(): Promise<void> {
-    if (this.initPromise) {
-      return this.initPromise;
+    // Circuit breaker - se estiver aberto, não tentar
+    if (this.circuitBreakerOpen) {
+      logger.warn('[AUTH-MANAGER] Circuit breaker ativo, pulando inicialização');
+      return;
     }
 
-    this.initPromise = this.performInitialization();
-    return this.initPromise;
+    // Debounce - evitar inicializações muito próximas
+    const now = Date.now();
+    if (now - this.lastInitTime < 1000) {
+      logger.debug('[AUTH-MANAGER] Inicialização muito recente, pulando');
+      return;
+    }
+    this.lastInitTime = now;
+
+    // Se já existe uma inicialização em andamento, retornar a mesma promise
+    if (this.initializationPromise) {
+      logger.debug('[AUTH-MANAGER] Inicialização já em andamento');
+      return this.initializationPromise;
+    }
+
+    this.initializationPromise = this.performInitialization();
+    
+    try {
+      await this.initializationPromise;
+    } finally {
+      this.initializationPromise = null;
+    }
   }
 
   private async performInitialization(): Promise<void> {
+    logger.info('[AUTH-MANAGER] Iniciando inicialização', { 
+      retry: this.retryCount,
+      maxRetries: this.maxRetries 
+    });
+
     try {
-      logger.info('[AUTH-MANAGER] Inicializando...');
-      
-      this.setState({ isLoading: true, error: null });
+      this.updateState({ isLoading: true, error: null });
 
-      // Configurar listener de mudanças de autenticação
-      supabase.auth.onAuthStateChange(async (event, session) => {
-        logger.info('[AUTH-MANAGER] Auth state changed:', event);
-        await this.handleAuthStateChange(event, session);
-      });
-
-      // Obter sessão atual
-      const { data: { session }, error } = await supabase.auth.getSession();
-      
-      if (error) {
-        logger.error('[AUTH-MANAGER] Erro ao obter sessão:', error);
-        this.setState({ 
-          error: error.message, 
-          isLoading: false 
-        });
-        return;
+      // Configurar listener apenas uma vez
+      if (this.retryCount === 0) {
+        this.setupAuthListener();
       }
 
-      await this.handleAuthStateChange('INITIAL_SESSION', session);
-      
-      logger.info('[AUTH-MANAGER] Inicialização concluída');
-      
-    } catch (error) {
-      logger.error('[AUTH-MANAGER] Erro na inicialização:', error);
-      this.setState({ 
-        error: error instanceof Error ? error.message : 'Erro desconhecido',
-        isLoading: false 
-      });
-    }
-  }
-
-  private async handleAuthStateChange(event: string, session: Session | null): Promise<void> {
-    try {
-      this.setState({ session, user: session?.user || null });
-
-      if (session?.user) {
-        await this.loadUserProfile(session.user.id);
-      } else {
-        this.setState({
-          profile: null,
-          isAdmin: false,
-          isFormacao: false,
-          isLoading: false
-        });
-      }
-    } catch (error) {
-      logger.error('[AUTH-MANAGER] Erro ao processar mudança de estado:', error);
-      this.setState({ 
-        error: error instanceof Error ? error.message : 'Erro ao processar autenticação',
-        isLoading: false 
-      });
-    }
-  }
-
-  private async loadUserProfile(userId: string, retryCount = 0): Promise<void> {
-    const maxRetries = 3;
-    
-    try {
-      logger.info('[AUTH-MANAGER] Carregando perfil:', { userId, attempt: retryCount + 1 });
-
-      // CORREÇÃO: Usar query mais específica para evitar problemas de embed
-      const { data: profile, error } = await supabase
-        .from('profiles')
-        .select(`
-          *,
-          user_roles!inner (
-            id,
-            name,
-            description,
-            permissions,
-            is_system
-          )
-        `)
-        .eq('id', userId)
-        .single();
+      // Buscar sessão atual
+      const { data: { session }, error } = await Promise.race([
+        supabase.auth.getSession(),
+        new Promise<never>((_, reject) => 
+          setTimeout(() => reject(new Error('Timeout na obtenção da sessão')), 8000)
+        )
+      ]);
 
       if (error) {
-        // Se erro de embed, tentar query alternativa
-        if (error.message.includes('Could not embed') || error.code === 'PGRST301') {
-          logger.warn('[AUTH-MANAGER] Erro de embed, tentando query alternativa');
-          await this.loadUserProfileAlternative(userId);
-          return;
-        }
         throw error;
       }
 
-      if (!profile) {
-        throw new Error('Perfil não encontrado');
-      }
-
-      const userProfile = profile as UserProfile;
-      const isAdmin = userProfile.user_roles?.name === 'admin';
-      const isFormacao = userProfile.user_roles?.name === 'formacao';
-
-      this.setState({
-        profile: userProfile,
-        isAdmin,
-        isFormacao,
-        isLoading: false,
-        error: null
-      });
-
-      logger.info('[AUTH-MANAGER] Perfil carregado com sucesso:', {
-        role: userProfile.user_roles?.name,
-        isAdmin,
-        isFormacao
-      });
-
-    } catch (error) {
-      logger.error('[AUTH-MANAGER] Erro ao carregar perfil:', error);
+      await this.handleSessionUpdate(session);
       
-      if (retryCount < maxRetries) {
-        const delay = (retryCount + 1) * 1000;
-        logger.info(`[AUTH-MANAGER] Tentando novamente em ${delay}ms...`);
+      // Reset retry count em caso de sucesso
+      this.retryCount = 0;
+      this.circuitBreakerOpen = false;
+      
+      logger.info('[AUTH-MANAGER] Inicialização concluída com sucesso');
+      
+    } catch (error) {
+      logger.error('[AUTH-MANAGER] Erro na inicialização:', error);
+      
+      this.retryCount++;
+      
+      if (this.retryCount >= this.maxRetries) {
+        // Abrir circuit breaker
+        this.circuitBreakerOpen = true;
+        setTimeout(() => {
+          this.circuitBreakerOpen = false;
+          this.retryCount = 0;
+        }, this.circuitBreakerTimeout);
+        
+        this.updateState({
+          isLoading: false,
+          error: 'Falha na autenticação após várias tentativas. Tente recarregar a página.'
+        });
+        
+        // Marcar para reset de emergência
+        localStorage.setItem('emergency_reset_needed', 'true');
+      } else {
+        // Retry com backoff exponencial
+        const delay = Math.min(1000 * Math.pow(2, this.retryCount - 1), 5000);
+        logger.warn(`[AUTH-MANAGER] Tentativa ${this.retryCount}/${this.maxRetries} em ${delay}ms`);
         
         setTimeout(() => {
-          this.loadUserProfile(userId, retryCount + 1);
+          this.initialize().catch(() => {
+            // Silenciar erros para evitar loops
+          });
         }, delay);
-        return;
       }
-
-      this.setState({
-        error: error instanceof Error ? error.message : 'Erro ao carregar perfil',
-        isLoading: false
-      });
     }
   }
 
-  private async loadUserProfileAlternative(userId: string): Promise<void> {
-    try {
-      logger.info('[AUTH-MANAGER] Usando query alternativa para perfil');
-
-      // Query separada para perfil e role
-      const [profileResult, roleResult] = await Promise.all([
-        supabase.from('profiles').select('*').eq('id', userId).single(),
-        supabase.from('user_roles').select('*')
-      ]);
-
-      if (profileResult.error) throw profileResult.error;
-      if (!profileResult.data) throw new Error('Perfil não encontrado');
-
-      const profile = profileResult.data;
-      let userRole = null;
-
-      if (roleResult.data && profile.role_id) {
-        userRole = roleResult.data.find(role => role.id === profile.role_id);
+  private setupAuthListener(): void {
+    supabase.auth.onAuthStateChange(async (event, session) => {
+      logger.info('[AUTH-MANAGER] Auth state changed:', { event, hasSession: !!session });
+      
+      if (event === 'SIGNED_OUT') {
+        this.updateState({
+          user: null,
+          session: null,
+          profile: null,
+          isLoading: false,
+          error: null,
+          isAdmin: false,
+          isFormacao: false
+        });
+      } else if (session) {
+        await this.handleSessionUpdate(session);
       }
+    });
+  }
 
-      const userProfile: UserProfile = {
-        ...profile,
-        user_roles: userRole
-      } as UserProfile;
+  private async handleSessionUpdate(session: Session | null): Promise<void> {
+    this.updateState({ 
+      session, 
+      user: session?.user ?? null 
+    });
 
-      const isAdmin = userRole?.name === 'admin';
-      const isFormacao = userRole?.name === 'formacao';
+    if (session?.user) {
+      try {
+        // Timeout reduzido para carregar perfil
+        const profile = await Promise.race([
+          fetchUserProfile(session.user.id),
+          new Promise<null>((_, reject) => 
+            setTimeout(() => reject(new Error('Timeout no carregamento do perfil')), 5000)
+          )
+        ]);
 
-      this.setState({
-        profile: userProfile,
-        isAdmin,
-        isFormacao,
-        isLoading: false,
-        error: null
-      });
+        const isAdmin = profile?.user_roles?.name === 'admin';
+        const isFormacao = profile?.user_roles?.name === 'formacao';
 
-      logger.info('[AUTH-MANAGER] Perfil carregado via query alternativa:', {
-        role: userRole?.name,
-        isAdmin,
-        isFormacao
-      });
+        this.updateState({
+          profile,
+          isAdmin,
+          isFormacao,
+          isLoading: false,
+          error: null
+        });
 
-    } catch (error) {
-      logger.error('[AUTH-MANAGER] Erro na query alternativa:', error);
-      throw error;
+      } catch (error) {
+        logger.error('[AUTH-MANAGER] Erro ao carregar perfil:', error);
+        
+        // Modo degradado - permitir acesso mesmo sem perfil completo
+        this.updateState({
+          profile: null,
+          isAdmin: false,
+          isFormacao: false,
+          isLoading: false,
+          error: 'Perfil não carregado completamente, mas login ativo'
+        });
+      }
+    } else {
+      this.updateState({ isLoading: false });
     }
+  }
+
+  private updateState(updates: Partial<AuthState>): void {
+    this.state = { ...this.state, ...updates };
+    this.notifyCallbacks();
+  }
+
+  private notifyCallbacks(): void {
+    this.callbacks.forEach(callback => {
+      try {
+        callback(this.state);
+      } catch (error) {
+        logger.error('[AUTH-MANAGER] Erro no callback:', error);
+      }
+    });
+  }
+
+  getState(): AuthState {
+    return { ...this.state };
+  }
+
+  on(event: 'stateChanged', callback: AuthEventCallback): () => void {
+    this.callbacks.add(callback);
+    return () => this.callbacks.delete(callback);
   }
 
   async signIn(email: string, password: string): Promise<{ error?: Error | null }> {
     try {
-      this.setState({ isLoading: true, error: null });
-
       const { error } = await supabase.auth.signInWithPassword({
         email,
         password
       });
-
-      if (error) {
-        this.setState({ error: error.message, isLoading: false });
-        return { error };
-      }
-
-      return { error: null };
+      return { error };
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro no login';
-      this.setState({ error: errorMessage, isLoading: false });
       return { error: error as Error };
     }
   }
 
   async signOut(): Promise<{ success: boolean; error?: Error | null }> {
     try {
-      this.setState({ isLoading: true });
-
-      const { error } = await supabase.auth.signOut();
-
-      if (error) {
-        this.setState({ error: error.message, isLoading: false });
-        return { success: false, error };
-      }
-
-      this.setState({
-        user: null,
-        session: null,
-        profile: null,
-        isAdmin: false,
-        isFormacao: false,
-        isLoading: false,
-        error: null
-      });
-
+      await supabase.auth.signOut({ scope: 'global' });
       return { success: true };
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro no logout';
-      this.setState({ error: errorMessage, isLoading: false });
       return { success: false, error: error as Error };
     }
   }
 
   getRedirectPath(): string {
-    const { user, profile, isAdmin, isFormacao } = this.state;
-
+    const { user, profile, isAdmin } = this.state;
+    
     if (!user) return '/login';
-
     if (isAdmin) return '/admin';
-    if (isFormacao) return '/formacao';
     if (!profile?.onboarding_completed) return '/onboarding';
-
+    if (profile?.user_roles?.name === 'formacao') return '/formacao';
+    
     return '/dashboard';
   }
 }

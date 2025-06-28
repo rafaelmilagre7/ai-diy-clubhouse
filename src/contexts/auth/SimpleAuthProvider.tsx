@@ -4,6 +4,7 @@ import { User, Session } from '@supabase/supabase-js';
 import { UserProfile } from '@/lib/supabase';
 import { logger } from '@/utils/logger';
 import AuthManager from '@/services/AuthManager';
+import { EmergencyReset } from '@/services/EmergencyReset';
 
 interface SimpleAuthContextType {
   user: User | null;
@@ -33,7 +34,10 @@ export const SimpleAuthProvider: React.FC<SimpleAuthProviderProps> = ({ children
   useEffect(() => {
     const authManager = AuthManager.getInstance();
     
-    logger.info('[SIMPLE-AUTH-PROVIDER] Inicializando com AuthManager');
+    logger.info('[SIMPLE-AUTH-PROVIDER] Inicializando com AuthManager otimizado');
+    
+    // Limpar estado de emergência se existir
+    EmergencyReset.clearEmergencyState();
     
     const handleStateChanged = (newState: typeof authState) => {
       logger.info('[SIMPLE-AUTH-PROVIDER] Estado atualizado via AuthManager', {
@@ -50,15 +54,27 @@ export const SimpleAuthProvider: React.FC<SimpleAuthProviderProps> = ({ children
     
     const initializeAuth = async () => {
       try {
-        await authManager.initialize();
+        // Timeout na inicialização para evitar travamento
+        await Promise.race([
+          authManager.initialize(),
+          new Promise<never>((_, reject) => 
+            setTimeout(() => reject(new Error('Timeout na inicialização do AuthManager')), 10000)
+          )
+        ]);
+        
         const currentState = authManager.getState();
         setAuthState(currentState);
+        
       } catch (error) {
-        logger.error('[SIMPLE-AUTH-PROVIDER] Erro na inicialização', error);
+        logger.error('[SIMPLE-AUTH-PROVIDER] Erro na inicialização:', error);
+        
+        // Marcar para reset de emergência
+        EmergencyReset.markEmergencyState();
+        
         setAuthState(prev => ({ 
           ...prev, 
           isLoading: false, 
-          error: (error as Error).message 
+          error: 'Falha na inicialização. Use o botão de Reset Sistema se necessário.' 
         }));
       }
     };
@@ -72,7 +88,11 @@ export const SimpleAuthProvider: React.FC<SimpleAuthProviderProps> = ({ children
 
   const refreshProfile = async () => {
     const authManager = AuthManager.getInstance();
-    await authManager.initialize();
+    try {
+      await authManager.initialize();
+    } catch (error) {
+      logger.error('[SIMPLE-AUTH-PROVIDER] Erro no refresh:', error);
+    }
   };
 
   const contextValue: SimpleAuthContextType = {

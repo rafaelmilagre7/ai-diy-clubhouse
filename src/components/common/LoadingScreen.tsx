@@ -2,6 +2,8 @@
 import React, { useState, useEffect } from 'react';
 import { Loader2, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { EmergencyResetButton } from './EmergencyResetButton';
+import { EmergencyReset } from '@/services/EmergencyReset';
 
 interface LoadingScreenProps {
   message?: string;
@@ -24,9 +26,10 @@ const LoadingScreen: React.FC<LoadingScreenProps> = ({
       const elapsed = Date.now() - startTime;
       setDuration(elapsed);
       
-      // Mostrar botão de emergência após 5 segundos
-      if (elapsed > 5000 && showEmergencyButton) {
+      // Mostrar botão de emergência após 8 segundos (reduzido de 10)
+      if (elapsed > 8000 && showEmergencyButton) {
         setShowButton(true);
+        EmergencyReset.markEmergencyState();
       }
     }, 100);
 
@@ -67,12 +70,13 @@ const LoadingScreen: React.FC<LoadingScreenProps> = ({
         </div>
         
         <p className="text-sm text-neutral-300">
-          {duration < 3000 ? 'Configurando sua experiência...' :
-           duration < 6000 ? 'Carregando seus dados...' :
-           'Quase pronto...'}
+          {duration < 2000 ? 'Configurando sua experiência...' :
+           duration < 5000 ? 'Carregando seus dados...' :
+           duration < 8000 ? 'Quase pronto...' :
+           'Carregamento demorado detectado...'}
         </p>
 
-        {/* Botão de emergência */}
+        {/* Botão de emergência local */}
         {showButton && (
           <div className="mt-6 space-y-3">
             <div className="flex items-center justify-center space-x-2 text-orange-400">
@@ -80,24 +84,38 @@ const LoadingScreen: React.FC<LoadingScreenProps> = ({
               <span className="text-sm">Carregamento demorado</span>
             </div>
             
-            <Button 
-              onClick={handleEmergencyAction}
-              variant="outline"
-              size="sm"
-              className="border-orange-400 text-orange-400 hover:bg-orange-400 hover:text-white"
-            >
-              Forçar Carregamento
-            </Button>
+            <div className="space-y-2">
+              <Button 
+                onClick={handleEmergencyAction}
+                variant="outline"
+                size="sm"
+                className="border-orange-400 text-orange-400 hover:bg-orange-400 hover:text-white"
+              >
+                Forçar Carregamento
+              </Button>
+              
+              <Button 
+                onClick={() => EmergencyReset.performFullReset()}
+                variant="destructive"
+                size="sm"
+                className="bg-red-600 hover:bg-red-700"
+              >
+                Reset Sistema
+              </Button>
+            </div>
           </div>
         )}
 
         {/* Debug info em desenvolvimento */}
         {import.meta.env.DEV && (
           <p className="text-xs text-neutral-500 mt-4">
-            {duration}ms
+            {duration}ms - Retry disponível em {Math.max(0, 8000 - duration)}ms
           </p>
         )}
       </div>
+      
+      {/* Botão de emergência global */}
+      <EmergencyResetButton />
     </div>
   );
 };
