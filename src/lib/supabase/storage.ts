@@ -130,14 +130,36 @@ export const ensureBucketExists = async (bucketName: string) => {
 };
 
 /**
- * Extract Panda video info from URL
+ * Extract Panda video info from URL - FIXED to include embedUrl
  */
 export const extractPandaVideoInfo = (url: string) => {
   if (!url) return null;
   
   try {
-    const match = url.match(/embed\/\?v=([^&]+)/);
-    return match && match[1] ? { videoId: match[1] } : null;
+    // Check for embed URL pattern
+    const embedMatch = url.match(/embed\/\?v=([^&]+)/);
+    if (embedMatch && embedMatch[1]) {
+      const videoId = embedMatch[1];
+      return { 
+        videoId, 
+        embedUrl: url // Return the full embed URL
+      };
+    }
+    
+    // Check for iframe pattern and extract embed URL
+    const iframeMatch = url.match(/src="([^"]+)"/);
+    if (iframeMatch && iframeMatch[1]) {
+      const embedUrl = iframeMatch[1];
+      const videoIdMatch = embedUrl.match(/embed\/\?v=([^&]+)/);
+      if (videoIdMatch && videoIdMatch[1]) {
+        return { 
+          videoId: videoIdMatch[1], 
+          embedUrl 
+        };
+      }
+    }
+    
+    return null;
   } catch (error) {
     console.error('Error extracting Panda video info:', error);
     return null;

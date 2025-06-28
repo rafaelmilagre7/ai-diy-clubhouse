@@ -27,7 +27,7 @@ export const PandaVideoEmbed: React.FC<PandaVideoEmbedProps> = ({
     
     const videoInfo = extractPandaVideoInfo(embedCode);
     
-    if (!videoInfo || !videoInfo.videoId || !videoInfo.embedUrl) {
+    if (!videoInfo?.videoId || !videoInfo?.embedUrl) {
       setError('O código de incorporação parece ser inválido. Certifique-se de que é um iframe do Panda Video.');
       return;
     }

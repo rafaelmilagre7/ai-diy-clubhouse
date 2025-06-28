@@ -1,7 +1,6 @@
 
-import { useQuery } from '@tanstack/react-query';
-import { useDashboardData } from './useDashboardData';
 import { useMemo } from 'react';
+import { useDashboardData } from './useDashboardData';
 
 export const useEnhancedDashboard = () => {
   const dashboardQuery = useDashboardData();
