@@ -11,14 +11,14 @@ interface CourseData {
   id: string;
   title: string;
   description: string;
-  published: boolean;
+  is_published: boolean;
   created_at: string;
   updated_at: string;
-  cover_image_url: string;
-  created_by: string;
+  thumbnail_url: string;
+  instructor_id: string;
   category: string;
   difficulty_level: string;
-  estimated_hours: number;
+  estimated_duration_hours: number;
 }
 
 const CourseCarousel = () => {
@@ -45,14 +45,14 @@ const CourseCarousel = () => {
         id: course.id,
         title: course.title,
         description: course.description || '',
-        published: course.published || false,
+        is_published: course.is_published || false,
         created_at: course.created_at,
         updated_at: course.updated_at,
-        cover_image_url: course.cover_image_url || '',
-        created_by: course.created_by || '',
+        thumbnail_url: course.thumbnail_url || '',
+        instructor_id: course.instructor_id || '',
         category: 'Geral',
         difficulty_level: 'Intermediário',
-        estimated_hours: 0
+        estimated_duration_hours: course.estimated_duration_hours || 0
       }));
 
       setCourses(mappedData);
@@ -63,7 +63,7 @@ const CourseCarousel = () => {
     }
   };
 
-  const featuredCourses = courses.filter(course => course.published).slice(0, 6);
+  const featuredCourses = courses.filter(course => course.is_published).slice(0, 6);
 
   if (loading) {
     return <p>Carregando cursos...</p>;
@@ -97,8 +97,8 @@ const CourseCarousel = () => {
               <CardHeader className="pb-3">
                 <div className="flex justify-between items-start">
                   <CardTitle className="text-lg line-clamp-2">{curso.title}</CardTitle>
-                  <Badge variant={curso.published ? "default" : "secondary"}>
-                    {curso.published ? "Publicado" : "Rascunho"}
+                  <Badge variant={curso.is_published ? "default" : "secondary"}>
+                    {curso.is_published ? "Publicado" : "Rascunho"}
                   </Badge>
                 </div>
               </CardHeader>
@@ -114,7 +114,7 @@ const CourseCarousel = () => {
                   </div>
                   <div className="flex items-center gap-1">
                     <Clock className="h-4 w-4" />
-                    <span>{curso.estimated_hours}h</span>
+                    <span>{curso.estimated_duration_hours}h</span>
                   </div>
                 </div>
               </CardContent>

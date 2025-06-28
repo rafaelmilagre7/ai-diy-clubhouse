@@ -5,28 +5,27 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Clock, Users, BookOpenCheck } from "lucide-react";
-import { LearningCourse } from "@/lib/supabase/types";
 import { supabase } from "@/lib/supabase";
-import { useAuth } from "@/contexts/auth";
+import { useSimpleAuth } from "@/contexts/auth/SimpleAuthProvider";
 
 interface CourseData {
   id: string;
   title: string;
   description: string;
-  published: boolean;
+  is_published: boolean;
   created_at: string;
   updated_at: string;
-  cover_image_url: string;
-  created_by: string;
+  thumbnail_url: string;
+  instructor_id: string;
   category: string;
   difficulty_level: string;
-  estimated_hours: number;
+  estimated_duration_hours: number;
 }
 
 const MemberCoursesList = () => {
   const [courses, setCourses] = useState<CourseData[]>([]);
   const [loading, setLoading] = useState(true);
-  const { user } = useAuth();
+  const { user } = useSimpleAuth();
 
   useEffect(() => {
     const fetchCourses = async () => {
@@ -45,14 +44,14 @@ const MemberCoursesList = () => {
           id: course.id,
           title: course.title,
           description: course.description || '',
-          published: course.published || false,
+          is_published: course.is_published || false,
           created_at: course.created_at,
           updated_at: course.updated_at,
-          cover_image_url: course.cover_image_url || '',
-          created_by: course.created_by || '',
+          thumbnail_url: course.thumbnail_url || '',
+          instructor_id: course.instructor_id || '',
           category: 'Geral',
           difficulty_level: 'Intermediário',
-          estimated_hours: 0
+          estimated_duration_hours: course.estimated_duration_hours || 0
         }));
 
         setCourses(mappedData);
@@ -64,7 +63,7 @@ const MemberCoursesList = () => {
     fetchCourses();
   }, []);
 
-  const publishedCourses = courses.filter(course => course.published);
+  const publishedCourses = courses.filter(course => course.is_published);
 
   if (loading) {
     return <p>Carregando cursos...</p>;
@@ -104,7 +103,7 @@ const MemberCoursesList = () => {
             </div>
             <div className="flex items-center gap-2">
               <Clock className="w-4 h-4" />
-              <span>0 horas</span>
+              <span>{course.estimated_duration_hours} horas</span>
             </div>
             <Button asChild>
               <Link to={`/formacao/cursos/${course.id}`}>Acessar curso</Link>

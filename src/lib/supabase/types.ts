@@ -11,7 +11,9 @@ export type LearningLesson = Database['public']['Tables']['learning_lessons']['R
 };
 
 export type LearningLessonVideo = Database['public']['Tables']['learning_lesson_videos']['Row'];
-export type LearningModule = Database['public']['Tables']['learning_modules']['Row'];
+export type LearningModule = Database['public']['Tables']['learning_modules']['Row'] & {
+  is_published?: boolean;
+};
 export type LearningCourse = Database['public']['Tables']['learning_courses']['Row'];
 export type LearningResource = Database['public']['Tables']['learning_resources']['Row'];
 export type LearningProgress = Database['public']['Tables']['learning_progress']['Row'];
@@ -52,6 +54,7 @@ export interface SimplifiedSolution {
   description: string;
   category: string;
   difficulty?: string;
+  difficulty_level?: string;
   thumbnail_url?: string;
   cover_image_url?: string;
   published: boolean;
@@ -59,6 +62,11 @@ export interface SimplifiedSolution {
   created_at: string;
   updated_at: string;
   tags?: string[];
+  estimated_time_hours?: number;
+  roi_potential?: string;
+  implementation_steps?: any;
+  required_tools?: string[];
+  expected_results?: string;
 }
 
 export interface SimplifiedTool {

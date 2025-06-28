@@ -4,17 +4,7 @@ import { supabase } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
 import { useSimpleAuth } from "@/contexts/auth/SimpleAuthProvider";
 import { useNavigate } from "react-router-dom";
-
-// Simplified types to avoid deep instantiation
-interface SimplifiedSolution {
-  id: string;
-  title: string;
-  description: string;
-  category: string;
-  published?: boolean;
-  difficulty_level?: string;
-  estimated_time_hours?: number;
-}
+import { SimplifiedSolution } from "@/lib/supabase/types";
 
 export const useSolutionData = (id: string | undefined) => {
   const { user, isAdmin } = useSimpleAuth();
@@ -46,7 +36,29 @@ export const useSolutionData = (id: string | undefined) => {
         }
         
         if (data) {
-          setSolution(data as SimplifiedSolution);
+          // Transform database data to match SimplifiedSolution interface
+          const transformedSolution: SimplifiedSolution = {
+            id: data.id,
+            title: data.title,
+            description: data.description,
+            category: data.category,
+            difficulty: data.difficulty_level || data.difficulty,
+            difficulty_level: data.difficulty_level,
+            thumbnail_url: data.thumbnail_url,
+            cover_image_url: data.cover_image_url,
+            published: data.published || false,
+            slug: data.slug,
+            created_at: data.created_at,
+            updated_at: data.updated_at,
+            tags: data.tags || [],
+            estimated_time_hours: data.estimated_time_hours,
+            roi_potential: data.roi_potential,
+            implementation_steps: data.implementation_steps,
+            required_tools: data.required_tools,
+            expected_results: data.expected_results
+          };
+          
+          setSolution(transformedSolution);
           
           if (user) {
             const { data: progressData } = await supabase

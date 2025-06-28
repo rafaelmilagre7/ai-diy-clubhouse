@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from "react";
-import { Module, Solution, supabase } from "@/lib/supabase";
-import { useAuth } from "@/contexts/auth";
+import { Module, supabase } from "@/lib/supabase";
+import { useSimpleAuth } from "@/contexts/auth/SimpleAuthProvider";
 import { useLogging } from "@/hooks/useLogging";
 
 export interface ChecklistItem {
@@ -10,7 +10,7 @@ export interface ChecklistItem {
   checked: boolean;
 }
 
-export const extractChecklistFromSolution = (solution: Solution): ChecklistItem[] => {
+export const extractChecklistFromSolution = (solution: any): ChecklistItem[] => {
   // Extract checklist from solution content or other fields
   // This is a placeholder implementation
   return [];
@@ -25,11 +25,11 @@ export const initializeUserChecklist = (checklist: ChecklistItem[]): Record<stri
 };
 
 export const useChecklistData = (module: Module) => {
-  const [solution, setSolution] = useState<Solution | null>(null);
+  const [solution, setSolution] = useState<any | null>(null);
   const [checklist, setChecklist] = useState<ChecklistItem[]>([]);
   const [userChecklist, setUserChecklist] = useState<Record<string, boolean>>({});
   const [loading, setLoading] = useState(true);
-  const { user } = useAuth();
+  const { user } = useSimpleAuth();
   const { log, logError } = useLogging();
 
   useEffect(() => {
@@ -60,11 +60,10 @@ export const useChecklistData = (module: Module) => {
           return;
         }
         
-        const solutionData = data as Solution;
-        setSolution(solutionData);
+        setSolution(data);
         
         // Extract checklist items from solution
-        let extractedChecklist = extractChecklistFromSolution(solutionData);
+        let extractedChecklist = extractChecklistFromSolution(data);
         
         // If no items in solution checklist, try fetching from implementation_checkpoints
         if (extractedChecklist.length === 0) {
@@ -83,7 +82,7 @@ export const useChecklistData = (module: Module) => {
               checked: false
             }));
           } else {
-            log("No checklist or implementation_checkpoints found", { solutionId: solutionData.id });
+            log("No checklist or implementation_checkpoints found", { solutionId: data.id });
           }
         }
         
@@ -103,7 +102,7 @@ export const useChecklistData = (module: Module) => {
               
           if (userError) {
             logError("Error fetching user checklist:", userError);
-          } else if (userData) {
+          } else if (userData && userData.checked_items) {
             // Parse the JSON data if it's a string
             const userItems = typeof userData.checked_items === 'string' 
               ? JSON.parse(userData.checked_items) 
