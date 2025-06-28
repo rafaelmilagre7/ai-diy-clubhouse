@@ -3,8 +3,8 @@ import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { supabase } from '@/lib/supabase';
-import { useAuth } from '@/contexts/auth';
-import { useToast } from '@/hooks/use-toast';
+import { useSimpleAuth } from '@/contexts/auth/SimpleAuthProvider';
+import { toast } from 'sonner';
 import { Form } from '@/components/ui/form';
 import { Button } from '@/components/ui/button';
 import { EventBasicInfo } from './form/EventBasicInfo';
@@ -23,8 +23,7 @@ interface EventFormProps {
 }
 
 export const EventForm = ({ event, onSuccess }: EventFormProps) => {
-  const { user } = useAuth();
-  const { toast } = useToast();
+  const { user } = useSimpleAuth();
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [selectedRoles, setSelectedRoles] = React.useState<string[]>([]);
 
@@ -49,11 +48,7 @@ export const EventForm = ({ event, onSuccess }: EventFormProps) => {
 
   const onSubmit = async (data: EventFormData) => {
     if (!user) {
-      toast({
-        title: "Erro",
-        description: "Você precisa estar logado para criar eventos.",
-        variant: "destructive",
-      });
+      toast.error('Você precisa estar logado para criar eventos.');
       return;
     }
 
@@ -79,42 +74,32 @@ export const EventForm = ({ event, onSuccess }: EventFormProps) => {
 
       if (event) {
         // Atualizar evento existente
-        const { error } = await supabase
+        const { error } = await (supabase as any)
           .from('events')
           .update(eventData)
-          .eq('id', event.id as any);
+          .eq('id', event.id);
 
         if (error) throw error;
 
-        toast({
-          title: "Sucesso",
-          description: "Evento atualizado com sucesso!",
-        });
+        toast.success('Evento atualizado com sucesso!');
       } else {
         // Criar novo evento
-        const { error } = await supabase
+        const { error } = await (supabase as any)
           .from('events')
           .insert({
             ...eventData,
             created_by: user.id,
-          } as any);
+          });
 
         if (error) throw error;
 
-        toast({
-          title: "Sucesso",
-          description: "Evento criado com sucesso!",
-        });
+        toast.success('Evento criado com sucesso!');
       }
 
       onSuccess?.();
     } catch (error: any) {
       console.error('Erro ao salvar evento:', error);
-      toast({
-        title: "Erro",
-        description: error.message || "Erro ao salvar evento.",
-        variant: "destructive",
-      });
+      toast.error(error.message || 'Erro ao salvar evento.');
     } finally {
       setIsSubmitting(false);
     }

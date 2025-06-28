@@ -23,10 +23,10 @@ export const EventsTable = () => {
     if (!confirmed) return;
 
     try {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from("events")
         .delete()
-        .eq("id", id as any);
+        .eq("id", id);
 
       if (error) throw error;
 

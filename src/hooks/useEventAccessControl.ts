@@ -12,13 +12,13 @@ export const useEventAccessControl = (eventId: string) => {
     queryFn: async () => {
       if (!eventId) return [];
 
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('event_access_control')
         .select(`
           *,
           roles:role_id(*)
         `)
-        .eq('event_id', eventId as any);
+        .eq('event_id', eventId);
 
       if (error) {
         console.error('Erro ao buscar controle de acesso:', error);

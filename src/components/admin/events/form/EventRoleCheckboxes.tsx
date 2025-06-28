@@ -24,7 +24,7 @@ export const EventRoleCheckboxes = ({ selectedRoles, onChange }: EventRoleCheckb
     queryKey: ['roles'],
     queryFn: async () => {
       console.log("🔍 [ROLE-CHECKBOXES] Fetching roles...");
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('user_roles')
         .select('id, name, description')
         .order('name');

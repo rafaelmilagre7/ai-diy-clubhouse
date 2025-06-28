@@ -13,7 +13,7 @@ export const useEvents = (options: UseEventsOptions = {}) => {
     queryFn: async (): Promise<Event[]> => {
       console.log('🔍 [EVENTS] Fetching events with options:', options);
       
-      let query = supabase
+      let query = (supabase as any)
         .from('events')
         .select('*')
         .order('start_time', { ascending: true });
