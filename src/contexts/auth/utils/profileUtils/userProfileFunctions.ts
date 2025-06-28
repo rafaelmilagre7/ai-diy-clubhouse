@@ -18,7 +18,7 @@ export const fetchUserProfile = async (userId: string): Promise<UserProfile | nu
       .single();
 
     if (error) throw error;
-    return data;
+    return data as UserProfile;
   } catch (error) {
     console.error('Erro ao buscar perfil:', error);
     return null;
@@ -87,7 +87,7 @@ export const createUserProfileIfNeeded = async (userId: string, email?: string):
         .single();
 
       if (error) throw error;
-      userProfile = data;
+      userProfile = data as UserProfile;
     }
     
     return userProfile;
@@ -99,8 +99,11 @@ export const createUserProfileIfNeeded = async (userId: string, email?: string):
 
 export const updateUserProfile = async (userId: string, updates: Partial<UserProfile>): Promise<UserProfile | null> => {
   try {
+    // Remover campos que não devem ser atualizados diretamente ou que causam conflito de tipo
+    const { user_roles, ...cleanUpdates } = updates;
+    
     const updateData = {
-      ...updates,
+      ...cleanUpdates,
       updated_at: new Date().toISOString()
     };
 
@@ -108,11 +111,18 @@ export const updateUserProfile = async (userId: string, updates: Partial<UserPro
       .from('profiles')
       .update(updateData)
       .eq('id', userId)
-      .select()
+      .select(`
+        *,
+        user_roles (
+          id,
+          name,
+          description
+        )
+      `)
       .single();
 
     if (error) throw error;
-    return data;
+    return data as UserProfile;
   } catch (error) {
     console.error('Erro ao atualizar perfil:', error);
     return null;
@@ -125,43 +135,46 @@ export const getUserProfile = async (userId: string): Promise<UserProfile | null
 
 export const createUserProfile = async (userData: Partial<UserProfile>): Promise<UserProfile | null> => {
   try {
+    // Remover campos que não devem ser inseridos diretamente
+    const { user_roles, ...cleanUserData } = userData;
+    
     const profileData = {
-      id: userData.id,
-      email: userData.email,
-      name: userData.name,
-      avatar_url: userData.avatar_url,
-      company_name: userData.company_name,
-      industry: userData.industry,
-      role_id: userData.role_id,
-      phone: userData.phone,
-      instagram: userData.instagram,
-      linkedin: userData.linkedin,
-      state: userData.state,
-      city: userData.city,
-      company_website: userData.company_website,
-      company_size: userData.company_size,
-      annual_revenue: userData.annual_revenue,
-      ai_knowledge_level: userData.ai_knowledge_level,
-      position: userData.position,
-      onboarding_completed: userData.onboarding_completed || false,
-      birth_date: userData.birth_date || null,
-      curiosity: userData.curiosity || null,
-      business_sector: userData.business_sector || null,
-      has_implemented_ai: userData.has_implemented_ai || "false",
-      ai_tools_used: userData.ai_tools_used || [],
-      daily_tools: userData.daily_tools || [],
-      who_will_implement: userData.who_will_implement || null,
-      main_objective: userData.main_objective || null,
-      area_to_impact: userData.area_to_impact || null,
-      expected_result_90_days: userData.expected_result_90_days || null,
-      ai_implementation_budget: userData.ai_implementation_budget || null,
-      weekly_learning_time: userData.weekly_learning_time || null,
-      content_preference: userData.content_preference || [],
-      wants_networking: userData.wants_networking || null,
-      best_days: userData.best_days || [],
-      best_periods: userData.best_periods || [],
-      accepts_case_study: userData.accepts_case_study || null,
-      onboarding_completed_at: userData.onboarding_completed_at || null,
+      id: cleanUserData.id,
+      email: cleanUserData.email,
+      name: cleanUserData.name,
+      avatar_url: cleanUserData.avatar_url,
+      company_name: cleanUserData.company_name,
+      industry: cleanUserData.industry,
+      role_id: cleanUserData.role_id,
+      phone: cleanUserData.phone,
+      instagram: cleanUserData.instagram,
+      linkedin: cleanUserData.linkedin,
+      state: cleanUserData.state,
+      city: cleanUserData.city,
+      company_website: cleanUserData.company_website,
+      company_size: cleanUserData.company_size,
+      annual_revenue: cleanUserData.annual_revenue,
+      ai_knowledge_level: cleanUserData.ai_knowledge_level,
+      position: cleanUserData.position,
+      onboarding_completed: cleanUserData.onboarding_completed || false,
+      birth_date: cleanUserData.birth_date || null,
+      curiosity: cleanUserData.curiosity || null,
+      business_sector: cleanUserData.business_sector || null,
+      has_implemented_ai: cleanUserData.has_implemented_ai || "false",
+      ai_tools_used: cleanUserData.ai_tools_used || [],
+      daily_tools: cleanUserData.daily_tools || [],
+      who_will_implement: cleanUserData.who_will_implement || null,
+      main_objective: cleanUserData.main_objective || null,
+      area_to_impact: cleanUserData.area_to_impact || null,
+      expected_result_90_days: cleanUserData.expected_result_90_days || null,
+      ai_implementation_budget: cleanUserData.ai_implementation_budget || null,
+      weekly_learning_time: cleanUserData.weekly_learning_time || null,
+      content_preference: cleanUserData.content_preference || [],
+      wants_networking: cleanUserData.wants_networking || null,
+      best_days: cleanUserData.best_days || [],
+      best_periods: cleanUserData.best_periods || [],
+      accepts_case_study: cleanUserData.accepts_case_study || null,
+      onboarding_completed_at: cleanUserData.onboarding_completed_at || null,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
     };
@@ -169,11 +182,18 @@ export const createUserProfile = async (userData: Partial<UserProfile>): Promise
     const { data, error } = await supabase
       .from('profiles')
       .insert(profileData)
-      .select()
+      .select(`
+        *,
+        user_roles (
+          id,
+          name,
+          description
+        )
+      `)
       .single();
 
     if (error) throw error;
-    return data;
+    return data as UserProfile;
   } catch (error) {
     console.error('Erro ao criar perfil:', error);
     return null;

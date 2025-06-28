@@ -64,14 +64,15 @@ export const useRealAnalyticsData = () => {
       const totalSolutions = solutions.length;
       const publishedSolutions = solutions.length; // Assumir que todas estão publicadas
       
-      // Buscar dados de progresso
+      // Buscar dados de progresso (usando os campos corretos da tabela progress)
       const { data: progressData, error: progressError } = await supabase
         .from('progress')
-        .select('id, is_completed, solution_id');
+        .select('id, completed_at, solution_id, user_id');
 
       const allImplementations = progressData || [];
       const totalImplementations = allImplementations.length;
-      const completedImplementations = allImplementations.filter(impl => impl.is_completed).length;
+      // Considerar como concluído se tem completed_at preenchido
+      const completedImplementations = allImplementations.filter(impl => impl.completed_at !== null).length;
       const averageCompletionRate = totalImplementations > 0 
         ? (completedImplementations / totalImplementations) * 100 
         : 0;
