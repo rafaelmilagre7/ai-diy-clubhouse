@@ -35,7 +35,25 @@ export const uploadFile = async (
     });
 
   if (error) throw error;
-  return data;
+  return { data, error: null };
+};
+
+/**
+ * Upload file with fallback options - FIXED SIGNATURE
+ */
+export const uploadFileWithFallback = async (
+  file: File | Blob,
+  bucket: string,
+  path: string,
+  options?: { cacheControl?: string; upsert?: boolean }
+) => {
+  try {
+    return await uploadFile(bucket, path, file, options);
+  } catch (error) {
+    console.error('Primary upload failed, trying fallback:', error);
+    // Fallback logic could be implemented here
+    throw error;
+  }
 };
 
 /**
@@ -163,24 +181,6 @@ export const extractPandaVideoInfo = (url: string) => {
   } catch (error) {
     console.error('Error extracting Panda video info:', error);
     return null;
-  }
-};
-
-/**
- * Upload file with fallback options
- */
-export const uploadFileWithFallback = async (
-  bucket: string,
-  path: string,
-  file: File | Blob,
-  options?: { cacheControl?: string; upsert?: boolean }
-) => {
-  try {
-    return await uploadFile(bucket, path, file, options);
-  } catch (error) {
-    console.error('Primary upload failed, trying fallback:', error);
-    // Fallback logic could be implemented here
-    throw error;
   }
 };
 

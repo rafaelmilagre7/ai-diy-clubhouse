@@ -71,16 +71,16 @@ export const ImageUpload = ({
       
       setProgress(25);
       
-      // Upload usando a função corrigida com 3 argumentos
-      const { data, error: uploadError } = await uploadFileWithFallback(
+      // Upload usando a função corrigida - FIXED ORDER OF PARAMETERS
+      const result = await uploadFileWithFallback(
         file,
         bucketName,
         filePath
       );
 
-      if (uploadError) {
-        console.error('Erro no upload:', uploadError);
-        throw new Error(`Erro no upload: ${uploadError.message}`);
+      if (result.error) {
+        console.error('Erro no upload:', result.error);
+        throw new Error(`Erro no upload: ${result.error.message}`);
       }
 
       setProgress(75);
