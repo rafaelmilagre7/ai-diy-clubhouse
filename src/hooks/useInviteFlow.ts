@@ -3,7 +3,6 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { tokenAudit } from '@/utils/tokenAuditLogger';
 import { logger } from '@/utils/logger';
-import AuthManager from '@/services/AuthManager';
 
 interface InviteDetails {
   email: string;
@@ -28,20 +27,6 @@ export const useInviteFlow = (token?: string) => {
     if (!token) {
       setInviteDetails(null);
       setError(null);
-      setIsLoading(false);
-      return;
-    }
-
-    // Verificar se AuthManager já tem detalhes do convite
-    const authManager = AuthManager.getInstance();
-    const authState = authManager.getState();
-    
-    if (authState.hasInviteToken && authState.inviteDetails) {
-      logger.info('[INVITE-FLOW] 🔄 Usando detalhes do AuthManager', {
-        component: 'useInviteFlow',
-        action: 'use_auth_manager_details'
-      });
-      setInviteDetails(authState.inviteDetails);
       setIsLoading(false);
       return;
     }
