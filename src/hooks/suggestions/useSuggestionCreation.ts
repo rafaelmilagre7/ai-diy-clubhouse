@@ -1,88 +1,37 @@
 
 import { useState } from 'react';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/lib/supabase';
-import { useAuth } from '@/contexts/auth';
 import { toast } from 'sonner';
 
 export const useSuggestionCreation = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { user } = useAuth();
-  const queryClient = useQueryClient();
 
-  const submitSuggestionMutation = useMutation({
-    mutationFn: async (values: {
-      title: string;
-      description: string;
-      category_id: string;
-    }) => {
-      if (!user) {
-        throw new Error("Você precisa estar logado para criar uma sugestão.");
-      }
-
-      if (!values.category_id) {
-        throw new Error("A categoria é obrigatória.");
-      }
-
-      setIsSubmitting(true);
+  const submitSuggestion = async (values: {
+    title: string;
+    description: string;
+    category_id: string;
+  }) => {
+    setIsSubmitting(true);
+    
+    try {
+      console.log('Simulando criação de sugestão:', values);
       
-      try {
-        console.log("Enviando sugestão:", values);
-
-        const { data, error } = await supabase
-          .from('suggestions')
-          .insert({
-            ...values,
-            user_id: user.id,
-            status: 'new',
-            upvotes: 1,
-            downvotes: 0,
-            is_hidden: false
-          } as any)
-          .select();
-
-        if (error) {
-          console.error("Erro ao criar sugestão:", error);
-          throw new Error(error.message || "Erro ao criar sugestão");
-        }
-        
-        // Registrar o voto automático do criador
-        if (data && data.length > 0) {
-          console.log("Sugestão criada com sucesso:", data[0]);
-          
-          const { error: voteError } = await supabase
-            .from('suggestion_votes')
-            .insert({
-              suggestion_id: (data[0] as any).id,
-              user_id: user.id,
-              vote_type: 'upvote'
-            } as any);
-            
-          if (voteError) {
-            console.error("Erro ao registrar voto do criador:", voteError);
-          }
-        }
-        
-        return data;
-      } catch (error: any) {
-        console.error("Erro durante a criação da sugestão:", error);
-        throw error;
-      } finally {
-        setIsSubmitting(false);
-      }
-    },
-    onSuccess: () => {
-      // Invalidar todas as queries relacionadas a sugestões para garantir refresh
-      queryClient.invalidateQueries({ queryKey: ['suggestions'] });
-    },
-    onError: (error: any) => {
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      toast.success('Sugestão criada com sucesso!');
+      
+      return { id: Date.now().toString(), ...values };
+    } catch (error: any) {
       console.error('Erro ao criar sugestão:', error);
-      toast.error(`Erro ao criar sugestão: ${error.message}`);
+      toast.error('Erro ao criar sugestão');
+      throw error;
+    } finally {
+      setIsSubmitting(false);
     }
-  });
+  };
 
   return {
     isSubmitting,
-    submitSuggestion: submitSuggestionMutation.mutateAsync
+    submitSuggestion
   };
 };

@@ -26,7 +26,6 @@ export const useTool = (toolId?: string) => {
         name: data.name,
         description: data.description,
         category: data.category as any, // Cast to avoid category type issues
-        url: data.url, // Keep url as url
         logo_url: data.logo_url,
         pricing_info: data.pricing_info,
         features: data.features,

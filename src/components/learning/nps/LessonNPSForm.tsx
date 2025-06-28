@@ -10,9 +10,10 @@ import { Star } from "lucide-react";
 interface LessonNPSFormProps {
   lessonId: string;
   onNPSSubmitted?: () => void;
+  className?: string;
 }
 
-export const LessonNPSForm = ({ lessonId, onNPSSubmitted }: LessonNPSFormProps) => {
+export const LessonNPSForm = ({ lessonId, onNPSSubmitted, className }: LessonNPSFormProps) => {
   const { user } = useSimpleAuth();
   const [rating, setRating] = useState<number>(0);
   const [feedback, setFeedback] = useState("");
@@ -46,7 +47,7 @@ export const LessonNPSForm = ({ lessonId, onNPSSubmitted }: LessonNPSFormProps) 
 
   if (isLoading) {
     return (
-      <Card>
+      <Card className={className}>
         <CardContent className="p-6">
           <div className="animate-pulse">
             <div className="h-4 bg-gray-300 rounded w-1/4 mb-2"></div>
@@ -59,7 +60,7 @@ export const LessonNPSForm = ({ lessonId, onNPSSubmitted }: LessonNPSFormProps) 
 
   if (existingNPS) {
     return (
-      <Card>
+      <Card className={className}>
         <CardHeader>
           <CardTitle>Obrigado pela sua avaliação!</CardTitle>
         </CardHeader>
@@ -73,7 +74,7 @@ export const LessonNPSForm = ({ lessonId, onNPSSubmitted }: LessonNPSFormProps) 
   }
 
   return (
-    <Card>
+    <Card className={className}>
       <CardHeader>
         <CardTitle>Avalie esta lição</CardTitle>
       </CardHeader>
