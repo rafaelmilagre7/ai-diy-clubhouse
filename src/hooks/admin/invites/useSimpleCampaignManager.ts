@@ -3,42 +3,27 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
-interface Campaign {
+interface SimpleCampaign {
   id: string;
   name: string;
   description?: string;
   status: 'draft' | 'active' | 'paused' | 'completed';
-  target_role_id?: string;
-  email_template: string;
-  whatsapp_template?: string;
-  scheduled_for?: string;
-  channels: string[];
-  segmentation: any;
-  follow_up_rules: any;
-  created_by: string;
   created_at: string;
-  updated_at: string;
-  // Dados calculados
   total_invites?: number;
-  sent_invites?: number;
-  conversions?: number;
-  conversion_rate?: number;
 }
 
-interface CampaignStats {
+interface SimpleCampaignStats {
   totalCampaigns: number;
   activeCampaigns: number;
   totalInvitesSent: number;
-  avgConversionRate: number;
 }
 
-export const useCampaignManager = () => {
-  const [campaigns, setCampaigns] = useState<Campaign[]>([]);
-  const [stats, setStats] = useState<CampaignStats>({
+export const useSimpleCampaignManager = () => {
+  const [campaigns, setCampaigns] = useState<SimpleCampaign[]>([]);
+  const [stats, setStats] = useState<SimpleCampaignStats>({
     totalCampaigns: 0,
     activeCampaigns: 0,
-    totalInvitesSent: 0,
-    avgConversionRate: 0
+    totalInvitesSent: 0
   });
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
@@ -47,7 +32,8 @@ export const useCampaignManager = () => {
     try {
       setLoading(true);
 
-      // Buscar dados dos convites para simular campanhas
+      // Para esta versão simplificada, vamos trabalhar apenas com os convites existentes
+      // e simular campanhas baseadas nos dados de convites
       const { data: invitesData, error: invitesError } = await supabase
         .from('invites')
         .select('id, email, created_at, used_at')
@@ -55,44 +41,29 @@ export const useCampaignManager = () => {
 
       if (invitesError) throw invitesError;
 
-      // Simular campanhas baseadas nos dados existentes
-      const mockCampaigns: Campaign[] = [
+      // Simular campanhas baseadas nos convites
+      const mockCampaigns: SimpleCampaign[] = [
         {
           id: '1',
-          name: 'Campanha Principal',
-          description: 'Convites gerais da plataforma',
+          name: 'Convites Gerais',
+          description: 'Todos os convites enviados pela plataforma',
           status: 'active',
-          target_role_id: '',
-          email_template: 'Template padrão',
-          channels: ['email'],
-          segmentation: {},
-          follow_up_rules: {},
-          created_by: 'admin',
           created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-          total_invites: invitesData?.length || 0,
-          sent_invites: invitesData?.length || 0,
-          conversions: invitesData?.filter(i => i.used_at).length || 0,
-          conversion_rate: invitesData?.length ? 
-            ((invitesData.filter(i => i.used_at).length / invitesData.length) * 100) : 0
+          total_invites: invitesData?.length || 0
         }
       ];
 
       setCampaigns(mockCampaigns);
 
-      // Calcular estatísticas
+      // Calcular estatísticas simples
       const totalCampaigns = mockCampaigns.length;
       const activeCampaigns = mockCampaigns.filter(c => c.status === 'active').length;
       const totalInvitesSent = invitesData?.length || 0;
-      const avgConversionRate = mockCampaigns.length > 0 
-        ? mockCampaigns.reduce((sum, c) => sum + (c.conversion_rate || 0), 0) / mockCampaigns.length
-        : 0;
 
       setStats({
         totalCampaigns,
         activeCampaigns,
-        totalInvitesSent,
-        avgConversionRate
+        totalInvitesSent
       });
 
     } catch (error: any) {
@@ -103,11 +74,11 @@ export const useCampaignManager = () => {
     }
   };
 
-  const createCampaign = async (campaignData: Partial<Campaign>) => {
+  const createCampaign = async (campaignData: Partial<SimpleCampaign>) => {
     try {
       setCreating(true);
-
-      // Para esta versão, simular criação de campanha
+      
+      // Para esta versão simplificada, apenas simular a criação
       toast.success("Campanha criada com sucesso!");
       await fetchCampaigns();
       
@@ -121,7 +92,7 @@ export const useCampaignManager = () => {
     }
   };
 
-  const updateCampaign = async (id: string, updates: Partial<Campaign>) => {
+  const updateCampaign = async (id: string, updates: Partial<SimpleCampaign>) => {
     try {
       toast.success("Campanha atualizada com sucesso!");
       await fetchCampaigns();
@@ -143,25 +114,6 @@ export const useCampaignManager = () => {
     }
   };
 
-  const pauseCampaign = async (id: string) => {
-    await updateCampaign(id, { status: 'paused' });
-  };
-
-  const resumeCampaign = async (id: string) => {
-    await updateCampaign(id, { status: 'active' });
-  };
-
-  const addInvitesToCampaign = async (campaignId: string, inviteIds: string[]) => {
-    try {
-      toast.success("Convites adicionados à campanha!");
-      await fetchCampaigns();
-    } catch (error: any) {
-      console.error("Erro ao adicionar convites à campanha:", error);
-      toast.error("Erro ao adicionar convites à campanha");
-      throw error;
-    }
-  };
-
   useEffect(() => {
     fetchCampaigns();
   }, []);
@@ -174,9 +126,6 @@ export const useCampaignManager = () => {
     fetchCampaigns,
     createCampaign,
     updateCampaign,
-    deleteCampaign,
-    pauseCampaign,
-    resumeCampaign,
-    addInvitesToCampaign
+    deleteCampaign
   };
 };
