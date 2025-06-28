@@ -46,8 +46,8 @@ export const useSolutionData = (id: string | undefined) => {
             difficulty_level: data.difficulty_level,
             thumbnail_url: data.thumbnail_url,
             cover_image_url: data.thumbnail_url || '', 
-            published: data.published ?? false, // Handle database field
-            slug: data.slug || data.title?.toLowerCase().replace(/\s+/g, '-') || '', // Generate slug if missing
+            published: data.published ?? false,
+            slug: data.slug || data.title?.toLowerCase().replace(/\s+/g, '-') || '',
             created_at: data.created_at,
             updated_at: data.updated_at,
             tags: data.tags || [],
@@ -55,10 +55,10 @@ export const useSolutionData = (id: string | undefined) => {
             roi_potential: data.roi_potential,
             implementation_steps: data.implementation_steps,
             required_tools: data.required_tools,
-            expected_results: data.expected_results || '', // Handle database field
-            success_metrics: data.success_metrics || '', // Handle database field
-            target_audience: data.target_audience || '', // Handle database field
-            prerequisites: data.prerequisites || '' // Handle database field
+            expected_results: data.expected_results || '',
+            success_metrics: data.success_metrics || '',
+            target_audience: data.target_audience || '',
+            prerequisites: data.prerequisites || ''
           };
           
           setSolution(transformedSolution);

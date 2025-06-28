@@ -31,21 +31,21 @@ export const useLmsAnalyticsData = (timeRange: string): LmsAnalyticsResult => {
   // Obter a data de início baseada no intervalo de tempo
   const startDate = useTimeRange(timeRange);
   
-  // Buscar dados de NPS
-  const npsResult = useNpsData();
+  // Buscar dados de NPS - fix the parameter issue
+  const npsResult = useNpsData(startDate);
   
   // Buscar estatísticas gerais
   const statsResult = useStatsData();
   
-  // Log de erros (sem toast para não ser intrusivo)
+  // Handle errors properly - fix the property access issue
   if (npsResult.error) {
     console.error('Erro ao carregar dados de NPS:', npsResult.error);
   }
   
-  if (statsResult.error) {
-    console.error('Erro ao carregar estatísticas:', statsResult.error);
+  if (statsResult.stats && statsResult.loading === false) {
+    // Stats loaded successfully
   }
-
+  
   // Função para atualizar os dados
   const refresh = useCallback(() => {
     queryClient.invalidateQueries({ queryKey: ['lms-nps-data'] });

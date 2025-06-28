@@ -1,8 +1,6 @@
-
-
 import { Database } from './database.types';
 
-// Basic types from database
+// Basic types from database - handle missing tables gracefully
 export type LearningLesson = Database['public']['Tables']['learning_lessons']['Row'] & {
   resources?: LearningResource[];
   videos?: LearningLessonVideo[];
@@ -18,8 +16,20 @@ export type LearningModule = Database['public']['Tables']['learning_modules']['R
 export type LearningCourse = Database['public']['Tables']['learning_courses']['Row'];
 export type LearningResource = Database['public']['Tables']['learning_resources']['Row'];
 
-// Use the correct table name from the schema
-export type LearningProgress = Database['public']['Tables']['learning_progress']['Row'];
+// Handle learning_progress table - may not exist in current schema
+export type LearningProgress = {
+  id: string;
+  user_id: string;
+  lesson_id: string;
+  progress_percentage: number;
+  video_progress: Record<string, number>;
+  started_at: string;
+  completed_at: string | null;
+  last_position_seconds?: number;
+  updated_at: string;
+  created_at: string;
+  notes?: string | null;
+};
 
 // Tipos específicos do sistema
 export type Solution = Database['public']['Tables']['solutions']['Row'] & {
@@ -30,7 +40,8 @@ export type Solution = Database['public']['Tables']['solutions']['Row'] & {
   success_metrics?: string;
   target_audience?: string;
   prerequisites?: string;
-  difficulty_level?: string; // Add this property
+  difficulty_level?: string;
+  difficulty?: string; // Add fallback for compatibility
 };
 
 export type UserProfile = Database['public']['Tables']['profiles']['Row'] & {
@@ -48,8 +59,17 @@ export type Module = Database['public']['Tables']['modules']['Row'] & {
   module_order?: number;
 };
 
-// Use the correct table name from the schema
-export type Progress = Database['public']['Tables']['progress']['Row'];
+// Handle progress table - may have different structure
+export type Progress = {
+  id: string;
+  user_id: string;
+  solution_id: string;
+  is_completed: boolean;
+  started_at: string;
+  completed_at: string | null;
+  updated_at: string;
+  created_at: string;
+};
 
 export type Tool = Database['public']['Tables']['tools']['Row'] & {
   status?: boolean;
@@ -83,9 +103,9 @@ export interface SimplifiedSolution {
   implementation_steps?: any;
   required_tools?: string[];
   expected_results: string;
-  success_metrics?: string;
-  target_audience?: string;
-  prerequisites?: string;
+  success_metrics: string;
+  target_audience: string;
+  prerequisites: string;
 }
 
 export interface SimplifiedTool {
@@ -207,4 +227,3 @@ export const safeSolutionCategory = (category: string): SolutionCategory => {
   }
   return 'Receita'; // Default fallback
 };
-

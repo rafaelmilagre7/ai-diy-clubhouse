@@ -40,10 +40,10 @@ export const useTools = (options?: {
         is_active: tool.is_active,
         created_at: tool.created_at,
         updated_at: tool.updated_at,
-        has_member_benefit: tool.has_member_benefit ?? false, // Handle database field
+        has_member_benefit: Boolean(tool.benefit_title || tool.benefit_description),
         benefit_type: tool.benefit_type,
-        benefit_discount_percentage: tool.benefit_discount_percentage ?? null, // Handle database field
-        benefit_link: tool.benefit_link ?? null, // Handle database field
+        benefit_discount_percentage: tool.benefit_discount_percentage ?? null,
+        benefit_link: tool.benefit_link ?? null,
         benefit_title: tool.benefit_title,
         benefit_description: tool.benefit_description,
         status: tool.is_active // Map is_active to status for compatibility
