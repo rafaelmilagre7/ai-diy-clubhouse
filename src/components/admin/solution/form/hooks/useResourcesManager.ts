@@ -1,19 +1,11 @@
 
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
-
-// Simplified resource interface to avoid circular dependencies
-interface SimpleResource {
-  id?: string;
-  name: string;
-  url: string;
-  type: string;
-  size?: number;
-}
+import { Resource } from "../types/ResourceTypes";
 
 export const useResourcesManager = (solutionId: string | null) => {
   const { toast } = useToast();
-  const [resources, setResources] = useState<SimpleResource[]>([]);
+  const [resources, setResources] = useState<Resource[]>([]);
   const [loading, setLoading] = useState(true);
   const [savingResources, setSavingResources] = useState(false);
 
@@ -54,10 +46,18 @@ export const useResourcesManager = (solutionId: string | null) => {
     if (!solutionId) return;
     
     try {
-      const newResource: SimpleResource = {
+      const newResource: Resource = {
         name: fileName,
         url: url,
         type: 'document',
+        solution_id: solutionId,
+        metadata: {
+          title: fileName,
+          description: `Arquivo ${fileName}`,
+          url: url,
+          type: 'document',
+          size: fileSize
+        },
         size: fileSize
       };
       

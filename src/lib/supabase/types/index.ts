@@ -1,6 +1,7 @@
+
 import { Database } from './database.types';
 
-// Tipos de tabelas principais
+// Tipos de tabelas principais (removendo referências a tabelas inexistentes)
 export type LearningLesson = Database['public']['Tables']['learning_lessons']['Row'];
 export type LearningLessonVideo = Database['public']['Tables']['learning_lesson_videos']['Row'];
 export type LearningModule = Database['public']['Tables']['learning_modules']['Row'];
@@ -47,11 +48,6 @@ export type SolutionResource = Database['public']['Tables']['solution_resources'
 // Tipos de analytics e notificações
 export type Analytics = Database['public']['Tables']['analytics']['Row'];
 export type NotificationPreferences = Database['public']['Tables']['notification_preferences']['Row'];
-
-// Tipos de funções RPC
-export type AuditResult = Database['public']['Functions']['audit_role_assignments']['Returns'][0];
-export type SyncResult = Database['public']['Functions']['sync_profile_roles']['Returns'];
-export type ValidationResult = Database['public']['Functions']['validate_profile_roles']['Returns'][0];
 
 // Re-exportação das definições de tipos base
 export * from './database.types';

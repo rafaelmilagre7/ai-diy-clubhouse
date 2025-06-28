@@ -22,15 +22,15 @@ export const useDashboardProgress = () => {
       }
 
       try {
-        // Buscar progresso do usuário nas soluções
+        // Usar tabela 'progress' que existe no Supabase
         const { data: progress, error } = await supabase
-          .from('user_solution_progress')
+          .from('progress')
           .select(`
             solution_id,
-            progress_percentage,
-            completed,
-            started_at,
-            completed_at
+            completion_percentage,
+            is_completed,
+            created_at,
+            updated_at
           `)
           .eq('user_id', user.id);
 
@@ -41,10 +41,10 @@ export const useDashboardProgress = () => {
 
         return (progress || []).map(p => ({
           solutionId: p.solution_id,
-          progress: p.progress_percentage || 0,
-          completed: p.completed || false,
-          startedAt: p.started_at,
-          completedAt: p.completed_at
+          progress: p.completion_percentage || 0,
+          completed: p.is_completed || false,
+          startedAt: p.created_at,
+          completedAt: p.is_completed ? p.updated_at : undefined
         }));
 
       } catch (error) {

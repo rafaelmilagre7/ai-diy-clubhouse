@@ -2,6 +2,13 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 
+interface ForumStats {
+  topicCount: number;
+  postCount: number;
+  activeUserCount: number;
+  solvedCount: number;
+}
+
 export const useForumStats = () => {
   const {
     data,
@@ -9,7 +16,7 @@ export const useForumStats = () => {
     error
   } = useQuery({
     queryKey: ['forumStats'],
-    queryFn: async () => {
+    queryFn: async (): Promise<ForumStats> => {
       try {
         console.log("Carregando estatísticas do fórum...");
         
@@ -64,7 +71,7 @@ export const useForumStats = () => {
         const { count: solvedCount, error: solvedError } = await supabase
           .from('forum_topics')
           .select('*', { count: 'exact', head: true })
-          .eq('is_solved', true as any);
+          .eq('is_solved', true);
           
         if (solvedError) {
           console.error("Erro ao buscar tópicos resolvidos:", solvedError.message);
@@ -73,8 +80,8 @@ export const useForumStats = () => {
         
         // Combinar e obter usuários únicos
         const allUserIds = [
-          ...((activeUsers as any)?.map((u: any) => (u as any).user_id) || []), 
-          ...((activePosterUsers as any)?.map((u: any) => (u as any).user_id) || [])
+          ...((activeUsers || []).map((u: any) => u.user_id)), 
+          ...((activePosterUsers || []).map((u: any) => u.user_id))
         ];
         const uniqueUserIds = [...new Set(allUserIds)];
         

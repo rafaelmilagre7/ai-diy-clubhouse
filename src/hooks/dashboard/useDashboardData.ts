@@ -1,7 +1,6 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
-import { Solution } from '@/lib/supabase';
 
 interface DashboardStats {
   totalSolutions: number;
@@ -12,7 +11,7 @@ interface DashboardStats {
 
 interface DashboardData {
   stats: DashboardStats;
-  recentSolutions: Solution[];
+  recentSolutions: any[];
 }
 
 export const useDashboardData = () => {
@@ -20,7 +19,7 @@ export const useDashboardData = () => {
     queryKey: ['dashboard-data'],
     queryFn: async (): Promise<DashboardData> => {
       try {
-        // Buscar soluções básicas
+        // Buscar soluções básicas (sem campo 'difficulty' que não existe)
         const { data: solutions, error: solutionsError } = await supabase
           .from('solutions')
           .select(`
@@ -28,7 +27,6 @@ export const useDashboardData = () => {
             title,
             description,
             category,
-            difficulty,
             estimated_time_hours,
             cover_image_url,
             created_at,
@@ -46,7 +44,7 @@ export const useDashboardData = () => {
         const { data: tools, error: toolsError } = await supabase
           .from('tools')
           .select('id')
-          .eq('status', 'published');
+          .eq('is_active', true);
 
         if (toolsError) {
           console.error('Erro ao buscar ferramentas:', toolsError);

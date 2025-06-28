@@ -1,10 +1,31 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
-import { Tool } from '@/types/toolTypes';
+
+interface SimpleTool {
+  id: string;
+  name: string;
+  description: string;
+  category: string;
+  logo_url: string;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+  official_url?: string;
+  tags?: string[];
+  benefit_title?: string;
+  benefit_type?: string;
+  benefit_description?: string;
+  benefit_link?: string;
+  benefit_discount_percentage?: number;
+  has_member_benefit?: boolean;
+  features?: string[];
+  pricing_info?: string;
+  has_valid_logo?: boolean;
+}
 
 export const useToolsData = () => {
-  const [tools, setTools] = useState<Tool[]>([]);
+  const [tools, setTools] = useState<SimpleTool[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -17,7 +38,7 @@ export const useToolsData = () => {
         const { data, error: fetchError } = await supabase
           .from('tools')
           .select('*')
-          .eq('status', true as any)
+          .eq('is_active', true)
           .order('name');
 
         if (fetchError) {
@@ -32,7 +53,6 @@ export const useToolsData = () => {
           category: tool.category,
           logo_url: tool.logo_url,
           is_active: tool.is_active || true,
-          status: tool.is_active || true,
           created_at: tool.created_at,
           updated_at: tool.updated_at,
           official_url: tool.url || '',
