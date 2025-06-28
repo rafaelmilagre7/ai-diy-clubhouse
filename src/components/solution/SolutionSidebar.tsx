@@ -1,9 +1,8 @@
-
 import { Solution } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { PlayCircle, CheckCircle, Award } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { SolutionCategory } from "@/lib/types/categoryTypes";
+import { SolutionCategory } from '@/lib/supabase/types';
 import { useEffect } from "react";
 
 interface SolutionSidebarProps {

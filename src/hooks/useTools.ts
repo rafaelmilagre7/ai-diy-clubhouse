@@ -42,10 +42,11 @@ export const useTools = (options?: {
         updated_at: tool.updated_at,
         has_member_benefit: tool.has_member_benefit || false,
         benefit_type: tool.benefit_type,
-        benefit_discount_percentage: tool.benefit_discount_percentage,
-        benefit_link: tool.benefit_link,
+        benefit_discount_percentage: tool.benefit_discount_percentage || null,
+        benefit_link: tool.benefit_link || null,
         benefit_title: tool.benefit_title,
-        benefit_description: tool.benefit_description
+        benefit_description: tool.benefit_description,
+        status: tool.is_active // Map is_active to status for compatibility
       }));
       
       if (opts.categoryFilter) {

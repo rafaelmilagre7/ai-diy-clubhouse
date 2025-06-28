@@ -32,26 +32,18 @@ export const useLmsAnalyticsData = (timeRange: string): LmsAnalyticsResult => {
   const startDate = useTimeRange(timeRange);
   
   // Buscar dados de NPS
-  const { 
-    data: npsDataResult, 
-    isLoading: isLoadingNps,
-    error: npsError 
-  } = useNpsData(startDate);
+  const npsResult = useNpsData(startDate);
   
   // Buscar estatísticas gerais
-  const { 
-    data: statsData, 
-    isLoading: isLoadingStats,
-    error: statsError
-  } = useStatsData(startDate, npsDataResult?.npsData?.overall || 0);
+  const statsResult = useStatsData(startDate, npsResult?.stats?.overall || 0);
   
   // Log de erros (sem toast para não ser intrusivo)
-  if (npsError) {
-    console.error('Erro ao carregar dados de NPS:', npsError);
+  if (npsResult.error) {
+    console.error('Erro ao carregar dados de NPS:', npsResult.error);
   }
   
-  if (statsError) {
-    console.error('Erro ao carregar estatísticas:', statsError);
+  if (statsResult.error) {
+    console.error('Erro ao carregar estatísticas:', statsResult.error);
   }
 
   // Função para atualizar os dados
@@ -61,29 +53,29 @@ export const useLmsAnalyticsData = (timeRange: string): LmsAnalyticsResult => {
   }, [queryClient]);
   
   // Processar dados de progresso por curso (vazio se não há dados)
-  const courseProgress = statsData?.totalLessons > 0 ? [
+  const courseProgress = statsResult?.stats?.totalLessons > 0 ? [
     {
       name: 'Cursos em Andamento',
-      completed: Math.floor((statsData.completionRate / 100) * statsData.totalStudents),
-      total: statsData.totalStudents
+      completed: Math.floor((statsResult.stats.completionRate / 100) * statsResult.stats.totalStudents),
+      total: statsResult.stats.totalStudents
     }
   ] : [];
 
   // Processar NPS scores por aula
-  const npsScores = npsDataResult?.npsData?.perLesson?.slice(0, 5).map(lesson => ({
+  const npsScores = npsResult?.stats?.perLesson?.slice(0, 5).map(lesson => ({
     lesson: lesson.lessonTitle,
     score: lesson.npsScore,
     responses: lesson.responseCount
   })) || [];
   
   return {
-    totalCourses: statsData?.totalLessons || 0,
-    totalStudents: statsData?.totalStudents || 0,
+    totalCourses: statsResult?.stats?.totalLessons || 0,
+    totalStudents: statsResult?.stats?.totalStudents || 0,
     averageCompletionTime: 45, // Pode ser calculado se tivermos dados de tempo
-    completionRate: statsData?.completionRate || 0,
+    completionRate: statsResult?.stats?.completionRate || 0,
     courseProgress,
     npsScores,
-    isLoading: isLoadingNps || isLoadingStats,
+    isLoading: npsResult.loading || statsResult.loading,
     refresh
   };
 };

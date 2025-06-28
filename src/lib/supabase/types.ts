@@ -24,6 +24,9 @@ export type Solution = Database['public']['Tables']['solutions']['Row'] & {
   published?: boolean;
   slug?: string;
   expected_results?: string;
+  success_metrics?: string;
+  target_audience?: string;
+  prerequisites?: string;
 };
 export type UserProfile = Database['public']['Tables']['profiles']['Row'] & {
   user_roles?: {
@@ -61,7 +64,7 @@ export interface SimplifiedSolution {
   thumbnail_url?: string;
   cover_image_url?: string;
   published: boolean;
-  slug?: string;
+  slug: string;
   created_at: string;
   updated_at: string;
   tags?: string[];
@@ -69,7 +72,10 @@ export interface SimplifiedSolution {
   roi_potential?: string;
   implementation_steps?: any;
   required_tools?: string[];
-  expected_results?: string;
+  expected_results: string;
+  success_metrics?: string;
+  target_audience?: string;
+  prerequisites?: string;
 }
 
 export interface SimplifiedTool {
@@ -90,6 +96,7 @@ export interface SimplifiedTool {
   benefit_link?: string | null;
   benefit_title?: string | null;
   benefit_description?: string | null;
+  status?: boolean;
 }
 
 // User checklist type for progress tracking
@@ -179,3 +186,6 @@ export const shouldAutoComplete = (moduleType: string): boolean => {
 export const getUserRoleName = (profile: UserProfile): string => {
   return profile.user_roles?.name || profile.role || 'member';
 };
+
+// Solution category type
+export type SolutionCategory = 'Receita' | 'Operacional' | 'Estratégia';
