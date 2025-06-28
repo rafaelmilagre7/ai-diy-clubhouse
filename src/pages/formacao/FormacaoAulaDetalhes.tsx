@@ -60,11 +60,11 @@ const FormacaoAulaDetalhes = () => {
         created_at: data.created_at,
         updated_at: data.updated_at,
         estimated_duration_minutes: data.estimated_duration_minutes || 0,
-        difficulty_level: data.difficulty_level || 'beginner', // Use from database or default
-        ai_assistant_enabled: !!data.ai_assistant_id || false, // Derive from ai_assistant_id
-        ai_assistant_id: data.ai_assistant_id || null, // Use from database
-        ai_assistant_prompt: data.ai_assistant_prompt || null, // Use from database
-        cover_image_url: data.cover_image_url || null, // Use from database
+        difficulty_level: data.difficulty_level || 'beginner',
+        ai_assistant_enabled: !!data.ai_assistant_id || false,
+        ai_assistant_id: data.ai_assistant_id || null,
+        ai_assistant_prompt: data.ai_assistant_prompt || null,
+        cover_image_url: data.cover_image_url || null,
         // Add missing required fields with defaults
         lesson_type: data.lesson_type || 'video',
         video_url: '', // Default empty string
