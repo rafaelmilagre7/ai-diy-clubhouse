@@ -2,7 +2,6 @@
 import { useState, useEffect } from 'react';
 import { useSimpleAuth } from '@/contexts/auth/SimpleAuthProvider';
 import { supabase } from '@/lib/supabase';
-import { getUserRoleName } from '@/lib/supabase/types';
 
 export const useOnboardingStatus = () => {
   const { user, profile, isLoading: authLoading } = useSimpleAuth();
@@ -28,7 +27,7 @@ export const useOnboardingStatus = () => {
           email: user.email,
           profileOnboardingCompleted: profile?.onboarding_completed,
           onboardingCompleted,
-          userRole: getUserRoleName(profile)
+          userRole: profile?.user_roles?.name
         });
 
         // TODOS devem fazer onboarding se não completaram

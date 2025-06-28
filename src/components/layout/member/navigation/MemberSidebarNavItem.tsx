@@ -3,8 +3,7 @@ import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { LucideIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useAuth } from '@/contexts/auth';
-import { getUserRoleName } from '@/lib/supabase/types';
+import { useSimpleAuth } from '@/contexts/auth/SimpleAuthProvider';
 
 interface MemberSidebarNavItemProps {
   to: string;
@@ -21,10 +20,10 @@ export const MemberSidebarNavItem: React.FC<MemberSidebarNavItemProps> = ({
   sidebarOpen,
   adminOnly = false
 }) => {
-  const { profile } = useAuth();
+  const { profile } = useSimpleAuth();
 
   // Se for admin only e o usuário não for admin, não mostrar
-  if (adminOnly && getUserRoleName(profile) !== 'admin') {
+  if (adminOnly && profile?.user_roles?.name !== 'admin') {
     return null;
   }
 
