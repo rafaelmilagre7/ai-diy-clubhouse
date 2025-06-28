@@ -45,6 +45,7 @@ export interface Tool {
   video_type?: string;
   tags: string[];
   status: boolean;
+  is_active: boolean;
   created_at: string;
   updated_at: string;
   video_tutorials?: VideoTutorial[];
@@ -58,4 +59,6 @@ export interface Tool {
   has_valid_logo?: boolean;
   is_access_restricted?: boolean;
   has_access?: boolean;
+  features?: string[];
+  pricing_info?: any;
 }
