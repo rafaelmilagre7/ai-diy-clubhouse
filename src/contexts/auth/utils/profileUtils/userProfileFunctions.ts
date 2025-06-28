@@ -31,7 +31,7 @@ export const createUserProfileIfNeeded = async (userId: string, email?: string):
     let userProfile = await fetchUserProfile(userId);
     
     if (!userProfile && email) {
-      // Se não existe, cria um novo
+      // Se não existe, cria um novo com todos os campos obrigatórios
       const profileData = {
         id: userId,
         email: email,
@@ -51,6 +51,24 @@ export const createUserProfileIfNeeded = async (userId: string, email?: string):
         ai_knowledge_level: null,
         position: null,
         onboarding_completed: false,
+        birth_date: null,
+        curiosity: null,
+        business_sector: null,
+        has_implemented_ai: "false",
+        ai_tools_used: [],
+        daily_tools: [],
+        who_will_implement: null,
+        main_objective: null,
+        area_to_impact: null,
+        expected_result_90_days: null,
+        ai_implementation_budget: null,
+        weekly_learning_time: null,
+        content_preference: [],
+        wants_networking: null,
+        best_days: [],
+        best_periods: [],
+        accepts_case_study: null,
+        onboarding_completed_at: null,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       };
@@ -83,7 +101,6 @@ export const updateUserProfile = async (userId: string, updates: Partial<UserPro
   try {
     const updateData = {
       ...updates,
-      position: updates.position,
       updated_at: new Date().toISOString()
     };
 
@@ -127,6 +144,24 @@ export const createUserProfile = async (userData: Partial<UserProfile>): Promise
       ai_knowledge_level: userData.ai_knowledge_level,
       position: userData.position,
       onboarding_completed: userData.onboarding_completed || false,
+      birth_date: userData.birth_date || null,
+      curiosity: userData.curiosity || null,
+      business_sector: userData.business_sector || null,
+      has_implemented_ai: userData.has_implemented_ai || "false",
+      ai_tools_used: userData.ai_tools_used || [],
+      daily_tools: userData.daily_tools || [],
+      who_will_implement: userData.who_will_implement || null,
+      main_objective: userData.main_objective || null,
+      area_to_impact: userData.area_to_impact || null,
+      expected_result_90_days: userData.expected_result_90_days || null,
+      ai_implementation_budget: userData.ai_implementation_budget || null,
+      weekly_learning_time: userData.weekly_learning_time || null,
+      content_preference: userData.content_preference || [],
+      wants_networking: userData.wants_networking || null,
+      best_days: userData.best_days || [],
+      best_periods: userData.best_periods || [],
+      accepts_case_study: userData.accepts_case_study || null,
+      onboarding_completed_at: userData.onboarding_completed_at || null,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
     };

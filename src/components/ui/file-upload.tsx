@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Upload, X, FileText, Loader2 } from 'lucide-react';
@@ -12,6 +11,7 @@ interface FileUploadProps {
   maxSize?: number; // em MB
   className?: string;
   bucket?: string;
+  bucketName?: string; // Adicionar suporte para bucketName também
   folder?: string;
   buttonText?: string;
   fieldLabel?: string;
@@ -24,6 +24,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({
   maxSize = 10, // 10MB por padrão
   className,
   bucket = 'learning-content',
+  bucketName, // Adicionar suporte para bucketName
   folder = 'uploads',
   buttonText = 'Selecionar Arquivo',
   fieldLabel = '',
@@ -34,6 +35,8 @@ export const FileUpload: React.FC<FileUploadProps> = ({
   const [uploadedFile, setUploadedFile] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Usar bucketName se fornecido, senão usar bucket
+  const finalBucket = bucketName || bucket;
   const maxSizeBytes = maxSize * 1024 * 1024;
 
   const handleUpload = async (file: File) => {
@@ -51,7 +54,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({
       
       // Upload para o Supabase Storage
       const { data, error } = await supabase.storage
-        .from(bucket)
+        .from(finalBucket)
         .upload(fileName, file);
 
       if (error) {
@@ -62,7 +65,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({
 
       // Obter URL pública
       const { data: { publicUrl } } = supabase.storage
-        .from(bucket)
+        .from(finalBucket)
         .getPublicUrl(fileName);
 
       setUploadedFile(file.name);
