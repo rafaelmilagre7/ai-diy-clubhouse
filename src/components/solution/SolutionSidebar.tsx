@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Solution } from '@/lib/supabase/types';
@@ -49,7 +50,7 @@ const SolutionSidebar = ({ solution, progress, startImplementation, continueImpl
             <span className="text-sm text-neutral-400">Dificuldade:</span>
             {solution ? (
               <Badge variant="secondary">
-                {solution.difficulty_level || 'Médio'}
+                {solution.difficulty_level || solution.difficulty || 'Médio'}
               </Badge>
             ) : (
               <Skeleton className="h-5 w-20" />

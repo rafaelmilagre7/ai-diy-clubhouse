@@ -1,4 +1,5 @@
 
+
 import { Database } from './database.types';
 
 // Basic types from database
@@ -16,6 +17,8 @@ export type LearningModule = Database['public']['Tables']['learning_modules']['R
 };
 export type LearningCourse = Database['public']['Tables']['learning_courses']['Row'];
 export type LearningResource = Database['public']['Tables']['learning_resources']['Row'];
+
+// Use the correct table name from the schema
 export type LearningProgress = Database['public']['Tables']['learning_progress']['Row'];
 
 // Tipos específicos do sistema
@@ -27,7 +30,9 @@ export type Solution = Database['public']['Tables']['solutions']['Row'] & {
   success_metrics?: string;
   target_audience?: string;
   prerequisites?: string;
+  difficulty_level?: string; // Add this property
 };
+
 export type UserProfile = Database['public']['Tables']['profiles']['Row'] & {
   user_roles?: {
     id: string;
@@ -36,11 +41,16 @@ export type UserProfile = Database['public']['Tables']['profiles']['Row'] & {
   };
 };
 export type UserRole = Database['public']['Tables']['user_roles']['Row'];
+
+// Use the correct table name from the schema  
 export type Module = Database['public']['Tables']['modules']['Row'] & {
   description?: string;
   module_order?: number;
 };
+
+// Use the correct table name from the schema
 export type Progress = Database['public']['Tables']['progress']['Row'];
+
 export type Tool = Database['public']['Tables']['tools']['Row'] & {
   status?: boolean;
   official_url?: string;
@@ -197,3 +207,4 @@ export const safeSolutionCategory = (category: string): SolutionCategory => {
   }
   return 'Receita'; // Default fallback
 };
+

@@ -5,12 +5,14 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { CategoryGrid } from './CategoryGrid';
 import { motion } from 'framer-motion';
+import { SimplifiedTool } from '@/lib/supabase/types';
 
 interface ToolsHeaderProps {
   searchQuery: string;
   onSearchChange: (query: string) => void;
   selectedCategory: string | null;
   onCategoryChange: (category: string | null) => void;
+  tools?: SimplifiedTool[]; // Add tools prop
 }
 
 export const ToolsHeader = ({
@@ -18,6 +20,7 @@ export const ToolsHeader = ({
   onSearchChange,
   selectedCategory,
   onCategoryChange,
+  tools = [] // Default to empty array
 }: ToolsHeaderProps) => {
   return (
     <div className="space-y-6">
@@ -41,6 +44,7 @@ export const ToolsHeader = ({
       </div>
 
       <CategoryGrid 
+        tools={tools}
         selectedCategory={selectedCategory} 
         onCategoryChange={onCategoryChange} 
       />
