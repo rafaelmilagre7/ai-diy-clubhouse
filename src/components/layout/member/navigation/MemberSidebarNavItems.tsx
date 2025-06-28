@@ -13,7 +13,10 @@ import {
   BarChart3,
   UserPlus,
   Mail,
-  Database
+  Database,
+  Award,
+  FileText,
+  HelpCircle
 } from 'lucide-react';
 import { MemberSidebarNavItem } from './MemberSidebarNavItem';
 import { useSimpleAuth } from '@/contexts/auth/SimpleAuthProvider';
@@ -27,6 +30,7 @@ export const MemberSidebarNavItems: React.FC<MemberSidebarNavItemsProps> = ({ si
   
   // Verificar se é admin baseado no SimpleAuth
   const isAdmin = profile?.user_roles?.name === 'admin';
+  const isFormacao = profile?.user_roles?.name === 'formacao';
 
   return (
     <nav className="flex-1 space-y-1 px-3 py-4">
@@ -76,11 +80,47 @@ export const MemberSidebarNavItems: React.FC<MemberSidebarNavItemsProps> = ({ si
         
         <MemberSidebarNavItem
           to="/suggestions"
-          icon={Lightbulb}
+          icon={HelpCircle}
           label="Sugestões"
           sidebarOpen={sidebarOpen}
         />
+
+        <MemberSidebarNavItem
+          to="/benefits"
+          icon={Award}
+          label="Benefícios"
+          sidebarOpen={sidebarOpen}
+        />
       </div>
+
+      {/* Seção Formação */}
+      {isFormacao && (
+        <>
+          {sidebarOpen && (
+            <div className="px-3 py-2">
+              <div className="text-xs font-medium text-gray-400 uppercase tracking-wider">
+                Formação
+              </div>
+            </div>
+          )}
+          
+          <div className="space-y-1">
+            <MemberSidebarNavItem
+              to="/formacao"
+              icon={BookOpen}
+              label="Área Formação"
+              sidebarOpen={sidebarOpen}
+            />
+            
+            <MemberSidebarNavItem
+              to="/formacao/aulas"
+              icon={FileText}
+              label="Minhas Aulas"
+              sidebarOpen={sidebarOpen}
+            />
+          </div>
+        </>
+      )}
 
       {/* Seção Admin */}
       {isAdmin && (
@@ -130,6 +170,22 @@ export const MemberSidebarNavItems: React.FC<MemberSidebarNavItemsProps> = ({ si
               to="/admin/communications"
               icon={Mail}
               label="Comunicações"
+              sidebarOpen={sidebarOpen}
+              adminOnly={true}
+            />
+
+            <MemberSidebarNavItem
+              to="/admin/solutions"
+              icon={Lightbulb}
+              label="Gerenciar Soluções"
+              sidebarOpen={sidebarOpen}
+              adminOnly={true}
+            />
+
+            <MemberSidebarNavItem
+              to="/admin/tools"
+              icon={Wrench}
+              label="Gerenciar Ferramentas"
               sidebarOpen={sidebarOpen}
               adminOnly={true}
             />
