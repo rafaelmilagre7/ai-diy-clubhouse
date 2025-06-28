@@ -1,5 +1,5 @@
 
-import { BrowserRouter as Router } from "react-router-dom";
+import { RouterProvider } from "react-router-dom";
 import { Toaster } from "sonner";
 import { AppRoutes } from "./routes/AppRoutes";
 import { ErrorBoundary } from "react-error-boundary";
@@ -9,16 +9,14 @@ import EmergencyResetButton from "@/components/common/EmergencyResetButton";
 function App() {
   return (
     <ErrorBoundary FallbackComponent={ErrorFallback}>
-      <Router>
-        <AppRoutes />
-        <Toaster 
-          position="top-right" 
-          expand={false}
-          richColors
-          closeButton
-        />
-        <EmergencyResetButton />
-      </Router>
+      <RouterProvider router={AppRoutes} />
+      <Toaster 
+        position="top-right" 
+        expand={false}
+        richColors
+        closeButton
+      />
+      <EmergencyResetButton />
     </ErrorBoundary>
   );
 }
