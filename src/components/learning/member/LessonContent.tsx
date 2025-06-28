@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { LearningLesson } from "@/lib/supabase";
 import { LessonVideoPlayer } from "./LessonVideoPlayer";
