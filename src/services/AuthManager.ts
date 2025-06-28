@@ -1,39 +1,29 @@
+
 import { User, Session } from '@supabase/supabase-js';
-import { supabase, UserProfile } from '@/lib/supabase';
+import { supabase } from '@/lib/supabase';
+import { UserProfile } from '@/lib/supabase';
 import { logger } from '@/utils/logger';
+import { AuthState, AuthManagerEvents, AuthEventType, AuthEventHandler } from '@/types/authTypes';
+import { BrowserEventEmitter } from '@/utils/BrowserEventEmitter';
 
-interface AuthState {
-  user: User | null;
-  session: Session | null;
-  profile: UserProfile | null;
-  isLoading: boolean;
-  error: string | null;
-  isAdmin: boolean;
-  isFormacao: boolean;
-  onboardingRequired: boolean;
-}
-
-type StateChangeCallback = (state: AuthState) => void;
-
-export default class AuthManager {
+class AuthManager extends BrowserEventEmitter<AuthManagerEvents> {
   private static instance: AuthManager;
-  private state: AuthState;
-  private listeners: Set<StateChangeCallback> = new Set();
-  private initialized = false;
-  private emergencyMode = false;
-  private initializationTimeout: NodeJS.Timeout | null = null;
+  private state: AuthState = {
+    user: null,
+    session: null,
+    profile: null,
+    isLoading: true,
+    error: null,
+    isAdmin: false,
+    isFormacao: false,
+    onboardingRequired: false,
+    hasInviteToken: false,
+    inviteDetails: null
+  };
 
   private constructor() {
-    this.state = {
-      user: null,
-      session: null,
-      profile: null,
-      isLoading: true,
-      error: null,
-      isAdmin: false,
-      isFormacao: false,
-      onboardingRequired: false,
-    };
+    super();
+    this.setupAuthStateListener();
   }
 
   static getInstance(): AuthManager {
@@ -47,349 +37,205 @@ export default class AuthManager {
     return { ...this.state };
   }
 
-  on(event: 'stateChanged', callback: StateChangeCallback) {
-    this.listeners.add(callback);
-    return () => this.listeners.delete(callback);
-  }
-
-  private setState(updates: Partial<AuthState>) {
+  private updateState(updates: Partial<AuthState>) {
+    const previousState = { ...this.state };
     this.state = { ...this.state, ...updates };
-    this.listeners.forEach(callback => callback(this.state));
+    
+    logger.debug('[AUTH-MANAGER] Estado atualizado:', {
+      changes: updates,
+      newState: this.state
+    });
+
+    this.emit('stateChanged', this.state);
   }
 
-  // CORREÇÃO 1: Timeout de Emergência - Força carregamento após 10s
-  private setupEmergencyTimeout() {
-    if (this.initializationTimeout) {
-      clearTimeout(this.initializationTimeout);
-    }
-
-    this.initializationTimeout = setTimeout(() => {
-      if (this.state.isLoading && !this.initialized) {
-        logger.warn('[AUTH-MANAGER] 🚨 TIMEOUT DE EMERGÊNCIA - Forçando acesso básico');
-        
-        this.emergencyMode = true;
-        this.setState({
-          isLoading: false,
-          error: 'Carregamento demorado - Acesso de emergência ativado'
-        });
-
-        // Se há usuário mas não há perfil, permitir acesso básico
-        if (this.state.user && !this.state.profile) {
-          logger.info('[AUTH-MANAGER] 🔧 Criando perfil básico para acesso de emergência');
-          
-          const basicProfile: Partial<UserProfile> = {
-            id: this.state.user.id,
-            email: this.state.user.email || '',
-            name: this.state.user.user_metadata?.name || null,
-            onboarding_completed: false
-          };
-
-          this.setState({
-            profile: basicProfile as UserProfile,
-            onboardingRequired: true
+  private setupAuthStateListener() {
+    logger.info('[AUTH-MANAGER] Configurando listener de autenticação');
+    
+    supabase.auth.onAuthStateChange(async (event, session) => {
+      logger.info('[AUTH-MANAGER] Evento de auth recebido:', { event, hasSession: !!session });
+      
+      try {
+        if (event === 'SIGNED_IN' && session?.user) {
+          this.updateState({ 
+            user: session.user, 
+            session, 
+            isLoading: true,
+            error: null 
           });
-        }
-
-        this.initialized = true;
-      }
-    }, 10000); // 10 segundos
-  }
-
-  async initialize(): Promise<void> {
-    if (this.initialized) return;
-
-    try {
-      logger.info('[AUTH-MANAGER] 🚀 Inicializando com timeout de emergência...');
-      
-      // CORREÇÃO 1: Configurar timeout de emergência
-      this.setupEmergencyTimeout();
-      
-      // Configurar listener de mudanças de auth
-      supabase.auth.onAuthStateChange(async (event, session) => {
-        logger.info('[AUTH-MANAGER] 📡 Auth state changed:', event);
-        
-        this.setState({
-          session,
-          user: session?.user || null,
-          isLoading: true
-        });
-
-        if (session?.user) {
-          await this.loadUserProfileWithTimeout(session.user.id);
-        } else {
-          this.setState({
+          
+          setTimeout(async () => {
+            await this.loadUserProfile(session.user.id);
+          }, 100);
+          
+        } else if (event === 'SIGNED_OUT') {
+          this.updateState({
+            user: null,
+            session: null,
             profile: null,
             isAdmin: false,
             isFormacao: false,
+            isLoading: false,
+            error: null,
             onboardingRequired: false,
-            isLoading: false
+            hasInviteToken: false,
+            inviteDetails: null
           });
+        } else if (event === 'TOKEN_REFRESHED' && session) {
+          this.updateState({ session, error: null });
         }
-      });
-
-      // Obter sessão inicial com timeout
-      const sessionPromise = supabase.auth.getSession();
-      const timeoutPromise = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error('Timeout na obtenção da sessão')), 5000)
-      );
-
-      const { data: { session }, error } = await Promise.race([
-        sessionPromise,
-        timeoutPromise
-      ]) as any;
-
-      if (error) {
-        logger.error('[AUTH-MANAGER] ❌ Erro ao obter sessão:', error);
-        this.setState({ error: error.message, isLoading: false });
-        return;
+      } catch (error) {
+        logger.error('[AUTH-MANAGER] Erro no listener de auth:', error);
+        this.updateState({ 
+          error: 'Erro no processamento de autenticação',
+          isLoading: false 
+        });
       }
+    });
+  }
 
-      this.setState({
-        session,
-        user: session?.user || null
-      });
+  async initialize(): Promise<void> {
+    logger.info('[AUTH-MANAGER] Inicializando...');
+    
+    try {
+      const { data: { session }, error } = await supabase.auth.getSession();
+      
+      if (error) {
+        throw error;
+      }
 
       if (session?.user) {
-        await this.loadUserProfileWithTimeout(session.user.id);
+        this.updateState({ 
+          user: session.user, 
+          session,
+          isLoading: true 
+        });
+        
+        await this.loadUserProfile(session.user.id);
       } else {
-        this.setState({ isLoading: false });
+        this.updateState({ 
+          isLoading: false,
+          error: null
+        });
       }
-
-      // Limpar timeout se inicialização foi bem-sucedida
-      if (this.initializationTimeout) {
-        clearTimeout(this.initializationTimeout);
-        this.initializationTimeout = null;
-      }
-
-      this.initialized = true;
-      logger.info('[AUTH-MANAGER] ✅ Inicializado com sucesso');
-
+      
+      logger.info('[AUTH-MANAGER] Inicialização concluída');
+      
     } catch (error) {
-      logger.error('[AUTH-MANAGER] ❌ Erro na inicialização:', error);
-      this.setState({
-        error: error instanceof Error ? error.message : 'Erro desconhecido',
-        isLoading: false
+      logger.error('[AUTH-MANAGER] Erro na inicialização:', error);
+      this.updateState({ 
+        error: 'Falha na inicialização',
+        isLoading: false 
       });
+      throw error;
     }
   }
 
-  // CORREÇÃO 2: Query de Perfil Mais Robusta com Timeout
-  private async loadUserProfileWithTimeout(userId: string): Promise<void> {
+  private async loadUserProfile(userId: string): Promise<void> {
     try {
-      logger.info('[AUTH-MANAGER] 👤 Carregando perfil com timeout:', userId);
+      logger.debug('[AUTH-MANAGER] Carregando perfil do usuário:', { userId });
       
-      const profilePromise = supabase
+      const { data: profile, error } = await supabase
         .from('profiles')
         .select(`
           *,
           user_roles (
             id,
             name,
-            description
+            permissions
           )
         `)
         .eq('id', userId)
-        .maybeSingle(); // CORREÇÃO: usar maybeSingle ao invés de single
+        .single();
 
-      const timeoutPromise = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error('Timeout no carregamento do perfil')), 8000)
-      );
-
-      const { data: profile, error } = await Promise.race([
-        profilePromise,
-        timeoutPromise
-      ]) as any;
-
-      if (error) {
-        logger.error('[AUTH-MANAGER] ❌ Erro ao carregar perfil:', error);
-        
-        // CORREÇÃO: Fallback - criar perfil básico mesmo com erro
-        if (!this.emergencyMode) {
-          logger.info('[AUTH-MANAGER] 🔧 Criando perfil básico devido ao erro');
-          
-          const user = this.state.user;
-          const basicProfile: Partial<UserProfile> = {
-            id: userId,
-            email: user?.email || '',
-            name: user?.user_metadata?.name || null,
-            onboarding_completed: false
-          };
-
-          this.setState({
-            profile: basicProfile as UserProfile,
-            isAdmin: false,
-            isFormacao: false,
-            onboardingRequired: true,
-            error: null,
-            isLoading: false
-          });
-        }
-        return;
-      }
-
-      // CORREÇÃO: Verificar se perfil existe, se não, usar dados básicos
-      if (!profile) {
-        logger.warn('[AUTH-MANAGER] ⚠️ Perfil não encontrado, usando dados básicos');
-        
-        const user = this.state.user;
-        const basicProfile: Partial<UserProfile> = {
-          id: userId,
-          email: user?.email || '',
-          name: user?.user_metadata?.name || null,
-          onboarding_completed: false
-        };
-
-        this.setState({
-          profile: basicProfile as UserProfile,
-          isAdmin: false,
-          isFormacao: false,
-          onboardingRequired: true,
-          error: null,
-          isLoading: false
-        });
-        return;
+      if (error && error.code !== 'PGRST116') {
+        throw error;
       }
 
       const isAdmin = profile?.user_roles?.name === 'admin';
       const isFormacao = profile?.user_roles?.name === 'formacao';
-      const onboardingRequired = !profile?.onboarding_completed && !isAdmin;
+      const onboardingRequired = !profile?.onboarding_completed;
 
-      this.setState({
-        profile: profile as UserProfile,
+      this.updateState({
+        profile: profile || null,
         isAdmin,
         isFormacao,
         onboardingRequired,
-        error: null,
-        isLoading: false
+        isLoading: false,
+        error: null
       });
 
-      logger.info('[AUTH-MANAGER] ✅ Perfil carregado:', {
-        userId,
-        role: profile?.user_roles?.name,
+      logger.info('[AUTH-MANAGER] Perfil carregado com sucesso:', {
+        hasProfile: !!profile,
         isAdmin,
         isFormacao,
         onboardingRequired
       });
 
     } catch (error) {
-      logger.error('[AUTH-MANAGER] ❌ Erro ao carregar perfil:', error);
-      
-      // CORREÇÃO: Sempre tentar fallback em caso de erro
-      const user = this.state.user;
-      const basicProfile: Partial<UserProfile> = {
-        id: userId,
-        email: user?.email || '',
-        name: user?.user_metadata?.name || null,
-        onboarding_completed: false
-      };
-
-      this.setState({
-        profile: basicProfile as UserProfile,
-        isAdmin: false,
-        isFormacao: false,
-        onboardingRequired: true,
-        error: 'Perfil carregado em modo básico',
-        isLoading: false
+      logger.error('[AUTH-MANAGER] Erro ao carregar perfil:', error);
+      this.updateState({ 
+        error: 'Erro ao carregar perfil do usuário',
+        isLoading: false 
       });
     }
-  }
-
-  // CORREÇÃO 3: Método para forçar acesso (usado pelo botão de emergência)
-  forceAccess(): void {
-    logger.warn('[AUTH-MANAGER] 🚨 ACESSO FORÇADO PELO USUÁRIO');
-    
-    this.emergencyMode = true;
-    
-    if (this.initializationTimeout) {
-      clearTimeout(this.initializationTimeout);
-      this.initializationTimeout = null;
-    }
-
-    // Se há usuário, criar perfil básico
-    if (this.state.user) {
-      const basicProfile: Partial<UserProfile> = {
-        id: this.state.user.id,
-        email: this.state.user.email || '',
-        name: this.state.user.user_metadata?.name || null,
-        onboarding_completed: false
-      };
-
-      this.setState({
-        profile: basicProfile as UserProfile,
-        isAdmin: false,
-        isFormacao: false,
-        onboardingRequired: true,
-        isLoading: false,
-        error: null
-      });
-    } else {
-      this.setState({
-        isLoading: false,
-        error: 'Acesso forçado - Redirecionando para login'
-      });
-    }
-
-    this.initialized = true;
-  }
-
-  getRedirectPath(): string {
-    const { profile, isAdmin } = this.state;
-    
-    if (isAdmin) return '/admin';
-    if (profile?.user_roles?.name === 'formacao') return '/formacao';
-    return '/dashboard';
   }
 
   async signIn(email: string, password: string): Promise<{ error?: Error | null }> {
+    logger.info('[AUTH-MANAGER] Tentativa de login:', { email });
+    
     try {
-      this.setState({ error: null, isLoading: true });
+      this.updateState({ isLoading: true, error: null });
       
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
-        password,
+        password
       });
 
       if (error) {
-        this.setState({ error: error.message, isLoading: false });
+        this.updateState({ 
+          error: error.message,
+          isLoading: false 
+        });
         return { error };
       }
 
-      return {};
+      logger.info('[AUTH-MANAGER] Login realizado com sucesso');
+      return { error: null };
+      
     } catch (error) {
-      const errorMsg = error instanceof Error ? error.message : 'Erro no login';
-      this.setState({ error: errorMsg, isLoading: false });
-      return { error: error as Error };
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido no login';
+      logger.error('[AUTH-MANAGER] Erro no login:', error);
+      this.updateState({ 
+        error: errorMessage,
+        isLoading: false 
+      });
+      return { error: error instanceof Error ? error : new Error(errorMessage) };
     }
   }
 
   async signOut(): Promise<{ success: boolean; error?: Error | null }> {
+    logger.info('[AUTH-MANAGER] Iniciando logout');
+    
     try {
-      this.setState({ isLoading: true });
-      
       const { error } = await supabase.auth.signOut({ scope: 'global' });
       
       if (error) {
-        this.setState({ error: error.message, isLoading: false });
+        logger.error('[AUTH-MANAGER] Erro no logout:', error);
         return { success: false, error };
       }
-
-      // Limpar estado local
-      this.setState({
-        user: null,
-        session: null,
-        profile: null,
-        isAdmin: false,
-        isFormacao: false,
-        onboardingRequired: false,
-        error: null,
-        isLoading: false
-      });
-
+      
+      logger.info('[AUTH-MANAGER] Logout realizado com sucesso');
       return { success: true };
+      
     } catch (error) {
-      const errorMsg = error instanceof Error ? error.message : 'Erro no logout';
-      this.setState({ error: errorMsg, isLoading: false });
-      return { success: false, error: error as Error };
+      logger.error('[AUTH-MANAGER] Erro inesperado no logout:', error);
+      return { 
+        success: false, 
+        error: error instanceof Error ? error : new Error('Erro desconhecido no logout')
+      };
     }
   }
 }
+
+export default AuthManager;
