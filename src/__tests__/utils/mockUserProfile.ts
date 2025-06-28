@@ -33,7 +33,8 @@ export const createMockUserProfile = (overrides: Partial<UserProfile> = {}): Use
     business_sector: null,
     position: null,
     has_implemented_ai: "false",
-    ai_tools_used: [], // Adicionado: propriedade obrigatória
+    ai_tools_used: [],
+    daily_tools: [], // Adicionado: propriedade obrigatória
     ...overrides,
   };
 };

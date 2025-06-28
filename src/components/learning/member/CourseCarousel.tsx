@@ -22,7 +22,6 @@ export const CourseCarousel = ({ courses, onCourseClick }: CourseCarouselProps) 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       {courses.map((course) => {
-        // CORREÇÃO: Parse seguro de dados JSON se necessário
         const courseData = safeJsonParseObject(course, course);
         
         return (
@@ -31,14 +30,13 @@ export const CourseCarousel = ({ courses, onCourseClick }: CourseCarouselProps) 
             className="cursor-pointer hover:shadow-lg transition-shadow duration-200 group"
             onClick={() => onCourseClick(course)}
           >
-            {/* Removido: cover_image_url não existe no schema */}
             <div className="aspect-video relative overflow-hidden rounded-t-lg bg-gradient-to-br from-blue-900 to-purple-900 flex items-center justify-center">
               <span className="text-white font-semibold">{course.title}</span>
             </div>
             
             <CardContent className="p-4 space-y-3">
               <div className="flex items-center justify-between">
-                {/* Corrigido: usar published que existe no schema */}
+                {/* Corrigido: usar published baseado no schema real */}
                 <Badge variant={course.published ? "default" : "secondary"}>
                   {course.published ? "Disponível" : "Em breve"}
                 </Badge>

@@ -70,7 +70,7 @@ export const CursosList = ({ cursos, loading, onEdit, onDelete, isAdmin, onRefre
             <CardHeader>
               <div className="flex justify-between items-start">
                 <CardTitle className="line-clamp-2">{curso.title}</CardTitle>
-                {/* Corrigido: usar published (que foi mantido no schema) */}
+                {/* Corrigido: usar published corretamente baseado no schema real */}
                 <Badge variant={curso.published ? "default" : "outline"}>
                   {curso.published ? "Publicado" : "Rascunho"}
                 </Badge>

@@ -1,99 +1,81 @@
 
-import { useCallback } from 'react';
-import { useSimpleAuth } from '@/contexts/auth/SimpleAuthProvider';
+import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
-import { useErrorHandler } from '@/hooks/useErrorHandler';
+import { useLogging } from '@/hooks/useLogging';
 
-interface OnboardingEvent {
-  event_type: 'step_start' | 'step_complete' | 'field_focus' | 'field_blur' | 'validation_error' | 'abandon' | 'complete';
-  step_number?: number;
-  field_name?: string;
-  error_message?: string;
-  metadata?: Record<string, any>;
+interface AnalyticsEvent {
+  event_type: string;
+  user_id: string;
+  event_data: any;
+  created_at: string;
 }
 
 export const useOnboardingAnalytics = () => {
-  const { user } = useSimpleAuth();
-  const { handleError } = useErrorHandler();
+  const { log, logError } = useLogging();
+  const [events, setEvents] = useState<AnalyticsEvent[]>([]);
+  const [loading, setLoading] = useState(false);
 
-  const trackEvent = useCallback(async (event: OnboardingEvent) => {
-    if (!user?.id) return;
-
+  const trackEvent = async (eventType: string, userId: string, eventData: any = {}) => {
     try {
-      const analyticsData = {
-        user_id: user.id,
-        event_type: event.event_type,
-        step_number: event.step_number,
-        field_name: event.field_name,
-        error_message: event.error_message,
-        metadata: event.metadata || {},
-        created_at: new Date().toISOString()
-      };
+      log('Rastreando evento de onboarding', { eventType, userId });
 
+      // CORREÇÃO: Usar a tabela analytics que existe no schema
       const { error } = await supabase
-        .from('onboarding_analytics')
-        .insert(analyticsData);
+        .from('analytics')
+        .insert({
+          event_type: eventType,
+          user_id: userId,
+          event_data: eventData
+        });
 
-      if (error) throw error;
+      if (error) {
+        logError('Erro ao rastrear evento', error);
+        return false;
+      }
 
-      console.log('[useOnboardingAnalytics] Evento registrado:', event.event_type);
-    } catch (error) {
-      console.error('[useOnboardingAnalytics] Erro ao registrar evento:', error);
-      handleError(error, 'useOnboardingAnalytics.trackEvent', { showToast: false });
+      log('Evento rastreado com sucesso');
+      return true;
+    } catch (error: any) {
+      logError('Erro inesperado ao rastrear evento', error);
+      return false;
     }
-  }, [user?.id, handleError]);
+  };
 
-  const trackStepStart = useCallback((stepNumber: number) => {
-    trackEvent({ event_type: 'step_start', step_number: stepNumber });
-  }, [trackEvent]);
+  const getAnalytics = async (userId?: string) => {
+    try {
+      setLoading(true);
+      log('Buscando analytics de onboarding', { userId });
 
-  const trackStepComplete = useCallback((stepNumber: number, timeSpent?: number) => {
-    trackEvent({ 
-      event_type: 'step_complete', 
-      step_number: stepNumber,
-      metadata: timeSpent ? { time_spent_seconds: timeSpent } : undefined
-    });
-  }, [trackEvent]);
+      let query = supabase
+        .from('analytics')
+        .select('*')
+        .order('created_at', { ascending: false });
 
-  const trackFieldFocus = useCallback((fieldName: string, stepNumber: number) => {
-    trackEvent({ 
-      event_type: 'field_focus', 
-      field_name: fieldName, 
-      step_number: stepNumber 
-    });
-  }, [trackEvent]);
+      if (userId) {
+        query = query.eq('user_id', userId);
+      }
 
-  const trackValidationError = useCallback((fieldName: string, errorMessage: string, stepNumber: number) => {
-    trackEvent({ 
-      event_type: 'validation_error', 
-      field_name: fieldName, 
-      error_message: errorMessage,
-      step_number: stepNumber 
-    });
-  }, [trackEvent]);
+      const { data, error } = await query;
 
-  const trackAbandon = useCallback((stepNumber: number, timeSpent?: number) => {
-    trackEvent({ 
-      event_type: 'abandon', 
-      step_number: stepNumber,
-      metadata: timeSpent ? { time_spent_seconds: timeSpent } : undefined
-    });
-  }, [trackEvent]);
+      if (error) {
+        logError('Erro ao buscar analytics', error);
+        return [];
+      }
 
-  const trackComplete = useCallback((totalTimeSpent?: number) => {
-    trackEvent({ 
-      event_type: 'complete',
-      metadata: totalTimeSpent ? { total_time_spent_seconds: totalTimeSpent } : undefined
-    });
-  }, [trackEvent]);
+      setEvents(data || []);
+      return data || [];
+    } catch (error: any) {
+      logError('Erro inesperado ao buscar analytics', error);
+      return [];
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return {
     trackEvent,
-    trackStepStart,
-    trackStepComplete,
-    trackFieldFocus,
-    trackValidationError,
-    trackAbandon,
-    trackComplete
+    getAnalytics,
+    events,
+    loading
   };
 };

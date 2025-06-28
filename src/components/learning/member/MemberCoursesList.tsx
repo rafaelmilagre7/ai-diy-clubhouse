@@ -15,12 +15,10 @@ interface MemberCoursesListProps {
 export const MemberCoursesList = ({ courses, userProgress = [] }: MemberCoursesListProps) => {
   
   const getCourseProgress = (courseId: string) => {
-    // Implementar lógica de progresso se necessário
     return 0;
   };
 
   const isCompleted = (courseId: string) => {
-    // Implementar lógica de conclusão se necessário
     return false;
   };
 
@@ -44,7 +42,6 @@ export const MemberCoursesList = ({ courses, userProgress = [] }: MemberCoursesL
         
         return (
           <Card key={course.id} className="group hover:shadow-lg transition-all duration-200">
-            {/* Removido: cover_image_url não existe no schema */}
             <div className="aspect-video relative overflow-hidden rounded-t-lg bg-gradient-to-br from-primary/90 to-primary/60 flex items-center justify-center">
               <div className="text-center text-white">
                 <BookOpen className="h-8 w-8 mx-auto mb-2" />
@@ -68,6 +65,7 @@ export const MemberCoursesList = ({ courses, userProgress = [] }: MemberCoursesL
             
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
+                {/* Corrigido: usar published baseado no schema real */}
                 <Badge variant={course.published ? "default" : "secondary"}>
                   {course.published ? "Disponível" : "Em breve"}
                 </Badge>
