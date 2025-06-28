@@ -1,107 +1,82 @@
 
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Mail, AlertTriangle, LogOut, ArrowLeft } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { AlertTriangle, LogOut, ArrowLeft } from 'lucide-react';
 import { useSimpleAuth } from '@/contexts/auth/SimpleAuthProvider';
-import { InviteTokenManager } from '@/utils/inviteTokenManager';
-import { logger } from '@/utils/logger';
+import { useNavigate } from 'react-router-dom';
 
 interface InviteEmailMismatchScreenProps {
   inviteEmail: string;
-  currentEmail: string;
-  token: string;
+  userEmail: string;
 }
 
-const InviteEmailMismatchScreen = ({
+export const InviteEmailMismatchScreen: React.FC<InviteEmailMismatchScreenProps> = ({
   inviteEmail,
-  currentEmail,
-  token
-}: InviteEmailMismatchScreenProps) => {
-  const navigate = useNavigate();
+  userEmail
+}) => {
   const { signOut } = useSimpleAuth();
-  const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const navigate = useNavigate();
 
-  const handleLogoutAndAcceptInvite = async () => {
-    try {
-      setIsLoggingOut(true);
-      
-      logger.info('[INVITE-MISMATCH] 🚪 Fazendo logout para aceitar convite:', {
-        currentEmail,
-        inviteEmail,
-        token: token.substring(0, 8) + '***'
-      });
-
-      // Armazenar token antes do logout
-      InviteTokenManager.storeToken(token);
-      
-      // Fazer logout
-      await signOut();
-      
-      // Redirecionar para login com parâmetro de convite
-      navigate(`/login?invite=true&token=${token}`, { replace: true });
-      
-    } catch (error) {
-      logger.error('[INVITE-MISMATCH] ❌ Erro no logout:', error);
-      setIsLoggingOut(false);
+  const handleSignOut = async () => {
+    const result = await signOut();
+    if (result.success) {
+      navigate('/auth');
     }
   };
 
-  const handleCancel = () => {
-    logger.info('[INVITE-MISMATCH] ❌ Usuário cancelou aceitação do convite');
-    navigate('/dashboard', { replace: true });
+  const handleGoBack = () => {
+    navigate(-1);
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background to-[#151823] flex items-center justify-center p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center space-y-4">
-          <div className="mx-auto w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center">
-            <AlertTriangle className="w-8 h-8 text-amber-600" />
-          </div>
-          <CardTitle className="text-xl">E-mail Incorreto</CardTitle>
+    <div className="min-h-screen bg-gradient-to-br from-[#0F111A] to-[#151823] flex items-center justify-center p-4">
+      <Card className="w-full max-w-md bg-[#1A1E2E]/80 backdrop-blur-sm border-white/10">
+        <CardHeader className="text-center">
+          <AlertTriangle className="h-12 w-12 text-yellow-500 mx-auto mb-4" />
+          <CardTitle className="text-white">Email Incompatível</CardTitle>
         </CardHeader>
         
-        <CardContent className="space-y-6">
-          <Alert>
-            <Mail className="h-4 w-4" />
-            <AlertDescription className="text-sm">
-              Este convite foi enviado especificamente para{' '}
-              <strong className="text-viverblue">{inviteEmail}</strong>, 
-              mas você está logado como{' '}
-              <strong className="text-amber-600">{currentEmail}</strong>.
-            </AlertDescription>
-          </Alert>
-
-          <div className="text-center text-sm text-neutral-400">
-            Para aceitar este convite, você precisa fazer login com o e-mail correto.
+        <CardContent className="space-y-4 text-center">
+          <div className="space-y-2">
+            <p className="text-white/80">
+              O convite foi enviado para:
+            </p>
+            <p className="font-semibold text-viverblue">
+              {inviteEmail}
+            </p>
+            
+            <p className="text-white/80 mt-4">
+              Mas você está logado como:
+            </p>
+            <p className="font-semibold text-white">
+              {userEmail}
+            </p>
           </div>
 
-          <div className="space-y-3">
-            <Button
-              onClick={handleLogoutAndAcceptInvite}
-              disabled={isLoggingOut}
-              className="w-full bg-viverblue hover:bg-viverblue/80"
-            >
-              <LogOut className="w-4 h-4 mr-2" />
-              {isLoggingOut ? 'Fazendo logout...' : 'Logout e aceitar convite'}
-            </Button>
-
-            <Button
-              onClick={handleCancel}
-              variant="outline"
-              className="w-full"
-              disabled={isLoggingOut}
-            >
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Cancelar e voltar
-            </Button>
+          <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-3 mt-4">
+            <p className="text-yellow-200 text-sm">
+              Para aceitar este convite, você precisa fazer login com o email correto ou solicitar um novo convite.
+            </p>
           </div>
 
-          <div className="text-xs text-center text-neutral-500">
-            Se você não tem acesso ao e-mail {inviteEmail}, entre em contato com quem enviou o convite.
+          <div className="space-y-2 pt-4">
+            <Button 
+              onClick={handleSignOut}
+              className="w-full bg-viverblue hover:bg-viverblue/90"
+            >
+              <LogOut className="h-4 w-4 mr-2" />
+              Fazer Login com Email Correto
+            </Button>
+            
+            <Button 
+              variant="outline" 
+              onClick={handleGoBack}
+              className="w-full border-white/20 text-white hover:bg-white/5"
+            >
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Voltar
+            </Button>
           </div>
         </CardContent>
       </Card>

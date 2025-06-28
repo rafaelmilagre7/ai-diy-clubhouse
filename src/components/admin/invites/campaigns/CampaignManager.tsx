@@ -3,225 +3,219 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Play, Pause, Copy, Trash2, Users, Send, Target, TrendingUp } from 'lucide-react';
-import { useCampaignManagement } from '@/hooks/admin/invites/useCampaignManagement';
+import { Plus, Play, Pause, MoreHorizontal, Users, TrendingUp, Mail, Eye } from 'lucide-react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { useCampaignManagement, InviteCampaign } from '@/hooks/admin/invites/useCampaignManagement';
+import { CreateCampaignDialog } from './CreateCampaignDialog';
+import { CampaignDetailsDialog } from './CampaignDetailsDialog';
 import { CampaignEmptyState } from './CampaignEmptyState';
 
-export const CampaignManager = () => {
-  const [showCreateForm, setShowCreateForm] = useState(false);
+export const CampaignManager: React.FC = () => {
   const {
     campaigns,
+    stats,
     loading,
+    creating,
+    createCampaign,
     updateCampaignStatus,
-    deleteCampaign,
     duplicateCampaign
   } = useCampaignManagement();
 
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [selectedCampaign, setSelectedCampaign] = useState<InviteCampaign | null>(null);
+  const [showDetailsDialog, setShowDetailsDialog] = useState(false);
+
+  const handleCreateCampaign = async (data: any) => {
+    await createCampaign(data);
+    setShowCreateDialog(false);
+  };
+
+  const handleStatusToggle = async (campaign: InviteCampaign) => {
+    const newStatus = campaign.status === 'active' ? 'paused' : 'active';
+    await updateCampaignStatus(campaign.id, newStatus);
+  };
+
+  const handleViewDetails = (campaign: InviteCampaign) => {
+    setSelectedCampaign(campaign);
+    setShowDetailsDialog(true);
+  };
+
+  const handleDuplicate = async (campaign: InviteCampaign) => {
+    await duplicateCampaign(campaign.id);
+  };
+
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'active': return 'success';
-      case 'paused': return 'warning';
-      case 'completed': return 'info';
-      default: return 'secondary';
+      case 'active': return 'bg-green-500';
+      case 'paused': return 'bg-yellow-500';
+      case 'completed': return 'bg-blue-500';
+      default: return 'bg-gray-500';
     }
   };
 
-  const getStatusText = (status: string) => {
-    switch (status) {
-      case 'active': return 'Ativa';
-      case 'paused': return 'Pausada';
-      case 'completed': return 'Concluída';
-      default: return 'Rascunho';
-    }
-  };
-
-  // Calcular estatísticas reais apenas com dados disponíveis
-  const stats = {
-    totalCampaigns: campaigns.length,
-    activeCampaigns: campaigns.filter(c => c.status === 'active').length,
-    totalInvitesSent: campaigns.reduce((sum, c) => sum + c.metrics.totalInvites, 0),
-    avgConversionRate: campaigns.length > 0 
-      ? campaigns.reduce((sum, c) => sum + c.metrics.conversionRate, 0) / campaigns.length 
-      : 0
+  const formatConversionRate = (rate: number | undefined) => {
+    return rate ? `${rate.toFixed(1)}%` : '0%';
   };
 
   if (loading) {
     return (
       <div className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          {Array(4).fill(null).map((_, i) => (
-            <Card key={i} className="animate-pulse">
-              <CardContent className="p-6">
-                <div className="h-4 bg-muted rounded mb-2"></div>
-                <div className="h-8 bg-muted rounded"></div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-        <Card className="animate-pulse">
-          <CardContent className="p-6">
-            <div className="h-32 bg-muted rounded"></div>
-          </CardContent>
-        </Card>
+        <div className="h-32 bg-muted animate-pulse rounded-lg" />
+        <div className="h-64 bg-muted animate-pulse rounded-lg" />
       </div>
     );
   }
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold">Campanhas de Convites</h2>
-          <p className="text-muted-foreground">
-            Gerencie suas campanhas de convites organizadas
-          </p>
-        </div>
-        
-        <Button onClick={() => setShowCreateForm(true)}>
-          <Plus className="h-4 w-4 mr-2" />
-          Nova Campanha
-        </Button>
-      </div>
-
-      {/* Estatísticas Reais */}
+      {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Total de Campanhas</p>
-                <p className="text-2xl font-bold">{stats.totalCampaigns}</p>
-              </div>
-              <Target className="h-8 w-8 text-viverblue" />
-            </div>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total de Campanhas</CardTitle>
+            <Users className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.totalCampaigns}</div>
           </CardContent>
         </Card>
 
         <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Campanhas Ativas</p>
-                <p className="text-2xl font-bold">{stats.activeCampaigns}</p>
-              </div>
-              <Play className="h-8 w-8 text-green-500" />
-            </div>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Campanhas Ativas</CardTitle>
+            <Play className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.activeCampaigns}</div>
           </CardContent>
         </Card>
 
         <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Convites Enviados</p>
-                <p className="text-2xl font-bold">{stats.totalInvitesSent}</p>
-              </div>
-              <Send className="h-8 w-8 text-blue-500" />
-            </div>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total de Convites</CardTitle>
+            <Mail className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.totalInvitesSent}</div>
           </CardContent>
         </Card>
 
         <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Taxa de Conversão Média</p>
-                <p className="text-2xl font-bold">
-                  {stats.avgConversionRate > 0 ? `${stats.avgConversionRate.toFixed(1)}%` : '0%'}
-                </p>
-              </div>
-              <TrendingUp className="h-8 w-8 text-orange-500" />
-            </div>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Taxa Média de Conversão</CardTitle>
+            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{formatConversionRate(stats.avgConversionRate)}</div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Lista de Campanhas ou Empty State */}
-      {campaigns.length === 0 ? (
-        <CampaignEmptyState onCreateCampaign={() => setShowCreateForm(true)} />
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {campaigns.map((campaign) => (
-            <Card key={campaign.id}>
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-lg">{campaign.name}</CardTitle>
-                  <Badge variant={getStatusColor(campaign.status)}>
-                    {getStatusText(campaign.status)}
-                  </Badge>
-                </div>
-                {campaign.description && (
-                  <p className="text-sm text-muted-foreground">{campaign.description}</p>
-                )}
-              </CardHeader>
-              
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="flex items-center gap-2 text-sm">
-                    <Users className="h-4 w-4" />
-                    <span>Papel: {campaign.targetRoleName || campaign.targetRole}</span>
-                  </div>
-                  
-                  <div className="grid grid-cols-2 gap-4 text-sm">
-                    <div>
-                      <p className="text-muted-foreground">Convites</p>
-                      <p className="font-semibold">{campaign.metrics.totalInvites}</p>
+      {/* Campaigns List */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle>Campanhas de Convite</CardTitle>
+            <Button onClick={() => setShowCreateDialog(true)} disabled={creating}>
+              <Plus className="h-4 w-4 mr-2" />
+              Nova Campanha
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {campaigns.length === 0 ? (
+            <CampaignEmptyState onCreateCampaign={() => setShowCreateDialog(true)} />
+          ) : (
+            <div className="space-y-4">
+              {campaigns.map((campaign) => (
+                <div
+                  key={campaign.id}
+                  className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors"
+                >
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-2">
+                      <h3 className="font-medium">{campaign.name}</h3>
+                      <Badge className={getStatusColor(campaign.status)}>
+                        {campaign.status}
+                      </Badge>
+                      {campaign.target_role_id && (
+                        <Badge variant="outline">
+                          Papel específico
+                        </Badge>
+                      )}
                     </div>
-                    <div>
-                      <p className="text-muted-foreground">Conversões</p>
-                      <p className="font-semibold">{campaign.metrics.registered}</p>
-                    </div>
-                    <div className="col-span-2">
-                      <p className="text-muted-foreground">Taxa de Conversão</p>
-                      <p className="font-semibold">{campaign.metrics.conversionRate.toFixed(1)}%</p>
-                    </div>
-                  </div>
-                  
-                  <div className="flex gap-2">
-                    {campaign.status === 'active' ? (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => updateCampaignStatus(campaign.id, 'paused')}
-                      >
-                        <Pause className="h-3 w-3 mr-1" />
-                        Pausar
-                      </Button>
-                    ) : (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => updateCampaignStatus(campaign.id, 'active')}
-                      >
-                        <Play className="h-3 w-3 mr-1" />
-                        Ativar
-                      </Button>
+                    {campaign.description && (
+                      <p className="text-sm text-muted-foreground mb-2">{campaign.description}</p>
                     )}
-                    
+                    <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                      <span>Total: {campaign.totalInvites || 0}</span>
+                      <span>Enviados: {campaign.sentInvites || 0}</span>
+                      <span>Conversões: {campaign.conversions || 0}</span>
+                      <span>Taxa: {formatConversionRate(campaign.conversionRate)}</span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2">
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => duplicateCampaign(campaign.id)}
+                      onClick={() => handleViewDetails(campaign)}
                     >
-                      <Copy className="h-3 w-3 mr-1" />
-                      Duplicar
+                      <Eye className="h-4 w-4 mr-1" />
+                      Ver Detalhes
                     </Button>
-                    
+
                     <Button
-                      variant="outline"
+                      variant={campaign.status === 'active' ? 'secondary' : 'default'}
                       size="sm"
-                      onClick={() => deleteCampaign(campaign.id)}
+                      onClick={() => handleStatusToggle(campaign)}
                     >
-                      <Trash2 className="h-3 w-3 mr-1" />
-                      Excluir
+                      {campaign.status === 'active' ? (
+                        <>
+                          <Pause className="h-4 w-4 mr-1" />
+                          Pausar
+                        </>
+                      ) : (
+                        <>
+                          <Play className="h-4 w-4 mr-1" />
+                          Ativar
+                        </>
+                      )}
                     </Button>
+
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="sm">
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent>
+                        <DropdownMenuItem onClick={() => handleDuplicate(campaign)}>
+                          Duplicar
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      )}
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Dialogs */}
+      <CreateCampaignDialog
+        open={showCreateDialog}
+        onOpenChange={setShowCreateDialog}
+        onSubmit={handleCreateCampaign}
+        isCreating={creating}
+      />
+
+      <CampaignDetailsDialog
+        campaign={selectedCampaign}
+        open={showDetailsDialog}
+        onOpenChange={setShowDetailsDialog}
+      />
     </div>
   );
 };
