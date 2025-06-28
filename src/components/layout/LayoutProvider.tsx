@@ -48,7 +48,9 @@ const LayoutProvider = memo(({ children }: LayoutProviderProps) => {
   if (isFormacaoRoute && (isFormacao || isAdmin)) {
     return (
       <PageTransitionWithFallback isVisible={true}>
-        <FormacaoLayout>{children}</FormacaoLayout>
+        <FormacaoLayout>
+          {children}
+        </FormacaoLayout>
       </PageTransitionWithFallback>
     );
   }
@@ -56,7 +58,9 @@ const LayoutProvider = memo(({ children }: LayoutProviderProps) => {
   // Layout padrão para membros
   return (
     <PageTransitionWithFallback isVisible={true}>
-      <MemberLayout>{children}</MemberLayout>
+      <MemberLayout>
+        {children}
+      </MemberLayout>
     </PageTransitionWithFallback>
   );
 });

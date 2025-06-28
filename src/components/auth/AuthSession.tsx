@@ -1,6 +1,6 @@
 
 import { useEffect } from 'react';
-import { useAuth } from '@/contexts/auth';
+import { useSimpleAuth } from '@/contexts/auth/SimpleAuthProvider';
 import { supabase } from '@/lib/supabase';
 import { fetchUserProfileSecurely } from '@/hooks/auth/utils/authSessionUtils';
 import LoadingScreen from '@/components/common/LoadingScreen';
@@ -9,9 +9,8 @@ const AuthSession = () => {
   const { 
     user, 
     isLoading, 
-    setProfile, 
-    setIsLoading 
-  } = useAuth();
+    refreshProfile 
+  } = useSimpleAuth();
 
   // Carrega o perfil do usuário quando o usuário é autenticado
   useEffect(() => {
@@ -25,19 +24,17 @@ const AuthSession = () => {
         
         if (profile) {
           console.log("Perfil carregado:", profile);
-          setProfile(profile);
+          await refreshProfile();
         }
       } catch (error) {
         console.error("Erro ao carregar perfil:", error);
-      } finally {
-        setIsLoading(false);
       }
     };
     
     if (user) {
       loadUserProfile();
     }
-  }, [user, setProfile, setIsLoading]);
+  }, [user, refreshProfile]);
   
   if (isLoading) {
     return <LoadingScreen />;
