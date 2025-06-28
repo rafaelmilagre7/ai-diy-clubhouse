@@ -36,42 +36,35 @@ export const adminForceDeleteUser = async (userEmail: string): Promise<AdminForc
     const affectedTables: string[] = [];
     const errorMessages: string[] = [];
 
-    // Lista de tabelas que existem e podem ter referências ao usuário
-    const tablesToClean = [
-      { name: 'learning_comments', exists: true },
-      { name: 'learning_progress', exists: true }, 
-      { name: 'learning_certificates', exists: true },
-      { name: 'learning_lesson_nps', exists: true },
-      { name: 'benefit_clicks', exists: true },
-      { name: 'forum_posts', exists: true },
-      { name: 'forum_topics', exists: true },
-      { name: 'forum_reactions', exists: true },
-      { name: 'implementation_trails', exists: true },
-      { name: 'analytics', exists: true }
+    // Lista de tabelas que realmente existem no schema
+    const existingTablesToClean = [
+      'analytics',
+      'forum_posts',
+      'forum_topics'
     ];
 
     // Deletar de cada tabela com tratamento de erro individual
-    for (const table of tablesToClean) {
+    for (const tableName of existingTablesToClean) {
       try {
         const { count, error } = await supabase
-          .from(table.name as any)
+          .from(tableName as any)
           .delete()
           .eq('user_id', userId)
           .select('*', { count: 'exact', head: true });
 
         if (error) {
-          errorMessages.push(`Erro em ${table.name}: ${error.message}`);
+          errorMessages.push(`Erro em ${tableName}: ${error.message}`);
         } else {
           const deletedCount = count || 0;
           if (deletedCount > 0) {
             totalDeleted += deletedCount;
-            affectedTables.push(table.name);
-            logger.info(`✅ Deletados ${deletedCount} registros de ${table.name}`);
+            affectedTables.push(tableName);
+            logger.info(`✅ Deletados ${deletedCount} registros de ${tableName}`);
           }
         }
       } catch (err: any) {
-        errorMessages.push(`Erro ao deletar de ${table.name}: ${err.message}`);
-        logger.warn(`⚠️ Tabela ${table.name} pode não existir ou ter problemas de acesso`);
+        errorMessages.push(`Erro ao deletar de ${tableName}: ${err.message}`);
+        logger.warn(`⚠️ Erro ao acessar tabela ${tableName}`);
       }
     }
 

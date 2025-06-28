@@ -41,8 +41,7 @@ export const useModeration = () => {
       setLoading(true);
       setError(null);
 
-      // Como a tabela community_reports não existe, vamos simular dados
-      // baseados em dados reais do fórum
+      // Simular relatórios de moderação baseados em dados reais do fórum
       const { data: forumPosts, error: postsError } = await supabase
         .from('forum_posts')
         .select('id, user_id, topic_id, created_at')
@@ -95,8 +94,8 @@ export const useModeration = () => {
     try {
       const { action_type, topic_id, post_id, reason } = actionRequest;
       
-      // Simular ação de moderação já que não temos as tabelas necessárias
-      console.log(`Ação de moderação simulada:`, {
+      // Executar ações reais nas tabelas existentes
+      console.log(`Executando ação de moderação:`, {
         action_type,
         topic_id,
         post_id,
@@ -129,21 +128,19 @@ export const useModeration = () => {
         }
       }
 
-      // Se for uma ação em post
+      // Se for uma ação em post (apenas deletar, pois is_hidden não existe)
       if (post_id) {
         switch (action_type) {
-          case 'hide':
-          case 'unhide':
-            await supabase
-              .from('forum_posts')
-              .update({ is_hidden: action_type === 'hide' })
-              .eq('id', post_id);
-            break;
           case 'delete':
             await supabase
               .from('forum_posts')
               .delete()
               .eq('id', post_id);
+            break;
+          case 'hide':
+          case 'unhide':
+            // Log que a funcionalidade não está disponível
+            console.log(`Ação ${action_type} não disponível para posts - campo is_hidden não existe`);
             break;
         }
       }

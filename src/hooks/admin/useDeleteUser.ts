@@ -11,118 +11,47 @@ export const useDeleteUser = () => {
     try {
       setIsDeleting(true);
 
-      // Deletar apenas das tabelas que realmente existem no schema atual
-      // Verificando as tabelas existentes uma por uma
-      
-      try {
-        // Deletar comentários de aprendizado
-        await supabase
-          .from('learning_comments')
-          .delete()
-          .eq('user_id', userId);
-      } catch (error) {
-        console.warn('Tabela learning_comments não encontrada ou erro:', error);
+      // Lista de tabelas que realmente existem no schema atual e podem ter referências ao usuário
+      const existingTablesToClean = [
+        'analytics',
+        'forum_posts', 
+        'forum_topics'
+      ];
+
+      let totalDeleted = 0;
+
+      // Deletar de cada tabela existente com tratamento de erro individual
+      for (const tableName of existingTablesToClean) {
+        try {
+          const { error } = await supabase
+            .from(tableName as any)
+            .delete()
+            .eq('user_id', userId);
+
+          if (error) {
+            console.warn(`Erro ao deletar de ${tableName}:`, error);
+          } else {
+            console.log(`✅ Limpeza concluída para ${tableName}`);
+            totalDeleted++;
+          }
+        } catch (error) {
+          console.warn(`Erro ao acessar tabela ${tableName}:`, error);
+        }
       }
 
+      // Atualizar convites relacionados (se a tabela existir)
       try {
-        // Deletar progresso de aprendizado
-        await supabase
-          .from('learning_progress')
-          .delete()
-          .eq('user_id', userId);
-      } catch (error) {
-        console.warn('Tabela learning_progress não encontrada ou erro:', error);
-      }
-
-      try {
-        // Deletar certificados
-        await supabase
-          .from('learning_certificates')
-          .delete()
-          .eq('user_id', userId);
-      } catch (error) {
-        console.warn('Tabela learning_certificates não encontrada ou erro:', error);
-      }
-
-      try {
-        // Deletar avaliações NPS
-        await supabase
-          .from('learning_lesson_nps')
-          .delete()
-          .eq('user_id', userId);
-      } catch (error) {
-        console.warn('Tabela learning_lesson_nps não encontrada ou erro:', error);
-      }
-
-      try {
-        // Deletar clicks em benefícios
-        await supabase
-          .from('benefit_clicks')
-          .delete()
-          .eq('user_id', userId);
-      } catch (error) {
-        console.warn('Tabela benefit_clicks não encontrada ou erro:', error);
-      }
-
-      try {
-        // Deletar posts do fórum
-        await supabase
-          .from('forum_posts')
-          .delete()
-          .eq('user_id', userId);
-      } catch (error) {
-        console.warn('Tabela forum_posts não encontrada ou erro:', error);
-      }
-
-      try {
-        // Deletar tópicos do fórum
-        await supabase
-          .from('forum_topics')
-          .delete()
-          .eq('user_id', userId);
-      } catch (error) {
-        console.warn('Tabela forum_topics não encontrada ou erro:', error);
-      }
-
-      try {
-        // Deletar reações do fórum
-        await supabase
-          .from('forum_reactions')
-          .delete()
-          .eq('user_id', userId);
-      } catch (error) {
-        console.warn('Tabela forum_reactions não encontrada ou erro:', error);
-      }
-
-      try {
-        // Deletar trilhas de implementação
-        await supabase
-          .from('implementation_trails')
-          .delete()
-          .eq('user_id', userId);
-      } catch (error) {
-        console.warn('Tabela implementation_trails não encontrada ou erro:', error);
-      }
-
-      try {
-        // Deletar analytics
-        await supabase
-          .from('analytics')
-          .delete()
-          .eq('user_id', userId);
-      } catch (error) {
-        console.warn('Tabela analytics não encontrada ou erro:', error);
-      }
-
-      try {
-        // Marcar convites relacionados como utilizados (se existirem)
-        await supabase
+        const { error: inviteError } = await supabase
           .from('invites')
           .update({ used_at: new Date().toISOString() })
           .eq('email', userEmail)
           .is('used_at', null);
-      } catch (error) {
-        console.warn('Erro ao atualizar convites:', error);
+
+        if (!inviteError) {
+          console.log('✅ Convites atualizados');
+        }
+      } catch (err) {
+        console.warn('Tabela invites pode não existir:', err);
       }
 
       // Finalmente, deletar o perfil do usuário
@@ -138,7 +67,7 @@ export const useDeleteUser = () => {
 
       toast({
         title: "Usuário excluído",
-        description: "O usuário e todos os dados relacionados foram removidos com sucesso.",
+        description: "O usuário e dados relacionados foram removidos com sucesso.",
       });
 
       return true;
