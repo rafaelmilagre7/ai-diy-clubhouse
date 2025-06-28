@@ -13,7 +13,7 @@ export interface Certificate {
   created_at: string;
 }
 
-export const useCertificates = () => {
+export const useCertificates = (courseId?: string) => {
   const { user } = useSimpleAuth();
   const queryClient = useQueryClient();
 
@@ -34,7 +34,7 @@ export const useCertificates = () => {
         {
           id: '1',
           user_id: user.id,
-          course_id: '1',
+          course_id: courseId || '1',
           certificate_url: '/certificates/sample-cert-1.pdf',
           validation_code: 'CERT-001-2024',
           issued_at: new Date().toISOString(),
@@ -45,6 +45,13 @@ export const useCertificates = () => {
     enabled: !!user?.id,
     staleTime: 5 * 60 * 1000
   });
+
+  // Check eligibility for certificate
+  const checkEligibility = async (courseId: string): Promise<boolean> => {
+    console.log('Simulando verificação de elegibilidade para certificado:', courseId);
+    await new Promise(resolve => setTimeout(resolve, 500));
+    return true; // Mock - always eligible
+  };
 
   // Generate certificate mutation
   const generateCertificateMutation = useMutation({
@@ -76,6 +83,12 @@ export const useCertificates = () => {
     }
   });
 
+  // Download certificate
+  const downloadCertificate = async (certificateId: string) => {
+    console.log('Simulando download de certificado:', certificateId);
+    toast.success('Download iniciado!');
+  };
+
   // Validate certificate mutation
   const validateCertificateMutation = useMutation({
     mutationFn: async (validationCode: string) => {
@@ -98,9 +111,11 @@ export const useCertificates = () => {
   return {
     certificates,
     isLoading,
-    error,
+    error: error as Error,
+    checkEligibility,
     generateCertificate: generateCertificateMutation.mutate,
     isGenerating: generateCertificateMutation.isPending,
+    downloadCertificate,
     validateCertificate: validateCertificateMutation.mutate,
     isValidating: validateCertificateMutation.isPending
   };

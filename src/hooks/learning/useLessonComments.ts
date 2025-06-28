@@ -1,6 +1,7 @@
 
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useSimpleAuth } from '@/contexts/auth/SimpleAuthProvider';
+import { toast } from 'sonner';
 
 export interface LessonComment {
   id: string;
@@ -20,8 +21,9 @@ export interface LessonComment {
 
 export const useLessonComments = (lessonId: string) => {
   const { user } = useSimpleAuth();
+  const queryClient = useQueryClient();
 
-  return useQuery({
+  const query = useQuery({
     queryKey: ['lesson-comments', lessonId],
     queryFn: async (): Promise<LessonComment[]> => {
       if (!lessonId) return [];
@@ -39,7 +41,7 @@ export const useLessonComments = (lessonId: string) => {
           updated_at: new Date(Date.now() - 86400000).toISOString(),
           author: {
             id: user?.id || '1',
-            name: user?.name || 'Usuário',
+            name: user?.name || user?.email?.split('@')[0] || 'Usuário',
             email: user?.email || 'usuario@exemplo.com'
           },
           likes_count: 3,
@@ -50,4 +52,50 @@ export const useLessonComments = (lessonId: string) => {
     enabled: !!lessonId,
     staleTime: 5 * 60 * 1000
   });
+
+  const addCommentMutation = useMutation({
+    mutationFn: async ({ content, parentId }: { content: string; parentId?: string }) => {
+      console.log('Simulando adição de comentário:', { content, parentId });
+      await new Promise(resolve => setTimeout(resolve, 500));
+      return { success: true };
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['lesson-comments', lessonId] });
+      toast.success('Comentário adicionado com sucesso!');
+    }
+  });
+
+  const deleteCommentMutation = useMutation({
+    mutationFn: async (commentId: string) => {
+      console.log('Simulando exclusão de comentário:', commentId);
+      await new Promise(resolve => setTimeout(resolve, 300));
+      return { success: true };
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['lesson-comments', lessonId] });
+      toast.success('Comentário excluído com sucesso!');
+    }
+  });
+
+  const likeCommentMutation = useMutation({
+    mutationFn: async (commentId: string) => {
+      console.log('Simulando like do comentário:', commentId);
+      await new Promise(resolve => setTimeout(resolve, 300));
+      return { success: true };
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['lesson-comments', lessonId] });
+    }
+  });
+
+  return {
+    ...query,
+    comments: query.data || [],
+    addComment: async (content: string, parentId?: string | null) => {
+      return addCommentMutation.mutateAsync({ content, parentId: parentId || undefined });
+    },
+    deleteComment: (commentId: string) => deleteCommentMutation.mutate(commentId),
+    likeComment: (commentId: string) => likeCommentMutation.mutate(commentId),
+    isSubmitting: addCommentMutation.isPending
+  };
 };

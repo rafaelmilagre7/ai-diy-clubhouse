@@ -45,9 +45,9 @@ export const ForumSearch = ({
           Populares
         </Button>
         <Button
-          variant={selectedFilter === "unsolved" ? "default" : "outline"}
+          variant={selectedFilter === "unanswered" ? "default" : "outline"}
           size="sm"
-          onClick={() => setSelectedFilter("unsolved")}
+          onClick={() => setSelectedFilter("unanswered")}
         >
           Sem respostas
         </Button>
