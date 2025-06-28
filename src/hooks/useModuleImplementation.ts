@@ -1,12 +1,11 @@
 
-
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useSimpleAuth } from "@/contexts/auth/SimpleAuthProvider";
 import { supabase } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
 
-interface Solution {
+interface SimpleSolution {
   id: string;
   title: string;
   description: string;
@@ -16,7 +15,7 @@ interface Solution {
   updated_at: string;
 }
 
-interface Module {
+interface SimpleModule {
   id: string;
   solution_id: string;
   title: string;
@@ -27,7 +26,7 @@ interface Module {
   updated_at: string;
 }
 
-interface Progress {
+interface SimpleProgress {
   id: string;
   user_id: string;
   solution_id: string;
@@ -44,10 +43,10 @@ export const useModuleImplementation = () => {
   const navigate = useNavigate();
   const isAdmin = profile?.user_roles?.name === 'admin';
   
-  const [solution, setSolution] = useState<Solution | null>(null);
-  const [modules, setModules] = useState<Module[]>([]);
-  const [currentModule, setCurrentModule] = useState<Module | null>(null);
-  const [progress, setProgress] = useState<Progress | null>(null);
+  const [solution, setSolution] = useState<SimpleSolution | null>(null);
+  const [modules, setModules] = useState<SimpleModule[]>([]);
+  const [currentModule, setCurrentModule] = useState<SimpleModule | null>(null);
+  const [progress, setProgress] = useState<SimpleProgress | null>(null);
   const [loading, setLoading] = useState(true);
 
   const moduleIdx = parseInt(moduleIndex || "0");
@@ -60,12 +59,11 @@ export const useModuleImplementation = () => {
         setLoading(true);
         
         // Fetch solution details
-        const solutionQuery = supabase
+        const { data: solutionData, error: solutionError } = await supabase
           .from("solutions")
-          .select("*")
-          .eq("id", id);
-        
-        const { data: solutionData, error: solutionError } = await solutionQuery.maybeSingle();
+          .select("id, title, description, category, estimated_time_hours, created_at, updated_at")
+          .eq("id", id)
+          .single();
         
         if (solutionError) {
           console.error("Erro ao buscar solução:", solutionError);
@@ -91,16 +89,14 @@ export const useModuleImplementation = () => {
           return;
         }
         
-        setSolution(solutionData as Solution);
+        setSolution(solutionData as SimpleSolution);
         
         // Fetch modules for this solution
-        const modulesQuery = supabase
+        const { data: modulesData, error: modulesError } = await supabase
           .from("modules")
-          .select("*")
+          .select("id, solution_id, title, content, type, module_order, created_at, updated_at")
           .eq("solution_id", id)
           .order("module_order", { ascending: true });
-        
-        const { data: modulesData, error: modulesError } = await modulesQuery;
         
         if (modulesError) {
           console.error("Erro ao buscar módulos:", modulesError);
@@ -108,7 +104,7 @@ export const useModuleImplementation = () => {
         }
         
         if (modulesData && modulesData.length > 0) {
-          const modulesList = modulesData as Module[];
+          const modulesList = modulesData as SimpleModule[];
           setModules(modulesList);
           
           // Get current module or create placeholder
@@ -119,7 +115,7 @@ export const useModuleImplementation = () => {
           }
         } else {
           // Create placeholder module for implementation screen
-          const placeholderModule: Module = {
+          const placeholderModule: SimpleModule = {
             id: `placeholder-module-${moduleIdx}`,
             solution_id: id,
             title: solutionData.title || "Implementação",
@@ -137,21 +133,20 @@ export const useModuleImplementation = () => {
         // Fetch user progress
         if (user) {
           try {
-            const progressQuery = supabase
+            const { data: progressData, error: progressError } = await supabase
               .from("progress")
-              .select("*")
+              .select("id, user_id, solution_id, current_module, is_completed, completed_modules, last_activity")
               .eq("solution_id", id)
-              .eq("user_id", user.id);
+              .eq("user_id", user.id)
+              .single();
             
-            const { data: progressData, error: progressError } = await progressQuery.maybeSingle();
-            
-            if (progressError) {
+            if (progressError && progressError.code !== 'PGRST116') {
               console.error("Erro ao buscar progresso:", progressError);
             } else if (progressData) {
-              setProgress(progressData as Progress);
+              setProgress(progressData as SimpleProgress);
             } else {
               // Create initial progress record if not exists
-              const newProgressQuery = supabase
+              const { data: newProgress, error: createError } = await supabase
                 .from("progress")
                 .insert({
                   user_id: user.id,
@@ -164,12 +159,10 @@ export const useModuleImplementation = () => {
                 .select()
                 .single();
               
-              const { data: newProgress, error: createError } = await newProgressQuery;
-              
               if (createError) {
                 console.error("Erro ao criar progresso:", createError);
               } else if (newProgress) {
-                setProgress(newProgress as Progress);
+                setProgress(newProgress as SimpleProgress);
               }
             }
           } catch (progressError) {
@@ -201,4 +194,3 @@ export const useModuleImplementation = () => {
     moduleIdx
   };
 };
-

@@ -1,5 +1,4 @@
 
-
 import { Database } from './database.types';
 
 // Tipos de tabelas principais (apenas tabelas que existem)
@@ -60,4 +59,3 @@ export { getUserRoleName } from './getUserRoleName';
 export const safeSupabaseQuery = <T = any>(query: Promise<any>): Promise<{ data: T | null; error: any }> => {
   return query.catch((error: any) => ({ data: null, error }));
 };
-
