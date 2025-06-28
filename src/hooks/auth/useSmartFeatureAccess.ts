@@ -29,6 +29,8 @@ export const useSmartFeatureAccess = () => {
     canAccess,
     isAdmin,
     isFormacao,
-    hasUser: !!user
+    hasUser: !!user,
+    data: null,
+    isLoading: false
   };
 };

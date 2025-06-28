@@ -14,8 +14,9 @@ export interface AutoRecommendation {
   impact?: 'high' | 'medium' | 'low';
   effort?: 'high' | 'medium' | 'low';
   metrics?: {
-    currentValue: number;
-    targetValue: number;
+    current: number;
+    target: number;
+    unit: string;
     improvement: string;
   };
   actionItems?: string[];
@@ -31,7 +32,7 @@ export const useAutoRecommendations = () => {
         // Buscar dados básicos 
         const [profilesResult, solutionsResult, analyticsResult] = await Promise.allSettled([
           supabase.from('profiles').select('id, created_at').limit(100),
-          supabase.from('solutions').select('id, title, category').limit(50),
+          supabase.from('solutions').select('id, title, category, published').limit(50),
           supabase.from('analytics').select('*').limit(100)
         ]);
 
@@ -59,8 +60,9 @@ export const useAutoRecommendations = () => {
               impact: 'high',
               effort: 'medium',
               metrics: {
-                currentValue: recentUsers.length,
-                targetValue: Math.round(profiles.length * 0.2),
+                current: recentUsers.length,
+                target: Math.round(profiles.length * 0.2),
+                unit: 'usuários',
                 improvement: '100%'
               },
               actionItems: [
@@ -75,7 +77,8 @@ export const useAutoRecommendations = () => {
 
         // Recomendação 2: Otimização de conteúdo
         if (solutions.length > 0) {
-          const unpublishedCount = Math.floor(solutions.length * 0.3);
+          const publishedSolutions = solutions.filter(s => s.published === true);
+          const unpublishedCount = solutions.length - publishedSolutions.length;
           
           if (unpublishedCount > 0) {
             recommendations.push({
@@ -89,8 +92,9 @@ export const useAutoRecommendations = () => {
               impact: 'medium',
               effort: 'low',
               metrics: {
-                currentValue: solutions.length - unpublishedCount,
-                targetValue: solutions.length,
+                current: publishedSolutions.length,
+                target: solutions.length,
+                unit: 'soluções',
                 improvement: `${Math.round((unpublishedCount / solutions.length) * 100)}%`
               },
               actionItems: [
@@ -98,7 +102,7 @@ export const useAutoRecommendations = () => {
                 'Definir processo de aprovação mais eficiente',
                 'Criar checklist de qualidade'
               ],
-              data: { unpublished: unpublishedCount, published: solutions.length - unpublishedCount }
+              data: { unpublished: unpublishedCount, published: publishedSolutions.length }
             });
           }
         }
@@ -121,8 +125,9 @@ export const useAutoRecommendations = () => {
               impact: 'medium',
               effort: 'medium',
               metrics: {
-                currentValue: recentActivity.length,
-                targetValue: 25,
+                current: recentActivity.length,
+                target: 25,
+                unit: 'eventos',
                 improvement: '150%'
               },
               actionItems: [

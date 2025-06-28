@@ -37,7 +37,7 @@ export const useTrendAnalysisData = (period: 'week' | 'month' | 'quarter' = 'mon
             .gte('created_at', startDate.toISOString()),
           supabase
             .from('solutions')
-            .select('id, title, created_at'),
+            .select('id, title, created_at, published'),
           supabase
             .from('analytics')
             .select('*')
@@ -56,6 +56,8 @@ export const useTrendAnalysisData = (period: 'week' | 'month' | 'quarter' = 'mon
         const firstHalfActivity = analytics.filter(a => new Date(a.created_at) < midDate).length;
         const secondHalfActivity = analytics.filter(a => new Date(a.created_at) >= midDate).length;
 
+        const publishedSolutions = solutions.filter(s => s.published === true);
+
         // Gerar dados de tendência
         const trends: TrendData[] = [
           {
@@ -67,8 +69,8 @@ export const useTrendAnalysisData = (period: 'week' | 'month' | 'quarter' = 'mon
           },
           {
             metric: 'Implementações',
-            current: solutions.length,
-            previous: Math.floor(solutions.length * 0.8),
+            current: publishedSolutions.length,
+            previous: Math.floor(publishedSolutions.length * 0.8),
             change: 25,
             trend: 'up'
           },

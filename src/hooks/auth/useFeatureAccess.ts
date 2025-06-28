@@ -27,6 +27,8 @@ export const useFeatureAccess = () => {
     canAccessAdminPanel: isAdmin,
     canCreateContent: isAdmin || isFormacao,
     canViewAnalytics: isAdmin,
-    canManageUsers: isAdmin
+    canManageUsers: isAdmin,
+    data: null,
+    isLoading: false
   };
 };

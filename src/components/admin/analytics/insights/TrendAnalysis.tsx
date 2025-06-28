@@ -10,7 +10,12 @@ interface TrendAnalysisProps {
 }
 
 export const TrendAnalysis: React.FC<TrendAnalysisProps> = ({ timeRange }) => {
-  const { data: trends, isLoading, error } = useTrendAnalysisData(timeRange);
+  // Convert string to proper type
+  const validTimeRange = (timeRange === 'week' || timeRange === 'month' || timeRange === 'quarter') 
+    ? timeRange 
+    : 'month';
+    
+  const { data: trendAnalysis, isLoading, error } = useTrendAnalysisData(validTimeRange);
 
   if (isLoading) {
     return <ModernLoadingState type="chart" />;
@@ -34,7 +39,7 @@ export const TrendAnalysis: React.FC<TrendAnalysisProps> = ({ timeRange }) => {
     );
   }
 
-  if (!trends || trends.length === 0) {
+  if (!trendAnalysis || !trendAnalysis.trends || trendAnalysis.trends.length === 0) {
     return (
       <Card className="border-0 shadow-xl bg-white/80 backdrop-blur-sm">
         <CardHeader>
@@ -106,7 +111,7 @@ export const TrendAnalysis: React.FC<TrendAnalysisProps> = ({ timeRange }) => {
         </p>
       </CardHeader>
       <CardContent className="space-y-4">
-        {trends.map((trend, index) => (
+        {trendAnalysis.trends.map((trend, index) => (
           <div 
             key={index} 
             className="flex items-center justify-between p-3 border border-gray-200 rounded-lg"

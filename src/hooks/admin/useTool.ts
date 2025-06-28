@@ -41,8 +41,8 @@ export const useTool = (toolId: string | null) => {
         has_member_benefit: data.benefit_type !== null,
         benefit_type: data.benefit_type as any,
         benefit_description: data.benefit_description,
-        benefit_link: data.benefit_link || null, // Handle missing property
-        benefit_discount_percentage: data.benefit_discount_percentage || null, // Handle missing property
+        benefit_link: data.benefit_link || null,
+        benefit_discount_percentage: data.benefit_discount_percentage || null,
         created_at: data.created_at,
         updated_at: data.updated_at
       };
