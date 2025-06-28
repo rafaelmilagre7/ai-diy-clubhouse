@@ -1,112 +1,83 @@
 
 import React from 'react';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { RefreshCw, Home, AlertTriangle } from 'lucide-react';
-import { ErrorFallbackProps } from './ErrorBoundary';
+import { AlertTriangle, RotateCcw, Home } from 'lucide-react';
 
-interface CustomErrorFallbackProps extends ErrorFallbackProps {
-  title?: string;
-  description?: string;
-  icon?: React.ReactNode;
-  variant?: 'default' | 'minimal' | 'detailed';
+interface ErrorFallbackProps {
+  error: Error;
+  resetErrorBoundary: () => void;
 }
 
-export const ErrorFallback: React.FC<CustomErrorFallbackProps> = ({
-  error,
-  errorInfo,
-  onRetry,
-  onGoHome,
-  retryCount,
-  maxRetries,
-  showDetails = false,
-  title = "Algo deu errado",
-  description = "Ocorreu um erro inesperado. Tente novamente ou volte para o dashboard.",
-  icon,
-  variant = 'default'
-}) => {
-  const canRetry = retryCount < maxRetries;
+const ErrorFallback: React.FC<ErrorFallbackProps> = ({ error, resetErrorBoundary }) => {
+  const handleGoHome = () => {
+    window.location.href = '/login';
+  };
 
-  if (variant === 'minimal') {
-    return (
-      <div className="flex flex-col items-center justify-center p-8 text-center">
-        {icon || <AlertTriangle className="w-8 h-8 text-orange-500 mb-4" />}
-        <h3 className="text-lg font-medium mb-2">{title}</h3>
-        <p className="text-muted-foreground mb-4">{description}</p>
-        <div className="flex gap-2">
-          {canRetry && (
-            <Button size="sm" onClick={onRetry}>
-              <RefreshCw className="w-4 h-4 mr-1" />
-              Tentar novamente
-            </Button>
-          )}
-          <Button size="sm" variant="outline" onClick={onGoHome}>
-            <Home className="w-4 h-4 mr-1" />
-            Dashboard
-          </Button>
-        </div>
-      </div>
-    );
-  }
+  const handleReset = () => {
+    // Limpar localStorage e tentar novamente
+    Object.keys(localStorage).forEach(key => {
+      if (
+        key.startsWith('supabase') ||
+        key.startsWith('sb-') ||
+        key.includes('auth') ||
+        key.includes('session')
+      ) {
+        localStorage.removeItem(key);
+      }
+    });
+    
+    resetErrorBoundary();
+  };
 
   return (
-    <div className="min-h-[400px] flex items-center justify-center p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <div className="mx-auto w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center mb-4">
-            {icon || <AlertTriangle className="w-6 h-6 text-orange-600" />}
+    <div className="min-h-screen bg-gradient-to-br from-[#0F111A] to-[#151823] flex items-center justify-center p-4">
+      <div className="text-center space-y-6 max-w-md">
+        <div className="flex justify-center">
+          <div className="p-4 bg-red-500/10 rounded-full">
+            <AlertTriangle className="h-12 w-12 text-red-500" />
           </div>
-          <CardTitle className="text-xl">{title}</CardTitle>
-        </CardHeader>
+        </div>
         
-        <CardContent className="space-y-4">
-          <p className="text-center text-muted-foreground">{description}</p>
+        <div className="space-y-2">
+          <h1 className="text-2xl font-bold text-white">
+            Oops! Algo deu errado
+          </h1>
+          <p className="text-neutral-300">
+            Ocorreu um erro inesperado na aplicação
+          </p>
+        </div>
 
-          {variant === 'detailed' && showDetails && error && (
-            <details className="bg-muted p-3 rounded text-sm">
-              <summary className="cursor-pointer font-medium mb-2">
-                Informações técnicas
-              </summary>
-              <div className="space-y-2">
-                <div>
-                  <strong>Mensagem:</strong> {error.message}
-                </div>
-                <div>
-                  <strong>Tipo:</strong> {error.name}
-                </div>
-                {error.stack && (
-                  <div>
-                    <strong>Stack trace:</strong>
-                    <pre className="text-xs overflow-auto mt-1 bg-background p-2 rounded max-h-32">
-                      {error.stack}
-                    </pre>
-                  </div>
-                )}
-              </div>
-            </details>
-          )}
-
-          <div className="flex gap-3 justify-center">
-            {canRetry && (
-              <Button onClick={onRetry} className="flex items-center gap-2">
-                <RefreshCw className="w-4 h-4" />
-                Tentar novamente
-              </Button>
-            )}
-            
-            <Button variant="outline" onClick={onGoHome} className="flex items-center gap-2">
-              <Home className="w-4 h-4" />
-              Dashboard
-            </Button>
-          </div>
-
-          {retryCount > 0 && (
-            <p className="text-xs text-center text-muted-foreground">
-              Tentativa {retryCount} de {maxRetries}
+        {import.meta.env.DEV && (
+          <div className="bg-red-500/5 border border-red-500/20 rounded-lg p-4 text-left">
+            <p className="text-xs text-red-400 font-mono break-all">
+              {error.message}
             </p>
-          )}
-        </CardContent>
-      </Card>
+          </div>
+        )}
+
+        <div className="flex flex-col sm:flex-row gap-3 justify-center">
+          <Button
+            onClick={handleReset}
+            className="bg-viverblue hover:bg-viverblue/90 text-white"
+          >
+            <RotateCcw className="h-4 w-4 mr-2" />
+            Tentar Novamente
+          </Button>
+          
+          <Button
+            onClick={handleGoHome}
+            variant="outline"
+            className="border-gray-700 text-white hover:bg-gray-800"
+          >
+            <Home className="h-4 w-4 mr-2" />
+            Ir para Login
+          </Button>
+        </div>
+
+        <div className="text-xs text-neutral-500">
+          Se o problema persistir, use o botão "Reset Sistema" no canto inferior direito
+        </div>
+      </div>
     </div>
   );
 };

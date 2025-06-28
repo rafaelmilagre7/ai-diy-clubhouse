@@ -4,7 +4,6 @@ import { User, Session } from '@supabase/supabase-js';
 import { UserProfile } from '@/lib/supabase';
 import { logger } from '@/utils/logger';
 import AuthManager from '@/services/AuthManager';
-import { EmergencyReset } from '@/services/EmergencyReset';
 
 interface SimpleAuthContextType {
   user: User | null;
@@ -34,13 +33,10 @@ export const SimpleAuthProvider: React.FC<SimpleAuthProviderProps> = ({ children
   useEffect(() => {
     const authManager = AuthManager.getInstance();
     
-    logger.info('[SIMPLE-AUTH-PROVIDER] Inicializando com AuthManager otimizado');
-    
-    // Limpar estado de emergência se existir
-    EmergencyReset.clearEmergencyState();
+    logger.info('[SIMPLE-AUTH-PROVIDER] Inicializando...');
     
     const handleStateChanged = (newState: typeof authState) => {
-      logger.info('[SIMPLE-AUTH-PROVIDER] Estado atualizado via AuthManager', {
+      logger.info('[SIMPLE-AUTH-PROVIDER] Estado atualizado:', {
         hasUser: !!newState.user,
         isLoading: newState.isLoading,
         isAdmin: newState.isAdmin,
@@ -52,34 +48,18 @@ export const SimpleAuthProvider: React.FC<SimpleAuthProviderProps> = ({ children
     
     const unsubscribe = authManager.on('stateChanged', handleStateChanged);
     
-    const initializeAuth = async () => {
-      try {
-        // Timeout na inicialização para evitar travamento
-        await Promise.race([
-          authManager.initialize(),
-          new Promise<never>((_, reject) => 
-            setTimeout(() => reject(new Error('Timeout na inicialização do AuthManager')), 10000)
-          )
-        ]);
-        
-        const currentState = authManager.getState();
-        setAuthState(currentState);
-        
-      } catch (error) {
-        logger.error('[SIMPLE-AUTH-PROVIDER] Erro na inicialização:', error);
-        
-        // Marcar para reset de emergência
-        EmergencyReset.markEmergencyState();
-        
-        setAuthState(prev => ({ 
-          ...prev, 
-          isLoading: false, 
-          error: 'Falha na inicialização. Use o botão de Reset Sistema se necessário.' 
-        }));
-      }
-    };
-
-    initializeAuth();
+    // Inicializar sem timeout complexo
+    authManager.initialize().then(() => {
+      const currentState = authManager.getState();
+      setAuthState(currentState);
+    }).catch((error) => {
+      logger.error('[SIMPLE-AUTH-PROVIDER] Erro na inicialização:', error);
+      setAuthState(prev => ({ 
+        ...prev, 
+        isLoading: false, 
+        error: 'Falha na inicialização do sistema de autenticação' 
+      }));
+    });
     
     return () => {
       unsubscribe();

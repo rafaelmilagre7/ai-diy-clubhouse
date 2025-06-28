@@ -1,5 +1,5 @@
 
-import { User, Session, AuthError } from '@supabase/supabase-js';
+import { User, Session } from '@supabase/supabase-js';
 import { supabase, UserProfile } from '@/lib/supabase';
 import { logger } from '@/utils/logger';
 
@@ -20,7 +20,6 @@ export default class AuthManager {
   private state: AuthState;
   private listeners: Set<StateChangeCallback> = new Set();
   private initialized = false;
-  private initPromise: Promise<void> | null = null;
 
   private constructor() {
     this.state = {
@@ -57,13 +56,7 @@ export default class AuthManager {
 
   async initialize(): Promise<void> {
     if (this.initialized) return;
-    if (this.initPromise) return this.initPromise;
 
-    this.initPromise = this._initialize();
-    return this.initPromise;
-  }
-
-  private async _initialize(): Promise<void> {
     try {
       logger.info('[AUTH-MANAGER] Inicializando...');
       
@@ -132,9 +125,7 @@ export default class AuthManager {
           user_roles!inner (
             id,
             name,
-            description,
-            permissions,
-            is_system
+            description
           )
         `)
         .eq('id', userId)

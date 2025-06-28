@@ -2,8 +2,6 @@
 import React, { useState, useEffect } from 'react';
 import { Loader2, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { EmergencyResetButton } from './EmergencyResetButton';
-import { EmergencyReset } from '@/services/EmergencyReset';
 
 interface LoadingScreenProps {
   message?: string;
@@ -26,12 +24,11 @@ const LoadingScreen: React.FC<LoadingScreenProps> = ({
       const elapsed = Date.now() - startTime;
       setDuration(elapsed);
       
-      // Mostrar botão de emergência após 8 segundos (reduzido de 10)
-      if (elapsed > 8000 && showEmergencyButton) {
+      // Mostrar botão de emergência após 12 segundos
+      if (elapsed > 12000 && showEmergencyButton) {
         setShowButton(true);
-        EmergencyReset.markEmergencyState();
       }
-    }, 100);
+    }, 1000);
 
     return () => clearInterval(interval);
   }, [showEmergencyButton]);
@@ -61,22 +58,20 @@ const LoadingScreen: React.FC<LoadingScreenProps> = ({
           <span className="text-lg font-medium text-white">{message}</span>
         </div>
         
-        {/* Barra de progresso visual */}
         <div className="w-64 bg-gray-700 rounded-full h-2">
           <div 
             className="bg-viverblue h-2 rounded-full transition-all duration-300 ease-out"
-            style={{ width: `${Math.min((duration / 8000) * 100, 100)}%` }}
+            style={{ width: `${Math.min((duration / 12000) * 100, 100)}%` }}
           />
         </div>
         
         <p className="text-sm text-neutral-300">
-          {duration < 2000 ? 'Configurando sua experiência...' :
-           duration < 5000 ? 'Carregando seus dados...' :
-           duration < 8000 ? 'Quase pronto...' :
+          {duration < 3000 ? 'Configurando sua experiência...' :
+           duration < 8000 ? 'Carregando seus dados...' :
+           duration < 12000 ? 'Quase pronto...' :
            'Carregamento demorado detectado...'}
         </p>
 
-        {/* Botão de emergência local */}
         {showButton && (
           <div className="mt-6 space-y-3">
             <div className="flex items-center justify-center space-x-2 text-orange-400">
@@ -95,27 +90,23 @@ const LoadingScreen: React.FC<LoadingScreenProps> = ({
               </Button>
               
               <Button 
-                onClick={() => EmergencyReset.performFullReset()}
+                onClick={() => window.location.reload()}
                 variant="destructive"
                 size="sm"
                 className="bg-red-600 hover:bg-red-700"
               >
-                Reset Sistema
+                Recarregar Página
               </Button>
             </div>
           </div>
         )}
 
-        {/* Debug info em desenvolvimento */}
         {import.meta.env.DEV && (
           <p className="text-xs text-neutral-500 mt-4">
-            {duration}ms - Retry disponível em {Math.max(0, 8000 - duration)}ms
+            {Math.round(duration/1000)}s - Retry disponível em {Math.max(0, Math.round((12000 - duration)/1000))}s
           </p>
         )}
       </div>
-      
-      {/* Botão de emergência global */}
-      <EmergencyResetButton />
     </div>
   );
 };

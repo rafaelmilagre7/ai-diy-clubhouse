@@ -2,7 +2,6 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { AlertTriangle, RotateCcw } from 'lucide-react';
-import { EmergencyReset } from '@/services/EmergencyReset';
 import { toast } from 'sonner';
 
 export const EmergencyResetButton: React.FC = () => {
@@ -10,12 +9,10 @@ export const EmergencyResetButton: React.FC = () => {
   const [isResetting, setIsResetting] = useState(false);
 
   useEffect(() => {
-    // Mostrar botão após 10 segundos se ainda estiver carregando
+    // Mostrar botão após 15 segundos se ainda estiver na tela
     const timer = setTimeout(() => {
-      if (EmergencyReset.isInEmergencyState()) {
-        setShowButton(true);
-      }
-    }, 10000);
+      setShowButton(true);
+    }, 15000);
 
     return () => clearTimeout(timer);
   }, []);
@@ -27,9 +24,40 @@ export const EmergencyResetButton: React.FC = () => {
     toast.info('🚨 Iniciando reset de emergência...');
     
     try {
-      await EmergencyReset.performFullReset();
+      // Limpar localStorage
+      Object.keys(localStorage).forEach(key => {
+        if (
+          key.startsWith('supabase') ||
+          key.startsWith('sb-') ||
+          key.includes('auth') ||
+          key.includes('session')
+        ) {
+          localStorage.removeItem(key);
+        }
+      });
+      
+      // Limpar sessionStorage
+      if (typeof sessionStorage !== 'undefined') {
+        sessionStorage.clear();
+      }
+      
+      // Limpar cache do browser se possível
+      if ('caches' in window) {
+        const cacheNames = await caches.keys();
+        await Promise.all(
+          cacheNames.map(cacheName => caches.delete(cacheName))
+        );
+      }
+      
+      toast.success('Reset concluído! Redirecionando...');
+      
+      // Aguardar um momento e recarregar
+      setTimeout(() => {
+        window.location.href = '/login';
+      }, 1000);
+      
     } catch (error) {
-      console.error('Erro no reset de emergência:', error);
+      console.error('Erro durante reset:', error);
       toast.error('Erro no reset. Recarregando página...');
       window.location.reload();
     }
@@ -55,3 +83,5 @@ export const EmergencyResetButton: React.FC = () => {
     </div>
   );
 };
+
+export default EmergencyResetButton;
