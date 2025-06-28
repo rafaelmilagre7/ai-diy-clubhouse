@@ -36,6 +36,16 @@ export const createMockUserProfile = (overrides: Partial<UserProfile> = {}): Use
     ai_tools_used: [],
     daily_tools: [],
     who_will_implement: null,
+    main_objective: null,
+    area_to_impact: null,
+    expected_result_90_days: null,
+    ai_implementation_budget: null,
+    weekly_learning_time: null,
+    content_preference: [],
+    wants_networking: null,
+    best_days: [],
+    best_periods: [],
+    accepts_case_study: null,
     ...overrides,
   };
 };

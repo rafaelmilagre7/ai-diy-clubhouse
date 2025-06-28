@@ -16,12 +16,16 @@ interface ResourcesFormProps {
 
 const ResourcesForm = ({ solutionId, onSave, saving }: ResourcesFormProps) => {
   const {
-    form,
+    resources,
+    loading,
     error,
-    isLoading,
     isSaving,
-    setError,
-    handleSaveResources
+    addResource,
+    updateResource,
+    removeResource,
+    handleSaveResources,
+    loadResources,
+    setResources
   } = useResourcesFormData(solutionId);
   
   const saveAndContinue = async () => {
@@ -31,7 +35,7 @@ const ResourcesForm = ({ solutionId, onSave, saving }: ResourcesFormProps) => {
     }
   };
   
-  if (isLoading) {
+  if (loading) {
     return (
       <div className="flex justify-center items-center py-20">
         <div className="text-center">
@@ -52,7 +56,11 @@ const ResourcesForm = ({ solutionId, onSave, saving }: ResourcesFormProps) => {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <ResourceFaqTab form={form} />
+          <div className="space-y-4">
+            <p className="text-muted-foreground">
+              Esta seção permite adicionar FAQs relacionadas à solução.
+            </p>
+          </div>
           
           {error && (
             <div className="mt-4 p-3 bg-destructive/10 text-destructive rounded-md">
