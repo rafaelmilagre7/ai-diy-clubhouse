@@ -1,212 +1,106 @@
 
 import React from "react";
-import { CertificateCard } from "./CertificateCard";
-import { SolutionCertificateCard } from "./SolutionCertificateCard";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Award, Download, Calendar, Shield } from "lucide-react";
 import { useCertificates } from "@/hooks/learning/useCertificates";
 import { useSolutionCertificates } from "@/hooks/learning/useSolutionCertificates";
-import { Skeleton } from "@/components/ui/skeleton";
-import { AlertCircle, Award } from "lucide-react";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface CertificatesListProps {
   courseId?: string;
+  solutionId?: string;
 }
 
-export const CertificatesList = ({ courseId }: CertificatesListProps) => {
-  console.log('[CertificatesList] Renderizando com courseId:', courseId);
-  
-  const { 
-    certificates: courseCertificates, 
-    isLoading: isLoadingCourse, 
-    error: courseError, 
-    downloadCertificate: downloadCourseCertificate
-  } = useCertificates(courseId);
-  
+export const CertificatesList = ({ courseId, solutionId }: CertificatesListProps) => {
+  const courseCertificates = useCertificates(courseId);
+  const solutionCertificates = useSolutionCertificates(solutionId || '');
+
+  // Use the appropriate hook based on the props
   const {
-    certificates: solutionCertificates,
-    isLoading: isLoadingSolutions,
-    downloadCertificate: downloadSolutionCertificate
-  } = useSolutionCertificates();
-  
-  const isLoading = isLoadingCourse || isLoadingSolutions;
-  const error = courseError;
-  
-  console.log('[CertificatesList] Estado atual:', {
-    courseCertificatesCount: courseCertificates.length,
-    solutionCertificatesCount: solutionCertificates.length,
+    certificates,
     isLoading,
-    hasError: !!error
-  });
-  
+    downloadCertificate,
+    validateCertificate
+  } = courseId ? courseCertificates : solutionCertificates;
+
   if (isLoading) {
-    console.log('[CertificatesList] Renderizando estado de loading');
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {[1, 2, 3].map((i) => (
-          <div key={i} className="space-y-4">
-            <Skeleton className="h-40 w-full bg-gray-700" />
-            <Skeleton className="h-6 w-3/4 bg-gray-700" />
-            <Skeleton className="h-4 w-1/2 bg-gray-700" />
-            <div className="flex gap-2">
-              <Skeleton className="h-9 w-24 bg-gray-700" />
-              <Skeleton className="h-9 w-24 bg-gray-700" />
-            </div>
-          </div>
-        ))}
-      </div>
-    );
-  }
-  
-  if (error) {
-    console.error('[CertificatesList] Erro encontrado:', error);
-    return (
-      <Alert variant="destructive" className="bg-red-900/20 border-red-700">
-        <AlertCircle className="h-4 w-4" />
-        <AlertTitle>Erro</AlertTitle>
-        <AlertDescription>
-          Ocorreu um erro ao carregar seus certificados: {error.message}
-          <br />
-          <button 
-            onClick={() => window.location.reload()} 
-            className="mt-2 text-sm underline"
-          >
-            Tentar novamente
-          </button>
-        </AlertDescription>
-      </Alert>
-    );
-  }
-
-  const totalCertificates = courseCertificates.length + solutionCertificates.length;
-  
-  console.log('[CertificatesList] Total de certificados:', totalCertificates);
-  
-  if (totalCertificates === 0) {
-    return (
-      <Alert className="bg-[#151823] border-neutral-700">
-        <Award className="h-4 w-4 text-viverblue" />
-        <AlertTitle className="text-white">Nenhum certificado encontrado</AlertTitle>
-        <AlertDescription className="text-gray-300">
-          {courseId 
-            ? "Você ainda não possui certificado para este curso. Complete todas as aulas para receber seu certificado."
-            : "Você ainda não possui nenhum certificado. Complete cursos e implemente soluções para receber certificados."}
-        </AlertDescription>
-      </Alert>
-    );
-  }
-
-  // Se é para um curso específico, mostrar apenas certificados do curso
-  if (courseId) {
-    console.log('[CertificatesList] Renderizando certificados para curso específico');
-    return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {courseCertificates.map((certificate) => (
-          <CertificateCard
-            key={certificate.id}
-            certificate={certificate}
-            onDownload={downloadCourseCertificate}
-          />
-        ))}
+      <div className="flex items-center justify-center p-8">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-viverblue"></div>
       </div>
     );
   }
 
-  // Para a página geral de certificados, mostrar ambos os tipos em abas
-  console.log('[CertificatesList] Renderizando todos os certificados em abas');
+  if (!certificates || certificates.length === 0) {
+    return (
+      <div className="text-center py-8">
+        <Award className="h-12 w-12 mx-auto text-gray-400 mb-4" />
+        <h3 className="text-lg font-medium text-gray-300 mb-2">Nenhum certificado encontrado</h3>
+        <p className="text-gray-500">
+          Complete cursos ou implemente soluções para obter certificados.
+        </p>
+      </div>
+    );
+  }
+
   return (
-    <Tabs defaultValue="all" className="w-full">
-      <TabsList className="grid w-full grid-cols-3 bg-[#151823] border-neutral-700">
-        <TabsTrigger value="all" className="data-[state=active]:bg-viverblue data-[state=active]:text-white">
-          Todos ({totalCertificates})
-        </TabsTrigger>
-        <TabsTrigger value="courses" className="data-[state=active]:bg-viverblue data-[state=active]:text-white">
-          Cursos ({courseCertificates.length})
-        </TabsTrigger>
-        <TabsTrigger value="solutions" className="data-[state=active]:bg-viverblue data-[state=active]:text-white">
-          Soluções ({solutionCertificates.length})
-        </TabsTrigger>
-      </TabsList>
-      
-      <TabsContent value="all" className="mt-6">
-        <div className="space-y-8">
-          {/* Certificados de Soluções */}
-          {solutionCertificates.length > 0 && (
-            <div>
-              <h3 className="text-lg font-semibold text-white mb-4">Certificados de Implementação</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {solutionCertificates.map((certificate) => (
-                  <SolutionCertificateCard
-                    key={certificate.id}
-                    certificate={certificate}
-                    onDownload={downloadSolutionCertificate}
-                  />
-                ))}
+    <div className="space-y-4">
+      {certificates.map((certificate) => (
+        <Card key={certificate.id} className="bg-[#151823] border-neutral-700">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-viverblue/10 rounded-lg">
+                  <Award className="h-6 w-6 text-viverblue" />
+                </div>
+                <div>
+                  <CardTitle className="text-white">
+                    {courseId ? 'Certificado de Curso' : 'Certificado de Implementação'}
+                  </CardTitle>
+                  <div className="flex items-center gap-2 mt-1">
+                    <Calendar className="h-4 w-4 text-gray-400" />
+                    <span className="text-sm text-gray-400">
+                      Emitido em {new Date(certificate.issued_at).toLocaleDateString('pt-BR')}
+                    </span>
+                  </div>
+                </div>
               </div>
+              <Badge variant="secondary" className="bg-green-600/20 text-green-400">
+                Válido
+              </Badge>
             </div>
-          )}
+          </CardHeader>
           
-          {/* Certificados de Cursos */}
-          {courseCertificates.length > 0 && (
-            <div>
-              <h3 className="text-lg font-semibold text-white mb-4">Certificados de Cursos</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {courseCertificates.map((certificate) => (
-                  <CertificateCard
-                    key={certificate.id}
-                    certificate={certificate}
-                    onDownload={downloadCourseCertificate}
-                  />
-                ))}
-              </div>
+          <CardContent className="space-y-4">
+            <div className="flex items-center gap-2 text-sm text-gray-400">
+              <Shield className="h-4 w-4" />
+              <span>Código de validação: {certificate.validation_code}</span>
             </div>
-          )}
-        </div>
-      </TabsContent>
-      
-      <TabsContent value="courses" className="mt-6">
-        {courseCertificates.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {courseCertificates.map((certificate) => (
-              <CertificateCard
-                key={certificate.id}
-                certificate={certificate}
-                onDownload={downloadCourseCertificate}
-              />
-            ))}
-          </div>
-        ) : (
-          <Alert className="bg-[#151823] border-neutral-700">
-            <Award className="h-4 w-4 text-viverblue" />
-            <AlertTitle className="text-white">Nenhum certificado de curso</AlertTitle>
-            <AlertDescription className="text-gray-300">
-              Complete cursos para receber certificados de conclusão.
-            </AlertDescription>
-          </Alert>
-        )}
-      </TabsContent>
-      
-      <TabsContent value="solutions" className="mt-6">
-        {solutionCertificates.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {solutionCertificates.map((certificate) => (
-              <SolutionCertificateCard
-                key={certificate.id}
-                certificate={certificate}
-                onDownload={downloadSolutionCertificate}
-              />
-            ))}
-          </div>
-        ) : (
-          <Alert className="bg-[#151823] border-neutral-700">
-            <Award className="h-4 w-4 text-viverblue" />
-            <AlertTitle className="text-white">Nenhum certificado de implementação</AlertTitle>
-            <AlertDescription className="text-gray-300">
-              Implemente soluções para receber certificados de implementação.
-            </AlertDescription>
-          </Alert>
-        )}
-      </TabsContent>
-    </Tabs>
+            
+            <div className="flex gap-2">
+              <Button
+                size="sm"
+                onClick={() => downloadCertificate && downloadCertificate(certificate.id)}
+                className="bg-viverblue hover:bg-viverblue/90"
+              >
+                <Download className="h-4 w-4 mr-2" />
+                Download
+              </Button>
+              
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => validateCertificate && validateCertificate(certificate.validation_code)}
+                className="border-gray-600 text-gray-300 hover:bg-gray-800"
+              >
+                <Shield className="h-4 w-4 mr-2" />
+                Validar
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      ))}
+    </div>
   );
 };

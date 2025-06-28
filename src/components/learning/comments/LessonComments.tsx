@@ -5,7 +5,6 @@ import { MessageCircle } from "lucide-react";
 import { useLessonComments } from "@/hooks/learning/useLessonComments";
 import { CommentForm } from "./CommentForm";
 import { CommentList } from "./CommentList";
-import { useRealtimeLessonComments } from "@/hooks/learning/useRealtimeLessonComments";
 import { useLogging } from "@/hooks/useLogging";
 
 interface LessonCommentsProps {
@@ -24,9 +23,6 @@ export const LessonComments: React.FC<LessonCommentsProps> = ({ lessonId }) => {
     error
   } = useLessonComments(lessonId);
   
-  // Ativar atualizações em tempo real
-  useRealtimeLessonComments(lessonId);
-  
   log('Renderizando componente de comentários', { 
     lessonId, 
     commentsCount: comments?.length || 0,
@@ -36,6 +32,14 @@ export const LessonComments: React.FC<LessonCommentsProps> = ({ lessonId }) => {
   const handleSubmitComment = async (content: string, parentId: string | null = null) => {
     log('Tentando enviar comentário', { lessonId, hasParentId: !!parentId });
     await addComment(content, parentId);
+  };
+
+  const handleDeleteComment = async (commentId: string) => {
+    await deleteComment(commentId);
+  };
+
+  const handleLikeComment = async (commentId: string) => {
+    await likeComment(commentId);
   };
 
   return (
@@ -57,8 +61,8 @@ export const LessonComments: React.FC<LessonCommentsProps> = ({ lessonId }) => {
         comments={comments}
         lessonId={lessonId}
         onReply={handleSubmitComment}
-        onDelete={deleteComment}
-        onLike={likeComment}
+        onDelete={handleDeleteComment}
+        onLike={handleLikeComment}
         isLoading={isLoading}
         error={error as Error | null}
       />

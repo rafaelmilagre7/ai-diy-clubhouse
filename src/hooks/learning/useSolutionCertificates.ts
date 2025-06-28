@@ -17,6 +17,8 @@ export interface SolutionCertificate {
 
 export const useSolutionCertificates = (solutionId: string) => {
   const [isLoading, setIsLoading] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [certificates, setCertificates] = useState<SolutionCertificate[]>([]);
 
   const checkEligibility = async (userId: string): Promise<boolean> => {
     console.log('Simulando verificação de elegibilidade:', { solutionId, userId });
@@ -24,8 +26,8 @@ export const useSolutionCertificates = (solutionId: string) => {
     return true; // Mock - always eligible
   };
 
-  const generateCertificate = async (userId: string, implementationDate: string): Promise<SolutionCertificate | null> => {
-    setIsLoading(true);
+  const generateCertificate = async (userId: string, implementationDate?: string): Promise<SolutionCertificate | null> => {
+    setIsGenerating(true);
     try {
       console.log('Simulando geração de certificado de solução:', { solutionId, userId, implementationDate });
       
@@ -35,7 +37,7 @@ export const useSolutionCertificates = (solutionId: string) => {
         id: Date.now().toString(),
         user_id: userId,
         solution_id: solutionId,
-        implementation_date: implementationDate,
+        implementation_date: implementationDate || new Date().toISOString(),
         certificate_url: `/certificates/solution-${solutionId}-${userId}.pdf`,
         validation_code: `SOL-${solutionId.slice(0, 3).toUpperCase()}-${Date.now()}`,
         template_id: null,
@@ -44,6 +46,7 @@ export const useSolutionCertificates = (solutionId: string) => {
         updated_at: new Date().toISOString()
       };
       
+      setCertificates(prev => [...prev, certificate]);
       toast.success('Certificado de solução gerado com sucesso!');
       return certificate;
     } catch (error) {
@@ -51,13 +54,13 @@ export const useSolutionCertificates = (solutionId: string) => {
       toast.error('Erro ao gerar certificado');
       return null;
     } finally {
-      setIsLoading(false);
+      setIsGenerating(false);
     }
   };
 
   const getCertificate = async (userId: string): Promise<SolutionCertificate | null> => {
     console.log('Simulando busca de certificado:', { solutionId, userId });
-    return null; // Mock - no certificate exists
+    return certificates.find(cert => cert.user_id === userId && cert.solution_id === solutionId) || null;
   };
 
   const getTemplates = async () => {
@@ -72,11 +75,19 @@ export const useSolutionCertificates = (solutionId: string) => {
     ];
   };
 
+  const downloadCertificate = async (certificateId: string) => {
+    console.log('Simulando download de certificado:', certificateId);
+    toast.success('Download iniciado!');
+  };
+
   return {
     checkEligibility,
     generateCertificate,
     getCertificate,
     getTemplates,
-    isLoading
+    downloadCertificate,
+    certificates,
+    isLoading,
+    isGenerating
   };
 };

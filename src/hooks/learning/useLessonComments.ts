@@ -73,7 +73,6 @@ export const useLessonComments = (lessonId: string) => {
     mutationFn: async (commentId: string) => {
       console.log('Simulando exclusão de comentário:', commentId);
       await new Promise(resolve => setTimeout(resolve, 300));
-      return { success: true };
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['lesson-comments', lessonId] });
@@ -85,7 +84,6 @@ export const useLessonComments = (lessonId: string) => {
     mutationFn: async (commentId: string) => {
       console.log('Simulando like do comentário:', commentId);
       await new Promise(resolve => setTimeout(resolve, 300));
-      return { success: true };
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['lesson-comments', lessonId] });

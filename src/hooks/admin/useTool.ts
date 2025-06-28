@@ -26,7 +26,7 @@ export const useTool = (toolId?: string) => {
         name: data.name,
         description: data.description,
         category: data.category as any, // Cast to avoid category type issues
-        url: data.url,
+        link: data.url, // Map url to link
         logo_url: data.logo_url,
         pricing_info: data.pricing_info,
         features: data.features,
@@ -38,7 +38,7 @@ export const useTool = (toolId?: string) => {
         benefit_description: data.benefit_description,
         benefit_instructions: data.benefit_title || null, // Map available field
         benefit_link: data.benefit_url || null,
-        benefit_discount_percentage: data.benefit_discount_code ? 10 : null, // Mock percentage
+        benefit_discount_percentage: data.benefit_url ? 10 : null, // Mock percentage based on benefit_url
       };
     },
     enabled: !!toolId
