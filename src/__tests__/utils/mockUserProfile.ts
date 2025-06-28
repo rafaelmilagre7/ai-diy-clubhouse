@@ -24,8 +24,6 @@ export const createMockUserProfile = (overrides: Partial<UserProfile> = {}): Use
     company_website: null,
     company_size: null,
     annual_revenue: null,
-    primary_goal: null,
-    business_challenges: null,
     ai_knowledge_level: null,
     nps_score: null,
     weekly_availability: null,
@@ -36,6 +34,7 @@ export const createMockUserProfile = (overrides: Partial<UserProfile> = {}): Use
     onboarding_completed_at: '2024-01-01T00:00:00Z',
     referrals_count: 0,
     successful_referrals_count: 0,
+    business_challenges: null,
     ...overrides,
   };
 };

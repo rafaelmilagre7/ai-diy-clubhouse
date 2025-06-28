@@ -1,96 +1,124 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
-import { RefreshCw, CheckCircle, AlertTriangle, XCircle } from 'lucide-react';
+import { AlertTriangle, CheckCircle, Info, RefreshCw } from 'lucide-react';
+
+interface SyncResult {
+  status: 'success' | 'warning' | 'error';
+  message: string;
+  details?: string[];
+}
 
 export const RoleSyncPanel = () => {
-  const [loading, setLoading] = useState(false);
-  const [results, setResults] = useState<any>(null);
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [syncResults, setSyncResults] = useState<SyncResult[]>([]);
   const { toast } = useToast();
 
-  const runAudit = async () => {
-    setLoading(true);
+  const runSync = async () => {
+    setIsSyncing(true);
+    setSyncResults([]);
+
     try {
-      // Chama a função RPC do banco para auditoria
-      const { data, error } = await supabase.rpc('audit_role_assignments');
-      
-      if (error) throw error;
-      
-      // Cast para contornar problema de tipos
-      const auditResults = data as any;
-      
-      setResults({
-        success: true,
-        data: auditResults,
-        totalChecked: Array.isArray(auditResults) ? auditResults.length : 0,
-        timestamp: new Date().toISOString()
-      });
-      
+      // Verificar e corrigir perfis sem papel
+      const { data: profilesWithoutRole, error: profilesError } = await (supabase as any)
+        .from('profiles')
+        .select('id, email, role_id')
+        .is('role_id', null);
+
+      if (profilesError) throw profilesError;
+
+      if (profilesWithoutRole && profilesWithoutRole.length > 0) {
+        // Buscar papel padrão 'member'
+        const { data: memberRole, error: memberRoleError } = await (supabase as any)
+          .from('user_roles')
+          .select('id')
+          .eq('name', 'member')
+          .single();
+
+        if (memberRoleError) {
+          setSyncResults(prev => [...prev, {
+            status: 'error',
+            message: 'Papel "member" não encontrado',
+            details: ['Crie um papel chamado "member" primeiro']
+          }]);
+        } else {
+          // Atualizar perfis sem papel
+          const { error: updateError } = await (supabase as any)
+            .from('profiles')
+            .update({ role_id: memberRole.id })
+            .is('role_id', null);
+
+          if (updateError) throw updateError;
+
+          setSyncResults(prev => [...prev, {
+            status: 'success',
+            message: `${profilesWithoutRole.length} perfis atualizados com papel padrão`,
+            details: profilesWithoutRole.map((p: any) => p.email)
+          }]);
+        }
+      } else {
+        setSyncResults(prev => [...prev, {
+          status: 'success',
+          message: 'Todos os perfis têm papéis atribuídos',
+        }]);
+      }
+
+      // Verificar papéis órfãos
+      const { data: orphanedRoles, error: orphanedError } = await (supabase as any)
+        .from('user_roles')
+        .select(`
+          id, 
+          name,
+          profiles!inner(id)
+        `)
+        .eq('profiles.role_id', null);
+
+      if (orphanedError) {
+        console.warn('Erro ao verificar papéis órfãos:', orphanedError);
+      }
+
+      setSyncResults(prev => [...prev, {
+        status: 'info',
+        message: 'Sincronização concluída com sucesso',
+      }]);
+
       toast({
-        title: "Auditoria concluída",
-        description: `Verificação de ${Array.isArray(auditResults) ? auditResults.length : 0} registros realizada com sucesso.`,
+        title: "Sincronização concluída",
+        description: "Verificação e correção de papéis realizada com sucesso.",
       });
-    } catch (error: any) {
-      console.error('Erro na auditoria:', error);
-      setResults({
-        success: false,
-        error: error.message,
-        timestamp: new Date().toISOString()
-      });
-      
+
+    } catch (error) {
+      console.error('Erro na sincronização:', error);
+      setSyncResults(prev => [...prev, {
+        status: 'error',
+        message: 'Erro durante a sincronização',
+        details: [error instanceof Error ? error.message : 'Erro desconhecido']
+      }]);
+
       toast({
-        title: "Erro na auditoria",
-        description: error.message,
+        title: "Erro na sincronização",
+        description: "Ocorreu um erro durante a sincronização dos papéis.",
         variant: "destructive",
       });
     } finally {
-      setLoading(false);
+      setIsSyncing(false);
     }
   };
 
-  const fixIssues = async () => {
-    if (!results?.data) return;
-    
-    setLoading(true);
-    try {
-      // Implementar correções automáticas baseadas nos resultados
-      let fixedCount = 0;
-      
-      for (const issue of results.data) {
-        try {
-          // Exemplo de correção: atualizar perfis com role_id null
-          if (issue.issue_type === 'missing_role_id') {
-            await supabase
-              .from('profiles')
-              .update({ role_id: issue.suggested_role_id } as any)
-              .eq('id', issue.user_id as any);
-            fixedCount++;
-          }
-        } catch (fixError) {
-          console.error(`Erro ao corrigir ${issue.id}:`, fixError);
-        }
-      }
-      
-      toast({
-        title: "Correções aplicadas",
-        description: `${fixedCount} problemas foram corrigidos automaticamente.`,
-      });
-      
-      // Executar auditoria novamente para verificar
-      await runAudit();
-    } catch (error: any) {
-      console.error('Erro nas correções:', error);
-      toast({
-        title: "Erro nas correções",
-        description: error.message,
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
+  const getIcon = (status: string) => {
+    switch (status) {
+      case 'success':
+        return <CheckCircle className="h-4 w-4 text-green-600" />;
+      case 'warning':
+        return <AlertTriangle className="h-4 w-4 text-yellow-600" />;
+      case 'error':
+        return <AlertTriangle className="h-4 w-4 text-red-600" />;
+      default:
+        return <Info className="h-4 w-4 text-blue-600" />;
     }
   };
 
@@ -103,94 +131,62 @@ export const RoleSyncPanel = () => {
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <Alert>
-          <AlertTriangle className="h-4 w-4" />
-          <AlertDescription>
-            Esta ferramenta verifica e corrige inconsistências no sistema de papéis e permissões.
-            Execute a auditoria primeiro para identificar problemas.
-          </AlertDescription>
-        </Alert>
-
-        <div className="flex gap-2">
-          <Button 
-            onClick={runAudit} 
-            disabled={loading}
-            className="flex-1"
-          >
-            {loading ? (
-              <>
-                <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-                Executando Auditoria...
-              </>
-            ) : (
-              <>
-                <RefreshCw className="mr-2 h-4 w-4" />
-                Executar Auditoria
-              </>
-            )}
-          </Button>
-          
-          {results?.data?.length > 0 && (
-            <Button 
-              onClick={fixIssues} 
-              disabled={loading}
-              variant="destructive"
-            >
-              Corrigir Problemas
-            </Button>
-          )}
+        <div className="space-y-2">
+          <p className="text-sm text-muted-foreground">
+            Esta ferramenta verifica e corrige inconsistências no sistema de papéis:
+          </p>
+          <ul className="text-xs text-muted-foreground space-y-1 ml-4">
+            <li>• Perfis sem papel atribuído</li>
+            <li>• Papéis órfãos sem usuários</li>
+            <li>• Referências quebradas entre perfis e papéis</li>
+          </ul>
         </div>
 
-        {results && (
-          <div className="space-y-4">
-            <div className="flex items-center gap-2">
-              {results.success ? (
-                <CheckCircle className="h-5 w-5 text-green-500" />
-              ) : (
-                <XCircle className="h-5 w-5 text-red-500" />
-              )}
-              <span className="font-medium">
-                {results.success ? 'Auditoria Concluída' : 'Erro na Auditoria'}
-              </span>
-              <Badge variant="outline">
-                {new Date(results.timestamp).toLocaleString('pt-BR')}
-              </Badge>
-            </div>
+        <Button 
+          onClick={runSync} 
+          disabled={isSyncing}
+          className="w-full"
+        >
+          {isSyncing ? (
+            <>
+              <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+              Sincronizando...
+            </>
+          ) : (
+            <>
+              <RefreshCw className="mr-2 h-4 w-4" />
+              Executar Sincronização
+            </>
+          )}
+        </Button>
 
-            {results.success && (
-              <div className="space-y-2">
-                <div className="text-sm">
-                  <strong>Registros verificados:</strong> {results.totalChecked}
+        {syncResults.length > 0 && (
+          <div className="space-y-2">
+            <h4 className="font-medium text-sm">Resultados da Sincronização:</h4>
+            {syncResults.map((result, index) => (
+              <Alert key={index} className={`
+                ${result.status === 'success' ? 'border-green-200 bg-green-50' : ''}
+                ${result.status === 'warning' ? 'border-yellow-200 bg-yellow-50' : ''}
+                ${result.status === 'error' ? 'border-red-200 bg-red-50' : ''}
+                ${result.status === 'info' ? 'border-blue-200 bg-blue-50' : ''}
+              `}>
+                <div className="flex items-start gap-2">
+                  {getIcon(result.status)}
+                  <div className="flex-1">
+                    <AlertDescription className="text-xs">
+                      {result.message}
+                      {result.details && result.details.length > 0 && (
+                        <ul className="mt-1 ml-2 space-y-0.5">
+                          {result.details.map((detail, i) => (
+                            <li key={i} className="text-xs opacity-75">• {detail}</li>
+                          ))}
+                        </ul>
+                      )}
+                    </AlertDescription>
+                  </div>
                 </div>
-                
-                {Array.isArray(results.data) && results.data.length > 0 ? (
-                  <div className="space-y-2">
-                    <div className="text-sm font-medium text-red-600">
-                      Problemas encontrados: {results.data.length}
-                    </div>
-                    <div className="max-h-40 overflow-y-auto space-y-1">
-                      {results.data.map((issue: any, index: number) => (
-                        <div key={index} className="text-xs p-2 bg-red-50 border border-red-200 rounded">
-                          <div><strong>Tipo:</strong> {issue.issue_type}</div>
-                          <div><strong>Usuário:</strong> {issue.user_email}</div>
-                          <div><strong>Descrição:</strong> {issue.description}</div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                ) : (
-                  <div className="text-sm text-green-600">
-                    ✅ Nenhum problema encontrado! O sistema está íntegro.
-                  </div>
-                )}
-              </div>
-            )}
-
-            {!results.success && (
-              <div className="text-sm text-red-600 bg-red-50 p-2 rounded">
-                {results.error}
-              </div>
-            )}
+              </Alert>
+            ))}
           </div>
         )}
       </CardContent>

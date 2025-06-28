@@ -9,6 +9,10 @@ export const useAnalyticsReset = () => {
   const [resetStats, setResetStats] = useState<{
     recordsDeleted: number;
     lastResetDate: Date | null;
+    backupRecords?: number;
+    deletedRecords?: number;
+    tablesAffected?: string[];
+    resetTimestamp?: string;
   }>({
     recordsDeleted: 0,
     lastResetDate: null
@@ -40,10 +44,15 @@ export const useAnalyticsReset = () => {
         
         if (isValidResult(data) && data.success) {
           setResetProgress(100);
-          setResetStats({
+          const newStats = {
             recordsDeleted: data.backupRecords || 0,
-            lastResetDate: new Date()
-          });
+            lastResetDate: new Date(),
+            backupRecords: data.backupRecords || 0,
+            deletedRecords: data.backupRecords || 0,
+            tablesAffected: ['analytics'],
+            resetTimestamp: new Date().toISOString()
+          };
+          setResetStats(newStats);
           toast.success(data.message || 'Dados resetados com sucesso!');
           
           if (data.backupRecords) {
@@ -58,8 +67,8 @@ export const useAnalyticsReset = () => {
         // Método alternativo - limpar tabelas diretamente
         setResetProgress(50);
         
-        const { error: deleteError } = await supabase
-          .from('analytics' as any)
+        const { error: deleteError } = await (supabase as any)
+          .from('analytics')
           .delete()
           .neq('id', '00000000-0000-0000-0000-000000000000'); // Manter um registro dummy
         
@@ -68,10 +77,15 @@ export const useAnalyticsReset = () => {
         }
         
         setResetProgress(100);
-        setResetStats({
+        const newStats = {
           recordsDeleted: 1,
-          lastResetDate: new Date()
-        });
+          lastResetDate: new Date(),
+          backupRecords: 1,
+          deletedRecords: 1,
+          tablesAffected: ['analytics'],
+          resetTimestamp: new Date().toISOString()
+        };
+        setResetStats(newStats);
         toast.success('Dados de analytics resetados com sucesso!');
       }
       

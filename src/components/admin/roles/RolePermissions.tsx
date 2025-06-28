@@ -1,24 +1,25 @@
 
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { supabase } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
-import { Badge } from '@/components/ui/badge';
+import { Role } from '@/hooks/admin/useRoles';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface Permission {
   id: string;
-  name: string;
   code: string;
-  description?: string;
-  category: string;
+  name: string;
+  description: string | null;
+  category: string | null;
 }
 
 interface RolePermissionsProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  role: { id: string; name: string } | null;
+  role: Role | null;
 }
 
 export const RolePermissions = ({ open, onOpenChange, role }: RolePermissionsProps) => {
@@ -38,14 +39,14 @@ export const RolePermissions = ({ open, onOpenChange, role }: RolePermissionsPro
   const fetchPermissions = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('permission_definitions')
         .select('*')
         .order('category, name');
 
       if (error) throw error;
       
-      setPermissions(data as any || []);
+      setPermissions(data || []);
     } catch (error) {
       console.error('Erro ao buscar permissões:', error);
       toast({
@@ -62,10 +63,10 @@ export const RolePermissions = ({ open, onOpenChange, role }: RolePermissionsPro
     if (!role) return;
     
     try {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('role_permissions')
         .select('permission_id')
-        .eq('role_id', role.id as any);
+        .eq('role_id', role.id);
 
       if (error) throw error;
       
@@ -75,127 +76,132 @@ export const RolePermissions = ({ open, onOpenChange, role }: RolePermissionsPro
       
       setSelectedPermissions(permissionIds);
     } catch (error) {
-      console.error('Erro ao buscar permissões da role:', error);
+      console.error('Erro ao buscar permissões do papel:', error);
     }
   };
 
-  const handlePermissionToggle = async (permissionId: string, checked: boolean) => {
+  const handlePermissionToggle = (permissionId: string, checked: boolean) => {
+    setSelectedPermissions(prev => 
+      checked 
+        ? [...prev, permissionId]
+        : prev.filter(id => id !== permissionId)
+    );
+  };
+
+  const savePermissions = async () => {
     if (!role) return;
-
+    
+    setSaving(true);
     try {
-      if (checked) {
-        // Adicionar permissão
-        const { error } = await supabase
-          .from('role_permissions')
-          .insert({
-            role_id: role.id,
-            permission_id: permissionId
-          } as any);
+      // Remover permissões existentes
+      const { error: deleteError } = await (supabase as any)
+        .from('role_permissions')
+        .delete()
+        .eq('role_id', role.id);
 
-        if (error) throw error;
-        
-        setSelectedPermissions(prev => [...prev, permissionId]);
-      } else {
-        // Remover permissão
-        const { error } = await supabase
-          .from('role_permissions')
-          .delete()
-          .eq('role_id', role.id as any)
-          .eq('permission_id', permissionId as any);
+      if (deleteError) throw deleteError;
 
-        if (error) throw error;
-        
-        setSelectedPermissions(prev => prev.filter(id => id !== permissionId));
+      // Adicionar novas permissões
+      if (selectedPermissions.length > 0) {
+        const permissionRecords = selectedPermissions.map(permissionId => ({
+          role_id: role.id,
+          permission_id: permissionId
+        }));
+
+        const { error: insertError } = await (supabase as any)
+          .from('role_permissions')
+          .insert(permissionRecords);
+
+        if (insertError) throw insertError;
       }
 
       toast({
         title: "Sucesso",
-        description: `Permissão ${checked ? 'adicionada' : 'removida'} com sucesso.`,
+        description: "Permissões atualizadas com sucesso.",
       });
+      
+      onOpenChange(false);
     } catch (error) {
-      console.error('Erro ao alterar permissão:', error);
+      console.error('Erro ao salvar permissões:', error);
       toast({
         title: "Erro",
-        description: "Erro ao alterar a permissão.",
+        description: "Erro ao atualizar as permissões.",
         variant: "destructive",
       });
+    } finally {
+      setSaving(false);
     }
   };
 
-  // Agrupar permissões por categoria
   const groupedPermissions = permissions.reduce((acc, permission) => {
-    if (!acc[permission.category]) {
-      acc[permission.category] = [];
+    const category = permission.category || 'Geral';
+    if (!acc[category]) {
+      acc[category] = [];
     }
-    acc[permission.category].push(permission);
+    acc[category].push(permission);
     return acc;
   }, {} as Record<string, Permission[]>);
 
-  if (!open || !role) return null;
-
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <Card className="w-full max-w-2xl max-h-[80vh] overflow-hidden">
-        <CardHeader>
-          <CardTitle className="flex items-center justify-between">
-            Permissões - {role.name}
-            <Button variant="outline" onClick={() => onOpenChange(false)}>
-              Fechar
-            </Button>
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="overflow-y-auto">
-          {loading ? (
-            <div className="text-center py-4">Carregando permissões...</div>
-          ) : (
-            <div className="space-y-6">
-              {Object.entries(groupedPermissions).map(([category, categoryPermissions]) => (
-                <div key={category} className="space-y-3">
-                  <div className="flex items-center gap-2">
-                    <Badge variant="outline">{category}</Badge>
-                  </div>
-                  <div className="space-y-2 pl-4">
-                    {categoryPermissions.map((permission) => (
-                      <div key={permission.id} className="flex items-start space-x-3">
-                        <Checkbox
-                          id={`permission-${permission.id}`}
-                          checked={selectedPermissions.includes(permission.id)}
-                          onCheckedChange={(checked) => 
-                            handlePermissionToggle(permission.id, checked as boolean)
-                          }
-                          disabled={saving}
-                        />
-                        <div className="flex-1">
-                          <label 
-                            htmlFor={`permission-${permission.id}`}
-                            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
-                          >
-                            {permission.name}
-                          </label>
-                          {permission.description && (
-                            <p className="text-xs text-muted-foreground mt-1">
-                              {permission.description}
-                            </p>
-                          )}
-                          <p className="text-xs text-blue-600 mt-1">
-                            {permission.code}
-                          </p>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-2xl">
+        <DialogHeader>
+          <DialogTitle>
+            Gerenciar Permissões - {role?.name}
+          </DialogTitle>
+        </DialogHeader>
+
+        {loading ? (
+          <div className="text-center py-8">Carregando permissões...</div>
+        ) : (
+          <div className="space-y-6">
+            <ScrollArea className="h-96">
+              <div className="space-y-6">
+                {Object.keys(groupedPermissions).map(category => (
+                  <div key={category}>
+                    <h3 className="font-medium text-lg mb-3">{category}</h3>
+                    <div className="space-y-2 pl-4">
+                      {groupedPermissions[category].map(permission => (
+                        <div key={permission.id} className="flex items-start space-x-3">
+                          <Checkbox
+                            id={`permission-${permission.id}`}
+                            checked={selectedPermissions.includes(permission.id)}
+                            onCheckedChange={(checked) => 
+                              handlePermissionToggle(permission.id, checked as boolean)
+                            }
+                          />
+                          <div className="flex-1">
+                            <label 
+                              htmlFor={`permission-${permission.id}`}
+                              className="text-sm font-medium cursor-pointer"
+                            >
+                              {permission.name}
+                            </label>
+                            {permission.description && (
+                              <p className="text-xs text-muted-foreground mt-1">
+                                {permission.description}
+                              </p>
+                            )}
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      ))}
+                    </div>
                   </div>
-                </div>
-              ))}
-              
-              {permissions.length === 0 && (
-                <div className="text-center py-4 text-muted-foreground">
-                  Nenhuma permissão encontrada.
-                </div>
-              )}
+                ))}
+              </div>
+            </ScrollArea>
+
+            <div className="flex justify-end space-x-2">
+              <Button variant="outline" onClick={() => onOpenChange(false)}>
+                Cancelar
+              </Button>
+              <Button onClick={savePermissions} disabled={saving}>
+                {saving ? 'Salvando...' : 'Salvar Permissões'}
+              </Button>
             </div>
-          )}
-        </CardContent>
-      </Card>
-    </div>
+          </div>
+        )}
+      </DialogContent>
+    </Dialog>
   );
 };
