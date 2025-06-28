@@ -1,5 +1,6 @@
 
 import { useState, useCallback } from 'react';
+import { useProductionLogger } from './useProductionLogger';
 
 interface LoadingState {
   auth: boolean;
@@ -15,35 +16,36 @@ export const useGlobalLoading = () => {
     navigation: false,
     global: false
   });
+  
+  const { log } = useProductionLogger({ component: 'GlobalLoading' });
 
   const setLoading = useCallback((type: keyof LoadingState, value: boolean) => {
     setLoadingState(prev => {
       const newState = { ...prev, [type]: value };
-      // Global loading é verdadeiro se qualquer um dos outros for verdadeiro
       newState.global = newState.auth || newState.data || newState.navigation;
       return newState;
     });
   }, []);
 
   const forceComplete = useCallback(() => {
-    console.log('[GLOBAL-LOADING] Finalizando todos os loadings');
+    log('Finalizando todos os loadings');
     setLoadingState({
       auth: false,
       data: false,
       navigation: false,
       global: false
     });
-  }, []);
+  }, [log]);
 
   const reset = useCallback(() => {
-    console.log('[GLOBAL-LOADING] Reset do sistema de loading');
+    log('Reset do sistema de loading');
     setLoadingState({
       auth: false,
       data: false,
       navigation: false,
       global: false
     });
-  }, []);
+  }, [log]);
 
   return {
     loadingState,

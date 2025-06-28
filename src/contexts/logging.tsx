@@ -13,15 +13,12 @@ interface LoggingContextType {
   info: (message: string, data?: LogData) => void;
 }
 
-// REDIRECIONAMENTO PARA A IMPLEMENTAÇÃO PRINCIPAL
+// Redirecionamento para a implementação principal
 export const useLogging = (): LoggingContextType => {
-  // Usa a implementação principal do hooks/useLogging.tsx
   const loggingHook = useLoggingHook();
   
-  // Adapta a interface para manter compatibilidade com o código existente
   return {
     log: (message: string, data: LogData = {}, category: string = "general") => {
-      // Agora passamos category dentro do objeto data
       loggingHook.log(message, { ...data, category });
     },
     error: (message: string, data: LogData = {}) => {
@@ -36,7 +33,6 @@ export const useLogging = (): LoggingContextType => {
   };
 };
 
-// Redirecionamento do provider para o hooks/useLogging.tsx
 export const LoggingProvider = ({ children }: { children: ReactNode }) => {
   return <OriginalLoggingProvider>{children}</OriginalLoggingProvider>;
 };

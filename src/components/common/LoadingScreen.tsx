@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Loader2, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useProductionLogger } from '@/hooks/useProductionLogger';
 
 interface LoadingScreenProps {
   message?: string;
@@ -16,6 +17,7 @@ const LoadingScreen: React.FC<LoadingScreenProps> = ({
 }) => {
   const [duration, setDuration] = useState(0);
   const [showButton, setShowButton] = useState(false);
+  const { log } = useProductionLogger({ component: 'LoadingScreen' });
 
   useEffect(() => {
     const startTime = Date.now();
@@ -24,20 +26,19 @@ const LoadingScreen: React.FC<LoadingScreenProps> = ({
       const elapsed = Date.now() - startTime;
       setDuration(elapsed);
       
-      // Mostrar botão de recarregar após 10 segundos
-      if (elapsed > 10000 && showEmergencyButton) {
+      if (elapsed > 10000 && showEmergencyButton && !showButton) {
         setShowButton(true);
+        log('Emergency button activated after 10s');
       }
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [showEmergencyButton]);
+  }, [showEmergencyButton, showButton, log]);
 
   const handleEmergencyAction = () => {
     if (emergencyAction) {
       emergencyAction();
     } else {
-      // Ação padrão: recarregar página
       window.location.reload();
     }
   };
