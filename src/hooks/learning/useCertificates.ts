@@ -113,7 +113,11 @@ export const useCertificates = (courseId?: string) => {
     isLoading,
     error: error as Error,
     checkEligibility,
-    generateCertificate: generateCertificateMutation.mutate,
+    generateCertificate: (courseId: string) => {
+      if (user?.id) {
+        generateCertificateMutation.mutate({ courseId, userId: user.id });
+      }
+    },
     isGenerating: generateCertificateMutation.isPending,
     downloadCertificate,
     validateCertificate: validateCertificateMutation.mutate,

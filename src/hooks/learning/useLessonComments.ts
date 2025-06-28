@@ -10,6 +10,8 @@ export interface LessonComment {
   content: string;
   created_at: string;
   updated_at: string;
+  parent_id: string | null;
+  is_hidden: boolean;
   author: {
     id: string;
     name: string;
@@ -39,9 +41,11 @@ export const useLessonComments = (lessonId: string) => {
           content: 'Excelente lição! Muito esclarecedora.',
           created_at: new Date(Date.now() - 86400000).toISOString(),
           updated_at: new Date(Date.now() - 86400000).toISOString(),
+          parent_id: null,
+          is_hidden: false,
           author: {
             id: user?.id || '1',
-            name: user?.name || user?.email?.split('@')[0] || 'Usuário',
+            name: user?.email?.split('@')[0] || 'Usuário', // Use email prefix as name
             email: user?.email || 'usuario@exemplo.com'
           },
           likes_count: 3,
@@ -94,8 +98,12 @@ export const useLessonComments = (lessonId: string) => {
     addComment: async (content: string, parentId?: string | null) => {
       return addCommentMutation.mutateAsync({ content, parentId: parentId || undefined });
     },
-    deleteComment: (commentId: string) => deleteCommentMutation.mutate(commentId),
-    likeComment: (commentId: string) => likeCommentMutation.mutate(commentId),
+    deleteComment: async (commentId: string) => {
+      return deleteCommentMutation.mutateAsync(commentId);
+    },
+    likeComment: async (commentId: string) => {
+      return likeCommentMutation.mutateAsync(commentId);
+    },
     isSubmitting: addCommentMutation.isPending
   };
 };

@@ -13,9 +13,11 @@ export interface NPSRating {
 
 export const useLessonNPS = (lessonId: string) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [existingNPS, setExistingNPS] = useState<NPSRating | null>(null);
 
   const submitNPS = async (rating: number, feedback?: string) => {
-    if (!lessonId) return;
+    if (!lessonId) return false;
 
     setIsSubmitting(true);
     
@@ -46,6 +48,8 @@ export const useLessonNPS = (lessonId: string) => {
   return {
     submitNPS,
     getUserNPS,
-    isSubmitting
+    isSubmitting,
+    isLoading,
+    existingNPS
   };
 };

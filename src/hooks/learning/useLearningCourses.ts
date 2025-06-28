@@ -11,7 +11,7 @@ export interface LearningCourse {
 }
 
 export const useLearningCourses = () => {
-  return useQuery({
+  const query = useQuery({
     queryKey: ['learning-courses'],
     queryFn: async (): Promise<LearningCourse[]> => {
       console.log('Buscando cursos de aprendizado');
@@ -36,4 +36,9 @@ export const useLearningCourses = () => {
     },
     staleTime: 5 * 60 * 1000
   });
+
+  return {
+    ...query,
+    courses: query.data || []
+  };
 };
