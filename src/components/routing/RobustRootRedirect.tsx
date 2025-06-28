@@ -3,9 +3,8 @@ import { Navigate } from "react-router-dom";
 import { useSimpleAuth } from "@/contexts/auth/SimpleAuthProvider";
 import { useOnboardingRequired } from "@/hooks/useOnboardingRequired";
 import LoadingScreen from "@/components/common/LoadingScreen";
-import AuthManager from "@/services/AuthManager";
 import { useLoadingTimeoutEnhanced } from "@/hooks/useLoadingTimeoutEnhanced";
-import { logger } from "@/utils/logger";
+import { useProductionLogger } from "@/hooks/useProductionLogger";
 import { useEffect } from "react";
 
 const RobustRootRedirect = () => {
@@ -13,50 +12,33 @@ const RobustRootRedirect = () => {
   const { isRequired: onboardingRequired, isLoading: onboardingLoading } = useOnboardingRequired();
   
   const totalLoading = authLoading || onboardingLoading;
+  const { log } = useProductionLogger({ component: 'RobustRootRedirect' });
   
   const { hasTimedOut, retry } = useLoadingTimeoutEnhanced({
     isLoading: totalLoading,
     timeoutMs: 5000,
     context: 'root_redirect',
     onTimeout: () => {
-      logger.warn('[ROBUST-ROOT-REDIRECT] Timeout no carregamento inicial');
+      log('Timeout no carregamento inicial');
     }
   });
 
   useEffect(() => {
-    const authManager = AuthManager.getInstance();
-    
-    const handleStateChanged = (authState: any) => {
-      logger.info('[ROBUST-ROOT-REDIRECT] Estado AuthManager atualizado:', {
-        hasUser: !!authState.user,
-        isLoading: authState.isLoading,
-        isAdmin: authState.isAdmin,
-        onboardingRequired: authState.onboardingRequired,
-        userRole: authState.profile?.user_roles?.name
-      });
-    };
+    log("Estado atual:", {
+      hasUser: !!user,
+      hasProfile: !!profile,
+      authLoading,
+      onboardingLoading,
+      onboardingRequired,
+      totalLoading,
+      hasTimedOut,
+      isAdmin,
+      userRole: profile?.user_roles?.name
+    });
+  }, [user, profile, authLoading, onboardingLoading, onboardingRequired, totalLoading, hasTimedOut, isAdmin, log]);
 
-    const unsubscribe = authManager.on('stateChanged', handleStateChanged);
-
-    return () => {
-      unsubscribe();
-    };
-  }, []);
-
-  logger.info("[ROBUST-ROOT-REDIRECT] Estado atual:", {
-    hasUser: !!user,
-    hasProfile: !!profile,
-    authLoading,
-    onboardingLoading,
-    onboardingRequired,
-    totalLoading,
-    hasTimedOut,
-    isAdmin,
-    userRole: profile?.user_roles?.name
-  });
-  
   if (hasTimedOut) {
-    logger.error('[ROBUST-ROOT-REDIRECT] TIMEOUT CRÍTICO - Forçando recuperação');
+    log('TIMEOUT CRÍTICO - Forçando recuperação');
     
     return (
       <div className="min-h-screen bg-gradient-to-br from-background to-[#151823] flex items-center justify-center">
@@ -94,12 +76,12 @@ const RobustRootRedirect = () => {
   }
   
   if (!user) {
-    logger.info("[ROBUST-ROOT-REDIRECT] Sem usuário -> login");
+    log("Sem usuário -> login");
     return <Navigate to="/login" replace />;
   }
   
   if (isAdmin) {
-    logger.info("[ROBUST-ROOT-REDIRECT] ADMIN DETECTADO - Redirecionamento direto para /admin", {
+    log("ADMIN DETECTADO - Redirecionamento direto para /admin", {
       userId: user.id.substring(0, 8) + '***',
       userRole: profile?.user_roles?.name,
       onboardingRequired: onboardingRequired,
@@ -109,21 +91,26 @@ const RobustRootRedirect = () => {
   }
   
   if (user && !profile) {
-    logger.info("[ROBUST-ROOT-REDIRECT] Aguardando perfil...");
+    log("Aguardando perfil...");
     return <LoadingScreen message="Carregando perfil..." />;
   }
   
-  const authManager = AuthManager.getInstance();
-  const redirectPath = authManager.getRedirectPath();
+  // Determinar redirecionamento baseado no estado atual
+  let redirectPath = '/dashboard';
   
-  logger.info("[ROBUST-ROOT-REDIRECT] Redirecionamento calculado:", {
+  if (onboardingRequired) {
+    redirectPath = '/onboarding';
+  } else if (profile?.user_roles?.name === 'formacao') {
+    redirectPath = '/formacao';
+  }
+  
+  log("Redirecionamento calculado:", {
     redirectPath,
     hasUser: !!user,
     hasProfile: !!profile,
     onboardingRequired,
     isAdmin,
-    roleName: profile?.user_roles?.name,
-    reason: isAdmin ? 'ADMIN_BYPASS' : 'NORMAL_FLOW'
+    roleName: profile?.user_roles?.name
   });
   
   return <Navigate to={redirectPath} replace />;

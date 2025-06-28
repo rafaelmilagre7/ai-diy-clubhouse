@@ -5,7 +5,7 @@ import { useSimpleAuth } from "@/contexts/auth/SimpleAuthProvider";
 import { useOnboardingRequired } from "@/hooks/useOnboardingRequired";
 import LoadingScreen from "@/components/common/LoadingScreen";
 import { InviteTokenManager } from "@/utils/inviteTokenManager";
-import { logger } from "@/utils/logger";
+import { useProductionLogger } from "@/hooks/useProductionLogger";
 
 interface RobustProtectedRoutesProps {
   children: ReactNode;
@@ -16,11 +16,12 @@ export const RobustProtectedRoutes = ({ children, allowInviteFlow = false }: Rob
   const location = useLocation();
   const { user, isAdmin, isLoading: authLoading } = useSimpleAuth();
   const { isRequired: onboardingRequired, isLoading: onboardingLoading } = useOnboardingRequired();
+  const { log } = useProductionLogger({ component: 'RobustProtectedRoutes' });
 
   const isInInviteFlow = InviteTokenManager.hasToken() || location.pathname.includes('/invite');
   const totalLoading = authLoading || onboardingLoading;
 
-  logger.info("[ROBUST-PROTECTED-ROUTES] Estado atual:", {
+  log("Estado atual:", {
     pathname: location.pathname,
     hasUser: !!user,
     authLoading,
@@ -38,13 +39,13 @@ export const RobustProtectedRoutes = ({ children, allowInviteFlow = false }: Rob
 
   // Sem usuário = login
   if (!user) {
-    logger.info("[ROBUST-PROTECTED-ROUTES] Sem usuário -> /login");
+    log("Sem usuário -> /login");
     return <Navigate to="/login" state={{ from: location.pathname }} replace />;
   }
 
   // CORREÇÃO CRÍTICA: Admin bypass ABSOLUTO - nunca bloquear admin
   if (isAdmin) {
-    logger.info("[ROBUST-PROTECTED-ROUTES] 👑 ADMIN detectado - Acesso total liberado", {
+    log("👑 ADMIN detectado - Acesso total liberado", {
       pathname: location.pathname,
       userId: user.id.substring(0, 8) + '***',
       onboardingRequired: onboardingRequired,
@@ -55,13 +56,13 @@ export const RobustProtectedRoutes = ({ children, allowInviteFlow = false }: Rob
 
   // Permitir fluxo de convite se configurado E específico
   if (allowInviteFlow && isInInviteFlow && location.pathname.includes('/onboarding')) {
-    logger.info("[ROBUST-PROTECTED-ROUTES] Fluxo de convite permitido APENAS para onboarding");
+    log("Fluxo de convite permitido APENAS para onboarding");
     return <>{children}</>;
   }
 
   // REGRA: Onboarding obrigatório PARA USUÁRIOS COMUNS (não admin)
   if (onboardingRequired && location.pathname !== '/onboarding') {
-    logger.info("[ROBUST-PROTECTED-ROUTES] Redirecionando usuário comum para onboarding obrigatório", {
+    log("Redirecionando usuário comum para onboarding obrigatório", {
       userId: user.id.substring(0, 8) + '***',
       isAdmin,
       pathname: location.pathname,
