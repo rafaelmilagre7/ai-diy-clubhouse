@@ -28,8 +28,6 @@ export const createMockUserProfile = (overrides: Partial<UserProfile> = {}): Use
     role: null,
     onboarding_completed: true,
     onboarding_completed_at: '2024-01-01T00:00:00Z',
-    referrals_count: 0,
-    successful_referrals_count: 0,
     business_challenges: null,
     ...overrides,
   };

@@ -44,10 +44,11 @@ export const VideoDisplay: React.FC<VideoDisplayProps> = ({
       try {
         setLoading(true);
         
-        const { data, error } = await supabase
+        // Usar query raw com cast para contornar problema de tipos
+        const { data, error } = await (supabase as any)
           .from('learning_lesson_videos')
           .select('*')
-          .eq('lesson_id', lessonId as any)
+          .eq('lesson_id', lessonId)
           .order('order_index');
           
         if (error) {
@@ -56,12 +57,12 @@ export const VideoDisplay: React.FC<VideoDisplayProps> = ({
           return;
         }
         
-        setVideos((data as any) || []);
+        setVideos(data || []);
         
         // Definir o primeiro vídeo como ativo se houver vídeos e onVideoSelect for fornecido
         if (data && data.length > 0 && onVideoSelect) {
-          setActiveVideoId((data as any)[0].id);
-          onVideoSelect((data as any)[0]);
+          setActiveVideoId(data[0].id);
+          onVideoSelect(data[0]);
         }
       } catch (error) {
         console.error("Erro ao carregar vídeos:", error);
