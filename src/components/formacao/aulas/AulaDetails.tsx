@@ -42,8 +42,8 @@ const AulaDetails = ({ aula }: AulaDetailsProps) => {
     }
   };
 
-  // Use difficulty_level que existe no schema
-  const difficultyLevel = aula.difficulty_level || 'beginner';
+  // Get difficulty level from content or use default
+  const difficultyLevel = content.difficulty_level || aula.difficulty_level || 'beginner';
 
   return (
     <div className="space-y-6">
@@ -99,10 +99,10 @@ const AulaDetails = ({ aula }: AulaDetailsProps) => {
               <p className="text-sm text-blue-700">
                 ID: {aula.ai_assistant_id}
               </p>
-              {/* Use ai_assistant_prompt que existe no schema */}
-              {aula.ai_assistant_prompt && (
+              {/* Get prompt from content if available */}
+              {content.ai_assistant_prompt && (
                 <p className="text-sm text-blue-600 mt-2">
-                  Prompt: {aula.ai_assistant_prompt}
+                  Prompt: {content.ai_assistant_prompt}
                 </p>
               )}
             </div>

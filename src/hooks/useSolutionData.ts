@@ -46,8 +46,8 @@ export const useSolutionData = (id: string | undefined) => {
             difficulty_level: data.difficulty_level,
             thumbnail_url: data.thumbnail_url,
             cover_image_url: data.thumbnail_url || '', 
-            published: Boolean(data.published), // Use published field directly
-            slug: data.slug || data.title?.toLowerCase().replace(/\s+/g, '-') || '', // Use slug field or generate from title
+            published: false, // Default value since field doesn't exist in DB
+            slug: data.title?.toLowerCase().replace(/\s+/g, '-') || '', // Generate slug from title
             created_at: data.created_at,
             updated_at: data.updated_at,
             tags: data.tags || [],
@@ -55,10 +55,10 @@ export const useSolutionData = (id: string | undefined) => {
             roi_potential: data.roi_potential,
             implementation_steps: data.implementation_steps,
             required_tools: data.required_tools,
-            expected_results: data.expected_results || data.description || '', // Use expected_results field
-            success_metrics: data.success_metrics || data.roi_potential || '', // Use success_metrics field
-            target_audience: data.target_audience || data.description || '', // Use target_audience field
-            prerequisites: data.prerequisites || data.description || '' // Use prerequisites field
+            expected_results: data.description || '', // Use description as fallback
+            success_metrics: data.roi_potential || '', // Use roi_potential as fallback
+            target_audience: data.description || '', // Use description as fallback
+            prerequisites: data.description || '' // Use description as fallback
           };
           
           setSolution(transformedSolution);

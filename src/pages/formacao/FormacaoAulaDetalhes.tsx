@@ -60,16 +60,15 @@ const FormacaoAulaDetalhes = () => {
         created_at: data.created_at,
         updated_at: data.updated_at,
         estimated_duration_minutes: data.estimated_duration_minutes || 0,
-        estimated_time_minutes: data.estimated_duration_minutes || 0, // Map for compatibility
         difficulty_level: data.difficulty_level || 'beginner', // Use from database or default
-        ai_assistant_enabled: data.ai_assistant_enabled || true, // Use from database or default
+        ai_assistant_enabled: !!data.ai_assistant_id || false, // Derive from ai_assistant_id
         ai_assistant_id: data.ai_assistant_id || null, // Use from database
         ai_assistant_prompt: data.ai_assistant_prompt || null, // Use from database
         cover_image_url: data.cover_image_url || null, // Use from database
         // Add missing required fields with defaults
         lesson_type: data.lesson_type || 'video',
-        video_url: data.video_url || '',
-        video_duration_seconds: data.video_duration_seconds || 0,
+        video_url: '', // Default empty string
+        video_duration_seconds: 0, // Default to 0
         // Add related data
         videos: data.videos || [],
         resources: data.resources || [],
