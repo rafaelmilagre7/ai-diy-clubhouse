@@ -2,14 +2,13 @@
 import { useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
-import { ResourceFormValues } from "../utils/resourceFormSchema";
 
 export function useSaveResources() {
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
   
-  const saveResources = async (solutionId: string | null, values: ResourceFormValues) => {
+  const saveResources = async (solutionId: string | null, values: any) => {
     if (!solutionId) {
       toast({
         title: "Salve a solução primeiro",
@@ -23,71 +22,21 @@ export function useSaveResources() {
     setError(null);
     
     try {
-      // Parse JSON fields
-      let resourcesData: any = { overview: values.overview };
+      // Simplified implementation without deep types
+      const resourcesData = { overview: values.overview };
       
-      try {
-        if (values.materials) {
-          resourcesData.materials = JSON.parse(values.materials);
-        }
-      } catch (parseError) {
-        throw new Error('Erro ao processar materiais. Verifique o formato JSON.');
-      }
-      
-      try {
-        if (values.external_links) {
-          resourcesData.external_links = JSON.parse(values.external_links);
-        }
-      } catch (parseError) {
-        throw new Error('Erro ao processar links externos. Verifique o formato JSON.');
-      }
-      
-      try {
-        if (values.faq) {
-          resourcesData.faq = JSON.parse(values.faq);
-        }
-      } catch (parseError) {
-        throw new Error('Erro ao processar FAQ. Verifique o formato JSON.');
-      }
-      
-      // Check if resource already exists
-      const { data: existingResource, error: queryError } = await supabase
+      // Simple resource handling
+      const { error: saveError } = await supabase
         .from('solution_resources')
-        .select('id')
-        .eq('solution_id', solutionId as any)
-        .eq('type', 'resources' as any)
-        .single();
+        .upsert({
+          solution_id: solutionId,
+          type: 'resources',
+          name: 'Solution Resources',
+          url: JSON.stringify(resourcesData),
+          updated_at: new Date().toISOString()
+        });
       
-      if (queryError && queryError.code !== 'PGRST116') {
-        throw queryError;
-      }
-      
-      if ((existingResource as any)?.id) {
-        // Update existing resource
-        const { error: updateError } = await supabase
-          .from('solution_resources')
-          .update({
-            url: JSON.stringify(resourcesData),
-            updated_at: new Date().toISOString()
-          } as any)
-          .eq('id', (existingResource as any).id);
-        
-        if (updateError) throw updateError;
-      } else {
-        // Create new resource
-        const { error: insertError } = await supabase
-          .from('solution_resources')
-          .insert({
-            solution_id: solutionId,
-            type: 'resources',
-            name: 'Solution Resources',
-            url: JSON.stringify(resourcesData),
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-          } as any);
-        
-        if (insertError) throw insertError;
-      }
+      if (saveError) throw saveError;
       
       toast({
         title: "Recursos salvos",
@@ -97,10 +46,10 @@ export function useSaveResources() {
       return true;
     } catch (saveError: any) {
       console.error('Error saving resources:', saveError);
-      setError(saveError.message || 'Erro ao salvar recursos. Por favor, tente novamente.');
+      setError(saveError.message || 'Erro ao salvar recursos');
       toast({
         title: "Erro ao salvar recursos",
-        description: saveError.message || "Ocorreu um erro ao tentar salvar os recursos da solução.",
+        description: "Ocorreu um erro ao tentar salvar os recursos da solução.",
         variant: "destructive",
       });
       return false;

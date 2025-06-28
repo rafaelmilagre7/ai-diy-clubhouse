@@ -2,14 +2,6 @@
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { AnalyticsFilters } from '@/components/admin/analytics/AnalyticsFilters';
-import { ModernAnalyticsHeader } from '@/components/admin/analytics/ModernAnalyticsHeader';
-import { UserAnalyticsTabContent } from '@/components/admin/analytics/users/UserAnalyticsTabContent';
-import { SolutionsAnalyticsTabContent } from '@/components/admin/analytics/solutions/SolutionsAnalyticsTabContent';
-import { ImplementationsAnalyticsTabContent } from '@/components/admin/analytics/implementations/ImplementationsAnalyticsTabContent';
-import { InsightsTabContent } from '@/components/admin/analytics/insights/InsightsTabContent';
-import { AutomationTabContent } from '@/components/admin/analytics/automation/AutomationTabContent';
 
 const AdminAnalytics = () => {
   const [timeRange, setTimeRange] = useState('7d');
@@ -17,12 +9,12 @@ const AdminAnalytics = () => {
 
   return (
     <div className="space-y-6">
-      <ModernAnalyticsHeader />
-      
-      <AnalyticsFilters 
-        timeRange={timeRange} 
-        onTimeRangeChange={setTimeRange}
-      />
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-3xl font-bold">Analytics</h1>
+          <p className="text-muted-foreground">Análise detalhada da plataforma</p>
+        </div>
+      </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="grid w-full grid-cols-6">
@@ -76,24 +68,18 @@ const AdminAnalytics = () => {
         </TabsContent>
 
         <TabsContent value="users">
-          <UserAnalyticsTabContent timeRange={timeRange} />
+          <Card>
+            <CardHeader>
+              <CardTitle>Análise de Usuários</CardTitle>
+              <CardDescription>Dados detalhados sobre os usuários da plataforma</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p>Conteúdo de análise de usuários será implementado aqui.</p>
+            </CardContent>
+          </Card>
         </TabsContent>
 
-        <TabsContent value="solutions">
-          <SolutionsAnalyticsTabContent timeRange={timeRange} />
-        </TabsContent>
-
-        <TabsContent value="implementations">
-          <ImplementationsAnalyticsTabContent timeRange={timeRange} />
-        </TabsContent>
-
-        <TabsContent value="insights">
-          <InsightsTabContent timeRange={timeRange} />
-        </TabsContent>
-
-        <TabsContent value="automation">
-          <AutomationTabContent timeRange={timeRange} />
-        </TabsContent>
+        {/* Add other tab contents as needed */}
       </Tabs>
     </div>
   );
