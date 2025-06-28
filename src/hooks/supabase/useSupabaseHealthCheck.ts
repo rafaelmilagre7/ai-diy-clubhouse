@@ -51,8 +51,8 @@ export const useSupabaseHealthCheck = () => {
         issues.push(`Erro de autenticação: ${authError.message}`);
       }
 
-      // Testar banco de dados usando função auxiliar
-      const dbTest = await supabase.rpc('simple_health_check');
+      // Testar banco de dados usando query simples em vez de função inexistente
+      const dbTest = await supabase.from('profiles').select('count').limit(1);
       const databaseStatus: HealthStatus['databaseStatus'] = dbTest.error ? 'error' : 'operational';
       if (dbTest.error) {
         issues.push(`Erro no banco: ${dbTest.error.message}`);
