@@ -25,33 +25,24 @@ export const useForumStats = () => {
         setIsLoading(true);
         console.log("Carregando estatísticas do fórum...");
         
-        // Buscar contagem de tópicos
-        const { count: topicCount } = await supabase
-          .from('forum_topics')
-          .select('*', { count: 'exact', head: true });
-        
-        // Buscar contagem de posts
-        const { count: postCount } = await supabase
-          .from('forum_posts')
-          .select('*', { count: 'exact', head: true });
-        
-        // Buscar contagem de tópicos resolvidos
-        const { count: solvedCount } = await supabase
-          .from('forum_topics')
-          .select('*', { count: 'exact', head: true })
-          .eq('is_solved', true);
+        // Use Promise.all to avoid type depth issues
+        const [topicsResult, postsResult, solvedResult] = await Promise.all([
+          supabase.from('forum_topics').select('*', { count: 'exact', head: true }),
+          supabase.from('forum_posts').select('*', { count: 'exact', head: true }),
+          supabase.from('forum_topics').select('*', { count: 'exact', head: true }).eq('is_solved', true)
+        ]);
         
         console.log("Estatísticas carregadas:", {
-          topicCount,
-          postCount,
-          solvedCount
+          topicCount: topicsResult.count,
+          postCount: postsResult.count,
+          solvedCount: solvedResult.count
         });
         
         setStats({
-          topicCount: topicCount || 0,
-          postCount: postCount || 0,
+          topicCount: topicsResult.count || 0,
+          postCount: postsResult.count || 0,
           activeUserCount: 0, // Simplified for now
-          solvedCount: solvedCount || 0
+          solvedCount: solvedResult.count || 0
         });
       } catch (err: any) {
         console.error('Erro ao buscar estatísticas do fórum:', err.message);

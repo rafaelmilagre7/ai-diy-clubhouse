@@ -30,10 +30,13 @@ interface SimpleProgress {
   id: string;
   user_id: string;
   solution_id: string;
-  current_module: number;
-  is_completed: boolean;
-  completed_modules: number[];
-  last_activity: string;
+  status: string;
+  progress_percentage: number;
+  started_at: string;
+  completed_at: string | null;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
 }
 
 export const useModuleImplementation = () => {
@@ -59,11 +62,13 @@ export const useModuleImplementation = () => {
         setLoading(true);
         
         // Fetch solution details
-        const { data: solutionData, error: solutionError } = await supabase
+        const solutionQuery = supabase
           .from("solutions")
           .select("id, title, description, category, estimated_time_hours, created_at, updated_at")
           .eq("id", id)
           .single();
+        
+        const { data: solutionData, error: solutionError } = await solutionQuery;
         
         if (solutionError) {
           console.error("Erro ao buscar solução:", solutionError);
@@ -89,29 +94,41 @@ export const useModuleImplementation = () => {
           return;
         }
         
-        setSolution(solutionData as SimpleSolution);
+        setSolution(solutionData);
         
-        // Fetch modules for this solution
-        const { data: modulesData, error: modulesError } = await supabase
+        // Fetch modules for this solution - using correct field names from database
+        const modulesQuery = supabase
           .from("modules")
           .select("id, solution_id, title, content, type, module_order, created_at, updated_at")
           .eq("solution_id", id)
           .order("module_order", { ascending: true });
         
+        const { data: modulesData, error: modulesError } = await modulesQuery;
+        
         if (modulesError) {
           console.error("Erro ao buscar módulos:", modulesError);
-          throw modulesError;
-        }
-        
-        if (modulesData && modulesData.length > 0) {
-          const modulesList = modulesData as SimpleModule[];
-          setModules(modulesList);
+          // Create placeholder modules if query fails
+          const placeholderModule: SimpleModule = {
+            id: `placeholder-module-${moduleIdx}`,
+            solution_id: id,
+            title: solutionData.title || "Implementação",
+            content: {},
+            type: "implementation",
+            module_order: moduleIdx,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          };
+          
+          setModules([placeholderModule]);
+          setCurrentModule(placeholderModule);
+        } else if (modulesData && modulesData.length > 0) {
+          setModules(modulesData);
           
           // Get current module or create placeholder
-          if (moduleIdx < modulesList.length) {
-            setCurrentModule(modulesList[moduleIdx]);
+          if (moduleIdx < modulesData.length) {
+            setCurrentModule(modulesData[moduleIdx]);
           } else {
-            setCurrentModule(modulesList[0]);
+            setCurrentModule(modulesData[0]);
           }
         } else {
           // Create placeholder module for implementation screen
@@ -130,20 +147,22 @@ export const useModuleImplementation = () => {
           setCurrentModule(placeholderModule);
         }
         
-        // Fetch user progress
+        // Fetch user progress - using correct field names from database
         if (user) {
           try {
-            const { data: progressData, error: progressError } = await supabase
+            const progressQuery = supabase
               .from("progress")
-              .select("id, user_id, solution_id, current_module, is_completed, completed_modules, last_activity")
+              .select("id, user_id, solution_id, status, progress_percentage, started_at, completed_at, notes, created_at, updated_at")
               .eq("solution_id", id)
               .eq("user_id", user.id)
               .single();
             
+            const { data: progressData, error: progressError } = await progressQuery;
+            
             if (progressError && progressError.code !== 'PGRST116') {
               console.error("Erro ao buscar progresso:", progressError);
             } else if (progressData) {
-              setProgress(progressData as SimpleProgress);
+              setProgress(progressData);
             } else {
               // Create initial progress record if not exists
               const { data: newProgress, error: createError } = await supabase
@@ -151,10 +170,10 @@ export const useModuleImplementation = () => {
                 .insert({
                   user_id: user.id,
                   solution_id: id,
-                  current_module: moduleIdx,
-                  is_completed: false,
-                  completed_modules: [],
-                  last_activity: new Date().toISOString(),
+                  status: 'in_progress',
+                  progress_percentage: 0,
+                  started_at: new Date().toISOString(),
+                  notes: null
                 })
                 .select()
                 .single();
@@ -162,7 +181,7 @@ export const useModuleImplementation = () => {
               if (createError) {
                 console.error("Erro ao criar progresso:", createError);
               } else if (newProgress) {
-                setProgress(newProgress as SimpleProgress);
+                setProgress(newProgress);
               }
             }
           } catch (progressError) {

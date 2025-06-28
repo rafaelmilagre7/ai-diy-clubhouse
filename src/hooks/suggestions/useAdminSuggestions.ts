@@ -40,7 +40,9 @@ export const useAdminSuggestions = () => {
   return {
     suggestions,
     isLoading,
+    loading: isLoading, // Add loading alias for compatibility
     updateSuggestionStatus,
-    deleteSuggestion
+    deleteSuggestion,
+    removeSuggestion: deleteSuggestion // Add removeSuggestion alias for compatibility
   };
 };

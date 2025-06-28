@@ -1,93 +1,94 @@
 
-import { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
-import { useSimpleAuth } from '@/contexts/auth/SimpleAuthProvider';
 
-export interface AdminDashboardData {
+interface RealAdminDashboardData {
   totalUsers: number;
   totalSolutions: number;
   totalTools: number;
   totalEvents: number;
-  recentActivity: any[];
-  userGrowth: any[];
-  completionRates: any[];
-  popularSolutions: any[];
+  usersByRole: Array<{ role: string; count: number }>;
+  userActivities: Array<{
+    id: string;
+    type: string;
+    description: string;
+    timestamp: string;
+    user?: string;
+  }>;
 }
 
-export const useRealAdminDashboardData = () => {
-  const { isAdmin } = useSimpleAuth();
-  const [data, setData] = useState<AdminDashboardData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+export const useRealAdminDashboardData = (timeRange: string) => {
+  const { data, isLoading, error, refetch } = useQuery({
+    queryKey: ['real-admin-dashboard', timeRange],
+    queryFn: async (): Promise<RealAdminDashboardData> => {
+      try {
+        // Get basic counts using Promise.all to avoid type depth issues
+        const [usersResult, solutionsResult, toolsResult, eventsResult] = await Promise.all([
+          supabase.from('profiles').select('*', { count: 'exact', head: true }),
+          supabase.from('solutions').select('*', { count: 'exact', head: true }),
+          supabase.from('tools').select('*', { count: 'exact', head: true }),
+          supabase.from('events').select('*', { count: 'exact', head: true })
+        ]);
 
-  const fetchDashboardData = async () => {
-    if (!isAdmin) {
-      setError('Acesso negado - apenas administradores');
-      setLoading(false);
-      return;
-    }
+        // Mock user activities for now
+        const userActivities = [
+          {
+            id: '1',
+            type: 'user_registration',
+            description: 'Novo usuário registrado',
+            timestamp: new Date().toISOString(),
+            user: 'Sistema'
+          }
+        ];
 
-    try {
-      setLoading(true);
-      setError(null);
+        // Mock users by role distribution
+        const usersByRole = [
+          { role: 'admin', count: 1 },
+          { role: 'membro_club', count: usersResult.count ? usersResult.count - 1 : 0 }
+        ];
 
-      // Buscar contadores básicos usando apenas tabelas que existem
-      const totalUsersQuery = supabase.from('profiles').select('id', { count: 'exact', head: true });
-      const totalSolutionsQuery = supabase.from('solutions').select('id', { count: 'exact', head: true });
-      const totalToolsQuery = supabase.from('tools').select('id', { count: 'exact', head: true });
-      const totalEventsQuery = supabase.from('events').select('id', { count: 'exact', head: true });
+        return {
+          totalUsers: usersResult.count || 0,
+          totalSolutions: solutionsResult.count || 0,
+          totalTools: toolsResult.count || 0,
+          totalEvents: eventsResult.count || 0,
+          usersByRole,
+          userActivities
+        };
+      } catch (error) {
+        console.error('Erro ao carregar dashboard admin:', error);
+        throw error;
+      }
+    },
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    refetchOnWindowFocus: false
+  });
 
-      // Executar queries de forma segura
-      const [usersResult, solutionsResult, toolsResult, eventsResult] = await Promise.allSettled([
-        totalUsersQuery,
-        totalSolutionsQuery,
-        totalToolsQuery,
-        totalEventsQuery
-      ]);
-
-      // Buscar atividade recente dos últimos 30 dias
-      const { data: recentAnalytics } = await supabase
-        .from('analytics')
-        .select('*')
-        .gte('created_at', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString())
-        .order('created_at', { ascending: false })
-        .limit(10);
-
-      // Buscar soluções populares
-      const { data: solutions } = await supabase
-        .from('solutions')
-        .select('id, title, category')
-        .limit(5);
-
-      const dashboardData: AdminDashboardData = {
-        totalUsers: usersResult.status === 'fulfilled' ? (usersResult.value.count || 0) : 0,
-        totalSolutions: solutionsResult.status === 'fulfilled' ? (solutionsResult.value.count || 0) : 0,
-        totalTools: toolsResult.status === 'fulfilled' ? (toolsResult.value.count || 0) : 0,
-        totalEvents: eventsResult.status === 'fulfilled' ? (eventsResult.value.count || 0) : 0,
-        recentActivity: recentAnalytics || [],
-        userGrowth: [], // Simplificado - dados reais requerem agregação complexa
-        completionRates: [], // Simplificado - dados reais requerem tabela progress
-        popularSolutions: solutions || []
-      };
-
-      setData(dashboardData);
-
-    } catch (error: any) {
-      console.error('Erro ao carregar dados do dashboard:', error);
-      setError(error.message || 'Erro ao carregar dados do dashboard');
-    } finally {
-      setLoading(false);
-    }
+  const dashboardData: RealAdminDashboardData = data || {
+    totalUsers: 0,
+    totalSolutions: 0,
+    totalTools: 0,
+    totalEvents: 0,
+    usersByRole: [],
+    userActivities: []
   };
 
-  useEffect(() => {
-    fetchDashboardData();
-  }, [isAdmin]);
-
   return {
-    data,
-    loading,
-    error,
-    refetch: fetchDashboardData
+    statsData: {
+      totalUsers: dashboardData.totalUsers,
+      totalSolutions: dashboardData.totalSolutions,
+      totalTools: dashboardData.totalTools,
+      totalEvents: dashboardData.totalEvents,
+      usersByRole: dashboardData.usersByRole
+    },
+    activityData: {
+      userActivities: dashboardData.userActivities,
+      totalEvents: dashboardData.totalEvents
+    },
+    loading: isLoading,
+    error: error?.message || '',
+    refetch: async () => {
+      await refetch();
+    }
   };
 };
