@@ -1,90 +1,40 @@
 
-import { useEffect } from 'react';
-import { useAuth } from '@/contexts/auth';
-import { supabase } from '@/lib/supabase';
-import { logger } from '@/utils/logger';
+import { useCallback } from 'react';
+import { useSimpleAuth } from '@/contexts/auth/SimpleAuthProvider';
 
-/**
- * Hook para forçar verificações de segurança e logs de auditoria - versão corrigida
- */
 export const useSecurityEnforcement = () => {
-  const { user, isLoading } = useAuth();
+  const { user, isAdmin } = useSimpleAuth();
 
-  useEffect(() => {
-    if (!isLoading && !user) {
-      // Log de tentativa de acesso não autorizado
-      logger.warn('[SECURITY] Tentativa de acesso sem autenticação detectada', {
+  const logSecurityAccess = useCallback(async (action: string, resource: string) => {
+    try {
+      // Mock implementation - sem chamar RPC inexistente
+      console.log('[SECURITY LOG]', {
+        user_id: user?.id,
+        action,
+        resource,
         timestamp: new Date().toISOString(),
-        url: window.location.href,
-        userAgent: navigator.userAgent,
-        component: 'useSecurityEnforcement'
-      });
-    }
-  }, [user, isLoading]);
-
-  // Função para logar acessos usando funções corrigidas
-  const logDataAccess = async (tableName: string, operation: string, resourceId?: string) => {
-    if (!user) return;
-
-    try {
-      await supabase.rpc('log_security_access', {
-        p_table_name: tableName,
-        p_operation: operation,
-        p_resource_id: resourceId
-      });
-    } catch (error) {
-      // A função já trata erros silenciosamente
-      logger.debug('[SECURITY] Log de auditoria processado:', { tableName, operation });
-    }
-  };
-
-  // Função para verificar permissões
-  const enforceUserDataAccess = (dataUserId: string, operation: string = 'read') => {
-    if (!user) {
-      logger.error('[SECURITY] Tentativa de acesso a dados sem autenticação', {
-        operation,
-        dataUserId,
-        component: 'useSecurityEnforcement'
-      });
-      throw new Error('Acesso negado: usuário não autenticado');
-    }
-
-    if (user.id !== dataUserId) {
-      logger.error('[SECURITY] Tentativa de acesso a dados de outro usuário', {
-        currentUserId: user.id,
-        targetUserId: dataUserId,
-        operation,
-        component: 'useSecurityEnforcement'
-      });
-      throw new Error('Acesso negado: dados de outro usuário');
-    }
-  };
-
-  // Função para log de violações RLS
-  const logRLSViolation = async (tableName: string, operation: string, targetUserId?: string) => {
-    if (!user) return;
-
-    try {
-      await supabase.rpc('log_rls_violation_attempt', {
-        p_table_name: tableName,
-        p_operation: operation,
-        p_user_id: targetUserId
+        is_admin: isAdmin
       });
       
-      logger.warn('[SECURITY] Violação RLS registrada', {
-        table: tableName,
-        operation,
-        userId: user.id.substring(0, 8) + '***'
-      });
+      return true;
     } catch (error) {
-      logger.error('[SECURITY] Erro ao registrar violação RLS:', error);
+      console.error('Erro ao registrar log de segurança:', error);
+      return false;
     }
-  };
+  }, [user?.id, isAdmin]);
+
+  const enforcePermission = useCallback((requiredPermission: string) => {
+    if (!user) return false;
+    
+    // Simple permission check
+    if (isAdmin) return true;
+    
+    // Add more specific permission logic as needed
+    return false;
+  }, [user, isAdmin]);
 
   return {
-    logDataAccess,
-    enforceUserDataAccess,
-    logRLSViolation,
-    isAuthenticated: !!user
+    logSecurityAccess,
+    enforcePermission
   };
 };

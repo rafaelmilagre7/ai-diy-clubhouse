@@ -1,8 +1,20 @@
 
 import { useState, useEffect } from 'react';
 import { useSimpleAuth } from '@/contexts/auth/SimpleAuthProvider';
-import { OnboardingValidator } from '@/utils/onboardingValidator';
 import { logger } from '@/utils/logger';
+
+// Utility functions for onboarding validation
+const OnboardingValidator = {
+  isRequired: (profile: any) => {
+    if (!profile) return true;
+    return !profile.onboarding_completed;
+  },
+  
+  isCompleted: (profile: any) => {
+    if (!profile) return false;
+    return Boolean(profile.onboarding_completed);
+  }
+};
 
 export const useOnboardingRequired = () => {
   const { user, profile, isLoading: authLoading, isAdmin } = useSimpleAuth();

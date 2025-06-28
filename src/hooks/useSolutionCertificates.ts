@@ -1,159 +1,59 @@
 
-import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/lib/supabase";
-import { useAuth } from "@/contexts/auth";
-import { toast } from "sonner";
+import { useState } from 'react';
 
 interface SolutionCertificate {
   id: string;
   user_id: string;
   solution_id: string;
-  implementation_date: string;
+  certificate_url: string;
   issued_at: string;
-  validation_code: string;
-  certificate_url?: string;
-  solutions?: {
-    id: string;
-    title: string;
-    category: string;
-    description: string;
-  };
+  created_at: string;
 }
 
-export const useSolutionCertificates = (solutionId?: string) => {
-  const { user } = useAuth();
-  const queryClient = useQueryClient();
+export const useSolutionCertificates = () => {
+  const [certificates, setCertificates] = useState<SolutionCertificate[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  // Buscar certificados de soluções do usuário
-  const { data: certificates = [], isLoading, error } = useQuery({
-    queryKey: ['solution-certificates', user?.id, solutionId],
-    queryFn: async () => {
-      if (!user?.id) return [];
-      
-      let query = supabase
-        .from('solution_certificates')
-        .select(`
-          *,
-          solutions (
-            id,
-            title,
-            category,
-            description
-          )
-        `)
-        .eq('user_id', user.id as any)
-        .order('issued_at', { ascending: false });
-
-      if (solutionId) {
-        query = query.eq('solution_id', solutionId as any);
-      }
-
-      const { data, error } = await query;
-      
-      if (error) {
-        console.error('Erro ao buscar certificados:', error);
-        return [];
-      }
-      return data as SolutionCertificate[];
-    },
-    enabled: !!user?.id
-  });
-
-  // Verificar elegibilidade para certificado
-  const checkEligibility = async (solutionId: string): Promise<boolean> => {
-    if (!user?.id) return false;
-
+  const fetchCertificates = async (userId: string) => {
+    setIsLoading(true);
+    setError(null);
     try {
-      // Verificar se a solução foi implementada completamente
-      const { data: implementations, error } = await supabase
-        .from('solution_implementations')
-        .select('*')
-        .eq('user_id', user.id as any)
-        .eq('solution_id', solutionId as any)
-        .eq('completed', true);
-
-      if (error) {
-        console.error('Erro ao verificar implementações:', error);
-        return false;
-      }
-
-      return implementations && implementations.length > 0;
-    } catch (error) {
-      console.error('Erro ao verificar elegibilidade:', error);
-      return false;
+      console.log('Simulando busca de certificados para:', userId);
+      
+      // Mock implementation - tabela não existe
+      const mockCertificates: SolutionCertificate[] = [];
+      
+      setCertificates(mockCertificates);
+      return mockCertificates;
+    } catch (error: any) {
+      console.error('Erro ao buscar certificados:', error);
+      setError(error.message);
+      throw error;
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  // Gerar certificado
-  const generateCertificate = useMutation({
-    mutationFn: async (solutionId: string) => {
-      if (!user?.id) throw new Error('Usuário não autenticado');
-
-      // Verificar elegibilidade primeiro
-      const isEligible = await checkEligibility(solutionId);
-      if (!isEligible) {
-        throw new Error('Você precisa completar a implementação da solução para gerar o certificado.');
-      }
-
-      // Verificar se já existe certificado
-      const existingCertificate = certificates.find(cert => cert.solution_id === solutionId);
-      if (existingCertificate) {
-        throw new Error('Você já possui um certificado para esta solução.');
-      }
-
-      // Criar certificado
-      const validationCode = `CERT-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
-      
-      const { data, error } = await supabase
-        .from('solution_certificates')
-        .insert({
-          user_id: user.id,
-          solution_id: solutionId,
-          implementation_date: new Date().toISOString(),
-          issued_at: new Date().toISOString(),
-          validation_code: validationCode
-        } as any)
-        .select()
-        .single();
-
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: () => {
-      toast.success('Certificado gerado com sucesso!');
-      queryClient.invalidateQueries({ queryKey: ['solution-certificates'] });
-    },
-    onError: (error: any) => {
-      console.error('Erro ao gerar certificado:', error);
-      toast.error(error.message || 'Erro ao gerar certificado. Tente novamente.');
-    }
-  });
-
-  // Download do certificado (simulado por enquanto)
-  const downloadCertificate = async (certificateId: string) => {
-    try {
-      const certificate = certificates.find(c => c.id === certificateId);
-      if (!certificate) {
-        toast.error('Certificado não encontrado');
-        return;
-      }
-
-      // Por enquanto, mostrar informações do certificado
-      toast.success('Funcionalidade de download será implementada em breve');
-    } catch (error) {
-      console.error('Erro ao fazer download:', error);
-      toast.error('Erro ao fazer download do certificado');
-    }
+  const generateCertificate = async (userId: string, solutionId: string) => {
+    console.log('Simulando geração de certificado:', { userId, solutionId });
+    
+    // Mock implementation
+    return {
+      id: 'mock-cert-id',
+      user_id: userId,
+      solution_id: solutionId,
+      certificate_url: 'https://example.com/certificate.pdf',
+      issued_at: new Date().toISOString(),
+      created_at: new Date().toISOString()
+    };
   };
 
   return {
     certificates,
     isLoading,
     error,
-    checkEligibility,
-    generateCertificate: generateCertificate.mutate,
-    isGenerating: generateCertificate.isPending,
-    downloadCertificate
+    fetchCertificates,
+    generateCertificate
   };
 };

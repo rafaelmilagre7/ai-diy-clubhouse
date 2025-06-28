@@ -17,7 +17,8 @@ export const useInviteAcceptance = () => {
         success: true,
         message: 'Convite aceito com sucesso!',
         requires_onboarding: true,
-        user_id: 'mock-user-id'
+        user_id: 'mock-user-id',
+        error: null
       };
       
       toast.success(mockResult.message);
@@ -32,14 +33,15 @@ export const useInviteAcceptance = () => {
     }
   };
 
-  const acceptInviteAndCompleteOnboarding = async (token: string, onboardingData: any) => {
-    console.log('Simulando aceitação de convite com onboarding:', token, onboardingData);
+  const acceptInviteAndCompleteOnboarding = async (data: { token: string; onboardingData: any }) => {
+    console.log('Simulando aceitação de convite com onboarding:', data.token, data.onboardingData);
     
     // Mock implementation
     return {
       success: true,
       message: 'Convite aceito e onboarding concluído!',
-      user_id: 'mock-user-id'
+      user_id: 'mock-user-id',
+      error: null
     };
   };
 

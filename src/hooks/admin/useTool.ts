@@ -20,7 +20,7 @@ export const useTool = (toolId?: string) => {
 
       if (error) throw error;
 
-      // Transform the data to match Tool interface with proper type casting
+      // Transform the data to match Tool interface with proper mapping
       return {
         id: data.id,
         name: data.name,
@@ -32,11 +32,10 @@ export const useTool = (toolId?: string) => {
         created_at: data.created_at,
         updated_at: data.updated_at,
         official_url: data.url || '',
-        tags: data.tags || [],
+        tags: [], // Default empty array since field doesn't exist in DB
         benefit_title: data.benefit_title || null,
         benefit_type: (data.benefit_type as any) || 'discount',
         benefit_description: data.benefit_description,
-        benefit_instructions: data.benefit_title || null,
         benefit_link: data.benefit_url || null,
         benefit_discount_percentage: data.benefit_url ? 10 : null,
         has_member_benefit: Boolean(data.benefit_title),
