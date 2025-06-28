@@ -22,7 +22,52 @@ export const fetchUserProfile = async (userId: string): Promise<UserProfile | nu
       return null;
     }
 
-    return data as UserProfile;
+    // Convert to UserProfile with proper type handling
+    return {
+      id: data.id,
+      email: data.email || '',
+      name: data.name || '',
+      avatar_url: data.avatar_url,
+      company_name: data.company_name,
+      industry: data.industry,
+      role_id: data.role_id,
+      role: data.role || 'member',
+      created_at: data.created_at,
+      updated_at: data.updated_at,
+      onboarding_completed: data.onboarding_completed || false,
+      onboarding_completed_at: data.onboarding_completed_at,
+      
+      // Required fields with defaults
+      birth_date: data.birth_date || null,
+      curiosity: data.curiosity || null,
+      business_sector: data.business_sector || null,
+      position: data.position || null,
+      company_size: data.company_size || null,
+      annual_revenue: data.annual_revenue || null,
+      primary_goal: data.primary_goal || null,
+      business_challenges: data.business_challenges || [],
+      ai_knowledge_level: data.ai_knowledge_level || null,
+      weekly_availability: data.weekly_availability || null,
+      networking_interests: data.networking_interests || [],
+      nps_score: data.nps_score || null,
+      country: data.country || null,
+      state: data.state || null,
+      city: data.city || null,
+      phone: data.phone || null,
+      phone_country_code: data.phone_country_code || '+55',
+      linkedin: data.linkedin || null,
+      instagram: data.instagram || null,
+      current_position: data.current_position || null,
+      company_website: data.company_website || null,
+      accepts_marketing: data.accepts_marketing || null,
+      accepts_case_study: data.accepts_case_study || null,
+      
+      user_roles: data.user_roles ? {
+        id: data.user_roles.id,
+        name: data.user_roles.name,
+        description: data.user_roles.description
+      } : null
+    } as UserProfile;
   } catch (error) {
     console.error('Erro na busca do perfil:', error);
     return null;
@@ -37,12 +82,11 @@ export const createUserProfileIfNeeded = async (userId: string, userData?: any):
       return existingProfile;
     }
 
-    // Criar novo perfil sem propriedades inexistentes
+    // Criar novo perfil
     const profileData = {
       id: userId,
       email: userData?.email || '',
       name: userData?.name || '',
-      // Removido whatsapp_number - não existe no tipo UserProfile
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     };
@@ -58,7 +102,7 @@ export const createUserProfileIfNeeded = async (userId: string, userData?: any):
       return null;
     }
 
-    return data as UserProfile;
+    return await fetchUserProfile(userId);
   } catch (error) {
     console.error('Erro ao criar perfil:', error);
     return null;
@@ -71,14 +115,21 @@ export const getUserProfile = async (userId: string): Promise<UserProfile | null
 
 export const createUserProfile = async (userId: string, profileData: Partial<UserProfile>): Promise<UserProfile | null> => {
   try {
+    const insertData = {
+      id: userId,
+      email: profileData.email || '',
+      name: profileData.name || '',
+      avatar_url: profileData.avatar_url,
+      company_name: profileData.company_name,
+      industry: profileData.industry,
+      role_id: profileData.role_id,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+
     const { data, error } = await supabase
       .from('profiles')
-      .insert([{
-        id: userId,
-        ...profileData,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      }])
+      .insert([insertData])
       .select()
       .single();
 
@@ -87,7 +138,7 @@ export const createUserProfile = async (userId: string, profileData: Partial<Use
       return null;
     }
 
-    return data as UserProfile;
+    return await fetchUserProfile(userId);
   } catch (error) {
     console.error('Erro ao criar perfil:', error);
     return null;
@@ -111,7 +162,7 @@ export const updateUserProfile = async (userId: string, updates: Partial<UserPro
       return null;
     }
 
-    return data as UserProfile;
+    return await fetchUserProfile(userId);
   } catch (error) {
     console.error('Erro ao atualizar perfil:', error);
     return null;

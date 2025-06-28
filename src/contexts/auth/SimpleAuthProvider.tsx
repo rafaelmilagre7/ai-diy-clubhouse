@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { UserProfile } from '@/lib/supabase';
@@ -69,9 +68,57 @@ export const SimpleAuthProvider: React.FC<SimpleAuthProviderProps> = ({ children
     if (newSession?.user) {
       const profileData = await fetchUserProfile(newSession.user.id);
       
-      // Type assertion para compatibilidade, mas mantendo segurança
+      // Convert to UserProfile with safe type conversion
       if (profileData) {
-        setProfile(profileData as UserProfile);
+        const userProfile: UserProfile = {
+          // Core fields
+          id: profileData.id,
+          email: profileData.email || '',
+          name: profileData.name || '',
+          avatar_url: profileData.avatar_url,
+          company_name: profileData.company_name,
+          industry: profileData.industry,
+          role_id: profileData.role_id,
+          role: profileData.role || 'member',
+          created_at: profileData.created_at,
+          updated_at: profileData.updated_at,
+          onboarding_completed: profileData.onboarding_completed || false,
+          onboarding_completed_at: profileData.onboarding_completed_at,
+          
+          // Additional required fields with defaults
+          birth_date: profileData.birth_date || null,
+          curiosity: profileData.curiosity || null,
+          business_sector: profileData.business_sector || null,
+          position: profileData.position || null,
+          company_size: profileData.company_size || null,
+          annual_revenue: profileData.annual_revenue || null,
+          primary_goal: profileData.primary_goal || null,
+          business_challenges: profileData.business_challenges || [],
+          ai_knowledge_level: profileData.ai_knowledge_level || null,
+          weekly_availability: profileData.weekly_availability || null,
+          networking_interests: profileData.networking_interests || [],
+          nps_score: profileData.nps_score || null,
+          country: profileData.country || null,
+          state: profileData.state || null,
+          city: profileData.city || null,
+          phone: profileData.phone || null,
+          phone_country_code: profileData.phone_country_code || '+55',
+          linkedin: profileData.linkedin || null,
+          instagram: profileData.instagram || null,
+          current_position: profileData.current_position || null,
+          company_website: profileData.company_website || null,
+          accepts_marketing: profileData.accepts_marketing || null,
+          accepts_case_study: profileData.accepts_case_study || null,
+          
+          // Role data
+          user_roles: profileData.user_roles ? {
+            id: profileData.user_roles.id,
+            name: profileData.user_roles.name,
+            description: profileData.user_roles.description
+          } : null
+        };
+        
+        setProfile(userProfile);
         
         const roleName = profileData.user_roles?.name;
         setIsAdmin(roleName === 'admin');
