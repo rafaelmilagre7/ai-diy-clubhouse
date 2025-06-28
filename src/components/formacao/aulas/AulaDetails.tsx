@@ -42,7 +42,7 @@ const AulaDetails = ({ aula }: AulaDetailsProps) => {
     }
   };
 
-  // Get difficulty level from content or use default - use the database field name
+  // Get difficulty level from content or use default - check both database field and content
   const difficultyLevel = content.difficulty_level || aula.difficulty_level || 'beginner';
 
   return (

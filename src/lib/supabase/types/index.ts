@@ -1,3 +1,4 @@
+
 import { Database } from './database.types';
 
 // Tipos de tabelas principais (apenas tabelas que existem)

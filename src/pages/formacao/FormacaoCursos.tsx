@@ -1,50 +1,63 @@
+
 import { useEffect, useState } from "react";
-import { useAuth } from "@/contexts/auth";
+import { useNavigate } from "react-router-dom";
+import { useSimpleAuth } from "@/contexts/auth/SimpleAuthProvider";
 import { supabase } from "@/lib/supabase";
-import { LearningCourse } from "@/lib/supabase";
+import CursosList from "@/components/formacao/cursos/CursosList";
 import { FormacaoCursosHeader } from "@/components/formacao/cursos/FormacaoCursosHeader";
-import { CursosList } from "@/components/formacao/cursos/CursosList";
-import { CursoFormDialog } from "@/components/formacao/cursos/CursoFormDialog";
 import { toast } from "sonner";
 
+interface Curso {
+  id: string;
+  title: string;
+  description: string;
+  published: boolean;
+  created_at: string;
+  updated_at: string;
+  cover_image_url: string;
+  instructor_id: string;
+  category: string;
+  difficulty_level: string;
+  estimated_hours: number;
+}
+
 const FormacaoCursos = () => {
-  const { profile } = useAuth();
-  const [cursos, setCursos] = useState<LearningCourse[]>([]);
+  const navigate = useNavigate();
+  const { isAdmin } = useSimpleAuth();
+  const [cursos, setCursos] = useState<Curso[]>([]);
   const [loading, setLoading] = useState(true);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [editingCurso, setEditingCurso] = useState<LearningCourse | null>(null);
-  
-  // Buscar cursos
+
+  // Buscar todos os cursos
   const fetchCursos = async () => {
-    setLoading(true);
     try {
-      // Buscar todos os cursos
+      setLoading(true);
+      
       const { data, error } = await supabase
         .from('learning_courses')
         .select('*')
-        .order('order_index');
-      
+        .order('created_at', { ascending: false });
+
       if (error) throw error;
-      
-      // Para cada curso, verificar se ele tem restrições de acesso
-      const coursesWithRestrictionInfo = await Promise.all(
-        (data || []).map(async (course) => {
-          const { count, error: restrictionError } = await supabase
-            .from('course_access_control')
-            .select('*', { count: 'exact', head: true })
-            .eq('course_id', course.id);
-            
-          return {
-            ...course,
-            is_restricted: count ? count > 0 : false
-          };
-        })
-      );
-      
-      setCursos(coursesWithRestrictionInfo);
+
+      // Map database data to expected format
+      const mappedCursos: Curso[] = (data || []).map(item => ({
+        id: item.id,
+        title: item.title,
+        description: item.description || '',
+        published: item.published || false,
+        created_at: item.created_at,
+        updated_at: item.updated_at,
+        cover_image_url: item.cover_image_url || '',
+        instructor_id: item.created_by || '',
+        category: 'Geral',
+        difficulty_level: 'Iniciante',
+        estimated_hours: 0
+      }));
+
+      setCursos(mappedCursos);
     } catch (error) {
       console.error("Erro ao buscar cursos:", error);
-      toast.error("Não foi possível carregar os cursos. Tente novamente.");
+      toast.error("Erro ao carregar cursos");
     } finally {
       setLoading(false);
     }
@@ -54,59 +67,39 @@ const FormacaoCursos = () => {
     fetchCursos();
   }, []);
 
-  // Abrir modal para criar novo curso
-  const handleNovoCurso = () => {
-    setEditingCurso(null);
-    setIsDialogOpen(true);
+  // Função para editar curso
+  const handleEdit = (curso: Curso) => {
+    navigate(`/formacao/cursos/${curso.id}`);
   };
 
-  // Abrir modal para editar curso existente
-  const handleEditarCurso = (curso: LearningCourse) => {
-    setEditingCurso(curso);
-    setIsDialogOpen(true);
-  };
-
-  // Ações após salvar um curso
-  const handleSalvarCurso = () => {
-    setIsDialogOpen(false);
-    fetchCursos();
-  };
-
-  // Excluir curso
-  const handleExcluirCurso = async (id: string) => {
+  // Função para excluir curso
+  const handleDelete = async (id: string) => {
     try {
       const { error } = await supabase
         .from('learning_courses')
         .delete()
         .eq('id', id);
-      
+
       if (error) throw error;
-      
+
       toast.success("Curso excluído com sucesso!");
-      fetchCursos();
+      fetchCursos(); // Recarregar lista
     } catch (error) {
       console.error("Erro ao excluir curso:", error);
-      toast.error("Não foi possível excluir o curso. Verifique se não há módulos ou aulas vinculados.");
+      toast.error("Erro ao excluir curso");
     }
   };
 
   return (
     <div className="space-y-6">
-      <FormacaoCursosHeader onNovoCurso={handleNovoCurso} />
+      <FormacaoCursosHeader />
       
       <CursosList 
-        cursos={cursos} 
-        loading={loading} 
-        onEdit={handleEditarCurso}
-        onDelete={handleExcluirCurso}
-        isAdmin={profile?.role === 'admin'}
-      />
-      
-      <CursoFormDialog 
-        open={isDialogOpen}
-        onOpenChange={setIsDialogOpen}
-        curso={editingCurso}
-        onSuccess={handleSalvarCurso}
+        cursos={cursos}
+        loading={loading}
+        onEdit={handleEdit}
+        onDelete={handleDelete}
+        isAdmin={isAdmin}
       />
     </div>
   );

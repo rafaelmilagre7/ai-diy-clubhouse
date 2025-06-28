@@ -47,7 +47,7 @@ const FormacaoAulaDetalhes = () => {
       
       if (error) throw error;
       
-      // Mapear dados para o formato LearningLesson esperado
+      // Mapear dados para o formato LearningLesson esperado - usar apenas campos que existem
       const mappedAula: LearningLesson = {
         ...data,
         // Map is_published to published for compatibility

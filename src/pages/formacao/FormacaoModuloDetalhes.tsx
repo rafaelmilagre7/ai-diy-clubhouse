@@ -59,7 +59,16 @@ const FormacaoModuloDetalhes = () => {
       
       if (error) throw error;
       
-      setAulas(data || []);
+      // Map database data to LearningLesson interface
+      const mappedAulas: LearningLesson[] = (data || []).map(item => ({
+        ...item,
+        // Add compatibility fields
+        published: item.is_published || false,
+        video_url: '', // Default empty string
+        video_duration_seconds: 0, // Default to 0
+      }));
+      
+      setAulas(mappedAulas);
     } catch (error) {
       console.error("Erro ao buscar aulas:", error);
       toast.error("Erro ao buscar aulas");

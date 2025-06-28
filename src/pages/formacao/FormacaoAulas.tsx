@@ -39,8 +39,8 @@ const FormacaoAulas = () => {
         ...item,
         // Add compatibility fields
         published: item.is_published || false,
-        video_url: '',
-        video_duration_seconds: 0,
+        video_url: '', // Default empty string
+        video_duration_seconds: 0, // Default to 0
         // Map related data
         module: item.learning_modules ? {
           ...item.learning_modules,
