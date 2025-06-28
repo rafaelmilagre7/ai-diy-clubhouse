@@ -1,160 +1,142 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { useLogging } from '@/hooks/useLogging';
 
-interface TrendMetric {
-  metric: string;
-  current: number;
-  previous: number;
-  change: number;
-  trend: 'up' | 'down' | 'stable';
-  icon: React.ReactNode;
+export interface TrendData {
+  period: string;
+  users: number;
+  solutions: number;
+  completions: number;
+  engagement: number;
 }
 
-export const useTrendAnalysisData = (timeRange: string) => {
-  const { log, logWarning } = useLogging();
+export interface TrendAnalysis {
+  trends: TrendData[];
+  insights: string[];
+  predictions: string[];
+}
 
+export const useTrendAnalysisData = (period: 'week' | 'month' | 'quarter' = 'month') => {
   return useQuery({
-    queryKey: ['trend-analysis', timeRange],
-    queryFn: async (): Promise<TrendMetric[]> => {
+    queryKey: ['trend-analysis', period],
+    queryFn: async (): Promise<TrendAnalysis> => {
+      console.log(`📈 [TREND ANALYSIS] Analisando tendências para período: ${period}`);
+
       try {
-        log('Buscando dados de análise de tendências', { timeRange });
-
-        // Calcular períodos atual e anterior baseado no timeRange
+        // Definir intervalo baseado no período
         const now = new Date();
-        let currentPeriodStart: Date;
-        let previousPeriodStart: Date;
-        let previousPeriodEnd: Date;
+        const intervals = period === 'week' ? 7 : period === 'month' ? 30 : 90;
+        const startDate = new Date(now.getTime() - intervals * 24 * 60 * 60 * 1000);
 
-        switch (timeRange) {
-          case '7d':
-            currentPeriodStart = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-            previousPeriodStart = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000);
-            previousPeriodEnd = currentPeriodStart;
-            break;
-          case '30d':
-            currentPeriodStart = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-            previousPeriodStart = new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000);
-            previousPeriodEnd = currentPeriodStart;
-            break;
-          case '90d':
-            currentPeriodStart = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
-            previousPeriodStart = new Date(now.getTime() - 180 * 24 * 60 * 60 * 1000);
-            previousPeriodEnd = currentPeriodStart;
-            break;
-          default:
-            currentPeriodStart = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-            previousPeriodStart = new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000);
-            previousPeriodEnd = currentPeriodStart;
+        // Buscar dados básicos
+        const [profilesResult, solutionsResult, analyticsResult] = await Promise.allSettled([
+          supabase
+            .from('profiles')
+            .select('id, created_at')
+            .gte('created_at', startDate.toISOString()),
+          supabase
+            .from('solutions')
+            .select('id, title, created_at, is_published'),
+          supabase
+            .from('analytics')
+            .select('*')
+            .gte('created_at', startDate.toISOString())
+            .order('created_at', { ascending: true })
+        ]);
+
+        const profiles = profilesResult.status === 'fulfilled' ? profilesResult.value.data || [] : [];
+        const solutions = solutionsResult.status === 'fulfilled' ? solutionsResult.value.data || [] : [];
+        const analytics = analyticsResult.status === 'fulfilled' ? analyticsResult.value.data || [] : [];
+
+        // Gerar tendências por período
+        const trends: TrendData[] = [];
+        const periodDays = period === 'week' ? 1 : period === 'month' ? 7 : 30; // Agrupamento
+
+        for (let i = 0; i < intervals; i += periodDays) {
+          const periodStart = new Date(startDate.getTime() + i * 24 * 60 * 60 * 1000);
+          const periodEnd = new Date(periodStart.getTime() + periodDays * 24 * 60 * 60 * 1000);
+          
+          const periodProfiles = profiles.filter(p => {
+            const date = new Date(p.created_at);
+            return date >= periodStart && date < periodEnd;
+          });
+
+          const periodAnalytics = analytics.filter(a => {
+            const date = new Date(a.created_at);
+            return date >= periodStart && date < periodEnd;
+          });
+
+          // Simular completions baseado em analytics (já que não temos status na tabela progress)
+          const completions = periodAnalytics.filter(a => 
+            a.event_type === 'solution_completed' || a.event_type === 'module_completed'
+          ).length;
+
+          trends.push({
+            period: periodStart.toISOString().split('T')[0],
+            users: periodProfiles.length,
+            solutions: solutions.filter(s => s.is_published).length, // Soluções publicadas
+            completions,
+            engagement: periodAnalytics.length
+          });
         }
 
-        // 1. Buscar usuários ativos no período atual
-        const { data: currentActiveUsers } = await supabase
-          .from('analytics')
-          .select('user_id')
-          .gte('created_at', currentPeriodStart.toISOString())
-          .lte('created_at', now.toISOString());
+        // Gerar insights baseados nas tendências
+        const insights: string[] = [];
+        const predictions: string[] = [];
 
-        // 2. Buscar usuários ativos no período anterior
-        const { data: previousActiveUsers } = await supabase
-          .from('analytics')
-          .select('user_id')
-          .gte('created_at', previousPeriodStart.toISOString())
-          .lte('created_at', previousPeriodEnd.toISOString());
+        if (trends.length >= 2) {
+          const latest = trends[trends.length - 1];
+          const previous = trends[trends.length - 2];
 
-        // 3. Buscar implementações no período atual
-        const { data: currentImplementations } = await supabase
-          .from('progress')
-          .select('*')
-          .gte('created_at', currentPeriodStart.toISOString())
-          .lte('created_at', now.toISOString());
-
-        // 4. Buscar implementações no período anterior
-        const { data: previousImplementations } = await supabase
-          .from('progress')
-          .select('*')
-          .gte('created_at', previousPeriodStart.toISOString())
-          .lte('created_at', previousPeriodEnd.toISOString());
-
-        // Calcular métricas
-        const currentActiveUsersCount = new Set(currentActiveUsers?.map(u => u.user_id) || []).size;
-        const previousActiveUsersCount = new Set(previousActiveUsers?.map(u => u.user_id) || []).size;
-
-        const currentImplementationsCount = currentImplementations?.length || 0;
-        const previousImplementationsCount = previousImplementations?.length || 0;
-
-        const currentCompletedCount = currentImplementations?.filter(i => i.is_completed).length || 0;
-        const previousCompletedCount = previousImplementations?.filter(i => i.is_completed).length || 0;
-
-        const currentCompletionRate = currentImplementationsCount > 0 
-          ? (currentCompletedCount / currentImplementationsCount) * 100 
-          : 0;
-        const previousCompletionRate = previousImplementationsCount > 0 
-          ? (previousCompletedCount / previousImplementationsCount) * 100 
-          : 0;
-
-        // Calcular mudanças percentuais
-        const calculateChange = (current: number, previous: number): number => {
-          if (previous === 0) return current > 0 ? 100 : 0;
-          return ((current - previous) / previous) * 100;
-        };
-
-        const getTrend = (change: number): 'up' | 'down' | 'stable' => {
-          if (Math.abs(change) < 1) return 'stable';
-          return change > 0 ? 'up' : 'down';
-        };
-
-        const usersChange = calculateChange(currentActiveUsersCount, previousActiveUsersCount);
-        const implementationsChange = calculateChange(currentImplementationsCount, previousImplementationsCount);
-        const completionChange = calculateChange(currentCompletionRate, previousCompletionRate);
-
-        const trends: TrendMetric[] = [
-          {
-            metric: 'Usuários Ativos',
-            current: currentActiveUsersCount,
-            previous: previousActiveUsersCount,
-            change: usersChange,
-            trend: getTrend(usersChange),
-            icon: null // Will be set in component
-          },
-          {
-            metric: 'Implementações',
-            current: currentImplementationsCount,
-            previous: previousImplementationsCount,
-            change: implementationsChange,
-            trend: getTrend(implementationsChange),
-            icon: null
-          },
-          {
-            metric: 'Taxa de Conclusão',
-            current: currentCompletionRate,
-            previous: previousCompletionRate,
-            change: completionChange,
-            trend: getTrend(completionChange),
-            icon: null
+          // Insight sobre crescimento de usuários
+          const userGrowth = ((latest.users - previous.users) / Math.max(previous.users, 1)) * 100;
+          if (userGrowth > 10) {
+            insights.push(`Crescimento acelerado de usuários: +${userGrowth.toFixed(1)}% no último período`);
+          } else if (userGrowth < -10) {
+            insights.push(`Declínio na aquisição de usuários: ${userGrowth.toFixed(1)}% no último período`);
           }
-        ];
 
-        log('Dados de tendências processados', { 
-          currentPeriod: { start: currentPeriodStart, end: now },
-          previousPeriod: { start: previousPeriodStart, end: previousPeriodEnd },
-          trendsCount: trends.length
-        });
+          // Insight sobre engajamento
+          const engagementGrowth = ((latest.engagement - previous.engagement) / Math.max(previous.engagement, 1)) * 100;
+          if (engagementGrowth > 20) {
+            insights.push(`Aumento significativo no engajamento: +${engagementGrowth.toFixed(1)}%`);
+          }
 
-        return trends;
+          // Predições baseadas na tendência
+          if (userGrowth > 0) {
+            predictions.push(`Tendência positiva: esperado ${Math.round(latest.users * (1 + userGrowth/100))} novos usuários no próximo período`);
+          }
 
-      } catch (error: any) {
-        logWarning('Erro ao buscar dados de análise de tendências', { 
-          error: error.message,
-          timeRange
-        });
+          if (latest.completions > previous.completions) {
+            predictions.push(`Aumento na conclusão de soluções indica maior valor percebido pelos usuários`);
+          }
+        }
+
+        // Insights adicionais
+        const totalEngagement = trends.reduce((sum, t) => sum + t.engagement, 0);
+        const avgEngagement = totalEngagement / trends.length;
         
-        // Retornar dados vazios em caso de erro
-        return [];
+        if (avgEngagement < 5) {
+          insights.push('Engajamento geral baixo - considere melhorias na experiência do usuário');
+        } else if (avgEngagement > 20) {
+          insights.push('Alto nível de engajamento - usuários estão ativamente utilizando a plataforma');
+        }
+
+        const analysis: TrendAnalysis = {
+          trends,
+          insights,
+          predictions
+        };
+
+        console.log(`✅ [TREND ANALYSIS] Análise concluída: ${trends.length} períodos, ${insights.length} insights`);
+        return analysis;
+
+      } catch (error) {
+        console.error('❌ [TREND ANALYSIS] Erro na análise de tendências:', error);
+        throw error;
       }
     },
-    staleTime: 5 * 60 * 1000, // 5 minutos
+    staleTime: 10 * 60 * 1000, // 10 minutos
     refetchOnWindowFocus: false
   });
 };

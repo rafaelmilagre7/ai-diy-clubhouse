@@ -42,15 +42,56 @@ export const useUsers = () => {
       setLoading(true);
       setError(null);
 
-      const { data, error } = await supabase.rpc('get_users_with_roles', {
-        limit_count: 100,
-        offset_count: 0,
-        search_query: searchQuery || null
-      });
+      // Como get_users_with_roles não existe, vamos buscar os dados diretamente
+      let query = supabase
+        .from('profiles')
+        .select(`
+          id,
+          email,
+          name,
+          avatar_url,
+          role,
+          role_id,
+          company_name,
+          industry,
+          created_at,
+          user_roles!inner(
+            id,
+            name,
+            description
+          )
+        `)
+        .order('created_at', { ascending: false })
+        .limit(100);
+
+      // Aplicar filtro de busca se existir
+      if (searchQuery) {
+        query = query.or(`name.ilike.%${searchQuery}%,email.ilike.%${searchQuery}%,company_name.ilike.%${searchQuery}%`);
+      }
+
+      const { data, error } = await query;
 
       if (error) throw error;
 
-      setUsers((data as any) || []);
+      // Mapear os dados para o formato esperado
+      const mappedUsers: User[] = (data || []).map(profile => ({
+        id: profile.id,
+        email: profile.email || '',
+        name: profile.name || '',
+        avatar_url: profile.avatar_url || '',
+        role: profile.role || '',
+        role_id: profile.role_id || '',
+        user_roles: profile.user_roles ? {
+          id: (profile.user_roles as any).id,
+          name: (profile.user_roles as any).name,
+          description: (profile.user_roles as any).description
+        } : null,
+        company_name: profile.company_name || '',
+        industry: profile.industry || '',
+        created_at: profile.created_at
+      }));
+
+      setUsers(mappedUsers);
     } catch (error: any) {
       console.error('Erro ao buscar usuários:', error);
       setError(error);

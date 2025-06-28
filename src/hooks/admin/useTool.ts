@@ -24,7 +24,30 @@ export const useTool = (toolId: string | null) => {
         throw error;
       }
 
-      return data as Tool;
+      // Mapear os dados do Supabase para o tipo Tool esperado
+      const tool: Tool = {
+        id: data.id,
+        name: data.name,
+        description: data.description,
+        category: data.category,
+        url: data.url,
+        official_url: data.url, // Mapeamento para official_url
+        logo_url: data.logo_url,
+        pricing_info: data.pricing_info,
+        features: data.features || [],
+        is_active: data.is_active,
+        status: data.is_active ? 'active' : 'inactive', // Mapeamento para status
+        tags: [], // Default empty array se não existir
+        has_member_benefit: data.benefit_type !== null, // Derivado do benefit_type
+        benefit_type: data.benefit_type,
+        benefit_description: data.benefit_description,
+        benefit_link: data.benefit_link,
+        benefit_discount_percentage: data.benefit_discount_percentage,
+        created_at: data.created_at,
+        updated_at: data.updated_at
+      };
+
+      return tool;
     },
     enabled: !!toolId && toolId !== 'new',
     staleTime: 5 * 60 * 1000 // 5 minutos
