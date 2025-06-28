@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { LearningCourse } from "@/lib/supabase";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";

@@ -39,16 +39,8 @@ export const ModuloHeader: React.FC<ModuloHeaderProps> = ({
       </div>
 
       <div className="relative h-40 md:h-48 rounded-lg overflow-hidden">
-        {modulo.cover_image_url ? (
-          <div 
-            className="absolute inset-0 bg-cover bg-center" 
-            style={{ backgroundImage: `url(${modulo.cover_image_url})` }}
-          >
-            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-black/20" />
-          </div>
-        ) : (
-          <div className="absolute inset-0 bg-gradient-to-t from-slate-900 to-slate-700" />
-        )}
+        {/* Removido: cover_image_url não existe no schema LearningModule */}
+        <div className="absolute inset-0 bg-gradient-to-t from-slate-900 to-slate-700" />
         
         <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
           <h1 className="text-2xl md:text-3xl font-bold">{modulo.title}</h1>
