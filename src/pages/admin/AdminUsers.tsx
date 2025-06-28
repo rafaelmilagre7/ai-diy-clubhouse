@@ -1,38 +1,13 @@
 
-import { useState } from "react";
-import { useUsers } from "@/hooks/admin/useUsers";
-import { UsersHeader } from "@/components/admin/users/UsersHeader";
-import { UsersTable } from "@/components/admin/users/UsersTable";
-import { UserRoleManager } from "@/components/admin/users/UserRoleManager";
-import { UserResetDialog } from "@/components/admin/users/UserResetDialog";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { AlertCircle, RefreshCw } from "lucide-react";
-import { DeleteUserDialog } from "@/components/admin/users/DeleteUserDialog";
-import { ResetPasswordDialog } from "@/components/admin/users/ResetPasswordDialog";
-import { toast } from "sonner";
-import { useAuth } from "@/contexts/auth";
-import { Button } from "@/components/ui/button";
-import { UserProfile as SupabaseUserProfile } from "@/lib/supabase/types";
-
-// Interface local para evitar conflitos de tipos
-interface LocalUserProfile {
-  id: string;
-  email: string;
-  name: string;
-  avatar_url: string;
-  role: string;
-  role_id: string;
-  user_roles: {
-    id: string;
-    name: string;
-    description: string;
-  } | null;
-  company_name: string;
-  industry: string;
-  created_at: string;
-  onboarding_completed?: boolean;
-  onboarding_completed_at?: string;
-}
+import React, { useState, useEffect } from 'react';
+import { useUsers } from '@/hooks/admin/useUsers';
+import { UsersHeader } from '@/components/admin/users/UsersHeader';
+import { UsersTable } from '@/components/admin/users/UsersTable';
+import { UserRoleDialog } from '@/components/admin/users/UserRoleDialog';
+import { DeleteUserDialog } from '@/components/admin/users/DeleteUserDialog';
+import { ResetPasswordDialog } from '@/components/admin/users/ResetPasswordDialog';
+import { Card, CardContent } from '@/components/ui/card';
+import { UserProfile } from '@/lib/supabase/types';
 
 const AdminUsers = () => {
   const {
@@ -41,188 +16,254 @@ const AdminUsers = () => {
     loading,
     isRefreshing,
     searchQuery,
-    setSearchQuery,
     selectedUser,
-    setSelectedUser,
-    fetchUsers,
+    error,
     canManageUsers,
     canAssignRoles,
     canDeleteUsers,
     canResetPasswords,
-    error
+    setSelectedUser,
+    fetchUsers,
+    searchUsers
   } = useUsers();
 
-  const { isAdmin } = useAuth();
-  
-  const [roleManagerOpen, setRoleManagerOpen] = useState(false);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [resetPasswordDialogOpen, setResetPasswordDialogOpen] = useState(false);
-  const [resetUserDialogOpen, setResetUserDialogOpen] = useState(false);
+  const [showRoleDialog, setShowRoleDialog] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [showResetDialog, setShowResetDialog] = useState(false);
 
-  const handleEditRole = (user: LocalUserProfile) => {
-    setSelectedUser(user as any);
-    setRoleManagerOpen(true);
+  const handleEditRole = (user: any) => {
+    // Mapear dados do usuário para o formato UserProfile esperado
+    const mappedUser: UserProfile = {
+      id: user.id,
+      email: user.email || '',
+      name: user.name || '',
+      avatar_url: user.avatar_url || '',
+      role: user.role || '',
+      role_id: user.role_id || '',
+      user_roles: user.user_roles,
+      company_name: user.company_name || '',
+      industry: user.industry || '',
+      created_at: user.created_at,
+      // Adicionar campos obrigatórios com valores padrão
+      updated_at: new Date().toISOString(),
+      phone: null,
+      instagram: null,
+      linkedin: null,
+      country: null,
+      state: null,
+      city: null,
+      company_website: null,
+      current_position: null,
+      company_sector: null,
+      company_size: null,
+      annual_revenue: null,
+      primary_goal: null,
+      business_challenges: null,
+      ai_knowledge_level: null,
+      weekly_availability: null,
+      networking_interests: null,
+      nps_score: null,
+      phone_country_code: '+55',
+      onboarding_completed: false,
+      onboarding_completed_at: null,
+      is_premium: false,
+      premium_expires_at: null,
+      referred_by: null,
+      referrals_count: 0,
+      successful_referrals_count: 0,
+      last_login_at: null,
+      login_count: 0,
+      email_verified: false,
+      email_verified_at: null,
+      profile_completion_percentage: 0,
+      last_profile_update: null,
+      preferences: null,
+      timezone: null,
+      language: 'pt',
+      notifications_enabled: true,
+      marketing_emails_enabled: true
+    };
+    
+    setSelectedUser(mappedUser);
+    setShowRoleDialog(true);
   };
 
-  const handleDeleteUser = (user: LocalUserProfile) => {
-    setSelectedUser(user as any);
-    setDeleteDialogOpen(true);
+  const handleDeleteUser = (user: any) => {
+    // Mesmo mapeamento para o delete
+    const mappedUser: UserProfile = {
+      id: user.id,
+      email: user.email || '',
+      name: user.name || '',
+      avatar_url: user.avatar_url || '',
+      role: user.role || '',
+      role_id: user.role_id || '',
+      user_roles: user.user_roles,
+      company_name: user.company_name || '',
+      industry: user.industry || '',
+      created_at: user.created_at,
+      updated_at: new Date().toISOString(),
+      phone: null,
+      instagram: null,
+      linkedin: null,
+      country: null,
+      state: null,
+      city: null,
+      company_website: null,
+      current_position: null,
+      company_sector: null,
+      company_size: null,
+      annual_revenue: null,
+      primary_goal: null,
+      business_challenges: null,
+      ai_knowledge_level: null,
+      weekly_availability: null,
+      networking_interests: null,
+      nps_score: null,
+      phone_country_code: '+55',
+      onboarding_completed: false,
+      onboarding_completed_at: null,
+      is_premium: false,
+      premium_expires_at: null,
+      referred_by: null,
+      referrals_count: 0,
+      successful_referrals_count: 0,
+      last_login_at: null,
+      login_count: 0,
+      email_verified: false,
+      email_verified_at: null,
+      profile_completion_percentage: 0,
+      last_profile_update: null,
+      preferences: null,
+      timezone: null,
+      language: 'pt',
+      notifications_enabled: true,
+      marketing_emails_enabled: true
+    };
+    
+    setSelectedUser(mappedUser);
+    setShowDeleteDialog(true);
   };
 
-  const handleResetPassword = (user: LocalUserProfile) => {
-    setSelectedUser(user as any);
-    setResetPasswordDialogOpen(true);
+  const handleResetPassword = (user: any) => {
+    // Mesmo mapeamento
+    const mappedUser: UserProfile = {
+      id: user.id,
+      email: user.email || '',
+      name: user.name || '',
+      avatar_url: user.avatar_url || '',
+      role: user.role || '',
+      role_id: user.role_id || '',
+      user_roles: user.user_roles,
+      company_name: user.company_name || '',
+      industry: user.industry || '',
+      created_at: user.created_at,
+      updated_at: new Date().toISOString(),
+      phone: null,
+      instagram: null,
+      linkedin: null,
+      country: null,
+      state: null,
+      city: null,
+      company_website: null,
+      current_position: null,
+      company_sector: null,
+      company_size: null,
+      annual_revenue: null,
+      primary_goal: null,
+      business_challenges: null,
+      ai_knowledge_level: null,
+      weekly_availability: null,
+      networking_interests: null,
+      nps_score: null,
+      phone_country_code: '+55',
+      onboarding_completed: false,
+      onboarding_completed_at: null,
+      is_premium: false,
+      premium_expires_at: null,
+      referred_by: null,
+      referrals_count: 0,
+      successful_referrals_count: 0,
+      last_login_at: null,
+      login_count: 0,
+      email_verified: false,
+      email_verified_at: null,
+      profile_completion_percentage: 0,
+      last_profile_update: null,
+      preferences: null,
+      timezone: null,
+      language: 'pt',
+      notifications_enabled: true,
+      marketing_emails_enabled: true
+    };
+    
+    setSelectedUser(mappedUser);
+    setShowResetDialog(true);
   };
 
-  const handleResetUser = (user: LocalUserProfile) => {
-    setSelectedUser(user as any);
-    setResetUserDialogOpen(true);
-  };
-
-  const handleRefresh = () => {
-    toast.info("Atualizando lista de usuários...");
-    fetchUsers();
-  };
-
-  const handleForceRefresh = () => {
-    toast.info("Recarregando a página por completo...");
-    window.location.reload();
-  };
-
-  // Verificação de acesso usando o contexto de auth
-  if (!isAdmin) {
+  if (error) {
     return (
-      <Alert variant="destructive" className="my-4">
-        <AlertCircle className="h-4 w-4" />
-        <AlertTitle>Acesso restrito</AlertTitle>
-        <AlertDescription>
-          Você não tem permissão para visualizar a lista de usuários.
-        </AlertDescription>
-      </Alert>
-    );
-  }
-
-  // Loading state
-  if (loading && !users.length) {
-    return (
-      <div className="flex flex-col items-center justify-center p-8 space-y-4">
-        <div className="animate-spin w-8 h-8 border-4 border-viverblue border-t-transparent rounded-full"></div>
-        <div className="text-foreground font-medium">Carregando usuários...</div>
-        <div className="text-sm text-muted-foreground">
-          Isso pode levar alguns instantes.
-        </div>
+      <div className="space-y-6">
+        <UsersHeader
+          searchQuery={searchQuery}
+          onSearch={searchUsers}
+          onRefresh={fetchUsers}
+          isRefreshing={isRefreshing}
+          canManageUsers={canManageUsers}
+        />
+        <Card>
+          <CardContent className="p-6">
+            <div className="text-center text-red-600">
+              <p>Erro ao carregar usuários: {error.message}</p>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     );
   }
-
-  // Error state
-  if (error && !users.length) {
-    return (
-      <Alert variant="destructive" className="my-4">
-        <AlertCircle className="h-4 w-4" />
-        <AlertTitle>Erro ao carregar usuários</AlertTitle>
-        <AlertDescription className="space-y-2">
-          <p>Ocorreu um problema ao carregar a lista de usuários:</p>
-          <p className="font-mono text-sm bg-destructive/10 p-2 rounded">
-            {error.message}
-          </p>
-          <div className="flex gap-2 mt-4">
-            <Button onClick={handleRefresh} variant="outline" disabled={isRefreshing}>
-              {isRefreshing ? (
-                <>
-                  <RefreshCw className="animate-spin mr-2 h-4 w-4" /> Atualizando...
-                </>
-              ) : (
-                <>
-                  <RefreshCw className="mr-2 h-4 w-4" /> Tentar novamente
-                </>
-              )}
-            </Button>
-            
-            <Button onClick={handleForceRefresh} variant="default">
-              Recarregar página
-            </Button>
-          </div>
-        </AlertDescription>
-      </Alert>
-    );
-  }
-
-  // Converter users para compatibilidade com componentes
-  const userProfiles: SupabaseUserProfile[] = users.map(user => ({
-    ...user,
-    role: user.role as any,
-    onboarding_completed: false,
-    onboarding_completed_at: null
-  }));
 
   return (
     <div className="space-y-6">
-      <UsersHeader 
-        searchQuery={searchQuery} 
-        onSearchChange={setSearchQuery}
-        onRefresh={handleRefresh}
+      <UsersHeader
+        searchQuery={searchQuery}
+        onSearch={searchUsers}
+        onRefresh={fetchUsers}
         isRefreshing={isRefreshing}
+        canManageUsers={canManageUsers}
       />
-      
-      <div className="border rounded-lg">
-        <UsersTable 
-          users={userProfiles}
-          loading={loading}
-          canEditRoles={canAssignRoles}
-          canDeleteUsers={canDeleteUsers}
-          canResetPasswords={canResetPasswords}
-          onEditRole={handleEditRole as any}
-          onDeleteUser={handleDeleteUser as any}
-          onResetPassword={handleResetPassword as any}
-          onResetUser={handleResetUser as any}
-          onRefresh={handleRefresh}
-        />
-      </div>
-      
-      {users.length > 0 && !isRefreshing && (
-        <div className="text-sm text-muted-foreground text-right">
-          {users.length} usuários carregados
-        </div>
-      )}
-      
-      {/* Diálogos */}
-      {canAssignRoles && (
-        <UserRoleManager 
-          open={roleManagerOpen}
-          onOpenChange={setRoleManagerOpen}
-          user={selectedUser}
-          availableRoles={availableRoles}
-          onSuccess={() => {
-            setTimeout(() => fetchUsers(), 500);
-          }}
-        />
-      )}
-      
-      {canDeleteUsers && (
-        <DeleteUserDialog 
-          open={deleteDialogOpen}
-          onOpenChange={setDeleteDialogOpen}
-          user={selectedUser}
-          onSuccess={fetchUsers}
-        />
-      )}
-      
-      {canResetPasswords && (
-        <ResetPasswordDialog 
-          open={resetPasswordDialogOpen}
-          onOpenChange={setResetPasswordDialogOpen}
-          user={selectedUser}
-        />
-      )}
 
-      <UserResetDialog 
-        open={resetUserDialogOpen}
-        onOpenChange={setResetUserDialogOpen}
+      <UsersTable
+        users={users}
+        loading={loading}
+        canAssignRoles={canAssignRoles}
+        canDeleteUsers={canDeleteUsers}
+        canResetPasswords={canResetPasswords}
+        onEditRole={handleEditRole}
+        onDeleteUser={handleDeleteUser}
+        onResetPassword={handleResetPassword}
+      />
+
+      {/* Role Dialog */}
+      <UserRoleDialog
+        open={showRoleDialog}
+        onOpenChange={setShowRoleDialog}
         user={selectedUser}
-        onSuccess={() => {
-          setTimeout(() => fetchUsers(), 500);
-        }}
+        availableRoles={availableRoles}
+        onSuccess={fetchUsers}
+      />
+
+      {/* Delete Dialog */}
+      <DeleteUserDialog
+        open={showDeleteDialog}
+        onOpenChange={setShowDeleteDialog}
+        user={selectedUser}
+        onSuccess={fetchUsers}
+      />
+
+      {/* Reset Password Dialog */}
+      <ResetPasswordDialog
+        open={showResetDialog}
+        onOpenChange={setShowResetDialog}
+        user={selectedUser}
       />
     </div>
   );

@@ -31,6 +31,20 @@ const AdminToolEdit = () => {
     navigate('/admin/tools');
   };
 
+  // Wrapper para compatibilidade de tipos
+  const handleFormSubmit = async (data: any) => {
+    try {
+      const result = await handleSubmit(data);
+      if (result.success) {
+        handleSaveSuccess();
+      }
+      return result;
+    } catch (error) {
+      console.error('Erro ao salvar ferramenta:', error);
+      return { success: false, error: 'Erro ao salvar ferramenta' };
+    }
+  };
+
   // Loading state
   if (isLoadingTool) {
     return <LoadingScreen message="Carregando ferramenta..." />;
@@ -103,7 +117,7 @@ const AdminToolEdit = () => {
 
       <ToolForm
         initialData={toolData}
-        onSubmit={handleSubmit}
+        onSubmit={handleFormSubmit}
         isSubmitting={isSubmitting}
         onSaveSuccess={handleSaveSuccess}
       />

@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/auth";
@@ -42,7 +43,32 @@ const FormacaoAulaDetalhes = () => {
       
       if (error) throw error;
       
-      setAula(data);
+      // Mapear dados para o formato LearningLesson esperado
+      const mappedAula: LearningLesson = {
+        id: data.id,
+        module_id: data.module_id,
+        title: data.title,
+        description: data.description,
+        content: data.content,
+        order_index: data.order_index,
+        is_published: data.is_published || false,
+        published: data.published || data.is_published || false, // Compatibilidade
+        created_at: data.created_at,
+        updated_at: data.updated_at,
+        estimated_duration_minutes: data.estimated_duration_minutes || 0,
+        estimated_time_minutes: data.estimated_time_minutes || data.estimated_duration_minutes || 0, // Compatibilidade
+        difficulty_level: data.difficulty_level || 'beginner',
+        ai_assistant_enabled: data.ai_assistant_enabled || false,
+        ai_assistant_id: data.ai_assistant_id,
+        ai_assistant_prompt: data.ai_assistant_prompt,
+        cover_image_url: data.cover_image_url,
+        // Adicionar campos relacionados se existirem
+        videos: data.videos || [],
+        resources: data.resources || [],
+        module: data.module || null
+      };
+      
+      setAula(mappedAula);
     } catch (error) {
       console.error("Erro ao buscar aula:", error);
       toast.error("Não foi possível carregar a aula");
