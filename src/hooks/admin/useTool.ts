@@ -25,18 +25,17 @@ export const useTool = (toolId?: string) => {
         id: data.id,
         name: data.name,
         description: data.description,
-        category: data.category as any, // Cast to avoid category type issues
+        category: data.category as any,
         logo_url: data.logo_url,
-        features: data.features,
         is_active: data.is_active,
         created_at: data.created_at,
         updated_at: data.updated_at,
-        benefit_active: Boolean(data.benefit_title), // Use benefit_title existence as active flag
-        benefit_type: (data.benefit_type as any) || 'discount', // Cast to avoid type issues
+        benefit_active: Boolean(data.benefit_title),
+        benefit_type: (data.benefit_type as any) || 'discount',
         benefit_description: data.benefit_description,
-        benefit_instructions: data.benefit_title || null, // Map available field
+        benefit_instructions: data.benefit_title || null,
         benefit_link: data.benefit_url || null,
-        benefit_discount_percentage: data.benefit_url ? 10 : null, // Mock percentage based on benefit_url
+        benefit_discount_percentage: data.benefit_url ? 10 : null,
       };
     },
     enabled: !!toolId

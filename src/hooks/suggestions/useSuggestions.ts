@@ -1,7 +1,20 @@
 
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Suggestion } from '@/types/suggestionTypes';
+
+export interface Suggestion {
+  id: string;
+  title: string;
+  description: string;
+  status: string;
+  upvotes: number;
+  downvotes: number;
+  created_at: string;
+  user_id: string;
+  user_name: string;
+  category_name?: string;
+  category_id?: string;
+}
 
 export type SuggestionFilter = 'all' | 'popular' | 'recent' | 'new' | 'in_development' | 'implemented';
 
@@ -31,7 +44,7 @@ export const useSuggestions = () => {
           created_at: new Date().toISOString(),
           user_id: 'user1',
           user_name: 'João Silva',
-          category: { name: 'Funcionalidades' }
+          category_name: 'Funcionalidades'
         },
         {
           id: '2',
@@ -43,7 +56,7 @@ export const useSuggestions = () => {
           created_at: new Date().toISOString(),
           user_id: 'user2',
           user_name: 'Maria Santos',
-          category: { name: 'Melhorias' }
+          category_name: 'Melhorias'
         }
       ];
 
@@ -73,7 +86,7 @@ export const useSuggestions = () => {
       return filteredSuggestions;
     },
     refetchOnWindowFocus: false,
-    staleTime: 1000 * 60 * 1, // 1 minuto
+    staleTime: 1000 * 60 * 1,
     refetchOnMount: true,
   });
 

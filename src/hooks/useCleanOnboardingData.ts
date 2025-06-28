@@ -1,56 +1,33 @@
 
 import { useState, useEffect } from 'react';
-import AuthManager from '@/services/AuthManager';
+import { useSimpleAuth } from '@/contexts/auth/SimpleAuthProvider';
 import { logger } from '@/utils/logger';
 
 export const useCleanOnboardingData = () => {
-  const authManager = AuthManager.getInstance();
-  const [cleanData, setCleanData] = useState(() => {
-    const currentState = authManager.getState();
-    return {
-      user: currentState.user,
-      profile: currentState.profile,
-      isLoading: currentState.isLoading,
-      shouldShowOnboarding: currentState.onboardingRequired
-    };
-  });
+  const { user, profile, isLoading } = useSimpleAuth();
+  const [cleanData, setCleanData] = useState(() => ({
+    user,
+    profile,
+    isLoading,
+    shouldShowOnboarding: !profile?.onboarding_completed
+  }));
 
   useEffect(() => {
-    logger.info('[CLEAN-ONBOARDING-DATA] 🔗 Conectando ao AuthManager', {
+    logger.info('[CLEAN-ONBOARDING-DATA] 📡 Dados limpos atualizados', {
       component: 'useCleanOnboardingData',
-      action: 'connect_auth_manager'
+      action: 'data_updated',
+      hasUser: !!user,
+      hasProfile: !!profile,
+      shouldShowOnboarding: !profile?.onboarding_completed
     });
 
-    // CORREÇÃO: criar função handler que aceita AuthState como argumento
-    const handleStateChanged = (authState) => {
-      logger.info('[CLEAN-ONBOARDING-DATA] 📡 Dados limpos atualizados', {
-        component: 'useCleanOnboardingData',
-        action: 'data_updated',
-        hasUser: !!authState.user,
-        hasProfile: !!authState.profile,
-        shouldShowOnboarding: authState.onboardingRequired
-      });
-
-      setCleanData({
-        user: authState.user,
-        profile: authState.profile,
-        isLoading: authState.isLoading,
-        shouldShowOnboarding: authState.onboardingRequired
-      });
-    };
-
-    const unsubscribe = authManager.on('stateChanged', handleStateChanged);
-
-    // Initialize if needed
-    if (!authManager.isInitialized) {
-      logger.info('[CLEAN-ONBOARDING-DATA] 🚀 Forçando inicialização do AuthManager');
-      authManager.initialize();
-    }
-
-    return () => {
-      authManager.off('stateChanged', handleStateChanged);
-    };
-  }, [authManager]);
+    setCleanData({
+      user,
+      profile,
+      isLoading,
+      shouldShowOnboarding: !profile?.onboarding_completed
+    });
+  }, [user, profile, isLoading]);
 
   return cleanData;
 };
