@@ -1,5 +1,6 @@
 
 import { useCallback } from 'react';
+import React from 'react';
 
 export const useLogging = () => {
   const log = useCallback((message: string, data?: any) => {
@@ -18,6 +19,6 @@ export const useLogging = () => {
 };
 
 // Simple provider component that doesn't do anything special
-export const LoggingProvider = ({ children }: { children: React.ReactNode }) => {
-  return <>{children}</>;
+export const LoggingProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  return React.createElement(React.Fragment, null, children);
 };
