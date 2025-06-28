@@ -12,8 +12,13 @@ interface ChecklistDisplayProps {
 }
 
 export const ChecklistDisplay = ({ module }: ChecklistDisplayProps) => {
-  const { checklist, userChecklist, loading } = useChecklistData(module);
-  const { handleToggleItem } = useChecklistInteractions(module);
+  const { checklist, userChecklist, setUserChecklist, loading } = useChecklistData(module);
+  const { saving, handleCheckChange } = useChecklistInteractions(module);
+
+  const handleToggleItem = async (itemId: string) => {
+    const currentValue = userChecklist[itemId] || false;
+    await handleCheckChange(itemId, !currentValue, userChecklist, setUserChecklist);
+  };
 
   if (loading) {
     return (
@@ -65,6 +70,7 @@ export const ChecklistDisplay = ({ module }: ChecklistDisplayProps) => {
                 id={item.id}
                 checked={userChecklist[item.id] || false}
                 onCheckedChange={() => handleToggleItem(item.id)}
+                disabled={saving}
               />
               <label
                 htmlFor={item.id}

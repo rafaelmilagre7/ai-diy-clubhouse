@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Play, CheckCircle } from "lucide-react";
 import { shouldAutoComplete } from "./content/ContentManager";
 import { useLogging } from "@/hooks/useLogging";
-import { safeJsonParseObject } from "@/lib/supabase/types";
+import { safeJsonParseObject, safeToStringContent } from "@/lib/supabase/types";
 
 interface LandingModuleProps {
   module: Module;
@@ -30,7 +30,7 @@ export const LandingModule = ({ module, onComplete }: LandingModuleProps) => {
 
   // Parse content safely
   const content = safeJsonParseObject(module.content, {});
-  const description = content.description || module.description || "Bem-vindo! Vamos começar esta jornada de implementação.";
+  const description = content.description || "Bem-vindo! Vamos começar esta jornada de implementação.";
 
   return (
     <div className="max-w-2xl mx-auto text-center space-y-8 py-8">
@@ -41,7 +41,7 @@ export const LandingModule = ({ module, onComplete }: LandingModuleProps) => {
         
         <div className="space-y-2">
           <h1 className="text-3xl font-bold text-gray-900">{module.title}</h1>
-          <div dangerouslySetInnerHTML={{ __html: String(description) }} className="text-lg text-gray-600" />
+          <div dangerouslySetInnerHTML={{ __html: safeToStringContent(description) }} className="text-lg text-gray-600" />
         </div>
       </div>
 

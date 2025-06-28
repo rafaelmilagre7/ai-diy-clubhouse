@@ -31,7 +31,7 @@ export const useSolutionEditor = (id: string | undefined, user: any) => {
         title: solution.title,
         description: solution.description,
         category: solution.category as "Receita" | "Operacional" | "Estratégia",
-        difficulty: (solution.difficulty || 'medium') as "easy" | "medium" | "advanced",
+        difficulty: (solution.difficulty_level || solution.difficulty || 'medium') as "easy" | "medium" | "advanced",
         thumbnail_url: solution.thumbnail_url || solution.cover_image_url || "",
         published: solution.published || false,
         slug: solution.slug || "",

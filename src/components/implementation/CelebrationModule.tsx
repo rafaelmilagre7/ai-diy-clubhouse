@@ -7,7 +7,7 @@ import { CheckCircle, Download, Share2 } from "lucide-react";
 import { shouldAutoComplete } from "./content/ContentManager";
 import { useLogging } from "@/hooks/useLogging";
 import { Badge } from "@/components/ui/badge";
-import { safeJsonParseObject } from "@/lib/supabase/types";
+import { safeJsonParseObject, safeToStringContent } from "@/lib/supabase/types";
 
 interface CelebrationModuleProps {
   module: Module;
@@ -41,7 +41,7 @@ export const CelebrationModule = ({ module, onComplete }: CelebrationModuleProps
 
   // Parse content safely
   const content = safeJsonParseObject(module.content, {});
-  const description = content.description || module.description || "Parabéns! Você concluiu esta implementação com sucesso.";
+  const description = content.description || "Parabéns! Você concluiu esta implementação com sucesso.";
 
   return (
     <div className="max-w-2xl mx-auto text-center space-y-8 py-8">
@@ -52,7 +52,7 @@ export const CelebrationModule = ({ module, onComplete }: CelebrationModuleProps
         
         <div className="space-y-2">
           <h1 className="text-3xl font-bold text-gray-900">{module.title}</h1>
-          <div dangerouslySetInnerHTML={{ __html: String(description) }} className="text-lg text-gray-600" />
+          <div dangerouslySetInnerHTML={{ __html: safeToStringContent(description) }} className="text-lg text-gray-600" />
         </div>
 
         <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">

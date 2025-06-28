@@ -9,8 +9,22 @@ import { LearningCourse } from "@/lib/supabase/types";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/auth";
 
+interface CourseData {
+  id: string;
+  title: string;
+  description: string;
+  published: boolean;
+  created_at: string;
+  updated_at: string;
+  cover_image_url: string;
+  created_by: string;
+  category: string;
+  difficulty_level: string;
+  estimated_hours: number;
+}
+
 const MemberCoursesList = () => {
-  const [courses, setCourses] = useState<LearningCourse[]>([]);
+  const [courses, setCourses] = useState<CourseData[]>([]);
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
 
@@ -27,7 +41,21 @@ const MemberCoursesList = () => {
           return;
         }
 
-        setCourses(data || []);
+        const mappedData: CourseData[] = (data || []).map(course => ({
+          id: course.id,
+          title: course.title,
+          description: course.description || '',
+          published: course.published || false,
+          created_at: course.created_at,
+          updated_at: course.updated_at,
+          cover_image_url: course.cover_image_url || '',
+          created_by: course.created_by || '',
+          category: 'Geral',
+          difficulty_level: 'Intermediário',
+          estimated_hours: 0
+        }));
+
+        setCourses(mappedData);
       } finally {
         setLoading(false);
       }

@@ -30,7 +30,9 @@ export type UserProfile = Database['public']['Tables']['profiles']['Row'] & {
 export type UserRole = Database['public']['Tables']['user_roles']['Row'];
 export type Module = Database['public']['Tables']['modules']['Row'] & {
   description?: string;
+  module_order?: number;
 };
+export type Progress = Database['public']['Tables']['progress']['Row'];
 export type Tool = Database['public']['Tables']['tools']['Row'] & {
   status?: boolean;
   official_url?: string;
@@ -39,6 +41,7 @@ export type Tool = Database['public']['Tables']['tools']['Row'] & {
   benefit_title?: string | null;
   benefit_description?: string | null;
   benefit_discount_percentage?: number | null;
+  has_member_benefit?: boolean;
 };
 export type SolutionResource = Database['public']['Tables']['solution_resources']['Row'];
 
@@ -121,4 +124,23 @@ export const safeJsonParseArray = (value: any, fallback: any[] = []) => {
     }
   }
   return fallback;
+};
+
+// Safe conversion from Json to ModuleContent
+export const safeJsonToModuleContent = (content: any): ModuleContent => {
+  if (content && typeof content === 'object' && content.blocks) {
+    return content as ModuleContent;
+  }
+  return { blocks: [] };
+};
+
+// Safe conversion to string for dangerouslySetInnerHTML
+export const safeToStringContent = (content: any): string => {
+  if (typeof content === 'string') {
+    return content;
+  }
+  if (typeof content === 'object' && content !== null) {
+    return JSON.stringify(content);
+  }
+  return String(content || '');
 };
