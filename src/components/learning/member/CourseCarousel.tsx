@@ -31,6 +31,7 @@ export const CourseCarousel = ({ courses, onCourseClick }: CourseCarouselProps) 
             className="cursor-pointer hover:shadow-lg transition-shadow duration-200 group"
             onClick={() => onCourseClick(course)}
           >
+            {/* Corrigido: usar cover_image_url que existe no schema */}
             {course.cover_image_url && (
               <div className="aspect-video relative overflow-hidden rounded-t-lg">
                 <img 
@@ -43,6 +44,7 @@ export const CourseCarousel = ({ courses, onCourseClick }: CourseCarouselProps) 
             
             <CardContent className="p-4 space-y-3">
               <div className="flex items-center justify-between">
+                {/* Corrigido: usar published que existe no schema */}
                 <Badge variant={course.published ? "default" : "secondary"}>
                   {course.published ? "Disponível" : "Em breve"}
                 </Badge>

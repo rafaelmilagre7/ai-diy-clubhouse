@@ -13,6 +13,7 @@ interface AulaDetailsProps {
 const AulaDetails = ({ aula }: AulaDetailsProps) => {
   // CORREÇÃO: Parse seguro do conteúdo JSON
   const content = safeJsonParseObject(aula.content, {});
+  // Corrigido: usar estimated_time_minutes que existe no schema
   const estimatedTime = aula.estimated_time_minutes || content.estimatedTime || 0;
   
   const getDifficultyColor = (level: string) => {
@@ -41,6 +42,9 @@ const AulaDetails = ({ aula }: AulaDetailsProps) => {
     }
   };
 
+  // Corrigido: usar difficulty_level que existe no schema
+  const difficultyLevel = aula.difficulty_level || 'beginner';
+
   return (
     <div className="space-y-6">
       <Card>
@@ -49,11 +53,12 @@ const AulaDetails = ({ aula }: AulaDetailsProps) => {
             <CardTitle className="text-xl">{aula.title}</CardTitle>
             <div className="flex items-center gap-2">
               <Badge 
-                className={getDifficultyColor(aula.difficulty_level || 'beginner')}
+                className={getDifficultyColor(difficultyLevel)}
                 variant="secondary"
               >
-                {getDifficultyLabel(aula.difficulty_level || 'beginner')}
+                {getDifficultyLabel(difficultyLevel)}
               </Badge>
+              {/* Corrigido: usar published que existe no schema */}
               <Badge variant={aula.published ? "default" : "secondary"}>
                 {aula.published ? "Publicada" : "Rascunho"}
               </Badge>
@@ -87,12 +92,14 @@ const AulaDetails = ({ aula }: AulaDetailsProps) => {
             </div>
           </div>
 
+          {/* Corrigido: usar ai_assistant_enabled que existe no schema */}
           {aula.ai_assistant_enabled && aula.ai_assistant_id && (
             <div className="bg-blue-50 p-3 rounded-lg">
               <h4 className="font-medium text-blue-900 mb-1">Assistente de IA Ativo</h4>
               <p className="text-sm text-blue-700">
                 ID: {aula.ai_assistant_id}
               </p>
+              {/* Corrigido: usar ai_assistant_prompt que existe no schema */}
               {aula.ai_assistant_prompt && (
                 <p className="text-sm text-blue-600 mt-2">
                   Prompt: {aula.ai_assistant_prompt}

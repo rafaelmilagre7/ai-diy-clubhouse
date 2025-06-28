@@ -28,7 +28,7 @@ export const createMockUserProfile = (overrides: Partial<UserProfile> = {}): Use
     role: null,
     onboarding_completed: true,
     onboarding_completed_at: '2024-01-01T00:00:00Z',
-    business_challenges: null,
+    // Removido business_challenges pois não existe no tipo UserProfile
     ...overrides,
   };
 };
