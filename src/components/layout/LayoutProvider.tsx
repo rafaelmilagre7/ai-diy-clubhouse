@@ -26,7 +26,7 @@ const LayoutProvider = memo(({ children }: LayoutProviderProps) => {
     isFormacaoRoute
   });
 
-  // CORREÇÃO PRINCIPAL: Condição simplificada - só loading se realmente carregando
+  // Loading state
   if (isLoading) {
     return (
       <PageTransitionWithFallback isVisible={true}>
@@ -35,7 +35,7 @@ const LayoutProvider = memo(({ children }: LayoutProviderProps) => {
     );
   }
 
-  // Se não há usuário após loading completo, deixar as rotas protegidas redirecionarem
+  // No user after loading completes
   if (!user) {
     return (
       <PageTransitionWithFallback isVisible={true}>
@@ -44,7 +44,7 @@ const LayoutProvider = memo(({ children }: LayoutProviderProps) => {
     );
   }
 
-  // Escolher layout baseado na rota atual
+  // Choose layout based on current route
   if (isFormacaoRoute && (isFormacao || isAdmin)) {
     return (
       <PageTransitionWithFallback isVisible={true}>
@@ -55,7 +55,7 @@ const LayoutProvider = memo(({ children }: LayoutProviderProps) => {
     );
   }
 
-  // Layout padrão para membros
+  // Default layout for members
   return (
     <PageTransitionWithFallback isVisible={true}>
       <MemberLayout>

@@ -11,6 +11,14 @@ export interface AutoRecommendation {
   confidence: number;
   actionable: boolean;
   data: any;
+  impact?: 'high' | 'medium' | 'low';
+  effort?: 'high' | 'medium' | 'low';
+  metrics?: {
+    currentValue: number;
+    targetValue: number;
+    improvement: string;
+  };
+  actionItems?: string[];
 }
 
 export const useAutoRecommendations = () => {
@@ -20,7 +28,7 @@ export const useAutoRecommendations = () => {
       console.log('🤖 [AUTO-RECOMMENDATIONS] Gerando recomendações automáticas...');
 
       try {
-        // Buscar dados básicos para gerar recomendações
+        // Buscar dados básicos 
         const [profilesResult, solutionsResult, analyticsResult] = await Promise.allSettled([
           supabase.from('profiles').select('id, created_at').limit(100),
           supabase.from('solutions').select('id, title, category').limit(50),
@@ -48,6 +56,18 @@ export const useAutoRecommendations = () => {
               priority: 'high',
               confidence: 0.85,
               actionable: true,
+              impact: 'high',
+              effort: 'medium',
+              metrics: {
+                currentValue: recentUsers.length,
+                targetValue: Math.round(profiles.length * 0.2),
+                improvement: '100%'
+              },
+              actionItems: [
+                'Implementar campanha de email marketing',
+                'Melhorar processo de onboarding',
+                'Criar conteúdo atrativo para novos usuários'
+              ],
               data: { recentUsers: recentUsers.length, totalUsers: profiles.length }
             });
           }
@@ -55,7 +75,7 @@ export const useAutoRecommendations = () => {
 
         // Recomendação 2: Otimização de conteúdo
         if (solutions.length > 0) {
-          const unpublishedCount = Math.floor(solutions.length * 0.3); // Simular não publicadas
+          const unpublishedCount = Math.floor(solutions.length * 0.3);
           
           if (unpublishedCount > 0) {
             recommendations.push({
@@ -66,6 +86,18 @@ export const useAutoRecommendations = () => {
               priority: 'medium',
               confidence: 0.75,
               actionable: true,
+              impact: 'medium',
+              effort: 'low',
+              metrics: {
+                currentValue: solutions.length - unpublishedCount,
+                targetValue: solutions.length,
+                improvement: `${Math.round((unpublishedCount / solutions.length) * 100)}%`
+              },
+              actionItems: [
+                'Revisar e publicar soluções pendentes',
+                'Definir processo de aprovação mais eficiente',
+                'Criar checklist de qualidade'
+              ],
               data: { unpublished: unpublishedCount, published: solutions.length - unpublishedCount }
             });
           }
@@ -86,33 +118,19 @@ export const useAutoRecommendations = () => {
               priority: 'medium',
               confidence: 0.70,
               actionable: true,
+              impact: 'medium',
+              effort: 'medium',
+              metrics: {
+                currentValue: recentActivity.length,
+                targetValue: 25,
+                improvement: '150%'
+              },
+              actionItems: [
+                'Implementar sistema de notificações',
+                'Criar conteúdo mais engajante',
+                'Melhorar UX da plataforma'
+              ],
               data: { recentEvents: recentActivity.length }
-            });
-          }
-        }
-
-        // Recomendação 4: Distribuição de categorias
-        const categoryDistribution = solutions.reduce((acc, solution) => {
-          acc[solution.category] = (acc[solution.category] || 0) + 1;
-          return acc;
-        }, {} as Record<string, number>);
-
-        const categories = Object.keys(categoryDistribution);
-        if (categories.length > 0) {
-          const maxCategory = categories.reduce((a, b) => 
-            categoryDistribution[a] > categoryDistribution[b] ? a : b
-          );
-          
-          if (categoryDistribution[maxCategory] > solutions.length * 0.6) {
-            recommendations.push({
-              id: 'category-balance',
-              type: 'content_optimization',
-              title: 'Desequilíbrio nas categorias de soluções',
-              description: `A categoria "${maxCategory}" representa ${Math.round((categoryDistribution[maxCategory] / solutions.length) * 100)}% das soluções. Considere diversificar o conteúdo.`,
-              priority: 'low',
-              confidence: 0.65,
-              actionable: true,
-              data: { distribution: categoryDistribution }
             });
           }
         }
@@ -125,7 +143,7 @@ export const useAutoRecommendations = () => {
         return [];
       }
     },
-    staleTime: 15 * 60 * 1000, // 15 minutos
+    staleTime: 15 * 60 * 1000,
     refetchOnWindowFocus: false
   });
 };

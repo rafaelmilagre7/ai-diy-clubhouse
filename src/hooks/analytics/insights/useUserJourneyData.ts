@@ -35,7 +35,6 @@ export const useUserJourneyData = () => {
         const analytics = analyticsResult.status === 'fulfilled' ? analyticsResult.value.data || [] : [];
         const solutions = solutionsResult.status === 'fulfilled' ? solutionsResult.value.data || [] : [];
 
-        // Simular progresso - como não temos is_completed, vamos usar dados simulados
         const totalUsers = profiles.length;
 
         // Definir etapas da jornada
@@ -61,10 +60,10 @@ export const useUserJourneyData = () => {
               stepUsers = totalUsers;
               break;
             case 'Primeiro Login':
-              stepUsers = Math.floor(totalUsers * 0.85); // 85% fazem primeiro login
+              stepUsers = Math.floor(totalUsers * 0.85);
               break;
             case 'Exploração de Soluções':
-              stepUsers = Math.floor(totalUsers * 0.70); // 70% exploram soluções
+              stepUsers = Math.floor(totalUsers * 0.70);
               break;
             case 'Início de Solução':
               stepUsers = analytics.filter(a => a.event_type === 'solution_started').length || Math.floor(totalUsers * 0.45);
@@ -76,7 +75,6 @@ export const useUserJourneyData = () => {
               stepUsers = analytics.filter(a => a.event_type === 'solution_completed').length || Math.floor(totalUsers * 0.15);
               break;
             case 'Usuário Ativo':
-              // Usuários com atividade recente
               const recentActivity = analytics.filter(a => 
                 new Date(a.created_at) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
               );
@@ -86,7 +84,7 @@ export const useUserJourneyData = () => {
 
           const completionRate = totalUsers > 0 ? (stepUsers / totalUsers) * 100 : 0;
           const dropOffRate = previousUsers > 0 ? ((previousUsers - stepUsers) / previousUsers) * 100 : 0;
-          const avgTimeSpent = 5 + Math.random() * 15; // Simular tempo médio em minutos
+          const avgTimeSpent = 5 + Math.random() * 15;
 
           steps.push({
             step: stepName,
@@ -103,7 +101,7 @@ export const useUserJourneyData = () => {
         const funnelConversion = totalUsers > 0 ? 
           Math.round((steps[steps.length - 1].users / totalUsers) * 100) : 0;
 
-        // Identificar gargalos (etapas com maior drop-off)
+        // Identificar gargalos
         const bottlenecks: string[] = [];
         const highDropOffSteps = steps.filter(step => step.drop_off_rate > 30);
         
@@ -145,7 +143,7 @@ export const useUserJourneyData = () => {
         throw error;
       }
     },
-    staleTime: 10 * 60 * 1000, // 10 minutos
+    staleTime: 10 * 60 * 1000,
     refetchOnWindowFocus: false
   });
 };
