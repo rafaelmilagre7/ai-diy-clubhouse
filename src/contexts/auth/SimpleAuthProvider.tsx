@@ -5,6 +5,7 @@ import { User, Session } from '@supabase/supabase-js';
 import { toast } from 'sonner';
 import { fetchUserProfile } from './utils/profileUtils/userProfileFunctions';
 import { UserProfile } from '@/types/userProfile';
+import { useAuthCache } from '@/hooks/auth/useAuthCache';
 
 export interface SimpleAuthContextType {
   user: User | null;
@@ -34,6 +35,8 @@ export const SimpleAuthProvider: React.FC<SimpleAuthProviderProps> = ({ children
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
   const [isSigningIn, setIsSigningIn] = useState(false);
+  
+  const { cachedData, saveToCache, clearCache, hasValidCache } = useAuthCache();
 
   const setSession = (newSession: Session | null) => {
     setSessionState(newSession);
@@ -46,6 +49,9 @@ export const SimpleAuthProvider: React.FC<SimpleAuthProviderProps> = ({ children
     try {
       const userProfile = await fetchUserProfile(user.id);
       setProfile(userProfile);
+      
+      // Atualizar cache
+      saveToCache(user, session, userProfile);
     } catch (error) {
       console.error('Error refreshing profile:', error);
       setError(error as Error);
@@ -72,6 +78,9 @@ export const SimpleAuthProvider: React.FC<SimpleAuthProviderProps> = ({ children
         const userProfile = await fetchUserProfile(data.user.id);
         setProfile(userProfile);
         
+        // Salvar no cache
+        saveToCache(data.user, data.session, userProfile);
+        
         toast.success('Login realizado com sucesso!');
       }
     } catch (error) {
@@ -96,6 +105,7 @@ export const SimpleAuthProvider: React.FC<SimpleAuthProviderProps> = ({ children
       setSessionState(null);
       setProfile(null);
       setError(null);
+      clearCache();
       
       return { success: true };
     } catch (error) {
@@ -104,11 +114,41 @@ export const SimpleAuthProvider: React.FC<SimpleAuthProviderProps> = ({ children
   };
 
   // Check user role
-  const isAdmin = profile?.role === 'admin';
-  const isFormacao = profile?.role === 'formacao' || isAdmin;
+  const isAdmin = profile?.user_roles?.name === 'admin';
+  const isFormacao = profile?.user_roles?.name === 'formacao' || isAdmin;
 
   useEffect(() => {
-    // Get initial session
+    // Se tem cache válido, usar imediatamente
+    if (hasValidCache && cachedData) {
+      console.log('[SIMPLE-AUTH] Usando dados do cache');
+      setUser(cachedData.user);
+      setSessionState(cachedData.session);
+      setProfile(cachedData.profile);
+      setIsLoading(false);
+      
+      // Validar sessão em background (não bloquear a UI)
+      setTimeout(() => {
+        supabase.auth.getSession().then(({ data: { session }, error }) => {
+          if (error) {
+            console.error('Error validating session:', error);
+            setError(error);
+            clearCache();
+          } else if (!session) {
+            // Sessão inválida, limpar cache
+            console.log('[SIMPLE-AUTH] Sessão inválida, limpando cache');
+            setUser(null);
+            setSessionState(null);
+            setProfile(null);
+            clearCache();
+          }
+          // Se sessão válida, manter cache atual
+        });
+      }, 100);
+      
+      return;
+    }
+
+    // Se não tem cache, fazer verificação normal
     const getInitialSession = async () => {
       try {
         const { data: { session }, error } = await supabase.auth.getSession();
@@ -124,6 +164,9 @@ export const SimpleAuthProvider: React.FC<SimpleAuthProviderProps> = ({ children
           try {
             const userProfile = await fetchUserProfile(session.user.id);
             setProfile(userProfile);
+            
+            // Salvar no cache
+            saveToCache(session.user, session, userProfile);
           } catch (profileError) {
             console.error('Error fetching profile:', profileError);
             setError(profileError as Error);
@@ -152,6 +195,9 @@ export const SimpleAuthProvider: React.FC<SimpleAuthProviderProps> = ({ children
             try {
               const userProfile = await fetchUserProfile(session.user.id);
               setProfile(userProfile);
+              
+              // Salvar no cache
+              saveToCache(session.user, session, userProfile);
             } catch (profileError) {
               console.error('Error fetching profile on sign in:', profileError);
               setError(profileError as Error);
@@ -161,6 +207,7 @@ export const SimpleAuthProvider: React.FC<SimpleAuthProviderProps> = ({ children
           setUser(null);
           setSessionState(null);
           setProfile(null);
+          clearCache();
         }
         
         setIsLoading(false);
@@ -168,7 +215,7 @@ export const SimpleAuthProvider: React.FC<SimpleAuthProviderProps> = ({ children
     );
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [hasValidCache, cachedData, saveToCache, clearCache]);
 
   const value: SimpleAuthContextType = {
     user,

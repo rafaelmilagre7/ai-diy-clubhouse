@@ -26,20 +26,20 @@ const LayoutProvider = memo(({ children }: LayoutProviderProps) => {
     isFormacaoRoute
   });
 
-  // Aguardar carregamento completo
-  if (isLoading) {
+  // Só mostrar loading se realmente não tem dados do usuário E está carregando
+  if (isLoading && !user) {
     return (
       <PageTransitionWithFallback isVisible={true}>
-        <LoadingScreen message="Preparando interface..." />
+        <LoadingScreen message="Carregando..." showEmergencyButton={false} />
       </PageTransitionWithFallback>
     );
   }
 
-  // Se não há usuário, mostrar loading (deve redirecionar via ProtectedRoutes para /login)
+  // Se não há usuário (após loading), redirecionar será feito pelas rotas protegidas
   if (!user) {
     return (
       <PageTransitionWithFallback isVisible={true}>
-        <LoadingScreen message="Verificando autenticação..." />
+        <LoadingScreen message="Redirecionando..." showEmergencyButton={false} />
       </PageTransitionWithFallback>
     );
   }
