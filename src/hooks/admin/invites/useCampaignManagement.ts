@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
-interface Campaign {
+export interface Campaign {
   id: string;
   name: string;
   description?: string;
@@ -25,6 +25,27 @@ interface Campaign {
   sent_invites?: number;
   conversions?: number;
   conversion_rate?: number;
+  targetRoleName?: string;
+  targetRole?: string;
+  metrics?: {
+    totalInvites: number;
+    sentInvites: number;
+    conversions: number;
+    conversionRate: number;
+  };
+}
+
+export interface InviteCampaign extends Campaign {}
+
+export interface CreateCampaignParams {
+  name: string;
+  description?: string;
+  target_role_id?: string;
+  email_template: string;
+  whatsapp_template?: string;
+  channels: string[];
+  segmentation?: any;
+  follow_up_rules?: any;
 }
 
 export const useCampaignManagement = () => {
@@ -72,7 +93,16 @@ export const useCampaignManagement = () => {
           sent_invites: invitesData?.length || 0,
           conversions: invitesData?.filter(i => i.used_at).length || 0,
           conversion_rate: invitesData?.length ? 
-            ((invitesData.filter(i => i.used_at).length / invitesData.length) * 100) : 0
+            ((invitesData.filter(i => i.used_at).length / invitesData.length) * 100) : 0,
+          targetRoleName: 'Todos',
+          targetRole: 'Todos',
+          metrics: {
+            totalInvites: invitesData?.length || 0,
+            sentInvites: invitesData?.length || 0,
+            conversions: invitesData?.filter(i => i.used_at).length || 0,
+            conversionRate: invitesData?.length ? 
+              ((invitesData.filter(i => i.used_at).length / invitesData.length) * 100) : 0,
+          }
         }
       ];
 
@@ -153,6 +183,30 @@ export const useCampaignManagement = () => {
     }
   };
 
+  const updateCampaignStatus = async (campaignId: string, status: string) => {
+    return await updateCampaign(campaignId, { status });
+  };
+
+  const duplicateCampaign = async (campaignId: string) => {
+    try {
+      const originalCampaign = campaigns.find(c => c.id === campaignId);
+      if (!originalCampaign) return null;
+
+      const duplicatedCampaign = {
+        ...originalCampaign,
+        name: `${originalCampaign.name} (Cópia)`,
+        status: 'draft',
+        id: undefined
+      };
+
+      return await createCampaign(duplicatedCampaign);
+    } catch (error: any) {
+      console.error('Erro ao duplicar campanha:', error);
+      toast.error('Erro ao duplicar campanha');
+      return null;
+    }
+  };
+
   useEffect(() => {
     fetchCampaigns();
   }, []);
@@ -167,6 +221,8 @@ export const useCampaignManagement = () => {
     updateCampaign,
     deleteCampaign,
     launchCampaign,
+    updateCampaignStatus,
+    duplicateCampaign,
     fetchCampaigns
   };
 };

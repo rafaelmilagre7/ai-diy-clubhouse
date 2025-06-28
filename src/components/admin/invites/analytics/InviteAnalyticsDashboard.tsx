@@ -16,6 +16,41 @@ export const InviteAnalyticsDashboard = () => {
     fetchAnalytics();
   }, [fetchAnalytics]);
 
+  // Transform analytics data to match component expectations
+  const funnelData = {
+    sent: analytics.totalInvites,
+    delivered: analytics.totalInvites - analytics.expiredInvites,
+    opened: Math.floor(analytics.totalInvites * 0.7), // Mock data
+    clicked: Math.floor(analytics.totalInvites * 0.5), // Mock data
+    registered: analytics.usedInvites,
+    active: Math.floor(analytics.usedInvites * 0.8) // Mock data
+  };
+
+  const channelPerformanceData = {
+    email: {
+      conversionRate: analytics.channelPerformance.find(c => c.channel === 'email')?.conversionRate || 0,
+      avgAcceptanceTime: analytics.averageTimeToAccept,
+      cost: 2.5, // Mock data
+      roi: 15.2 // Mock data
+    },
+    whatsapp: {
+      conversionRate: analytics.channelPerformance.find(c => c.channel === 'whatsapp')?.conversionRate || 0,
+      avgAcceptanceTime: analytics.averageTimeToAccept * 0.8,
+      cost: 1.8, // Mock data
+      roi: 18.5 // Mock data
+    }
+  };
+
+  const timeAnalysisData = [9, 10, 11, 14, 15, 16]; // Mock optimal hours
+
+  const roleSegmentationData = analytics.roleBasedAnalytics.map(role => ({
+    roleId: `role-${role.roleName.toLowerCase()}`,
+    roleName: role.roleName,
+    conversionRate: role.conversionRate,
+    avgOnboardingTime: 4.5, // Mock data in hours
+    retentionRate: 85.2 // Mock data
+  }));
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -42,7 +77,7 @@ export const InviteAnalyticsDashboard = () => {
             <CardTitle>Funil de Conversão</CardTitle>
           </CardHeader>
           <CardContent>
-            <FunnelChart data={analytics.channelPerformance} />
+            <FunnelChart data={funnelData} />
           </CardContent>
         </Card>
 
@@ -51,7 +86,7 @@ export const InviteAnalyticsDashboard = () => {
             <CardTitle>Performance por Canal</CardTitle>
           </CardHeader>
           <CardContent>
-            <ConversionChart data={analytics.channelPerformance} />
+            <ConversionChart data={channelPerformanceData} />
           </CardContent>
         </Card>
 
@@ -60,7 +95,7 @@ export const InviteAnalyticsDashboard = () => {
             <CardTitle>Análise Temporal</CardTitle>
           </CardHeader>
           <CardContent>
-            <TimeAnalysisChart data={analytics.timeBasedAnalytics} />
+            <TimeAnalysisChart data={timeAnalysisData} />
           </CardContent>
         </Card>
 
@@ -69,7 +104,7 @@ export const InviteAnalyticsDashboard = () => {
             <CardTitle>Segmentação por Papel</CardTitle>
           </CardHeader>
           <CardContent>
-            <RoleSegmentationTable data={analytics.roleBasedAnalytics} />
+            <RoleSegmentationTable data={roleSegmentationData} />
           </CardContent>
         </Card>
       </div>

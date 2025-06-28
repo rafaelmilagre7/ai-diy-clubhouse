@@ -1,168 +1,127 @@
-import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { User, Session } from '@supabase/supabase-js';
-import { UserProfile } from '@/lib/supabase';
-import { supabase } from '@/integrations/supabase/client';
-import { useProductionLogger } from '@/hooks/useProductionLogger';
+
+import React, { createContext, useContext, useEffect, useState } from 'react';
+import { supabase } from '@/lib/supabase';
+import { User } from '@supabase/supabase-js';
+import { UserProfile, UserRole } from '@/lib/supabase';
+import { fetchUserProfile, createUserProfileIfNeeded } from './utils/profileUtils/userProfileFunctions';
+import { logger } from '@/utils/logger';
 
 interface SimpleAuthContextType {
   user: User | null;
-  session: Session | null;
   profile: UserProfile | null;
   isLoading: boolean;
-  error: string | null;
   isAdmin: boolean;
   isFormacao: boolean;
+  login: (email: string, password: string) => Promise<void>;
+  register: (email: string, password: string, userData?: any) => Promise<void>;
+  logout: () => Promise<void>;
   refreshProfile: () => Promise<void>;
-  signIn: (email: string, password: string) => Promise<{ error?: Error | null }>;
-  signOut: () => Promise<{ success: boolean; error?: Error | null }>;
 }
 
-const SimpleAuthContext = createContext<SimpleAuthContextType | undefined>(undefined);
+const SimpleAuthContext = createContext<SimpleAuthContextType>({
+  user: null,
+  profile: null,
+  isLoading: true,
+  isAdmin: false,
+  isFormacao: false,
+  login: async () => {},
+  register: async () => {},
+  logout: async () => {},
+  refreshProfile: async () => {},
+});
 
-interface SimpleAuthProviderProps {
-  children: ReactNode;
-}
+export const useSimpleAuth = () => {
+  const context = useContext(SimpleAuthContext);
+  if (!context) {
+    throw new Error('useSimpleAuth must be used within SimpleAuthProvider');
+  }
+  return context;
+};
 
-export const SimpleAuthProvider: React.FC<SimpleAuthProviderProps> = ({ children }) => {
+export const SimpleAuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [isFormacao, setIsFormacao] = useState(false);
-  
-  const { log, error: logError } = useProductionLogger({ component: 'SimpleAuthProvider' });
 
-  const fetchUserProfile = async (userId: string) => {
+  const refreshProfile = async () => {
+    if (!user) return;
+    
     try {
-      const { data: profileData, error: profileError } = await supabase
-        .from('profiles')
-        .select(`
-          *,
-          user_roles:user_roles(
-            id,
-            name,
-            description
-          )
-        `)
-        .eq('id', userId)
-        .single();
-
-      if (profileError) {
-        logError('Erro ao buscar perfil:', profileError);
-        return null;
-      }
-
-      return profileData;
+      const userProfile = await fetchUserProfile(user.id);
+      setProfile(userProfile);
     } catch (error) {
-      logError('Erro na busca do perfil:', error);
-      return null;
+      logger.error('Erro ao atualizar perfil:', error);
     }
   };
 
-  const updateUserState = async (newSession: Session | null) => {
-    setSession(newSession);
-    setUser(newSession?.user || null);
-
-    if (newSession?.user) {
-      const profileData = await fetchUserProfile(newSession.user.id);
+  const transformToUserProfile = (data: any): UserProfile => {
+    return {
+      id: data.id,
+      email: data.email || '',
+      name: data.name || '',
+      avatar_url: data.avatar_url,
+      company_name: data.company_name,
+      industry: data.industry,
+      role_id: data.role_id,
+      role: (data.role || 'member') as UserRole,
+      created_at: data.created_at,
+      updated_at: data.updated_at,
+      onboarding_completed: data.onboarding_completed || false,
+      onboarding_completed_at: data.onboarding_completed_at,
       
-      // Convert to UserProfile with safe type conversion
-      if (profileData) {
-        const userProfile: UserProfile = {
-          // Core fields
-          id: profileData.id,
-          email: profileData.email || '',
-          name: profileData.name || '',
-          avatar_url: profileData.avatar_url,
-          company_name: profileData.company_name,
-          industry: profileData.industry,
-          role_id: profileData.role_id,
-          role: profileData.role || 'member',
-          created_at: profileData.created_at,
-          updated_at: profileData.updated_at,
-          onboarding_completed: profileData.onboarding_completed || false,
-          onboarding_completed_at: profileData.onboarding_completed_at,
-          
-          // Additional required fields with defaults
-          birth_date: profileData.birth_date || null,
-          curiosity: profileData.curiosity || null,
-          business_sector: profileData.business_sector || null,
-          position: profileData.position || null,
-          company_size: profileData.company_size || null,
-          annual_revenue: profileData.annual_revenue || null,
-          primary_goal: profileData.primary_goal || null,
-          business_challenges: profileData.business_challenges || [],
-          ai_knowledge_level: profileData.ai_knowledge_level || null,
-          weekly_availability: profileData.weekly_availability || null,
-          networking_interests: profileData.networking_interests || [],
-          nps_score: profileData.nps_score || null,
-          country: profileData.country || null,
-          state: profileData.state || null,
-          city: profileData.city || null,
-          phone: profileData.phone || null,
-          phone_country_code: profileData.phone_country_code || '+55',
-          linkedin: profileData.linkedin || null,
-          instagram: profileData.instagram || null,
-          current_position: profileData.current_position || null,
-          company_website: profileData.company_website || null,
-          accepts_marketing: profileData.accepts_marketing || null,
-          accepts_case_study: profileData.accepts_case_study || null,
-          
-          // Role data
-          user_roles: profileData.user_roles ? {
-            id: profileData.user_roles.id,
-            name: profileData.user_roles.name,
-            description: profileData.user_roles.description
-          } : null
-        };
-        
-        setProfile(userProfile);
-        
-        const roleName = profileData.user_roles?.name;
-        setIsAdmin(roleName === 'admin');
-        setIsFormacao(roleName === 'formacao');
-        
-        log('Usuário autenticado:', { 
-          userId: newSession.user.id.substring(0, 8) + '***',
-          role: roleName 
-        });
-      }
-    } else {
-      setProfile(null);
-      setIsAdmin(false);
-      setIsFormacao(false);
-    }
+      // Required fields with defaults
+      birth_date: data.birth_date || null,
+      curiosity: data.curiosity || null,
+      business_sector: data.business_sector || null,
+      position: data.position || null,
+      company_size: data.company_size || null,
+      annual_revenue: data.annual_revenue || null,
+      primary_goal: data.primary_goal || null,
+      business_challenges: data.business_challenges || [],
+      ai_knowledge_level: data.ai_knowledge_level || null,
+      weekly_availability: data.weekly_availability || null,
+      networking_interests: data.networking_interests || [],
+      nps_score: data.nps_score || null,
+      country: data.country || null,
+      state: data.state || null,
+      city: data.city || null,
+      phone: data.phone || null,
+      phone_country_code: data.phone_country_code || '+55',
+      linkedin: data.linkedin || null,
+      instagram: data.instagram || null,
+      current_position: data.current_position || null,
+      company_website: data.company_website || null,
+      accepts_marketing: data.accepts_marketing || null,
+      accepts_case_study: data.accepts_case_study || null,
+      
+      user_roles: data.user_roles ? {
+        id: data.user_roles.id,
+        name: data.user_roles.name,
+        description: data.user_roles.description
+      } : null
+    };
   };
 
   useEffect(() => {
-    log('Inicializando SimpleAuthProvider...');
-    
-    // Configurar listener de mudanças de auth
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        log('Auth state changed:', event);
-        await updateUserState(session);
-        setIsLoading(false);
-        setError(null);
-      }
-    );
-
-    // Buscar sessão inicial
     const initializeAuth = async () => {
       try {
-        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        const { data: { session } } = await supabase.auth.getSession();
         
-        if (sessionError) {
-          logError('Erro ao obter sessão:', sessionError);
-          setError(sessionError.message);
-        } else {
-          await updateUserState(session);
+        if (session?.user) {
+          setUser(session.user);
+          
+          // Fetch or create profile
+          const userProfile = await createUserProfileIfNeeded(session.user.id, {
+            email: session.user.email,
+            name: session.user.user_metadata?.name || ''
+          });
+          
+          if (userProfile) {
+            setProfile(userProfile);
+          }
         }
-      } catch (error: any) {
-        logError('Erro na inicialização:', error);
-        setError(error.message || 'Erro na inicialização');
+      } catch (error) {
+        logger.error('Erro na inicialização da autenticação:', error);
       } finally {
         setIsLoading(false);
       }
@@ -170,100 +129,66 @@ export const SimpleAuthProvider: React.FC<SimpleAuthProviderProps> = ({ children
 
     initializeAuth();
 
-    return () => {
-      subscription.unsubscribe();
-    };
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'SIGNED_IN' && session?.user) {
+        setUser(session.user);
+        
+        const userProfile = await createUserProfileIfNeeded(session.user.id, {
+          email: session.user.email,
+          name: session.user.user_metadata?.name || ''
+        });
+        
+        if (userProfile) {
+          setProfile(userProfile);
+        }
+      } else if (event === 'SIGNED_OUT') {
+        setUser(null);
+        setProfile(null);
+      }
+      
+      setIsLoading(false);
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
-  const refreshProfile = async () => {
-    if (user) {
-      log('Atualizando perfil do usuário...');
-      await updateUserState(session);
-    }
+  const login = async (email: string, password: string) => {
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) throw error;
   };
 
-  const signIn = async (email: string, password: string) => {
-    try {
-      setIsLoading(true);
-      setError(null);
-
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password
-      });
-
-      if (error) {
-        setError(error.message);
-        return { error };
+  const register = async (email: string, password: string, userData?: any) => {
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: userData
       }
-
-      log('Login realizado com sucesso');
-      return { error: null };
-    } catch (error: any) {
-      const errorMessage = error.message || 'Erro no login';
-      setError(errorMessage);
-      logError('Erro no signIn:', error);
-      return { error };
-    } finally {
-      setIsLoading(false);
-    }
+    });
+    if (error) throw error;
   };
 
-  const signOut = async () => {
-    try {
-      setIsLoading(true);
-      
-      const { error } = await supabase.auth.signOut();
-      
-      if (error) {
-        logError('Erro no signOut:', error);
-        return { success: false, error };
-      }
-
-      // Limpar estado local
-      setUser(null);
-      setSession(null);
-      setProfile(null);
-      setIsAdmin(false);
-      setIsFormacao(false);
-      setError(null);
-
-      log('Logout realizado com sucesso');
-      return { success: true, error: null };
-    } catch (error: any) {
-      logError('Erro no signOut:', error);
-      return { success: false, error };
-    } finally {
-      setIsLoading(false);
-    }
+  const logout = async () => {
+    const { error } = await supabase.auth.signOut();
+    if (error) throw error;
   };
 
-  const contextValue: SimpleAuthContextType = {
-    user,
-    session,
-    profile,
-    isLoading,
-    error,
-    isAdmin,
-    isFormacao,
-    refreshProfile,
-    signIn,
-    signOut
-  };
+  const isAdmin = profile?.user_roles?.name === 'admin';
+  const isFormacao = profile?.user_roles?.name === 'formacao';
 
   return (
-    <SimpleAuthContext.Provider value={contextValue}>
+    <SimpleAuthContext.Provider value={{
+      user,
+      profile,
+      isLoading,
+      isAdmin,
+      isFormacao,
+      login,
+      register,
+      logout,
+      refreshProfile
+    }}>
       {children}
     </SimpleAuthContext.Provider>
   );
 };
-
-export const useSimpleAuth = (): SimpleAuthContextType => {
-  const context = useContext(SimpleAuthContext);
-  if (context === undefined) {
-    throw new Error('useSimpleAuth must be used within a SimpleAuthProvider');
-  }
-  return context;
-};
-
-export const useAuth = useSimpleAuth;
