@@ -7,7 +7,7 @@ import { SidebarProvider } from '@/components/ui/sidebar/provider';
 import { MemberSidebarContent } from '@/components/ui/sidebar/member-sidebar-content';
 import LoadingScreen from '@/components/common/LoadingScreen';
 
-export const MemberLayout = () => {
+export const MemberLayout = ({ children }: { children?: React.ReactNode }) => {
   const { user, isLoading, signOut } = useSimpleAuth();
 
   const handleSignOut = async () => {
@@ -26,7 +26,7 @@ export const MemberLayout = () => {
   }
 
   if (!user) {
-    return <Navigate to="/auth" replace />;
+    return <Navigate to="/login" replace />;
   }
 
   return (
@@ -38,10 +38,12 @@ export const MemberLayout = () => {
         
         <main className="flex-1 overflow-hidden">
           <div className="h-full overflow-y-auto">
-            <Outlet />
+            {children || <Outlet />}
           </div>
         </main>
       </div>
     </SidebarProvider>
   );
 };
+
+export default MemberLayout;

@@ -23,9 +23,9 @@ interface OptimizedDashboardLayoutProps {
 }
 
 export const OptimizedDashboardLayout: FC<OptimizedDashboardLayoutProps> = memo(({
-  active,
-  completed,
-  recommended,
+  active = [],
+  completed = [],
+  recommended = [],
   onSolutionClick,
   isLoading = false,
   performance
@@ -36,34 +36,27 @@ export const OptimizedDashboardLayout: FC<OptimizedDashboardLayoutProps> = memo(
     hasProfile: !!profile,
     profileName: profile?.name,
     isLoading,
-    activeCount: active?.length || 0,
-    completedCount: completed?.length || 0,
-    recommendedCount: recommended?.length || 0
+    activeCount: active.length,
+    completedCount: completed.length,
+    recommendedCount: recommended.length
   });
 
   const userName = useMemo(() => 
     profile?.name?.split(" ")[0] || "Membro"
   , [profile?.name]);
 
-  // Garantir arrays válidos
-  const { safeActive, safeCompleted, safeRecommended } = useMemo(() => ({
-    safeActive: Array.isArray(active) ? active : [],
-    safeCompleted: Array.isArray(completed) ? completed : [],
-    safeRecommended: Array.isArray(recommended) ? recommended : []
-  }), [active, completed, recommended]);
-
   const hasNoSolutions = useMemo(() => 
     !isLoading && 
-    safeActive.length === 0 && 
-    safeCompleted.length === 0 && 
-    safeRecommended.length === 0
-  , [isLoading, safeActive.length, safeCompleted.length, safeRecommended.length]);
+    active.length === 0 && 
+    completed.length === 0 && 
+    recommended.length === 0
+  , [isLoading, active.length, completed.length, recommended.length]);
 
   const kpiTotals = useMemo(() => ({
-    completed: safeCompleted.length,
-    inProgress: safeActive.length,
-    total: safeActive.length + safeCompleted.length + safeRecommended.length
-  }), [safeActive.length, safeCompleted.length, safeRecommended.length]);
+    completed: completed.length,
+    inProgress: active.length,
+    total: active.length + completed.length + recommended.length
+  }), [active.length, completed.length, recommended.length]);
 
   if (isLoading) {
     return (
@@ -97,6 +90,22 @@ export const OptimizedDashboardLayout: FC<OptimizedDashboardLayoutProps> = memo(
     );
   }
 
+  // Função auxiliar para renderizar seção de soluções
+  const renderSolutionSection = (solutions: Solution[], title: string, description: string, delay: string) => {
+    if (solutions.length === 0) return null;
+    
+    return (
+      <div className="animate-fade-in" style={{ animationDelay: delay }}>
+        <h2 className="text-2xl font-bold mb-2 text-white">{title}</h2>
+        <p className="text-neutral-400 mb-6">{description}</p>
+        <SolutionsGrid 
+          solutions={solutions} 
+          onSolutionClick={onSolutionClick} 
+        />
+      </div>
+    );
+  };
+
   return (
     <div className="space-y-8 md:pt-2 animate-fade-in">
       {/* Header */}
@@ -113,45 +122,27 @@ export const OptimizedDashboardLayout: FC<OptimizedDashboardLayoutProps> = memo(
       {/* Conteúdo */}
       <div className="space-y-10">
         {/* Soluções Ativas */}
-        {safeActive.length > 0 && (
-          <div className="animate-fade-in" style={{ animationDelay: '0.1s' }}>
-            <h2 className="text-2xl font-bold mb-2 text-white">Projetos em andamento</h2>
-            <p className="text-neutral-400 mb-6">
-              Continue implementando esses projetos em seu negócio
-            </p>
-            <SolutionsGrid 
-              solutions={safeActive} 
-              onSolutionClick={onSolutionClick} 
-            />
-          </div>
+        {renderSolutionSection(
+          active,
+          "Projetos em andamento",
+          "Continue implementando esses projetos em seu negócio",
+          "0.1s"
         )}
 
         {/* Soluções Completadas */}
-        {safeCompleted.length > 0 && (
-          <div className="animate-fade-in" style={{ animationDelay: '0.2s' }}>
-            <h2 className="text-2xl font-bold mb-2 text-white">Implementações concluídas</h2>
-            <p className="text-neutral-400 mb-6">
-              Projetos que você já implementou com sucesso
-            </p>
-            <SolutionsGrid 
-              solutions={safeCompleted} 
-              onSolutionClick={onSolutionClick} 
-            />
-          </div>
+        {renderSolutionSection(
+          completed,
+          "Implementações concluídas",
+          "Projetos que você já implementou com sucesso",
+          "0.2s"
         )}
 
         {/* Soluções Recomendadas */}
-        {safeRecommended.length > 0 && (
-          <div className="animate-fade-in" style={{ animationDelay: '0.3s' }}>
-            <h2 className="text-2xl font-bold mb-2 text-white">Soluções recomendadas</h2>
-            <p className="text-neutral-400 mb-6">
-              Soluções personalizadas para o seu negócio
-            </p>
-            <SolutionsGrid 
-              solutions={safeRecommended} 
-              onSolutionClick={onSolutionClick} 
-            />
-          </div>
+        {renderSolutionSection(
+          recommended,
+          "Soluções recomendadas",
+          "Soluções personalizadas para o seu negócio",
+          "0.3s"
         )}
       </div>
     </div>

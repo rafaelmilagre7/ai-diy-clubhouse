@@ -61,7 +61,7 @@ export const MemberSidebarNavItems: React.FC<MemberSidebarNavItemsProps> = ({ si
         />
         
         <MemberSidebarNavItem
-          to="/community"
+          to="/comunidade"
           icon={MessageSquare}
           label="Comunidade"
           sidebarOpen={sidebarOpen}
@@ -71,13 +71,6 @@ export const MemberSidebarNavItems: React.FC<MemberSidebarNavItemsProps> = ({ si
           to="/events"
           icon={Calendar}
           label="Eventos"
-          sidebarOpen={sidebarOpen}
-        />
-        
-        <MemberSidebarNavItem
-          to="/network"
-          icon={Users}
-          label="Networking"
           sidebarOpen={sidebarOpen}
         />
         
@@ -137,14 +130,6 @@ export const MemberSidebarNavItems: React.FC<MemberSidebarNavItemsProps> = ({ si
               to="/admin/communications"
               icon={Mail}
               label="Comunicações"
-              sidebarOpen={sidebarOpen}
-              adminOnly={true}
-            />
-            
-            <MemberSidebarNavItem
-              to="/admin/security"
-              icon={Database}
-              label="Segurança"
               sidebarOpen={sidebarOpen}
               adminOnly={true}
             />

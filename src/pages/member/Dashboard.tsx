@@ -6,27 +6,21 @@ import { OptimizedDashboardLayout } from "@/components/dashboard/OptimizedDashbo
 import { useEnhancedDashboard } from "@/hooks/dashboard/useEnhancedDashboard";
 import { useStableCallback } from "@/hooks/performance/useStableCallback";
 import { useSimpleAuth } from "@/contexts/auth/SimpleAuthProvider";
-import { useOnboardingGuard } from "@/hooks/auth/useOnboardingGuard";
+import LoadingScreen from "@/components/common/LoadingScreen";
 
 const Dashboard = () => {
   const navigate = useNavigate();
   const { user, profile, isLoading: authLoading } = useSimpleAuth();
   
-  // PROTEÇÃO CRÍTICA: Garantir onboarding obrigatório
-  const { isBlocked, isLoading: guardLoading } = useOnboardingGuard();
-  
   console.log('[DASHBOARD] Estado de autenticação:', {
     hasUser: !!user,
     hasProfile: !!profile,
     authLoading,
-    guardLoading,
-    isBlocked,
     profileName: profile?.name,
-    onboardingCompleted: profile?.onboarding_completed,
     userId: user?.id?.substring(0, 8)
   });
 
-  // Hook híbrido com otimização + fallback automático
+  // Hook com dados do dashboard
   const {
     active,
     completed,
@@ -56,53 +50,51 @@ const Dashboard = () => {
     console.warn('[DASHBOARD] Erro detectado:', error);
   }
 
-  // Se ainda está carregando auth ou guard, mostrar loading
-  if (authLoading || guardLoading) {
-    console.log('[DASHBOARD] Aguardando autenticação/validação...');
-    return (
-      <div className="space-y-8 md:pt-2">
-        <div className="text-center py-8">
-          <div className="text-white">Carregando dashboard...</div>
-        </div>
-      </div>
-    );
+  // Se ainda está carregando auth, mostrar loading
+  if (authLoading) {
+    console.log('[DASHBOARD] Aguardando autenticação...');
+    return <LoadingScreen message="Carregando dashboard..." />;
   }
 
-  // Se está bloqueado pelo onboarding guard, não renderizar
-  if (isBlocked) {
-    console.warn('[DASHBOARD] Acesso bloqueado - onboarding obrigatório');
-    return (
-      <div className="space-y-8 md:pt-2">
-        <div className="text-center py-8">
-          <div className="text-white">Redirecionando para onboarding...</div>
-        </div>
-      </div>
-    );
-  }
-
-  // Se não há usuário, não renderizar
+  // Se não há usuário, não renderizar (o layout já vai redirecionar)
   if (!user) {
     console.warn('[DASHBOARD] Usuário não autenticado');
+    return <LoadingScreen message="Redirecionando..." />;
+  }
+
+  // Se há erro crítico, mostrar mensagem de erro
+  if (error && !isLoading) {
     return (
       <div className="space-y-8 md:pt-2">
         <div className="text-center py-8">
-          <div className="text-white">Redirecionando...</div>
+          <div className="text-white mb-4">Ops! Algo deu errado</div>
+          <div className="text-neutral-400 mb-4">
+            Não foi possível carregar os dados do dashboard
+          </div>
+          <button 
+            onClick={() => window.location.reload()}
+            className="bg-viverblue hover:bg-viverblue/80 text-white px-4 py-2 rounded"
+          >
+            Tentar novamente
+          </button>
         </div>
       </div>
     );
   }
 
-  console.log('[DASHBOARD] Renderizando dashboard principal - onboarding validado');
+  console.log('[DASHBOARD] Renderizando dashboard principal');
 
   return (
-    <OptimizedDashboardLayout
-      active={active}
-      completed={completed}
-      recommended={recommended}
-      onSolutionClick={handleSolutionClick}
-      isLoading={isLoading}
-      performance={performance}
-    />
+    <div className="p-6">
+      <OptimizedDashboardLayout
+        active={active || []}
+        completed={completed || []}
+        recommended={recommended || []}
+        onSolutionClick={handleSolutionClick}
+        isLoading={isLoading}
+        performance={performance}
+      />
+    </div>
   );
 };
 
