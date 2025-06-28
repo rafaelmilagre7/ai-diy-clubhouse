@@ -51,10 +51,10 @@ export const useUserHealthDashboard = () => {
       setLoading(true);
       setError(null);
 
-      // Get user profiles data
+      // Get user profiles data - using correct column names
       const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
-        .select('id, full_name, email, created_at, updated_at');
+        .select('id, name, email, created_at, updated_at');
 
       if (profilesError) throw profilesError;
 
@@ -77,7 +77,7 @@ export const useUserHealthDashboard = () => {
       // Generate top users with simulated data
       const topUsers = (profiles || []).slice(0, 10).map(profile => ({
         user_id: profile.id,
-        name: profile.full_name || 'Unknown',
+        name: profile.name || 'Unknown',
         email: profile.email || '',
         health_score: 80 + Math.floor(Math.random() * 20),
         engagement_score: 70 + Math.floor(Math.random() * 30),
@@ -89,7 +89,7 @@ export const useUserHealthDashboard = () => {
       // Generate at-risk users
       const atRiskUsersList = (profiles || []).slice(0, 5).map(profile => ({
         user_id: profile.id,
-        name: profile.full_name || 'Unknown',
+        name: profile.name || 'Unknown',
         email: profile.email || '',
         risk_factors: ['Low engagement', 'Incomplete profile'],
         last_activity: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000).toISOString(),

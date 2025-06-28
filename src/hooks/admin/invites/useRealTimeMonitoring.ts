@@ -19,6 +19,8 @@ interface Alert {
   type: 'error' | 'warning' | 'info';
   message: string;
   timestamp: string;
+  acknowledged?: boolean;
+  title?: string;
 }
 
 export const useRealTimeMonitoring = () => {
