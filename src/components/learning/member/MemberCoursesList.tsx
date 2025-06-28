@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -75,7 +76,7 @@ const MemberCoursesList = () => {
             </div>
             <div className="flex items-center gap-2">
               <Clock className="w-4 h-4" />
-              <span>{course.estimated_hours} horas</span>
+              <span>0 horas</span>
             </div>
             <Button asChild>
               <Link to={`/formacao/cursos/${course.id}`}>Acessar curso</Link>

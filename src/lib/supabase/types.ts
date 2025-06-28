@@ -17,7 +17,9 @@ export type LearningResource = Database['public']['Tables']['learning_resources'
 export type LearningProgress = Database['public']['Tables']['learning_progress']['Row'];
 
 // Tipos específicos do sistema
-export type Solution = Database['public']['Tables']['solutions']['Row'];
+export type Solution = Database['public']['Tables']['solutions']['Row'] & {
+  tags?: string[];
+};
 export type UserProfile = Database['public']['Tables']['profiles']['Row'] & {
   user_roles?: {
     id: string;
@@ -40,7 +42,7 @@ export type Tool = Database['public']['Tables']['tools']['Row'] & {
 };
 export type SolutionResource = Database['public']['Tables']['solution_resources']['Row'];
 
-// Simplified types for compatibility
+// Simplified types for compatibility - Updated with all required properties
 export interface SimplifiedSolution {
   id: string;
   title: string;

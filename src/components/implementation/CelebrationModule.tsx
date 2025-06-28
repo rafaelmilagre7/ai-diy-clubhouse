@@ -41,7 +41,7 @@ export const CelebrationModule = ({ module, onComplete }: CelebrationModuleProps
 
   // Parse content safely
   const content = safeJsonParseObject(module.content, {});
-  const description = content.description || "Parabéns! Você concluiu esta implementação com sucesso.";
+  const description = content.description || module.description || "Parabéns! Você concluiu esta implementação com sucesso.";
 
   return (
     <div className="max-w-2xl mx-auto text-center space-y-8 py-8">

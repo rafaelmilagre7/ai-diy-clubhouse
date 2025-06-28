@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -15,7 +16,7 @@ interface CourseData {
   created_at: string;
   updated_at: string;
   cover_image_url: string;
-  instructor_id: string;
+  created_by: string;
   category: string;
   difficulty_level: string;
   estimated_hours: number;
@@ -49,7 +50,7 @@ const CursosList = () => {
         created_at: course.created_at,
         updated_at: course.updated_at,
         cover_image_url: course.cover_image_url || '',
-        instructor_id: course.created_by || '',
+        created_by: course.created_by || '',
         category: 'Geral',
         difficulty_level: 'Intermediário',
         estimated_hours: 0

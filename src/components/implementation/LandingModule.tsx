@@ -1,124 +1,67 @@
 
-import React from "react";
+import React, { useEffect } from "react";
 import { Module } from "@/lib/supabase";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Clock, Target, TrendingUp } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Play, CheckCircle } from "lucide-react";
+import { shouldAutoComplete } from "./content/ContentManager";
+import { useLogging } from "@/hooks/useLogging";
+import { safeJsonParseObject } from "@/lib/supabase/types";
 
 interface LandingModuleProps {
   module: Module;
-  solution: any;
+  onComplete: () => void;
 }
 
-const LandingModule = ({ module, solution }: LandingModuleProps) => {
-  const getCategoryColor = (category: string) => {
-    switch (category) {
-      case "Receita": return "bg-blue-500";
-      case "Operacional": return "bg-green-500";
-      case "Estratégia": return "bg-purple-500";
-      default: return "bg-gray-500";
-    }
-  };
+export const LandingModule = ({ module, onComplete }: LandingModuleProps) => {
+  const { log } = useLogging();
+  
+  useEffect(() => {
+    // Auto-complete landing module after viewing
+    if (shouldAutoComplete(module.type)) {
+      const timer = setTimeout(() => {
+        log("Auto-completing landing module", { module_id: module.id });
+        onComplete();
+      }, 1000);
 
-  const formatContent = (content: any): string => {
-    if (typeof content === 'string') {
-      return content;
+      return () => clearTimeout(timer);
     }
-    if (typeof content === 'object' && content !== null) {
-      return JSON.stringify(content);
-    }
-    return String(content || '');
-  };
+  }, [module, onComplete, log]);
+
+  // Parse content safely
+  const content = safeJsonParseObject(module.content, {});
+  const description = content.description || module.description || "Bem-vindo! Vamos começar esta jornada de implementação.";
 
   return (
-    <div className="space-y-6">
-      {/* Hero Section */}
-      <div className="relative overflow-hidden rounded-lg bg-gradient-to-r from-[#0ABAB5] to-blue-600 text-white">
-        <div className="absolute inset-0 bg-black/20" />
-        <div className="relative p-8 md:p-12">
-          <div className="max-w-3xl">
-            <Badge className={`${getCategoryColor(solution.category)} text-white mb-4`}>
-              {solution.category}
-            </Badge>
-            <h1 className="text-3xl md:text-4xl font-bold mb-4">
-              {solution.title}
-            </h1>
-            <p className="text-lg md:text-xl text-blue-50 mb-6">
-              {solution.description}
-            </p>
-            <div className="flex flex-wrap gap-4">
-              <div className="flex items-center gap-2">
-                <Clock className="h-5 w-5" />
-                <span>{solution.estimated_time_hours || 2}h de implementação</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Target className="h-5 w-5" />
-                <span>Nível {solution.difficulty || 'Médio'}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <TrendingUp className="h-5 w-5" />
-                <span>ROI: {solution.roi_potential || 'Alto'}</span>
-              </div>
-            </div>
-          </div>
+    <div className="max-w-2xl mx-auto text-center space-y-8 py-8">
+      <div className="space-y-4">
+        <div className="mx-auto w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center">
+          <Play className="w-12 h-12 text-blue-600" />
+        </div>
+        
+        <div className="space-y-2">
+          <h1 className="text-3xl font-bold text-gray-900">{module.title}</h1>
+          <div dangerouslySetInnerHTML={{ __html: String(description) }} className="text-lg text-gray-600" />
         </div>
       </div>
 
-      {/* Module Content */}
-      {module.content && (
-        <Card>
-          <CardHeader>
-            <CardTitle>{module.title}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div 
-              className="prose max-w-none"
-              dangerouslySetInnerHTML={{ 
-                __html: formatContent(module.content)
-              }}
-            />
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Key Benefits */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card>
-          <CardContent className="p-6 text-center">
-            <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <TrendingUp className="h-6 w-6 text-green-600" />
-            </div>
-            <h3 className="font-semibold mb-2">Resultados Rápidos</h3>
-            <p className="text-sm text-muted-foreground">
-              Veja impacto positivo em seu negócio em poucas semanas
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-6 text-center">
-            <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Target className="h-6 w-6 text-blue-600" />
-            </div>
-            <h3 className="font-semibold mb-2">Fácil Implementação</h3>
-            <p className="text-sm text-muted-foreground">
-              Passo a passo detalhado para implementar sem complicações
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-6 text-center">
-            <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Clock className="h-6 w-6 text-purple-600" />
-            </div>
-            <h3 className="font-semibold mb-2">Otimização Contínua</h3>
-            <p className="text-sm text-muted-foreground">
-              Aprenda a otimizar e melhorar constantemente os resultados
-            </p>
-          </CardContent>
-        </Card>
-      </div>
+      <Card>
+        <CardContent className="p-6 space-y-4">
+          <h3 className="text-xl font-semibold">Pronto para começar?</h3>
+          <p className="text-gray-600">
+            Esta implementação irá guiá-lo passo a passo através do processo de configuração e otimização.
+          </p>
+          
+          <Button 
+            onClick={onComplete} 
+            className="w-full bg-[#0ABAB5] hover:bg-[#0ABAB5]/90"
+            size="lg"
+          >
+            <CheckCircle className="mr-2 h-5 w-5" />
+            Iniciar Implementação
+          </Button>
+        </CardContent>
+      </Card>
     </div>
   );
 };
