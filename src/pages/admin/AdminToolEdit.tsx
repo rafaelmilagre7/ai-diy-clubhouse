@@ -18,7 +18,7 @@ const AdminToolEdit = () => {
   
   // Buscar dados da ferramenta se estiver editando
   const { 
-    data: toolData, 
+    tool: toolData, 
     isLoading: isLoadingTool, 
     error: toolError 
   } = useTool(isEditing ? id || null : null);

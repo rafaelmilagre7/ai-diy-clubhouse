@@ -32,7 +32,7 @@ export const useTool = (toolId?: string) => {
         created_at: data.created_at,
         updated_at: data.updated_at,
         official_url: data.url || '',
-        tags: [], // Default empty array since field doesn't exist in DB
+        tags: [],
         benefit_title: data.benefit_title || null,
         benefit_type: (data.benefit_type as any) || 'discount',
         benefit_description: data.benefit_description,
@@ -41,6 +41,8 @@ export const useTool = (toolId?: string) => {
         has_member_benefit: Boolean(data.benefit_title),
         features: data.features || [],
         pricing_info: data.pricing_info || null,
+        video_tutorials: [],
+        benefit_badge_url: null,
       };
     },
     enabled: !!toolId
