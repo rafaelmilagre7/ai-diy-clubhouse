@@ -1,4 +1,3 @@
-
 import { supabase } from '@/lib/supabase';
 import { UserProfile } from '@/lib/supabase';
 
@@ -22,7 +21,7 @@ export const fetchUserProfile = async (userId: string): Promise<UserProfile | nu
       return null;
     }
 
-    // Convert to UserProfile with proper type handling
+    // Convert to UserProfile with proper type handling and all required fields
     return {
       id: data.id,
       email: data.email || '',
@@ -61,6 +60,21 @@ export const fetchUserProfile = async (userId: string): Promise<UserProfile | nu
       company_website: data.company_website || null,
       accepts_marketing: data.accepts_marketing || null,
       accepts_case_study: data.accepts_case_study || null,
+      
+      // Additional required fields
+      has_implemented_ai: data.has_implemented_ai || null,
+      ai_tools_used: data.ai_tools_used || [],
+      daily_tools: data.daily_tools || [],
+      who_will_implement: data.who_will_implement || null,
+      implementation_timeline: data.implementation_timeline || null,
+      team_size: data.team_size || null,
+      main_challenges: data.main_challenges || [],
+      success_metrics: data.success_metrics || [],
+      learning_preferences: data.learning_preferences || [],
+      time_investment: data.time_investment || null,
+      budget_range: data.budget_range || null,
+      technical_level: data.technical_level || null,
+      support_needs: data.support_needs || [],
       
       user_roles: data.user_roles ? {
         id: data.user_roles.id,

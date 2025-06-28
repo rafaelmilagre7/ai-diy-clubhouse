@@ -15,6 +15,7 @@ interface SimpleAuthContextType {
   login: (email: string, password: string) => Promise<void>;
   register: (email: string, password: string, userData?: any) => Promise<void>;
   logout: () => Promise<void>;
+  signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
 }
 
@@ -27,6 +28,7 @@ const SimpleAuthContext = createContext<SimpleAuthContextType>({
   login: async () => {},
   register: async () => {},
   logout: async () => {},
+  signOut: async () => {},
   refreshProfile: async () => {},
 });
 
@@ -93,6 +95,21 @@ export const SimpleAuthProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       company_website: data.company_website || null,
       accepts_marketing: data.accepts_marketing || null,
       accepts_case_study: data.accepts_case_study || null,
+      
+      // Additional required fields
+      has_implemented_ai: data.has_implemented_ai || null,
+      ai_tools_used: data.ai_tools_used || [],
+      daily_tools: data.daily_tools || [],
+      who_will_implement: data.who_will_implement || null,
+      implementation_timeline: data.implementation_timeline || null,
+      team_size: data.team_size || null,
+      main_challenges: data.main_challenges || [],
+      success_metrics: data.success_metrics || [],
+      learning_preferences: data.learning_preferences || [],
+      time_investment: data.time_investment || null,
+      budget_range: data.budget_range || null,
+      technical_level: data.technical_level || null,
+      support_needs: data.support_needs || [],
       
       user_roles: data.user_roles ? {
         id: data.user_roles.id,
@@ -173,6 +190,8 @@ export const SimpleAuthProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     if (error) throw error;
   };
 
+  const signOut = logout; // Alias for logout
+
   const isAdmin = profile?.user_roles?.name === 'admin';
   const isFormacao = profile?.user_roles?.name === 'formacao';
 
@@ -186,6 +205,7 @@ export const SimpleAuthProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       login,
       register,
       logout,
+      signOut,
       refreshProfile
     }}>
       {children}
