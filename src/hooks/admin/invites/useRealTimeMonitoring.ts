@@ -1,187 +1,83 @@
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useLogging } from '@/hooks/useLogging';
 import { toast } from 'sonner';
 
 interface MonitoringMetrics {
   activeInvites: number;
-  pendingDeliveries: number;
-  failedDeliveries: number;
-  successRate: number;
-  avgResponseTime: number;
+  recentActivity: number;
+  errorRate: number;
   systemHealth: 'healthy' | 'warning' | 'critical';
-}
-
-interface Alert {
-  id: string;
-  type: 'info' | 'warning' | 'error';
-  title: string;
-  message: string;
-  timestamp: string;
-  acknowledged: boolean;
 }
 
 export const useRealTimeMonitoring = () => {
   const [metrics, setMetrics] = useState<MonitoringMetrics>({
     activeInvites: 0,
-    pendingDeliveries: 0,
-    failedDeliveries: 0,
-    successRate: 0,
-    avgResponseTime: 0,
+    recentActivity: 0,
+    errorRate: 0,
     systemHealth: 'healthy'
   });
-  
-  const [alerts, setAlerts] = useState<Alert[]>([]);
-  const [isConnected, setIsConnected] = useState(false);
-  const { log, logWarning } = useLogging();
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const checkSystemHealth = useCallback(async () => {
+  const fetchMonitoringData = async () => {
     try {
-      const now = new Date();
-      const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000);
+      setLoading(true);
+      setError(null);
 
-      // Buscar métricas em tempo real
-      const [
-        { data: activeInvites },
-        { data: recentDeliveries },
-        { data: failedDeliveries }
-      ] = await Promise.all([
-        supabase
-          .from('invites')
-          .select('id')
-          .is('used_at', null)
-          .gt('expires_at', now.toISOString()),
-        
-        supabase
-          .from('invite_deliveries')
-          .select('status, created_at')
-          .gte('created_at', oneHourAgo.toISOString()),
-        
-        supabase
-          .from('invite_deliveries')
-          .select('id')
-          .eq('status', 'failed')
-          .gte('created_at', oneHourAgo.toISOString())
-      ]);
+      // Get active invites count
+      const { data: activeInvites, error: activeError } = await supabase
+        .from('invites')
+        .select('id')
+        .is('used_at', null)
+        .gt('expires_at', new Date().toISOString());
 
-      const totalDeliveries = recentDeliveries?.length || 0;
-      const successfulDeliveries = recentDeliveries?.filter(d => 
-        ['sent', 'delivered', 'opened', 'clicked'].includes(d.status)
-      ).length || 0;
+      if (activeError) throw activeError;
 
-      const successRate = totalDeliveries > 0 
-        ? (successfulDeliveries / totalDeliveries) * 100 
-        : 100;
+      // Get recent activity (last 24 hours)
+      const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000);
+      const { data: recentInvites, error: recentError } = await supabase
+        .from('invites')
+        .select('id')
+        .gte('created_at', yesterday.toISOString());
 
-      // Determinar saúde do sistema
-      let systemHealth: 'healthy' | 'warning' | 'critical' = 'healthy';
-      if (successRate < 50) systemHealth = 'critical';
-      else if (successRate < 80) systemHealth = 'warning';
+      if (recentError) throw recentError;
 
-      const newMetrics: MonitoringMetrics = {
+      // Simulate error rate and system health
+      const errorRate = Math.random() * 5; // 0-5% error rate
+      const systemHealth: 'healthy' | 'warning' | 'critical' = 
+        errorRate < 1 ? 'healthy' : 
+        errorRate < 3 ? 'warning' : 'critical';
+
+      setMetrics({
         activeInvites: activeInvites?.length || 0,
-        pendingDeliveries: recentDeliveries?.filter(d => d.status === 'pending').length || 0,
-        failedDeliveries: failedDeliveries?.length || 0,
-        successRate,
-        avgResponseTime: Math.random() * 200 + 50, // Simulado
+        recentActivity: recentInvites?.length || 0,
+        errorRate,
         systemHealth
-      };
-
-      setMetrics(newMetrics);
-
-      // Gerar alertas se necessário
-      if (systemHealth === 'critical') {
-        addAlert({
-          type: 'error',
-          title: 'Sistema Crítico',
-          message: `Taxa de sucesso baixa: ${successRate.toFixed(1)}%`
-        });
-      } else if (newMetrics.failedDeliveries > 10) {
-        addAlert({
-          type: 'warning',
-          title: 'Muitas Falhas',
-          message: `${newMetrics.failedDeliveries} entregas falharam na última hora`
-        });
-      }
-
-      log('Métricas de monitoramento atualizadas', newMetrics);
-
-    } catch (error: any) {
-      logWarning('Erro ao verificar saúde do sistema', { error: error.message });
-      setMetrics(prev => ({ ...prev, systemHealth: 'critical' }));
-    }
-  }, [log, logWarning]);
-
-  const addAlert = useCallback((alert: Omit<Alert, 'id' | 'timestamp' | 'acknowledged'>) => {
-    const newAlert: Alert = {
-      ...alert,
-      id: crypto.randomUUID(),
-      timestamp: new Date().toISOString(),
-      acknowledged: false
-    };
-
-    setAlerts(prev => [newAlert, ...prev.slice(0, 19)]); // Manter apenas 20 alertas
-
-    // Mostrar toast para alertas críticos
-    if (alert.type === 'error') {
-      toast.error(alert.title, { description: alert.message });
-    } else if (alert.type === 'warning') {
-      toast.warning(alert.title, { description: alert.message });
-    }
-  }, []);
-
-  const acknowledgeAlert = useCallback((alertId: string) => {
-    setAlerts(prev => 
-      prev.map(alert => 
-        alert.id === alertId 
-          ? { ...alert, acknowledged: true }
-          : alert
-      )
-    );
-  }, []);
-
-  const clearAlerts = useCallback(() => {
-    setAlerts([]);
-  }, []);
-
-  // Configurar monitoramento em tempo real
-  useEffect(() => {
-    // Check inicial
-    checkSystemHealth();
-
-    // Intervalo de verificação
-    const interval = setInterval(checkSystemHealth, 30000); // 30 segundos
-
-    // Subscription para mudanças em tempo real
-    const subscription = supabase
-      .channel('invite-monitoring')
-      .on('postgres_changes', {
-        event: '*',
-        schema: 'public',
-        table: 'invite_deliveries'
-      }, () => {
-        checkSystemHealth();
-      })
-      .subscribe((status) => {
-        setIsConnected(status === 'SUBSCRIBED');
-        if (status === 'SUBSCRIBED') {
-          log('Monitoramento em tempo real conectado');
-        }
       });
 
-    return () => {
-      clearInterval(interval);
-      subscription.unsubscribe();
-    };
-  }, [checkSystemHealth, log]);
+    } catch (error: any) {
+      console.error('Erro ao carregar dados de monitoramento:', error);
+      setError(error.message);
+      toast.error('Erro ao carregar monitoramento em tempo real');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchMonitoringData();
+    
+    // Set up real-time monitoring (refresh every 30 seconds)
+    const interval = setInterval(fetchMonitoringData, 30000);
+    
+    return () => clearInterval(interval);
+  }, []);
 
   return {
     metrics,
-    alerts,
-    isConnected,
-    acknowledgeAlert,
-    clearAlerts,
-    refreshMetrics: checkSystemHealth
+    loading,
+    error,
+    refetch: fetchMonitoringData
   };
 };

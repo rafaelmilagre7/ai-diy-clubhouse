@@ -23,7 +23,6 @@ export const useInvitesList = () => {
           used_at,
           created_at,
           created_by,
-          whatsapp_number,
           user_roles:role_id(id, name, description)
         `)
         .order('created_at', { ascending: false });
@@ -40,10 +39,10 @@ export const useInvitesList = () => {
         used_at: invite.used_at,
         created_at: invite.created_at,
         created_by: invite.created_by,
-        whatsapp_number: invite.whatsapp_number,
-        notes: '', // Default empty since column doesn't exist
-        last_sent_at: null, // Default null since column doesn't exist
-        send_attempts: 0, // Default 0 since column doesn't exist
+        whatsapp_number: null, // Not available in current schema
+        notes: null, // Not available in current schema
+        last_sent_at: null, // Not available in current schema
+        send_attempts: 0, // Not available in current schema
         role: invite.user_roles || { id: invite.role_id, name: 'Unknown', description: '' },
         user_roles: invite.user_roles || { id: invite.role_id, name: 'Unknown', description: '' }
       }));

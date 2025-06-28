@@ -42,7 +42,7 @@ export const useInviteAudit = (timeRange: string = '30d') => {
       const daysBack = timeRange === '7d' ? 7 : timeRange === '30d' ? 30 : 90;
       const startDate = new Date(now.getTime() - (daysBack * 24 * 60 * 60 * 1000));
 
-      // Query audit_logs table for invite-related actions
+      // Query audit_logs table for invite-related actions using correct column names
       const { data: auditLogs, error } = await supabase
         .from('audit_logs')
         .select('*')
@@ -75,7 +75,7 @@ export const useInviteAudit = (timeRange: string = '30d') => {
         const dayEnd = new Date(date.setHours(23, 59, 59, 999));
         
         const dayActions = logs.filter(log => {
-          const logDate = new Date(log.timestamp);
+          const logDate = new Date(log.timestamp || log.created_at);
           return logDate >= dayStart && logDate <= dayEnd;
         }).length;
         
@@ -88,11 +88,11 @@ export const useInviteAudit = (timeRange: string = '30d') => {
       // Map recent actions using correct column names
       const recentActions: InviteAuditLog[] = logs.slice(0, 20).map(log => ({
         id: log.id,
-        invite_id: log.resource_id || '',
+        invite_id: log.resource_id || log.id,
         action_type: log.action || 'unknown',
         user_id: log.user_id || '',
-        timestamp: log.timestamp,
-        details: log.details || {}
+        timestamp: log.timestamp || log.created_at,
+        details: log.event_type === 'invite_action' ? { event_type: log.event_type } : {}
       }));
 
       setMetrics({
