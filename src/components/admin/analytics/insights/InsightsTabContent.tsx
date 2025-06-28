@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { TrendingUp, Users, Target, Zap } from 'lucide-react';
@@ -38,7 +37,7 @@ export const InsightsTabContent: React.FC<InsightsTabContentProps> = ({ timeRang
       color: "text-orange-500"
     }
   ];
-
+  
   return (
     <div className="space-y-6">
       <div className="text-center">

@@ -1,18 +1,21 @@
 
-import { UserProfile } from '@/types/userProfile';
+import { UserProfile } from './index';
 
-export const getUserRoleName = (profile: UserProfile | null | undefined): string | null => {
-  if (!profile) return null;
+/**
+ * Get the role name from a user profile
+ */
+export function getUserRoleName(profile: UserProfile): string {
+  if (!profile) return '';
   
-  // Primeiro, tentar user_roles.name
-  if (profile.user_roles?.name) {
-    return profile.user_roles.name;
+  // Check if user_roles exists and has a name property
+  if (profile.user_roles && typeof profile.user_roles === 'object' && 'name' in profile.user_roles) {
+    return (profile.user_roles as any).name || '';
   }
   
-  // Fallback para role diretamente
+  // Fallback to role field if it exists
   if (profile.role) {
     return profile.role;
   }
   
-  return null;
-};
+  return '';
+}

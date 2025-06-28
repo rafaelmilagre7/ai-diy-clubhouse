@@ -52,8 +52,8 @@ export type NotificationPreferences = Database['public']['Tables']['notification
 export * from './database.types';
 export * from './events';
 
-// Função utilitária movida para arquivo separado
-export { getUserRoleName } from './getUserroleName';
+// Função utilitária
+export { getUserRoleName } from './getUserRoleName';
 
 // Utilitário para type casting seguro
 export const safeSupabaseQuery = <T = any>(query: Promise<any>): Promise<{ data: T | null; error: any }> => {

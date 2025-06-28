@@ -4,6 +4,7 @@ import { Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useInvites } from '@/hooks/admin/useInvites';
 import { useRoles } from '@/hooks/admin/useRoles';
+import { useInviteResend } from '@/hooks/admin/invites/useInviteResend';
 import { toast } from 'sonner';
 
 // Componentes
@@ -25,13 +26,17 @@ const InvitesManagement = () => {
     loading, 
     createInvite,
     deleteInvite,
-    resendInvite,
     isCreating,
     isDeleting,
-    isSending,
-    isInviteResending,
     fetchInvites
   } = useInvites();
+
+  const { 
+    resendInvite, 
+    isResending, 
+    isInviteResending,
+    isSending 
+  } = useInviteResend();
 
   const { roles } = useRoles();
 

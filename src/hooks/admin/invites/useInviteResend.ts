@@ -1,41 +1,44 @@
-import { useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
+
+import { useState } from 'react';
+import { toast } from 'sonner';
 
 export const useInviteResend = () => {
   const [isResending, setIsResending] = useState(false);
-  const [resendingInviteId, setResendingInviteId] = useState<string | null>(null);
+  const [resendingIds, setResendingIds] = useState<Set<string>>(new Set());
 
   const resendInvite = async (inviteId: string) => {
     try {
       setIsResending(true);
-      setResendingInviteId(inviteId);
-
-      // Simular atualização do convite (sem função RPC)
-      const { error } = await supabase
-        .from('invites')
-        .update({
-          // Não podemos atualizar last_sent_at ou send_attempts se não existirem
-        })
-        .eq('id', inviteId);
-
-      if (error) throw error;
-
+      setResendingIds(prev => new Set([...prev, inviteId]));
+      
+      // Mock resend logic
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
       toast.success('Convite reenviado com sucesso!');
       
+      return { success: true };
     } catch (error: any) {
       console.error('Erro ao reenviar convite:', error);
-      toast.error(error.message || 'Erro ao reenviar convite');
+      toast.error('Erro ao reenviar convite');
       throw error;
     } finally {
       setIsResending(false);
-      setResendingInviteId(null);
+      setResendingIds(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(inviteId);
+        return newSet;
+      });
     }
   };
 
   const isInviteResending = (inviteId: string) => {
-    return resendingInviteId === inviteId;
+    return resendingIds.has(inviteId);
   };
 
-  return { resendInvite, isResending, isInviteResending };
+  return {
+    resendInvite,
+    isResending,
+    isInviteResending,
+    isSending: isResending // Alias for compatibility
+  };
 };

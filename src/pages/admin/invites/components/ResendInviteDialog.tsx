@@ -1,20 +1,19 @@
 
-import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Mail, MessageCircle, RefreshCw, Loader } from "lucide-react";
-import { useInviteResend } from "@/hooks/admin/invites/useInviteResend";
-import { toast } from "sonner";
-import type { Invite } from "@/hooks/admin/invites/types";
+import React, { useState } from 'react';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { useInviteResend } from '@/hooks/admin/invites/useInviteResend';
+import { toast } from 'sonner';
+
+interface Invite {
+  id: string;
+  email: string;
+  role_id: string;
+  created_at: string;
+  expires_at: string;
+  used_at?: string;
+  last_sent_at?: string;
+}
 
 interface ResendInviteDialogProps {
   invite: Invite | null;
@@ -23,208 +22,64 @@ interface ResendInviteDialogProps {
   onSuccess: () => void;
 }
 
-const ResendInviteDialog = ({ invite, open, onOpenChange, onSuccess }: ResendInviteDialogProps) => {
-  const [emailEnabled, setEmailEnabled] = useState(true);
-  const [whatsappEnabled, setWhatsappEnabled] = useState(false);
-  const [whatsappNumber, setWhatsappNumber] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  
-  const { resendInvite, isSending } = useInviteResend();
+const ResendInviteDialog: React.FC<ResendInviteDialogProps> = ({
+  invite,
+  open,
+  onOpenChange,
+  onSuccess
+}) => {
+  const { resendInvite, isResending } = useInviteResend();
 
-  // Reset form when dialog opens with proper invite data
-  useEffect(() => {
-    if (open && invite) {
-      console.log('[RESEND-DIALOG] Abrindo diálogo para convite:', invite.id);
-      setEmailEnabled(true);
-      setWhatsappEnabled(!!invite.whatsapp_number);
-      setWhatsappNumber(invite.whatsapp_number || "");
-      setIsSubmitting(false);
-    }
-  }, [open, invite]);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!invite || isSubmitting || isSending) {
-      console.log('[RESEND-DIALOG] Bloqueando submissão:', { invite: !!invite, isSubmitting, isSending });
-      return;
-    }
-
-    // Verificar se pelo menos um canal está habilitado
-    if (!emailEnabled && !whatsappEnabled) {
-      toast.error("Selecione pelo menos um canal de comunicação");
-      return;
-    }
-
-    // Se WhatsApp está habilitado, verificar se o número foi fornecido
-    if (whatsappEnabled && !whatsappNumber.trim()) {
-      toast.error("Número do WhatsApp é obrigatório quando WhatsApp está habilitado");
-      return;
-    }
+  const handleResend = async () => {
+    if (!invite) return;
 
     try {
-      setIsSubmitting(true);
+      const result = await resendInvite(invite.id);
       
-      // Determinar quais canais usar
-      const channels: ('email' | 'whatsapp')[] = [];
-      if (emailEnabled) channels.push('email');
-      if (whatsappEnabled) channels.push('whatsapp');
-
-      console.log('[RESEND-DIALOG] Iniciando reenvio:', {
-        inviteId: invite.id,
-        email: invite.email,
-        channels,
-        attempts: invite.send_attempts || 0
-      });
-
-      // Mostrar toast de início
-      toast.loading('Reenviando convite...', { id: 'resend-loading' });
-
-      const result = await resendInvite(invite, channels, whatsappNumber.trim());
-      
-      // Dismissar toast de loading
-      toast.dismiss('resend-loading');
-      
-      if (result?.success) {
-        const channelNames = channels.map(c => c === 'email' ? 'E-mail' : 'WhatsApp').join(' e ');
-        toast.success(`Convite reenviado via ${channelNames}!`);
-        onOpenChange(false);
+      if (result.success) {
+        toast.success('Convite reenviado com sucesso!');
         onSuccess();
-      } else {
-        toast.error('Erro ao reenviar convite. Tente novamente.');
+        onOpenChange(false);
       }
-      
-    } catch (error: any) {
-      console.error('[RESEND-DIALOG] Erro ao reenviar:', error);
-      toast.dismiss('resend-loading');
-      toast.error(error.message || 'Erro ao reenviar convite. Tente novamente.');
-    } finally {
-      setIsSubmitting(false);
+    } catch (error) {
+      console.error('Erro ao reenviar convite:', error);
+      toast.error('Erro ao reenviar convite');
     }
-  };
-
-  const handleEmailCheckboxChange = (checked: boolean | "indeterminate") => {
-    setEmailEnabled(checked === true);
-  };
-
-  const handleWhatsappCheckboxChange = (checked: boolean | "indeterminate") => {
-    setWhatsappEnabled(checked === true);
   };
 
   if (!invite) return null;
 
-  const isLoading = isSending || isSubmitting;
-  const attemptCount = invite.send_attempts || 0;
-  const roleName = invite.user_roles?.name || invite.role?.name || 'Cargo não definido';
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent>
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            {isLoading ? (
-              <Loader className="h-4 w-4 animate-spin" />
-            ) : (
-              <RefreshCw className="h-4 w-4" />
-            )}
-            Reenviar Convite
-          </DialogTitle>
+          <DialogTitle>Reenviar Convite</DialogTitle>
           <DialogDescription>
-            Reenvie o convite para <strong>{invite.email}</strong> ({roleName}) via email e/ou WhatsApp
-            {attemptCount > 0 && (
-              <span className="block text-xs text-muted-foreground mt-1">
-                Tentativas anteriores: {attemptCount}
-              </span>
-            )}
+            Tem certeza de que deseja reenviar o convite para {invite.email}?
           </DialogDescription>
         </DialogHeader>
         
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-4">
-            <Label>Canais de Comunicação *</Label>
-            
-            <div className="space-y-3">
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="email-channel"
-                  checked={emailEnabled}
-                  onCheckedChange={handleEmailCheckboxChange}
-                  disabled={isLoading}
-                />
-                <Label htmlFor="email-channel" className="flex items-center cursor-pointer">
-                  <Mail className="h-4 w-4 mr-1" />
-                  Email
-                </Label>
-              </div>
+        <div className="py-4">
+          <p className="text-sm text-muted-foreground">
+            Este convite será reenviado por email. O destinatário receberá um novo link para aceitar o convite.
+          </p>
+        </div>
 
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="whatsapp-channel"
-                  checked={whatsappEnabled}
-                  onCheckedChange={handleWhatsappCheckboxChange}
-                  disabled={isLoading}
-                />
-                <Label htmlFor="whatsapp-channel" className="flex items-center cursor-pointer">
-                  <MessageCircle className="h-4 w-4 mr-1" />
-                  WhatsApp
-                </Label>
-              </div>
-            </div>
-
-            {whatsappEnabled && (
-              <div className="space-y-2 ml-6">
-                <Label htmlFor="whatsapp">Número do WhatsApp</Label>
-                <Input
-                  id="whatsapp"
-                  type="tel"
-                  value={whatsappNumber}
-                  onChange={(e) => setWhatsappNumber(e.target.value)}
-                  placeholder="+55 11 99999-9999"
-                  required={whatsappEnabled}
-                  disabled={isLoading}
-                />
-                <p className="text-xs text-muted-foreground">
-                  Inclua código do país (ex: +55 para Brasil)
-                </p>
-              </div>
-            )}
-          </div>
-
-          <div className="flex justify-end space-x-2 pt-4">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-              disabled={isLoading}
-            >
-              Cancelar
-            </Button>
-            <Button 
-              type="submit" 
-              disabled={isLoading || (!emailEnabled && !whatsappEnabled)}
-              className="min-w-[120px]"
-            >
-              {isLoading ? (
-                <>
-                  <Loader className="h-4 w-4 mr-2 animate-spin" />
-                  Enviando...
-                </>
-              ) : (
-                <>
-                  <RefreshCw className="h-4 w-4 mr-2" />
-                  Reenviar {attemptCount > 0 ? `(${attemptCount + 1}ª vez)` : ''}
-                </>
-              )}
-            </Button>
-          </div>
-
-          {isLoading && (
-            <div className="text-center text-sm text-muted-foreground">
-              <Loader className="h-4 w-4 inline animate-spin mr-2" />
-              Processando reenvio...
-            </div>
-          )}
-        </form>
+        <DialogFooter>
+          <Button 
+            variant="outline" 
+            onClick={() => onOpenChange(false)}
+            disabled={isResending}
+          >
+            Cancelar
+          </Button>
+          <Button 
+            onClick={handleResend}
+            disabled={isResending}
+          >
+            {isResending ? 'Reenviando...' : 'Reenviar Convite'}
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

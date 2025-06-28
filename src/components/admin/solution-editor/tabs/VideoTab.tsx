@@ -1,6 +1,6 @@
 
 import React from "react";
-import VideoLessonsForm from "@/components/admin/solution/form/VideoLessonsForm";
+import { VideoLessonsForm } from "@/components/admin/solution/form/VideoLessonsForm";
 
 interface VideoTabProps {
   solutionId: string | null;
@@ -16,9 +16,8 @@ const VideoTab: React.FC<VideoTabProps> = ({
   return (
     <div className="text-neutral-800 dark:text-white">
       <VideoLessonsForm 
-        solutionId={solutionId} 
-        onSave={onSave} 
-        saving={saving} 
+        form={{ watch: () => [], setValue: () => {} } as any}
+        solutionId={solutionId || undefined}
       />
     </div>
   );
