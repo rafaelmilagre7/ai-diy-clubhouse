@@ -1,7 +1,34 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
-import { Topic } from '@/types/forumTypes';
+
+export interface Topic {
+  id: string;
+  title: string;
+  content: string;
+  category_id: string;
+  user_id: string;
+  view_count: number;
+  reply_count: number;
+  is_pinned: boolean;
+  is_locked: boolean;
+  is_solved?: boolean;
+  created_at: string;
+  updated_at: string;
+  last_activity_at: string;
+  profiles?: {
+    id: string;
+    name: string;
+    avatar_url?: string;
+  };
+  category?: {
+    id: string;
+    name: string;
+    slug: string;
+  };
+}
+
+export type TopicFilterType = 'all' | 'popular' | 'recent' | 'solved' | 'unsolved';
 
 export const useForumTopics = (categoryId?: string, limit = 20) => {
   return useQuery({
@@ -15,7 +42,7 @@ export const useForumTopics = (categoryId?: string, limit = 20) => {
           .select(`
             *,
             profiles!forum_topics_user_id_fkey(id, name, avatar_url),
-            category:forum_categories!forum_topics_category_id_fkey(id, name, slug)
+            forum_categories!forum_topics_category_id_fkey(id, name, slug)
           `)
           .order('is_pinned', { ascending: false })
           .order('last_activity_at', { ascending: false })
@@ -32,8 +59,27 @@ export const useForumTopics = (categoryId?: string, limit = 20) => {
           throw error;
         }
 
-        console.log(`✅ ${data?.length || 0} tópicos carregados`);
-        return data || [];
+        // Map the data to match our Topic interface
+        const topics: Topic[] = (data || []).map((item: any) => ({
+          id: item.id,
+          title: item.title,
+          content: item.content,
+          category_id: item.category_id,
+          user_id: item.user_id,
+          view_count: item.view_count || 0,
+          reply_count: item.reply_count || 0,
+          is_pinned: item.is_pinned || false,
+          is_locked: item.is_locked || false,
+          is_solved: item.is_solved || false,
+          created_at: item.created_at,
+          updated_at: item.updated_at,
+          last_activity_at: item.last_activity_at,
+          profiles: item.profiles,
+          category: item.forum_categories
+        }));
+
+        console.log(`✅ ${topics.length} tópicos carregados`);
+        return topics;
 
       } catch (error) {
         console.error('Erro na consulta de tópicos:', error);
@@ -59,7 +105,7 @@ export const useForumTopic = (topicId: string) => {
           .select(`
             *,
             profiles!forum_topics_user_id_fkey(id, name, avatar_url),
-            category:forum_categories!forum_topics_category_id_fkey(id, name, slug)
+            forum_categories!forum_topics_category_id_fkey(id, name, slug)
           `)
           .eq('id', topicId)
           .single();
@@ -69,11 +115,30 @@ export const useForumTopic = (topicId: string) => {
           throw error;
         }
 
+        // Map the data to match our Topic interface
+        const topic: Topic = {
+          id: data.id,
+          title: data.title,
+          content: data.content,
+          category_id: data.category_id,
+          user_id: data.user_id,
+          view_count: data.view_count || 0,
+          reply_count: data.reply_count || 0,
+          is_pinned: data.is_pinned || false,
+          is_locked: data.is_locked || false,
+          is_solved: data.is_solved || false,
+          created_at: data.created_at,
+          updated_at: data.updated_at,
+          last_activity_at: data.last_activity_at,
+          profiles: data.profiles,
+          category: data.forum_categories
+        };
+
         // Increment view count
         await supabase.rpc('increment_topic_views', { topic_id: topicId });
 
         console.log('✅ Tópico carregado com sucesso');
-        return data;
+        return topic;
 
       } catch (error) {
         console.error('Erro na consulta do tópico:', error);

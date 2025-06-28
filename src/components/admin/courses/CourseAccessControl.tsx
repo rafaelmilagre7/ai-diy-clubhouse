@@ -25,11 +25,13 @@ export const CourseAccessControl = ({ courseId }: CourseAccessControlProps) => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('user_roles')
-        .select('role')
-        .group('role');
+        .select('role');
       
       if (error) throw error;
-      return data?.map(r => r.role) || [];
+      
+      // Extract unique roles
+      const uniqueRoles = [...new Set((data || []).map((r: any) => r.role))];
+      return uniqueRoles;
     }
   });
 

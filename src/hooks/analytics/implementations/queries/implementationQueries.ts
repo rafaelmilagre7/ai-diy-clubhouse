@@ -68,3 +68,29 @@ export const useImplementationQueries = () => {
     getImplementationTrends
   };
 };
+
+// Export individual query functions for backward compatibility
+export const fetchCompletionData = async () => {
+  const { data } = await supabase.from('solutions').select('*');
+  return data || [];
+};
+
+export const fetchDifficultyData = async () => {
+  const { data } = await supabase.from('solutions').select('*');
+  return data || [];
+};
+
+export const fetchTimeCompletionData = async () => {
+  const { data } = await supabase.from('analytics').select('*');
+  return data || [];
+};
+
+export const fetchModuleData = async () => {
+  const { data } = await supabase.from('modules').select('*');
+  return data || [];
+};
+
+export const fetchRecentImplementations = async () => {
+  const { data } = await supabase.from('solutions').select('*').limit(10);
+  return data || [];
+};

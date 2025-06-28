@@ -11,12 +11,13 @@ export const useFetchComments = (solutionId: string, moduleId: string) => {
       // Simulate API delay
       await new Promise(resolve => setTimeout(resolve, 300));
       
-      // Return mock comments
+      // Return mock comments with all required fields
       return [
         {
           id: '1',
           content: 'Comentário de exemplo para demonstração',
           user_id: 'user-1',
+          tool_id: solutionId, // Add required tool_id field
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
           likes_count: 0,

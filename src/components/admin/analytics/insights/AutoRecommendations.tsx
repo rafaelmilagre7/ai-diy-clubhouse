@@ -3,13 +3,37 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Lightbulb, TrendingUp, Users, Target, AlertTriangle, CheckCircle } from 'lucide-react';
-import { useAutoRecommendations } from '@/hooks/analytics/insights/useAutoRecommendations';
+import { Lightbulb, TrendingUp, AlertTriangle, Target } from 'lucide-react';
+import { useAutoRecommendations, AutoRecommendation } from '@/hooks/analytics/insights/useAutoRecommendations';
 
-export const AutoRecommendations = () => {
-  const { data, isLoading, error } = useAutoRecommendations();
+interface AutoRecommendationsProps {
+  timeRange?: string;
+}
+
+export const AutoRecommendations: React.FC<AutoRecommendationsProps> = ({ timeRange }) => {
+  const { data: recommendations = [], isLoading, error } = useAutoRecommendations();
+
+  const getPriorityIcon = (priority: string) => {
+    switch (priority) {
+      case 'high':
+        return <AlertTriangle className="h-4 w-4 text-red-500" />;
+      case 'medium':
+        return <TrendingUp className="h-4 w-4 text-yellow-500" />;
+      default:
+        return <Target className="h-4 w-4 text-blue-500" />;
+    }
+  };
+
+  const getPriorityColor = (priority: string) => {
+    switch (priority) {
+      case 'high':
+        return 'bg-red-100 text-red-800 border-red-200';
+      case 'medium':
+        return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+      default:
+        return 'bg-blue-100 text-blue-800 border-blue-200';
+    }
+  };
 
   if (isLoading) {
     return (
@@ -21,7 +45,7 @@ export const AutoRecommendations = () => {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
+          <div className="space-y-3">
             {[1, 2, 3].map((i) => (
               <div key={i} className="animate-pulse">
                 <div className="h-4 bg-muted rounded w-3/4 mb-2"></div>
@@ -34,7 +58,7 @@ export const AutoRecommendations = () => {
     );
   }
 
-  if (error || !data) {
+  if (error) {
     return (
       <Card>
         <CardHeader>
@@ -44,123 +68,83 @@ export const AutoRecommendations = () => {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <Alert>
-            <AlertTriangle className="h-4 w-4" />
-            <AlertDescription>
-              Erro ao carregar recomendações. Tente novamente mais tarde.
-            </AlertDescription>
-          </Alert>
+          <p className="text-muted-foreground">Erro ao carregar recomendações</p>
         </CardContent>
       </Card>
     );
   }
 
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case 'high': return 'destructive';
-      case 'medium': return 'default';
-      case 'low': return 'secondary';
-      default: return 'outline';
-    }
-  };
-
-  const getPriorityIcon = (priority: string) => {
-    switch (priority) {
-      case 'high': return AlertTriangle;
-      case 'medium': return TrendingUp;
-      case 'low': return Target;
-      default: return CheckCircle;
-    }
-  };
-
   return (
-    <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Lightbulb className="h-5 w-5" />
-            Recomendações Automáticas
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {data.recommendations.map((rec) => {
-              const PriorityIcon = getPriorityIcon(rec.priority);
-              
-              return (
-                <div key={rec.id} className="border rounded-lg p-4 space-y-3">
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-start gap-3 flex-1">
-                      <PriorityIcon className="h-5 w-5 mt-0.5 text-muted-foreground" />
-                      <div className="space-y-1">
-                        <h4 className="font-medium">{rec.title}</h4>
-                        <p className="text-sm text-muted-foreground">{rec.description}</p>
-                      </div>
-                    </div>
-                    <Badge variant={getPriorityColor(rec.priority)}>
-                      {rec.priority}
-                    </Badge>
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Lightbulb className="h-5 w-5" />
+          Recomendações Automáticas
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {recommendations.length === 0 ? (
+          <p className="text-muted-foreground text-center py-4">
+            Nenhuma recomendação disponível no momento
+          </p>
+        ) : (
+          recommendations.map((recommendation) => (
+            <div
+              key={recommendation.id}
+              className="border rounded-lg p-4 space-y-3"
+            >
+              <div className="flex items-start justify-between">
+                <div className="flex items-center gap-2">
+                  {getPriorityIcon(recommendation.priority)}
+                  <h4 className="font-medium">{recommendation.title}</h4>
+                </div>
+                <Badge className={getPriorityColor(recommendation.priority)}>
+                  {recommendation.priority}
+                </Badge>
+              </div>
+
+              <p className="text-sm text-muted-foreground">
+                {recommendation.description}
+              </p>
+
+              {recommendation.metrics && (
+                <div className="bg-muted/50 rounded p-3 text-sm">
+                  <div className="flex justify-between items-center">
+                    <span>Atual: {recommendation.metrics.current} {recommendation.metrics.unit}</span>
+                    <span>Meta: {recommendation.metrics.target} {recommendation.metrics.unit}</span>
                   </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <div className="text-sm font-medium mb-1">Impacto Estimado</div>
-                      <div className="flex items-center gap-2">
-                        <Progress value={Number(rec.impact) * 20} className="flex-1" />
-                        <span className="text-sm">{rec.impact}/5</span>
-                      </div>
-                    </div>
-                    <div>
-                      <div className="text-sm font-medium mb-1">Esforço Necessário</div>
-                      <div className="flex items-center gap-2">
-                        <Progress value={Number(rec.effort) * 20} className="flex-1" />
-                        <span className="text-sm">{rec.effort}/5</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {rec.metrics && (
-                    <div className="grid grid-cols-2 gap-4 pt-2 border-t">
-                      <div className="text-sm">
-                        <span className="text-muted-foreground">Atual: </span>
-                        <span className="font-medium">{rec.metrics.currentValue}</span>
-                      </div>
-                      <div className="text-sm">
-                        <span className="text-muted-foreground">Meta: </span>
-                        <span className="font-medium">{rec.metrics.targetValue}</span>
-                      </div>
-                      <div className="col-span-2 text-sm">
-                        <span className="text-muted-foreground">Melhoria esperada: </span>
-                        <span className="font-medium text-green-600">{rec.metrics.improvement}</span>
-                      </div>
-                    </div>
-                  )}
-
-                  {rec.actionItems && rec.actionItems.length > 0 && (
-                    <div className="space-y-2">
-                      <div className="text-sm font-medium">Ações Recomendadas:</div>
-                      <ul className="text-sm space-y-1">
-                        {rec.actionItems.map((action, index) => (
-                          <li key={index} className="flex items-start gap-2">
-                            <span className="text-muted-foreground">•</span>
-                            <span>{action}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-
-                  <div className="flex justify-end pt-2 border-t">
-                    <Button variant="outline" size="sm">
-                      Aplicar Recomendação
-                    </Button>
+                  <div className="text-green-600 font-medium">
+                    Melhoria esperada: {recommendation.metrics.improvement}
                   </div>
                 </div>
-              );
-            })}
-          </div>
-        </CardContent>
-      </Card>
-    </div>
+              )}
+
+              {recommendation.actionItems && recommendation.actionItems.length > 0 && (
+                <div className="space-y-2">
+                  <h5 className="text-sm font-medium">Ações recomendadas:</h5>
+                  <ul className="text-sm text-muted-foreground space-y-1">
+                    {recommendation.actionItems.map((action, index) => (
+                      <li key={index} className="flex items-start gap-2">
+                        <span className="text-primary">•</span>
+                        {action}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              <div className="flex items-center justify-between text-xs text-muted-foreground">
+                <span>Confiança: {Math.round(recommendation.confidence * 100)}%</span>
+                {recommendation.impact && recommendation.effort && (
+                  <span>
+                    Impacto: {recommendation.impact} | Esforço: {recommendation.effort}
+                  </span>
+                )}
+              </div>
+            </div>
+          ))
+        )}
+      </CardContent>
+    </Card>
   );
 };

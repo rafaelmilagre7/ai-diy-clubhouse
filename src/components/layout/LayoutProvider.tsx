@@ -1,66 +1,74 @@
 
-import { useLocation } from "react-router-dom";
-import { ReactNode, memo } from "react";
-import { useSimpleAuth } from "@/contexts/auth/SimpleAuthProvider";
-import LoadingScreen from "@/components/common/LoadingScreen";
-import { MemberLayout } from "./MemberLayout";
-import FormacaoLayout from "./formacao/FormacaoLayout";
-import { PageTransitionWithFallback } from "@/components/transitions/PageTransitionWithFallback";
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { useLocation } from 'react-router-dom';
+
+interface LayoutContextType {
+  sidebarOpen: boolean;
+  setSidebarOpen: (open: boolean) => void;
+  currentLayout: 'admin' | 'member' | 'formacao' | 'public';
+  isMobile: boolean;
+}
+
+const LayoutContext = createContext<LayoutContextType | undefined>(undefined);
+
+export const useLayout = () => {
+  const context = useContext(LayoutContext);
+  if (!context) {
+    throw new Error('useLayout must be used within a LayoutProvider');
+  }
+  return context;
+};
 
 interface LayoutProviderProps {
   children: ReactNode;
 }
 
-const LayoutProvider = memo(({ children }: LayoutProviderProps) => {
-  const { user, isFormacao, isAdmin, isLoading } = useSimpleAuth();
+export const LayoutProvider: React.FC<LayoutProviderProps> = ({ children }) => {
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   const location = useLocation();
 
-  const isFormacaoRoute = location.pathname.startsWith('/formacao');
+  // Determine current layout based on route
+  const getCurrentLayout = (): 'admin' | 'member' | 'formacao' | 'public' => {
+    if (location.pathname.startsWith('/admin')) return 'admin';
+    if (location.pathname.startsWith('/formacao')) return 'formacao';
+    if (location.pathname.startsWith('/dashboard') || 
+        location.pathname.startsWith('/solutions') ||
+        location.pathname.startsWith('/tools') ||
+        location.pathname.startsWith('/community')) return 'member';
+    return 'public';
+  };
 
-  console.log("[LAYOUT-PROVIDER] Estado:", {
-    hasUser: !!user,
-    isFormacao,
-    isAdmin,
-    isLoading,
-    currentPath: location.pathname,
-    isFormacaoRoute
-  });
+  const currentLayout = getCurrentLayout();
 
-  // Loading state
-  if (isLoading) {
-    return (
-      <PageTransitionWithFallback isVisible={true}>
-        <LoadingScreen message="Verificando credenciais..." showEmergencyButton={false} />
-      </PageTransitionWithFallback>
-    );
-  }
+  // Handle mobile detection
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
 
-  // No user after loading completes
-  if (!user) {
-    return (
-      <PageTransitionWithFallback isVisible={true}>
-        <LoadingScreen message="Redirecionando..." showEmergencyButton={false} />
-      </PageTransitionWithFallback>
-    );
-  }
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
-  // Choose layout based on current route
-  if (isFormacaoRoute && (isFormacao || isAdmin)) {
-    return (
-      <PageTransitionWithFallback isVisible={true}>
-        <FormacaoLayout>{children}</FormacaoLayout>
-      </PageTransitionWithFallback>
-    );
-  }
+  // Auto-close sidebar on mobile when route changes
+  useEffect(() => {
+    if (isMobile) {
+      setSidebarOpen(false);
+    }
+  }, [location.pathname, isMobile]);
 
-  // Default layout for members
+  const value: LayoutContextType = {
+    sidebarOpen,
+    setSidebarOpen,
+    currentLayout,
+    isMobile
+  };
+
   return (
-    <PageTransitionWithFallback isVisible={true}>
-      <MemberLayout>{children}</MemberLayout>
-    </PageTransitionWithFallback>
+    <LayoutContext.Provider value={value}>
+      {children}
+    </LayoutContext.Provider>
   );
-});
-
-LayoutProvider.displayName = 'LayoutProvider';
-
-export default LayoutProvider;
+};
