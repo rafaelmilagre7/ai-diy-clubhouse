@@ -13,7 +13,7 @@ interface NotificationPrefs {
   admin_communications_email: boolean;
 }
 
-const NotificationPreferences = () => {
+export const NotificationPreferences = () => {
   const { user } = useSimpleAuth();
   const [preferences, setPreferences] = useState<NotificationPrefs>({
     email_enabled: true,
@@ -145,4 +145,5 @@ const NotificationPreferences = () => {
   );
 };
 
+// Manter exportação default para compatibilidade
 export default NotificationPreferences;
