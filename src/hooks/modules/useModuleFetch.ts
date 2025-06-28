@@ -1,8 +1,11 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
+import { useState } from 'react';
 
-export const useModuleFetch = (moduleId: string) => {
+export const useModuleFetch = (moduleId: string | null) => {
+  const [modules, setModules] = useState([]);
+
   const { data: module, isLoading, error } = useQuery({
     queryKey: ['module', moduleId],
     queryFn: async () => {
@@ -22,6 +25,8 @@ export const useModuleFetch = (moduleId: string) => {
 
   return {
     module,
+    modules,
+    setModules,
     isLoading,
     error
   };

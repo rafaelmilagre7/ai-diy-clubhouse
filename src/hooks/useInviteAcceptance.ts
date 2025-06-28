@@ -32,8 +32,20 @@ export const useInviteAcceptance = () => {
     }
   };
 
+  const acceptInviteAndCompleteOnboarding = async (token: string, onboardingData: any) => {
+    console.log('Simulando aceitação de convite com onboarding:', token, onboardingData);
+    
+    // Mock implementation
+    return {
+      success: true,
+      message: 'Convite aceito e onboarding concluído!',
+      user_id: 'mock-user-id'
+    };
+  };
+
   return {
     acceptInvite,
+    acceptInviteAndCompleteOnboarding,
     isLoading
   };
 };

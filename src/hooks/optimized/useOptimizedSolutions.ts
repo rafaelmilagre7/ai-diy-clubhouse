@@ -21,6 +21,12 @@ export const useOptimizedSolutions = () => {
   return {
     solutions,
     isLoading,
-    error
+    loading: isLoading,
+    error,
+    cacheStatus: {
+      isCached: false,
+      cacheAge: 0
+    },
+    invalidateCache: () => console.log('Cache invalidated')
   };
 };

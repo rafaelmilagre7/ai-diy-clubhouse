@@ -8,6 +8,7 @@ interface Notification {
   type: 'info' | 'success' | 'warning' | 'error';
   is_read: boolean;
   created_at: string;
+  data?: any; // Added missing data property
 }
 
 export const useNotifications = () => {
@@ -50,12 +51,21 @@ export const useNotifications = () => {
     setUnreadCount(0);
   };
 
+  const deleteNotification = async (notificationId: string) => {
+    console.log('Simulando deletar notificação:', notificationId);
+    setNotifications(prev => 
+      prev.filter(notif => notif.id !== notificationId)
+    );
+    setUnreadCount(prev => Math.max(0, prev - 1));
+  };
+
   return {
     notifications,
     isLoading,
     unreadCount,
     fetchNotifications,
     markAsRead,
-    markAllAsRead
+    markAllAsRead,
+    deleteNotification
   };
 };
