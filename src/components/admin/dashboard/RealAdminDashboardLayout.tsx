@@ -33,7 +33,7 @@ export const RealAdminDashboardLayout = ({
           <RealSystemActivity activityData={activityData} loading={loading} />
         </div>
         <div>
-          <UserDistributionChart data={statsData.usersByRole || []} loading={loading} />
+          <UserDistributionChart data={statsData?.usersByRole || []} loading={loading} />
         </div>
       </div>
     </div>

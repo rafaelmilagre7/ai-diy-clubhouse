@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Activity, Clock, User } from 'lucide-react';
+import { Activity, Clock, User, Database } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
@@ -22,7 +22,7 @@ interface RealSystemActivityProps {
     totalEvents: number;
     eventsByType: { type: string; count: number }[];
     userActivities: SystemActivity[];
-  };
+  } | null;
   loading: boolean;
 }
 
@@ -47,6 +47,28 @@ export const RealSystemActivity = ({ activityData, loading }: RealSystemActivity
                 </div>
               </div>
             ))}
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (!activityData) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Activity className="h-5 w-5" />
+            Atividade do Sistema
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-center py-8">
+            <Database className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+            <p className="text-muted-foreground">Dados de atividade não disponíveis para este período</p>
+            <p className="text-sm text-muted-foreground mt-2">
+              Configure o sistema de analytics para visualizar atividades
+            </p>
           </div>
         </CardContent>
       </Card>

@@ -14,7 +14,7 @@ interface RealStatsOverviewProps {
     lastMonthGrowth: number;
     activeUsersLast7Days: number;
     contentEngagementRate: number;
-  };
+  } | null;
   loading: boolean;
 }
 
@@ -29,8 +29,20 @@ export const RealStatsOverview = ({ data, loading }: RealStatsOverviewProps) => 
     );
   }
 
+  if (!data) {
+    return (
+      <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
+        <div className="col-span-full text-center py-8 text-muted-foreground">
+          Dados não disponíveis para o período selecionado
+        </div>
+      </div>
+    );
+  }
+
   // Função para formatar o tempo médio
   const formatTime = (minutes: number) => {
+    if (minutes === 0) return "N/A";
+    
     if (minutes < 60) {
       return `${minutes} min`;
     }
@@ -41,7 +53,7 @@ export const RealStatsOverview = ({ data, loading }: RealStatsOverviewProps) => 
 
   // Encontrar o role com mais usuários (exceto admin)
   const dominantRole = data.usersByRole
-    .filter(role => role.role !== 'admin')
+    .filter(role => role.role !== 'admin' && role.role !== 'sem_role')
     .sort((a, b) => b.count - a.count)[0];
 
   // Função para determinar a cor do indicador de crescimento
@@ -51,7 +63,7 @@ export const RealStatsOverview = ({ data, loading }: RealStatsOverviewProps) => 
     return "blue";
   };
 
-  // Calcular taxa de conclusão mais precisa
+  // Calcular taxa de conclusão real
   const completionRate = data.totalSolutions > 0 ? 
     Math.round((data.completedImplementations / data.totalSolutions) * 100) : 0;
 
@@ -114,9 +126,7 @@ export const RealStatsOverview = ({ data, loading }: RealStatsOverviewProps) => 
         title="Taxa de Conclusão"
         value={`${completionRate}%`}
         icon={<TrendingUp className="h-5 w-5" />}
-        percentageChange={completionRate > 50 ? 15.2 : -5.4}
-        percentageText="performance geral"
-        colorScheme={completionRate > 50 ? "green" : "red"}
+        colorScheme={completionRate > 50 ? "green" : completionRate > 0 ? "blue" : "red"}
       />
     </div>
   );
