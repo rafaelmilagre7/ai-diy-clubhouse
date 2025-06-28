@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { AlertCircle } from 'lucide-react';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useAuth } from '@/contexts/auth';
+import { useSimpleAuth } from '@/contexts/auth/SimpleAuthProvider';
 import { getUserRoleName } from '@/lib/supabase/types';
 
 interface PermissionGuardProps {
@@ -19,7 +19,7 @@ export const PermissionGuard: React.FC<PermissionGuardProps> = ({
   fallback,
   timeoutSeconds = 1
 }) => {
-  const { profile } = useAuth();
+  const { profile } = useSimpleAuth();
   const [timedOut, setTimedOut] = useState(false);
   
   // Verificação rápida e simplificada - APENAS via banco de dados

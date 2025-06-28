@@ -1,4 +1,3 @@
-
 import { Database } from './database.types';
 
 // Tipos de tabelas principais
@@ -57,6 +56,9 @@ export type ValidationResult = Database['public']['Functions']['validate_profile
 // Re-exportação das definições de tipos base
 export * from './database.types';
 export * from './events';
+
+// Função utilitária movida para arquivo separado
+export { getUserRoleName } from './getUserRoleName';
 
 // Utilitário para type casting seguro
 export const safeSupabaseQuery = <T = any>(query: Promise<any>): Promise<{ data: T | null; error: any }> => {

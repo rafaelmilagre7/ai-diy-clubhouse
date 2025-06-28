@@ -40,44 +40,44 @@ export const fetchUserProfile = async (userId: string): Promise<UserProfile | nu
       updated_at: data.updated_at,
       onboarding_completed: data.onboarding_completed || false,
       onboarding_completed_at: data.onboarding_completed_at,
-      birth_date: data.birth_date || undefined,
-      curiosity: data.curiosity || undefined,
-      business_sector: data.business_sector || undefined,
-      position: data.position || undefined,
-      primary_goal: data.primary_goal || undefined,
-      weekly_availability: data.weekly_availability || undefined,
-      weekly_learning_time: data.weekly_learning_time || undefined,
-      networking_interests: data.networking_interests || undefined,
-      nps_score: data.nps_score || undefined,
-      country: data.country || undefined,
-      state: data.state || undefined,
-      city: data.city || undefined,
-      phone: data.phone || undefined,
-      phone_country_code: data.phone_country_code || undefined,
-      linkedin: data.linkedin || undefined,
-      instagram: data.instagram || undefined,
-      current_position: data.current_position || undefined,
-      accepts_marketing: data.accepts_marketing === true || data.accepts_marketing === 'true',
-      accepts_case_study: data.accepts_case_study === true || data.accepts_case_study === 'true',
-      company_website: data.company_website || undefined,
-      has_implemented_ai: data.has_implemented_ai === true || data.has_implemented_ai === 'true',
-      ai_tools_used: data.ai_tools_used || undefined,
-      daily_tools: data.daily_tools || undefined,
-      who_will_implement: data.who_will_implement || undefined,
-      implementation_timeline: data.implementation_timeline || undefined,
-      team_size: data.team_size || undefined,
-      annual_revenue: data.annual_revenue || undefined,
-      company_size: data.company_size || undefined,
-      ai_knowledge_level: data.ai_knowledge_level || undefined,
-      business_challenges: data.business_challenges || undefined,
-      main_objective: data.main_objective || undefined,
-      area_to_impact: data.area_to_impact || undefined,
-      expected_result_90_days: data.expected_result_90_days || undefined,
-      ai_implementation_budget: data.ai_implementation_budget || undefined,
-      content_preference: data.content_preference || undefined,
-      wants_networking: data.wants_networking === true || data.wants_networking === 'true',
-      best_days: data.best_days || undefined,
-      best_periods: data.best_periods || undefined,
+      birth_date: (data as any).birth_date || undefined,
+      curiosity: (data as any).curiosity || undefined,
+      business_sector: (data as any).business_sector || undefined,
+      position: (data as any).position || undefined,
+      primary_goal: (data as any).primary_goal || undefined,
+      weekly_availability: (data as any).weekly_availability || undefined,
+      weekly_learning_time: (data as any).weekly_learning_time || undefined,
+      networking_interests: (data as any).networking_interests || undefined,
+      nps_score: (data as any).nps_score || undefined,
+      country: (data as any).country || undefined,
+      state: (data as any).state || undefined,
+      city: (data as any).city || undefined,
+      phone: (data as any).phone || undefined,
+      phone_country_code: (data as any).phone_country_code || undefined,
+      linkedin: (data as any).linkedin || undefined,
+      instagram: (data as any).instagram || undefined,
+      current_position: (data as any).current_position || undefined,
+      accepts_marketing: (data as any).accepts_marketing === true || (data as any).accepts_marketing === 'true',
+      accepts_case_study: (data as any).accepts_case_study === true || (data as any).accepts_case_study === 'true',
+      company_website: (data as any).company_website || undefined,
+      has_implemented_ai: (data as any).has_implemented_ai === true || (data as any).has_implemented_ai === 'true',
+      ai_tools_used: (data as any).ai_tools_used || undefined,
+      daily_tools: (data as any).daily_tools || undefined,
+      who_will_implement: (data as any).who_will_implement || undefined,
+      implementation_timeline: (data as any).implementation_timeline || undefined,
+      team_size: (data as any).team_size || undefined,
+      annual_revenue: (data as any).annual_revenue || undefined,
+      company_size: (data as any).company_size || undefined,
+      ai_knowledge_level: (data as any).ai_knowledge_level || undefined,
+      business_challenges: (data as any).business_challenges || undefined,
+      main_objective: (data as any).main_objective || undefined,
+      area_to_impact: (data as any).area_to_impact || undefined,
+      expected_result_90_days: (data as any).expected_result_90_days || undefined,
+      ai_implementation_budget: (data as any).ai_implementation_budget || undefined,
+      content_preference: (data as any).content_preference || undefined,
+      wants_networking: (data as any).wants_networking === true || (data as any).wants_networking === 'true',
+      best_days: (data as any).best_days || undefined,
+      best_periods: (data as any).best_periods || undefined,
       user_roles: data.user_roles
     };
 
@@ -115,7 +115,7 @@ export const createUserProfile = async (userId: string, email: string, name?: st
       return null;
     }
 
-    return data as UserProfile;
+    return data as any;
   } catch (error) {
     console.error('Error in createUserProfile:', error);
     return null;
@@ -153,7 +153,7 @@ export const updateUserProfile = async (userId: string, updates: Partial<UserPro
       return null;
     }
 
-    return data as UserProfile;
+    return data as any;
   } catch (error) {
     console.error('Error in updateUserProfile:', error);
     return null;

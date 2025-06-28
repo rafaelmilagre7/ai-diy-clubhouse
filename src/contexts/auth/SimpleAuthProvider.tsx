@@ -4,7 +4,6 @@ import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
 import { UserProfile } from '@/types/userProfile';
 import { fetchUserProfile, createUserProfileIfNeeded } from './utils/profileUtils/userProfileFunctions';
-import { useAuthCache } from '@/hooks/auth/useAuthCache';
 import { logger } from '@/utils/logger';
 
 interface SimpleAuthContextType {
@@ -16,7 +15,9 @@ interface SimpleAuthContextType {
   isAdmin: boolean;
   isFormacao: boolean;
   isSigningIn: boolean;
-  signOut: () => Promise<void>;
+  signIn: (email: string, password: string) => Promise<{ error?: Error }>;
+  signOut: () => Promise<{ success: boolean; error?: Error | null }>;
+  refreshProfile: () => Promise<void>;
 }
 
 const SimpleAuthContext = createContext<SimpleAuthContextType | undefined>(undefined);
@@ -32,153 +33,133 @@ export const SimpleAuthProvider: React.FC<SimpleAuthProviderProps> = ({ children
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
   const [isSigningIn, setIsSigningIn] = useState(false);
-  
-  const { cachedData, saveToCache, clearCache, hasValidCache } = useAuthCache();
 
-  // Calcular roles baseado no perfil
+  // Derived states
   const isAdmin = profile?.user_roles?.name === 'admin';
   const isFormacao = profile?.user_roles?.name === 'formacao';
 
-  // Função para carregar perfil do usuário
+  // Load user profile
   const loadUserProfile = async (userId: string, email?: string) => {
     try {
-      setError(null);
-      logger.info('[SIMPLE-AUTH] Carregando perfil do usuário', { userId: userId.substring(0, 8) + '***' });
+      logger.info('[SIMPLE-AUTH] Carregando perfil do usuário:', { userId });
       
       let userProfile = await fetchUserProfile(userId);
       
       if (!userProfile && email) {
-        logger.info('[SIMPLE-AUTH] Perfil não encontrado, criando novo perfil');
+        logger.info('[SIMPLE-AUTH] Criando perfil para novo usuário');
         userProfile = await createUserProfileIfNeeded(userId, email);
       }
       
       if (userProfile) {
         setProfile(userProfile);
-        logger.info('[SIMPLE-AUTH] Perfil carregado com sucesso', { 
-          role: userProfile.user_roles?.name 
-        });
-      } else {
-        throw new Error('Não foi possível carregar ou criar o perfil do usuário');
+        logger.info('[SIMPLE-AUTH] Perfil carregado com sucesso');
       }
-      
     } catch (error) {
       logger.error('[SIMPLE-AUTH] Erro ao carregar perfil:', error);
-      setError(error instanceof Error ? error : new Error('Erro desconhecido ao carregar perfil'));
+      setError(error instanceof Error ? error : new Error('Erro desconhecido'));
     }
   };
 
-  // Sign out function
+  // Refresh profile
+  const refreshProfile = async () => {
+    if (user) {
+      await loadUserProfile(user.id, user.email);
+    }
+  };
+
+  // Sign in method
+  const signIn = async (email: string, password: string) => {
+    setIsSigningIn(true);
+    setError(null);
+    
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      
+      if (error) {
+        setError(error);
+        return { error };
+      }
+      
+      return {};
+    } catch (error) {
+      const err = error instanceof Error ? error : new Error('Erro desconhecido');
+      setError(err);
+      return { error: err };
+    } finally {
+      setIsSigningIn(false);
+    }
+  };
+
+  // Sign out method
   const signOut = async () => {
     try {
-      logger.info('[SIMPLE-AUTH] Fazendo logout');
+      const { error } = await supabase.auth.signOut();
       
-      // Limpar estado local
+      if (error) {
+        return { success: false, error };
+      }
+      
+      // Clear state
       setUser(null);
       setSession(null);
       setProfile(null);
       setError(null);
       
-      // Limpar cache
-      clearCache();
-      
-      // Fazer logout no Supabase
-      const { error } = await supabase.auth.signOut();
-      
-      if (error) {
-        throw error;
-      }
-      
-      logger.info('[SIMPLE-AUTH] Logout realizado com sucesso');
+      return { success: true };
     } catch (error) {
-      logger.error('[SIMPLE-AUTH] Erro no logout:', error);
-      setError(error instanceof Error ? error : new Error('Erro ao fazer logout'));
+      const err = error instanceof Error ? error : new Error('Erro no logout');
+      return { success: false, error: err };
     }
   };
 
-  // Inicialização do contexto de autenticação
+  // Auth state listener
   useEffect(() => {
     logger.info('[SIMPLE-AUTH] Inicializando provider');
-
-    // CORREÇÃO PRINCIPAL: Cache apenas para UX inicial, não define loading
-    if (hasValidCache && cachedData) {
-      logger.info('[SIMPLE-AUTH] Usando cache para UX inicial');
-      setUser(cachedData.user);
-      setSession(cachedData.session);
-      setProfile(cachedData.profile);
-      // ❌ REMOVIDO: setIsLoading(false) - Cache não interfere no loading
-    }
-
-    // ÚNICA FONTE DE VERDADE: Supabase Auth State
+    
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, currentSession) => {
-        logger.info('[SIMPLE-AUTH] 🔄 Auth state changed:', { 
-          event, 
-          hasSession: !!currentSession,
-          hasUser: !!currentSession?.user 
-        });
-
-        // Atualizar estado da sessão e usuário
-        setSession(currentSession);
-        setUser(currentSession?.user ?? null);
-
-        if (event === 'SIGNED_IN' && currentSession?.user) {
-          // Carregar perfil para usuários logados
+      async (event, session) => {
+        logger.info('[SIMPLE-AUTH] Auth state changed:', { event, hasSession: !!session });
+        
+        setSession(session);
+        setUser(session?.user ?? null);
+        
+        if (event === 'SIGNED_IN' && session?.user) {
           setTimeout(() => {
-            loadUserProfile(currentSession.user.id, currentSession.user.email);
+            loadUserProfile(session.user.id, session.user.email);
           }, 0);
         } else if (event === 'SIGNED_OUT') {
-          // Limpar estado para usuários deslogados
           setProfile(null);
           setError(null);
-          clearCache();
         }
-
-        // ✅ APENAS AQUI: Supabase define o estado final de loading
-        setIsLoading(false);
       }
     );
 
-    // Verificar sessão inicial do Supabase
-    supabase.auth.getSession().then(({ data: { session: initialSession }, error }) => {
+    // Get initial session
+    supabase.auth.getSession().then(({ data: { session }, error }) => {
       if (error) {
         logger.error('[SIMPLE-AUTH] Erro ao obter sessão inicial:', error);
         setError(error);
-        setIsLoading(false);
-        return;
-      }
-
-      logger.info('[SIMPLE-AUTH] Sessão inicial obtida:', { 
-        hasSession: !!initialSession,
-        hasUser: !!initialSession?.user 
-      });
-
-      // Atualizar estado inicial
-      setSession(initialSession);
-      setUser(initialSession?.user ?? null);
-
-      if (initialSession?.user) {
-        // Carregar perfil se há usuário logado
-        setTimeout(() => {
-          loadUserProfile(initialSession.user.id, initialSession.user.email);
-        }, 0);
       } else {
-        // ✅ Se não há usuário, finalizar loading imediatamente
-        setIsLoading(false);
+        logger.info('[SIMPLE-AUTH] Sessão inicial:', { hasSession: !!session });
+        setSession(session);
+        setUser(session?.user ?? null);
+        
+        if (session?.user) {
+          setTimeout(() => {
+            loadUserProfile(session.user.id, session.user.email);
+          }, 0);
+        }
       }
+      setIsLoading(false);
     });
 
-    // Cleanup subscription
     return () => {
       subscription.unsubscribe();
     };
   }, []);
-
-  // Salvar no cache sempre que dados mudarem (para UX futura)
-  useEffect(() => {
-    if (user && session) {
-      saveToCache(user, session, profile);
-    }
-  }, [user, session, profile, saveToCache]);
 
   const contextValue: SimpleAuthContextType = {
     user,
@@ -189,7 +170,9 @@ export const SimpleAuthProvider: React.FC<SimpleAuthProviderProps> = ({ children
     isAdmin,
     isFormacao,
     isSigningIn,
-    signOut
+    signIn,
+    signOut,
+    refreshProfile
   };
 
   return (
@@ -202,7 +185,7 @@ export const SimpleAuthProvider: React.FC<SimpleAuthProviderProps> = ({ children
 export const useSimpleAuth = (): SimpleAuthContextType => {
   const context = useContext(SimpleAuthContext);
   if (context === undefined) {
-    throw new Error('useSimpleAuth deve ser usado dentro de um SimpleAuthProvider');
+    throw new Error('useSimpleAuth must be used within a SimpleAuthProvider');
   }
   return context;
 };
