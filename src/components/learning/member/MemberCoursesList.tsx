@@ -65,8 +65,8 @@ export const MemberCoursesList = ({ courses, userProgress = [] }: MemberCoursesL
             
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
-                <Badge variant={course.published ? "default" : "secondary"}>
-                  {course.published ? "Disponível" : "Em breve"}
+                <Badge variant={course.is_published ? "default" : "secondary"}>
+                  {course.is_published ? "Disponível" : "Em breve"}
                 </Badge>
                 {completed && (
                   <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">

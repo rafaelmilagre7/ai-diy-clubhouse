@@ -7,32 +7,40 @@ import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 
 interface FileUploadProps {
-  onUpload: (url: string) => void;
+  onUploadComplete: (url: string, fileName?: string, fileSize?: number) => void;
   accept?: string;
-  maxSize?: number; // em bytes
+  maxSize?: number; // em MB
   className?: string;
   bucket?: string;
   folder?: string;
+  buttonText?: string;
+  fieldLabel?: string;
+  initialFileUrl?: string;
 }
 
 export const FileUpload: React.FC<FileUploadProps> = ({
-  onUpload,
+  onUploadComplete,
   accept = "*/*",
-  maxSize = 10 * 1024 * 1024, // 10MB por padrão
+  maxSize = 10, // 10MB por padrão
   className,
   bucket = 'learning-content',
-  folder = 'uploads'
+  folder = 'uploads',
+  buttonText = 'Selecionar Arquivo',
+  fieldLabel = '',
+  initialFileUrl
 }) => {
   const [uploading, setUploading] = useState(false);
   const [dragActive, setDragActive] = useState(false);
   const [uploadedFile, setUploadedFile] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const maxSizeBytes = maxSize * 1024 * 1024;
+
   const handleUpload = async (file: File) => {
     if (!file) return;
 
-    if (file.size > maxSize) {
-      toast.error(`Arquivo muito grande. Tamanho máximo: ${maxSize / 1024 / 1024}MB`);
+    if (file.size > maxSizeBytes) {
+      toast.error(`Arquivo muito grande. Tamanho máximo: ${maxSize}MB`);
       return;
     }
 
@@ -41,7 +49,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({
     try {
       const fileName = `${folder}/${Date.now()}-${file.name}`;
       
-      // Upload simplificado para o Supabase Storage
+      // Upload para o Supabase Storage
       const { data, error } = await supabase.storage
         .from(bucket)
         .upload(fileName, file);
@@ -58,7 +66,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({
         .getPublicUrl(fileName);
 
       setUploadedFile(file.name);
-      onUpload(publicUrl);
+      onUploadComplete(publicUrl, file.name, file.size);
       toast.success('Arquivo enviado com sucesso!');
 
     } catch (error) {
@@ -132,10 +140,10 @@ export const FileUpload: React.FC<FileUploadProps> = ({
             <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
             <p className="text-sm text-muted-foreground">Enviando arquivo...</p>
           </div>
-        ) : uploadedFile ? (
+        ) : uploadedFile || initialFileUrl ? (
           <div className="flex items-center justify-center gap-2">
             <FileText className="h-5 w-5 text-green-600" />
-            <span className="text-sm font-medium">{uploadedFile}</span>
+            <span className="text-sm font-medium">{uploadedFile || 'Arquivo atual'}</span>
             <Button
               variant="ghost"
               size="sm"
@@ -150,10 +158,10 @@ export const FileUpload: React.FC<FileUploadProps> = ({
             <Upload className="h-8 w-8 text-muted-foreground" />
             <div className="space-y-1">
               <p className="text-sm font-medium">
-                Clique para fazer upload ou arraste arquivos aqui
+                {fieldLabel || 'Clique para fazer upload ou arraste arquivos aqui'}
               </p>
               <p className="text-xs text-muted-foreground">
-                Tamanho máximo: {maxSize / 1024 / 1024}MB
+                Tamanho máximo: {maxSize}MB
               </p>
             </div>
             <Button
@@ -162,7 +170,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({
               size="sm"
               onClick={() => fileInputRef.current?.click()}
             >
-              Selecionar Arquivo
+              {buttonText}
             </Button>
           </div>
         )}

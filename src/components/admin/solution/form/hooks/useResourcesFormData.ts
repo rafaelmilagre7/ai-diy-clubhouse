@@ -1,46 +1,41 @@
 
 import { useState } from "react";
 import { useResourcesForm } from "./useResourcesForm";
-import { useSaveResources } from "./useSaveResources";
 
 export function useResourcesFormData(solutionId: string | null) {
   const {
-    form,
-    modules,
-    error: formError,
-    isLoading,
-    isSaving: formIsSaving,
-    setError,
-    setIsSaving
+    resources,
+    loading,
+    error,
+    addResource,
+    updateResource,
+    removeResource,
+    saveResources,
+    loadResources,
+    setResources
   } = useResourcesForm(solutionId);
   
-  const {
-    saveResources,
-    isSaving: saveIsSaving,
-    error: saveError
-  } = useSaveResources();
-
-  // Calculate combined state
-  const error = formError || saveError;
-  const isSaving = formIsSaving || saveIsSaving;
+  const [isSaving, setIsSaving] = useState(false);
 
   // Function to save all resources
   const handleSaveResources = async () => {
     setIsSaving(true);
-    const values = form.getValues();
-    const success = await saveResources(solutionId, values);
+    const success = await saveResources();
     setIsSaving(false);
     return success;
   };
 
   return {
-    form,
-    modules,
+    resources,
+    loading,
     error,
-    isLoading,
     isSaving,
-    setError,
-    handleSaveResources
+    addResource,
+    updateResource,
+    removeResource,
+    handleSaveResources,
+    loadResources,
+    setResources
   };
 }
 

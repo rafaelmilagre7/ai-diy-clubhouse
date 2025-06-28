@@ -10,18 +10,25 @@ export async function checkUserPermission(userId: string, permission: string): P
       return false;
     }
 
-    // Usar RPC function para verificar permissão
-    const { data, error } = await supabase.rpc('user_has_permission', {
-      user_id: userId,
-      permission_code: permission
-    });
+    // Implementação simplificada - verificar role diretamente
+    const { data: profile, error } = await supabase
+      .from('profiles')
+      .select('user_roles(name)')
+      .eq('id', userId)
+      .single();
 
     if (error) {
       console.error('Erro ao verificar permissão:', error);
       return false;
     }
 
-    return Boolean(data) || false;
+    // Verificações básicas baseadas no role
+    const roleName = profile?.user_roles?.name;
+    
+    if (roleName === 'admin') return true;
+    if (roleName === 'formacao' && permission.includes('course')) return true;
+    
+    return false;
   } catch (error) {
     console.error('Erro ao verificar permissão:', error);
     return false;
@@ -37,16 +44,18 @@ export async function checkUserRole(userId: string, roleName: string): Promise<b
       return false;
     }
 
-    const { data, error } = await supabase.rpc('has_role', {
-      role_name: roleName
-    });
+    const { data: profile, error } = await supabase
+      .from('profiles')
+      .select('user_roles(name)')
+      .eq('id', userId)
+      .single();
 
     if (error) {
       console.error('Erro ao verificar papel:', error);
       return false;
     }
 
-    return Boolean(data) || false;
+    return profile?.user_roles?.name === roleName;
   } catch (error) {
     console.error('Erro ao verificar papel:', error);
     return false;

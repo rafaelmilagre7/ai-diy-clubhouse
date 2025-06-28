@@ -36,8 +36,8 @@ export const CourseCarousel = ({ courses, onCourseClick }: CourseCarouselProps) 
             
             <CardContent className="p-4 space-y-3">
               <div className="flex items-center justify-between">
-                <Badge variant={course.published ? "default" : "secondary"}>
-                  {course.published ? "Disponível" : "Em breve"}
+                <Badge variant={course.is_published ? "default" : "secondary"}>
+                  {course.is_published ? "Disponível" : "Em breve"}
                 </Badge>
                 {courseData.module_count && (
                   <span className="text-sm text-muted-foreground">

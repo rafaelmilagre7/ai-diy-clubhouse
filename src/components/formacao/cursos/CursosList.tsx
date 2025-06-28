@@ -68,8 +68,8 @@ export const CursosList = ({ cursos, loading, onEdit, onDelete, isAdmin, onRefre
             <CardHeader>
               <div className="flex justify-between items-start">
                 <CardTitle className="line-clamp-2">{curso.title}</CardTitle>
-                <Badge variant={curso.published ? "default" : "outline"}>
-                  {curso.published ? "Publicado" : "Rascunho"}
+                <Badge variant={curso.is_published ? "default" : "outline"}>
+                  {curso.is_published ? "Publicado" : "Rascunho"}
                 </Badge>
               </div>
               {curso.description && (

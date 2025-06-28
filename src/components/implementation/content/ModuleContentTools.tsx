@@ -36,7 +36,7 @@ export const ModuleContentTools = ({ module }: ModuleContentToolsProps) => {
       const mockSolutionTools = (allTools || []).slice(0, 3).map(tool => ({
         id: tool.id,
         tool_name: tool.name,
-        tool_url: tool.official_url || tool.url,
+        tool_url: tool.url,
         is_required: true,
         details: tool
       }));
