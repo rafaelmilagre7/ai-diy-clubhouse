@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import App from './App.tsx';
 import './index.css';
 import { SimpleAuthProvider } from '@/contexts/auth/SimpleAuthProvider';
+import { LoggingProvider } from '@/hooks/useLogging';
 
 // Criar instância do QueryClient
 const queryClient = new QueryClient({
@@ -23,9 +24,11 @@ const queryClient = new QueryClient({
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
-      <SimpleAuthProvider>
-        <App />
-      </SimpleAuthProvider>
+      <LoggingProvider>
+        <SimpleAuthProvider>
+          <App />
+        </SimpleAuthProvider>
+      </LoggingProvider>
     </QueryClientProvider>
   </StrictMode>,
 );
