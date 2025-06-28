@@ -65,7 +65,6 @@ export const MemberCoursesList = ({ courses, userProgress = [] }: MemberCoursesL
             
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
-                {/* Corrigido: usar published baseado no schema real */}
                 <Badge variant={course.published ? "default" : "secondary"}>
                   {course.published ? "Disponível" : "Em breve"}
                 </Badge>

@@ -19,7 +19,7 @@ export const useOnboardingAnalytics = () => {
     try {
       log('Rastreando evento de onboarding', { eventType, userId });
 
-      // CORREÇÃO: Usar a tabela analytics que existe no schema
+      // Usar a tabela analytics que existe no schema
       const { error } = await supabase
         .from('analytics')
         .insert({

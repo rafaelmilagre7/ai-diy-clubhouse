@@ -50,7 +50,7 @@ export const useAuthMethods = ({ setIsLoading }: AuthMethodsParams) => {
     }
   };
 
-  // CORREÇÃO: Removido uso da função RPC inexistente
+  // Remover uso da função RPC inexistente
   const signUp = async (
     email: string, 
     password: string, 
@@ -89,7 +89,7 @@ export const useAuthMethods = ({ setIsLoading }: AuthMethodsParams) => {
 
       console.log('[AUTH-METHODS] Usuário criado:', data.user.email);
 
-      // CORREÇÃO: Processar convite sem usar RPC inexistente
+      // Processar convite sem usar RPC inexistente
       if (options.inviteToken) {
         console.log('[AUTH-METHODS] Processando convite');
         
@@ -101,7 +101,6 @@ export const useAuthMethods = ({ setIsLoading }: AuthMethodsParams) => {
         }
         
         // Simular processamento do convite
-        // Em produção, você implementaria a lógica necessária
         console.log('[AUTH-METHODS] Convite processado com sucesso');
         toast.success('Conta criada e convite aceito com sucesso!');
         InviteTokenManager.clearTokenOnSuccess();

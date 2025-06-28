@@ -36,7 +36,6 @@ export const CourseCarousel = ({ courses, onCourseClick }: CourseCarouselProps) 
             
             <CardContent className="p-4 space-y-3">
               <div className="flex items-center justify-between">
-                {/* Corrigido: usar published baseado no schema real */}
                 <Badge variant={course.published ? "default" : "secondary"}>
                   {course.published ? "Disponível" : "Em breve"}
                 </Badge>

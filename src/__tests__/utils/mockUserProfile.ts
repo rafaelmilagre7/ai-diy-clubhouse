@@ -34,7 +34,7 @@ export const createMockUserProfile = (overrides: Partial<UserProfile> = {}): Use
     position: null,
     has_implemented_ai: "false",
     ai_tools_used: [],
-    daily_tools: [], // Adicionado: propriedade obrigatória
+    daily_tools: [],
     ...overrides,
   };
 };

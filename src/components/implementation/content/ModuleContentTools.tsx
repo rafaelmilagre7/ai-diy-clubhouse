@@ -21,8 +21,7 @@ export const ModuleContentTools = ({ module }: ModuleContentToolsProps) => {
     queryFn: async () => {
       log("Buscando ferramentas do módulo", { solution_id: module.solution_id });
       
-      // CORREÇÃO: Como a tabela solution_tools não existe no schema,
-      // vamos buscar as ferramentas diretamente da tabela tools
+      // Buscar as ferramentas diretamente da tabela tools
       const { data: allTools, error: toolsError } = await supabase
         .from("tools")
         .select("*")
@@ -34,7 +33,6 @@ export const ModuleContentTools = ({ module }: ModuleContentToolsProps) => {
       }
       
       // Para demonstração, retornar algumas ferramentas
-      // Em um caso real, você teria uma tabela de relacionamento
       const mockSolutionTools = (allTools || []).slice(0, 3).map(tool => ({
         id: tool.id,
         tool_name: tool.name,

@@ -1,255 +1,172 @@
-import React, { useState, useRef, useEffect } from 'react';
+
+import React, { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
-import { Loader2, Upload, AlertCircle, X, Info, Check } from 'lucide-react';
-import { uploadFileToStorage } from '@/components/ui/file/uploadUtils';
-import { useToast } from '@/hooks/use-toast';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { STORAGE_BUCKETS } from '@/lib/supabase/config';
+import { Upload, X, FileText, Loader2 } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
+import { toast } from 'sonner';
+import { cn } from '@/lib/utils';
 
 interface FileUploadProps {
-  bucketName: string;
-  folder?: string;
-  onUploadComplete: (url: string, fileName?: string, fileSize?: number) => void;
+  onUpload: (url: string) => void;
   accept?: string;
-  maxSize?: number; // Em MB
-  buttonText?: string;
-  fieldLabel?: string;
-  initialFileUrl?: string;
+  maxSize?: number; // em bytes
+  className?: string;
+  bucket?: string;
+  folder?: string;
 }
 
 export const FileUpload: React.FC<FileUploadProps> = ({
-  bucketName,
-  folder = '', // Definir um valor padrão para folder
-  onUploadComplete,
-  accept = '*',
-  maxSize = 300, // Padrão aumentado para 300MB
-  buttonText = 'Upload do Arquivo',
-  fieldLabel = 'Selecione um arquivo',
-  initialFileUrl,
+  onUpload,
+  accept = "*/*",
+  maxSize = 10 * 1024 * 1024, // 10MB por padrão
+  className,
+  bucket = 'learning-content',
+  folder = 'uploads'
 }) => {
-  const [isUploading, setIsUploading] = useState(false);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [progress, setProgress] = useState(0);
-  const [fileName, setFileName] = useState<string | null>(null);
-  const [bucketStatus, setBucketStatus] = useState<"ready" | "checking">("ready");
-  const { toast } = useToast();
+  const [uploading, setUploading] = useState(false);
+  const [dragActive, setDragActive] = useState(false);
+  const [uploadedFile, setUploadedFile] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const abortControllerRef = useRef<AbortController | null>(null);
-  
-  const handleButtonClick = () => {
-    // Acionar o clique no input de arquivo
-    if (fileInputRef.current) {
-      fileInputRef.current.click();
+
+  const handleUpload = async (file: File) => {
+    if (!file) return;
+
+    if (file.size > maxSize) {
+      toast.error(`Arquivo muito grande. Tamanho máximo: ${maxSize / 1024 / 1024}MB`);
+      return;
+    }
+
+    setUploading(true);
+
+    try {
+      const fileName = `${folder}/${Date.now()}-${file.name}`;
+      
+      // Upload simplificado para o Supabase Storage
+      const { data, error } = await supabase.storage
+        .from(bucket)
+        .upload(fileName, file);
+
+      if (error) {
+        console.error('Erro no upload:', error);
+        toast.error('Erro ao fazer upload do arquivo');
+        return;
+      }
+
+      // Obter URL pública
+      const { data: { publicUrl } } = supabase.storage
+        .from(bucket)
+        .getPublicUrl(fileName);
+
+      setUploadedFile(file.name);
+      onUpload(publicUrl);
+      toast.success('Arquivo enviado com sucesso!');
+
+    } catch (error) {
+      console.error('Erro inesperado no upload:', error);
+      toast.error('Erro inesperado ao fazer upload');
+    } finally {
+      setUploading(false);
     }
   };
 
-  const handleCancelUpload = () => {
-    if (abortControllerRef.current) {
-      abortControllerRef.current.abort();
-      abortControllerRef.current = null;
-      setIsUploading(false);
-      toast({
-        title: 'Upload cancelado',
-        description: 'O upload foi interrompido.',
-      });
+  const handleDrag = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.type === "dragenter" || e.type === "dragover") {
+      setDragActive(true);
+    } else if (e.type === "dragleave") {
+      setDragActive(false);
     }
   };
-  
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    
-    if (!file) return;
-    
-    // Validações
-    const fileSizeMB = file.size / (1024 * 1024);
-    if (fileSizeMB > maxSize) {
-      setErrorMessage(`O arquivo é muito grande. O tamanho máximo é ${maxSize}MB.`);
-      toast({
-        title: 'Arquivo muito grande',
-        description: `O tamanho máximo é ${maxSize}MB.`,
-        variant: 'destructive',
-      });
-      return;
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(false);
+
+    const files = e.dataTransfer.files;
+    if (files && files[0]) {
+      handleUpload(files[0]);
     }
-    
-    setErrorMessage(null);
-    setIsUploading(true);
-    setProgress(0);
-    setFileName(file.name);
-    
-    try {
-      abortControllerRef.current = new AbortController();
-      
-      const uploadBucket = bucketName;
-      const actualFolder = folder.trim();
-      
-      console.log(`Iniciando upload para bucket: ${uploadBucket}, pasta: ${actualFolder}`);
-      toast({
-        title: 'Iniciando upload',
-        description: "Enviando arquivo...",
-      });
-      
-      // Corrigido: Passar o AbortSignal em vez do AbortController completo
-      const result = await uploadFileToStorage(
-        file,
-        uploadBucket,
-        actualFolder,
-        (progress) => {
-          setProgress(progress);
-        },
-        abortControllerRef.current.signal // Corrigido: Agora passamos o AbortSignal
-      );
-      
-      console.log('Upload bem-sucedido:', result);
-      
-      onUploadComplete(result.publicUrl, file.name, file.size);
-      
-      toast({
-        title: 'Upload realizado com sucesso',
-        description: 'O arquivo foi enviado com sucesso.',
-        variant: 'default',
-      });
-    } catch (error: any) {
-      console.error('Erro ao fazer upload:', error);
-      
-      let displayMessage = error.message || 'Erro ao fazer upload do arquivo.';
-      
-      // Mensagens de erro específicas para problemas comuns
-      if (error.message?.includes('bucket') && error.message?.includes('not found')) {
-        displayMessage = 'Não foi possível encontrar o local de armazenamento. Tentando usar armazenamento alternativo...';
-        // Não exibimos o erro para o usuário, tentamos novamente com bucket alternativo
-        try {
-          abortControllerRef.current = new AbortController();
-          const fallbackBucket = STORAGE_BUCKETS.FALLBACK;
-          const fallbackFolder = `${bucketName}/${folder}`.trim();
-          
-          console.log(`Tentando upload com fallback para bucket: ${fallbackBucket}, pasta: ${fallbackFolder}`);
-          
-          const result = await uploadFileToStorage(
-            file,
-            fallbackBucket,
-            fallbackFolder,
-            (progress) => {
-              setProgress(progress);
-            },
-            abortControllerRef.current.signal
-          );
-          
-          console.log('Upload com fallback bem-sucedido:', result);
-          
-          onUploadComplete(result.publicUrl, file.name, file.size);
-          
-          toast({
-            title: 'Upload realizado com sucesso',
-            description: 'O arquivo foi enviado com sucesso usando armazenamento alternativo.',
-            variant: 'default',
-          });
-          
-          setErrorMessage(null);
-          setIsUploading(false);
-          e.target.value = '';
-          return;
-        } catch (fallbackError: any) {
-          console.error('Erro no upload com fallback:', fallbackError);
-          displayMessage = 'Não foi possível fazer o upload mesmo com armazenamento alternativo. Por favor, tente novamente mais tarde.';
-        }
-      } else if (error.message?.includes('timeout') || error.message?.includes('network')) {
-        displayMessage = 'Tempo limite excedido ou problema de conexão. Tente novamente com um arquivo menor ou verifique sua conexão.';
-      }
-      
-      setErrorMessage(displayMessage);
-      
-      toast({
-        title: 'Erro ao fazer upload',
-        description: displayMessage,
-        variant: 'destructive',
-      });
-    } finally {
-      setIsUploading(false);
-      abortControllerRef.current = null;
-      // Limpar o input
-      e.target.value = '';
+  };
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (files && files[0]) {
+      handleUpload(files[0]);
+    }
+  };
+
+  const removeFile = () => {
+    setUploadedFile(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
     }
   };
 
   return (
-    <div className="space-y-2">
-      <div className="flex flex-col">
-        {fieldLabel && (
-          <label className="text-sm text-neutral-800 dark:text-white mb-2">
-            {fieldLabel}
-          </label>
+    <div className={cn("w-full", className)}>
+      <div
+        className={cn(
+          "border-2 border-dashed rounded-lg p-6 text-center transition-colors",
+          dragActive 
+            ? "border-primary bg-primary/5"
+            : "border-muted-foreground/20 hover:border-muted-foreground/40",
+          uploading && "opacity-50 pointer-events-none"
         )}
-        <div className="flex items-center gap-2">
-          <Button
-            type="button"
-            variant="outline"
-            className={`relative ${isUploading ? 'opacity-70' : ''}`}
-            disabled={isUploading}
-            onClick={handleButtonClick}
-          >
-            {isUploading ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Enviando... {progress}%
-              </>
-            ) : (
-              <>
-                <Upload className="mr-2 h-4 w-4" />
-                {buttonText}
-              </>
-            )}
-          </Button>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept={accept}
-            onChange={handleFileChange}
-            className="hidden"
-            disabled={isUploading}
-          />
-          
-          {isUploading && (
+        onDragEnter={handleDrag}
+        onDragLeave={handleDrag}
+        onDragOver={handleDrag}
+        onDrop={handleDrop}
+      >
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept={accept}
+          onChange={handleFileSelect}
+          className="hidden"
+        />
+
+        {uploading ? (
+          <div className="flex flex-col items-center gap-2">
+            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+            <p className="text-sm text-muted-foreground">Enviando arquivo...</p>
+          </div>
+        ) : uploadedFile ? (
+          <div className="flex items-center justify-center gap-2">
+            <FileText className="h-5 w-5 text-green-600" />
+            <span className="text-sm font-medium">{uploadedFile}</span>
             <Button
-              type="button"
               variant="ghost"
               size="sm"
-              onClick={handleCancelUpload}
-              className="text-destructive hover:text-destructive/90"
+              onClick={removeFile}
+              className="h-6 w-6 p-0 text-muted-foreground hover:text-destructive"
             >
-              <X className="h-4 w-4 mr-1" />
-              Cancelar
+              <X className="h-4 w-4" />
             </Button>
-          )}
-          
-          {initialFileUrl && !isUploading && (
-            <a
-              href={initialFileUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-sm text-blue-600 hover:underline ml-2"
+          </div>
+        ) : (
+          <div className="flex flex-col items-center gap-3">
+            <Upload className="h-8 w-8 text-muted-foreground" />
+            <div className="space-y-1">
+              <p className="text-sm font-medium">
+                Clique para fazer upload ou arraste arquivos aqui
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Tamanho máximo: {maxSize / 1024 / 1024}MB
+              </p>
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => fileInputRef.current?.click()}
             >
-              Visualizar arquivo atual
-            </a>
-          )}
-        </div>
+              Selecionar Arquivo
+            </Button>
+          </div>
+        )}
       </div>
-      
-      {!errorMessage && !isUploading && fileName && (
-        <Alert variant="default" className="bg-green-50 border-green-100 py-2">
-          <Check className="h-4 w-4 text-green-600" />
-          <AlertDescription className="text-green-700 text-xs">
-            Arquivo selecionado: {fileName}
-          </AlertDescription>
-        </Alert>
-      )}
-      
-      {errorMessage && (
-        <Alert variant="destructive">
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>{errorMessage}</AlertDescription>
-        </Alert>
-      )}
     </div>
   );
 };

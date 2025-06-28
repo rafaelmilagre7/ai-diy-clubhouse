@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { LearningCourse } from "@/lib/supabase";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -21,12 +22,10 @@ interface CursosListProps {
 export const CursosList = ({ cursos, loading, onEdit, onDelete, isAdmin, onRefresh }: CursosListProps) => {
   const [cursoParaExcluir, setCursoParaExcluir] = useState<LearningCourse | null>(null);
 
-  // Abrir diálogo de confirmação para excluir
   const handleOpenDelete = (curso: LearningCourse) => {
     setCursoParaExcluir(curso);
   };
 
-  // Confirmar exclusão
   const handleConfirmDelete = () => {
     if (cursoParaExcluir) {
       onDelete(cursoParaExcluir.id);
@@ -62,7 +61,6 @@ export const CursosList = ({ cursos, loading, onEdit, onDelete, isAdmin, onRefre
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {cursos.map((curso) => (
           <Card key={curso.id} className="overflow-hidden">
-            {/* Removido: cover_image_url não existe no schema */}
             <div className="aspect-video w-full bg-muted flex items-center justify-center">
               <FileText className="h-12 w-12 text-muted-foreground" />
             </div>
@@ -70,7 +68,6 @@ export const CursosList = ({ cursos, loading, onEdit, onDelete, isAdmin, onRefre
             <CardHeader>
               <div className="flex justify-between items-start">
                 <CardTitle className="line-clamp-2">{curso.title}</CardTitle>
-                {/* Corrigido: usar published corretamente baseado no schema real */}
                 <Badge variant={curso.published ? "default" : "outline"}>
                   {curso.published ? "Publicado" : "Rascunho"}
                 </Badge>

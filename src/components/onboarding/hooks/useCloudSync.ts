@@ -20,8 +20,7 @@ export const useCloudSync = (options: CloudSyncOptions = {}) => {
   const [lastSync, setLastSync] = useState<string | null>(null);
   const [syncError, setSyncError] = useState<string | null>(null);
 
-  // CORREÇÃO: Como a tabela onboarding_sync não existe, 
-  // vamos usar a tabela profiles para sincronização
+  // Usar a tabela profiles para sincronização
   const syncToCloud = useCallback(async (data: any): Promise<SyncResult> => {
     setIsSyncing(true);
     setSyncError(null);
@@ -76,7 +75,7 @@ export const useCloudSync = (options: CloudSyncOptions = {}) => {
     try {
       log('Buscando dados da nuvem', { userId });
 
-      // CORREÇÃO: Buscar da tabela profiles
+      // Buscar da tabela profiles
       const { data, error } = await supabase
         .from("profiles")
         .select('*')
@@ -99,7 +98,7 @@ export const useCloudSync = (options: CloudSyncOptions = {}) => {
     try {
       log('Limpando dados da nuvem', { userId });
 
-      // CORREÇÃO: Atualizar a tabela profiles resetando campos de onboarding
+      // Atualizar a tabela profiles resetando campos de onboarding
       const { error } = await supabase
         .from("profiles")
         .update({
