@@ -37,12 +37,12 @@ export const useInviteAudit = (timeRange: string = '30d') => {
       setLoading(true);
       setError(null);
       
-      // Calcular data de início
+      // Calculate date range
       const now = new Date();
       const daysBack = timeRange === '7d' ? 7 : timeRange === '30d' ? 30 : 90;
       const startDate = new Date(now.getTime() - (daysBack * 24 * 60 * 60 * 1000));
 
-      // Buscar logs de auditoria relacionados a convites usando a tabela audit_logs
+      // Query audit_logs table for invite-related actions
       const { data: auditLogs, error } = await supabase
         .from('audit_logs')
         .select('*')
@@ -57,17 +57,17 @@ export const useInviteAudit = (timeRange: string = '30d') => {
 
       const logs = auditLogs || [];
       
-      // Processar métricas
+      // Process metrics
       const totalActions = logs.length;
       
-      // Agrupar por tipo de ação
+      // Group by action type
       const actionsByType = logs.reduce((acc: Record<string, number>, log) => {
         const actionType = log.action || 'unknown';
         acc[actionType] = (acc[actionType] || 0) + 1;
         return acc;
       }, {});
 
-      // Criar timeline dos últimos 7 dias
+      // Create timeline for last 7 days
       const actionsTimeline = [];
       for (let i = 6; i >= 0; i--) {
         const date = new Date(now.getTime() - (i * 24 * 60 * 60 * 1000));
@@ -85,7 +85,7 @@ export const useInviteAudit = (timeRange: string = '30d') => {
         });
       }
 
-      // Mapear logs recentes
+      // Map recent actions using correct column names
       const recentActions: InviteAuditLog[] = logs.slice(0, 20).map(log => ({
         id: log.id,
         invite_id: log.resource_id || '',

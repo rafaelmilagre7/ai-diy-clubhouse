@@ -11,6 +11,7 @@ export const useInvitesList = () => {
     try {
       setLoading(true);
 
+      // Query only existing columns from invites table
       const { data, error } = await supabase
         .from('invites')
         .select(`
@@ -22,23 +23,29 @@ export const useInvitesList = () => {
           used_at,
           created_at,
           created_by,
-          notes,
           whatsapp_number,
-          user_roles:role_id!inner(id, name, description)
+          user_roles:role_id(id, name, description)
         `)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
 
-      // Mapear os dados para garantir compatibilidade com o tipo Invite
+      // Map the data to ensure compatibility with Invite type
       const mappedInvites: Invite[] = (data || []).map(invite => ({
-        ...invite,
-        // Adicionar campos padrão que podem estar ausentes
-        last_sent_at: null,
-        send_attempts: 0,
-        // Se user_roles for um array, pegar o primeiro item; se for objeto, usar diretamente
-        role: Array.isArray(invite.user_roles) ? invite.user_roles[0] : invite.user_roles,
-        user_roles: Array.isArray(invite.user_roles) ? invite.user_roles[0] : invite.user_roles
+        id: invite.id,
+        email: invite.email,
+        role_id: invite.role_id,
+        token: invite.token,
+        expires_at: invite.expires_at,
+        used_at: invite.used_at,
+        created_at: invite.created_at,
+        created_by: invite.created_by,
+        whatsapp_number: invite.whatsapp_number,
+        notes: '', // Default empty since column doesn't exist
+        last_sent_at: null, // Default null since column doesn't exist
+        send_attempts: 0, // Default 0 since column doesn't exist
+        role: invite.user_roles || { id: invite.role_id, name: 'Unknown', description: '' },
+        user_roles: invite.user_roles || { id: invite.role_id, name: 'Unknown', description: '' }
       }));
 
       setInvites(mappedInvites);

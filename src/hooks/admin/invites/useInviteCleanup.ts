@@ -1,6 +1,6 @@
 
 import { useState, useCallback } from 'react';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
 export interface InviteCleanupStats {
@@ -19,7 +19,7 @@ export const useInviteCleanup = () => {
       
       console.log('🧹 [INVITE CLEANUP] Iniciando limpeza manual');
       
-      // Buscar convites expirados
+      // First, get count of expired invites
       const { data: expiredInvites, error: selectError } = await supabase
         .from('invites')
         .select('id, email')
@@ -30,24 +30,24 @@ export const useInviteCleanup = () => {
 
       const expiredCount = expiredInvites?.length || 0;
 
-      // Criar backup antes de deletar
-      if (expiredCount > 0) {
-        const { error: backupError } = await supabase
-          .from('invite_backups')
-          .insert(
-            expiredInvites.map(invite => ({
-              original_invite_id: invite.id,
-              email: invite.email,
-              backup_reason: 'cleanup_expired',
-              backup_data: { cleaned_at: new Date().toISOString() }
-            }))
-          );
+      // Create backup in audit_logs before deleting
+      if (expiredCount > 0 && expiredInvites) {
+        // Log cleanup action
+        await supabase
+          .from('audit_logs')
+          .insert({
+            event_type: 'invite_cleanup',
+            action: 'cleanup_expired_invites',
+            user_id: (await supabase.auth.getUser()).data.user?.id || null,
+            details: {
+              expired_count: expiredCount,
+              emails: expiredInvites.map(i => i.email),
+              cleanup_reason: 'automated_cleanup',
+              cleaned_at: new Date().toISOString()
+            }
+          });
 
-        if (backupError) {
-          console.warn('Erro ao criar backup:', backupError);
-        }
-
-        // Deletar convites expirados
+        // Delete expired invites
         const { error: deleteError } = await supabase
           .from('invites')
           .delete()
@@ -65,7 +65,7 @@ export const useInviteCleanup = () => {
 
       setStats(result);
       
-      // Toast baseado no resultado
+      // Toast based on result
       if (result.deletedInvites === 0) {
         toast.info('ℹ️ Nenhum convite expirado encontrado', {
           description: 'Todos os convites estão dentro do prazo válido',
@@ -73,7 +73,7 @@ export const useInviteCleanup = () => {
         });
       } else {
         toast.success('✅ Limpeza de convites concluída!', {
-          description: `${result.deletedInvites} convites expirados removidos com backup automático`,
+          description: `${result.deletedInvites} convites expirados removidos`,
           duration: 6000
         });
       }
