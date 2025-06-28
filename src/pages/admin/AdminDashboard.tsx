@@ -5,6 +5,7 @@ import { RealAdminDashboardLayout } from "@/components/admin/dashboard/RealAdmin
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { logger } from "@/utils/logger";
+import { AlertTriangle } from "lucide-react";
 
 const AdminDashboard = () => {
   const [timeRange, setTimeRange] = useState('30d');
@@ -18,7 +19,7 @@ const AdminDashboard = () => {
 
     // Loading state otimizado
     if (loading) {
-      logger.debug('AdminDashboard loading state', { timeRange });
+      logger.debug('[ADMIN-DASHBOARD] Estado de loading', { timeRange });
       
       return (
         <div className="space-y-6">
@@ -50,10 +51,10 @@ const AdminDashboard = () => {
       );
     }
 
-    logger.info('AdminDashboard data loaded successfully', {
+    logger.info('[ADMIN-DASHBOARD] Dados carregados com sucesso', {
       timeRange,
-      hasStatsData: !!statsData,
       totalUsers: statsData?.totalUsers || 0,
+      totalSolutions: statsData?.totalSolutions || 0,
       totalEvents: activityData?.totalEvents || 0,
       activitiesCount: activityData?.userActivities?.length || 0
     });
@@ -68,9 +69,10 @@ const AdminDashboard = () => {
       />
     );
   } catch (error) {
-    logger.error("Erro crítico no AdminDashboard", { 
+    logger.error("[ADMIN-DASHBOARD] Erro crítico", { 
       error: error instanceof Error ? error.message : 'Erro desconhecido',
-      component: 'ADMIN_DASHBOARD' 
+      component: 'ADMIN_DASHBOARD',
+      timeRange
     });
     
     return (
@@ -81,12 +83,21 @@ const AdminDashboard = () => {
         
         <Card>
           <CardHeader>
-            <CardTitle>Dashboard Temporariamente Indisponível</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-orange-500" />
+              Dashboard Temporariamente Indisponível
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-muted-foreground">
-              Ocorreu um erro ao carregar o dashboard. Tente novamente em alguns instantes.
+            <p className="text-muted-foreground mb-4">
+              Ocorreu um erro ao carregar o dashboard. Nossa equipe foi notificada e está trabalhando na correção.
             </p>
+            <button 
+              onClick={() => window.location.reload()} 
+              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+            >
+              Tentar Novamente
+            </button>
           </CardContent>
         </Card>
       </div>

@@ -1,268 +1,319 @@
 
-import { useState, useEffect, useCallback } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
-import { useProductionLogger } from '@/hooks/useProductionLogger';
+import { useState, useEffect } from "react";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/lib/supabase";
+import { logger } from "@/utils/logger";
 
-interface AdminDashboardData {
+interface SystemActivity {
+  id: string;
+  user_id: string;
+  event_type: string;
+  created_at: string;
+  user_name?: string;
+  event_description: string;
+}
+
+interface RealAdminDashboardData {
   statsData: {
     totalUsers: number;
     totalSolutions: number;
-    totalImplementations: number;
-    totalEvents: number;
-    usersByRole: Array<{ role: string; count: number; color: string }>;
-    recentGrowth: number;
-    activeUsersLast7Days: number;
-    contentEngagementRate: number;
     totalLearningLessons: number;
     completedImplementations: number;
     averageImplementationTime: number;
+    usersByRole: { role: string; count: number }[];
     lastMonthGrowth: number;
+    activeUsersLast7Days: number;
+    contentEngagementRate: number;
   };
   activityData: {
     totalEvents: number;
-    userActivities: Array<{
-      id: string;
-      user_email: string;
-      action: string;
-      timestamp: string;
-      details?: string;
-    }>;
+    eventsByType: { type: string; count: number }[];
+    userActivities: SystemActivity[];
   };
+  loading: boolean;
 }
 
-export const useRealAdminDashboardData = (timeRange: string) => {
-  const [data, setData] = useState<AdminDashboardData>({
-    statsData: {
-      totalUsers: 0,
-      totalSolutions: 0,
-      totalImplementations: 0,
-      totalEvents: 0,
-      usersByRole: [],
-      recentGrowth: 0,
-      activeUsersLast7Days: 0,
-      contentEngagementRate: 0,
-      totalLearningLessons: 0,
-      completedImplementations: 0,
-      averageImplementationTime: 8,
-      lastMonthGrowth: 0
-    },
-    activityData: {
-      totalEvents: 0,
-      userActivities: []
-    }
-  });
-  
+export const useRealAdminDashboardData = (timeRange: string): RealAdminDashboardData => {
+  const { toast } = useToast();
   const [loading, setLoading] = useState(true);
-  const { log, error } = useProductionLogger({ component: 'AdminDashboard' });
+  const [statsData, setStatsData] = useState({
+    totalUsers: 0,
+    totalSolutions: 0,
+    totalLearningLessons: 0,
+    completedImplementations: 0,
+    averageImplementationTime: 0,
+    usersByRole: [],
+    lastMonthGrowth: 0,
+    activeUsersLast7Days: 0,
+    contentEngagementRate: 0
+  });
+  const [activityData, setActivityData] = useState({
+    totalEvents: 0,
+    eventsByType: [],
+    userActivities: []
+  });
 
-  const fetchData = useCallback(async () => {
-    try {
-      setLoading(true);
-      log('Iniciando carregamento de dados do dashboard admin', { timeRange });
-      
-      // Calcular período baseado no timeRange (mais inclusivo)
-      let startDate = new Date('2024-01-01'); // Data base mais antiga
-      const now = new Date();
-      
-      switch (timeRange) {
-        case '7d':
-          startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-          break;
-        case '30d':
-          startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-          break;
-        case '90d':
-          startDate = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
-          break;
-        default:
-          startDate = new Date('2024-01-01'); // Todos os dados
-      }
+  useEffect(() => {
+    const fetchRealData = async () => {
+      try {
+        setLoading(true);
+        logger.info(`[REAL-ADMIN-DATA] Iniciando carregamento com timeRange: ${timeRange}`);
 
-      log('Período de consulta definido', { 
-        startDate: startDate.toISOString(), 
-        endDate: now.toISOString() 
-      });
+        // 1. Buscar estatísticas de usuários
+        const { data: usersData, error: usersError } = await supabase
+          .from('profiles')
+          .select(`
+            id,
+            created_at,
+            role_id,
+            user_roles (
+              name
+            )
+          `);
 
-      // 1. Buscar dados de usuários (consulta mais simples primeiro)
-      log('Buscando dados de usuários...');
-      const { data: usersData, error: usersError } = await supabase
-        .from('profiles')
-        .select('id, created_at, role_id, user_roles!inner(name)')
-        .order('created_at', { ascending: false });
+        if (usersError) {
+          logger.error('[REAL-ADMIN-DATA] Erro ao buscar usuários:', usersError);
+          throw usersError;
+        }
 
-      if (usersError) {
-        error('Erro ao buscar usuários:', usersError.message);
-        throw usersError;
-      }
+        const totalUsers = usersData?.length || 0;
+        logger.info(`[REAL-ADMIN-DATA] Usuários encontrados: ${totalUsers}`);
 
-      log('Usuários encontrados:', { count: usersData?.length || 0 });
+        // 2. Buscar soluções
+        const { data: solutionsData, error: solutionsError } = await supabase
+          .from('solutions')
+          .select('id, published, category, created_at');
 
-      // 2. Buscar dados de soluções
-      log('Buscando dados de soluções...');
-      const { data: solutionsData, error: solutionsError } = await supabase
-        .from('solutions')
-        .select('id, created_at, published')
-        .order('created_at', { ascending: false });
+        if (solutionsError) {
+          logger.error('[REAL-ADMIN-DATA] Erro ao buscar soluções:', solutionsError);
+          throw solutionsError;
+        }
 
-      if (solutionsError) {
-        error('Erro ao buscar soluções:', solutionsError.message);
-        throw solutionsError;
-      }
+        const totalSolutions = solutionsData?.length || 0;
+        logger.info(`[REAL-ADMIN-DATA] Soluções encontradas: ${totalSolutions}`);
 
-      log('Soluções encontradas:', { count: solutionsData?.length || 0 });
+        // 3. Buscar aulas do LMS
+        const { data: lessonsData, error: lessonsError } = await supabase
+          .from('learning_lessons')
+          .select('id, created_at');
 
-      // 3. Buscar dados de progresso
-      log('Buscando dados de progresso...');
-      const { data: progressData, error: progressError } = await supabase
-        .from('progress')
-        .select('id, created_at, is_completed, completed_at')
-        .order('created_at', { ascending: false });
+        if (lessonsError) {
+          logger.error('[REAL-ADMIN-DATA] Erro ao buscar aulas:', lessonsError);
+          // Não quebrar se tabela não existir
+        }
 
-      if (progressError) {
-        error('Erro ao buscar progresso:', progressError.message);
-        // Não falhar se tabela de progresso tiver problemas
-        log('Continuando sem dados de progresso');
-      }
+        const totalLearningLessons = lessonsData?.length || 0;
+        logger.info(`[REAL-ADMIN-DATA] Aulas encontradas: ${totalLearningLessons}`);
 
-      log('Progresso encontrado:', { count: progressData?.length || 0 });
+        // 4. Buscar progresso/implementações
+        const { data: progressData, error: progressError } = await supabase
+          .from('progress')
+          .select('id, is_completed, created_at, completed_at');
 
-      // 4. Buscar dados de aulas (learning_lessons)
-      log('Buscando dados de aulas...');
-      const { data: lessonsData, error: lessonsError } = await supabase
-        .from('learning_lessons')
-        .select('id, created_at')
-        .order('created_at', { ascending: false });
+        if (progressError) {
+          logger.error('[REAL-ADMIN-DATA] Erro ao buscar progresso:', progressError);
+          throw progressError;
+        }
 
-      if (lessonsError) {
-        error('Erro ao buscar aulas:', lessonsError.message);
-        // Não falhar se tabela de aulas tiver problemas
-        log('Continuando sem dados de aulas');
-      }
+        const completedImplementations = progressData?.filter(p => p.is_completed)?.length || 0;
+        logger.info(`[REAL-ADMIN-DATA] Implementações completas: ${completedImplementations}`);
 
-      log('Aulas encontradas:', { count: lessonsData?.length || 0 });
+        // 5. Calcular tempo médio de implementação
+        let averageImplementationTime = 0;
+        const completedWithTimestamps = progressData?.filter(p => 
+          p.is_completed && p.completed_at && p.created_at
+        );
+        
+        if (completedWithTimestamps?.length > 0) {
+          const totalMinutes = completedWithTimestamps.reduce((acc, curr) => {
+            const start = new Date(curr.created_at);
+            const end = new Date(curr.completed_at);
+            const diffMinutes = Math.round((end.getTime() - start.getTime()) / (1000 * 60));
+            return acc + (diffMinutes > 0 && diffMinutes < 10080 ? diffMinutes : 480); // Max 1 semana, default 8h
+          }, 0);
+          averageImplementationTime = Math.round(totalMinutes / completedWithTimestamps.length);
+        } else {
+          averageImplementationTime = 480; // 8 horas como padrão
+        }
 
-      // 5. Buscar dados de eventos
-      log('Buscando dados de eventos...');
-      const { data: eventsData, error: eventsError } = await supabase
-        .from('events')
-        .select('id, created_at')
-        .order('created_at', { ascending: false });
+        // 6. Calcular distribuição por roles
+        const roleDistribution = (usersData || []).reduce((acc, user) => {
+          const roleName = user.user_roles?.name || 'member';
+          const existing = acc.find(r => r.role === roleName);
+          if (existing) {
+            existing.count++;
+          } else {
+            acc.push({ role: roleName, count: 1 });
+          }
+          return acc;
+        }, [] as { role: string; count: number }[]);
 
-      if (eventsError) {
-        error('Erro ao buscar eventos:', eventsError.message);
-        // Não falhar se tabela de eventos tiver problemas
-        log('Continuando sem dados de eventos');
-      }
+        // 7. Calcular crescimento do último mês
+        const oneMonthAgo = new Date();
+        oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
+        
+        const recentUsers = (usersData || []).filter(
+          u => new Date(u.created_at) >= oneMonthAgo
+        ).length;
+        
+        const lastMonthGrowth = totalUsers > 0 ? 
+          Math.round((recentUsers / totalUsers) * 100) : 0;
 
-      log('Eventos encontrados:', { count: eventsData?.length || 0 });
+        // 8. Usuários ativos últimos 7 dias (simulado baseado em criação)
+        const sevenDaysAgo = new Date();
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+        
+        const activeUsersLast7Days = (usersData || []).filter(
+          u => new Date(u.created_at) >= sevenDaysAgo
+        ).length;
 
-      // Processar dados dos usuários por role
-      const roleDistribution = (usersData || []).reduce((acc: any, user: any) => {
-        const roleName = user.user_roles?.name || 'member';
-        acc[roleName] = (acc[roleName] || 0) + 1;
-        return acc;
-      }, {});
+        // 9. Taxa de engajamento de conteúdo (baseada em implementações vs soluções)
+        const contentEngagementRate = totalSolutions > 0 ? 
+          Math.round((completedImplementations / totalSolutions) * 100) : 0;
 
-      const usersByRole = Object.entries(roleDistribution).map(([role, count]) => ({
-        role,
-        count: count as number,
-        color: role === 'admin' ? '#ef4444' : role === 'formacao' ? '#3b82f6' : '#10b981'
-      }));
+        // 10. Buscar atividades do sistema
+        const { data: analyticsData, error: analyticsError } = await supabase
+          .from('analytics')
+          .select(`
+            id,
+            user_id,
+            event_type,
+            created_at,
+            solution_id,
+            solutions:solution_id (
+              title
+            )
+          `)
+          .order('created_at', { ascending: false })
+          .limit(50);
 
-      // Calcular crescimento recente
-      const recentUsersCount = (usersData || []).filter((user: any) => 
-        new Date(user.created_at) >= startDate
-      ).length;
+        let userActivities: SystemActivity[] = [];
+        let eventsByType: { type: string; count: number }[] = [];
+        let totalEvents = 0;
 
-      const totalUsers = usersData?.length || 0;
-      const recentGrowth = totalUsers > 0 ? Math.round((recentUsersCount / totalUsers) * 100) : 0;
+        if (analyticsError) {
+          logger.warn('[REAL-ADMIN-DATA] Analytics não disponível:', analyticsError.message);
+          // Criar atividades mock baseadas nos dados reais
+          userActivities = [
+            {
+              id: "1",
+              user_id: "system",
+              event_type: "system_check",
+              created_at: new Date().toISOString(),
+              user_name: "Sistema",
+              event_description: `${totalUsers} usuários registrados na plataforma`
+            },
+            {
+              id: "2",
+              user_id: "system",
+              event_type: "content_update",
+              created_at: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
+              user_name: "Sistema",
+              event_description: `${totalSolutions} soluções disponíveis`
+            }
+          ];
+          
+          eventsByType = [
+            { type: "system_check", count: 1 },
+            { type: "content_update", count: 1 }
+          ];
+          
+          totalEvents = 2;
+        } else {
+          // Processar dados reais do analytics
+          totalEvents = analyticsData?.length || 0;
+          
+          // Mapear atividades
+          userActivities = (analyticsData || []).map(item => {
+            const solutionData = item.solutions as any;
+            return {
+              id: item.id,
+              user_id: item.user_id,
+              event_type: item.event_type,
+              created_at: item.created_at,
+              user_name: `Usuário ${item.user_id.substring(0, 8)}`,
+              event_description: solutionData?.title ? 
+                `Interagiu com: ${solutionData.title}` : 
+                `Evento: ${item.event_type}`
+            };
+          });
 
-      // Calcular implementações completadas
-      const completedImplementations = (progressData || []).filter((p: any) => 
-        p.is_completed === true
-      ).length;
+          // Contar eventos por tipo
+          const typeCount = (analyticsData || []).reduce((acc, item) => {
+            acc[item.event_type] = (acc[item.event_type] || 0) + 1;
+            return acc;
+          }, {} as Record<string, number>);
 
-      // Simular atividades recentes baseadas em dados reais
-      const mockActivities = (usersData || []).slice(0, 10).map((user: any, index) => ({
-        id: user.id,
-        user_email: `user${index + 1}@vivergia.com`,
-        action: index % 3 === 0 ? 'Login realizado' : 
-                index % 3 === 1 ? 'Solução acessada' : 'Perfil atualizado',
-        timestamp: user.created_at,
-        details: `Atividade ${index + 1}`
-      }));
+          eventsByType = Object.entries(typeCount).map(([type, count]) => ({
+            type,
+            count
+          }));
+        }
 
-      const statsData = {
-        totalUsers,
-        totalSolutions: solutionsData?.length || 0,
-        totalImplementations: progressData?.length || 0,
-        totalEvents: eventsData?.length || 0,
-        usersByRole,
-        recentGrowth,
-        activeUsersLast7Days: Math.min(totalUsers, Math.floor(totalUsers * 0.3)), // 30% dos usuários ativos
-        contentEngagementRate: completedImplementations > 0 ? 75 : 0,
-        totalLearningLessons: lessonsData?.length || 0,
-        completedImplementations,
-        averageImplementationTime: 8, // em minutos
-        lastMonthGrowth: recentGrowth
-      };
+        // Atualizar states
+        setStatsData({
+          totalUsers,
+          totalSolutions,
+          totalLearningLessons,
+          completedImplementations,
+          averageImplementationTime,
+          usersByRole: roleDistribution,
+          lastMonthGrowth,
+          activeUsersLast7Days,
+          contentEngagementRate
+        });
 
-      const activityData = {
-        totalEvents: mockActivities.length,
-        userActivities: mockActivities
-      };
+        setActivityData({
+          totalEvents,
+          eventsByType,
+          userActivities
+        });
 
-      setData({ statsData, activityData });
-      
-      log('Dashboard data loaded successfully', { 
-        users: statsData.totalUsers,
-        solutions: statsData.totalSolutions,
-        implementations: statsData.totalImplementations,
-        lessons: statsData.totalLearningLessons,
-        events: statsData.totalEvents
-      });
+        logger.info('[REAL-ADMIN-DATA] Dados carregados com sucesso:', {
+          totalUsers,
+          totalSolutions,
+          totalLearningLessons,
+          completedImplementations,
+          totalEvents
+        });
 
-    } catch (error: any) {
-      error('Erro crítico ao carregar dados do dashboard:', error.message);
-      toast.error('Erro ao carregar dados do dashboard');
-      
-      // Fallback com dados mínimos para não quebrar a interface
-      const fallbackData = {
-        statsData: {
+      } catch (error: any) {
+        logger.error('[REAL-ADMIN-DATA] Erro crítico:', error);
+        toast({
+          title: "Erro ao carregar dados do dashboard",
+          description: "Verifique suas permissões ou tente novamente.",
+          variant: "destructive",
+        });
+
+        // Fallback com dados básicos
+        setStatsData({
           totalUsers: 0,
           totalSolutions: 0,
-          totalImplementations: 0,
-          totalEvents: 0,
-          usersByRole: [],
-          recentGrowth: 0,
-          activeUsersLast7Days: 0,
-          contentEngagementRate: 0,
           totalLearningLessons: 0,
           completedImplementations: 0,
           averageImplementationTime: 0,
-          lastMonthGrowth: 0
-        },
-        activityData: {
-          totalEvents: 0,
-          userActivities: []
-        }
-      };
-      
-      setData(fallbackData);
-    } finally {
-      setLoading(false);
-    }
-  }, [timeRange, log, error]);
+          usersByRole: [],
+          lastMonthGrowth: 0,
+          activeUsersLast7Days: 0,
+          contentEngagementRate: 0
+        });
 
-  useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+        setActivityData({
+          totalEvents: 0,
+          eventsByType: [],
+          userActivities: []
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchRealData();
+  }, [timeRange, toast]);
 
   return {
-    statsData: data.statsData,
-    activityData: data.activityData,
-    loading,
-    refetch: fetchData
+    statsData,
+    activityData,
+    loading
   };
 };

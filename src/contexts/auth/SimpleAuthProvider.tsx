@@ -32,202 +32,153 @@ export const SimpleAuthProvider: React.FC<SimpleAuthProviderProps> = ({ children
   const [isLoading, setIsLoading] = useState(true);
   const [isSigningIn, setIsSigningIn] = useState(false);
   const [error, setError] = useState<Error | null>(null);
-
-  // Cache system
+  
   const { cachedData, saveToCache, clearCache, hasValidCache } = useAuthCache();
 
-  // Load from cache immediately if available
-  useEffect(() => {
-    if (hasValidCache && cachedData) {
-      logger.info('[SIMPLE-AUTH] Carregando dados do cache');
-      setUser(cachedData.user);
-      setSession(cachedData.session);
-      setProfile(cachedData.profile);
-      setIsLoading(false); // Set loading to false immediately for cached data
-    }
-  }, [hasValidCache, cachedData]);
-
-  // Profile helper functions
-  const isAdmin = profile?.user_roles?.name === 'admin';
-  const isFormacao = profile?.user_roles?.name === 'formacao';
-
-  // Load user profile
-  const loadUserProfile = async (userId: string, email?: string) => {
+  // Função otimizada para carregar perfil
+  const loadUserProfile = async (userId: string, email?: string, useCache: boolean = true) => {
     try {
-      logger.info('[SIMPLE-AUTH] Carregando perfil do usuário:', { userId: userId.substring(0, 8) });
+      setError(null);
+      
+      // Se tem cache válido e não é admin fazendo query crítica, usar cache
+      if (useCache && hasValidCache && cachedData?.profile) {
+        logger.info('[SIMPLE-AUTH] Usando perfil do cache');
+        setProfile(cachedData.profile);
+        return;
+      }
+      
+      logger.info('[SIMPLE-AUTH] Carregando perfil do banco:', { userId: userId.substring(0, 8) });
       
       let userProfile = await fetchUserProfile(userId);
       
       if (!userProfile && email) {
-        logger.info('[SIMPLE-AUTH] Perfil não encontrado, criando...');
+        logger.info('[SIMPLE-AUTH] Criando perfil para novo usuário');
         userProfile = await createUserProfileIfNeeded(userId, email);
       }
       
       if (userProfile) {
         setProfile(userProfile);
-        logger.info('[SIMPLE-AUTH] Perfil carregado com sucesso');
-        return userProfile;
+        // Salvar no cache apenas se não for operação admin crítica
+        if (useCache) {
+          saveToCache(user, session, userProfile);
+        }
+        logger.info('[SIMPLE-AUTH] Perfil carregado:', { 
+          role: userProfile.user_roles?.name,
+          isAdmin: userProfile.user_roles?.name === 'admin'
+        });
       } else {
         throw new Error('Não foi possível carregar o perfil do usuário');
       }
+      
     } catch (error) {
       logger.error('[SIMPLE-AUTH] Erro ao carregar perfil:', error);
       setError(error instanceof Error ? error : new Error('Erro desconhecido'));
-      throw error;
     }
   };
 
-  // Sign out function
-  const signOut = async (): Promise<{ success: boolean; error?: Error | null }> => {
-    try {
-      setIsSigningIn(true);
-      const { error: signOutError } = await supabase.auth.signOut();
-      
-      if (signOutError) {
-        logger.error('[SIMPLE-AUTH] Erro ao fazer logout:', signOutError);
-        return { success: false, error: signOutError };
-      }
-      
-      // Clear all state and cache
-      setUser(null);
-      setSession(null);
-      setProfile(null);
-      setError(null);
-      clearCache();
-      
-      logger.info('[SIMPLE-AUTH] Logout realizado com sucesso');
-      return { success: true };
-    } catch (error) {
-      logger.error('[SIMPLE-AUTH] Erro inesperado no logout:', error);
-      return { success: false, error: error instanceof Error ? error : new Error('Erro inesperado') };
-    } finally {
-      setIsSigningIn(false);
-    }
-  };
-
-  // Initialize auth
+  // Inicialização com verificação de cache otimizada
   useEffect(() => {
-    let mounted = true;
+    logger.info('[SIMPLE-AUTH] Inicializando provider');
+    
+    let isMounted = true;
+    
+    // Verificar cache primeiro para acelerar loading
+    if (hasValidCache && cachedData) {
+      logger.info('[SIMPLE-AUTH] Aplicando cache inicial');
+      setUser(cachedData.user);
+      setSession(cachedData.session);
+      setProfile(cachedData.profile);
+      setIsLoading(false);
+    }
 
-    const initializeAuth = async () => {
-      try {
-        logger.info('[SIMPLE-AUTH] Inicializando autenticação');
-        
-        // Get current session
-        const { data: { session: currentSession }, error: sessionError } = await supabase.auth.getSession();
-        
-        if (sessionError) {
-          throw sessionError;
-        }
-
-        if (!mounted) return;
-
-        if (currentSession?.user) {
-          logger.info('[SIMPLE-AUTH] Sessão encontrada:', { userId: currentSession.user.id.substring(0, 8) });
-          
-          setUser(currentSession.user);
-          setSession(currentSession);
-          
-          // Load profile in background (don't wait if we have cache)
-          if (!hasValidCache) {
-            try {
-              const userProfile = await loadUserProfile(currentSession.user.id, currentSession.user.email);
-              if (mounted && userProfile) {
-                // Save to cache
-                saveToCache(currentSession.user, currentSession, userProfile);
-              }
-            } catch (profileError) {
-              logger.error('[SIMPLE-AUTH] Erro ao carregar perfil na inicialização:', profileError);
-              // Don't fail the entire auth if profile fails
-            }
-          } else {
-            // Background validation when using cache
-            loadUserProfile(currentSession.user.id, currentSession.user.email)
-              .then(userProfile => {
-                if (mounted && userProfile) {
-                  saveToCache(currentSession.user, currentSession, userProfile);
-                }
-              })
-              .catch(error => {
-                logger.warn('[SIMPLE-AUTH] Erro na validação em background:', error);
-              });
-          }
-        } else {
-          logger.info('[SIMPLE-AUTH] Nenhuma sessão encontrada');
-          setUser(null);
-          setSession(null);
-          setProfile(null);
-          clearCache();
-        }
-      } catch (error) {
-        logger.error('[SIMPLE-AUTH] Erro na inicialização:', error);
-        if (mounted) {
-          setError(error instanceof Error ? error : new Error('Erro na inicialização'));
-          setUser(null);
-          setSession(null);
-          setProfile(null);
-          clearCache();
-        }
-      } finally {
-        if (mounted) {
-          setIsLoading(false);
-        }
-      }
-    };
-
-    // Auth state change listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, newSession) => {
-        if (!mounted) return;
-
-        logger.info('[SIMPLE-AUTH] Auth state changed:', { event, hasSession: !!newSession });
+      async (event, currentSession) => {
+        if (!isMounted) return;
         
-        setSession(newSession);
-        setUser(newSession?.user ?? null);
+        logger.info('[SIMPLE-AUTH] Auth state changed:', { 
+          event, 
+          hasSession: !!currentSession,
+          userId: currentSession?.user?.id?.substring(0, 8)
+        });
         
-        if (event === 'SIGNED_IN' && newSession?.user) {
-          try {
-            const userProfile = await loadUserProfile(newSession.user.id, newSession.user.email);
-            if (mounted && userProfile) {
-              saveToCache(newSession.user, newSession, userProfile);
-            }
-          } catch (error) {
-            logger.error('[SIMPLE-AUTH] Erro ao carregar perfil no sign in:', error);
-          }
+        setSession(currentSession);
+        setUser(currentSession?.user ?? null);
+        
+        if (event === 'SIGNED_IN' && currentSession?.user) {
+          await loadUserProfile(currentSession.user.id, currentSession.user.email, true);
         } else if (event === 'SIGNED_OUT') {
           setProfile(null);
           setError(null);
           clearCache();
         }
+        
+        if (isMounted) {
+          setIsLoading(false);
+        }
       }
     );
 
-    // Only initialize if we don't have valid cache (for immediate UI)
+    // Obter sessão inicial apenas se não tiver cache válido
     if (!hasValidCache) {
-      initializeAuth();
-    } else {
-      // Still validate in background
-      setIsLoading(false);
-      supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
-        if (currentSession?.user && mounted) {
-          loadUserProfile(currentSession.user.id, currentSession.user.email)
-            .then(userProfile => {
-              if (mounted && userProfile) {
-                saveToCache(currentSession.user, currentSession, userProfile);
-              }
-            })
-            .catch(error => {
-              logger.warn('[SIMPLE-AUTH] Erro na validação de cache:', error);
-            });
+      supabase.auth.getSession().then(({ data: { session: initialSession }, error }) => {
+        if (!isMounted) return;
+        
+        if (error) {
+          logger.error('[SIMPLE-AUTH] Erro ao obter sessão inicial:', error);
+          setError(error);
+        } else {
+          logger.info('[SIMPLE-AUTH] Sessão inicial:', { hasSession: !!initialSession });
+          setSession(initialSession);
+          setUser(initialSession?.user ?? null);
+          
+          if (initialSession?.user) {
+            loadUserProfile(initialSession.user.id, initialSession.user.email, true);
+          }
         }
+        
+        setIsLoading(false);
       });
     }
 
     return () => {
-      mounted = false;
+      isMounted = false;
       subscription.unsubscribe();
     };
-  }, [hasValidCache, cachedData]); // Add dependencies for cache
+  }, [hasValidCache, cachedData]);
+
+  const signOut = async (): Promise<{ success: boolean; error?: Error | null }> => {
+    try {
+      setIsSigningIn(true);
+      setError(null);
+      
+      const { error } = await supabase.auth.signOut();
+      
+      if (error) {
+        setError(error);
+        return { success: false, error };
+      }
+      
+      // Limpar estados
+      setUser(null);
+      setSession(null);
+      setProfile(null);
+      clearCache();
+      
+      logger.info('[SIMPLE-AUTH] Sign out realizado com sucesso');
+      return { success: true };
+      
+    } catch (error) {
+      const err = error instanceof Error ? error : new Error('Erro no sign out');
+      setError(err);
+      return { success: false, error: err };
+    } finally {
+      setIsSigningIn(false);
+    }
+  };
+
+  // Derivar roles de forma otimizada
+  const isAdmin = profile?.user_roles?.name === 'admin';
+  const isFormacao = profile?.user_roles?.name === 'formacao';
 
   const contextValue: SimpleAuthContextType = {
     user,
@@ -251,7 +202,9 @@ export const SimpleAuthProvider: React.FC<SimpleAuthProviderProps> = ({ children
 export const useSimpleAuth = (): SimpleAuthContextType => {
   const context = useContext(SimpleAuthContext);
   if (context === undefined) {
-    throw new Error('useSimpleAuth must be used within a SimpleAuthProvider');
+    throw new Error('useSimpleAuth deve ser usado dentro de um SimpleAuthProvider');
   }
   return context;
 };
+
+export default SimpleAuthProvider;

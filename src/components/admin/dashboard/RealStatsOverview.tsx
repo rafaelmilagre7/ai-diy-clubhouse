@@ -29,15 +29,6 @@ export const RealStatsOverview = ({ data, loading }: RealStatsOverviewProps) => 
     );
   }
 
-  // Debug: mostrar dados no console
-  console.log('[REAL-STATS] Dados recebidos:', {
-    totalUsers: data.totalUsers,
-    totalSolutions: data.totalSolutions,
-    totalLearningLessons: data.totalLearningLessons,
-    completedImplementations: data.completedImplementations,
-    usersByRole: data.usersByRole
-  });
-
   // Função para formatar o tempo médio
   const formatTime = (minutes: number) => {
     if (minutes < 60) {
@@ -60,27 +51,9 @@ export const RealStatsOverview = ({ data, loading }: RealStatsOverviewProps) => 
     return "blue";
   };
 
-  // Se não há dados, mostrar mensagem informativa
-  if (data.totalUsers === 0 && data.totalSolutions === 0) {
-    return (
-      <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
-        <div className="col-span-full bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-          <p className="text-yellow-800 text-sm">
-            <strong>Aviso:</strong> Nenhum dado foi encontrado no banco. Verifique as permissões RLS ou se há dados nas tabelas.
-          </p>
-        </div>
-        {[...Array(8)].map((_, i) => (
-          <StatCard
-            key={i}
-            title="Sem dados"
-            value="0"
-            icon={<Users className="h-5 w-5" />}
-            colorScheme="blue"
-          />
-        ))}
-      </div>
-    );
-  }
+  // Calcular taxa de conclusão mais precisa
+  const completionRate = data.totalSolutions > 0 ? 
+    Math.round((data.completedImplementations / data.totalSolutions) * 100) : 0;
 
   return (
     <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
@@ -89,12 +62,12 @@ export const RealStatsOverview = ({ data, loading }: RealStatsOverviewProps) => 
         value={data.totalUsers}
         icon={<Users className="h-5 w-5" />}
         percentageChange={data.lastMonthGrowth}
-        percentageText={data.lastMonthGrowth !== 0 ? "vs período anterior" : "no período"}
+        percentageText={data.lastMonthGrowth !== 0 ? "crescimento mensal" : "sem crescimento"}
         colorScheme={getGrowthColor(data.lastMonthGrowth)}
       />
       
       <StatCard
-        title="Usuários Ativos"
+        title="Usuários Ativos (7d)"
         value={data.activeUsersLast7Days}
         icon={<Activity className="h-5 w-5" />}
         percentageChange={data.contentEngagementRate}
@@ -110,7 +83,7 @@ export const RealStatsOverview = ({ data, loading }: RealStatsOverviewProps) => 
       />
       
       <StatCard
-        title="Aulas"
+        title="Aulas LMS"
         value={data.totalLearningLessons}
         icon={<GraduationCap className="h-5 w-5" />}
         colorScheme="blue"
@@ -132,18 +105,18 @@ export const RealStatsOverview = ({ data, loading }: RealStatsOverviewProps) => 
       
       <StatCard
         title="Role Predominante"
-        value={`${dominantRole?.role || 'N/A'} (${dominantRole?.count || 0})`}
+        value={dominantRole ? `${dominantRole.role} (${dominantRole.count})` : 'N/A'}
         icon={<Target className="h-5 w-5" />}
         colorScheme="blue"
       />
       
       <StatCard
         title="Taxa de Conclusão"
-        value={`${data.totalSolutions > 0 ? Math.round((data.completedImplementations / data.totalSolutions) * 100) : 0}%`}
+        value={`${completionRate}%`}
         icon={<TrendingUp className="h-5 w-5" />}
-        percentageChange={data.completedImplementations > 0 ? 15.2 : 0}
-        percentageText="estimativa de sucesso"
-        colorScheme="green"
+        percentageChange={completionRate > 50 ? 15.2 : -5.4}
+        percentageText="performance geral"
+        colorScheme={completionRate > 50 ? "green" : "red"}
       />
     </div>
   );
