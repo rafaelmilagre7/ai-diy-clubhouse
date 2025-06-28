@@ -21,6 +21,9 @@ export type LearningProgress = Database['public']['Tables']['learning_progress']
 // Tipos específicos do sistema
 export type Solution = Database['public']['Tables']['solutions']['Row'] & {
   tags?: string[];
+  published?: boolean;
+  slug?: string;
+  expected_results?: string;
 };
 export type UserProfile = Database['public']['Tables']['profiles']['Row'] & {
   user_roles?: {
@@ -83,6 +86,10 @@ export interface SimplifiedTool {
   updated_at: string;
   has_member_benefit: boolean;
   benefit_type: string | null;
+  benefit_discount_percentage?: number | null;
+  benefit_link?: string | null;
+  benefit_title?: string | null;
+  benefit_description?: string | null;
 }
 
 // User checklist type for progress tracking
@@ -161,4 +168,14 @@ export const safeToStringContent = (content: any): string => {
     return JSON.stringify(content);
   }
   return String(content || '');
+};
+
+// Helper function to determine if auto-complete should happen
+export const shouldAutoComplete = (moduleType: string): boolean => {
+  return ['landing', 'celebration'].includes(moduleType);
+};
+
+// Add getUserRoleName function for compatibility
+export const getUserRoleName = (profile: UserProfile): string => {
+  return profile.user_roles?.name || profile.role || 'member';
 };

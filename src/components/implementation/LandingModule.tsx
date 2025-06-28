@@ -4,7 +4,7 @@ import { Module } from "@/lib/supabase";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Play, CheckCircle } from "lucide-react";
-import { shouldAutoComplete } from "./content/ContentManager";
+import { shouldAutoComplete } from "@/lib/supabase/types";
 import { useLogging } from "@/hooks/useLogging";
 import { safeJsonParseObject, safeToStringContent } from "@/lib/supabase/types";
 

@@ -46,8 +46,8 @@ export const useSolutionData = (id: string | undefined) => {
             difficulty_level: data.difficulty_level,
             thumbnail_url: data.thumbnail_url,
             cover_image_url: data.thumbnail_url, // Use thumbnail_url as fallback
-            published: data.published || false,
-            slug: data.slug || '',
+            published: data.published || false, // Provide fallback
+            slug: data.slug || '', // Provide fallback
             created_at: data.created_at,
             updated_at: data.updated_at,
             tags: data.tags || [],
@@ -55,7 +55,7 @@ export const useSolutionData = (id: string | undefined) => {
             roi_potential: data.roi_potential,
             implementation_steps: data.implementation_steps,
             required_tools: data.required_tools,
-            expected_results: data.expected_results
+            expected_results: data.expected_results || '' // Provide fallback
           };
           
           setSolution(transformedSolution);
