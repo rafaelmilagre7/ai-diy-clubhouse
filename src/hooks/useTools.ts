@@ -42,8 +42,8 @@ export const useTools = (options?: {
         updated_at: tool.updated_at,
         has_member_benefit: Boolean(tool.benefit_title || tool.benefit_description),
         benefit_type: tool.benefit_type || 'discount',
-        benefit_discount_percentage: tool.benefit_discount_percentage ?? null,
-        benefit_link: tool.benefit_url ?? null,
+        benefit_discount_percentage: null, // Fix: set to null as this field doesn't exist in database
+        benefit_link: tool.benefit_url || null, // Fix: use benefit_url from database
         benefit_title: tool.benefit_title || '',
         benefit_description: tool.benefit_description || '',
         status: tool.is_active // Map is_active to status for compatibility

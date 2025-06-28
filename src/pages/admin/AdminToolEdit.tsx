@@ -31,14 +31,14 @@ const AdminToolEdit = () => {
     navigate('/admin/tools');
   };
 
-  // Wrapper para compatibilidade de tipos
+  // Wrapper para compatibilidade de tipos - mais flexível
   const handleFormSubmit = async (data: any) => {
     try {
       const result = await handleSubmit(data);
       if (result.success) {
         handleSaveSuccess();
       }
-      return { success: result.success, data: result.data };
+      return { success: result.success };
     } catch (error) {
       console.error('Erro ao salvar ferramenta:', error);
       return { success: false, error: 'Erro ao salvar ferramenta' };

@@ -52,16 +52,16 @@ const FormacaoAulaDetalhes = () => {
         content: data.content,
         order_index: data.order_index,
         is_published: data.is_published || false,
-        published: data.published || data.is_published || false, // Compatibilidade
+        published: data.is_published || false, // Fix: use is_published from database
         created_at: data.created_at,
         updated_at: data.updated_at,
         estimated_duration_minutes: data.estimated_duration_minutes || 0,
-        estimated_time_minutes: data.estimated_time_minutes || data.estimated_duration_minutes || 0, // Compatibilidade
-        difficulty_level: data.difficulty_level || 'beginner',
-        ai_assistant_enabled: data.ai_assistant_enabled || false,
-        ai_assistant_id: data.ai_assistant_id,
-        ai_assistant_prompt: data.ai_assistant_prompt,
-        cover_image_url: data.cover_image_url,
+        estimated_time_minutes: data.estimated_duration_minutes || 0, // Fix: use estimated_duration_minutes
+        difficulty_level: 'beginner', // Fix: default value since this field doesn't exist
+        ai_assistant_enabled: true, // Fix: default value since this field doesn't exist
+        ai_assistant_id: null, // Fix: default value since this field doesn't exist
+        ai_assistant_prompt: null, // Fix: default value since this field doesn't exist
+        cover_image_url: null, // Fix: default value since this field doesn't exist
         // Adicionar campos relacionados se existirem
         videos: data.videos || [],
         resources: data.resources || [],
