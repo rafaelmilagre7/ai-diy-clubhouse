@@ -33,6 +33,10 @@ const FormacaoAulaDetalhes = () => {
             id,
             title,
             course_id,
+            description,
+            order_index,
+            created_at,
+            updated_at,
             course:learning_courses(id, title)
           ),
           videos:learning_lesson_videos(*),
@@ -52,20 +56,31 @@ const FormacaoAulaDetalhes = () => {
         content: data.content,
         order_index: data.order_index,
         is_published: data.is_published || false,
-        published: data.is_published || false, // Fix: use is_published from database
+        published: data.is_published || false, // Map is_published to published
         created_at: data.created_at,
         updated_at: data.updated_at,
         estimated_duration_minutes: data.estimated_duration_minutes || 0,
-        estimated_time_minutes: data.estimated_duration_minutes || 0, // Fix: use estimated_duration_minutes
-        difficulty_level: 'beginner', // Fix: default value since this field doesn't exist
-        ai_assistant_enabled: true, // Fix: default value since this field doesn't exist
-        ai_assistant_id: null, // Fix: default value since this field doesn't exist
-        ai_assistant_prompt: null, // Fix: default value since this field doesn't exist
-        cover_image_url: null, // Fix: default value since this field doesn't exist
-        // Adicionar campos relacionados se existirem
+        estimated_time_minutes: data.estimated_duration_minutes || 0, // Map for compatibility
+        difficulty_level: data.difficulty_level || 'beginner', // Use from database or default
+        ai_assistant_enabled: data.ai_assistant_enabled || true, // Use from database or default
+        ai_assistant_id: data.ai_assistant_id || null, // Use from database
+        ai_assistant_prompt: data.ai_assistant_prompt || null, // Use from database
+        cover_image_url: data.cover_image_url || null, // Use from database
+        // Add missing required fields with defaults
+        lesson_type: data.lesson_type || 'video',
+        video_url: data.video_url || '',
+        video_duration_seconds: data.video_duration_seconds || 0,
+        // Add related data
         videos: data.videos || [],
         resources: data.resources || [],
-        module: data.module || null
+        module: data.module ? {
+          ...data.module,
+          // Ensure all required LearningModule fields are present
+          description: data.module.description || '',
+          order_index: data.module.order_index || 0,
+          created_at: data.module.created_at || new Date().toISOString(),
+          updated_at: data.module.updated_at || new Date().toISOString()
+        } : null
       };
       
       setAula(mappedAula);
@@ -144,11 +159,7 @@ const FormacaoAulaDetalhes = () => {
 
   return (
     <div className="space-y-6">
-      <AulaDetails 
-        aula={aula}
-        onEditClick={handleEditClick}
-        onDeleteClick={() => setDeleteDialogOpen(true)}
-      />
+      <AulaDetails aula={aula} />
       
       <AulaDeleteDialog 
         open={deleteDialogOpen}

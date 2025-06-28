@@ -11,9 +11,9 @@ interface AulaDetailsProps {
 }
 
 const AulaDetails = ({ aula }: AulaDetailsProps) => {
-  // CORREÇÃO: Parse seguro do conteúdo JSON
+  // Parse seguro do conteúdo JSON
   const content = safeJsonParseObject(aula.content, {});
-  // Corrigido: usar estimated_duration_minutes que existe no schema
+  // Use estimated_duration_minutes que existe no schema
   const estimatedTime = aula.estimated_duration_minutes || content.estimatedTime || 0;
   
   const getDifficultyColor = (level: string) => {
@@ -42,8 +42,8 @@ const AulaDetails = ({ aula }: AulaDetailsProps) => {
     }
   };
 
-  // CORREÇÃO: usar content.difficulty_level pois não existe no schema LearningLesson
-  const difficultyLevel = content.difficulty_level || 'beginner';
+  // Use difficulty_level que existe no schema
+  const difficultyLevel = aula.difficulty_level || 'beginner';
 
   return (
     <div className="space-y-6">
@@ -58,9 +58,9 @@ const AulaDetails = ({ aula }: AulaDetailsProps) => {
               >
                 {getDifficultyLabel(difficultyLevel)}
               </Badge>
-              {/* Corrigido: usar published que existe no schema */}
-              <Badge variant={aula.published ? "default" : "secondary"}>
-                {aula.published ? "Publicada" : "Rascunho"}
+              {/* Use is_published que existe no schema */}
+              <Badge variant={aula.is_published ? "default" : "secondary"}>
+                {aula.is_published ? "Publicada" : "Rascunho"}
               </Badge>
             </div>
           </div>
@@ -92,17 +92,17 @@ const AulaDetails = ({ aula }: AulaDetailsProps) => {
             </div>
           </div>
 
-          {/* Corrigido: usar ai_assistant_id do extended type */}
+          {/* Use ai_assistant_id que existe no schema */}
           {aula.ai_assistant_id && (
             <div className="bg-blue-50 p-3 rounded-lg">
               <h4 className="font-medium text-blue-900 mb-1">Assistente de IA Ativo</h4>
               <p className="text-sm text-blue-700">
                 ID: {aula.ai_assistant_id}
               </p>
-              {/* Corrigido: usar content.ai_assistant_prompt pois não existe no schema */}
-              {content.ai_assistant_prompt && (
+              {/* Use ai_assistant_prompt que existe no schema */}
+              {aula.ai_assistant_prompt && (
                 <p className="text-sm text-blue-600 mt-2">
-                  Prompt: {content.ai_assistant_prompt}
+                  Prompt: {aula.ai_assistant_prompt}
                 </p>
               )}
             </div>

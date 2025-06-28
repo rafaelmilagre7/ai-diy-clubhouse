@@ -31,8 +31,8 @@ const SolutionsList = () => {
           difficulty_level: item.difficulty_level,
           thumbnail_url: item.thumbnail_url,
           cover_image_url: item.thumbnail_url || '',
-          published: item.is_published || false, // Fix: use is_published from database
-          slug: item.slug || item.title?.toLowerCase().replace(/\s+/g, '-') || '', // Fix: provide fallback
+          published: Boolean(item.published), // Use published field directly
+          slug: item.slug || item.title?.toLowerCase().replace(/\s+/g, '-') || '', // Use slug field or generate
           created_at: item.created_at,
           updated_at: item.updated_at,
           tags: item.tags || [],
@@ -40,10 +40,10 @@ const SolutionsList = () => {
           roi_potential: item.roi_potential,
           implementation_steps: item.implementation_steps,
           required_tools: item.required_tools,
-          expected_results: item.description || '', // Fix: fallback to description
-          success_metrics: item.roi_potential || '', // Fix: fallback to roi_potential
-          target_audience: item.description || '', // Fix: fallback to description
-          prerequisites: item.description || '' // Fix: fallback to description
+          expected_results: item.expected_results || item.description || '', // Use expected_results field
+          success_metrics: item.success_metrics || item.roi_potential || '', // Use success_metrics field
+          target_audience: item.target_audience || item.description || '', // Use target_audience field
+          prerequisites: item.prerequisites || item.description || '' // Use prerequisites field
         }));
 
         setSolutions(transformedSolutions);

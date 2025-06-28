@@ -1,6 +1,7 @@
 
 import { useState, useEffect } from 'react';
 
+// Simplified stats interface to avoid deep type instantiation
 export interface LMSStats {
   totalLessons: number;
   completedLessons: number;
@@ -22,7 +23,7 @@ export const useStatsData = () => {
     const fetchStats = async () => {
       try {
         setError(null);
-        // Mock data to avoid deep type issues
+        // Simplified mock data to avoid type issues
         setStats({
           totalLessons: 45,
           completedLessons: 123,
