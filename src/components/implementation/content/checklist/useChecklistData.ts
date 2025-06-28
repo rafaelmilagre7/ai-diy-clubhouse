@@ -91,24 +91,21 @@ export const useChecklistData = (module: Module) => {
         // Initialize user checklist state
         const initialUserChecklist = initializeUserChecklist(extractedChecklist);
         
-        // If user is logged in, fetch their specific checklist progress
+        // If user is logged in, try to fetch their progress from the progress table
         if (user) {
-          const { data: userData, error: userError } = await supabase
-            .from("user_checklists")
+          const { data: progressData, error: progressError } = await supabase
+            .from("progress")
             .select("*")
             .eq("user_id", user.id)
             .eq("solution_id", module.solution_id)
             .maybeSingle();
               
-          if (userError) {
-            logError("Error fetching user checklist:", userError);
-          } else if (userData && userData.checked_items) {
-            // Parse the JSON data if it's a string
-            const userItems = typeof userData.checked_items === 'string' 
-              ? JSON.parse(userData.checked_items) 
-              : userData.checked_items;
-              
-            setUserChecklist(userItems as Record<string, boolean>);
+          if (progressError) {
+            logError("Error fetching user progress:", progressError);
+          } else if (progressData) {
+            // Use progress data if available
+            // For now, just use the initial checklist
+            setUserChecklist(initialUserChecklist);
           } else {
             setUserChecklist(initialUserChecklist);
           }

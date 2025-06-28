@@ -85,6 +85,16 @@ export interface SimplifiedTool {
   benefit_type: string | null;
 }
 
+// User checklist type for progress tracking
+export interface UserChecklist {
+  id: string;
+  user_id: string;
+  solution_id: string;
+  checked_items: Record<string, boolean>;
+  updated_at: string;
+  created_at: string;
+}
+
 // Content block interface for modules
 export interface ContentBlock {
   id: string;

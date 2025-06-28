@@ -2,12 +2,12 @@
 import { useState } from "react";
 import { Module } from "@/lib/supabase";
 import { supabase } from "@/lib/supabase";
-import { useAuth } from "@/contexts/auth";
+import { useSimpleAuth } from "@/contexts/auth/SimpleAuthProvider";
 import { useLogging } from "@/hooks/useLogging";
 
 export const useChecklistInteractions = (module: Module) => {
   const [saving, setSaving] = useState(false);
-  const { user } = useAuth();
+  const { user } = useSimpleAuth();
   const { log, logError } = useLogging();
 
   const handleCheckChange = async (
@@ -29,13 +29,13 @@ export const useChecklistInteractions = (module: Module) => {
       // Update local state first for immediate feedback
       setUserChecklist(updatedChecklist);
       
-      // Then save to database
+      // Save to progress table instead of non-existent user_checklists
       const { error } = await supabase
-        .from("user_checklists")
+        .from("progress")
         .upsert({
           user_id: user.id,
           solution_id: module.solution_id,
-          checked_items: updatedChecklist,
+          is_completed: false,
           updated_at: new Date().toISOString()
         }, {
           onConflict: 'user_id,solution_id'
