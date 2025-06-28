@@ -39,6 +39,53 @@ export const uploadFile = async (
 };
 
 /**
+ * Extract YouTube video ID from various YouTube URL formats
+ */
+export const getYoutubeVideoId = (url: string): string | null => {
+  if (!url) return null;
+  
+  try {
+    // Check if it's already just a video ID
+    if (url.match(/^[a-zA-Z0-9_-]{11}$/)) {
+      return url;
+    }
+    
+    // Handle different YouTube URL formats
+    const regex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i;
+    const match = url.match(regex);
+    
+    return match && match[1] ? match[1] : null;
+  } catch (error) {
+    console.error('Error extracting YouTube video ID:', error);
+    return null;
+  }
+};
+
+/**
+ * Get YouTube thumbnail URL from video ID
+ */
+export const getYoutubeThumbnailUrl = (videoId: string): string => {
+  return `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
+};
+
+/**
+ * Format video duration from seconds to readable format
+ */
+export const formatVideoDuration = (seconds: number): string => {
+  if (!seconds || seconds <= 0) return '0:00';
+  
+  const hours = Math.floor(seconds / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+  const secs = Math.floor(seconds % 60);
+  
+  if (hours > 0) {
+    return `${hours}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  }
+  
+  return `${minutes}:${secs.toString().padStart(2, '0')}`;
+};
+
+/**
  * Setup storage buckets and policies - Mock implementation
  */
 export const setupStorageBuckets = async () => {
@@ -52,6 +99,65 @@ export const setupStorageBuckets = async () => {
     };
   } catch (error) {
     console.error('Erro ao configurar storage buckets:', error);
+    throw error;
+  }
+};
+
+/**
+ * Setup learning storage buckets - Mock implementation
+ */
+export const setupLearningStorageBuckets = async () => {
+  try {
+    console.log('Simulando configuração de buckets de aprendizado');
+    
+    // Mock implementation since RPC doesn't exist
+    return {
+      success: true,
+      message: 'Learning storage buckets configurados com sucesso'
+    };
+  } catch (error) {
+    console.error('Erro ao configurar learning storage buckets:', error);
+    throw error;
+  }
+};
+
+/**
+ * Ensure bucket exists - Mock implementation
+ */
+export const ensureBucketExists = async (bucketName: string) => {
+  console.log(`Simulando verificação de bucket: ${bucketName}`);
+  return { success: true };
+};
+
+/**
+ * Extract Panda video info from URL
+ */
+export const extractPandaVideoInfo = (url: string) => {
+  if (!url) return null;
+  
+  try {
+    const match = url.match(/embed\/\?v=([^&]+)/);
+    return match && match[1] ? { videoId: match[1] } : null;
+  } catch (error) {
+    console.error('Error extracting Panda video info:', error);
+    return null;
+  }
+};
+
+/**
+ * Upload file with fallback options
+ */
+export const uploadFileWithFallback = async (
+  bucket: string,
+  path: string,
+  file: File | Blob,
+  options?: { cacheControl?: string; upsert?: boolean }
+) => {
+  try {
+    return await uploadFile(bucket, path, file, options);
+  } catch (error) {
+    console.error('Primary upload failed, trying fallback:', error);
+    // Fallback logic could be implemented here
     throw error;
   }
 };
