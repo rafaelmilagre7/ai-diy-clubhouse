@@ -42,7 +42,7 @@ const AulaDetails = ({ aula }: AulaDetailsProps) => {
     }
   };
 
-  // Get difficulty level from content or use default
+  // Get difficulty level from content or use default - use the database field name
   const difficultyLevel = content.difficulty_level || aula.difficulty_level || 'beginner';
 
   return (
@@ -99,10 +99,10 @@ const AulaDetails = ({ aula }: AulaDetailsProps) => {
               <p className="text-sm text-blue-700">
                 ID: {aula.ai_assistant_id}
               </p>
-              {/* Get prompt from content if available */}
+              {/* Get prompt from content if available, otherwise use database field */}
               {(content.ai_assistant_prompt || aula.ai_assistant_prompt) && (
                 <p className="text-sm text-blue-600 mt-2">
-                  Prompt: {content.ai_assistant_prompt || aula.ai_assistant_prompt || ''}
+                  Prompt: {content.ai_assistant_prompt || aula.ai_assistant_prompt}
                 </p>
               )}
             </div>

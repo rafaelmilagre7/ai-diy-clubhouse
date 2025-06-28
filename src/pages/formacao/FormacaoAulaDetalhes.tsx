@@ -53,11 +53,8 @@ const FormacaoAulaDetalhes = () => {
         // Map is_published to published for compatibility
         published: data.is_published || false,
         // Add missing optional fields with defaults
-        difficulty_level: data.difficulty_level || 'beginner',
-        ai_assistant_prompt: data.ai_assistant_prompt || null,
         video_url: '', // Default empty string
         video_duration_seconds: 0, // Default to 0
-        cover_image_url: data.cover_image_url || null,
         // Add related data
         videos: data.videos || [],
         resources: data.resources || [],

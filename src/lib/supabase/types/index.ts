@@ -12,11 +12,8 @@ export type LearningCommentRow = Database['public']['Tables']['learning_comments
 export interface LearningLesson extends LearningLessonRow {
   // Add computed/optional fields for compatibility
   published?: boolean;
-  difficulty_level?: string;
-  ai_assistant_prompt?: string;
   video_url?: string;
   video_duration_seconds?: number;
-  cover_image_url?: string;
   // Related data
   videos?: LearningLessonVideoRow[];
   resources?: LearningResourceRow[];

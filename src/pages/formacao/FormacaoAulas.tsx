@@ -39,11 +39,8 @@ const FormacaoAulas = () => {
         ...item,
         // Add compatibility fields
         published: item.is_published || false,
-        difficulty_level: item.difficulty_level || 'beginner',
         video_url: '',
         video_duration_seconds: 0,
-        cover_image_url: item.cover_image_url || null,
-        ai_assistant_prompt: item.ai_assistant_prompt || null,
         // Map related data
         module: item.learning_modules ? {
           ...item.learning_modules,
