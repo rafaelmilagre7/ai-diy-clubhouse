@@ -35,7 +35,6 @@ export const useLessonData = ({ lessonId, courseId }: UseLessonDataProps) => {
           .from("learning_lessons")
           .select("*")
           .eq("id", lessonId)
-          .eq("published", true)
           .single();
 
         if (lessonError) {
@@ -112,7 +111,6 @@ export const useLessonData = ({ lessonId, courseId }: UseLessonDataProps) => {
               )
             `)
             .eq("learning_modules.course_id", courseId)
-            .eq("published", true)
             .order("learning_modules.order_index", { ascending: true })
             .order("order_index", { ascending: true });
 

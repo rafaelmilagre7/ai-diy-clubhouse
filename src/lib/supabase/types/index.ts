@@ -14,7 +14,6 @@ export type LearningComment = Database['public']['Tables']['learning_comments'][
 export type Solution = Database['public']['Tables']['solutions']['Row'];
 export type UserProfile = Database['public']['Tables']['profiles']['Row'];
 export type UserRole = Database['public']['Tables']['user_roles']['Row'];
-export type UserChecklist = Database['public']['Tables']['user_checklists']['Row'];
 export type Progress = Database['public']['Tables']['progress']['Row'];
 export type Module = Database['public']['Tables']['modules']['Row'];
 export type Invite = Database['public']['Tables']['invites']['Row'];

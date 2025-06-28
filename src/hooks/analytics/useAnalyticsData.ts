@@ -31,7 +31,6 @@ export const useAnalyticsData = (startDate?: string, endDate?: string) => {
         const { data: solutions } = await supabase
           .from('solutions')
           .select('id, title, category')
-          .eq('published', true)
           .limit(10);
 
         // Calcular métricas

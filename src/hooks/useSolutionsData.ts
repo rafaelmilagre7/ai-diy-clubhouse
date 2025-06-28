@@ -11,7 +11,6 @@ interface SimpleSolution {
   estimated_time_hours: number;
   created_at: string;
   updated_at: string;
-  published: boolean;
 }
 
 // Cache global para evitar requests desnecessários
@@ -86,7 +85,7 @@ export const useSolutionsData = () => {
         // Query simplificada com apenas campos que existem na tabela
         const { data, error: fetchError } = await supabase
           .from("solutions")
-          .select("id, title, description, category, estimated_time_hours, created_at, updated_at, published");
+          .select("id, title, description, category, estimated_time_hours, created_at, updated_at");
 
         if (fetchError) {
           console.error('[SOLUTIONS] Erro ao buscar soluções:', fetchError);
@@ -101,27 +100,21 @@ export const useSolutionsData = () => {
           category: solution.category,
           estimated_time_hours: solution.estimated_time_hours,
           created_at: solution.created_at,
-          updated_at: solution.updated_at,
-          published: solution.published
+          updated_at: solution.updated_at
         }));
-
-        // Filtrar por publicação se não for admin
-        const filteredSolutions = profile?.user_roles?.name === 'admin' 
-          ? validSolutions 
-          : validSolutions.filter(sol => sol.published);
 
         // Atualizar cache
         solutionsCache.set(cacheKey, {
-          data: filteredSolutions,
+          data: validSolutions,
           timestamp: now
         });
 
-        setSolutions(filteredSolutions);
+        setSolutions(validSolutions);
         
         if (process.env.NODE_ENV === 'development') {
           console.log('[SOLUTIONS] Soluções carregadas do servidor:', {
             execCount: executionCountRef.current,
-            count: filteredSolutions.length,
+            count: validSolutions.length,
             isAdmin: profile?.user_roles?.name === 'admin',
             userId: user.id.substring(0, 8) + '***'
           });

@@ -23,7 +23,6 @@ export const useDashboardData = () => {
         const { data: solutions, error: solutionsError } = await supabase
           .from('solutions')
           .select('id, title, description, category, estimated_time_hours, created_at, updated_at')
-          .eq('published', true)
           .order('created_at', { ascending: false })
           .limit(10);
 
