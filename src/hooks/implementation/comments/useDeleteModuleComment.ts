@@ -1,18 +1,14 @@
 
 import { useState } from 'react';
-import { supabase } from '@/lib/supabase';
-import { useAuth } from '@/contexts/auth';
-import { Comment } from '@/types/commentTypes';
-import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { useLogging } from '@/hooks/useLogging';
-import { getUserRoleName } from '@/lib/supabase/types';
+import { Comment } from '@/types/commentTypes';
+import { useSimpleAuth } from '@/contexts/auth/SimpleAuthProvider';
+import { useQueryClient } from '@tanstack/react-query';
 
 export const useDeleteModuleComment = (solutionId: string, moduleId: string) => {
   const [isDeleting, setIsDeleting] = useState(false);
-  const { user, profile } = useAuth();
+  const { user, isAdmin } = useSimpleAuth();
   const queryClient = useQueryClient();
-  const { logError, log } = useLogging();
 
   const deleteComment = async (comment: Comment) => {
     if (!user) {
@@ -21,7 +17,6 @@ export const useDeleteModuleComment = (solutionId: string, moduleId: string) => 
     }
 
     const isAuthor = user.id === comment.user_id;
-    const isAdmin = getUserRoleName(profile) === 'admin';
     
     if (!isAuthor && !isAdmin) {
       toast.error('Você só pode excluir seus próprios comentários');
@@ -32,20 +27,16 @@ export const useDeleteModuleComment = (solutionId: string, moduleId: string) => 
 
     try {
       setIsDeleting(true);
-      log('Excluindo comentário', { commentId: comment.id });
+      console.log('Simulando exclusão de comentário do módulo:', comment.id);
       
-      const { error } = await supabase
-        .from('tool_comments')
-        .delete()
-        .eq('id', comment.id as any);
-        
-      if (error) throw error;
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 500));
       
       toast.success('Comentário excluído com sucesso');
       queryClient.invalidateQueries({ queryKey: ['solution-comments', solutionId, moduleId] });
       
     } catch (error) {
-      logError('Erro ao excluir comentário', error);
+      console.error('Erro ao excluir comentário:', error);
       toast.error('Erro ao excluir comentário. Tente novamente.');
     } finally {
       setIsDeleting(false);

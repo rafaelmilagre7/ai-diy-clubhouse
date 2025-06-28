@@ -1,187 +1,220 @@
 
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { 
-  Map, 
-  ArrowRight, 
   Users, 
-  TrendingUp,
-  Clock,
+  TrendingDown, 
+  Clock, 
   Target,
-  AlertCircle
+  AlertTriangle,
+  ArrowRight
 } from 'lucide-react';
-import { ModernLoadingState } from '../ModernLoadingState';
 import { useUserJourneyData } from '@/hooks/analytics/insights/useUserJourneyData';
 
-interface UserJourneyAnalysisProps {
-  timeRange: string;
-}
-
-export const UserJourneyAnalysis: React.FC<UserJourneyAnalysisProps> = ({ timeRange }) => {
-  const { data: journeyData, isLoading, error } = useUserJourneyData(timeRange);
+export const UserJourneyAnalysis = () => {
+  const { data, isLoading, error } = useUserJourneyData();
 
   if (isLoading) {
-    return <ModernLoadingState type="chart" />;
-  }
-
-  if (error) {
     return (
-      <Card className="border-0 shadow-xl bg-white/80 backdrop-blur-sm">
+      <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Map className="h-6 w-6 text-purple-500" />
-            Jornada do Usuário
+            <Users className="h-5 w-5" />
+            Análise da Jornada do Usuário
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex items-center justify-center h-32 text-center">
-            <div className="space-y-2">
-              <AlertCircle className="h-8 w-8 text-red-500 mx-auto" />
-              <p className="text-muted-foreground">Erro ao carregar dados da jornada</p>
-              <p className="text-sm text-gray-500">{error.message}</p>
-            </div>
+          <div className="space-y-4">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="animate-pulse">
+                <div className="h-4 bg-muted rounded w-full mb-2"></div>
+                <div className="h-2 bg-muted rounded w-3/4"></div>
+              </div>
+            ))}
           </div>
         </CardContent>
       </Card>
     );
   }
 
-  if (!journeyData || journeyData.length === 0) {
+  if (error || !data) {
     return (
-      <Card className="border-0 shadow-xl bg-white/80 backdrop-blur-sm">
+      <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Map className="h-6 w-6 text-purple-500" />
-            Jornada do Usuário
+            <Users className="h-5 w-5" />
+            Análise da Jornada do Usuário
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex items-center justify-center h-32 text-center">
-            <div className="space-y-2">
-              <Users className="h-8 w-8 text-gray-400 mx-auto" />
-              <p className="text-muted-foreground">Dados insuficientes para análise da jornada</p>
-              <p className="text-sm text-gray-500">
-                Não há usuários registrados no período selecionado ({timeRange})
-              </p>
-            </div>
+          <Alert>
+            <AlertTriangle className="h-4 w-4" />
+            <AlertDescription>
+              Erro ao carregar dados da jornada. Tente novamente mais tarde.
+            </AlertDescription>
+          </Alert>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (!data.steps || data.steps.length === 0) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Users className="h-5 w-5" />
+            Análise da Jornada do Usuário
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-center py-8 text-muted-foreground">
+            Dados insuficientes para análise da jornada
           </div>
         </CardContent>
       </Card>
     );
   }
 
-  const getStepIcon = (step: string) => {
-    switch (step.toLowerCase()) {
-      case 'registro':
-        return <Users className="h-4 w-4" />;
-      case 'primeiro acesso':
-        return <Clock className="h-4 w-4" />;
-      case 'primeira implementação':
-        return <Target className="h-4 w-4" />;
-      case 'conclusão':
-        return <TrendingUp className="h-4 w-4" />;
-      default:
-        return <ArrowRight className="h-4 w-4" />;
-    }
-  };
-
-  const getConversionColor = (rate: number) => {
-    if (rate >= 80) return 'bg-green-100 text-green-800 border-green-200';
-    if (rate >= 60) return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-    return 'bg-red-100 text-red-800 border-red-200';
+  const getStepColor = (completionRate: number) => {
+    if (completionRate >= 80) return 'bg-green-500';
+    if (completionRate >= 60) return 'bg-yellow-500';
+    return 'bg-red-500';
   };
 
   return (
-    <Card className="border-0 shadow-xl bg-white/80 backdrop-blur-sm">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Map className="h-6 w-6 text-purple-500" />
-          Jornada do Usuário
-        </CardTitle>
-        <p className="text-sm text-gray-600">
-          Análise do fluxo de usuários através da plataforma ({timeRange})
-        </p>
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-4">
-          {journeyData.map((step, index) => (
-            <div key={step.step} className="relative">
-              <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-purple-50 text-purple-600">
-                    {getStepIcon(step.step)}
+    <div className="space-y-6">
+      {/* Overview Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2">
+              <Users className="h-4 w-4 text-muted-foreground" />
+              <div>
+                <div className="text-2xl font-bold">{data.total_users}</div>
+                <div className="text-sm text-muted-foreground">Total de Usuários</div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2">
+              <Target className="h-4 w-4 text-muted-foreground" />
+              <div>
+                <div className="text-2xl font-bold">{data.completion_rate}%</div>
+                <div className="text-sm text-muted-foreground">Taxa de Conclusão</div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2">
+              <Clock className="h-4 w-4 text-muted-foreground" />
+              <div>
+                <div className="text-2xl font-bold">{Math.round(data.avg_journey_time / 60)}h</div>
+                <div className="text-sm text-muted-foreground">Tempo Médio</div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2">
+              <TrendingDown className="h-4 w-4 text-muted-foreground" />
+              <div>
+                <div className="text-2xl font-bold">
+                  {data.steps && data.steps.length > 0 
+                    ? Math.max(...data.steps.map(s => s.drop_off_rate))
+                    : 0}%
+                </div>
+                <div className="text-sm text-muted-foreground">Maior Abandono</div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Journey Steps */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Users className="h-5 w-5" />
+            Etapas da Jornada
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {data.steps.map((step, index) => (
+              <div key={step.step} className="relative">
+                <div className="flex items-center gap-4">
+                  <div className="flex-shrink-0">
+                    <div className={`w-8 h-8 rounded-full ${getStepColor(step.completion_rate)} flex items-center justify-center text-white text-sm font-bold`}>
+                      {index + 1}
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="font-semibold text-gray-900">{step.step}</h3>
-                    <p className="text-sm text-gray-600">
-                      {step.users} usuários
-                      {step.avgTimeMinutes !== undefined && (
-                        <> • {step.avgTimeMinutes} min médio</>
-                      )}
-                      {step.avgTimeMinutes === undefined && (
-                        <> • Tempo não disponível</>
-                      )}
-                    </p>
+                  
+                  <div className="flex-1 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <h4 className="font-medium">{step.step}</h4>
+                      <Badge variant="outline">
+                        {step.users} usuários
+                      </Badge>
+                    </div>
+                    
+                    <div className="grid grid-cols-3 gap-4 text-sm">
+                      <div>
+                        <span className="text-muted-foreground">Taxa de conclusão: </span>
+                        <span className="font-medium">{step.completion_rate}%</span>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">Tempo médio: </span>
+                        <span className="font-medium">{step.avg_time_minutes}min</span>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">Taxa de abandono: </span>
+                        <span className="font-medium text-red-600">{step.drop_off_rate}%</span>
+                      </div>
+                    </div>
+                    
+                    <Progress value={step.completion_rate} className="h-2" />
                   </div>
                 </div>
                 
-                <div className="flex items-center gap-3">
-                  <Badge className={getConversionColor(step.conversionRate)}>
-                    {step.conversionRate.toFixed(1)}% conversão
-                  </Badge>
-                  
-                  {index < journeyData.length - 1 && (
-                    <div className="flex items-center gap-1 text-gray-400">
-                      <ArrowRight className="h-4 w-4" />
-                      <span className="text-xs">
-                        {((step.users / journeyData[0].users) * 100).toFixed(0)}%
-                      </span>
-                    </div>
-                  )}
+                {index < data.steps.length - 1 && (
+                  <div className="absolute left-4 top-8 w-px h-6 bg-border"></div>
+                )}
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Insights */}
+      {data.insights && data.insights.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Insights da Análise</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {data.insights.map((insight, index) => (
+                <div key={index} className="flex items-start gap-3 p-3 bg-muted/50 rounded-lg">
+                  <AlertTriangle className="h-4 w-4 mt-0.5 text-amber-500" />
+                  <span className="text-sm">{insight}</span>
                 </div>
-              </div>
-              
-              {/* Barra de progresso visual */}
-              <div className="mt-2 h-2 bg-gray-100 rounded-full overflow-hidden">
-                <div 
-                  className="h-full bg-gradient-to-r from-purple-400 to-purple-600 transition-all"
-                  style={{ 
-                    width: `${(step.users / journeyData[0].users) * 100}%` 
-                  }}
-                />
-              </div>
+              ))}
             </div>
-          ))}
-        </div>
-        
-        {/* Resumo de insights baseado em dados reais */}
-        <div className="mt-6 p-4 bg-purple-50 rounded-lg">
-          <h4 className="font-semibold text-purple-900 mb-2">Insights da Jornada</h4>
-          <ul className="text-sm text-purple-700 space-y-1">
-            {journeyData.length >= 2 && (
-              <li>
-                • Maior perda de usuários: {journeyData[0].step} → {journeyData[1].step} 
-                ({((journeyData[0].users - journeyData[1].users) / journeyData[0].users * 100).toFixed(1)}% de perda)
-              </li>
-            )}
-            {journeyData.length >= 3 && journeyData[2].users > 0 && (
-              <li>
-                • Taxa de conversão para implementação: {((journeyData[2].users / journeyData[0].users) * 100).toFixed(1)}%
-              </li>
-            )}
-            {journeyData.some(step => step.avgTimeMinutes !== undefined) ? (
-              <li>
-                • Dados de tempo baseados em atividade real dos usuários
-              </li>
-            ) : (
-              <li>
-                • Dados de tempo indisponíveis - aguardando mais atividade na plataforma
-              </li>
-            )}
-          </ul>
-        </div>
-      </CardContent>
-    </Card>
+          </CardContent>
+        </Card>
+      )}
+    </div>
   );
 };

@@ -4,6 +4,12 @@ import { toast } from 'sonner';
 
 export const useReporting = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [reportData, setReportData] = useState<{
+    type: string;
+    itemId: string;
+    reportedUserId?: string;
+  } | null>(null);
 
   const submitReport = useCallback(async (
     reportData: {
@@ -49,9 +55,23 @@ export const useReporting = () => {
     }
   }, []);
 
+  const openReportModal = useCallback((type: string, itemId: string, reportedUserId?: string) => {
+    setReportData({ type, itemId, reportedUserId });
+    setIsModalOpen(true);
+  }, []);
+
+  const closeReportModal = useCallback(() => {
+    setIsModalOpen(false);
+    setReportData(null);
+  }, []);
+
   return {
     submitReport,
     getReports,
-    isSubmitting
+    isSubmitting,
+    openReportModal,
+    closeReportModal,
+    isModalOpen,
+    reportData
   };
 };
