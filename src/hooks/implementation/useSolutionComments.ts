@@ -18,7 +18,7 @@ export const useSolutionComments = (solutionId: string, moduleId: string) => {
   };
   
   const { addComment, isSubmitting } = useAddComment(onSuccess);
-  const { likeComment } = useLikeComment(solutionId, moduleId);
+  const { likeComment } = useLikeComment(solutionId);
   const { deleteComment } = useDeleteComment(solutionId, moduleId);
 
   const handleSubmitComment = async (e?: React.FormEvent) => {

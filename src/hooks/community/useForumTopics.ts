@@ -66,8 +66,8 @@ export const useForumTopics = (categoryId?: string, limit = 20) => {
           content: item.content,
           category_id: item.category_id,
           user_id: item.user_id,
-          view_count: item.views_count || 0, // Corrigido: usar views_count
-          reply_count: item.replies_count || 0, // Corrigido: usar replies_count
+          view_count: item.views_count || 0,
+          reply_count: item.replies_count || 0,
           is_pinned: item.is_pinned || false,
           is_locked: item.is_locked || false,
           is_solved: false, // Default value since property doesn't exist
@@ -75,7 +75,9 @@ export const useForumTopics = (categoryId?: string, limit = 20) => {
           updated_at: item.updated_at,
           last_activity_at: item.last_activity_at,
           profiles: item.profiles,
-          category: item.forum_categories?.error ? null : item.forum_categories // Handle potential errors
+          category: item.forum_categories?.error ? 
+            { id: '', name: 'Categoria não encontrada', slug: '' } : 
+            item.forum_categories
         }));
 
         console.log(`✅ ${topics.length} tópicos carregados`);
@@ -131,7 +133,9 @@ export const useForumTopic = (topicId: string) => {
           updated_at: data.updated_at,
           last_activity_at: data.last_activity_at,
           profiles: data.profiles,
-          category: data.forum_categories?.error ? null : data.forum_categories
+          category: data.forum_categories?.error ? 
+            { id: '', name: 'Categoria não encontrada', slug: '' } : 
+            data.forum_categories
         };
 
         // Increment view count

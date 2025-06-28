@@ -7,7 +7,7 @@ export const useLikeComment = (solutionId: string) => {
   const { user } = useSimpleAuth();
   const queryClient = useQueryClient();
 
-  return useMutation({
+  const mutation = useMutation({
     mutationFn: async ({ commentId, isLiked }: { commentId: string; isLiked: boolean }) => {
       if (!user) {
         throw new Error('Usuário não autenticado');
@@ -31,4 +31,10 @@ export const useLikeComment = (solutionId: string) => {
       toast.error('Erro ao curtir comentário');
     }
   });
+
+  const likeComment = (commentId: string, isLiked: boolean) => {
+    mutation.mutate({ commentId, isLiked });
+  };
+
+  return { likeComment };
 };

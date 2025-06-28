@@ -7,7 +7,7 @@ export const useLikeModuleComment = (solutionId: string, moduleId: string) => {
   const { user } = useSimpleAuth();
   const queryClient = useQueryClient();
 
-  const likeComment = useMutation({
+  const mutation = useMutation({
     mutationFn: async ({ commentId, isLiked }: { commentId: string; isLiked: boolean }) => {
       if (!user) {
         throw new Error('Usuário não autenticado');
@@ -32,8 +32,9 @@ export const useLikeModuleComment = (solutionId: string, moduleId: string) => {
     }
   });
 
-  return {
-    likeComment: (commentId: string, isLiked: boolean) => 
-      likeComment.mutate({ commentId, isLiked })
+  const likeComment = (commentId: string, isLiked: boolean) => {
+    mutation.mutate({ commentId, isLiked });
   };
+
+  return { likeComment };
 };

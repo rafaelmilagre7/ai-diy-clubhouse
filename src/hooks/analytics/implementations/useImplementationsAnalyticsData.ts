@@ -1,5 +1,8 @@
 
 import { useImplementationQueries } from './queries/implementationQueries';
+import { ImplementationData } from './types/implementationTypes';
+
+export { ImplementationData } from './types/implementationTypes';
 
 export const useImplementationsAnalyticsData = () => {
   const {
@@ -7,33 +10,55 @@ export const useImplementationsAnalyticsData = () => {
     getImplementationTrends
   } = useImplementationQueries();
 
-  // Chamar as queries sem argumentos
-  const statsQuery = getImplementationStats;
-  const trendsQuery = getImplementationTrends;
+  // Gerar dados mock baseados nas queries
+  const mockImplementationData: ImplementationData = {
+    completionRate: {
+      completed: getImplementationStats.data?.completedImplementations || 0,
+      inProgress: (getImplementationStats.data?.totalImplementations || 0) - (getImplementationStats.data?.completedImplementations || 0)
+    },
+    implementationsByDifficulty: [
+      { difficulty: 'beginner', count: 15 },
+      { difficulty: 'intermediate', count: 8 },
+      { difficulty: 'advanced', count: 3 }
+    ],
+    averageCompletionTime: [
+      { solutionId: '1', solutionTitle: 'IA para Vendas', avgDays: 7, count: 5 },
+      { solutionId: '2', solutionTitle: 'Automação de Marketing', avgDays: 14, count: 3 }
+    ],
+    abandonmentByModule: [
+      { moduleOrder: 1, moduleTitle: 'Introdução', abandonmentRate: 5, totalStarts: 100 },
+      { moduleOrder: 2, moduleTitle: 'Configuração', abandonmentRate: 15, totalStarts: 95 }
+    ],
+    recentImplementations: [
+      {
+        id: '1',
+        solutionTitle: 'IA para Vendas',
+        userName: 'João Silva',
+        status: 'Em andamento',
+        lastActivity: '2 horas atrás',
+        percentComplete: 65
+      }
+    ]
+  };
 
   return {
-    stats: {
-      data: statsQuery.data,
-      isLoading: statsQuery.isLoading,
-      error: statsQuery.error
-    },
-    trends: {
-      data: trendsQuery.data,
-      isLoading: trendsQuery.isLoading,
-      error: trendsQuery.error
-    },
+    data: mockImplementationData,
+    isLoading: getImplementationStats.isLoading,
+    error: getImplementationStats.error,
+    refetch: getImplementationStats.refetch,
+    
     // Compatibility functions that return promises
     fetchCompletionData: async () => {
-      return statsQuery.data?.solutions || [];
+      return getImplementationStats.data?.solutions || [];
     },
     fetchDifficultyData: async () => {
-      return statsQuery.data?.solutions || [];
+      return getImplementationStats.data?.solutions || [];
     },
     fetchTimeCompletionData: async () => {
-      return statsQuery.data?.analytics || [];
+      return getImplementationStats.data?.analytics || [];
     },
     fetchRecentImplementations: async () => {
-      return statsQuery.data?.solutions?.slice(0, 10) || [];
+      return getImplementationStats.data?.solutions?.slice(0, 10) || [];
     }
   };
 };
