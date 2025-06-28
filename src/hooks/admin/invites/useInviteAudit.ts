@@ -47,8 +47,8 @@ export const useInviteAudit = (timeRange: string = '30d') => {
         .from('audit_logs')
         .select('*')
         .or('action.ilike.%invite%,event_type.ilike.%invite%')
-        .gte('timestamp', startDate.toISOString())
-        .order('timestamp', { ascending: false });
+        .gte('created_at', startDate.toISOString())
+        .order('created_at', { ascending: false });
 
       if (error) {
         console.error('Erro ao buscar logs de auditoria:', error);
@@ -75,7 +75,7 @@ export const useInviteAudit = (timeRange: string = '30d') => {
         const dayEnd = new Date(date.setHours(23, 59, 59, 999));
         
         const dayActions = logs.filter(log => {
-          const logDate = new Date(log.timestamp || log.created_at);
+          const logDate = new Date(log.created_at);
           return logDate >= dayStart && logDate <= dayEnd;
         }).length;
         
@@ -88,11 +88,11 @@ export const useInviteAudit = (timeRange: string = '30d') => {
       // Map recent actions using correct column names
       const recentActions: InviteAuditLog[] = logs.slice(0, 20).map(log => ({
         id: log.id,
-        invite_id: log.resource_id || log.id,
+        invite_id: log.record_id || log.id,
         action_type: log.action || 'unknown',
         user_id: log.user_id || '',
-        timestamp: log.timestamp || log.created_at,
-        details: log.event_type === 'invite_action' ? { event_type: log.event_type } : {}
+        timestamp: log.created_at,
+        details: { action: log.action, table_name: log.table_name }
       }));
 
       setMetrics({
@@ -126,6 +126,8 @@ export const useInviteAudit = (timeRange: string = '30d') => {
     fetchAuditData, 
     runAudit,
     isLoading: loading,
-    isAuditing: loading
+    isAuditing: loading,
+    data: metrics,
+    refetch: fetchAuditData
   };
 };

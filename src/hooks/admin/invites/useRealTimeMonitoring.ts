@@ -8,6 +8,17 @@ interface MonitoringMetrics {
   recentActivity: number;
   errorRate: number;
   systemHealth: 'healthy' | 'warning' | 'critical';
+  successRate: number;
+  pendingDeliveries: number;
+  failedDeliveries: number;
+  avgResponseTime: number;
+}
+
+interface Alert {
+  id: string;
+  type: 'error' | 'warning' | 'info';
+  message: string;
+  timestamp: string;
 }
 
 export const useRealTimeMonitoring = () => {
@@ -15,10 +26,16 @@ export const useRealTimeMonitoring = () => {
     activeInvites: 0,
     recentActivity: 0,
     errorRate: 0,
-    systemHealth: 'healthy'
+    systemHealth: 'healthy',
+    successRate: 95,
+    pendingDeliveries: 0,
+    failedDeliveries: 0,
+    avgResponseTime: 1200
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [alerts, setAlerts] = useState<Alert[]>([]);
+  const [isConnected, setIsConnected] = useState(false);
 
   const fetchMonitoringData = async () => {
     try {
@@ -43,26 +60,50 @@ export const useRealTimeMonitoring = () => {
 
       if (recentError) throw recentError;
 
-      // Simulate error rate and system health
+      // Simulate other metrics
       const errorRate = Math.random() * 5; // 0-5% error rate
       const systemHealth: 'healthy' | 'warning' | 'critical' = 
         errorRate < 1 ? 'healthy' : 
         errorRate < 3 ? 'warning' : 'critical';
 
+      const successRate = 100 - errorRate;
+      const pendingDeliveries = Math.floor(Math.random() * 10);
+      const failedDeliveries = Math.floor(Math.random() * 3);
+      const avgResponseTime = 800 + Math.floor(Math.random() * 800);
+
       setMetrics({
         activeInvites: activeInvites?.length || 0,
         recentActivity: recentInvites?.length || 0,
         errorRate,
-        systemHealth
+        systemHealth,
+        successRate,
+        pendingDeliveries,
+        failedDeliveries,
+        avgResponseTime
       });
+
+      setIsConnected(true);
 
     } catch (error: any) {
       console.error('Erro ao carregar dados de monitoramento:', error);
       setError(error.message);
+      setIsConnected(false);
       toast.error('Erro ao carregar monitoramento em tempo real');
     } finally {
       setLoading(false);
     }
+  };
+
+  const acknowledgeAlert = (alertId: string) => {
+    setAlerts(prev => prev.filter(alert => alert.id !== alertId));
+  };
+
+  const clearAlerts = () => {
+    setAlerts([]);
+  };
+
+  const refreshMetrics = async () => {
+    await fetchMonitoringData();
   };
 
   useEffect(() => {
@@ -78,6 +119,11 @@ export const useRealTimeMonitoring = () => {
     metrics,
     loading,
     error,
-    refetch: fetchMonitoringData
+    refetch: fetchMonitoringData,
+    alerts,
+    isConnected,
+    acknowledgeAlert,
+    clearAlerts,
+    refreshMetrics
   };
 };
