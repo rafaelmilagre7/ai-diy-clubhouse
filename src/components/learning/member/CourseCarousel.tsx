@@ -31,16 +31,10 @@ export const CourseCarousel = ({ courses, onCourseClick }: CourseCarouselProps) 
             className="cursor-pointer hover:shadow-lg transition-shadow duration-200 group"
             onClick={() => onCourseClick(course)}
           >
-            {/* Corrigido: usar cover_image_url que existe no schema */}
-            {course.cover_image_url && (
-              <div className="aspect-video relative overflow-hidden rounded-t-lg">
-                <img 
-                  src={course.cover_image_url} 
-                  alt={course.title}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
-                />
-              </div>
-            )}
+            {/* Removido: cover_image_url não existe no schema */}
+            <div className="aspect-video relative overflow-hidden rounded-t-lg bg-gradient-to-br from-blue-900 to-purple-900 flex items-center justify-center">
+              <span className="text-white font-semibold">{course.title}</span>
+            </div>
             
             <CardContent className="p-4 space-y-3">
               <div className="flex items-center justify-between">

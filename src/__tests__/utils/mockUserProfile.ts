@@ -32,7 +32,7 @@ export const createMockUserProfile = (overrides: Partial<UserProfile> = {}): Use
     curiosity: null,
     business_sector: null,
     position: null,
-    has_implemented_ai: false, // Required property added
+    has_implemented_ai: "false", // String em vez de boolean
     ...overrides,
   };
 };

@@ -8,22 +8,8 @@ interface LessonCoverImageProps {
 }
 
 export const LessonCoverImage: React.FC<LessonCoverImageProps> = ({ lesson, className = "" }) => {
-  if (!lesson.cover_image_url) return null;
-  
-  return (
-    <div className={`mb-6 ${className}`}>
-      <div className="relative rounded-xl overflow-hidden">
-        <img 
-          src={lesson.cover_image_url} 
-          alt={`Capa da aula ${lesson.title}`}
-          className="w-full h-full object-cover aspect-video"
-          onError={(e) => {
-            (e.target as HTMLImageElement).style.display = 'none';
-          }}
-        />
-      </div>
-    </div>
-  );
+  // cover_image_url não existe no schema, então este componente não renderiza nada
+  return null;
 };
 
 export default LessonCoverImage;

@@ -4,6 +4,7 @@ import { LearningLesson } from "@/lib/supabase/types";
 import { Badge } from "@/components/ui/badge";
 import { CheckCircle, Play } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { safeJsonParseObject } from "@/utils/jsonUtils";
 
 interface LessonListItemProps {
   lesson: LearningLesson;
@@ -20,6 +21,10 @@ export const LessonListItem = ({
   inProgress,
   progress
 }: LessonListItemProps) => {
+  // Parse seguro do conteúdo da lição
+  const content = safeJsonParseObject(lesson.content, {});
+  const difficultyLevel = content.difficulty_level || 'beginner';
+
   return (
     <Link 
       key={lesson.id}
@@ -49,16 +54,17 @@ export const LessonListItem = ({
         <div>
           <div className="font-medium">{lesson.title}</div>
           <div className="flex items-center gap-2 mt-1">
-            {lesson.difficulty_level && (
+            {/* Corrigido: buscar difficulty_level do content */}
+            {difficultyLevel && (
               <span className={cn(
                 "text-xs px-1.5 py-0.5 rounded-md",
-                lesson.difficulty_level === 'beginner' && "bg-green-100 text-green-800",
-                lesson.difficulty_level === 'intermediate' && "bg-yellow-100 text-yellow-800",
-                lesson.difficulty_level === 'advanced' && "bg-red-100 text-red-800"
+                difficultyLevel === 'beginner' && "bg-green-100 text-green-800",
+                difficultyLevel === 'intermediate' && "bg-yellow-100 text-yellow-800",
+                difficultyLevel === 'advanced' && "bg-red-100 text-red-800"
               )}>
-                {lesson.difficulty_level === 'beginner' && "Iniciante"}
-                {lesson.difficulty_level === 'intermediate' && "Intermediário"}
-                {lesson.difficulty_level === 'advanced' && "Avançado"}
+                {difficultyLevel === 'beginner' && "Iniciante"}
+                {difficultyLevel === 'intermediate' && "Intermediário"}
+                {difficultyLevel === 'advanced' && "Avançado"}
               </span>
             )}
             
