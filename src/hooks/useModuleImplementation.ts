@@ -1,18 +1,48 @@
 
+
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { useAuth } from "@/contexts/auth";
-import { supabase, Solution, Module, Progress } from "@/lib/supabase";
+import { useSimpleAuth } from "@/contexts/auth/SimpleAuthProvider";
+import { supabase } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
-import { useLogging } from "@/hooks/useLogging";
+
+interface Solution {
+  id: string;
+  title: string;
+  description: string;
+  category: string;
+  estimated_time_hours: number;
+  created_at: string;
+  updated_at: string;
+}
+
+interface Module {
+  id: string;
+  solution_id: string;
+  title: string;
+  content: any;
+  type: string;
+  module_order: number;
+  created_at: string;
+  updated_at: string;
+}
+
+interface Progress {
+  id: string;
+  user_id: string;
+  solution_id: string;
+  current_module: number;
+  is_completed: boolean;
+  completed_modules: number[];
+  last_activity: string;
+}
 
 export const useModuleImplementation = () => {
   const { id, moduleIndex } = useParams<{ id: string; moduleIndex: string }>();
-  const { user, profile } = useAuth();
+  const { user, profile } = useSimpleAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
-  const { log, logError } = useLogging();
-  const isAdmin = profile?.role === 'admin';
+  const isAdmin = profile?.user_roles?.name === 'admin';
   
   const [solution, setSolution] = useState<Solution | null>(null);
   const [modules, setModules] = useState<Module[]>([]);
@@ -30,20 +60,15 @@ export const useModuleImplementation = () => {
         setLoading(true);
         
         // Fetch solution details
-        let query = supabase
+        const solutionQuery = supabase
           .from("solutions")
           .select("*")
-          .eq("id", id as any);
-          
-        // Se não for admin, filtra apenas soluções publicadas
-        if (!isAdmin) {
-          query = query.eq("published", true as any);
-        }
+          .eq("id", id);
         
-        const { data: solutionData, error: solutionError } = await query.maybeSingle();
+        const { data: solutionData, error: solutionError } = await solutionQuery.maybeSingle();
         
         if (solutionError) {
-          logError("Erro ao buscar solução:", solutionError);
+          console.error("Erro ao buscar solução:", solutionError);
           if (!isAdmin) {
             toast({
               title: "Solução não disponível",
@@ -66,42 +91,44 @@ export const useModuleImplementation = () => {
           return;
         }
         
-        setSolution(solutionData as unknown as Solution);
+        setSolution(solutionData as Solution);
         
         // Fetch modules for this solution
-        const { data: modulesData, error: modulesError } = await supabase
+        const modulesQuery = supabase
           .from("modules")
           .select("*")
-          .eq("solution_id", id as any)
+          .eq("solution_id", id)
           .order("module_order", { ascending: true });
         
+        const { data: modulesData, error: modulesError } = await modulesQuery;
+        
         if (modulesError) {
-          logError("Erro ao buscar módulos:", modulesError);
+          console.error("Erro ao buscar módulos:", modulesError);
           throw modulesError;
         }
         
         if (modulesData && modulesData.length > 0) {
-          const modulesList = modulesData as unknown as Module[];
+          const modulesList = modulesData as Module[];
           setModules(modulesList);
           
           // Get current module or create placeholder
           if (moduleIdx < modulesList.length) {
-            setCurrentModule(modulesList[moduleIdx] as unknown as Module);
+            setCurrentModule(modulesList[moduleIdx]);
           } else {
-            setCurrentModule(modulesList[0] as unknown as Module);
+            setCurrentModule(modulesList[0]);
           }
         } else {
           // Create placeholder module for implementation screen
-          const placeholderModule = {
+          const placeholderModule: Module = {
             id: `placeholder-module-${moduleIdx}`,
             solution_id: id,
-            title: (solutionData as any)?.title || "Implementação",
+            title: solutionData.title || "Implementação",
             content: {},
             type: "implementation",
             module_order: moduleIdx,
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString(),
-          } as unknown as Module;
+          };
           
           setModules([placeholderModule]);
           setCurrentModule(placeholderModule);
@@ -110,20 +137,21 @@ export const useModuleImplementation = () => {
         // Fetch user progress
         if (user) {
           try {
-            const { data: progressData, error: progressError } = await supabase
+            const progressQuery = supabase
               .from("progress")
               .select("*")
-              .eq("solution_id", id as any)
-              .eq("user_id", user.id as any)
-              .maybeSingle();
+              .eq("solution_id", id)
+              .eq("user_id", user.id);
+            
+            const { data: progressData, error: progressError } = await progressQuery.maybeSingle();
             
             if (progressError) {
-              logError("Erro ao buscar progresso:", progressError);
+              console.error("Erro ao buscar progresso:", progressError);
             } else if (progressData) {
-              setProgress(progressData as unknown as Progress);
+              setProgress(progressData as Progress);
             } else {
               // Create initial progress record if not exists
-              const { data: newProgress, error: createError } = await supabase
+              const newProgressQuery = supabase
                 .from("progress")
                 .insert({
                   user_id: user.id,
@@ -132,22 +160,24 @@ export const useModuleImplementation = () => {
                   is_completed: false,
                   completed_modules: [],
                   last_activity: new Date().toISOString(),
-                } as any)
+                })
                 .select()
                 .single();
               
+              const { data: newProgress, error: createError } = await newProgressQuery;
+              
               if (createError) {
-                logError("Erro ao criar progresso:", createError);
+                console.error("Erro ao criar progresso:", createError);
               } else if (newProgress) {
-                setProgress(newProgress as unknown as Progress);
+                setProgress(newProgress as Progress);
               }
             }
           } catch (progressError) {
-            logError("Erro ao processar progresso:", progressError);
+            console.error("Erro ao processar progresso:", progressError);
           }
         }
       } catch (error) {
-        logError("Error fetching data:", error);
+        console.error("Error fetching data:", error);
         toast({
           title: "Erro ao carregar dados",
           description: "Ocorreu um erro ao tentar carregar os dados da implementação.",
@@ -160,7 +190,7 @@ export const useModuleImplementation = () => {
     };
     
     fetchData();
-  }, [id, moduleIndex, user, toast, navigate, isAdmin, profile?.role, log, logError]);
+  }, [id, moduleIndex, user, toast, navigate, isAdmin, profile?.user_roles?.name]);
   
   return {
     solution,
@@ -171,3 +201,4 @@ export const useModuleImplementation = () => {
     moduleIdx
   };
 };
+

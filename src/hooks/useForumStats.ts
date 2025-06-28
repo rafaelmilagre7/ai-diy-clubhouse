@@ -1,4 +1,5 @@
 
+
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 
@@ -21,37 +22,47 @@ export const useForumStats = () => {
         console.log("Carregando estatísticas do fórum...");
         
         // Buscar contagem de tópicos
-        const { count: topicCount } = await supabase
+        const topicQuery = supabase
           .from('forum_topics')
           .select('*', { count: 'exact', head: true });
         
+        const { count: topicCount } = await topicQuery;
+        
         // Buscar contagem de posts
-        const { count: postCount } = await supabase
+        const postQuery = supabase
           .from('forum_posts')
           .select('*', { count: 'exact', head: true });
+        
+        const { count: postCount } = await postQuery;
         
         // Buscar usuários ativos (usuários únicos com atividade nos últimos 30 dias)
         const thirtyDaysAgo = new Date();
         thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
         
-        const { data: activeUsers } = await supabase
+        const activeUsersQuery = supabase
           .from('forum_topics')
           .select('user_id')
           .gt('created_at', thirtyDaysAgo.toISOString())
           .limit(1000);
         
+        const { data: activeUsers } = await activeUsersQuery;
+        
         // Adicionar também usuários que fizeram posts
-        const { data: activePosterUsers } = await supabase
+        const activePosterUsersQuery = supabase
           .from('forum_posts')
           .select('user_id')
           .gt('created_at', thirtyDaysAgo.toISOString())
           .limit(1000);
         
+        const { data: activePosterUsers } = await activePosterUsersQuery;
+        
         // Buscar contagem de tópicos resolvidos
-        const { count: solvedCount } = await supabase
+        const solvedQuery = supabase
           .from('forum_topics')
           .select('*', { count: 'exact', head: true })
           .eq('is_solved', true);
+        
+        const { count: solvedCount } = await solvedQuery;
         
         // Combinar e obter usuários únicos
         const allUserIds = [
@@ -98,3 +109,4 @@ export const useForumStats = () => {
     error
   };
 };
+
