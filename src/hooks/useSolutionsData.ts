@@ -9,7 +9,6 @@ interface SimpleSolution {
   description: string;
   category: string;
   estimated_time_hours: number;
-  cover_image_url: string | null;
   created_at: string;
   updated_at: string;
   published: boolean;
@@ -84,17 +83,10 @@ export const useSolutionsData = () => {
         setLoading(true);
         setError(null);
 
-        // Query otimizada com apenas campos necessários
-        let query = supabase
+        // Query simplificada com apenas campos que existem na tabela
+        const { data, error: fetchError } = await supabase
           .from("solutions")
-          .select("id, title, description, category, estimated_time_hours, cover_image_url, created_at, updated_at, published");
-
-        // Se não for admin, mostrar apenas soluções publicadas
-        if (!profile || profile.user_roles?.name !== 'admin') {
-          query = query.eq("published", true);
-        }
-
-        const { data, error: fetchError } = await query.order("created_at", { ascending: false });
+          .select("id, title, description, category, estimated_time_hours, created_at, updated_at, published");
 
         if (fetchError) {
           console.error('[SOLUTIONS] Erro ao buscar soluções:', fetchError);
@@ -108,24 +100,28 @@ export const useSolutionsData = () => {
           description: solution.description,
           category: solution.category,
           estimated_time_hours: solution.estimated_time_hours,
-          cover_image_url: solution.cover_image_url,
           created_at: solution.created_at,
           updated_at: solution.updated_at,
           published: solution.published
         }));
 
+        // Filtrar por publicação se não for admin
+        const filteredSolutions = profile?.user_roles?.name === 'admin' 
+          ? validSolutions 
+          : validSolutions.filter(sol => sol.published);
+
         // Atualizar cache
         solutionsCache.set(cacheKey, {
-          data: validSolutions,
+          data: filteredSolutions,
           timestamp: now
         });
 
-        setSolutions(validSolutions);
+        setSolutions(filteredSolutions);
         
         if (process.env.NODE_ENV === 'development') {
           console.log('[SOLUTIONS] Soluções carregadas do servidor:', {
             execCount: executionCountRef.current,
-            count: validSolutions.length,
+            count: filteredSolutions.length,
             isAdmin: profile?.user_roles?.name === 'admin',
             userId: user.id.substring(0, 8) + '***'
           });
