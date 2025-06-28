@@ -1,62 +1,91 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
-import { useSimpleAuth } from '@/contexts/auth/SimpleAuthProvider';
+import { Solution } from '@/lib/supabase';
+
+interface DashboardStats {
+  totalSolutions: number;
+  completedSolutions: number;
+  activeSolutions: number;
+  totalTools: number;
+}
+
+interface DashboardData {
+  stats: DashboardStats;
+  recentSolutions: Solution[];
+}
 
 export const useDashboardData = () => {
-  const { user, profile } = useSimpleAuth();
-
   return useQuery({
-    queryKey: ['dashboard-data', user?.id],
-    queryFn: async () => {
-      if (!user) throw new Error('User not authenticated');
-
-      console.log('🏠 [DASHBOARD] Carregando dados do dashboard...');
-
+    queryKey: ['dashboard-data'],
+    queryFn: async (): Promise<DashboardData> => {
       try {
-        // Buscar dados básicos em paralelo
-        const [solutionsResult, analyticsResult, profilesResult] = await Promise.allSettled([
-          supabase.from('solutions').select('id, title, category').limit(10),
-          supabase.from('analytics').select('*').eq('user_id', user.id).limit(50),
-          supabase.from('profiles').select('id, name').limit(100)
-        ]);
+        // Buscar soluções básicas
+        const { data: solutions, error: solutionsError } = await supabase
+          .from('solutions')
+          .select(`
+            id,
+            title,
+            description,
+            category,
+            difficulty,
+            estimated_time_hours,
+            cover_image_url,
+            created_at,
+            updated_at
+          `)
+          .eq('published', true)
+          .order('created_at', { ascending: false })
+          .limit(10);
 
-        const solutions = solutionsResult.status === 'fulfilled' ? solutionsResult.value.data || [] : [];
-        const analytics = analyticsResult.status === 'fulfilled' ? analyticsResult.value.data || [] : [];
-        const profiles = profilesResult.status === 'fulfilled' ? profilesResult.value.data || [] : [];
+        if (solutionsError) {
+          console.error('Erro ao buscar soluções:', solutionsError);
+        }
 
-        // Calcular métricas básicas
-        const dashboardData = {
-          user: {
-            id: user.id,
-            name: profile?.name || user.email || 'Usuário',
-            email: user.email
-          },
-          stats: {
-            totalSolutions: solutions.length,
-            totalUsers: profiles.length,
-            userActivity: analytics.length,
-            completionRate: Math.floor(Math.random() * 40) + 60 // Mock data
-          },
-          recentSolutions: solutions.slice(0, 5),
-          recentActivity: analytics.slice(0, 10),
-          insights: [
-            'Crescimento de 15% no engajamento esta semana',
-            'Taxa de conclusão acima da média do setor',
-            '3 novas implementações concluídas'
-          ]
+        // Buscar ferramentas para stats
+        const { data: tools, error: toolsError } = await supabase
+          .from('tools')
+          .select('id')
+          .eq('status', 'published');
+
+        if (toolsError) {
+          console.error('Erro ao buscar ferramentas:', toolsError);
+        }
+
+        const solutionsList = solutions || [];
+        const toolsList = tools || [];
+
+        // Calcular estatísticas básicas
+        const stats: DashboardStats = {
+          totalSolutions: solutionsList.length,
+          completedSolutions: 0, // Será calculado com progresso do usuário
+          activeSolutions: 0, // Será calculado com progresso do usuário
+          totalTools: toolsList.length
         };
 
-        console.log('✅ [DASHBOARD] Dados carregados com sucesso');
-        return dashboardData;
+        return {
+          stats,
+          recentSolutions: solutionsList
+        };
 
       } catch (error) {
-        console.error('❌ [DASHBOARD] Erro ao carregar dados:', error);
-        throw error;
+        console.error('Erro geral no dashboard:', error);
+        
+        // Retornar dados vazios em caso de erro
+        return {
+          stats: {
+            totalSolutions: 0,
+            completedSolutions: 0,
+            activeSolutions: 0,
+            totalTools: 0
+          },
+          recentSolutions: []
+        };
       }
     },
-    enabled: !!user,
-    staleTime: 5 * 60 * 1000,
+    staleTime: 5 * 60 * 1000, // 5 minutos
+    gcTime: 10 * 60 * 1000, // 10 minutos
+    retry: 2,
     refetchOnWindowFocus: false
   });
 };

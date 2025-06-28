@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { LogOut, User, Home, BookOpen, Wrench, Users, Calendar, MessageSquare, Lightbulb, HelpCircle, Award, Settings, Shield, BarChart3, UserPlus, Mail } from 'lucide-react';
+import { LogOut, User, Home, BookOpen, Wrench, Users, Calendar, MessageSquare, Lightbulb, HelpCircle, Award, Settings, Shield } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useSimpleAuth } from '@/contexts/auth/SimpleAuthProvider';
@@ -33,14 +33,9 @@ export const MemberSidebarContent: React.FC<MemberSidebarContentProps> = ({ onSi
     { icon: BookOpen, label: 'Área Formação', path: '/formacao' },
   ];
 
+  // APENAS UM ITEM para admin - entrada única para área administrativa
   const adminItems = [
     { icon: Shield, label: 'Painel Admin', path: '/admin' },
-    { icon: BarChart3, label: 'Analytics', path: '/admin/analytics' },
-    { icon: Users, label: 'Usuários', path: '/admin/users' },
-    { icon: UserPlus, label: 'Convites', path: '/admin/invites' },
-    { icon: Mail, label: 'Comunicações', path: '/admin/communications' },
-    { icon: Lightbulb, label: 'Gerenciar Soluções', path: '/admin/solutions' },
-    { icon: Wrench, label: 'Gerenciar Ferramentas', path: '/admin/tools' },
   ];
 
   const isActive = (path: string) => location.pathname === path || location.pathname.startsWith(path + '/');
@@ -63,9 +58,20 @@ export const MemberSidebarContent: React.FC<MemberSidebarContentProps> = ({ onSi
 
   return (
     <div className="flex flex-col h-full">
+      {/* Logo restaurada */}
       <div className="p-6">
-        <h2 className="text-xl font-bold text-white">Viver de IA</h2>
-        <p className="text-sm text-neutral-400 mt-1">
+        <div className="flex items-center">
+          <img
+            src="/lovable-uploads/a408c993-07fa-49f2-bee6-c66d0614298b.png"
+            alt="VIVER DE IA Club"
+            className="h-10 w-auto"
+            onError={(e) => {
+              const target = e.target as HTMLImageElement;
+              target.src = "https://milagredigital.com/wp-content/uploads/2025/04/viverdeiaclub.avif";
+            }}
+          />
+        </div>
+        <p className="text-sm text-neutral-400 mt-2">
           Olá, {profile?.name?.split(' ')[0] || 'Membro'}!
         </p>
       </div>
@@ -92,7 +98,7 @@ export const MemberSidebarContent: React.FC<MemberSidebarContentProps> = ({ onSi
           </div>
         )}
 
-        {/* Menu Admin */}
+        {/* Menu Admin - SIMPLIFICADO */}
         {isAdmin && (
           <div>
             <div className="px-2 py-2 mb-2">

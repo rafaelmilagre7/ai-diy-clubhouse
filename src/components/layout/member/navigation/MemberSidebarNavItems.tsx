@@ -4,18 +4,12 @@ import {
   Home, 
   BookOpen, 
   Wrench, 
-  Users, 
   Calendar,
   MessageSquare,
   Lightbulb,
   Settings,
   Shield,
-  BarChart3,
-  UserPlus,
-  Mail,
-  Database,
   Award,
-  FileText,
   HelpCircle
 } from 'lucide-react';
 import { MemberSidebarNavItem } from './MemberSidebarNavItem';
@@ -111,18 +105,11 @@ export const MemberSidebarNavItems: React.FC<MemberSidebarNavItemsProps> = ({ si
               label="Área Formação"
               sidebarOpen={sidebarOpen}
             />
-            
-            <MemberSidebarNavItem
-              to="/formacao/aulas"
-              icon={FileText}
-              label="Minhas Aulas"
-              sidebarOpen={sidebarOpen}
-            />
           </div>
         </>
       )}
 
-      {/* Seção Admin */}
+      {/* Seção Admin - SIMPLIFICADA */}
       {isAdmin && (
         <>
           {sidebarOpen && (
@@ -138,54 +125,6 @@ export const MemberSidebarNavItems: React.FC<MemberSidebarNavItemsProps> = ({ si
               to="/admin"
               icon={Shield}
               label="Painel Admin"
-              sidebarOpen={sidebarOpen}
-              adminOnly={true}
-            />
-            
-            <MemberSidebarNavItem
-              to="/admin/analytics"
-              icon={BarChart3}
-              label="Analytics"
-              sidebarOpen={sidebarOpen}
-              adminOnly={true}
-            />
-            
-            <MemberSidebarNavItem
-              to="/admin/users"
-              icon={Users}
-              label="Usuários"
-              sidebarOpen={sidebarOpen}
-              adminOnly={true}
-            />
-            
-            <MemberSidebarNavItem
-              to="/admin/invites"
-              icon={UserPlus}
-              label="Convites"
-              sidebarOpen={sidebarOpen}
-              adminOnly={true}
-            />
-            
-            <MemberSidebarNavItem
-              to="/admin/communications"
-              icon={Mail}
-              label="Comunicações"
-              sidebarOpen={sidebarOpen}
-              adminOnly={true}
-            />
-
-            <MemberSidebarNavItem
-              to="/admin/solutions"
-              icon={Lightbulb}
-              label="Gerenciar Soluções"
-              sidebarOpen={sidebarOpen}
-              adminOnly={true}
-            />
-
-            <MemberSidebarNavItem
-              to="/admin/tools"
-              icon={Wrench}
-              label="Gerenciar Ferramentas"
               sidebarOpen={sidebarOpen}
               adminOnly={true}
             />
