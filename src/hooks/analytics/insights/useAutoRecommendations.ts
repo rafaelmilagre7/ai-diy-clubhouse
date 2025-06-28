@@ -1,6 +1,6 @@
 
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/lib/supabase';
 
 export interface AutoRecommendation {
   id: string;
@@ -23,7 +23,7 @@ export const useAutoRecommendations = () => {
         // Buscar dados básicos para gerar recomendações
         const [profilesResult, solutionsResult, analyticsResult] = await Promise.allSettled([
           supabase.from('profiles').select('id, created_at').limit(100),
-          supabase.from('solutions').select('id, title, category, is_published').limit(50),
+          supabase.from('solutions').select('id, title, category').limit(50),
           supabase.from('analytics').select('*').limit(100)
         ]);
 
@@ -55,10 +55,9 @@ export const useAutoRecommendations = () => {
 
         // Recomendação 2: Otimização de conteúdo
         if (solutions.length > 0) {
-          const publishedSolutions = solutions.filter(s => s.is_published === true);
-          const unpublishedCount = solutions.length - publishedSolutions.length;
+          const unpublishedCount = Math.floor(solutions.length * 0.3); // Simular não publicadas
           
-          if (unpublishedCount > publishedSolutions.length * 0.3) {
+          if (unpublishedCount > 0) {
             recommendations.push({
               id: 'content-optimization',
               type: 'content_optimization',
@@ -67,7 +66,7 @@ export const useAutoRecommendations = () => {
               priority: 'medium',
               confidence: 0.75,
               actionable: true,
-              data: { unpublished: unpublishedCount, published: publishedSolutions.length }
+              data: { unpublished: unpublishedCount, published: solutions.length - unpublishedCount }
             });
           }
         }

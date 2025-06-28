@@ -1,6 +1,6 @@
 
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/lib/supabase';
 
 export interface JourneyStep {
   step: string;
@@ -28,14 +28,14 @@ export const useUserJourneyData = () => {
         const [profilesResult, analyticsResult, solutionsResult] = await Promise.allSettled([
           supabase.from('profiles').select('id, created_at').limit(1000),
           supabase.from('analytics').select('*').limit(1000),
-          supabase.from('solutions').select('id, title').eq('is_published', true)
+          supabase.from('solutions').select('id, title')
         ]);
 
         const profiles = profilesResult.status === 'fulfilled' ? profilesResult.value.data || [] : [];
         const analytics = analyticsResult.status === 'fulfilled' ? analyticsResult.value.data || [] : [];
         const solutions = solutionsResult.status === 'fulfilled' ? solutionsResult.value.data || [] : [];
 
-        // Como não temos is_completed na tabela progress, vamos simular a jornada baseada em analytics
+        // Simular progresso - como não temos is_completed, vamos usar dados simulados
         const totalUsers = profiles.length;
 
         // Definir etapas da jornada

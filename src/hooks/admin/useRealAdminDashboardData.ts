@@ -32,11 +32,17 @@ export const useRealAdminDashboardData = () => {
       setError(null);
 
       // Buscar contadores básicos usando apenas tabelas que existem
+      const totalUsersQuery = supabase.from('profiles').select('id', { count: 'exact', head: true });
+      const totalSolutionsQuery = supabase.from('solutions').select('id', { count: 'exact', head: true });
+      const totalToolsQuery = supabase.from('tools').select('id', { count: 'exact', head: true });
+      const totalEventsQuery = supabase.from('events').select('id', { count: 'exact', head: true });
+
+      // Executar queries de forma segura
       const [usersResult, solutionsResult, toolsResult, eventsResult] = await Promise.allSettled([
-        supabase.from('profiles').select('id', { count: 'exact', head: true }),
-        supabase.from('solutions').select('id', { count: 'exact', head: true }),
-        supabase.from('tools').select('id', { count: 'exact', head: true }),
-        supabase.from('events').select('id', { count: 'exact', head: true })
+        totalUsersQuery,
+        totalSolutionsQuery,
+        totalToolsQuery,
+        totalEventsQuery
       ]);
 
       // Buscar atividade recente dos últimos 30 dias
@@ -51,7 +57,6 @@ export const useRealAdminDashboardData = () => {
       const { data: solutions } = await supabase
         .from('solutions')
         .select('id, title, category')
-        .eq('is_published', true)
         .limit(5);
 
       const dashboardData: AdminDashboardData = {

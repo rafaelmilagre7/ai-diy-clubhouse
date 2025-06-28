@@ -1,6 +1,6 @@
 
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/lib/supabase';
 
 export interface TrendData {
   period: string;
@@ -36,7 +36,7 @@ export const useTrendAnalysisData = (period: 'week' | 'month' | 'quarter' = 'mon
             .gte('created_at', startDate.toISOString()),
           supabase
             .from('solutions')
-            .select('id, title, created_at, is_published'),
+            .select('id, title, created_at'),
           supabase
             .from('analytics')
             .select('*')
@@ -66,7 +66,7 @@ export const useTrendAnalysisData = (period: 'week' | 'month' | 'quarter' = 'mon
             return date >= periodStart && date < periodEnd;
           });
 
-          // Simular completions baseado em analytics (já que não temos status na tabela progress)
+          // Simular completions baseado em analytics
           const completions = periodAnalytics.filter(a => 
             a.event_type === 'solution_completed' || a.event_type === 'module_completed'
           ).length;
@@ -74,7 +74,7 @@ export const useTrendAnalysisData = (period: 'week' | 'month' | 'quarter' = 'mon
           trends.push({
             period: periodStart.toISOString().split('T')[0],
             users: periodProfiles.length,
-            solutions: solutions.filter(s => s.is_published).length, // Soluções publicadas
+            solutions: solutions.length, // Total de soluções
             completions,
             engagement: periodAnalytics.length
           });
