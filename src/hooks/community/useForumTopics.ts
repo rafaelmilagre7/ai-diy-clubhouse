@@ -66,16 +66,16 @@ export const useForumTopics = (categoryId?: string, limit = 20) => {
           content: item.content,
           category_id: item.category_id,
           user_id: item.user_id,
-          view_count: item.view_count || 0,
-          reply_count: item.reply_count || 0,
+          view_count: item.views_count || 0, // Corrigido: usar views_count
+          reply_count: item.replies_count || 0, // Corrigido: usar replies_count
           is_pinned: item.is_pinned || false,
           is_locked: item.is_locked || false,
-          is_solved: item.is_solved || false,
+          is_solved: false, // Default value since property doesn't exist
           created_at: item.created_at,
           updated_at: item.updated_at,
           last_activity_at: item.last_activity_at,
           profiles: item.profiles,
-          category: item.forum_categories
+          category: item.forum_categories?.error ? null : item.forum_categories // Handle potential errors
         }));
 
         console.log(`✅ ${topics.length} tópicos carregados`);
@@ -122,16 +122,16 @@ export const useForumTopic = (topicId: string) => {
           content: data.content,
           category_id: data.category_id,
           user_id: data.user_id,
-          view_count: data.view_count || 0,
-          reply_count: data.reply_count || 0,
+          view_count: data.views_count || 0,
+          reply_count: data.replies_count || 0,
           is_pinned: data.is_pinned || false,
           is_locked: data.is_locked || false,
-          is_solved: data.is_solved || false,
+          is_solved: false, // Default value
           created_at: data.created_at,
           updated_at: data.updated_at,
           last_activity_at: data.last_activity_at,
           profiles: data.profiles,
-          category: data.forum_categories
+          category: data.forum_categories?.error ? null : data.forum_categories
         };
 
         // Increment view count

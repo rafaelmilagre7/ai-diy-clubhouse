@@ -41,8 +41,8 @@ export const useTool = (toolId: string | null) => {
         has_member_benefit: Boolean(data.benefit_type),
         benefit_type: data.benefit_type as any,
         benefit_description: data.benefit_description,
-        benefit_link: data.benefit_link || null,
-        benefit_discount_percentage: data.benefit_discount_percentage || null,
+        benefit_link: null, // Set to null since property doesn't exist in database
+        benefit_discount_percentage: null, // Set to null since property doesn't exist in database
         created_at: data.created_at,
         updated_at: data.updated_at
       };

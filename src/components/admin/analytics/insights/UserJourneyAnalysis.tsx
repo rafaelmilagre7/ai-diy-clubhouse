@@ -53,7 +53,7 @@ export const UserJourneyAnalysis: React.FC<UserJourneyAnalysisProps> = ({ timeRa
   }
 
   const totalSteps = journeyData.steps?.length || 0;
-  const completedSteps = journeyData.steps?.filter(step => step.completed)?.length || 0;
+  const completedSteps = journeyData.steps?.filter(step => step.completion_rate > 80)?.length || 0;
   const completionRate = totalSteps > 0 ? (completedSteps / totalSteps) * 100 : 0;
 
   return (
@@ -68,7 +68,7 @@ export const UserJourneyAnalysis: React.FC<UserJourneyAnalysisProps> = ({ timeRa
         {/* Overview */}
         <div className="grid grid-cols-3 gap-4">
           <div className="text-center">
-            <div className="text-2xl font-bold text-primary">{journeyData.totalUsers || 0}</div>
+            <div className="text-2xl font-bold text-primary">{journeyData.total_users || 0}</div>
             <div className="text-sm text-muted-foreground">Usuários Ativos</div>
           </div>
           <div className="text-center">
@@ -76,7 +76,7 @@ export const UserJourneyAnalysis: React.FC<UserJourneyAnalysisProps> = ({ timeRa
             <div className="text-sm text-muted-foreground">Taxa de Conclusão</div>
           </div>
           <div className="text-center">
-            <div className="text-2xl font-bold text-orange-600">{journeyData.averageTime || 0}min</div>
+            <div className="text-2xl font-bold text-orange-600">{journeyData.avg_journey_time || 0}min</div>
             <div className="text-sm text-muted-foreground">Tempo Médio</div>
           </div>
         </div>
@@ -93,18 +93,18 @@ export const UserJourneyAnalysis: React.FC<UserJourneyAnalysisProps> = ({ timeRa
               <div key={index} className="space-y-2">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium">{step.name}</span>
-                    {step.completed && (
+                    <span className="text-sm font-medium">{step.step}</span>
+                    {step.completion_rate > 80 && (
                       <Badge variant="secondary" className="bg-green-100 text-green-800">
                         Concluído
                       </Badge>
                     )}
                   </div>
                   <span className="text-sm text-muted-foreground">
-                    {step.completionRate}%
+                    {step.completion_rate}%
                   </span>
                 </div>
-                <Progress value={step.completionRate} className="h-2" />
+                <Progress value={step.completion_rate} className="h-2" />
               </div>
             ))
           ) : (
@@ -114,39 +114,39 @@ export const UserJourneyAnalysis: React.FC<UserJourneyAnalysisProps> = ({ timeRa
           )}
         </div>
 
-        {/* Bottlenecks */}
-        {journeyData.bottlenecks && journeyData.bottlenecks.length > 0 && (
+        {/* Insights */}
+        {journeyData.insights && journeyData.insights.length > 0 && (
           <div className="space-y-3">
             <h4 className="font-medium flex items-center gap-2">
               <AlertCircle className="h-4 w-4 text-orange-500" />
-              Gargalos Identificados
+              Insights Identificados
             </h4>
-            {journeyData.bottlenecks.map((bottleneck, index) => (
+            {journeyData.insights.map((insight, index) => (
               <div key={index} className="border-l-4 border-orange-400 pl-3 py-2">
-                <div className="font-medium text-sm">{bottleneck.step}</div>
-                <div className="text-sm text-muted-foreground">{bottleneck.issue}</div>
-                <div className="text-xs text-orange-600">
-                  Taxa de abandono: {bottleneck.dropoffRate}%
-                </div>
+                <div className="text-sm text-muted-foreground">{insight}</div>
               </div>
             ))}
           </div>
         )}
 
         {/* Recommendations */}
-        {journeyData.recommendations && journeyData.recommendations.length > 0 && (
-          <div className="bg-blue-50 rounded-lg p-4 space-y-2">
-            <h4 className="font-medium text-blue-900">Recomendações</h4>
-            <ul className="space-y-1">
-              {journeyData.recommendations.map((rec, index) => (
-                <li key={index} className="text-sm text-blue-800 flex items-start gap-2">
-                  <span className="text-blue-500">•</span>
-                  {rec}
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
+        <div className="bg-blue-50 rounded-lg p-4 space-y-2">
+          <h4 className="font-medium text-blue-900">Recomendações</h4>
+          <ul className="space-y-1">
+            <li className="text-sm text-blue-800 flex items-start gap-2">
+              <span className="text-blue-500">•</span>
+              Otimizar a etapa com maior taxa de abandono
+            </li>
+            <li className="text-sm text-blue-800 flex items-start gap-2">
+              <span className="text-blue-500">•</span>
+              Implementar tutoriais interativos
+            </li>
+            <li className="text-sm text-blue-800 flex items-start gap-2">
+              <span className="text-blue-500">•</span>
+              Criar alertas para usuários inativos
+            </li>
+          </ul>
+        </div>
       </CardContent>
     </Card>
   );

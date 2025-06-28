@@ -1,78 +1,39 @@
 
-import { useQuery } from '@tanstack/react-query';
-import { useLogging } from '@/hooks/useLogging';
-import { useTimeRange } from '../lms/useTimeRange';
-import { ImplementationData } from './types/implementationTypes';
-import { 
-  fetchCompletionData,
-  fetchDifficultyData,
-  fetchTimeCompletionData,
-  fetchModuleData,
-  fetchRecentImplementations
-} from './queries/implementationQueries';
-import {
-  processCompletionRate,
-  processDifficultyDistribution,
-  processCompletionTime,
-  processModuleAbandonment,
-  processRecentImplementations
-} from './processors/dataProcessors';
+import { useImplementationQueries } from './queries/implementationQueries';
 
-export type { ImplementationData } from './types/implementationTypes';
+export const useImplementationsAnalyticsData = () => {
+  const {
+    getImplementationStats,
+    getImplementationTrends
+  } = useImplementationQueries();
 
-export const useImplementationsAnalyticsData = (timeRangeStr: string) => {
-  const { log, logWarning } = useLogging();
-  const startDate = useTimeRange(timeRangeStr);
+  // Chamar as queries sem argumentos
+  const statsQuery = getImplementationStats;
+  const trendsQuery = getImplementationTrends;
 
-  return useQuery({
-    queryKey: ['implementations-analytics', timeRangeStr],
-    queryFn: async (): Promise<ImplementationData> => {
-      try {
-        log('Buscando dados de analytics de implementações', { startDate });
-
-        // 1. Buscar todos os dados necessários
-        const completionData = await fetchCompletionData(startDate);
-        const difficultyData = await fetchDifficultyData(startDate);
-        const timeData = await fetchTimeCompletionData(startDate);
-        const moduleData = await fetchModuleData();
-        const recentData = await fetchRecentImplementations(startDate);
-        
-        // 2. Processar os dados
-        const completionRate = processCompletionRate(completionData);
-        const implementationsByDifficulty = processDifficultyDistribution(difficultyData);
-        const averageCompletionTime = processCompletionTime(timeData);
-        const abandonmentByModule = processModuleAbandonment(moduleData, recentData);
-        const recentImplementations = processRecentImplementations(recentData);
-        
-        return {
-          completionRate,
-          implementationsByDifficulty,
-          averageCompletionTime,
-          abandonmentByModule,
-          recentImplementations
-        };
-
-      } catch (error: any) {
-        logWarning('Erro ao processar dados de analytics de implementações', { 
-          error: error.message,
-          stack: error.stack,
-          critical: false
-        });
-        
-        // Retornar estrutura vazia em caso de erro
-        return {
-          completionRate: {
-            completed: 0,
-            inProgress: 0
-          },
-          implementationsByDifficulty: [],
-          averageCompletionTime: [],
-          abandonmentByModule: [],
-          recentImplementations: []
-        };
-      }
+  return {
+    stats: {
+      data: statsQuery.data,
+      isLoading: statsQuery.isLoading,
+      error: statsQuery.error
     },
-    staleTime: 5 * 60 * 1000, // 5 minutos
-    refetchOnWindowFocus: false
-  });
+    trends: {
+      data: trendsQuery.data,
+      isLoading: trendsQuery.isLoading,
+      error: trendsQuery.error
+    },
+    // Compatibility functions that return promises
+    fetchCompletionData: async () => {
+      return statsQuery.data?.solutions || [];
+    },
+    fetchDifficultyData: async () => {
+      return statsQuery.data?.solutions || [];
+    },
+    fetchTimeCompletionData: async () => {
+      return statsQuery.data?.analytics || [];
+    },
+    fetchRecentImplementations: async () => {
+      return statsQuery.data?.solutions?.slice(0, 10) || [];
+    }
+  };
 };
