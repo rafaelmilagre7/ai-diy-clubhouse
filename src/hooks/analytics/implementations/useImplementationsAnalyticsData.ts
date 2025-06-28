@@ -2,7 +2,8 @@
 import { useImplementationQueries } from './queries/implementationQueries';
 import { ImplementationData } from './types/implementationTypes';
 
-export { ImplementationData } from './types/implementationTypes';
+// Use export type for isolated modules
+export type { ImplementationData } from './types/implementationTypes';
 
 export const useImplementationsAnalyticsData = () => {
   const {
@@ -45,7 +46,7 @@ export const useImplementationsAnalyticsData = () => {
     data: mockImplementationData,
     isLoading: getImplementationStats.isLoading,
     error: getImplementationStats.error,
-    refetch: getImplementationStats.refetch,
+    refetch: () => getImplementationStats.refetch(),
     
     // Compatibility functions that return promises
     fetchCompletionData: async () => {

@@ -11,8 +11,15 @@ export interface MaterialItem {
   created_at: string;
 }
 
-export const useMaterialsData = (solutionId?: string) => {
-  return useQuery({
+// Export Material as alias for MaterialItem for compatibility
+export type Material = MaterialItem;
+
+export const useMaterialsData = (solutionIdOrModule?: string | { id: string }) => {
+  const solutionId = typeof solutionIdOrModule === 'string' 
+    ? solutionIdOrModule 
+    : solutionIdOrModule?.id;
+
+  const query = useQuery({
     queryKey: ['materials', solutionId],
     queryFn: async (): Promise<MaterialItem[]> => {
       if (!solutionId) return [];
@@ -43,4 +50,10 @@ export const useMaterialsData = (solutionId?: string) => {
     enabled: !!solutionId,
     staleTime: 5 * 60 * 1000
   });
+
+  return {
+    ...query,
+    materials: query.data || [],
+    loading: query.isLoading
+  };
 };
