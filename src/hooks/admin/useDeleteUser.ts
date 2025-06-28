@@ -11,63 +11,63 @@ export const useDeleteUser = () => {
     try {
       setIsDeleting(true);
 
-      // Deletar apenas das tabelas que realmente existem no schema
+      // Deletar apenas das tabelas que realmente existem no schema atual
       
-      // Deletar comentários de aprendizado (existe)
+      // Deletar comentários de aprendizado
       await supabase
         .from('learning_comments')
         .delete()
         .eq('user_id', userId);
 
-      // Deletar progresso de aprendizado (existe)
+      // Deletar progresso de aprendizado
       await supabase
         .from('learning_progress')
         .delete()
         .eq('user_id', userId);
 
-      // Deletar certificados (existe)
+      // Deletar certificados
       await supabase
         .from('learning_certificates')
         .delete()
         .eq('user_id', userId);
 
-      // Deletar avaliações NPS (existe)
+      // Deletar avaliações NPS
       await supabase
         .from('learning_lesson_nps')
         .delete()
         .eq('user_id', userId);
 
-      // Deletar clicks em benefícios (existe)
+      // Deletar clicks em benefícios
       await supabase
         .from('benefit_clicks')
         .delete()
         .eq('user_id', userId);
 
-      // Deletar posts do fórum (existe)
+      // Deletar posts do fórum
       await supabase
         .from('forum_posts')
         .delete()
         .eq('user_id', userId);
 
-      // Deletar tópicos do fórum (existe)
+      // Deletar tópicos do fórum
       await supabase
         .from('forum_topics')
         .delete()
         .eq('user_id', userId);
 
-      // Deletar reações do fórum (existe)
+      // Deletar reações do fórum
       await supabase
         .from('forum_reactions')
         .delete()
         .eq('user_id', userId);
 
-      // Deletar trilhas de implementação (existe)
+      // Deletar trilhas de implementação
       await supabase
         .from('implementation_trails')
         .delete()
         .eq('user_id', userId);
 
-      // Deletar analytics (existe)
+      // Deletar analytics
       await supabase
         .from('analytics')
         .delete()
