@@ -30,7 +30,8 @@ export const createMockUserProfile = (overrides: Partial<UserProfile> = {}): Use
     onboarding_completed_at: '2024-01-01T00:00:00Z',
     birth_date: null,
     curiosity: null,
-    business_sector: null, // Required property added
+    business_sector: null,
+    position: null, // Required property added
     ...overrides,
   };
 };
