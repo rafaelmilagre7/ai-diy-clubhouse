@@ -43,7 +43,7 @@ export const useTools = (options?: {
         has_member_benefit: Boolean(tool.benefit_title || tool.benefit_description),
         benefit_type: tool.benefit_type,
         benefit_discount_percentage: tool.benefit_discount_percentage ?? null,
-        benefit_link: tool.benefit_link ?? null,
+        benefit_link: tool.benefit_url ?? null,
         benefit_title: tool.benefit_title,
         benefit_description: tool.benefit_description,
         status: tool.is_active // Map is_active to status for compatibility

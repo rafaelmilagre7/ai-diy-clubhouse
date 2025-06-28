@@ -2,7 +2,7 @@
 import React, { useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/auth';
-import { supabase, Solution } from '@/lib/supabase';
+import { supabase } from '@/lib/supabase';
 import LoadingScreen from '@/components/common/LoadingScreen';
 import SolutionEditorHeader from '@/components/admin/solution-editor/SolutionEditorHeader';
 import SolutionEditorTabs from '@/components/admin/solution-editor/SolutionEditorTabs';
@@ -127,7 +127,7 @@ const AdminSolutionEdit = () => {
           <SolutionEditorTabs 
             activeTab={activeTab}
             setActiveTab={setActiveTab}
-            solution={solution}
+            solution={solution as any}
             currentValues={currentValues}
             onSubmit={onSubmit}
             saving={saving}
