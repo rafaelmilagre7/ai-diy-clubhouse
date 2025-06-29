@@ -4,7 +4,24 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/auth';
 import { toast } from 'sonner';
-import { SolutionCertificate } from '@/types/learningTypes';
+import jsPDF from 'jspdf';
+
+interface SolutionCertificate {
+  id: string;
+  user_id: string;
+  solution_id: string;
+  template_id?: string;
+  validation_code: string;
+  implementation_date: string;
+  certificate_url?: string;
+  certificate_filename?: string;
+  issued_at: string;
+  solutions: {
+    title: string;
+    category: string;
+    description?: string;
+  };
+}
 
 export const useSolutionCertificates = (solutionId?: string) => {
   const { user } = useAuth();
@@ -37,7 +54,7 @@ export const useSolutionCertificates = (solutionId?: string) => {
       const { data, error } = await query;
       
       if (error) throw error;
-      return data as any[];
+      return data as SolutionCertificate[];
     },
     enabled: !!user?.id
   });
@@ -98,8 +115,40 @@ export const useSolutionCertificates = (solutionId?: string) => {
         return;
       }
 
-      // Gerar PDF do certificado
-      await generateCertificatePDF(certificate);
+      // Gerar PDF básico do certificado
+      const pdf = new jsPDF({
+        orientation: 'landscape',
+        unit: 'mm',
+        format: 'a4'
+      });
+
+      pdf.setFontSize(24);
+      pdf.text('CERTIFICADO DE IMPLEMENTAÇÃO', 148, 50, { align: 'center' });
+      
+      pdf.setFontSize(16);
+      pdf.text('Certificamos que', 148, 80, { align: 'center' });
+      
+      pdf.setFontSize(20);
+      pdf.text('O usuário', 148, 100, { align: 'center' });
+      
+      pdf.setFontSize(16);
+      pdf.text('concluiu com sucesso a implementação da solução', 148, 120, { align: 'center' });
+      
+      pdf.setFontSize(18);
+      pdf.text(certificate.solutions.title, 148, 140, { align: 'center' });
+      
+      pdf.setFontSize(12);
+      pdf.text(`Categoria: ${certificate.solutions.category}`, 148, 160, { align: 'center' });
+      
+      pdf.setFontSize(14);
+      const implementationDate = new Date(certificate.implementation_date).toLocaleDateString('pt-BR');
+      pdf.text(`em ${implementationDate}`, 148, 180, { align: 'center' });
+      
+      pdf.setFontSize(10);
+      pdf.text(`Código de Validação: ${certificate.validation_code}`, 148, 200, { align: 'center' });
+
+      pdf.save(`certificado-${certificate.solutions.title}-${certificate.validation_code}.pdf`);
+      toast.success('Certificado baixado com sucesso!');
     } catch (error) {
       console.error('Erro ao fazer download:', error);
       toast.error('Erro ao fazer download do certificado');
@@ -115,77 +164,4 @@ export const useSolutionCertificates = (solutionId?: string) => {
     isGenerating: generateCertificate.isPending,
     downloadCertificate
   };
-};
-
-// Função auxiliar para gerar PDF do certificado
-const generateCertificatePDF = async (certificate: any) => {
-  try {
-    // Buscar template do certificado
-    const { data: template, error } = await supabase
-      .from('solution_certificate_templates')
-      .select('*')
-      .eq('id', certificate.template_id)
-      .single();
-
-    if (error || !template) {
-      toast.error('Template do certificado não encontrado');
-      return;
-    }
-
-    // Criar elemento temporário para renderizar o certificado
-    const tempDiv = document.createElement('div');
-    tempDiv.style.position = 'absolute';
-    tempDiv.style.left = '-9999px';
-    tempDiv.style.width = '800px';
-    
-    // Substituir placeholders no template
-    let htmlContent = template.html_template
-      .replace(/{{USER_NAME}}/g, certificate.profiles?.name || 'Usuário')
-      .replace(/{{SOLUTION_TITLE}}/g, certificate.solutions?.title || 'Solução')
-      .replace(/{{SOLUTION_CATEGORY}}/g, certificate.solutions?.category || 'Categoria')
-      .replace(/{{IMPLEMENTATION_DATE}}/g, new Date(certificate.implementation_date).toLocaleDateString('pt-BR'))
-      .replace(/{{VALIDATION_CODE}}/g, certificate.validation_code);
-
-    tempDiv.innerHTML = htmlContent;
-    
-    // Adicionar estilos
-    const styleSheet = document.createElement('style');
-    styleSheet.textContent = template.css_styles || '';
-    tempDiv.appendChild(styleSheet);
-    
-    document.body.appendChild(tempDiv);
-
-    // Usar html2canvas para capturar o elemento
-    const html2canvas = (await import('html2canvas')).default;
-    const canvas = await html2canvas(tempDiv, {
-      scale: 2,
-      useCORS: true,
-      allowTaint: true
-    });
-
-    // Converter para PDF usando jsPDF
-    const jsPDF = (await import('jspdf')).default;
-    const pdf = new jsPDF({
-      orientation: 'landscape',
-      unit: 'mm',
-      format: 'a4'
-    });
-
-    const imgData = canvas.toDataURL('image/png');
-    const imgWidth = 297; // A4 landscape width in mm
-    const imgHeight = (canvas.height * imgWidth) / canvas.width;
-
-    pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
-    
-    // Download do PDF
-    pdf.save(`certificado-${certificate.solutions?.title || 'solucao'}-${certificate.validation_code}.pdf`);
-
-    // Remover elemento temporário
-    document.body.removeChild(tempDiv);
-
-    toast.success('Certificado baixado com sucesso!');
-  } catch (error) {
-    console.error('Erro ao gerar PDF:', error);
-    toast.error('Erro ao gerar PDF do certificado');
-  }
 };

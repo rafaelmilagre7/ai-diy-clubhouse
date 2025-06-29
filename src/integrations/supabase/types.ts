@@ -1693,6 +1693,7 @@ export type Database = {
           id: string
           issued_at: string
           user_id: string
+          validation_code: string
         }
         Insert: {
           certificate_url?: string | null
@@ -1701,6 +1702,7 @@ export type Database = {
           id?: string
           issued_at?: string
           user_id: string
+          validation_code?: string
         }
         Update: {
           certificate_url?: string | null
@@ -1709,6 +1711,7 @@ export type Database = {
           id?: string
           issued_at?: string
           user_id?: string
+          validation_code?: string
         }
         Relationships: [
           {
@@ -3460,6 +3463,63 @@ export type Database = {
         }
         Relationships: []
       }
+      solution_certificates: {
+        Row: {
+          certificate_filename: string | null
+          certificate_url: string | null
+          created_at: string
+          id: string
+          implementation_date: string
+          issued_at: string
+          solution_id: string
+          template_id: string | null
+          updated_at: string
+          user_id: string
+          validation_code: string
+        }
+        Insert: {
+          certificate_filename?: string | null
+          certificate_url?: string | null
+          created_at?: string
+          id?: string
+          implementation_date: string
+          issued_at?: string
+          solution_id: string
+          template_id?: string | null
+          updated_at?: string
+          user_id: string
+          validation_code?: string
+        }
+        Update: {
+          certificate_filename?: string | null
+          certificate_url?: string | null
+          created_at?: string
+          id?: string
+          implementation_date?: string
+          issued_at?: string
+          solution_id?: string
+          template_id?: string | null
+          updated_at?: string
+          user_id?: string
+          validation_code?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "solution_certificates_solution_id_fkey"
+            columns: ["solution_id"]
+            isOneToOne: false
+            referencedRelation: "solutions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "solution_certificates_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "solution_certificate_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       solution_comment_likes: {
         Row: {
           comment_id: string
@@ -4715,6 +4775,10 @@ export type Database = {
           policy_count: number
           security_status: string
         }[]
+      }
+      check_solution_certificate_eligibility: {
+        Args: { p_user_id: string; p_solution_id: string }
+        Returns: boolean
       }
       clean_user_onboarding_data: {
         Args: { p_user_id: string }

@@ -27,3 +27,33 @@ export interface CommunityReport {
   created_at: string;
   updated_at: string;
 }
+
+// Tipos para certificados de soluções
+export interface SolutionCertificate {
+  id: string;
+  user_id: string;
+  solution_id: string;
+  template_id?: string;
+  validation_code: string;
+  implementation_date: string;
+  certificate_url?: string;
+  certificate_filename?: string;
+  issued_at: string;
+  created_at: string;
+  updated_at: string;
+  solutions?: {
+    title: string;
+    category: string;
+    description?: string;
+  };
+}
+
+export interface SolutionCertificateTemplate {
+  id: string;
+  name: string;
+  html_template: string;
+  css_styles?: string;
+  is_default: boolean;
+  created_at: string;
+  updated_at: string;
+}
