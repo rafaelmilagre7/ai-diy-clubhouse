@@ -2809,6 +2809,48 @@ export type Database = {
           },
         ]
       }
+      progress: {
+        Row: {
+          completed_at: string | null
+          completed_modules: number[] | null
+          completion_data: Json | null
+          created_at: string | null
+          current_module: number | null
+          id: string
+          implementation_status: string | null
+          is_completed: boolean | null
+          last_activity: string | null
+          solution_id: string
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          completed_modules?: number[] | null
+          completion_data?: Json | null
+          created_at?: string | null
+          current_module?: number | null
+          id?: string
+          implementation_status?: string | null
+          is_completed?: boolean | null
+          last_activity?: string | null
+          solution_id: string
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          completed_modules?: number[] | null
+          completion_data?: Json | null
+          created_at?: string | null
+          current_module?: number | null
+          id?: string
+          implementation_status?: string | null
+          is_completed?: boolean | null
+          last_activity?: string | null
+          solution_id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       rate_limit_attempts: {
         Row: {
           attempts: number | null
@@ -3277,6 +3319,60 @@ export type Database = {
           solution_id?: string | null
           tool_name?: string
           tool_url?: string | null
+        }
+        Relationships: []
+      }
+      solutions: {
+        Row: {
+          category: string | null
+          checklist_items: Json | null
+          completion_requirements: Json | null
+          created_at: string | null
+          description: string | null
+          difficulty: string | null
+          id: string
+          implementation_steps: Json | null
+          published: boolean | null
+          related_solutions: string[] | null
+          slug: string | null
+          tags: string[] | null
+          thumbnail_url: string | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          category?: string | null
+          checklist_items?: Json | null
+          completion_requirements?: Json | null
+          created_at?: string | null
+          description?: string | null
+          difficulty?: string | null
+          id?: string
+          implementation_steps?: Json | null
+          published?: boolean | null
+          related_solutions?: string[] | null
+          slug?: string | null
+          tags?: string[] | null
+          thumbnail_url?: string | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          category?: string | null
+          checklist_items?: Json | null
+          completion_requirements?: Json | null
+          created_at?: string | null
+          description?: string | null
+          difficulty?: string | null
+          id?: string
+          implementation_steps?: Json | null
+          published?: boolean | null
+          related_solutions?: string[] | null
+          slug?: string | null
+          tags?: string[] | null
+          thumbnail_url?: string | null
+          title?: string
+          updated_at?: string | null
         }
         Relationships: []
       }

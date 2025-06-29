@@ -19,49 +19,29 @@ export const useSolutionsAdmin = () => {
     try {
       setLoading(true);
       
-      // Buscar soluções da tabela restaurada
+      // Buscar todas as soluções da tabela restaurada
       const { data, error } = await supabase
         .from('solutions')
         .select('*')
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.warn('Erro ao buscar soluções:', error);
-        // Se a tabela não existir, usar dados mock
-        setSolutions([
-          {
-            id: 'mock-1',
-            title: 'Assistente Virtual WhatsApp',
-            description: 'Implemente um assistente virtual completo para WhatsApp Business usando IA',
-            category: 'automacao',
-            difficulty: 'intermediario' as 'easy' | 'medium' | 'advanced',
-            published: true,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-            slug: 'assistente-virtual-whatsapp'
-          },
-          {
-            id: 'mock-2',
-            title: 'Automação de E-mail Marketing',
-            description: 'Configure campanhas automatizadas de e-mail com segmentação inteligente',
-            category: 'marketing',
-            difficulty: 'iniciante' as 'easy' | 'medium' | 'advanced',
-            published: true,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-            slug: 'automacao-email-marketing'
-          }
-        ]);
-        return;
+        console.error('Erro ao buscar soluções:', error);
+        throw error;
       }
 
-      // Mapear dificuldades para o formato esperado pelo frontend
+      // Mapear as soluções para o formato esperado pelo frontend
       const mappedSolutions = (data || []).map(solution => ({
         ...solution,
-        difficulty: mapDifficultyToEnglish(solution.difficulty)
+        // Garantir que os campos obrigatórios existam
+        slug: solution.slug || `${solution.title?.toLowerCase().replace(/\s+/g, '-') || 'solucao'}-${solution.id}`,
+        category: solution.category || 'Operacional'
       }));
 
       setSolutions(mappedSolutions);
+      
+      console.log(`✅ Carregadas ${mappedSolutions.length} soluções da tabela restaurada`);
+      
     } catch (error: any) {
       console.error('Erro ao buscar soluções:', error.message);
       toast({
@@ -71,22 +51,6 @@ export const useSolutionsAdmin = () => {
       });
     } finally {
       setLoading(false);
-    }
-  };
-
-  // Mapear dificuldades do português para inglês
-  const mapDifficultyToEnglish = (difficulty: string): 'easy' | 'medium' | 'advanced' => {
-    switch (difficulty?.toLowerCase()) {
-      case 'iniciante':
-        return 'easy';
-      case 'intermediario':
-      case 'intermediário':
-        return 'medium';
-      case 'avancado':
-      case 'avançado':
-        return 'advanced';
-      default:
-        return 'easy';
     }
   };
 

@@ -33,54 +33,73 @@ export const useRealAdminStats = (timeRange: string) => {
       try {
         setLoading(true);
         
-        // Usar a função SQL criada para buscar estatísticas
-        const { data, error } = await supabase.rpc('get_admin_dashboard_stats');
-        
-        if (error) {
-          console.warn('Erro ao buscar estatísticas via RPC, usando queries diretas:', error);
-          
-          // Fallback: buscar dados individualmente
-          const [usersResult, solutionsResult, lessonsResult, progressResult] = await Promise.all([
-            supabase.from('profiles').select('id', { count: 'exact' }),
-            supabase.from('solutions').select('id', { count: 'exact' }).eq('published', true),
-            supabase.from('learning_lessons').select('id', { count: 'exact' }).eq('published', true),
-            supabase.from('progress').select('id', { count: 'exact' }).eq('is_completed', true)
-          ]);
+        // Buscar dados das tabelas restauradas
+        const [usersResult, solutionsResult, lessonsResult, progressResult] = await Promise.all([
+          supabase.from('profiles').select('id, role', { count: 'exact' }),
+          supabase.from('solutions').select('id', { count: 'exact' }).eq('published', true),
+          supabase.from('learning_lessons').select('id', { count: 'exact' }).eq('published', true),
+          supabase.from('progress').select('id', { count: 'exact' }).eq('is_completed', true)
+        ]);
 
-          setStatsData({
-            totalUsers: usersResult.count || 0,
-            totalSolutions: solutionsResult.count || 0,
-            totalLearningLessons: lessonsResult.count || 0,
-            completedImplementations: progressResult.count || 0,
-            averageImplementationTime: 120,
-            usersByRole: [
-              { role: 'admin', count: 2 },
-              { role: 'member', count: (usersResult.count || 0) - 2 }
-            ],
-            lastMonthGrowth: Math.floor((usersResult.count || 0) * 0.1),
-            activeUsersLast7Days: Math.floor((usersResult.count || 0) * 0.3),
-            contentEngagementRate: 65
-          });
-        } else {
-          setStatsData(data);
-        }
+        // Processar roles dos usuários
+        const rolesCounts = (usersResult.data || []).reduce((acc: Record<string, number>, user) => {
+          const role = user.role || 'member';
+          acc[role] = (acc[role] || 0) + 1;
+          return acc;
+        }, {});
+
+        const usersByRole = Object.entries(rolesCounts).map(([role, count]) => ({
+          role,
+          count: count as number
+        }));
+
+        // Calcular usuários ativos nos últimos 7 dias
+        const lastWeek = new Date();
+        lastWeek.setDate(lastWeek.getDate() - 7);
+        
+        const { count: activeUsers } = await supabase
+          .from('analytics')
+          .select('*', { count: 'exact', head: true })
+          .gte('created_at', lastWeek.toISOString())
+          .not('user_id', 'is', null);
+
+        const totalUsers = usersResult.count || 0;
+        const totalSolutions = solutionsResult.count || 0;
+        const completedImplementations = progressResult.count || 0;
+
+        setStatsData({
+          totalUsers,
+          totalSolutions,
+          totalLearningLessons: lessonsResult.count || 0,
+          completedImplementations,
+          averageImplementationTime: completedImplementations > 0 ? 120 : 0,
+          usersByRole,
+          lastMonthGrowth: Math.floor(totalUsers * 0.1),
+          activeUsersLast7Days: activeUsers || Math.floor(totalUsers * 0.3),
+          contentEngagementRate: totalUsers > 0 ? Math.round((completedImplementations / totalUsers) * 100) : 0
+        });
+
+        console.log(`✅ Estatísticas administrativas carregadas:`, {
+          totalUsers,
+          totalSolutions,
+          completedImplementations,
+          activeUsers
+        });
+
       } catch (error) {
         console.error('Erro ao buscar estatísticas administrativas:', error);
         
-        // Dados mock como fallback final
+        // Fallback com dados mínimos
         setStatsData({
-          totalUsers: 12,
-          totalSolutions: 8,
-          totalLearningLessons: 24,
-          completedImplementations: 45,
-          averageImplementationTime: 180,
-          usersByRole: [
-            { role: 'admin', count: 2 },
-            { role: 'member', count: 10 }
-          ],
-          lastMonthGrowth: 3,
-          activeUsersLast7Days: 8,
-          contentEngagementRate: 67
+          totalUsers: 0,
+          totalSolutions: 0,
+          totalLearningLessons: 0,
+          completedImplementations: 0,
+          averageImplementationTime: 0,
+          usersByRole: [{ role: 'member', count: 0 }],
+          lastMonthGrowth: 0,
+          activeUsersLast7Days: 0,
+          contentEngagementRate: 0
         });
       } finally {
         setLoading(false);
