@@ -6,7 +6,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
 import { Solution } from "@/lib/supabase";
 import { toast } from "sonner";
-import { LoadingScreen } from "@/components/common/LoadingScreen";
+import LoadingScreen from "@/components/common/LoadingScreen";
 import { SolutionsTable } from "@/components/admin/solutions/SolutionsTable";
 import { SolutionsHeader } from "@/components/admin/solutions/SolutionsHeader";
 import { SolutionsFilters } from "@/components/admin/solutions/SolutionsFilters";

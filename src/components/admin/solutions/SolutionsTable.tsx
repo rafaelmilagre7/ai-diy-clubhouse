@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Solution } from '@/types/solutionTypes';
+import { Solution } from '@/lib/supabase/types/legacy';
 import { SolutionDifficultyBadge } from './SolutionDifficultyBadge';
 import { TableActions } from './TableActions';
 import { PublishStatus } from './PublishStatus';
@@ -9,23 +9,26 @@ import { formatDateDistance } from './utils/dateFormatter';
 
 interface SolutionsTableProps {
   solutions: Solution[];
-  onDeleteClick: (id: string) => void;
+  onEdit: (id: string) => void;
+  onDelete: (solutionId: string) => Promise<void>;
+  onTogglePublish: (solutionId: string, newPublishedState: boolean) => Promise<void>;
+  getCategoryDetails: (category: string) => { name: string; color: string; bgColor: string; icon: string; description: string; };
 }
 
 export const SolutionsTable: React.FC<SolutionsTableProps> = ({ 
   solutions, 
-  onDeleteClick 
+  onEdit,
+  onDelete,
+  onTogglePublish,
+  getCategoryDetails
 }) => {
   const getCategoryText = (category: string) => {
-    switch (category) {
-      case 'revenue': return 'Aumento de Receita';
-      case 'operational': return 'Otimização Operacional';
-      case 'strategy': return 'Gestão Estratégica';
-      case 'Receita': return 'Aumento de Receita';
-      case 'Operacional': return 'Otimização Operacional';
-      case 'Estratégia': return 'Gestão Estratégica';
-      default: return category;
-    }
+    const details = getCategoryDetails(category);
+    return details.name;
+  };
+
+  const handleTogglePublish = async (solutionId: string, currentPublished: boolean) => {
+    await onTogglePublish(solutionId, !currentPublished);
   };
 
   return (
@@ -49,13 +52,17 @@ export const SolutionsTable: React.FC<SolutionsTableProps> = ({
               <SolutionDifficultyBadge difficulty={solution.difficulty} />
             </TableCell>
             <TableCell>
-              <PublishStatus published={solution.published} />
+              <PublishStatus 
+                published={solution.published}
+                onToggle={() => handleTogglePublish(solution.id, solution.published)}
+              />
             </TableCell>
             <TableCell className="text-white">{formatDateDistance(solution.created_at)}</TableCell>
             <TableCell className="text-right">
               <TableActions 
                 solutionId={solution.id} 
-                onDeleteClick={onDeleteClick} 
+                onEdit={() => onEdit(solution.id)}
+                onDelete={() => onDelete(solution.id)} 
               />
             </TableCell>
           </TableRow>
