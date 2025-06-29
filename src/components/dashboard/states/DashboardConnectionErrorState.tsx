@@ -1,52 +1,42 @@
 
-import { Button } from "@/components/ui/button";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { AlertCircle, RefreshCw } from "lucide-react";
-import { useAuth } from "@/contexts/auth";
+import React from 'react';
+import { AlertTriangle, RefreshCw } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
 
-export const DashboardConnectionErrorState = () => {
-  const { signOut } = useAuth();
-
+export const DashboardConnectionErrorState: React.FC = () => {
   const handleRefresh = () => {
     window.location.reload();
   };
 
-  const handleSignOut = async () => {
-    await signOut();
-    window.location.href = '/login';
-  };
-
   return (
-    <div className="container flex flex-col items-center justify-center py-12 text-center">
-      <div className="max-w-md mx-auto">
-        <Alert variant="destructive" className="mb-6">
-          <AlertCircle className="h-4 w-4" />
-          <AlertTitle>Problema de conexão</AlertTitle>
-          <AlertDescription>
-            Não foi possível carregar os dados do seu dashboard. Isso pode ser causado por um problema temporário de conexão.
-          </AlertDescription>
-        </Alert>
+    <div className="min-h-[60vh] flex items-center justify-center">
+      <Card className="max-w-md w-full mx-4">
+        <CardContent className="p-6 text-center space-y-4">
+          <div className="w-16 h-16 mx-auto bg-red-100 rounded-full flex items-center justify-center">
+            <AlertTriangle className="w-8 h-8 text-red-600" />
+          </div>
           
-        <div className="flex flex-col md:flex-row gap-4 justify-center mt-4">
-          <Button onClick={handleRefresh} className="flex items-center gap-2">
-            <RefreshCw className="h-4 w-4" /> Atualizar página
-          </Button>
+          <div className="space-y-2">
+            <h3 className="text-lg font-semibold text-gray-900">
+              Erro de Conexão
+            </h3>
+            <p className="text-gray-600">
+              Não foi possível carregar os dados do dashboard. 
+              Verifique sua conexão e tente novamente.
+            </p>
+          </div>
           
-          <Button variant="outline" onClick={handleSignOut}>
-            Sair e entrar novamente
+          <Button 
+            onClick={handleRefresh}
+            className="w-full"
+            variant="outline"
+          >
+            <RefreshCw className="w-4 h-4 mr-2" />
+            Tentar Novamente
           </Button>
-        </div>
-
-        <div className="mt-8 text-sm text-muted-foreground">
-          <p>Sugestões de solução:</p>
-          <ul className="list-disc text-left ml-6 mt-2 space-y-1">
-            <li>Verifique sua conexão com a internet</li>
-            <li>Limpe o cache do navegador</li>
-            <li>Tente usar outro navegador</li>
-            <li>Se o problema persistir, contate o suporte</li>
-          </ul>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };

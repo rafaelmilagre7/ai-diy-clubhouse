@@ -2,44 +2,119 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Brain, ArrowRight, Sparkles } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { Badge } from '@/components/ui/badge';
+import { Rocket, Plus, Clock, CheckCircle } from 'lucide-react';
+import { useImplementationTrails } from '@/hooks/useImplementationTrails';
 
-export const ImplementationTrailCard = () => {
-  const navigate = useNavigate();
+export const ImplementationTrailCard: React.FC = () => {
+  const { trails, loading, createTrail } = useImplementationTrails();
 
-  const handleNavigateToTrail = () => {
-    navigate('/trilha-implementacao');
+  const handleCreateTrail = async () => {
+    try {
+      await createTrail({
+        trail_data: {
+          title: 'Nova Trilha de Implementação',
+          description: 'Trilha personalizada baseada no seu perfil',
+          steps: []
+        },
+        status: 'draft'
+      });
+    } catch (error) {
+      console.error('Erro ao criar trilha:', error);
+    }
   };
 
+  const getStatusBadge = (status: string) => {
+    const statusConfig = {
+      draft: { label: 'Rascunho', variant: 'secondary' as const, icon: Clock },
+      active: { label: 'Ativa', variant: 'default' as const, icon: Rocket },
+      completed: { label: 'Concluída', variant: 'default' as const, icon: CheckCircle },
+      paused: { label: 'Pausada', variant: 'outline' as const, icon: Clock },
+    };
+
+    const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.draft;
+    const IconComponent = config.icon;
+
+    return (
+      <Badge variant={config.variant} className="flex items-center gap-1">
+        <IconComponent className="h-3 w-3" />
+        {config.label}
+      </Badge>
+    );
+  };
+
+  if (loading) {
+    return (
+      <Card className="bg-gradient-to-br from-purple-50 to-indigo-50 border-purple-200">
+        <CardContent className="p-6">
+          <div className="animate-pulse">
+            <div className="h-4 bg-purple-200 rounded w-3/4 mb-2"></div>
+            <div className="h-3 bg-purple-200 rounded w-1/2"></div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  const activeTrail = trails.find(trail => trail.status === 'active');
+  const completedCount = trails.filter(trail => trail.status === 'completed').length;
+
   return (
-    <Card className="glass-dark border-2 bg-gradient-to-br from-viverblue/20 to-purple-500/20 border-viverblue/30 hover:border-viverblue/50 transition-all duration-300 hover:shadow-lg hover:shadow-viverblue/25">
-      <CardHeader className="pb-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-viverblue/20 rounded-lg">
-              <Brain className="h-5 w-5 text-viverblue" />
-            </div>
+    <Card className="bg-gradient-to-br from-purple-50 to-indigo-50 border-purple-200 hover:shadow-lg transition-shadow">
+      <CardHeader className="pb-3">
+        <CardTitle className="flex items-center justify-between text-purple-900">
+          <div className="flex items-center gap-2">
+            <Rocket className="h-5 w-5 text-purple-600" />
+            <span>Trilha de Implementação</span>
+          </div>
+          {activeTrail && getStatusBadge(activeTrail.status)}
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="pt-0">
+        {activeTrail ? (
+          <div className="space-y-3">
             <div>
-              <CardTitle className="text-high-contrast text-lg flex items-center gap-2">
-                <Sparkles className="h-4 w-4 text-viverblue animate-pulse" />
-                Trilha Personalizada
-              </CardTitle>
-              <p className="text-medium-contrast text-sm">
-                Guia inteligente criado especialmente para você
+              <h4 className="font-medium text-gray-900">
+                {activeTrail.trail_data?.title || 'Trilha Personalizada'}
+              </h4>
+              <p className="text-sm text-gray-600 mt-1">
+                {activeTrail.trail_data?.description || 'Implementação baseada no seu perfil e objetivos'}
               </p>
             </div>
+            
+            {completedCount > 0 && (
+              <div className="flex items-center gap-2 text-sm text-green-600">
+                <CheckCircle className="h-4 w-4" />
+                <span>{completedCount} trilhas concluídas</span>
+              </div>
+            )}
+            
+            <Button 
+              className="w-full bg-purple-600 hover:bg-purple-700"
+              onClick={() => window.location.href = '/implementation'}
+            >
+              Continuar Implementação
+            </Button>
           </div>
-          <Button 
-            onClick={handleNavigateToTrail}
-            size="sm"
-            className="bg-viverblue hover:bg-viverblue/90 text-white"
-          >
-            Acessar
-            <ArrowRight className="ml-1 h-4 w-4" />
-          </Button>
-        </div>
-      </CardHeader>
+        ) : (
+          <div className="space-y-3">
+            <div>
+              <h4 className="font-medium text-gray-900">Crie sua Trilha Personalizada</h4>
+              <p className="text-sm text-gray-600 mt-1">
+                Baseada no seu perfil e objetivos de negócio
+              </p>
+            </div>
+            
+            <Button 
+              onClick={handleCreateTrail}
+              className="w-full bg-purple-600 hover:bg-purple-700"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Criar Trilha
+            </Button>
+          </div>
+        )}
+      </CardContent>
     </Card>
   );
 };

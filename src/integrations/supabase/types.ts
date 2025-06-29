@@ -781,6 +781,57 @@ export type Database = {
         }
         Relationships: []
       }
+      community_reports: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          post_id: string | null
+          reason: string
+          report_type: string
+          reported_user_id: string | null
+          reporter_id: string
+          resolution_notes: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          topic_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          post_id?: string | null
+          reason: string
+          report_type: string
+          reported_user_id?: string | null
+          reporter_id: string
+          resolution_notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          topic_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          post_id?: string | null
+          reason?: string
+          report_type?: string
+          reported_user_id?: string | null
+          reporter_id?: string
+          resolution_notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          topic_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       connection_notifications: {
         Row: {
           created_at: string
@@ -1337,6 +1388,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      implementation_trails: {
+        Row: {
+          created_at: string | null
+          error_message: string | null
+          generation_attempts: number | null
+          id: string
+          status: string
+          trail_data: Json
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          error_message?: string | null
+          generation_attempts?: number | null
+          id?: string
+          status?: string
+          trail_data?: Json
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          error_message?: string | null
+          generation_attempts?: number | null
+          id?: string
+          status?: string
+          trail_data?: Json
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
       }
       invite_analytics_events: {
         Row: {
