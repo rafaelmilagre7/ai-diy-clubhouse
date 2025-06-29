@@ -56,6 +56,19 @@ export interface Solution {
   success_rate?: number;
   related_solutions?: string[];
   author_id?: string;
+  overview?: string;
+  checklist?: Array<{
+    id: string;
+    title: string;
+    description?: string;
+    checked?: boolean;
+  }>;
+  videos?: Array<{
+    title?: string;
+    description?: string;
+    url?: string;
+    youtube_id?: string;
+  }>;
 }
 
 // Compatibilidade: Module (sistema legado)
@@ -65,6 +78,18 @@ export interface Module {
   type: string;
   content?: {
     blocks?: any[];
+    checklist?: Array<{
+      id: string;
+      title: string;
+      description?: string;
+      checked?: boolean;
+    }>;
+    videos?: Array<{
+      title?: string;
+      description?: string;
+      url?: string;
+      youtube_id?: string;
+    }>;
   };
   solution_id?: string;
   module_order?: number;
@@ -73,6 +98,30 @@ export interface Module {
   updated_at: string;
   certificate_template?: any;
   metrics?: any;
+}
+
+// Compatibilidade: Progress (sistema legado)
+export interface Progress {
+  id: string;
+  user_id: string;
+  solution_id: string;
+  current_module: number;
+  is_completed: boolean;
+  completed_modules: number[];
+  last_activity: string;
+  completed_at?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+// Compatibilidade: UserChecklist (sistema legado)
+export interface UserChecklist {
+  id: string;
+  user_id: string;
+  solution_id: string;
+  checked_items: Record<string, boolean>;
+  created_at: string;
+  updated_at: string;
 }
 
 // =============================================================================
