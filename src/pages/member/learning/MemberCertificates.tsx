@@ -1,6 +1,7 @@
 
 import React from "react";
 import { CertificatesList } from "@/components/learning/certificates/CertificatesList";
+import { RetroactiveCertificatesPanel } from "@/components/learning/certificates/RetroactiveCertificatesPanel";
 import { useAuth } from "@/contexts/auth";
 
 const MemberCertificates = () => {
@@ -15,6 +16,9 @@ const MemberCertificates = () => {
             Aqui você encontra todos os certificados obtidos em seus cursos e implementações de soluções.
           </p>
         </div>
+        
+        {/* Painel para gerar certificados retroativos */}
+        <RetroactiveCertificatesPanel />
         
         {/* Lista de certificados */}
         <div>

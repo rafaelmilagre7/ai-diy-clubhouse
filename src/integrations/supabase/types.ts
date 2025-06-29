@@ -4826,6 +4826,10 @@ export type Database = {
         }
         Returns: Json
       }
+      create_learning_certificate_if_eligible: {
+        Args: { p_user_id: string; p_course_id: string }
+        Returns: string
+      }
       create_onboarding_backup: {
         Args: { p_user_id: string; p_backup_type?: string }
         Returns: string
@@ -4891,6 +4895,10 @@ export type Database = {
       generate_referral_token: {
         Args: Record<PropertyKey, never>
         Returns: string
+      }
+      generate_retroactive_certificates: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
       }
       generate_security_metrics: {
         Args: Record<PropertyKey, never>

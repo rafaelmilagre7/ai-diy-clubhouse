@@ -77,7 +77,7 @@ export const useSolutionCertificates = (solutionId?: string) => {
     }
   };
 
-  // Gerar certificado
+  // Gerar certificado usando função SQL
   const generateCertificate = useMutation({
     mutationFn: async (solutionId: string) => {
       if (!user?.id) throw new Error('Usuário não autenticado');
@@ -96,10 +96,10 @@ export const useSolutionCertificates = (solutionId?: string) => {
     },
     onError: (error: any) => {
       console.error('Erro ao gerar certificado:', error);
-      if (error.message.includes('não é elegível')) {
-        toast.error('Você precisa completar a implementação da solução para gerar o certificado.');
-      } else if (error.message.includes('já possui certificado')) {
+      if (error.message.includes('já possui certificado')) {
         toast.info('Você já possui um certificado para esta solução.');
+      } else if (error.message.includes('não é elegível')) {
+        toast.error('Você precisa completar a implementação da solução para gerar o certificado.');
       } else {
         toast.error('Erro ao gerar certificado. Tente novamente.');
       }

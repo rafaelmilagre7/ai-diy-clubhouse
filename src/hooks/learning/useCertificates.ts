@@ -48,73 +48,57 @@ export const useCertificates = (courseId?: string) => {
   // Verificar elegibilidade para certificado
   const checkEligibility = async (courseId: string): Promise<boolean> => {
     if (!user) {
-      toast.error("Você precisa estar logado para verificar elegibilidade");
       return false;
     }
     
     try {
-      // Verificar se o usuário completou o curso
-      const { data: progress, error } = await supabase
-        .from('learning_progress')
+      // Verificar se o usuário completou todas as aulas do curso
+      const { data: lessons, error: lessonsError } = await supabase
+        .from('learning_lessons')
         .select(`
-          lesson_id,
-          progress_percentage,
-          completed_at,
-          learning_lessons!inner (
-            id,
-            learning_modules!inner (
-              id,
-              course_id
-            )
+          id,
+          learning_modules!inner (
+            course_id
           )
         `)
+        .eq('learning_modules.course_id', courseId)
+        .eq('published', true);
+      
+      if (lessonsError) throw lessonsError;
+      
+      if (!lessons || lessons.length === 0) return false;
+      
+      // Verificar se todas as aulas foram completadas
+      const { data: progress, error: progressError } = await supabase
+        .from('learning_progress')
+        .select('lesson_id, progress_percentage, completed_at')
         .eq('user_id', user.id)
-        .eq('learning_lessons.learning_modules.course_id', courseId);
+        .in('lesson_id', lessons.map(l => l.id))
+        .eq('progress_percentage', 100)
+        .not('completed_at', 'is', null);
       
-      if (error) throw error;
+      if (progressError) throw progressError;
       
-      // Verificar se todas as aulas foram completadas (100%)
-      const allCompleted = progress && progress.length > 0 && 
-        progress.every(p => p.progress_percentage === 100 && p.completed_at);
-      
-      return allCompleted;
+      return progress && progress.length === lessons.length;
     } catch (error: any) {
       console.error("Erro ao verificar elegibilidade:", error);
-      toast.error(`Erro ao verificar elegibilidade: ${error.message}`);
       return false;
     }
   };
   
-  // Gerar certificado
+  // Gerar certificado usando função SQL
   const generateCertificate = useMutation({
     mutationFn: async (courseId: string) => {
       if (!user) {
         throw new Error("Usuário não autenticado");
       }
       
-      // Verificar elegibilidade novamente antes de gerar
-      const eligible = await checkEligibility(courseId);
-      if (!eligible) {
-        throw new Error("Usuário não elegível para certificado");
-      }
-      
-      // Gerar código de validação
-      const validationCode = await supabase.rpc('generate_certificate_validation_code');
-      
-      // Criar certificado
-      const { data, error } = await supabase
-        .from('learning_certificates')
-        .insert({
-          user_id: user.id,
-          course_id: courseId,
-          validation_code: validationCode.data,
-          issued_at: new Date().toISOString()
-        })
-        .select()
-        .single();
+      const { data, error } = await supabase.rpc('create_learning_certificate_if_eligible', {
+        p_user_id: user.id,
+        p_course_id: courseId
+      });
       
       if (error) throw error;
-      
       return data;
     },
     onSuccess: () => {
@@ -123,10 +107,12 @@ export const useCertificates = (courseId?: string) => {
     },
     onError: (error: any) => {
       console.error("Erro ao gerar certificado:", error);
-      if (error.message.includes('não elegível')) {
+      if (error.message.includes('já possui certificado')) {
+        toast.info('Você já possui um certificado para este curso.');
+      } else if (error.message.includes('não completou')) {
         toast.error('Você precisa completar todas as aulas do curso para gerar o certificado.');
       } else {
-        toast.error(`Erro ao gerar certificado: ${error.message}`);
+        toast.error('Erro ao gerar certificado. Tente novamente.');
       }
     }
   });
