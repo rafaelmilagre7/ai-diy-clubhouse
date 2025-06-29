@@ -2,7 +2,7 @@
 import React, { useRef, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Download, ExternalLink, X, RefreshCw } from "lucide-react";
+import { Download, ExternalLink, X, RefreshCw, Printer } from "lucide-react";
 import { CertificateRenderer } from "./CertificateRenderer";
 import { useCertificateTemplate } from "@/hooks/learning/useCertificateTemplate";
 import { usePDFGenerator } from "@/hooks/learning/usePDFGenerator";
@@ -21,7 +21,7 @@ export const CertificateModal = ({ certificate, isOpen, onClose }: CertificateMo
   const { user } = useAuth();
   const certificateRef = useRef<HTMLDivElement>(null);
   const { data: template, isLoading: templateLoading, clearCache } = useCertificateTemplate();
-  const { generatePDF, downloadPDF, isGenerating } = usePDFGenerator();
+  const { generatePDF, downloadPDF, openCertificateInNewTab, isGenerating } = usePDFGenerator();
 
   const solution = certificate.solutions;
   const implementationDate = format(new Date(certificate.implementation_date), "dd 'de' MMMM 'de' yyyy", { locale: ptBR });
@@ -75,20 +75,14 @@ export const CertificateModal = ({ certificate, isOpen, onClose }: CertificateMo
     }
   };
 
-  const handleOpenInNewTab = async () => {
-    // Sempre gerar novo PDF para nova aba
+  const handleOpenForPrint = async () => {
     if (!certificateRef.current || !template) {
       toast.error('Erro ao preparar certificado');
       return;
     }
 
-    const filename = `certificado-${solution?.title?.replace(/[^a-zA-Z0-9]/g, '-')}-${certificate.validation_code}.pdf`;
-    const result = await generatePDF(certificateRef.current, filename, certificate.id);
-    
-    if (result) {
-      window.open(result.url, '_blank');
-      toast.success('Certificado aberto em nova aba!');
-    }
+    console.log('🖨️ Abrindo certificado para impressão...');
+    await openCertificateInNewTab(certificateRef.current, certificateData);
   };
 
   if (templateLoading) {
@@ -158,22 +152,22 @@ export const CertificateModal = ({ certificate, isOpen, onClose }: CertificateMo
           {/* Botões de Ação */}
           <div className="flex flex-col sm:flex-row gap-3 justify-center border-t border-neutral-700 pt-4">
             <Button
-              onClick={handleDownload}
+              onClick={handleOpenForPrint}
               disabled={isGenerating}
               className="bg-viverblue hover:bg-viverblue/90 text-white"
             >
-              <Download className="h-4 w-4 mr-2" />
-              {isGenerating ? 'Gerando PDF...' : 'Baixar PDF'}
+              <Printer className="h-4 w-4 mr-2" />
+              {isGenerating ? 'Preparando...' : 'Visualizar para Imprimir'}
             </Button>
             
             <Button
-              onClick={handleOpenInNewTab}
+              onClick={handleDownload}
               disabled={isGenerating}
               variant="outline"
               className="border-viverblue/50 text-viverblue hover:bg-viverblue/10"
             >
-              <ExternalLink className="h-4 w-4 mr-2" />
-              Abrir em Nova Aba
+              <Download className="h-4 w-4 mr-2" />
+              {isGenerating ? 'Gerando PDF...' : 'Baixar PDF'}
             </Button>
           </div>
 

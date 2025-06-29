@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Download, Calendar, CheckCircle2, Award, Target, Zap, TrendingUp, Eye } from "lucide-react";
+import { Download, Calendar, CheckCircle2, Award, Target, Zap, TrendingUp, Eye, Printer } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { CertificateModal } from "./CertificateModal";
@@ -158,11 +158,19 @@ export const SolutionCertificateCard = ({
         
         <CardFooter className="pt-0 flex gap-2">
           <Button
-            onClick={handleDownload}
+            onClick={handlePreview}
             className={`flex-1 bg-gradient-to-r ${categoryConfig.buttonColor} text-white font-semibold transition-all duration-300 group-hover:shadow-lg`}
           >
-            <Download className="h-4 w-4 mr-2" />
-            {hasCachedPDF ? 'Download' : 'Baixar'}
+            <Printer className="h-4 w-4 mr-2" />
+            Imprimir
+          </Button>
+          
+          <Button
+            onClick={handleDownload}
+            variant="outline"
+            className="border-neutral-600 text-gray-300 hover:bg-neutral-800"
+          >
+            <Download className="h-4 w-4" />
           </Button>
           
           <Button
