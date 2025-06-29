@@ -1,5 +1,5 @@
 
-import React, { useRef } from "react";
+import React, { useRef, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Download, ExternalLink, X } from "lucide-react";
@@ -35,22 +35,40 @@ export const CertificateModal = ({ certificate, isOpen, onClose }: CertificateMo
     benefits: [] // Pode ser expandido futuramente
   };
 
+  // Debug: Log do template quando carregado
+  useEffect(() => {
+    if (template) {
+      console.log('📋 Template carregado:', {
+        id: template.id,
+        name: template.name,
+        hasHTML: !!template.html_template,
+        hasCSS: !!template.css_styles,
+        htmlLength: template.html_template?.length || 0,
+        cssLength: template.css_styles?.length || 0
+      });
+    }
+  }, [template]);
+
   const handleDownload = async () => {
     if (!certificateRef.current || !template) {
       toast.error('Erro ao preparar certificado para download');
       return;
     }
 
+    console.log('🔄 Iniciando download do certificado:', certificate.id);
+
     const filename = `certificado-${solution?.title?.replace(/[^a-zA-Z0-9]/g, '-')}-${certificate.validation_code}.pdf`;
     
     // Se já existe um PDF cacheado, fazer download direto
     if (certificate.certificate_url && certificate.certificate_filename) {
+      console.log('📥 Download direto do cache');
       downloadPDF(certificate.certificate_url, certificate.certificate_filename);
       toast.success('Download iniciado!');
       return;
     }
 
     // Gerar novo PDF
+    console.log('🏭 Gerando novo PDF...');
     const result = await generatePDF(certificateRef.current, filename, certificate.id);
     
     if (result) {
@@ -92,6 +110,18 @@ export const CertificateModal = ({ certificate, isOpen, onClose }: CertificateMo
     );
   }
 
+  if (!template) {
+    return (
+      <Dialog open={isOpen} onOpenChange={onClose}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-[#0a0b14] border-neutral-700">
+          <div className="flex items-center justify-center h-64">
+            <div className="text-red-400">Erro: Template não encontrado</div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
+  }
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-6xl max-h-[95vh] overflow-y-auto bg-[#0a0b14] border-neutral-700">
@@ -111,12 +141,10 @@ export const CertificateModal = ({ certificate, isOpen, onClose }: CertificateMo
           {/* Preview do Certificado */}
           <div className="flex justify-center bg-white p-4 rounded-lg">
             <div ref={certificateRef} className="transform scale-75 origin-top">
-              {template && (
-                <CertificateRenderer
-                  template={template}
-                  data={certificateData}
-                />
-              )}
+              <CertificateRenderer
+                template={template}
+                data={certificateData}
+              />
             </div>
           </div>
 
@@ -147,6 +175,16 @@ export const CertificateModal = ({ certificate, isOpen, onClose }: CertificateMo
               <div className="inline-flex items-center gap-2 px-3 py-1 bg-green-500/10 border border-green-500/20 rounded-full text-green-400 text-sm">
                 ✓ Certificado disponível para download instantâneo
               </div>
+            </div>
+          )}
+
+          {/* Debug info (apenas em desenvolvimento) */}
+          {process.env.NODE_ENV === 'development' && (
+            <div className="text-xs text-gray-500 space-y-1">
+              <div>Template ID: {template.id}</div>
+              <div>Template Name: {template.name}</div>
+              <div>Certificate ID: {certificate.id}</div>
+              <div>Has Cached PDF: {certificate.certificate_url ? 'Sim' : 'Não'}</div>
             </div>
           )}
         </div>
