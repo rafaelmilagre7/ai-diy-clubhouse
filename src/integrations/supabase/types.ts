@@ -94,22 +94,7 @@ export type Database = {
           solution_id?: string | null
           user_id?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "analytics_module_id_fkey"
-            columns: ["module_id"]
-            isOneToOne: false
-            referencedRelation: "modules"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "analytics_solution_id_fkey"
-            columns: ["solution_id"]
-            isOneToOne: false
-            referencedRelation: "solutions"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       analytics_backups: {
         Row: {
@@ -392,6 +377,316 @@ export type Database = {
           },
         ]
       }
+      cleanup_backup_forum_posts: {
+        Row: {
+          content: string | null
+          created_at: string | null
+          id: string | null
+          is_hidden: boolean | null
+          is_solution: boolean | null
+          parent_id: string | null
+          topic_id: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          content?: string | null
+          created_at?: string | null
+          id?: string | null
+          is_hidden?: boolean | null
+          is_solution?: boolean | null
+          parent_id?: string | null
+          topic_id?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          content?: string | null
+          created_at?: string | null
+          id?: string | null
+          is_hidden?: boolean | null
+          is_solution?: boolean | null
+          parent_id?: string | null
+          topic_id?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      cleanup_backup_forum_topics: {
+        Row: {
+          category_id: string | null
+          content: string | null
+          created_at: string | null
+          id: string | null
+          is_locked: boolean | null
+          is_pinned: boolean | null
+          is_solved: boolean | null
+          last_activity_at: string | null
+          reply_count: number | null
+          title: string | null
+          updated_at: string | null
+          user_id: string | null
+          view_count: number | null
+        }
+        Insert: {
+          category_id?: string | null
+          content?: string | null
+          created_at?: string | null
+          id?: string | null
+          is_locked?: boolean | null
+          is_pinned?: boolean | null
+          is_solved?: boolean | null
+          last_activity_at?: string | null
+          reply_count?: number | null
+          title?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+          view_count?: number | null
+        }
+        Update: {
+          category_id?: string | null
+          content?: string | null
+          created_at?: string | null
+          id?: string | null
+          is_locked?: boolean | null
+          is_pinned?: boolean | null
+          is_solved?: boolean | null
+          last_activity_at?: string | null
+          reply_count?: number | null
+          title?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+          view_count?: number | null
+        }
+        Relationships: []
+      }
+      cleanup_backup_implementation_trails: {
+        Row: {
+          created_at: string | null
+          error_message: string | null
+          generation_attempts: number | null
+          id: string | null
+          status: string | null
+          trail_data: Json | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          error_message?: string | null
+          generation_attempts?: number | null
+          id?: string | null
+          status?: string | null
+          trail_data?: Json | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          error_message?: string | null
+          generation_attempts?: number | null
+          id?: string | null
+          status?: string | null
+          trail_data?: Json | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      cleanup_backup_modules: {
+        Row: {
+          certificate_template: Json | null
+          content: Json | null
+          created_at: string | null
+          estimated_time_minutes: number | null
+          id: string | null
+          metrics: Json | null
+          module_order: number | null
+          solution_id: string | null
+          title: string | null
+          type: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          certificate_template?: Json | null
+          content?: Json | null
+          created_at?: string | null
+          estimated_time_minutes?: number | null
+          id?: string | null
+          metrics?: Json | null
+          module_order?: number | null
+          solution_id?: string | null
+          title?: string | null
+          type?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          certificate_template?: Json | null
+          content?: Json | null
+          created_at?: string | null
+          estimated_time_minutes?: number | null
+          id?: string | null
+          metrics?: Json | null
+          module_order?: number | null
+          solution_id?: string | null
+          title?: string | null
+          type?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      cleanup_backup_progress: {
+        Row: {
+          completed_at: string | null
+          completed_modules: number[] | null
+          completion_data: Json | null
+          created_at: string | null
+          current_module: number | null
+          id: string | null
+          implementation_status: string | null
+          is_completed: boolean | null
+          last_activity: string | null
+          solution_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          completed_at?: string | null
+          completed_modules?: number[] | null
+          completion_data?: Json | null
+          created_at?: string | null
+          current_module?: number | null
+          id?: string | null
+          implementation_status?: string | null
+          is_completed?: boolean | null
+          last_activity?: string | null
+          solution_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          completed_at?: string | null
+          completed_modules?: number[] | null
+          completion_data?: Json | null
+          created_at?: string | null
+          current_module?: number | null
+          id?: string | null
+          implementation_status?: string | null
+          is_completed?: boolean | null
+          last_activity?: string | null
+          solution_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      cleanup_backup_solutions: {
+        Row: {
+          checklist_items: Json | null
+          completion_requirements: Json | null
+          created_at: string | null
+          description: string | null
+          difficulty: Database["public"]["Enums"]["difficulty_level_new"] | null
+          id: string | null
+          implementation_steps: Json | null
+          published: boolean | null
+          related_solutions: string[] | null
+          slug: string | null
+          tags: string[] | null
+          thumbnail_url: string | null
+          title: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          checklist_items?: Json | null
+          completion_requirements?: Json | null
+          created_at?: string | null
+          description?: string | null
+          difficulty?:
+            | Database["public"]["Enums"]["difficulty_level_new"]
+            | null
+          id?: string | null
+          implementation_steps?: Json | null
+          published?: boolean | null
+          related_solutions?: string[] | null
+          slug?: string | null
+          tags?: string[] | null
+          thumbnail_url?: string | null
+          title?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          checklist_items?: Json | null
+          completion_requirements?: Json | null
+          created_at?: string | null
+          description?: string | null
+          difficulty?:
+            | Database["public"]["Enums"]["difficulty_level_new"]
+            | null
+          id?: string | null
+          implementation_steps?: Json | null
+          published?: boolean | null
+          related_solutions?: string[] | null
+          slug?: string | null
+          tags?: string[] | null
+          thumbnail_url?: string | null
+          title?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      cleanup_backup_suggestions: {
+        Row: {
+          category_id: string | null
+          comment_count: number | null
+          created_at: string | null
+          description: string | null
+          downvotes: number | null
+          id: string | null
+          image_url: string | null
+          is_hidden: boolean | null
+          is_pinned: boolean | null
+          profiles: Json | null
+          status: Database["public"]["Enums"]["suggestion_status"] | null
+          title: string | null
+          updated_at: string | null
+          upvotes: number | null
+          user_id: string | null
+        }
+        Insert: {
+          category_id?: string | null
+          comment_count?: number | null
+          created_at?: string | null
+          description?: string | null
+          downvotes?: number | null
+          id?: string | null
+          image_url?: string | null
+          is_hidden?: boolean | null
+          is_pinned?: boolean | null
+          profiles?: Json | null
+          status?: Database["public"]["Enums"]["suggestion_status"] | null
+          title?: string | null
+          updated_at?: string | null
+          upvotes?: number | null
+          user_id?: string | null
+        }
+        Update: {
+          category_id?: string | null
+          comment_count?: number | null
+          created_at?: string | null
+          description?: string | null
+          downvotes?: number | null
+          id?: string | null
+          image_url?: string | null
+          is_hidden?: boolean | null
+          is_pinned?: boolean | null
+          profiles?: Json | null
+          status?: Database["public"]["Enums"]["suggestion_status"] | null
+          title?: string | null
+          updated_at?: string | null
+          upvotes?: number | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       communication_deliveries: {
         Row: {
           clicked_at: string | null
@@ -472,114 +767,6 @@ export type Database = {
         }
         Relationships: []
       }
-      community_reports: {
-        Row: {
-          created_at: string
-          description: string | null
-          id: string
-          post_id: string | null
-          reason: string
-          report_type: string
-          reported_user_id: string | null
-          reporter_id: string
-          resolution_notes: string | null
-          reviewed_at: string | null
-          reviewed_by: string | null
-          status: string
-          topic_id: string | null
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          description?: string | null
-          id?: string
-          post_id?: string | null
-          reason: string
-          report_type: string
-          reported_user_id?: string | null
-          reporter_id: string
-          resolution_notes?: string | null
-          reviewed_at?: string | null
-          reviewed_by?: string | null
-          status?: string
-          topic_id?: string | null
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          description?: string | null
-          id?: string
-          post_id?: string | null
-          reason?: string
-          report_type?: string
-          reported_user_id?: string | null
-          reporter_id?: string
-          resolution_notes?: string | null
-          reviewed_at?: string | null
-          reviewed_by?: string | null
-          status?: string
-          topic_id?: string | null
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "community_reports_post_id_fkey"
-            columns: ["post_id"]
-            isOneToOne: false
-            referencedRelation: "forum_posts"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "community_reports_reported_user_id_fkey"
-            columns: ["reported_user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "community_reports_reported_user_id_fkey"
-            columns: ["reported_user_id"]
-            isOneToOne: false
-            referencedRelation: "users_with_roles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "community_reports_reporter_id_fkey"
-            columns: ["reporter_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "community_reports_reporter_id_fkey"
-            columns: ["reporter_id"]
-            isOneToOne: false
-            referencedRelation: "users_with_roles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "community_reports_reviewed_by_fkey"
-            columns: ["reviewed_by"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "community_reports_reviewed_by_fkey"
-            columns: ["reviewed_by"]
-            isOneToOne: false
-            referencedRelation: "users_with_roles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "community_reports_topic_id_fkey"
-            columns: ["topic_id"]
-            isOneToOne: false
-            referencedRelation: "forum_topics"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       connection_notifications: {
         Row: {
           created_at: string
@@ -629,65 +816,6 @@ export type Database = {
           },
           {
             foreignKeyName: "connection_notifications_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "users_with_roles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      connection_recommendations: {
-        Row: {
-          created_at: string
-          id: string
-          is_dismissed: boolean | null
-          reason: string | null
-          recommended_user_id: string
-          score: number | null
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          is_dismissed?: boolean | null
-          reason?: string | null
-          recommended_user_id: string
-          score?: number | null
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          is_dismissed?: boolean | null
-          reason?: string | null
-          recommended_user_id?: string
-          score?: number | null
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "connection_recommendations_recommended_user_id_fkey"
-            columns: ["recommended_user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "connection_recommendations_recommended_user_id_fkey"
-            columns: ["recommended_user_id"]
-            isOneToOne: false
-            referencedRelation: "users_with_roles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "connection_recommendations_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "connection_recommendations_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "users_with_roles"
@@ -1018,472 +1146,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
-      }
-      forum_categories: {
-        Row: {
-          created_at: string
-          description: string | null
-          icon: string | null
-          id: string
-          is_active: boolean
-          name: string
-          order_index: number
-          slug: string
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          description?: string | null
-          icon?: string | null
-          id?: string
-          is_active?: boolean
-          name: string
-          order_index?: number
-          slug: string
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          description?: string | null
-          icon?: string | null
-          id?: string
-          is_active?: boolean
-          name?: string
-          order_index?: number
-          slug?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
-      forum_mentions: {
-        Row: {
-          created_at: string
-          id: string
-          is_read: boolean | null
-          mentioned_by_user_id: string
-          mentioned_user_id: string
-          post_id: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          is_read?: boolean | null
-          mentioned_by_user_id: string
-          mentioned_user_id: string
-          post_id: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          is_read?: boolean | null
-          mentioned_by_user_id?: string
-          mentioned_user_id?: string
-          post_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "forum_mentions_mentioned_by_user_id_fkey"
-            columns: ["mentioned_by_user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "forum_mentions_mentioned_by_user_id_fkey"
-            columns: ["mentioned_by_user_id"]
-            isOneToOne: false
-            referencedRelation: "users_with_roles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "forum_mentions_mentioned_user_id_fkey"
-            columns: ["mentioned_user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "forum_mentions_mentioned_user_id_fkey"
-            columns: ["mentioned_user_id"]
-            isOneToOne: false
-            referencedRelation: "users_with_roles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "forum_mentions_post_id_fkey"
-            columns: ["post_id"]
-            isOneToOne: false
-            referencedRelation: "forum_posts"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      forum_notifications: {
-        Row: {
-          created_at: string
-          id: string
-          is_read: boolean | null
-          post_id: string | null
-          topic_id: string | null
-          triggered_by_user_id: string
-          type: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          is_read?: boolean | null
-          post_id?: string | null
-          topic_id?: string | null
-          triggered_by_user_id: string
-          type: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          is_read?: boolean | null
-          post_id?: string | null
-          topic_id?: string | null
-          triggered_by_user_id?: string
-          type?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "forum_notifications_post_id_fkey"
-            columns: ["post_id"]
-            isOneToOne: false
-            referencedRelation: "forum_posts"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "forum_notifications_topic_id_fkey"
-            columns: ["topic_id"]
-            isOneToOne: false
-            referencedRelation: "forum_topics"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "forum_notifications_triggered_by_user_id_fkey"
-            columns: ["triggered_by_user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "forum_notifications_triggered_by_user_id_fkey"
-            columns: ["triggered_by_user_id"]
-            isOneToOne: false
-            referencedRelation: "users_with_roles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "forum_notifications_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "forum_notifications_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "users_with_roles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      forum_posts: {
-        Row: {
-          content: string
-          created_at: string
-          id: string
-          is_hidden: boolean
-          is_solution: boolean
-          parent_id: string | null
-          topic_id: string
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          content: string
-          created_at?: string
-          id?: string
-          is_hidden?: boolean
-          is_solution?: boolean
-          parent_id?: string | null
-          topic_id: string
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          content?: string
-          created_at?: string
-          id?: string
-          is_hidden?: boolean
-          is_solution?: boolean
-          parent_id?: string | null
-          topic_id?: string
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "forum_posts_parent_id_fkey"
-            columns: ["parent_id"]
-            isOneToOne: false
-            referencedRelation: "forum_posts"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "forum_posts_topic_id_fkey"
-            columns: ["topic_id"]
-            isOneToOne: false
-            referencedRelation: "forum_topics"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      forum_reactions: {
-        Row: {
-          created_at: string
-          id: string
-          post_id: string
-          reaction_type: Database["public"]["Enums"]["forum_reaction_type"]
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          post_id: string
-          reaction_type: Database["public"]["Enums"]["forum_reaction_type"]
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          post_id?: string
-          reaction_type?: Database["public"]["Enums"]["forum_reaction_type"]
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "forum_reactions_post_id_fkey"
-            columns: ["post_id"]
-            isOneToOne: false
-            referencedRelation: "forum_posts"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      forum_topics: {
-        Row: {
-          category_id: string
-          content: string
-          created_at: string
-          id: string
-          is_locked: boolean
-          is_pinned: boolean
-          is_solved: boolean | null
-          last_activity_at: string
-          reply_count: number
-          title: string
-          updated_at: string
-          user_id: string
-          view_count: number
-        }
-        Insert: {
-          category_id: string
-          content: string
-          created_at?: string
-          id?: string
-          is_locked?: boolean
-          is_pinned?: boolean
-          is_solved?: boolean | null
-          last_activity_at?: string
-          reply_count?: number
-          title: string
-          updated_at?: string
-          user_id: string
-          view_count?: number
-        }
-        Update: {
-          category_id?: string
-          content?: string
-          created_at?: string
-          id?: string
-          is_locked?: boolean
-          is_pinned?: boolean
-          is_solved?: boolean | null
-          last_activity_at?: string
-          reply_count?: number
-          title?: string
-          updated_at?: string
-          user_id?: string
-          view_count?: number
-        }
-        Relationships: [
-          {
-            foreignKeyName: "forum_topics_category_id_fkey"
-            columns: ["category_id"]
-            isOneToOne: false
-            referencedRelation: "forum_categories"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      implementation_checkpoints: {
-        Row: {
-          checkpoint_order: number
-          created_at: string | null
-          description: string
-          id: string
-          solution_id: string | null
-        }
-        Insert: {
-          checkpoint_order: number
-          created_at?: string | null
-          description: string
-          id?: string
-          solution_id?: string | null
-        }
-        Update: {
-          checkpoint_order?: number
-          created_at?: string | null
-          description?: string
-          id?: string
-          solution_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "implementation_checkpoints_solution_id_fkey"
-            columns: ["solution_id"]
-            isOneToOne: false
-            referencedRelation: "solutions"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      implementation_profiles: {
-        Row: {
-          ai_knowledge_level: number | null
-          annual_revenue: string | null
-          business_challenges: string[] | null
-          city: string | null
-          company_name: string | null
-          company_sector: string | null
-          company_size: string | null
-          company_website: string | null
-          country: string | null
-          created_at: string | null
-          current_position: string | null
-          email: string | null
-          id: string
-          instagram: string | null
-          is_completed: boolean | null
-          linkedin: string | null
-          name: string | null
-          networking_interests: string[] | null
-          nps_score: number | null
-          phone: string | null
-          phone_country_code: string | null
-          primary_goal: string | null
-          state: string | null
-          updated_at: string | null
-          user_id: string | null
-          weekly_availability: string | null
-        }
-        Insert: {
-          ai_knowledge_level?: number | null
-          annual_revenue?: string | null
-          business_challenges?: string[] | null
-          city?: string | null
-          company_name?: string | null
-          company_sector?: string | null
-          company_size?: string | null
-          company_website?: string | null
-          country?: string | null
-          created_at?: string | null
-          current_position?: string | null
-          email?: string | null
-          id?: string
-          instagram?: string | null
-          is_completed?: boolean | null
-          linkedin?: string | null
-          name?: string | null
-          networking_interests?: string[] | null
-          nps_score?: number | null
-          phone?: string | null
-          phone_country_code?: string | null
-          primary_goal?: string | null
-          state?: string | null
-          updated_at?: string | null
-          user_id?: string | null
-          weekly_availability?: string | null
-        }
-        Update: {
-          ai_knowledge_level?: number | null
-          annual_revenue?: string | null
-          business_challenges?: string[] | null
-          city?: string | null
-          company_name?: string | null
-          company_sector?: string | null
-          company_size?: string | null
-          company_website?: string | null
-          country?: string | null
-          created_at?: string | null
-          current_position?: string | null
-          email?: string | null
-          id?: string
-          instagram?: string | null
-          is_completed?: boolean | null
-          linkedin?: string | null
-          name?: string | null
-          networking_interests?: string[] | null
-          nps_score?: number | null
-          phone?: string | null
-          phone_country_code?: string | null
-          primary_goal?: string | null
-          state?: string | null
-          updated_at?: string | null
-          user_id?: string | null
-          weekly_availability?: string | null
-        }
-        Relationships: []
-      }
-      implementation_trails: {
-        Row: {
-          created_at: string
-          error_message: string | null
-          generation_attempts: number
-          id: string
-          status: string
-          trail_data: Json
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          error_message?: string | null
-          generation_attempts?: number
-          id?: string
-          status?: string
-          trail_data?: Json
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          error_message?: string | null
-          generation_attempts?: number
-          id?: string
-          status?: string
-          trail_data?: Json
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
       }
       invite_analytics_events: {
         Row: {
@@ -2392,13 +2054,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "moderation_actions_post_id_fkey"
-            columns: ["post_id"]
-            isOneToOne: false
-            referencedRelation: "forum_posts"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "moderation_actions_target_user_id_fkey"
             columns: ["target_user_id"]
             isOneToOne: false
@@ -2410,13 +2065,6 @@ export type Database = {
             columns: ["target_user_id"]
             isOneToOne: false
             referencedRelation: "users_with_roles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "moderation_actions_topic_id_fkey"
-            columns: ["topic_id"]
-            isOneToOne: false
-            referencedRelation: "forum_topics"
             referencedColumns: ["id"]
           },
         ]
@@ -2475,56 +2123,6 @@ export type Database = {
           },
         ]
       }
-      modules: {
-        Row: {
-          certificate_template: Json | null
-          content: Json
-          created_at: string
-          estimated_time_minutes: number | null
-          id: string
-          metrics: Json | null
-          module_order: number
-          solution_id: string
-          title: string
-          type: string
-          updated_at: string
-        }
-        Insert: {
-          certificate_template?: Json | null
-          content: Json
-          created_at?: string
-          estimated_time_minutes?: number | null
-          id?: string
-          metrics?: Json | null
-          module_order: number
-          solution_id: string
-          title: string
-          type: string
-          updated_at?: string
-        }
-        Update: {
-          certificate_template?: Json | null
-          content?: Json
-          created_at?: string
-          estimated_time_minutes?: number | null
-          id?: string
-          metrics?: Json | null
-          module_order?: number
-          solution_id?: string
-          title?: string
-          type?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "modules_solution_id_fkey"
-            columns: ["solution_id"]
-            isOneToOne: false
-            referencedRelation: "solutions"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       network_connections: {
         Row: {
           created_at: string
@@ -2549,57 +2147,6 @@ export type Database = {
           requester_id?: string
           status?: string
           updated_at?: string
-        }
-        Relationships: []
-      }
-      network_matches: {
-        Row: {
-          ai_analysis: Json | null
-          compatibility_score: number
-          created_at: string
-          id: string
-          is_viewed: boolean
-          match_reason: string | null
-          match_strengths: Json | null
-          match_type: string
-          matched_user_id: string
-          month_year: string
-          status: string
-          suggested_topics: Json | null
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          ai_analysis?: Json | null
-          compatibility_score: number
-          created_at?: string
-          id?: string
-          is_viewed?: boolean
-          match_reason?: string | null
-          match_strengths?: Json | null
-          match_type?: string
-          matched_user_id: string
-          month_year?: string
-          status?: string
-          suggested_topics?: Json | null
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          ai_analysis?: Json | null
-          compatibility_score?: number
-          created_at?: string
-          id?: string
-          is_viewed?: boolean
-          match_reason?: string | null
-          match_strengths?: Json | null
-          match_type?: string
-          matched_user_id?: string
-          month_year?: string
-          status?: string
-          suggested_topics?: Json | null
-          updated_at?: string
-          user_id?: string
         }
         Relationships: []
       }
@@ -3241,56 +2788,6 @@ export type Database = {
           },
         ]
       }
-      progress: {
-        Row: {
-          completed_at: string | null
-          completed_modules: number[] | null
-          completion_data: Json | null
-          created_at: string
-          current_module: number
-          id: string
-          implementation_status: string | null
-          is_completed: boolean
-          last_activity: string
-          solution_id: string
-          user_id: string
-        }
-        Insert: {
-          completed_at?: string | null
-          completed_modules?: number[] | null
-          completion_data?: Json | null
-          created_at?: string
-          current_module?: number
-          id?: string
-          implementation_status?: string | null
-          is_completed?: boolean
-          last_activity?: string
-          solution_id: string
-          user_id: string
-        }
-        Update: {
-          completed_at?: string | null
-          completed_modules?: number[] | null
-          completion_data?: Json | null
-          created_at?: string
-          current_module?: number
-          id?: string
-          implementation_status?: string | null
-          is_completed?: boolean
-          last_activity?: string
-          solution_id?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "progress_solution_id_fkey"
-            columns: ["solution_id"]
-            isOneToOne: false
-            referencedRelation: "solutions"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       rate_limit_attempts: {
         Row: {
           attempts: number | null
@@ -3357,13 +2854,6 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "referral_benefits_referral_id_fkey"
-            columns: ["referral_id"]
-            isOneToOne: false
-            referencedRelation: "referrals"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "referral_benefits_referrer_id_fkey"
             columns: ["referrer_id"]
             isOneToOne: false
@@ -3375,82 +2865,6 @@ export type Database = {
             columns: ["referrer_id"]
             isOneToOne: false
             referencedRelation: "users_with_roles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      referrals: {
-        Row: {
-          benefits_claimed: boolean
-          completed_at: string | null
-          created_at: string
-          email: string
-          expires_at: string
-          id: string
-          last_sent_at: string | null
-          metadata: Json | null
-          notes: string | null
-          referrer_id: string
-          role_id: string | null
-          send_attempts: number | null
-          status: Database["public"]["Enums"]["referral_status"]
-          token: string
-          type: Database["public"]["Enums"]["referral_type"]
-        }
-        Insert: {
-          benefits_claimed?: boolean
-          completed_at?: string | null
-          created_at?: string
-          email: string
-          expires_at: string
-          id?: string
-          last_sent_at?: string | null
-          metadata?: Json | null
-          notes?: string | null
-          referrer_id: string
-          role_id?: string | null
-          send_attempts?: number | null
-          status?: Database["public"]["Enums"]["referral_status"]
-          token: string
-          type: Database["public"]["Enums"]["referral_type"]
-        }
-        Update: {
-          benefits_claimed?: boolean
-          completed_at?: string | null
-          created_at?: string
-          email?: string
-          expires_at?: string
-          id?: string
-          last_sent_at?: string | null
-          metadata?: Json | null
-          notes?: string | null
-          referrer_id?: string
-          role_id?: string | null
-          send_attempts?: number | null
-          status?: Database["public"]["Enums"]["referral_status"]
-          token?: string
-          type?: Database["public"]["Enums"]["referral_type"]
-        }
-        Relationships: [
-          {
-            foreignKeyName: "referrals_referrer_id_fkey"
-            columns: ["referrer_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "referrals_referrer_id_fkey"
-            columns: ["referrer_id"]
-            isOneToOne: false
-            referencedRelation: "users_with_roles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "referrals_role_id_fkey"
-            columns: ["role_id"]
-            isOneToOne: false
-            referencedRelation: "user_roles"
             referencedColumns: ["id"]
           },
         ]
@@ -3722,59 +3136,6 @@ export type Database = {
         }
         Relationships: []
       }
-      solution_certificates: {
-        Row: {
-          certificate_data: Json | null
-          certificate_filename: string | null
-          certificate_url: string | null
-          created_at: string | null
-          id: string
-          implementation_date: string
-          issued_at: string | null
-          solution_id: string | null
-          template_id: string | null
-          updated_at: string
-          user_id: string | null
-          validation_code: string | null
-        }
-        Insert: {
-          certificate_data?: Json | null
-          certificate_filename?: string | null
-          certificate_url?: string | null
-          created_at?: string | null
-          id?: string
-          implementation_date?: string
-          issued_at?: string | null
-          solution_id?: string | null
-          template_id?: string | null
-          updated_at?: string
-          user_id?: string | null
-          validation_code?: string | null
-        }
-        Update: {
-          certificate_data?: Json | null
-          certificate_filename?: string | null
-          certificate_url?: string | null
-          created_at?: string | null
-          id?: string
-          implementation_date?: string
-          issued_at?: string | null
-          solution_id?: string | null
-          template_id?: string | null
-          updated_at?: string
-          user_id?: string | null
-          validation_code?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "solution_certificates_solution_id_fkey"
-            columns: ["solution_id"]
-            isOneToOne: false
-            referencedRelation: "solutions"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       solution_comment_likes: {
         Row: {
           comment_id: string
@@ -3794,59 +3155,7 @@ export type Database = {
           id?: string
           user_id?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "solution_comment_likes_comment_id_fkey"
-            columns: ["comment_id"]
-            isOneToOne: false
-            referencedRelation: "solution_comments"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      solution_comments: {
-        Row: {
-          content: string
-          created_at: string | null
-          id: string
-          likes_count: number
-          module_id: string | null
-          parent_id: string | null
-          solution_id: string
-          updated_at: string | null
-          user_id: string
-        }
-        Insert: {
-          content: string
-          created_at?: string | null
-          id?: string
-          likes_count?: number
-          module_id?: string | null
-          parent_id?: string | null
-          solution_id: string
-          updated_at?: string | null
-          user_id: string
-        }
-        Update: {
-          content?: string
-          created_at?: string | null
-          id?: string
-          likes_count?: number
-          module_id?: string | null
-          parent_id?: string | null
-          solution_id?: string
-          updated_at?: string | null
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "solution_comments_parent_id_fkey"
-            columns: ["parent_id"]
-            isOneToOne: false
-            referencedRelation: "solution_comments"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       solution_metrics: {
         Row: {
@@ -3879,15 +3188,7 @@ export type Database = {
           total_starts?: number | null
           total_views?: number | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "solution_metrics_solution_id_fkey"
-            columns: ["solution_id"]
-            isOneToOne: false
-            referencedRelation: "solutions"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       solution_resources: {
         Row: {
@@ -3929,22 +3230,7 @@ export type Database = {
           updated_at?: string | null
           url?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "solution_resources_module_id_fkey"
-            columns: ["module_id"]
-            isOneToOne: false
-            referencedRelation: "modules"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "solution_resources_solution_id_fkey"
-            columns: ["solution_id"]
-            isOneToOne: false
-            referencedRelation: "solutions"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       solution_tools: {
         Row: {
@@ -3970,113 +3256,6 @@ export type Database = {
           solution_id?: string | null
           tool_name?: string
           tool_url?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "solution_tools_solution_id_fkey"
-            columns: ["solution_id"]
-            isOneToOne: false
-            referencedRelation: "solutions"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      solution_tools_reference: {
-        Row: {
-          created_at: string
-          id: string
-          is_required: boolean
-          order_index: number
-          solution_id: string | null
-          tool_id: string | null
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          is_required?: boolean
-          order_index?: number
-          solution_id?: string | null
-          tool_id?: string | null
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          is_required?: boolean
-          order_index?: number
-          solution_id?: string | null
-          tool_id?: string | null
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "solution_tools_reference_solution_id_fkey"
-            columns: ["solution_id"]
-            isOneToOne: false
-            referencedRelation: "solutions"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "solution_tools_reference_tool_id_fkey"
-            columns: ["tool_id"]
-            isOneToOne: false
-            referencedRelation: "tools"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      solutions: {
-        Row: {
-          category: Database["public"]["Enums"]["solution_category"]
-          checklist_items: Json | null
-          completion_requirements: Json | null
-          created_at: string
-          description: string
-          difficulty: Database["public"]["Enums"]["difficulty_level_new"]
-          id: string
-          implementation_steps: Json | null
-          published: boolean
-          related_solutions: string[] | null
-          slug: string
-          tags: string[] | null
-          thumbnail_url: string | null
-          title: string
-          updated_at: string
-        }
-        Insert: {
-          category: Database["public"]["Enums"]["solution_category"]
-          checklist_items?: Json | null
-          completion_requirements?: Json | null
-          created_at?: string
-          description: string
-          difficulty: Database["public"]["Enums"]["difficulty_level_new"]
-          id?: string
-          implementation_steps?: Json | null
-          published?: boolean
-          related_solutions?: string[] | null
-          slug: string
-          tags?: string[] | null
-          thumbnail_url?: string | null
-          title: string
-          updated_at?: string
-        }
-        Update: {
-          category?: Database["public"]["Enums"]["solution_category"]
-          checklist_items?: Json | null
-          completion_requirements?: Json | null
-          created_at?: string
-          description?: string
-          difficulty?: Database["public"]["Enums"]["difficulty_level_new"]
-          id?: string
-          implementation_steps?: Json | null
-          published?: boolean
-          related_solutions?: string[] | null
-          slug?: string
-          tags?: string[] | null
-          thumbnail_url?: string | null
-          title?: string
-          updated_at?: string
         }
         Relationships: []
       }
@@ -4190,20 +3369,6 @@ export type Database = {
             referencedRelation: "suggestion_comments"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "suggestion_comments_suggestion_id_fkey"
-            columns: ["suggestion_id"]
-            isOneToOne: false
-            referencedRelation: "suggestions"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "suggestion_comments_suggestion_id_fkey"
-            columns: ["suggestion_id"]
-            isOneToOne: false
-            referencedRelation: "suggestions_with_profiles"
-            referencedColumns: ["id"]
-          },
         ]
       }
       suggestion_notifications: {
@@ -4243,138 +3408,6 @@ export type Database = {
             columns: ["comment_id"]
             isOneToOne: false
             referencedRelation: "suggestion_comments"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "suggestion_notifications_suggestion_id_fkey"
-            columns: ["suggestion_id"]
-            isOneToOne: false
-            referencedRelation: "suggestions"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "suggestion_notifications_suggestion_id_fkey"
-            columns: ["suggestion_id"]
-            isOneToOne: false
-            referencedRelation: "suggestions_with_profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      suggestion_votes: {
-        Row: {
-          created_at: string
-          id: string
-          suggestion_id: string
-          updated_at: string
-          user_id: string
-          vote_type: Database["public"]["Enums"]["vote_type"]
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          suggestion_id: string
-          updated_at?: string
-          user_id: string
-          vote_type: Database["public"]["Enums"]["vote_type"]
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          suggestion_id?: string
-          updated_at?: string
-          user_id?: string
-          vote_type?: Database["public"]["Enums"]["vote_type"]
-        }
-        Relationships: [
-          {
-            foreignKeyName: "suggestion_votes_suggestion_id_fkey"
-            columns: ["suggestion_id"]
-            isOneToOne: false
-            referencedRelation: "suggestions"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "suggestion_votes_suggestion_id_fkey"
-            columns: ["suggestion_id"]
-            isOneToOne: false
-            referencedRelation: "suggestions_with_profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      suggestions: {
-        Row: {
-          category_id: string | null
-          comment_count: number
-          created_at: string
-          description: string
-          downvotes: number
-          id: string
-          image_url: string | null
-          is_hidden: boolean
-          is_pinned: boolean
-          profiles: Json | null
-          status: Database["public"]["Enums"]["suggestion_status"]
-          title: string
-          updated_at: string
-          upvotes: number
-          user_id: string
-        }
-        Insert: {
-          category_id?: string | null
-          comment_count?: number
-          created_at?: string
-          description: string
-          downvotes?: number
-          id?: string
-          image_url?: string | null
-          is_hidden?: boolean
-          is_pinned?: boolean
-          profiles?: Json | null
-          status?: Database["public"]["Enums"]["suggestion_status"]
-          title: string
-          updated_at?: string
-          upvotes?: number
-          user_id: string
-        }
-        Update: {
-          category_id?: string | null
-          comment_count?: number
-          created_at?: string
-          description?: string
-          downvotes?: number
-          id?: string
-          image_url?: string | null
-          is_hidden?: boolean
-          is_pinned?: boolean
-          profiles?: Json | null
-          status?: Database["public"]["Enums"]["suggestion_status"]
-          title?: string
-          updated_at?: string
-          upvotes?: number
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "suggestions_category_id_fkey"
-            columns: ["category_id"]
-            isOneToOne: false
-            referencedRelation: "suggestion_categories"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "suggestions_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "suggestions_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "users_with_roles"
             referencedColumns: ["id"]
           },
         ]
@@ -4638,15 +3671,7 @@ export type Database = {
           updated_at?: string
           user_id?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "user_checklists_solution_id_fkey"
-            columns: ["solution_id"]
-            isOneToOne: false
-            referencedRelation: "solutions"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       user_health_alerts: {
         Row: {
@@ -5087,71 +4112,6 @@ export type Database = {
           },
         ]
       }
-      suggestions_with_profiles: {
-        Row: {
-          category_id: string | null
-          comment_count: number | null
-          created_at: string | null
-          description: string | null
-          downvotes: number | null
-          id: string | null
-          image_url: string | null
-          is_hidden: boolean | null
-          is_pinned: boolean | null
-          profiles: Json | null
-          status: Database["public"]["Enums"]["suggestion_status"] | null
-          title: string | null
-          updated_at: string | null
-          upvotes: number | null
-          user_avatar: string | null
-          user_id: string | null
-          user_name: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "suggestions_category_id_fkey"
-            columns: ["category_id"]
-            isOneToOne: false
-            referencedRelation: "suggestion_categories"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "suggestions_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "suggestions_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "users_with_roles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      user_progress: {
-        Row: {
-          created_at: string | null
-          is_completed: boolean | null
-          solution_category:
-            | Database["public"]["Enums"]["solution_category"]
-            | null
-          solution_id: string | null
-          solution_title: string | null
-          user_id: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "progress_solution_id_fkey"
-            columns: ["solution_id"]
-            isOneToOne: false
-            referencedRelation: "solutions"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       users_with_roles: {
         Row: {
           avatar_url: string | null
@@ -5194,10 +4154,6 @@ export type Database = {
           users_without_roles: number
         }[]
       }
-      backup_all_onboarding_data: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
       can_access_benefit: {
         Args: { user_id: string; tool_id: string }
         Returns: boolean
@@ -5239,10 +4195,6 @@ export type Database = {
           policy_count: number
           security_status: string
         }[]
-      }
-      check_solution_certificate_eligibility: {
-        Args: { p_user_id: string; p_solution_id: string }
-        Returns: boolean
       }
       clean_user_onboarding_data: {
         Args: { p_user_id: string }
@@ -5294,17 +4246,6 @@ export type Database = {
         Args: { p_user_id: string; p_backup_type?: string }
         Returns: string
       }
-      create_referral: {
-        Args: {
-          p_referrer_id: string
-          p_email: string
-          p_type: Database["public"]["Enums"]["referral_type"]
-          p_role_id?: string
-          p_notes?: string
-          p_expires_in?: unknown
-        }
-        Returns: Json
-      }
       create_solution_certificate_if_eligible: {
         Args: { p_user_id: string; p_solution_id: string }
         Returns: string
@@ -5324,18 +4265,6 @@ export type Database = {
       decrement: {
         Args: { row_id: string; table_name: string; column_name: string }
         Returns: undefined
-      }
-      decrement_suggestion_downvote: {
-        Args: { suggestion_id: string }
-        Returns: undefined
-      }
-      decrement_suggestion_upvote: {
-        Args: { suggestion_id: string }
-        Returns: undefined
-      }
-      deleteforumpost: {
-        Args: { post_id: string }
-        Returns: Json
       }
       detect_at_risk_users: {
         Args: Record<PropertyKey, never>
@@ -5489,22 +4418,6 @@ export type Database = {
         Args: { row_id: string; table_name: string; column_name: string }
         Returns: undefined
       }
-      increment_suggestion_downvote: {
-        Args: { suggestion_id: string }
-        Returns: undefined
-      }
-      increment_suggestion_upvote: {
-        Args: { suggestion_id: string }
-        Returns: undefined
-      }
-      increment_topic_replies: {
-        Args: { topic_id: string }
-        Returns: undefined
-      }
-      increment_topic_views: {
-        Args: { topic_id: string }
-        Returns: undefined
-      }
       initialize_onboarding_for_all_users: {
         Args: Record<PropertyKey, never>
         Returns: Json
@@ -5590,14 +4503,6 @@ export type Database = {
         }
         Returns: undefined
       }
-      mark_topic_as_solved: {
-        Args: { topic_id: string; post_id: string }
-        Returns: Json
-      }
-      mark_topic_solved: {
-        Args: { p_topic_id: string; p_post_id: string }
-        Returns: Json
-      }
       merge_json_data: {
         Args: { target: Json; source: Json }
         Returns: Json
@@ -5609,10 +4514,6 @@ export type Database = {
       migrate_onboarding_data_to_quick: {
         Args: Record<PropertyKey, never>
         Returns: Json
-      }
-      normalize_solution_category: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
       }
       process_referral: {
         Args: { p_token: string; p_user_id: string }
@@ -5648,10 +4549,6 @@ export type Database = {
       }
       sync_profile_roles: {
         Args: Record<PropertyKey, never>
-        Returns: Json
-      }
-      unmark_topic_as_solved: {
-        Args: { topic_id: string }
         Returns: Json
       }
       update_invite_send_attempt: {
@@ -5709,7 +4606,6 @@ export type Database = {
       connection_status: "pending" | "accepted" | "rejected"
       difficulty_level: "beginner" | "intermediate" | "advanced"
       difficulty_level_new: "easy" | "medium" | "advanced"
-      forum_reaction_type: "like" | "helpful" | "insightful" | "celebrate"
       notification_type:
         | "status_change"
         | "new_comment"
@@ -5717,8 +4613,6 @@ export type Database = {
         | "comment_reply"
         | "admin_response"
       referral_status: "pending" | "registered" | "completed"
-      referral_type: "club" | "formacao"
-      solution_category: "Receita" | "Operacional" | "Estratégia"
       solution_category_bkp: "revenue" | "operational" | "strategy"
       suggestion_status:
         | "new"
@@ -5846,7 +4740,6 @@ export const Constants = {
       connection_status: ["pending", "accepted", "rejected"],
       difficulty_level: ["beginner", "intermediate", "advanced"],
       difficulty_level_new: ["easy", "medium", "advanced"],
-      forum_reaction_type: ["like", "helpful", "insightful", "celebrate"],
       notification_type: [
         "status_change",
         "new_comment",
@@ -5855,8 +4748,6 @@ export const Constants = {
         "admin_response",
       ],
       referral_status: ["pending", "registered", "completed"],
-      referral_type: ["club", "formacao"],
-      solution_category: ["Receita", "Operacional", "Estratégia"],
       solution_category_bkp: ["revenue", "operational", "strategy"],
       suggestion_status: [
         "new",

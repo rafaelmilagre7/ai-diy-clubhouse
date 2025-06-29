@@ -6,13 +6,13 @@ import { LearningLesson, LearningLessonVideo, LearningResource, LearningModule, 
 
 // Tipo estendido para aulas com dados relacionais
 export interface LearningLessonWithRelations extends LearningLesson {
-  ai_assistant_id?: string; // Novo campo adicionado
+  ai_assistant_id?: string; // Campo adicionado
   videos?: LearningLessonVideo[];
   resources?: LearningResource[];
   module?: LearningModuleWithCourse;
 }
 
-// Tipo estendido para módulos com dados do curso - sem sobrescrever campos obrigatórios
+// Tipo estendido para módulos com dados do curso
 export interface LearningModuleWithCourse extends LearningModule {
   learning_courses?: LearningCourse;
   course?: LearningCourse;

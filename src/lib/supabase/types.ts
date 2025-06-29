@@ -1,19 +1,24 @@
+
 import { Database } from './types/database.types';
+
+// =============================================================================
+// TIPOS PRINCIPAIS DO SISTEMA LEARNING (LMS)
+// =============================================================================
 
 // Tipos de tabelas expandidos com dados relacionais
 export type LearningLesson = Database['public']['Tables']['learning_lessons']['Row'] & {
-  ai_assistant_id?: string; // Novo campo adicionado
+  ai_assistant_id?: string; // Campo adicionado na migração
   // Campos relacionais opcionais para compatibilidade
   module?: {
     id: string;
     title: string;
-    description: string | null; // Permitir null do banco
+    description: string | null;
     course_id: string;
     order_index: number;
     published: boolean;
     created_at: string;
     updated_at: string;
-    cover_image_url: string | null; // Permitir null do banco
+    cover_image_url: string | null;
   };
   videos?: any[];
   resources?: any[];
@@ -31,6 +36,8 @@ export type LearningProgress = Database['public']['Tables']['learning_progress']
 export type LearningResource = Database['public']['Tables']['learning_resources']['Row'];
 export type LearningLessonTool = Database['public']['Tables']['learning_lesson_tools']['Row'];
 export type LearningComment = Database['public']['Tables']['learning_comments']['Row'];
+export type LearningCertificate = Database['public']['Tables']['learning_certificates']['Row'];
+export type LearningLessonNps = Database['public']['Tables']['learning_lesson_nps']['Row'];
 
 // Tipos estendidos para queries com JOINs
 export interface LearningLessonWithRelations extends LearningLesson {
@@ -50,8 +57,9 @@ export interface LearningCourseWithStats extends LearningCourse {
   is_restricted: boolean;
 }
 
-// Outros tipos existentes
-export * from './types/database.types';
+// =============================================================================
+// TIPOS DO SISTEMA ADMINISTRATIVO
+// =============================================================================
 
 // Interface para dados de role do usuário
 export interface UserRoleData {
@@ -91,7 +99,6 @@ export const getUserRoleName = (profile: UserProfile | null): string => {
   
   // Fallback para campo legado durante migração
   if (profile.role) {
-    // CORREÇÃO: Log de deprecação para monitoramento
     if (process.env.NODE_ENV !== 'production') {
       console.warn('⚠️ [DEPRECATED] Usando profile.role (legado). Migre para role_id/user_roles.', {
         profileId: profile.id.substring(0, 8) + '***',
@@ -118,75 +125,41 @@ export const isFormacaoRole = (profile: UserProfile | null): boolean => {
   return roleName === 'formacao';
 };
 
-// Interface para Solution (sem dependência de tabela inexistente)
-export interface Solution {
+// =============================================================================
+// TIPOS DO SISTEMA DE MEMBROS (Tools, Events, Benefits)
+// =============================================================================
+
+// Tools/Benefits interfaces (mantidas para compatibilidade com sistema de membros)
+export interface Tool {
   id: string;
-  title: string;
+  name: string;
   description: string;
-  difficulty: string;
-  category: 'Receita' | 'Operacional' | 'Estratégia';
+  link: string;
   image_url?: string;
-  thumbnail_url?: string;
-  author_id?: string;
+  category: string;
+  is_premium: boolean;
   created_at: string;
   updated_at: string;
-  published: boolean;
-  slug: string;
-  status?: string;
-  completion_percentage?: number;
-  overview?: string;
-  estimated_time?: number;
-  success_rate?: number;
-  tags?: string[];
-  videos?: any[];
-  checklist?: any[];
-  module_order?: number;
-  related_solutions?: string[];
 }
 
-export interface Module {
+export interface Event {
   id: string;
-  solution_id: string;
   title: string;
   description?: string;
-  order: number;
-  module_order?: number;
-  type: string;
-  content?: any;
-  created_at: string;
-  updated_at: string;
-  completed?: boolean;
-}
-
-export interface Progress {
-  id: string;
-  user_id: string;
-  solution_id: string;
-  current_module: number;
-  is_completed: boolean;
-  completed_modules: number[];
-  completed_at?: string;
-  last_activity: string;
+  start_time: string;
+  end_time: string;
+  location_link?: string;
+  physical_location?: string;
+  cover_image_url?: string;
+  is_recurring: boolean;
+  recurrence_pattern?: string;
+  created_by: string;
   created_at: string;
 }
 
-export interface UserChecklist {
-  id: string;
-  user_id: string;
-  solution_id: string;
-  checked_items: Record<string, boolean>;
-  created_at: string;
-  updated_at: string;
-}
-
-export interface LearningCertificate {
-  id: string;
-  user_id: string;
-  course_id: string;
-  certificate_url: string | null;
-  created_at: string;
-  issued_at: string;
-}
+// =============================================================================
+// TIPOS DE FORMULÁRIOS E COMPONENTES
+// =============================================================================
 
 export interface VideoFormValues {
   id?: string;
@@ -203,12 +176,9 @@ export interface VideoFormValues {
   order_index?: number;
 }
 
-export interface LearningLessonNps {
-  id: string;
-  user_id: string;
-  lesson_id: string;
-  score: number;
-  feedback: string | null;
-  created_at: string;
-  updated_at: string;
-}
+// =============================================================================
+// RE-EXPORTAR TIPOS DO DATABASE
+// =============================================================================
+
+// Outros tipos existentes do database
+export * from './types/database.types';
