@@ -304,6 +304,13 @@ export type Database = {
             foreignKeyName: "benefit_access_control_tool_id_fkey"
             columns: ["tool_id"]
             isOneToOne: false
+            referencedRelation: "benefits"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "benefit_access_control_tool_id_fkey"
+            columns: ["tool_id"]
+            isOneToOne: false
             referencedRelation: "tools"
             referencedColumns: ["id"]
           },
@@ -332,6 +339,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "benefit_clicks_tool_id_fkey"
+            columns: ["tool_id"]
+            isOneToOne: false
+            referencedRelation: "benefits"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "benefit_clicks_tool_id_fkey"
             columns: ["tool_id"]
@@ -1644,6 +1658,13 @@ export type Database = {
             columns: ["lesson_id"]
             isOneToOne: false
             referencedRelation: "learning_lessons_with_relations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "learning_lesson_tools_tool_id_fkey"
+            columns: ["tool_id"]
+            isOneToOne: false
+            referencedRelation: "benefits"
             referencedColumns: ["id"]
           },
           {
@@ -4063,6 +4084,75 @@ export type Database = {
       }
     }
     Views: {
+      benefits: {
+        Row: {
+          benefit_badge_url: string | null
+          benefit_clicks: number | null
+          benefit_description: string | null
+          benefit_link: string | null
+          benefit_title: string | null
+          benefit_type: string | null
+          category: string | null
+          created_at: string | null
+          description: string | null
+          has_member_benefit: boolean | null
+          id: string | null
+          logo_url: string | null
+          name: string | null
+          official_url: string | null
+          status: boolean | null
+          tags: string[] | null
+          updated_at: string | null
+          video_tutorials: Json | null
+          video_type: string | null
+          video_url: string | null
+        }
+        Insert: {
+          benefit_badge_url?: string | null
+          benefit_clicks?: number | null
+          benefit_description?: string | null
+          benefit_link?: string | null
+          benefit_title?: string | null
+          benefit_type?: string | null
+          category?: string | null
+          created_at?: string | null
+          description?: string | null
+          has_member_benefit?: boolean | null
+          id?: string | null
+          logo_url?: string | null
+          name?: string | null
+          official_url?: string | null
+          status?: boolean | null
+          tags?: string[] | null
+          updated_at?: string | null
+          video_tutorials?: Json | null
+          video_type?: string | null
+          video_url?: string | null
+        }
+        Update: {
+          benefit_badge_url?: string | null
+          benefit_clicks?: number | null
+          benefit_description?: string | null
+          benefit_link?: string | null
+          benefit_title?: string | null
+          benefit_type?: string | null
+          category?: string | null
+          created_at?: string | null
+          description?: string | null
+          has_member_benefit?: boolean | null
+          id?: string | null
+          logo_url?: string | null
+          name?: string | null
+          official_url?: string | null
+          status?: boolean | null
+          tags?: string[] | null
+          updated_at?: string | null
+          video_tutorials?: Json | null
+          video_type?: string | null
+          video_url?: string | null
+        }
+        Relationships: []
+      }
       learning_courses_with_stats: {
         Row: {
           cover_image_url: string | null
@@ -4613,6 +4703,7 @@ export type Database = {
         | "comment_reply"
         | "admin_response"
       referral_status: "pending" | "registered" | "completed"
+      solution_category: "Receita" | "Operacional" | "Estratégia"
       solution_category_bkp: "revenue" | "operational" | "strategy"
       suggestion_status:
         | "new"
@@ -4748,6 +4839,7 @@ export const Constants = {
         "admin_response",
       ],
       referral_status: ["pending", "registered", "completed"],
+      solution_category: ["Receita", "Operacional", "Estratégia"],
       solution_category_bkp: ["revenue", "operational", "strategy"],
       suggestion_status: [
         "new",

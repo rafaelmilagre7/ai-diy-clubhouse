@@ -1,9 +1,8 @@
 
-import { SolutionCategory } from "@/lib/types/categoryTypes";
-
-// Usar os tipos de compatibilidade do sistema principal
+// Usar o tipo Solution de compatibilidade do sistema principal
 export type { Solution } from "@/lib/supabase/types";
 
+// Interface para progresso do usuário
 export interface UserProgress {
   [key: string]: {
     started: boolean;
@@ -17,6 +16,7 @@ export interface UserProgress {
   }
 }
 
+// Interface principal do dashboard
 export interface Dashboard {
   activeSolutions: Solution[];
   completedSolutions: Solution[];
