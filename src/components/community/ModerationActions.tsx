@@ -1,3 +1,5 @@
+
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -20,7 +22,6 @@ import {
   Eye, 
   Trash2,
   Flag,
-  Shield
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -33,7 +34,7 @@ interface ModerationActionsProps {
     isHidden?: boolean;
   };
   onReport?: () => void;
-  onSuccess?: () => void; // Novo callback para atualizar a UI
+  onSuccess?: () => void;
 }
 
 export const ModerationActions = ({ 
@@ -43,10 +44,14 @@ export const ModerationActions = ({
   onReport,
   onSuccess 
 }: ModerationActionsProps) => {
+  const [isOpen, setIsOpen] = useState(false);
   const { hasPermission } = usePermissions();
-  const { performModerationAction } = useModeration();
+  
+  // Só inicializar o hook de moderação quando o dropdown for aberto
+  const { performModerationAction } = useModeration(isOpen);
+  
   const {
-    isOpen,
+    isOpen: isDeleteDialogOpen,
     isDeleting,
     pendingAction,
     openDeleteDialog,
@@ -65,7 +70,6 @@ export const ModerationActions = ({
         reason
       });
       
-      // Chamar callback de sucesso para atualizar a UI
       if (onSuccess) {
         onSuccess();
       }
@@ -79,7 +83,6 @@ export const ModerationActions = ({
       await handleAction('delete', 'Conteúdo removido por moderação');
       toast.success(`${type === 'topic' ? 'Tópico' : 'Post'} excluído com sucesso`);
       
-      // Chamar callback de sucesso após exclusão bem-sucedida
       if (onSuccess) {
         onSuccess();
       }
@@ -151,7 +154,7 @@ export const ModerationActions = ({
 
   return (
     <>
-      <DropdownMenu>
+      <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" size="sm">
             <MoreHorizontal className="h-4 w-4" />
@@ -183,7 +186,7 @@ export const ModerationActions = ({
       </DropdownMenu>
 
       <DeleteConfirmationDialog
-        isOpen={isOpen}
+        isOpen={isDeleteDialogOpen}
         onClose={closeDeleteDialog}
         onDelete={confirmDelete}
         isDeleting={isDeleting}
