@@ -1,6 +1,6 @@
 
-// Usar o tipo Solution de compatibilidade do sistema principal
-export type { Solution } from "@/lib/supabase/types/legacy";
+// Importar o tipo Solution corretamente do sistema principal
+import type { Solution } from "@/lib/supabase/types/legacy";
 
 // Interface para progresso do usuário
 export interface UserProgress {
@@ -34,3 +34,6 @@ export interface RecentActivity {
   solution?: string;
   created_at: string;
 }
+
+// Re-exportar o tipo Solution para compatibilidade
+export type { Solution };

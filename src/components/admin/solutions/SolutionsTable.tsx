@@ -13,6 +13,7 @@ interface SolutionsTableProps {
   onDelete: (solutionId: string) => Promise<void>;
   onTogglePublish: (solutionId: string, newPublishedState: boolean) => Promise<void>;
   getCategoryDetails: (category: string) => { name: string; color: string; bgColor: string; icon: string; description: string; };
+  onDeleteClick?: (id: string) => void;
 }
 
 export const SolutionsTable: React.FC<SolutionsTableProps> = ({ 
@@ -20,7 +21,8 @@ export const SolutionsTable: React.FC<SolutionsTableProps> = ({
   onEdit,
   onDelete,
   onTogglePublish,
-  getCategoryDetails
+  getCategoryDetails,
+  onDeleteClick
 }) => {
   const getCategoryText = (category: string) => {
     const details = getCategoryDetails(category);
@@ -62,7 +64,8 @@ export const SolutionsTable: React.FC<SolutionsTableProps> = ({
               <TableActions 
                 solutionId={solution.id} 
                 onEdit={() => onEdit(solution.id)}
-                onDelete={() => onDelete(solution.id)} 
+                onDelete={() => onDelete(solution.id)}
+                onDeleteClick={onDeleteClick}
               />
             </TableCell>
           </TableRow>
