@@ -169,6 +169,7 @@ export const SolutionCertificateCard = ({
             onClick={handleDownload}
             variant="outline"
             className="border-neutral-600 text-gray-300 hover:bg-neutral-800"
+            title="Baixar PDF"
           >
             <Download className="h-4 w-4" />
           </Button>
@@ -177,6 +178,7 @@ export const SolutionCertificateCard = ({
             onClick={handlePreview}
             variant="outline"
             className="border-neutral-600 text-gray-300 hover:bg-neutral-800"
+            title="Visualizar"
           >
             <Eye className="h-4 w-4" />
           </Button>

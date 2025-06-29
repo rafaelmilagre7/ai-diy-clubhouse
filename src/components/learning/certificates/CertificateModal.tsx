@@ -1,4 +1,3 @@
-
 import React, { useRef, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -61,17 +60,16 @@ export const CertificateModal = ({ certificate, isOpen, onClose }: CertificateMo
       return;
     }
 
-    console.log('🔄 Iniciando download do certificado:', certificate.id);
+    console.log('💾 Iniciando download do certificado:', certificate.id);
 
     const filename = `certificado-${solution?.title?.replace(/[^a-zA-Z0-9]/g, '-')}-${certificate.validation_code}.pdf`;
     
-    // Sempre gerar novo PDF para garantir template atualizado
-    console.log('🏭 Gerando PDF com template atual...');
+    // Gerar PDF e fazer download direto
     const result = await generatePDF(certificateRef.current, filename, certificate.id);
     
     if (result) {
-      downloadPDF(result.url, result.filename, !!result.blob);
-      toast.success('Certificado gerado e download iniciado!');
+      downloadPDF(result.url, result.filename, true);
+      toast.success('Download do certificado iniciado!');
     }
   };
 
