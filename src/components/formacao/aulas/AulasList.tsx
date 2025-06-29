@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { LearningLesson } from "@/lib/supabase";
+import { LearningLessonWithRelations } from "@/lib/supabase/types";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -12,20 +12,20 @@ import { ptBR } from "date-fns/locale";
 import { PublishLessonButton } from "./PublishLessonButton";
 
 interface AulasListProps {
-  aulas: LearningLesson[];
+  aulas: LearningLessonWithRelations[];
   loading: boolean;
-  onEdit: (aula: LearningLesson) => void;
+  onEdit: (aula: LearningLessonWithRelations) => void;
   onDelete: (id: string) => void;
   isAdmin: boolean;
   onRefresh?: () => void;
 }
 
 export const AulasList = ({ aulas, loading, onEdit, onDelete, isAdmin, onRefresh }: AulasListProps) => {
-  const [aulaParaExcluir, setAulaParaExcluir] = useState<LearningLesson | null>(null);
+  const [aulaParaExcluir, setAulaParaExcluir] = useState<LearningLessonWithRelations | null>(null);
   const [publishingStates, setPublishingStates] = useState<Record<string, boolean>>({});
 
   // Abrir diálogo de confirmação para excluir
-  const handleOpenDelete = (aula: LearningLesson) => {
+  const handleOpenDelete = (aula: LearningLessonWithRelations) => {
     setAulaParaExcluir(aula);
   };
 
@@ -55,7 +55,7 @@ export const AulasList = ({ aulas, loading, onEdit, onDelete, isAdmin, onRefresh
   };
 
   // Determinar se uma aula está publicada (considerando o estado local se disponível)
-  const isPublished = (aula: LearningLesson) => {
+  const isPublished = (aula: LearningLessonWithRelations) => {
     return aula.id in publishingStates 
       ? publishingStates[aula.id] 
       : !!aula.published;
@@ -117,7 +117,7 @@ export const AulasList = ({ aulas, loading, onEdit, onDelete, isAdmin, onRefresh
             <CardContent>
               <div className="flex items-center text-sm text-muted-foreground">
                 <p>{format(new Date(aula.created_at), "dd/MM/yyyy", { locale: ptBR })}</p>
-                {aula.estimated_time_minutes > 0 && (
+                {aula.estimated_time_minutes && aula.estimated_time_minutes > 0 && (
                   <Badge variant="outline" className="ml-2">
                     {aula.estimated_time_minutes} min
                   </Badge>

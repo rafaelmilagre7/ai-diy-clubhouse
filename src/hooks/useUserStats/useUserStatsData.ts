@@ -4,13 +4,38 @@ import { useAuth } from "@/contexts/auth";
 import { supabase } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
 
+// Tipos simplificados para evitar deep instantiation
+interface SimpleSolution {
+  id: string;
+  category: string;
+  difficulty: string;
+}
+
+interface SimpleProgress {
+  id: string;
+  user_id: string;
+  solution_id: string;
+  is_completed: boolean;
+  last_activity: string;
+  solution?: {
+    title: string;
+  };
+}
+
+interface SimpleAnalytics {
+  id: string;
+  user_id: string;
+  event_type: string;
+  created_at: string;
+}
+
 export const useUserStatsData = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
-  const [solutions, setSolutions] = useState<any[]>([]);
-  const [progressData, setProgressData] = useState<any[]>([]);
-  const [analyticsData, setAnalyticsData] = useState<any[]>([]);
+  const [solutions, setSolutions] = useState<SimpleSolution[]>([]);
+  const [progressData, setProgressData] = useState<SimpleProgress[]>([]);
+  const [analyticsData, setAnalyticsData] = useState<SimpleAnalytics[]>([]);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {

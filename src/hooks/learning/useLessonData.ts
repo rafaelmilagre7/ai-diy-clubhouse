@@ -1,6 +1,7 @@
+
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
-import { LearningLesson, LearningLessonVideo, LearningResource } from "@/lib/supabase";
+import { LearningLessonWithRelations, LearningLessonVideo, LearningResource } from "@/lib/supabase/types";
 import { sortLessonsByNumber } from "@/components/learning/member/course-modules/CourseModulesHelpers";
 
 interface UseLessonDataProps {
@@ -14,7 +15,7 @@ export interface LessonModule {
     title: string;
     [key: string]: any;
   };
-  lessons: LearningLesson[];
+  lessons: LearningLessonWithRelations[];
 }
 
 export function useLessonData({ lessonId, courseId }: UseLessonDataProps) {
@@ -132,7 +133,7 @@ export function useLessonData({ lessonId, courseId }: UseLessonDataProps) {
       }
       
       // Organizar todas as aulas do curso em ordem
-      const allLessons: LearningLesson[] = [];
+      const allLessons: LearningLessonWithRelations[] = [];
       
       if (modules) {
         // Ordenar módulos por order_index

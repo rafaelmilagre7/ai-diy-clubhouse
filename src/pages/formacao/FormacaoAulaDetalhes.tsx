@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/auth";
 import { supabase } from "@/lib/supabase";
-import { LearningLesson } from "@/lib/supabase";
+import { LearningLessonWithRelations } from "@/lib/supabase/types";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
@@ -15,7 +15,7 @@ const FormacaoAulaDetalhes = () => {
   const navigate = useNavigate();
   const { profile } = useAuth();
   
-  const [aula, setAula] = useState<LearningLesson | null>(null);
+  const [aula, setAula] = useState<LearningLessonWithRelations | null>(null);
   const [loading, setLoading] = useState(true);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
