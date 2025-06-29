@@ -14,8 +14,8 @@ export function convertToLearningLessonsWithRelations(
     resources: lesson.resources || [],
     module: lesson.module ? {
       ...lesson.module,
-      description: lesson.module.description || null,
-      cover_image_url: lesson.module.cover_image_url || null
+      description: lesson.module.description,
+      cover_image_url: lesson.module.cover_image_url
     } : undefined
   }));
 }
@@ -32,8 +32,8 @@ export function convertToLearningLessonWithRelations(
     resources: lesson.resources || [],
     module: lesson.module ? {
       ...lesson.module,
-      description: lesson.module.description || null,
-      cover_image_url: lesson.module.cover_image_url || null
+      description: lesson.module.description,
+      cover_image_url: lesson.module.cover_image_url
     } : undefined
   };
 }

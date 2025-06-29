@@ -12,10 +12,8 @@ export interface LearningLessonWithRelations extends LearningLesson {
   module?: LearningModuleWithCourse;
 }
 
-// Tipo estendido para módulos com dados do curso
+// Tipo estendido para módulos com dados do curso - sem sobrescrever campos obrigatórios
 export interface LearningModuleWithCourse extends LearningModule {
-  description?: string | null; // Ajustar para compatibilidade com banco
-  cover_image_url?: string | null; // Ajustar para compatibilidade com banco
   learning_courses?: LearningCourse;
   course?: LearningCourse;
 }
