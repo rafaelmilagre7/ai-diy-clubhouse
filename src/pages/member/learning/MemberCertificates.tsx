@@ -1,30 +1,35 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { CertificatesList } from "@/components/learning/certificates/CertificatesList";
-import { RetroactiveCertificatesPanel } from "@/components/learning/certificates/RetroactiveCertificatesPanel";
+import { CertificatesHeader } from "@/components/learning/certificates/CertificatesHeader";
+import { CertificatesFilters } from "@/components/learning/certificates/CertificatesFilters";
 import { useAuth } from "@/contexts/auth";
 
 const MemberCertificates = () => {
   const { user } = useAuth();
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("all");
+  const [sortBy, setSortBy] = useState("recent");
   
   return (
     <div className="container mx-auto py-8 space-y-8">
-      <div className="flex flex-col gap-6">
-        <div>
-          <h1 className="text-3xl font-bold text-white">Meus Certificados</h1>
-          <p className="text-gray-300 mt-1">
-            Aqui você encontra todos os certificados obtidos em seus cursos e implementações de soluções.
-          </p>
-        </div>
+      <div className="flex flex-col gap-8">
+        <CertificatesHeader />
         
-        {/* Painel para gerar certificados retroativos */}
-        <RetroactiveCertificatesPanel />
+        <CertificatesFilters
+          searchTerm={searchTerm}
+          onSearchChange={setSearchTerm}
+          selectedCategory={selectedCategory}
+          onCategoryChange={setSelectedCategory}
+          sortBy={sortBy}
+          onSortChange={setSortBy}
+        />
         
-        {/* Lista de certificados */}
-        <div>
-          <h2 className="text-xl font-semibold text-white mb-4">Seus Certificados</h2>
-          <CertificatesList />
-        </div>
+        <CertificatesList 
+          searchTerm={searchTerm}
+          selectedCategory={selectedCategory}
+          sortBy={sortBy}
+        />
       </div>
     </div>
   );
