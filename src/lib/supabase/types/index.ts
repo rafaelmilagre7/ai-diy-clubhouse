@@ -36,6 +36,46 @@ export type Event = Database['public']['Tables']['events']['Row'];
 export type Benefit = Database['public']['Tables']['benefits']['Row'];
 
 // =============================================================================
+// TIPOS DE COMPATIBILIDADE
+// =============================================================================
+
+// Compatibilidade: Solution (sistema legado)
+export interface Solution {
+  id: string;
+  title: string;
+  description: string;
+  category: string;
+  difficulty: 'easy' | 'medium' | 'advanced';
+  published: boolean;
+  created_at: string;
+  updated_at: string;
+  thumbnail_url?: string;
+  slug: string;
+  tags?: string[];
+  estimated_time?: number;
+  success_rate?: number;
+  related_solutions?: string[];
+  author_id?: string;
+}
+
+// Compatibilidade: Module (sistema legado)
+export interface Module {
+  id: string;
+  title: string;
+  type: string;
+  content?: {
+    blocks?: any[];
+  };
+  solution_id?: string;
+  module_order?: number;
+  estimated_time_minutes?: number;
+  created_at: string;
+  updated_at: string;
+  certificate_template?: any;
+  metrics?: any;
+}
+
+// =============================================================================
 // RE-EXPORTAR TIPOS DO DATABASE
 // =============================================================================
 

@@ -58,6 +58,46 @@ export interface LearningCourseWithStats extends LearningCourse {
 }
 
 // =============================================================================
+// TIPOS DE COMPATIBILIDADE PARA SISTEMA LEGADO
+// =============================================================================
+
+// Compatibilidade: Solution → mapeado para estrutura similar a LearningLesson
+export interface Solution {
+  id: string;
+  title: string;
+  description: string;
+  category: string;
+  difficulty: 'easy' | 'medium' | 'advanced';
+  published: boolean;
+  created_at: string;
+  updated_at: string;
+  thumbnail_url?: string;
+  slug: string;
+  tags?: string[];
+  estimated_time?: number;
+  success_rate?: number;
+  related_solutions?: string[];
+  author_id?: string;
+}
+
+// Compatibilidade: Module → mapeado para estrutura com conteúdo de módulo
+export interface Module {
+  id: string;
+  title: string;
+  type: string;
+  content?: {
+    blocks?: any[];
+  };
+  solution_id?: string;
+  module_order?: number;
+  estimated_time_minutes?: number;
+  created_at: string;
+  updated_at: string;
+  certificate_template?: any;
+  metrics?: any;
+}
+
+// =============================================================================
 // TIPOS DO SISTEMA ADMINISTRATIVO
 // =============================================================================
 
