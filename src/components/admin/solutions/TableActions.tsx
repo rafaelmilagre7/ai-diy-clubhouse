@@ -12,13 +12,25 @@ import { Link } from 'react-router-dom';
 
 interface TableActionsProps {
   solutionId: string;
-  onDeleteClick: (id: string) => void;
+  onEdit: () => void;
+  onDelete: () => void;
+  onDeleteClick?: (id: string) => void; // Manter compatibilidade
 }
 
 export const TableActions: React.FC<TableActionsProps> = ({
   solutionId,
+  onEdit,
+  onDelete,
   onDeleteClick
 }) => {
+  const handleDelete = () => {
+    if (onDeleteClick) {
+      onDeleteClick(solutionId);
+    } else {
+      onDelete();
+    }
+  };
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -27,12 +39,10 @@ export const TableActions: React.FC<TableActionsProps> = ({
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="bg-[#1A1E2E] border-neutral-700 text-white">
-        <Link to={`/admin/solutions/${solutionId}`}>
-          <DropdownMenuItem className="hover:bg-neutral-800 text-white cursor-pointer">
-            <FileEdit className="mr-2 h-4 w-4" />
-            <span>Editar</span>
-          </DropdownMenuItem>
-        </Link>
+        <DropdownMenuItem className="hover:bg-neutral-800 text-white cursor-pointer" onClick={onEdit}>
+          <FileEdit className="mr-2 h-4 w-4" />
+          <span>Editar</span>
+        </DropdownMenuItem>
         <Link to={`/solution/${solutionId}`} target="_blank">
           <DropdownMenuItem className="hover:bg-neutral-800 text-white cursor-pointer">
             <Eye className="mr-2 h-4 w-4" />
@@ -43,7 +53,7 @@ export const TableActions: React.FC<TableActionsProps> = ({
           className="hover:bg-neutral-800 text-white cursor-pointer"
           onClick={(e) => {
             e.preventDefault();
-            onDeleteClick(solutionId);
+            handleDelete();
           }}
         >
           <Trash2 className="mr-2 h-4 w-4" />

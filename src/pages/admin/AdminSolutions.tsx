@@ -4,6 +4,7 @@ import { useSolutionsAdmin } from '@/hooks/admin/useSolutionsAdmin';
 import { SolutionsHeader } from '@/components/admin/solutions/SolutionsHeader';
 import { SolutionsTable } from '@/components/admin/solutions/SolutionsTable';
 import { DeleteSolutionDialog } from '@/components/admin/solutions/DeleteSolutionDialog';
+import { getCategoryDetails } from '@/lib/types/categoryTypes';
 
 const AdminSolutions = () => {
   const {
@@ -13,12 +14,22 @@ const AdminSolutions = () => {
     setDeleteDialogOpen,
     solutionToDelete,
     setSolutionToDelete,
-    handleDeleteConfirm
+    handleDeleteConfirm,
+    handleEdit,
+    handleDelete,
+    handleTogglePublish,
+    handleCreateNew,
+    totalSolutions,
+    publishedSolutions
   } = useSolutionsAdmin();
 
   return (
     <div className="space-y-6">
-      <SolutionsHeader />
+      <SolutionsHeader 
+        totalSolutions={totalSolutions}
+        publishedSolutions={publishedSolutions}
+        onCreateNew={handleCreateNew}
+      />
       
       <div className="border rounded-lg border-neutral-700 bg-[#151823] overflow-hidden">
         {loading ? (
@@ -34,6 +45,10 @@ const AdminSolutions = () => {
           <div className="overflow-x-auto">
             <SolutionsTable 
               solutions={solutions}
+              onEdit={handleEdit}
+              onDelete={handleDelete}
+              onTogglePublish={handleTogglePublish}
+              getCategoryDetails={getCategoryDetails}
               onDeleteClick={(id) => {
                 setSolutionToDelete(id);
                 setDeleteDialogOpen(true);

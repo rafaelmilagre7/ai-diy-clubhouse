@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/lib/supabase';
-import { Solution } from '@/types/solutionTypes';
+import { Solution } from '@/lib/supabase/types/legacy';
 
 export const useSolutionsAdmin = () => {
   const { toast } = useToast();
@@ -38,18 +38,21 @@ export const useSolutionsAdmin = () => {
     }
   };
 
-  const handleDeleteConfirm = async () => {
-    if (!solutionToDelete) return;
+  const handleEdit = (id: string) => {
+    // Implementar navegação para edição
+    console.log('Editar solução:', id);
+  };
 
+  const handleDelete = async (solutionId: string) => {
     try {
       const { error } = await supabase
         .from('solutions')
         .delete()
-        .eq('id', solutionToDelete);
+        .eq('id', solutionId);
 
       if (error) throw error;
 
-      setSolutions(solutions.filter(solution => solution.id !== solutionToDelete));
+      setSolutions(solutions.filter(solution => solution.id !== solutionId));
       
       toast({
         title: 'Solução excluída',
@@ -62,10 +65,48 @@ export const useSolutionsAdmin = () => {
         description: 'Não foi possível excluir a solução.',
         variant: 'destructive',
       });
-    } finally {
-      setDeleteDialogOpen(false);
-      setSolutionToDelete(null);
     }
+  };
+
+  const handleTogglePublish = async (solutionId: string, newPublishedState: boolean) => {
+    try {
+      const { error } = await supabase
+        .from('solutions')
+        .update({ published: newPublishedState })
+        .eq('id', solutionId);
+
+      if (error) throw error;
+
+      setSolutions(prev => prev.map(solution => 
+        solution.id === solutionId 
+          ? { ...solution, published: newPublishedState }
+          : solution
+      ));
+
+      toast({
+        title: newPublishedState ? 'Solução publicada' : 'Solução despublicada',
+        description: `A solução foi ${newPublishedState ? 'publicada' : 'despublicada'} com sucesso.`,
+      });
+    } catch (error: any) {
+      console.error('Erro ao alterar status de publicação:', error);
+      toast({
+        title: 'Erro ao alterar status',
+        description: 'Não foi possível alterar o status da solução.',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!solutionToDelete) return;
+    await handleDelete(solutionToDelete);
+    setDeleteDialogOpen(false);
+    setSolutionToDelete(null);
+  };
+
+  const handleCreateNew = () => {
+    // Implementar navegação para criação
+    console.log('Criar nova solução');
   };
 
   return {
@@ -75,6 +116,12 @@ export const useSolutionsAdmin = () => {
     setDeleteDialogOpen,
     solutionToDelete,
     setSolutionToDelete,
-    handleDeleteConfirm
+    handleDeleteConfirm,
+    handleEdit,
+    handleDelete,
+    handleTogglePublish,
+    handleCreateNew,
+    totalSolutions: solutions.length,
+    publishedSolutions: solutions.filter(s => s.published).length
   };
 };
