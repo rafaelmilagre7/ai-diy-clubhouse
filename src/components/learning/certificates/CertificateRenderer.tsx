@@ -3,6 +3,8 @@ import React, { useEffect, useState } from "react";
 
 interface CertificateRendererProps {
   template: {
+    id?: string;
+    name?: string;
     html_template: string;
     css_styles: string;
   };
@@ -18,24 +20,38 @@ interface CertificateRendererProps {
 
 export const CertificateRenderer = ({ template, data }: CertificateRendererProps) => {
   const [isReady, setIsReady] = useState(false);
+  const [processedHtml, setProcessedHtml] = useState("");
 
   useEffect(() => {
+    console.log('📋 CertificateRenderer - Template recebido:', {
+      id: template.id,
+      name: template.name,
+      hasHtml: !!template.html_template,
+      hasCss: !!template.css_styles,
+      htmlPreview: template.html_template?.substring(0, 100) + '...'
+    });
+
+    console.log('📋 CertificateRenderer - Dados do certificado:', data);
+
+    // Processar HTML com substituições
+    const html = template.html_template
+      .replace(/\{\{USER_NAME\}\}/g, data.userName)
+      .replace(/\{\{SOLUTION_TITLE\}\}/g, data.solutionTitle)
+      .replace(/\{\{SOLUTION_CATEGORY\}\}/g, data.solutionCategory)
+      .replace(/\{\{IMPLEMENTATION_DATE\}\}/g, data.implementationDate)
+      .replace(/\{\{VALIDATION_CODE\}\}/g, data.validationCode)
+      .replace(/\{\{BENEFITS\}\}/g, data.benefits?.join(', ') || '');
+
+    setProcessedHtml(html);
+
     // Aguardar um pouco para garantir que as fontes carregaram
     const timer = setTimeout(() => {
+      console.log('✅ CertificateRenderer pronto para renderização');
       setIsReady(true);
-    }, 100);
+    }, 200);
 
     return () => clearTimeout(timer);
-  }, []);
-
-  // Substituir variáveis no template HTML
-  const processedHtml = template.html_template
-    .replace(/\{\{USER_NAME\}\}/g, data.userName)
-    .replace(/\{\{SOLUTION_TITLE\}\}/g, data.solutionTitle)
-    .replace(/\{\{SOLUTION_CATEGORY\}\}/g, data.solutionCategory)
-    .replace(/\{\{IMPLEMENTATION_DATE\}\}/g, data.implementationDate)
-    .replace(/\{\{VALIDATION_CODE\}\}/g, data.validationCode)
-    .replace(/\{\{BENEFITS\}\}/g, data.benefits?.join(', ') || '');
+  }, [template, data]);
 
   // CSS otimizado para renderização de PDF
   const optimizedCSS = `

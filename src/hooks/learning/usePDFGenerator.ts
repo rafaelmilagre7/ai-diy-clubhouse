@@ -30,7 +30,7 @@ export const usePDFGenerator = () => {
     certificateElement: HTMLElement,
     filename: string,
     certificateId: string
-  ): Promise<{ url: string; filename: string } | null> => {
+  ): Promise<{ url: string; filename: string; blob: Blob } | null> => {
     setIsGenerating(true);
     
     try {
@@ -82,47 +82,49 @@ export const usePDFGenerator = () => {
       // Converter para Blob
       const pdfBlob = pdf.output('blob');
       
-      console.log('☁️ Fazendo upload para Supabase...');
+      console.log('☁️ Fazendo upload para Supabase (background)...');
 
-      // Upload para Supabase Storage
-      const { data: uploadData, error: uploadError } = await supabase.storage
-        .from('certificates')
-        .upload(`solution-certificates/${filename}`, pdfBlob, {
-          contentType: 'application/pdf',
-          upsert: true
-        });
+      // Upload para Supabase Storage (em background, não bloquear download)
+      try {
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from('certificates')
+          .upload(`solution-certificates/${filename}`, pdfBlob, {
+            contentType: 'application/pdf',
+            upsert: true
+          });
 
-      if (uploadError) {
-        console.error('❌ Erro no upload:', uploadError);
-        throw uploadError;
-      }
+        if (!uploadError) {
+          // Obter URL pública
+          const { data: { publicUrl } } = supabase.storage
+            .from('certificates')
+            .getPublicUrl(`solution-certificates/${filename}`);
 
-      // Obter URL pública
-      const { data: { publicUrl } } = supabase.storage
-        .from('certificates')
-        .getPublicUrl(`solution-certificates/${filename}`);
+          console.log('🔄 Atualizando registro do certificado...');
 
-      console.log('🔄 Atualizando registro do certificado...');
+          // Atualizar registro do certificado com a URL
+          await supabase
+            .from('solution_certificates')
+            .update({
+              certificate_url: publicUrl,
+              certificate_filename: filename
+            })
+            .eq('id', certificateId);
 
-      // Atualizar registro do certificado com a URL
-      const { error: updateError } = await supabase
-        .from('solution_certificates')
-        .update({
-          certificate_url: publicUrl,
-          certificate_filename: filename
-        })
-        .eq('id', certificateId);
-
-      if (updateError) {
-        console.error('❌ Erro ao atualizar certificado:', updateError);
-        throw updateError;
+          console.log('✅ PDF salvo no Supabase com sucesso!');
+        }
+      } catch (uploadError) {
+        console.warn('⚠️ Erro no upload para Supabase (não crítico):', uploadError);
       }
 
       console.log('✅ PDF gerado com sucesso!');
 
+      // Retornar blob local para download imediato
+      const blobUrl = URL.createObjectURL(pdfBlob);
+
       return {
-        url: publicUrl,
-        filename
+        url: blobUrl,
+        filename,
+        blob: pdfBlob
       };
     } catch (error) {
       console.error('❌ Erro ao gerar PDF:', error);
@@ -133,13 +135,26 @@ export const usePDFGenerator = () => {
     }
   };
 
-  const downloadPDF = (url: string, filename: string) => {
+  const downloadPDF = (url: string, filename: string, isBlob = false) => {
+    console.log('💾 Iniciando download:', { url: isBlob ? 'blob-url' : url, filename });
+    
     const link = document.createElement('a');
     link.href = url;
     link.download = filename;
+    link.style.display = 'none';
+    
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+    
+    // Limpar blob URL se necessário
+    if (isBlob) {
+      setTimeout(() => {
+        URL.revokeObjectURL(url);
+      }, 1000);
+    }
+    
+    console.log('✅ Download iniciado com sucesso');
   };
 
   return {
