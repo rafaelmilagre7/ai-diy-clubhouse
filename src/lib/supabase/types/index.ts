@@ -1,8 +1,10 @@
 
 import { Database } from './database.types';
 
-// Tipos de tabelas
-export type LearningLesson = Database['public']['Tables']['learning_lessons']['Row'];
+// Tipos de tabelas com campos adicionais
+export type LearningLesson = Database['public']['Tables']['learning_lessons']['Row'] & {
+  ai_assistant_id?: string; // Novo campo adicionado na migração
+};
 export type LearningLessonVideo = Database['public']['Tables']['learning_lesson_videos']['Row'];
 export type LearningModule = Database['public']['Tables']['learning_modules']['Row'];
 export type LearningCourse = Database['public']['Tables']['learning_courses']['Row'];

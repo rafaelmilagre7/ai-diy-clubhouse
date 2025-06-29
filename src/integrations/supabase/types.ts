@@ -779,6 +779,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "course_access_control_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "learning_courses_with_stats"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "course_access_control_role_id_fkey"
             columns: ["role_id"]
             isOneToOne: false
@@ -1774,6 +1781,13 @@ export type Database = {
             referencedRelation: "learning_courses"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "learning_certificates_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "learning_courses_with_stats"
+            referencedColumns: ["id"]
+          },
         ]
       }
       learning_comment_likes: {
@@ -1924,6 +1938,13 @@ export type Database = {
             referencedRelation: "learning_lessons"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "learning_lesson_nps_lesson_id_fkey"
+            columns: ["lesson_id"]
+            isOneToOne: false
+            referencedRelation: "learning_lessons_with_relations"
+            referencedColumns: ["id"]
+          },
         ]
       }
       learning_lesson_tools: {
@@ -1954,6 +1975,13 @@ export type Database = {
             columns: ["lesson_id"]
             isOneToOne: false
             referencedRelation: "learning_lessons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "learning_lesson_tools_lesson_id_fkey"
+            columns: ["lesson_id"]
+            isOneToOne: false
+            referencedRelation: "learning_lessons_with_relations"
             referencedColumns: ["id"]
           },
           {
@@ -2020,6 +2048,13 @@ export type Database = {
             columns: ["lesson_id"]
             isOneToOne: false
             referencedRelation: "learning_lessons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "learning_lesson_videos_lesson_id_fkey"
+            columns: ["lesson_id"]
+            isOneToOne: false
+            referencedRelation: "learning_lessons_with_relations"
             referencedColumns: ["id"]
           },
         ]
@@ -2128,6 +2163,13 @@ export type Database = {
             referencedRelation: "learning_courses"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "learning_modules_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "learning_courses_with_stats"
+            referencedColumns: ["id"]
+          },
         ]
       }
       learning_progress: {
@@ -2178,6 +2220,13 @@ export type Database = {
             referencedRelation: "learning_lessons"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "learning_progress_lesson_id_fkey"
+            columns: ["lesson_id"]
+            isOneToOne: false
+            referencedRelation: "learning_lessons_with_relations"
+            referencedColumns: ["id"]
+          },
         ]
       }
       learning_resources: {
@@ -2220,6 +2269,13 @@ export type Database = {
             columns: ["lesson_id"]
             isOneToOne: false
             referencedRelation: "learning_lessons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "learning_resources_lesson_id_fkey"
+            columns: ["lesson_id"]
+            isOneToOne: false
+            referencedRelation: "learning_lessons_with_relations"
             referencedColumns: ["id"]
           },
         ]
@@ -4982,6 +5038,55 @@ export type Database = {
       }
     }
     Views: {
+      learning_courses_with_stats: {
+        Row: {
+          cover_image_url: string | null
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          id: string | null
+          is_restricted: boolean | null
+          lesson_count: number | null
+          module_count: number | null
+          order_index: number | null
+          published: boolean | null
+          slug: string | null
+          title: string | null
+          updated_at: string | null
+        }
+        Relationships: []
+      }
+      learning_lessons_with_relations: {
+        Row: {
+          ai_assistant_enabled: boolean | null
+          ai_assistant_id: string | null
+          ai_assistant_prompt: string | null
+          content: Json | null
+          cover_image_url: string | null
+          created_at: string | null
+          description: string | null
+          difficulty_level: string | null
+          estimated_time_minutes: number | null
+          id: string | null
+          module: Json | null
+          module_id: string | null
+          order_index: number | null
+          published: boolean | null
+          resources: Json | null
+          title: string | null
+          updated_at: string | null
+          videos: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "learning_lessons_module_id_fkey"
+            columns: ["module_id"]
+            isOneToOne: false
+            referencedRelation: "learning_modules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       suggestions_with_profiles: {
         Row: {
           category_id: string | null

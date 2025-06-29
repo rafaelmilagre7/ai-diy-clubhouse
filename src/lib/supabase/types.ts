@@ -2,7 +2,9 @@
 import { Database } from './types/database.types';
 
 // Tipos de tabelas expandidos com dados relacionais
-export type LearningLesson = Database['public']['Tables']['learning_lessons']['Row'];
+export type LearningLesson = Database['public']['Tables']['learning_lessons']['Row'] & {
+  ai_assistant_id?: string; // Novo campo adicionado
+};
 export type LearningLessonVideo = Database['public']['Tables']['learning_lesson_videos']['Row'];
 export type LearningModule = Database['public']['Tables']['learning_modules']['Row'];
 export type LearningCourse = Database['public']['Tables']['learning_courses']['Row'];
