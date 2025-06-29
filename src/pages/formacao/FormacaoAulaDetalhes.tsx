@@ -1,19 +1,19 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { useSimpleAuth } from "@/contexts/auth/SimpleAuthProvider";
+import { useAuth } from "@/contexts/auth";
 import { supabase } from "@/lib/supabase";
 import { LearningLesson } from "@/lib/supabase";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
-import AulaDetails from "@/components/formacao/aulas/AulaDetails";
+import { AulaDetails } from "@/components/formacao/aulas/AulaDetails";
 import { AulaDeleteDialog } from "@/components/formacao/aulas/AulaDeleteDialog";
 
 const FormacaoAulaDetalhes = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { user } = useSimpleAuth();
+  const { profile } = useAuth();
   
   const [aula, setAula] = useState<LearningLesson | null>(null);
   const [loading, setLoading] = useState(true);
@@ -33,10 +33,6 @@ const FormacaoAulaDetalhes = () => {
             id,
             title,
             course_id,
-            description,
-            order_index,
-            created_at,
-            updated_at,
             course:learning_courses(id, title)
           ),
           videos:learning_lesson_videos(*),
@@ -47,28 +43,7 @@ const FormacaoAulaDetalhes = () => {
       
       if (error) throw error;
       
-      // Mapear dados para o formato LearningLesson esperado - usar apenas campos que existem
-      const mappedAula: LearningLesson = {
-        ...data,
-        // Map is_published to published for compatibility
-        published: data.is_published || false,
-        // Add missing optional fields with defaults
-        video_url: '', // Default empty string
-        video_duration_seconds: 0, // Default to 0
-        // Add related data
-        videos: data.videos || [],
-        resources: data.resources || [],
-        module: data.module ? {
-          ...data.module,
-          // Ensure all required LearningModule fields are present
-          description: data.module.description || '',
-          order_index: data.module.order_index || 0,
-          created_at: data.module.created_at || new Date().toISOString(),
-          updated_at: data.module.updated_at || new Date().toISOString()
-        } : null
-      };
-      
-      setAula(mappedAula);
+      setAula(data);
     } catch (error) {
       console.error("Erro ao buscar aula:", error);
       toast.error("Não foi possível carregar a aula");
@@ -144,7 +119,11 @@ const FormacaoAulaDetalhes = () => {
 
   return (
     <div className="space-y-6">
-      <AulaDetails aula={aula} />
+      <AulaDetails 
+        aula={aula}
+        onEditClick={handleEditClick}
+        onDeleteClick={() => setDeleteDialogOpen(true)}
+      />
       
       <AulaDeleteDialog 
         open={deleteDialogOpen}

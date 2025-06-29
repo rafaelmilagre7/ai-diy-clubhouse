@@ -1,6 +1,8 @@
 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 import { Edit, Trash2, Repeat } from "lucide-react";
 import { useState } from "react";
 import { useEvents } from "@/hooks/useEvents";
@@ -10,12 +12,10 @@ import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import type { Event } from "@/types/events";
 import { Badge } from "@/components/ui/badge";
-import { formatBrazilianDateTime } from "@/utils/timezoneUtils";
 
 export const EventsTable = () => {
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
-  // Incluir eventos pai na área administrativa
-  const { data: events = [], isLoading, error } = useEvents({ includeParentEvents: true });
+  const { data: events = [], isLoading, error } = useEvents();
   const queryClient = useQueryClient();
 
   const handleDelete = async (id: string) => {
@@ -23,7 +23,7 @@ export const EventsTable = () => {
     if (!confirmed) return;
 
     try {
-      const { error } = await (supabase as any)
+      const { error } = await supabase
         .from("events")
         .delete()
         .eq("id", id);
@@ -93,10 +93,10 @@ export const EventsTable = () => {
               <TableRow key={event.id}>
                 <TableCell className="font-medium">{event.title}</TableCell>
                 <TableCell>
-                  {formatBrazilianDateTime(event.start_time)}
+                  {format(new Date(event.start_time), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
                 </TableCell>
                 <TableCell>
-                  {formatBrazilianDateTime(event.end_time)}
+                  {format(new Date(event.end_time), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
                 </TableCell>
                 <TableCell>
                   {event.is_recurring ? (

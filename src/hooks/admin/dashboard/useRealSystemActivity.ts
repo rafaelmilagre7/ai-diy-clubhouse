@@ -1,7 +1,8 @@
+
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/lib/supabase";
-import { logger } from "@/utils/logger";
+import { secureLogger } from "@/utils/secureLogger";
 
 interface SystemActivity {
   id: string;
@@ -33,31 +34,25 @@ export const useRealSystemActivity = (timeRange: string) => {
         setLoading(true);
         
         // Calcular data de início baseada no timeRange
-        let startDate: string | null = null;
+        const now = new Date();
+        let startDate = new Date();
         
-        if (timeRange !== 'all') {
-          const now = new Date();
-          let pastDate = new Date();
-          
-          switch (timeRange) {
-            case '7d':
-              pastDate.setDate(now.getDate() - 7);
-              break;
-            case '30d':
-              pastDate.setDate(now.getDate() - 30);
-              break;
-            case '90d':
-              pastDate.setDate(now.getDate() - 90);
-              break;
-            default:
-              pastDate.setDate(now.getDate() - 30);
-          }
-          
-          startDate = pastDate.toISOString();
+        switch (timeRange) {
+          case '7d':
+            startDate.setDate(now.getDate() - 7);
+            break;
+          case '30d':
+            startDate.setDate(now.getDate() - 30);
+            break;
+          case '90d':
+            startDate.setDate(now.getDate() - 90);
+            break;
+          default:
+            startDate.setDate(now.getDate() - 30);
         }
         
-        // Buscar atividades do analytics com filtro de data opcional
-        let analyticsQuery = supabase
+        // Buscar atividades do analytics
+        const { data: analytics, error: analyticsError } = await supabase
           .from('analytics')
           .select(`
             id,
@@ -66,45 +61,16 @@ export const useRealSystemActivity = (timeRange: string) => {
             created_at,
             event_data
           `)
-          .order('created_at', { ascending: false });
-        
-        if (startDate) {
-          analyticsQuery = analyticsQuery.gte('created_at', startDate);
-        }
-        
-        // Aumentar limite para mostrar mais diversidade de usuários
-        const { data: analytics, error: analyticsError } = await analyticsQuery.limit(200);
+          .gte('created_at', startDate.toISOString())
+          .order('created_at', { ascending: false })
+          .limit(50);
         
         if (analyticsError) {
           console.warn("Erro ao buscar analytics:", analyticsError);
         }
         
-        // Processar atividades para garantir diversidade de usuários
-        const processedActivities = (analytics as any) || [];
-        
-        // Agrupar por usuário para balancear a exibição
-        const activitiesByUser = processedActivities.reduce((acc: any, activity: any) => {
-          const userId = activity.user_id;
-          if (!acc[userId]) {
-            acc[userId] = [];
-          }
-          acc[userId].push(activity);
-          return acc;
-        }, {});
-        
-        // Selecionar até 3 atividades por usuário para maior diversidade
-        const balancedActivities: any[] = [];
-        Object.values(activitiesByUser).forEach((userActivities: any) => {
-          balancedActivities.push(...userActivities.slice(0, 3));
-        });
-        
-        // Ordenar por data e limitar a 50 atividades finais
-        const finalActivities = balancedActivities
-          .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-          .slice(0, 50);
-        
-        // Buscar informações dos usuários para as atividades selecionadas
-        const userIds = finalActivities.map(a => a.user_id).filter(Boolean);
+        // Buscar informações dos usuários para as atividades
+        const userIds = analytics?.map(a => a.user_id).filter(Boolean) || [];
         const uniqueUserIds = [...new Set(userIds)];
         
         let userProfiles: any[] = [];
@@ -112,13 +78,13 @@ export const useRealSystemActivity = (timeRange: string) => {
           const { data: profiles } = await supabase
             .from('profiles')
             .select('id, name')
-            .in('id', uniqueUserIds as any);
+            .in('id', uniqueUserIds);
           
-          userProfiles = (profiles as any) || [];
+          userProfiles = profiles || [];
         }
         
         // Processar atividades com nomes de usuários
-        const userActivities: SystemActivity[] = finalActivities.map((activity: any) => {
+        const userActivities: SystemActivity[] = (analytics || []).map(activity => {
           const userProfile = userProfiles.find(p => p.id === activity.user_id);
           return {
             id: activity.id,
@@ -134,13 +100,11 @@ export const useRealSystemActivity = (timeRange: string) => {
         const eventsByType = groupEventsByType(userActivities);
         
         // Log de segurança para monitoramento
-        logger.info('System activity data loaded', {
-          component: 'ADMIN_DASHBOARD',
+        secureLogger.info('System activity data loaded', 'ADMIN_DASHBOARD', {
           timeRange,
           totalEvents: userActivities.length,
           uniqueUsers: uniqueUserIds.length,
-          eventTypes: eventsByType.length,
-          dateFilter: startDate ? 'applied' : 'all_time'
+          eventTypes: eventsByType.length
         });
         
         setActivityData({
@@ -153,8 +117,8 @@ export const useRealSystemActivity = (timeRange: string) => {
         console.error("Erro ao carregar atividade do sistema:", error);
         
         // Log de erro de segurança
-        logger.error('Failed to load system activity', error, {
-          component: 'ADMIN_DASHBOARD',
+        secureLogger.error('Failed to load system activity', 'ADMIN_DASHBOARD', {
+          error: error.message,
           timeRange
         });
         

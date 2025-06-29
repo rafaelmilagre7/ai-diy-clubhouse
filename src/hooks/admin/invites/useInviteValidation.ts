@@ -1,63 +1,89 @@
 
-import { useState, useEffect } from 'react';
-import { CreateInviteParams } from './types';
+import { useState, useCallback } from 'react';
+import { validateInviteToken, InviteValidationResult } from '@/utils/inviteValidationUtils';
 
-interface ValidationErrors {
-  email?: string;
-  userName?: string;
-  whatsappNumber?: string;
-  channels?: string;
-  roleId?: string;
+interface ValidationState {
+  isValid: boolean;
+  errors: string[];
+  warnings: string[];
+  isValidating: boolean;
 }
 
-export const useInviteValidation = (formData: Partial<CreateInviteParams>) => {
-  const [errors, setErrors] = useState<ValidationErrors>({});
-  const [isValid, setIsValid] = useState(false);
+export const useInviteValidation = () => {
+  const [validationState, setValidationState] = useState<ValidationState>({
+    isValid: true,
+    errors: [],
+    warnings: [],
+    isValidating: false
+  });
 
-  useEffect(() => {
-    const newErrors: ValidationErrors = {};
+  const validateInviteData = useCallback((email: string, roleId: string) => {
+    const errors: string[] = [];
+    const warnings: string[] = [];
 
     // Validar email
-    if (!formData.email || formData.email.trim() === '') {
-      newErrors.email = 'Email é obrigatório';
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      newErrors.email = 'Email inválido';
+    if (!email) {
+      errors.push('Email é obrigatório');
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      errors.push('Formato de email inválido');
     }
 
-    // Validar roleId
-    if (!formData.roleId) {
-      newErrors.roleId = 'Cargo é obrigatório';
+    // Validar role
+    if (!roleId) {
+      errors.push('Papel é obrigatório');
     }
 
-    // Validar canais
-    if (!formData.channels || formData.channels.length === 0) {
-      newErrors.channels = 'Pelo menos um canal deve ser selecionado';
+    // Verificar domínios comuns que podem gerar problemas
+    if (email && /^[^\s@]+@(gmail|yahoo|hotmail|outlook)\.(com|com\.br)$/i.test(email)) {
+      warnings.push('Emails de provedores gratuitos podem ter problemas de entrega');
     }
 
-    // Validações específicas para WhatsApp
-    if (formData.channels?.includes('whatsapp')) {
-      if (!formData.userName || formData.userName.trim() === '') {
-        newErrors.userName = 'Nome é obrigatório para envio via WhatsApp';
-      }
+    const isValid = errors.length === 0;
 
-      if (!formData.whatsappNumber || formData.whatsappNumber.trim() === '') {
-        newErrors.whatsappNumber = 'Número do WhatsApp é obrigatório';
-      } else {
-        // Validação básica do formato do WhatsApp
-        const cleanNumber = formData.whatsappNumber.replace(/\D/g, '');
-        if (cleanNumber.length < 10 || cleanNumber.length > 15) {
-          newErrors.whatsappNumber = 'Número do WhatsApp deve ter entre 10 e 15 dígitos';
-        }
-      }
+    setValidationState({
+      isValid,
+      errors,
+      warnings,
+      isValidating: false
+    });
+
+    return { isValid, errors, warnings };
+  }, []);
+
+  const validateToken = useCallback(async (
+    token: string,
+    currentUserEmail?: string
+  ): Promise<InviteValidationResult> => {
+    setValidationState(prev => ({ ...prev, isValidating: true }));
+    
+    try {
+      const result = await validateInviteToken(token, currentUserEmail);
+      
+      setValidationState(prev => ({
+        ...prev,
+        isValidating: false,
+        isValid: result.isValid,
+        errors: result.isValid ? [] : [result.error || 'Erro na validação'],
+        warnings: result.suggestions || []
+      }));
+      
+      return result;
+    } catch (error) {
+      setValidationState(prev => ({
+        ...prev,
+        isValidating: false,
+        isValid: false,
+        errors: ['Erro interno na validação'],
+        warnings: []
+      }));
+      
+      throw error;
     }
-
-    setErrors(newErrors);
-    setIsValid(Object.keys(newErrors).length === 0);
-  }, [formData]);
+  }, []);
 
   return {
-    errors,
-    isValid,
-    hasErrors: Object.keys(errors).length > 0
+    validationState,
+    validateInviteData,
+    validateToken
   };
 };

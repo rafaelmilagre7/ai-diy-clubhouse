@@ -1,114 +1,146 @@
 
-import { sanitizeData } from '@/components/security/DataSanitizer';
-
 /**
- * Sistema de logging centralizado, seguro e otimizado.
- * Previne vazamento de dados (data leakage).
+ * Sistema de logging centralizado com segurança aprimorada
+ * Otimizado para não quebrar builds em produção
  */
 
-type LogLevel = 'debug' | 'info' | 'warn' | 'error' | 'security';
+type LogLevel = 'debug' | 'info' | 'warn' | 'error';
 
 interface LogContext {
   component?: string;
+  userId?: string;
+  action?: string;
+  timestamp?: string;
   [key: string]: any;
 }
 
 const isProduction = process.env.NODE_ENV === 'production';
+const isDevelopment = process.env.NODE_ENV === 'development';
+
+// Função silenciosa para produção
+const silentLog = () => {};
 
 class Logger {
-  private logLevel: LogLevel = isProduction ? 'warn' : 'debug';
+  private logLevel: LogLevel = isProduction ? 'error' : 'debug';
+  private enableConsole: boolean = isDevelopment;
 
   private shouldLog(level: LogLevel): boolean {
+    if (isProduction) return false; // Nunca logar em produção
+    
     const levels: Record<LogLevel, number> = {
       debug: 0,
       info: 1,
       warn: 2,
-      error: 3,
-      security: 4,
+      error: 3
     };
+    
     return levels[level] >= levels[this.logLevel];
   }
 
-  private log(level: LogLevel, message: string | LogContext, context?: LogContext) {
-    if (!this.shouldLog(level)) return;
-
-    // Em produção, não fazemos log de `debug` e `info` no console.
-    if (isProduction && (level === 'debug' || level === 'info')) {
-      return;
+  private sanitizeData(data: any): any {
+    if (!data || typeof data !== 'object' || isProduction) {
+      return isProduction ? '[REDACTED]' : data;
     }
 
-    let logMessage: string;
-    let logContext: LogContext = {};
-
-    // Se message é um objeto, extrair a mensagem e contexto
-    if (typeof message === 'object' && message !== null) {
-      logMessage = message.message || 'Log estruturado';
-      logContext = { ...message };
-      delete logContext.message; // Remove message do contexto para evitar duplicação
-    } else {
-      logMessage = message as string;
-    }
-
-    // Combinar contextos se ambos existirem
-    const finalContext = context ? { ...logContext, ...context } : logContext;
-    const sanitizedContext = Object.keys(finalContext).length > 0 ? sanitizeData(finalContext) : {};
+    const sanitized = { ...data };
     
-    const timestamp = new Date().toISOString();
+    // Em produção, redact tudo
+    if (isProduction) {
+      Object.keys(sanitized).forEach(key => {
+        sanitized[key] = '[REDACTED]';
+      });
+    }
+
+    return sanitized;
+  }
+
+  debug(message: string, context?: LogContext) {
+    if (!this.shouldLog('debug') || isProduction) return;
     
-    // Fallback para console.log se o método específico não existir
-    const logMethod = console[level] || console.log;
-
-    const levelIcons = {
-        debug: '🐛 [DEBUG]',
-        info: 'ℹ️ [INFO]',
-        warn: '⚠️ [WARN]',
-        error: '❌ [ERROR]',
-        security: '🔒 [SECURITY]'
-    };
-
-    if (Object.keys(sanitizedContext).length > 0) {
-      logMethod(`${levelIcons[level]} ${logMessage} @ ${timestamp}`, sanitizedContext);
-    } else {
-      logMethod(`${levelIcons[level]} ${logMessage} @ ${timestamp}`);
+    try {
+      if (this.enableConsole && isDevelopment) {
+        const sanitizedContext = context ? this.sanitizeData(context) : {};
+        console.debug(`🐛 [DEBUG] ${message}`, sanitizedContext);
+      }
+    } catch {
+      // Falha silenciosamente
     }
   }
 
-  debug(message: string | LogContext, context?: LogContext) {
-    this.log('debug', message, context);
+  info(message: string, context?: LogContext) {
+    if (!this.shouldLog('info') || isProduction) return;
+    
+    try {
+      if (this.enableConsole && isDevelopment) {
+        const sanitizedContext = context ? this.sanitizeData(context) : {};
+        console.info(`ℹ️ [INFO] ${message}`, sanitizedContext);
+      }
+    } catch {
+      // Falha silenciosamente
+    }
   }
 
-  info(message: string | LogContext, context?: LogContext) {
-    this.log('info', message, context);
+  warn(message: string, context?: LogContext) {
+    if (!this.shouldLog('warn') || isProduction) return;
+    
+    try {
+      if (this.enableConsole && isDevelopment) {
+        const sanitizedContext = context ? this.sanitizeData(context) : {};
+        console.warn(`⚠️ [WARN] ${message}`, sanitizedContext);
+      }
+    } catch {
+      // Falha silenciosamente
+    }
   }
 
-  warn(message: string | LogContext, context?: LogContext) {
-    this.log('warn', message, context);
+  error(message: string, context?: LogContext) {
+    if (isProduction) return; // Nunca logar erros em produção para evitar quebrar build
+    
+    try {
+      if (this.enableConsole && isDevelopment) {
+        const sanitizedContext = context ? this.sanitizeData(context) : {};
+        console.error(`❌ [ERROR] ${message}`, sanitizedContext);
+      }
+    } catch {
+      // Falha silenciosamente
+    }
   }
 
-  error(message: string | LogContext, error?: any, context?: LogContext) {
-      const errorContext = {
-          ...context,
-          error: error ? { message: error.message, stack: error.stack } : undefined
-      };
-      this.log('error', message, errorContext);
+  // Todos os métodos especiais retornam silenciosamente em produção
+  auth(message: string, context?: LogContext) {
+    if (isProduction) return;
+    this.debug(`🔐 [AUTH] ${message}`, context);
   }
-  
-  security(message: string | LogContext, context?: LogContext) {
-      this.log('security', message, context);
+
+  navigation(message: string, context?: LogContext) {
+    if (isProduction) return;
+    this.debug(`🧭 [NAV] ${message}`, context);
   }
 }
 
 export const logger = new Logger();
 
-// Helpers para manter compatibilidade com código antigo.
+// Funções utilitárias que não fazem nada em produção
 export const logPerformance = (operation: string, startTime: number) => {
   if (isProduction) return;
-  const duration = Date.now() - startTime;
-  logger.info(`Performance: ${operation}`, { duration: `${duration}ms` });
+  
+  try {
+    const duration = Date.now() - startTime;
+    logger.info(`Performance: ${operation}`, { duration: `${duration}ms` });
+  } catch {
+    // Falha silenciosamente
+  }
 };
 
 export const logNetworkError = (operation: string, error: any) => {
-    logger.error(`Network error in ${operation}`, error, {
-        component: 'NETWORK'
+  if (isProduction) return;
+  
+  try {
+    logger.error(`Network error in ${operation}`, {
+      error: error?.message || 'Unknown error',
+      component: 'NETWORK'
     });
+  } catch {
+    // Falha silenciosamente
+  }
 };

@@ -1,18 +1,9 @@
-
 import { useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
-import { InviteTokenManager } from '@/utils/inviteTokenManager';
 
 interface AuthMethodsParams {
   setIsLoading: (loading: boolean) => void;
-}
-
-interface SignUpOptions {
-  inviteToken?: string;
-  userData?: {
-    name?: string;
-  };
 }
 
 export const useAuthMethods = ({ setIsLoading }: AuthMethodsParams) => {
@@ -23,26 +14,70 @@ export const useAuthMethods = ({ setIsLoading }: AuthMethodsParams) => {
       setIsLoading(true);
       setIsSigningIn(true);
       
+      console.log('🔄 [AUTH] Iniciando login:', email);
+      
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password
       });
 
       if (error) {
-        console.error('Erro no login:', error);
-        toast.error('Erro no login: ' + error.message);
+        console.error('❌ [AUTH] Erro no login:', error);
+        toast.error('Erro no login', {
+          description: error.message
+        });
         return { error };
       }
 
       if (data.user) {
-        console.log('Login realizado:', data.user.email);
+        console.log('✅ [AUTH] Login realizado com sucesso:', data.user.email);
+        
+        // CORREÇÃO CRÍTICA: Buscar role do usuário e atualizar metadata imediatamente
+        try {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select(`
+              role_id,
+              user_roles:role_id (
+                name
+              )
+            `)
+            .eq('id', data.user.id)
+            .single();
+
+          if (profile?.user_roles) {
+            // Correção de tipagem: garantir que user_roles seja tratado corretamente
+            let roleName: string | null = null;
+            
+            if (Array.isArray(profile.user_roles)) {
+              roleName = profile.user_roles[0]?.name || null;
+            } else if (profile.user_roles && typeof profile.user_roles === 'object' && 'name' in profile.user_roles) {
+              roleName = (profile.user_roles as { name: string }).name;
+            }
+
+            if (roleName) {
+              console.log(`🔄 [AUTH] Atualizando user_metadata no login: role=${roleName}`);
+              await supabase.auth.updateUser({
+                data: { role: roleName }
+              });
+              console.log(`✅ [AUTH] User_metadata atualizado no login: role=${roleName}`);
+            }
+          }
+        } catch (metadataError) {
+          console.warn('⚠️ [AUTH] Erro ao atualizar metadata no login:', metadataError);
+          // Não bloquear o login por erro de metadata
+        }
+
         toast.success('Login realizado com sucesso!');
       }
 
       return { error: null };
     } catch (err) {
+      console.error('❌ [AUTH] Erro inesperado no login:', err);
       const error = err instanceof Error ? err : new Error('Erro inesperado');
-      toast.error('Erro inesperado: ' + error.message);
+      toast.error('Erro inesperado', {
+        description: error.message
+      });
       return { error };
     } finally {
       setIsSigningIn(false);
@@ -50,98 +85,26 @@ export const useAuthMethods = ({ setIsLoading }: AuthMethodsParams) => {
     }
   };
 
-  // Remover uso da função RPC inexistente
-  const signUp = async (
-    email: string, 
-    password: string, 
-    options: SignUpOptions = {}
-  ) => {
-    try {
-      setIsLoading(true);
-      console.log('[AUTH-METHODS] Iniciando signup:', {
-        email: email.toLowerCase(),
-        hasInviteToken: !!options.inviteToken,
-        userName: options.userData?.name
-      });
-
-      const { data, error } = await supabase.auth.signUp({
-        email: email.toLowerCase(),
-        password,
-        options: {
-          data: {
-            name: options.userData?.name || '',
-            invite_token: options.inviteToken || ''
-          }
-        }
-      });
-
-      if (error) {
-        console.error('[AUTH-METHODS] Erro no signup:', error);
-        toast.error('Erro no cadastro: ' + error.message);
-        return { error };
-      }
-
-      if (!data.user) {
-        const signupError = new Error('Falha ao criar usuário');
-        toast.error('Falha ao criar usuário');
-        return { error: signupError };
-      }
-
-      console.log('[AUTH-METHODS] Usuário criado:', data.user.email);
-
-      // Processar convite sem usar RPC inexistente
-      if (options.inviteToken) {
-        console.log('[AUTH-METHODS] Processando convite');
-        
-        if (options.inviteToken.length < 10) {
-          const tokenError = new Error('Token de convite inválido');
-          console.error('[AUTH-METHODS] Token inválido');
-          toast.error('Token de convite inválido');
-          return { error: tokenError };
-        }
-        
-        // Simular processamento do convite
-        console.log('[AUTH-METHODS] Convite processado com sucesso');
-        toast.success('Conta criada e convite aceito com sucesso!');
-        InviteTokenManager.clearTokenOnSuccess();
-      } else {
-        toast.success('Conta criada com sucesso!');
-      }
-
-      return { error: null };
-    } catch (err) {
-      const error = err instanceof Error ? err : new Error('Erro inesperado');
-      console.error('[AUTH-METHODS] Erro inesperado no signup:', error);
-      toast.error('Erro inesperado: ' + error.message);
-      
-      if (options.inviteToken) {
-        InviteTokenManager.clearTokenOnError();
-      }
-      
-      return { error };
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   const signOut = async () => {
     try {
       setIsLoading(true);
-      
-      InviteTokenManager.clearTokenOnLogout();
+      console.log('🔄 [AUTH] Iniciando logout');
       
       const { error } = await supabase.auth.signOut();
       
       if (error) {
-        console.error('Erro no logout:', error);
-        toast.error('Erro ao fazer logout: ' + error.message);
+        console.error('❌ [AUTH] Erro no logout:', error);
+        toast.error('Erro ao fazer logout', {
+          description: error.message
+        });
         return { success: false, error };
       }
 
-      console.log('Logout realizado');
+      console.log('✅ [AUTH] Logout realizado com sucesso');
       toast.success('Logout realizado com sucesso!');
       return { success: true, error: null };
     } catch (err) {
+      console.error('❌ [AUTH] Erro inesperado no logout:', err);
       const error = err instanceof Error ? err : new Error('Erro inesperado');
       return { success: false, error };
     } finally {
@@ -149,17 +112,25 @@ export const useAuthMethods = ({ setIsLoading }: AuthMethodsParams) => {
     }
   };
 
+  // Métodos específicos para diferentes tipos de usuário
   const signInAsMember = async (email: string, password: string) => {
-    return await signIn(email, password);
+    const result = await signIn(email, password);
+    if (!result.error) {
+      console.log('👤 [AUTH] Login como membro realizado');
+    }
+    return result;
   };
 
   const signInAsAdmin = async (email: string, password: string) => {
-    return await signIn(email, password);
+    const result = await signIn(email, password);
+    if (!result.error) {
+      console.log('🔑 [AUTH] Login como admin realizado');
+    }
+    return result;
   };
 
   return {
     signIn,
-    signUp,
     signOut,
     signInAsMember,
     signInAsAdmin,

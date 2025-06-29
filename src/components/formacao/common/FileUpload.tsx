@@ -1,206 +1,183 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
-import { uploadFileWithFallback } from "@/lib/supabase/storage";
-import { ImagePlus, Trash2, Loader2, AlertCircle } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { v4 as uuidv4 } from 'uuid';
+import { Input } from "@/components/ui/input";
+import { toast } from "sonner";
+import { uploadFileWithFallback, ensureBucketExists } from "@/lib/supabase/storage";
+import { Upload, Loader2, File, X } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { STORAGE_BUCKETS } from "@/lib/supabase/config";
 
-interface ImageUploadProps {
-  value: string | undefined;
-  onChange: (url: string) => void;
+interface FileUploadProps {
+  value: string;
+  onChange: (value: string, fileType: string | undefined, fileSize: number | undefined) => void;
   bucketName: string;
-  folderPath: string;
-  maxSizeMB?: number;
-  disabled?: boolean;
+  folderPath?: string;
+  acceptedFileTypes?: string;
 }
 
-export const ImageUpload = ({ 
+export const FileUpload = ({ 
   value, 
   onChange, 
   bucketName, 
-  folderPath,
-  maxSizeMB = 5,
-  disabled = false
-}: ImageUploadProps) => {
+  folderPath = "",
+  acceptedFileTypes = "*/*"
+}: FileUploadProps) => {
   const [uploading, setUploading] = useState(false);
-  const [progress, setProgress] = useState(0);
-  const [error, setError] = useState<string | null>(null);
-  const { toast } = useToast();
+  const [fileName, setFileName] = useState<string | null>(null);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [bucketReady, setBucketReady] = useState(false);
 
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    
-    // Validar tipo de arquivo
-    const fileType = file.type.split('/')[0];
-    if (fileType !== 'image') {
-      setError("Por favor, selecione apenas arquivos de imagem");
-      toast({
-        title: "Tipo de arquivo inválido",
-        description: "Por favor, selecione apenas arquivos de imagem.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    // Validar tamanho do arquivo
-    const maxSize = maxSizeMB * 1024 * 1024;
-    if (file.size > maxSize) {
-      setError(`A imagem é muito grande (${(file.size / (1024 * 1024)).toFixed(2)}MB). O tamanho máximo é ${maxSizeMB}MB.`);
-      toast({
-        title: "Arquivo muito grande",
-        description: `A imagem excede o tamanho máximo de ${maxSizeMB}MB.`,
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setError(null);
-    setUploading(true);
-    setProgress(0);
-
-    try {
-      console.log(`Iniciando upload para bucket: ${bucketName}, pasta: ${folderPath}`);
-      
-      // Gerar nome único para o arquivo
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${uuidv4()}.${fileExt}`;
-      const filePath = folderPath ? `${folderPath}/${fileName}` : fileName;
-      
-      setProgress(25);
-      
-      // Upload usando a função corrigida - FIXED ORDER OF PARAMETERS
-      const result = await uploadFileWithFallback(
-        file,
-        bucketName,
-        filePath
-      );
-
-      if (result.error) {
-        console.error('Erro no upload:', result.error);
-        throw new Error(`Erro no upload: ${result.error.message}`);
+  // Verificar status do bucket ao montar o componente
+  useEffect(() => {
+    const checkBucket = async () => {
+      try {
+        const isReady = await ensureBucketExists(bucketName);
+        setBucketReady(isReady);
+        
+        if (!isReady) {
+          console.warn(`Bucket ${bucketName} não está pronto. Algumas funcionalidades podem não estar disponíveis.`);
+        }
+      } catch (error) {
+        console.error("Erro ao verificar bucket:", error);
       }
+    };
+    
+    checkBucket();
+  }, [bucketName]);
 
-      setProgress(75);
-      
-      // Construir URL pública
-      const publicUrl = `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/${bucketName}/${filePath}`;
-
-      setProgress(100);
-      
-      console.log('Upload concluído:', publicUrl);
-      onChange(publicUrl);
-      
-      toast({
-        title: "Upload concluído",
-        description: "A imagem foi enviada com sucesso.",
-        variant: "default",
-      });
-    } catch (error: any) {
-      console.error("Erro no upload:", error);
-      const errorMessage = error.message || "Não foi possível enviar a imagem. Tente novamente.";
-      setError(errorMessage);
-      toast({
-        title: "Falha no upload",
-        description: errorMessage,
-        variant: "destructive",
-      });
-    } finally {
-      setUploading(false);
-      setProgress(0);
+  // Extract filename from URL for display
+  const getFileNameFromUrl = (url: string): string => {
+    if (!url) return "";
+    try {
+      const pathParts = url.split("/");
+      return decodeURIComponent(pathParts[pathParts.length - 1]);
+    } catch (e) {
+      console.error("Error parsing filename from URL:", e);
+      return "Arquivo";
     }
   };
 
-  const handleRemoveImage = () => {
-    onChange("");
-    setError(null);
+  // Set initial filename if URL exists
+  useEffect(() => {
+    if (value) {
+      setFileName(getFileNameFromUrl(value));
+    }
+  }, [value]);
+
+  const uploadFile = async (file: File) => {
+    try {
+      setUploading(true);
+      setUploadProgress(0);
+      
+      // Upload com mecanismo de fallback
+      const result = await uploadFileWithFallback(
+        file,
+        bucketName,
+        folderPath,
+        (progress) => setUploadProgress(progress),
+        STORAGE_BUCKETS.FALLBACK // Usar bucket de fallback
+      );
+      
+      // Verificar se há erro e tratar corretamente
+      if ('error' in result) {
+        throw result.error;
+      }
+      
+      // Caso de sucesso - definindo uma variável com tipo explícito
+      const successResult = result as { publicUrl: string; path: string; error: null };
+      
+      setFileName(file.name);
+      onChange(successResult.publicUrl, file.type, file.size);
+      
+      toast.success("Upload realizado com sucesso!");
+      
+    } catch (error: any) {
+      console.error("Erro no upload de arquivo:", error);
+      toast.error("Erro ao fazer upload do arquivo. Tente novamente.");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || e.target.files.length === 0) {
+      return;
+    }
+    
+    const file = e.target.files[0];
+    uploadFile(file);
+  };
+
+  const handleRemoveFile = () => {
+    onChange("", undefined, undefined);
+    setFileName(null);
   };
 
   return (
     <div className="space-y-4">
-      {error && (
-        <Alert variant="destructive">
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
-      )}
-      
-      {value ? (
-        <div className="relative aspect-video w-full overflow-hidden rounded-md border">
-          <img
-            src={value}
-            alt="Imagem de capa"
-            className="h-full w-full object-cover"
-            onError={(e) => {
-              const target = e.target as HTMLImageElement;
-              target.src = "https://placehold.co/600x400?text=Imagem+não+encontrada";
-              setError("Não foi possível carregar a imagem.");
-              console.error("Erro ao carregar imagem:", value);
-            }}
-          />
-          <Button
-            type="button"
-            size="icon"
-            variant="destructive"
-            className="absolute right-2 top-2"
-            onClick={handleRemoveImage}
-            disabled={disabled}
+      {!value || !fileName ? (
+        <div className="flex items-center justify-center w-full">
+          <label
+            className={cn(
+              "flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer",
+              "bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600",
+              "border-gray-300 dark:border-gray-600"
+            )}
           >
-            <Trash2 className="h-4 w-4" />
-          </Button>
+            <div className="flex flex-col items-center justify-center pt-5 pb-6">
+              {uploading ? (
+                <>
+                  <Loader2 className="w-8 h-8 mb-3 text-gray-500 animate-spin" />
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                    Fazendo upload... {uploadProgress}%
+                  </p>
+                </>
+              ) : (
+                <>
+                  <Upload className="w-8 h-8 mb-3 text-gray-500" />
+                  <p className="mb-2 text-sm text-gray-500 dark:text-gray-400">
+                    <span className="font-semibold">Clique para upload</span> ou arraste o arquivo
+                  </p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                    Tamanho máximo recomendado: 10MB
+                  </p>
+                </>
+              )}
+            </div>
+            <Input
+              id="dropzone-file"
+              type="file"
+              className="hidden"
+              onChange={handleFileChange}
+              disabled={uploading}
+              accept={acceptedFileTypes}
+            />
+          </label>
         </div>
       ) : (
-        <div className="flex aspect-video w-full items-center justify-center rounded-md border border-dashed">
-          {uploading ? (
-            <div className="flex flex-col items-center gap-2">
-              <Loader2 className="h-8 w-8 animate-spin text-primary" />
-              <span className="text-sm text-muted-foreground">
-                Enviando... {progress}%
-              </span>
-            </div>
-          ) : (
-            <div className="flex flex-col items-center gap-2">
-              <ImagePlus className="h-8 w-8 text-muted-foreground" />
-              <span className="text-sm text-muted-foreground">
-                Clique para adicionar uma imagem de capa
-              </span>
-              <span className="text-xs text-muted-foreground">
-                Tamanho máximo: {maxSizeMB}MB
-              </span>
-            </div>
-          )}
+        <div className="flex items-center p-4 space-x-4 border rounded-lg bg-gray-50 dark:bg-gray-700">
+          <File className="h-10 w-10 flex-shrink-0 text-blue-600" />
+          <div className="flex-1 min-w-0">
+            <p className="font-medium text-gray-900 truncate dark:text-white">
+              {fileName}
+            </p>
+            <p className="text-sm text-gray-500 truncate dark:text-gray-400">
+              Arquivo carregado com sucesso
+            </p>
+          </div>
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={handleRemoveFile}
+            disabled={uploading}
+            className="flex-shrink-0"
+          >
+            <X className="h-4 w-4" />
+            <span className="sr-only">Remover arquivo</span>
+          </Button>
         </div>
-      )}
-      <input
-        type="file"
-        accept="image/*"
-        onChange={handleImageUpload}
-        disabled={uploading || disabled}
-        className="hidden"
-        id="image-upload"
-      />
-      {!value && !uploading && (
-        <Button
-          type="button"
-          variant="outline"
-          disabled={uploading || disabled}
-          onClick={() => document.getElementById("image-upload")?.click()}
-          className="w-full"
-        >
-          {uploading ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Enviando...
-            </>
-          ) : (
-            <>
-              <ImagePlus className="mr-2 h-4 w-4" />
-              Upload de Imagem
-            </>
-          )}
-        </Button>
       )}
     </div>
   );

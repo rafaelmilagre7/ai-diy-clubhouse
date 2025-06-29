@@ -1,126 +1,112 @@
 
-import React from 'react';
+import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { supabase } from '@/lib/supabase';
+import { Tool } from '@/types/toolTypes';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft } from 'lucide-react';
+import { Card } from '@/components/ui/card';
+import { ArrowLeft, Loader2, Shield } from 'lucide-react';
+import { toast } from 'sonner';
+import { BenefitAccessControl } from '@/components/admin/tools/BenefitAccessControl';
 import { ToolForm } from '@/components/admin/tools/ToolForm';
-import { useTool } from '@/hooks/admin/useTool';
 import { useToolForm } from '@/hooks/admin/useToolForm';
-import LoadingScreen from '@/components/common/LoadingScreen';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { AlertTriangle } from 'lucide-react';
 
 const AdminToolEdit = () => {
-  const { id } = useParams();
+  const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const isEditing = id !== 'new';
+  const [isLoading, setIsLoading] = useState(false);
+  const [initialData, setInitialData] = useState<Tool | undefined>(undefined);
+  const [accessControlOpen, setAccessControlOpen] = useState(false);
+  const { isSubmitting, handleSubmit } = useToolForm(id || 'new');
   
-  // Buscar dados da ferramenta se estiver editando
-  const { 
-    tool: toolData, 
-    isLoading: isLoadingTool, 
-    error: toolError 
-  } = useTool(isEditing ? id || null : null);
-  
-  // Hook para salvar ferramenta
-  const { handleSubmit, isSubmitting } = useToolForm(id || 'new');
+  // Recuperar dados da ferramenta se for edição
+  useEffect(() => {
+    if (id && id !== 'new') {
+      fetchTool(id);
+    }
+  }, [id]);
 
-  // Callback após salvamento bem-sucedido
-  const handleSaveSuccess = () => {
-    navigate('/admin/tools');
-  };
-
-  // Wrapper para compatibilidade de tipos - mais flexível
-  const handleFormSubmit = async (data: any) => {
+  const fetchTool = async (toolId: string) => {
+    setIsLoading(true);
     try {
-      const result = await handleSubmit(data);
-      if (result.success) {
-        handleSaveSuccess();
-      }
-      return { success: result.success };
+      const { data, error } = await supabase
+        .from('tools')
+        .select('*')
+        .eq('id', toolId)
+        .single();
+
+      if (error) throw error;
+      
+      setInitialData(data);
     } catch (error) {
-      console.error('Erro ao salvar ferramenta:', error);
-      return { success: false, error: 'Erro ao salvar ferramenta' };
+      console.error('Erro ao carregar ferramenta:', error);
+      toast.error('Erro ao carregar dados da ferramenta');
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  // Loading state
-  if (isLoadingTool) {
-    return <LoadingScreen message="Carregando ferramenta..." />;
-  }
+  // Manipulador para abrir o modal de controle de acesso
+  const handleOpenAccessControl = () => {
+    if (!id || id === 'new') {
+      toast.error('Salve a ferramenta primeiro para gerenciar acesso');
+      return;
+    }
+    setAccessControlOpen(true);
+  };
 
-  // Error state
-  if (toolError) {
-    return (
-      <div className="space-y-6">
-        <div className="flex items-center gap-4">
-          <Button 
-            variant="outline" 
-            size="icon"
-            onClick={() => navigate('/admin/tools')}
-          >
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-          <h1 className="text-3xl font-bold tracking-tight">Erro ao Carregar Ferramenta</h1>
-        </div>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <AlertTriangle className="h-5 w-5 text-red-500" />
-              Ferramenta Não Encontrada
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Alert variant="destructive">
-              <AlertTriangle className="h-4 w-4" />
-              <AlertDescription>
-                Não foi possível carregar os dados da ferramenta. 
-                Verifique se o ID está correto ou se a ferramenta ainda existe.
-              </AlertDescription>
-            </Alert>
-            
-            <div className="mt-4">
-              <Button onClick={() => navigate('/admin/tools')}>
-                Voltar para Lista de Ferramentas
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
+  const showAccessControl = initialData?.has_member_benefit && id && id !== 'new';
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center gap-4">
-        <Button 
-          variant="outline" 
-          size="icon"
-          onClick={() => navigate('/admin/tools')}
-        >
-          <ArrowLeft className="h-4 w-4" />
-        </Button>
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">
-            {isEditing ? 'Editar Ferramenta' : 'Nova Ferramenta'}
+    <div className="container py-8">
+      <div className="flex justify-between items-center mb-6">
+        <div className="flex items-center space-x-4">
+          <Button variant="ghost" onClick={() => navigate('/admin/tools')}>
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Voltar
+          </Button>
+          <h1 className="text-2xl font-bold">
+            {id && id !== 'new' ? 'Editar Ferramenta' : 'Nova Ferramenta'}
           </h1>
-          <p className="text-muted-foreground">
-            {isEditing 
-              ? `Editando: ${toolData?.name || 'Ferramenta'}` 
-              : 'Crie uma nova ferramenta para a plataforma'
-            }
-          </p>
+        </div>
+        
+        <div className="flex space-x-2">
+          {showAccessControl && (
+            <Button 
+              onClick={handleOpenAccessControl}
+              variant="outline"
+              className="flex items-center gap-2"
+            >
+              <Shield className="h-4 w-4" />
+              <span className="hidden sm:inline">Gerenciar Acesso</span>
+              <span className="sm:hidden">Acesso</span>
+            </Button>
+          )}
         </div>
       </div>
 
-      <ToolForm
-        initialData={toolData}
-        onSubmit={handleFormSubmit}
-        isSubmitting={isSubmitting}
-        onSaveSuccess={handleSaveSuccess}
-      />
+      {isLoading ? (
+        <div className="flex justify-center py-12">
+          <Loader2 className="h-12 w-12 animate-spin text-primary" />
+        </div>
+      ) : (
+        <Card className="p-6">
+          <ToolForm 
+            initialData={initialData}
+            onSubmit={handleSubmit}
+            isSubmitting={isSubmitting}
+          />
+        </Card>
+      )}
+      
+      {/* Modal de Controle de Acesso */}
+      {id && id !== 'new' && (
+        <BenefitAccessControl
+          open={accessControlOpen}
+          onOpenChange={setAccessControlOpen}
+          tool={initialData as Tool}
+        />
+      )}
     </div>
   );
 };

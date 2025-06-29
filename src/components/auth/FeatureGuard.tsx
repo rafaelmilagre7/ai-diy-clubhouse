@@ -1,8 +1,9 @@
 
 import React from 'react';
-import { useSimpleAuth } from '@/contexts/auth/SimpleAuthProvider';
+import { useAuth } from '@/contexts/auth';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { AlertCircle, Lock } from 'lucide-react';
+import { getUserRoleName } from '@/lib/supabase/types';
 
 interface FeatureGuardProps {
   feature: string;
@@ -17,10 +18,10 @@ export const FeatureGuard: React.FC<FeatureGuardProps> = ({
   fallback,
   showUpgradeMessage = true
 }) => {
-  const { profile } = useSimpleAuth();
+  const { profile } = useAuth();
   
   // Verificação simplificada baseada apenas no papel do usuário
-  const roleName = profile?.user_roles?.name;
+  const roleName = getUserRoleName(profile);
   const hasAccess = roleName && ['admin', 'member', 'membro_club'].includes(roleName);
   
   if (hasAccess) {

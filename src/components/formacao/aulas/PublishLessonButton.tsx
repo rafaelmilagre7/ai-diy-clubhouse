@@ -49,14 +49,14 @@ export const PublishLessonButton = ({
               course_id
             )
           `)
-          .eq("id", lessonId as any)
+          .eq("id", lessonId)
           .single();
         
         if (error) throw error;
         
-        if (data && (data as any).module) {
+        if (data && data.module) {
           // Verificação detalhada da estrutura de dados retornada
-          const moduleData = (data as any).module;
+          const moduleData = data.module;
           console.log("Estrutura do módulo retornada:", moduleData);
           
           let extractedCourseId: string | null = null;
@@ -118,15 +118,15 @@ export const PublishLessonButton = ({
       
       const { data, error } = await supabase
         .from("learning_lessons")
-        .update(updateData as any)
-        .eq("id", lessonId as any)
+        .update(updateData)
+        .eq("id", lessonId)
         .select()
         .single();
       
       if (error) throw error;
       
       if (data) {
-        const newStatus = (data as any).published;
+        const newStatus = data.published;
         
         toast.success(
           newStatus 

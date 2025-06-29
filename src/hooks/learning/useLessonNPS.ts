@@ -1,55 +1,111 @@
 
 import { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { supabase } from '@/lib/supabase';
+import { useAuth } from '@/contexts/auth';
 import { toast } from 'sonner';
 
-export interface NPSRating {
-  id: string;
-  lesson_id: string;
-  user_id: string;
-  rating: number;
-  feedback?: string;
-  created_at: string;
+interface LessonNPSOptions {
+  lessonId: string;
 }
 
-export const useLessonNPS = (lessonId: string) => {
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [existingNPS, setExistingNPS] = useState<NPSRating | null>(null);
+interface SubmitNPSData {
+  score: number;
+  feedback?: string;
+}
 
-  const submitNPS = async (rating: number, feedback?: string) => {
-    if (!lessonId) return false;
+export const useLessonNPS = ({ lessonId }: LessonNPSOptions) => {
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
-    setIsSubmitting(true);
-    
-    try {
-      console.log('Simulando envio de NPS:', { lessonId, rating, feedback });
+  // Buscar avaliação NPS existente para esta aula e usuário
+  const { data: existingNPS, isLoading } = useQuery({
+    queryKey: ['lesson-nps', lessonId, user?.id],
+    queryFn: async () => {
+      if (!user) return null;
+
+      const { data, error } = await supabase
+        .from('learning_lesson_nps')
+        .select('*')
+        .eq('lesson_id', lessonId)
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (error) {
+        console.error("Erro ao buscar NPS:", error);
+        return null;
+      }
+
+      return data;
+    },
+    enabled: !!user && !!lessonId
+  });
+
+  // Mutação para enviar uma nova avaliação NPS
+  const submitNPSMutation = useMutation({
+    mutationFn: async ({ score, feedback }: SubmitNPSData) => {
+      if (!user) throw new Error('Usuário não autenticado');
       
-      // Simulate API call since table doesn't exist
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      setIsSubmitting(true);
       
-      toast.success('Avaliação enviada com sucesso!');
-      return true;
-    } catch (error) {
-      console.error('Erro ao enviar NPS:', error);
-      toast.error('Erro ao enviar avaliação');
-      return false;
-    } finally {
-      setIsSubmitting(false);
+      try {
+        // Se já existe uma avaliação, atualiza
+        if (existingNPS) {
+          const { data, error } = await supabase
+            .from('learning_lesson_nps')
+            .update({ 
+              score, 
+              feedback: feedback || null,
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', existingNPS.id)
+            .select()
+            .single();
+            
+          if (error) throw error;
+          return data;
+        } 
+        // Caso contrário, cria nova
+        else {
+          const { data, error } = await supabase
+            .from('learning_lesson_nps')
+            .insert({
+              lesson_id: lessonId,
+              user_id: user.id,
+              score,
+              feedback: feedback || null
+            })
+            .select()
+            .single();
+            
+          if (error) throw error;
+          return data;
+        }
+      } finally {
+        setIsSubmitting(false);
+      }
+    },
+    onSuccess: () => {
+      toast.success('Sua avaliação foi enviada com sucesso!');
+      queryClient.invalidateQueries({ queryKey: ['lesson-nps', lessonId, user?.id] });
+    },
+    onError: (error) => {
+      console.error('Erro ao enviar avaliação:', error);
+      toast.error('Não foi possível enviar sua avaliação. Tente novamente.');
     }
-  };
+  });
 
-  const getUserNPS = async (userId: string) => {
-    console.log('Simulando busca de NPS do usuário:', { lessonId, userId });
-    
-    // Mock - return null (no previous rating)
-    return null;
+  const submitNPS = (score: number, feedback?: string) => {
+    submitNPSMutation.mutate({ score, feedback });
   };
 
   return {
-    submitNPS,
-    getUserNPS,
-    isSubmitting,
+    existingNPS,
     isLoading,
-    existingNPS
+    isSubmitting,
+    submitNPS
   };
 };
+
+export default useLessonNPS;

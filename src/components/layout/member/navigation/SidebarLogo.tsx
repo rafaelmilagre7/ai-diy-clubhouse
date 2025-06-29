@@ -16,7 +16,7 @@ export const SidebarLogo = ({ sidebarOpen, setSidebarOpen }: SidebarLogoProps) =
     <div className="flex h-16 shrink-0 items-center justify-between px-3">
       <div className="flex items-center overflow-hidden min-w-0">
         <img
-          src="/lovable-uploads/a408c993-07fa-49f2-bee6-c66d0614298b.png"
+          src="https://milagredigital.com/wp-content/uploads/2025/04/viverdeiaclub.avif"
           alt="VIVER DE IA Club"
           className={cn(
             "transition-all duration-300 object-contain",
@@ -24,10 +24,6 @@ export const SidebarLogo = ({ sidebarOpen, setSidebarOpen }: SidebarLogoProps) =
               ? "h-8 w-auto max-w-[160px]" // Logo completo quando aberto
               : "h-8 w-8" // Logo compacto quando fechado
           )}
-          onError={(e) => {
-            const target = e.target as HTMLImageElement;
-            target.src = "https://milagredigital.com/wp-content/uploads/2025/04/viverdeiaclub.avif";
-          }}
         />
       </div>
       

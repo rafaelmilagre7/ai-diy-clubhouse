@@ -1,5 +1,5 @@
 
-import { FC, memo } from "react";
+import { FC } from "react";
 import { Solution } from "@/lib/supabase";
 import { SolutionsGrid } from "./SolutionsGrid";
 
@@ -8,8 +8,7 @@ interface ActiveSolutionsProps {
   onSolutionClick: (solution: Solution) => void;
 }
 
-// Componente 100% memoizado para evitar re-renders desnecessários
-export const ActiveSolutions: FC<ActiveSolutionsProps> = memo(({ 
+export const ActiveSolutions: FC<ActiveSolutionsProps> = ({ 
   solutions, 
   onSolutionClick 
 }) => {
@@ -22,6 +21,4 @@ export const ActiveSolutions: FC<ActiveSolutionsProps> = memo(({
       <SolutionsGrid solutions={solutions} onSolutionClick={onSolutionClick} />
     </div>
   );
-});
-
-ActiveSolutions.displayName = 'ActiveSolutions';
+};

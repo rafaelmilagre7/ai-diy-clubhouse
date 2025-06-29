@@ -1,132 +1,154 @@
 
-import { useState, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import { useAuth } from '@/contexts/auth';
 import { supabase } from '@/lib/supabase';
-import { useLogging } from '@/hooks/useLogging';
+import { OnboardingData } from '../types/onboardingTypes';
+import { useErrorHandler } from '@/hooks/useErrorHandler';
 
-interface CloudSyncOptions {
-  retryAttempts?: number;
-  retryDelay?: number;
+interface CloudSyncStatus {
+  isSyncing: boolean;
+  lastSyncTime: string | null;
+  syncError: string | null;
+  retryCount: number;
 }
 
-interface SyncResult {
-  success: boolean;
-  error?: string;
-  timestamp: string;
-}
+const MAX_RETRIES = 3;
+const RETRY_DELAYS = [1000, 3000, 5000]; // Backoff exponencial
 
-export const useCloudSync = (options: CloudSyncOptions = {}) => {
-  const { log, logError } = useLogging();
-  const [isSyncing, setIsSyncing] = useState(false);
-  const [lastSync, setLastSync] = useState<string | null>(null);
-  const [syncError, setSyncError] = useState<string | null>(null);
+export const useCloudSync = () => {
+  const { user } = useAuth();
+  const { handleError } = useErrorHandler();
+  const [syncStatus, setSyncStatus] = useState<CloudSyncStatus>({
+    isSyncing: false,
+    lastSyncTime: null,
+    syncError: null,
+    retryCount: 0
+  });
 
-  // Usar a tabela profiles para sincronização
-  const syncToCloud = useCallback(async (data: any): Promise<SyncResult> => {
-    setIsSyncing(true);
-    setSyncError(null);
+  // Função de retry com backoff exponencial
+  const retryWithBackoff = async (fn: () => Promise<any>, retryCount = 0): Promise<any> => {
+    try {
+      return await fn();
+    } catch (error) {
+      if (retryCount < MAX_RETRIES) {
+        const delay = RETRY_DELAYS[retryCount] || 5000;
+        console.warn(`[CloudSync] Tentativa ${retryCount + 1} falhou, tentando novamente em ${delay}ms...`);
+        
+        setSyncStatus(prev => ({ ...prev, retryCount: retryCount + 1 }));
+        
+        await new Promise(resolve => setTimeout(resolve, delay));
+        return retryWithBackoff(fn, retryCount + 1);
+      }
+      throw error;
+    }
+  };
+
+  const saveToCloud = useCallback(async (data: OnboardingData) => {
+    if (!user?.id) {
+      console.log('[CloudSync] Usuário não logado - pulando sync na nuvem');
+      return;
+    }
+
+    setSyncStatus(prev => ({ ...prev, isSyncing: true, syncError: null, retryCount: 0 }));
 
     try {
-      log('Iniciando sincronização com a nuvem', { dataKeys: Object.keys(data) });
-
-      // Usar a tabela profiles para armazenar dados de onboarding
-      const { error: syncError } = await supabase
-        .from("profiles")
-        .upsert({
-          id: data.user_id,
-          ...data,
+      const syncOperation = async () => {
+        const syncData = {
+          user_id: user.id,
+          data: data,
           updated_at: new Date().toISOString()
-        });
-
-      if (syncError) {
-        logError('Erro na sincronização', syncError);
-        setSyncError(syncError.message);
-        return {
-          success: false,
-          error: syncError.message,
-          timestamp: new Date().toISOString()
         };
-      }
 
-      const timestamp = new Date().toISOString();
-      setLastSync(timestamp);
-      log('Sincronização concluída com sucesso');
+        const { error } = await supabase
+          .from('onboarding_sync')
+          .upsert(syncData, { onConflict: 'user_id' });
 
-      return {
-        success: true,
-        timestamp
+        if (error) throw error;
       };
 
-    } catch (error: any) {
-      const errorMessage = error.message || 'Erro desconhecido na sincronização';
-      logError('Erro inesperado na sincronização', error);
-      setSyncError(errorMessage);
+      await retryWithBackoff(syncOperation);
+
+      setSyncStatus(prev => ({
+        ...prev,
+        isSyncing: false,
+        lastSyncTime: new Date().toISOString(),
+        syncError: null,
+        retryCount: 0
+      }));
+
+      console.log('[CloudSync] Dados salvos na nuvem com sucesso');
+    } catch (error) {
+      console.error('[CloudSync] Erro ao salvar na nuvem após todas as tentativas:', error);
+      setSyncStatus(prev => ({
+        ...prev,
+        isSyncing: false,
+        syncError: 'Falha na sincronização (dados salvos localmente)',
+        retryCount: 0
+      }));
       
-      return {
-        success: false,
-        error: errorMessage,
-        timestamp: new Date().toISOString()
+      // Log do erro mas não mostrar toast para o usuário
+      handleError(error, 'CloudSync.saveToCloud', { showToast: false });
+    }
+  }, [user?.id, handleError]);
+
+  const loadFromCloud = useCallback(async (): Promise<OnboardingData | null> => {
+    if (!user?.id) {
+      console.log('[CloudSync] Usuário não logado - não é possível carregar da nuvem');
+      return null;
+    }
+
+    try {
+      const loadOperation = async () => {
+        const { data, error } = await supabase
+          .from('onboarding_sync')
+          .select('data, updated_at')
+          .eq('user_id', user.id)
+          .maybeSingle();
+
+        if (error) throw error;
+        return data;
       };
-    } finally {
-      setIsSyncing(false);
-    }
-  }, [log, logError]);
 
-  const getCloudData = useCallback(async (userId: string) => {
-    try {
-      log('Buscando dados da nuvem', { userId });
-
-      // Buscar da tabela profiles
-      const { data, error } = await supabase
-        .from("profiles")
-        .select('*')
-        .eq('id', userId)
-        .single();
-
-      if (error) {
-        logError('Erro ao buscar dados da nuvem', error);
-        throw error;
+      const result = await retryWithBackoff(loadOperation);
+      
+      if (result) {
+        console.log('[CloudSync] Dados carregados da nuvem');
+        return { ...result.data, updatedAt: result.updated_at };
       }
-
-      return data;
-    } catch (error: any) {
-      logError('Erro ao recuperar dados da nuvem', error);
-      throw error;
+      
+      return null;
+    } catch (error) {
+      console.error('[CloudSync] Erro ao carregar da nuvem:', error);
+      handleError(error, 'CloudSync.loadFromCloud', { showToast: false });
+      return null;
     }
-  }, [log, logError]);
+  }, [user?.id, handleError]);
 
-  const clearCloudData = useCallback(async (userId: string) => {
+  const clearCloudData = useCallback(async () => {
+    if (!user?.id) return;
+
     try {
-      log('Limpando dados da nuvem', { userId });
+      const clearOperation = async () => {
+        const { error } = await supabase
+          .from('onboarding_sync')
+          .delete()
+          .eq('user_id', user.id);
 
-      // Atualizar a tabela profiles resetando campos de onboarding
-      const { error } = await supabase
-        .from("profiles")
-        .update({
-          onboarding_completed: false,
-          onboarding_completed_at: null,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', userId);
+        if (error) throw error;
+      };
 
-      if (error) {
-        logError('Erro ao limpar dados da nuvem', error);
-        throw error;
-      }
-
-      log('Dados da nuvem limpos com sucesso');
-    } catch (error: any) {
-      logError('Erro ao limpar dados da nuvem', error);
-      throw error;
+      await retryWithBackoff(clearOperation);
+      console.log('[CloudSync] Dados da nuvem removidos');
+    } catch (error) {
+      console.error('[CloudSync] Erro ao limpar dados da nuvem:', error);
+      handleError(error, 'CloudSync.clearCloudData', { showToast: false });
     }
-  }, [log, logError]);
+  }, [user?.id, handleError]);
 
   return {
-    syncToCloud,
-    getCloudData,
-    clearCloudData,
-    isSyncing,
-    lastSync,
-    syncError,
-    clearError: () => setSyncError(null)
+    syncStatus,
+    saveToCloud,
+    loadFromCloud,
+    clearCloudData
   };
 };

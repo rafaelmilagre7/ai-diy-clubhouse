@@ -1,89 +1,129 @@
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { toast } from 'sonner';
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/lib/supabase";
+import { useAuth } from "@/contexts/auth";
+import { toast } from "sonner";
+import { CertificateTemplate } from "@/types/learningTypes";
 
-export interface CertificateTemplate {
-  id: string;
-  name: string;
-  template_data: any;
-  is_default: boolean;
-  created_at: string;
-  updated_at: string;
-}
-
-export const useCertificateTemplates = () => {
-  return useQuery({
-    queryKey: ['certificate-templates'],
-    queryFn: async (): Promise<CertificateTemplate[]> => {
-      console.log('Simulando busca de templates de certificado...');
-      
-      // Return mock data since table doesn't exist
-      return [
-        {
-          id: '1',
-          name: 'Template Padrão',
-          template_data: { layout: 'classic', colors: ['#00EAD9', '#ffffff'] },
-          is_default: true,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
+export const useCertificateTemplates = (courseId?: string) => {
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+  
+  // Buscar templates de certificados
+  const { 
+    data: templates = [],
+    isLoading,
+    error
+  } = useQuery({
+    queryKey: ['certificate-templates', courseId],
+    queryFn: async () => {
+      try {
+        let query = supabase
+          .from('learning_certificate_templates')
+          .select(`*`);
+          
+        if (courseId) {
+          query = query.eq('course_id', courseId).order('is_default', { ascending: false });
+        } else {
+          query = query.is('course_id', null).order('is_default', { ascending: false });
         }
-      ];
-    },
-    staleTime: 10 * 60 * 1000
-  });
-};
-
-export const useCreateCertificateTemplate = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (templateData: Omit<CertificateTemplate, 'id' | 'created_at' | 'updated_at'>) => {
-      console.log('Simulando criação de template:', templateData);
-      
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      return {
-        id: Date.now().toString(),
-        ...templateData,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      };
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['certificate-templates'] });
-      toast.success('Template criado com sucesso!');
-    },
-    onError: (error) => {
-      console.error('Erro ao criar template:', error);
-      toast.error('Erro ao criar template');
+        
+        const { data, error } = await query;
+        
+        if (error) throw error;
+        
+        return data as CertificateTemplate[];
+      } catch (error) {
+        console.error("Erro ao buscar templates de certificados:", error);
+        return [];
+      }
     }
   });
-};
-
-export const useUpdateCertificateTemplate = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async ({ id, ...templateData }: Partial<CertificateTemplate> & { id: string }) => {
-      console.log('Simulando atualização de template:', id, templateData);
+  
+  // Salvar template de certificado
+  const saveTemplate = useMutation({
+    mutationFn: async (templateData: Partial<CertificateTemplate>) => {
+      if (!user) {
+        throw new Error("Usuário não autenticado");
+      }
       
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 500));
+      const isUpdate = !!templateData.id;
       
-      return {
-        id,
-        ...templateData,
-        updated_at: new Date().toISOString()
-      };
+      if (isUpdate) {
+        const { data, error } = await supabase
+          .from('learning_certificate_templates')
+          .update({
+            name: templateData.name,
+            description: templateData.description,
+            html_template: templateData.html_template,
+            is_default: templateData.is_default || false,
+            course_id: templateData.course_id,
+            metadata: templateData.metadata || {},
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', templateData.id)
+          .select();
+          
+        if (error) throw error;
+        
+        return data?.[0] as CertificateTemplate;
+      } else {
+        const { data, error } = await supabase
+          .from('learning_certificate_templates')
+          .insert({
+            name: templateData.name,
+            description: templateData.description,
+            html_template: templateData.html_template,
+            is_default: templateData.is_default || false,
+            course_id: templateData.course_id,
+            created_by: user.id,
+            metadata: templateData.metadata || {}
+          })
+          .select();
+          
+        if (error) throw error;
+        
+        return data?.[0] as CertificateTemplate;
+      }
     },
-    onSuccess: () => {
+    onSuccess: (data, variables) => {
+      toast.success(variables.id ? "Template atualizado com sucesso!" : "Template criado com sucesso!");
       queryClient.invalidateQueries({ queryKey: ['certificate-templates'] });
-      toast.success('Template atualizado com sucesso!');
     },
-    onError: (error) => {
-      console.error('Erro ao atualizar template:', error);
-      toast.error('Erro ao atualizar template');
+    onError: (error: any) => {
+      toast.error(`Erro ao salvar template: ${error.message}`);
     }
   });
+  
+  // Excluir template de certificado
+  const deleteTemplate = useMutation({
+    mutationFn: async (templateId: string) => {
+      const { error } = await supabase
+        .from('learning_certificate_templates')
+        .delete()
+        .eq('id', templateId);
+        
+      if (error) throw error;
+      
+      return templateId;
+    },
+    onSuccess: () => {
+      toast.success("Template excluído com sucesso!");
+      queryClient.invalidateQueries({ queryKey: ['certificate-templates'] });
+    },
+    onError: (error: any) => {
+      toast.error(`Erro ao excluir template: ${error.message}`);
+    }
+  });
+  
+  return { 
+    templates, 
+    isLoading, 
+    error, 
+    saveTemplate: saveTemplate.mutate,
+    deleteTemplate: deleteTemplate.mutate,
+    isSaving: saveTemplate.isPending,
+    isDeleting: deleteTemplate.isPending
+  };
 };

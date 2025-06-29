@@ -22,50 +22,39 @@ export const RealtimeStats = () => {
         const oneDayAgo = new Date();
         oneDayAgo.setDate(oneDayAgo.getDate() - 1);
         
-        // Usar type casting seguro para tabelas não tipadas
-        const { data: activeUsersData, error: activeUsersError } = await (supabase as any)
+        const { data: activeUsersData, error: activeUsersError } = await supabase
           .from('progress')
           .select('user_id')
           .gte('last_activity', oneDayAgo.toISOString())
           .limit(1000);
 
-        if (activeUsersError) {
-          console.warn('Erro ao buscar usuários ativos, usando dados mock:', activeUsersError);
-        }
+        if (activeUsersError) throw activeUsersError;
         
-        // Contar usuários únicos - verificar se data existe e não é erro
-        const uniqueUsers = new Set(
-          Array.isArray(activeUsersData) 
-            ? activeUsersData.map((p: any) => p?.user_id).filter(Boolean)
-            : []
-        );
+        // Contar usuários únicos
+        const uniqueUsers = new Set(activeUsersData?.map(p => p.user_id));
         
-        // Buscar tempo médio de implementação - usar filtro correto para booleano
-        const { data: completedData, error: completedError } = await (supabase as any)
+        // Buscar tempo médio de implementação
+        const { data: completedData, error: completedError } = await supabase
           .from('progress')
           .select('created_at, completed_at')
           .eq('is_completed', true)
           .not('completed_at', 'is', null);
           
-        if (completedError) {
-          console.warn('Erro ao buscar dados de conclusão, usando dados mock:', completedError);
-        }
+        if (completedError) throw completedError;
         
         // Calcular tempo médio em minutos
         let totalMinutes = 0;
         let completedCount = 0;
         
-        if (Array.isArray(completedData) && completedData.length > 0) {
-          completedData.forEach((item: any) => {
-            if (item && typeof item === 'object' && 'created_at' in item && 'completed_at' in item) {
-              if (item.created_at && item.completed_at) {
-                const start = new Date(item.created_at);
-                const end = new Date(item.completed_at);
-                const diffMinutes = Math.round((end.getTime() - start.getTime()) / (1000 * 60));
-                if (diffMinutes > 0 && diffMinutes < 10000) { // Ignorar outliers
-                  totalMinutes += diffMinutes;
-                  completedCount++;
-                }
+        if (completedData && completedData.length > 0) {
+          completedData.forEach(item => {
+            if (item.created_at && item.completed_at) {
+              const start = new Date(item.created_at);
+              const end = new Date(item.completed_at);
+              const diffMinutes = Math.round((end.getTime() - start.getTime()) / (1000 * 60));
+              if (diffMinutes > 0 && diffMinutes < 10000) { // Ignorar outliers
+                totalMinutes += diffMinutes;
+                completedCount++;
               }
             }
           });
@@ -74,45 +63,33 @@ export const RealtimeStats = () => {
         const avgTime = completedCount > 0 ? Math.round(totalMinutes / completedCount) : 0;
         
         // Buscar número total de implementações concluídas
-        const { count: totalCompletions, error: completionsError } = await (supabase as any)
+        const { count: totalCompletions, error: completionsError } = await supabase
           .from('progress')
           .select('id', { count: 'exact', head: true })
           .eq('is_completed', true);
           
-        if (completionsError) {
-          console.warn('Erro ao buscar total de conclusões, usando dados mock:', completionsError);
-        }
+        if (completionsError) throw completionsError;
         
         // Buscar atividade semanal (últimos 7 dias)
         const sevenDaysAgo = new Date();
         sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
         
-        const { count: weeklyActivity, error: weeklyError } = await (supabase as any)
+        const { count: weeklyActivity, error: weeklyError } = await supabase
           .from('progress')
           .select('id', { count: 'exact', head: true })
           .gte('last_activity', sevenDaysAgo.toISOString());
           
-        if (weeklyError) {
-          console.warn('Erro ao buscar atividade semanal, usando dados mock:', weeklyError);
-        }
+        if (weeklyError) throw weeklyError;
         
         setStats({
-          activeUsers: uniqueUsers.size || Math.floor(Math.random() * 50) + 10,
-          avgImplementationTime: avgTime || Math.floor(Math.random() * 120) + 30,
-          totalCompletions: totalCompletions || Math.floor(Math.random() * 200) + 50,
-          weeklyActivity: weeklyActivity || Math.floor(Math.random() * 100) + 20
+          activeUsers: uniqueUsers.size,
+          avgImplementationTime: avgTime,
+          totalCompletions: totalCompletions || 0,
+          weeklyActivity: weeklyActivity || 0
         });
         
       } catch (error) {
         console.error("Erro ao buscar estatísticas em tempo real:", error);
-        
-        // Usar dados mock em caso de erro
-        setStats({
-          activeUsers: Math.floor(Math.random() * 50) + 10,
-          avgImplementationTime: Math.floor(Math.random() * 120) + 30,
-          totalCompletions: Math.floor(Math.random() * 200) + 50,
-          weeklyActivity: Math.floor(Math.random() * 100) + 20
-        });
       } finally {
         setLoading(false);
       }

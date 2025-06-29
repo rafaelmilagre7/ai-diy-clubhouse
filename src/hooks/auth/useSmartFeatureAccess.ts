@@ -1,41 +1,66 @@
 
-import { useSimpleAuth } from '@/contexts/auth/SimpleAuthProvider';
+import { useQuery } from '@tanstack/react-query';
+import { useAuth } from '@/contexts/auth';
+import { isFeatureEnabledForUser, APP_FEATURES } from '@/config/features';
+import { getUserRoleName } from '@/lib/supabase/types';
 
-export const useSmartFeatureAccess = () => {
-  const { user, isAdmin, isFormacao } = useSimpleAuth();
+interface SmartFeatureAccessResult {
+  hasAccess: boolean;
+  hasRoleAccess: boolean;
+  setupComplete: boolean;
+  blockReason: 'insufficient_role' | 'incomplete_setup' | 'feature_disabled' | 'none';
+  isLoading: boolean;
+}
 
-  const getAccessLevel = (feature: string) => {
-    if (!user) return 'none';
-    
-    if (isAdmin) return 'full';
-    if (isFormacao) {
-      if (feature === 'content_creation' || feature === 'courses') return 'full';
-      return 'limited';
-    }
-    
-    return 'basic';
-  };
+/**
+ * Hook para verificar acesso a features inteligentes
+ * 
+ * Nota: Trilha de implementação foi removida na Fase 4.
+ * Este hook ainda funciona para outras features do sistema.
+ */
+export const useSmartFeatureAccess = (feature: string) => {
+  const { profile, user } = useAuth();
+  const userRole = getUserRoleName(profile);
 
-  const canAccess = (feature: string, level: 'basic' | 'limited' | 'full' = 'basic') => {
-    const userLevel = getAccessLevel(feature);
-    
-    const levelHierarchy = { 'none': 0, 'basic': 1, 'limited': 2, 'full': 3 };
-    
-    return levelHierarchy[userLevel] >= levelHierarchy[level];
-  };
+  return useQuery({
+    queryKey: ['smart-feature-access', feature, user?.id, userRole],
+    queryFn: async (): Promise<SmartFeatureAccessResult> => {
+      // Verificar se a feature existe na configuração
+      if (!(feature in APP_FEATURES)) {
+        return {
+          hasAccess: false,
+          hasRoleAccess: false,
+          setupComplete: false,
+          blockReason: 'feature_disabled',
+          isLoading: false
+        };
+      }
 
-  return {
-    getAccessLevel,
-    canAccess,
-    isAdmin,
-    isFormacao,
-    hasUser: !!user,
-    data: {
-      hasAccess: true,
-      blockReason: null,
-      hasRoleAccess: true,
-      setupComplete: true
+      // Verificar se a feature está habilitada globalmente
+      const featureConfig = APP_FEATURES[feature];
+      if (!featureConfig?.enabled) {
+        return {
+          hasAccess: false,
+          hasRoleAccess: userRole === 'admin',
+          setupComplete: true,
+          blockReason: 'feature_disabled',
+          isLoading: false
+        };
+      }
+
+      // Verificar acesso baseado no papel do usuário
+      const hasRoleAccess = isFeatureEnabledForUser(feature, userRole);
+      
+      return {
+        hasAccess: hasRoleAccess,
+        hasRoleAccess,
+        setupComplete: true,
+        blockReason: hasRoleAccess ? 'none' : 'insufficient_role',
+        isLoading: false
+      };
     },
-    isLoading: false
-  };
+    enabled: !!user && !!profile,
+    staleTime: 5 * 60 * 1000, // 5 minutos
+    refetchOnWindowFocus: false
+  });
 };

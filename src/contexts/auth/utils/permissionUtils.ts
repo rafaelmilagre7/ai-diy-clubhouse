@@ -1,63 +1,42 @@
 
-import { supabase } from '@/lib/supabase';
+import { supabase } from "@/lib/supabase";
 
-/**
- * Verifica se o usuário tem uma permissão específica
- */
-export async function checkUserPermission(userId: string, permission: string): Promise<boolean> {
+export const checkUserPermission = async (
+  userId: string,
+  permissionCode: string
+): Promise<boolean> => {
   try {
-    if (!userId || !permission) {
-      return false;
-    }
-
-    // Implementação simplificada - verificar role diretamente
-    const { data: profile, error } = await supabase
-      .from('profiles')
-      .select('user_roles(name)')
-      .eq('id', userId)
-      .single();
-
+    const { data, error } = await supabase.rpc('user_has_permission', {
+      user_id: userId,
+      permission_code: permissionCode
+    });
+    
     if (error) {
       console.error('Erro ao verificar permissão:', error);
       return false;
     }
-
-    // Verificações básicas baseadas no role
-    const roleName = profile?.user_roles?.name;
     
-    if (roleName === 'admin') return true;
-    if (roleName === 'formacao' && permission.includes('course')) return true;
-    
-    return false;
+    return data || false;
   } catch (error) {
     console.error('Erro ao verificar permissão:', error);
     return false;
   }
-}
+};
 
-/**
- * Verifica se o usuário tem um papel específico
- */
-export async function checkUserRole(userId: string, roleName: string): Promise<boolean> {
+export const getUserPermissions = async (userId: string): Promise<string[]> => {
   try {
-    if (!userId || !roleName) {
-      return false;
-    }
-
-    const { data: profile, error } = await supabase
-      .from('profiles')
-      .select('user_roles(name)')
-      .eq('id', userId)
-      .single();
-
+    const { data, error } = await supabase.rpc('get_user_permissions', {
+      user_id: userId
+    });
+    
     if (error) {
-      console.error('Erro ao verificar papel:', error);
-      return false;
+      console.error('Erro ao buscar permissões do usuário:', error);
+      return [];
     }
-
-    return profile?.user_roles?.name === roleName;
+    
+    return data || [];
   } catch (error) {
-    console.error('Erro ao verificar papel:', error);
-    return false;
+    console.error('Erro ao buscar permissões do usuário:', error);
+    return [];
   }
-}
+};

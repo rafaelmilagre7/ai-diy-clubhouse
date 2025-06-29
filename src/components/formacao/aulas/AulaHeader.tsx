@@ -29,8 +29,7 @@ export const AulaHeader = ({
   moduloId,
   courseId 
 }: AulaHeaderProps) => {
-  // Corrigido: usar is_published que existe no schema
-  const isPublished = aula.is_published;
+  const isPublished = aula.published;
 
   return (
     <div className="space-y-4">

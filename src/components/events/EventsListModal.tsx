@@ -10,7 +10,6 @@ import { Event } from '@/types/events';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Calendar as CalendarIcon, Clock } from 'lucide-react';
-import { extractTimeFromDateString } from '@/utils/timezoneUtils';
 
 interface EventsListModalProps {
   date: Date;
@@ -54,7 +53,7 @@ export const EventsListModal = ({ date, events, onSelectEvent, onClose }: Events
               <div className="mt-2 flex items-center gap-1.5 text-sm text-gray-600">
                 <Clock className="h-4 w-4" />
                 <span>
-                  {extractTimeFromDateString(event.start_time)}
+                  {format(new Date(event.start_time), "HH:mm", { locale: ptBR })}
                 </span>
               </div>
               

@@ -1,109 +1,218 @@
 
 import { useState, useEffect } from "react";
+import { supabase } from "@/lib/supabase";
+import { Resource, ResourceMetadata } from "../types/ResourceTypes";
 import { useToast } from "@/hooks/use-toast";
-import { Resource } from "../types/ResourceTypes";
+import { parseResourceMetadata } from "../utils/resourceMetadataUtils";
+import { detectFileType } from "../utils/resourceUtils";
 
-export const useResourcesManager = (solutionId: string | null) => {
-  const { toast } = useToast();
+export function useResourcesManager(solutionId: string | null) {
   const [resources, setResources] = useState<Resource[]>([]);
   const [loading, setLoading] = useState(true);
   const [savingResources, setSavingResources] = useState(false);
-
-  // Simplified fetch without complex types
-  const fetchResources = async () => {
-    if (!solutionId) {
+  const { toast } = useToast();
+  
+  // Fetch resources on component mount
+  useEffect(() => {
+    if (solutionId) {
+      fetchResources();
+    } else {
       setLoading(false);
-      return;
     }
-    
+  }, [solutionId]);
+  
+  // Fetch resources from Supabase
+  const fetchResources = async () => {
     try {
       setLoading(true);
       
-      // Mock implementation to avoid type conflicts
-      console.log(`Fetching resources for solution: ${solutionId}`);
+      const { data, error } = await supabase
+        .from("solution_resources")
+        .select("*")
+        .eq("solution_id", solutionId)
+        .is("module_id", null)
+        .neq("type", "video");
+        
+      if (error) throw error;
       
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      setResources([]);
-    } catch (error) {
+      if (data) {
+        // Map the data to Resource objects
+        const mappedResources = data.map(parseResourceMetadata);
+        setResources(mappedResources);
+      }
+    } catch (error: any) {
       console.error("Error fetching resources:", error);
       toast({
-        title: "Erro ao carregar recursos",
-        description: "Não foi possível carregar a lista de recursos.",
+        title: "Erro ao carregar materiais",
+        description: error.message || "Ocorreu um erro ao tentar carregar os materiais.",
         variant: "destructive",
       });
     } finally {
       setLoading(false);
     }
   };
-
-  useEffect(() => {
-    fetchResources();
-  }, [solutionId]);
-
+  
+  // Handle file upload completion
   const handleUploadComplete = async (url: string, fileName: string, fileSize: number) => {
     if (!solutionId) return;
     
     try {
-      const newResource: Resource = {
+      // Detect file type and format
+      const fileExtension = fileName.split('.').pop()?.toLowerCase() || '';
+      const fileType = getFileType(fileExtension);
+      const fileFormat = getFileFormat(fileExtension);
+      
+      // Create metadata object
+      const metadata: ResourceMetadata = {
+        title: fileName,
+        description: `Arquivo ${fileFormat}`,
+        url: url,
+        type: fileType,
+        format: fileFormat,
+        tags: [],
+        order: 0,
+        downloads: 0,
+        size: fileSize,
+        version: "1.0"
+      };
+      
+      // Create new resource object
+      const newResource = {
+        solution_id: solutionId,
         name: fileName,
         url: url,
-        type: 'document',
-        solution_id: solutionId,
-        metadata: {
-          title: fileName,
-          description: `Arquivo ${fileName}`,
-          url: url,
-          type: 'document',
-          size: fileSize
-        },
+        type: fileType,
+        format: fileFormat,
+        metadata: JSON.stringify(metadata),
         size: fileSize
       };
       
-      setResources(prev => [...prev, newResource]);
+      // Save to Supabase
+      const { data, error } = await supabase
+        .from("solution_resources")
+        .insert(newResource)
+        .select()
+        .single();
+        
+      if (error) throw error;
       
-      toast({
-        title: "Recurso adicionado",
-        description: "O recurso foi adicionado com sucesso.",
-      });
+      if (data) {
+        // Map to Resource object and add to state
+        const resource: Resource = {
+          id: data.id,
+          name: data.name,
+          url: data.url,
+          type: fileType,
+          format: data.format,
+          solution_id: data.solution_id,
+          metadata: metadata,
+          created_at: data.created_at,
+          updated_at: data.updated_at,
+          module_id: data.module_id,
+          size: data.size
+        };
+        
+        setResources(prev => [...prev, resource]);
+        
+        toast({
+          title: "Material adicionado",
+          description: "O material foi adicionado com sucesso.",
+        });
+      }
     } catch (error: any) {
-      console.error("Erro ao adicionar recurso:", error);
+      console.error("Error adding resource:", error);
       toast({
-        title: "Erro ao adicionar recurso",
-        description: error.message || "Ocorreu um erro ao tentar adicionar o recurso.",
+        title: "Erro ao adicionar material",
+        description: error.message || "Ocorreu um erro ao tentar adicionar o material.",
         variant: "destructive",
       });
+      throw error;
     }
   };
-
-  const handleRemoveResource = async (id?: string) => {
+  
+  // Handle resource removal
+  const handleRemoveResource = async (id?: string, url?: string) => {
     if (!id) return;
     
     try {
+      // Delete from Supabase
+      const { error } = await supabase
+        .from("solution_resources")
+        .delete()
+        .eq("id", id);
+        
+      if (error) throw error;
+      
+      // Remove from state
       setResources(prev => prev.filter(resource => resource.id !== id));
       
       toast({
-        title: "Recurso removido",
-        description: "O recurso foi removido com sucesso.",
+        title: "Material removido",
+        description: "O material foi removido com sucesso.",
       });
     } catch (error: any) {
-      console.error("Erro ao remover recurso:", error);
+      console.error("Error removing resource:", error);
       toast({
-        title: "Erro ao remover recurso",
-        description: error.message || "Ocorreu um erro ao tentar remover o recurso.",
+        title: "Erro ao remover material",
+        description: error.message || "Ocorreu um erro ao tentar remover o material.",
         variant: "destructive",
       });
+      throw error;
     }
   };
-
+  
+  // Helper functions for file type and format detection
+  function getFileType(extension: string): Resource['type'] {
+    const documentExtensions = ['doc', 'docx', 'odt', 'rtf', 'txt'];
+    const spreadsheetExtensions = ['xls', 'xlsx', 'ods', 'csv'];
+    const presentationExtensions = ['ppt', 'pptx', 'odp', 'key'];
+    const imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'svg', 'webp'];
+    const pdfExtensions = ['pdf'];
+    const videoExtensions = ['mp4', 'webm', 'ogv', 'mov', 'avi'];
+    
+    if (documentExtensions.includes(extension)) return 'document';
+    if (spreadsheetExtensions.includes(extension)) return 'spreadsheet';
+    if (presentationExtensions.includes(extension)) return 'presentation';
+    if (imageExtensions.includes(extension)) return 'image';
+    if (pdfExtensions.includes(extension)) return 'pdf';
+    if (videoExtensions.includes(extension)) return 'video';
+    
+    return 'other';
+  }
+  
+  function getFileFormat(extension: string): string {
+    const formats: {[key: string]: string} = {
+      'doc': 'Word',
+      'docx': 'Word',
+      'xls': 'Excel',
+      'xlsx': 'Excel',
+      'ppt': 'PowerPoint',
+      'pptx': 'PowerPoint',
+      'pdf': 'PDF',
+      'jpg': 'Imagem',
+      'jpeg': 'Imagem',
+      'png': 'Imagem',
+      'gif': 'Imagem',
+      'mp4': 'Vídeo',
+      'webm': 'Vídeo',
+      'mov': 'Vídeo',
+      'csv': 'CSV',
+      'txt': 'Texto',
+      'rtf': 'Rich Text',
+      'zip': 'Arquivo ZIP',
+      'rar': 'Arquivo RAR'
+    };
+    
+    return formats[extension] || 'Outro';
+  }
+  
   return {
     resources,
-    setResources,
+    setResources, // Now exposing this
     loading,
     savingResources,
     setSavingResources,
     handleUploadComplete,
     handleRemoveResource
   };
-};
+}

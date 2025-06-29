@@ -1,49 +1,115 @@
 
-import React from 'react';
-import { Outlet, Navigate } from 'react-router-dom';
-import { useSimpleAuth } from '@/contexts/auth/SimpleAuthProvider';
-import { Sidebar } from '@/components/ui/sidebar/sidebar';
-import { SidebarProvider } from '@/components/ui/sidebar/provider';
-import { MemberSidebarContent } from '@/components/ui/sidebar/member-sidebar-content';
-import LoadingScreen from '@/components/common/LoadingScreen';
+import React, { memo, useMemo, useCallback } from "react";
+import { useAuth } from "@/contexts/auth";
+import BaseLayout from "./BaseLayout";
+import { MemberSidebar } from "./member/MemberSidebar";
+import { MemberContent } from "./member/MemberContent";
+import { useSidebarControl } from "@/hooks/useSidebarControl";
+import { toast } from "sonner";
 
-export const MemberLayout = ({ children }: { children?: React.ReactNode }) => {
-  const { user, isLoading, signOut } = useSimpleAuth();
+interface MemberLayoutProps {
+  children: React.ReactNode;
+}
 
-  const handleSignOut = async () => {
+const MemberLayout = memo<MemberLayoutProps>(({ children }) => {
+  const { profile, signOut } = useAuth();
+  const { sidebarOpen, setSidebarOpen, toggleSidebar, isMobile } = useSidebarControl();
+
+  // Log apenas em desenvolvimento
+  if (process.env.NODE_ENV === 'development') {
+    console.log('[MemberLayout] Renderizando com:', {
+      profile: !!profile,
+      profileName: profile?.name,
+      hasChildren: !!children,
+      sidebarOpen,
+      isMobile
+    });
+  }
+
+  // Memoizar função para obter iniciais
+  const getInitials = useCallback((name: string | null) => {
+    if (!name) return "U";
+    return name
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase()
+      .substring(0, 2);
+  }, []);
+
+  // Memoizar handler de signOut com tratamento seguro
+  const handleSignOut = useCallback(async () => {
     try {
       const result = await signOut();
       if (result.success) {
-        // Redirect will happen automatically due to auth state change
+        toast.success("Logout realizado com sucesso");
+      } else {
+        toast.error("Erro ao fazer logout");
       }
     } catch (error) {
-      console.error('Error signing out:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('[MemberLayout] Erro no signOut:', error);
+      }
+      toast.error("Erro ao fazer logout");
     }
-  };
+  }, [signOut]);
 
-  if (isLoading) {
-    return <LoadingScreen message="Carregando área do membro..." />;
-  }
+  // Memoizar dados do perfil
+  const profileData = useMemo(() => ({
+    name: profile?.name || null,
+    email: profile?.email || null,
+    avatar: profile?.avatar_url
+  }), [profile?.name, profile?.email, profile?.avatar_url]);
 
-  if (!user) {
-    return <Navigate to="/login" replace />;
-  }
-
-  return (
-    <SidebarProvider>
-      <div className="min-h-screen flex w-full bg-gradient-to-br from-[#0F111A] to-[#151823]">
-        <Sidebar className="border-r border-white/10">
-          <MemberSidebarContent onSignOut={handleSignOut} />
-        </Sidebar>
+  try {
+    return (
+      <>
+        {/* Backdrop para mobile quando sidebar aberto */}
+        {isMobile && sidebarOpen && (
+          <div 
+            className="fixed inset-0 bg-black/50 z-40 md:hidden"
+            onClick={() => setSidebarOpen(false)}
+            aria-label="Fechar menu"
+          />
+        )}
         
-        <main className="flex-1 overflow-hidden">
-          <div className="h-full overflow-y-auto">
-            {children || <Outlet />}
-          </div>
-        </main>
+        <BaseLayout
+          variant="member"
+          sidebarComponent={MemberSidebar}
+          contentComponent={MemberContent}
+          onSignOut={handleSignOut}
+          profileName={profileData.name}
+          profileEmail={profileData.email}
+          profileAvatar={profileData.avatar}
+          getInitials={getInitials}
+          sidebarOpen={sidebarOpen}
+          setSidebarOpen={setSidebarOpen}
+        >
+          {children}
+        </BaseLayout>
+      </>
+    );
+  } catch (error) {
+    if (process.env.NODE_ENV === 'development') {
+      console.error('[MemberLayout] Erro ao renderizar:', error);
+    }
+    return (
+      <div className="flex h-screen bg-background items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-xl font-semibold mb-2">Erro no Layout do Membro</h2>
+          <p className="text-muted-foreground">Ocorreu um erro ao carregar a interface.</p>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="mt-4 px-4 py-2 bg-primary text-primary-foreground rounded"
+          >
+            Recarregar Página
+          </button>
+        </div>
       </div>
-    </SidebarProvider>
-  );
-};
+    );
+  }
+});
+
+MemberLayout.displayName = 'MemberLayout';
 
 export default MemberLayout;

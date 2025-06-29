@@ -33,8 +33,8 @@ export const CourseStatistics = ({
   totalStudents,
   completionRate
 }: CourseStatisticsProps) => {
-  // Calcular estatísticas - usar is_published se existir, senão assumir published
-  const publishedModules = modules.filter(m => m.is_published ?? true).length;
+  // Calcular estatísticas
+  const publishedModules = modules.filter(m => m.published).length;
   const moduleCompletionRate = modules.length > 0 
     ? Math.round((publishedModules / modules.length) * 100) 
     : 0;

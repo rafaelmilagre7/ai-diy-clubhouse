@@ -38,8 +38,8 @@ export const useModuleEditing = (
           title: updatedModule.title,
           content: updatedModule.content,
           updated_at: new Date().toISOString()
-        } as any)
-        .eq("id", updatedModule.id as any);
+        })
+        .eq("id", updatedModule.id);
 
       if (error) {
         throw error;

@@ -1,71 +1,150 @@
 
-import { useState } from 'react';
+import React from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { supabase } from '@/lib/supabase';
+import { useAuth } from '@/contexts/auth';
+import { toast } from 'sonner';
 
-interface Notification {
+export interface Notification {
   id: string;
+  user_id: string;
+  type: string;
   title: string;
   message: string;
-  type: 'info' | 'success' | 'warning' | 'error';
   is_read: boolean;
   created_at: string;
-  data?: any; // Added missing data property
+  expires_at?: string;
+  data?: Record<string, any>;
 }
 
 export const useNotifications = () => {
-  const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [unreadCount, setUnreadCount] = useState(0);
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
 
-  const fetchNotifications = async () => {
-    setIsLoading(true);
-    try {
-      console.log('Simulando busca de notificações');
-      
-      // Mock implementation
-      const mockNotifications: Notification[] = [];
-      
-      setNotifications(mockNotifications);
-      setUnreadCount(0);
-    } catch (error) {
-      console.error('Erro ao buscar notificações:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  // Buscar notificações do usuário
+  const { data: notifications = [], isLoading } = useQuery({
+    queryKey: ['notifications', user?.id],
+    queryFn: async () => {
+      if (!user) return [];
 
-  const markAsRead = async (notificationId: string) => {
-    console.log('Simulando marcar notificação como lida:', notificationId);
-    setNotifications(prev => 
-      prev.map(notif => 
-        notif.id === notificationId ? { ...notif, is_read: true } : notif
+      const { data, error } = await supabase
+        .from('notifications')
+        .select('*')
+        .eq('user_id', user.id)
+        .or('expires_at.is.null,expires_at.gt.now()')
+        .order('created_at', { ascending: false })
+        .limit(50);
+
+      if (error) throw error;
+      return data as Notification[];
+    },
+    enabled: !!user,
+    refetchInterval: 30000, // Atualizar a cada 30 segundos
+  });
+
+  // Marcar notificação como lida
+  const markAsRead = useMutation({
+    mutationFn: async (notificationId: string) => {
+      const { error } = await supabase
+        .from('notifications')
+        .update({ is_read: true })
+        .eq('id', notificationId);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['notifications'] });
+    },
+    onError: (error: any) => {
+      toast.error('Erro ao marcar notificação como lida: ' + error.message);
+    },
+  });
+
+  // Marcar todas as notificações como lidas
+  const markAllAsRead = useMutation({
+    mutationFn: async () => {
+      if (!user) return;
+
+      const { error } = await supabase
+        .from('notifications')
+        .update({ is_read: true })
+        .eq('user_id', user.id)
+        .eq('is_read', false);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['notifications'] });
+      toast.success('Todas as notificações foram marcadas como lidas');
+    },
+    onError: (error: any) => {
+      toast.error('Erro ao marcar notificações como lidas: ' + error.message);
+    },
+  });
+
+  // Deletar notificação
+  const deleteNotification = useMutation({
+    mutationFn: async (notificationId: string) => {
+      const { error } = await supabase
+        .from('notifications')
+        .delete()
+        .eq('id', notificationId);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['notifications'] });
+    },
+    onError: (error: any) => {
+      toast.error('Erro ao deletar notificação: ' + error.message);
+    },
+  });
+
+  // Contar notificações não lidas
+  const unreadCount = notifications.filter(n => !n.is_read).length;
+
+  // Configurar real-time para novas notificações
+  React.useEffect(() => {
+    if (!user) return;
+
+    const channel = supabase
+      .channel('notifications')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'notifications',
+          filter: `user_id=eq.${user.id}`,
+        },
+        (payload) => {
+          queryClient.invalidateQueries({ queryKey: ['notifications'] });
+          
+          // Mostrar toast para notificações importantes
+          const newNotification = payload.new as Notification;
+          if (newNotification.type === 'admin_communication' || newNotification.type === 'urgent') {
+            toast.info(newNotification.title, {
+              description: newNotification.message,
+            });
+          }
+        }
       )
-    );
-    setUnreadCount(prev => Math.max(0, prev - 1));
-  };
+      .subscribe();
 
-  const markAllAsRead = async () => {
-    console.log('Simulando marcar todas notificações como lidas');
-    setNotifications(prev => 
-      prev.map(notif => ({ ...notif, is_read: true }))
-    );
-    setUnreadCount(0);
-  };
-
-  const deleteNotification = async (notificationId: string) => {
-    console.log('Simulando deletar notificação:', notificationId);
-    setNotifications(prev => 
-      prev.filter(notif => notif.id !== notificationId)
-    );
-    setUnreadCount(prev => Math.max(0, prev - 1));
-  };
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user, queryClient]);
 
   return {
     notifications,
     isLoading,
     unreadCount,
-    fetchNotifications,
-    markAsRead,
-    markAllAsRead,
-    deleteNotification
+    markAsRead: markAsRead.mutateAsync,
+    markAllAsRead: markAllAsRead.mutateAsync,
+    deleteNotification: deleteNotification.mutateAsync,
+    isMarkingAsRead: markAsRead.isPending,
+    isMarkingAllAsRead: markAllAsRead.isPending,
+    isDeletingNotification: deleteNotification.isPending,
   };
 };

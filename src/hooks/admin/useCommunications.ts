@@ -36,7 +36,7 @@ export const useCommunications = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      return (data as any) as AdminCommunication[];
+      return data as AdminCommunication[];
     },
   });
 
@@ -49,7 +49,7 @@ export const useCommunications = () => {
         .order('name');
 
       if (error) throw error;
-      return (data as any) as Role[];
+      return data as Role[];
     },
   });
 
@@ -63,7 +63,7 @@ export const useCommunications = () => {
         .insert({
           ...communication,
           created_by: user.id,
-        } as any)
+        })
         .select()
         .single();
 
@@ -83,8 +83,8 @@ export const useCommunications = () => {
     mutationFn: async ({ id, ...updates }: Partial<AdminCommunication> & { id: string }) => {
       const { data, error } = await supabase
         .from('admin_communications')
-        .update(updates as any)
-        .eq('id', id as any)
+        .update(updates)
+        .eq('id', id)
         .select()
         .single();
 
@@ -105,7 +105,7 @@ export const useCommunications = () => {
       const { error } = await supabase
         .from('admin_communications')
         .delete()
-        .eq('id', communicationId as any);
+        .eq('id', communicationId);
 
       if (error) throw error;
     },
@@ -120,13 +120,9 @@ export const useCommunications = () => {
 
   const sendCommunication = useMutation({
     mutationFn: async (communicationId: string) => {
-      // Simular envio já que não temos Edge Functions configuradas
-      const { data, error } = await supabase
-        .from('admin_communications')
-        .update({ status: 'sent', sent_at: new Date().toISOString() })
-        .eq('id', communicationId)
-        .select()
-        .single();
+      const { data, error } = await supabase.functions.invoke('send-communication', {
+        body: { communicationId },
+      });
 
       if (error) throw error;
       return data;
@@ -141,11 +137,32 @@ export const useCommunications = () => {
   });
 
   const getDeliveryStats = async (communicationId: string) => {
-    // Simular estatísticas já que não temos tabela communication_deliveries
-    return {
-      email: { total: 0, delivered: 0, pending: 0, failed: 0 },
-      notification: { total: 0, delivered: 0, pending: 0, failed: 0 }
-    };
+    const { data, error } = await supabase
+      .from('communication_deliveries')
+      .select('delivery_channel, status')
+      .eq('communication_id', communicationId);
+
+    if (error) throw error;
+
+    const stats: Record<string, any> = {};
+    
+    data.forEach((delivery) => {
+      const channel = delivery.delivery_channel;
+      if (!stats[channel]) {
+        stats[channel] = { total: 0, delivered: 0, pending: 0, failed: 0 };
+      }
+      
+      stats[channel].total++;
+      if (delivery.status === 'delivered') {
+        stats[channel].delivered++;
+      } else if (delivery.status === 'pending') {
+        stats[channel].pending++;
+      } else if (delivery.status === 'failed') {
+        stats[channel].failed++;
+      }
+    });
+
+    return stats;
   };
 
   return {

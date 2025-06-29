@@ -45,6 +45,7 @@ export const RecursosList = ({
     setRecursoParaExcluir(recurso);
   };
 
+  // Confirmar exclusão
   const handleConfirmDelete = () => {
     if (recursoParaExcluir) {
       onDelete(recursoParaExcluir.id);
@@ -52,17 +53,15 @@ export const RecursosList = ({
     }
   };
 
-  // Função para determinar o ícone com base na URL do arquivo
-  const getFileIcon = (fileUrl: string | null) => {
-    if (!fileUrl) return <File className="h-5 w-5" />;
+  // Função para determinar o ícone com base no tipo de arquivo
+  const getFileIcon = (fileType: string | null) => {
+    if (!fileType) return <File className="h-5 w-5" />;
     
-    const extension = fileUrl.split('.').pop()?.toLowerCase();
-    
-    if (extension === 'pdf') return <FileText className="h-5 w-5 text-red-500" />;
-    if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(extension || '')) return <FileImage className="h-5 w-5" />;
-    if (['zip', 'rar', '7z'].includes(extension || '')) return <FileArchive className="h-5 w-5" />;
-    if (['doc', 'docx', 'txt'].includes(extension || '')) return <FileText className="h-5 w-5" />;
-    if (['json', 'html', 'js', 'ts', 'css'].includes(extension || '')) return <FileCode className="h-5 w-5" />;
+    if (fileType.includes("pdf")) return <FileText className="h-5 w-5 text-red-500" />;
+    if (fileType.includes("image")) return <FileImage className="h-5 w-5" />;
+    if (fileType.includes("zip") || fileType.includes("rar")) return <FileArchive className="h-5 w-5" />;
+    if (fileType.includes("text") || fileType.includes("doc")) return <FileText className="h-5 w-5" />;
+    if (fileType.includes("code") || fileType.includes("json") || fileType.includes("html")) return <FileCode className="h-5 w-5" />;
     
     return <File className="h-5 w-5" />;
   };
@@ -75,11 +74,6 @@ export const RecursosList = ({
     if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
     if (bytes < 1024 * 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
     return `${(bytes / (1024 * 1024 * 1024)).toFixed(1)} GB`;
-  };
-
-  // Função para extrair nome do arquivo da URL
-  const getFileName = (fileUrl: string) => {
-    return fileUrl.split('/').pop() || 'Arquivo';
   };
 
   if (loading) {
@@ -118,9 +112,8 @@ export const RecursosList = ({
           <TableBody>
             {recursos.map((recurso) => (
               <TableRow key={recurso.id}>
-                <TableCell>{getFileIcon(recurso.file_url)}</TableCell>
-                {/* Corrigido: usar file_url para extrair o nome do arquivo */}
-                <TableCell className="font-medium">{getFileName(recurso.file_url)}</TableCell>
+                <TableCell>{getFileIcon(recurso.file_type)}</TableCell>
+                <TableCell className="font-medium">{recurso.name}</TableCell>
                 <TableCell>{recurso.description || "—"}</TableCell>
                 <TableCell>{formatFileSize(recurso.file_size_bytes)}</TableCell>
                 <TableCell className="text-right">

@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
-import { supabase } from "@/lib/supabase";
+import { setupLearningStorageBuckets } from "@/lib/supabase/storage";
 
 export interface StorageStatus {
   checked: boolean;
@@ -19,35 +19,23 @@ export const useAulaStorage = () => {
     const checkStorageConfig = async () => {
       try {
         setStorageChecking(true);
-        console.log("[AulaStorage] Verificando buckets essenciais...");
+        console.log("Verificando configuração de buckets de armazenamento...");
+        const result = await setupLearningStorageBuckets();
+        console.log("Resultado da configuração de buckets:", result);
+        setStorageReady(result.success);
         
-        // Verificar se o bucket lesson_images existe
-        const { data: buckets, error } = await supabase.storage.listBuckets();
-        
-        if (error) {
-          console.error("[AulaStorage] Erro ao listar buckets:", error);
-          setStorageError(`Erro ao verificar buckets: ${error.message}`);
-          setStorageReady(false);
-          return;
+        if (!result.success) {
+          console.warn("Configuração de armazenamento incompleta:", result.error);
+          setStorageError(result.error);
+          toast.warning("Configuração de armazenamento incompleta. Alguns recursos podem não funcionar corretamente.");
+        } else {
+          console.log("Buckets configurados com sucesso:", result);
+          setStorageError(null);
         }
-        
-        const lessonImagesBucket = buckets?.find(bucket => bucket.name === 'lesson_images');
-        
-        if (!lessonImagesBucket) {
-          console.warn("[AulaStorage] Bucket lesson_images não encontrado");
-          setStorageError("Bucket lesson_images não configurado. Execute a migration SQL primeiro.");
-          setStorageReady(false);
-          return;
-        }
-        
-        console.log("[AulaStorage] Bucket lesson_images encontrado e configurado");
-        setStorageReady(true);
-        setStorageError(null);
-        
-      } catch (error: any) {
-        console.error("[AulaStorage] Erro ao verificar armazenamento:", error);
+      } catch (error) {
+        console.error("Erro ao verificar configuração de armazenamento:", error);
         setStorageError("Erro ao verificar armazenamento");
-        setStorageReady(false);
+        toast.error("Erro ao verificar armazenamento. Alguns recursos podem não funcionar corretamente.");
       } finally {
         setStorageChecking(false);
       }
@@ -61,30 +49,18 @@ export const useAulaStorage = () => {
       setStorageChecking(true);
       setStorageError(null);
       
-      console.log("[AulaStorage] Tentando reconfigurar buckets...");
+      const result = await setupLearningStorageBuckets();
+      setStorageReady(result.success);
       
-      // Verificar novamente os buckets
-      const { data: buckets, error } = await supabase.storage.listBuckets();
-      
-      if (error) {
-        setStorageError(`Erro ao verificar buckets: ${error.message}`);
-        toast.error(`Erro: ${error.message}`);
-        return;
-      }
-      
-      const lessonImagesBucket = buckets?.find(bucket => bucket.name === 'lesson_images');
-      
-      if (lessonImagesBucket) {
-        setStorageReady(true);
-        setStorageError(null);
-        toast.success("Configuração de armazenamento verificada com sucesso!");
+      if (result.success) {
+        toast.success("Configuração de armazenamento concluída com sucesso!");
       } else {
-        setStorageError("Bucket lesson_images ainda não existe. Execute a migration SQL.");
-        toast.error("Execute a migration SQL para criar os buckets necessários.");
+        setStorageError(result.error);
+        toast.error(`Falha na configuração: ${result.error}`);
       }
     } catch (error: any) {
       setStorageError(error.message || "Erro desconhecido");
-      toast.error("Erro ao verificar armazenamento");
+      toast.error("Erro ao configurar armazenamento");
     } finally {
       setStorageChecking(false);
     }

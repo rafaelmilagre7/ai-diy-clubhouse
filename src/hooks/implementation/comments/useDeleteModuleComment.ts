@@ -1,14 +1,17 @@
 
 import { useState } from 'react';
-import { toast } from 'sonner';
+import { supabase } from '@/lib/supabase';
+import { useAuth } from '@/contexts/auth';
 import { Comment } from '@/types/commentTypes';
-import { useSimpleAuth } from '@/contexts/auth/SimpleAuthProvider';
 import { useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
+import { useLogging } from '@/hooks/useLogging';
 
 export const useDeleteModuleComment = (solutionId: string, moduleId: string) => {
   const [isDeleting, setIsDeleting] = useState(false);
-  const { user, isAdmin } = useSimpleAuth();
+  const { user, profile } = useAuth();
   const queryClient = useQueryClient();
+  const { logError, log } = useLogging();
 
   const deleteComment = async (comment: Comment) => {
     if (!user) {
@@ -17,6 +20,7 @@ export const useDeleteModuleComment = (solutionId: string, moduleId: string) => 
     }
 
     const isAuthor = user.id === comment.user_id;
+    const isAdmin = profile?.role === 'admin';
     
     if (!isAuthor && !isAdmin) {
       toast.error('Você só pode excluir seus próprios comentários');
@@ -27,16 +31,20 @@ export const useDeleteModuleComment = (solutionId: string, moduleId: string) => 
 
     try {
       setIsDeleting(true);
-      console.log('Simulando exclusão de comentário do módulo:', comment.id);
+      log('Excluindo comentário', { commentId: comment.id });
       
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 500));
+      const { error } = await supabase
+        .from('tool_comments')
+        .delete()
+        .eq('id', comment.id);
+        
+      if (error) throw error;
       
       toast.success('Comentário excluído com sucesso');
       queryClient.invalidateQueries({ queryKey: ['solution-comments', solutionId, moduleId] });
       
     } catch (error) {
-      console.error('Erro ao excluir comentário:', error);
+      logError('Erro ao excluir comentário', error);
       toast.error('Erro ao excluir comentário. Tente novamente.');
     } finally {
       setIsDeleting(false);

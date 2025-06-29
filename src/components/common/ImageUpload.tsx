@@ -1,11 +1,9 @@
-
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { supabase } from "@/lib/supabase";
-import { ImagePlus, Trash2, Loader2, AlertCircle } from "lucide-react";
+import { uploadFileToStorage } from "@/components/ui/file/uploadUtils";
+import { useImageURL } from "@/hooks/useImageURL";
+import { ImagePlus, Trash2, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { v4 as uuidv4 } from 'uuid';
 
 interface ImageUploadProps {
   value: string | undefined;
@@ -13,7 +11,6 @@ interface ImageUploadProps {
   bucketName: string;
   folderPath: string;
   enableOptimization?: boolean;
-  maxSizeMB?: number;
 }
 
 export const ImageUpload = ({ 
@@ -21,130 +18,93 @@ export const ImageUpload = ({
   onChange, 
   bucketName, 
   folderPath,
-  enableOptimization = true,
-  maxSizeMB = 10
+  enableOptimization = true 
 }: ImageUploadProps) => {
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState(0);
-  const [error, setError] = useState<string | null>(null);
+  const [optimizedUrl, setOptimizedUrl] = useState<string>(value || '');
+  const { optimizeImageURL } = useImageURL();
   const { toast } = useToast();
+
+  // Otimizar URL quando value mudar
+  useEffect(() => {
+    if (enableOptimization && value) {
+      optimizeImageURL(value, { priority: 'normal' })
+        .then(url => {
+          setOptimizedUrl(url);
+        })
+        .catch(error => {
+          console.warn('[ImageUpload] Erro na otimização:', error);
+          setOptimizedUrl(value);
+        });
+    } else {
+      setOptimizedUrl(value || '');
+    }
+  }, [value, enableOptimization, optimizeImageURL]);
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Validar tipo de arquivo
-    if (!file.type.startsWith('image/')) {
-      setError("Por favor, selecione apenas arquivos de imagem");
-      toast({
-        title: "Tipo de arquivo inválido",
-        description: "Por favor, selecione apenas arquivos de imagem.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    // Validar tamanho do arquivo
-    const maxSize = maxSizeMB * 1024 * 1024;
-    if (file.size > maxSize) {
-      setError(`A imagem é muito grande (${(file.size / (1024 * 1024)).toFixed(2)}MB). O tamanho máximo é ${maxSizeMB}MB.`);
-      toast({
-        title: "Arquivo muito grande",
-        description: `A imagem excede o tamanho máximo de ${maxSizeMB}MB.`,
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setError(null);
     setUploading(true);
     setProgress(0);
 
     try {
-      console.log(`[ImageUpload] Iniciando upload para bucket: ${bucketName}, pasta: ${folderPath}`);
+      console.log(`Iniciando upload para bucket: ${bucketName}, pasta: ${folderPath}`);
       
-      // Gerar nome único para o arquivo
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${uuidv4()}.${fileExt}`;
-      const filePath = folderPath ? `${folderPath}/${fileName}` : fileName;
-      
-      setProgress(25);
-      
-      // Upload direto para o Supabase Storage
-      const { data, error: uploadError } = await supabase.storage
-        .from(bucketName)
-        .upload(filePath, file, {
-          cacheControl: '3600',
-          upsert: true,
-          contentType: file.type
-        });
+      const result = await uploadFileToStorage(
+        file,
+        bucketName,
+        folderPath,
+        (progress) => {
+          setProgress(Math.round(progress));
+        }
+      );
 
-      if (uploadError) {
-        console.error('[ImageUpload] Erro no upload:', uploadError);
-        throw new Error(`Erro no upload: ${uploadError.message}`);
-      }
-
-      setProgress(75);
+      console.log("Upload bem-sucedido:", result);
       
-      // Obter URL pública
-      const { data: urlData } = supabase.storage
-        .from(bucketName)
-        .getPublicUrl(data.path);
-
-      if (!urlData.publicUrl) {
-        throw new Error("Não foi possível obter URL pública do arquivo");
-      }
-
-      setProgress(100);
-      
-      console.log('[ImageUpload] Upload concluído:', urlData.publicUrl);
-      onChange(urlData.publicUrl);
+      // Chamar onChange com a URL original (não otimizada ainda)
+      onChange(result.publicUrl);
       
       toast({
         title: "Upload concluído",
         description: "A imagem foi enviada com sucesso.",
         variant: "default",
       });
-    } catch (error: any) {
-      console.error("[ImageUpload] Erro no upload:", error);
-      const errorMessage = error.message || "Não foi possível enviar a imagem. Tente novamente.";
-      setError(errorMessage);
+    } catch (error) {
+      console.error("Erro ao fazer upload:", error);
       toast({
         title: "Falha no upload",
-        description: errorMessage,
+        description: "Não foi possível enviar a imagem. Tente novamente.",
         variant: "destructive",
       });
     } finally {
       setUploading(false);
-      setProgress(0);
     }
   };
 
   const handleRemoveImage = () => {
     onChange("");
-    setError(null);
+    setOptimizedUrl("");
   };
 
   return (
     <div className="space-y-4">
-      {error && (
-        <Alert variant="destructive">
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
-      )}
-      
-      {value ? (
+      {optimizedUrl ? (
         <div className="relative aspect-video w-full overflow-hidden rounded-md border">
           <img
-            src={value}
+            src={optimizedUrl}
             alt="Imagem de capa"
             className="h-full w-full object-cover"
             onError={(e) => {
               const target = e.target as HTMLImageElement;
-              target.src = "https://placehold.co/600x400?text=Imagem+não+encontrada";
-              setError("Não foi possível carregar a imagem.");
-              console.error("Erro ao carregar imagem:", value);
+              // Fallback para URL original se a otimizada falhar
+              if (optimizedUrl !== value && value) {
+                target.src = value;
+              } else {
+                target.src = "https://placehold.co/600x400?text=Imagem+não+encontrada";
+              }
+              console.error("Erro ao carregar imagem:", optimizedUrl);
             }}
           />
           <Button
@@ -172,9 +132,6 @@ export const ImageUpload = ({
               <span className="text-sm text-muted-foreground">
                 Clique para adicionar uma imagem de capa
               </span>
-              <span className="text-xs text-muted-foreground">
-                Tamanho máximo: {maxSizeMB}MB
-              </span>
             </div>
           )}
         </div>
@@ -187,7 +144,7 @@ export const ImageUpload = ({
         className="hidden"
         id="image-upload"
       />
-      {!value && (
+      {!optimizedUrl && (
         <Button
           type="button"
           variant="outline"

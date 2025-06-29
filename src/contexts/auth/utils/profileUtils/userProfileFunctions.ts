@@ -1,180 +1,188 @@
 
-import { supabase } from '@/integrations/supabase/client';
-import { UserProfile } from '@/types/userProfile';
+import { supabase, UserProfile } from '@/lib/supabase';
+import { getUserRoleName } from '@/lib/supabase/types';
 
+/**
+ * Fetch user profile from Supabase com join para user_roles
+ */
 export const fetchUserProfile = async (userId: string): Promise<UserProfile | null> => {
   try {
+    console.log(`Buscando perfil para usuário: ${userId}`);
+    
     const { data, error } = await supabase
       .from('profiles')
       .select(`
-        *,
-        user_roles (
+        id,
+        email,
+        name,
+        role_id,
+        avatar_url,
+        company_name,
+        industry,
+        created_at,
+        onboarding_completed,
+        onboarding_completed_at,
+        user_roles:role_id (
           id,
           name,
-          description
+          description,
+          permissions,
+          is_system
         )
       `)
       .eq('id', userId)
       .single();
 
     if (error) {
+      // Handle infinite recursion policy error specially
+      if (error.message.includes('infinite recursion')) {
+        console.warn('Detectada recursão infinita na política. Tentando criar perfil como solução alternativa.');
+        return null;
+      }
       console.error('Error fetching user profile:', error);
-      return null;
+      return null; // Retornar null ao invés de lançar erro
     }
-
+    
     if (!data) {
+      console.warn(`Nenhum perfil encontrado para o usuário ${userId}`);
       return null;
     }
-
-    // Map the database response to our UserProfile type with safe property access
+    
+    // Mapear corretamente o resultado da query
     const profile: UserProfile = {
       id: data.id,
-      email: data.email || '',
-      name: data.name || '',
-      avatar_url: data.avatar_url || '',
-      company_name: data.company_name || '',
-      industry: data.industry || '',
-      role_id: data.role_id || '',
-      role: data.role || '',
+      email: data.email,
+      name: data.name,
+      role_id: data.role_id,
+      avatar_url: data.avatar_url,
+      company_name: data.company_name,
+      industry: data.industry,
       created_at: data.created_at,
-      updated_at: data.updated_at,
-      onboarding_completed: data.onboarding_completed || false,
+      onboarding_completed: data.onboarding_completed,
       onboarding_completed_at: data.onboarding_completed_at,
-      birth_date: (data as any).birth_date || undefined,
-      curiosity: (data as any).curiosity || undefined,
-      business_sector: (data as any).business_sector || undefined,
-      position: (data as any).position || undefined,
-      primary_goal: (data as any).primary_goal || undefined,
-      weekly_availability: (data as any).weekly_availability || undefined,
-      weekly_learning_time: (data as any).weekly_learning_time || undefined,
-      networking_interests: (data as any).networking_interests || undefined,
-      nps_score: (data as any).nps_score || undefined,
-      country: (data as any).country || undefined,
-      state: (data as any).state || undefined,
-      city: (data as any).city || undefined,
-      phone: (data as any).phone || undefined,
-      phone_country_code: (data as any).phone_country_code || undefined,
-      linkedin: (data as any).linkedin || undefined,
-      instagram: (data as any).instagram || undefined,
-      current_position: (data as any).current_position || undefined,
-      accepts_marketing: (data as any).accepts_marketing === true || (data as any).accepts_marketing === 'true',
-      accepts_case_study: (data as any).accepts_case_study === true || (data as any).accepts_case_study === 'true',
-      company_website: (data as any).company_website || undefined,
-      has_implemented_ai: (data as any).has_implemented_ai === true || (data as any).has_implemented_ai === 'true',
-      ai_tools_used: (data as any).ai_tools_used || undefined,
-      daily_tools: (data as any).daily_tools || undefined,
-      who_will_implement: (data as any).who_will_implement || undefined,
-      implementation_timeline: (data as any).implementation_timeline || undefined,
-      team_size: (data as any).team_size || undefined,
-      annual_revenue: (data as any).annual_revenue || undefined,
-      company_size: (data as any).company_size || undefined,
-      ai_knowledge_level: (data as any).ai_knowledge_level || undefined,
-      business_challenges: (data as any).business_challenges || undefined,
-      main_objective: (data as any).main_objective || undefined,
-      area_to_impact: (data as any).area_to_impact || undefined,
-      expected_result_90_days: (data as any).expected_result_90_days || undefined,
-      ai_implementation_budget: (data as any).ai_implementation_budget || undefined,
-      content_preference: (data as any).content_preference || undefined,
-      wants_networking: (data as any).wants_networking === true || (data as any).wants_networking === 'true',
-      best_days: (data as any).best_days || undefined,
-      best_periods: (data as any).best_periods || undefined,
-      user_roles: data.user_roles
+      user_roles: data.user_roles as any
     };
-
+    
+    console.log('Perfil encontrado:', profile);
     return profile;
   } catch (error) {
-    console.error('Error in fetchUserProfile:', error);
-    return null;
+    console.error('Unexpected error fetching profile:', error);
+    return null; // Retornar null ao invés de lançar erro
   }
 };
 
-export const getUserProfile = fetchUserProfile;
-
-export const createUserProfile = async (userId: string, email: string, name?: string): Promise<UserProfile | null> => {
+/**
+ * Create profile for user if it doesn't exist
+ */
+export const createUserProfileIfNeeded = async (
+  userId: string, 
+  email: string, 
+  name: string = 'Usuário'
+): Promise<UserProfile | null> => {
   try {
-    const { data, error } = await supabase
+    console.log(`Tentando criar perfil para ${email}`);
+    
+    // Buscar role_id padrão para membro_club
+    const { data: defaultRole } = await supabase
+      .from('user_roles')
+      .select('id')
+      .eq('name', 'membro_club')
+      .single();
+    
+    const defaultRoleId = defaultRole?.id || null;
+    
+    // Use upsert with conflict handling to avoid duplications
+    const { data: newProfile, error: insertError } = await supabase
       .from('profiles')
-      .insert({
+      .upsert({
         id: userId,
         email,
-        name: name || null,
-        onboarding_completed: false
+        name,
+        role_id: defaultRoleId,
+        created_at: new Date().toISOString(),
+        avatar_url: null,
+        company_name: null,
+        industry: null,
+        onboarding_completed: false,
+        onboarding_completed_at: null
       })
       .select(`
-        *,
-        user_roles (
+        id,
+        email,
+        name,
+        role_id,
+        avatar_url,
+        company_name,
+        industry,
+        created_at,
+        onboarding_completed,
+        onboarding_completed_at,
+        user_roles:role_id (
           id,
           name,
-          description
+          description,
+          permissions,
+          is_system
         )
       `)
       .single();
-
-    if (error) {
-      console.error('Error creating user profile:', error);
-      return null;
+      
+    if (insertError) {
+      // If insertion fails due to policies, try using fallback
+      if (insertError.message.includes('policy') || insertError.message.includes('permission denied')) {
+        console.warn('Erro de política ao criar perfil. Continuando com perfil alternativo:', insertError);
+        return createFallbackProfile(userId, email, name, defaultRoleId);
+      }
+      
+      console.error('Erro ao criar perfil:', insertError);
+      return createFallbackProfile(userId, email, name, defaultRoleId);
     }
-
-    return data as any;
+    
+    // Mapear corretamente o resultado da query
+    const profile: UserProfile = {
+      id: newProfile.id,
+      email: newProfile.email,
+      name: newProfile.name,
+      role_id: newProfile.role_id,
+      avatar_url: newProfile.avatar_url,
+      company_name: newProfile.company_name,
+      industry: newProfile.industry,
+      created_at: newProfile.created_at,
+      onboarding_completed: newProfile.onboarding_completed,
+      onboarding_completed_at: newProfile.onboarding_completed_at,
+      user_roles: newProfile.user_roles as any
+    };
+    
+    console.log('Perfil criado com sucesso:', profile);
+    return profile;
   } catch (error) {
-    console.error('Error in createUserProfile:', error);
-    return null;
+    console.error('Erro inesperado ao criar perfil:', error);
+    // Return minimal profile in case of error to not block application
+    return createFallbackProfile(userId, email, name, null);
   }
 };
 
-export const createUserProfileIfNeeded = async (userId: string, email: string, name?: string): Promise<UserProfile | null> => {
-  let profile = await fetchUserProfile(userId);
-  
-  if (!profile) {
-    profile = await createUserProfile(userId, email, name);
-  }
-  
-  return profile;
-};
-
-export const updateUserProfile = async (userId: string, updates: Partial<UserProfile>): Promise<UserProfile | null> => {
-  try {
-    const { data, error } = await supabase
-      .from('profiles')
-      .update(updates)
-      .eq('id', userId)
-      .select(`
-        *,
-        user_roles (
-          id,
-          name,
-          description
-        )
-      `)
-      .single();
-
-    if (error) {
-      console.error('Error updating user profile:', error);
-      return null;
-    }
-
-    return data as any;
-  } catch (error) {
-    console.error('Error in updateUserProfile:', error);
-    return null;
-  }
-};
-
-export const deleteUserProfile = async (userId: string): Promise<boolean> => {
-  try {
-    const { error } = await supabase
-      .from('profiles')
-      .delete()
-      .eq('id', userId);
-
-    if (error) {
-      console.error('Error deleting user profile:', error);
-      return false;
-    }
-
-    return true;
-  } catch (error) {
-    console.error('Error in deleteUserProfile:', error);
-    return false;
-  }
+/**
+ * Creates a minimal fallback profile when database operations fail
+ */
+const createFallbackProfile = (
+  userId: string, 
+  email: string, 
+  name: string, 
+  roleId: string | null
+): UserProfile => {
+  console.log(`Criando perfil alternativo para ${email}`);
+  return {
+    id: userId,
+    email,
+    name,
+    role_id: roleId,
+    user_roles: roleId ? { id: roleId, name: 'membro_club' } : null,
+    avatar_url: null,
+    company_name: null,
+    industry: null,
+    created_at: new Date().toISOString(),
+    onboarding_completed: false,
+    onboarding_completed_at: null
+  };
 };

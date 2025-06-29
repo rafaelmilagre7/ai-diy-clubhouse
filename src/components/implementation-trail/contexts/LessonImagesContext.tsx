@@ -56,21 +56,21 @@ export const LessonImagesProvider: React.FC<{ children: React.ReactNode }> = ({ 
         const { data, error } = await supabase
           .from('learning_lessons')
           .select('id, cover_image_url, title, estimated_time_minutes, difficulty_level, description')
-          .in('id', missingIds as any);
+          .in('id', missingIds);
 
         if (error) {
           throw error;
         }
 
         if (data && data.length > 0) {
-          const imagesMap = (data as any).reduce((acc: Record<string, string>, lesson: LessonImageData) => {
+          const imagesMap = data.reduce((acc, lesson: LessonImageData) => {
             if (lesson.cover_image_url) {
               acc[lesson.id] = lesson.cover_image_url;
             }
             return acc;
           }, {} as Record<string, string>);
 
-          const metadataMap = (data as any).reduce((acc: Record<string, LessonImageData>, lesson: LessonImageData) => {
+          const metadataMap = data.reduce((acc, lesson: LessonImageData) => {
             acc[lesson.id] = lesson;
             return acc;
           }, {} as Record<string, LessonImageData>);

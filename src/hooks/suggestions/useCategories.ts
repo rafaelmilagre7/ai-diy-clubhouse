@@ -1,36 +1,31 @@
 
-import { useState, useEffect } from 'react';
-
-export interface SuggestionCategory {
-  id: string;
-  name: string;
-  description?: string;
-}
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/lib/supabase';
+import { SuggestionCategory } from '@/types/suggestionTypes';
 
 export const useCategories = () => {
-  const [categories, setCategories] = useState<SuggestionCategory[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const {
+    data: categories = [],
+    isLoading: categoriesLoading
+  } = useQuery({
+    queryKey: ['suggestion-categories'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('suggestion_categories')
+        .select('*')
+        .order('name');
 
-  useEffect(() => {
-    // Mock categories
-    const mockCategories: SuggestionCategory[] = [
-      { id: '1', name: 'Funcionalidades', description: 'Sugestões de novas funcionalidades' },
-      { id: '2', name: 'Melhorias', description: 'Melhorias em funcionalidades existentes' },
-      { id: '3', name: 'Bugs', description: 'Relatórios de problemas técnicos' },
-      { id: '4', name: 'Interface', description: 'Sugestões de melhorias na interface' }
-    ];
+      if (error) {
+        console.error('Erro ao buscar categorias:', error);
+        throw error;
+      }
 
-    const timer = setTimeout(() => {
-      setCategories(mockCategories);
-      setIsLoading(false);
-    }, 500);
-
-    return () => clearTimeout(timer);
-  }, []);
+      return data || [];
+    },
+  });
 
   return {
     categories,
-    isLoading,
-    error: null
+    isLoading: categoriesLoading
   };
 };

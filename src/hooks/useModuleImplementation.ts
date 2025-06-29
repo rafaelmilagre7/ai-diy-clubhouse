@@ -1,171 +1,213 @@
 
-import { useState, useEffect } from 'react';
-import { useSimpleAuth } from '@/contexts/auth/SimpleAuthProvider';
+import { useState, useEffect } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import { useAuth } from "@/contexts/auth";
+import { supabase } from "@/lib/supabase";
+import { useToast } from "@/hooks/use-toast";
+import { Module, Solution } from "@/lib/supabase";
+import { useLogging } from "@/hooks/useLogging";
 
-// Simplified interfaces to avoid type depth issues
-interface SimpleModule {
-  id: string;
-  solution_id: string;
-  title: string;
-  content: any;
-  type: string;
-  module_order: number;
-  estimated_time_minutes: number;
-}
-
-interface SimpleProgress {
-  id: string;
-  user_id: string;
-  solution_id: string;
-  current_module: string | null;
-  progress_percentage: number;
-  is_completed: boolean;
-  completed_modules: string[];
-  last_activity: string;
-}
-
-export const useModuleImplementation = (solutionId: string) => {
-  const { user } = useSimpleAuth();
-  const [modules, setModules] = useState<SimpleModule[]>([]);
-  const [currentModule, setCurrentModule] = useState<SimpleModule | null>(null);
-  const [nextModule, setNextModule] = useState<SimpleModule | null>(null);
-  const [progress, setProgress] = useState<SimpleProgress | null>(null);
+export const useModuleImplementation = () => {
+  const { id, moduleIndex, moduleIdx } = useParams<{ 
+    id: string; 
+    moduleIndex: string;
+    moduleIdx: string; 
+  }>();
+  
+  // Compatibilidade entre URLs /implement/:id/:moduleIdx e /implementation/:id/:moduleIdx
+  const currentModuleIdx = moduleIndex || moduleIdx || "0";
+  const moduleIdxNumber = parseInt(currentModuleIdx);
+  
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const navigate = useNavigate();
+  const { log, logError } = useLogging();
+  
+  const [solution, setSolution] = useState<Solution | null>(null);
+  const [modules, setModules] = useState<Module[]>([]);
+  const [currentModule, setCurrentModule] = useState<Module | null>(null);
+  const [completedModules, setCompletedModules] = useState<number[]>([]);
+  const [progress, setProgress] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  const fetchModules = async () => {
-    try {
-      console.log('Buscando módulos para solução:', solutionId);
-      
-      // Mock data since modules table may not have expected structure
-      const mockModules: SimpleModule[] = [
-        {
-          id: '1',
-          solution_id: solutionId,
-          title: 'Introdução',
-          content: { type: 'text', blocks: [] },
-          type: 'introduction',
-          module_order: 1,
-          estimated_time_minutes: 15
-        },
-        {
-          id: '2',
-          solution_id: solutionId,
-          title: 'Implementação',
-          content: { type: 'text', blocks: [] },
-          type: 'implementation',
-          module_order: 2,
-          estimated_time_minutes: 30
-        }
-      ];
-
-      setModules(mockModules);
-      
-      if (mockModules.length > 0) {
-        setCurrentModule(mockModules[0]);
-        if (mockModules.length > 1) {
-          setNextModule(mockModules[1]);
-        }
-      }
-
-    } catch (err: any) {
-      console.error('Erro ao buscar módulos:', err);
-      setError(err.message);
-      setModules([]);
-    }
-  };
-
-  const fetchProgress = async () => {
-    if (!user?.id) return;
-
-    try {
-      console.log('Buscando progresso para usuário:', user.id);
-      
-      // Mock progress data
-      const mockProgress: SimpleProgress = {
-        id: '1',
-        user_id: user.id,
-        solution_id: solutionId,
-        current_module: '1',
-        progress_percentage: 25,
-        is_completed: false,
-        completed_modules: [],
-        last_activity: new Date().toISOString()
-      };
-
-      setProgress(mockProgress);
-
-    } catch (err: any) {
-      console.error('Erro ao buscar progresso:', err);
-      setError(err.message);
-    }
-  };
-
-  const markModuleAsCompleted = async (moduleId: string) => {
-    if (!progress) return;
-
-    try {
-      console.log('Marcando módulo como concluído:', moduleId);
-      
-      const updatedProgress = {
-        ...progress,
-        completed_modules: [...progress.completed_modules, moduleId],
-        progress_percentage: Math.min(100, progress.progress_percentage + 25)
-      };
-
-      setProgress(updatedProgress);
-      
-      // Move to next module if available
-      const currentIndex = modules.findIndex(m => m.id === moduleId);
-      if (currentIndex >= 0 && currentIndex < modules.length - 1) {
-        setCurrentModule(modules[currentIndex + 1]);
-        if (currentIndex + 2 < modules.length) {
-          setNextModule(modules[currentIndex + 2]);
-        } else {
-          setNextModule(null);
-        }
-      }
-
-    } catch (err: any) {
-      console.error('Erro ao marcar módulo como concluído:', err);
-      setError(err.message);
-    }
-  };
-
+  
+  // Fetch solution and modules data
   useEffect(() => {
-    const initializeData = async () => {
-      if (!solutionId) return;
-      
-      setLoading(true);
-      setError(null);
+    const fetchData = async () => {
+      if (!id) return;
       
       try {
-        await Promise.all([
-          fetchModules(),
-          fetchProgress()
-        ]);
-      } catch (err: any) {
-        console.error('Erro ao inicializar dados:', err);
-        setError(err.message);
+        setLoading(true);
+        log("Buscando dados da solução e módulos para implementação", { id, moduleIdx: moduleIdxNumber });
+        
+        // Fetch solution
+        const { data: solutionData, error: solutionError } = await supabase
+          .from("solutions")
+          .select("*")
+          .eq("id", id)
+          .maybeSingle();
+        
+        if (solutionError) {
+          logError("Erro ao buscar solução:", solutionError);
+          toast({
+            title: "Erro ao carregar solução",
+            description: "Não foi possível encontrar a solução solicitada.",
+            variant: "destructive"
+          });
+          navigate("/solutions");
+          return;
+        }
+        
+        if (!solutionData) {
+          toast({
+            title: "Solução não encontrada",
+            description: "Não foi possível encontrar a solução solicitada.",
+            variant: "destructive"
+          });
+          navigate("/solutions");
+          return;
+        }
+        
+        setSolution(solutionData as Solution);
+        log("Solução encontrada:", { solution: solutionData });
+        
+        // Fetch modules for this solution
+        const { data: modulesData, error: modulesError } = await supabase
+          .from("modules")
+          .select("*")
+          .eq("solution_id", id)
+          .order("module_order", { ascending: true });
+        
+        if (modulesError) {
+          logError("Erro ao buscar módulos:", modulesError);
+          toast({
+            title: "Erro ao carregar módulos",
+            description: "Não foi possível carregar os módulos desta solução.",
+            variant: "destructive"
+          });
+          return;
+        }
+        
+        if (modulesData && modulesData.length > 0) {
+          setModules(modulesData as Module[]);
+          log("Módulos encontrados:", { count: modulesData.length });
+          
+          // Set current module based on moduleIdx
+          if (moduleIdxNumber < modulesData.length) {
+            setCurrentModule(modulesData[moduleIdxNumber] as Module);
+            log("Módulo atual definido:", { moduleId: modulesData[moduleIdxNumber].id });
+          } else {
+            // If moduleIdx is out of bounds, set to first module
+            setCurrentModule(modulesData[0] as Module);
+            log("Índice de módulo fora dos limites, usando o primeiro módulo", { requestedIdx: moduleIdxNumber, maxIdx: modulesData.length - 1 });
+          }
+        } else {
+          log("Nenhum módulo encontrado, criando placeholder", { solutionId: id });
+          
+          // Create placeholder module if no modules exist
+          const placeholderModule = {
+            id: `placeholder-${id}`,
+            solution_id: id,
+            title: solutionData.title,
+            description: "Implementação da solução",
+            type: "implementation",
+            module_order: 0,
+            content: {},
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          };
+          
+          setModules([placeholderModule as Module]);
+          setCurrentModule(placeholderModule as Module);
+        }
+        
+        // Fetch progress for logged in user
+        if (user) {
+          try {
+            const { data: progressData, error: progressError } = await supabase
+              .from("progress")
+              .select("*")
+              .eq("solution_id", id)
+              .eq("user_id", user.id)
+              .maybeSingle();
+            
+            if (progressError) {
+              logError("Erro ao buscar progresso:", progressError);
+            } else if (progressData) {
+              setProgress(progressData);
+              log("Progresso encontrado:", { progress: progressData });
+              
+              // Update current module index in progress if different
+              if (progressData.current_module !== moduleIdxNumber) {
+                const { error: updateError } = await supabase
+                  .from("progress")
+                  .update({ 
+                    current_module: moduleIdxNumber,
+                    last_activity: new Date().toISOString()
+                  })
+                  .eq("id", progressData.id);
+                
+                if (updateError) {
+                  logError("Erro ao atualizar progresso:", updateError);
+                }
+              }
+              
+              // Set completed modules
+              if (progressData.completed_modules && Array.isArray(progressData.completed_modules)) {
+                setCompletedModules(progressData.completed_modules);
+                log("Módulos completados:", { completedModules: progressData.completed_modules });
+              } else {
+                setCompletedModules([]);
+              }
+            } else {
+              log("Nenhum progresso encontrado, criando novo registro", { userId: user.id, solutionId: id });
+              
+              // Create progress record if it doesn't exist
+              const { data: newProgress, error: createError } = await supabase
+                .from("progress")
+                .insert({
+                  user_id: user.id,
+                  solution_id: id,
+                  current_module: moduleIdxNumber,
+                  is_completed: false,
+                  completed_modules: [],
+                  last_activity: new Date().toISOString()
+                })
+                .select()
+                .single();
+              
+              if (createError) {
+                logError("Erro ao criar progresso:", createError);
+              } else {
+                setProgress(newProgress);
+                log("Novo progresso criado:", { progress: newProgress });
+              }
+            }
+          } catch (progressError) {
+            logError("Erro ao processar progresso:", progressError);
+          }
+        }
+      } catch (error) {
+        logError("Erro no useModuleImplementation:", error);
+        toast({
+          title: "Erro",
+          description: "Ocorreu um erro ao carregar os dados de implementação.",
+          variant: "destructive"
+        });
       } finally {
         setLoading(false);
       }
     };
-
-    initializeData();
-  }, [solutionId, user?.id]);
-
+    
+    fetchData();
+  }, [id, moduleIdxNumber, user, toast, navigate, log, logError]);
+  
   return {
+    solution,
     modules,
     currentModule,
-    nextModule,
+    completedModules,
+    setCompletedModules,
     progress,
-    loading,
-    error,
-    markModuleAsCompleted,
-    refetch: () => {
-      fetchModules();
-      fetchProgress();
-    }
+    loading
   };
 };

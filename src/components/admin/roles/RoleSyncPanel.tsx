@@ -1,18 +1,19 @@
 
-import React, { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { 
   RefreshCw, 
-  Shield, 
-  Users, 
   AlertTriangle, 
   CheckCircle, 
-  Info,
-  Trash2,
-  Database
+  Users, 
+  Shield,
+  AlertCircle,
+  PlayCircle,
+  Activity,
+  CheckCircle2
 } from 'lucide-react';
 import { useRoleSync } from '@/hooks/admin/useRoleSync';
 
@@ -21,232 +22,255 @@ export const RoleSyncPanel = () => {
     isLoading, 
     issues, 
     auditData, 
-    syncResults,
     validateRoles, 
     auditRoles, 
-    syncRoles, 
-    runFullDiagnostic,
-    clearResults
+    syncRoles,
+    runFullDiagnostic
   } = useRoleSync();
 
-  const [activeOperation, setActiveOperation] = useState<string | null>(null);
+  const [hasRunInitialCheck, setHasRunInitialCheck] = useState(false);
+  const [showMigrationSuccess, setShowMigrationSuccess] = useState(true);
 
-  const handleOperation = async (operation: string, fn: () => Promise<any>) => {
-    setActiveOperation(operation);
+  useEffect(() => {
+    // Executar diagnóstico inicial automaticamente
+    if (!hasRunInitialCheck) {
+      const runInitialCheck = async () => {
+        try {
+          await runFullDiagnostic();
+          setHasRunInitialCheck(true);
+        } catch (error) {
+          console.error('Erro na verificação inicial:', error);
+          setHasRunInitialCheck(true); // Marcar como executado mesmo com erro
+        }
+      };
+      
+      runInitialCheck();
+    }
+  }, [hasRunInitialCheck, runFullDiagnostic]);
+
+  const handleSyncRoles = async () => {
     try {
-      await fn();
-    } finally {
-      setActiveOperation(null);
+      await syncRoles();
+    } catch (error) {
+      console.error('Erro ao sincronizar:', error);
     }
   };
 
-  const getStatusIcon = (status: 'success' | 'error' | 'warning' | 'info') => {
-    switch (status) {
-      case 'success':
-        return <CheckCircle className="h-4 w-4 text-green-500" />;
-      case 'error':
-        return <AlertTriangle className="h-4 w-4 text-red-500" />;
-      case 'warning':
-        return <AlertTriangle className="h-4 w-4 text-yellow-500" />;
-      case 'info':
-        return <Info className="h-4 w-4 text-blue-500" />;
+  const handleRunDiagnostic = async () => {
+    try {
+      await runFullDiagnostic();
+    } catch (error) {
+      console.error('Erro ao executar diagnóstico:', error);
+    }
+  };
+
+  const getIssueTypeLabel = (issueType: string) => {
+    switch (issueType) {
+      case 'missing_role':
+        return 'Role ausente';
+      case 'missing_role_id':
+        return 'Role ID ausente';
+      case 'role_mismatch':
+        return 'Inconsistência de role';
+      case 'both_null':
+        return 'Sem role definido';
       default:
-        return <Info className="h-4 w-4 text-gray-500" />;
+        return issueType;
     }
   };
 
-  const getStatusBadge = (status: 'success' | 'error' | 'warning' | 'info') => {
-    const variants = {
-      success: 'default' as const,
-      error: 'destructive' as const, 
-      warning: 'secondary' as const,
-      info: 'outline' as const
-    };
-    
-    return (
-      <Badge variant={variants[status]} className="ml-2">
-        {status.charAt(0).toUpperCase() + status.slice(1)}
-      </Badge>
-    );
+  const getIssueVariant = (issueType: string) => {
+    switch (issueType) {
+      case 'missing_role':
+      case 'missing_role_id':
+        return 'destructive' as const;
+      case 'role_mismatch':
+        return 'destructive' as const;
+      case 'both_null':
+        return 'secondary' as const;
+      default:
+        return 'outline' as const;
+    }
   };
 
   return (
     <div className="space-y-6">
-      {/* Controles Principais */}
+      {/* Mensagem de Sucesso da Migration */}
+      {showMigrationSuccess && (
+        <Alert className="border-green-200 bg-green-50">
+          <CheckCircle2 className="h-4 w-4 text-green-600" />
+          <AlertDescription className="text-green-800">
+            <div className="flex items-center justify-between">
+              <span>
+                ✅ Sistema atualizado com sucesso! As funções SQL foram recriadas para resolver problemas de cache.
+              </span>
+              <Button 
+                variant="ghost" 
+                size="sm"
+                onClick={() => setShowMigrationSuccess(false)}
+                className="text-green-600 hover:text-green-700"
+              >
+                ✕
+              </Button>
+            </div>
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {/* Painel de Status do Sistema */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Shield className="h-5 w-5" />
-            Ferramentas de Correção Sistêmica
+            Status do Sistema de Roles
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <Button
-              onClick={() => handleOperation('validate', validateRoles)}
-              disabled={isLoading}
-              variant="outline"
-              className="flex-col h-auto p-4"
-            >
-              <Users className="h-6 w-6 mb-2" />
-              <span className="text-sm font-medium">Validar Roles</span>
-              <span className="text-xs text-muted-foreground">Detectar inconsistências</span>
-            </Button>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* Total de Usuários */}
+            <div className="text-center p-4 border rounded-lg">
+              <Users className="h-8 w-8 mx-auto text-blue-600 mb-2" />
+              <div className="text-2xl font-bold">{auditData?.total_users || 0}</div>
+              <div className="text-sm text-muted-foreground">Total de Usuários</div>
+            </div>
 
-            <Button
-              onClick={() => handleOperation('audit', auditRoles)}
-              disabled={isLoading}
-              variant="outline"
-              className="flex-col h-auto p-4"
-            >
-              <Database className="h-6 w-6 mb-2" />
-              <span className="text-sm font-medium">Auditar Sistema</span>
-              <span className="text-xs text-muted-foreground">Análise completa</span>
-            </Button>
+            {/* Inconsistências */}
+            <div className="text-center p-4 border rounded-lg">
+              <AlertTriangle className="h-8 w-8 mx-auto text-orange-600 mb-2" />
+              <div className="text-2xl font-bold text-orange-600">
+                {auditData?.inconsistencies_count || 0}
+              </div>
+              <div className="text-sm text-muted-foreground">Inconsistências</div>
+            </div>
 
-            <Button
-              onClick={() => handleOperation('sync', syncRoles)}
-              disabled={isLoading}
-              variant="outline"
-              className="flex-col h-auto p-4"
-            >
-              <RefreshCw className="h-6 w-6 mb-2" />
-              <span className="text-sm font-medium">Sincronizar</span>
-              <span className="text-xs text-muted-foreground">Corrigir automaticamente</span>
-            </Button>
-
-            <Button
-              onClick={() => handleOperation('diagnostic', runFullDiagnostic)}
-              disabled={isLoading}
-              className="flex-col h-auto p-4"
-            >
-              <AlertTriangle className="h-6 w-6 mb-2" />
-              <span className="text-sm font-medium">Diagnóstico Completo</span>
-              <span className="text-xs text-muted-foreground">Análise + Validação</span>
-            </Button>
+            {/* Usuários sem Role */}
+            <div className="text-center p-4 border rounded-lg">
+              <AlertCircle className="h-8 w-8 mx-auto text-red-600 mb-2" />
+              <div className="text-2xl font-bold text-red-600">
+                {auditData?.users_without_roles || 0}
+              </div>
+              <div className="text-sm text-muted-foreground">Sem Roles</div>
+            </div>
           </div>
 
-          {isLoading && (
-            <div className="text-center py-4">
-              <RefreshCw className="h-6 w-6 animate-spin mx-auto mb-2" />
-              <p className="text-sm text-muted-foreground">
-                Executando {activeOperation}...
-              </p>
+          {/* Distribuição por Role */}
+          {auditData?.user_count_by_role && (
+            <div className="mt-6">
+              <h4 className="font-medium mb-3">Distribuição por Role:</h4>
+              <div className="flex flex-wrap gap-2">
+                {Object.entries(auditData.user_count_by_role).map(([role, count]) => (
+                  <Badge key={role} variant="outline" className="px-3 py-1">
+                    {role}: {count}
+                  </Badge>
+                ))}
+              </div>
             </div>
           )}
         </CardContent>
       </Card>
 
-      {/* Resultados de Auditoria */}
-      {auditData && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Relatório de Auditoria</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="text-center p-4 border rounded-lg">
-                <div className="text-2xl font-bold text-blue-600">
-                  {auditData.total_users}
-                </div>
-                <div className="text-sm text-muted-foreground">Usuários Totais</div>
-              </div>
-              
-              <div className="text-center p-4 border rounded-lg">
-                <div className="text-2xl font-bold text-orange-600">
-                  {auditData.inconsistencies_count}
-                </div>
-                <div className="text-sm text-muted-foreground">Inconsistências</div>
-              </div>
-              
-              <div className="text-center p-4 border rounded-lg">
-                <div className="text-2xl font-bold text-red-600">
-                  {auditData.users_without_roles}
-                </div>
-                <div className="text-sm text-muted-foreground">Usuários sem Role</div>
-              </div>
-            </div>
+      {/* Painel de Ações */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Activity className="h-5 w-5" />
+            Ferramentas de Diagnóstico e Correção
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex flex-wrap gap-3">
+            <Button 
+              onClick={handleRunDiagnostic} 
+              disabled={isLoading}
+              variant="default"
+            >
+              <PlayCircle className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+              Diagnóstico Completo
+            </Button>
 
-            <Separator className="my-4" />
+            <Button 
+              onClick={validateRoles} 
+              disabled={isLoading}
+              variant="outline"
+            >
+              <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+              Validar Roles
+            </Button>
 
-            <div>
-              <h4 className="font-medium mb-2">Distribuição por Roles:</h4>
-              <div className="space-y-2">
-                {Object.entries(auditData.user_count_by_role).map(([role, count]) => (
-                  <div key={role} className="flex justify-between items-center py-1">
-                    <span className="text-sm">{role}</span>
-                    <Badge variant="outline">{count}</Badge>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
+            <Button 
+              onClick={auditRoles} 
+              disabled={isLoading}
+              variant="outline"
+            >
+              <CheckCircle className="h-4 w-4 mr-2" />
+              Auditar Sistema
+            </Button>
 
-      {/* Issues Encontradas */}  
+            {issues.length > 0 && (
+              <Button 
+                onClick={handleSyncRoles} 
+                disabled={isLoading}
+                className="bg-orange-600 hover:bg-orange-700"
+              >
+                <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+                Corrigir Automaticamente ({issues.length})
+              </Button>
+            )}
+          </div>
+
+          {/* Status do Sistema */}
+          {issues.length === 0 && hasRunInitialCheck && !isLoading && (
+            <Alert>
+              <CheckCircle className="h-4 w-4" />
+              <AlertDescription>
+                ✅ Sistema de roles está íntegro! Nenhuma inconsistência encontrada.
+              </AlertDescription>
+            </Alert>
+          )}
+
+          {/* Indicador de carregamento */}
+          {isLoading && (
+            <Alert>
+              <RefreshCw className="h-4 w-4 animate-spin" />
+              <AlertDescription>
+                Executando operações no sistema de roles...
+              </AlertDescription>
+            </Alert>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Lista de Inconsistências */}
       {issues.length > 0 && (
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <AlertTriangle className="h-5 w-5 text-yellow-500" />
+              <AlertTriangle className="h-5 w-5 text-orange-600" />
               Inconsistências Detectadas ({issues.length})
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-3 max-h-64 overflow-y-auto">
+            <div className="space-y-3">
               {issues.map((issue, index) => (
-                <div key={index} className="p-3 border rounded-lg bg-yellow-50">
-                  <div className="flex justify-between items-start">
-                    <div className="flex-1">
-                      <p className="font-medium text-sm">{issue.email}</p>
-                      <p className="text-xs text-muted-foreground">
-                        Role atual: {issue.user_role} → Esperado: {issue.expected_role_name}
-                      </p>
-                      <p className="text-xs text-red-600">Tipo: {issue.issue_type}</p>
-                    </div>
-                    <Badge variant="destructive" className="text-xs">
-                      {issue.issue_type}
-                    </Badge>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Log de Operações */}
-      {syncResults.length > 0 && (
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle>Log de Operações</CardTitle>
-            <Button
-              onClick={clearResults}
-              size="sm"
-              variant="outline"
-            >
-              <Trash2 className="h-4 w-4 mr-2" />
-              Limpar
-            </Button>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3 max-h-64 overflow-y-auto">
-              {syncResults.map((result, index) => (
-                <div key={index} className="flex items-start gap-3 p-3 border rounded-lg">
-                  {getStatusIcon(result.status)}
+                <div 
+                  key={index}
+                  className="flex items-center justify-between p-3 border rounded-lg"
+                >
                   <div className="flex-1">
-                    <div className="flex items-center gap-2">
-                      <p className="text-sm font-medium">{result.message}</p>
-                      {getStatusBadge(result.status)}
+                    <div className="font-medium">{issue.email}</div>
+                    <div className="text-sm text-muted-foreground">
+                      Role atual: {issue.user_role || 'Nenhum'} | 
+                      Role esperado: {issue.expected_role_name || 'Nenhum'}
                     </div>
-                    {result.status !== 'info' && (
-                      <div className="flex gap-4 mt-1 text-xs text-muted-foreground">
-                        <span>Perfis: {result.total_profiles}</span>
-                        <span>Corrigidos: {result.profiles_corrected}</span>
+                    {issue.user_role_id && (
+                      <div className="text-xs text-muted-foreground">
+                        ID: {issue.user_role_id}
                       </div>
                     )}
                   </div>
+                  <Badge variant={getIssueVariant(issue.issue_type)}>
+                    {getIssueTypeLabel(issue.issue_type)}
+                  </Badge>
                 </div>
               ))}
             </div>

@@ -1,77 +1,54 @@
 
-import { useState, useCallback } from 'react';
-import { toast } from 'sonner';
+import { useState } from 'react';
+import { useModeration } from '@/hooks/admin/useModeration';
+
+type ReportType = 'spam' | 'inappropriate' | 'harassment' | 'misinformation' | 'other';
 
 export const useReporting = () => {
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [reportData, setReportData] = useState<{
-    type: string;
-    itemId: string;
-    reportedUserId?: string;
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
+  const [reportTarget, setReportTarget] = useState<{
+    type: 'topic' | 'post';
+    id: string;
+    userId?: string;
   } | null>(null);
+  
+  const { createReport } = useModeration();
 
-  const submitReport = useCallback(async (
-    reportData: {
-      reason: string;
-      description?: string;
-      topicId?: string;
-      postId?: string;
-      reportedUserId?: string;
-    }
-  ) => {
-    setIsSubmitting(true);
-    
-    try {
-      // Simulate report submission since table doesn't exist
-      console.log('Simulando envio de denúncia:', reportData);
-      
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      toast.success('Denúncia enviada com sucesso! Nossa equipe irá analisar.');
-      return true;
-    } catch (error) {
-      console.error('Erro ao enviar denúncia:', error);
-      toast.error('Erro ao enviar denúncia. Tente novamente.');
-      return false;
-    } finally {
-      setIsSubmitting(false);
-    }
-  }, []);
+  const openReportModal = (type: 'topic' | 'post', id: string, userId?: string) => {
+    setReportTarget({ type, id, userId });
+    setIsReportModalOpen(true);
+  };
 
-  const getReports = useCallback(async (filters?: any) => {
-    try {
-      // Simulate getting reports since table doesn't exist
-      console.log('Simulando busca de denúncias com filtros:', filters);
-      
-      return {
-        data: [],
-        count: 0
-      };
-    } catch (error) {
-      console.error('Erro ao buscar denúncias:', error);
-      return { data: [], count: 0 };
-    }
-  }, []);
+  const closeReportModal = () => {
+    setIsReportModalOpen(false);
+    setReportTarget(null);
+  };
 
-  const openReportModal = useCallback((type: string, itemId: string, reportedUserId?: string) => {
-    setReportData({ type, itemId, reportedUserId });
-    setIsModalOpen(true);
-  }, []);
+  const submitReport = async (reportData: {
+    report_type: ReportType;
+    reason: string;
+    description?: string;
+  }) => {
+    if (!reportTarget) return;
 
-  const closeReportModal = useCallback(() => {
-    setIsModalOpen(false);
-    setReportData(null);
-  }, []);
+    const payload = {
+      ...reportData,
+      ...(reportTarget.type === 'topic' 
+        ? { topic_id: reportTarget.id } 
+        : { post_id: reportTarget.id }
+      ),
+      ...(reportTarget.userId && { reported_user_id: reportTarget.userId })
+    };
+
+    await createReport(payload);
+    closeReportModal();
+  };
 
   return {
-    submitReport,
-    getReports,
-    isSubmitting,
+    isReportModalOpen,
+    reportTarget,
     openReportModal,
     closeReportModal,
-    isModalOpen,
-    reportData
+    submitReport
   };
 };

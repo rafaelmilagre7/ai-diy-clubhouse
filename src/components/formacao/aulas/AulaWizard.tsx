@@ -1,523 +1,726 @@
+import React, { useState, useEffect } from 'react';
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import * as z from "zod";
 
-import { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Switch } from '@/components/ui/switch';
-import { Badge } from '@/components/ui/badge';
-import { Upload, Video, FileText, Image, Plus, X, Save, ArrowLeft, ArrowRight } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/lib/supabase';
+import { 
+  Form, 
+  FormControl, 
+  FormField, 
+  FormItem, 
+  FormLabel, 
+  FormMessage,
+  FormDescription
+} from "@/components/ui/form"
+import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/button"
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogDescription, 
+  DialogFooter, 
+  DialogHeader, 
+  DialogTitle
+} from "@/components/ui/dialog"
+import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch"
+import { Label } from "@/components/ui/label"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useToast } from "@/hooks/use-toast";
+import { LearningLesson, LearningModule, supabase } from "@/lib/supabase";
+import { Editor } from "@/components/editor/Editor";
+import { VideoUpload } from "@/components/formacao/comum/VideoUpload";
+import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
+import { Plus, GripVertical } from "lucide-react";
+import { toast } from "sonner";
+import { VideoFormValues } from "@/lib/supabase/types";
+
+const formSchema = z.object({
+  title: z.string().min(2, {
+    message: "O título deve ter pelo menos 2 caracteres.",
+  }),
+  description: z.string().optional(),
+  moduleId: z.string().uuid({
+    message: "Por favor, selecione um módulo válido.",
+  }),
+  coverImageUrl: z.string().optional(),
+  aiAssistantEnabled: z.boolean().default(false),
+  aiAssistantPrompt: z.string().optional(),
+  published: z.boolean().default(false),
+  orderIndex: z.number().optional().default(0),
+  videos: z.array(
+    z.object({
+      id: z.string().optional(),
+      title: z.string().optional(),
+      description: z.string().optional(),
+      url: z.string().url("Por favor, insira uma URL válida").optional(),
+      type: z.string().optional(),
+      fileName: z.string().optional(),
+      filePath: z.string().optional(),
+      fileSize: z.number().optional(),
+      duration_seconds: z.number().optional(),
+      video_id: z.string().optional(),
+      thumbnail_url: z.string().optional(),
+    })
+  ).optional().default([])
+})
 
 interface AulaWizardProps {
-  moduleId: string;
-  lessonId?: string;
-  onComplete: () => void;
-  onCancel: () => void;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  aula?: LearningLesson | null;
+  moduleId?: string | null;
+  onSuccess?: () => void;
 }
 
-interface VideoData {
-  id: string;
-  title: string;
-  description: string;
-  url: string;
-  video_type: string;
-  video_file_name?: string;
-  video_file_path?: string;
-  file_size_bytes?: number;
-  duration_seconds?: number;
-  thumbnail_url?: string;
-  video_id?: string;
-}
+type FormSchema = z.infer<typeof formSchema>
 
-interface Module {
-  id: string;
-  title: string;
-  description: string;
-  cover_image_url: string;
-  course_id: string;
-  published: boolean;
-  created_at: string;
-  updated_at: string;
-  order_index: number;
-}
+const AulaWizard: React.FC<AulaWizardProps> = ({ open, onOpenChange, aula, moduleId, onSuccess }) => {
+  const [isSaving, setIsSaving] = useState(false);
+  const [modules, setModules] = useState<LearningModule[]>([]);
+  const { toast: hookToast } = useToast();
 
-export const AulaWizard = ({ moduleId, lessonId, onComplete, onCancel }: AulaWizardProps) => {
-  const [currentStep, setCurrentStep] = useState(1);
-  const [lessonData, setLessonData] = useState({
-    title: '',
-    description: '',
-    content: '',
-    estimated_time_minutes: 0,
-    difficulty_level: 'beginner',
-    published: false,
-    ai_assistant_enabled: true,
-    ai_assistant_prompt: '',
-    cover_image_url: ''
-  });
+  // Carregamos os vídeos da aula para o estado local
+  const [aulaVideos, setAulaVideos] = useState<VideoFormValues[]>([]);
   
-  const [videos, setVideos] = useState<VideoData[]>([]);
-  const [modules, setModules] = useState<Module[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const { toast } = useToast();
-
-  // Buscar vídeos existentes se editando
   useEffect(() => {
-    if (lessonId) {
-      fetchExistingVideos();
+    // Se tiver aula e ID, buscar vídeos
+    if (aula?.id) {
+      const fetchVideos = async () => {
+        try {
+          const { data, error } = await supabase
+            .from("learning_lesson_videos")
+            .select("*")
+            .eq("lesson_id", aula.id)
+            .order("order_index", { ascending: true });
+            
+          if (error) throw error;
+          
+          if (data) {
+            const formattedVideos: VideoFormValues[] = data.map(video => ({
+              id: video.id,
+              title: video.title,
+              description: video.description || "",
+              url: video.url,
+              type: video.video_type || "youtube",
+              fileName: video.video_file_name || undefined,
+              filePath: video.video_file_path || undefined,
+              fileSize: video.file_size_bytes || undefined,
+              duration_seconds: video.duration_seconds || undefined,
+              thumbnail_url: video.thumbnail_url || undefined,
+              video_id: video.video_id || undefined
+            }));
+            
+            setAulaVideos(formattedVideos);
+          }
+        } catch (error) {
+          console.error("Erro ao buscar vídeos da aula:", error);
+        }
+      };
+      
+      fetchVideos();
     }
-  }, [lessonId]);
+  }, [aula?.id]);
 
-  // Buscar módulos
+  const defaultValues: Partial<FormSchema> = {
+    title: aula?.title || "",
+    description: aula?.description || "",
+    moduleId: aula?.module_id || moduleId || "",
+    coverImageUrl: aula?.cover_image_url || "",
+    aiAssistantEnabled: aula?.ai_assistant_enabled || false,
+    aiAssistantPrompt: aula?.ai_assistant_prompt || "",
+    published: aula?.published || false,
+    orderIndex: aula?.order_index || 0,
+    videos: aulaVideos || []
+  };
+
+  const form = useForm<FormSchema>({
+    resolver: zodResolver(formSchema),
+    defaultValues,
+    mode: "onChange"
+  });
+
+  // Redefinir o formulário quando a aula ou os vídeos mudarem
   useEffect(() => {
+    if (aula || aulaVideos.length > 0) {
+      form.reset({
+        ...defaultValues,
+        videos: aulaVideos
+      });
+    }
+  }, [aula, moduleId, aulaVideos, form]);
+
+  useEffect(() => {
+    const fetchModules = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('learning_modules')
+          .select('*')
+          .order('title');
+
+        if (error) {
+          console.error("Erro ao buscar módulos:", error);
+          hookToast({
+            title: "Erro ao carregar",
+            description: "Falha ao carregar a lista de módulos.",
+            variant: "destructive",
+          });
+          return;
+        }
+
+        setModules(data || []);
+      } catch (error) {
+        console.error("Erro ao buscar módulos:", error);
+        hookToast({
+          title: "Erro ao carregar",
+          description: "Falha ao carregar a lista de módulos.",
+          variant: "destructive",
+        });
+      }
+    };
+
     fetchModules();
   }, []);
 
-  const fetchExistingVideos = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('learning_lesson_videos')
-        .select('*')
-        .eq('lesson_id', lessonId as any)
-        .order('order_index');
-
-      if (error) throw error;
-
-      if (data) {
-        const mappedVideos: VideoData[] = (data as any[]).map(video => ({
-          id: (video as any).id,
-          title: (video as any).title,
-          description: (video as any).description,
-          url: (video as any).url,
-          video_type: (video as any).video_type,
-          video_file_name: (video as any).video_file_name,
-          video_file_path: (video as any).video_file_path,
-          file_size_bytes: (video as any).file_size_bytes,
-          duration_seconds: (video as any).duration_seconds,
-          thumbnail_url: (video as any).thumbnail_url,
-          video_id: (video as any).video_id
-        }));
-        setVideos(mappedVideos);
+  const calculateTotalDuration = (videos: VideoFormValues[]): number => {
+    if (!videos || videos.length === 0) return 0;
+    
+    let totalDuration = 0;
+    for (const video of videos) {
+      if (video.duration_seconds) {
+        totalDuration += video.duration_seconds;
       }
-    } catch (error) {
-      console.error('Erro ao buscar vídeos:', error);
-      toast({
-        title: "Erro",
-        description: "Não foi possível carregar os vídeos existentes.",
-        variant: "destructive",
-      });
     }
+    
+    // Converter segundos para minutos e arredondar para cima
+    return Math.ceil(totalDuration / 60);
   };
 
-  const fetchModules = async () => {
+  const handleSaveVideos = async (lessonId: string, videos: VideoFormValues[]) => {
     try {
-      setIsLoading(true);
-      const { data, error } = await supabase
-        .from('learning_modules')
-        .select('*')
-        .order('order_index');
-
-      if (error) throw error;
-
-      if (data) {
-        setModules((data as any) || []);
-      }
-    } catch (error) {
-      console.error('Erro ao buscar módulos:', error);
-      toast({
-        title: "Erro",
-        description: "Não foi possível carregar os módulos.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleLessonSubmit = async () => {
-    try {
-      setIsLoading(true);
+      console.log("Salvando vídeos para a aula:", lessonId);
+      console.log("Vídeos a salvar:", videos);
       
-      const lessonPayload = {
-        module_id: moduleId,
-        title: lessonData.title,
-        description: lessonData.description,
-        content: JSON.stringify({ blocks: [] }), // Estrutura básica
-        estimated_time_minutes: lessonData.estimated_time_minutes,
-        difficulty_level: lessonData.difficulty_level,
-        published: lessonData.published,
-        ai_assistant_enabled: lessonData.ai_assistant_enabled,
-        ai_assistant_prompt: lessonData.ai_assistant_prompt,
-        cover_image_url: lessonData.cover_image_url,
-        order_index: 0
-      };
+      if (!videos || videos.length === 0) {
+        console.log("Nenhum vídeo para salvar.");
+        return;
+      }
+      
+      // Primeiro, remover todos os vídeos existentes
+      if (aula?.id) {
+        const { error: deleteError } = await supabase
+          .from('learning_lesson_videos')
+          .delete()
+          .eq('lesson_id', lessonId);
+        
+        if (deleteError) {
+          console.error("Erro ao remover vídeos existentes:", deleteError);
+        }
+      }
+      
+      // Para cada vídeo no formulário
+      for (let i = 0; i < videos.length; i++) {
+        const video = videos[i];
+        
+        // Se o vídeo não tiver URL, pular
+        if (!video.url) {
+          console.log("Vídeo sem URL encontrado, pulando...");
+          continue;
+        }
+        
+        const videoData = {
+          lesson_id: lessonId,
+          title: video.title || "Vídeo sem título",
+          description: video.description || null,
+          url: video.url,
+          order_index: i,
+          video_type: video.type || "youtube",
+          video_file_path: video.filePath || video.video_id || null, // Usar video_id como fallback
+          video_file_name: video.fileName || null,
+          file_size_bytes: video.fileSize || null,
+          duration_seconds: video.duration_seconds || null,
+          thumbnail_url: video.thumbnail_url || null,
+          video_id: video.video_id || null
+        };
+        
+        console.log(`Salvando vídeo ${i + 1}:`, videoData);
+        
+        // Inserir novo vídeo
+        const { error } = await supabase
+          .from('learning_lesson_videos')
+          .insert([videoData]);
+          
+        if (error) {
+          console.error(`Erro ao criar vídeo ${i + 1}:`, error);
+        } else {
+          console.log(`Vídeo ${i + 1} criado com sucesso.`);
+        }
+      }
+      
+      console.log("Todos os vídeos foram salvos com sucesso.");
+      return true;
+    } catch (error) {
+      console.error("Erro ao salvar vídeos:", error);
+      return false;
+    }
+  };
 
-      let result;
+  const onSubmit = async (values: FormSchema) => {
+    try {
+      setIsSaving(true);
+      
+      const lessonId = aula?.id;
+      
+      console.log("Dados do formulário:", values);
+      console.log("ID da aula:", lessonId);
+      console.log("Status de publicação a ser salvo:", values.published);
+      
+      // Calcular o tempo estimado com base nos vídeos
+      const totalDurationMinutes = calculateTotalDuration(values.videos);
+      console.log("Tempo total calculado dos vídeos (minutos):", totalDurationMinutes);
+      
+      // Preparar os dados completos da lição
+      const completeLessonData: Partial<LearningLesson> = {
+        title: values.title,
+        description: values.description || null,
+        module_id: values.moduleId,
+        cover_image_url: values.coverImageUrl || null,
+        estimated_time_minutes: totalDurationMinutes, // Tempo calculado automaticamente
+        ai_assistant_enabled: values.aiAssistantEnabled,
+        ai_assistant_prompt: values.aiAssistantPrompt || null,
+        published: values.published,
+        order_index: values.orderIndex || 0
+      };
+      
+      console.log("Dados completos a serem salvos:", completeLessonData);
+      console.log("Status de publicação a ser salvo:", completeLessonData.published);
+      
       if (lessonId) {
         // Atualizar aula existente
-        result = await supabase
+        console.log("Atualizando aula existente:", lessonId);
+        
+        // 1. Primeiro fazer a atualização sem retorno de dados
+        const { error: updateError } = await supabase
           .from('learning_lessons')
-          .update(lessonPayload as any)
-          .eq('id', lessonId as any)
-          .select()
+          .update(completeLessonData)
+          .eq('id', lessonId);
+          
+        if (updateError) {
+          console.error("Erro ao atualizar aula:", updateError);
+          throw updateError;
+        }
+        
+        // 2. Depois buscar os dados atualizados para verificar
+        const { data: updatedData, error: fetchError } = await supabase
+          .from('learning_lessons')
+          .select('*')
+          .eq('id', lessonId)
           .single();
+          
+        if (fetchError) {
+          console.error("Erro ao buscar aula atualizada:", fetchError);
+          throw fetchError;
+        }
+        
+        console.log("Aula atualizada com sucesso:", updatedData);
+        console.log("Status de publicação após atualização:", updatedData.published);
+        
+        if (updatedData.published !== values.published) {
+          console.warn("AVISO: Status de publicação após atualização não corresponde ao esperado!");
+          console.log("Tentando atualização específica do status de publicação...");
+          
+          // Tenta atualizar especificamente o status de publicação para garantir
+          const { error: pubUpdateError } = await supabase
+            .from('learning_lessons')
+            .update({ published: values.published })
+            .eq('id', lessonId);
+            
+          if (pubUpdateError) {
+            console.error("Erro na atualização específica do status:", pubUpdateError);
+          } else {
+            console.log("Status de publicação atualizado com sucesso!");
+          }
+        }
+        
+        // Atualizar os vídeos da aula
+        await handleSaveVideos(lessonId, values.videos);
+        
+        toast.success("Aula atualizada com sucesso!");
       } else {
         // Criar nova aula
-        result = await supabase
+        console.log("Criando nova aula...");
+        
+        // Verificar se o bucket de vídeos existe para evitar problemas de upload
+        try {
+          const { data: buckets } = await supabase.storage.listBuckets();
+          const bucketExists = buckets?.some(bucket => bucket.name === 'learning_videos');
+          
+          if (!bucketExists) {
+            console.log("Bucket de vídeos não existe, tentando criar...");
+            await supabase.storage.createBucket('learning_videos', {
+              public: true,
+              fileSizeLimit: 104857600, // 100MB
+            });
+            console.log("Bucket de vídeos criado com sucesso!");
+          }
+        } catch (err) {
+          console.log("Erro ao verificar/criar bucket:", err);
+          // Continuamos mesmo em caso de erro, pois o bucket pode existir
+        }
+        
+        const { data, error } = await supabase
           .from('learning_lessons')
-          .insert(lessonPayload as any)
-          .select()
+          .insert([completeLessonData])
+          .select('*')
           .single();
+          
+        if (error) {
+          console.error("Erro ao criar aula:", error);
+          throw error;
+        }
+        
+        console.log("Aula criada com sucesso:", data);
+        
+        // Verificar se os dados foram realmente persistidos
+        const { data: verifyData, error: verifyError } = await supabase
+          .from('learning_lessons')
+          .select('*')
+          .eq('id', data.id)
+          .single();
+          
+        if (verifyError) {
+          console.error("Erro ao verificar aula criada:", verifyError);
+        } else {
+          console.log("Verificação da aula criada:", verifyData);
+          console.log("Status de publicação verificado:", verifyData.published);
+        }
+        
+        // Salvar os vídeos da aula
+        const newLessonId = data.id;
+        await handleSaveVideos(newLessonId, values.videos);
+        
+        toast.success("Aula criada com sucesso!");
       }
-
-      if (result.error) throw result.error;
-
-      toast({
-        title: "Sucesso",
-        description: lessonId ? "Aula atualizada com sucesso!" : "Aula criada com sucesso!",
-      });
-
-      onComplete();
+      
+      if (onSuccess) onSuccess();
+      form.reset(defaultValues);
+      onOpenChange(false);
+      
     } catch (error: any) {
-      console.error('Erro ao salvar aula:', error);
-      toast({
-        title: "Erro",
-        description: error.message || "Não foi possível salvar a aula.",
-        variant: "destructive",
-      });
+      console.error("Erro ao salvar aula:", error);
+      toast.error(`Erro ao salvar aula: ${error.message || "Ocorreu um erro ao tentar salvar."}`);
     } finally {
-      setIsLoading(false);
+      setIsSaving(false);
     }
   };
 
-  const addVideo = () => {
-    const newVideo: VideoData = {
-      id: `temp-${Date.now()}`,
-      title: '',
-      description: '',
-      url: '',
-      video_type: 'youtube'
-    };
-    setVideos([...videos, newVideo]);
+  const handleCancel = () => {
+    form.reset(defaultValues);
+    onOpenChange(false);
   };
 
-  const removeVideo = (index: number) => {
-    setVideos(videos.filter((_, i) => i !== index));
+  const handleVideoChange = (index: number, field: string, value: any) => {
+    const newVideos = [...form.getValues().videos];
+    newVideos[index] = { ...newVideos[index], [field]: value };
+    form.setValue("videos", newVideos);
   };
 
-  const updateVideo = (index: number, field: keyof VideoData, value: string) => {
-    const updatedVideos = [...videos];
-    (updatedVideos[index] as any)[field] = value;
-    setVideos(updatedVideos);
+  const handleAddVideo = () => {
+    const videos = form.getValues().videos || [];
+    form.setValue("videos", [...videos, { url: '', type: 'youtube' }]);
   };
 
-  const renderStep1 = () => (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <FileText className="h-5 w-5" />
-          Informações Básicas da Aula
-        </CardTitle>
-        <CardDescription>
-          Configure as informações principais da sua aula
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-6">
-        <div className="space-y-2">
-          <Label htmlFor="title">Título da Aula</Label>
-          <Input
-            id="title"
-            placeholder="Digite o título da aula"
-            value={lessonData.title}
-            onChange={(e) => setLessonData({ ...lessonData, title: e.target.value })}
-          />
-        </div>
+  const handleRemoveVideo = (index: number) => {
+    const videos = form.getValues().videos || [];
+    const newVideos = [...videos];
+    newVideos.splice(index, 1);
+    form.setValue("videos", newVideos);
+  };
 
-        <div className="space-y-2">
-          <Label htmlFor="description">Descrição</Label>
-          <Textarea
-            id="description"
-            placeholder="Descreva o que será ensinado nesta aula"
-            value={lessonData.description}
-            onChange={(e) => setLessonData({ ...lessonData, description: e.target.value })}
-            rows={3}
-          />
-        </div>
+  const onDragEnd = (result: any) => {
+    if (!result.destination) {
+      return;
+    }
 
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="time">Tempo Estimado (minutos)</Label>
-            <Input
-              id="time"
-              type="number"
-              placeholder="60"
-              value={lessonData.estimated_time_minutes}
-              onChange={(e) => setLessonData({ ...lessonData, estimated_time_minutes: parseInt(e.target.value) || 0 })}
-            />
-          </div>
+    const items = Array.from(form.getValues().videos);
+    const [reorderedItem] = items.splice(result.source.index, 1);
+    items.splice(result.destination.index, 0, reorderedItem);
 
-          <div className="space-y-2">
-            <Label htmlFor="difficulty">Nível de Dificuldade</Label>
-            <Select 
-              value={lessonData.difficulty_level} 
-              onValueChange={(value) => setLessonData({ ...lessonData, difficulty_level: value })}
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="beginner">Iniciante</SelectItem>
-                <SelectItem value="intermediate">Intermediário</SelectItem>
-                <SelectItem value="advanced">Avançado</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="cover">URL da Imagem de Capa</Label>
-          <Input
-            id="cover"
-            placeholder="https://exemplo.com/imagem.jpg"
-            value={lessonData.cover_image_url}
-            onChange={(e) => setLessonData({ ...lessonData, cover_image_url: e.target.value })}
-          />
-        </div>
-
-        <div className="flex items-center space-x-2">
-          <Switch
-            id="published"
-            checked={lessonData.published}
-            onCheckedChange={(checked) => setLessonData({ ...lessonData, published: checked })}
-          />
-          <Label htmlFor="published">Publicar aula imediatamente</Label>
-        </div>
-
-        <div className="flex items-center space-x-2">
-          <Switch
-            id="ai-assistant"
-            checked={lessonData.ai_assistant_enabled}
-            onCheckedChange={(checked) => setLessonData({ ...lessonData, ai_assistant_enabled: checked })}
-          />
-          <Label htmlFor="ai-assistant">Habilitar assistente de IA</Label>
-        </div>
-
-        {lessonData.ai_assistant_enabled && (
-          <div className="space-y-2">
-            <Label htmlFor="ai-prompt">Prompt do Assistente de IA</Label>
-            <Textarea
-              id="ai-prompt"
-              placeholder="Instruções para o assistente de IA sobre como ajudar nesta aula"
-              value={lessonData.ai_assistant_prompt}
-              onChange={(e) => setLessonData({ ...lessonData, ai_assistant_prompt: e.target.value })}
-              rows={3}
-            />
-          </div>
-        )}
-      </CardContent>
-    </Card>
-  );
-
-  const renderStep2 = () => (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Video className="h-5 w-5" />
-          Vídeos da Aula
-        </CardTitle>
-        <CardDescription>
-          Adicione os vídeos que farão parte desta aula
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-6">
-        {videos.map((video, index) => (
-          <Card key={video.id} className="p-4">
-            <div className="flex items-start justify-between mb-4">
-              <Badge variant="outline">Vídeo {index + 1}</Badge>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => removeVideo(index)}
-                className="text-destructive hover:text-destructive"
-              >
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
-            
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label>Título do Vídeo</Label>
-                <Input
-                  placeholder="Digite o título do vídeo"
-                  value={video.title}
-                  onChange={(e) => updateVideo(index, 'title', e.target.value)}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label>Descrição</Label>
-                <Textarea
-                  placeholder="Descrição do vídeo"
-                  value={video.description}
-                  onChange={(e) => updateVideo(index, 'description', e.target.value)}
-                  rows={2}
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>Tipo de Vídeo</Label>
-                  <Select 
-                    value={video.video_type} 
-                    onValueChange={(value) => updateVideo(index, 'video_type', value)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="youtube">YouTube</SelectItem>
-                      <SelectItem value="vimeo">Vimeo</SelectItem>
-                      <SelectItem value="upload">Upload Direto</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label>URL do Vídeo</Label>
-                  <Input
-                    placeholder="https://youtube.com/watch?v=..."
-                    value={video.url}
-                    onChange={(e) => updateVideo(index, 'url', e.target.value)}
-                  />
-                </div>
-              </div>
-            </div>
-          </Card>
-        ))}
-
-        <Button onClick={addVideo} variant="outline" className="w-full">
-          <Plus className="h-4 w-4 mr-2" />
-          Adicionar Vídeo
-        </Button>
-      </CardContent>
-    </Card>
-  );
-
-  const renderStep3 = () => (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Save className="h-5 w-5" />
-          Revisão e Finalização
-        </CardTitle>
-        <CardDescription>
-          Revise as informações antes de salvar a aula
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-6">
-        <div className="bg-muted p-4 rounded-lg space-y-2">
-          <h3 className="font-semibold">{lessonData.title}</h3>
-          <p className="text-sm text-muted-foreground">{lessonData.description}</p>
-          <div className="flex gap-2 text-xs">
-            <Badge variant="outline">{lessonData.difficulty_level}</Badge>
-            <Badge variant="outline">{lessonData.estimated_time_minutes} min</Badge>
-            {lessonData.published && <Badge>Publicada</Badge>}
-          </div>
-        </div>
-
-        {videos.length > 0 && (
-          <div>
-            <h4 className="font-medium mb-2">Vídeos ({videos.length})</h4>
-            <div className="space-y-2">
-              {videos.map((video, index) => (
-                <div key={video.id} className="bg-muted p-3 rounded text-sm">
-                  <div className="font-medium">{video.title || `Vídeo ${index + 1}`}</div>
-                  <div className="text-muted-foreground">{video.video_type}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        <Button 
-          onClick={handleLessonSubmit} 
-          className="w-full" 
-          disabled={isLoading || !lessonData.title}
-        >
-          {isLoading ? 'Salvando...' : (lessonId ? 'Atualizar Aula' : 'Criar Aula')}
-        </Button>
-      </CardContent>
-    </Card>
-  );
+    form.setValue("videos", items);
+  };
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">
-            {lessonId ? 'Editar Aula' : 'Nova Aula'}
-          </h1>
-          <p className="text-muted-foreground">
-            Passo {currentStep} de 3
-          </p>
-        </div>
-        <Button variant="outline" onClick={onCancel}>
-          Cancelar
-        </Button>
-      </div>
-
-      {/* Progress indicator */}
-      <div className="flex items-center space-x-2">
-        {[1, 2, 3].map((step) => (
-          <div key={step} className="flex items-center">
-            <div
-              className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
-                step <= currentStep
-                  ? 'bg-primary text-primary-foreground'
-                  : 'bg-muted text-muted-foreground'
-              }`}
-            >
-              {step}
-            </div>
-            {step < 3 && (
-              <div
-                className={`w-16 h-1 ${
-                  step < currentStep ? 'bg-primary' : 'bg-muted'
-                }`}
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="w-full max-w-3xl max-h-[90vh] overflow-y-auto p-4 sm:p-6">
+        <DialogHeader className="sticky top-0 z-10 bg-background pb-4">
+          <DialogTitle>{aula ? "Editar Aula" : "Criar Nova Aula"}</DialogTitle>
+          <DialogDescription>
+            Preencha os campos abaixo para {aula ? "editar a aula." : "criar uma nova aula."}
+          </DialogDescription>
+        </DialogHeader>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            {/* Campos básicos */}
+            <div className="grid grid-cols-1 gap-4">
+              <FormField
+                control={form.control}
+                name="title"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>1. Título da Aula</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Título da aula" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-            )}
-          </div>
-        ))}
-      </div>
+              
+              <FormField
+                control={form.control}
+                name="description"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>2. Descrição da Aula</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        placeholder="Descrição da aula"
+                        className="min-h-[80px]"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="coverImageUrl"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>3. Imagem da Capa</FormLabel>
+                    <FormControl>
+                      <Editor
+                        value={field.value}
+                        onChange={field.onChange}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="moduleId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Módulo</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione um módulo" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {modules.map((module) => (
+                          <SelectItem key={module.id} value={module.id}>{module.title}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="orderIndex"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>4. Ordem da Aula</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        placeholder="Ordem da aula no módulo"
+                        {...field}
+                        onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                    <FormDescription>
+                      Posição desta aula dentro do módulo
+                    </FormDescription>
+                  </FormItem>
+                )}
+              />
+            </div>
 
-      {/* Step content */}
-      {currentStep === 1 && renderStep1()}
-      {currentStep === 2 && renderStep2()}
-      {currentStep === 3 && renderStep3()}
+            <div className="rounded-lg border p-4 space-y-4">
+              <FormField
+                control={form.control}
+                name="aiAssistantEnabled"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-center justify-between">
+                    <div className="space-y-0.5">
+                      <FormLabel className="text-base">5. Assistente de IA</FormLabel>
+                      <FormDescription>
+                        Ative para permitir assistência de IA nesta aula
+                      </FormDescription>
+                    </div>
+                    <FormControl>
+                      <Switch
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
 
-      {/* Navigation */}
-      {currentStep < 3 && (
-        <div className="flex justify-between">
-          <Button
-            variant="outline"
-            onClick={() => setCurrentStep(currentStep - 1)}
-            disabled={currentStep === 1}
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Anterior
-          </Button>
-          <Button
-            onClick={() => setCurrentStep(currentStep + 1)}
-            disabled={!lessonData.title}
-          >
-            Próximo
-            <ArrowRight className="h-4 w-4 ml-2" />
-          </Button>
-        </div>
-      )}
-    </div>
+              {form.getValues().aiAssistantEnabled && (
+                <FormField
+                  control={form.control}
+                  name="aiAssistantPrompt"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>ID do Assistente de IA</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="ID do assistente (ex: asst_abc123)"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
+            </div>
+
+            <div className="rounded-lg border p-4">
+              <FormLabel className="text-base block mb-4">6. Vídeos da Aula</FormLabel>
+              <FormDescription className="mb-4">
+                Os vídeos adicionados aqui determinarão automaticamente o tempo total da aula
+              </FormDescription>
+              
+              <DragDropContext onDragEnd={onDragEnd}>
+                <Droppable droppableId="videos">
+                  {(provided) => (
+                    <div {...provided.droppableProps} ref={provided.innerRef} className="space-y-4">
+                      {form.getValues().videos?.map((video, index) => (
+                        <Draggable key={index} draggableId={`video-${index}`} index={index}>
+                          {(provided) => (
+                            <div
+                              ref={provided.innerRef}
+                              {...provided.draggableProps}
+                              className="border rounded-md p-4"
+                            >
+                              <div className="flex items-center justify-between mb-2">
+                                <div className="flex items-center">
+                                  <div {...provided.dragHandleProps} className="cursor-grab mr-2">
+                                    <GripVertical className="h-4 w-4 text-gray-500" />
+                                  </div>
+                                  <span className="font-medium">Vídeo {index + 1}</span>
+                                </div>
+                                <Button 
+                                  type="button" 
+                                  variant="ghost" 
+                                  size="sm" 
+                                  onClick={() => handleRemoveVideo(index)}
+                                >
+                                  Remover
+                                </Button>
+                              </div>
+
+                              <div className="space-y-3">
+                                <Input
+                                  placeholder="Título do vídeo"
+                                  value={video.title || ''}
+                                  onChange={(e) => handleVideoChange(index, "title", e.target.value)}
+                                  className="mb-2"
+                                />
+                                
+                                <Textarea
+                                  placeholder="Descrição do vídeo"
+                                  value={video.description || ''}
+                                  onChange={(e) => handleVideoChange(index, "description", e.target.value)}
+                                  className="mb-2 resize-none h-20"
+                                />
+                                
+                                <VideoUpload
+                                  value={video.url || ""}
+                                  videoType={video.type || "youtube"}
+                                  onChange={(url, type, fileName, filePath, fileSize, duration_seconds, thumbnail_url) => {
+                                    handleVideoChange(index, "url", url);
+                                    handleVideoChange(index, "type", type);
+                                    handleVideoChange(index, "fileName", fileName);
+                                    handleVideoChange(index, "filePath", filePath);
+                                    handleVideoChange(index, "fileSize", fileSize);
+                                    handleVideoChange(index, "duration_seconds", duration_seconds);
+                                    handleVideoChange(index, "thumbnail_url", thumbnail_url);
+                                    
+                                    // Se for um vídeo do YouTube, tentar extrair duração (implementação futura)
+                                    // Por enquanto, adicionamos um valor padrão para teste de 300 segundos (5 min)
+                                    // if (type === 'youtube') {
+                                    //   handleVideoChange(index, "duration_seconds", 300);
+                                    // }
+                                  }}
+                                />
+                              </div>
+                            </div>
+                          )}
+                        </Draggable>
+                      ))}
+                      {provided.placeholder}
+                    </div>
+                  )}
+                </Droppable>
+              </DragDropContext>
+
+              <Button type="button" variant="outline" className="mt-4 w-full" onClick={handleAddVideo}>
+                <Plus className="w-4 h-4 mr-2" />
+                Adicionar Vídeo
+              </Button>
+            </div>
+
+            <FormField
+              control={form.control}
+              name="published"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                  <div className="space-y-0.5">
+                    <FormLabel className="text-base">Publicar Aula</FormLabel>
+                    <FormDescription>
+                      Quando publicada, a aula ficará visível para os alunos.
+                    </FormDescription>
+                  </div>
+                  <FormControl>
+                    <Switch
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+
+            <DialogFooter className="pt-4 border-t">
+              <Button type="button" variant="ghost" onClick={handleCancel}>
+                Cancelar
+              </Button>
+              <Button type="submit" disabled={isSaving}>
+                {isSaving ? "Salvando..." : "Salvar Aula"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </Form>
+      </DialogContent>
+    </Dialog>
   );
 };
+
+export default AulaWizard;

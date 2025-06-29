@@ -3,6 +3,7 @@ import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/comp
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { UseFormReturn } from "react-hook-form";
 import { ToolFormValues } from "../../types/toolFormTypes";
+import { ToolCategory } from "@/types/toolTypes";
 
 interface CategoryInputProps {
   form: UseFormReturn<ToolFormValues>;
@@ -11,7 +12,7 @@ interface CategoryInputProps {
 export const CategoryInput = ({ form }: CategoryInputProps) => {
   const handleCategoryChange = (value: string) => {
     // Atualiza o valor no formulário
-    form.setValue('category', value as any, { 
+    form.setValue('category', value as ToolCategory, { 
       shouldDirty: true, 
       shouldTouch: true,
       shouldValidate: true 
@@ -50,7 +51,6 @@ export const CategoryInput = ({ form }: CategoryInputProps) => {
               <SelectItem value="Produtividade e Organização">Produtividade e Organização</SelectItem>
               <SelectItem value="Desenvolvimento e Código">Desenvolvimento e Código</SelectItem>
               <SelectItem value="Plataformas de Mídia">Plataformas de Mídia</SelectItem>
-              <SelectItem value="Outros">Outros</SelectItem>
             </SelectContent>
           </Select>
           <FormMessage />

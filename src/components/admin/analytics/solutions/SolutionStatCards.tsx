@@ -1,69 +1,80 @@
 
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Target, CheckCircle, TrendingUp, Users } from 'lucide-react';
+import { StatCard } from '@/components/admin/dashboard/StatCard';
+import { BookOpen, FileCheck, Clock, Award } from 'lucide-react';
 
 interface SolutionStatCardsProps {
-  data: {
-    totalSolutions: number;
-    publishedSolutions: number;
-    totalImplementations: number;
-    averageCompletionRate: number;
-    // Remover trends hardcoded
-  };
+  totalSolutions: number;
+  publishedSolutions: number;
+  drafts: number;
+  avgCompletionRate: number;
+  loading: boolean;
 }
 
-export const SolutionStatCards = ({ data }: SolutionStatCardsProps) => {
-  const stats = [
-    {
-      title: 'Total de Soluções',
-      value: data.totalSolutions,
-      icon: Target,
-      description: 'Soluções criadas na plataforma'
-    },
-    {
-      title: 'Soluções Publicadas',
-      value: data.publishedSolutions,
-      icon: CheckCircle,
-      description: 'Soluções disponíveis para implementação'
-    },
-    {
-      title: 'Implementações Totais',
-      value: data.totalImplementations,
-      icon: Users,
-      description: 'Número total de implementações iniciadas'
-    },
-    {
-      title: 'Taxa Média de Conclusão',
-      value: `${data.averageCompletionRate.toFixed(1)}%`,
-      icon: TrendingUp,
-      description: 'Percentual médio de conclusão das implementações'
-    }
-  ];
+export const SolutionStatCards: React.FC<SolutionStatCardsProps> = ({
+  totalSolutions,
+  publishedSolutions,
+  drafts,
+  avgCompletionRate,
+  loading
+}) => {
+  if (loading) {
+    return (
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <StatCard 
+          title="Total de Soluções" 
+          value="-" 
+          icon={<BookOpen className="h-6 w-6" />}
+          colorScheme="blue"
+        />
+        <StatCard 
+          title="Soluções Publicadas" 
+          value="-" 
+          icon={<FileCheck className="h-6 w-6" />}
+          colorScheme="green"
+        />
+        <StatCard 
+          title="Rascunhos" 
+          value="-" 
+          icon={<Clock className="h-6 w-6" />}
+          colorScheme="orange"
+        />
+        <StatCard 
+          title="Taxa Média de Conclusão" 
+          value="-" 
+          icon={<Award className="h-6 w-6" />}
+          colorScheme="blue"
+        />
+      </div>
+    );
+  }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-      {stats.map((stat, index) => {
-        const Icon = stat.icon;
-        
-        return (
-          <Card key={index}>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-                {stat.title}
-              </CardTitle>
-              <Icon className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stat.value}</div>
-              <p className="text-xs text-muted-foreground mt-1">
-                {stat.description}
-              </p>
-              {/* REMOVIDO: trends hardcoded */}
-            </CardContent>
-          </Card>
-        );
-      })}
+    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <StatCard 
+        title="Total de Soluções" 
+        value={totalSolutions} 
+        icon={<BookOpen className="h-6 w-6" />}
+        colorScheme="blue"
+      />
+      <StatCard 
+        title="Soluções Publicadas" 
+        value={publishedSolutions} 
+        icon={<FileCheck className="h-6 w-6" />}
+        colorScheme="green"
+      />
+      <StatCard 
+        title="Rascunhos" 
+        value={drafts} 
+        icon={<Clock className="h-6 w-6" />}
+        colorScheme="orange"
+      />
+      <StatCard 
+        title="Taxa Média de Conclusão" 
+        value={`${avgCompletionRate}%`} 
+        icon={<Award className="h-6 w-6" />}
+        colorScheme="blue"
+      />
     </div>
   );
 };

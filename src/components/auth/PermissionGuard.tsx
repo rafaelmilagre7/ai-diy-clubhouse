@@ -3,7 +3,8 @@ import React, { useEffect, useState } from 'react';
 import { AlertCircle } from 'lucide-react';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useSimpleAuth } from '@/contexts/auth/SimpleAuthProvider';
+import { useAuth } from '@/contexts/auth';
+import { getUserRoleName } from '@/lib/supabase/types';
 
 interface PermissionGuardProps {
   permission: string;
@@ -18,11 +19,11 @@ export const PermissionGuard: React.FC<PermissionGuardProps> = ({
   fallback,
   timeoutSeconds = 1
 }) => {
-  const { profile } = useSimpleAuth();
+  const { profile } = useAuth();
   const [timedOut, setTimedOut] = useState(false);
   
   // Verificação rápida e simplificada - APENAS via banco de dados
-  const isAdmin = profile?.user_roles?.name === 'admin';
+  const isAdmin = getUserRoleName(profile) === 'admin';
   const isLoading = !profile && !timedOut;
   
   // Se é admin, renderiza imediatamente os filhos

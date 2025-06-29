@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/auth";
@@ -174,6 +175,7 @@ const FormacaoCursoDetalhes = () => {
           onOpenChange={setIsCursoDialogOpen}
           curso={curso}
           onSuccess={handleSalvarCurso}
+          userId={profile?.id || ''}
         />
       )}
     </div>

@@ -50,13 +50,6 @@ export interface OnboardingData {
   completedAt?: string;
   startedAt?: string;
   updatedAt?: string;
-  fromInvite?: boolean; // Nova propriedade para identificar se veio de convite
-  inviteToken?: string; // Token do convite
-  
-  // ADICIONADO: Flags de controle para campos vindos do convite
-  isEmailFromInvite?: boolean;
-  isNameFromInvite?: boolean;
-  isPhoneFromInvite?: boolean;
   
   // IA Interativa - mensagens personalizadas para cada etapa
   aiMessage1?: string;

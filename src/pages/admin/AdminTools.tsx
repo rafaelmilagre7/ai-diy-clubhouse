@@ -1,25 +1,11 @@
 
 import React, { useState } from "react";
 import { useTools } from "@/hooks/useTools";
+import { AdminToolList } from "@/components/admin/tools/AdminToolList";
+import { AdminToolsHeader } from "@/components/admin/tools/AdminToolsHeader";
 import LoadingScreen from "@/components/common/LoadingScreen";
 import { Button } from "@/components/ui/button";
 import { RefreshCcw } from "lucide-react";
-import { AdminToolsHeader } from "@/components/admin/tools/AdminToolsHeader";
-
-// Simple component to display tools list
-const AdminToolList = ({ tools, refreshTrigger }: { tools: any[]; refreshTrigger: number }) => {
-  return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-      {tools.map((tool) => (
-        <div key={tool.id} className="p-4 border rounded-lg bg-card">
-          <h3 className="font-semibold">{tool.name}</h3>
-          <p className="text-sm text-muted-foreground">{tool.description}</p>
-          <p className="text-xs text-muted-foreground mt-2">Categoria: {tool.category}</p>
-        </div>
-      ))}
-    </div>
-  );
-};
 
 const AdminTools = () => {
   const { tools, isLoading, error, refetch } = useTools();

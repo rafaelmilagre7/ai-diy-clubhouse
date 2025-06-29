@@ -1,5 +1,5 @@
 
-import { FC, memo } from "react";
+import { FC } from "react";
 import { Solution } from "@/lib/supabase";
 import { SolutionsGrid } from "./SolutionsGrid";
 
@@ -8,8 +8,7 @@ interface CompletedSolutionsProps {
   onSolutionClick: (solution: Solution) => void;
 }
 
-// Componente 100% memoizado para evitar re-renders desnecessários
-export const CompletedSolutions: FC<CompletedSolutionsProps> = memo(({ 
+export const CompletedSolutions: FC<CompletedSolutionsProps> = ({ 
   solutions, 
   onSolutionClick 
 }) => {
@@ -22,6 +21,4 @@ export const CompletedSolutions: FC<CompletedSolutionsProps> = memo(({
       <SolutionsGrid solutions={solutions} onSolutionClick={onSolutionClick} />
     </div>
   );
-});
-
-CompletedSolutions.displayName = 'CompletedSolutions';
+};

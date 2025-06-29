@@ -19,11 +19,9 @@ export const EventCalendar = () => {
   const handleDayClick = (day: Date | undefined) => {
     if (!day) return;
     
-    const eventsOnSelectedDay = events.filter(event => {
-      // Converter o horário UTC do evento para data local para comparação
-      const eventDate = new Date(event.start_time);
-      return isSameDay(eventDate, day);
-    });
+    const eventsOnSelectedDay = events.filter(event => 
+      isSameDay(new Date(event.start_time), day)
+    );
     
     if (eventsOnSelectedDay.length === 1) {
       setSelectedEvent(eventsOnSelectedDay[0]);
@@ -64,10 +62,9 @@ export const EventCalendar = () => {
           onDayClick={handleDayClick}
           selected={selectedDate}
           modifiers={{
-            event: (date) => events.some(event => {
-              const eventDate = new Date(event.start_time);
-              return isSameDay(eventDate, date);
-            })
+            event: (date) => events.some(event => 
+              isSameDay(new Date(event.start_time), date)
+            )
           }}
           modifiersClassNames={{
             event: 'bg-viverblue/10 font-medium text-viverblue hover:bg-viverblue/20 transition-colors'
@@ -90,10 +87,9 @@ export const EventCalendar = () => {
           }}
           components={{
             DayContent: (props) => {
-              const dayEvents = events.filter(event => {
-                const eventDate = new Date(event.start_time);
-                return isSameDay(eventDate, props.date);
-              });
+              const dayEvents = events.filter(event => 
+                isSameDay(new Date(event.start_time), props.date)
+              );
               return (
                 <div className="w-full h-full flex flex-col items-center">
                   <span className="text-sm mb-1">{props.date.getDate()}</span>

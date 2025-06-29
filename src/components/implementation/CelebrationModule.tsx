@@ -1,13 +1,10 @@
 
-import React, { useEffect } from "react";
-import { Module } from "@/lib/supabase";
-import { Card, CardContent } from "@/components/ui/card";
+import React from "react";
 import { Button } from "@/components/ui/button";
-import { CheckCircle, Download, Share2 } from "lucide-react";
-import { shouldAutoComplete } from "@/lib/supabase/types";
-import { useLogging } from "@/hooks/useLogging";
-import { Badge } from "@/components/ui/badge";
-import { safeJsonParseObject, safeToStringContent } from "@/lib/supabase/types";
+import { CheckCircle, Award, Share2, ArrowRight } from "lucide-react";
+import { Module } from "@/lib/supabase";
+import { useNavigate } from "react-router-dom";
+import confetti from 'canvas-confetti';
 
 interface CelebrationModuleProps {
   module: Module;
@@ -15,85 +12,123 @@ interface CelebrationModuleProps {
 }
 
 export const CelebrationModule = ({ module, onComplete }: CelebrationModuleProps) => {
-  const { log } = useLogging();
+  const navigate = useNavigate();
   
-  useEffect(() => {
-    // Auto-complete celebration module after viewing
-    if (shouldAutoComplete(module.type)) {
-      const timer = setTimeout(() => {
-        log("Auto-completing celebration module", { module_id: module.id });
-        onComplete();
-      }, 2000);
-
-      return () => clearTimeout(timer);
-    }
-  }, [module, onComplete, log]);
-
-  const handleDownloadCertificate = () => {
-    log("User requested certificate download", { module_id: module.id });
-    // Certificate download logic would go here
-  };
-
-  const handleShareSuccess = () => {
-    log("User shared success", { module_id: module.id });
-    // Share success logic would go here
-  };
-
-  // Parse content safely
-  const content = safeJsonParseObject(module.content, {});
-  const description = content.description || "Parabéns! Você concluiu esta implementação com sucesso.";
-
+  React.useEffect(() => {
+    // Dispara confetti ao carregar o componente
+    const duration = 5 * 1000;
+    const animationEnd = Date.now() + duration;
+    
+    const randomInRange = (min: number, max: number) => {
+      return Math.random() * (max - min) + min;
+    };
+    
+    const interval: NodeJS.Timeout = setInterval(() => {
+      const timeLeft = animationEnd - Date.now();
+      
+      if (timeLeft <= 0) {
+        return clearInterval(interval);
+      }
+      
+      const particleCount = 50 * (timeLeft / duration);
+      
+      // Dispara confetti dos cantos
+      confetti({
+        particleCount: Math.floor(randomInRange(30, 60)),
+        angle: randomInRange(55, 125),
+        spread: randomInRange(50, 70),
+        origin: { x: 0, y: 0.8 }
+      });
+      
+      confetti({
+        particleCount: Math.floor(randomInRange(30, 60)),
+        angle: randomInRange(55, 125),
+        spread: randomInRange(50, 70),
+        origin: { x: 1, y: 0.8 }
+      });
+    }, 250);
+    
+    return () => clearInterval(interval);
+  }, []);
+  
   return (
-    <div className="max-w-2xl mx-auto text-center space-y-8 py-8">
-      <div className="space-y-4">
-        <div className="mx-auto w-20 h-20 bg-green-100 rounded-full flex items-center justify-center">
-          <CheckCircle className="w-12 h-12 text-green-600" />
+    <div className="max-w-3xl mx-auto space-y-8 py-8 animate-fade-in">
+      <div className="text-center">
+        <div className="inline-flex items-center justify-center h-20 w-20 rounded-full bg-green-100 mb-6">
+          <CheckCircle className="h-10 w-10 text-green-600" />
         </div>
-        
-        <div className="space-y-2">
-          <h1 className="text-3xl font-bold text-gray-900">{module.title}</h1>
-          <div dangerouslySetInnerHTML={{ __html: safeToStringContent(description) }} className="text-lg text-gray-600" />
-        </div>
-
-        <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-          Implementação Concluída
-        </Badge>
+        <h1 className="text-3xl font-bold mb-4">
+          Parabéns! Implementação Concluída
+        </h1>
+        <p className="text-xl text-muted-foreground">
+          Você concluiu com sucesso a implementação desta solução
+        </p>
       </div>
-
-      <Card>
-        <CardContent className="p-6 space-y-4">
-          <h3 className="text-xl font-semibold">Próximos passos</h3>
-          
-          <div className="grid gap-3">
-            <Button 
-              onClick={handleDownloadCertificate}
-              className="w-full"
-              variant="outline"
-            >
-              <Download className="mr-2 h-4 w-4" />
-              Baixar Certificado
-            </Button>
-            
-            <Button 
-              onClick={handleShareSuccess}
-              className="w-full"
-              variant="outline"
-            >
-              <Share2 className="mr-2 h-4 w-4" />
-              Compartilhar Conquista
-            </Button>
-            
-            <Button 
-              onClick={onComplete} 
-              className="w-full bg-[#0ABAB5] hover:bg-[#0ABAB5]/90"
-            >
-              Finalizar
-            </Button>
+      
+      <div className="bg-green-50 p-6 rounded-lg border border-green-100">
+        <h2 className="text-xl font-semibold mb-4 flex items-center">
+          <Award className="mr-2 h-6 w-6 text-viverblue" />
+          Suas conquistas
+        </h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="bg-white p-4 rounded-lg shadow-sm text-center">
+            <div className="text-3xl font-bold text-viverblue">1</div>
+            <div className="text-sm text-muted-foreground">Solução Implementada</div>
           </div>
-        </CardContent>
-      </Card>
+          <div className="bg-white p-4 rounded-lg shadow-sm text-center">
+            <div className="text-3xl font-bold text-viverblue">8</div>
+            <div className="text-sm text-muted-foreground">Módulos Concluídos</div>
+          </div>
+          <div className="bg-white p-4 rounded-lg shadow-sm text-center">
+            <div className="text-3xl font-bold text-viverblue">+30%</div>
+            <div className="text-sm text-muted-foreground">Eficiência Esperada</div>
+          </div>
+        </div>
+      </div>
+      
+      <div className="bg-white p-6 rounded-lg border shadow-sm">
+        <h2 className="text-xl font-semibold mb-4">Próximos passos</h2>
+        <ul className="space-y-4">
+          <li className="flex items-start">
+            <div className="bg-amber-100 p-2 rounded-full mr-3 flex-shrink-0">
+              <Share2 className="h-5 w-5 text-amber-700" />
+            </div>
+            <div>
+              <h3 className="font-medium">Compartilhe seus resultados</h3>
+              <p className="text-sm text-muted-foreground">
+                Compartilhe seus resultados com o time do VIVER DE IA Club e com outros membros
+              </p>
+            </div>
+          </li>
+          <li className="flex items-start">
+            <div className="bg-blue-100 p-2 rounded-full mr-3 flex-shrink-0">
+              <ArrowRight className="h-5 w-5 text-blue-700" />
+            </div>
+            <div>
+              <h3 className="font-medium">Explore mais soluções</h3>
+              <p className="text-sm text-muted-foreground">
+                Retorne ao dashboard e explore outras soluções para continuar otimizando seu negócio
+              </p>
+            </div>
+          </li>
+        </ul>
+      </div>
+      
+      <div className="flex justify-center space-x-4 pt-8">
+        <Button 
+          onClick={onComplete} 
+          className="bg-green-600 hover:bg-green-700"
+        >
+          <CheckCircle className="mr-2 h-5 w-5" />
+          Finalizar
+        </Button>
+        <Button 
+          variant="outline" 
+          onClick={() => navigate("/dashboard")}
+        >
+          Voltar ao Dashboard
+        </Button>
+      </div>
     </div>
   );
 };
-
-export default CelebrationModule;

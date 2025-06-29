@@ -1,34 +1,19 @@
 
-import { useSimpleAuth } from '@/contexts/auth/SimpleAuthProvider';
+import { useAuth } from '@/contexts/auth';
+import { isFeatureEnabledForUser, APP_FEATURES } from '@/config/features';
+import { getUserRoleName } from '@/lib/supabase/types';
 
 export const useFeatureAccess = () => {
-  const { user, isAdmin, isFormacao } = useSimpleAuth();
+  const { profile } = useAuth();
+  const userRole = getUserRoleName(profile);
 
-  const hasFeatureAccess = (feature: string) => {
-    if (!user) return false;
-    
-    // Simple feature access logic
-    switch (feature) {
-      case 'admin_panel':
-        return isAdmin;
-      case 'content_creation':
-        return isAdmin || isFormacao;
-      case 'analytics':
-        return isAdmin;
-      case 'user_management':
-        return isAdmin;
-      default:
-        return true; // Basic features available to all users
-    }
+  const hasFeatureAccess = (featureName: string) => {
+    return isFeatureEnabledForUser(featureName, userRole);
   };
 
   return {
     hasFeatureAccess,
-    canAccessAdminPanel: isAdmin,
-    canCreateContent: isAdmin || isFormacao,
-    canViewAnalytics: isAdmin,
-    canManageUsers: isAdmin,
-    data: null,
-    isLoading: false
+    isAdmin: userRole === 'admin',
+    userRole
   };
 };

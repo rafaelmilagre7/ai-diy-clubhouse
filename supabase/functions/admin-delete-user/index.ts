@@ -1,179 +1,468 @@
 
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.4'
+import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
 
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+};
 
 interface DeleteUserRequest {
-  userEmail: string;
+  userId: string;
   forceDelete?: boolean;
+  softDelete?: boolean;
 }
 
-interface DeleteUserResponse {
+interface DeleteResult {
   success: boolean;
   message: string;
   details: {
-    tablesAffected: string[];
-    backupRecords: number;
+    profileDeleted: boolean;
     authUserDeleted: boolean;
+    relatedDataCleared: boolean;
+    tablesAffected: string[];
     errors: any[];
   };
+  userId: string;
+  userEmail?: string;
 }
 
-Deno.serve(async (req) => {
-  console.log(`🚀 [ADMIN-DELETE-USER] Requisição recebida: ${req.method}`);
-
-  // Handle CORS preflight requests
-  if (req.method === 'OPTIONS') {
+const handler = async (req: Request): Promise<Response> => {
+  if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    // Verificar se é uma requisição POST
-    if (req.method !== 'POST') {
-      return new Response(
-        JSON.stringify({ error: 'Método não permitido' }),
-        { 
-          status: 405, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      );
-    }
+    console.log("🗑️ === INICIANDO PROCESSO DE EXCLUSÃO DE USUÁRIO ===");
 
-    // Parse do body da requisição
-    const { userEmail, forceDelete = false }: DeleteUserRequest = await req.json();
+    const { userId, forceDelete = false, softDelete = false }: DeleteUserRequest = await req.json();
     
-    if (!userEmail) {
+    if (!userId) {
+      console.error("❌ ID do usuário não fornecido");
       return new Response(
-        JSON.stringify({ error: 'Email do usuário é obrigatório' }),
-        { 
-          status: 400, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
+        JSON.stringify({ success: false, error: 'ID do usuário não fornecido' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    console.log(`📧 [ADMIN-DELETE-USER] Processando limpeza para: ${userEmail}`);
+    console.log(`🎯 Processando exclusão para userId: ${userId}`, { 
+      forceDelete, 
+      softDelete,
+      timestamp: new Date().toISOString()
+    });
 
-    // Inicializar cliente Supabase com service role
+    // Criar cliente administrativo
     const supabaseAdmin = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+      {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false
+        }
+      }
     );
 
-    const result: DeleteUserResponse = {
+    // Buscar dados do usuário ANTES da exclusão
+    console.log("📋 Buscando dados do usuário...");
+    const { data: profileData } = await supabaseAdmin
+      .from('profiles')
+      .select('email, name, role')
+      .eq('id', userId)
+      .single();
+
+    const userEmail = profileData?.email || 'email não encontrado';
+    const userName = profileData?.name || 'nome não encontrado';
+    const userRole = profileData?.role || 'papel não encontrado';
+
+    console.log("👤 Dados do usuário:", { 
+      email: userEmail, 
+      name: userName, 
+      role: userRole,
+      softDelete 
+    });
+
+    const result: DeleteResult = {
       success: false,
       message: '',
       details: {
-        tablesAffected: [],
-        backupRecords: 0,
+        profileDeleted: false,
         authUserDeleted: false,
+        relatedDataCleared: false,
+        tablesAffected: [],
         errors: []
-      }
+      },
+      userId,
+      userEmail
     };
 
-    // FASE 1: Executar limpeza completa via função SQL
-    console.log(`🧹 [ADMIN-DELETE-USER] Executando limpeza completa dos dados públicos`);
-    
-    const { data: cleanupData, error: cleanupError } = await supabaseAdmin.rpc(
-      'admin_complete_user_cleanup',
-      { user_email: userEmail }
-    );
-
-    if (cleanupError) {
-      console.error(`❌ [ADMIN-DELETE-USER] Erro na limpeza dos dados:`, cleanupError);
-      result.details.errors.push({
-        operation: 'cleanup_public_data',
-        error: cleanupError.message
-      });
-    } else if (cleanupData?.success) {
-      console.log(`✅ [ADMIN-DELETE-USER] Limpeza dos dados públicos concluída:`, cleanupData);
-      result.details.backupRecords = cleanupData.backup_records || 0;
-      result.details.tablesAffected = [
-        'profiles', 'user_onboarding', 'onboarding_sync', 'onboarding_final',
-        'implementation_trails', 'analytics', 'notifications', 'progress',
-        'learning_progress', 'forum_posts', 'forum_topics', 'solution_comments'
+    // === SOFT DELETE ===
+    if (softDelete) {
+      console.log("🧹 === EXECUTANDO SOFT DELETE ===");
+      
+      const tables = [
+        'onboarding_progress',
+        'onboarding_history', 
+        'onboarding_ai_conversations',
+        'onboarding_chat_messages',
+        'onboarding_complementary_info',
+        'implementation_trails',
+        'invites',
+        'direct_messages',
+        'member_connections',
+        'notifications',
+        'forum_posts',
+        'forum_topics',
+        'learning_progress',
+        'learning_lesson_nps',
+        'learning_comment_likes',
+        'learning_comments',
+        'progress',
+        'user_checklists',
+        'analytics'
       ];
+
+      let clearedTables = 0;
+      const errors = [];
+
+      for (const table of tables) {
+        try {
+          console.log(`🗑️ Limpando tabela: ${table}`);
+          
+          if (table === 'direct_messages') {
+            await supabaseAdmin.from(table).delete().eq('sender_id', userId);
+            await supabaseAdmin.from(table).delete().eq('recipient_id', userId);
+          } else if (table === 'member_connections') {
+            await supabaseAdmin.from(table).delete().eq('requester_id', userId);
+            await supabaseAdmin.from(table).delete().eq('recipient_id', userId);
+          } else if (table === 'invites') {
+            await supabaseAdmin.from(table).delete().eq('created_by', userId);
+          } else {
+            const { error } = await supabaseAdmin.from(table).delete().eq('user_id', userId);
+            if (error && !forceDelete) {
+              throw error;
+            }
+          }
+          
+          clearedTables++;
+          result.details.tablesAffected.push(table);
+          console.log(`✅ Tabela ${table} limpa com sucesso`);
+        } catch (error: any) {
+          console.warn(`⚠️ Erro ao limpar ${table}:`, error);
+          errors.push({ table, error: error.message });
+          if (!forceDelete) {
+            result.details.errors.push(error);
+          }
+        }
+      }
+
+      // Resetar campos do perfil mas manter o usuário
+      console.log("🔄 Resetando campos do perfil...");
+      try {
+        const { error } = await supabaseAdmin
+          .from('profiles')
+          .update({
+            company_name: null,
+            industry: null,
+            current_position: null,
+            referrals_count: 0,
+            successful_referrals_count: 0,
+            whatsapp_number: null,
+            professional_bio: null,
+            skills: [],
+            linkedin_url: null,
+            available_for_networking: true
+          })
+          .eq('id', userId);
+
+        if (error) throw error;
+        console.log("✅ Perfil resetado com sucesso");
+      } catch (error: any) {
+        console.error("❌ Erro ao resetar perfil:", error);
+        result.details.errors.push(error);
+      }
+
+      result.success = true;
+      result.message = `Soft delete concluído. ${clearedTables} tabelas processadas.`;
+      result.details.relatedDataCleared = true;
+      result.details.profileDeleted = false; // Perfil mantido, apenas resetado
+      result.details.authUserDeleted = false; // Usuário mantido no Auth
+
+      console.log("✅ === SOFT DELETE CONCLUÍDO ===", {
+        tabelas_limpas: clearedTables,
+        erros: errors.length,
+        usuario: userEmail
+      });
+
+      return new Response(
+        JSON.stringify(result),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
-    // FASE 2: Excluir usuário da auth.users (se forceDelete = true)
-    if (forceDelete) {
-      console.log(`🗑️ [ADMIN-DELETE-USER] Executando exclusão do auth.users`);
+    // === HARD DELETE ===
+    console.log("💥 === EXECUTANDO HARD DELETE ===");
+    
+    // 1. Limpar dados relacionados - LISTA COMPLETA E ATUALIZADA
+    console.log("🧹 Limpando dados relacionados...");
+    const tables = [
+      // Analytics e auditoria
+      'analytics',
+      'audit_logs',
       
-      // Buscar o ID do usuário primeiro
-      const { data: userData, error: userError } = await supabaseAdmin
-        .from('auth.users')
-        .select('id')
-        .eq('email', userEmail)
-        .single();
+      // Onboarding e configuração inicial
+      'onboarding_progress',
+      'onboarding_history', 
+      'onboarding_ai_conversations',
+      'onboarding_chat_messages',
+      'onboarding_complementary_info',
+      'user_onboarding',
+      
+      // Trilhas de implementação
+      'implementation_trails',
+      'implementation_profiles',
+      
+      // Sistema de convites
+      'invites',
+      
+      // Comunicações e mensagens
+      'direct_messages',
+      'whatsapp_messages',
+      'communication_deliveries',
+      
+      // Conexões e networking
+      'member_connections',
+      'network_connections',
+      'network_matches',
+      'connection_notifications',
+      'connection_recommendations',
+      'networking_preferences',
+      
+      // Sistema de notificações
+      'notifications',
+      'notification_preferences',
+      
+      // Fórum e comunidade
+      'forum_posts',
+      'forum_topics',
+      'forum_notifications',
+      'forum_mentions',
+      'forum_reactions',
+      'community_reports',
+      
+      // Sistema de aprendizado - CRÍTICO: inclui learning_lesson_nps
+      'learning_progress',
+      'learning_lesson_nps',
+      'learning_comment_likes', 
+      'learning_comments',
+      'learning_certificates',
+      
+      // Progresso e checklists
+      'progress',
+      'user_checklists',
+      
+      // Benefícios e ferramentas
+      'benefit_clicks',
+      'solution_comments',
+      'tool_comments',
+      
+      // Sistema de indicações
+      'referrals',
+      
+      // Sugestões e votações
+      'suggestion_votes',
+      'suggestion_comments',
+      
+      // Moderação
+      'moderation_actions'
+    ];
 
-      if (userError) {
-        console.error(`❌ [ADMIN-DELETE-USER] Erro ao buscar usuário:`, userError);
-        result.details.errors.push({
-          operation: 'find_auth_user',
-          error: userError.message
-        });
-      } else if (userData?.id) {
-        // Excluir usuário da auth.users usando Admin API
-        const { error: deleteError } = await supabaseAdmin.auth.admin.deleteUser(userData.id);
+    let clearedTables = 0;
+    const errors = [];
+
+    for (const table of tables) {
+      try {
+        console.log(`🗑️ Limpando tabela: ${table}`);
         
-        if (deleteError) {
-          console.error(`❌ [ADMIN-DELETE-USER] Erro ao excluir auth user:`, deleteError);
-          result.details.errors.push({
-            operation: 'delete_auth_user',
-            error: deleteError.message
-          });
+        if (table === 'direct_messages') {
+          await supabaseAdmin.from(table).delete().eq('sender_id', userId);
+          await supabaseAdmin.from(table).delete().eq('recipient_id', userId);
+        } else if (table === 'member_connections' || table === 'network_connections') {
+          await supabaseAdmin.from(table).delete().eq('requester_id', userId);
+          await supabaseAdmin.from(table).delete().eq('recipient_id', userId);
+        } else if (table === 'network_matches') {
+          await supabaseAdmin.from(table).delete().eq('user_id', userId);
+          await supabaseAdmin.from(table).delete().eq('matched_user_id', userId);
+        } else if (table === 'invites') {
+          await supabaseAdmin.from(table).delete().eq('created_by', userId);
+        } else if (table === 'referrals') {
+          await supabaseAdmin.from(table).delete().eq('referrer_id', userId);
+        } else if (table === 'community_reports') {
+          await supabaseAdmin.from(table).delete().eq('reporter_id', userId);
+          await supabaseAdmin.from(table).delete().eq('reported_user_id', userId);
+          await supabaseAdmin.from(table).delete().eq('reviewed_by', userId);
+        } else if (table === 'moderation_actions') {
+          await supabaseAdmin.from(table).delete().eq('moderator_id', userId);
+          await supabaseAdmin.from(table).delete().eq('target_user_id', userId);
         } else {
-          console.log(`✅ [ADMIN-DELETE-USER] Usuário removido da auth.users com sucesso`);
-          result.details.authUserDeleted = true;
+          const { error } = await supabaseAdmin.from(table).delete().eq('user_id', userId);
+          if (error && !forceDelete) {
+            console.warn(`⚠️ Erro ao limpar ${table}:`, error.message);
+            errors.push({ table, error: error.message });
+          } else if (error) {
+            console.warn(`⚠️ Erro ignorado (forceDelete=true) ao limpar ${table}:`, error.message);
+            errors.push({ table, error: error.message });
+          }
+        }
+        
+        clearedTables++;
+        result.details.tablesAffected.push(table);
+        console.log(`✅ Tabela ${table} limpa`);
+      } catch (error: any) {
+        console.warn(`⚠️ Erro ao limpar ${table}:`, error);
+        errors.push({ table, error: error.message });
+        if (!forceDelete) {
+          result.details.errors.push(error);
         }
       }
     }
 
-    // FASE 3: Determinar resultado final
-    const hasErrors = result.details.errors.length > 0;
-    const authDeletionSuccess = forceDelete ? result.details.authUserDeleted : true;
-    
-    result.success = !hasErrors && authDeletionSuccess;
-    
-    if (result.success) {
-      result.message = forceDelete 
-        ? `Usuário ${userEmail} completamente removido do sistema`
-        : `Dados públicos do usuário ${userEmail} limpos com sucesso`;
-    } else {
-      result.message = `Limpeza parcial realizada com ${result.details.errors.length} erro(s)`;
+    result.details.relatedDataCleared = clearedTables > 0;
+
+    // 2. Limpar convites pendentes para o email
+    console.log("📧 Limpando convites pendentes para o email...");
+    try {
+      const { error: inviteError } = await supabaseAdmin
+        .from('invites')
+        .delete()
+        .eq('email', userEmail);
+
+      if (inviteError) {
+        console.warn("⚠️ Erro ao limpar convites por email:", inviteError);
+        errors.push({ table: 'invites_by_email', error: inviteError.message });
+      } else {
+        console.log("✅ Convites por email limpos");
+      }
+    } catch (error: any) {
+      console.warn("⚠️ Erro ao limpar convites por email:", error);
+      errors.push({ table: 'invites_by_email', error: error.message });
     }
 
-    console.log(`📊 [ADMIN-DELETE-USER] Resultado final:`, result);
+    // 3. Remover perfil
+    console.log("👤 Removendo perfil...");
+    try {
+      const { error: profileError } = await supabaseAdmin
+        .from('profiles')
+        .delete()
+        .eq('id', userId);
+
+      if (profileError) {
+        console.error("❌ Erro ao remover perfil:", profileError);
+        if (!forceDelete) {
+          throw profileError;
+        }
+        result.details.errors.push(profileError);
+      } else {
+        result.details.profileDeleted = true;
+        console.log("✅ Perfil removido com sucesso");
+      }
+    } catch (error: any) {
+      console.error("❌ Erro crítico ao remover perfil:", error);
+      result.details.errors.push(error);
+    }
+
+    // 4. Excluir usuário do Auth
+    console.log("🔐 Removendo usuário do sistema de autenticação...");
+    try {
+      const { error: deleteError } = await supabaseAdmin.auth.admin.deleteUser(userId);
+
+      if (deleteError) {
+        console.error("❌ Erro ao excluir usuário do Auth:", deleteError);
+        if (!forceDelete) {
+          throw deleteError;
+        }
+        result.details.errors.push(deleteError);
+      } else {
+        result.details.authUserDeleted = true;
+        console.log("✅ Usuário removido do Auth com sucesso");
+      }
+    } catch (error: any) {
+      console.error("❌ Erro crítico ao remover do Auth:", error);
+      result.details.errors.push(error);
+    }
+
+    // 5. Verificação final: testar se email pode receber novo convite
+    console.log("🔍 Verificando se email foi liberado...");
+    try {
+      // Verificar se ainda existe algum registro com este email
+      const { data: remainingProfile } = await supabaseAdmin
+        .from('profiles')
+        .select('id')
+        .eq('email', userEmail)
+        .maybeSingle();
+
+      const { data: remainingInvite } = await supabaseAdmin
+        .from('invites')
+        .select('id')
+        .eq('email', userEmail)
+        .maybeSingle();
+
+      if (remainingProfile || remainingInvite) {
+        console.warn("⚠️ Email ainda não foi completamente liberado", {
+          hasProfile: !!remainingProfile,
+          hasInvite: !!remainingInvite
+        });
+        errors.push({ 
+          table: 'verification', 
+          error: `Email ${userEmail} ainda tem registros: profile=${!!remainingProfile}, invite=${!!remainingInvite}` 
+        });
+      } else {
+        console.log("✅ Email completamente liberado para novos convites");
+      }
+    } catch (error: any) {
+      console.warn("⚠️ Erro na verificação final:", error);
+      errors.push({ table: 'verification', error: error.message });
+    }
+
+    // Determinar sucesso
+    const hasErrors = result.details.errors.length > 0;
+    const criticalSuccess = result.details.profileDeleted || result.details.authUserDeleted;
+    
+    result.success = forceDelete ? true : (!hasErrors && criticalSuccess);
+    result.message = result.success 
+      ? `Usuário ${userEmail} removido completamente (${clearedTables} tabelas limpas, ${errors.length} avisos)`
+      : `Falha parcial na remoção. ${result.details.errors.length} erros encontrados.`;
+
+    console.log("🎉 === HARD DELETE CONCLUÍDO ===", {
+      sucesso: result.success,
+      tabelas_limpas: clearedTables,
+      erros: result.details.errors.length,
+      avisos: errors.length,
+      perfil_removido: result.details.profileDeleted,
+      auth_removido: result.details.authUserDeleted,
+      usuario: userEmail
+    });
 
     return new Response(
       JSON.stringify(result),
-      { 
-        status: result.success ? 200 : 207, // 207 = Multi-Status (partial success)
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-      }
+      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 
   } catch (error: any) {
-    console.error(`💥 [ADMIN-DELETE-USER] Erro inesperado:`, error);
+    console.error("💥 === ERRO CRÍTICO NA EXCLUSÃO ===", error);
     
     return new Response(
-      JSON.stringify({
+      JSON.stringify({ 
         success: false,
-        message: `Erro inesperado: ${error.message}`,
+        error: 'Erro interno do servidor durante exclusão',
         details: {
-          tablesAffected: [],
-          backupRecords: 0,
-          authUserDeleted: false,
-          errors: [{ operation: 'unexpected_error', error: error.message }]
+          message: error.message,
+          stack: error.stack
         }
       }),
-      { 
-        status: 500, 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-      }
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
-});
+};
+
+serve(handler);

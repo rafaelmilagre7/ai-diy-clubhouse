@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { supabase } from "@/lib/supabase";
+import { LucideIcon } from "lucide-react";
 import { MessagesSquare } from "lucide-react";
 
 interface ForumCategory {
@@ -31,11 +32,11 @@ export const CategoryList = () => {
       const { data, error } = await supabase
         .from('forum_categories')
         .select('*')
-        .eq('is_active', true as any)
+        .eq('is_active', true)
         .order('order_index', { ascending: true });
       
       if (error) throw error;
-      return data as any as ForumCategory[];
+      return data as ForumCategory[];
     }
   });
 

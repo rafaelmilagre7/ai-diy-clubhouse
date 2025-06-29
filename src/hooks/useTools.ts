@@ -1,65 +1,109 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
-import { useSimpleAuth } from '@/contexts/auth/SimpleAuthProvider';
-import { SimplifiedTool } from '@/lib/supabase/types';
+import { Tool } from '@/types/toolTypes';
+import { useAuth } from '@/contexts/auth';
 
 export const useTools = (options?: { 
   checkAccessRestrictions?: boolean;
   categoryFilter?: string;
   benefitsOnly?: boolean;
 }) => {
-  const { user } = useSimpleAuth();
+  const { user } = useAuth();
   const opts = {
     checkAccessRestrictions: true,
     ...options
   };
 
-  const query = useQuery<SimplifiedTool[], Error>({
+  const query = useQuery<Tool[], Error>({
     queryKey: ['tools', user?.id, opts.categoryFilter, opts.benefitsOnly],
     queryFn: async () => {
+      console.log('Buscando ferramentas...');
+      
+      // Buscar todas as ferramentas
       const { data, error } = await supabase
         .from('tools')
         .select('*')
-        .eq('is_active', true)
+        .eq('status', true)
         .order('name');
 
       if (error) {
+        console.error('Erro ao buscar ferramentas:', error);
         throw error;
       }
 
-      let mappedData = (data || []).map(tool => ({
-        id: tool.id,
-        name: tool.name,
-        description: tool.description,
-        category: tool.category,
-        url: tool.url,
-        logo_url: tool.logo_url,
-        pricing_info: tool.pricing_info,
-        features: tool.features,
-        is_active: tool.is_active,
-        created_at: tool.created_at,
-        updated_at: tool.updated_at,
-        has_member_benefit: Boolean(tool.benefit_title || tool.benefit_description),
-        benefit_type: tool.benefit_type || 'discount',
-        benefit_discount_percentage: null, // Fix: set to null as this field doesn't exist in database
-        benefit_link: tool.benefit_url || null, // Fix: use benefit_url from database
-        benefit_title: tool.benefit_title || '',
-        benefit_description: tool.benefit_description || '',
-        status: tool.is_active // Map is_active to status for compatibility
-      }));
-      
+      // Filtrar por categoria, se especificado
+      let filteredData = data;
       if (opts.categoryFilter) {
-        mappedData = mappedData.filter(tool => tool.category === opts.categoryFilter);
+        filteredData = data.filter(tool => tool.category === opts.categoryFilter);
       }
 
+      // Filtrar apenas benefícios, se solicitado
       if (opts.benefitsOnly) {
-        mappedData = mappedData.filter(tool => tool.has_member_benefit);
+        filteredData = filteredData.filter(tool => tool.has_member_benefit);
       }
 
-      return mappedData;
+      // Verificar restrições de acesso para benefícios, se autenticado e solicitado
+      if (user && opts.checkAccessRestrictions) {
+        // Verificar quais ferramentas têm restrições de acesso
+        const { data: restrictedToolsData } = await supabase
+          .from('benefit_access_control')
+          .select('tool_id')
+          .order('tool_id');
+
+        const restrictedTools = new Set(restrictedToolsData?.map(rt => rt.tool_id) || []);
+
+        // Para cada ferramenta com restrições, verificar acesso
+        if (restrictedTools.size > 0) {
+          // Array para armazenar promessas de verificação de acesso
+          const accessChecks = filteredData
+            .filter(tool => tool.has_member_benefit && restrictedTools.has(tool.id))
+            .map(async tool => {
+              const { data: hasAccess } = await supabase.rpc('can_access_benefit', {
+                user_id: user.id,
+                tool_id: tool.id
+              });
+              
+              return {
+                toolId: tool.id,
+                hasAccess: hasAccess || false
+              };
+            });
+
+          // Aguardar todas as verificações de acesso
+          const accessResults = await Promise.all(accessChecks);
+          const accessMap = new Map(accessResults.map(r => [r.toolId, r.hasAccess]));
+
+          // Adicionar flag de acesso restrito para cada ferramenta
+          filteredData = filteredData.map(tool => ({
+            ...tool,
+            is_access_restricted: restrictedTools.has(tool.id),
+            has_access: !restrictedTools.has(tool.id) || accessMap.get(tool.id) || false
+          }));
+        } else {
+          // Se não houver restrições, todos têm acesso
+          filteredData = filteredData.map(tool => ({
+            ...tool,
+            is_access_restricted: false,
+            has_access: true
+          }));
+        }
+      }
+
+      const toolsWithLogosInfo = filteredData.map(tool => ({
+        ...tool,
+        has_valid_logo: !!tool.logo_url
+      }));
+
+      console.log('Ferramentas encontradas:', { 
+        total: filteredData.length,
+        comLogo: toolsWithLogosInfo.filter(t => t.has_valid_logo).length,
+        semLogo: toolsWithLogosInfo.filter(t => !t.has_valid_logo).length
+      });
+
+      return toolsWithLogosInfo as Tool[];
     },
-    staleTime: 5 * 60 * 1000
+    staleTime: 5 * 60 * 1000 // 5 minutos
   });
 
   return {

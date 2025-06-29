@@ -18,8 +18,7 @@ export const toolFormSchema = z.object({
     'Marketing e CRM',
     'Produtividade e Organização',
     'Desenvolvimento e Código',
-    'Plataformas de Mídia',
-    'Outros'
+    'Plataformas de Mídia'
   ] as const, {
     errorMap: () => ({ message: 'Categoria é obrigatória' })
   }),
@@ -30,8 +29,7 @@ export const toolFormSchema = z.object({
     z.object({
       title: z.string().min(1, 'Título é obrigatório'),
       url: z.string().url('URL inválida'),
-      type: z.enum(['youtube', 'upload']).default('youtube'),
-      description: z.string().optional(),
+      type: z.enum(['youtube', 'upload']),
     })
   ).default([]),
   has_member_benefit: z.boolean().default(false),

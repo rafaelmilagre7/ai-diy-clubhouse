@@ -1,5 +1,5 @@
 
-import { LayoutProvider } from "./LayoutProvider";
+import LayoutProvider from "./LayoutProvider";
 import { ReactNode } from "react";
 
 /**

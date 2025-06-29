@@ -1,15 +1,18 @@
 
+import React from 'react';
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { UserProfile } from "@/lib/supabase";
 import { useResetPassword } from "@/hooks/admin/useResetPassword";
+import { LoadingSpinner } from "@/components/common/LoadingSpinner";
 
 interface ResetPasswordDialogProps {
   open: boolean;
@@ -17,53 +20,54 @@ interface ResetPasswordDialogProps {
   user: UserProfile | null;
 }
 
-export const ResetPasswordDialog = ({
+export const ResetPasswordDialog: React.FC<ResetPasswordDialogProps> = ({
   open,
   onOpenChange,
-  user,
-}: ResetPasswordDialogProps) => {
-  const { resetPassword, isResetting } = useResetPassword();
+  user
+}) => {
+  const { resetUserPassword, isResetting } = useResetPassword();
 
   const handleResetPassword = async () => {
-    if (!user?.email) return;
-
-    try {
-      await resetPassword(user.email);
+    if (!user) return;
+    
+    const success = await resetUserPassword(user.email);
+    
+    if (success) {
       onOpenChange(false);
-    } catch (error) {
-      console.error("Erro ao resetar senha:", error);
     }
   };
 
-  if (!user) return null;
-
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Redefinir senha do usuário</DialogTitle>
-          <DialogDescription>
-            Um email de redefinição de senha será enviado para{" "}
-            <strong>{user.email}</strong>.
-          </DialogDescription>
-        </DialogHeader>
-        
-        <DialogFooter>
-          <Button
-            variant="outline"
-            onClick={() => onOpenChange(false)}
+    <AlertDialog open={open} onOpenChange={onOpenChange}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Redefinir senha do usuário</AlertDialogTitle>
+          <AlertDialogDescription>
+            Tem certeza que deseja enviar um e-mail de redefinição de senha para <strong>{user?.email}</strong>?
+            <br /><br />
+            Um link será enviado para o e-mail do usuário permitindo que ele defina uma nova senha.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel disabled={isResetting}>Cancelar</AlertDialogCancel>
+          <AlertDialogAction
+            onClick={(e) => {
+              e.preventDefault();
+              handleResetPassword();
+            }}
             disabled={isResetting}
           >
-            Cancelar
-          </Button>
-          <Button
-            onClick={handleResetPassword}
-            disabled={isResetting}
-          >
-            {isResetting ? "Enviando..." : "Enviar Email"}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+            {isResetting ? (
+              <>
+                <LoadingSpinner className="mr-2 h-4 w-4" />
+                <span>Enviando...</span>
+              </>
+            ) : (
+              "Enviar e-mail de redefinição"
+            )}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   );
 };

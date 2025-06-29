@@ -1,106 +1,170 @@
 
 import React from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Award, Download, Calendar, Shield } from "lucide-react";
+import { CertificateCard } from "./CertificateCard";
+import { SolutionCertificateCard } from "./SolutionCertificateCard";
 import { useCertificates } from "@/hooks/learning/useCertificates";
 import { useSolutionCertificates } from "@/hooks/learning/useSolutionCertificates";
+import { Skeleton } from "@/components/ui/skeleton";
+import { AlertCircle } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface CertificatesListProps {
   courseId?: string;
-  solutionId?: string;
 }
 
-export const CertificatesList = ({ courseId, solutionId }: CertificatesListProps) => {
-  const courseCertificates = useCertificates(courseId);
-  const solutionCertificates = useSolutionCertificates(solutionId || '');
-
-  // Use the appropriate hook based on the props
+export const CertificatesList = ({ courseId }: CertificatesListProps) => {
+  const { 
+    certificates: courseCertificates, 
+    isLoading: isLoadingCourse, 
+    error: courseError, 
+    downloadCertificate: downloadCourseCertificate
+  } = useCertificates(courseId);
+  
   const {
-    certificates,
-    isLoading,
-    downloadCertificate,
-    validateCertificate
-  } = courseId ? courseCertificates : solutionCertificates;
-
+    certificates: solutionCertificates,
+    isLoading: isLoadingSolutions,
+    downloadCertificate: downloadSolutionCertificate
+  } = useSolutionCertificates();
+  
+  const isLoading = isLoadingCourse || isLoadingSolutions;
+  const error = courseError;
+  
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center p-8">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-viverblue"></div>
-      </div>
-    );
-  }
-
-  if (!certificates || certificates.length === 0) {
-    return (
-      <div className="text-center py-8">
-        <Award className="h-12 w-12 mx-auto text-gray-400 mb-4" />
-        <h3 className="text-lg font-medium text-gray-300 mb-2">Nenhum certificado encontrado</h3>
-        <p className="text-gray-500">
-          Complete cursos ou implemente soluções para obter certificados.
-        </p>
-      </div>
-    );
-  }
-
-  return (
-    <div className="space-y-4">
-      {certificates.map((certificate) => (
-        <Card key={certificate.id} className="bg-[#151823] border-neutral-700">
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-viverblue/10 rounded-lg">
-                  <Award className="h-6 w-6 text-viverblue" />
-                </div>
-                <div>
-                  <CardTitle className="text-white">
-                    {courseId ? 'Certificado de Curso' : 'Certificado de Implementação'}
-                  </CardTitle>
-                  <div className="flex items-center gap-2 mt-1">
-                    <Calendar className="h-4 w-4 text-gray-400" />
-                    <span className="text-sm text-gray-400">
-                      Emitido em {new Date(certificate.issued_at).toLocaleDateString('pt-BR')}
-                    </span>
-                  </div>
-                </div>
-              </div>
-              <Badge variant="secondary" className="bg-green-600/20 text-green-400">
-                Válido
-              </Badge>
-            </div>
-          </CardHeader>
-          
-          <CardContent className="space-y-4">
-            <div className="flex items-center gap-2 text-sm text-gray-400">
-              <Shield className="h-4 w-4" />
-              <span>Código de validação: {certificate.validation_code}</span>
-            </div>
-            
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {[1, 2, 3].map((i) => (
+          <div key={i} className="space-y-4">
+            <Skeleton className="h-40 w-full" />
+            <Skeleton className="h-6 w-3/4" />
+            <Skeleton className="h-4 w-1/2" />
             <div className="flex gap-2">
-              <Button
-                size="sm"
-                onClick={() => downloadCertificate && downloadCertificate(certificate.id)}
-                className="bg-viverblue hover:bg-viverblue/90"
-              >
-                <Download className="h-4 w-4 mr-2" />
-                Download
-              </Button>
-              
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => validateCertificate && validateCertificate(certificate.validation_code)}
-                className="border-gray-600 text-gray-300 hover:bg-gray-800"
-              >
-                <Shield className="h-4 w-4 mr-2" />
-                Validar
-              </Button>
+              <Skeleton className="h-9 w-24" />
+              <Skeleton className="h-9 w-24" />
             </div>
-          </CardContent>
-        </Card>
-      ))}
-    </div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+  
+  if (error) {
+    return (
+      <Alert variant="destructive">
+        <AlertCircle className="h-4 w-4" />
+        <AlertTitle>Erro</AlertTitle>
+        <AlertDescription>
+          Ocorreu um erro ao carregar seus certificados. Por favor, tente novamente mais tarde.
+        </AlertDescription>
+      </Alert>
+    );
+  }
+
+  const totalCertificates = courseCertificates.length + solutionCertificates.length;
+  
+  if (totalCertificates === 0) {
+    return (
+      <Alert>
+        <AlertCircle className="h-4 w-4" />
+        <AlertTitle>Nenhum certificado encontrado</AlertTitle>
+        <AlertDescription>
+          {courseId 
+            ? "Você ainda não possui certificado para este curso. Complete todas as aulas para receber seu certificado."
+            : "Você ainda não possui nenhum certificado. Complete cursos e implemente soluções para receber certificados."}
+        </AlertDescription>
+      </Alert>
+    );
+  }
+
+  // Se é para um curso específico, mostrar apenas certificados do curso
+  if (courseId) {
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {courseCertificates.map((certificate) => (
+          <CertificateCard
+            key={certificate.id}
+            certificate={certificate}
+            onDownload={downloadCourseCertificate}
+          />
+        ))}
+      </div>
+    );
+  }
+
+  // Para a página geral de certificados, mostrar ambos os tipos em abas
+  return (
+    <Tabs defaultValue="all" className="w-full">
+      <TabsList className="grid w-full grid-cols-3 bg-[#151823] border-neutral-700">
+        <TabsTrigger value="all" className="data-[state=active]:bg-viverblue data-[state=active]:text-white">
+          Todos ({totalCertificates})
+        </TabsTrigger>
+        <TabsTrigger value="courses" className="data-[state=active]:bg-viverblue data-[state=active]:text-white">
+          Cursos ({courseCertificates.length})
+        </TabsTrigger>
+        <TabsTrigger value="solutions" className="data-[state=active]:bg-viverblue data-[state=active]:text-white">
+          Soluções ({solutionCertificates.length})
+        </TabsTrigger>
+      </TabsList>
+      
+      <TabsContent value="all" className="mt-6">
+        <div className="space-y-8">
+          {/* Certificados de Soluções */}
+          {solutionCertificates.length > 0 && (
+            <div>
+              <h3 className="text-lg font-semibold text-white mb-4">Certificados de Implementação</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {solutionCertificates.map((certificate) => (
+                  <SolutionCertificateCard
+                    key={certificate.id}
+                    certificate={certificate}
+                    onDownload={downloadSolutionCertificate}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+          
+          {/* Certificados de Cursos */}
+          {courseCertificates.length > 0 && (
+            <div>
+              <h3 className="text-lg font-semibold text-white mb-4">Certificados de Cursos</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {courseCertificates.map((certificate) => (
+                  <CertificateCard
+                    key={certificate.id}
+                    certificate={certificate}
+                    onDownload={downloadCourseCertificate}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      </TabsContent>
+      
+      <TabsContent value="courses" className="mt-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {courseCertificates.map((certificate) => (
+            <CertificateCard
+              key={certificate.id}
+              certificate={certificate}
+              onDownload={downloadCourseCertificate}
+            />
+          ))}
+        </div>
+      </TabsContent>
+      
+      <TabsContent value="solutions" className="mt-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {solutionCertificates.map((certificate) => (
+            <SolutionCertificateCard
+              key={certificate.id}
+              certificate={certificate}
+              onDownload={downloadSolutionCertificate}
+            />
+          ))}
+        </div>
+      </TabsContent>
+    </Tabs>
   );
 };

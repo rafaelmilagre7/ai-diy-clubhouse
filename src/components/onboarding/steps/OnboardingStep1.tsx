@@ -1,181 +1,211 @@
 
 import React from 'react';
+import { motion } from 'framer-motion';
+import { User, Mail, Instagram, Linkedin, Sparkles } from 'lucide-react';
+import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { EnhancedFieldIndicator } from '../components/EnhancedFieldIndicator';
-import { User, Mail, Phone, Lock } from 'lucide-react';
-import { OnboardingData } from '../types/onboardingTypes';
+import { Textarea } from '@/components/ui/textarea';
+import { OnboardingStepProps } from '../types/onboardingTypes';
+import { LocationSelector } from '../components/LocationSelector';
+import { ProfilePictureUpload } from '../components/ProfilePictureUpload';
+import { BirthDateSelector } from '../components/BirthDateSelector';
+import { WhatsAppInput } from '../components/WhatsAppInput';
 
-interface OnboardingStep1Props {
-  data: OnboardingData;
-  onUpdateData: (newData: Partial<OnboardingData>) => void;
-  memberType: 'club' | 'formacao';
-  validationErrors: Array<{ field: string; message: string }>;
-  getFieldError: (field: string) => string | undefined;
-  disabled?: boolean;
-  readOnly?: boolean;
-  isLoading?: boolean;
-  onNext?: () => Promise<void>;
-  onPrev?: () => Promise<void>;
-}
-
-const OnboardingStep1: React.FC<OnboardingStep1Props> = ({
+const OnboardingStep1: React.FC<OnboardingStepProps> = ({
   data,
   onUpdateData,
-  memberType,
-  validationErrors,
-  getFieldError,
-  disabled = false,
-  readOnly = false,
-  isLoading = false
+  getFieldError
 }) => {
-  const handleInputChange = (field: string, value: string) => {
-    if (disabled || readOnly) return;
-    onUpdateData({ [field]: value });
-  };
+  const handleBirthDateChange = (day: string, month: string, year: string) => {
+    // Salvar campos separadamente para preservar dados parciais
+    const updates: any = {
+      birthDay: day || undefined,
+      birthMonth: month || undefined,
+      birthYear: year || undefined
+    };
 
-  const isFieldReadOnly = (field: string) => {
-    switch (field) {
-      case 'email':
-        return data.isEmailFromInvite || false;
-      case 'name':
-        return data.isNameFromInvite || false;
-      case 'phone':
-        return data.isPhoneFromInvite || false;
-      default:
-        return readOnly;
+    // Se todos os campos estão preenchidos, também criar a data ISO
+    if (day && month && year) {
+      const isoDate = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+      updates.birthDate = isoDate;
+      console.log('[OnboardingStep1] Data completa criada:', isoDate);
+    } else {
+      // Se não está completa, limpar a data ISO
+      updates.birthDate = undefined;
+      console.log('[OnboardingStep1] Data incompleta, salvando campos separados:', updates);
     }
-  };
 
-  const getFieldIcon = (field: string) => {
-    switch (field) {
-      case 'email':
-        return Mail;
-      case 'name':
-        return User;
-      case 'phone':
-        return Phone;
-      default:
-        return User;
-    }
-  };
-
-  const renderField = (
-    field: string,
-    label: string,
-    placeholder: string,
-    type: 'text' | 'email' | 'tel' = 'text',
-    required: boolean = true
-  ) => {
-    const isReadOnly = isFieldReadOnly(field);
-    const fieldError = getFieldError(field);
-    const hasValue = data[field as keyof OnboardingData] as string;
-    const Icon = getFieldIcon(field);
-
-    return (
-      <div className="space-y-2">
-        <div className="flex items-center justify-between">
-          <Label htmlFor={field} className="text-white font-medium flex items-center gap-2">
-            <Icon className="w-4 h-4" />
-            {label}
-            {required && <span className="text-red-400">*</span>}
-          </Label>
-          {isReadOnly && (
-            <Badge variant="secondary" className="text-xs bg-amber-500/20 text-amber-300 border-amber-500/30">
-              <Lock className="w-3 h-3 mr-1" />
-              Dados do Convite
-            </Badge>
-          )}
-        </div>
-        
-        <div className="relative">
-          <Input
-            id={field}
-            type={type}
-            placeholder={placeholder}
-            value={hasValue || ''}
-            onChange={(e) => handleInputChange(field, e.target.value)}
-            disabled={disabled || isLoading}
-            readOnly={isReadOnly}
-            className={`
-              bg-[#0F111A] border-gray-700 text-white placeholder:text-neutral-400 
-              focus:border-viverblue focus:ring-viverblue
-              ${isReadOnly ? 'bg-gray-800/50 cursor-not-allowed opacity-75' : ''}
-              ${fieldError ? 'border-red-500 focus:border-red-500' : ''}
-            `}
-          />
-          {isReadOnly && (
-            <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-              <Lock className="w-4 h-4 text-gray-400" />
-            </div>
-          )}
-        </div>
-        
-        <EnhancedFieldIndicator
-          isValid={!fieldError && hasValue?.length > 0}
-          isRequired={required}
-          message={fieldError}
-          showSuccess={!isReadOnly && hasValue?.length > 0}
-        />
-        
-        {isReadOnly && (
-          <p className="text-xs text-amber-300/80 flex items-center gap-1">
-            <Lock className="w-3 h-3" />
-            Este campo foi preenchido automaticamente pelo convite
-          </p>
-        )}
-      </div>
-    );
+    onUpdateData(updates);
   };
 
   return (
-    <div className="space-y-6">
-      <Card className="bg-[#1A1E2E] border-gray-800">
-        <CardHeader>
-          <CardTitle className="text-white flex items-center gap-2">
-            <User className="w-5 h-5 text-viverblue" />
-            Informações Pessoais
-          </CardTitle>
-          <p className="text-neutral-300 text-sm">
-            Vamos começar com suas informações básicas
-          </p>
-          {(data.isEmailFromInvite || data.isNameFromInvite || data.isPhoneFromInvite) && (
-            <div className="flex items-center gap-2 p-3 bg-amber-500/10 border border-amber-500/20 rounded-lg">
-              <Lock className="w-4 h-4 text-amber-300" />
-              <p className="text-sm text-amber-300">
-                Alguns campos foram preenchidos automaticamente pelo seu convite
-              </p>
+    <motion.div
+      initial={{ opacity: 0, x: 20 }}
+      animate={{ opacity: 1, x: 0 }}
+      exit={{ opacity: 0, x: -20 }}
+      className="space-y-6"
+    >
+      <div className="text-center mb-8">
+        <motion.div
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          transition={{ delay: 0.2, type: "spring" }}
+          className="w-16 h-16 bg-viverblue/20 rounded-full flex items-center justify-center mx-auto mb-4"
+        >
+          <User className="w-8 h-8 text-viverblue" />
+        </motion.div>
+        <h2 className="text-2xl font-bold text-white mb-2">
+          Vamos nos conhecer melhor!
+        </h2>
+        <p className="text-slate-400">
+          Conte-nos sobre você para personalizarmos sua experiência
+        </p>
+      </div>
+
+      <Card className="p-6 bg-[#1A1E2E]/80 backdrop-blur-sm border-white/10">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Nome Completo */}
+          <div>
+            <Label htmlFor="name" className="text-slate-200">
+              Nome Completo *
+            </Label>
+            <div className="relative mt-1">
+              <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
+              <Input
+                id="name"
+                type="text"
+                value={data.name || ''}
+                onChange={(e) => onUpdateData({ name: e.target.value })}
+                className="pl-10 bg-[#151823] border-white/20 text-white"
+                placeholder="Seu nome completo"
+              />
             </div>
-          )}
-        </CardHeader>
-        
-        <CardContent className="space-y-6">
-          {renderField('name', 'Nome Completo', 'Digite seu nome completo', 'text', true)}
-          {renderField('email', 'E-mail', 'Digite seu e-mail', 'email', true)}
-          {renderField('phone', 'Telefone/WhatsApp', 'Digite seu telefone', 'tel', false)}
-          
-          <div className="pt-4 border-t border-gray-700">
-            <div className="flex items-center gap-2 mb-2">
-              <Badge 
-                variant={memberType === 'formacao' ? 'default' : 'secondary'}
-                className={
-                  memberType === 'formacao' 
-                    ? 'bg-purple-500/20 text-purple-300 border-purple-500/30' 
-                    : 'bg-viverblue/20 text-viverblue border-viverblue/30'
-                }
-              >
-                {memberType === 'formacao' ? 'Formação' : 'Membro Club'}
-              </Badge>
-            </div>
-            <p className="text-xs text-neutral-400">
-              Seu tipo de acesso foi definido pelo convite recebido
-            </p>
+            {getFieldError?.('name') && (
+              <p className="text-red-400 text-sm mt-1">{getFieldError('name')}</p>
+            )}
           </div>
-        </CardContent>
+
+          {/* E-mail */}
+          <div>
+            <Label htmlFor="email" className="text-slate-200">
+              E-mail *
+            </Label>
+            <div className="relative mt-1">
+              <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
+              <Input
+                id="email"
+                type="email"
+                value={data.email || ''}
+                onChange={(e) => onUpdateData({ email: e.target.value })}
+                className="pl-10 bg-[#151823] border-white/20 text-white"
+                placeholder="seu@email.com"
+              />
+            </div>
+            {getFieldError?.('email') && (
+              <p className="text-red-400 text-sm mt-1">{getFieldError('email')}</p>
+            )}
+          </div>
+
+          {/* WhatsApp */}
+          <div>
+            <WhatsAppInput
+              value={data.phone}
+              onChange={(phone) => onUpdateData({ phone })}
+              getFieldError={getFieldError}
+            />
+          </div>
+
+          {/* Instagram */}
+          <div>
+            <Label htmlFor="instagram" className="text-slate-200">
+              Instagram
+            </Label>
+            <div className="relative mt-1">
+              <Instagram className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
+              <Input
+                id="instagram"
+                type="text"
+                value={data.instagram || ''}
+                onChange={(e) => onUpdateData({ instagram: e.target.value })}
+                className="pl-10 bg-[#151823] border-white/20 text-white"
+                placeholder="@seuinstagram"
+              />
+            </div>
+          </div>
+
+          {/* LinkedIn */}
+          <div>
+            <Label htmlFor="linkedin" className="text-slate-200">
+              LinkedIn
+            </Label>
+            <div className="relative mt-1">
+              <Linkedin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
+              <Input
+                id="linkedin"
+                type="url"
+                value={data.linkedin || ''}
+                onChange={(e) => onUpdateData({ linkedin: e.target.value })}
+                className="pl-10 bg-[#151823] border-white/20 text-white"
+                placeholder="linkedin.com/in/seuperfil"
+              />
+            </div>
+          </div>
+
+          {/* Data de Nascimento */}
+          <div>
+            <BirthDateSelector
+              birthDay={data.birthDay}
+              birthMonth={data.birthMonth}
+              birthYear={data.birthYear}
+              onChange={handleBirthDateChange}
+              getFieldError={getFieldError}
+            />
+          </div>
+        </div>
+
+        {/* Localização */}
+        <div className="mt-6">
+          <LocationSelector
+            selectedState={data.state}
+            selectedCity={data.city}
+            onStateChange={(state) => onUpdateData({ state })}
+            onCityChange={(city) => onUpdateData({ city })}
+            getFieldError={getFieldError}
+          />
+        </div>
+
+        {/* Foto de Perfil */}
+        <div className="mt-6">
+          <ProfilePictureUpload
+            value={data.profilePicture}
+            onChange={(url) => onUpdateData({ profilePicture: url })}
+            userName={data.name}
+          />
+        </div>
+
+        {/* Curiosidade */}
+        <div className="mt-6">
+          <Label htmlFor="curiosity" className="text-slate-200">
+            Conte uma curiosidade sobre você *
+          </Label>
+          <div className="relative mt-1">
+            <Sparkles className="absolute left-3 top-3 text-slate-400 w-4 h-4" />
+            <Textarea
+              id="curiosity"
+              value={data.curiosity || ''}
+              onChange={(e) => onUpdateData({ curiosity: e.target.value })}
+              className="pl-10 bg-[#151823] border-white/20 text-white resize-none"
+              placeholder="Compartilhe algo interessante sobre você..."
+              rows={3}
+            />
+          </div>
+          {getFieldError?.('curiosity') && (
+            <p className="text-red-400 text-sm mt-1">{getFieldError('curiosity')}</p>
+          )}
+        </div>
       </Card>
-    </div>
+    </motion.div>
   );
 };
 

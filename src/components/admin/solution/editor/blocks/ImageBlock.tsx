@@ -47,17 +47,16 @@ const ImageBlock: React.FC<ImageBlockProps> = ({ data, onChange }) => {
       setUploading(true);
       setUploadProgress(0);
       
-      // Usar apenas 3 argumentos conforme esperado pela função
       const result = await uploadFileToStorage(
         file,
         "solution_files",
-        "content_images"
+        "content_images",
+        (progress) => setUploadProgress(progress)
       );
       
-      // Corrigir: acessar a URL corretamente do resultado
       onChange({ 
         ...data, 
-        url: result.url || '',
+        url: result.publicUrl,
         alt: data.alt || file.name
       });
       
@@ -98,7 +97,7 @@ const ImageBlock: React.FC<ImageBlockProps> = ({ data, onChange }) => {
             {uploading ? (
               <>
                 <div className="h-4 w-4 mr-2 animate-spin border-2 border-current border-t-transparent rounded-full" />
-                Enviando...
+                {uploadProgress}%
               </>
             ) : (
               <>

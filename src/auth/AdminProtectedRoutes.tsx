@@ -1,7 +1,7 @@
 
 import { Navigate, useLocation } from "react-router-dom";
 import { useEffect, useState, useRef, ReactNode } from "react";
-import { useSimpleAuth } from "@/contexts/auth/SimpleAuthProvider";
+import { useAuth } from "@/contexts/auth";
 import LoadingScreen from "@/components/common/LoadingScreen";
 import { toast } from "sonner";
 
@@ -10,7 +10,7 @@ interface AdminProtectedRoutesProps {
 }
 
 export const AdminProtectedRoutes = ({ children }: AdminProtectedRoutesProps) => {
-  const { user, isAdmin, isLoading } = useSimpleAuth();
+  const { user, isAdmin, isLoading } = useAuth();
   const location = useLocation();
   const [loadingTimeout, setLoadingTimeout] = useState(false);
   const timeoutRef = useRef<number | null>(null);
@@ -40,7 +40,7 @@ export const AdminProtectedRoutes = ({ children }: AdminProtectedRoutesProps) =>
     return <LoadingScreen message="Verificando permissões de administrador..." />;
   }
 
-  // Se o usuário não estiver autenticado, redireciona para a página de login (NOVO PADRÃO: /login)
+  // Se o usuário não estiver autenticado, redireciona para a página de login
   if (!user) {
     toast.error("Por favor, faça login para acessar esta página");
     return <Navigate to="/login" state={{ from: location }} replace />;

@@ -1,95 +1,59 @@
 
-import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/lib/supabase';
+import { Suggestion } from '@/types/suggestionTypes';
 
-interface Suggestion {
-  id: string;
-  title: string;
-  description: string;
-  status: string;
-  upvotes: number;
-  downvotes: number;
-  created_at: string;
-  user_id: string;
-  user_name: string;
-  category_name?: string;
-  category_id?: string;
-}
-
-export const useSuggestionsList = () => {
-  const [selectedCategory, setSelectedCategory] = useState<string>('all');
-  const [searchQuery, setSearchQuery] = useState('');
-
+export const useSuggestionsList = (categoryId?: string, filter: 'popular' | 'recent' = 'popular') => {
   const {
     data: suggestions = [],
     isLoading,
     error,
     refetch
   } = useQuery({
-    queryKey: ['suggestions-list', selectedCategory, searchQuery],
+    queryKey: ['suggestions', categoryId, filter],
     queryFn: async () => {
-      console.log('Buscando lista de sugestões...', { selectedCategory, searchQuery });
+      console.log('Buscando sugestões...', { categoryId, filter });
       
-      // Mock data since suggestions_with_profiles view doesn't exist
-      const mockSuggestions: Suggestion[] = [
-        {
-          id: '1',
-          title: 'Nova funcionalidade X',
-          description: 'Descrição da funcionalidade solicitada',
-          status: 'new',
-          upvotes: 10,
-          downvotes: 1,
-          created_at: new Date().toISOString(),
-          user_id: 'user1',
-          user_name: 'Usuário Teste',
-          category_name: 'Funcionalidades',
-          category_id: '1'
-        },
-        {
-          id: '2',
-          title: 'Melhoria na interface',
-          description: 'Sugestão de melhoria na UI/UX',
-          status: 'in_development',
-          upvotes: 7,
-          downvotes: 0,
-          created_at: new Date().toISOString(),
-          user_id: 'user2',
-          user_name: 'Outro Usuário',
-          category_name: 'Interface',
-          category_id: '2'
+      try {
+        // Usamos a view suggestions_with_profiles que já conecta os dados de perfil
+        let query = supabase
+          .from('suggestions_with_profiles')
+          .select('*')
+          .eq('is_hidden', false); // Apenas sugestões não ocultas
+
+        if (categoryId) {
+          query = query.eq('category_id', categoryId);
         }
-      ];
 
-      // Apply filters
-      let filteredSuggestions = [...mockSuggestions];
+        if (filter === 'popular') {
+          query = query.order('upvotes', { ascending: false });
+        } else {
+          query = query.order('created_at', { ascending: false });
+        }
 
-      if (selectedCategory && selectedCategory !== 'all') {
-        filteredSuggestions = filteredSuggestions.filter(s => s.category_id === selectedCategory);
+        const { data, error } = await query;
+
+        if (error) {
+          console.error('Erro ao buscar sugestões:', error);
+          throw error;
+        }
+
+        console.log('Sugestões encontradas:', data?.length, data);
+        return data || [];
+      } catch (error) {
+        console.error('Erro na consulta de sugestões:', error);
+        throw error;
       }
-
-      if (searchQuery) {
-        const query = searchQuery.toLowerCase();
-        filteredSuggestions = filteredSuggestions.filter(s =>
-          s.title.toLowerCase().includes(query) ||
-          s.description.toLowerCase().includes(query)
-        );
-      }
-
-      console.log('Lista de sugestões encontradas:', filteredSuggestions.length);
-      return filteredSuggestions;
     },
     refetchOnWindowFocus: false,
-    staleTime: 1000 * 60 * 2,
+    staleTime: 1000 * 60 * 1, // 1 minuto
+    refetchOnMount: true,
   });
 
   return {
     suggestions,
     isLoading,
     error,
-    selectedCategory,
-    setSelectedCategory,
-    searchQuery,
-    setSearchQuery,
     refetch
   };
 };

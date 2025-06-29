@@ -1,229 +1,188 @@
-import { Database } from './database.types';
 
-// Basic types from database - handle missing tables gracefully
+import { Database } from './types/database.types';
+
+// Tipos de tabelas expandidos
 export type LearningLesson = Database['public']['Tables']['learning_lessons']['Row'] & {
-  resources?: LearningResource[];
   videos?: LearningLessonVideo[];
-  module?: LearningModule;
-  ai_assistant_id?: string;
-  estimated_duration_minutes?: number;
+  resources?: LearningResource[];
+  module?: LearningModule & {
+    course_id?: string;
+    learning_courses?: LearningCourse;
+  };
+  ai_assistant_id?: string | null;
 };
 
 export type LearningLessonVideo = Database['public']['Tables']['learning_lesson_videos']['Row'];
-export type LearningModule = Database['public']['Tables']['learning_modules']['Row'] & {
-  is_published?: boolean;
+export type LearningModule = Database['public']['Tables']['learning_modules']['Row'];
+export type LearningCourse = Database['public']['Tables']['learning_courses']['Row'] & {
+  module_count?: number;
+  lesson_count?: number;
+  is_restricted?: boolean;
 };
-export type LearningCourse = Database['public']['Tables']['learning_courses']['Row'];
+export type LearningProgress = Database['public']['Tables']['learning_progress']['Row'];
 export type LearningResource = Database['public']['Tables']['learning_resources']['Row'];
+export type LearningLessonTool = Database['public']['Tables']['learning_lesson_tools']['Row'];
+export type LearningComment = Database['public']['Tables']['learning_comments']['Row'];
 
-// Handle learning_progress table - may not exist in current schema
-export type LearningProgress = {
+// Outros tipos existentes
+export * from './types/database.types';
+
+// Interface para dados de role do usuário
+export interface UserRoleData {
   id: string;
-  user_id: string;
-  lesson_id: string;
-  progress_percentage: number;
-  video_progress: Record<string, number>;
-  started_at: string;
-  completed_at: string | null;
-  last_position_seconds?: number;
-  updated_at: string;
-  created_at: string;
-  notes?: string | null;
-};
-
-// Tipos específicos do sistema
-export type Solution = Database['public']['Tables']['solutions']['Row'] & {
-  tags?: string[];
-  published?: boolean;
-  slug?: string;
-  expected_results?: string;
-  success_metrics?: string;
-  target_audience?: string;
-  prerequisites?: string;
-  difficulty_level?: string;
-  difficulty?: string; // Add fallback for compatibility
-};
-
-export type UserProfile = Database['public']['Tables']['profiles']['Row'] & {
-  user_roles?: {
-    id: string;
-    name: string;
-    description?: string;
-  };
-};
-export type UserRole = Database['public']['Tables']['user_roles']['Row'];
-
-// Use the correct table name from the schema  
-export type Module = Database['public']['Tables']['modules']['Row'] & {
+  name: string;
   description?: string;
-  module_order?: number;
-};
+  permissions?: any;
+  is_system?: boolean;
+}
 
-// Handle progress table - may have different structure
-export type Progress = {
+// Enum para tipos de roles conhecidos (compatibilidade)
+export type UserRole = 'admin' | 'formacao' | 'membro_club';
+
+export interface UserProfile {
   id: string;
-  user_id: string;
-  solution_id: string;
-  is_completed: boolean;
-  started_at: string;
-  completed_at: string | null;
-  updated_at: string;
+  email: string;
+  name: string | null;
+  avatar_url: string | null;
+  company_name: string | null;
+  industry: string | null;
+  role_id: string | null; // Campo principal para roles
+  role?: UserRole; // Campo legado - deprecado, mas mantido para compatibilidade
+  user_roles?: UserRoleData | null; // Dados da role via join
   created_at: string;
+  onboarding_completed: boolean;
+  onboarding_completed_at: string | null;
+}
+
+// Função utilitária para obter o nome da role
+export const getUserRoleName = (profile: UserProfile | null): string => {
+  if (!profile) return 'member';
+  
+  // Priorizar user_roles (novo sistema)
+  if (profile.user_roles?.name) {
+    return profile.user_roles.name;
+  }
+  
+  // Fallback para campo legado durante migração
+  if (profile.role) {
+    // CORREÇÃO: Log de deprecação para monitoramento
+    if (process.env.NODE_ENV !== 'production') {
+      console.warn('⚠️ [DEPRECATED] Usando profile.role (legado). Migre para role_id/user_roles.', {
+        profileId: profile.id.substring(0, 8) + '***',
+        legacyRole: profile.role,
+        hasRoleId: !!profile.role_id,
+        hasUserRoles: !!profile.user_roles
+      });
+    }
+    return profile.role;
+  }
+  
+  return 'member';
 };
 
-export type Tool = Database['public']['Tables']['tools']['Row'] & {
-  status?: boolean;
-  official_url?: string;
-  tags?: string[];
-  benefit_link?: string | null;
-  benefit_title?: string | null;
-  benefit_description?: string | null;
-  benefit_discount_percentage?: number | null;
-  has_member_benefit?: boolean;
+// Função utilitária para verificar se é admin
+export const isAdminRole = (profile: UserProfile | null): boolean => {
+  const roleName = getUserRoleName(profile);
+  return roleName === 'admin';
 };
-export type SolutionResource = Database['public']['Tables']['solution_resources']['Row'];
 
-// Simplified types for compatibility - Updated with all required properties
-export interface SimplifiedSolution {
+// Função utilitária para verificar se é formação
+export const isFormacaoRole = (profile: UserProfile | null): boolean => {
+  const roleName = getUserRoleName(profile);
+  return roleName === 'formacao';
+};
+
+// Interface para Solution (sem dependência de tabela inexistente)
+export interface Solution {
   id: string;
   title: string;
   description: string;
-  category: string;
-  difficulty?: string;
-  difficulty_level?: string;
+  difficulty: string;
+  category: 'Receita' | 'Operacional' | 'Estratégia';
+  image_url?: string;
   thumbnail_url?: string;
-  cover_image_url?: string;
+  author_id?: string;
+  created_at: string;
+  updated_at: string;
   published: boolean;
   slug: string;
-  created_at: string;
-  updated_at: string;
+  status?: string;
+  completion_percentage?: number;
+  overview?: string;
+  estimated_time?: number;
+  success_rate?: number;
   tags?: string[];
-  estimated_time_hours?: number;
-  roi_potential?: string;
-  implementation_steps?: any;
-  required_tools?: string[];
-  expected_results: string;
-  success_metrics: string;
-  target_audience: string;
-  prerequisites: string;
+  videos?: any[];
+  checklist?: any[];
+  module_order?: number;
+  related_solutions?: string[];
 }
 
-export interface SimplifiedTool {
+export interface Module {
   id: string;
-  name: string;
-  description: string | null;
-  category: string;
-  url: string | null;
-  logo_url: string | null;
-  pricing_info: any;
-  features: string[] | null;
-  is_active: boolean;
+  solution_id: string;
+  title: string;
+  description?: string;
+  order: number;
+  module_order?: number;
+  type: string;
+  content?: any;
   created_at: string;
   updated_at: string;
-  has_member_benefit: boolean;
-  benefit_type: string | null;
-  benefit_discount_percentage?: number | null;
-  benefit_link?: string | null;
-  benefit_title?: string | null;
-  benefit_description?: string | null;
-  status?: boolean;
+  completed?: boolean;
 }
 
-// User checklist type for progress tracking
+export interface Progress {
+  id: string;
+  user_id: string;
+  solution_id: string;
+  current_module: number;
+  is_completed: boolean;
+  completed_modules: number[];
+  completed_at?: string;
+  last_activity: string;
+  created_at: string;
+}
+
 export interface UserChecklist {
   id: string;
   user_id: string;
   solution_id: string;
   checked_items: Record<string, boolean>;
-  updated_at: string;
   created_at: string;
+  updated_at: string;
 }
 
-// Content block interface for modules
-export interface ContentBlock {
+export interface LearningCertificate {
   id: string;
-  type: string;
-  data: Record<string, any>;
+  user_id: string;
+  course_id: string;
+  certificate_url: string | null;
+  created_at: string;
+  issued_at: string;
 }
 
-export interface ModuleContent {
-  blocks: ContentBlock[];
+export interface VideoFormValues {
+  id?: string;
+  title?: string;
+  description?: string;
+  url?: string;
+  type?: string;
+  fileName?: string;
+  filePath?: string;
+  fileSize?: number;
+  duration_seconds?: number;
+  video_id?: string;
+  thumbnail_url?: string;
+  order_index?: number;
 }
 
-// Re-exportação das definições de tipos base
-export * from './database.types';
-
-// Utilitário para type casting seguro
-export const safeSupabaseQuery = <T = any>(query: Promise<any>): Promise<{ data: T | null; error: any }> => {
-  return query.catch((error: any) => ({ data: null, error }));
-};
-
-// Safe JSON parsing utilities
-export const safeJsonParseObject = (value: any, fallback: any = {}) => {
-  if (typeof value === 'object' && value !== null) {
-    return value;
-  }
-  if (typeof value === 'string') {
-    try {
-      return JSON.parse(value);
-    } catch {
-      return fallback;
-    }
-  }
-  return fallback;
-};
-
-export const safeJsonParseArray = (value: any, fallback: any[] = []) => {
-  if (Array.isArray(value)) {
-    return value;
-  }
-  if (typeof value === 'string') {
-    try {
-      const parsed = JSON.parse(value);
-      return Array.isArray(parsed) ? parsed : fallback;
-    } catch {
-      return fallback;
-    }
-  }
-  return fallback;
-};
-
-// Safe conversion from Json to ModuleContent
-export const safeJsonToModuleContent = (content: any): ModuleContent => {
-  if (content && typeof content === 'object' && content.blocks) {
-    return content as ModuleContent;
-  }
-  return { blocks: [] };
-};
-
-// Safe conversion to string for dangerouslySetInnerHTML
-export const safeToStringContent = (content: any): string => {
-  if (typeof content === 'string') {
-    return content;
-  }
-  if (typeof content === 'object' && content !== null) {
-    return JSON.stringify(content);
-  }
-  return String(content || '');
-};
-
-// Helper function to determine if auto-complete should happen
-export const shouldAutoComplete = (moduleType: string): boolean => {
-  return ['landing', 'celebration'].includes(moduleType);
-};
-
-// Add getUserRoleName function for compatibility
-export const getUserRoleName = (profile: UserProfile): string => {
-  return profile.user_roles?.name || profile.role || 'member';
-};
-
-// Solution category type
-export type SolutionCategory = 'Receita' | 'Operacional' | 'Estratégia';
-
-// Safe category type conversion
-export const safeSolutionCategory = (category: string): SolutionCategory => {
-  if (['Receita', 'Operacional', 'Estratégia'].includes(category)) {
-    return category as SolutionCategory;
-  }
-  return 'Receita'; // Default fallback
-};
+export interface LearningLessonNps {
+  id: string;
+  user_id: string;
+  lesson_id: string;
+  score: number;
+  feedback: string | null;
+  created_at: string;
+  updated_at: string;
+}

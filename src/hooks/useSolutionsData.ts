@@ -1,25 +1,19 @@
 
 import { useState, useEffect, useMemo, useRef } from "react";
 import { supabase } from "@/lib/supabase";
-import { useSimpleAuth } from "@/contexts/auth/SimpleAuthProvider";
-
-interface SimpleSolution {
-  id: string;
-  title: string;
-  description: string;
-  category: string;
-  estimated_time_hours: number;
-  created_at: string;
-  updated_at: string;
-}
+import { Solution } from "@/lib/supabase";
+import { useAuth } from "@/contexts/auth";
+import { useSecurityEnforcement } from "@/hooks/auth/useSecurityEnforcement";
+import { logger } from "@/utils/logger";
 
 // Cache global para evitar requests desnecessários
-const solutionsCache = new Map<string, { data: SimpleSolution[], timestamp: number }>();
+const solutionsCache = new Map<string, { data: Solution[], timestamp: number }>();
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutos
 
 export const useSolutionsData = () => {
-  const { user, profile } = useSimpleAuth();
-  const [solutions, setSolutions] = useState<SimpleSolution[]>([]);
+  const { user, profile } = useAuth();
+  const { logDataAccess } = useSecurityEnforcement();
+  const [solutions, setSolutions] = useState<Solution[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const lastFetchRef = useRef<number>(0);
@@ -36,15 +30,15 @@ export const useSolutionsData = () => {
 
   // Chave de cache baseada no perfil do usuário
   const cacheKey = useMemo(() => {
-    const isAdmin = profile?.user_roles?.name === 'admin';
+    const isAdmin = profile?.role === 'admin';
     return `solutions_${user?.id}_${isAdmin ? 'admin' : 'user'}`;
-  }, [user?.id, profile?.user_roles?.name]);
+  }, [user?.id, profile?.role]);
 
   useEffect(() => {
     const fetchSolutions = async () => {
       // Verificar autenticação
       if (!user) {
-        console.warn('[SOLUTIONS] Tentativa de carregar soluções sem autenticação');
+        logger.warn('[SOLUTIONS] Tentativa de carregar soluções sem autenticação');
         setLoading(false);
         return;
       }
@@ -82,26 +76,32 @@ export const useSolutionsData = () => {
         setLoading(true);
         setError(null);
 
-        // Query simplificada com apenas campos que existem na tabela
-        const { data, error: fetchError } = await supabase
-          .from("solutions")
-          .select("id, title, description, category, estimated_time_hours, created_at, updated_at");
+        // Log de acesso apenas uma vez
+        try {
+          await logDataAccess('solutions', 'fetch_list');
+        } catch (auditError) {
+          // Ignorar erros de auditoria silenciosamente
+        }
+
+        // Query otimizada
+        let query = supabase.from("solutions").select("*");
+
+        // Se não for admin, mostrar apenas soluções publicadas
+        if (!profile || profile.role !== 'admin') {
+          query = query.eq("published", true);
+        }
+
+        const { data, error: fetchError } = await query.order("created_at", { ascending: false });
 
         if (fetchError) {
-          console.error('[SOLUTIONS] Erro ao buscar soluções:', fetchError);
+          logger.error('[SOLUTIONS] Erro ao buscar soluções:', fetchError);
           throw fetchError;
         }
 
-        // Transformar dados para SimpleSolution
-        const validSolutions: SimpleSolution[] = (data || []).map(solution => ({
-          id: solution.id,
-          title: solution.title,
-          description: solution.description,
-          category: solution.category,
-          estimated_time_hours: solution.estimated_time_hours,
-          created_at: solution.created_at,
-          updated_at: solution.updated_at
-        }));
+        // Validar dados antes de definir no estado
+        const validSolutions = (data || []).filter(solution => 
+          solution && typeof solution.id === 'string'
+        );
 
         // Atualizar cache
         solutionsCache.set(cacheKey, {
@@ -115,13 +115,13 @@ export const useSolutionsData = () => {
           console.log('[SOLUTIONS] Soluções carregadas do servidor:', {
             execCount: executionCountRef.current,
             count: validSolutions.length,
-            isAdmin: profile?.user_roles?.name === 'admin',
+            isAdmin: profile?.role === 'admin',
             userId: user.id.substring(0, 8) + '***'
           });
         }
 
       } catch (error: any) {
-        console.error('[SOLUTIONS] Erro ao carregar soluções:', error);
+        logger.error('[SOLUTIONS] Erro ao carregar soluções:', error);
         setError(error.message || "Erro ao carregar soluções");
       } finally {
         setLoading(false);
@@ -129,7 +129,7 @@ export const useSolutionsData = () => {
     };
 
     fetchSolutions();
-  }, [user, profile?.user_roles?.name, cacheKey]); // Dependências mínimas
+  }, [user, profile?.role, cacheKey, logDataAccess]); // Dependências mínimas
 
   // Implementar filtragem de soluções baseada na busca e categoria
   const filteredSolutions = useMemo(() => {

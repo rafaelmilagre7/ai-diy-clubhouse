@@ -1,51 +1,84 @@
 
-import React from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { RefreshCw, UserPlus } from 'lucide-react';
+import React, { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Search, RefreshCw, UserPlus, Trash2 } from "lucide-react";
+import { ManualCleanupDialog } from "./ManualCleanupDialog";
 
 interface UsersHeaderProps {
   searchQuery: string;
-  onSearch: (query: string) => void;
+  onSearchChange: (query: string) => void;
   onRefresh: () => void;
   isRefreshing: boolean;
-  canManageUsers: boolean;
 }
 
 export const UsersHeader: React.FC<UsersHeaderProps> = ({
   searchQuery,
-  onSearch,
+  onSearchChange,
   onRefresh,
   isRefreshing,
-  canManageUsers
 }) => {
+  const [cleanupDialogOpen, setCleanupDialogOpen] = useState(false);
+
   return (
-    <div className="flex justify-between items-center mb-6">
-      <div>
-        <h1 className="text-2xl font-bold">Gerenciar Usuários</h1>
-        <p className="text-muted-foreground">Administre usuários e suas permissões</p>
-      </div>
-      <div className="flex gap-2">
-        <Input
-          placeholder="Buscar usuários..."
-          value={searchQuery}
-          onChange={(e) => onSearch(e.target.value)}
-          className="w-64"
-        />
-        <Button
-          variant="outline"
-          onClick={onRefresh}
-          disabled={isRefreshing}
-        >
-          <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-        </Button>
-        {canManageUsers && (
-          <Button>
-            <UserPlus className="h-4 w-4 mr-2" />
-            Convidar Usuário
+    <>
+      <div className="flex flex-col space-y-4 md:flex-row md:items-center md:justify-between md:space-y-0">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">Gerenciamento de Usuários</h1>
+          <p className="text-muted-foreground">
+            Gerencie usuários, papéis e permissões do sistema
+          </p>
+        </div>
+        
+        <div className="flex items-center space-x-2">
+          <Button
+            onClick={() => setCleanupDialogOpen(true)}
+            variant="outline"
+            size="sm"
+            className="text-red-600 border-red-200 hover:bg-red-50"
+          >
+            <Trash2 className="mr-2 h-4 w-4" />
+            Limpeza Manual
           </Button>
-        )}
+          
+          <Button
+            onClick={onRefresh}
+            variant="outline"
+            size="sm"
+            disabled={isRefreshing}
+          >
+            {isRefreshing ? (
+              <>
+                <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                Atualizando...
+              </>
+            ) : (
+              <>
+                <RefreshCw className="mr-2 h-4 w-4" />
+                Atualizar
+              </>
+            )}
+          </Button>
+        </div>
       </div>
-    </div>
+
+      <div className="flex items-center space-x-2">
+        <div className="relative flex-1 max-w-sm">
+          <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Buscar por nome, email ou empresa..."
+            value={searchQuery}
+            onChange={(e) => onSearchChange(e.target.value)}
+            className="pl-8"
+          />
+        </div>
+      </div>
+
+      <ManualCleanupDialog
+        open={cleanupDialogOpen}
+        onOpenChange={setCleanupDialogOpen}
+        onSuccess={onRefresh}
+      />
+    </>
   );
 };

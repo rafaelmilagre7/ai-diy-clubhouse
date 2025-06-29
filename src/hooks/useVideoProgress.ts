@@ -22,15 +22,15 @@ export function useVideoProgress(lessonId?: string) {
         const { data, error } = await supabase
           .from("learning_progress")
           .select("*")
-          .eq("user_id", userData.user.id as any)
-          .eq("lesson_id", lessonId as any)
+          .eq("user_id", userData.user.id)
+          .eq("lesson_id", lessonId)
           .maybeSingle();
           
         if (error) throw error;
         
-        if (data && (data as any).video_progress) {
-          setVideoProgresses((data as any).video_progress);
-          setTotalProgress((data as any).progress_percentage || 0);
+        if (data && data.video_progress) {
+          setVideoProgresses(data.video_progress);
+          setTotalProgress(data.progress_percentage || 0);
         }
       } catch (err) {
         console.error("Erro ao buscar progresso inicial:", err);
@@ -60,8 +60,8 @@ export function useVideoProgress(lessonId?: string) {
       const { data: existingProgress } = await supabase
         .from("learning_progress")
         .select("id, completed_at")
-        .eq("user_id", userData.user.id as any)
-        .eq("lesson_id", lessonId as any)
+        .eq("user_id", userData.user.id)
+        .eq("lesson_id", lessonId)
         .maybeSingle();
       
       if (existingProgress) {
@@ -72,9 +72,9 @@ export function useVideoProgress(lessonId?: string) {
             progress_percentage: progress,
             video_progress: videoProgress,
             updated_at: now,
-            completed_at: progress >= 100 ? now : (existingProgress as any).completed_at
-          } as any)
-          .eq("id", (existingProgress as any).id as any)
+            completed_at: progress >= 100 ? now : existingProgress.completed_at
+          })
+          .eq("id", existingProgress.id)
           .select();
           
         if (error) throw error;
@@ -90,7 +90,7 @@ export function useVideoProgress(lessonId?: string) {
             video_progress: videoProgress,
             started_at: now,
             completed_at: progress >= 100 ? now : null
-          } as any)
+          })
           .select();
           
         if (error) throw error;

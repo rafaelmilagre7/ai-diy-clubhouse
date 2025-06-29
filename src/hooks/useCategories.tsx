@@ -1,6 +1,6 @@
 
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/lib/supabase';
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/lib/supabase";
 
 export interface Category {
   id: string;
@@ -11,22 +11,29 @@ export interface Category {
 }
 
 export const useCategories = () => {
-  const { data: categories, isLoading, error } = useQuery({
-    queryKey: ['categories'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('forum_categories')
-        .select('*')
-        .eq('is_active', true as any)
-        .order('order_index');
+  const fetchCategories = async (): Promise<Category[]> => {
+    const { data, error } = await supabase
+      .from('forum_categories')
+      .select('*')
+      .eq('is_active', true)
+      .order('order_index', { ascending: true });
+    
+    if (error) throw error;
+    return data as Category[];
+  };
 
-      if (error) throw error;
-      return (data as unknown) as Category[];
+  const { data: categories, isLoading, error } = useQuery({
+    queryKey: ['forumCategories'],
+    queryFn: fetchCategories,
+    meta: {
+      onError: (err: Error) => {
+        console.error("Erro ao buscar categorias:", err.message);
+      }
     }
   });
 
   return {
-    categories: categories || [],
+    categories,
     isLoading,
     error
   };

@@ -1,88 +1,143 @@
 
-import { useState } from "react";
-import { supabase } from "@/lib/supabase";
-import { useToast } from "@/hooks/use-toast";
+import { useState } from 'react';
+import { supabase } from '@/lib/supabase';
+import { toast } from 'sonner';
+
+interface DeleteResult {
+  success: boolean;
+  message: string;
+  details: {
+    profileDeleted: boolean;
+    authUserDeleted: boolean;
+    relatedDataCleared: boolean;
+    tablesAffected: string[];
+    errors: any[];
+  };
+  userId: string;
+  userEmail?: string;
+}
 
 export const useDeleteUser = () => {
   const [isDeleting, setIsDeleting] = useState(false);
-  const { toast } = useToast();
+  const [error, setError] = useState<Error | null>(null);
+  const [deleteResult, setDeleteResult] = useState<DeleteResult | null>(null);
 
-  const deleteUser = async (userId: string, userEmail: string) => {
+  const deleteUser = async (userId: string, userEmail: string, softDelete: boolean = false) => {
     try {
       setIsDeleting(true);
+      setError(null);
+      setDeleteResult(null);
 
-      // Lista de tabelas que realmente existem no schema atual e podem ter referências ao usuário
-      const existingTablesToClean = [
-        'analytics',
-        'forum_posts', 
-        'forum_topics'
-      ];
+      console.log("🗑️ Iniciando exclusão do usuário:", { userId, userEmail, softDelete });
 
-      let totalDeleted = 0;
-
-      // Deletar de cada tabela existente com tratamento de erro individual
-      for (const tableName of existingTablesToClean) {
-        try {
-          const { error } = await supabase
-            .from(tableName as any)
-            .delete()
-            .eq('user_id', userId);
-
-          if (error) {
-            console.warn(`Erro ao deletar de ${tableName}:`, error);
-          } else {
-            console.log(`✅ Limpeza concluída para ${tableName}`);
-            totalDeleted++;
-          }
-        } catch (error) {
-          console.warn(`Erro ao acessar tabela ${tableName}:`, error);
+      const { data, error } = await supabase.functions.invoke('admin-delete-user', {
+        body: { 
+          userId,
+          forceDelete: true, // Sempre forçar delete para contornar erros menores
+          softDelete
         }
-      }
-
-      // Atualizar convites relacionados (se a tabela existir)
-      try {
-        const { error: inviteError } = await supabase
-          .from('invites')
-          .update({ used_at: new Date().toISOString() })
-          .eq('email', userEmail)
-          .is('used_at', null);
-
-        if (!inviteError) {
-          console.log('✅ Convites atualizados');
-        }
-      } catch (err) {
-        console.warn('Tabela invites pode não existir:', err);
-      }
-
-      // Finalmente, deletar o perfil do usuário
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .delete()
-        .eq('id', userId);
-
-      if (profileError) {
-        console.error('Erro ao deletar perfil:', profileError);
-        throw new Error(`Erro ao deletar perfil: ${profileError.message}`);
-      }
-
-      toast({
-        title: "Usuário excluído",
-        description: "O usuário e dados relacionados foram removidos com sucesso.",
       });
+
+      if (error) {
+        console.error("❌ Erro da Edge Function:", error);
+        throw new Error(`Erro na Edge Function: ${error.message}`);
+      }
+
+      if (!data?.success) {
+        console.error("❌ Edge Function reportou falha:", data);
+        throw new Error(data?.error || 'Falha na exclusão do usuário');
+      }
+
+      console.log("✅ Usuário processado com sucesso:", data);
+      setDeleteResult(data as DeleteResult);
+
+      // Toast detalhado baseado no resultado
+      if (softDelete) {
+        toast.success('🧹 Dados do usuário limpos (soft delete)', {
+          description: `${userEmail} foi resetado. ${data.details.tablesAffected.length} tabelas limpas. Agora é possível reenviar convites.`,
+          duration: 6000
+        });
+      } else {
+        const authStatus = data.details.authUserDeleted ? "✅ Auth removido" : "⚠️ Auth mantido";
+        const profileStatus = data.details.profileDeleted ? "✅ Perfil removido" : "⚠️ Perfil mantido";
+        
+        toast.success('💥 Usuário excluído completamente', {
+          description: `${userEmail} foi removido. ${authStatus}, ${profileStatus}. ${data.details.tablesAffected.length} tabelas limpas.`,
+          duration: 8000
+        });
+      }
+
+      // Toast adicional com detalhes técnicos se houver erros
+      if (data.details.errors.length > 0) {
+        toast.warning('⚠️ Exclusão com avisos', {
+          description: `${data.details.errors.length} avisos durante a exclusão. Verifique os logs para detalhes.`,
+          duration: 5000
+        });
+        console.warn("Erros durante exclusão:", data.details.errors);
+      }
 
       return true;
-    } catch (error: any) {
-      console.error('Erro ao excluir usuário:', error);
-      toast({
-        title: "Erro ao excluir usuário",
-        description: error.message || "Ocorreu um erro inesperado",
-        variant: "destructive",
+    } catch (err: any) {
+      console.error('❌ Erro ao processar usuário:', err);
+      setError(err);
+      
+      toast.error('❌ Erro ao processar usuário', {
+        description: err.message || 'Não foi possível processar o usuário. Verifique os logs e tente novamente.',
+        duration: 10000
       });
-      throw error;
+      
+      return false;
     } finally {
       setIsDeleting(false);
     }
   };
 
-  return { deleteUser, isDeleting };
+  // Função para verificar se um usuário pode receber novos convites
+  const canReceiveNewInvite = (email: string): Promise<boolean> => {
+    return new Promise(async (resolve) => {
+      try {
+        // Verificar se existe convite pendente
+        const { data: existingInvite } = await supabase
+          .from('invites')
+          .select('id, used_at, expires_at')
+          .eq('email', email)
+          .is('used_at', null)
+          .gt('expires_at', new Date().toISOString())
+          .maybeSingle();
+
+        if (existingInvite) {
+          console.log("❌ Convite pendente encontrado:", existingInvite);
+          resolve(false);
+          return;
+        }
+
+        // Verificar se usuário ainda existe no sistema
+        const { data: existingProfile } = await supabase
+          .from('profiles')
+          .select('id, email')
+          .eq('email', email)
+          .maybeSingle();
+
+        if (existingProfile) {
+          console.log("❌ Usuário ainda existe no sistema:", existingProfile);
+          resolve(false);
+          return;
+        }
+
+        console.log("✅ Email limpo, pode receber novo convite");
+        resolve(true);
+      } catch (error) {
+        console.error("Erro ao verificar email:", error);
+        resolve(false);
+      }
+    });
+  };
+
+  return {
+    deleteUser,
+    canReceiveNewInvite,
+    isDeleting,
+    error,
+    deleteResult
+  };
 };

@@ -26,9 +26,9 @@ export const useToolLogo = ({ toolName, toolId }: UseToolLogoProps) => {
         let query = supabase.from('tools').select('logo_url, name, has_member_benefit, benefit_type');
         
         if (toolId) {
-          query = query.eq('id', toolId as any);
+          query = query.eq('id', toolId);
         } else if (toolName) {
-          query = query.ilike('name', toolName as any);
+          query = query.ilike('name', toolName);
         }
         
         const { data, error } = await query.limit(1);
@@ -38,8 +38,8 @@ export const useToolLogo = ({ toolName, toolId }: UseToolLogoProps) => {
         }
         
         if (data && data.length > 0) {
-          log('Logo da ferramenta encontrado', { tool: (data[0] as any).name });
-          setLogoUrl((data[0] as any).logo_url);
+          log('Logo da ferramenta encontrado', { tool: data[0].name });
+          setLogoUrl(data[0].logo_url);
         } else {
           log('Nenhum logo encontrado para a ferramenta', { toolName, toolId });
         }

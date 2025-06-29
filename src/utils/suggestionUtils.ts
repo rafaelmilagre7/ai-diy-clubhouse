@@ -5,14 +5,12 @@ export const getStatusLabel = (status: string): string => {
       return 'Nova';
     case 'under_review':
       return 'Em Análise';
-    case 'approved':
-      return 'Aprovada';
     case 'in_development':
       return 'Em Desenvolvimento';
     case 'implemented':
       return 'Implementada';
     case 'rejected':
-      return 'Rejeitada';
+      return 'Recusada';
     default:
       return 'Desconhecido';
   }
@@ -23,13 +21,11 @@ export const getStatusColor = (status: string): string => {
     case 'new':
       return 'bg-blue-100 text-blue-800 hover:bg-blue-100/80';
     case 'under_review':
-      return 'bg-yellow-100 text-yellow-800 hover:bg-yellow-100/80';
-    case 'approved':
-      return 'bg-green-100 text-green-800 hover:bg-green-100/80';
-    case 'in_development':
       return 'bg-purple-100 text-purple-800 hover:bg-purple-100/80';
+    case 'in_development':
+      return 'bg-amber-100 text-amber-800 hover:bg-amber-100/80';
     case 'implemented':
-      return 'bg-emerald-100 text-emerald-800 hover:bg-emerald-100/80';
+      return 'bg-green-100 text-green-800 hover:bg-green-100/80';
     case 'rejected':
       return 'bg-red-100 text-red-800 hover:bg-red-100/80';
     default:

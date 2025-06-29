@@ -1,67 +1,226 @@
 
-import { useState, useCallback } from 'react';
-import { useCloudSync } from './useCloudSync';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { OnboardingData } from '../types/onboardingTypes';
+import { useCloudSync } from './useCloudSync';
+import { useAuth } from '@/contexts/auth';
+import { supabase } from '@/lib/supabase';
+
+const STORAGE_KEY = 'viver-ia-onboarding-data';
 
 export const useOnboardingStorage = () => {
-  const { syncToCloud, getCloudData, clearCloudData, isSyncing } = useCloudSync();
+  const { user } = useAuth();
+  const { saveToCloud, loadFromCloud, clearCloudData, syncStatus } = useCloudSync();
+  const [data, setData] = useState<OnboardingData>({});
+  const [isLoading, setIsLoading] = useState(true);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  
+  // Usar ref para evitar updates desnecessários
+  const updateTimeoutRef = useRef<NodeJS.Timeout>();
+  const lastDataRef = useRef<OnboardingData>({});
 
-  // Auto-save function
-  const autoSave = useCallback(async (data: OnboardingData, userId: string) => {
+  // Função para salvar dados no localStorage e tentar sync na nuvem
+  const saveDataToStorage = useCallback(async (dataToSave: OnboardingData) => {
     try {
-      const result = await syncToCloud({ ...data, user_id: userId });
-      if (result.success) {
-        setLastSaved(new Date());
-        setHasUnsavedChanges(false);
+      // Sempre salvar no localStorage primeiro (prioridade)
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(dataToSave));
+      console.log('[OnboardingStorage] Dados salvos no localStorage');
+      
+      // Se há foto de perfil, atualizar avatar do usuário
+      if (dataToSave.profilePicture && user?.id) {
+        try {
+          await supabase
+            .from('profiles')
+            .update({ avatar_url: dataToSave.profilePicture })
+            .eq('id', user.id);
+          console.log('[OnboardingStorage] Avatar atualizado no perfil');
+        } catch (avatarError) {
+          console.warn('[OnboardingStorage] Falha ao atualizar avatar (não crítico):', avatarError);
+        }
+      }
+      
+      // Tentar sincronizar na nuvem (não crítico se falhar)
+      if (user?.id) {
+        try {
+          await saveToCloud(dataToSave);
+          console.log('[OnboardingStorage] Dados sincronizados na nuvem');
+        } catch (cloudError) {
+          console.warn('[OnboardingStorage] Falha na sincronização (não crítico):', cloudError);
+          // Não falhar se a nuvem não funcionar - localStorage é suficiente
+        }
       }
     } catch (error) {
-      console.error('Erro no auto-save:', error);
+      console.error('[OnboardingStorage] Erro ao salvar dados:', error);
+      throw error;
     }
-  }, [syncToCloud]);
+  }, [saveToCloud, user?.id]);
 
-  // Force save function
-  const forceSave = useCallback(async (data: OnboardingData, userId: string) => {
-    const result = await syncToCloud({ ...data, user_id: userId });
-    if (result.success) {
+  // Carregar dados na inicialização
+  useEffect(() => {
+    const loadInitialData = async () => {
+      try {
+        setIsLoading(true);
+        
+        // SEMPRE priorizar localStorage primeiro
+        const localData = localStorage.getItem(STORAGE_KEY);
+        if (localData) {
+          try {
+            const parsedLocalData = JSON.parse(localData);
+            setData(parsedLocalData);
+            lastDataRef.current = parsedLocalData;
+            console.log('[OnboardingStorage] Dados recuperados do localStorage');
+            
+            // Se há dados locais, usar eles imediatamente
+            // Tentar sync na nuvem em background (não crítico)
+            if (user?.id) {
+              try {
+                const cloudData = await loadFromCloud();
+                // Só usar dados da nuvem se foram atualizados mais recentemente
+                if (cloudData && cloudData.updatedAt && parsedLocalData.updatedAt) {
+                  const cloudTime = new Date(cloudData.updatedAt).getTime();
+                  const localTime = new Date(parsedLocalData.updatedAt).getTime();
+                  
+                  if (cloudTime > localTime) {
+                    setData(cloudData);
+                    lastDataRef.current = cloudData;
+                    localStorage.setItem(STORAGE_KEY, JSON.stringify(cloudData));
+                    console.log('[OnboardingStorage] Dados da nuvem mais recentes aplicados');
+                  }
+                }
+              } catch (cloudError) {
+                console.warn('[OnboardingStorage] Falha ao carregar da nuvem (usando localStorage):', cloudError);
+                // Continuar com dados locais se nuvem falhar
+              }
+            }
+            
+            return; // Dados encontrados localmente
+          } catch (parseError) {
+            console.error('[OnboardingStorage] Erro ao parsear dados locais:', parseError);
+            localStorage.removeItem(STORAGE_KEY); // Limpar dados corrompidos
+          }
+        }
+
+        // Se não há dados locais, tentar carregar da nuvem
+        if (user?.id) {
+          try {
+            const cloudData = await loadFromCloud();
+            if (cloudData) {
+              setData(cloudData);
+              lastDataRef.current = cloudData;
+              localStorage.setItem(STORAGE_KEY, JSON.stringify(cloudData));
+              console.log('[OnboardingStorage] Dados carregados da nuvem');
+              return;
+            }
+          } catch (cloudError) {
+            console.warn('[OnboardingStorage] Erro ao carregar da nuvem:', cloudError);
+          }
+        }
+        
+        // Se chegou aqui, não há dados salvos
+        console.log('[OnboardingStorage] Nenhum dado encontrado - iniciando onboarding novo');
+        
+      } catch (error) {
+        console.error('[OnboardingStorage] Erro ao carregar dados:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadInitialData();
+  }, [user?.id, loadFromCloud]);
+
+  // Atualizar dados com debounce para evitar re-renders excessivos
+  const updateData = useCallback((newData: Partial<OnboardingData>) => {
+    const updatedData = { 
+      ...lastDataRef.current, 
+      ...newData, 
+      updatedAt: new Date().toISOString() 
+    };
+    
+    // Verificar se realmente houve mudança para evitar updates desnecessários
+    const hasRealChange = JSON.stringify(updatedData) !== JSON.stringify(lastDataRef.current);
+    
+    if (hasRealChange) {
+      setData(updatedData);
+      lastDataRef.current = updatedData;
+      setHasUnsavedChanges(true);
+      
+      console.log('[OnboardingStorage] Dados atualizados:', Object.keys(newData));
+      
+      // Debounce para auto-save (opcional, pode ser removido se causar problemas)
+      if (updateTimeoutRef.current) {
+        clearTimeout(updateTimeoutRef.current);
+      }
+    }
+  }, []);
+
+  // Salvamento manual forçado (usado nas mudanças de etapas)
+  const forceSave = useCallback(async () => {
+    try {
+      await saveDataToStorage(lastDataRef.current);
+      setHasUnsavedChanges(false);
       setLastSaved(new Date());
-      setHasUnsavedChanges(false);
-    }
-    return result;
-  }, [syncToCloud]);
-
-  // Load data function
-  const loadData = useCallback(async (userId: string) => {
-    try {
-      const data = await getCloudData(userId);
-      return data;
+      console.log('[OnboardingStorage] Salvamento manual concluído');
     } catch (error) {
-      console.error('Erro ao carregar dados:', error);
-      return null;
+      console.error('[OnboardingStorage] Erro no salvamento manual:', error);
+      throw error;
     }
-  }, [getCloudData]);
+  }, [saveDataToStorage]);
 
-  // Clear data function
-  const clearData = useCallback(async (userId: string) => {
+  // Limpar dados
+  const clearData = useCallback(async () => {
+    const emptyData = {};
+    setData(emptyData);
+    lastDataRef.current = emptyData;
+    setHasUnsavedChanges(false);
+    setLastSaved(null);
+    
     try {
-      await clearCloudData(userId);
-      setLastSaved(null);
-      setHasUnsavedChanges(false);
+      localStorage.removeItem(STORAGE_KEY);
+      
+      if (user?.id) {
+        await clearCloudData();
+      }
+      console.log('[OnboardingStorage] Dados limpos');
     } catch (error) {
-      console.error('Erro ao limpar dados:', error);
+      console.error('[OnboardingStorage] Erro ao limpar dados:', error);
     }
-  }, [clearCloudData]);
+  }, [clearCloudData, user?.id]);
+
+  // Verificar se onboarding foi completado
+  const isCompleted = useCallback(() => {
+    return !!lastDataRef.current.completedAt;
+  }, []);
+
+  // Recuperar dados perdidos (função de emergência)
+  const recoverData = useCallback(() => {
+    try {
+      const localData = localStorage.getItem(STORAGE_KEY);
+      if (localData) {
+        const parsedData = JSON.parse(localData);
+        setData(parsedData);
+        lastDataRef.current = parsedData;
+        setHasUnsavedChanges(false); // Dados recuperados estão salvos
+        console.log('[OnboardingStorage] Dados recuperados do localStorage');
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error('[OnboardingStorage] Erro ao recuperar dados:', error);
+      return false;
+    }
+  }, []);
 
   return {
-    autoSave,
+    data,
+    updateData,
     forceSave,
-    loadData,
     clearData,
-    lastSaved,
+    recoverData,
+    isCompleted,
+    isLoading,
+    syncStatus,
     hasUnsavedChanges,
-    setLastSaved,
-    setHasUnsavedChanges,
-    isSyncing
+    lastSaved
   };
 };

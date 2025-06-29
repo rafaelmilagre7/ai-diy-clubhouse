@@ -1,181 +1,280 @@
+
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { Resend } from "npm:resend@2.0.0";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
+import { Resend } from 'npm:resend@4.0.0';
+import { renderAsync } from 'npm:@react-email/components@0.0.22';
+import React from 'npm:react@18.3.1';
+import { InviteEmail } from './_templates/invite-email.tsx';
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
 interface SendInviteRequest {
   email: string;
-  token: string;
-  roleId: string;
-  isResend?: boolean;
-  userName?: string;
+  inviteUrl: string;
+  roleName: string;
+  expiresAt: string;
+  senderName?: string;
+  notes?: string;
+  inviteId?: string;
+  forceResend?: boolean;
 }
 
-// Template compatível com Outlook/Hotmail usando tabelas
-const getOutlookCompatibleTemplate = (inviteUrl: string, userName?: string, isResend?: boolean) => {
-  const currentYear = new Date().getFullYear();
-  
-  return `
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Convite - Viver de IA</title>
-</head>
-<body style="margin: 0; padding: 0; background-color: #f5f5f5; font-family: Arial, sans-serif;">
-  <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background-color: #f5f5f5;">
-    <tr>
-      <td style="padding: 20px 0;">
-        <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="600" style="margin: 0 auto; background-color: #ffffff; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
-          
-          <!-- Header -->
-          <tr>
-            <td style="background-color: #667eea; padding: 30px; text-align: center; border-radius: 8px 8px 0 0;">
-              <h1 style="color: #ffffff; margin: 0; font-size: 28px; font-weight: bold;">Viver de IA</h1>
-              <p style="color: #ffffff; margin: 15px 0 0 0; font-size: 16px; opacity: 0.9;">
-                ${isResend ? 'Reenvio do seu convite' : 'Você foi convidado para nossa plataforma!'}
-              </p>
-            </td>
-          </tr>
-          
-          <!-- Content -->
-          <tr>
-            <td style="padding: 40px 30px;">
-              ${userName ? `<p style="margin: 0 0 20px 0; font-size: 16px; color: #333333;">Olá, ${userName}!</p>` : '<p style="margin: 0 0 20px 0; font-size: 16px; color: #333333;">Olá!</p>'}
-              
-              ${isResend ? 
-                '<p style="margin: 0 0 20px 0; font-size: 16px; color: #333333; line-height: 1.5;">Este é um reenvio do seu convite para acessar a plataforma Viver de IA.</p>' :
-                '<p style="margin: 0 0 20px 0; font-size: 16px; color: #333333; line-height: 1.5;">Você foi convidado para fazer parte da comunidade Viver de IA - a plataforma de educação e networking em Inteligência Artificial.</p>'
-              }
-              
-              <!-- CTA Section -->
-              <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin: 30px 0;">
-                <tr>
-                  <td style="background-color: #f8f9fa; padding: 25px; text-align: center; border-radius: 8px;">
-                    <p style="margin: 0 0 20px 0; font-size: 16px; font-weight: bold; color: #333333;">Clique no botão abaixo para aceitar o convite:</p>
-                    <table role="presentation" cellspacing="0" cellpadding="0" border="0" style="margin: 0 auto;">
-                      <tr>
-                        <td style="background-color: #667eea; border-radius: 6px;">
-                          <a href="${inviteUrl}" style="display: block; padding: 16px 32px; color: #ffffff; text-decoration: none; font-weight: bold; font-size: 16px;">
-                            Aceitar Convite
-                          </a>
-                        </td>
-                      </tr>
-                    </table>
-                  </td>
-                </tr>
-              </table>
-              
-              <p style="margin: 20px 0 0 0; font-size: 14px; color: #666666;">
-                Ou copie e cole este link no seu navegador:
-              </p>
-              <p style="margin: 10px 0 0 0; font-size: 14px; color: #667eea; word-break: break-all;">
-                ${inviteUrl}
-              </p>
-            </td>
-          </tr>
-          
-          <!-- Footer -->
-          <tr>
-            <td style="background-color: #f8f9fa; padding: 20px 30px; text-align: center; border-radius: 0 0 8px 8px; border-top: 1px solid #e9ecef;">
-              <p style="margin: 0 0 10px 0; font-size: 12px; color: #666666;">
-                Este convite é pessoal e intransferível. Se você não solicitou este convite, pode ignorar este email.
-              </p>
-              <p style="margin: 0; font-size: 12px; color: #666666;">
-                © ${currentYear} Viver de IA - Plataforma de Inteligência Artificial
-              </p>
-            </td>
-          </tr>
-          
-        </table>
-      </td>
-    </tr>
-  </table>
-</body>
-</html>`;
+// 🎯 CONFIGURAÇÃO DO DOMÍNIO CORRETO
+const getCorrectDomain = (): string => {
+  // Usar sempre o domínio personalizado para produção
+  return 'https://app.viverdeia.ai';
+};
+
+const generateCorrectInviteUrl = (token: string): string => {
+  const domain = getCorrectDomain();
+  return `${domain}/convite/${encodeURIComponent(token)}`;
 };
 
 const handler = async (req: Request): Promise<Response> => {
-  console.log(`📧 [SEND-INVITE-EMAIL] Nova requisição: ${req.method} - v3-6 Data Corrigida`);
-  
-  // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
-  if (req.method !== "POST") {
-    return new Response(
-      JSON.stringify({ error: "Método não permitido" }), 
-      { 
-        status: 405, 
-        headers: { "Content-Type": "application/json", ...corsHeaders } 
-      }
-    );
-  }
-
   try {
-    const { email, token, isResend = false, userName }: SendInviteRequest = await req.json();
-    
-    console.log(`📨 [SEND-INVITE-EMAIL] Enviando para: ${email}, Token: ${token}, Reenvio: ${isResend}`);
+    console.log("📧 Processando convite para email...");
 
-    const apiKey = Deno.env.get("RESEND_API_KEY");
-    if (!apiKey) {
-      throw new Error("RESEND_API_KEY não configurada");
+    const { 
+      email, 
+      inviteUrl, 
+      roleName, 
+      expiresAt, 
+      senderName, 
+      notes, 
+      inviteId,
+      forceResend = true 
+    }: SendInviteRequest = await req.json();
+
+    // Validações
+    if (!email || !inviteUrl || !roleName || !expiresAt) {
+      console.error("❌ Dados obrigatórios faltando");
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          error: 'Dados obrigatórios faltando: email, inviteUrl, roleName, expiresAt' 
+        }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
-    const resend = new Resend(apiKey);
-    
-    const inviteUrl = `${Deno.env.get("SITE_URL") || "https://app.viverdeia.ai"}/convite/${token}`;
-    console.log(`📧 [SEND-INVITE-EMAIL] URL do convite: ${inviteUrl}`);
-    
-    const emailHtml = getOutlookCompatibleTemplate(inviteUrl, userName, isResend);
-    
-    const emailResponse = await resend.emails.send({
-      from: "Viver de IA <convites@viverdeia.ai>",
-      to: [email],
-      subject: isResend ? "🔄 Convite Reenviado - Viver de IA" : "🎉 Convite para Viver de IA",
-      html: emailHtml,
-      tags: [
-        { name: 'type', value: 'invite' },
-        { name: 'version', value: 'v3-6-data-corrigida' },
-        { name: 'is_resend', value: isResend.toString() }
-      ]
-    });
+    console.log(`📧 Processando convite para: ${email}`, { forceResend });
 
-    console.log(`✅ [SEND-INVITE-EMAIL] Email enviado com sucesso:`, emailResponse.data?.id);
+    // 🎯 CORREÇÃO: Garantir que o URL use sempre o domínio correto
+    let correctedInviteUrl = inviteUrl;
+    
+    // Extrair token do URL original e recriar com domínio correto
+    const urlParts = inviteUrl.split('/convite/');
+    if (urlParts.length === 2) {
+      const token = urlParts[1];
+      correctedInviteUrl = generateCorrectInviteUrl(token);
+      console.log(`🔄 URL corrigido: ${inviteUrl} → ${correctedInviteUrl}`);
+    }
 
-    return new Response(
-      JSON.stringify({
-        success: true,
-        message: "Email de convite enviado com sucesso",
-        emailId: emailResponse.data?.id
-      }),
+    // Criar cliente Supabase para estatísticas
+    const supabaseAdmin = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
       {
-        status: 200,
-        headers: { "Content-Type": "application/json", ...corsHeaders },
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false
+        }
       }
     );
 
+    // Estratégia 1: Tentar Resend primeiro (mais confiável)
+    console.log("📨 Usando Resend como estratégia primária");
+    
+    const resend = new Resend(Deno.env.get('RESEND_API_KEY'));
+    
+    try {
+      console.log("📧 Renderizando template React Email...");
+      
+      // Renderizar template React Email com URL corrigido
+      const emailHtml = await renderAsync(
+        React.createElement(InviteEmail, {
+          inviteUrl: correctedInviteUrl, // 🎯 Usar URL corrigido
+          roleName,
+          expiresAt,
+          senderName,
+          notes,
+          recipientEmail: email,
+        })
+      );
+
+      console.log("📧 Enviando via Resend...");
+      
+      const resendResponse = await resend.emails.send({
+        from: 'Viver de IA <convites@viverdeia.ai>',
+        to: [email],
+        subject: `🚀 Convite para Viver de IA - ${roleName}`,
+        html: emailHtml,
+        headers: {
+          'X-Priority': '1',
+          'X-MSMail-Priority': 'High',
+          'Importance': 'high',
+        },
+        tags: [
+          { name: 'category', value: 'invite' },
+          { name: 'role', value: roleName },
+          { name: 'source', value: 'admin-invite' },
+        ],
+      });
+
+      if (resendResponse.error) {
+        throw new Error(`Resend falhou: ${resendResponse.error.message}`);
+      }
+
+      console.log(`✅ Email enviado via Resend: ${resendResponse.data?.id}`);
+
+      // Atualizar estatísticas do convite
+      if (inviteId) {
+        try {
+          console.log("📊 Atualizando estatísticas...");
+          
+          await supabaseAdmin
+            .from('invites')
+            .update({
+              last_sent_at: new Date().toISOString(),
+              send_attempts: supabaseAdmin.sql`COALESCE(send_attempts, 0) + 1`,
+              email_provider: 'resend',
+              email_id: resendResponse.data?.id,
+            })
+            .eq('id', inviteId);
+
+          console.log("📊 Estatísticas atualizadas");
+        } catch (statsError) {
+          console.warn("⚠️ Erro ao atualizar estatísticas:", statsError);
+        }
+      }
+
+      console.log("✅ Convite processado com sucesso (resend_primary):", {
+        email,
+        role: roleName,
+        strategy: 'resend_primary',
+        correctedUrl: correctedInviteUrl
+      });
+
+      return new Response(
+        JSON.stringify({ 
+          success: true, 
+          message: 'Email enviado via Resend (sistema otimizado)',
+          email,
+          strategy: 'resend_primary',
+          method: 'resend',
+          emailId: resendResponse.data?.id,
+          finalUrl: correctedInviteUrl // 🎯 Informar URL final usado
+        }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+
+    } catch (resendError: any) {
+      console.error("❌ Falha no Resend:", resendError);
+      
+      // Estratégia 2: Fallback para Supabase Auth
+      console.log("🔄 Tentando fallback: Supabase Auth...");
+      
+      try {
+        // Verificar se o usuário já existe
+        const { data: existingUser } = await supabaseAdmin.auth.admin.getUserByEmail(email);
+        
+        if (existingUser.user) {
+          console.log("👤 Usuário já existe, enviando link de recuperação...");
+          
+          const { error: recoveryError } = await supabaseAdmin.auth.admin.generateLink({
+            type: 'recovery',
+            email: email,
+            options: {
+              redirectTo: correctedInviteUrl // 🎯 Usar URL corrigido
+            }
+          });
+
+          if (recoveryError) {
+            throw new Error(`Supabase recovery falhou: ${recoveryError.message}`);
+          }
+
+          console.log("✅ Link de recuperação enviado");
+
+          return new Response(
+            JSON.stringify({ 
+              success: true, 
+              message: 'Link de recuperação enviado (usuário existente)',
+              email,
+              strategy: 'supabase_recovery',
+              method: 'recovery_link',
+              finalUrl: correctedInviteUrl
+            }),
+            { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        } else {
+          console.log("👤 Usuário novo, enviando via Supabase Auth...");
+          
+          const { error: inviteError } = await supabaseAdmin.auth.admin.inviteUserByEmail(email, {
+            redirectTo: correctedInviteUrl, // 🎯 Usar URL corrigido
+            data: {
+              role: roleName,
+              invited_by: senderName,
+              notes: notes
+            }
+          });
+
+          if (inviteError) {
+            throw new Error(`Supabase invite falhou: ${inviteError.message}`);
+          }
+
+          console.log("✅ Convite enviado via Supabase Auth");
+
+          return new Response(
+            JSON.stringify({ 
+              success: true, 
+              message: 'Convite enviado via Supabase Auth',
+              email,
+              strategy: 'supabase_auth',
+              method: 'auth_invite',
+              finalUrl: correctedInviteUrl
+            }),
+            { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+      } catch (supabaseError: any) {
+        console.error("❌ Fallback Supabase também falhou:", supabaseError);
+        
+        // Todas as estratégias falharam
+        console.error("💥 Todas as estratégias falharam");
+        
+        return new Response(
+          JSON.stringify({ 
+            success: false, 
+            error: 'Todas as estratégias de envio falharam',
+            details: {
+              resend_error: resendError.message,
+              supabase_error: supabaseError.message
+            }
+          }),
+          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+    }
+
   } catch (error: any) {
-    console.error(`❌ [SEND-INVITE-EMAIL] Erro:`, error);
+    console.error("❌ Erro crítico:", error);
     
     return new Response(
-      JSON.stringify({
-        success: false,
-        error: error.message || "Erro interno do servidor"
+      JSON.stringify({ 
+        success: false, 
+        error: 'Erro interno do servidor',
+        details: error.message
       }),
-      {
-        status: 500,
-        headers: { "Content-Type": "application/json", ...corsHeaders },
-      }
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
 };
 
-console.log("📧 [SEND-INVITE-EMAIL] Edge Function carregada! v3-6 Data Corrigida");
 serve(handler);

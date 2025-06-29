@@ -1,21 +1,20 @@
 
-import React from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { supabase } from '@/lib/supabase';
-import { useSimpleAuth } from '@/contexts/auth/SimpleAuthProvider';
-import { toast } from 'sonner';
-import { Form } from '@/components/ui/form';
-import { Button } from '@/components/ui/button';
-import { EventBasicInfo } from './form/EventBasicInfo';
-import { EventDateTime } from './form/EventDateTime';
-import { EventLocation } from './form/EventLocation';
-import { EventCoverImage } from './form/EventCoverImage';
-import { EventRecurrence } from './form/EventRecurrence';
-import { EventRoleAccess } from './form/EventRoleAccess';
-import { eventSchema, type EventFormData } from './form/EventFormSchema';
-import { Loader2 } from 'lucide-react';
-import type { Event } from '@/types/events';
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Button } from "@/components/ui/button";
+import { Form } from "@/components/ui/form";
+import { toast } from "sonner";
+import { supabase } from "@/lib/supabase";
+import { useQueryClient } from "@tanstack/react-query";
+import { EventBasicInfo } from "./form/EventBasicInfo";
+import { EventDateTime } from "./form/EventDateTime";
+import { EventLocation } from "./form/EventLocation";
+import { EventCoverImage } from "./form/EventCoverImage";
+import { EventRecurrence } from "./form/EventRecurrence";
+import { eventSchema, type EventFormData } from "./form/EventFormSchema";
+import { type Event } from "@/types/events";
+import { formatDateTimeLocal } from "@/utils/timezoneUtils";
 
 interface EventFormProps {
   event?: Event;
@@ -23,40 +22,33 @@ interface EventFormProps {
 }
 
 export const EventForm = ({ event, onSuccess }: EventFormProps) => {
-  const { user } = useSimpleAuth();
-  const [isSubmitting, setIsSubmitting] = React.useState(false);
-  const [selectedRoles, setSelectedRoles] = React.useState<string[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const queryClient = useQueryClient();
 
   const form = useForm<EventFormData>({
     resolver: zodResolver(eventSchema),
     defaultValues: {
-      title: event?.title || '',
-      description: event?.description || '',
-      start_time: event?.start_time ? new Date(event.start_time).toISOString().slice(0, 16) : '',
-      end_time: event?.end_time ? new Date(event.end_time).toISOString().slice(0, 16) : '',
-      location_link: event?.location_link || '',
-      physical_location: event?.physical_location || '',
-      cover_image_url: event?.cover_image_url || '',
+      title: event?.title || "",
+      description: event?.description || "",
+      start_time: event?.start_time ? formatDateTimeLocal(new Date(event.start_time)) : "",
+      end_time: event?.end_time ? formatDateTimeLocal(new Date(event.end_time)) : "",
+      location_link: event?.location_link || "",
+      physical_location: event?.physical_location || "",
+      cover_image_url: event?.cover_image_url || "",
       is_recurring: event?.is_recurring || false,
-      recurrence_pattern: event?.recurrence_pattern || '',
-      recurrence_interval: event?.recurrence_interval || 1,
-      recurrence_day: event?.recurrence_day || 0,
+      recurrence_pattern: event?.recurrence_pattern || undefined,
+      recurrence_interval: event?.recurrence_interval || undefined,
+      recurrence_day: event?.recurrence_day || undefined,
       recurrence_count: event?.recurrence_count || undefined,
-      recurrence_end_date: event?.recurrence_end_date ? new Date(event.recurrence_end_date).toISOString().slice(0, 16) : '',
+      recurrence_end_date: event?.recurrence_end_date || undefined,
     },
   });
 
   const onSubmit = async (data: EventFormData) => {
-    if (!user) {
-      toast.error('Você precisa estar logado para criar eventos.');
-      return;
-    }
-
-    setIsSubmitting(true);
-
     try {
-      // Preparar dados para inserção/atualização - usando any para contornar tipos TypeScript
-      const eventData: any = {
+      setIsSubmitting(true);
+
+      const eventData = {
         title: data.title,
         description: data.description || null,
         start_time: data.start_time,
@@ -64,7 +56,7 @@ export const EventForm = ({ event, onSuccess }: EventFormProps) => {
         location_link: data.location_link || null,
         physical_location: data.physical_location || null,
         cover_image_url: data.cover_image_url || null,
-        is_recurring: data.is_recurring,
+        is_recurring: data.is_recurring || false,
         recurrence_pattern: data.recurrence_pattern || null,
         recurrence_interval: data.recurrence_interval || null,
         recurrence_day: data.recurrence_day || null,
@@ -72,34 +64,48 @@ export const EventForm = ({ event, onSuccess }: EventFormProps) => {
         recurrence_end_date: data.recurrence_end_date || null,
       };
 
+      let result;
       if (event) {
         // Atualizar evento existente
-        const { error } = await (supabase as any)
-          .from('events')
+        result = await supabase
+          .from("events")
           .update(eventData)
-          .eq('id', event.id);
-
-        if (error) throw error;
-
-        toast.success('Evento atualizado com sucesso!');
+          .eq("id", event.id)
+          .select()
+          .single();
       } else {
         // Criar novo evento
-        const { error } = await (supabase as any)
-          .from('events')
+        const { data: userData } = await supabase.auth.getUser();
+        if (!userData.user) {
+          throw new Error("Usuário não autenticado");
+        }
+
+        result = await supabase
+          .from("events")
           .insert({
             ...eventData,
-            created_by: user.id,
-          });
-
-        if (error) throw error;
-
-        toast.success('Evento criado com sucesso!');
+            created_by: userData.user.id,
+          })
+          .select()
+          .single();
       }
 
-      onSuccess?.();
-    } catch (error: any) {
-      console.error('Erro ao salvar evento:', error);
-      toast.error(error.message || 'Erro ao salvar evento.');
+      if (result.error) {
+        throw result.error;
+      }
+
+      toast.success(event ? "Evento atualizado com sucesso!" : "Evento criado com sucesso!");
+      
+      // Invalidar queries para atualizar a lista
+      queryClient.invalidateQueries({ queryKey: ["events"] });
+      
+      if (onSuccess) {
+        onSuccess();
+      }
+
+    } catch (error) {
+      console.error("Erro ao salvar evento:", error);
+      toast.error("Erro ao salvar evento. Tente novamente.");
     } finally {
       setIsSubmitting(false);
     }
@@ -113,25 +119,14 @@ export const EventForm = ({ event, onSuccess }: EventFormProps) => {
         <EventLocation form={form} />
         <EventCoverImage form={form} />
         <EventRecurrence form={form} />
-        <EventRoleAccess 
-          selectedRoles={selectedRoles}
-          onChange={setSelectedRoles}
-        />
 
-        <div className="flex justify-end space-x-4 pt-4">
+        <div className="flex justify-end gap-3 pt-6 border-t">
           <Button
             type="submit"
             disabled={isSubmitting}
-            className="min-w-[120px]"
+            className="min-w-[100px]"
           >
-            {isSubmitting ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Salvando...
-              </>
-            ) : (
-              event ? 'Atualizar Evento' : 'Criar Evento'
-            )}
+            {isSubmitting ? "Salvando..." : event ? "Atualizar" : "Criar"}
           </Button>
         </div>
       </form>

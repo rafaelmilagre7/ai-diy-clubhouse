@@ -11,17 +11,15 @@ interface RecurrenceToggleProps {
 
 export const RecurrenceToggle = ({ form }: RecurrenceToggleProps) => {
   const isRecurring = form.watch("is_recurring");
-  
+
   return (
     <FormField
       control={form.control}
       name="is_recurring"
       render={({ field }) => (
-        <FormItem className="">
+        <FormItem className={`flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm transition-all ${isRecurring ? 'bg-blue-50 border-blue-200' : ''}`}>
           <div className="flex items-center space-x-3">
-            <CalendarClock 
-              className={`w-5 h-5 ${isRecurring ? 'text-viverblue' : 'text-muted-foreground'}`} 
-            />
+            <CalendarClock className={`w-5 h-5 ${isRecurring ? 'text-viverblue' : 'text-muted-foreground'}`} />
             <div className="space-y-0.5">
               <FormLabel className="text-base">Evento Recorrente</FormLabel>
               <p className="text-sm text-muted-foreground">
@@ -31,8 +29,10 @@ export const RecurrenceToggle = ({ form }: RecurrenceToggleProps) => {
           </div>
           <FormControl>
             <Switch
-              checked={field.value || false}
-              onCheckedChange={field.onChange}
+              checked={field.value}
+              onCheckedChange={(checked) => {
+                field.onChange(checked);
+              }}
               className="data-[state=checked]:bg-viverblue"
             />
           </FormControl>

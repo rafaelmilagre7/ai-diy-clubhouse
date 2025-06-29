@@ -95,8 +95,7 @@ export const LessonContent: React.FC<LessonContentProps> = ({
   
   // Verificar condições para exibição dos componentes
   const hasVideos = safeVideos.length > 0;
-  // Corrigido: usar ai_assistant_id que existe no schema
-  const hasAiAssistant = !!lesson.ai_assistant_id;
+  const hasAiAssistant = lesson.ai_assistant_enabled;
   
   // Calcular posição da aula no curso
   const currentLessonIndex = allLessons.findIndex(l => l.id === lesson.id);

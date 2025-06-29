@@ -1,71 +1,89 @@
 
 import { useState } from "react";
-import { Module } from "@/lib/supabase";
-import { supabase } from "@/lib/supabase";
-import { useSimpleAuth } from "@/contexts/auth/SimpleAuthProvider";
+import { Solution, supabase } from "@/lib/supabase";
+import { useAuth } from "@/contexts/auth";
 import { useLogging } from "@/hooks/useLogging";
+import { toast } from "sonner";
+import { handleChecklistError } from "./checklistUtils";
 
-export const useChecklistInteractions = (module: Module) => {
+export const useChecklistInteractions = (solution: Solution | null) => {
   const [saving, setSaving] = useState(false);
-  const { user } = useSimpleAuth();
+  const { user } = useAuth();
   const { log, logError } = useLogging();
 
+  // Handle checkbox change and save to user's progress
   const handleCheckChange = async (
     itemId: string, 
-    checked: boolean, 
+    checked: boolean,
     userChecklist: Record<string, boolean>,
     setUserChecklist: (checklist: Record<string, boolean>) => void
   ) => {
-    if (!user || !module?.solution_id) return;
-
-    setSaving(true);
-    
     try {
-      const updatedChecklist = {
-        ...userChecklist,
-        [itemId]: checked
-      };
-      
       // Update local state first for immediate feedback
-      setUserChecklist(updatedChecklist);
+      const newUserChecklist = { ...userChecklist };
+      newUserChecklist[itemId] = checked;
+      setUserChecklist(newUserChecklist);
       
-      // Save to progress table instead of non-existent user_checklists
-      const { error } = await supabase
-        .from("progress")
-        .upsert({
-          user_id: user.id,
-          solution_id: module.solution_id,
-          is_completed: false,
-          updated_at: new Date().toISOString()
-        }, {
-          onConflict: 'user_id,solution_id'
-        });
+      // Only save to database if user is logged in
+      if (user && solution) {
+        setSaving(true);
         
-      if (error) {
-        logError("Error saving checklist item", error);
-        // Revert on error
-        setUserChecklist(userChecklist);
-      } else {
-        log("Checklist item updated", { item_id: itemId, checked });
+        // Check if a record already exists
+        const { data, error } = await supabase
+          .from("user_checklists")
+          .select("*")
+          .eq("user_id", user.id)
+          .eq("solution_id", solution.id)
+          .single();
+          
+        if (error && error.code !== "PGRST116") { // PGRST116 = Not found, which is expected if no record yet
+          throw error;
+        }
+        
+        if (data) {
+          // Update existing record
+          await supabase
+            .from("user_checklists")
+            .update({
+              checked_items: newUserChecklist,
+              updated_at: new Date().toISOString()
+            })
+            .eq("id", data.id);
+        } else {
+          // Create new record
+          await supabase
+            .from("user_checklists")
+            .insert({
+              user_id: user.id,
+              solution_id: solution.id,
+              checked_items: newUserChecklist,
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString()
+            });
+        }
+        
+        // Log user interaction
+        log("User toggled checklist item", { 
+          solution_id: solution.id,
+          item_id: itemId,
+          checked
+        });
       }
     } catch (error) {
-      logError("Error updating checklist", error);
-      // Revert on error
-      setUserChecklist(userChecklist);
+      logError("Error saving checklist progress:", error);
+      toast.error("Erro ao salvar progresso do checklist");
+      
+      // Revert the change in UI if save fails
+      const revertedChecklist = { ...userChecklist };
+      revertedChecklist[itemId] = !checked;
+      setUserChecklist(revertedChecklist);
     } finally {
       setSaving(false);
     }
   };
 
-  const handleToggleItem = (itemId: string) => {
-    // This function will be called from the component
-    // Implementation will depend on the current state
-    log("Toggle item requested", { item_id: itemId });
-  };
-
   return {
     saving,
-    handleCheckChange,
-    handleToggleItem
+    handleCheckChange
   };
 };

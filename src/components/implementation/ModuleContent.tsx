@@ -1,9 +1,8 @@
-
 import React, { useEffect } from "react";
 import { Module } from "@/lib/supabase";
-import LandingModule from "./LandingModule";
-import CelebrationModule from "./CelebrationModule";
-import DefaultModule from "./DefaultModule";
+import { LandingModule } from "./LandingModule";
+import { CelebrationModule } from "./CelebrationModule";
+import { DefaultModule } from "./DefaultModule";
 import { shouldAutoComplete } from "./content/ContentManager";
 import { useLogging } from "@/hooks/useLogging";
 
@@ -11,35 +10,28 @@ interface ModuleContentProps {
   module: Module | null;
   onComplete: () => void;
   onError?: (error: any) => void;
-  onInteraction?: () => void;
 }
 
-export const ModuleContent = ({ module, onComplete, onError, onInteraction }: ModuleContentProps) => {
+export const ModuleContent = ({ module, onComplete, onError }: ModuleContentProps) => {
   const { log, logError } = useLogging();
   
-  // Não fazer auto-complete aqui, deixar para os componentes individuais decidirem
+  // Mark landing and celebration modules as automatically interacted with
   useEffect(() => {
-    if (module) {
-      log("Renderizando conteúdo do módulo", { 
-        module_id: module.id, 
-        module_type: module.type,
-        module_title: module.title 
-      });
+    if (module && shouldAutoComplete(module)) {
+      log("Auto-completing module", { module_id: module.id, module_type: module.type });
+      onComplete();
     }
-  }, [module, log]);
+  }, [module, onComplete, log]);
 
   if (!module) {
-    log("Nenhum módulo fornecido para ModuleContent");
-    return (
-      <div className="p-8 text-center">
-        <p className="text-muted-foreground">Nenhum módulo disponível.</p>
-      </div>
-    );
+    log("No module provided to ModuleContent");
+    return null;
   }
   
   try {
-    log("Renderizando módulo", { module_type: module.type });
-    
+    // Renderiza o conteúdo apropriado com base no tipo do módulo
+    log("Rendering module content", { module_type: module.type });
+    // Microanimação suave na troca de módulo (fade-in)
     return (
       <div className="animate-fade-in">
         {(() => {
@@ -49,19 +41,13 @@ export const ModuleContent = ({ module, onComplete, onError, onInteraction }: Mo
             case "celebration":
               return <CelebrationModule module={module} onComplete={onComplete} />;
             default:
-              return (
-                <DefaultModule 
-                  module={module} 
-                  onComplete={onComplete}
-                  onInteraction={onInteraction}
-                />
-              );
+              return <DefaultModule module={module} onComplete={onComplete} />;
           }
         })()}
       </div>
     );
   } catch (error) {
-    logError("Erro ao renderizar conteúdo do módulo", error);
+    logError("Error rendering module content", error);
     if (onError) {
       onError(error);
     }

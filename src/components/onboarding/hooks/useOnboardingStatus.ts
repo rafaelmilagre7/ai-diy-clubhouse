@@ -1,10 +1,11 @@
 
 import { useState, useEffect } from 'react';
-import { useSimpleAuth } from '@/contexts/auth/SimpleAuthProvider';
+import { useAuth } from '@/contexts/auth';
 import { supabase } from '@/lib/supabase';
+import { getUserRoleName } from '@/lib/supabase/types';
 
 export const useOnboardingStatus = () => {
-  const { user, profile, isLoading: authLoading } = useSimpleAuth();
+  const { user, profile, isLoading: authLoading } = useAuth();
   const [isLoading, setIsLoading] = useState(true);
   const [isRequired, setIsRequired] = useState(false);
   const [hasCompleted, setHasCompleted] = useState(false);
@@ -19,24 +20,41 @@ export const useOnboardingStatus = () => {
       try {
         console.log('[OnboardingStatus] Verificando status para usuário:', user.id);
         
-        // MUDANÇA: Usar profiles.onboarding_completed como fonte principal
-        const onboardingCompleted = profile?.onboarding_completed === true;
+        // CORREÇÃO DE SEGURANÇA: Verificação de admin APENAS via banco de dados
+        const userRole = getUserRoleName(profile);
+        const isAdmin = userRole === 'admin';
 
-        console.log('[OnboardingStatus] Status:', {
-          userId: user.id,
-          email: user.email,
-          profileOnboardingCompleted: profile?.onboarding_completed,
-          onboardingCompleted,
-          userRole: profile?.user_roles?.name
-        });
+        console.log('[OnboardingStatus] Role do usuário:', userRole, 'É admin:', isAdmin);
 
-        // TODOS devem fazer onboarding se não completaram
-        setHasCompleted(onboardingCompleted);
-        setIsRequired(!onboardingCompleted);
-        
+        // Admins não precisam de onboarding
+        if (isAdmin) {
+          console.log('[OnboardingStatus] Admin detectado - onboarding não necessário');
+          setIsRequired(false);
+          setHasCompleted(true);
+          setIsLoading(false);
+          return;
+        }
+
+        // Verificar se o usuário já completou o onboarding
+        const { data: onboardingData, error } = await supabase
+          .from('user_onboarding')
+          .select('completed_at, user_id')
+          .eq('user_id', user.id)
+          .maybeSingle();
+
+        if (error && error.code !== 'PGRST116') {
+          console.error('[OnboardingStatus] Erro ao verificar onboarding:', error);
+          setIsRequired(true);
+          setHasCompleted(false);
+        } else {
+          const completed = !!onboardingData?.completed_at;
+          console.log('[OnboardingStatus] Dados do onboarding encontrados:', !!onboardingData, 'Completado:', completed);
+          
+          setHasCompleted(completed);
+          setIsRequired(!completed);
+        }
       } catch (error) {
         console.error('[OnboardingStatus] Erro ao verificar status do onboarding:', error);
-        // Em caso de erro, assumir que precisa fazer onboarding por segurança
         setIsRequired(true);
         setHasCompleted(false);
       } finally {
@@ -52,7 +70,7 @@ export const useOnboardingStatus = () => {
     isRequired,
     hasCompleted,
     userId: user?.id,
-    profileOnboardingCompleted: profile?.onboarding_completed
+    userRole: getUserRoleName(profile)
   });
 
   return {

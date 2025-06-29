@@ -1,96 +1,242 @@
 
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Card, CardContent } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { AlertCircle } from 'lucide-react';
-import { useSimpleAuth } from '@/contexts/auth/SimpleAuthProvider';
-import { LoginForm } from './LoginForm';
-import SimpleRegisterForm from './SimpleRegisterForm';
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Eye, EyeOff, Loader2 } from "lucide-react";
+import { supabase } from "@/lib/supabase";
+import { toast } from "@/hooks/use-toast";
+import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/auth";
+import { useEffect } from "react";
 
 const AuthLayout = () => {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
-  const { user } = useSimpleAuth();
-  
-  const [activeTab, setActiveTab] = useState('login');
-  const [message, setMessage] = useState('');
+  const { user, profile, isAdmin } = useAuth();
 
-  console.log('[AUTH-LAYOUT] Renderizando para usuário:', user ? user.email : 'não logado');
-
-  // Redirecionar usuário autenticado
+  // CORREÇÃO CRÍTICA 1: Verificar se usuário já está logado e redirecionar
   useEffect(() => {
-    if (user) {
-      console.log('[AUTH-LAYOUT] Usuário logado detectado, redirecionando para dashboard');
-      navigate('/dashboard');
+    if (user && profile) {
+      console.log("[AUTH-LAYOUT] Usuário já autenticado detectado, redirecionando...", {
+        email: user.email,
+        isAdmin,
+        profileRole: profile.role_id
+      });
+      
+      // Redirecionar baseado no papel do usuário
+      if (isAdmin || profile.role_id === 'admin') {
+        console.log("[AUTH-LAYOUT] Redirecionando admin para /admin");
+        navigate('/admin', { replace: true });
+      } else if (profile.role_id === 'formacao') {
+        console.log("[AUTH-LAYOUT] Redirecionando formação para /formacao");
+        navigate('/formacao', { replace: true });
+      } else {
+        console.log("[AUTH-LAYOUT] Redirecionando usuário comum para /dashboard");
+        navigate('/dashboard', { replace: true });
+      }
     }
-  }, [user, navigate]);
+  }, [user, profile, isAdmin, navigate]);
 
-  // Se usuário está logado, mostrar loading enquanto redireciona
-  if (user) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#0F111A] to-[#151823] p-4">
-        <Card className="w-full max-w-md bg-[#1A1E2E]/90 backdrop-blur-sm border-white/20">
-          <CardContent className="p-6 text-center">
-            <h2 className="text-xl font-semibold text-white mb-4">
-              Redirecionando...
-            </h2>
-            <div className="flex justify-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-viverblue"></div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!email || !password) {
+      toast({
+        title: "Campos obrigatórios",
+        description: "Por favor, preencha email e senha.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    try {
+      setIsLoading(true);
+      console.log("[AUTH-LAYOUT] Iniciando processo de login");
+      
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
+      
+      if (error) {
+        console.error("[AUTH-LAYOUT] Erro de autenticação:", error);
+        throw error;
+      }
+      
+      if (data.user) {
+        console.log("[AUTH-LAYOUT] Login bem-sucedido:", data.user.email);
+        toast({
+          title: "Login realizado com sucesso",
+          description: "Redirecionando...",
+        });
+        
+        // CORREÇÃO CRÍTICA 2: Redirecionar explicitamente para a raiz após login
+        console.log("[AUTH-LAYOUT] Redirecionando para / para acionar RootRedirect");
+        navigate('/', { replace: true });
+      }
+      
+    } catch (error: any) {
+      console.error("[AUTH-LAYOUT] Erro no processo de login:", error);
+      
+      // Tratar diferentes tipos de erro
+      if (error.message?.includes('Invalid login credentials')) {
+        toast({
+          title: "Credenciais inválidas",
+          description: "Email ou senha incorretos. Verifique e tente novamente.",
+          variant: "destructive",
+        });
+      } else if (error.message?.includes('Email not confirmed')) {
+        toast({
+          title: "Email não confirmado",
+          description: "Verifique sua caixa de entrada e confirme seu email.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Erro de autenticação",
+          description: error.message || "Não foi possível fazer login. Tente novamente.",
+          variant: "destructive",
+        });
+      }
+    } finally {
+      // CORREÇÃO CRÍTICA 3: Timeout mais curto e sempre finalizar loading
+      setTimeout(() => {
+        setIsLoading(false);
+        console.log("[AUTH-LAYOUT] Loading finalizado");
+      }, 1000);
+    }
+  };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#0F111A] to-[#151823] p-4">
-      <Card className="w-full max-w-md bg-[#1A1E2E]/90 backdrop-blur-sm border-white/20">
-        <CardContent className="p-6">
-          {message && (
-            <Alert className="mb-4 bg-blue-500/10 border-blue-500/20">
-              <AlertCircle className="h-4 w-4 text-blue-400" />
-              <AlertDescription className="text-blue-400">{message}</AlertDescription>
-            </Alert>
-          )}
+    <div className="min-h-screen w-full flex items-center justify-center bg-gradient-to-b from-gray-900 to-black p-4">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -20 }}
+        transition={{ duration: 0.5 }}
+        className="w-full max-w-md"
+      >
+        {/* Logo */}
+        <div className="mb-8 text-center">
+          <img
+            src="https://milagredigital.com/wp-content/uploads/2025/04/viverdeiaclub.avif"
+            alt="VIVER DE IA Club"
+            className="mx-auto h-20 w-auto"
+          />
+        </div>
+
+        {/* Título Principal */}
+        <div className="mb-8 text-center">
+          <h1 className="text-3xl font-bold text-white mb-2">
+            Potencialize com IA
+          </h1>
+          <p className="text-gray-300 text-lg">
+            Transforme seu negócio com inteligência artificial
+          </p>
+        </div>
+
+        {/* Card de Login */}
+        <div className="bg-gray-800 border border-gray-700 rounded-lg shadow-xl p-6 mb-8">
+          <div className="text-center pb-4">
+            <h2 className="text-2xl text-white mb-2">
+              Acesse sua conta
+            </h2>
+            <p className="text-gray-300">
+              Entre para acessar suas soluções de IA exclusivas
+            </p>
+          </div>
           
-          <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid w-full grid-cols-2 mb-6 bg-[#252842] border-white/10">
-              <TabsTrigger 
-                value="login" 
-                className="data-[state=active]:bg-viverblue data-[state=active]:text-white text-neutral-300"
-              >
-                Entrar
-              </TabsTrigger>
-              <TabsTrigger 
-                value="register"
-                className="data-[state=active]:bg-viverblue data-[state=active]:text-white text-neutral-300"
-              >
-                Criar conta
-              </TabsTrigger>
-            </TabsList>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="email" className="text-gray-200">Email</Label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="seu@email.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                disabled={isLoading}
+                required
+                className="bg-gray-700 border-gray-600 text-white placeholder-gray-400 focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
             
-            <TabsContent value="login">
-              <div className="space-y-4">
-                <div className="text-center space-y-2">
-                  <h2 className="text-2xl font-bold text-white">
-                    Entrar na conta
-                  </h2>
-                  <p className="text-neutral-300">
-                    Acesse sua conta para continuar
-                  </p>
-                </div>
-                <LoginForm />
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="password" className="text-gray-200">Senha</Label>
+                <Button
+                  type="button"
+                  variant="link"
+                  onClick={() => console.log("[AUTH-LAYOUT] Reset password clicked")}
+                  className="text-xs text-blue-400 hover:text-blue-300 p-0 h-auto"
+                >
+                  Esqueceu a senha?
+                </Button>
               </div>
-            </TabsContent>
-            
-            <TabsContent value="register">
-              <SimpleRegisterForm />
-            </TabsContent>
-          </Tabs>
-        </CardContent>
-      </Card>
+              <div className="relative">
+                <Input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  placeholder="********"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  disabled={isLoading}
+                  required
+                  className="bg-gray-700 border-gray-600 text-white placeholder-gray-400 focus:ring-blue-500 focus:border-blue-500"
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent text-gray-400 hover:text-gray-300"
+                  onClick={() => setShowPassword(!showPassword)}
+                  disabled={isLoading}
+                >
+                  {showPassword ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
+                </Button>
+              </div>
+            </div>
+
+            <Button 
+              type="submit" 
+              className="w-full bg-cyan-500 hover:bg-cyan-600 text-white font-semibold uppercase tracking-wide" 
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Entrando...
+                </>
+              ) : (
+                "ENTRAR"
+              )}
+            </Button>
+          </form>
+        </div>
+
+        {/* Seção Inferior - Acesso Exclusivo */}
+        <div className="text-center bg-gray-800/50 border border-gray-700/50 rounded-lg p-4">
+          <div className="flex items-center justify-center gap-2 mb-2">
+            <span className="text-xl">🔒</span>
+            <span className="text-white font-semibold">
+              Acesso exclusivo para membros convidados
+            </span>
+          </div>
+          <p className="text-gray-400 text-sm">
+            Esta plataforma é restrita apenas para membros que receberam um convite oficial. 
+            Entre em contato conosco se precisar de acesso.
+          </p>
+        </div>
+      </motion.div>
     </div>
   );
 };

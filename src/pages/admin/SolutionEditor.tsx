@@ -1,15 +1,14 @@
 
-import React from 'react';
-import { useParams } from 'react-router-dom';
-import { useAuth } from '@/contexts/auth';
-import { useSolutionEditor } from '@/components/admin/solution-editor/useSolutionEditor';
-import LoadingScreen from '@/components/common/LoadingScreen';
-import SolutionEditorHeader from '@/components/admin/solution-editor/SolutionEditorHeader';
-import SolutionEditorTabs from '@/components/admin/solution-editor/SolutionEditorTabs';
-import { Card, CardContent } from '@/components/ui/card';
-import NavigationButtons from '@/components/admin/solution-editor/NavigationButtons';
-import AuthError from '@/components/admin/solution-editor/AuthError';
-import { useToast } from '@/hooks/use-toast';
+import { useParams } from "react-router-dom";
+import { useAuth } from "@/contexts/auth";
+import LoadingScreen from "@/components/common/LoadingScreen";
+import SolutionEditorHeader from "@/components/admin/solution-editor/SolutionEditorHeader";
+import SolutionEditorTabs from "@/components/admin/solution-editor/SolutionEditorTabs";
+import { Card, CardContent } from "@/components/ui/card";
+import NavigationButtons from "@/components/admin/solution-editor/NavigationButtons";
+import AuthError from "@/components/admin/solution-editor/AuthError";
+import { useToast } from "@/hooks/use-toast";
+import { useSolutionEditor } from "@/components/admin/solution-editor/useSolutionEditor";
 
 const SolutionEditor = () => {
   const { id } = useParams<{ id: string }>();
@@ -34,20 +33,28 @@ const SolutionEditor = () => {
     return <LoadingScreen />;
   }
   
-  const handleSaveWithToast = async () => {
-    try {
-      await onSubmit({...currentValues, published: currentStep === totalSteps - 1});
-      toast({
-        title: "Progresso salvo",
-        description: "Suas alterações foram salvas com sucesso."
-      });
-    } catch (error) {
-      console.error("Erro ao salvar:", error);
-      toast({
-        title: "Erro ao salvar",
-        description: "Ocorreu um erro ao salvar suas alterações.",
-        variant: "destructive"
-      });
+  // Função para mostrar toast explicitamente ao salvar
+  const handleSaveWithToast = () => {
+    // Na primeira etapa, dispara o submit do formulário
+    if (currentStep === 0) {
+      const form = document.querySelector("form");
+      if (form) form.dispatchEvent(new Event("submit", { cancelable: true, bubbles: true }));
+    } else {
+      // Nas outras etapas, chama a função específica de salvamento
+      onSubmit({...currentValues, published: currentStep === totalSteps - 1})
+        .then(() => {
+          toast({
+            title: "Progresso salvo",
+            description: "Suas alterações foram salvas com sucesso."
+          });
+        })
+        .catch(error => {
+          toast({
+            title: "Erro ao salvar",
+            description: "Ocorreu um erro ao salvar suas alterações.",
+            variant: "destructive"
+          });
+        });
     }
   };
 
@@ -63,26 +70,18 @@ const SolutionEditor = () => {
     }
   };
 
+  // Determina a cor do nível de dificuldade
   const getDifficultyColor = () => {
     const difficulty = currentValues.difficulty;
     switch (difficulty) {
       case "easy":
         return "bg-green-500";
       case "medium":
-        return "bg-yellow-500";
-      case "advanced":
         return "bg-orange-500";
+      case "advanced":
+        return "bg-red-500";
       default:
         return "bg-gray-500";
-    }
-  };
-  
-  const getDifficultyText = (difficulty: string) => {
-    switch (difficulty) {
-      case "easy": return "Fácil";
-      case "medium": return "Normal";
-      case "advanced": return "Avançado";
-      default: return difficulty;
     }
   };
   
@@ -95,7 +94,6 @@ const SolutionEditor = () => {
         title={currentValues.title}
         difficulty={currentValues.difficulty}
         difficultyColor={getDifficultyColor()}
-        difficultyText={getDifficultyText(currentValues.difficulty)}
       />
       
       {!user && <AuthError />}
@@ -105,7 +103,7 @@ const SolutionEditor = () => {
           <SolutionEditorTabs 
             activeTab={activeTab}
             setActiveTab={setActiveTab}
-            solution={solution as any}
+            solution={solution}
             currentValues={currentValues}
             onSubmit={onSubmit}
             saving={saving}

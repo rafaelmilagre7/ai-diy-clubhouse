@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { CertificateTemplate } from "@/types/learningTypes";
 import { Button } from "@/components/ui/button";
@@ -10,7 +9,6 @@ import { Loader2 } from "lucide-react";
 import { useLearningCourses } from "@/hooks/learning/useLearningCourses";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { SafeHtmlRenderer } from "@/components/security/SafeHtmlRenderer";
 
 interface CertificateTemplateFormProps {
   template: CertificateTemplate | null;
@@ -136,13 +134,15 @@ export const CertificateTemplateForm = ({
         </TabsContent>
         <TabsContent value="preview">
           <div className="border rounded-lg p-4 h-80 overflow-auto">
-            <SafeHtmlRenderer
-              html={(formData.html_template || "")
-                .replace(/\{\{nome\}\}/g, "Nome do Aluno")
-                .replace(/\{\{curso\}\}/g, "Nome do Curso")
-                .replace(/\{\{data\}\}/g, new Date().toLocaleDateString("pt-BR"))
-                .replace(/\{\{codigo\}\}/g, "ABC-123-XYZ")}
+            <div
               className="certificate-preview"
+              dangerouslySetInnerHTML={{
+                __html: (formData.html_template || "")
+                  .replace(/\{\{nome\}\}/g, "Nome do Aluno")
+                  .replace(/\{\{curso\}\}/g, "Nome do Curso")
+                  .replace(/\{\{data\}\}/g, new Date().toLocaleDateString("pt-BR"))
+                  .replace(/\{\{codigo\}\}/g, "ABC-123-XYZ")
+              }}
             />
           </div>
         </TabsContent>

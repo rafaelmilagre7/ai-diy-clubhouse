@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { ModernStatsCard } from '../ModernStatsCard';
+import { StatCard } from '@/components/admin/dashboard/StatCard';
 import { Users, Activity, UserPlus, ArrowUpRight } from 'lucide-react';
 
 interface UserStatCardsProps {
@@ -17,53 +17,37 @@ export const UserStatCards: React.FC<UserStatCardsProps> = ({
   growthRate
 }) => {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-      <ModernStatsCard
+    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <StatCard
         title="Total de Usuários"
         value={totalUsers}
-        icon={Users}
+        icon={<Users className="h-5 w-5" />}
         colorScheme="blue"
-        trend={{
-          value: Math.round((activeUsers / totalUsers) * 100),
-          label: "usuários ativos",
-          type: activeUsers > totalUsers * 0.3 ? 'positive' : 'neutral'
-        }}
       />
       
-      <ModernStatsCard
+      <StatCard
         title="Novos Usuários Hoje"
         value={newUsersToday}
-        icon={UserPlus}
+        icon={<UserPlus className="h-5 w-5" />}
+        percentageChange={newUsersToday > 0 ? 100 : 0}
+        percentageText="em relação a ontem"
         colorScheme="green"
-        trend={{
-          value: newUsersToday,
-          label: "hoje",
-          type: newUsersToday > 0 ? 'positive' : 'neutral'
-        }}
       />
       
-      <ModernStatsCard
+      <StatCard
         title="Usuários Ativos (7d)"
         value={activeUsers}
-        icon={Activity}
-        colorScheme="purple"
-        trend={{
-          value: Math.round((activeUsers / totalUsers) * 100),
-          label: "do total",
-          type: activeUsers > totalUsers * 0.2 ? 'positive' : 'negative'
-        }}
+        icon={<Activity className="h-5 w-5" />}
+        percentageChange={Math.round((activeUsers / totalUsers) * 100)}
+        percentageText="do total de usuários"
+        colorScheme="blue"
       />
       
-      <ModernStatsCard
+      <StatCard
         title="Taxa de Crescimento"
         value={`${growthRate.toFixed(1)}%`}
-        icon={ArrowUpRight}
-        colorScheme={growthRate > 0 ? "green" : growthRate < 0 ? "red" : "indigo"}
-        trend={{
-          value: Math.abs(growthRate),
-          label: "vs período anterior",
-          type: growthRate > 0 ? 'positive' : growthRate < 0 ? 'negative' : 'neutral'
-        }}
+        icon={<ArrowUpRight className="h-5 w-5" />}
+        colorScheme="green"
       />
     </div>
   );

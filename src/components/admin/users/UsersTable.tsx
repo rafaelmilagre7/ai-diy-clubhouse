@@ -1,96 +1,169 @@
 
-import React from 'react';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { MoreHorizontal, UserCog, Trash2, Key } from 'lucide-react';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-
-interface User {
-  id: string;
-  email: string;
-  name: string;
-  role: string;
-  created_at: string;
-}
+import React, { useState } from "react";
+import { UserProfile, getUserRoleName } from "@/lib/supabase";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { MoreHorizontal, Edit, Trash2, Key, RotateCcw } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { UserResetDialog } from "./UserResetDialog";
 
 interface UsersTableProps {
-  users: User[];
+  users: UserProfile[];
   loading: boolean;
-  canAssignRoles: boolean;
+  canEditRoles: boolean;
   canDeleteUsers: boolean;
   canResetPasswords: boolean;
-  onEditRole: (user: User) => void;
-  onDeleteUser: (user: User) => void;
-  onResetPassword: (user: User) => void;
+  onEditRole: (user: UserProfile) => void;
+  onDeleteUser: (user: UserProfile) => void;
+  onResetPassword: (user: UserProfile) => void;
+  onResetUser: (user: UserProfile) => void;
+  onRefresh: () => void;
 }
 
 export const UsersTable: React.FC<UsersTableProps> = ({
   users,
   loading,
-  canAssignRoles,
+  canEditRoles,
   canDeleteUsers,
   canResetPasswords,
   onEditRole,
   onDeleteUser,
-  onResetPassword
+  onResetPassword,
+  onResetUser,
+  onRefresh,
 }) => {
+  const [resetDialogOpen, setResetDialogOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
+
+  const handleResetUser = (user: UserProfile) => {
+    setSelectedUser(user);
+    setResetDialogOpen(true);
+  };
+
+  const handleResetSuccess = () => {
+    onRefresh();
+  };
+
   if (loading) {
-    return <div>Carregando usuários...</div>;
+    return (
+      <div className="text-center py-8">
+        <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-viverblue"></div>
+        <p className="mt-2 text-muted-foreground">Carregando usuários...</p>
+      </div>
+    );
   }
 
   return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead>Nome</TableHead>
-          <TableHead>Email</TableHead>
-          <TableHead>Papel</TableHead>
-          <TableHead>Data de Cadastro</TableHead>
-          <TableHead>Ações</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {users.map((user) => (
-          <TableRow key={user.id}>
-            <TableCell>{user.name}</TableCell>
-            <TableCell>{user.email}</TableCell>
-            <TableCell>
-              <Badge variant="outline">{user.role}</Badge>
-            </TableCell>
-            <TableCell>{new Date(user.created_at).toLocaleDateString()}</TableCell>
-            <TableCell>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="sm">
-                    <MoreHorizontal className="h-4 w-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  {canAssignRoles && (
-                    <DropdownMenuItem onClick={() => onEditRole(user)}>
-                      <UserCog className="h-4 w-4 mr-2" />
-                      Alterar Papel
-                    </DropdownMenuItem>
-                  )}
-                  {canResetPasswords && (
-                    <DropdownMenuItem onClick={() => onResetPassword(user)}>
-                      <Key className="h-4 w-4 mr-2" />
-                      Resetar Senha
-                    </DropdownMenuItem>
-                  )}
-                  {canDeleteUsers && (
-                    <DropdownMenuItem onClick={() => onDeleteUser(user)} className="text-red-600">
-                      <Trash2 className="h-4 w-4 mr-2" />
-                      Excluir
-                    </DropdownMenuItem>
-                  )}
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </TableCell>
-          </TableRow>
-        ))}
-      </TableBody>
-    </Table>
+    <>
+      <div className="border rounded-lg">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Usuário</TableHead>
+              <TableHead>Email</TableHead>
+              <TableHead>Papel</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead>Criado em</TableHead>
+              <TableHead className="text-right">Ações</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {users.map((user) => {
+              const roleName = getUserRoleName(user);
+              
+              return (
+                <TableRow key={user.id}>
+                  <TableCell>
+                    <div className="flex items-center space-x-3">
+                      <Avatar className="h-8 w-8">
+                        <AvatarImage src={user.avatar_url || undefined} />
+                        <AvatarFallback>
+                          {user.name?.charAt(0)?.toUpperCase() || user.email?.charAt(0)?.toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                      <span className="font-medium">{user.name || 'Sem nome'}</span>
+                    </div>
+                  </TableCell>
+                  <TableCell>{user.email}</TableCell>
+                  <TableCell>
+                    <Badge variant={roleName === 'admin' ? 'default' : 'secondary'}>
+                      {roleName}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant="outline">Ativo</Badge>
+                  </TableCell>
+                  <TableCell>
+                    {new Date(user.created_at).toLocaleDateString('pt-BR')}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" className="h-8 w-8 p-0">
+                          <span className="sr-only">Abrir menu</span>
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        {canEditRoles && (
+                          <DropdownMenuItem onClick={() => onEditRole(user)}>
+                            <Edit className="mr-2 h-4 w-4" />
+                            Editar papel
+                          </DropdownMenuItem>
+                        )}
+                        {canResetPasswords && (
+                          <DropdownMenuItem onClick={() => onResetPassword(user)}>
+                            <Key className="mr-2 h-4 w-4" />
+                            Redefinir senha
+                          </DropdownMenuItem>
+                        )}
+                        <DropdownMenuItem onClick={() => handleResetUser(user)}>
+                          <RotateCcw className="mr-2 h-4 w-4" />
+                          Resetar usuário
+                        </DropdownMenuItem>
+                        {canDeleteUsers && (
+                          <>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem 
+                              onClick={() => onDeleteUser(user)}
+                              className="text-destructive"
+                            >
+                              <Trash2 className="mr-2 h-4 w-4" />
+                              Excluir usuário
+                            </DropdownMenuItem>
+                          </>
+                        )}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </TableCell>
+                </TableRow>
+              );
+            })}
+          </TableBody>
+        </Table>
+      </div>
+
+      <UserResetDialog 
+        open={resetDialogOpen}
+        onOpenChange={setResetDialogOpen}
+        user={selectedUser}
+        onSuccess={handleResetSuccess}
+      />
+    </>
   );
 };

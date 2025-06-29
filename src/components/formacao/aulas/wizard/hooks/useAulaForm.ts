@@ -8,7 +8,6 @@ import { aulaFormSchema, AulaFormValues } from "../schemas/aulaFormSchema";
 import { fetchLessonVideos } from "../services/videoService";
 import { fetchLessonResources } from "../services/resourceService";
 import { LearningLesson, LearningModule } from "@/lib/supabase/types";
-import { safeJsonParseObject } from "@/utils/jsonUtils";
 
 export const useAulaForm = (
   aula?: LearningLesson | null,
@@ -20,22 +19,15 @@ export const useAulaForm = (
   const [modules, setModules] = useState<LearningModule[]>([]);
   const [initialLoading, setInitialLoading] = useState(true);
 
-  // Parse seguro do conteúdo da aula se existir
-  const aulaContent = aula ? safeJsonParseObject(aula.content, {}) : {};
-
   // Inicializar formulário com valores padrão ou da aula existente
   const defaultValues: Partial<AulaFormValues> = {
     title: aula?.title || "",
     description: aula?.description || "",
     moduleId: aula?.module_id || moduleId || "",
-    // Corrigido: buscar difficulty_level do content JSON
-    difficultyLevel: (aulaContent.difficulty_level as any) || "beginner",
-    // Removido: cover_image_url não existe no schema
-    coverImageUrl: "",
-    // Corrigido: usar is_published
-    published: aula?.is_published || false,
-    // Corrigido: usar ai_assistant_id em vez de ai_assistant_enabled
-    aiAssistantEnabled: !!aula?.ai_assistant_id,
+    difficultyLevel: (aula?.difficulty_level as any) || "beginner",
+    coverImageUrl: aula?.cover_image_url || "",
+    published: aula?.published || false,
+    aiAssistantEnabled: aula?.ai_assistant_enabled || false,
     aiAssistantId: aula?.ai_assistant_id || "",
     videos: [],
     resources: [],
@@ -63,7 +55,7 @@ export const useAulaForm = (
           return;
         }
 
-        setModules((data as any) || []);
+        setModules(data || []);
       } catch (error) {
         console.error("Erro ao buscar módulos:", error);
         toast.error("Falha ao carregar a lista de módulos.");

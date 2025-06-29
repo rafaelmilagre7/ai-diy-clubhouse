@@ -1,35 +1,87 @@
 
 import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/lib/supabase';
 import { Comment } from '@/types/commentTypes';
+import { useLogging } from '@/hooks/useLogging';
+import { useAuth } from '@/contexts/auth';
 
 export const useFetchComments = (solutionId: string, moduleId: string) => {
+  const { log, logError } = useLogging();
+  const { user } = useAuth();
+
   return useQuery({
     queryKey: ['solution-comments', solutionId, moduleId],
-    queryFn: async (): Promise<Comment[]> => {
-      console.log('Simulando busca de comentários para solução:', solutionId, 'módulo:', moduleId);
-      
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 300));
-      
-      // Return mock comments with all required fields
-      return [
-        {
-          id: '1',
-          content: 'Comentário de exemplo para demonstração',
-          user_id: 'user-1',
-          tool_id: solutionId, // Add required tool_id field
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-          likes_count: 0,
-          user_has_liked: false,
-          profiles: {
-            name: 'Usuário Exemplo',
-            avatar_url: null
-          }
+    queryFn: async () => {
+      try {
+        log('Buscando comentários da solução', { solutionId, moduleId });
+        
+        // Verificamos se a tabela solution_comments existe, se não, usamos tool_comments
+        const { data: checkTable } = await supabase
+          .from('tool_comments')
+          .select('id')
+          .limit(1);
+        
+        const tableName = checkTable !== null ? 'tool_comments' : 'solution_comments';
+        log(`Usando tabela ${tableName} para comentários`, { solutionId, moduleId });
+        
+        // Buscar comentários principais
+        const { data: parentComments, error: parentError } = await supabase
+          .from(tableName)
+          .select(`
+            *,
+            profiles:user_id(name, avatar_url, role)
+          `)
+          .eq('tool_id', solutionId)
+          .is('parent_id', null)
+          .order('created_at', { ascending: false });
+
+        if (parentError) throw parentError;
+
+        // Buscar respostas
+        const { data: replies, error: repliesError } = await supabase
+          .from(tableName)
+          .select(`
+            *,
+            profiles:user_id(name, avatar_url, role)
+          `)
+          .eq('tool_id', solutionId)
+          .not('parent_id', 'is', null)
+          .order('created_at', { ascending: true });
+
+        if (repliesError) throw repliesError;
+
+        // Verificar curtidas do usuário atual
+        let likesMap: Record<string, boolean> = {};
+        
+        if (user) {
+          const { data: userLikes } = await supabase
+            .from(`${tableName.replace('comments', 'comment')}_likes`)
+            .select('comment_id')
+            .eq('user_id', user.id);
+
+          likesMap = (userLikes || []).reduce((acc: Record<string, boolean>, like) => {
+            acc[like.comment_id] = true;
+            return acc;
+          }, {});
         }
-      ];
-    },
-    enabled: !!(solutionId && moduleId),
-    staleTime: 30 * 1000
+
+        // Organizar comentários com respostas
+        const organizedComments = parentComments.map((comment: Comment) => ({
+          ...comment,
+          user_has_liked: !!likesMap[comment.id],
+          replies: replies
+            .filter((reply: Comment) => reply.parent_id === comment.id)
+            .map((reply: Comment) => ({
+              ...reply,
+              user_has_liked: !!likesMap[reply.id]
+            }))
+        }));
+
+        return organizedComments;
+      } catch (error) {
+        logError('Erro ao buscar comentários', error);
+        return [];
+      }
+    }
   });
 };

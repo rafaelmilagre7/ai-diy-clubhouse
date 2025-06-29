@@ -44,14 +44,14 @@ export const useMaterialsOperations = (
       
       const { data, error } = await supabase
         .from("solution_resources")
-        .insert(newResource as any)
+        .insert(newResource)
         .select()
         .single();
         
       if (error) throw error;
       
       if (data) {
-        setMaterials(prev => [...prev, data as any as Resource]);
+        setMaterials(prev => [...prev, data as Resource]);
       }
       
       toast({
@@ -82,7 +82,7 @@ export const useMaterialsOperations = (
       const { error } = await supabase
         .from("solution_resources")
         .delete()
-        .eq("id", id as any);
+        .eq("id", id);
         
       if (error) throw error;
       

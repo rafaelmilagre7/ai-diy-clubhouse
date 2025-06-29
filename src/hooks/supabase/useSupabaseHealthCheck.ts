@@ -1,6 +1,6 @@
 
 import { useState, useEffect, useCallback } from 'react';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
 interface HealthStatus {
@@ -51,14 +51,14 @@ export const useSupabaseHealthCheck = () => {
         issues.push(`Erro de autenticação: ${authError.message}`);
       }
 
-      // Testar banco de dados usando query simples em vez de função inexistente
-      const dbTest = await supabase.from('profiles').select('count').limit(1);
+      // Testar banco de dados
+      const dbTest = await supabase.rpc('audit_role_assignments');
       const databaseStatus: HealthStatus['databaseStatus'] = dbTest.error ? 'error' : 'operational';
       if (dbTest.error) {
         issues.push(`Erro no banco: ${dbTest.error.message}`);
       }
 
-      // Testar storage
+      // Testar storage (simplificado)
       const storageTest = await supabase.storage.listBuckets();
       const storageStatus: HealthStatus['storageStatus'] = storageTest.error ? 'error' : 'operational';
       if (storageTest.error) {

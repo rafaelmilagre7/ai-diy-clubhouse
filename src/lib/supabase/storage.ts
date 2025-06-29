@@ -1,209 +1,272 @@
-
-import { supabase } from './client';
-
-// Storage bucket names
-export const STORAGE_BUCKETS = {
-  LEARNING_VIDEOS: 'learning-videos',
-  LEARNING_RESOURCES: 'learning-resources',
-  TOOLS_LOGOS: 'tools-logos',
-  USER_AVATARS: 'user-avatars',
-  GENERAL_UPLOADS: 'general-uploads'
-} as const;
+import { supabase } from "./client";
+import { STORAGE_BUCKETS } from "./config";
 
 /**
- * Get the public URL for a file in storage
- */
-export const getPublicUrl = (bucket: string, path: string): string => {
-  const { data } = supabase.storage.from(bucket).getPublicUrl(path);
-  return data.publicUrl;
-};
-
-/**
- * Upload a file to storage
- */
-export const uploadFile = async (
-  bucket: string,
-  path: string,
-  file: File | Blob,
-  options?: { cacheControl?: string; upsert?: boolean }
-) => {
-  const { data, error } = await supabase.storage
-    .from(bucket)
-    .upload(path, file, {
-      cacheControl: options?.cacheControl || '3600',
-      upsert: options?.upsert || false
-    });
-
-  if (error) throw error;
-  return { data, error: null };
-};
-
-/**
- * Upload file with fallback options - FIXED SIGNATURE
- */
-export const uploadFileWithFallback = async (
-  file: File | Blob,
-  bucket: string,
-  path: string,
-  options?: { cacheControl?: string; upsert?: boolean }
-) => {
-  try {
-    return await uploadFile(bucket, path, file, options);
-  } catch (error) {
-    console.error('Primary upload failed, trying fallback:', error);
-    // Fallback logic could be implemented here
-    throw error;
-  }
-};
-
-/**
- * Extract YouTube video ID from various YouTube URL formats
+ * Obtém o ID de um vídeo do YouTube a partir de uma URL
  */
 export const getYoutubeVideoId = (url: string): string | null => {
   if (!url) return null;
   
-  try {
-    // Check if it's already just a video ID
-    if (url.match(/^[a-zA-Z0-9_-]{11}$/)) {
-      return url;
-    }
-    
-    // Handle different YouTube URL formats
-    const regex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i;
-    const match = url.match(regex);
-    
-    return match && match[1] ? match[1] : null;
-  } catch (error) {
-    console.error('Error extracting YouTube video ID:', error);
-    return null;
-  }
+  const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+  const match = url.match(regExp);
+  
+  return (match && match[2].length === 11) ? match[2] : null;
 };
 
 /**
- * Get YouTube thumbnail URL from video ID
+ * Obtém a URL da thumbnail de um vídeo do YouTube
  */
 export const getYoutubeThumbnailUrl = (videoId: string): string => {
-  return `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
+  return `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
 };
 
 /**
- * Format video duration from seconds to readable format
+ * Formata a duração de um vídeo para exibição (MM:SS)
  */
 export const formatVideoDuration = (seconds: number): string => {
-  if (!seconds || seconds <= 0) return '0:00';
-  
-  const hours = Math.floor(seconds / 3600);
-  const minutes = Math.floor((seconds % 3600) / 60);
-  const secs = Math.floor(seconds % 60);
-  
-  if (hours > 0) {
-    return `${hours}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-  }
-  
-  return `${minutes}:${secs.toString().padStart(2, '0')}`;
+  const minutes = Math.floor(seconds / 60);
+  const remainingSeconds = Math.floor(seconds % 60);
+  return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
 };
 
 /**
- * Setup storage buckets and policies - Mock implementation
- */
-export const setupStorageBuckets = async () => {
-  try {
-    console.log('Simulando configuração de buckets de storage');
-    
-    // Mock implementation since RPC doesn't exist
-    return {
-      success: true,
-      message: 'Storage buckets configurados com sucesso'
-    };
-  } catch (error) {
-    console.error('Erro ao configurar storage buckets:', error);
-    throw error;
-  }
-};
-
-/**
- * Setup learning storage buckets - Mock implementation
+ * Configura os buckets de armazenamento necessários para o LMS
  */
 export const setupLearningStorageBuckets = async () => {
   try {
-    console.log('Simulando configuração de buckets de aprendizado');
+    console.log('Configurando buckets de armazenamento para o LMS...');
     
-    // Mock implementation since RPC doesn't exist
-    return {
-      success: true,
-      message: 'Learning storage buckets configurados com sucesso'
-    };
+    const { data, error } = await supabase.rpc('setup_learning_storage_buckets');
+    
+    if (error) {
+      console.error('Erro ao configurar buckets:', error);
+      return { success: false, error: error.message };
+    }
+    
+    console.log('Buckets configurados com sucesso:', data);
+    
+    return { success: true, data };
   } catch (error) {
-    console.error('Erro ao configurar learning storage buckets:', error);
-    throw error;
+    console.error('Falha na configuração de buckets:', error);
+    return { success: false, error: error instanceof Error ? error.message : String(error) };
   }
 };
 
 /**
- * Ensure bucket exists - Mock implementation
+ * Verifica se um bucket existe e cria se necessário
  */
-export const ensureBucketExists = async (bucketName: string) => {
-  console.log(`Simulando verificação de bucket: ${bucketName}`);
-  return { success: true };
+export const ensureBucketExists = async (bucketName: string): Promise<boolean> => {
+  try {
+    // Verificar se o bucket já existe
+    const { data: existingBucket, error: checkError } = await supabase
+      .storage
+      .getBucket(bucketName);
+    
+    if (existingBucket) {
+      console.log(`Bucket ${bucketName} já existe`);
+      return true;
+    }
+    
+    if (checkError && checkError.message !== 'The resource was not found') {
+      console.error(`Erro ao verificar bucket ${bucketName}:`, checkError);
+      return false;
+    }
+    
+    // Criar o bucket se não existir
+    const { data, error } = await supabase
+      .storage
+      .createBucket(bucketName, {
+        public: true,
+        fileSizeLimit: 314572800 // 300MB
+      });
+      
+    if (error) {
+      console.error(`Erro ao criar bucket ${bucketName}:`, error);
+      return false;
+    }
+    
+    console.log(`Bucket ${bucketName} criado com sucesso`);
+    return true;
+  } catch (error) {
+    console.error(`Exceção ao verificar/criar bucket ${bucketName}:`, error);
+    return false;
+  }
 };
 
 /**
- * Extract Panda video info from URL - FIXED to include embedUrl
+ * Extrai informações de um vídeo do Panda Video
+ * 
+ * Aceita um código de incorporação HTML (iframe) ou um objeto com os dados do vídeo
  */
-export const extractPandaVideoInfo = (url: string) => {
-  if (!url) return null;
-  
-  try {
-    // Check for embed URL pattern
-    const embedMatch = url.match(/embed\/\?v=([^&]+)/);
-    if (embedMatch && embedMatch[1]) {
-      const videoId = embedMatch[1];
-      return { 
-        videoId, 
-        embedUrl: url // Return the full embed URL
+export const extractPandaVideoInfo = (data: any): { videoId: string; url: string; thumbnailUrl: string } => {
+  // Se recebermos uma string (código iframe), extrair informações do código HTML
+  if (typeof data === 'string') {
+    try {
+      // Extrair src do iframe
+      const srcMatch = data.match(/src=["'](https:\/\/[^"']+)["']/i);
+      if (!srcMatch || !srcMatch[1]) {
+        throw new Error('URL não encontrada no iframe');
+      }
+      
+      const iframeSrc = srcMatch[1];
+      let videoId = '';
+      let thumbnailUrl = '';
+      
+      // Extrair videoId do URL
+      // Formato padrão: https://player-vz-d6ebf577-797.tv.pandavideo.com.br/embed/?v=VIDEO_ID
+      const videoIdMatch = iframeSrc.match(/embed\/\?v=([^&]+)/);
+      if (videoIdMatch && videoIdMatch[1]) {
+        videoId = videoIdMatch[1];
+      } else {
+        // Formato alternativo: https://player.pandavideo.com.br/embed/VIDEO_ID
+        const altMatch = iframeSrc.match(/\/embed\/([^/?]+)/);
+        if (altMatch && altMatch[1]) {
+          videoId = altMatch[1];
+        }
+      }
+      
+      // Se encontramos um ID de vídeo, podemos compor a URL da thumbnail
+      if (videoId) {
+        thumbnailUrl = `https://thumbs.pandavideo.com.br/${videoId}.jpg`;
+      }
+      
+      return {
+        videoId,
+        url: iframeSrc,
+        thumbnailUrl
       };
+    } catch (error) {
+      console.error('Erro ao extrair informações do iframe do Panda Video:', error);
+      return { videoId: '', url: '', thumbnailUrl: '' };
+    }
+  }
+  
+  // Verificando se os dados são válidos como objeto
+  if (!data || !data.id) {
+    console.error('Dados de vídeo inválidos:', data);
+    return { videoId: '', url: '', thumbnailUrl: '' };
+  }
+
+  return {
+    videoId: data.id || '',
+    url: data.url || '',
+    thumbnailUrl: data.thumbnailUrl || data.thumbnail || ''
+  };
+};
+
+/**
+ * Faz upload de um arquivo com fallback para um bucket alternativo
+ */
+export const uploadFileWithFallback = async (
+  file: File,
+  bucketName: string,
+  filePath: string = '',
+  onProgress?: (progress: number) => void,
+  fallbackBucket?: string
+): Promise<{ publicUrl: string; path: string; error: null } | { error: Error }> => {
+  try {
+    if (onProgress) {
+      onProgress(5);
+    }
+
+    // Tentativa inicial no bucket primário
+    const { data, error } = await supabase.storage
+      .from(bucketName)
+      .upload(filePath, file, { upsert: true });
+    
+    // Se o upload foi bem-sucedido
+    if (data && !error) {
+      if (onProgress) {
+        onProgress(90);
+      }
+
+      const { data: publicUrlData } = await supabase.storage
+        .from(bucketName)
+        .getPublicUrl(filePath);
+      
+      if (onProgress) {
+        onProgress(100);
+      }
+
+      return { publicUrl: publicUrlData.publicUrl, path: data.path, error: null };
     }
     
-    // Check for iframe pattern and extract embed URL
-    const iframeMatch = url.match(/src="([^"]+)"/);
-    if (iframeMatch && iframeMatch[1]) {
-      const embedUrl = iframeMatch[1];
-      const videoIdMatch = embedUrl.match(/embed\/\?v=([^&]+)/);
-      if (videoIdMatch && videoIdMatch[1]) {
-        return { 
-          videoId: videoIdMatch[1], 
-          embedUrl 
-        };
+    // Se houve erro mas não é um problema de bucket inexistente
+    if (error && !error.message.includes('bucket') && !error.message.includes('does not exist')) {
+      console.error(`Erro ao fazer upload para ${bucketName}:`, error);
+      return { error: new Error(error.message) };
+    }
+
+    // Tentar criar o bucket
+    const bucketCreated = await ensureBucketExists(bucketName);
+    if (bucketCreated) {
+      if (onProgress) {
+        onProgress(30);
+      }
+
+      // Tentar novamente com o bucket recém-criado
+      const { data: retryData, error: retryError } = await supabase.storage
+        .from(bucketName)
+        .upload(filePath, file, { upsert: true });
+      
+      if (retryData && !retryError) {
+        if (onProgress) {
+          onProgress(90);
+        }
+
+        const { data: publicUrlData } = await supabase.storage
+          .from(bucketName)
+          .getPublicUrl(filePath);
+        
+        if (onProgress) {
+          onProgress(100);
+        }
+
+        return { publicUrl: publicUrlData.publicUrl, path: retryData.path, error: null };
+      }
+      
+      console.error(`Erro na segunda tentativa de upload para ${bucketName}:`, retryError);
+      if (!fallbackBucket) {
+        return { error: new Error(retryError?.message || 'Falha no upload após criar bucket') };
       }
     }
+
+    // Fallback para o bucket geral
+    if (fallbackBucket) {
+      console.log(`Usando bucket de fallback ${fallbackBucket} para o upload`);
+      
+      if (onProgress) {
+        onProgress(40);
+      }
+
+      const fallbackPath = `fallback/${bucketName}/${filePath}`;
+      const { data: fallbackData, error: fallbackError } = await supabase.storage
+        .from(fallbackBucket)
+        .upload(fallbackPath, file, { upsert: true });
+      
+      if (fallbackData && !fallbackError) {
+        if (onProgress) {
+          onProgress(90);
+        }
+
+        const { data: publicUrlData } = await supabase.storage
+          .from(fallbackBucket)
+          .getPublicUrl(fallbackPath);
+        
+        if (onProgress) {
+          onProgress(100);
+        }
+
+        return { publicUrl: publicUrlData.publicUrl, path: fallbackData.path, error: null };
+      }
+      
+      console.error('Todas as tentativas de upload falharam:', fallbackError);
+      return { error: new Error(fallbackError?.message || 'Todas as tentativas de upload falharam') };
+    }
     
-    return null;
+    return { error: new Error('Falha no upload e nenhum bucket de fallback fornecido') };
   } catch (error) {
-    console.error('Error extracting Panda video info:', error);
-    return null;
+    console.error('Exceção durante upload:', error);
+    return { error: error instanceof Error ? error : new Error('Erro desconhecido durante upload') };
   }
-};
-
-/**
- * Delete a file from storage
- */
-export const deleteFile = async (bucket: string, paths: string[]) => {
-  const { data, error } = await supabase.storage
-    .from(bucket)
-    .remove(paths);
-
-  if (error) throw error;
-  return data;
-};
-
-/**
- * List files in a storage bucket
- */
-export const listFiles = async (bucket: string, path?: string) => {
-  const { data, error } = await supabase.storage
-    .from(bucket)
-    .list(path);
-
-  if (error) throw error;
-  return data;
 };

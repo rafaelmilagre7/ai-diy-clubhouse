@@ -12,7 +12,7 @@ import {
 import { UseFormReturn } from "react-hook-form";
 import { AulaFormValues } from "../schemas/aulaFormSchema";
 import { Button } from "@/components/ui/button";
-import { ImageUpload } from "@/components/common/ImageUpload";
+import { ImageUploadImgBB } from "@/components/formacao/comum/ImageUploadImgBB";
 
 interface EtapaMidiaProps {
   form: UseFormReturn<AulaFormValues>;
@@ -49,13 +49,11 @@ const EtapaMidia: React.FC<EtapaMidiaProps> = ({
                   Escolha uma imagem atrativa que represente o conteúdo da aula
                 </FormDescription>
                 <FormControl>
-                  <ImageUpload
+                  <ImageUploadImgBB
                     value={field.value || ""}
                     onChange={field.onChange}
-                    bucketName="lesson_images"
-                    folderPath="covers"
                     maxSizeMB={5}
-                    enableOptimization={false}
+                    disabled={isSaving}
                   />
                 </FormControl>
                 <FormMessage />

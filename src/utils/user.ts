@@ -1,8 +1,6 @@
 
-import { SUPABASE_CONFIG } from '@/config/app';
-
 /**
- * Utilitários para gerenciamento de usuários - LIVRE DE CREDENCIAIS HARDCODED
+ * Utilitários para gerenciamento de usuários
  */
 
 /**
@@ -28,7 +26,6 @@ export const isValidImageUrl = (url: string | undefined | null): boolean => {
 
 /**
  * Formata a URL do avatar para garantir que seja válida
- * AGORA USA CONFIGURAÇÃO CENTRALIZADA - SEM CREDENCIAIS HARDCODED
  */
 export const getAvatarUrl = (url: string | null | undefined): string | undefined => {
   if (!url) return undefined;
@@ -38,20 +35,14 @@ export const getAvatarUrl = (url: string | null | undefined): string | undefined
     return url;
   }
   
-  // Verificar se o Supabase está configurado antes de usar
-  if (!SUPABASE_CONFIG.isConfigured()) {
-    console.warn('⚠️ Supabase não configurado - não é possível gerar URL do avatar');
-    return undefined;
-  }
-  
   // Se começar com / (caminho relativo), adicionar domínio da API
   if (url.startsWith('/')) {
-    return `${SUPABASE_CONFIG.url}${url}`;
+    return `${import.meta.env.VITE_SUPABASE_URL}${url}`;
   }
   
   // Se for um ID de storage do Supabase
   if (url.includes('storage/v1')) {
-    return `${SUPABASE_CONFIG.url}/${url}`;
+    return `${import.meta.env.VITE_SUPABASE_URL}/${url}`;
   }
   
   return url;

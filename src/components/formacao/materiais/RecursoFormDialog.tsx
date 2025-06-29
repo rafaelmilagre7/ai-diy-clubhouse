@@ -1,191 +1,270 @@
 
-import React, { useState } from 'react';
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { supabase } from "@/lib/supabase";
+import { LearningResource } from "@/lib/supabase";
+import { toast } from "sonner";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { FileUpload } from '@/components/formacao/comum/FileUpload';
-import { supabase } from '@/lib/supabase';
-import { toast } from 'sonner';
-
-interface Material {
-  id?: string;
-  name: string;
-  description?: string;
-  file_url?: string;
-  file_type?: string;
-  file_size_bytes?: number;
-}
+} from "@/components/ui/dialog";
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
+import { FileUpload } from "@/components/formacao/comum/FileUpload";
+import { Loader2, AlertCircle } from "lucide-react";
+import { STORAGE_BUCKETS } from "@/lib/supabase/config";
 
 interface RecursoFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  recurso: LearningResource | null;
+  lessonId: string;
   onSuccess: () => void;
-  material?: Material;
-  recurso?: any;
-  lessonId?: string | null;
 }
 
-export const RecursoFormDialog: React.FC<RecursoFormDialogProps> = ({
+const recursoFormSchema = z.object({
+  name: z.string().min(3, { message: "O nome precisa ter pelo menos 3 caracteres" }),
+  description: z.string().optional(),
+  file_url: z.string().min(5, { message: "É necessário fazer upload de um arquivo" }),
+  file_type: z.string().optional(),
+  file_size_bytes: z.number().optional(),
+});
+
+type RecursoFormValues = z.infer<typeof recursoFormSchema>;
+
+export const RecursoFormDialog = ({
   open,
   onOpenChange,
-  onSuccess,
-  material,
   recurso,
-  lessonId
-}) => {
-  const editingItem = material || recurso;
+  lessonId,
+  onSuccess
+}: RecursoFormDialogProps) => {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const isEditing = !!recurso;
   
-  const [formData, setFormData] = useState({
-    name: editingItem?.name || '',
-    description: editingItem?.description || '',
-    file_url: editingItem?.file_url || '',
-    file_type: editingItem?.file_type || '',
-    file_size_bytes: editingItem?.file_size_bytes || 0
+  const form = useForm<RecursoFormValues>({
+    resolver: zodResolver(recursoFormSchema),
+    defaultValues: {
+      name: recurso?.name || "",
+      description: recurso?.description || "",
+      file_url: recurso?.file_url || "",
+      file_type: recurso?.file_type || "",
+      file_size_bytes: recurso?.file_size_bytes || 0,
+    },
   });
-  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const onSubmit = async (values: RecursoFormValues) => {
+    setIsSubmitting(true);
+    setError(null);
     
-    if (!formData.name.trim()) {
-      toast.error('Nome é obrigatório');
-      return;
-    }
-
-    if (!formData.file_url) {
-      toast.error('Arquivo é obrigatório');
-      return;
-    }
-
     try {
-      setIsLoading(true);
+      console.log("Iniciando salvamento do recurso:", values);
       
-      const materialData = {
-        name: formData.name.trim(),
-        description: formData.description?.trim() || null,
-        file_url: formData.file_url,
-        file_type: formData.file_type || 'document',
-        file_size_bytes: formData.file_size_bytes || null,
-        created_at: new Date().toISOString(),
-        // Apenas incluir lesson_id se for fornecido (não null)
-        ...(lessonId && { lesson_id: lessonId })
-      };
-
-      if (editingItem?.id) {
-        // Atualizar material existente
+      if (isEditing) {
+        // Atualizando recurso existente
         const { error } = await supabase
           .from('learning_resources')
-          .update(materialData as any)
-          .eq('id', editingItem.id as any);
-
-        if (error) throw error;
-        toast.success('Material atualizado com sucesso!');
+          .update({
+            name: values.name,
+            description: values.description,
+            file_url: values.file_url,
+            file_type: values.file_type,
+            file_size_bytes: values.file_size_bytes,
+          })
+          .eq('id', recurso.id);
+          
+        if (error) {
+          console.error("Erro ao atualizar recurso:", error);
+          throw error;
+        }
+        
+        console.log("Recurso atualizado com sucesso");
+        toast.success("Material atualizado com sucesso!");
       } else {
-        // Criar novo material
-        const { error } = await supabase
+        // Primeiro, verificamos a ordem máxima atual
+        const { data: maxOrderData, error: maxOrderError } = await supabase
           .from('learning_resources')
-          .insert([materialData] as any);
-
-        if (error) throw error;
-        toast.success('Material criado com sucesso!');
+          .select('order_index')
+          .eq('lesson_id', lessonId)
+          .order('order_index', { ascending: false })
+          .limit(1);
+          
+        if (maxOrderError) {
+          console.error("Erro ao buscar ordem máxima:", maxOrderError);
+          throw maxOrderError;
+        }
+        
+        const nextOrder = maxOrderData && maxOrderData.length > 0 
+          ? (maxOrderData[0].order_index + 1) 
+          : 0;
+          
+        console.log("Próxima ordem:", nextOrder);
+        
+        // Criando novo recurso
+        const { data, error } = await supabase
+          .from('learning_resources')
+          .insert({
+            name: values.name,
+            description: values.description,
+            file_url: values.file_url,
+            file_type: values.file_type,
+            file_size_bytes: values.file_size_bytes,
+            lesson_id: lessonId,
+            order_index: nextOrder,
+          })
+          .select();
+          
+        if (error) {
+          console.error("Erro ao inserir recurso:", error);
+          throw error;
+        }
+        
+        console.log("Recurso criado com sucesso:", data);
+        toast.success("Material adicionado com sucesso!");
       }
-
+      
       onSuccess();
+      form.reset();
       onOpenChange(false);
-      
-      // Reset form
-      setFormData({
-        name: '',
-        description: '',
-        file_url: '',
-        file_type: '',
-        file_size_bytes: 0
-      });
-      
     } catch (error: any) {
-      console.error('Erro ao salvar material:', error);
-      toast.error(error.message || 'Erro ao salvar material');
+      console.error("Erro ao salvar material:", error);
+      setError(error.message || "Não foi possível salvar o material. Tente novamente.");
+      toast.error(`Erro ao salvar o material: ${error.message || "Tente novamente."}`);
     } finally {
-      setIsLoading(false);
+      setIsSubmitting(false);
     }
   };
 
-  const handleFileUpload = (url: string, fileType: string, fileSize: number) => {
-    setFormData(prev => ({
-      ...prev,
-      file_url: url,
-      file_type: fileType,
-      file_size_bytes: fileSize
-    }));
+  const handleOpenChange = (open: boolean) => {
+    if (!open) {
+      form.reset();
+      setError(null);
+    }
+    onOpenChange(open);
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
+    <Dialog open={open} onOpenChange={handleOpenChange}>
+      <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
-          <DialogTitle>
-            {editingItem ? 'Editar Material' : 'Novo Material'}
-          </DialogTitle>
+          <DialogTitle>{isEditing ? "Editar Material" : "Adicionar Material"}</DialogTitle>
+          <DialogDescription>
+            {isEditing 
+              ? "Atualize as informações do material existente." 
+              : "Adicione um novo material para esta aula."}
+          </DialogDescription>
         </DialogHeader>
-
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="name">Nome *</Label>
-            <Input
-              id="name"
-              value={formData.name}
-              onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-              placeholder="Nome do material"
-              required
+        
+        {error && (
+          <div className="bg-destructive/10 text-destructive p-3 rounded-md flex items-center space-x-2 text-sm">
+            <AlertCircle className="h-4 w-4 flex-shrink-0" />
+            <span>{error}</span>
+          </div>
+        )}
+        
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <FormField
+              control={form.control}
+              name="name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Nome do Material</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Digite o nome do material" {...field} />
+                  </FormControl>
+                  <FormDescription>Este será o nome exibido para os alunos.</FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="description">Descrição</Label>
-            <Textarea
-              id="description"
-              value={formData.description}
-              onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-              placeholder="Descrição do material (opcional)"
-              rows={3}
+            
+            <FormField
+              control={form.control}
+              name="description"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Descrição (Opcional)</FormLabel>
+                  <FormControl>
+                    <Textarea 
+                      placeholder="Digite uma breve descrição do material" 
+                      rows={2}
+                      {...field} 
+                      value={field.value || ''} 
+                    />
+                  </FormControl>
+                  <FormDescription>
+                    Uma descrição para ajudar os alunos a entenderem o que contém este material.
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-          </div>
 
-          <div className="space-y-2">
-            <Label>Arquivo *</Label>
-            <FileUpload
-              value={formData.file_url}
-              onChange={handleFileUpload}
-              bucketName="lesson_materials"
-              folder="library"
-              accept="*"
+            <FormField
+              control={form.control}
+              name="file_url"
+              render={({ field }) => (
+                <FormItem className="space-y-3">
+                  <FormLabel>Arquivo</FormLabel>
+                  <FormControl>
+                    <FileUpload
+                      value={field.value}
+                      onChange={(url, fileType, fileSize) => {
+                        console.log("Arquivo enviado:", { url, fileType, fileSize });
+                        field.onChange(url);
+                        form.setValue("file_type", fileType || "");
+                        form.setValue("file_size_bytes", fileSize || 0);
+                      }}
+                      bucketName={STORAGE_BUCKETS.LEARNING_MATERIALS}
+                      folderPath="materials"
+                      acceptedFileTypes="*/*"
+                      disabled={isSubmitting}
+                    />
+                  </FormControl>
+                  <FormDescription>
+                    Upload do arquivo para disponibilizar aos alunos.
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-          </div>
 
-          <div className="flex justify-end gap-2 pt-4">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-              disabled={isLoading}
-            >
-              Cancelar
-            </Button>
-            <Button type="submit" disabled={isLoading}>
-              {isLoading ? 'Salvando...' : editingItem ? 'Atualizar' : 'Criar'}
-            </Button>
-          </div>
-        </form>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => handleOpenChange(false)} disabled={isSubmitting}>
+                Cancelar
+              </Button>
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Salvando...
+                  </>
+                ) : (
+                  isEditing ? "Atualizar Material" : "Adicionar Material"
+                )}
+              </Button>
+            </DialogFooter>
+          </form>
+        </Form>
       </DialogContent>
     </Dialog>
   );
 };
-
-export default RecursoFormDialog;

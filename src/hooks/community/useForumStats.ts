@@ -55,8 +55,8 @@ export const useForumStats = (): ForumStats => {
         
         // Combinar e obter usuários únicos
         const allUserIds = [
-          ...((activeUsers as any)?.map((u: any) => (u as any).user_id) || []), 
-          ...((activePosterUsers as any)?.map((u: any) => (u as any).user_id) || [])
+          ...(activeUsers?.map(u => u.user_id) || []), 
+          ...(activePosterUsers?.map(u => u.user_id) || [])
         ];
         const uniqueUserIds = [...new Set(allUserIds)];
         

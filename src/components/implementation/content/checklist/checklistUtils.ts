@@ -1,44 +1,69 @@
 
-// Simplified checklist utilities without complex type dependencies
+import { Solution, UserChecklist } from "@/lib/supabase";
+import { toast } from "sonner";
+
 export interface ChecklistItem {
   id: string;
-  title: string;
+  title?: string;
   description?: string;
-  completed: boolean;
-  order: number;
+  checked: boolean;
 }
 
-export const createChecklistItem = (title: string, description?: string): ChecklistItem => ({
-  id: Math.random().toString(36).substring(2, 15),
-  title,
-  description,
-  completed: false,
-  order: 0
-});
-
-export const toggleChecklistItem = (items: ChecklistItem[], itemId: string): ChecklistItem[] => {
-  return items.map(item => 
-    item.id === itemId ? { ...item, completed: !item.completed } : item
-  );
-};
-
-export const calculateProgress = (items: ChecklistItem[]): number => {
-  if (items.length === 0) return 0;
-  const completed = items.filter(item => item.completed).length;
-  return Math.round((completed / items.length) * 100);
-};
-
-// Additional utility functions for compatibility
-export const extractChecklistFromSolution = (solution: any): ChecklistItem[] => {
-  // Mock implementation
+/**
+ * Extract checklist items from a solution
+ */
+export const extractChecklistFromSolution = (solution: Solution): ChecklistItem[] => {
+  // Check if checklist property exists and is an array
+  if (solution.checklist && Array.isArray(solution.checklist)) {
+    // Transform items to ensure they have the required properties
+    return solution.checklist.map((item: any, index: number) => ({
+      id: item.id || `checklist-${index}`,
+      title: item.title || item.text || "Item sem título",
+      description: item.description,
+      checked: false
+    }));
+  }
+  
   return [];
 };
 
-export const initializeUserChecklist = (userId: string, solutionId: string): Promise<ChecklistItem[]> => {
-  // Mock implementation
-  return Promise.resolve([]);
+/**
+ * Initialize user checklist state based on solution checklist
+ */
+export const initializeUserChecklist = (checklist: ChecklistItem[]): Record<string, boolean> => {
+  const initialUserChecklist: Record<string, boolean> = {};
+  checklist.forEach(item => {
+    initialUserChecklist[item.id] = false;
+  });
+  return initialUserChecklist;
 };
 
-export const handleChecklistError = (error: any): void => {
-  console.error('Checklist error:', error);
+/**
+ * Update user checklist with saved progress
+ */
+export const applyUserProgress = (
+  initialChecklist: Record<string, boolean>,
+  userProgress: UserChecklist | null
+): Record<string, boolean> => {
+  if (!userProgress || !userProgress.checked_items) {
+    return initialChecklist;
+  }
+  
+  const updatedChecklist = { ...initialChecklist };
+  
+  Object.keys(userProgress.checked_items).forEach(itemId => {
+    if (updatedChecklist.hasOwnProperty(itemId)) {
+      updatedChecklist[itemId] = userProgress.checked_items[itemId];
+    }
+  });
+  
+  return updatedChecklist;
+};
+
+/**
+ * Handle errors in checklist operations
+ */
+export const handleChecklistError = (error: any, logError: (message: string, data: any) => void): void => {
+  logError("Error in checklist operation:", error);
+  toast.error("Erro ao processar checklist");
 };

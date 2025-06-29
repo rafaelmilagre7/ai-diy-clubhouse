@@ -1,20 +1,8 @@
 
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-
-export interface Suggestion {
-  id: string;
-  title: string;
-  description: string;
-  status: string;
-  upvotes: number;
-  downvotes: number;
-  created_at: string;
-  user_id: string;
-  user_name: string;
-  category_name?: string;
-  category_id?: string;
-}
+import { supabase } from '@/lib/supabase';
+import { Suggestion } from '@/types/suggestionTypes';
 
 export type SuggestionFilter = 'all' | 'popular' | 'recent' | 'new' | 'in_development' | 'implemented';
 
@@ -30,63 +18,63 @@ export const useSuggestions = () => {
   } = useQuery({
     queryKey: ['suggestions', filter, searchQuery],
     queryFn: async () => {
-      console.log('Simulando busca de sugestões...', { filter, searchQuery });
+      console.log('Buscando sugestões...', { filter, searchQuery });
       
-      // Mock data since suggestions table doesn't exist
-      const mockSuggestions: Suggestion[] = [
-        {
-          id: '1',
-          title: 'Implementar dashboard de analytics',
-          description: 'Seria útil ter um dashboard com métricas detalhadas',
-          status: 'new',
-          upvotes: 15,
-          downvotes: 2,
-          created_at: new Date().toISOString(),
-          user_id: 'user1',
-          user_name: 'João Silva',
-          category_name: 'Funcionalidades'
-        },
-        {
-          id: '2',
-          title: 'Melhorar performance do carregamento',
-          description: 'O sistema poderia carregar mais rapidamente',
-          status: 'in_development',
-          upvotes: 8,
-          downvotes: 1,
-          created_at: new Date().toISOString(),
-          user_id: 'user2',
-          user_name: 'Maria Santos',
-          category_name: 'Melhorias'
+      try {
+        // Usamos a view suggestions_with_profiles que já conecta os dados de perfil
+        let query = supabase
+          .from('suggestions_with_profiles')
+          .select('*')
+          .eq('is_hidden', false); // Apenas sugestões não ocultas
+
+        // Filtragem por termo de busca
+        if (searchQuery) {
+          query = query.or(`title.ilike.%${searchQuery}%,description.ilike.%${searchQuery}%`);
         }
-      ];
 
-      // Apply filters
-      let filteredSuggestions = [...mockSuggestions];
+        // Filtragem por status
+        if (filter === 'new') {
+          query = query.eq('status', 'new');
+        } else if (filter === 'in_development') {
+          query = query.eq('status', 'in_development');
+        } else if (filter === 'implemented') {
+          query = query.eq('status', 'implemented');
+        }
 
-      if (searchQuery) {
-        const query = searchQuery.toLowerCase();
-        filteredSuggestions = filteredSuggestions.filter(s => 
-          s.title.toLowerCase().includes(query) || 
-          s.description.toLowerCase().includes(query)
-        );
+        // Ordenação
+        if (filter === 'popular' || filter === 'new' || filter === 'in_development' || filter === 'implemented') {
+          // Ordenar por votos líquidos (upvotes - downvotes) em ordem decrescente
+          query = query.order('upvotes', { ascending: false });
+        } else if (filter === 'recent') {
+          query = query.order('created_at', { ascending: false });
+        }
+
+        const { data, error } = await query;
+
+        if (error) {
+          console.error('Erro ao buscar sugestões:', error);
+          throw error;
+        }
+
+        // Ordenar por votos líquidos no frontend para garantir precisão
+        let sortedData = data || [];
+        if (filter === 'popular' || filter === 'new' || filter === 'in_development' || filter === 'implemented') {
+          sortedData = sortedData.sort((a, b) => {
+            const aNetVotes = (a.upvotes || 0) - (a.downvotes || 0);
+            const bNetVotes = (b.upvotes || 0) - (b.downvotes || 0);
+            return bNetVotes - aNetVotes; // Ordem decrescente
+          });
+        }
+
+        console.log('Sugestões encontradas:', sortedData.length, sortedData);
+        return sortedData;
+      } catch (error) {
+        console.error('Erro na consulta de sugestões:', error);
+        throw error;
       }
-
-      if (filter !== 'all') {
-        filteredSuggestions = filteredSuggestions.filter(s => s.status === filter);
-      }
-
-      // Sort by popularity (net votes)
-      if (filter === 'popular') {
-        filteredSuggestions.sort((a, b) => (b.upvotes - b.downvotes) - (a.upvotes - a.downvotes));
-      } else if (filter === 'recent') {
-        filteredSuggestions.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-      }
-
-      console.log('Sugestões encontradas:', filteredSuggestions.length);
-      return filteredSuggestions;
     },
     refetchOnWindowFocus: false,
-    staleTime: 1000 * 60 * 1,
+    staleTime: 1000 * 60 * 1, // 1 minuto
     refetchOnMount: true,
   });
 

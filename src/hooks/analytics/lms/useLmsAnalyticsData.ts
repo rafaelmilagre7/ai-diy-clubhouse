@@ -2,80 +2,77 @@
 import { useTimeRange } from './useTimeRange';
 import { useNpsData } from './useNpsData';
 import { useStatsData } from './useStatsData';
+import { LmsAnalyticsData } from './types';
+import { useLogging } from '@/hooks/useLogging';
 import { useQueryClient } from '@tanstack/react-query';
 import { useCallback } from 'react';
 
-// Interface atualizada para compatibilidade com o componente
-interface LmsAnalyticsResult {
-  totalCourses: number;
-  totalStudents: number;
-  averageCompletionTime: number;
-  completionRate: number;
-  courseProgress: Array<{
-    name: string;
-    completed: number;
-    total: number;
-  }>;
-  npsScores: Array<{
-    lesson: string;
-    score: number;
-    responses: number;
-  }>;
+// Hook principal que combina todos os dados de analytics do LMS
+export const useLmsAnalyticsData = (timeRange: string): {
+  npsData: LmsAnalyticsData['npsData'];
+  statsData: LmsAnalyticsData['statsData'];
+  feedbackData: LmsAnalyticsData['feedbackData'];
   isLoading: boolean;
   refresh: () => void;
-}
-
-export const useLmsAnalyticsData = (timeRange: string): LmsAnalyticsResult => {
+} => {
+  const { logWarning } = useLogging();
   const queryClient = useQueryClient();
   
   // Obter a data de início baseada no intervalo de tempo
   const startDate = useTimeRange(timeRange);
   
-  // Buscar dados de NPS - fix the parameter issue
-  const npsResult = useNpsData(startDate);
+  // Buscar dados de NPS
+  const { 
+    data: npsDataResult, 
+    isLoading: isLoadingNps,
+    error: npsError 
+  } = useNpsData(startDate);
+  
+  // Se houver erro, logar como aviso não crítico
+  if (npsError) {
+    logWarning('Erro ao carregar dados de NPS', { 
+      error: npsError,
+      critical: false // Não mostrar toast
+    });
+    console.error('Erro ao carregar dados de NPS:', npsError);
+  }
   
   // Buscar estatísticas gerais
-  const statsResult = useStatsData();
+  const { 
+    data: statsData, 
+    isLoading: isLoadingStats,
+    error: statsError
+  } = useStatsData(startDate, npsDataResult?.npsData?.overall || 0);
   
-  // Handle errors properly - fix the property access issue
-  if (npsResult.error) {
-    console.error('Erro ao carregar dados de NPS:', npsResult.error);
+  // Se houver erro, logar como aviso não crítico
+  if (statsError) {
+    logWarning('Erro ao carregar estatísticas', { 
+      error: statsError,
+      critical: false // Não mostrar toast
+    });
+    console.error('Erro ao carregar estatísticas:', statsError);
   }
-  
-  if (statsResult.stats && statsResult.loading === false) {
-    // Stats loaded successfully
-  }
-  
+
   // Função para atualizar os dados
   const refresh = useCallback(() => {
     queryClient.invalidateQueries({ queryKey: ['lms-nps-data'] });
     queryClient.invalidateQueries({ queryKey: ['lms-stats-data'] });
   }, [queryClient]);
   
-  // Processar dados de progresso por curso (vazio se não há dados)
-  const courseProgress = statsResult?.stats?.totalLessons > 0 ? [
-    {
-      name: 'Cursos em Andamento',
-      completed: Math.floor((statsResult.stats.avgCompletionRate / 100) * statsResult.stats.totalStudents),
-      total: statsResult.stats.totalStudents
-    }
-  ] : [];
-
-  // Processar NPS scores por aula
-  const npsScores = npsResult?.data?.npsData?.perLesson?.slice(0, 5).map(lesson => ({
-    lesson: lesson.lessonTitle,
-    score: lesson.npsScore,
-    responses: lesson.responseCount
-  })) || [];
-  
   return {
-    totalCourses: statsResult?.stats?.totalLessons || 0,
-    totalStudents: statsResult?.stats?.totalStudents || 0,
-    averageCompletionTime: 45, // Pode ser calculado se tivermos dados de tempo
-    completionRate: statsResult?.stats?.avgCompletionRate || 0,
-    courseProgress,
-    npsScores,
-    isLoading: npsResult.isLoading || statsResult.loading,
+    npsData: {
+      overall: npsDataResult?.npsData?.overall || 0,
+      distribution: npsDataResult?.npsData?.distribution || { promoters: 0, neutrals: 0, detractors: 0 },
+      perLesson: npsDataResult?.npsData?.perLesson || []
+    },
+    statsData: statsData || {
+      totalStudents: 0,
+      totalLessons: 0,
+      completionRate: 0,
+      npsScore: 0
+    },
+    feedbackData: npsDataResult?.feedbackData || [],
+    isLoading: isLoadingNps || isLoadingStats,
     refresh
   };
 };

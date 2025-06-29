@@ -15,7 +15,7 @@ export const validateUserRole = async (userId: string): Promise<string> => {
           permissions
         )
       `)
-      .eq('id', userId as any)
+      .eq('id', userId)
       .single();
 
     if (error || !profile) {
@@ -24,8 +24,8 @@ export const validateUserRole = async (userId: string): Promise<string> => {
     }
 
     // Return the role name from the database via join
-    if ((profile as any).user_roles && typeof (profile as any).user_roles === 'object' && 'name' in (profile as any).user_roles) {
-      const roleName = (profile as any).user_roles.name;
+    if (profile.user_roles && typeof profile.user_roles === 'object' && 'name' in profile.user_roles) {
+      const roleName = profile.user_roles.name;
       return typeof roleName === 'string' ? roleName : 'member';
     }
 
@@ -50,7 +50,7 @@ export const isSuperAdmin = async (userId: string): Promise<boolean> => {
           permissions
         )
       `)
-      .eq('id', userId as any)
+      .eq('id', userId)
       .single();
 
     if (error || !profile) {
@@ -58,7 +58,7 @@ export const isSuperAdmin = async (userId: string): Promise<boolean> => {
     }
 
     // Check if user has admin role or admin permissions
-    const userRoles = (profile as any).user_roles as any;
+    const userRoles = profile.user_roles as any;
     return (userRoles && userRoles.name === 'admin') ||
            (userRoles && userRoles.permissions && userRoles.permissions.all === true);
   } catch (error) {

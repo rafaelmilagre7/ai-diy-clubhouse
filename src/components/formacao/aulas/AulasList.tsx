@@ -58,7 +58,7 @@ export const AulasList = ({ aulas, loading, onEdit, onDelete, isAdmin, onRefresh
   const isPublished = (aula: LearningLesson) => {
     return aula.id in publishingStates 
       ? publishingStates[aula.id] 
-      : !!aula.is_published; // Corrigido: usar is_published
+      : !!aula.published;
   };
 
   if (loading) {
@@ -86,10 +86,19 @@ export const AulasList = ({ aulas, loading, onEdit, onDelete, isAdmin, onRefresh
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {aulas.map((aula) => (
           <Card key={aula.id} className="overflow-hidden">
-            {/* Removido: cover_image_url não existe no schema */}
-            <div className="aspect-video w-full bg-muted flex items-center justify-center">
-              <FileText className="h-12 w-12 text-muted-foreground" />
-            </div>
+            {aula.cover_image_url ? (
+              <div className="aspect-video w-full overflow-hidden">
+                <img 
+                  src={aula.cover_image_url} 
+                  alt={aula.title} 
+                  className="h-full w-full object-cover transition-all hover:scale-105" 
+                />
+              </div>
+            ) : (
+              <div className="aspect-video w-full bg-muted flex items-center justify-center">
+                <FileText className="h-12 w-12 text-muted-foreground" />
+              </div>
+            )}
             
             <CardHeader>
               <div className="flex justify-between items-start">
@@ -108,10 +117,9 @@ export const AulasList = ({ aulas, loading, onEdit, onDelete, isAdmin, onRefresh
             <CardContent>
               <div className="flex items-center text-sm text-muted-foreground">
                 <p>{format(new Date(aula.created_at), "dd/MM/yyyy", { locale: ptBR })}</p>
-                {/* Corrigido: usar estimated_duration_minutes */}
-                {aula.estimated_duration_minutes && aula.estimated_duration_minutes > 0 && (
+                {aula.estimated_time_minutes > 0 && (
                   <Badge variant="outline" className="ml-2">
-                    {aula.estimated_duration_minutes} min
+                    {aula.estimated_time_minutes} min
                   </Badge>
                 )}
               </div>

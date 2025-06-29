@@ -1,83 +1,174 @@
 
-import { useState } from "react";
-import { supabase } from "@/lib/supabase";
-import { useToast } from "@/hooks/use-toast";
+import { useState, useCallback, useRef } from 'react';
+import { supabase } from '@/lib/supabase';
+import { UserProfile } from '@/lib/supabase';
+import { useAuth } from '@/contexts/auth';
+import { toast } from 'sonner';
+import { logSecurityEvent, clearPermissionCache } from '@/contexts/auth/utils/securityUtils';
+import { clearProfileCache } from '@/hooks/auth/utils/authSessionUtils';
 
-export const useUserRoles = () => {
+interface UserRoleResult {
+  roleId: string | null;
+  roleName: string | null;
+  roleData: any | null;
+}
+
+interface UserRoleData {
+  name?: string;
+  [key: string]: any;
+}
+
+export function useUserRoles() {
+  const { user } = useAuth();
   const [isUpdating, setIsUpdating] = useState(false);
-  const { toast } = useToast();
+  const [error, setError] = useState<Error | null>(null);
+  const roleCache = useRef<Map<string, UserRoleResult>>(new Map());
 
-  const updateUserRole = async (userId: string, roleId: string) => {
+  const assignRoleToUser = useCallback(async (userId: string, roleId: string) => {
     try {
       setIsUpdating(true);
-
-      const { error } = await supabase
-        .from('profiles')
-        .update({ role_id: roleId } as any)
-        .eq('id', userId as any);
-
-      if (error) throw error;
-
-      toast({
-        title: "Papel atualizado",
-        description: "O papel do usuário foi atualizado com sucesso.",
+      setError(null);
+      
+      // CORREÇÃO BUG BAIXO 1: Proteger logs de debug em produção
+      if (process.env.NODE_ENV !== 'production') {
+        console.log(`🔄 [USER-ROLES] Iniciando atribuição de role: userId=${userId.substring(0, 8)}***, roleId=${roleId}`);
+      }
+      
+      // Buscar dados antigos para auditoria
+      const { data: oldProfileData } = await supabase
+        .from("profiles")
+        .select("role_id")
+        .eq("id", userId)
+        .single();
+      
+      // CORREÇÃO: Log da ação no sistema de auditoria de segurança com argumentos corretos
+      await logSecurityEvent(
+        'assign_role',
+        'profiles',
+        userId
+      );
+      
+      // Atualizar o papel do usuário - apenas role_id
+      const { data, error } = await supabase
+        .from("profiles")
+        .update({ role_id: roleId })
+        .eq("id", userId)
+        .select();
+      
+      if (error) {
+        // Log de erro sempre visível (crítico)
+        console.error('❌ [USER-ROLES] Erro ao atualizar role:', error);
+        throw error;
+      }
+      
+      if (process.env.NODE_ENV !== 'production') {
+        console.log('✅ [USER-ROLES] Role atualizado com sucesso no banco de dados');
+      }
+      
+      // CORREÇÃO BUG MÉDIO 3: Invalidação de cache mais abrangente para sincronização imediata
+      roleCache.current.delete(userId);
+      clearPermissionCache(userId);
+      
+      // CORREÇÃO: Limpar cache de perfil para forçar refresh na próxima busca
+      clearProfileCache();
+      
+      if (process.env.NODE_ENV !== 'production') {
+        console.log('🧹 [USER-ROLES] Cache de perfil e permissões limpo para sincronização imediata');
+      }
+      
+      toast.success('Papel do usuário atualizado com sucesso');
+      
+      if (process.env.NODE_ENV !== 'production') {
+        console.log('🎉 [USER-ROLES] Operação concluída com sucesso');
+      }
+      
+      return data;
+    } catch (err: any) {
+      // Log de erro sempre visível (crítico)
+      console.error('❌ [USER-ROLES] Erro ao atribuir papel:', err);
+      setError(err);
+      toast.error('Erro ao atualizar papel', {
+        description: err.message || 'Não foi possível atribuir o papel ao usuário.'
       });
-
-      return true;
-    } catch (error: any) {
-      console.error('Erro ao atualizar papel do usuário:', error);
-      toast({
-        title: "Erro ao atualizar papel",
-        description: error.message || "Ocorreu um erro inesperado",
-        variant: "destructive",
-      });
-      throw error;
+      throw err;
     } finally {
       setIsUpdating(false);
+      if (process.env.NODE_ENV !== 'production') {
+        console.log('✅ [USER-ROLES] Finalizando operação assignRoleToUser');
+      }
     }
-  };
+  }, [user?.id]);
 
-  const assignRoleToUser = async (userId: string, roleId: string) => {
-    return await updateUserRole(userId, roleId);
-  };
-
-  const getUserRole = async (userId: string) => {
+  const getUserRole = useCallback(async (userId: string): Promise<UserRoleResult> => {
+    if (roleCache.current.has(userId)) {
+      if (process.env.NODE_ENV !== 'production') {
+        console.log(`🔄 [USER-ROLES] Retornando role do cache para: ${userId.substring(0, 8)}***`);
+      }
+      return roleCache.current.get(userId)!;
+    }
+    
     try {
+      if (process.env.NODE_ENV !== 'production') {
+        console.log(`🔍 [USER-ROLES] Buscando papel para usuário: ${userId.substring(0, 8)}***`);
+      }
+      
       const { data, error } = await supabase
-        .from('profiles')
+        .from("profiles")
         .select(`
           role_id,
-          user_roles (
+          user_roles:role_id (
             id,
             name,
-            description
+            description,
+            permissions,
+            is_system
           )
         `)
-        .eq('id', userId as any)
+        .eq("id", userId)
         .single();
-
-      if (error) throw error;
-
-      const profile = data as any;
-      return {
-        roleId: profile.role_id,
-        roleName: profile.user_roles?.name || null,
-        roleDescription: profile.user_roles?.description || null
-      };
-    } catch (error: any) {
-      console.error('Erro ao buscar papel do usuário:', error);
-      return {
-        roleId: null,
-        roleName: null,
-        roleDescription: null
-      };
+      
+      if (error) {
+        // Log de erro sempre visível (crítico)
+        console.error('❌ [USER-ROLES] Erro ao buscar papel do usuário:', error);
+        return { roleId: null, roleName: null, roleData: null };
+      }
+      
+      const roleId = data?.role_id ? String(data.role_id) : null;
+      let roleName: string | null = null;
+      let roleData: any = null;
+      
+      if (data?.user_roles) {
+        if (Array.isArray(data.user_roles)) {
+          if (data.user_roles.length > 0) {
+            const firstRole = data.user_roles[0] as UserRoleData;
+            roleName = firstRole.name !== undefined ? String(firstRole.name) : null;
+            roleData = firstRole;
+          }
+        } else if (typeof data.user_roles === 'object' && data.user_roles !== null) {
+          const roleObject = data.user_roles as UserRoleData;
+          roleName = roleObject.name !== undefined ? String(roleObject.name) : null;
+          roleData = roleObject;
+        }
+      }
+      
+      const result: UserRoleResult = { roleId, roleName, roleData };
+      roleCache.current.set(userId, result);
+      
+      if (process.env.NODE_ENV !== 'production') {
+        console.log(`✅ [USER-ROLES] Role carregado: ${roleName || 'undefined'} para usuário ${userId.substring(0, 8)}***`);
+      }
+      return result;
+    } catch (err) {
+      // Log de erro sempre visível (crítico)
+      console.error('❌ [USER-ROLES] Erro ao buscar papel do usuário:', err);
+      return { roleId: null, roleName: null, roleData: null };
     }
-  };
+  }, []);
 
-  return { 
-    updateUserRole, 
-    assignRoleToUser, 
-    getUserRole, 
-    isUpdating 
+  return {
+    assignRoleToUser,
+    getUserRole,
+    isUpdating,
+    error
   };
-};
+}

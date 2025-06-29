@@ -1,270 +1,155 @@
 
-import React, { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { useState } from 'react';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { ExternalLink, Clock, Users, Target, CheckCircle } from 'lucide-react';
 import { useBenefitClick } from '@/hooks/useBenefitClick';
+import { Tool } from '@/types/toolTypes';
+import { Gift, Copy, ExternalLink, Check } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
+import { BenefitAccessDenied } from './BenefitAccessDenied';
+import { cn } from '@/lib/utils';
 
 interface MemberBenefitModalProps {
-  tool: any;
-  isOpen?: boolean;
-  onClose?: () => void;
-  variant?: string;
-  size?: string;
+  tool: Tool;
+  size?: 'sm' | 'lg' | 'default' | 'icon';
+  variant?: 'default' | 'outline';
 }
 
-export const MemberBenefitModal: React.FC<MemberBenefitModalProps> = ({
-  tool,
-  isOpen: controlledIsOpen,
-  onClose: controlledOnClose,
-  variant = "default",
-  size = "default"
-}) => {
-  const { trackBenefitClick, isProcessing } = useBenefitClick();
-  const [hasClickedBenefit, setHasClickedBenefit] = useState(false);
-  const [internalIsOpen, setInternalIsOpen] = useState(false);
+export const MemberBenefitModal = ({ 
+  tool, 
+  size = 'default', 
+  variant = 'default' 
+}: MemberBenefitModalProps) => {
+  const [open, setOpen] = useState(false);
+  const { registerBenefitClick, isProcessing } = useBenefitClick();
+  const [copied, setCopied] = useState(false);
 
-  // Use controlled state if provided, otherwise use internal state
-  const isOpen = controlledIsOpen !== undefined ? controlledIsOpen : internalIsOpen;
-  const onClose = controlledOnClose || (() => setInternalIsOpen(false));
-  const onOpen = () => {
-    if (controlledIsOpen === undefined) {
-      setInternalIsOpen(true);
+  const hasPromoCode = tool.benefit_description?.includes('CÓDIGO:') || 
+                      tool.benefit_description?.includes('CUPOM:') ||
+                      tool.benefit_description?.includes('PROMO:');
+
+  const extractPromoCode = () => {
+    if (!tool.benefit_description) return null;
+    
+    const codeMatch = tool.benefit_description.match(/(?:CÓDIGO|CUPOM|PROMO):?\s+([A-Z0-9-_]+)/i);
+    return codeMatch ? codeMatch[1] : null;
+  };
+
+  const promoCode = extractPromoCode();
+  const hasAccessRestriction = tool.is_access_restricted === true;
+  const hasAccess = tool.has_access !== false;
+
+  const handleCopyCode = () => {
+    if (promoCode) {
+      navigator.clipboard.writeText(promoCode);
+      setCopied(true);
+      toast.success('Código copiado para a área de transferência!');
+      
+      setTimeout(() => {
+        setCopied(false);
+      }, 3000);
     }
   };
 
-  const handleBenefitClick = async (benefitLink: string) => {
-    try {
-      await trackBenefitClick({
-        toolId: tool.id,
-        benefitLink
-      });
-      
-      setHasClickedBenefit(true);
-      toast.success('Clique registrado! Redirecionando...');
-      
-      // Abrir link em nova aba
-      window.open(benefitLink, '_blank');
-    } catch (error) {
-      console.error('Erro ao registrar clique:', error);
-      toast.error('Erro ao registrar clique do benefício');
+  const handleAccessBenefit = () => {
+    if (tool.id && tool.benefit_link) {
+      registerBenefitClick(tool.id, tool.benefit_link);
+      setOpen(false);
     }
   };
 
-  if (!tool) return null;
-
-  // If no controlled state, render as button + modal
-  if (controlledIsOpen === undefined) {
-    return (
-      <>
-        <Button
-          onClick={onOpen}
-          className="bg-[#0ABAB5] hover:bg-[#0ABAB5]/90"
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button 
+          className={cn(
+            "w-full",
+            variant === 'default' 
+              ? 'bg-viverblue hover:bg-viverblue-dark text-white' 
+              : 'bg-[#1A1E2E] text-viverblue border-viverblue hover:bg-viverblue/10'
+          )}
+          size={size}
         >
-          <Target className="w-4 h-4 mr-2" />
-          Acessar Benefício
+          <Gift className="mr-2 h-4 w-4" />
+          Benefício Membro
         </Button>
-
-        <Dialog open={isOpen} onOpenChange={onClose}>
-          <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+      </DialogTrigger>
+      
+      <DialogContent className="sm:max-w-md bg-[#151823] border-neutral-700 text-white">
+        {hasAccessRestriction && !hasAccess ? (
+          <BenefitAccessDenied 
+            tool={tool} 
+            onClose={() => setOpen(false)} 
+          />
+        ) : (
+          <>
             <DialogHeader>
-              <DialogTitle className="flex items-center gap-3">
-                <img 
-                  src={tool.logo_url} 
-                  alt={tool.name}
-                  className="w-8 h-8 rounded"
-                />
-                {tool.name}
-                <Badge variant="outline" className="bg-[#0ABAB5]/10 text-[#0ABAB5] border-[#0ABAB5]/20">
-                  Benefício Exclusivo
-                </Badge>
+              <div className="flex items-center gap-2 mb-1">
+                <Badge className="bg-viverblue text-white">Benefício Exclusivo</Badge>
+              </div>
+              <DialogTitle className="text-xl text-white">
+                {tool.benefit_title}
               </DialogTitle>
+              <DialogDescription className="text-neutral-300">
+                Oferta exclusiva para membros do VIVER DE IA Club
+              </DialogDescription>
             </DialogHeader>
-
-            <div className="space-y-6">
-              {/* Descrição da ferramenta */}
-              <div>
-                <h3 className="font-semibold mb-2">Sobre a Ferramenta</h3>
-                <p className="text-muted-foreground">{tool.description}</p>
-              </div>
-
-              {/* Categoria e tags */}
-              <div className="flex flex-wrap gap-2">
-                <Badge variant="secondary">{tool.category}</Badge>
-                {tool.tags?.map((tag: string, index: number) => (
-                  <Badge key={index} variant="outline">{tag}</Badge>
-                ))}
-              </div>
-
-              {/* Informações do benefício */}
-              <div className="bg-gradient-to-r from-[#0ABAB5]/5 to-blue-500/5 p-4 rounded-lg border border-[#0ABAB5]/20">
-                <h3 className="font-semibold text-[#0ABAB5] mb-3 flex items-center gap-2">
-                  <Target className="w-5 h-5" />
-                  Seu Benefício Exclusivo
-                </h3>
-                
-                <div className="space-y-3">
-                  <p className="text-sm">{tool.member_benefit_description}</p>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
-                    <div className="flex items-center gap-2">
-                      <Clock className="w-4 h-4 text-[#0ABAB5]" />
-                      <span className="text-muted-foreground">Tempo de ativação: Imediato</span>
-                    </div>
-                    
-                    <div className="flex items-center gap-2">
-                      <Users className="w-4 h-4 text-[#0ABAB5]" />
-                      <span className="text-muted-foreground">Exclusivo para membros</span>
-                    </div>
-                    
-                    {hasClickedBenefit && (
-                      <div className="flex items-center gap-2">
-                        <CheckCircle className="w-4 h-4 text-green-500" />
-                        <span className="text-green-600 text-xs">Benefício acessado</span>
-                      </div>
-                    )}
-                  </div>
+            
+            <div className="flex flex-col items-center py-4">
+              {tool.benefit_badge_url ? (
+                <img 
+                  src={tool.benefit_badge_url} 
+                  alt="Badge" 
+                  className="w-24 h-24 object-contain mb-4" 
+                />
+              ) : (
+                <div className="w-20 h-20 rounded-full bg-viverblue/10 flex items-center justify-center mb-4">
+                  <Gift className="h-10 w-10 text-viverblue" />
                 </div>
-              </div>
-
-              {/* Botão de ação */}
-              <div className="flex gap-3">
-                <Button
-                  onClick={() => handleBenefitClick(tool.member_benefit_link)}
-                  disabled={isProcessing}
-                  className="flex-1 bg-[#0ABAB5] hover:bg-[#0ABAB5]/90"
-                >
-                  {isProcessing ? (
-                    'Processando...'
-                  ) : (
-                    <>
-                      <ExternalLink className="w-4 h-4 mr-2" />
-                      Acessar Benefício
-                    </>
-                  )}
-                </Button>
-                
-                <Button
-                  variant="outline"
-                  onClick={onClose}
-                >
-                  Fechar
-                </Button>
-              </div>
-
-              {/* Observações */}
-              <div className="text-xs text-muted-foreground bg-muted/50 p-3 rounded">
-                <p>
-                  <strong>Importante:</strong> Alguns benefícios podem levar alguns minutos para serem ativados. 
-                  Caso tenha problemas, entre em contato com nosso suporte.
+              )}
+              
+              <div className="prose max-w-full w-full">
+                <p className="text-center whitespace-pre-line text-neutral-100">
+                  {tool.benefit_description}
                 </p>
               </div>
-            </div>
-          </DialogContent>
-        </Dialog>
-      </>
-    );
-  }
-
-  // If controlled state, render only the modal
-  return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-3">
-            <img 
-              src={tool.logo_url} 
-              alt={tool.name}
-              className="w-8 h-8 rounded"
-            />
-            {tool.name}
-            <Badge variant="outline" className="bg-[#0ABAB5]/10 text-[#0ABAB5] border-[#0ABAB5]/20">
-              Benefício Exclusivo
-            </Badge>
-          </DialogTitle>
-        </DialogHeader>
-
-        <div className="space-y-6">
-          {/* Descrição da ferramenta */}
-          <div>
-            <h3 className="font-semibold mb-2">Sobre a Ferramenta</h3>
-            <p className="text-muted-foreground">{tool.description}</p>
-          </div>
-
-          {/* Categoria e tags */}
-          <div className="flex flex-wrap gap-2">
-            <Badge variant="secondary">{tool.category}</Badge>
-            {tool.tags?.map((tag: string, index: number) => (
-              <Badge key={index} variant="outline">{tag}</Badge>
-            ))}
-          </div>
-
-          {/* Informações do benefício */}
-          <div className="bg-gradient-to-r from-[#0ABAB5]/5 to-blue-500/5 p-4 rounded-lg border border-[#0ABAB5]/20">
-            <h3 className="font-semibold text-[#0ABAB5] mb-3 flex items-center gap-2">
-              <Target className="w-5 h-5" />
-              Seu Benefício Exclusivo
-            </h3>
-            
-            <div className="space-y-3">
-              <p className="text-sm">{tool.member_benefit_description}</p>
               
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
-                <div className="flex items-center gap-2">
-                  <Clock className="w-4 h-4 text-[#0ABAB5]" />
-                  <span className="text-muted-foreground">Tempo de ativação: Imediato</span>
+              {promoCode && (
+                <div className="mt-4 p-3 bg-[#1A1E2E] border border-neutral-700 rounded-md flex items-center justify-between w-full">
+                  <code className="font-mono font-bold text-viverblue">{promoCode}</code>
+                  <Button 
+                    size="sm" 
+                    variant="ghost" 
+                    onClick={handleCopyCode}
+                    className="text-viverblue hover:text-viverblue-light hover:bg-viverblue/10"
+                  >
+                    {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                  </Button>
                 </div>
-                
-                <div className="flex items-center gap-2">
-                  <Users className="w-4 h-4 text-[#0ABAB5]" />
-                  <span className="text-muted-foreground">Exclusivo para membros</span>
-                </div>
-                
-                {hasClickedBenefit && (
-                  <div className="flex items-center gap-2">
-                    <CheckCircle className="w-4 h-4 text-green-500" />
-                    <span className="text-green-600 text-xs">Benefício acessado</span>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* Botão de ação */}
-          <div className="flex gap-3">
-            <Button
-              onClick={() => handleBenefitClick(tool.member_benefit_link)}
-              disabled={isProcessing}
-              className="flex-1 bg-[#0ABAB5] hover:bg-[#0ABAB5]/90"
-            >
-              {isProcessing ? (
-                'Processando...'
-              ) : (
-                <>
-                  <ExternalLink className="w-4 h-4 mr-2" />
-                  Acessar Benefício
-                </>
               )}
-            </Button>
+            </div>
             
-            <Button
-              variant="outline"
-              onClick={onClose}
-            >
-              Fechar
-            </Button>
-          </div>
-
-          {/* Observações */}
-          <div className="text-xs text-muted-foreground bg-muted/50 p-3 rounded">
-            <p>
-              <strong>Importante:</strong> Alguns benefícios podem levar alguns minutos para serem ativados. 
-              Caso tenha problemas, entre em contato com nosso suporte.
-            </p>
-          </div>
-        </div>
+            <DialogFooter className="flex flex-col sm:flex-row gap-2">
+              <Button
+                variant="outline"
+                onClick={() => setOpen(false)}
+                className="sm:w-auto flex-1 border-neutral-700 text-white hover:bg-[#1A1E2E]"
+              >
+                Fechar
+              </Button>
+              
+              <Button 
+                className="bg-viverblue hover:bg-viverblue-dark text-white sm:w-auto flex-1"
+                onClick={handleAccessBenefit}
+                disabled={isProcessing}
+              >
+                <ExternalLink className="mr-2 h-4 w-4" />
+                Acessar Benefício
+              </Button>
+            </DialogFooter>
+          </>
+        )}
       </DialogContent>
     </Dialog>
   );

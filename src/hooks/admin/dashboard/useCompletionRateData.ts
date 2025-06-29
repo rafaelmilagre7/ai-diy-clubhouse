@@ -57,12 +57,12 @@ export const useCompletionRateData = (timeRange: string) => {
         } else {
           // Agrupar por solução e calcular taxa de conclusão
           const solutionStats = progressData.reduce((acc: any, item) => {
-            const solutionTitle = (item as any).solutions?.title || 'Solução Desconhecida';
+            const solutionTitle = (item.solutions as any)?.title || 'Solução Desconhecida';
             if (!acc[solutionTitle]) {
               acc[solutionTitle] = { total: 0, completed: 0 };
             }
             acc[solutionTitle].total++;
-            if ((item as any).is_completed) {
+            if (item.is_completed) {
               acc[solutionTitle].completed++;
             }
             return acc;

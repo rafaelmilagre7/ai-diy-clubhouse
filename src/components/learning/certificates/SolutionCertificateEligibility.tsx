@@ -8,7 +8,6 @@ import {
   AlertDescription,
   AlertTitle,
 } from "@/components/ui/alert";
-import { useSimpleAuth } from "@/contexts/auth/SimpleAuthProvider";
 
 interface SolutionCertificateEligibilityProps {
   solutionId: string;
@@ -19,7 +18,6 @@ export const SolutionCertificateEligibility = ({
   solutionId,
   isCompleted = false,
 }: SolutionCertificateEligibilityProps) => {
-  const { user } = useSimpleAuth();
   const [isEligible, setIsEligible] = useState<boolean | null>(null);
   const [isChecking, setIsChecking] = useState(false);
   
@@ -35,11 +33,11 @@ export const SolutionCertificateEligibility = ({
   
   useEffect(() => {
     const handleCheckEligibility = async () => {
-      if (!solutionId || hasCertificate || !user?.id) return;
+      if (!solutionId || hasCertificate) return;
       
       setIsChecking(true);
       try {
-        const eligible = await checkEligibility(user.id);
+        const eligible = await checkEligibility(solutionId);
         setIsEligible(eligible);
       } catch (error) {
         console.error("Erro ao verificar elegibilidade:", error);
@@ -50,7 +48,7 @@ export const SolutionCertificateEligibility = ({
     };
 
     handleCheckEligibility();
-  }, [solutionId, hasCertificate, checkEligibility, user?.id]);
+  }, [solutionId, hasCertificate, checkEligibility]);
   
   if (isLoading || isChecking) {
     return (
@@ -83,7 +81,7 @@ export const SolutionCertificateEligibility = ({
     );
   }
 
-  if (isEligible === true && user?.id) {
+  if (isEligible === true) {
     return (
       <div className="space-y-4 p-4 border rounded-lg bg-[#151823] border-viverblue/20">
         <div className="flex items-center gap-2">
@@ -96,7 +94,7 @@ export const SolutionCertificateEligibility = ({
         </p>
         
         <Button
-          onClick={() => generateCertificate(user.id)}
+          onClick={() => generateCertificate(solutionId)}
           disabled={isGenerating}
           className="w-full bg-gradient-to-r from-viverblue to-viverblue-light hover:from-viverblue/90 hover:to-viverblue-light/90 text-white"
         >

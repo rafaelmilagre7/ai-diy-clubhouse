@@ -80,7 +80,6 @@ export function RoleForm({ open, onOpenChange, mode, role }: RoleFormProps) {
         await createRole({
           name: values.name,
           description: values.description,
-          permissions: {},
           is_system: false,
         });
       } else if (mode === "edit" && role) {

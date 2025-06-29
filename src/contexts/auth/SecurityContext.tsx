@@ -1,49 +1,142 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { useAuth } from './index';
+
+import React, { createContext, useContext, useEffect, ReactNode } from 'react';
+import { useSecureSession } from '@/hooks/useSecureSession';
+import { useAuth } from '@/contexts/auth';
 import { supabase } from '@/lib/supabase';
 
-interface SecurityContextProps {
-  logSecurityEvent: (eventType: string, details: any) => Promise<void>;
+interface SecurityContextType {
+  lastActivity: number;
+  updateActivity: () => void;
+  validateSession: () => Promise<boolean>;
+  isInactive: boolean;
 }
 
-const SecurityContext = createContext<SecurityContextProps | undefined>(undefined);
+const SecurityContext = createContext<SecurityContextType | undefined>(undefined);
 
 interface SecurityProviderProps {
-  children: React.ReactNode;
+  children: ReactNode;
 }
-
-export const useSecurity = () => {
-  const context = useContext(SecurityContext);
-  if (!context) {
-    throw new Error('useSecurity must be used within a SecurityProvider');
-  }
-  return context;
-};
 
 export const SecurityProvider: React.FC<SecurityProviderProps> = ({ children }) => {
   const { user } = useAuth();
+  const secureSession = useSecureSession({
+    maxIdleTime: 30, // 30 minutos
+    checkInterval: 30, // verificar a cada 30 segundos
+    autoLogoutWarning: 5 // avisar 5 minutos antes
+  });
 
-  const logSecurityEvent = async (eventType: string, details: any) => {
-    try {
-      await supabase.from('analytics').insert({
-        user_id: user?.id || '',
-        event_type: 'security_event',
-        event_data: {
-          security_event_type: eventType,
-          timestamp: new Date().toISOString(),
-          user_agent: navigator.userAgent,
-          url: window.location.href,
-          ...details
+  // Log de eventos de segurança (sem dados sensíveis)
+  useEffect(() => {
+    if (!user) return;
+
+    const logSecurityEvent = async (eventType: string) => {
+      try {
+        // Mapear event_type para os valores válidos
+        let mappedEventType = 'view'; // padrão
+        if (eventType === 'session_start') {
+          mappedEventType = 'start';
+        } else if (eventType === 'console_access') {
+          mappedEventType = 'view';
         }
-      } as any);
-    } catch (error) {
-      console.error('Erro ao registrar evento de segurança:', error);
+        
+        await supabase.from('analytics').insert({
+          user_id: user.id,
+          event_type: mappedEventType,
+          event_data: {
+            security_event_type: eventType,
+            timestamp: new Date().toISOString(),
+            user_agent: navigator.userAgent.substring(0, 100), // Limitado para privacidade
+            url: window.location.pathname // Apenas o path, sem query params
+          }
+        });
+      } catch (error) {
+        console.error('[SECURITY] Erro ao registrar evento:', error);
+      }
+    };
+
+    // Log de início de sessão segura
+    logSecurityEvent('session_start');
+
+    // Detectar tentativas de manipulação do console com type safety
+    const originalConsole = {
+      log: console.log,
+      warn: console.warn,
+      error: console.error,
+      info: console.info,
+      debug: console.debug
+    };
+    
+    let consoleWarningShown = false;
+
+    // Override console methods com verificação de tipo
+    const overrideConsoleMethod = (methodName: keyof typeof originalConsole) => {
+      const original = originalConsole[methodName];
+      if (typeof original === 'function') {
+        (console as any)[methodName] = (...args: any[]) => {
+          if (!consoleWarningShown && process.env.NODE_ENV === 'production') {
+            consoleWarningShown = true;
+            original.call(console, '[SECURITY] Detectada atividade no console em produção');
+            logSecurityEvent('console_access');
+          }
+          return original.apply(console, args);
+        };
+      }
+    };
+
+    // Aplicar override apenas para métodos que existem
+    if (process.env.NODE_ENV === 'production') {
+      overrideConsoleMethod('log');
+      overrideConsoleMethod('warn');
+      overrideConsoleMethod('error');
+      overrideConsoleMethod('info');
+      overrideConsoleMethod('debug');
     }
-  };
+
+    return () => {
+      // Restaurar console original de forma segura
+      Object.assign(console, originalConsole);
+    };
+  }, [user]);
+
+  // Detectar DevTools abertas com proteção adicional
+  useEffect(() => {
+    if (process.env.NODE_ENV !== 'production') return;
+
+    let devToolsOpen = false;
+    
+    const detectDevTools = () => {
+      try {
+        const threshold = 160;
+        
+        if (window.outerHeight - window.innerHeight > threshold || 
+            window.outerWidth - window.innerWidth > threshold) {
+          if (!devToolsOpen) {
+            devToolsOpen = true;
+            console.warn('[SECURITY] DevTools detectadas');
+          }
+        } else {
+          devToolsOpen = false;
+        }
+      } catch (error) {
+        // Silenciosamente falhar se não conseguir detectar
+      }
+    };
+
+    const interval = setInterval(detectDevTools, 1000);
+    return () => clearInterval(interval);
+  }, []);
 
   return (
-    <SecurityContext.Provider value={{ logSecurityEvent }}>
+    <SecurityContext.Provider value={secureSession}>
       {children}
     </SecurityContext.Provider>
   );
+};
+
+export const useSecurity = () => {
+  const context = useContext(SecurityContext);
+  if (context === undefined) {
+    throw new Error('useSecurity deve ser usado dentro de um SecurityProvider');
+  }
+  return context;
 };

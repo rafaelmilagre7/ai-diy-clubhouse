@@ -60,6 +60,7 @@ export const NewTopicForm = ({ categoryId, categorySlug }: NewTopicFormProps) =>
     try {
       setIsSubmitting(true);
       
+      // Inserir o novo tópico com conteúdo em markdown
       const { data: topicData, error: topicError } = await supabase
         .from("forum_topics")
         .insert({
@@ -72,14 +73,14 @@ export const NewTopicForm = ({ categoryId, categorySlug }: NewTopicFormProps) =>
           is_pinned: false,
           is_locked: false,
           last_activity_at: new Date().toISOString()
-        } as any)
+        })
         .select("id")
         .single();
         
       if (topicError) throw topicError;
       
       toast.success("Tópico criado com sucesso!");
-      navigate(`/comunidade/topico/${(topicData as any).id}`);
+      navigate(`/comunidade/topico/${topicData.id}`);
       
     } catch (error: any) {
       console.error("Erro ao criar tópico:", error);

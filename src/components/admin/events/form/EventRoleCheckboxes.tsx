@@ -6,7 +6,6 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { Badge } from "@/components/ui/badge";
 import { Users } from "lucide-react";
-import { useCallback, useMemo } from "react";
 
 interface Role {
   id: string;
@@ -20,41 +19,32 @@ interface EventRoleCheckboxesProps {
 }
 
 export const EventRoleCheckboxes = ({ selectedRoles, onChange }: EventRoleCheckboxesProps) => {
-  const { data: roles, isLoading, error } = useQuery({
+  const { data: roles, isLoading } = useQuery({
     queryKey: ['roles'],
     queryFn: async () => {
-      console.log("🔍 [ROLE-CHECKBOXES] Fetching roles...");
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from('user_roles')
-        .select('id, name, description')
-        .order('name');
+        .select('id, name, description');
       
-      if (error) {
-        console.error("❌ [ROLE-CHECKBOXES] Error fetching roles:", error);
-        throw error;
-      }
-      
-      console.log("✅ [ROLE-CHECKBOXES] Roles fetched:", data?.length || 0);
+      if (error) throw error;
       return data as Role[];
-    },
-    retry: 2,
-    staleTime: 5 * 60 * 1000
+    }
   });
 
-  // Função estabilizada para atualizar seleção de papéis
-  const handleCheckedChange = useCallback((checked: boolean, roleId: string) => {
-    console.log("🔄 [ROLE-CHECKBOXES] Role selection changed:", { roleId, checked });
-    
-    const updatedSelection = checked 
-      ? [...selectedRoles, roleId]
-      : selectedRoles.filter(id => id !== roleId);
+  // Função para atualizar seleção de papéis quando um checkbox é alterado
+  const handleCheckedChange = (checked: boolean, roleId: string) => {
+    let updatedSelection: string[];
 
-    console.log("🔄 [ROLE-CHECKBOXES] Updated selection:", updatedSelection);
+    if (checked) {
+      // Adicionar à seleção
+      updatedSelection = [...selectedRoles, roleId];
+    } else {
+      // Remover da seleção
+      updatedSelection = selectedRoles.filter(id => id !== roleId);
+    }
+
     onChange(updatedSelection);
-  }, [selectedRoles, onChange]);
-
-  // Memoizar contagem de selecionados
-  const selectedCount = useMemo(() => selectedRoles.length, [selectedRoles.length]);
+  };
 
   if (isLoading) {
     return (
@@ -69,23 +59,11 @@ export const EventRoleCheckboxes = ({ selectedRoles, onChange }: EventRoleCheckb
     );
   }
 
-  if (error) {
-    return (
-      <div className="p-4 border border-red-200 rounded-md bg-red-50">
-        <p className="text-sm text-red-600">
-          Erro ao carregar papéis de usuário: {error.message}
-        </p>
-      </div>
-    );
+  if (!roles?.length) {
+    return <p className="text-sm text-muted-foreground">Nenhum papel de usuário encontrado</p>;
   }
 
-  if (!roles?.length) {
-    return (
-      <div className="p-4 border border-gray-200 rounded-md bg-gray-50">
-        <p className="text-sm text-muted-foreground">Nenhum papel de usuário encontrado</p>
-      </div>
-    );
-  }
+  const selectedCount = selectedRoles.length;
 
   return (
     <div>
@@ -98,7 +76,7 @@ export const EventRoleCheckboxes = ({ selectedRoles, onChange }: EventRoleCheckb
         ) : (
           <Badge variant="outline" className="border-muted-foreground/30 text-muted-foreground">
             <Users className="w-3 h-3 mr-1" />
-            Nenhum papel selecionado (evento público)
+            Nenhum papel selecionado
           </Badge>
         )}
       </div>
@@ -109,11 +87,12 @@ export const EventRoleCheckboxes = ({ selectedRoles, onChange }: EventRoleCheckb
             return (
               <div 
                 key={role.id}
-                className={`flex items-start space-x-2 rounded-md p-2 transition-colors ${
+                className={`flex items-start space-x-2 rounded-md p-2 transition-colors cursor-pointer ${
                   isChecked 
                     ? "bg-viverblue/10 dark:bg-viverblue/20 border border-viverblue/30 dark:border-viverblue/40" 
                     : "hover:bg-muted/50 dark:hover:bg-muted/30 border border-transparent"
                 }`}
+                onClick={() => handleCheckedChange(!isChecked, role.id)}
               >
                 <Checkbox
                   id={`role-${role.id}`}

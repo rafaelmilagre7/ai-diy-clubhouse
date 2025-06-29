@@ -1,23 +1,18 @@
+
 import { ReactNode } from 'react';
 
-// --- Funções de Máscara ---
-const maskEmail = (email: string): string => {
-  if (typeof email !== 'string' || email.indexOf('@') === -1) return '[INVALID_EMAIL]';
-  const [user, domain] = email.split('@');
-  if (!user || !domain) return '[INVALID_EMAIL]';
-  return `${user.substring(0, 1)}***@${domain}`;
-};
+interface DataSanitizerProps {
+  children: ReactNode;
+  data?: any;
+  allowedFields?: string[];
+  sensitiveFields?: string[];
+}
 
-const maskId = (id: string): string => {
-  if (typeof id !== 'string' || id.length < 8) return `[REDACTED]`;
-  return `${id.substring(0, 4)}...${id.substring(id.length - 4)}`;
-};
-
-// Utilitário para sanitizar dados antes da exibição ou log
+// Utilitário para sanitizar dados antes da exibição
 export const sanitizeData = (
-  data: any,
-  allowedFields?: string[],
-  sensitiveFields: string[] = ['password', 'token', 'secret', 'key', 'apiKey', 'accessToken', 'refreshToken', 'session']
+  data: any, 
+  allowedFields?: string[], 
+  sensitiveFields: string[] = ['password', 'token', 'secret', 'key', 'email', 'phone']
 ): any => {
   if (!data || typeof data !== 'object') {
     return data;
@@ -31,27 +26,16 @@ export const sanitizeData = (
 
   Object.keys(data).forEach(key => {
     const value = data[key];
-    const lowerKey = key.toLowerCase();
+    
+    // Pular campos sensíveis
+    if (sensitiveFields.some(field => key.toLowerCase().includes(field.toLowerCase()))) {
+      sanitized[key] = '[REDACTED]';
+      return;
+    }
 
-    // Se há lista de campos permitidos, pular os que não estão nela
+    // Se há lista de campos permitidos, verificar
     if (allowedFields && !allowedFields.includes(key)) {
       return;
-    }
-
-    // Pular campos sensíveis genéricos
-    if (sensitiveFields.some(field => lowerKey.includes(field))) {
-      sanitized[key] = `[REDACTED_${key.toUpperCase()}]`;
-      return;
-    }
-    
-    // Aplicar máscaras específicas
-    if (lowerKey.includes('email')) {
-        sanitized[key] = typeof value === 'string' ? maskEmail(value) : '[REDACTED]';
-        return;
-    }
-    if (lowerKey.includes('id') || lowerKey.includes('userid') || lowerKey.includes('user_id')) {
-        sanitized[key] = typeof value === 'string' ? maskId(value) : '[REDACTED]';
-        return;
     }
 
     // Recursivamente sanitizar objetos aninhados
@@ -64,14 +48,6 @@ export const sanitizeData = (
 
   return sanitized;
 };
-
-// Adicionando a definição de props que estava faltando.
-interface DataSanitizerProps {
-  children?: React.ReactNode | ((sanitizedData: any) => React.ReactNode);
-  data?: any;
-  allowedFields?: string[];
-  sensitiveFields?: string[];
-}
 
 // Componente para exibir dados sanitizados
 export const DataSanitizer: React.FC<DataSanitizerProps> = ({ 

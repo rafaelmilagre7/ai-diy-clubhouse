@@ -1,204 +1,281 @@
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { supabase } from "@/lib/supabase";
+import { LearningModule } from "@/lib/supabase";
+import { toast } from "sonner";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Switch } from '@/components/ui/switch';
-import { supabase } from '@/lib/supabase';
-import { toast } from 'sonner';
-import { ImageUpload } from '@/components/formacao/comum/ImageUpload';
-
-interface Modulo {
-  id?: string;
-  title: string;
-  description?: string;
-  cover_image_url?: string;
-  published?: boolean;
-  course_id: string;
-}
+} from "@/components/ui/dialog";
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
+import { ImageUpload } from "@/components/formacao/common/ImageUpload";
+import { Loader2 } from "lucide-react";
 
 interface ModuloFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSuccess: () => void;
-  modulo?: Modulo;
+  modulo: LearningModule | null;
   cursoId: string;
+  onSuccess: () => void;
 }
 
-export const ModuloFormDialog: React.FC<ModuloFormDialogProps> = ({
+const moduloFormSchema = z.object({
+  title: z.string().min(3, { message: "O título precisa ter pelo menos 3 caracteres" }),
+  description: z.string().optional(),
+  cover_image_url: z.string().optional(),
+  published: z.boolean().default(false),
+});
+
+type ModuloFormValues = z.infer<typeof moduloFormSchema>;
+
+export const ModuloFormDialog = ({
   open,
   onOpenChange,
-  onSuccess,
   modulo,
-  cursoId
-}) => {
-  const [formData, setFormData] = useState({
-    title: modulo?.title || '',
-    description: modulo?.description || '',
-    cover_image_url: modulo?.cover_image_url || '',
-    published: modulo?.published || false
+  cursoId,
+  onSuccess
+}: ModuloFormDialogProps) => {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const isEditing = !!modulo;
+
+  const form = useForm<ModuloFormValues>({
+    resolver: zodResolver(moduloFormSchema),
+    defaultValues: {
+      title: modulo?.title || "",
+      description: modulo?.description || "",
+      cover_image_url: modulo?.cover_image_url || "",
+      published: modulo?.published || false,
+    },
   });
-  const [isLoading, setIsLoading] = useState(false);
 
+  // Efeito para resetar e inicializar o formulário quando modulo ou estado do modal mudar
   useEffect(() => {
-    if (modulo) {
-      setFormData({
-        title: modulo.title || '',
-        description: modulo.description || '',
-        cover_image_url: modulo.cover_image_url || '',
-        published: modulo.published || false
+    if (open && modulo) {
+      console.log("Inicializando formulário com módulo existente:", modulo);
+      // Inicializa o formulário com os valores do módulo
+      form.reset({
+        title: modulo.title || "",
+        description: modulo.description || "",
+        cover_image_url: modulo.cover_image_url || "",
+        published: modulo.published || false,
       });
-    } else {
-      setFormData({
-        title: '',
-        description: '',
-        cover_image_url: '',
-        published: false
+    } else if (open) {
+      console.log("Inicializando formulário para novo módulo");
+      // Se está abrindo para criar um novo módulo, resetamos o formulário
+      form.reset({
+        title: "",
+        description: "",
+        cover_image_url: "",
+        published: false,
       });
     }
-  }, [modulo]);
+  }, [modulo, open, form.reset]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const onSubmit = async (values: ModuloFormValues) => {
+    setIsSubmitting(true);
+    console.log("Submetendo formulário com valores:", values);
     
-    if (!formData.title.trim()) {
-      toast.error('Título é obrigatório');
-      return;
-    }
-
     try {
-      setIsLoading(true);
-      
-      if (modulo?.id) {
-        // Atualizar módulo existente
+      if (isEditing) {
+        // Atualizando módulo existente
         const { error } = await supabase
           .from('learning_modules')
           .update({
-            title: formData.title.trim(),
-            description: formData.description?.trim() || null,
-            cover_image_url: formData.cover_image_url || null,
-            published: formData.published,
-            updated_at: new Date().toISOString()
-          } as any)
-          .eq('id', modulo.id as any);
-
+            title: values.title,
+            description: values.description,
+            cover_image_url: values.cover_image_url,
+            published: values.published,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', modulo.id);
+          
         if (error) throw error;
-        toast.success('Módulo atualizado com sucesso!');
+        
+        console.log("Módulo atualizado com sucesso!");
+        toast.success("Módulo atualizado com sucesso!");
       } else {
-        // Criar novo módulo
+        // Criando novo módulo
+        // Primeiro, verificamos a ordem máxima atual
+        const { data: maxOrderData, error: maxOrderError } = await supabase
+          .from('learning_modules')
+          .select('order_index')
+          .eq('course_id', cursoId)
+          .order('order_index', { ascending: false })
+          .limit(1);
+          
+        if (maxOrderError) throw maxOrderError;
+        
+        const nextOrder = maxOrderData && maxOrderData.length > 0 
+          ? (maxOrderData[0].order_index + 1) 
+          : 0;
+        
+        console.log("Próxima ordem do módulo:", nextOrder);
+        
         const { error } = await supabase
           .from('learning_modules')
-          .insert([{
-            title: formData.title.trim(),
-            description: formData.description?.trim() || null,
-            cover_image_url: formData.cover_image_url || null,
-            published: formData.published,
+          .insert({
+            title: values.title,
+            description: values.description,
+            cover_image_url: values.cover_image_url,
+            published: values.published,
             course_id: cursoId,
-            order_index: 0
-          }] as any);
-
+            order_index: nextOrder,
+          });
+          
         if (error) throw error;
-        toast.success('Módulo criado com sucesso!');
+        
+        console.log("Módulo criado com sucesso!");
+        toast.success("Módulo criado com sucesso!");
       }
-
+      
       onSuccess();
-      onOpenChange(false);
-      
-      // Reset form
-      setFormData({
-        title: '',
-        description: '',
-        cover_image_url: '',
-        published: false
-      });
-      
-    } catch (error: any) {
-      console.error('Erro ao salvar módulo:', error);
-      toast.error(error.message || 'Erro ao salvar módulo');
+      form.reset();
+    } catch (error) {
+      console.error("Erro ao salvar módulo:", error);
+      toast.error("Ocorreu um erro ao salvar o módulo. Tente novamente.");
     } finally {
-      setIsLoading(false);
+      setIsSubmitting(false);
     }
   };
 
-  const handleImageUpload = (url: string) => {
-    setFormData(prev => ({ ...prev, cover_image_url: url }));
+  const handleOpenChange = (open: boolean) => {
+    if (!open) {
+      form.reset();
+    }
+    onOpenChange(open);
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
+    <Dialog open={open} onOpenChange={handleOpenChange}>
+      <DialogContent className="w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>
-            {modulo ? 'Editar Módulo' : 'Novo Módulo'}
-          </DialogTitle>
+          <DialogTitle>{isEditing ? "Editar Módulo" : "Criar Novo Módulo"}</DialogTitle>
+          <DialogDescription>
+            {isEditing 
+              ? "Atualize as informações do módulo existente." 
+              : "Preencha as informações para criar um novo módulo."}
+          </DialogDescription>
         </DialogHeader>
-
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="title">Título *</Label>
-            <Input
-              id="title"
-              value={formData.title}
-              onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-              placeholder="Nome do módulo"
-              required
+        
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <FormField
+              control={form.control}
+              name="title"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Título do Módulo</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Digite o título do módulo" {...field} />
+                  </FormControl>
+                  <FormDescription>Este será o nome exibido para os alunos.</FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="description">Descrição</Label>
-            <Textarea
-              id="description"
-              value={formData.description}
-              onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-              placeholder="Descrição do módulo (opcional)"
-              rows={3}
+            
+            <FormField
+              control={form.control}
+              name="description"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Descrição</FormLabel>
+                  <FormControl>
+                    <Textarea 
+                      placeholder="Digite uma breve descrição do módulo" 
+                      rows={3}
+                      {...field} 
+                      value={field.value || ''} 
+                    />
+                  </FormControl>
+                  <FormDescription>
+                    Uma descrição clara ajudará os alunos a entenderem o conteúdo do módulo.
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-          </div>
 
-          <div className="space-y-2">
-            <Label>Imagem de Capa</Label>
-            <ImageUpload
-              value={formData.cover_image_url}
-              onChange={handleImageUpload}
-              bucketName="module_images"
-              folderPath="covers"
+            <FormField
+              control={form.control}
+              name="cover_image_url"
+              render={({ field }) => (
+                <FormItem className="space-y-3">
+                  <FormLabel>Imagem de Capa (Opcional)</FormLabel>
+                  <FormControl>
+                    <ImageUpload
+                      value={field.value}
+                      onChange={field.onChange}
+                      bucketName="learning_covers"
+                      folderPath="modulos"
+                    />
+                  </FormControl>
+                  <FormDescription>
+                    A imagem será exibida como capa do módulo.
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-          </div>
 
-          <div className="flex items-center space-x-2">
-            <Switch
-              id="published"
-              checked={formData.published}
-              onCheckedChange={(checked) => setFormData(prev => ({ ...prev, published: checked }))}
+            <FormField
+              control={form.control}
+              name="published"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3">
+                  <div className="space-y-0.5">
+                    <FormLabel className="text-base">Publicar módulo</FormLabel>
+                    <FormDescription>
+                      Quando ativado, o módulo será visível para os alunos.
+                    </FormDescription>
+                  </div>
+                  <FormControl>
+                    <Switch
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                </FormItem>
+              )}
             />
-            <Label htmlFor="published">Publicado</Label>
-          </div>
 
-          <div className="flex justify-end gap-2 pt-4">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-              disabled={isLoading}
-            >
-              Cancelar
-            </Button>
-            <Button type="submit" disabled={isLoading}>
-              {isLoading ? 'Salvando...' : modulo ? 'Atualizar' : 'Criar'}
-            </Button>
-          </div>
-        </form>
+            <DialogFooter className="flex flex-col sm:flex-row gap-2 pt-4">
+              <Button type="button" variant="outline" onClick={() => handleOpenChange(false)}>
+                Cancelar
+              </Button>
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Salvando...
+                  </>
+                ) : (
+                  isEditing ? "Atualizar Módulo" : "Criar Módulo"
+                )}
+              </Button>
+            </DialogFooter>
+          </form>
+        </Form>
       </DialogContent>
     </Dialog>
   );
 };
-
-export default ModuloFormDialog;

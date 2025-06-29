@@ -1,47 +1,90 @@
 
-import { render, screen } from '@testing-library/react';
+import { render } from '@testing-library/react';
+import '@testing-library/jest-dom';
 import { UserRoleDialog } from '../UserRoleDialog';
-import { createMockUserProfile } from '@/__tests__/utils/mockUserProfile';
-
-// Mock do toast
-jest.mock('@/hooks/use-toast', () => ({
-  useToast: () => ({
-    toast: jest.fn(),
-  }),
-}));
+import { UserProfile } from '@/lib/supabase';
 
 describe('UserRoleDialog', () => {
-  const mockUser = createMockUserProfile({
+  const mockUser: UserProfile = {
     id: '1',
-    name: 'Test User',
     email: 'test@example.com',
-  });
+    name: 'Test User',
+    role_id: 'membro-club-role-id',
+    user_roles: {
+      id: 'membro-club-role-id',
+      name: 'membro_club'
+    },
+    avatar_url: null,
+    company_name: 'Test Company',
+    industry: 'Technology',
+    created_at: '2024-01-01T00:00:00Z',
+    onboarding_completed: true,
+    onboarding_completed_at: '2024-01-01T00:00:00Z',
+  };
 
-  const defaultProps = {
+  const mockAvailableRoles = [
+    { 
+      id: 'membro-club-role-id', 
+      name: 'membro_club', 
+      description: 'Membro do Club', 
+      is_system: true, 
+      created_at: '2024-01-01T00:00:00Z',
+      updated_at: '2024-01-01T00:00:00Z'
+    },
+    { 
+      id: 'admin-role-id', 
+      name: 'admin', 
+      description: 'Administrador', 
+      is_system: true, 
+      created_at: '2024-01-01T00:00:00Z',
+      updated_at: '2024-01-01T00:00:00Z'
+    }
+  ];
+
+  const mockProps = {
     open: true,
     onOpenChange: jest.fn(),
-    user: mockUser,
-    newRoleId: 'admin-role-id',
+    selectedUser: mockUser,
+    newRoleId: 'membro-club-role-id',
     onRoleChange: jest.fn(),
     onUpdateRole: jest.fn(),
     saving: false,
-    availableRoles: [
-      { id: 'admin-role-id', name: 'Admin', description: 'Administrator' },
-      { id: 'user-role-id', name: 'User', description: 'Regular User' }
-    ],
-    onSuccess: jest.fn()
+    availableRoles: mockAvailableRoles
   };
 
   it('renders correctly when open', () => {
-    render(<UserRoleDialog {...defaultProps} />);
+    const { getByText } = render(<UserRoleDialog {...mockProps} />);
     
-    expect(screen.getByText('Alterar Papel do Usuário')).toBeInTheDocument();
-    expect(screen.getByText('Test User')).toBeInTheDocument();
+    expect(getByText('Alterar Papel do Usuário')).toBeInTheDocument();
+    expect(getByText(/Test User/)).toBeInTheDocument();
   });
 
-  it('does not render when closed', () => {
-    render(<UserRoleDialog {...defaultProps} open={false} />);
+  it('calls onRoleChange when role is selected', () => {
+    const { getByRole } = render(<UserRoleDialog {...mockProps} />);
     
-    expect(screen.queryByText('Alterar Papel do Usuário')).not.toBeInTheDocument();
+    const select = getByRole('combobox');
+    select.dispatchEvent(new Event('change', { bubbles: true }));
+    
+    // Verificação ajustada devido à limitação do teste sem userEvent
+    expect(mockProps.onRoleChange).toHaveBeenCalled();
+  });
+
+  it('disables buttons when saving', () => {
+    const { getByRole } = render(<UserRoleDialog {...mockProps} saving={true} />);
+    
+    const saveButton = getByRole('button', { name: /salvando/i });
+    const cancelButton = getByRole('button', { name: /cancelar/i });
+    
+    expect(saveButton).toBeDisabled();
+    expect(cancelButton).toBeDisabled();
+  });
+
+  it('calls onUpdateRole when save button is clicked', () => {
+    const { getByRole } = render(<UserRoleDialog {...mockProps} />);
+    
+    const saveButton = getByRole('button', { name: /salvar/i });
+    saveButton.click();
+    
+    expect(mockProps.onUpdateRole).toHaveBeenCalled();
   });
 });

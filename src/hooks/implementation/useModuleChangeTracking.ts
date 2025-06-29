@@ -33,8 +33,8 @@ export const useModuleChangeTracking = (
           .update({ 
             current_module: moduleIdx,
             last_activity: new Date().toISOString()
-          } as any)
-          .eq("id", progressId as any);
+          })
+          .eq("id", progressId);
         
         if (error) {
           throw error;

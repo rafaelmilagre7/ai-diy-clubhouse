@@ -12,7 +12,6 @@ export const useUserProgress = () => {
     queryFn: async () => {
       if (!user) return [];
       
-      // CORRIGIDO: Usar learning_progress em vez da VIEW user_progress para melhor performance
       const { data, error } = await supabase
         .from("learning_progress")
         .select(`
@@ -25,7 +24,7 @@ export const useUserProgress = () => {
             )
           )
         `)
-        .eq("user_id", user.id as any);
+        .eq("user_id", user.id);
         
       if (error) {
         console.error("Erro ao buscar progresso do usuário:", error);

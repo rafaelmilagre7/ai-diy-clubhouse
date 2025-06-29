@@ -5,6 +5,7 @@ import { ToolsLoading } from "./tools/ToolsLoading";
 import { ToolsEmptyState } from "./tools/ToolsEmptyState";
 import { ToolItem } from "./tools/ToolItem";
 import { useQuery } from "@tanstack/react-query";
+import { SolutionTool } from "@/types/toolTypes";
 import { useToolsData } from "@/hooks/useToolsData";
 import { useLogging } from "@/hooks/useLogging";
 
@@ -14,41 +15,65 @@ interface ModuleContentToolsProps {
 
 export const ModuleContentTools = ({ module }: ModuleContentToolsProps) => {
   const { log, logError } = useLogging();
+  // Garantir que os dados das ferramentas estejam corretos
   const { isLoading: toolsDataLoading } = useToolsData();
 
   const { data: tools, isLoading, error } = useQuery({
-    queryKey: ['module-tools', module.solution_id],
+    queryKey: ['solution-tools', module.solution_id],
     queryFn: async () => {
-      log("Buscando ferramentas do módulo", { solution_id: module.solution_id });
+      log("Buscando ferramentas da solução", { solution_id: module.solution_id });
       
-      // Buscar as ferramentas diretamente da tabela tools
-      const { data: allTools, error: toolsError } = await supabase
-        .from("tools")
+      // Buscar as ferramentas associadas à solução
+      const { data: solutionTools, error: toolsError } = await supabase
+        .from("solution_tools")
         .select("*")
-        .eq("is_active", true);
+        .eq("solution_id", module.solution_id);
       
       if (toolsError) {
-        logError("Erro ao buscar ferramentas", toolsError);
+        logError("Erro ao buscar ferramentas da solução", toolsError);
         throw toolsError;
       }
       
-      // Para demonstração, retornar algumas ferramentas
-      const mockSolutionTools = (allTools || []).slice(0, 3).map(tool => ({
-        id: tool.id,
-        tool_name: tool.name,
-        tool_url: tool.url,
-        is_required: true,
-        details: tool
-      }));
+      // Para cada ferramenta da solução, buscar informações detalhadas
+      const toolsWithDetails = await Promise.all(
+        (solutionTools || []).map(async (solutionTool) => {
+          try {
+            // Buscar informações detalhadas da ferramenta pelo nome
+            const { data: toolDetails, error: detailsError } = await supabase
+              .from("tools")
+              .select("*")
+              .ilike("name", solutionTool.tool_name)
+              .maybeSingle();
+            
+            if (detailsError) {
+              logError("Erro ao buscar detalhes da ferramenta", {
+                error: detailsError,
+                tool_name: solutionTool.tool_name
+              });
+            }
+            
+            return {
+              ...solutionTool,
+              details: toolDetails || null
+            };
+          } catch (error) {
+            logError("Erro ao processar detalhes da ferramenta", {
+              error,
+              tool_name: solutionTool.tool_name
+            });
+            return solutionTool;
+          }
+        })
+      );
       
-      log("Ferramentas recuperadas", { 
-        count: mockSolutionTools?.length || 0, 
-        tools: mockSolutionTools?.map((t: any) => t.tool_name) 
+      log("Ferramentas da solução recuperadas", { 
+        count: toolsWithDetails?.length || 0, 
+        tools: toolsWithDetails?.map(t => t.tool_name) 
       });
       
-      return mockSolutionTools;
+      return toolsWithDetails;
     },
-    enabled: !toolsDataLoading
+    enabled: !toolsDataLoading // Só executa a query depois que os dados estiverem prontos
   });
 
   if (error) {
@@ -80,7 +105,7 @@ export const ModuleContentTools = ({ module }: ModuleContentToolsProps) => {
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-        {tools.map((tool: any) => (
+        {tools.map((tool) => (
           <ToolItem 
             key={tool.id} 
             toolName={tool.tool_name}
@@ -88,7 +113,7 @@ export const ModuleContentTools = ({ module }: ModuleContentToolsProps) => {
             toolId={tool.details?.id}
             isRequired={tool.is_required} 
             hasBenefit={tool.details?.has_member_benefit}
-            benefitType={tool.details?.benefit_type}
+            benefitType={tool.details?.benefit_type as any}
           />
         ))}
       </div>

@@ -1,27 +1,10 @@
 
 import React, { useState, useEffect } from "react";
-import { supabase } from "@/lib/supabase";
+import { supabase, LearningLessonVideo } from "@/lib/supabase";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getYoutubeVideoId, formatVideoDuration } from "@/lib/supabase/storage";
 import { toast } from "sonner";
-
-interface LearningLessonVideo {
-  id: string;
-  lesson_id: string;
-  title: string;
-  description: string | null;
-  url: string;
-  thumbnail_url: string | null;
-  duration_seconds: number;
-  created_at: string;
-  order_index: number;
-  video_type: string;
-  file_size_bytes: number | null;
-  video_file_path: string | null;
-  video_file_name: string | null;
-  video_id: string | null;
-}
 
 interface VideoDisplayProps {
   lessonId: string;
@@ -44,8 +27,7 @@ export const VideoDisplay: React.FC<VideoDisplayProps> = ({
       try {
         setLoading(true);
         
-        // Usar query raw com cast para contornar problema de tipos
-        const { data, error } = await (supabase as any)
+        const { data, error } = await supabase
           .from('learning_lesson_videos')
           .select('*')
           .eq('lesson_id', lessonId)

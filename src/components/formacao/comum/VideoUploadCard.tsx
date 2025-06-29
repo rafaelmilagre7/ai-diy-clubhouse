@@ -1,11 +1,13 @@
 
 import { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
 import { VideoUpload } from './VideoUpload';
 import { setupLearningStorageBuckets } from '@/lib/supabase/storage';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { AlertTriangle, RefreshCcw } from 'lucide-react';
+import { VideoIcon, AlertTriangle, RefreshCcw } from 'lucide-react';
 
 interface VideoUploadCardProps {
   value: string;
@@ -36,8 +38,8 @@ export const VideoUploadCard = ({ value, onChange, videoType = 'youtube' }: Vide
         const result = await setupLearningStorageBuckets();
         
         if (!result.success) {
-          console.warn('Buckets de armazenamento não configurados:', result.message);
-          setError(`Os buckets de armazenamento não estão configurados corretamente: ${result.message}`);
+          console.warn('Buckets de armazenamento não configurados:', result.error);
+          setError(`Os buckets de armazenamento não estão configurados corretamente: ${result.error}`);
           setStorageReady(false);
         } else {
           setStorageReady(true);
@@ -67,13 +69,13 @@ export const VideoUploadCard = ({ value, onChange, videoType = 'youtube' }: Vide
             </Alert>
           )}
           {!storageReady && storageChecking && (
-            <Alert>
+            <Alert variant="info">
               <RefreshCcw className="mr-2 h-4 w-4 animate-spin" />
               <AlertDescription>Verificando configuração de armazenamento...</AlertDescription>
             </Alert>
           )}
           {!storageReady && !storageChecking && !error && (
-            <Alert>
+            <Alert variant="warning">
               <AlertTriangle className="h-4 w-4" />
               <AlertDescription>
                 O sistema de armazenamento não está pronto. Alguns recursos podem não funcionar corretamente.

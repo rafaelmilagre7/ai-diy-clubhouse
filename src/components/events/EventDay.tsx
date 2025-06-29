@@ -2,7 +2,8 @@
 import { Event } from '@/types/events';
 import { Badge } from '@/components/ui/badge';
 import { Clock } from 'lucide-react';
-import { extractTimeFromDateString } from '@/utils/timezoneUtils';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
 interface EventDayProps {
   events: Event[];
@@ -23,7 +24,7 @@ export const EventDay = ({ events }: EventDayProps) => {
           </Badge>
           <div className="flex items-center justify-center text-[9px] text-viverblue/70">
             <Clock className="w-2 h-2 mr-0.5" />
-            {extractTimeFromDateString(events[0].start_time)}
+            {format(new Date(events[0].start_time), 'HH:mm', { locale: ptBR })}
           </div>
         </div>
       ) : (

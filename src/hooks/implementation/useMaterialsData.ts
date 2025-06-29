@@ -1,59 +1,73 @@
 
-import { useQuery } from '@tanstack/react-query';
+import { useState, useEffect } from "react";
+import { Module, supabase } from "@/lib/supabase";
+import { useLogging } from "@/hooks/useLogging";
 
-export interface MaterialItem {
+export interface Material {
   id: string;
   name: string;
-  type: 'pdf' | 'image' | 'video' | 'link';
   url: string;
-  description?: string;
-  size?: number;
-  created_at: string;
+  type: string;
+  format: string | null;
+  solution_id: string;
+  module_id: string | null;
 }
 
-// Export Material as alias for MaterialItem for compatibility
-export type Material = MaterialItem;
+export const useMaterialsData = (module: Module) => {
+  const [materials, setMaterials] = useState<Material[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { log, logError } = useLogging();
 
-export const useMaterialsData = (solutionIdOrModule?: string | { id: string }) => {
-  const solutionId = typeof solutionIdOrModule === 'string' 
-    ? solutionIdOrModule 
-    : solutionIdOrModule?.id;
-
-  const query = useQuery({
-    queryKey: ['materials', solutionId],
-    queryFn: async (): Promise<MaterialItem[]> => {
-      if (!solutionId) return [];
-
-      console.log('Simulando busca de materiais para solução:', solutionId);
-      
-      // Return mock data
-      return [
-        {
-          id: '1',
-          name: 'Guia de Implementação.pdf',
-          type: 'pdf',
-          url: '/materials/guia-implementacao.pdf',
-          description: 'Guia completo para implementação da solução',
-          size: 2048000,
-          created_at: new Date().toISOString()
-        },
-        {
-          id: '2',
-          name: 'Template de Configuração',
-          type: 'link',
-          url: 'https://exemplo.com/template',
-          description: 'Template pronto para usar',
-          created_at: new Date().toISOString()
+  useEffect(() => {
+    const fetchMaterials = async () => {
+      try {
+        setLoading(true);
+        
+        // First try to find materials specific to this module
+        let { data: moduleData, error: moduleError } = await supabase
+          .from("solution_resources")
+          .select("*")
+          .eq("module_id", module.id);
+        
+        // If no module-specific materials or error, fetch solution-level materials
+        if (moduleError || !moduleData || moduleData.length === 0) {
+          const { data: solutionData, error: solutionError } = await supabase
+            .from("solution_resources")
+            .select("*")
+            .eq("solution_id", module.solution_id)
+            .is("module_id", null);
+          
+          if (solutionError) {
+            logError("Error fetching materials:", solutionError);
+            return;
+          }
+          
+          // Filter out video types - they should be in the Videos tab only
+          const filteredData = (solutionData || []).filter(
+            item => item.type !== 'video' && item.type !== 'youtube'
+          );
+          
+          setMaterials(filteredData);
+        } else {
+          // Filter out video types from module data too
+          const filteredModuleData = moduleData.filter(
+            item => item.type !== 'video' && item.type !== 'youtube'
+          );
+          
+          setMaterials(filteredModuleData);
         }
-      ];
-    },
-    enabled: !!solutionId,
-    staleTime: 5 * 60 * 1000
-  });
+      } catch (err) {
+        logError("Error in materials fetch:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchMaterials();
+  }, [module.id, module.solution_id, log, logError]);
 
   return {
-    ...query,
-    materials: query.data || [],
-    loading: query.isLoading
+    materials,
+    loading
   };
 };

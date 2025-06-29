@@ -1,97 +1,115 @@
 
 import { useState, useEffect } from "react";
+import { supabase } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
-import { SelectedTool } from "@/components/admin/solution/form/types";
+import { useQuery } from "@tanstack/react-query";
+import { Tool } from "@/types/toolTypes";
 
-// Interface local para Tool já que não está exportada do supabase
-interface Tool {
-  id: string;
-  name: string;
-  official_url: string;
-  status: boolean;
+export interface SelectedTool extends Tool {
+  is_required: boolean;
 }
 
 export const useToolsChecklist = (solutionId: string | null) => {
   const [tools, setTools] = useState<SelectedTool[]>([]);
-  const [availableTools, setAvailableTools] = useState<Tool[]>([]);
   const [loading, setLoading] = useState(true);
   const [savingTools, setSavingTools] = useState(false);
   const { toast } = useToast();
 
-  useEffect(() => {
-    const fetchAvailableTools = async () => {
-      try {
-        // Mock implementation - since tools table might not have all expected fields
-        const mockTools: Tool[] = [
-          { id: '1', name: 'ChatGPT', official_url: 'https://chat.openai.com', status: true },
-          { id: '2', name: 'Claude', official_url: 'https://claude.ai', status: true },
-          { id: '3', name: 'Midjourney', official_url: 'https://midjourney.com', status: true }
-        ];
-
-        setAvailableTools(mockTools);
-      } catch (error) {
-        console.error('Erro ao buscar ferramentas:', error);
-        toast({
-          title: "Erro ao carregar ferramentas",
-          description: "Não foi possível carregar as ferramentas disponíveis.",
-          variant: "destructive",
-        });
-      }
-    };
-
-    fetchAvailableTools();
-  }, [toast]);
-
-  useEffect(() => {
-    const fetchSelectedTools = async () => {
-      if (!solutionId) {
-        setLoading(false);
-        return;
-      }
-
-      try {
-        setLoading(true);
+  const { data: availableTools = [] } = useQuery({
+    queryKey: ['tools'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('tools')
+        .select('*')
+        .eq('status', true);
         
-        // Mock implementation - solution_tools table doesn't exist
-        console.log('Simulando busca de ferramentas da solução:', solutionId);
-        
-        // Return empty array for now
-        setTools([]);
-      } catch (error) {
-        console.error('Erro ao buscar ferramentas da solução:', error);
-        toast({
-          title: "Erro ao carregar ferramentas",
-          description: "Não foi possível carregar as ferramentas selecionadas.",
-          variant: "destructive",
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (availableTools.length > 0) {
-      fetchSelectedTools();
+      if (error) throw error;
+      return data as Tool[];
     }
-  }, [solutionId, availableTools, toast]);
+  });
+
+  useEffect(() => {
+    if (solutionId) {
+      fetchTools();
+    } else {
+      setLoading(false);
+    }
+  }, [solutionId, availableTools]);
+
+  const fetchTools = async () => {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from("solution_tools")
+        .select("*")
+        .eq("solution_id", solutionId);
+        
+      if (error) throw error;
+      
+      if (data && data.length > 0) {
+        const solutionToolsData: SelectedTool[] = [];
+        
+        for (const solutionTool of data) {
+          const fullTool = availableTools.find(t => t.name === solutionTool.tool_name);
+          
+          if (fullTool) {
+            solutionToolsData.push({
+              ...fullTool,
+              is_required: solutionTool.is_required
+            });
+          }
+        }
+        
+        setTools(solutionToolsData);
+      }
+    } catch (error) {
+      console.error("Erro ao carregar ferramentas:", error);
+      toast({
+        title: "Erro ao carregar ferramentas",
+        description: "Não foi possível carregar a lista de ferramentas.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const saveTools = async () => {
     if (!solutionId) return;
-
+    
     try {
       setSavingTools(true);
-
-      // Mock implementation - solution_tools table doesn't exist
-      console.log('Simulando salvamento de ferramentas:', tools);
-
+      
+      await supabase
+        .from("solution_tools")
+        .delete()
+        .eq("solution_id", solutionId);
+      
+      if (tools.length > 0) {
+        const toolsToInsert = tools.map(tool => ({
+          solution_id: solutionId,
+          tool_name: tool.name,
+          tool_url: tool.official_url,
+          is_required: tool.is_required
+        }));
+        
+        const { error: insertError } = await supabase
+          .from("solution_tools")
+          .insert(toolsToInsert);
+          
+        if (insertError) throw insertError;
+      }
+      
       toast({
         title: "Ferramentas salvas",
         description: "As ferramentas foram salvas com sucesso.",
       });
-    } catch (error) {
-      console.error('Erro ao salvar ferramentas:', error);
+      
+    } catch (error: any) {
+      console.error("Erro ao salvar ferramentas:", error);
       toast({
         title: "Erro ao salvar ferramentas",
-        description: "Ocorreu um erro ao salvar as ferramentas.",
+        description: error.message || "Ocorreu um erro ao tentar salvar as ferramentas.",
         variant: "destructive",
       });
     } finally {

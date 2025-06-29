@@ -1,7 +1,7 @@
 
 import { supabase } from "@/lib/supabase";
 
-interface ResourceFormValues {
+export interface ResourceFormValues {
   id?: string;
   title?: string;
   description?: string;
@@ -16,11 +16,11 @@ export async function fetchLessonResources(lessonId: string): Promise<ResourceFo
     const { data, error } = await supabase
       .from("learning_resources")
       .select("*")
-      .eq("lesson_id", lessonId as any)
+      .eq("lesson_id", lessonId)
       .order("order_index", { ascending: true });
       
     if (error) {
-      console.error("Erro ao buscar recursos:", error);
+      console.error("Erro ao buscar materiais:", error);
       throw error;
     }
     
@@ -28,76 +28,75 @@ export async function fetchLessonResources(lessonId: string): Promise<ResourceFo
       return [];
     }
     
-    return data.map((resource: any) => ({
+    return data.map(resource => ({
       id: resource.id,
       title: resource.name,
       description: resource.description || "",
       url: resource.file_url,
       type: resource.file_type || "document",
-      fileName: resource.name,
       fileSize: resource.file_size_bytes || undefined
     }));
   } catch (error) {
-    console.error("Erro ao buscar recursos da aula:", error);
+    console.error("Erro ao buscar materiais da aula:", error);
     return [];
   }
 }
 
 export async function saveResourcesForLesson(lessonId: string, resources: ResourceFormValues[]): Promise<boolean> {
   try {
-    console.log("Salvando recursos para a aula:", lessonId);
+    console.log("Salvando materiais para a aula:", lessonId);
     
     if (!resources || resources.length === 0) {
-      console.log("Nenhum recurso para salvar.");
+      console.log("Nenhum material para salvar.");
       return true;
     }
     
-    // Primeiro, remover todos os recursos existentes da aula
+    // Primeiro, remover todos os recursos existentes
     const { error: deleteError } = await supabase
       .from('learning_resources')
       .delete()
-      .eq('lesson_id', lessonId as any);
+      .eq('lesson_id', lessonId);
     
     if (deleteError) {
-      console.error("Erro ao remover recursos existentes:", deleteError);
+      console.error("Erro ao remover materiais existentes:", deleteError);
       return false;
     }
     
-    // Para cada recurso no formulário
+    // Para cada material no formulário
     for (let i = 0; i < resources.length; i++) {
       const resource = resources[i];
       
-      // Se o recurso não tiver URL, pular
+      // Se o material não tiver URL, pular
       if (!resource.url) {
-        console.log("Recurso sem URL encontrado, pulando...");
+        console.log("Material sem URL encontrado, pulando...");
         continue;
       }
       
       const resourceData = {
-        lesson_id: lessonId, // Para recursos específicos de aula
-        name: resource.title || "Recurso sem título",
+        lesson_id: lessonId,
+        name: resource.title || "Material sem título",
         description: resource.description || null,
         file_url: resource.url,
-        file_type: resource.type || "document",
         order_index: i,
+        file_type: resource.type || "document",
         file_size_bytes: resource.fileSize || null
       };
       
-      // Inserir novo recurso
+      // Inserir novo material
       const { error } = await supabase
         .from('learning_resources')
-        .insert([resourceData as any]);
+        .insert([resourceData]);
         
       if (error) {
-        console.error(`Erro ao criar recurso ${i + 1}:`, error);
+        console.error(`Erro ao criar material ${i + 1}:`, error);
         return false;
       }
     }
     
-    console.log("Todos os recursos foram salvos com sucesso.");
+    console.log("Todos os materiais foram salvos com sucesso.");
     return true;
   } catch (error) {
-    console.error("Erro ao salvar recursos:", error);
+    console.error("Erro ao salvar materiais:", error);
     return false;
   }
 }

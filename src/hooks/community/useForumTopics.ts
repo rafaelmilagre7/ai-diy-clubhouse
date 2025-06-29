@@ -1,104 +1,174 @@
 
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/lib/supabase';
-import { ForumTopic } from '@/types/forumTypes';
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/lib/supabase";
+import { toast } from "sonner";
+import { Topic, ForumCategory } from "@/types/forumTypes";
+import { getUserRoleName } from "@/lib/supabase/types";
 
-export type TopicFilterType = 'all' | 'recent' | 'popular' | 'unanswered' | 'solved';
+export type TopicFilterType = "recentes" | "populares" | "sem-respostas" | "resolvidos";
 
-export const useForumTopics = (categoryId?: string | null, filter: TopicFilterType = 'all') => {
+interface UseForumTopicsProps {
+  activeTab: string;
+  selectedFilter: TopicFilterType;
+  searchQuery: string;
+  categories?: ForumCategory[];
+}
+
+export const useForumTopics = ({ 
+  activeTab, 
+  selectedFilter, 
+  searchQuery, 
+  categories 
+}: UseForumTopicsProps) => {
+  
   return useQuery({
-    queryKey: ['forum-topics', categoryId, filter],
-    queryFn: async (): Promise<{ topics: ForumTopic[], categories: any[] }> => {
-      console.log('Simulando busca de tópicos do fórum', { categoryId, filter });
+    queryKey: ['communityTopics', selectedFilter, searchQuery, activeTab],
+    queryFn: async (): Promise<Topic[]> => {
+      try {
+        console.log("Buscando tópicos com filtros:", { selectedFilter, searchQuery, activeTab });
+        
+        // Construir query base para tópicos
+        let query = supabase
+          .from('forum_topics')
+          .select(`
+            id, 
+            title, 
+            content, 
+            created_at, 
+            updated_at, 
+            view_count, 
+            reply_count, 
+            is_locked, 
+            is_pinned,
+            is_solved,
+            user_id, 
+            category_id, 
+            last_activity_at
+          `)
+          .order('is_pinned', { ascending: false });
 
-      let query = supabase
-        .from('forum_topics')
-        .select(`
-          *,
-          profiles:user_id (
-            id,
-            name,
-            email
-          ),
-          forum_categories:category_id (
-            id,
-            name
-          )
-        `)
-        .eq('is_deleted', false);
-
-      if (categoryId) {
-        query = query.eq('category_id', categoryId);
+        // Aplicar filtros de categoria apenas se não for "todos"
+        if (activeTab !== "todos") {
+          const category = categories?.find(c => c.slug === activeTab);
+          if (category) {
+            query = query.eq('category_id', category.id);
+          }
+        }
+        
+        // Aplicar filtros adicionais
+        switch (selectedFilter) {
+          case "recentes":
+            query = query.order('last_activity_at', { ascending: false });
+            break;
+          case "populares":
+            query = query.order('view_count', { ascending: false });
+            break;
+          case "sem-respostas":
+            query = query.eq('reply_count', 0).order('created_at', { ascending: false });
+            break;
+          case "resolvidos":
+            // Filtrar apenas tópicos marcados como resolvidos
+            query = query.eq('is_solved', true).order('last_activity_at', { ascending: false });
+            break;
+        }
+        
+        // Aplicar filtro de busca
+        if (searchQuery) {
+          query = query.ilike('title', `%${searchQuery}%`);
+        }
+        
+        // Limitar resultados
+        query = query.limit(20);
+        
+        // Executar a consulta principal
+        const { data: topicsData, error: topicsError } = await query;
+        
+        if (topicsError) {
+          throw topicsError;
+        }
+        
+        // Se não temos tópicos, retornar array vazio
+        if (!topicsData || topicsData.length === 0) {
+          return [];
+        }
+        
+        // Buscar perfis de usuários em uma consulta separada
+        const userIds = topicsData.map(topic => topic.user_id);
+        const { data: profilesData, error: profilesError } = await supabase
+          .from('profiles')
+          .select('id, name, avatar_url, role_id, user_roles:role_id(name)')
+          .in('id', userIds);
+          
+        if (profilesError) {
+          console.warn("Erro ao buscar perfis:", profilesError.message);
+        }
+        
+        // Buscar categorias em uma consulta separada
+        const categoryIds = topicsData.map(topic => topic.category_id).filter(Boolean);
+        const { data: categoriesData, error: categoriesError } = await supabase
+          .from('forum_categories')
+          .select('id, name, slug')
+          .in('id', categoryIds);
+          
+        if (categoriesError) {
+          console.warn("Erro ao buscar categorias:", categoriesError.message);
+        }
+        
+        // Mapear os perfis e categorias para os tópicos
+        const formattedTopics: Topic[] = topicsData.map(topic => {
+          const userProfile = profilesData?.find(profile => profile.id === topic.user_id);
+          const topicCategory = categoriesData?.find(cat => cat.id === topic.category_id);
+          
+          // CORREÇÃO: Usar getUserRoleName() para obter role de forma consistente
+          let userRole = '';
+          if (userProfile) {
+            // Criar objeto profile temporário para usar getUserRoleName
+            const profileForRole = {
+              ...userProfile,
+              user_roles: userProfile.user_roles || null
+            };
+            userRole = getUserRoleName(profileForRole as any) || '';
+          }
+          
+          return {
+            id: topic.id,
+            title: topic.title,
+            content: topic.content,
+            created_at: topic.created_at,
+            updated_at: topic.updated_at,
+            last_activity_at: topic.last_activity_at,
+            user_id: topic.user_id,
+            category_id: topic.category_id,
+            view_count: topic.view_count || 0,
+            reply_count: topic.reply_count || 0,
+            is_pinned: topic.is_pinned || false,
+            is_locked: topic.is_locked || false,
+            is_solved: topic.is_solved || false,
+            profiles: userProfile ? {
+              id: userProfile.id,
+              name: userProfile.name || 'Usuário',
+              avatar_url: userProfile.avatar_url,
+              role: userRole, // Usando role obtido via getUserRoleName
+              user_id: userProfile.id // Garantindo que tenhamos o user_id
+            } : null,
+            category: topicCategory ? {
+              id: topicCategory.id,
+              name: topicCategory.name,
+              slug: topicCategory.slug
+            } : null
+          };
+        });
+        
+        console.log(`Tópicos formatados: ${formattedTopics.length}`);
+        return formattedTopics;
+      } catch (error: any) {
+        console.error('Erro ao buscar tópicos:', error.message);
+        toast.error("Não foi possível carregar os tópicos. Por favor, tente novamente.");
+        return [];
       }
-
-      // Apply filter
-      switch (filter) {
-        case 'recent':
-          query = query.order('created_at', { ascending: false });
-          break;
-        case 'popular':
-          query = query.order('views_count', { ascending: false });
-          break;
-        case 'unanswered':
-          query = query.eq('replies_count', 0);
-          break;
-        case 'solved':
-          // Since is_solved doesn't exist, simulate with replies > 0
-          query = query.gt('replies_count', 0);
-          break;
-        default:
-          query = query.order('last_activity_at', { ascending: false });
-      }
-
-      const { data, error } = await query;
-
-      if (error) {
-        console.error('Erro ao buscar tópicos:', error);
-        throw error;
-      }
-
-      // Transform data to match ForumTopic interface
-      const topics: ForumTopic[] = data?.map((topic: any) => ({
-        id: topic.id,
-        title: topic.title,
-        content: topic.content,
-        user_id: topic.user_id,
-        category_id: topic.category_id,
-        views_count: topic.views_count,
-        replies_count: topic.replies_count,
-        is_pinned: topic.is_pinned,
-        is_locked: topic.is_locked,
-        is_solved: false, // Default since column doesn't exist
-        created_at: topic.created_at,
-        updated_at: topic.updated_at,
-        last_activity_at: topic.last_activity_at,
-        author: topic.profiles ? {
-          id: topic.profiles.id,
-          name: topic.profiles.name || topic.profiles.email,
-          email: topic.profiles.email
-        } : { id: '', name: 'Usuário', email: '' },
-        category: topic.forum_categories ? {
-          id: topic.forum_categories.id,
-          name: topic.forum_categories.name,
-          slug: topic.forum_categories.name?.toLowerCase().replace(/\s+/g, '-') || 'categoria'
-        } : { id: '', name: 'Categoria', slug: 'categoria' }
-      })) || [];
-
-      // Get categories for filter
-      const { data: categoriesData } = await supabase
-        .from('forum_categories')
-        .select('id, name')
-        .order('name');
-
-      const categories = categoriesData?.map(cat => ({
-        id: cat.id,
-        name: cat.name,
-        slug: cat.name.toLowerCase().replace(/\s+/g, '-')
-      })) || [];
-
-      return { topics, categories };
     },
-    staleTime: 30 * 1000, // 30 seconds
-    refetchOnWindowFocus: false
+    staleTime: 1000 * 60 * 2, // 2 minutos de cache
+    retry: 2,
+    refetchOnWindowFocus: false,
   });
 };

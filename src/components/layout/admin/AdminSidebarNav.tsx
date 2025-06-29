@@ -1,13 +1,16 @@
+
 import { useLocation, Link } from "react-router-dom";
 import { 
   BarChart3, 
   Users, 
   Wrench, 
+  Gift, 
   FileText, 
   Calendar, 
   UserCheck, 
   Mail, 
   MessageSquare,
+  Stethoscope,
   GraduationCap,
   Shield
 } from "lucide-react";
@@ -29,6 +32,11 @@ const navigationItems = [
     title: "Ferramentas",
     href: "/admin/tools",
     icon: Wrench,
+  },
+  {
+    title: "Benefícios",
+    href: "/admin/benefits",
+    icon: Gift,
   },
   {
     title: "Soluções",
@@ -81,14 +89,9 @@ const navigationItems = [
     icon: MessageSquare,
   },
   {
-    title: "Email Debug",
-    href: "/admin/email-debug",
-    icon: Mail,
-  },
-  {
     title: "Diagnósticos",
     href: "/admin/diagnostics",
-    icon: MessageSquare,
+    icon: Stethoscope,
   },
 ];
 

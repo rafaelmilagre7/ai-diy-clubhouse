@@ -31,30 +31,30 @@ export const ForumSearch = ({
       </div>
       <div className="flex gap-2 overflow-x-auto pb-1 sm:pb-0">
         <Button
-          variant={selectedFilter === "recent" ? "default" : "outline"}
+          variant={selectedFilter === "recentes" ? "default" : "outline"}
           size="sm"
-          onClick={() => setSelectedFilter("recent")}
+          onClick={() => setSelectedFilter("recentes")}
         >
           Recentes
         </Button>
         <Button
-          variant={selectedFilter === "popular" ? "default" : "outline"}
+          variant={selectedFilter === "populares" ? "default" : "outline"}
           size="sm"
-          onClick={() => setSelectedFilter("popular")}
+          onClick={() => setSelectedFilter("populares")}
         >
           Populares
         </Button>
         <Button
-          variant={selectedFilter === "unanswered" ? "default" : "outline"}
+          variant={selectedFilter === "sem-respostas" ? "default" : "outline"}
           size="sm"
-          onClick={() => setSelectedFilter("unanswered")}
+          onClick={() => setSelectedFilter("sem-respostas")}
         >
           Sem respostas
         </Button>
         <Button
-          variant={selectedFilter === "solved" ? "default" : "outline"}
+          variant={selectedFilter === "resolvidos" ? "default" : "outline"}
           size="sm"
-          onClick={() => setSelectedFilter("solved")}
+          onClick={() => setSelectedFilter("resolvidos")}
         >
           Resolvidos
         </Button>

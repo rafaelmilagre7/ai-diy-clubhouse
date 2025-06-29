@@ -1,5 +1,5 @@
 
-import { FC, memo } from "react";
+import { FC } from "react";
 import { Solution } from "@/lib/supabase";
 import { SolutionsGrid } from "./SolutionsGrid";
 
@@ -8,8 +8,7 @@ interface RecommendedSolutionsProps {
   onSolutionClick: (solution: Solution) => void;
 }
 
-// Componente 100% memoizado para evitar re-renders desnecessários
-export const RecommendedSolutions: FC<RecommendedSolutionsProps> = memo(({ 
+export const RecommendedSolutions: FC<RecommendedSolutionsProps> = ({ 
   solutions, 
   onSolutionClick 
 }) => {
@@ -22,7 +21,4 @@ export const RecommendedSolutions: FC<RecommendedSolutionsProps> = memo(({
       <SolutionsGrid solutions={solutions} onSolutionClick={onSolutionClick} />
     </div>
   );
-});
-
-RecommendedSolutions.displayName = 'RecommendedSolutions';
-
+};

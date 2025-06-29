@@ -32,10 +32,10 @@ export const useTopicSolution = ({
       const { data: profile } = await supabase
         .from('profiles')
         .select('role')
-        .eq('id', user.id as any)
+        .eq('id', user.id)
         .single();
         
-      return (profile as any)?.role === 'admin';
+      return profile?.role === 'admin';
     } catch (error) {
       console.error("Erro ao verificar permissões:", error);
       return false;
@@ -50,8 +50,8 @@ export const useTopicSolution = ({
       // Atualizar o tópico para ser marcado como resolvido
       const { error } = await supabase
         .from('forum_topics')
-        .update({ is_solved: true } as any)
-        .eq('id', topicId as any);
+        .update({ is_solved: true })
+        .eq('id', topicId);
         
       if (error) throw error;
       
@@ -74,16 +74,16 @@ export const useTopicSolution = ({
       // Atualizar o tópico para não estar resolvido
       const { error: topicError } = await supabase
         .from('forum_topics')
-        .update({ is_solved: false } as any)
-        .eq('id', topicId as any);
+        .update({ is_solved: false })
+        .eq('id', topicId);
         
       if (topicError) throw topicError;
       
       // Também remover a marcação de solução de todos os posts relacionados
       const { error: postsError } = await supabase
         .from('forum_posts')
-        .update({ is_solution: false } as any)
-        .eq('topic_id', topicId as any);
+        .update({ is_solution: false })
+        .eq('topic_id', topicId);
         
       if (postsError) {
         console.error("Erro ao limpar soluções dos posts:", postsError);

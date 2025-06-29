@@ -1,121 +1,98 @@
 
-import React, { useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import React from 'react';
 import { OnboardingWizardContainer } from './components/OnboardingWizardContainer';
 import { OnboardingStepRenderer } from './components/OnboardingStepRenderer';
 import { OnboardingWizardControls } from './components/OnboardingWizardControls';
 import { OnboardingProgress } from './OnboardingProgress';
-import { OnboardingLoadingState } from './components/OnboardingLoadingStates';
-import TokenDiagnosticReport from './components/TokenDiagnosticReport';
-import { useSimpleAuth } from '@/contexts/auth/SimpleAuthProvider';
-import { tokenAudit } from '@/utils/tokenAuditLogger';
-import { logger } from '@/utils/logger';
+import { Card } from '@/components/ui/card';
+
+const stepTitles = [
+  'Informações Pessoais',
+  'Perfil Empresarial', 
+  'Maturidade em IA',
+  'Objetivos e Expectativas',
+  'Personalização da Experiência',
+  'Finalização'
+];
 
 const OnboardingWizard = () => {
-  const [searchParams] = useSearchParams();
-  const { user, profile } = useSimpleAuth();
-  
-  const inviteToken = searchParams.get('token');
-  
-  useEffect(() => {
-    logger.info('[ONBOARDING-WIZARD] 🎯 Inicializando wizard com diagnóstico:', {
-      hasToken: !!inviteToken,
-      tokenLength: inviteToken?.length,
-      userId: user?.id?.substring(0, 8) + '***' || 'none',
-      hasProfile: !!profile,
-      timestamp: new Date().toISOString()
-    });
-  }, [inviteToken, user?.id, profile]);
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#0F111A] to-[#151823] text-white">
-      <div className="container mx-auto px-4 py-8">
-        <OnboardingWizardContainer>
-          {(wizardProps) => {
-            const { 
-              currentStep, 
-              totalSteps, 
-              isLoading, 
-              handleNext,
-              handlePrevious, 
-              handleSubmit,
-              handleDataChange,
-              data,
-              memberType
-            } = wizardProps;
-            
-            // Verificar se houve erro de token
-            const auditReport = tokenAudit.generateAuditReport();
-            const hasTokenError = auditReport.corruptionDetected || (inviteToken && auditReport.totalSteps === 0);
-            
-            logger.info('[ONBOARDING-WIZARD] 🎨 Renderizando wizard:', {
-              currentStep,
-              totalSteps,
-              isLoading,
-              hasTokenError,
-              auditSteps: auditReport.totalSteps,
-              dataReady: !!(data?.email || data?.memberType)
-            });
+    <OnboardingWizardContainer>
+      {({
+        currentStep,
+        isSubmitting,
+        data,
+        isLoading,
+        lastSaved,
+        hasUnsavedChanges,
+        validationErrors,
+        getFieldError,
+        handleNext,
+        handlePrevious,
+        handleDataChange,
+        handleSubmit,
+        isCurrentStepValid,
+        totalSteps
+      }) => {
+        if (isLoading) {
+          return (
+            <div className="min-h-screen bg-gradient-to-br from-[#0F111A] to-[#151823] flex items-center justify-center">
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-viverblue mx-auto mb-4"></div>
+                <p className="text-slate-300">Carregando...</p>
+              </div>
+            </div>
+          );
+        }
 
-            // Mostrar diagnóstico apenas se houver erro crítico de token
-            if (hasTokenError && inviteToken) {
-              return (
-                <div className="max-w-4xl mx-auto space-y-8">
-                  <div className="text-center mb-8">
-                    <h1 className="text-3xl font-bold text-white mb-2">Problema no Convite</h1>
-                    <p className="text-neutral-300">
-                      Detectamos um problema com seu convite. Veja os detalhes:
-                    </p>
-                  </div>
-                  
-                  <TokenDiagnosticReport 
-                    onRetry={() => window.location.reload()} 
-                  />
-                </div>
-              );
-            }
-
-            return (
-              <div className="max-w-4xl mx-auto space-y-8">
-                {/* Progress Bar */}
+        return (
+          <div className="min-h-screen bg-gradient-to-br from-[#0F111A] to-[#151823]">
+            <div className="container mx-auto px-4 py-8">
+              <div className="max-w-4xl mx-auto">
                 <OnboardingProgress 
                   currentStep={currentStep} 
-                  totalSteps={totalSteps} 
+                  totalSteps={totalSteps}
+                  stepTitles={stepTitles}
                 />
                 
-                {/* Loading States - APENAS se realmente necessário */}
-                {isLoading && (
-                  <OnboardingLoadingState 
-                    type="initialization"
-                    message="Preparando sua experiência..."
-                  />
-                )}
-                
-                {/* Step Content - SEMPRE mostrar após loading */}
-                {!isLoading && (
-                  <div className="bg-[#1A1E2E] rounded-lg p-8 border border-gray-800">
-                    <OnboardingStepRenderer 
-                      {...wizardProps}
-                      onUpdateData={handleDataChange}
-                    />
-                  </div>
-                )}
-                
-                {/* Controls - SEMPRE mostrar após loading */}
-                {!isLoading && (
-                  <OnboardingWizardControls 
-                    {...wizardProps}
+                <Card className="mt-8 p-8 bg-[#1A1E2E]/80 backdrop-blur-sm border-white/10">
+                  <OnboardingStepRenderer
+                    currentStep={currentStep}
+                    data={data}
+                    onUpdateData={handleDataChange}
                     onNext={handleNext}
-                    onPrevious={handlePrevious}
-                    onSubmit={handleSubmit}
+                    onPrev={handlePrevious}
+                    onComplete={handleSubmit}
+                    memberType={data.memberType || 'club'}
+                    validationErrors={validationErrors}
+                    getFieldError={getFieldError}
+                    isCompleting={isSubmitting}
                   />
-                )}
+                  
+                  {currentStep < totalSteps && (
+                    <OnboardingWizardControls
+                      currentStep={currentStep}
+                      totalSteps={totalSteps}
+                      onNext={handleNext}
+                      onPrev={handlePrevious}
+                      canProceed={isCurrentStepValid}
+                      isLoading={isSubmitting}
+                      hasUnsavedChanges={hasUnsavedChanges}
+                      lastSaved={lastSaved}
+                      syncStatus={{
+                        isSyncing: false,
+                        lastSyncTime: lastSaved?.toISOString() || '',
+                        syncError: ''
+                      }}
+                    />
+                  )}
+                </Card>
               </div>
-            );
-          }}
-        </OnboardingWizardContainer>
-      </div>
-    </div>
+            </div>
+          </div>
+        );
+      }}
+    </OnboardingWizardContainer>
   );
 };
 

@@ -1,139 +1,80 @@
 
-import React, { useEffect, useState } from 'react';
-import { useSimpleAuth } from '@/contexts/auth/SimpleAuthProvider';
-import { useOnboardingRequired } from '@/hooks/useOnboardingRequired';
-import { useNavigate } from 'react-router-dom';
+import React from 'react';
+import { Navigate } from 'react-router-dom';
+import { useAuth } from '@/contexts/auth';
+import { useOnboardingStatus } from '../hooks/useOnboardingStatus';
+import { useAdminPreview } from '@/hooks/useAdminPreview';
 import LoadingScreen from '@/components/common/LoadingScreen';
-import { Button } from '@/components/ui/button';
-import { logger } from '@/utils/logger';
+import { getUserRoleName } from '@/lib/supabase/types';
+import { AdminPreviewBanner } from './AdminPreviewBanner';
 
 interface OnboardingLoaderProps {
   children: React.ReactNode;
 }
 
-export const OnboardingLoader: React.FC<OnboardingLoaderProps> = ({ children }) => {
-  const navigate = useNavigate();
-  const { user, profile, isLoading: authLoading, isAdmin } = useSimpleAuth();
-  const { isRequired, isLoading: onboardingLoading } = useOnboardingRequired();
-  const [forceShowContent, setForceShowContent] = useState(false);
-  const [emergencyMode, setEmergencyMode] = useState(false);
+export const OnboardingLoader = ({ children }: OnboardingLoaderProps) => {
+  console.log('[OnboardingLoader] Renderizando');
+  
+  const { user, profile, isLoading: authLoading, isAdmin } = useAuth();
+  const { isRequired, isLoading: onboardingLoading, hasCompleted } = useOnboardingStatus();
+  const { isAdminPreviewMode, isValidAdminAccess } = useAdminPreview();
 
-  // TIMEOUT AGRESSIVO: máximo 3 segundos
-  useEffect(() => {
-    const aggressiveTimeout = setTimeout(() => {
-      logger.warn('[ONBOARDING-LOADER] ⏰ TIMEOUT 3s - forçando exibição do conteúdo', {
-        authLoading,
-        onboardingLoading,
-        hasUser: !!user,
-        hasProfile: !!profile,
-        isAdmin
-      });
-      setForceShowContent(true);
-    }, 3000);
+  // CORREÇÃO CRÍTICA: Usar getUserRoleName baseado em role_id
+  const roleName = getUserRoleName(profile);
+  const memberType = roleName === 'formacao' ? 'formacao' : 'club';
 
-    return () => clearTimeout(aggressiveTimeout);
-  }, [authLoading, onboardingLoading, user, profile, isAdmin]);
-
-  // TIMEOUT DE EMERGÊNCIA: 5 segundos
-  useEffect(() => {
-    const emergencyTimeout = setTimeout(() => {
-      logger.error('[ONBOARDING-LOADER] 🚨 EMERGÊNCIA 5s - ativando modo de emergência', {});
-      setEmergencyMode(true);
-      setForceShowContent(true);
-    }, 5000);
-
-    return () => clearTimeout(emergencyTimeout);
-  }, []);
-
-  // BYPASS IMEDIATO PARA ADMIN
-  useEffect(() => {
-    if (!authLoading && user && profile && isAdmin) {
-      logger.info('[ONBOARDING-LOADER] 👑 Admin detectado - redirecionando para /admin', {});
-      navigate('/admin', { replace: true });
-      return;
-    }
-  }, [user, profile, isAdmin, authLoading, navigate]);
-
-  const totalLoading = authLoading || onboardingLoading;
-  const shouldShowLoading = totalLoading && !forceShowContent && !emergencyMode;
-
-  logger.info('[ONBOARDING-LOADER] Estado atual', {
+  console.log('[OnboardingLoader] Estado:', {
     authLoading,
     onboardingLoading,
-    totalLoading,
-    forceShowContent,
-    shouldShowLoading,
-    emergencyMode,
-    isAdmin,
+    user: !!user,
+    profile: !!profile,
     isRequired,
-    hasUser: !!user,
-    hasProfile: !!profile
+    hasCompleted,
+    memberType,
+    isAdmin,
+    roleName,
+    isAdminPreviewMode
   });
 
-  // MODO DE EMERGÊNCIA - botão para forçar carregamento
-  if (emergencyMode) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-[#0F111A] to-[#151823] flex items-center justify-center p-4">
-        <div className="max-w-md w-full space-y-6 text-center">
-          <div className="space-y-4">
-            <h2 className="text-2xl font-bold text-white">
-              Carregamento demorado
-            </h2>
-            <p className="text-neutral-300">
-              O carregamento está demorando mais que o esperado. Você pode:
-            </p>
-          </div>
-          
-          <div className="space-y-3">
-            <Button 
-              onClick={() => {
-                logger.info('[ONBOARDING-LOADER] 🚀 Usuário forçou carregamento', {});
-                setForceShowContent(true);
-                setEmergencyMode(false);
-              }}
-              className="w-full bg-viverblue hover:bg-viverblue/90"
-            >
-              Continuar mesmo assim
-            </Button>
-            
-            <Button 
-              onClick={() => {
-                logger.info('[ONBOARDING-LOADER] 🔄 Usuário recarregou página', {});
-                window.location.reload();
-              }}
-              variant="outline"
-              className="w-full"
-            >
-              Recarregar página
-            </Button>
-            
-            <Button 
-              onClick={() => {
-                logger.info('[ONBOARDING-LOADER] 🏠 Usuário foi para home', {});
-                window.location.href = '/';
-              }}
-              variant="ghost"
-              className="w-full"
-            >
-              Voltar ao início
-            </Button>
-          </div>
-          
-          {import.meta.env.DEV && (
-            <div className="text-xs text-neutral-500 mt-4">
-              Debug: authLoading={String(authLoading)}, onboardingLoading={String(onboardingLoading)}
-            </div>
-          )}
-        </div>
-      </div>
-    );
-  }
-
-  // DECISÃO: Mostrar loading apenas se necessário E dentro do timeout
-  if (shouldShowLoading) {
+  // Mostrar loading enquanto carrega
+  if (authLoading || onboardingLoading) {
+    console.log('[OnboardingLoader] Carregando...');
     return <LoadingScreen message="Verificando seu progresso..." />;
   }
 
-  // SEMPRE mostrar conteúdo após timeout
+  // Se não está autenticado, redirecionar para login
+  if (!user) {
+    console.log('[OnboardingLoader] Redirecionando para login');
+    return <Navigate to="/login" replace />;
+  }
+
+  // MODO ADMIN PREVIEW: Permitir acesso mesmo se onboarding já foi concluído
+  if (isAdminPreviewMode && isValidAdminAccess) {
+    console.log('[OnboardingLoader] Modo admin preview ativo - permitindo acesso');
+    return (
+      <>
+        <AdminPreviewBanner />
+        <div style={{ paddingTop: '60px' }}>
+          {children}
+        </div>
+      </>
+    );
+  }
+
+  // CORREÇÃO CRÍTICA: Se é admin, nunca mostrar onboarding (apenas fora do modo preview)
+  if (isAdmin || roleName === 'admin') {
+    console.log('[OnboardingLoader] Admin detectado - redirecionando para /dashboard');
+    return <Navigate to="/dashboard" replace />;
+  }
+
+  // Se onboarding foi concluído, redirecionar para dashboard apropriado
+  if (hasCompleted && !isRequired) {
+    console.log('[OnboardingLoader] Onboarding completo, redirecionando para dashboard');
+    const redirectPath = memberType === 'formacao' ? '/formacao' : '/dashboard';
+    return <Navigate to={redirectPath} replace />;
+  }
+
+  // Se onboarding é necessário (apenas para não-admins), renderizar wizard
+  console.log('[OnboardingLoader] Renderizando wizard de onboarding');
   return <>{children}</>;
 };

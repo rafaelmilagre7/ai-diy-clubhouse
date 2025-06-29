@@ -1,133 +1,101 @@
 
-import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { ArrowRight, BookOpen, Eye, Users, Clock } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
-import { supabase } from '@/lib/supabase';
+import React from "react";
+import { CourseCard } from "./CourseCard";
+import { 
+  Carousel, 
+  CarouselContent, 
+  CarouselItem, 
+  CarouselNext, 
+  CarouselPrevious 
+} from "@/components/ui/carousel";
+import { LearningCourse } from "@/lib/supabase";
+import { cn } from "@/lib/utils";
 
-interface CourseData {
-  id: string;
+interface CourseCarouselProps {
   title: string;
-  description: string;
-  is_published: boolean;
-  created_at: string;
-  updated_at: string;
-  thumbnail_url: string;
-  instructor_id: string;
-  category: string;
-  difficulty_level: string;
-  estimated_duration_hours: number;
+  courses: LearningCourse[];
+  className?: string;
+  userProgress?: any[];
+  showEmptyMessage?: boolean;
 }
 
-const CourseCarousel = () => {
-  const [courses, setCourses] = useState<CourseData[]>([]);
-  const [loading, setLoading] = useState(true);
-  const navigate = useNavigate();
+export const CourseCarousel: React.FC<CourseCarouselProps> = ({
+  title,
+  courses = [],
+  className,
+  userProgress = [],
+  showEmptyMessage = true
+}) => {
+  // Verificar se há cursos para exibir
+  const hasCourses = courses && courses.length > 0;
 
-  useEffect(() => {
-    fetchCourses();
-  }, []);
-
-  const fetchCourses = async () => {
-    try {
-      setLoading(true);
-      const { data, error } = await supabase
-        .from('learning_courses')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-
-      // Map the data to match our CourseData interface
-      const mappedData: CourseData[] = data.map(course => ({
-        id: course.id,
-        title: course.title,
-        description: course.description || '',
-        is_published: course.is_published || false,
-        created_at: course.created_at,
-        updated_at: course.updated_at,
-        thumbnail_url: course.thumbnail_url || '',
-        instructor_id: course.instructor_id || '',
-        category: 'Geral',
-        difficulty_level: 'Intermediário',
-        estimated_duration_hours: course.estimated_duration_hours || 0
-      }));
-
-      setCourses(mappedData);
-    } catch (error: any) {
-      console.error('Erro ao buscar cursos:', error);
-    } finally {
-      setLoading(false);
-    }
+  // Calcular progresso para cada curso
+  const calculateProgress = (courseId: string): number => {
+    if (!userProgress || userProgress.length === 0) return 0;
+    
+    const courseProgress = userProgress.filter(p => {
+      return p.lesson && p.lesson.module && p.lesson.module.course_id === courseId;
+    });
+    
+    if (courseProgress.length === 0) return 0;
+    
+    const completedLessons = courseProgress.filter(p => p.completed_at).length;
+    return Math.round((completedLessons / courseProgress.length) * 100);
   };
 
-  const featuredCourses = courses.filter(course => course.is_published).slice(0, 6);
+  if (!hasCourses && showEmptyMessage) {
+    return (
+      <div className={cn("my-8", className)}>
+        <h2 className="text-2xl font-semibold mb-6 px-1">{title}</h2>
+        <p className="text-muted-foreground text-center py-8">
+          Nenhum curso disponível nesta categoria
+        </p>
+      </div>
+    );
+  }
 
-  if (loading) {
-    return <p>Carregando cursos...</p>;
+  if (!hasCourses) {
+    return null;
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h2 className="text-2xl font-bold">Cursos em Destaque</h2>
-          <p className="text-gray-600">Confira nossos cursos mais populares</p>
-        </div>
-        <Button onClick={() => navigate('/formacao/cursos')} variant="outline">
-          Ver todos
-          <ArrowRight className="ml-2 h-4 w-4" />
-        </Button>
+    <div className={cn("my-8", className)}>
+      <h2 className="text-2xl font-semibold mb-6 px-1">{title}</h2>
+      
+      <div className="relative">
+        <Carousel
+          opts={{
+            align: "start",
+            loop: courses.length > 3,
+          }}
+          className="w-full"
+        >
+          <CarouselContent className="-ml-4">
+            {courses.map((course) => (
+              <CarouselItem 
+                key={course.id} 
+                className="pl-4 md:basis-1/3 lg:basis-1/4 xl:basis-1/5"
+              >
+                <CourseCard 
+                  id={course.id}
+                  title={course.title}
+                  description={course.description || ""}
+                  imageUrl={course.cover_image_url}
+                  progress={calculateProgress(course.id)}
+                  moduleCount={course.module_count}
+                  lessonCount={course.lesson_count}
+                />
+              </CarouselItem>
+            ))}
+          </CarouselContent>
+          <CarouselPrevious 
+            className="left-0 bg-black/30 text-white border-none hover:bg-black/60" 
+          />
+          <CarouselNext 
+            className="right-0 bg-black/30 text-white border-none hover:bg-black/60" 
+          />
+        </Carousel>
       </div>
-
-      {featuredCourses.length === 0 ? (
-        <Card>
-          <CardContent className="p-8 text-center">
-            <BookOpen className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">Nenhum curso em destaque</h3>
-            <p className="text-gray-500 mb-4">Volte mais tarde para conferir os cursos mais populares.</p>
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {featuredCourses.map((curso) => (
-            <Card key={curso.id} className="hover:shadow-lg transition-shadow">
-              <CardHeader className="pb-3">
-                <div className="flex justify-between items-start">
-                  <CardTitle className="text-lg line-clamp-2">{curso.title}</CardTitle>
-                  <Badge variant={curso.is_published ? "default" : "secondary"}>
-                    {curso.is_published ? "Publicado" : "Rascunho"}
-                  </Badge>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <p className="text-sm text-gray-600 line-clamp-3">
-                  {curso.description}
-                </p>
-                
-                <div className="flex items-center gap-4 text-sm text-gray-500">
-                  <div className="flex items-center gap-1">
-                    <Users className="h-4 w-4" />
-                    <span>0 alunos</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Clock className="h-4 w-4" />
-                    <span>{curso.estimated_duration_hours}h</span>
-                  </div>
-                </div>
-              </CardContent>
-              <Button onClick={() => navigate(`/formacao/cursos/${curso.id}`)} className="w-full">
-                <Eye className="mr-2 h-4 w-4" />
-                Ver detalhes
-              </Button>
-            </Card>
-          ))}
-        </div>
-      )}
     </div>
   );
 };
-
-export default CourseCarousel;

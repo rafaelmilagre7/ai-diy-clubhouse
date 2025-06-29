@@ -1,27 +1,28 @@
 
-import React from 'react';
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface SolutionsGridLoaderProps {
-  title: string;
+  title?: string;
   count?: number;
 }
 
-export const SolutionsGridLoader: React.FC<SolutionsGridLoaderProps> = ({ 
-  title, 
-  count = 3 
-}) => {
+export const SolutionsGridLoader = ({ title = "Carregando", count = 6 }: SolutionsGridLoaderProps) => {
   return (
     <div className="space-y-4">
-      <h2 className="text-2xl font-bold text-white">{title}</h2>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {title && <h2 className="text-2xl font-bold mb-4">{title}</h2>}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {Array.from({ length: count }).map((_, index) => (
-          <div 
-            key={index}
-            className="bg-white/5 border border-white/10 rounded-lg p-6 animate-pulse"
-          >
-            <div className="h-4 bg-white/10 rounded mb-3"></div>
-            <div className="h-3 bg-white/10 rounded mb-2"></div>
-            <div className="h-3 bg-white/10 rounded w-2/3"></div>
+          <div key={index} className="border rounded-lg shadow-sm overflow-hidden">
+            <Skeleton className="h-[160px] w-full" />
+            <div className="p-4 space-y-3">
+              <Skeleton className="h-5 w-3/4" />
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-full" />
+              <div className="flex justify-between pt-2">
+                <Skeleton className="h-3 w-[80px]" />
+                <Skeleton className="h-3 w-[60px]" />
+              </div>
+            </div>
           </div>
         ))}
       </div>

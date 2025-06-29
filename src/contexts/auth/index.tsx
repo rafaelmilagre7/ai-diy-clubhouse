@@ -1,186 +1,179 @@
 
-// MIGRAÇÃO TEMPORÁRIA: Redirecionando useAuth para useSimpleAuth
-// Este arquivo será usado durante a transição para evitar quebras
-
-import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useEffect, useState, useRef, useCallback } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
-import { UserProfile } from '@/types/userProfile';
-import { fetchUserProfile, createUserProfileIfNeeded } from './utils/profileUtils/userProfileFunctions';
+import { UserProfile, getUserRoleName, isAdminRole, isFormacaoRole } from '@/lib/supabase';
 import { useAuthMethods } from './hooks/useAuthMethods';
+import { useAuthStateManager } from '../../hooks/auth/useAuthStateManager';
+import { clearProfileCache } from '@/hooks/auth/utils/authSessionUtils';
 import { AuthContextType } from './types';
-import { logger } from '@/utils/logger';
-
-// IMPORTAR O NOVO CONTEXTO
-import { useSimpleAuth } from './SimpleAuthProvider';
-
-interface AuthProviderProps {
-  children: ReactNode;
-}
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// PROVIDER LEGACY - mantido para compatibilidade temporária
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (context === undefined) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+};
+
+interface AuthProviderProps {
+  children: React.ReactNode;
+}
+
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [profileLoading, setProfileLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [authError, setAuthError] = useState<Error | null>(null);
+  
+  const authListenerRef = useRef<any>(null);
+  const isInitialized = useRef(false);
+  const lastUserId = useRef<string | null>(null);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Usar métodos de auth robustos
-  const authMethods = useAuthMethods({ setIsLoading });
-
-  // Função para carregar perfil com retry
-  const loadUserProfile = async (userId: string, email?: string, retryCount = 0) => {
-    const maxRetries = 3;
-    
-    try {
-      setProfileLoading(true);
-      setError(null);
-      
-      logger.info('Carregando perfil:', { userId, email, attempt: retryCount + 1 });
-      
-      let userProfile = await fetchUserProfile(userId);
-      
-      if (!userProfile && email) {
-        logger.info('Perfil não encontrado, criando...');
-        userProfile = await createUserProfileIfNeeded(userId, email);
-      }
-      
-      if (userProfile) {
-        setProfile(userProfile);
-        logger.info('Perfil carregado com sucesso');
-      } else if (retryCount < maxRetries) {
-        const delay = (retryCount + 1) * 1000;
-        logger.warn('Tentativa de retry em', { delayMs: delay });
-        
-        setTimeout(() => {
-          loadUserProfile(userId, email, retryCount + 1);
-        }, delay);
-        return;
-      } else {
-        throw new Error('Não foi possível carregar o perfil após várias tentativas');
-      }
-      
-    } catch (error) {
-      logger.error('Erro ao carregar perfil:', error);
-      setError(error instanceof Error ? error.message : 'Erro desconhecido');
-      
-      if (retryCount < maxRetries) {
-        const delay = (retryCount + 1) * 2000;
-        setTimeout(() => {
-          loadUserProfile(userId, email, retryCount + 1);
-        }, delay);
-      }
-    } finally {
-      setProfileLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    logger.info('Inicializando AuthProvider LEGACY');
-    
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        logger.info('Auth state changed:', { event, hasSession: !!session });
-        
-        setSession(session);
-        setUser(session?.user ?? null);
-        
-        if (event === 'SIGNED_IN' && session?.user) {
-          setTimeout(() => {
-            loadUserProfile(session.user.id, session.user.email);
-          }, 0);
-        } else if (event === 'SIGNED_OUT') {
-          setProfile(null);
-          setError(null);
-        }
-      }
-    );
-
-    supabase.auth.getSession().then(({ data: { session }, error }) => {
-      if (error) {
-        logger.error('Erro ao obter sessão:', error);
-        setError(error.message);
-      } else {
-        logger.info('Sessão inicial:', { hasSession: !!session });
-        setSession(session);
-        setUser(session?.user ?? null);
-        
-        if (session?.user) {
-          setTimeout(() => {
-            loadUserProfile(session.user.id, session.user.email);
-          }, 0);
-        }
-      }
-      setIsLoading(false);
-    });
-
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, []);
-
-  const refreshProfile = async () => {
-    if (user) {
-      await loadUserProfile(user.id, user.email);
-    }
-  };
-
-  const contextValue: AuthContextType = {
-    user,
-    session,
-    profile,
-    isLoading: isLoading || profileLoading,
-    error,
-    refreshProfile,
-    isAdmin: profile?.user_roles?.name === 'admin',
-    isFormacao: profile?.user_roles?.name === 'formacao',
+  // Inicializar useAuthStateManager com os setters como parâmetros
+  const { setupAuthSession } = useAuthStateManager({
     setSession,
     setUser,
     setProfile,
     setIsLoading,
-    ...authMethods
+  });
+
+  const { signIn, signOut, signInAsMember, signInAsAdmin } = useAuthMethods({
+    setIsLoading,
+  });
+
+  // Circuit breaker - timeout de 5 segundos para inicialização
+  useEffect(() => {
+    timeoutRef.current = setTimeout(() => {
+      if (isLoading) {
+        console.warn("⚠️ [AUTH] Circuit breaker ativado - forçando fim do loading");
+        setIsLoading(false);
+      }
+    }, 5000);
+
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, [isLoading]);
+
+  // Verificação imediata de admin baseada em email
+  const isAdminByEmail = user?.email && [
+    'rafael@viverdeia.ai',
+    'admin@viverdeia.ai',
+    'admin@teste.com'
+  ].includes(user.email.toLowerCase());
+
+  // Computar isAdmin com cache
+  const isAdmin = React.useMemo(() => {
+    return isAdminRole(profile) || isAdminByEmail;
+  }, [profile, isAdminByEmail]);
+
+  // Computar isFormacao
+  const isFormacao = React.useMemo(() => {
+    return isFormacaoRole(profile);
+  }, [profile]);
+
+  // Inicialização única otimizada
+  useEffect(() => {
+    if (isInitialized.current) return;
+    
+    const initializeAuth = async () => {
+      console.log('🚀 [AUTH] Inicializando sistema de autenticação');
+      
+      try {
+        // CORREÇÃO: Configurar listener ANTES de tentar setup
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(
+          async (event, session) => {
+            console.log(`🔄 [AUTH] Evento: ${event}`);
+            
+            const currentUserId = session?.user?.id;
+            if (lastUserId.current && lastUserId.current !== currentUserId) {
+              console.log('👤 [AUTH] Mudança de usuário - limpando cache');
+              clearProfileCache();
+            }
+            lastUserId.current = currentUserId;
+            
+            if (event === 'SIGNED_IN' && session?.user) {
+              console.log(`🎉 [AUTH] Login: ${session.user.email}`);
+              
+              // Defer a busca do perfil para evitar deadlock
+              setTimeout(async () => {
+                try {
+                  await setupAuthSession();
+                } catch (error) {
+                  console.error('❌ [AUTH] Erro no setup pós-login:', error);
+                  setAuthError(error instanceof Error ? error : new Error('Erro no setup'));
+                  setUser(session.user);
+                  setSession(session);
+                  setIsLoading(false);
+                }
+              }, 0);
+            } else if (event === 'SIGNED_OUT') {
+              console.log('👋 [AUTH] Logout');
+              clearProfileCache();
+              setUser(null);
+              setProfile(null);
+              setSession(null);
+              setAuthError(null);
+              setIsLoading(false);
+            }
+          }
+        );
+        
+        authListenerRef.current = subscription;
+        
+        // DEPOIS de configurar o listener, tentar setup inicial
+        await setupAuthSession();
+        
+        isInitialized.current = true;
+        console.log('✅ [AUTH] Inicialização concluída');
+        
+      } catch (error) {
+        console.error('❌ [AUTH] Erro na inicialização:', error);
+        setAuthError(error instanceof Error ? error : new Error('Erro na inicialização'));
+        setIsLoading(false);
+      }
+    };
+
+    initializeAuth();
+
+    return () => {
+      if (authListenerRef.current) {
+        authListenerRef.current.unsubscribe();
+      }
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, []); // Sem dependências para evitar re-inicialização
+
+  const value: AuthContextType = {
+    user,
+    session,
+    profile,
+    isAdmin,
+    isFormacao,
+    isLoading,
+    authError,
+    signIn,
+    signOut,
+    signInAsMember,
+    signInAsAdmin,
+    setUser,
+    setSession,
+    setProfile,
+    setIsLoading,
   };
 
   return (
-    <AuthContext.Provider value={contextValue}>
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );
 };
-
-// HOOK PRINCIPAL - MIGRAÇÃO PARA useSimpleAuth
-export const useAuth = (): AuthContextType => {
-  logger.warn('[MIGRATION] useAuth está sendo redirecionado para useSimpleAuth');
-  
-  // Usar o novo contexto
-  const simpleAuth = useSimpleAuth();
-  
-  // Adaptar para interface legacy
-  return {
-    user: simpleAuth.user,
-    session: simpleAuth.session,
-    profile: simpleAuth.profile,
-    isLoading: simpleAuth.isLoading,
-    error: simpleAuth.error?.message || null,
-    isAdmin: simpleAuth.isAdmin,
-    isFormacao: simpleAuth.isFormacao,
-    refreshProfile: async () => {}, // Método vazio para compatibilidade
-    setSession: () => {},
-    setUser: () => {},
-    setProfile: () => {},
-    setIsLoading: () => {},
-    signIn: async () => ({ error: undefined }),
-    signUp: async () => ({ error: undefined }),
-    signOut: simpleAuth.signOut,
-    signInAsMember: async () => ({ error: undefined }),
-    signInAsAdmin: async () => ({ error: undefined }),
-    isSigningIn: simpleAuth.isSigningIn
-  } as AuthContextType;
-};
-
-// Exportar também o novo hook para migração gradual
-export { useSimpleAuth } from './SimpleAuthProvider';

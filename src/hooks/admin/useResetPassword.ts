@@ -1,40 +1,55 @@
 
-import { useState } from "react";
-import { supabase } from "@/lib/supabase";
-import { useToast } from "@/hooks/use-toast";
+import { useState } from 'react';
+import { supabase } from '@/lib/supabase';
+import { toast } from 'sonner';
 
 export const useResetPassword = () => {
   const [isResetting, setIsResetting] = useState(false);
-  const { toast } = useToast();
+  const [error, setError] = useState<Error | null>(null);
 
-  const resetPassword = async (email: string) => {
+  const resetUserPassword = async (userEmail: string) => {
     try {
       setIsResetting(true);
+      setError(null);
 
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/reset-password`,
+      // Solicitar redefinição de senha
+      const { error } = await supabase.auth.resetPasswordForEmail(userEmail, {
+        redirectTo: `${window.location.origin}/auth/reset-password`
       });
 
-      if (error) throw error;
+      if (error) {
+        throw error;
+      }
 
-      toast({
-        title: "Email enviado",
-        description: `Um email de redefinição de senha foi enviado para ${email}.`,
+      // Registrar a ação no log de auditoria
+      await supabase.rpc('log_permission_change', {
+        user_id: (await supabase.auth.getUser()).data.user?.id,
+        action_type: 'reset_password',
+        old_value: userEmail
+      });
+
+      toast.success('Email de redefinição de senha enviado', {
+        description: `Um email foi enviado para ${userEmail} com instruções para redefinir a senha.`
       });
 
       return true;
-    } catch (error: any) {
-      console.error('Erro ao enviar reset de senha:', error);
-      toast({
-        title: "Erro ao enviar email",
-        description: error.message || "Ocorreu um erro inesperado",
-        variant: "destructive",
+    } catch (err: any) {
+      console.error('Erro ao redefinir senha:', err);
+      setError(err);
+      
+      toast.error('Erro ao enviar email de redefinição de senha', {
+        description: err.message || 'Não foi possível enviar o email de redefinição de senha. Tente novamente mais tarde.'
       });
-      throw error;
+      
+      return false;
     } finally {
       setIsResetting(false);
     }
   };
 
-  return { resetPassword, isResetting };
+  return {
+    resetUserPassword,
+    isResetting,
+    error
+  };
 };

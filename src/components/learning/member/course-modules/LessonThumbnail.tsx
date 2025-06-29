@@ -5,7 +5,6 @@ import { Badge } from "@/components/ui/badge";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
 import { CheckCircle, Play } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { safeJsonParseObject } from "@/utils/jsonUtils";
 
 interface LessonThumbnailProps {
   lesson: LearningLesson;
@@ -22,10 +21,6 @@ export const LessonThumbnail = ({
   inProgress, 
   progress 
 }: LessonThumbnailProps) => {
-  // Parse seguro do conteúdo da lição
-  const content = safeJsonParseObject(lesson.content, {});
-  const difficultyLevel = content.difficulty_level || 'beginner';
-
   return (
     <Link 
       to={`/learning/course/${courseId}/lesson/${lesson.id}`}
@@ -33,10 +28,17 @@ export const LessonThumbnail = ({
     >
       <div className="relative overflow-hidden rounded-md">
         <AspectRatio ratio={9/16}>
-          {/* Removido: cover_image_url não existe no schema */}
-          <div className="w-full h-full bg-gradient-to-br from-blue-900 to-purple-900 flex items-center justify-center">
-            <span className="font-semibold text-white">{lesson.title}</span>
-          </div>
+          {lesson.cover_image_url ? (
+            <img 
+              src={lesson.cover_image_url} 
+              alt={lesson.title}
+              className="w-full h-full object-cover transition-all duration-300 group-hover:scale-105"
+            />
+          ) : (
+            <div className="w-full h-full bg-gradient-to-br from-blue-900 to-purple-900 flex items-center justify-center">
+              <span className="font-semibold text-white">{lesson.title}</span>
+            </div>
+          )}
           
           {/* Overlay para exibir informação completa em hover */}
           <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-between p-3">
@@ -48,17 +50,16 @@ export const LessonThumbnail = ({
             </div>
             
             <div className="flex items-center gap-2 mt-1">
-              {/* Corrigido: buscar difficulty_level do content */}
-              {difficultyLevel && (
+              {lesson.difficulty_level && (
                 <span className={cn(
                   "text-xs px-1.5 py-0.5 rounded-md",
-                  difficultyLevel === 'beginner' && "bg-green-100 text-green-800",
-                  difficultyLevel === 'intermediate' && "bg-yellow-100 text-yellow-800",
-                  difficultyLevel === 'advanced' && "bg-red-100 text-red-800"
+                  lesson.difficulty_level === 'beginner' && "bg-green-100 text-green-800",
+                  lesson.difficulty_level === 'intermediate' && "bg-yellow-100 text-yellow-800",
+                  lesson.difficulty_level === 'advanced' && "bg-red-100 text-red-800"
                 )}>
-                  {difficultyLevel === 'beginner' && "Iniciante"}
-                  {difficultyLevel === 'intermediate' && "Intermediário"}
-                  {difficultyLevel === 'advanced' && "Avançado"}
+                  {lesson.difficulty_level === 'beginner' && "Iniciante"}
+                  {lesson.difficulty_level === 'intermediate' && "Intermediário"}
+                  {lesson.difficulty_level === 'advanced' && "Avançado"}
                 </span>
               )}
             </div>

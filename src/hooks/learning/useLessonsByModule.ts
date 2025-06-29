@@ -23,7 +23,7 @@ export const useLessonsByModule = (moduleId: string) => {
         const { data: allLessonsData, error } = await supabase
           .from("learning_lessons")
           .select("*, videos:learning_lesson_videos(*)")
-          .eq("module_id", moduleId as any)
+          .eq("module_id", moduleId)
           .order("order_index", { ascending: true });
           
         if (error) {
@@ -37,30 +37,30 @@ export const useLessonsByModule = (moduleId: string) => {
         console.log(`Total de aulas encontradas no módulo ${moduleId}:`, allLessons.length);
         console.log("Status das aulas:", 
           allLessons.map(l => ({
-            id: (l as any).id, 
-            title: (l as any).title, 
-            order_index: (l as any).order_index,
-            published: (l as any).published
+            id: l.id, 
+            title: l.title, 
+            order_index: l.order_index,
+            published: l.published
           }))
         );
         
         // Filtrar apenas aulas publicadas
-        const publishedLessons = allLessons.filter(lesson => (lesson as any).published);
+        const publishedLessons = allLessons.filter(lesson => lesson.published);
         
         console.log(`Aulas publicadas no módulo ${moduleId}:`, publishedLessons.length);
         
         // Ordenar as aulas por número no título e garantir consistência
-        const sortedLessons = sortLessonsByNumber(publishedLessons as any);
+        const sortedLessons = sortLessonsByNumber(publishedLessons);
         
         console.log(`Aulas ordenadas para o módulo ${moduleId}:`, 
           sortedLessons.map(l => ({
-            id: (l as any).id, 
-            title: (l as any).title, 
-            order_index: (l as any).order_index
+            id: l.id, 
+            title: l.title, 
+            order_index: l.order_index
           }))
         );
         
-        return sortedLessons as LearningLesson[];
+        return sortedLessons;
       } catch (err) {
         console.error("Erro inesperado ao buscar lições:", err);
         return [];

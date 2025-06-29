@@ -1,37 +1,42 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
-import { Event } from '@/types/events';
+import type { Event } from '@/types/events';
 
-interface UseEventsOptions {
-  includeParentEvents?: boolean;
-}
-
-export const useEvents = (options: UseEventsOptions = {}) => {
+export const useEvents = () => {
   return useQuery({
-    queryKey: ['events', options.includeParentEvents],
+    queryKey: ['events'],
     queryFn: async (): Promise<Event[]> => {
-      console.log('🔍 [EVENTS] Fetching events with options:', options);
-      
-      let query = (supabase as any)
-        .from('events')
-        .select('*')
-        .order('start_time', { ascending: true });
+      try {
+        // Primeiro, tentar buscar eventos usando a função RPC se disponível
+        const { data: rpcData, error: rpcError } = await supabase
+          .rpc('get_visible_events_for_user', { 
+            user_id: (await supabase.auth.getUser()).data.user?.id 
+          });
 
-      // Se não incluir eventos pai, filtrar apenas eventos não recorrentes ou filhos
-      if (!options.includeParentEvents) {
-        query = query.is('parent_event_id', null);
-      }
+        if (!rpcError && rpcData) {
+          return rpcData as Event[];
+        }
 
-      const { data, error } = await query;
+        // Fallback: buscar eventos diretamente
+        console.log("RPC não disponível, usando query direta");
+        
+        const { data: events, error } = await supabase
+          .from('events')
+          .select('*')
+          .order('start_time', { ascending: true });
 
-      if (error) {
-        console.error('❌ [EVENTS] Error fetching events:', error);
+        if (error) {
+          console.error("Erro ao buscar eventos:", error);
+          throw error;
+        }
+
+        return events as Event[];
+
+      } catch (error) {
+        console.error("Erro na busca de eventos:", error);
         throw error;
       }
-
-      console.log('✅ [EVENTS] Events fetched successfully:', data?.length || 0);
-      return (data as Event[]) || [];
     },
     retry: 2,
     staleTime: 5 * 60 * 1000, // 5 minutos

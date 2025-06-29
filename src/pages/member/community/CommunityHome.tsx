@@ -64,19 +64,6 @@ export default function CommunityHome() {
     setCreateTopicOpen(true);
   };
 
-  const handleReportSubmit = async (data: { report_type: string; reason: string; description?: string }) => {
-    // Transform the data to match ReportData interface
-    const reportData = {
-      type: data.report_type as any,
-      targetId: '', // This would need to be set based on context
-      reportedUserId: '', // This would need to be set based on context
-      reason: data.reason,
-      description: data.description
-    };
-    
-    await submitReport(reportData);
-  };
-
   return (
     <div className="container mx-auto px-4 py-6 max-w-6xl">
       <ForumBreadcrumbs categorySlug={activeTab !== "todos" ? activeTab : undefined} />
@@ -204,7 +191,7 @@ export default function CommunityHome() {
       <ReportModal
         open={isReportModalOpen}
         onOpenChange={closeReportModal}
-        onSubmit={handleReportSubmit}
+        onSubmit={submitReport}
         targetType="topic"
       />
     </div>

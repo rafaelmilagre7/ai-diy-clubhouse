@@ -1,6 +1,7 @@
 
 import { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/auth';
 import { toast } from 'sonner';
 
@@ -17,10 +18,46 @@ export const useVoting = () => {
 
       try {
         setVoteLoading(true);
-        console.log("Simulando voto:", { voteType, suggestionId, userId: user.id });
+        console.log("Votando:", { voteType, suggestionId, userId: user.id });
         
-        // Simulate voting logic since suggestion_votes table doesn't exist
-        await new Promise(resolve => setTimeout(resolve, 500));
+        const { data: existingVote } = await supabase
+          .from('suggestion_votes')
+          .select('id, vote_type')
+          .eq('suggestion_id', suggestionId)
+          .eq('user_id', user.id)
+          .maybeSingle();
+          
+        const { error: voteError } = await supabase
+          .from('suggestion_votes')
+          .upsert({
+            suggestion_id: suggestionId,
+            user_id: user.id,
+            vote_type: voteType,
+            updated_at: new Date().toISOString()
+          }, {
+            onConflict: 'suggestion_id,user_id'
+          });
+
+        if (voteError) throw voteError;
+        
+        // Atualizar contagem de votos
+        if (!existingVote) {
+          // Novo voto
+          if (voteType === 'upvote') {
+            await supabase.rpc('increment_suggestion_upvote', { suggestion_id: suggestionId });
+          } else {
+            await supabase.rpc('increment_suggestion_downvote', { suggestion_id: suggestionId });
+          }
+        } else if (existingVote.vote_type !== voteType) {
+          // Mudança de voto
+          if (voteType === 'upvote') {
+            await supabase.rpc('increment_suggestion_upvote', { suggestion_id: suggestionId });
+            await supabase.rpc('decrement_suggestion_downvote', { suggestion_id: suggestionId });
+          } else {
+            await supabase.rpc('increment_suggestion_downvote', { suggestion_id: suggestionId });
+            await supabase.rpc('decrement_suggestion_upvote', { suggestion_id: suggestionId });
+          }
+        }
         
         return { success: true };
       } finally {

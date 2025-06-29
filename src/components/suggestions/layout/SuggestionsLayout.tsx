@@ -93,7 +93,7 @@ const SuggestionsLayout = () => {
         </Alert>
       ) : (
         <SuggestionsContent 
-          suggestions={suggestions as any} 
+          suggestions={suggestions} 
           searchQuery={searchQuery}
         />
       )}

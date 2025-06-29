@@ -19,12 +19,6 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
-  // Configuração de variáveis de ambiente para Supabase
-  define: {
-    // Garantir que as variáveis de ambiente do Supabase estejam disponíveis
-    'import.meta.env.VITE_SUPABASE_URL': JSON.stringify(process.env.VITE_SUPABASE_URL),
-    'import.meta.env.VITE_SUPABASE_ANON_KEY': JSON.stringify(process.env.VITE_SUPABASE_ANON_KEY),
-  },
   build: {
     sourcemap: false,
     minify: 'esbuild', // Usar esbuild ao invés de terser

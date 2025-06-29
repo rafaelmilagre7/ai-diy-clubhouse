@@ -1,111 +1,86 @@
-
-import React from 'react';
-import { ChevronLeft, ChevronRight, Home, CheckCircle } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { LearningLesson } from '@/lib/supabase';
-import { safeJsonParseObject } from '@/utils/jsonUtils';
-
+import React from "react";
+import { Button } from "@/components/ui/button";
+import { ArrowLeft, ArrowRight, CheckCircle } from "lucide-react";
+import { LearningLesson } from "@/lib/supabase/types";
 interface LessonNavigationBarProps {
-  lesson?: LearningLesson;
-  isCompleted?: boolean;
-  onComplete?: () => void;
+  isCompleted: boolean;
+  onComplete: () => void;
   onPrevious?: () => void;
-  onNext?: () => void;
-  onBackToModule?: () => void;
-  hasPrevious?: boolean;
-  hasNext?: boolean;
-  prevLesson?: any;
-  nextLesson?: any;
+  onNext: () => void;
+  prevLesson?: LearningLesson | null;
+  nextLesson?: LearningLesson | null;
   isUpdating?: boolean;
   currentLessonIndex?: number;
   totalLessons?: number;
 }
-
-export const LessonNavigationBar = ({
-  lesson,
-  isCompleted = false,
+export const LessonNavigationBar: React.FC<LessonNavigationBarProps> = ({
+  isCompleted,
   onComplete,
   onPrevious,
   onNext,
-  onBackToModule,
-  hasPrevious = false,
-  hasNext = false,
   prevLesson,
   nextLesson,
   isUpdating = false,
-  currentLessonIndex,
-  totalLessons
-}: LessonNavigationBarProps) => {
-  const moduleName = lesson?.module?.title || 'Módulo';
-  
-  // Parse seguro do conteúdo JSON
-  const content = lesson ? safeJsonParseObject(lesson.content, {}) : {};
-  // Corrigido: usar estimated_duration_minutes que existe no schema
-  const estimatedTime = lesson?.estimated_duration_minutes || content.estimatedTime || 0;
-
-  return (
-    <div className="sticky top-0 z-40 bg-background border-b border-border px-4 py-3">
-      <div className="flex items-center justify-between max-w-7xl mx-auto">
-        <div className="flex items-center gap-4">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onBackToModule}
-            className="flex items-center gap-2 text-muted-foreground hover:text-foreground"
-          >
-            <Home className="h-4 w-4" />
-            {moduleName}
-          </Button>
-          <div className="h-4 w-px bg-border" />
-          <div className="flex flex-col">
-            <h1 className="font-semibold text-sm truncate max-w-[300px]">
-              {lesson?.title || 'Aula'}
-            </h1>
-            {estimatedTime > 0 && (
-              <span className="text-xs text-muted-foreground">
-                ~{estimatedTime} min
-              </span>
-            )}
+  currentLessonIndex = 0,
+  totalLessons = 0
+}) => {
+  return <div className="w-full max-w-4xl mx-auto">
+      {/* Indicador de progresso */}
+      {totalLessons > 0 && <div className="flex items-center justify-center mb-4">
+          <div className="text-sm text-muted-foreground bg-muted px-3 py-1 rounded-full">
+            Aula {currentLessonIndex + 1} de {totalLessons}
           </div>
+        </div>}
+
+      {/* Botões de navegação */}
+      <div className="grid grid-cols-3 gap-4 items-center">
+        {/* Botão Aula Anterior */}
+        <div className="flex justify-start">
+          <Button variant="outline" onClick={onPrevious} disabled={!prevLesson} className="w-full sm:w-auto gap-2 border-gray-200 bg-sky-500 hover:bg-sky-400">
+            <ArrowLeft className="h-4 w-4" />
+            <span className="hidden sm:inline">Aula Anterior</span>
+            <span className="sm:hidden">Anterior</span>
+          </Button>
         </div>
 
-        <div className="flex items-center gap-2">
-          {!isCompleted && onComplete && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={onComplete}
-              disabled={isUpdating}
-              className="flex items-center gap-2"
-            >
-              <CheckCircle className="h-4 w-4" />
-              Marcar como Concluída
-            </Button>
-          )}
-          
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={onPrevious}
-            disabled={!hasPrevious && !prevLesson}
-            className="flex items-center gap-2"
-          >
-            <ChevronLeft className="h-4 w-4" />
-            Anterior
+        {/* Botão Marcar como Concluída */}
+        <div className="flex justify-center">
+          <Button onClick={onComplete} disabled={isUpdating} variant={isCompleted ? "secondary" : "default"} className={`gap-2 px-6 py-3 font-medium transition-all duration-200 ${isCompleted ? "bg-green-100 text-green-800 hover:bg-green-200 border border-green-300" : "bg-viverblue text-white hover:bg-viverblue-dark shadow-lg hover:shadow-xl"}`}>
+            <CheckCircle className={`h-4 w-4 ${isCompleted ? "text-green-600" : "text-white"}`} />
+            {isUpdating ? "Salvando..." : isCompleted ? "Aula Concluída" : "Marcar como Concluída"}
           </Button>
-          
-          <Button
-            variant="default"
-            size="sm"
-            onClick={onNext}
-            disabled={!hasNext && !nextLesson}
-            className="flex items-center gap-2"
-          >
-            Próxima
-            <ChevronRight className="h-4 w-4" />
+        </div>
+
+        {/* Botão Próxima Aula */}
+        <div className="flex justify-end">
+          <Button variant="outline" onClick={onNext} className="w-full sm:w-auto gap-2 border-gray-200 bg-sky-500 hover:bg-sky-400">
+            <span className="hidden sm:inline">
+              {nextLesson ? "Próxima Aula" : "Finalizar Curso"}
+            </span>
+            <span className="sm:hidden">
+              {nextLesson ? "Próxima" : "Finalizar"}
+            </span>
+            <ArrowRight className="h-4 w-4" />
           </Button>
         </div>
       </div>
-    </div>
-  );
+
+      {/* Informações das aulas adjacentes */}
+      <div className="hidden lg:grid lg:grid-cols-3 lg:gap-4 mt-3 text-xs text-muted-foreground">
+        <div className="text-left">
+          {prevLesson && <div className="truncate">
+              <span className="font-medium">Anterior:</span> {prevLesson.title}
+              {prevLesson.module?.title && <div className="text-xs opacity-75">Módulo: {prevLesson.module.title}</div>}
+            </div>}
+        </div>
+        <div></div>
+        <div className="text-right">
+          {nextLesson ? <div className="truncate">
+              <span className="font-medium">Próxima:</span> {nextLesson.title}
+              {nextLesson.module?.title && <div className="text-xs opacity-75">Módulo: {nextLesson.module.title}</div>}
+            </div> : <span>Última aula do curso</span>}
+        </div>
+      </div>
+    </div>;
 };
+export default LessonNavigationBar;

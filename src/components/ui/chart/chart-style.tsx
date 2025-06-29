@@ -1,8 +1,6 @@
 
-
 import * as React from "react"
 import { ChartConfig, THEMES } from "./context"
-import { SafeHtmlRenderer } from "@/components/security/SafeHtmlRenderer"
 
 export const ChartStyle = ({ id, config }: { id: string; config: ChartConfig }) => {
   const colorConfig = Object.entries(config).filter(
@@ -13,9 +11,12 @@ export const ChartStyle = ({ id, config }: { id: string; config: ChartConfig }) 
     return null
   }
 
-  const styleContent = Object.entries(THEMES)
-    .map(
-      ([theme, prefix]) => `
+  return (
+    <style
+      dangerouslySetInnerHTML={{
+        __html: Object.entries(THEMES)
+          .map(
+            ([theme, prefix]) => `
 ${prefix} [data-chart=${id}] {
 ${colorConfig
   .map(([key, itemConfig]) => {
@@ -27,15 +28,9 @@ ${colorConfig
   .join("\n")}
 }
 `
-    )
-    .join("\n");
-
-  return (
-    <SafeHtmlRenderer
-      html={`<style>${styleContent}</style>`}
-      allowedTags={['style']}
-      allowedAttributes={[]}
+          )
+          .join("\n"),
+      }}
     />
   )
 }
-

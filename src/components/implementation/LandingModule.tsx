@@ -1,12 +1,9 @@
 
-import React, { useEffect } from "react";
-import { Module } from "@/lib/supabase";
-import { Card, CardContent } from "@/components/ui/card";
+import React from "react";
 import { Button } from "@/components/ui/button";
-import { Play, CheckCircle } from "lucide-react";
-import { shouldAutoComplete } from "@/lib/supabase/types";
-import { useLogging } from "@/hooks/useLogging";
-import { safeJsonParseObject, safeToStringContent } from "@/lib/supabase/types";
+import { ChevronRight } from "lucide-react";
+import { Module } from "@/lib/supabase";
+import { ModuleTitle } from "./ModuleTitle";
 
 interface LandingModuleProps {
   module: Module;
@@ -14,56 +11,66 @@ interface LandingModuleProps {
 }
 
 export const LandingModule = ({ module, onComplete }: LandingModuleProps) => {
-  const { log } = useLogging();
-  
-  useEffect(() => {
-    // Auto-complete landing module after viewing
-    if (shouldAutoComplete(module.type)) {
-      const timer = setTimeout(() => {
-        log("Auto-completing landing module", { module_id: module.id });
-        onComplete();
-      }, 1000);
-
-      return () => clearTimeout(timer);
-    }
-  }, [module, onComplete, log]);
-
-  // Parse content safely
-  const content = safeJsonParseObject(module.content, {});
-  const description = content.description || "Bem-vindo! Vamos começar esta jornada de implementação.";
-
   return (
-    <div className="max-w-2xl mx-auto text-center space-y-8 py-8">
-      <div className="space-y-4">
-        <div className="mx-auto w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center">
-          <Play className="w-12 h-12 text-blue-600" />
-        </div>
-        
-        <div className="space-y-2">
-          <h1 className="text-3xl font-bold text-gray-900">{module.title}</h1>
-          <div dangerouslySetInnerHTML={{ __html: safeToStringContent(description) }} className="text-lg text-gray-600" />
-        </div>
+    <div className="max-w-3xl mx-auto space-y-8 py-8">
+      <div className="text-center mb-8">
+        <h1 className="text-3xl font-bold mb-4">
+          <ModuleTitle type={module.type} />
+        </h1>
+        <p className="text-xl text-muted-foreground">
+          Bem-vindo à implementação guiada passo a passo
+        </p>
       </div>
-
-      <Card>
-        <CardContent className="p-6 space-y-4">
-          <h3 className="text-xl font-semibold">Pronto para começar?</h3>
-          <p className="text-gray-600">
-            Esta implementação irá guiá-lo passo a passo através do processo de configuração e otimização.
-          </p>
-          
-          <Button 
-            onClick={onComplete} 
-            className="w-full bg-[#0ABAB5] hover:bg-[#0ABAB5]/90"
-            size="lg"
-          >
-            <CheckCircle className="mr-2 h-5 w-5" />
-            Iniciar Implementação
-          </Button>
-        </CardContent>
-      </Card>
+      
+      <div className="bg-blue-50 p-6 rounded-lg border border-blue-100">
+        <h2 className="text-xl font-semibold mb-4 text-blue-800">O que você vai aprender</h2>
+        <ul className="space-y-3">
+          <li className="flex items-start">
+            <div className="h-6 w-6 rounded-full bg-blue-200 text-blue-800 flex items-center justify-center mr-3 flex-shrink-0">1</div>
+            <span>Como configurar todas as ferramentas necessárias</span>
+          </li>
+          <li className="flex items-start">
+            <div className="h-6 w-6 rounded-full bg-blue-200 text-blue-800 flex items-center justify-center mr-3 flex-shrink-0">2</div>
+            <span>O passo a passo detalhado da implementação</span>
+          </li>
+          <li className="flex items-start">
+            <div className="h-6 w-6 rounded-full bg-blue-200 text-blue-800 flex items-center justify-center mr-3 flex-shrink-0">3</div>
+            <span>Como validar que tudo está funcionando corretamente</span>
+          </li>
+          <li className="flex items-start">
+            <div className="h-6 w-6 rounded-full bg-blue-200 text-blue-800 flex items-center justify-center mr-3 flex-shrink-0">4</div>
+            <span>Estratégias para otimizar e escalar os resultados</span>
+          </li>
+        </ul>
+      </div>
+      
+      <div className="bg-amber-50 p-6 rounded-lg border border-amber-100">
+        <h2 className="text-xl font-semibold mb-4 text-amber-800">Antes de começar</h2>
+        <p className="mb-4">
+          Esta implementação levará aproximadamente 1-2 horas para ser concluída.
+          Recomendamos que você reserve esse tempo para seguir todos os passos sem interrupções.
+        </p>
+        <p>Tenha à mão:</p>
+        <ul className="list-disc pl-5 space-y-1 mt-2">
+          <li>Acesso às suas contas de ferramentas (se aplicável)</li>
+          <li>Permissões para implementar esta solução em sua empresa</li>
+          <li>Um ambiente tranquilo para concentração</li>
+        </ul>
+      </div>
+      
+      <div className="text-center pt-8">
+        <Button 
+          onClick={onComplete} 
+          size="lg"
+          className="bg-viverblue hover:bg-viverblue/90"
+        >
+          Começar Implementação
+          <ChevronRight className="ml-2 h-5 w-5" />
+        </Button>
+        <p className="text-sm text-muted-foreground mt-4">
+          Seu progresso será salvo automaticamente em cada etapa
+        </p>
+      </div>
     </div>
   );
 };
-
-export default LandingModule;

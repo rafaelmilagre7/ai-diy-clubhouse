@@ -1,74 +1,114 @@
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useNavigate, useLocation } from "react-router-dom";
+import { useEffect, useState, useRef, ReactNode, memo, useMemo } from "react";
+import { useAuth } from "@/contexts/auth";
+import LoadingScreen from "@/components/common/LoadingScreen";
+import MemberLayout from "./MemberLayout";
+import FormacaoLayout from "./formacao/FormacaoLayout";
+import { PageTransitionWithFallback } from "@/components/transitions/PageTransitionWithFallback";
 
-interface LayoutContextType {
-  sidebarOpen: boolean;
-  setSidebarOpen: (open: boolean) => void;
-  currentLayout: 'admin' | 'member' | 'formacao' | 'public';
-  isMobile: boolean;
-}
-
-const LayoutContext = createContext<LayoutContextType | undefined>(undefined);
-
-export const useLayout = () => {
-  const context = useContext(LayoutContext);
-  if (!context) {
-    throw new Error('useLayout must be used within a LayoutProvider');
-  }
-  return context;
-};
-
-interface LayoutProviderProps {
-  children: ReactNode;
-}
-
-export const LayoutProvider: React.FC<LayoutProviderProps> = ({ children }) => {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
+/**
+ * LayoutProvider gerencia autenticação e roteamento baseado em papéis
+ * antes de renderizar o componente de layout apropriado
+ */
+const LayoutProvider = memo(({ children }: { children: ReactNode }) => {
+  const {
+    user,
+    profile,
+    isAdmin,
+    isFormacao,
+    isLoading,
+  } = useAuth();
+  const navigate = useNavigate();
   const location = useLocation();
+  const [layoutReady, setLayoutReady] = useState(false);
+  const timeoutRef = useRef<number | null>(null);
 
-  // Determine current layout based on route
-  const getCurrentLayout = (): 'admin' | 'member' | 'formacao' | 'public' => {
-    if (location.pathname.startsWith('/admin')) return 'admin';
-    if (location.pathname.startsWith('/formacao')) return 'formacao';
-    if (location.pathname.startsWith('/dashboard') || 
-        location.pathname.startsWith('/solutions') ||
-        location.pathname.startsWith('/tools') ||
-        location.pathname.startsWith('/community')) return 'member';
-    return 'public';
-  };
+  // Memoizar as verificações de rota para evitar recálculos desnecessários
+  const routeChecks = useMemo(() => ({
+    isLearningRoute: location.pathname.startsWith('/learning'),
+    isPathAdmin: location.pathname.startsWith('/admin'),
+    isPathFormacao: location.pathname.startsWith('/formacao'),
+    isFormacaoRoute: location.pathname.startsWith('/formacao')
+  }), [location.pathname]);
 
-  const currentLayout = getCurrentLayout();
+  // Memoizar a mensagem de loading baseada no estado
+  const loadingMessage = useMemo(() => {
+    if (isLoading) return "Preparando seu dashboard...";
+    if (!user) return "Verificando autenticação...";
+    return "Carregando layout...";
+  }, [isLoading, user]);
 
-  // Handle mobile detection
+  // Verificar autenticação assim que o estado estiver pronto
   useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Auto-close sidebar on mobile when route changes
-  useEffect(() => {
-    if (isMobile) {
-      setSidebarOpen(false);
+    // Limpar qualquer timeout existente
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
     }
-  }, [location.pathname, isMobile]);
+    
+    // Se não estiver carregando, verificar autenticação
+    if (!isLoading) {
+      if (!user) {
+        navigate('/login', { replace: true });
+        return;
+      }
+      
+      // Se temos usuário, marcar layout como pronto
+      setLayoutReady(true);
+      
+      // Verificar papel do usuário e rota atual
+      if (user && profile) {
+        const { isLearningRoute, isPathAdmin, isPathFormacao } = routeChecks;
+        
+        // Redirecionar apenas se estiver na rota errada
+        if (isAdmin && !isPathAdmin && !isPathFormacao && !isLearningRoute) {
+          navigate('/admin', { replace: true });
+        } 
+        else if (isFormacao && !isAdmin && !isPathFormacao && !isLearningRoute) {
+          navigate('/formacao', { replace: true });
+        }
+      }
+    } else {
+      // Configurar timeout para não ficar preso em carregamento infinito
+      timeoutRef.current = window.setTimeout(() => {
+        setLayoutReady(true);
+      }, 2000);
+    }
+    
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, [user, profile, isAdmin, isFormacao, isLoading, navigate, routeChecks]);
 
-  const value: LayoutContextType = {
-    sidebarOpen,
-    setSidebarOpen,
-    currentLayout,
-    isMobile
-  };
+  // Renderizar com base na rota e permissões
+  if (layoutReady && user) {
+    const { isFormacaoRoute, isLearningRoute } = routeChecks;
+    
+    if (isFormacaoRoute && (isFormacao || isAdmin)) {
+      return (
+        <PageTransitionWithFallback isVisible={true}>
+          <FormacaoLayout>{children}</FormacaoLayout>
+        </PageTransitionWithFallback>
+      );
+    } else if (isLearningRoute || !isFormacao || isAdmin) {
+      return (
+        <PageTransitionWithFallback isVisible={true}>
+          <MemberLayout>{children}</MemberLayout>
+        </PageTransitionWithFallback>
+      );
+    }
+  }
 
+  // Mostrar loading enquanto o layout não está pronto
   return (
-    <LayoutContext.Provider value={value}>
-      {children}
-    </LayoutContext.Provider>
+    <PageTransitionWithFallback isVisible={true}>
+      <LoadingScreen message={loadingMessage} />
+    </PageTransitionWithFallback>
   );
-};
+});
+
+LayoutProvider.displayName = 'LayoutProvider';
+
+export default LayoutProvider;

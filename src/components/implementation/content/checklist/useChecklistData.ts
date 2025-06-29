@@ -1,35 +1,16 @@
 
 import { useState, useEffect } from "react";
-import { Module, supabase } from "@/lib/supabase";
-import { useSimpleAuth } from "@/contexts/auth/SimpleAuthProvider";
+import { Module, Solution, supabase } from "@/lib/supabase";
+import { useAuth } from "@/contexts/auth";
 import { useLogging } from "@/hooks/useLogging";
-
-export interface ChecklistItem {
-  id: string;
-  title: string;
-  checked: boolean;
-}
-
-export const extractChecklistFromSolution = (solution: any): ChecklistItem[] => {
-  // Extract checklist from solution content or other fields
-  // This is a placeholder implementation
-  return [];
-};
-
-export const initializeUserChecklist = (checklist: ChecklistItem[]): Record<string, boolean> => {
-  const userChecklist: Record<string, boolean> = {};
-  checklist.forEach(item => {
-    userChecklist[item.id] = item.checked;
-  });
-  return userChecklist;
-};
+import { ChecklistItem, extractChecklistFromSolution, initializeUserChecklist, handleChecklistError } from "./checklistUtils";
 
 export const useChecklistData = (module: Module) => {
-  const [solution, setSolution] = useState<any | null>(null);
+  const [solution, setSolution] = useState<Solution | null>(null);
   const [checklist, setChecklist] = useState<ChecklistItem[]>([]);
   const [userChecklist, setUserChecklist] = useState<Record<string, boolean>>({});
   const [loading, setLoading] = useState(true);
-  const { user } = useSimpleAuth();
+  const { user } = useAuth();
   const { log, logError } = useLogging();
 
   useEffect(() => {
@@ -60,10 +41,12 @@ export const useChecklistData = (module: Module) => {
           return;
         }
         
-        setSolution(data);
+        // Ensure data is of Solution type
+        const solutionData = data as Solution;
+        setSolution(solutionData);
         
         // Extract checklist items from solution
-        let extractedChecklist = extractChecklistFromSolution(data);
+        const extractedChecklist = extractChecklistFromSolution(solutionData);
         
         // If no items in solution checklist, try fetching from implementation_checkpoints
         if (extractedChecklist.length === 0) {
@@ -76,36 +59,43 @@ export const useChecklistData = (module: Module) => {
           if (checkpointError) {
             logError("Error fetching checkpoints:", checkpointError);
           } else if (checkpointData && checkpointData.length > 0) {
-            extractedChecklist = checkpointData.map((item: any) => ({
+            const checkpointChecklist: ChecklistItem[] = checkpointData.map((item: any) => ({
               id: item.id,
               title: item.description,
               checked: false
             }));
+            
+            setChecklist(checkpointChecklist);
           } else {
-            log("No checklist or implementation_checkpoints found", { solutionId: data.id });
+            log("No checklist or implementation_checkpoints found", { solutionId: solutionData.id });
+            setChecklist([]);
           }
+        } else {
+          setChecklist(extractedChecklist);
         }
         
-        setChecklist(extractedChecklist);
-        
+        let finalChecklist = checklist.length > 0 ? checklist : extractedChecklist;
         // Initialize user checklist state
-        const initialUserChecklist = initializeUserChecklist(extractedChecklist);
+        const initialUserChecklist = initializeUserChecklist(finalChecklist);
         
-        // If user is logged in, try to fetch their progress from the progress table
+        // If user is logged in, fetch their specific checklist progress
         if (user) {
-          const { data: progressData, error: progressError } = await supabase
-            .from("progress")
+          const { data: userData, error: userError } = await supabase
+            .from("user_checklists")
             .select("*")
             .eq("user_id", user.id)
             .eq("solution_id", module.solution_id)
             .maybeSingle();
               
-          if (progressError) {
-            logError("Error fetching user progress:", progressError);
-          } else if (progressData) {
-            // Use progress data if available
-            // For now, just use the initial checklist
-            setUserChecklist(initialUserChecklist);
+          if (userError) {
+            logError("Error fetching user checklist:", userError);
+          } else if (userData) {
+            // Parse the JSON data if it's a string
+            const userItems = typeof userData.checked_items === 'string' 
+              ? JSON.parse(userData.checked_items) 
+              : userData.checked_items;
+              
+            setUserChecklist(userItems as Record<string, boolean>);
           } else {
             setUserChecklist(initialUserChecklist);
           }

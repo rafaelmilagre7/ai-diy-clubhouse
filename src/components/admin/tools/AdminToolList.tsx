@@ -1,290 +1,178 @@
-
-import React, { useState, useMemo } from 'react';
-import { useTools } from '@/hooks/useTools';
+import { useState } from 'react';
+import { Tool } from '@/types/toolTypes';
+import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Search, Filter, ExternalLink, Edit, Trash2 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { Edit, Trash, ExternalLink, Plus } from 'lucide-react';
+import { 
+  AlertDialog, 
+  AlertDialogAction, 
+  AlertDialogCancel, 
+  AlertDialogContent, 
+  AlertDialogDescription, 
+  AlertDialogFooter, 
+  AlertDialogHeader, 
+  AlertDialogTitle, 
+  AlertDialogTrigger 
+} from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/lib/supabase';
+import { useAdminTools } from '@/hooks/useAdminTools';
+import { AdminToolsFilters } from './AdminToolsFilters';
 
-const AdminToolList = () => {
-  const navigate = useNavigate();
+interface AdminToolListProps {
+  tools: Tool[];
+  refreshTrigger?: number;
+}
+
+export const AdminToolList = ({ refreshTrigger }: AdminToolListProps) => {
+  const { 
+    tools, 
+    isLoading, 
+    selectedCategory, 
+    setSelectedCategory, 
+    searchQuery, 
+    setSearchQuery 
+  } = useAdminTools();
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const { toast } = useToast();
-  const [searchQuery, setSearchQuery] = useState('');
-  const [categoryFilter, setCategoryFilter] = useState('all');
-  const [statusFilter, setStatusFilter] = useState('all');
-  
-  const { tools, isLoading, refetch } = useTools();
 
-  // Filter tools based on search and filters
-  const filteredTools = useMemo(() => {
-    return tools.filter(tool => {
-      const matchesSearch = tool.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          tool.description.toLowerCase().includes(searchQuery.toLowerCase());
-      
-      const matchesCategory = categoryFilter === 'all' || tool.category === categoryFilter;
-      
-      const matchesStatus = statusFilter === 'all' || 
-                          (statusFilter === 'active' && tool.is_active) ||
-                          (statusFilter === 'inactive' && !tool.is_active);
-      
-      return matchesSearch && matchesCategory && matchesStatus;
-    });
-  }, [tools, searchQuery, categoryFilter, statusFilter]);
-
-  // Get unique categories for filter
-  const categories = useMemo(() => {
-    const uniqueCategories = [...new Set(tools.map(tool => tool.category))];
-    return uniqueCategories.sort();
-  }, [tools]);
-
-  const handleDelete = async (toolId: string) => {
-    if (!confirm('Tem certeza que deseja excluir esta ferramenta?')) return;
-
+  const handleDelete = async (id: string) => {
     try {
       const { error } = await supabase
         .from('tools')
         .delete()
-        .eq('id', toolId);
+        .eq('id', id);
 
       if (error) throw error;
-
+      
       toast({
         title: "Ferramenta excluída",
         description: "A ferramenta foi excluída com sucesso.",
       });
-
-      refetch();
+      
+      // Recarregar a página para atualizar a lista
+      window.location.reload();
     } catch (error: any) {
-      console.error('Error deleting tool:', error);
+      console.error("Erro ao excluir ferramenta:", error);
       toast({
-        title: "Erro ao excluir",
-        description: "Ocorreu um erro ao excluir a ferramenta.",
+        title: "Erro ao excluir ferramenta",
+        description: error.message || "Ocorreu um erro ao excluir a ferramenta.",
         variant: "destructive",
       });
-    }
-  };
-
-  const handleToggleStatus = async (toolId: string) => {
-    try {
-      const tool = tools.find(t => t.id === toolId);
-      if (!tool) return;
-
-      const { error } = await supabase
-        .from('tools')
-        .update({ is_active: !tool.is_active })
-        .eq('id', toolId);
-
-      if (error) throw error;
-
-      toast({
-        title: "Status atualizado",
-        description: `Ferramenta ${tool.is_active ? 'desativada' : 'ativada'} com sucesso.`,
-      });
-
-      refetch();
-    } catch (error: any) {
-      console.error('Error updating tool status:', error);
-      toast({
-        title: "Erro ao atualizar",
-        description: "Ocorreu um erro ao atualizar o status da ferramenta.",
-        variant: "destructive",
-      });
+    } finally {
+      setDeletingId(null);
     }
   };
 
   if (isLoading) {
     return (
-      <div className="space-y-6">
-        <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">Ferramentas</h1>
-            <p className="text-muted-foreground">Carregando ferramentas...</p>
-          </div>
-        </div>
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {[1, 2, 3].map(i => (
-            <Card key={i} className="animate-pulse">
-              <CardHeader>
-                <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-                <div className="h-3 bg-gray-200 rounded w-1/2"></div>
-              </CardHeader>
-              <CardContent>
-                <div className="h-3 bg-gray-200 rounded w-full mb-2"></div>
-                <div className="h-3 bg-gray-200 rounded w-2/3"></div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+      <div className="text-center py-8">
+        <p className="text-muted-foreground">Carregando ferramentas...</p>
+      </div>
+    );
+  }
+
+  if (tools.length === 0) {
+    return (
+      <div className="text-center py-12 space-y-6">
+        <p className="text-muted-foreground">Nenhuma ferramenta encontrada.</p>
+        <Link to="/admin/tools/new">
+          <Button className="bg-[#0ABAB5] hover:bg-[#0ABAB5]/90">
+            <Plus className="mr-2 h-4 w-4" />
+            Adicionar ferramenta
+          </Button>
+        </Link>
       </div>
     );
   }
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Ferramentas</h1>
-          <p className="text-muted-foreground">
-            Gerencie as ferramentas disponíveis na plataforma
-          </p>
-        </div>
-        <Button onClick={() => navigate('/admin/tools/new')}>
-          <Plus className="h-4 w-4 mr-2" />
-          Nova Ferramenta
-        </Button>
-      </div>
-
-      {/* Filters */}
-      <Card>
-        <CardContent className="pt-6">
-          <div className="flex flex-col sm:flex-row gap-4">
-            <div className="flex-1">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                <Input
-                  placeholder="Buscar ferramentas..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
-            </div>
-            <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-              <SelectTrigger className="w-[200px]">
-                <Filter className="h-4 w-4 mr-2" />
-                <SelectValue placeholder="Categoria" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todas as categorias</SelectItem>
-                {categories.map(category => (
-                  <SelectItem key={category} value={category}>
-                    {category}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-[150px]">
-                <SelectValue placeholder="Status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos</SelectItem>
-                <SelectItem value="active">Ativo</SelectItem>
-                <SelectItem value="inactive">Inativo</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Tools Grid */}
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {filteredTools.map(tool => (
-          <Card key={tool.id} className="relative group">
-            <CardHeader>
-              <div className="flex items-start justify-between">
-                <div className="flex items-center space-x-3">
-                  {tool.logo_url && (
-                    <img 
-                      src={tool.logo_url} 
-                      alt={tool.name}
-                      className="w-10 h-10 rounded object-cover"
-                    />
-                  )}
-                  <div>
-                    <CardTitle className="text-lg">{tool.name}</CardTitle>
-                    <Badge 
-                      variant={tool.is_active ? "default" : "secondary"}
-                      className="mt-1"
-                    >
-                      {tool.is_active ? 'Ativo' : 'Inativo'}
-                    </Badge>
+      <AdminToolsFilters
+        selectedCategory={selectedCategory}
+        onCategoryChange={setSelectedCategory}
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+      />
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {tools.map((tool) => (
+          <Card key={tool.id} className="flex flex-col h-full border overflow-hidden">
+            <CardHeader className="pb-3 pt-6 px-6 flex-row items-center gap-4">
+              <div className="h-12 w-12 rounded-lg bg-gray-100 border flex items-center justify-center overflow-hidden flex-shrink-0">
+                {tool.logo_url ? (
+                  <img 
+                    src={tool.logo_url} 
+                    alt={tool.name} 
+                    className="h-full w-full object-contain" 
+                  />
+                ) : (
+                  <div className="text-xl font-bold text-[#0ABAB5]">
+                    {tool.name.substring(0, 2).toUpperCase()}
                   </div>
-                </div>
-                <div className="flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={() => navigate(`/admin/tools/${tool.id}`)}
-                  >
-                    <Edit className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={() => handleDelete(tool.id)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+                )}
+              </div>
+              <div>
+                <h3 className="font-semibold text-lg line-clamp-1">{tool.name}</h3>
+                <div className="flex gap-2">
+                  <Badge variant="outline" className="bg-[#0ABAB5]/10 text-[#0ABAB5]">
+                    {tool.category}
+                  </Badge>
+                  {!tool.status && (
+                    <Badge variant="outline" className="bg-gray-100 text-muted-foreground">
+                      Inativo
+                    </Badge>
+                  )}
                 </div>
               </div>
             </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
+            <CardContent className="px-6 flex-1">
+              <p className="text-muted-foreground line-clamp-3 text-sm">
                 {tool.description}
               </p>
-              
-              <div className="space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Categoria:</span>
-                  <span className="font-medium">{tool.category}</span>
-                </div>
-                
-                {tool.has_member_benefit && (
-                  <Badge variant="outline" className="text-xs">
-                    Benefício para membros
-                  </Badge>
-                )}
-              </div>
-
-              <div className="flex justify-between items-center mt-4 pt-4 border-t">
-                {tool.url && (
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => window.open(tool.url, '_blank')}
-                  >
-                    <ExternalLink className="h-4 w-4 mr-2" />
-                    Ver Site
-                  </Button>
-                )}
-                
-                <Button
-                  size="sm"
-                  variant={tool.is_active ? "destructive" : "default"}
-                  onClick={() => handleToggleStatus(tool.id)}
-                >
-                  {tool.is_active ? 'Desativar' : 'Ativar'}
-                </Button>
-              </div>
             </CardContent>
+            <CardFooter className="px-6 pb-6 pt-2 flex justify-between">
+              <div className="flex gap-2">
+                <Link to={`/admin/tools/${tool.id}`}>
+                  <Button variant="outline" size="sm">
+                    <Edit className="h-4 w-4 mr-2" />
+                    Editar
+                  </Button>
+                </Link>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="destructive" size="sm">
+                      <Trash className="h-4 w-4 mr-2" />
+                      Excluir
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Tem certeza que deseja excluir a ferramenta "{tool.name}"? Esta ação não pode ser desfeita.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                      <AlertDialogAction onClick={() => handleDelete(tool.id)}>
+                        Excluir
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </div>
+              <a href={tool.official_url} target="_blank" rel="noopener noreferrer">
+                <Button size="sm" variant="ghost" className="text-[#0ABAB5]">
+                  <ExternalLink className="h-4 w-4" />
+                </Button>
+              </a>
+            </CardFooter>
           </Card>
         ))}
       </div>
-
-      {filteredTools.length === 0 && (
-        <Card>
-          <CardContent className="pt-6">
-            <div className="text-center py-12">
-              <p className="text-muted-foreground mb-4">
-                Nenhuma ferramenta encontrada com os filtros aplicados.
-              </p>
-              <Button onClick={() => navigate('/admin/tools/new')}>
-                <Plus className="h-4 w-4 mr-2" />
-                Adicionar Nova Ferramenta
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      )}
     </div>
   );
 };
-
-export default AdminToolList;

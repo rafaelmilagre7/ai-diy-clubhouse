@@ -31,8 +31,7 @@ export const RecursoDeleteDialog = ({
           <AlertDialogTitle>Tem certeza?</AlertDialogTitle>
           <AlertDialogDescription>
             Esta ação não pode ser desfeita. Isso excluirá permanentemente o material{" "}
-            {/* Corrigido: usar file_url como fallback já que name não existe */}
-            <span className="font-medium">{recurso?.file_url?.split('/').pop() || 'material'}</span> e o arquivo associado.
+            <span className="font-medium">{recurso?.name}</span> e o arquivo associado.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>

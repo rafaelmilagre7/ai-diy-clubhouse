@@ -1,5 +1,5 @@
 
-import React, { memo, useMemo } from 'react';
+import React from 'react';
 import { cn } from '@/lib/utils';
 import { CheckIcon } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -7,43 +7,14 @@ import { motion } from 'framer-motion';
 interface OnboardingProgressProps {
   currentStep: number;
   totalSteps: number;
-  memberType?: 'club' | 'formacao';
+  stepTitles: string[];
 }
 
-// Títulos das etapas baseados no memberType
-const getStepTitles = (memberType: 'club' | 'formacao' = 'club'): string[] => {
-  return [
-    'Informações Pessoais',
-    'Perfil Empresarial', 
-    'Maturidade em IA',
-    'Objetivos',
-    'Personalização',
-    'Finalização'
-  ];
-};
-
-const OnboardingProgress = memo<OnboardingProgressProps>(({ 
+export const OnboardingProgress = ({ 
   currentStep, 
   totalSteps, 
-  memberType = 'club'
-}) => {
-  // Gerar títulos baseado no memberType
-  const stepTitles = useMemo(() => getStepTitles(memberType), [memberType]);
-
-  // Memoizar cálculos de progresso
-  const progressPercentage = useMemo(() => {
-    return Math.round((currentStep / totalSteps) * 100);
-  }, [currentStep, totalSteps]);
-
-  const progressWidth = useMemo(() => {
-    return `${((currentStep - 1) / (totalSteps - 1)) * 100}%`;
-  }, [currentStep, totalSteps]);
-
-  // Memoizar título atual
-  const currentStepTitle = useMemo(() => {
-    return stepTitles[currentStep - 1] || '';
-  }, [stepTitles, currentStep]);
-
+  stepTitles 
+}: OnboardingProgressProps) => {
   return (
     <div className="w-full space-y-4">
       {/* Header */}
@@ -67,11 +38,11 @@ const OnboardingProgress = memo<OnboardingProgressProps>(({
       <div className="hidden lg:block">
         <div className="relative">
           {/* Linha de conexão */}
-          <div className="absolute top-4 left-0 right-0 h-0.5 bg-white/10 -z-10" />
+          <div className="absolute top-4 left-0 right-0 h-0.5 bg-white/10 -z-10"></div>
           <div 
             className="absolute top-4 left-0 h-0.5 bg-gradient-to-r from-viverblue to-viverblue-light transition-all duration-500 -z-10"
-            style={{ width: progressWidth }}
-          />
+            style={{ width: `${((currentStep - 1) / (totalSteps - 1)) * 100}%` }}
+          ></div>
           
           {/* Steps */}
           <div className="flex items-start justify-between">
@@ -81,7 +52,7 @@ const OnboardingProgress = memo<OnboardingProgressProps>(({
               const isCurrent = stepNumber === currentStep;
               
               return (
-                <div key={`step-${stepNumber}`} className="flex flex-col items-center max-w-[140px]">
+                <div key={stepNumber} className="flex flex-col items-center max-w-[140px]">
                   <motion.div
                     initial={{ scale: 0.8, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
@@ -136,7 +107,7 @@ const OnboardingProgress = memo<OnboardingProgressProps>(({
             </div>
             <div className="flex-1">
               <h3 className="text-white font-semibold text-sm">
-                {currentStepTitle}
+                {stepTitles[currentStep - 1]}
               </h3>
               <p className="text-slate-300 text-xs">
                 Etapa {currentStep} de {totalSteps}
@@ -146,11 +117,11 @@ const OnboardingProgress = memo<OnboardingProgressProps>(({
               <div className="w-16 bg-white/10 rounded-full h-2 overflow-hidden">
                 <div 
                   className="h-full bg-gradient-to-r from-viverblue to-viverblue-light transition-all duration-300"
-                  style={{ width: `${progressPercentage}%` }}
+                  style={{ width: `${(currentStep / totalSteps) * 100}%` }}
                 />
               </div>
               <span className="text-xs text-slate-300 mt-1 block">
-                {progressPercentage}%
+                {Math.round((currentStep / totalSteps) * 100)}%
               </span>
             </div>
           </div>
@@ -158,8 +129,4 @@ const OnboardingProgress = memo<OnboardingProgressProps>(({
       </div>
     </div>
   );
-});
-
-OnboardingProgress.displayName = 'OnboardingProgress';
-
-export { OnboardingProgress };
+};

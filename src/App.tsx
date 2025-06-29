@@ -1,21 +1,46 @@
 
-import { RouterProvider } from "react-router-dom";
-import { Toaster } from "sonner";
-import { AppRoutes } from "./routes/AppRoutes";
-import { ErrorBoundary } from "react-error-boundary";
-import ErrorFallback from "@/components/common/ErrorFallback";
+import React from 'react';
+import { BrowserRouter as Router } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
+import { Toaster } from 'sonner';
+import { AuthProvider } from '@/contexts/auth';
+import { LoggingProvider } from '@/contexts/logging';
+import { AppRoutes } from '@/routes';
+import { SEOWrapper } from '@/components/seo/SEOWrapper';
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000,
+      retry: 2
+    }
+  }
+});
 
 function App() {
   return (
-    <ErrorBoundary FallbackComponent={ErrorFallback}>
-      <RouterProvider router={AppRoutes} />
-      <Toaster 
-        position="top-right" 
-        expand={false}
-        richColors
-        closeButton
-      />
-    </ErrorBoundary>
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <LoggingProvider>
+          <Router>
+            <SEOWrapper>
+              <div className="App">
+                <AppRoutes />
+                <Toaster 
+                  position="top-right"
+                  theme="dark"
+                  richColors
+                  expand
+                  visibleToasts={3}
+                />
+                <ReactQueryDevtools initialIsOpen={false} />
+              </div>
+            </SEOWrapper>
+          </Router>
+        </LoggingProvider>
+      </AuthProvider>
+    </QueryClientProvider>
   );
 }
 

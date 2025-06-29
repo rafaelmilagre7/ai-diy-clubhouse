@@ -1,8 +1,7 @@
 
 import { useState, useCallback, createContext, useContext, ReactNode } from "react";
 import { supabase } from "@/lib/supabase";
-import { logger } from "@/utils/logger";
-import { sanitizeData } from "@/components/security/DataSanitizer";
+import { useToast } from "@/hooks/use-toast";
 
 interface LogData {
   [key: string]: any;
@@ -11,82 +10,109 @@ interface LogData {
 interface LoggingContextType {
   log: (action: string, data?: LogData) => void;
   logWarning: (action: string, data?: LogData) => void;
-  logError: (action: string, error: any, data?: LogData) => any;
+  logError: (action: string, error: any) => any;
   lastError: any;
 }
 
+// Create a context for logging functions
 const LoggingContext = createContext<LoggingContextType | undefined>(undefined);
 
+// Provider component
 export const LoggingProvider = ({ children }: { children: ReactNode }) => {
+  const { toast } = useToast();
   const [lastError, setLastError] = useState<any>(null);
   
-  const storeLog = useCallback(async (action: string, data: LogData, level: string, user_id: string) => {
+  // Funções de logging independentes de auth
+  const log = useCallback((action: string, data: LogData = {}) => {
+    console.log(`[Log] ${action}:`, data);
+    
+    // Armazenar logs críticos apenas se tivermos um user_id
+    if (data.critical && data.user_id) {
+      storeLog(action, data, "info", data.user_id);
+    }
+  }, []);
+  
+  const logWarning = useCallback((action: string, data: LogData = {}) => {
+    console.warn(`[Warning] ${action}:`, data);
+    
+    // Armazenar avisos apenas se tivermos um user_id
+    if (data.user_id) {
+      storeLog(action, data, "warning", data.user_id);
+    }
+    
+    // Mostrar toast apenas para avisos críticos
+    if (data.critical === true) {
+      toast({
+        title: "Aviso",
+        description: action,
+        variant: "default",
+      });
+    }
+  }, [toast]);
+  
+  const logError = useCallback((action: string, error: any) => {
+    console.error(`[Error] ${action}:`, error);
+    setLastError(error);
+    
+    // Verificar se o erro deve mostrar um toast (padrão é mostrar)
+    const shouldShowToast = error?.showToast !== false;
+    
+    // Show toast notification for errors that should be shown
+    if (shouldShowToast) {
+      toast({
+        title: "Erro ao carregar conteúdo",
+        description: "Ocorreu um erro ao carregar o conteúdo. Alguns dados podem não estar disponíveis.",
+        variant: "destructive",
+      });
+    }
+    
+    // Armazenar erros apenas se tivermos um user_id
+    if (error?.user_id) {
+      storeLog(action, { 
+        error: error?.message || String(error),
+        stack: error?.stack,
+        showToast: shouldShowToast
+      }, "error", error.user_id);
+    }
+    
+    return error;
+  }, [toast]);
+  
+  const storeLog = async (action: string, data: LogData, level: string, user_id: string) => {
     try {
+      // Verificar se temos o user_id antes de armazenar
       if (!user_id) return;
       
-      const sanitizedPayload = sanitizeData({ ...data, user_id });
-      
-      logger.info(`Storing log to database`, { action, level, userId: user_id });
-
       const logEntry = {
-        ...sanitizedPayload,
+        user_id,
         action,
+        data,
         level,
+        solution_id: data.solution_id,
+        module_id: data.module_id,
         created_at: new Date().toISOString(),
       };
       
+      // Store in analytics table
       const { error } = await supabase
         .from("analytics")
         .insert({
           user_id,
           event_type: `log_${level}`,
-          solution_id: data.solution_id,
+          solution_id: data.solution_id, 
           module_id: data.module_id,
           event_data: logEntry
-        } as any);
+        });
         
       if (error) {
-        logger.error("Failed to store log in Supabase", error, { userId: user_id });
+        console.error("Failed to store log:", error);
       }
     } catch (e) {
-      logger.error("Error in logging system (storeLog)", e, { userId: user_id });
+      console.error("Error in logging system:", e);
     }
-  }, []);
+  };
   
-  const log = useCallback((action: string, data: LogData = {}) => {
-    logger.info(action, data);
-    
-    if (data.critical && data.user_id) {
-      storeLog(action, data, "info", data.user_id);
-    }
-  }, [storeLog]);
-  
-  const logWarning = useCallback((action: string, data: LogData = {}) => {
-    logger.warn(action, data);
-    
-    if (data.user_id) {
-      storeLog(action, data, "warning", data.user_id);
-    }
-  }, [storeLog]);
-  
-  const logError = useCallback((action: string, error: any, data: LogData = {}) => {
-    logger.error(action, error, data);
-    setLastError(error);
-    
-    const userId = data.user_id || error?.user_id;
-    if (userId) {
-      const errorData = { 
-        ...data,
-        error: error?.message || String(error),
-        stack: error?.stack,
-      };
-      storeLog(action, errorData, "error", userId);
-    }
-    
-    return error;
-  }, [storeLog]);
-  
-  const contextValue: LoggingContextType = {
+  const contextValue = {
     log,
     logWarning,
     logError,
@@ -100,6 +126,7 @@ export const LoggingProvider = ({ children }: { children: ReactNode }) => {
   );
 };
 
+// Hook to use the logging context
 export const useLogging = (): LoggingContextType => {
   const context = useContext(LoggingContext);
   if (context === undefined) {

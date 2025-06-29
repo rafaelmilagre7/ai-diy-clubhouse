@@ -39,8 +39,8 @@ export const useVideoProgress = ({
         const { data, error } = await supabase
           .from("learning_progress")
           .select("video_progress, last_position_seconds")
-          .eq("lesson_id", lessonId as any)
-          .eq("user_id", userData.user.id as any)
+          .eq("lesson_id", lessonId)
+          .eq("user_id", userData.user.id)
           .single();
           
         if (error && error.code !== 'PGRST116') { // Não encontrado
@@ -48,9 +48,9 @@ export const useVideoProgress = ({
         }
         
         if (data) {
-          const videoProgress = (data as any).video_progress || {};
+          const videoProgress = data.video_progress || {};
           const videoCurrentProgress = videoProgress[videoId] || 0;
-          const lastPosition = videoCurrentProgress > 0 ? (data as any).last_position_seconds : 0;
+          const lastPosition = videoCurrentProgress > 0 ? data.last_position_seconds : 0;
           
           setProgress(videoCurrentProgress);
           setLastSavedTime(lastPosition);
@@ -115,8 +115,8 @@ export const useVideoProgress = ({
           const { data: existingProgress, error: checkError } = await supabase
             .from("learning_progress")
             .select("id, video_progress, progress_percentage, completed_at")
-            .eq("lesson_id", lessonId as any)
-            .eq("user_id", userData.user.id as any)
+            .eq("lesson_id", lessonId)
+            .eq("user_id", userData.user.id)
             .maybeSingle();
             
           if (checkError && checkError.code !== 'PGRST116') {
@@ -124,12 +124,12 @@ export const useVideoProgress = ({
             return;
           }
           
-          const videoProgressObj = (existingProgress as any)?.video_progress || {};
+          const videoProgressObj = existingProgress?.video_progress || {};
           videoProgressObj[videoId] = currentProgress;
           
           // Calcular progresso geral da lição
           // Se o vídeo atual atingiu 95%, considerar lição como 100% concluída
-          let lessonProgress = (existingProgress as any)?.progress_percentage || 0;
+          let lessonProgress = existingProgress?.progress_percentage || 0;
           if (currentProgress >= 95) {
             lessonProgress = 100;
           } else if (lessonProgress < 75) {
@@ -138,7 +138,7 @@ export const useVideoProgress = ({
           }
           
           // Definir data de conclusão se progresso chegou a 100%
-          const completedAt = lessonProgress >= 100 ? new Date().toISOString() : (existingProgress as any)?.completed_at || null;
+          const completedAt = lessonProgress >= 100 ? new Date().toISOString() : existingProgress?.completed_at || null;
           
           if (existingProgress) {
             // Atualizar registro existente
@@ -150,8 +150,8 @@ export const useVideoProgress = ({
                 last_position_seconds: currentTime,
                 completed_at: completedAt,
                 updated_at: new Date().toISOString()
-              } as any)
-              .eq("id", (existingProgress as any).id as any);
+              })
+              .eq("id", existingProgress.id);
           } else {
             // Criar novo registro de progresso
             await supabase
@@ -163,7 +163,7 @@ export const useVideoProgress = ({
                 progress_percentage: lessonProgress,
                 last_position_seconds: currentTime,
                 completed_at: completedAt,
-              } as any);
+              });
           }
           
           // Atualizar último progresso salvo

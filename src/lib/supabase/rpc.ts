@@ -1,6 +1,5 @@
 
 import { supabase } from './client';
-import { UserProfile } from './types';
 
 /**
  * Cria uma política pública para um bucket de armazenamento
@@ -54,7 +53,7 @@ export async function deleteForumTopic(topicId: string): Promise<{ success: bool
     const { error: postsError } = await supabase
       .from('forum_posts')
       .delete()
-      .eq('topic_id', topicId as any);
+      .eq('topic_id', topicId);
       
     if (postsError) {
       console.error("Erro ao excluir posts do tópico:", postsError);
@@ -65,7 +64,7 @@ export async function deleteForumTopic(topicId: string): Promise<{ success: bool
     const { error: topicError } = await supabase
       .from('forum_topics')
       .delete()
-      .eq('id', topicId as any);
+      .eq('id', topicId);
       
     if (topicError) {
       console.error("Erro ao excluir tópico:", topicError);
@@ -88,40 +87,40 @@ export async function deleteForumPost(postId: string): Promise<{ success: boolea
     const { data: postData } = await supabase
       .from('forum_posts')
       .select('topic_id, is_solution')
-      .eq('id', postId as any)
+      .eq('id', postId)
       .single();
       
     // Excluir o post
     const { error } = await supabase
       .from('forum_posts')
       .delete()
-      .eq('id', postId as any);
+      .eq('id', postId);
       
     if (error) {
       return { success: false, error: error.message };
     }
     
     // Se o post era uma solução, atualizar o tópico
-    if ((postData as any)?.is_solution) {
+    if (postData?.is_solution) {
       await supabase
         .from('forum_topics')
-        .update({ is_solved: false } as any)
-        .eq('id', (postData as any).topic_id as any);
+        .update({ is_solved: false })
+        .eq('id', postData.topic_id);
     }
     
     // Decrementar contagem de respostas no tópico
-    if ((postData as any)?.topic_id) {
+    if (postData?.topic_id) {
       const { data } = await supabase
         .from('forum_topics')
         .select('reply_count')
-        .eq('id', (postData as any).topic_id as any)
+        .eq('id', postData.topic_id)
         .single();
         
-      if ((data as any) && (data as any).reply_count > 0) {
+      if (data && data.reply_count > 0) {
         await supabase
           .from('forum_topics')
-          .update({ reply_count: (data as any).reply_count - 1 } as any)
-          .eq('id', (postData as any).topic_id as any);
+          .update({ reply_count: data.reply_count - 1 })
+          .eq('id', postData.topic_id);
       }
     }
     
@@ -130,23 +129,4 @@ export async function deleteForumPost(postId: string): Promise<{ success: boolea
     console.error("Erro ao excluir post:", error);
     return { success: false, error: error.message };
   }
-}
-
-/**
- * Obtém o nome do papel do usuário a partir do perfil
- */
-export function getUserRoleName(profile: UserProfile): string {
-  if (!profile) return '';
-  
-  // Verificar se existe user_roles e tem name
-  if (profile.user_roles && typeof profile.user_roles === 'object' && 'name' in profile.user_roles) {
-    return (profile.user_roles as any).name || '';
-  }
-  
-  // Fallback para role direto no profile (se existir)
-  if (profile.role) {
-    return profile.role;
-  }
-  
-  return '';
 }

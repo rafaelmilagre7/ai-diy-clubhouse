@@ -1,48 +1,83 @@
 
 import { useState } from 'react';
+import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 
-export interface AdminSuggestion {
-  id: string;
-  title: string;
-  description: string;
-  status: string;
-  created_at: string;
-  upvotes: number;
-  downvotes: number;
-}
+const getStatusDisplayName = (status: string): string => {
+  switch (status) {
+    case 'new':
+      return 'Nova';
+    case 'in_development':
+      return 'Em Desenvolvimento';
+    case 'implemented':
+      return 'Implementada';
+    case 'rejected':
+      return 'Recusada';
+    default:
+      return status;
+  }
+};
 
 export const useAdminSuggestions = () => {
-  const [suggestions, setSuggestions] = useState<AdminSuggestion[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  const updateSuggestionStatus = async (id: string, status: string) => {
-    console.log('Simulando atualização de status da sugestão:', { id, status });
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
-    setSuggestions(prev => 
-      prev.map(suggestion => 
-        suggestion.id === id ? { ...suggestion, status } : suggestion
-      )
-    );
-    
-    toast.success('Status da sugestão atualizado com sucesso!');
+  const removeSuggestion = async (suggestionId: string): Promise<boolean> => {
+    try {
+      setLoading(true);
+      console.log('Removendo sugestão:', suggestionId);
+      
+      const { error } = await supabase
+        .from('suggestions')
+        .delete()
+        .eq('id', suggestionId);
+      
+      if (error) {
+        console.error('Erro ao remover sugestão:', error);
+        toast.error('Erro ao remover sugestão: ' + error.message);
+        return false;
+      }
+      
+      return true;
+    } catch (error: any) {
+      console.error('Erro não esperado ao remover sugestão:', error);
+      toast.error('Erro ao remover sugestão: ' + error.message);
+      return false;
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const deleteSuggestion = async (id: string) => {
-    console.log('Simulando exclusão de sugestão:', id);
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
-    setSuggestions(prev => prev.filter(suggestion => suggestion.id !== id));
-    toast.success('Sugestão excluída com sucesso!');
+  const updateSuggestionStatus = async (suggestionId: string, status: string): Promise<boolean> => {
+    try {
+      setLoading(true);
+      console.log('Atualizando status da sugestão:', suggestionId, status);
+      
+      const { error } = await supabase
+        .from('suggestions')
+        .update({ status })
+        .eq('id', suggestionId);
+      
+      if (error) {
+        console.error('Erro ao atualizar status da sugestão:', error);
+        toast.error('Erro ao atualizar status da sugestão: ' + error.message);
+        return false;
+      }
+      
+      const statusDisplayName = getStatusDisplayName(status);
+      toast.success(`Sugestão marcada como "${statusDisplayName}" com sucesso`);
+      return true;
+    } catch (error: any) {
+      console.error('Erro não esperado ao atualizar status da sugestão:', error);
+      toast.error('Erro ao atualizar status da sugestão: ' + error.message);
+      return false;
+    } finally {
+      setLoading(false);
+    }
   };
 
   return {
-    suggestions,
-    isLoading,
-    loading: isLoading, // Add loading alias for compatibility
-    updateSuggestionStatus,
-    deleteSuggestion,
-    removeSuggestion: deleteSuggestion // Add removeSuggestion alias for compatibility
+    loading,
+    removeSuggestion,
+    updateSuggestionStatus
   };
 };

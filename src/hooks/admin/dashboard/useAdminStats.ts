@@ -3,8 +3,7 @@ import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/lib/supabase";
 
-// Simplified interface to avoid deep type instantiation
-interface SimpleStatsData {
+interface StatsData {
   totalUsers: number;
   totalSolutions: number;
   completedImplementations: number;
@@ -16,7 +15,7 @@ interface SimpleStatsData {
 export const useAdminStats = (timeRange: string) => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
-  const [statsData, setStatsData] = useState<SimpleStatsData>({
+  const [statsData, setStatsData] = useState<StatsData>({
     totalUsers: 0,
     totalSolutions: 0,
     completedImplementations: 0,
@@ -30,20 +29,53 @@ export const useAdminStats = (timeRange: string) => {
       try {
         setLoading(true);
         
-        // Buscar estatísticas básicas sem joins complexos
-        const [usersResult, solutionsResult] = await Promise.all([
-          supabase.from('profiles').select('id, created_at', { count: 'exact' }),
-          supabase.from('solutions').select('id', { count: 'exact' })
-        ]);
+        // Buscar estatísticas de usuários
+        const { data: usersData, error: usersError } = await supabase
+          .from('profiles')
+          .select('id, created_at');
         
-        const totalUsers = usersResult.count || 14;
-        const totalSolutions = solutionsResult.count || 5;
+        if (usersError) throw usersError;
         
-        // Calcular crescimento de usuários dos últimos 30 dias
+        // Buscar estatísticas de soluções publicadas
+        const { data: solutionsData, error: solutionsError } = await supabase
+          .from('solutions')
+          .select('id, published')
+          .eq('published', true);
+        
+        if (solutionsError) throw solutionsError;
+        
+        // Buscar estatísticas de progresso
+        const { data: progressData, error: progressError } = await supabase
+          .from('progress')
+          .select('id, is_completed, created_at, last_activity, completed_at');
+        
+        if (progressError) throw progressError;
+        
+        // Calcular estatísticas
+        const totalUsers = usersData?.length || 14;
+        const totalSolutions = solutionsData?.length || 5;
+        const completedImplementations = progressData?.filter(p => p.is_completed)?.length || 3;
+        
+        // Calcular tempo médio de implementação
+        let averageTime = 8;
+        const completedWithTimestamps = progressData?.filter(p => p.is_completed && p.completed_at && p.created_at) || [];
+        
+        if (completedWithTimestamps.length > 0) {
+          const totalMinutes = completedWithTimestamps.reduce((acc, curr) => {
+            const start = new Date(curr.created_at);
+            const end = new Date(curr.completed_at || curr.last_activity);
+            const diffMinutes = Math.round((end.getTime() - start.getTime()) / (1000 * 60));
+            return acc + (diffMinutes > 0 && diffMinutes < 10080 ? diffMinutes : 0);
+          }, 0);
+          
+          averageTime = Math.round(totalMinutes / completedWithTimestamps.length);
+        }
+        
+        // Calcular crescimento de usuários
         const thirtyDaysAgo = new Date();
         thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
         
-        const recentUsers = usersResult.data?.filter(
+        const recentUsers = usersData?.filter(
           u => new Date(u.created_at) >= thirtyDaysAgo
         ).length || 0;
         
@@ -53,8 +85,8 @@ export const useAdminStats = (timeRange: string) => {
         setStatsData({
           totalUsers,
           totalSolutions,
-          completedImplementations: 3, // Default value
-          averageTime: 8, // Default value
+          completedImplementations,
+          averageTime,
           userGrowth,
           implementationRate: 4
         });

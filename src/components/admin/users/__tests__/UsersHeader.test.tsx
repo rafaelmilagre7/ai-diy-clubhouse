@@ -1,25 +1,31 @@
 
-import { render, screen } from '@testing-library/react';
+import { render } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import '@testing-library/jest-dom';
 import { UsersHeader } from '../UsersHeader';
 
 describe('UsersHeader', () => {
-  const defaultProps = {
+  const mockProps = {
     searchQuery: '',
-    onSearch: jest.fn(),
+    onSearchChange: jest.fn(),
     onRefresh: jest.fn(),
     isRefreshing: false,
-    canManageUsers: true,
   };
 
   it('renders correctly', () => {
-    render(<UsersHeader {...defaultProps} />);
+    const { getByText, getByPlaceholderText } = render(<UsersHeader {...mockProps} />);
     
-    expect(screen.getByText('Gerenciamento de Usuários')).toBeInTheDocument();
+    expect(getByText('Gerenciamento de Usuários')).toBeInTheDocument();
+    expect(getByPlaceholderText('Buscar por nome, email ou empresa...')).toBeInTheDocument();
   });
 
-  it('renders with search functionality', () => {
-    render(<UsersHeader {...defaultProps} searchQuery="test" />);
+  it('calls onSearchChange when input changes', async () => {
+    const user = userEvent.setup();
+    const { getByPlaceholderText } = render(<UsersHeader {...mockProps} />);
     
-    expect(screen.getByDisplayValue('test')).toBeInTheDocument();
+    const input = getByPlaceholderText('Buscar por nome, email ou empresa...');
+    await user.type(input, 'teste');
+    
+    expect(mockProps.onSearchChange).toHaveBeenCalled();
   });
 });

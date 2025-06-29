@@ -1,36 +1,51 @@
 
-import { useMutation } from '@tanstack/react-query';
+import { useState } from 'react';
+import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/auth';
-import { toast } from 'sonner';
+import { useToast } from '@/hooks/use-toast';
 
 export const useBenefitClick = () => {
+  const [isProcessing, setIsProcessing] = useState(false);
   const { user } = useAuth();
+  const { toast } = useToast();
 
-  const trackBenefitClick = useMutation({
-    mutationFn: async ({ toolId, benefitLink }: { toolId: string; benefitLink: string }) => {
-      if (!user) {
-        throw new Error('User must be logged in to track benefit clicks');
-      }
-
-      console.log('Simulando tracking de clique no benefício:', { toolId, benefitLink, userId: user.id });
-      
-      // Mock implementation since benefit_clicks table doesn't exist
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      return { success: true, toolId, benefitLink };
-    },
-    onSuccess: () => {
-      console.log('Clique no benefício registrado com sucesso');
-    },
-    onError: (error) => {
-      console.error('Erro ao registrar clique no benefício:', error);
-      toast.error('Erro ao registrar clique');
+  const registerBenefitClick = async (toolId: string, benefitLink: string) => {
+    if (!user) {
+      // Se não estiver autenticado, apenas abre o link
+      window.open(benefitLink, '_blank');
+      return;
     }
-  });
 
-  return {
-    trackBenefitClick: trackBenefitClick.mutateAsync,
-    registerBenefitClick: trackBenefitClick.mutateAsync,
-    isProcessing: trackBenefitClick.isPending
+    setIsProcessing(true);
+
+    try {
+      // Registrar o clique na tabela benefit_clicks
+      await supabase.from('benefit_clicks').insert({
+        tool_id: toolId,
+        user_id: user.id,
+        benefit_link: benefitLink
+      });
+
+      // Atualizar o contador de cliques na tabela tools
+      await supabase.rpc('increment_benefit_clicks', { tool_id: toolId });
+
+      // Abrir o link em uma nova aba
+      window.open(benefitLink, '_blank');
+    } catch (error) {
+      console.error('Erro ao registrar clique no benefício:', error);
+      
+      // Mesmo com erro, abre o link para não prejudicar a experiência do usuário
+      window.open(benefitLink, '_blank');
+      
+      toast({
+        variant: 'destructive',
+        title: 'Erro ao registrar acesso',
+        description: 'Ocorreu um erro ao registrar o seu acesso à oferta, mas o link foi aberto.',
+      });
+    } finally {
+      setIsProcessing(false);
+    }
   };
+
+  return { registerBenefitClick, isProcessing };
 };
