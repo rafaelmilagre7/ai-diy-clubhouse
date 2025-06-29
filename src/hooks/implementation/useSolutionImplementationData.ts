@@ -17,7 +17,7 @@ interface SolutionModule {
   updated_at: string;
 }
 
-export const useImplementationData = () => {
+export const useSolutionImplementationData = () => {
   const { id } = useParams<{ id: string }>();
   const { user, profile } = useAuth();
   const { toast } = useToast();
@@ -84,7 +84,7 @@ export const useImplementationData = () => {
           updated_at: solutionData.updated_at
         });
 
-        // Buscar ferramentas da solução
+        // Módulo de ferramentas (se existirem)
         const { data: toolsData } = await supabase
           .from("solution_tools")
           .select("*")
@@ -106,7 +106,7 @@ export const useImplementationData = () => {
           });
         }
 
-        // Buscar recursos da solução
+        // Módulo de recursos (se existirem)
         const { data: resourcesData } = await supabase
           .from("solution_resources")
           .select("*")
@@ -145,26 +145,6 @@ export const useImplementationData = () => {
         });
 
         setModules(virtualModules);
-        
-        // Se não há módulos virtuais, criar um módulo padrão
-        if (virtualModules.length === 0) {
-          const placeholderModule = {
-            id: `placeholder-${id}`,
-            solution_id: id,
-            title: solutionData.title || "Implementação",
-            description: solutionData.description,
-            type: "implementation",
-            module_order: 0,
-            content: {
-              implementation_steps: solutionData.implementation_steps || [],
-              checklist_items: solutionData.checklist_items || []
-            },
-            created_at: solutionData.created_at,
-            updated_at: solutionData.updated_at
-          };
-          
-          setModules([placeholderModule]);
-        }
         
         // Fetch user progress
         if (user) {

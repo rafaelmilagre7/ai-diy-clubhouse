@@ -19,7 +19,7 @@ interface SolutionModule {
   updated_at: string;
 }
 
-export const useModuleImplementation = () => {
+export const useSolutionModuleImplementation = () => {
   const { id, moduleIndex, moduleIdx } = useParams<{ 
     id: string; 
     moduleIndex: string;
@@ -160,38 +160,18 @@ export const useModuleImplementation = () => {
         });
 
         setModules(virtualModules);
+        log("Módulos virtuais criados:", { count: virtualModules.length });
         
-        // Se não criou módulos, criar um padrão
-        if (virtualModules.length === 0) {
-          const placeholderModule = {
-            id: `placeholder-${id}`,
-            solution_id: id,
-            title: solutionData.title,
-            description: "Implementação da solução",
-            type: "implementation",
-            module_order: 0,
-            content: {
-              implementation_steps: solutionData.implementation_steps || [],
-              checklist_items: solutionData.checklist_items || []
-            },
-            created_at: solutionData.created_at,
-            updated_at: solutionData.updated_at
-          };
-          
-          setModules([placeholderModule]);
-          setCurrentModule(placeholderModule);
+        // Set current module based on moduleIdx
+        if (moduleIdxNumber < virtualModules.length) {
+          setCurrentModule(virtualModules[moduleIdxNumber]);
+          log("Módulo atual definido:", { moduleId: virtualModules[moduleIdxNumber].id });
         } else {
-          // Set current module based on moduleIdx
-          if (moduleIdxNumber < virtualModules.length) {
-            setCurrentModule(virtualModules[moduleIdxNumber]);
-            log("Módulo atual definido:", { moduleId: virtualModules[moduleIdxNumber].id });
-          } else {
-            setCurrentModule(virtualModules[0]);
-            log("Índice de módulo fora dos limites, usando o primeiro módulo", { 
-              requestedIdx: moduleIdxNumber, 
-              maxIdx: virtualModules.length - 1 
-            });
-          }
+          setCurrentModule(virtualModules[0]);
+          log("Índice de módulo fora dos limites, usando o primeiro módulo", { 
+            requestedIdx: moduleIdxNumber, 
+            maxIdx: virtualModules.length - 1 
+          });
         }
         
         // Fetch progress for logged in user
@@ -261,7 +241,7 @@ export const useModuleImplementation = () => {
           }
         }
       } catch (error) {
-        logError("Erro no useModuleImplementation:", error);
+        logError("Erro no useSolutionModuleImplementation:", error);
         toast({
           title: "Erro",
           description: "Ocorreu um erro ao carregar os dados de implementação.",
