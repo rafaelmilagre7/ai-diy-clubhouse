@@ -1,10 +1,11 @@
 
 import { useMemo } from "react";
-import { LearningLesson, LearningModule, LearningProgress } from "@/lib/supabase/types";
+import { LearningModule, LearningProgress } from "@/lib/supabase/types";
+import { LearningLessonWithRelations } from "@/lib/supabase/types/extended";
 
 interface CourseStatsProps {
   modules?: LearningModule[];
-  allLessons?: LearningLesson[];
+  allLessons?: LearningLessonWithRelations[];
   userProgress?: LearningProgress[];
 }
 

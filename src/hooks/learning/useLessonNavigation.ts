@@ -1,17 +1,17 @@
 
 import { useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { LearningLesson } from "@/lib/supabase";
+import { LearningLessonWithRelations } from "@/lib/supabase/types/extended";
 
 interface UseLessonNavigationProps {
   courseId?: string;
   currentLessonId?: string;
-  lessons?: LearningLesson[]; // Todas as aulas do curso
+  lessons?: LearningLessonWithRelations[]; // Todas as aulas do curso
 }
 
 interface AdjacentLessons {
-  prev: LearningLesson | null;
-  next: LearningLesson | null;
+  prev: LearningLessonWithRelations | null;
+  next: LearningLessonWithRelations | null;
 }
 
 export function useLessonNavigation({ 

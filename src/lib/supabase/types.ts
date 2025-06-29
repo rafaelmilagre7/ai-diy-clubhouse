@@ -1,13 +1,32 @@
-
 import { Database } from './types/database.types';
 
 // Tipos de tabelas expandidos com dados relacionais
 export type LearningLesson = Database['public']['Tables']['learning_lessons']['Row'] & {
   ai_assistant_id?: string; // Novo campo adicionado
+  // Campos relacionais opcionais para compatibilidade
+  module?: {
+    id: string;
+    title: string;
+    description?: string;
+    course_id: string;
+    order_index: number;
+    published: boolean;
+    created_at: string;
+    updated_at: string;
+    cover_image_url?: string;
+  };
+  videos?: any[];
+  resources?: any[];
 };
+
 export type LearningLessonVideo = Database['public']['Tables']['learning_lesson_videos']['Row'];
 export type LearningModule = Database['public']['Tables']['learning_modules']['Row'];
-export type LearningCourse = Database['public']['Tables']['learning_courses']['Row'];
+export type LearningCourse = Database['public']['Tables']['learning_courses']['Row'] & {
+  // Campos calculados opcionais
+  module_count?: number;
+  lesson_count?: number;
+  is_restricted?: boolean;
+};
 export type LearningProgress = Database['public']['Tables']['learning_progress']['Row'];
 export type LearningResource = Database['public']['Tables']['learning_resources']['Row'];
 export type LearningLessonTool = Database['public']['Tables']['learning_lesson_tools']['Row'];
@@ -21,15 +40,14 @@ export interface LearningLessonWithRelations extends LearningLesson {
 }
 
 export interface LearningModuleWithCourse extends LearningModule {
-  course_id?: string;
   learning_courses?: LearningCourse;
   course?: LearningCourse;
 }
 
 export interface LearningCourseWithStats extends LearningCourse {
-  module_count?: number;
-  lesson_count?: number;
-  is_restricted?: boolean;
+  module_count: number;
+  lesson_count: number;
+  is_restricted: boolean;
 }
 
 // Outros tipos existentes

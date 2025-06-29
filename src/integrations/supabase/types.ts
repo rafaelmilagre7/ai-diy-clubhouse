@@ -5383,9 +5383,50 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      get_courses_with_stats: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          id: string
+          title: string
+          description: string
+          cover_image_url: string
+          slug: string
+          published: boolean
+          created_at: string
+          updated_at: string
+          order_index: number
+          created_by: string
+          module_count: number
+          lesson_count: number
+          is_restricted: boolean
+        }[]
+      }
       get_current_user_role: {
         Args: Record<PropertyKey, never>
         Returns: string
+      }
+      get_lessons_with_relations: {
+        Args: { p_course_id?: string }
+        Returns: {
+          id: string
+          title: string
+          description: string
+          cover_image_url: string
+          module_id: string
+          content: Json
+          order_index: number
+          ai_assistant_enabled: boolean
+          ai_assistant_prompt: string
+          ai_assistant_id: string
+          published: boolean
+          difficulty_level: string
+          created_at: string
+          updated_at: string
+          estimated_time_minutes: number
+          module: Json
+          videos: Json
+          resources: Json
+        }[]
       }
       get_user_profile_safe: {
         Args: { p_user_id?: string }
