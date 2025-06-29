@@ -14,6 +14,7 @@ export interface LearningLessonWithRelations extends LearningLesson {
 
 // Tipo estendido para módulos com dados do curso
 export interface LearningModuleWithCourse extends LearningModule {
+  description?: string; // Tornar opcional para compatibilidade
   learning_courses?: LearningCourse;
   course?: LearningCourse;
 }

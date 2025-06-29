@@ -1,3 +1,4 @@
+
 import { Database } from './types/database.types';
 
 // Tipos de tabelas expandidos com dados relacionais
@@ -7,7 +8,7 @@ export type LearningLesson = Database['public']['Tables']['learning_lessons']['R
   module?: {
     id: string;
     title: string;
-    description?: string;
+    description?: string; // Opcional para compatibilidade
     course_id: string;
     order_index: number;
     published: boolean;
@@ -40,6 +41,7 @@ export interface LearningLessonWithRelations extends LearningLesson {
 }
 
 export interface LearningModuleWithCourse extends LearningModule {
+  description?: string; // Garantir que é opcional
   learning_courses?: LearningCourse;
   course?: LearningCourse;
 }

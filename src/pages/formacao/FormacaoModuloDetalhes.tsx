@@ -1,9 +1,9 @@
-
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/auth";
 import { supabase } from "@/lib/supabase";
 import { LearningModule, LearningLesson } from "@/lib/supabase";
+import { convertToLearningLessonsWithRelations } from "@/lib/supabase/utils/typeConverters";
 import { toast } from "sonner";
 import { FormacaoAulasHeader } from "@/components/formacao/aulas/FormacaoAulasHeader";
 import { AulasList } from "@/components/formacao/aulas/AulasList";
@@ -156,7 +156,7 @@ const FormacaoModuloDetalhes = () => {
       </FormacaoAulasHeader>
       
       <AulasList 
-        aulas={aulas} 
+        aulas={convertToLearningLessonsWithRelations(aulas)}
         loading={loadingAulas} 
         onEdit={handleEditarAula}
         onDelete={handleExcluirAula}

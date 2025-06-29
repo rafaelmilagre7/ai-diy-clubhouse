@@ -1,9 +1,9 @@
-
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import { sortLessonsByNumber } from "@/components/learning/member/course-modules/CourseModulesHelpers";
+import { convertToLearningLessonsWithRelations } from "@/lib/supabase/utils/typeConverters";
 import { useNavigate } from "react-router-dom";
 import { useCourseAccess } from "./useCourseAccess";
 import { useAuth } from "@/contexts/auth";
@@ -144,7 +144,8 @@ export function useCourseDetails(courseId?: string) {
       console.log(`${sortedLessons.length} aulas publicadas carregadas para o curso ${courseId}:`,
         sortedLessons.map(l => ({ id: l.id, title: l.title, module_id: l.module_id })));
       
-      return sortedLessons;
+      // Converter para LearningLessonWithRelations
+      return convertToLearningLessonsWithRelations(sortedLessons);
     },
     enabled: !!modules?.length && (hasAccess !== false || isAccessError) && !accessDenied
   });

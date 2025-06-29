@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/auth";
 import { supabase } from "@/lib/supabase";
 import { LearningModule, LearningLesson } from "@/lib/supabase";
+import { convertToLearningLessonsWithRelations } from "@/lib/supabase/utils/typeConverters";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Loader2 } from "lucide-react";
@@ -190,7 +191,7 @@ const ModuloDetalhes = () => {
       </div>
       
       <AulasList 
-        aulas={aulas} 
+        aulas={convertToLearningLessonsWithRelations(aulas)}
         loading={loadingAulas} 
         onEdit={handleEditarAula}
         onDelete={handleExcluirAula}
