@@ -4,7 +4,6 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/auth';
 import { toast } from 'sonner';
-import jsPDF from 'jspdf';
 
 interface SolutionCertificate {
   id: string;
@@ -106,7 +105,7 @@ export const useSolutionCertificates = (solutionId?: string) => {
     }
   });
 
-  // Download do certificado
+  // Download direto do certificado (se já estiver cacheado)
   const downloadCertificate = async (certificateId: string) => {
     try {
       const certificate = certificates.find(c => c.id === certificateId);
@@ -115,40 +114,20 @@ export const useSolutionCertificates = (solutionId?: string) => {
         return;
       }
 
-      // Gerar PDF básico do certificado
-      const pdf = new jsPDF({
-        orientation: 'landscape',
-        unit: 'mm',
-        format: 'a4'
-      });
+      // Se já tem URL cacheada, fazer download direto
+      if (certificate.certificate_url && certificate.certificate_filename) {
+        const link = document.createElement('a');
+        link.href = certificate.certificate_url;
+        link.download = certificate.certificate_filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        toast.success('Download iniciado!');
+        return;
+      }
 
-      pdf.setFontSize(24);
-      pdf.text('CERTIFICADO DE IMPLEMENTAÇÃO', 148, 50, { align: 'center' });
-      
-      pdf.setFontSize(16);
-      pdf.text('Certificamos que', 148, 80, { align: 'center' });
-      
-      pdf.setFontSize(20);
-      pdf.text('O usuário', 148, 100, { align: 'center' });
-      
-      pdf.setFontSize(16);
-      pdf.text('concluiu com sucesso a implementação da solução', 148, 120, { align: 'center' });
-      
-      pdf.setFontSize(18);
-      pdf.text(certificate.solutions.title, 148, 140, { align: 'center' });
-      
-      pdf.setFontSize(12);
-      pdf.text(`Categoria: ${certificate.solutions.category}`, 148, 160, { align: 'center' });
-      
-      pdf.setFontSize(14);
-      const implementationDate = new Date(certificate.implementation_date).toLocaleDateString('pt-BR');
-      pdf.text(`em ${implementationDate}`, 148, 180, { align: 'center' });
-      
-      pdf.setFontSize(10);
-      pdf.text(`Código de Validação: ${certificate.validation_code}`, 148, 200, { align: 'center' });
-
-      pdf.save(`certificado-${certificate.solutions.title}-${certificate.validation_code}.pdf`);
-      toast.success('Certificado baixado com sucesso!');
+      // Se não tem cache, mostrar modal para gerar
+      toast.info('Abrindo preview para gerar o certificado...');
     } catch (error) {
       console.error('Erro ao fazer download:', error);
       toast.error('Erro ao fazer download do certificado');

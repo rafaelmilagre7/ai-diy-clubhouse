@@ -1,9 +1,9 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Download, Star, Calendar, BookOpen, Award } from "lucide-react";
+import { Download, Star, Calendar, BookOpen, Award, Eye } from "lucide-react";
 import { Certificate } from "@/types/learningTypes";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -18,12 +18,17 @@ export const CertificateCard = ({
   certificate,
   onDownload
 }: CertificateCardProps) => {
+  const [showPreview, setShowPreview] = useState(false);
   const course = (certificate as any).learning_courses;
   const formattedDate = format(new Date(certificate.issued_at), "dd 'de' MMMM 'de' yyyy", { locale: ptBR });
   
   const handleDownload = () => {
     onDownload(certificate.id);
     toast.success("Download iniciado!");
+  };
+
+  const handlePreview = () => {
+    toast.info("Preview em desenvolvimento para certificados de curso");
   };
   
   return (
@@ -70,13 +75,21 @@ export const CertificateCard = ({
         </div>
       </CardContent>
       
-      <CardFooter className="pt-0">
+      <CardFooter className="pt-0 flex gap-2">
         <Button
           onClick={handleDownload}
-          className="w-full bg-gradient-to-r from-yellow-400 to-amber-400 hover:from-yellow-500 hover:to-amber-500 text-black font-semibold transition-all duration-300 group-hover:shadow-lg group-hover:shadow-yellow-400/25"
+          className="flex-1 bg-gradient-to-r from-yellow-400 to-amber-400 hover:from-yellow-500 hover:to-amber-500 text-black font-semibold transition-all duration-300 group-hover:shadow-lg group-hover:shadow-yellow-400/25"
         >
           <Download className="h-4 w-4 mr-2" />
           Baixar Certificado
+        </Button>
+        
+        <Button
+          onClick={handlePreview}
+          variant="outline"
+          className="border-neutral-600 text-gray-300 hover:bg-neutral-800"
+        >
+          <Eye className="h-4 w-4" />
         </Button>
       </CardFooter>
     </Card>
