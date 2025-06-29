@@ -10,7 +10,7 @@ import { CertificateModal } from "./CertificateModal";
 
 interface SolutionCertificateCardProps {
   certificate: any;
-  onDownload: (certificateId: string) => void;
+  onDownload: (certificateId: string) => Promise<{ needsModal: boolean; certificate?: any }>;
 }
 
 export const SolutionCertificateCard = ({
@@ -18,6 +18,8 @@ export const SolutionCertificateCard = ({
   onDownload
 }: SolutionCertificateCardProps) => {
   const [showModal, setShowModal] = useState(false);
+  const [pendingCertificate, setPendingCertificate] = useState<any>(null);
+  
   const solution = certificate.solutions;
   const implementationDate = format(new Date(certificate.implementation_date), "dd 'de' MMMM 'de' yyyy", { locale: ptBR });
   const issuedDate = format(new Date(certificate.issued_at), "dd 'de' MMMM 'de' yyyy", { locale: ptBR });
@@ -63,12 +65,23 @@ export const SolutionCertificateCard = ({
   const CategoryIcon = categoryConfig.icon;
   const hasCachedPDF = certificate.certificate_url && certificate.certificate_filename;
   
-  const handleDownload = () => {
-    onDownload(certificate.id);
+  const handleDownload = async () => {
+    const result = await onDownload(certificate.id);
+    
+    if (result.needsModal && result.certificate) {
+      setPendingCertificate(result.certificate);
+      setShowModal(true);
+    }
   };
 
   const handlePreview = () => {
+    setPendingCertificate(certificate);
     setShowModal(true);
+  };
+
+  const handleCloseModal = () => {
+    setShowModal(false);
+    setPendingCertificate(null);
   };
   
   return (
@@ -162,11 +175,13 @@ export const SolutionCertificateCard = ({
         </CardFooter>
       </Card>
 
-      <CertificateModal
-        certificate={certificate}
-        isOpen={showModal}
-        onClose={() => setShowModal(false)}
-      />
+      {pendingCertificate && (
+        <CertificateModal
+          certificate={pendingCertificate}
+          isOpen={showModal}
+          onClose={handleCloseModal}
+        />
+      )}
     </>
   );
 };

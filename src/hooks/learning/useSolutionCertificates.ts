@@ -105,13 +105,13 @@ export const useSolutionCertificates = (solutionId?: string) => {
     }
   });
 
-  // Download direto do certificado (se já estiver cacheado)
-  const downloadCertificate = async (certificateId: string) => {
+  // Download do certificado - retorna indicador se precisa abrir modal
+  const downloadCertificate = async (certificateId: string): Promise<{ needsModal: boolean; certificate?: any }> => {
     try {
       const certificate = certificates.find(c => c.id === certificateId);
       if (!certificate) {
         toast.error('Certificado não encontrado');
-        return;
+        return { needsModal: false };
       }
 
       // Se já tem URL cacheada, fazer download direto
@@ -123,14 +123,15 @@ export const useSolutionCertificates = (solutionId?: string) => {
         link.click();
         document.body.removeChild(link);
         toast.success('Download iniciado!');
-        return;
+        return { needsModal: false };
       }
 
-      // Se não tem cache, mostrar modal para gerar
-      toast.info('Abrindo preview para gerar o certificado...');
+      // Se não tem cache, indicar que precisa abrir modal
+      return { needsModal: true, certificate };
     } catch (error) {
       console.error('Erro ao fazer download:', error);
       toast.error('Erro ao fazer download do certificado');
+      return { needsModal: false };
     }
   };
 
