@@ -1,7 +1,7 @@
 
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { categoryMapping } from "@/lib/types/categoryTypes";
+import { ALL_CATEGORIES } from "@/lib/types/categoryTypes";
 
 export interface CategoryTabsProps {
   activeCategory: string;
@@ -9,17 +9,9 @@ export interface CategoryTabsProps {
 }
 
 export const CategoryTabs = ({ activeCategory, setActiveCategory }: CategoryTabsProps) => {
-  // Mantemos as chaves antigas para IDs para compatibilidade com o resto do sistema
-  const categories = [
-    { id: "all", name: "Todas" },
-    { id: "Receita", name: "Receita" },
-    { id: "Operacional", name: "Otimização Operacional" },
-    { id: "Estratégia", name: "Gestão Estratégica" }
-  ];
-
   return (
     <div className="flex space-x-2 overflow-x-auto pb-2 md:pb-0">
-      {categories.map((category) => (
+      {ALL_CATEGORIES.map((category) => (
         <Button
           key={category.id}
           onClick={() => setActiveCategory(category.id)}

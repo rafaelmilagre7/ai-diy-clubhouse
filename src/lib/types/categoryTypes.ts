@@ -9,6 +9,13 @@ export enum SolutionCategory {
 // Type union para compatibilidade
 export type SolutionCategoryType = 'Receita' | 'Operacional' | 'Estratégia';
 
+// Mapeamento de categorias para compatibilidade com componentes antigos
+export const categoryMapping = {
+  'Receita': SolutionCategory.RECEITA,
+  'Operacional': SolutionCategory.OPERACIONAL,
+  'Estratégia': SolutionCategory.ESTRATEGIA
+} as const;
+
 // Função helper para converter string para SolutionCategory
 export function getSolutionCategory(category: string): SolutionCategory {
   switch (category) {
@@ -65,3 +72,23 @@ export function getCategoryDetails(category: string | SolutionCategory) {
       };
   }
 }
+
+// Função para obter nome amigável da categoria
+export function getCategoryDisplayName(category: string | SolutionCategory): string {
+  const details = getCategoryDetails(category);
+  return details.name;
+}
+
+// Função para obter ícone da categoria
+export function getCategoryIcon(category: string | SolutionCategory): string {
+  const details = getCategoryDetails(category);
+  return details.icon;
+}
+
+// Lista de todas as categorias disponíveis
+export const ALL_CATEGORIES = [
+  { id: "all", name: "Todas" },
+  { id: "Receita", name: "Receita" },
+  { id: "Operacional", name: "Otimização Operacional" },
+  { id: "Estratégia", name: "Gestão Estratégica" }
+];

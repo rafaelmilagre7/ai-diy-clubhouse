@@ -6,7 +6,7 @@ import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { BarChart, TrendingUp, Settings, Zap } from 'lucide-react';
-import { SolutionCategory } from '@/lib/types/categoryTypes';
+import { getCategoryDetails } from '@/lib/types/categoryTypes';
 
 interface SolutionCardProps {
   solution: Solution;
@@ -26,34 +26,35 @@ const getDifficultyBadgeStyle = (difficulty: string) => {
 };
 
 export const SolutionCard: React.FC<SolutionCardProps> = ({ solution }) => {
-  const getCategoryDetails = (category: SolutionCategory) => {
+  const getCategoryDetailsWithIcon = (category: string) => {
+    const details = getCategoryDetails(category);
+    
+    let icon;
     switch (category) {
       case 'Receita':
-        return {
-          name: 'Receita',
-          icon: <TrendingUp className="h-4 w-4 text-green-400" />,
-          color: 'bg-green-900/40 text-green-300 border-green-700'
-        };
+        icon = <TrendingUp className="h-4 w-4 text-green-400" />;
+        break;
       case 'Operacional':
-        return {
-          name: 'Operacional',
-          icon: <Settings className="h-4 w-4 text-blue-400" />,
-          color: 'bg-blue-900/40 text-blue-300 border-blue-700'
-        };
+        icon = <Settings className="h-4 w-4 text-blue-400" />;
+        break;
       case 'Estratégia':
-        return {
-          name: 'Estratégia',
-          icon: <BarChart className="h-4 w-4 text-purple-400" />,
-          color: 'bg-purple-900/40 text-purple-300 border-purple-700'
-        };
+        icon = <BarChart className="h-4 w-4 text-purple-400" />;
+        break;
       default:
-        return {
-          name: 'Geral',
-          icon: <Zap className="h-4 w-4 text-gray-400" />,
-          color: 'bg-gray-800/60 text-gray-300 border-gray-700'
-        };
+        icon = <Zap className="h-4 w-4 text-gray-400" />;
     }
+
+    return {
+      ...details,
+      icon,
+      color: category === 'Receita' ? 'bg-green-900/40 text-green-300 border-green-700' :
+             category === 'Operacional' ? 'bg-blue-900/40 text-blue-300 border-blue-700' :
+             category === 'Estratégia' ? 'bg-purple-900/40 text-purple-300 border-purple-700' :
+             'bg-gray-800/60 text-gray-300 border-gray-700'
+    };
   };
+
+  const categoryDetails = getCategoryDetailsWithIcon(solution.category);
 
   return (
     <Link to={`/solution/${solution.id}`} className="block">
@@ -74,11 +75,11 @@ export const SolutionCard: React.FC<SolutionCardProps> = ({ solution }) => {
             <div className="absolute inset-0 bg-gradient-to-t from-[#0F111A] via-transparent to-transparent opacity-70"></div>
             <Badge 
               variant="outline"
-              className={`absolute top-2 left-2 ${getCategoryDetails(solution.category).color}`}
+              className={`absolute top-2 left-2 ${categoryDetails.color}`}
             >
               <span className="flex items-center">
-                {getCategoryDetails(solution.category).icon}
-                <span className="ml-1">{getCategoryDetails(solution.category).name}</span>
+                {categoryDetails.icon}
+                <span className="ml-1">{categoryDetails.name}</span>
               </span>
             </Badge>
           </div>
@@ -93,8 +94,8 @@ export const SolutionCard: React.FC<SolutionCardProps> = ({ solution }) => {
         </CardContent>
         <CardFooter className="p-4 pt-0 flex gap-2 flex-wrap justify-between text-xs text-neutral-400">
           <div className="flex items-center">
-            {getCategoryDetails(solution.category).icon}
-            <span className="ml-1">{getCategoryDetails(solution.category).name}</span>
+            {categoryDetails.icon}
+            <span className="ml-1">{categoryDetails.name}</span>
           </div>
           <Badge
             variant="outline"

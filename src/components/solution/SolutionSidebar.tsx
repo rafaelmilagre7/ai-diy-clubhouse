@@ -3,7 +3,7 @@ import { Solution } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { PlayCircle, CheckCircle, Award } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { SolutionCategory } from "@/lib/types/categoryTypes";
+import { getCategoryDisplayName } from "@/lib/types/categoryTypes";
 
 interface SolutionSidebarProps {
   solution: Solution;
@@ -32,20 +32,6 @@ export const SolutionSidebar = ({
     } else {
       console.log("Chamando startImplementation");
       startImplementation();
-    }
-  };
-  
-  // Função auxiliar para converter categoria para texto de exibição
-  const getCategoryDisplayText = (category: SolutionCategory): string => {
-    switch (category) {
-      case 'Receita':
-        return "Receita";
-      case 'Operacional':
-        return "Operacional";
-      case 'Estratégia':
-        return "Estratégia";
-      default:
-        return String(category);
     }
   };
   
@@ -111,7 +97,7 @@ export const SolutionSidebar = ({
             <div className="flex justify-between text-sm">
               <span className="text-neutral-400">Categoria:</span>
               <span className="font-medium text-neutral-200">
-                {getCategoryDisplayText(solution.category)}
+                {getCategoryDisplayName(solution.category)}
               </span>
             </div>
           )}
