@@ -8,13 +8,13 @@ export type LearningLesson = Database['public']['Tables']['learning_lessons']['R
   module?: {
     id: string;
     title: string;
-    description?: string; // Opcional para compatibilidade
+    description?: string | null; // Ajustar para opcional e null
     course_id: string;
     order_index: number;
     published: boolean;
     created_at: string;
     updated_at: string;
-    cover_image_url?: string;
+    cover_image_url?: string | null; // Ajustar para opcional e null
   };
   videos?: any[];
   resources?: any[];
@@ -41,7 +41,8 @@ export interface LearningLessonWithRelations extends LearningLesson {
 }
 
 export interface LearningModuleWithCourse extends LearningModule {
-  description?: string; // Garantir que é opcional
+  description?: string | null; // Garantir que é opcional e permite null
+  cover_image_url?: string | null; // Garantir que é opcional e permite null
   learning_courses?: LearningCourse;
   course?: LearningCourse;
 }
