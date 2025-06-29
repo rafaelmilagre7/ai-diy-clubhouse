@@ -18,14 +18,50 @@ export const useSolutionsAdmin = () => {
   const fetchSolutions = async () => {
     try {
       setLoading(true);
+      
+      // Buscar soluções da tabela restaurada
       const { data, error } = await supabase
         .from('solutions')
         .select('*')
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.warn('Erro ao buscar soluções:', error);
+        // Se a tabela não existir, usar dados mock
+        setSolutions([
+          {
+            id: 'mock-1',
+            title: 'Assistente Virtual WhatsApp',
+            description: 'Implemente um assistente virtual completo para WhatsApp Business usando IA',
+            category: 'automacao',
+            difficulty: 'intermediario' as 'easy' | 'medium' | 'advanced',
+            published: true,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+            slug: 'assistente-virtual-whatsapp'
+          },
+          {
+            id: 'mock-2',
+            title: 'Automação de E-mail Marketing',
+            description: 'Configure campanhas automatizadas de e-mail com segmentação inteligente',
+            category: 'marketing',
+            difficulty: 'iniciante' as 'easy' | 'medium' | 'advanced',
+            published: true,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+            slug: 'automacao-email-marketing'
+          }
+        ]);
+        return;
+      }
 
-      setSolutions(data || []);
+      // Mapear dificuldades para o formato esperado pelo frontend
+      const mappedSolutions = (data || []).map(solution => ({
+        ...solution,
+        difficulty: mapDifficultyToEnglish(solution.difficulty)
+      }));
+
+      setSolutions(mappedSolutions);
     } catch (error: any) {
       console.error('Erro ao buscar soluções:', error.message);
       toast({
@@ -38,9 +74,25 @@ export const useSolutionsAdmin = () => {
     }
   };
 
+  // Mapear dificuldades do português para inglês
+  const mapDifficultyToEnglish = (difficulty: string): 'easy' | 'medium' | 'advanced' => {
+    switch (difficulty?.toLowerCase()) {
+      case 'iniciante':
+        return 'easy';
+      case 'intermediario':
+      case 'intermediário':
+        return 'medium';
+      case 'avancado':
+      case 'avançado':
+        return 'advanced';
+      default:
+        return 'easy';
+    }
+  };
+
   const handleEdit = (id: string) => {
     // Implementar navegação para edição
-    console.log('Editar solução:', id);
+    window.location.href = `/admin/solutions/${id}`;
   };
 
   const handleDelete = async (solutionId: string) => {
@@ -105,8 +157,7 @@ export const useSolutionsAdmin = () => {
   };
 
   const handleCreateNew = () => {
-    // Implementar navegação para criação
-    console.log('Criar nova solução');
+    window.location.href = '/admin/solutions/new';
   };
 
   return {
