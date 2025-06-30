@@ -9,8 +9,6 @@ import { certificateRoutes } from './CertificateRoutes';
 import { CommunityRedirects } from '@/components/routing/CommunityRedirects';
 import NotFound from '@/pages/NotFound';
 import InvitePage from '@/pages/InvitePage';
-import OnboardingPage from '@/pages/OnboardingPage';
-import { ProtectedRoutes } from '@/auth/ProtectedRoutes';
 
 const AppRoutes = () => {
   const location = useLocation();
@@ -76,16 +74,6 @@ const AppRoutes = () => {
         {authRoutes.map((route) => (
           <Route key={route.path} path={route.path} element={route.element} />
         ))}
-        
-        {/* Onboarding Route - Protegida mas sem layout */}
-        <Route 
-          path="/onboarding" 
-          element={
-            <ProtectedRoutes>
-              <OnboardingPage />
-            </ProtectedRoutes>
-          } 
-        />
         
         {/* Member Routes - Agora incluindo a rota raiz com RootRedirect */}
         {memberRoutes.map((route) => (
