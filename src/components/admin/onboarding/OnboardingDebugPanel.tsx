@@ -1,256 +1,167 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { useMockOnboarding } from './MockOnboardingWizardContainer';
 import { 
   RotateCcw, 
   Play, 
+  Pause, 
+  SkipForward, 
   AlertTriangle, 
-  Eye, 
-  EyeOff, 
-  ChevronRight, 
-  ChevronLeft,
-  Database,
-  Clock,
-  User,
-  CheckCircle
+  CheckCircle,
+  Settings,
+  Eye,
+  Bug
 } from 'lucide-react';
 
-export const OnboardingDebugPanel: React.FC = () => {
-  const {
-    currentStep,
-    data,
-    totalSteps,
-    isSubmitting,
-    hasUnsavedChanges,
-    lastSaved,
-    isCurrentStepValid,
-    resetData,
-    setCurrentStep,
-    simulateLoading,
-    simulateError
-  } = useMockOnboarding();
+interface OnboardingDebugPanelProps {
+  currentStep: number;
+  totalSteps: number;
+  data: any;
+  onReset: () => void;
+  onSkipToStep: (step: number) => void;
+  onSimulateError: () => void;
+  onToggleLoading: () => void;
+  isLoading: boolean;
+  hasError: boolean;
+}
 
-  const [showData, setShowData] = useState(false);
-
-  const stepNames = [
-    'Info Pessoal',
-    'Empresa',
-    'IA',
-    'Objetivos',
-    'Preferências',
-    'Finalização'
-  ];
-
-  const getStepStatus = (step: number) => {
-    if (step < currentStep) return 'completed';
-    if (step === currentStep) return 'current';
-    return 'pending';
-  };
-
-  const getCompletionPercentage = () => {
-    const requiredFields = [
-      'name', 'email', 'phone', 'state', 'city',
-      'companyName', 'businessSector', 'companySize', 'position',
-      'hasImplementedAI', 'aiKnowledgeLevel',
-      'mainObjective', 'weeklyLearningTime', 'wantsNetworking'
-    ];
-    
-    const completedFields = requiredFields.filter(field => data[field as keyof typeof data]);
-    return Math.round((completedFields.length / requiredFields.length) * 100);
-  };
-
+export const OnboardingDebugPanel: React.FC<OnboardingDebugPanelProps> = ({
+  currentStep,
+  totalSteps,
+  data,
+  onReset,
+  onSkipToStep,
+  onSimulateError,
+  onToggleLoading,
+  isLoading,
+  hasError
+}) => {
   return (
-    <div className="space-y-4">
-      {/* Status Card */}
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-sm flex items-center gap-2">
-            <User className="h-4 w-4" />
-            Status do Fluxo
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          <div className="flex items-center justify-between">
-            <span className="text-sm">Etapa Atual:</span>
-            <Badge variant="outline">
-              {currentStep}/{totalSteps}
-            </Badge>
-          </div>
-          
-          <div className="flex items-center justify-between">
-            <span className="text-sm">Progresso:</span>
-            <span className="text-sm font-medium">{getCompletionPercentage()}%</span>
-          </div>
-          
-          <div className="flex items-center justify-between">
-            <span className="text-sm">Válido:</span>
-            {isCurrentStepValid ? (
-              <CheckCircle className="h-4 w-4 text-green-500" />
-            ) : (
-              <AlertTriangle className="h-4 w-4 text-red-500" />
-            )}
-          </div>
-          
-          {lastSaved && (
-            <div className="flex items-center justify-between">
-              <span className="text-sm">Último Save:</span>
-              <span className="text-xs text-muted-foreground">
-                {lastSaved.toLocaleTimeString()}
-              </span>
+    <Card className="h-fit">
+      <CardHeader className="pb-4">
+        <CardTitle className="text-lg flex items-center gap-2">
+          <Bug className="h-5 w-5 text-purple-500" />
+          Debug Panel
+        </CardTitle>
+      </CardHeader>
+      
+      <CardContent className="space-y-4">
+        {/* Status */}
+        <div className="space-y-2">
+          <h4 className="font-medium flex items-center gap-2">
+            <Eye className="h-4 w-4" />
+            Status Atual
+          </h4>
+          <div className="grid grid-cols-2 gap-2 text-sm">
+            <div>
+              <span className="text-muted-foreground">Etapa:</span>
+              <Badge variant="outline">{currentStep}/{totalSteps}</Badge>
             </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Navigation Controls */}
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-sm flex items-center gap-2">
-            <ChevronRight className="h-4 w-4" />
-            Navegação
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          <div className="grid grid-cols-3 gap-2">
-            {Array.from({ length: totalSteps }, (_, i) => i + 1).map((step) => (
-              <Button
-                key={step}
-                variant={step === currentStep ? "default" : "outline"}
-                size="sm"
-                onClick={() => setCurrentStep(step)}
-                className="h-8 text-xs"
-              >
-                {step}
-              </Button>
-            ))}
+            <div>
+              <span className="text-muted-foreground">Estado:</span>
+              {isLoading ? (
+                <Badge variant="secondary">Loading</Badge>
+              ) : hasError ? (
+                <Badge variant="destructive">Error</Badge>
+              ) : (
+                <Badge variant="default">Normal</Badge>
+              )}
+            </div>
           </div>
-          
-          <Separator />
+        </div>
+
+        <Separator />
+
+        {/* Controles */}
+        <div className="space-y-3">
+          <h4 className="font-medium flex items-center gap-2">
+            <Settings className="h-4 w-4" />
+            Controles
+          </h4>
           
           <div className="grid grid-cols-2 gap-2">
             <Button
               variant="outline"
               size="sm"
-              onClick={() => setCurrentStep(Math.max(1, currentStep - 1))}
-              disabled={currentStep === 1}
+              onClick={onReset}
+              className="w-full"
             >
-              <ChevronLeft className="h-3 w-3 mr-1" />
-              Anterior
+              <RotateCcw className="h-3 w-3 mr-1" />
+              Reset
             </Button>
+            
             <Button
               variant="outline"
               size="sm"
-              onClick={() => setCurrentStep(Math.min(totalSteps, currentStep + 1))}
-              disabled={currentStep === totalSteps}
+              onClick={onToggleLoading}
+              className="w-full"
             >
-              Próximo
-              <ChevronRight className="h-3 w-3 ml-1" />
+              {isLoading ? (
+                <>
+                  <Pause className="h-3 w-3 mr-1" />
+                  Stop Loading
+                </>
+              ) : (
+                <>
+                  <Play className="h-3 w-3 mr-1" />
+                  Simulate Loading
+                </>
+              )}
             </Button>
           </div>
-        </CardContent>
-      </Card>
 
-      {/* Test Controls */}
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-sm flex items-center gap-2">
-            <Play className="h-4 w-4" />
-            Controles de Teste
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-2">
           <Button
             variant="outline"
             size="sm"
-            onClick={() => simulateLoading(3000)}
-            className="w-full justify-start"
+            onClick={onSimulateError}
+            className="w-full"
           >
-            <Clock className="h-3 w-3 mr-2" />
-            Simular Loading
+            <AlertTriangle className="h-3 w-3 mr-1" />
+            Simular Erro
           </Button>
-          
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={simulateError}
-            className="w-full justify-start"
-          >
-            <AlertTriangle className="h-3 w-3 mr-2" />
-            Toggle Erro
-          </Button>
-          
-          <Button
-            variant="destructive"
-            size="sm"
-            onClick={resetData}
-            className="w-full justify-start"
-          >
-            <RotateCcw className="h-3 w-3 mr-2" />
-            Reset Dados
-          </Button>
-        </CardContent>
-      </Card>
+        </div>
 
-      {/* Steps Overview */}
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-sm">Etapas</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <ScrollArea className="h-32">
-            <div className="space-y-2">
-              {stepNames.map((name, index) => {
-                const step = index + 1;
-                const status = getStepStatus(step);
-                return (
-                  <div key={step} className="flex items-center gap-2 text-xs">
-                    <div className={`w-2 h-2 rounded-full ${
-                      status === 'completed' ? 'bg-green-500' :
-                      status === 'current' ? 'bg-blue-500' : 'bg-gray-300'
-                    }`} />
-                    <span className={status === 'current' ? 'font-medium' : ''}>
-                      {step}. {name}
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
-          </ScrollArea>
-        </CardContent>
-      </Card>
+        <Separator />
 
-      {/* Data Preview */}
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-sm flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Database className="h-4 w-4" />
-              Dados
-            </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setShowData(!showData)}
-            >
-              {showData ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
-            </Button>
-          </CardTitle>
-        </CardHeader>
-        {showData && (
-          <CardContent>
-            <ScrollArea className="h-48">
-              <pre className="text-xs bg-muted p-2 rounded">
-                {JSON.stringify(data, null, 2)}
-              </pre>
-            </ScrollArea>
-          </CardContent>
-        )}
-      </Card>
-    </div>
+        {/* Navegação */}
+        <div className="space-y-3">
+          <h4 className="font-medium">Pular para Etapa</h4>
+          <div className="grid grid-cols-3 gap-1">
+            {Array.from({ length: totalSteps }, (_, i) => i + 1).map((step) => (
+              <Button
+                key={step}
+                variant={currentStep === step ? "default" : "outline"}
+                size="sm"
+                onClick={() => onSkipToStep(step)}
+                className="text-xs"
+              >
+                {step}
+              </Button>
+            ))}
+          </div>
+        </div>
+
+        <Separator />
+
+        {/* Preview dos Dados */}
+        <div className="space-y-2">
+          <h4 className="font-medium">Dados Atuais</h4>
+          <div className="bg-muted/50 p-2 rounded text-xs max-h-32 overflow-y-auto">
+            <pre className="whitespace-pre-wrap">
+              {JSON.stringify(data, null, 2)}
+            </pre>
+          </div>
+        </div>
+
+        {/* Info */}
+        <div className="text-xs text-muted-foreground p-2 bg-blue-500/10 rounded border border-blue-500/20">
+          <CheckCircle className="h-3 w-3 inline mr-1" />
+          Ambiente de teste - dados não são salvos no backend
+        </div>
+      </CardContent>
+    </Card>
   );
 };

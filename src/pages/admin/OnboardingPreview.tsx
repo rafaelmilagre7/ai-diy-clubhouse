@@ -5,8 +5,114 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, TestTube, Users, Settings } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { MockOnboardingWizardContainer } from '@/components/admin/onboarding/MockOnboardingWizardContainer';
+import { MockOnboardingWizardContainer, useMockOnboarding } from '@/components/admin/onboarding/MockOnboardingWizardContainer';
 import { OnboardingDebugPanel } from '@/components/admin/onboarding/OnboardingDebugPanel';
+import { OnboardingStepRenderer } from '@/components/onboarding/components/OnboardingStepRenderer';
+import { OnboardingProgress } from '@/components/onboarding/OnboardingProgress';
+
+const stepTitles = [
+  'Informações Pessoais',
+  'Perfil Empresarial', 
+  'Maturidade em IA',
+  'Objetivos e Expectativas',
+  'Personalização da Experiência',
+  'Finalização'
+];
+
+const OnboardingPreviewContent = () => {
+  const {
+    currentStep,
+    totalSteps,
+    data,
+    isLoading,
+    hasError,
+    validationErrors,
+    updateData,
+    nextStep,
+    prevStep,
+    reset,
+    simulateError,
+    toggleLoading,
+    setCurrentStep,
+    getFieldError
+  } = useMockOnboarding();
+
+  const handleNext = async () => {
+    // Simulate async operation
+    toggleLoading();
+    setTimeout(() => {
+      nextStep();
+      toggleLoading();
+    }, 1000);
+  };
+
+  const handlePrev = () => {
+    prevStep();
+  };
+
+  const handleComplete = async () => {
+    // Simulate completion
+    toggleLoading();
+    setTimeout(() => {
+      toggleLoading();
+      console.log('Mock onboarding completed!', data);
+    }, 1500);
+  };
+
+  return (
+    <>
+      {/* Progress */}
+      <div className="mb-6">
+        <OnboardingProgress 
+          currentStep={currentStep} 
+          totalSteps={totalSteps}
+          stepTitles={stepTitles}
+        />
+      </div>
+
+      {/* Main Content */}
+      <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">
+        {/* Onboarding Preview - 3/4 width */}
+        <div className="xl:col-span-3">
+          <Card className="h-full">
+            <CardHeader>
+              <CardTitle>Preview do Onboarding - Etapa {currentStep}</CardTitle>
+            </CardHeader>
+            <CardContent className="p-8">
+              <OnboardingStepRenderer
+                currentStep={currentStep}
+                data={data}
+                onUpdateData={updateData}
+                onNext={handleNext}
+                onPrev={handlePrev}
+                onComplete={handleComplete}
+                memberType={data.memberType || 'club'}
+                validationErrors={validationErrors}
+                getFieldError={getFieldError}
+                isCompleting={isLoading}
+              />
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Debug Panel - 1/4 width */}
+        <div className="xl:col-span-1">
+          <OnboardingDebugPanel
+            currentStep={currentStep}
+            totalSteps={totalSteps}
+            data={data}
+            onReset={reset}
+            onSkipToStep={setCurrentStep}
+            onSimulateError={simulateError}
+            onToggleLoading={toggleLoading}
+            isLoading={isLoading}
+            hasError={hasError}
+          />
+        </div>
+      </div>
+    </>
+  );
+};
 
 const OnboardingPreview = () => {
   return (
@@ -74,25 +180,10 @@ const OnboardingPreview = () => {
         </Card>
       </div>
 
-      {/* Main Content */}
-      <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">
-        {/* Onboarding Preview - 3/4 width */}
-        <div className="xl:col-span-3">
-          <Card className="h-full">
-            <CardHeader>
-              <CardTitle>Preview do Onboarding</CardTitle>
-            </CardHeader>
-            <CardContent className="p-0">
-              <MockOnboardingWizardContainer />
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Debug Panel - 1/4 width */}
-        <div className="xl:col-span-1">
-          <OnboardingDebugPanel />
-        </div>
-      </div>
+      {/* Wrapped Content */}
+      <MockOnboardingWizardContainer>
+        <OnboardingPreviewContent />
+      </MockOnboardingWizardContainer>
     </div>
   );
 };
