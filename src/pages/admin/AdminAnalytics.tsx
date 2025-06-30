@@ -1,21 +1,24 @@
 
 import React, { useState, useCallback } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { TabsContent } from '@/components/ui/tabs';
 import { RealAnalyticsOverview } from '@/components/admin/analytics/RealAnalyticsOverview';
 import { UserAnalyticsTabContent } from '@/components/admin/analytics/tabs/UserAnalyticsTabContent';
 import { SolutionAnalyticsTabContent } from '@/components/admin/analytics/tabs/SolutionAnalyticsTabContent';
 import { LmsAnalyticsTabContent } from '@/components/admin/analytics/tabs/LmsAnalyticsTabContent';
-import { AnalyticsHeader } from '@/components/admin/analytics/AnalyticsHeader';
+import { ModernAnalyticsHeader } from '@/components/admin/analytics/ModernAnalyticsHeader';
+import { AdvancedFilterBar } from '@/components/admin/analytics/AdvancedFilterBar';
+import { ModernTabsNavigation } from '@/components/admin/analytics/ModernTabsNavigation';
 import { useRealAdminAnalytics } from '@/hooks/admin/useRealAdminAnalytics';
 import { PermissionGuard } from '@/components/auth/PermissionGuard';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { AlertCircle, RefreshCw } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { AlertCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 const AdminAnalytics = () => {
   const [timeRange, setTimeRange] = useState('30d');
+  const [activeTab, setActiveTab] = useState('overview');
+  const [category, setCategory] = useState('all');
+  const [difficulty, setDifficulty] = useState('all');
   const { toast } = useToast();
   
   // Usar o hook de analytics real
@@ -38,6 +41,28 @@ const AdminAnalytics = () => {
     refreshAnalytics();
   }, [refreshAnalytics, toast]);
 
+  const handleExport = () => {
+    toast({
+      title: "Exportando dados",
+      description: "O relatório será preparado em breve...",
+    });
+  };
+
+  const handleSettings = () => {
+    toast({
+      title: "Configurações",
+      description: "Funcionalidade em desenvolvimento...",
+    });
+  };
+
+  // Preparar dados para os componentes
+  const tabsData = {
+    totalUsers: analyticsData?.totalUsers || 0,
+    totalSolutions: analyticsData?.totalSolutions || 0,
+    totalCourses: analyticsData?.totalCourses || 0,
+    activeImplementations: analyticsData?.activeImplementations || 0
+  };
+
   return (
     <PermissionGuard 
       permission="analytics.view"
@@ -52,95 +77,68 @@ const AdminAnalytics = () => {
         </Alert>
       }
     >
-      <div className="space-y-6 p-6">
-        {/* Header melhorado */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight text-neutral-900 dark:text-white">
-              Analytics Administrativo
-            </h1>
-            <p className="text-muted-foreground mt-1">
-              Visão geral completa dos dados da plataforma em tempo real
-            </p>
-          </div>
-          <div className="flex items-center gap-3">
-            <Button 
-              variant="outline"
-              size="sm"
-              onClick={handleRefresh}
-              disabled={analyticsLoading}
-              className="text-neutral-700 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-800"
-            >
-              <RefreshCw className={`h-4 w-4 mr-2 ${analyticsLoading ? 'animate-spin' : ''}`} />
-              Atualizar
-            </Button>
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
+        <div className="space-y-6 p-6 max-w-7xl mx-auto">
+          {/* Modern Header */}
+          <ModernAnalyticsHeader
+            lastUpdated={new Date()}
+            onRefresh={handleRefresh}
+            onExport={handleExport}
+            onSettings={handleSettings}
+            isLoading={analyticsLoading}
+            totalUsers={tabsData.totalUsers}
+            totalSolutions={tabsData.totalSolutions}
+            totalCourses={tabsData.totalCourses}
+          />
+
+          {/* Advanced Filters */}
+          <AdvancedFilterBar
+            timeRange={timeRange}
+            onTimeRangeChange={handleTimeRangeChange}
+            category={category}
+            onCategoryChange={setCategory}
+            difficulty={difficulty}
+            onDifficultyChange={setDifficulty}
+          />
+
+          {/* Modern Tabs Navigation */}
+          <ModernTabsNavigation
+            activeTab={activeTab}
+            onTabChange={setActiveTab}
+            tabsData={tabsData}
+          />
+
+          {/* Tab Contents */}
+          <div className="mt-6">
+            {activeTab === 'overview' && (
+              <div className="space-y-4">
+                <RealAnalyticsOverview 
+                  data={analyticsData}
+                  loading={analyticsLoading} 
+                  error={analyticsError}
+                />
+              </div>
+            )}
+            
+            {activeTab === 'users' && (
+              <div className="space-y-4">
+                <UserAnalyticsTabContent timeRange={timeRange} />
+              </div>
+            )}
+            
+            {activeTab === 'solutions' && (
+              <div className="space-y-4">
+                <SolutionAnalyticsTabContent timeRange={timeRange} />
+              </div>
+            )}
+            
+            {activeTab === 'learning' && (
+              <div className="space-y-4">
+                <LmsAnalyticsTabContent timeRange={timeRange} />
+              </div>
+            )}
           </div>
         </div>
-
-        {/* Filtros de período */}
-        <Card className="border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm">
-          <CardContent className="pt-6">
-            <AnalyticsHeader 
-              timeRange={timeRange}
-              setTimeRange={handleTimeRangeChange}
-              category="all"
-              setCategory={() => {}}
-              difficulty="all"
-              setDifficulty={() => {}}
-            />
-          </CardContent>
-        </Card>
-
-        <Tabs defaultValue="overview" className="space-y-6">
-          <div className="bg-white dark:bg-gray-900 p-1 rounded-lg border border-gray-200 dark:border-gray-800 shadow-sm">
-            <TabsList className="grid grid-cols-4 max-w-2xl gap-1 bg-gray-50 dark:bg-gray-800">
-              <TabsTrigger 
-                value="overview" 
-                className="text-neutral-700 dark:text-gray-300 data-[state=active]:bg-[#0ABAB5] data-[state=active]:text-white data-[state=active]:shadow-sm transition-all duration-200"
-              >
-                Visão Geral
-              </TabsTrigger>
-              <TabsTrigger 
-                value="users" 
-                className="text-neutral-700 dark:text-gray-300 data-[state=active]:bg-[#0ABAB5] data-[state=active]:text-white data-[state=active]:shadow-sm transition-all duration-200"
-              >
-                Usuários
-              </TabsTrigger>
-              <TabsTrigger 
-                value="solutions" 
-                className="text-neutral-700 dark:text-gray-300 data-[state=active]:bg-[#0ABAB5] data-[state=active]:text-white data-[state=active]:shadow-sm transition-all duration-200"
-              >
-                Soluções
-              </TabsTrigger>
-              <TabsTrigger 
-                value="learning" 
-                className="text-neutral-700 dark:text-gray-300 data-[state=active]:bg-[#0ABAB5] data-[state=active]:text-white data-[state=active]:shadow-sm transition-all duration-200"
-              >
-                Aprendizado
-              </TabsTrigger>
-            </TabsList>
-          </div>
-          
-          <TabsContent value="overview" className="space-y-4">
-            <RealAnalyticsOverview 
-              data={analyticsData}
-              loading={analyticsLoading} 
-              error={analyticsError}
-            />
-          </TabsContent>
-          
-          <TabsContent value="users" className="space-y-4">
-            <UserAnalyticsTabContent timeRange={timeRange} />
-          </TabsContent>
-          
-          <TabsContent value="solutions" className="space-y-4">
-            <SolutionAnalyticsTabContent timeRange={timeRange} />
-          </TabsContent>
-          
-          <TabsContent value="learning" className="space-y-4">
-            <LmsAnalyticsTabContent timeRange={timeRange} />
-          </TabsContent>
-        </Tabs>
       </div>
     </PermissionGuard>
   );
