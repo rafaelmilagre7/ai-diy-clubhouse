@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 
@@ -58,39 +59,47 @@ export const useRealAdminStats = (timeRange: string) => {
       const startDate = getStartDate(timeRange);
       const startDateISO = startDate.toISOString();
       
-      // Buscar dados das tabelas com filtro de período
+      // Buscar dados das tabelas com JOIN otimizado
       const [usersResult, solutionsResult, lessonsResult, progressResult] = await Promise.all([
-        // Usuários criados no período
+        // Usuários criados no período com informações de role
         supabase
           .from('profiles')
-          .select('id, role', { count: 'exact' })
+          .select(`
+            id, 
+            role,
+            created_at,
+            user_roles:role_id (
+              name
+            )
+          `, { count: 'exact' })
           .gte('created_at', startDateISO),
         
         // Soluções publicadas no período
         supabase
           .from('solutions')
-          .select('id', { count: 'exact' })
+          .select('id, created_at', { count: 'exact' })
           .eq('published', true)
           .gte('created_at', startDateISO),
         
         // Aulas publicadas no período
         supabase
           .from('learning_lessons')
-          .select('id', { count: 'exact' })
+          .select('id, created_at', { count: 'exact' })
           .eq('published', true)
           .gte('created_at', startDateISO),
         
-        // Implementações completadas no período
+        // Implementações completadas no período com timing
         supabase
           .from('progress')
-          .select('id, completed_at, created_at', { count: 'exact' })
+          .select('id, user_id, completed_at, created_at, last_activity', { count: 'exact' })
           .eq('is_completed', true)
           .gte('completed_at', startDateISO)
       ]);
 
-      // Processar roles dos usuários
+      // Processar roles dos usuários com fallback
       const rolesCounts = (usersResult.data || []).reduce((acc: Record<string, number>, user) => {
-        const role = user.role || 'member';
+        const roleData = user.user_roles as any;
+        const role = roleData?.name || user.role || 'member';
         acc[role] = (acc[role] || 0) + 1;
         return acc;
       }, {});
@@ -100,7 +109,7 @@ export const useRealAdminStats = (timeRange: string) => {
         count: count as number
       }));
 
-      // Calcular usuários ativos baseado no período selecionado
+      // Buscar usuários ativos com query otimizada
       const activeUsersPeriod = timeRange === '7d' ? 7 : 
                               timeRange === '30d' ? 30 : 
                               timeRange === '90d' ? 90 : 7;
@@ -108,13 +117,17 @@ export const useRealAdminStats = (timeRange: string) => {
       const activeUsersStartDate = new Date();
       activeUsersStartDate.setDate(activeUsersStartDate.getDate() - activeUsersPeriod);
       
-      const { count: activeUsers } = await supabase
+      // Buscar atividades recentes para contar usuários ativos
+      const { data: recentActivities } = await supabase
         .from('analytics')
-        .select('*', { count: 'exact', head: true })
+        .select('user_id')
         .gte('created_at', activeUsersStartDate.toISOString())
         .not('user_id', 'is', null);
 
-      // Calcular tempo médio de implementação baseado nos dados do período
+      // Contar usuários únicos ativos
+      const uniqueActiveUsers = new Set(recentActivities?.map(a => a.user_id) || []);
+
+      // Calcular tempo médio de implementação com dados mais precisos
       let averageImplementationTime = 0;
       if (progressResult.data && progressResult.data.length > 0) {
         const implementationsWithTime = progressResult.data.filter(p => 
@@ -122,14 +135,20 @@ export const useRealAdminStats = (timeRange: string) => {
         );
         
         if (implementationsWithTime.length > 0) {
-          const totalMinutes = implementationsWithTime.reduce((acc, curr) => {
-            const start = new Date(curr.created_at);
-            const end = new Date(curr.completed_at);
-            const diffMinutes = Math.round((end.getTime() - start.getTime()) / (1000 * 60));
-            return acc + (diffMinutes > 0 && diffMinutes < 10080 ? diffMinutes : 0);
-          }, 0);
+          const validImplementations = implementationsWithTime
+            .map(p => {
+              const start = new Date(p.created_at);
+              const end = new Date(p.completed_at);
+              const diffMinutes = Math.round((end.getTime() - start.getTime()) / (1000 * 60));
+              return diffMinutes;
+            })
+            .filter(minutes => minutes > 0 && minutes < 43200); // Entre 1 minuto e 30 dias
           
-          averageImplementationTime = Math.round(totalMinutes / implementationsWithTime.length);
+          if (validImplementations.length > 0) {
+            averageImplementationTime = Math.round(
+              validImplementations.reduce((sum, time) => sum + time, 0) / validImplementations.length
+            );
+          }
         }
       }
 
@@ -137,7 +156,7 @@ export const useRealAdminStats = (timeRange: string) => {
       const totalSolutions = solutionsResult.count || 0;
       const completedImplementations = progressResult.count || 0;
 
-      // Calcular crescimento baseado no período atual vs período anterior
+      // Calcular crescimento com base no período anterior
       const previousPeriodStart = new Date(startDate);
       const periodDuration = new Date().getTime() - startDate.getTime();
       previousPeriodStart.setTime(previousPeriodStart.getTime() - periodDuration);
@@ -148,9 +167,13 @@ export const useRealAdminStats = (timeRange: string) => {
         .gte('created_at', previousPeriodStart.toISOString())
         .lt('created_at', startDateISO);
 
-      const lastMonthGrowth = previousPeriodUsers > 0 ? 
+      const lastMonthGrowth = previousPeriodUsers && previousPeriodUsers > 0 ? 
         Math.round(((totalUsers - previousPeriodUsers) / previousPeriodUsers) * 100) : 
         totalUsers > 0 ? 100 : 0;
+
+      // Calcular taxa de engajamento
+      const contentEngagementRate = totalUsers > 0 ? 
+        Math.round((completedImplementations / totalUsers) * 100) : 0;
 
       setStatsData({
         totalUsers,
@@ -160,15 +183,16 @@ export const useRealAdminStats = (timeRange: string) => {
         averageImplementationTime,
         usersByRole,
         lastMonthGrowth,
-        activeUsersLast7Days: activeUsers || Math.floor(totalUsers * 0.3),
-        contentEngagementRate: totalUsers > 0 ? Math.round((completedImplementations / totalUsers) * 100) : 0
+        activeUsersLast7Days: uniqueActiveUsers.size,
+        contentEngagementRate
       });
 
-      console.log(`✅ Estatísticas administrativas carregadas para período ${timeRange}:`, {
+      console.log(`✅ Estatísticas administrativas otimizadas para período ${timeRange}:`, {
         totalUsers,
         totalSolutions,
         completedImplementations,
-        activeUsers,
+        activeUsers: uniqueActiveUsers.size,
+        avgTime: averageImplementationTime,
         period: timeRange,
         startDate: startDateISO
       });
@@ -176,7 +200,7 @@ export const useRealAdminStats = (timeRange: string) => {
     } catch (error) {
       console.error('Erro ao buscar estatísticas administrativas:', error);
       
-      // Fallback com dados mínimos
+      // Fallback com dados estruturados
       setStatsData({
         totalUsers: 0,
         totalSolutions: 0,
