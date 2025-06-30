@@ -64,7 +64,7 @@ export const useModeration = (enabled: boolean = false) => {
 
       return data || [];
     },
-    enabled: shouldFetchReports,
+    enabled: Boolean(shouldFetchReports),
     staleTime: 5 * 60 * 1000, // 5 minutos
     refetchOnWindowFocus: false,
   });
@@ -94,7 +94,7 @@ export const useModeration = (enabled: boolean = false) => {
 
       return data || [];
     },
-    enabled: shouldFetchReports,
+    enabled: Boolean(shouldFetchReports),
     staleTime: 5 * 60 * 1000,
     refetchOnWindowFocus: false,
   });
