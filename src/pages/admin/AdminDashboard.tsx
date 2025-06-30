@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { useRealAdminDashboardData } from "@/hooks/admin/useRealAdminDashboardData";
+import { useRealAdminDashboardData } from "@/hooks/useRealAdminDashboardData";
 import { RealAdminDashboardLayout } from "@/components/admin/dashboard/RealAdminDashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -53,12 +53,18 @@ const AdminDashboard = () => {
       );
     }
 
+    // Calcular totalEvents a partir das propriedades disponíveis
+    const totalEvents = (activityData?.totalLogins || 0) + 
+                       (activityData?.forumActivity || 0) + 
+                       (activityData?.completedSolutions || 0) + 
+                       (activityData?.activeImplementations || 0);
+
     logger.info('AdminDashboard data loaded successfully', {
       timeRange,
       hasStatsData: !!statsData,
       totalUsers: statsData?.totalUsers || 0,
-      totalEvents: activityData?.totalEvents || 0,
-      activitiesCount: activityData?.userActivities?.length || 0
+      totalEvents,
+      activitiesCount: activityData?.recentActivities?.length || 0
     });
 
     return (
