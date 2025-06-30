@@ -12,7 +12,8 @@ import {
   MessageSquare,
   Stethoscope,
   GraduationCap,
-  Shield
+  Shield,
+  TestTube
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -82,6 +83,11 @@ const navigationItems = [
     title: "Segurança",
     href: "/admin/security",
     icon: Shield,
+  },
+  {
+    title: "Preview Onboarding",
+    href: "/admin/onboarding-preview",
+    icon: TestTube,
   },
   {
     title: "WhatsApp Debug",
