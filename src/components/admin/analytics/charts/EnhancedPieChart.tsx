@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { 
   PieChart as RechartsPieChart, 
@@ -97,7 +96,6 @@ export const EnhancedPieChart: React.FC<EnhancedPieChartProps> = ({
             startAngle={startAngle}
             endAngle={endAngle}
             animationDuration={chartTheme.animations.duration}
-            animationEasing={chartTheme.animations.easing}
           >
             {dataWithPercentage.map((entry, idx) => (
               <Cell 

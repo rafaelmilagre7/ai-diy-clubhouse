@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { 
   AreaChart as RechartsAreaChart, 
@@ -123,7 +122,6 @@ export const EnhancedAreaChart: React.FC<EnhancedAreaChartProps> = ({
                 fill: '#fff' 
               }}
               animationDuration={chartTheme.animations.duration}
-              animationEasing={chartTheme.animations.easing}
             />
           ))}
         </RechartsAreaChart>

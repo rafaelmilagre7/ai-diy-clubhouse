@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { 
   BarChart as RechartsBarChart, 
@@ -135,7 +134,6 @@ export const EnhancedBarChart: React.FC<EnhancedBarChartProps> = ({
               fill={`url(#bar-gradient-${category})`}
               radius={barRadius}
               animationDuration={chartTheme.animations.duration}
-              animationEasing={chartTheme.animations.easing}
             />
           ))}
         </RechartsBarChart>

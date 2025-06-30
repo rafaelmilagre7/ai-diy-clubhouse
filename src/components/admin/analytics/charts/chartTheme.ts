@@ -1,4 +1,3 @@
-
 export const chartTheme = {
   colors: {
     primary: '#0ABAB5',
@@ -63,10 +62,9 @@ export const chartTheme = {
     }
   },
 
-  // Configurações de animação
+  // Configurações de animação (apenas duração - Recharts não suporta easing customizado)
   animations: {
     duration: 800,
-    easing: 'ease-out',
     delay: 100
   },
 
