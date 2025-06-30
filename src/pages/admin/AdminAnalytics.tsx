@@ -8,6 +8,8 @@ import { LmsAnalyticsTabContent } from '@/components/admin/analytics/tabs/LmsAna
 import { ModernAnalyticsHeader } from '@/components/admin/analytics/ModernAnalyticsHeader';
 import { AdvancedFilterBar } from '@/components/admin/analytics/AdvancedFilterBar';
 import { ModernTabsNavigation } from '@/components/admin/analytics/ModernTabsNavigation';
+import { OptimizedAnalyticsProvider } from '@/components/admin/analytics/providers/OptimizedAnalyticsProvider';
+import { TabTransition } from '@/components/admin/analytics/components/TransitionWrapper';
 import { useRealAdminAnalytics } from '@/hooks/admin/useRealAdminAnalytics';
 import { PermissionGuard } from '@/components/auth/PermissionGuard';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -77,69 +79,71 @@ const AdminAnalytics = () => {
         </Alert>
       }
     >
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
-        <div className="space-y-6 p-6 max-w-7xl mx-auto">
-          {/* Modern Header */}
-          <ModernAnalyticsHeader
-            lastUpdated={new Date()}
-            onRefresh={handleRefresh}
-            onExport={handleExport}
-            onSettings={handleSettings}
-            isLoading={analyticsLoading}
-            totalUsers={tabsData.totalUsers}
-            totalSolutions={tabsData.totalSolutions}
-            totalCourses={tabsData.totalCourses}
-          />
+      <OptimizedAnalyticsProvider>
+        <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
+          <div className="space-y-6 p-6 max-w-7xl mx-auto">
+            {/* Modern Header */}
+            <ModernAnalyticsHeader
+              lastUpdated={new Date()}
+              onRefresh={handleRefresh}
+              onExport={handleExport}
+              onSettings={handleSettings}
+              isLoading={analyticsLoading}
+              totalUsers={tabsData.totalUsers}
+              totalSolutions={tabsData.totalSolutions}
+              totalCourses={tabsData.totalCourses}
+            />
 
-          {/* Advanced Filters */}
-          <AdvancedFilterBar
-            timeRange={timeRange}
-            onTimeRangeChange={handleTimeRangeChange}
-            category={category}
-            onCategoryChange={setCategory}
-            difficulty={difficulty}
-            onDifficultyChange={setDifficulty}
-          />
+            {/* Advanced Filters */}
+            <AdvancedFilterBar
+              timeRange={timeRange}
+              onTimeRangeChange={handleTimeRangeChange}
+              category={category}
+              onCategoryChange={setCategory}
+              difficulty={difficulty}
+              onDifficultyChange={setDifficulty}
+            />
 
-          {/* Modern Tabs Navigation */}
-          <ModernTabsNavigation
-            activeTab={activeTab}
-            onTabChange={setActiveTab}
-            tabsData={tabsData}
-          />
+            {/* Modern Tabs Navigation */}
+            <ModernTabsNavigation
+              activeTab={activeTab}
+              onTabChange={setActiveTab}
+              tabsData={tabsData}
+            />
 
-          {/* Tab Contents */}
-          <div className="mt-6">
-            {activeTab === 'overview' && (
-              <div className="space-y-4">
-                <RealAnalyticsOverview 
-                  data={analyticsData}
-                  loading={analyticsLoading} 
-                  error={analyticsError}
-                />
-              </div>
-            )}
-            
-            {activeTab === 'users' && (
-              <div className="space-y-4">
-                <UserAnalyticsTabContent timeRange={timeRange} />
-              </div>
-            )}
-            
-            {activeTab === 'solutions' && (
-              <div className="space-y-4">
-                <SolutionAnalyticsTabContent timeRange={timeRange} />
-              </div>
-            )}
-            
-            {activeTab === 'learning' && (
-              <div className="space-y-4">
-                <LmsAnalyticsTabContent timeRange={timeRange} />
-              </div>
-            )}
+            {/* Tab Contents with Transitions */}
+            <TabTransition tabKey={activeTab} className="mt-6">
+              {activeTab === 'overview' && (
+                <div className="space-y-4">
+                  <RealAnalyticsOverview 
+                    data={analyticsData}
+                    loading={analyticsLoading} 
+                    error={analyticsError}
+                  />
+                </div>
+              )}
+              
+              {activeTab === 'users' && (
+                <div className="space-y-4">
+                  <UserAnalyticsTabContent timeRange={timeRange} />
+                </div>
+              )}
+              
+              {activeTab === 'solutions' && (
+                <div className="space-y-4">
+                  <SolutionAnalyticsTabContent timeRange={timeRange} />
+                </div>
+              )}
+              
+              {activeTab === 'learning' && (
+                <div className="space-y-4">
+                  <LmsAnalyticsTabContent timeRange={timeRange} />
+                </div>
+              )}
+            </TabTransition>
           </div>
         </div>
-      </div>
+      </OptimizedAnalyticsProvider>
     </PermissionGuard>
   );
 };

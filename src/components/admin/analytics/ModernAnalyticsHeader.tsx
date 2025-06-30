@@ -3,9 +3,11 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { RefreshCw, Download, Settings, Clock, TrendingUp } from 'lucide-react';
+import { RefreshCw, Download, Settings, Clock, TrendingUp, Zap } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { PerformanceMonitor } from './performance/PerformanceMonitor';
+import { useOptimizedAnalyticsContext } from './providers/OptimizedAnalyticsProvider';
 
 interface ModernAnalyticsHeaderProps {
   lastUpdated?: Date;
@@ -28,6 +30,12 @@ export const ModernAnalyticsHeader = ({
   totalSolutions = 0,
   totalCourses = 0
 }: ModernAnalyticsHeaderProps) => {
+  const { 
+    isOptimizationEnabled, 
+    showPerformanceMonitor, 
+    togglePerformanceMonitor 
+  } = useOptimizedAnalyticsContext();
+
   return (
     <div className="space-y-6">
       {/* Breadcrumb e Status */}
@@ -46,11 +54,26 @@ export const ModernAnalyticsHeader = ({
               <div className="w-2 h-2 bg-green-500 rounded-full mr-2 animate-pulse"></div>
               Ao Vivo
             </Badge>
+            {isOptimizationEnabled && (
+              <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                <Zap className="w-3 h-3 mr-1" />
+                Otimizado
+              </Badge>
+            )}
           </div>
         </div>
 
         {/* Quick Actions */}
         <div className="flex items-center space-x-2">
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={togglePerformanceMonitor}
+            className="hidden sm:flex"
+          >
+            <TrendingUp className="h-4 w-4 mr-2" />
+            Performance
+          </Button>
           <Button 
             variant="outline" 
             size="sm"
@@ -145,6 +168,9 @@ export const ModernAnalyticsHeader = ({
           </CardContent>
         </Card>
       </div>
+
+      {/* Performance Monitor */}
+      {showPerformanceMonitor && <PerformanceMonitor />}
     </div>
   );
 };
