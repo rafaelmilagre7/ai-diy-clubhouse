@@ -4795,6 +4795,10 @@ export type Database = {
         Args: { row_id: string; table_name: string; column_name: string }
         Returns: undefined
       }
+      increment_benefit_clicks: {
+        Args: { tool_id: string }
+        Returns: undefined
+      }
       increment_suggestion_downvote: {
         Args: { suggestion_id: string }
         Returns: undefined
