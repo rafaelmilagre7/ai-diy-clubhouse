@@ -2,118 +2,136 @@
 import { supabase } from '@/lib/supabase';
 import { UserProfile } from '@/lib/supabase';
 import { logger } from '@/utils/logger';
-
-// Cache para perfis de usuário
-const profileCache = new Map<string, { profile: UserProfile | null; timestamp: number }>();
-const CACHE_DURATION = 5 * 60 * 1000; // 5 minutos
-
-export const clearProfileCache = () => {
-  profileCache.clear();
-};
+import { authCacheManager, debounceManager } from './authCacheManager';
 
 /**
- * Valida a sessão do usuário de forma segura
+ * Valida a sessão do usuário de forma segura com retry
  */
-export const validateUserSession = async () => {
-  try {
-    const { data: { session }, error } = await supabase.auth.getSession();
-    
-    if (error) {
-      logger.error('[AUTH-SESSION] Erro ao validar sessão:', error);
-      return { session: null, user: null };
+export const validateUserSession = async (retries: number = 2) => {
+  for (let attempt = 1; attempt <= retries + 1; attempt++) {
+    try {
+      logger.debug(`[AUTH-SESSION] Tentativa ${attempt}/${retries + 1} de validação`);
+      
+      const { data: { session }, error } = await supabase.auth.getSession();
+      
+      if (error) {
+        if (attempt === retries + 1) {
+          logger.error('[AUTH-SESSION] Erro final na validação:', error);
+          return { session: null, user: null };
+        }
+        
+        // Aguardar antes da próxima tentativa
+        await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+        continue;
+      }
+      
+      return { 
+        session, 
+        user: session?.user || null 
+      };
+    } catch (error) {
+      if (attempt === retries + 1) {
+        logger.error('[AUTH-SESSION] Erro crítico na validação:', error);
+        return { session: null, user: null };
+      }
+      
+      // Aguardar com backoff exponencial
+      await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, attempt - 1)));
     }
-    
-    return { 
-      session, 
-      user: session?.user || null 
-    };
-  } catch (error) {
-    logger.error('[AUTH-SESSION] Erro crítico na validação:', error);
-    return { session: null, user: null };
   }
+  
+  return { session: null, user: null };
 };
 
 /**
- * Busca o perfil do usuário usando a nova função segura
+ * Busca o perfil do usuário com cache otimizado
  */
 export const fetchUserProfileSecurely = async (userId: string): Promise<UserProfile | null> => {
   try {
     // Verificar cache primeiro
-    const cached = profileCache.get(userId);
-    if (cached && (Date.now() - cached.timestamp) < CACHE_DURATION) {
-      logger.debug('[PROFILE-FETCH] Retornando perfil do cache');
-      return cached.profile;
+    const cached = authCacheManager.get(userId);
+    if (cached !== undefined) {
+      return cached;
     }
 
-    logger.info('[PROFILE-FETCH] Buscando perfil usando função segura');
-    
-    // CORREÇÃO: Usar a nova função segura get_user_profile_safe
-    const { data: profiles, error } = await supabase
-      .rpc('get_user_profile_safe', { user_id: userId });
-    
-    if (error) {
-      logger.error('[PROFILE-FETCH] Erro na função segura:', error);
-      // Fallback para query direta simples
-      const { data: directData, error: directError } = await supabase
-        .from('profiles')
-        .select(`
-          *,
-          user_roles (
-            id,
-            name,
-            description,
-            permissions
-          )
-        `)
-        .eq('id', userId)
-        .single();
-      
-      if (directError) {
-        logger.error('[PROFILE-FETCH] Erro no fallback direto:', directError);
-        return null;
-      }
-      
-      const profile = directData as UserProfile;
-      // Cache o resultado
-      profileCache.set(userId, { profile, timestamp: Date.now() });
-      return profile;
-    }
-    
-    const profile = profiles?.[0] || null;
-    
-    if (profile) {
-      // Buscar informações do role separadamente se necessário
-      if (!profile.user_roles && profile.role_id) {
-        const { data: roleData } = await supabase
-          .from('user_roles')
-          .select('id, name, description, permissions')
-          .eq('id', profile.role_id)
+    // Usar debounce para evitar múltiplas chamadas simultâneas
+    const result = await debounceManager.execute(
+      `fetch-profile-${userId}`,
+      async () => {
+        logger.info('[PROFILE-FETCH] Buscando perfil usando função segura');
+        
+        // Tentar função segura primeiro
+        const { data: profiles, error } = await supabase
+          .rpc('get_user_profile_safe', { user_id: userId });
+        
+        if (!error && profiles?.[0]) {
+          const profile = profiles[0] as UserProfile;
+          
+          // Buscar role se necessário
+          if (!profile.user_roles && profile.role_id) {
+            const { data: roleData } = await supabase
+              .from('user_roles')
+              .select('id, name, description, permissions')
+              .eq('id', profile.role_id)
+              .single();
+            
+            if (roleData) {
+              profile.user_roles = roleData;
+            }
+          }
+          
+          // Cache o resultado
+          authCacheManager.set(userId, profile);
+          return profile;
+        }
+        
+        // Fallback para query direta se função RPC falhar
+        logger.warn('[PROFILE-FETCH] Função segura falhou, usando fallback direto');
+        const { data: directData, error: directError } = await supabase
+          .from('profiles')
+          .select(`
+            *,
+            user_roles (
+              id,
+              name,
+              description,
+              permissions
+            )
+          `)
+          .eq('id', userId)
           .single();
         
-        if (roleData) {
-          profile.user_roles = roleData;
+        if (directError) {
+          logger.error('[PROFILE-FETCH] Erro no fallback direto:', directError);
+          authCacheManager.set(userId, null);
+          return null;
         }
-      }
-      
-      logger.info('[PROFILE-FETCH] Perfil carregado com sucesso:', {
-        userId: profile.id.substring(0, 8) + '***',
-        hasRole: !!profile.user_roles,
-        roleName: profile.user_roles?.name || 'sem role'
-      });
-    }
-    
-    // Cache o resultado
-    profileCache.set(userId, { profile, timestamp: Date.now() });
-    return profile;
+        
+        const profile = directData as UserProfile;
+        authCacheManager.set(userId, profile);
+        
+        logger.info('[PROFILE-FETCH] Perfil carregado via fallback:', {
+          userId: profile.id.substring(0, 8) + '***',
+          hasRole: !!profile.user_roles,
+          roleName: profile.user_roles?.name || 'sem role'
+        });
+        
+        return profile;
+      },
+      300 // 300ms debounce
+    );
+
+    return result;
     
   } catch (error) {
     logger.error('[PROFILE-FETCH] Erro crítico:', error);
+    authCacheManager.set(userId, null);
     return null;
   }
 };
 
 /**
- * Processa e valida o perfil do usuário
+ * Processa e valida o perfil do usuário com cache
  */
 export const processUserProfile = async (
   userId: string,
@@ -153,8 +171,9 @@ export const processUserProfile = async (
       
       profile = newProfile as UserProfile;
       
-      // Limpar cache após criação
-      profileCache.delete(userId);
+      // Invalidar cache e definir novo perfil
+      authCacheManager.invalidate(userId);
+      authCacheManager.set(userId, profile);
     }
     
     return profile;
@@ -163,4 +182,31 @@ export const processUserProfile = async (
     logger.error('[PROFILE-PROCESS] Erro no processamento:', error);
     return null;
   }
+};
+
+/**
+ * Limpa o cache de perfil
+ */
+export const clearProfileCache = (userId?: string) => {
+  if (userId) {
+    authCacheManager.invalidate(userId);
+  } else {
+    authCacheManager.clear();
+  }
+  debounceManager.clear();
+};
+
+/**
+ * Invalidar cache quando perfil é atualizado
+ */
+export const invalidateProfileCache = (userId: string) => {
+  authCacheManager.invalidate(userId);
+  logger.info('[PROFILE-CACHE] Cache invalidado após atualização');
+};
+
+/**
+ * Obter estatísticas do cache para debug
+ */
+export const getCacheStats = () => {
+  return authCacheManager.getStats();
 };

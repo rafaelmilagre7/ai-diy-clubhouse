@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabase';
 import { UserProfile } from '@/lib/supabase';
 import { logger } from '@/utils/logger';
 import { useAuthStateManager } from './hooks/useAuthStateManager';
+import { clearProfileCache } from '@/hooks/auth/utils/authSessionUtils';
 
 interface AuthContextType {
   user: User | null;
@@ -38,7 +39,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Usar o hook de gerenciamento de estado
+  // Usar o hook de gerenciamento de estado otimizado
   const { setupAuthSession } = useAuthStateManager({
     setSession,
     setUser,
@@ -54,57 +55,82 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     profile?.role === 'formacao'
   );
 
-  // Configurar sessão na inicialização
+  // OTIMIZAÇÃO: Configurar sessão na inicialização - APENAS UMA VEZ
   useEffect(() => {
-    logger.info('[AUTH-CONTEXT] Inicializando AuthProvider', {
-      component: 'AuthContext'
-    });
-    setupAuthSession();
-  }, [setupAuthSession]);
+    let mounted = true;
+    let authListener: any = null;
 
-  // Listener para mudanças de autenticação
-  useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        logger.info('[AUTH-CONTEXT] Auth state change:', {
-          event,
-          component: 'AuthContext'
-        });
-        
-        if (event === 'SIGNED_OUT' || !session) {
-          setSession(null);
-          setUser(null);
-          setProfile(null);
-          setIsLoading(false);
-        } else if (session?.user) {
-          setSession(session);
-          setUser(session.user);
-          // O perfil será carregado pelo setupAuthSession
-          if (event === 'SIGNED_IN') {
-            setupAuthSession();
+    const initializeAuth = async () => {
+      if (!mounted) return;
+
+      logger.info('[AUTH-CONTEXT] Inicializando AuthProvider');
+      
+      try {
+        // PRIMEIRO: Configurar listener para mudanças de auth
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(
+          async (event, session) => {
+            if (!mounted) return;
+
+            logger.info('[AUTH-CONTEXT] Auth state change:', { event });
+            
+            if (event === 'SIGNED_OUT' || !session) {
+              setSession(null);
+              setUser(null);
+              setProfile(null);
+              setIsLoading(false);
+              clearProfileCache();
+            } else if (session?.user) {
+              setSession(session);
+              setUser(session.user);
+              
+              // CORREÇÃO: Defer setup para evitar deadlock
+              if (event === 'SIGNED_IN') {
+                setTimeout(() => {
+                  if (mounted) {
+                    setupAuthSession();
+                  }
+                }, 0);
+              }
+            }
           }
+        );
+        
+        authListener = subscription;
+
+        // SEGUNDO: Verificar sessão existente (APENAS uma vez)
+        await setupAuthSession();
+
+      } catch (error) {
+        logger.error('[AUTH-CONTEXT] Erro na inicialização:', error);
+        if (mounted) {
+          setIsLoading(false);
         }
       }
-    );
-
-    return () => {
-      subscription.unsubscribe();
     };
-  }, [setupAuthSession]);
 
-  // Função de logout
+    initializeAuth();
+
+    // Cleanup
+    return () => {
+      mounted = false;
+      if (authListener) {
+        authListener.unsubscribe();
+      }
+    };
+  }, []); // IMPORTANTE: Array vazio para executar apenas uma vez
+
+  // Função de logout otimizada
   const signOut = useCallback(async (): Promise<{ success: boolean; error?: string }> => {
     try {
-      logger.info('[AUTH-CONTEXT] Iniciando logout', {
-        component: 'AuthContext'
-      });
+      logger.info('[AUTH-CONTEXT] Iniciando logout');
+      
+      // Limpar cache primeiro
+      clearProfileCache();
+      
       const { error } = await supabase.auth.signOut();
       
       if (error) {
-        logger.error('[AUTH-CONTEXT] Erro no logout:', {
-          error: error.message,
-          component: 'AuthContext'
-        });
+        logger.error('[AUTH-CONTEXT] Erro no logout:', error);
         return { success: false, error: error.message };
       }
       
@@ -114,16 +140,11 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       setProfile(null);
       setIsLoading(false);
       
-      logger.info('[AUTH-CONTEXT] Logout realizado com sucesso', {
-        component: 'AuthContext'
-      });
+      logger.info('[AUTH-CONTEXT] Logout realizado com sucesso');
       return { success: true };
       
     } catch (error) {
-      logger.error('[AUTH-CONTEXT] Erro crítico no logout:', {
-        error: error instanceof Error ? error.message : 'Erro desconhecido',
-        component: 'AuthContext'
-      });
+      logger.error('[AUTH-CONTEXT] Erro crítico no logout:', error);
       return { 
         success: false, 
         error: error instanceof Error ? error.message : 'Erro desconhecido' 
