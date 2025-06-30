@@ -1,196 +1,235 @@
 
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
-import { logger } from "@/utils/logger";
 
-export interface ActivitySummary {
-  totalEvents: number;
-  userActivities: Array<{
-    id: string;
-    user_id: string;
-    event_type: string;
-    created_at: string;
-    metadata?: any;
-    user_name?: string;
-    event_description: string;
-  }>;
-  eventsByType: Array<{ type: string; count: number }>;
+interface SystemActivity {
+  totalLogins: number;
+  newUsers: number;
+  activeImplementations: number;
+  completedSolutions: number;
+  forumActivity: number;
+  learningProgress: number;
+  benefitClicks: number;
+  systemHealth: 'healthy' | 'warning' | 'critical';
+  peakUsageHours: Array<{ hour: number; users: number }>;
   recentActivities: Array<{
     id: string;
-    user_id: string;
-    event_type: string;
-    created_at: string;
+    type: string;
     description: string;
-    user_name?: string;
+    timestamp: string;
+    user_id?: string;
   }>;
 }
 
+// Função para calcular data de início baseada no timeRange
+const getStartDate = (timeRange: string): Date => {
+  const now = new Date();
+  
+  switch (timeRange) {
+    case '7d':
+      now.setDate(now.getDate() - 7);
+      break;
+    case '30d':
+      now.setDate(now.getDate() - 30);
+      break;
+    case '90d':
+      now.setDate(now.getDate() - 90);
+      break;
+    case 'all':
+    default:
+      now.setFullYear(2020); // Data muito antiga para pegar todos os dados
+      break;
+  }
+  
+  return now;
+};
+
 export const useRealSystemActivity = (timeRange: string) => {
-  const [activityData, setActivityData] = useState<ActivitySummary>({
-    totalEvents: 0,
-    userActivities: [],
-    eventsByType: [],
+  const [activityData, setActivityData] = useState<SystemActivity>({
+    totalLogins: 0,
+    newUsers: 0,
+    activeImplementations: 0,
+    completedSolutions: 0,
+    forumActivity: 0,
+    learningProgress: 0,
+    benefitClicks: 0,
+    systemHealth: 'healthy',
+    peakUsageHours: [],
     recentActivities: []
   });
   const [loading, setLoading] = useState(true);
 
-  const fetchData = async () => {
+  const fetchSystemActivity = async () => {
     try {
       setLoading(true);
       
-      // Calcular período baseado no timeRange
-      const now = new Date();
-      const startDate = new Date();
+      // Calcular data de início baseada no timeRange
+      const startDate = getStartDate(timeRange);
+      const startDateISO = startDate.toISOString();
       
-      switch (timeRange) {
-        case '7d':
-          startDate.setDate(now.getDate() - 7);
-          break;
-        case '30d':
-          startDate.setDate(now.getDate() - 30);
-          break;
-        case '90d':
-          startDate.setDate(now.getDate() - 90);
-          break;
-        default:
-          startDate.setDate(now.getDate() - 30);
-      }
-
-      // Buscar dados de analytics com JOIN para incluir nomes de usuários
-      const { data: analyticsData, error } = await supabase
-        .from('analytics')
-        .select(`
-          *,
-          profiles:user_id (
-            name,
-            email
-          ),
-          solutions:solution_id (
-            title
-          )
-        `)
-        .gte('created_at', startDate.toISOString())
-        .order('created_at', { ascending: false })
-        .limit(100);
-
-      if (error) {
-        logger.warn('Erro ao buscar analytics, usando dados mock', error);
+      // Buscar atividades do sistema com queries otimizadas
+      const [
+        analyticsResult,
+        profilesResult,
+        progressResult,
+        forumTopicsResult,
+        forumPostsResult,
+        learningProgressResult,
+        benefitClicksResult
+      ] = await Promise.all([
+        // Atividades de analytics (logins, etc)
+        supabase
+          .from('analytics')
+          .select('event_type, created_at, user_id', { count: 'exact' })
+          .gte('created_at', startDateISO),
         
-        // Dados mock como fallback - estrutura completa
-        setActivityData({
-          totalEvents: 150,
-          userActivities: [
-            {
-              id: '1',
-              user_id: 'user_001',
-              event_type: 'login',
-              created_at: new Date().toISOString(),
-              user_name: 'João Silva',
-              event_description: 'Usuário fez login na plataforma'
-            },
-            {
-              id: '2',
-              user_id: 'user_002',
-              event_type: 'solution_view',
-              created_at: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
-              user_name: 'Maria Santos',
-              event_description: 'Visualizou solução: Assistente WhatsApp'
-            }
-          ],
-          eventsByType: [
-            { type: 'login', count: 45 },
-            { type: 'solution_view', count: 32 },
-            { type: 'implementation_start', count: 28 },
-            { type: 'implementation_complete', count: 18 }
-          ],
-          recentActivities: [
-            {
-              id: '1',
-              user_id: 'user_001',
-              event_type: 'login',
-              created_at: new Date().toISOString(),
-              description: 'Usuário fez login na plataforma',
-              user_name: 'João Silva'
-            },
-            {
-              id: '2',
-              user_id: 'user_002',
-              event_type: 'solution_view',
-              created_at: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
-              description: 'Visualizou solução: Assistente WhatsApp',
-              user_name: 'Maria Santos'
-            }
-          ]
-        });
-        return;
-      }
-
-      // Processar dados reais com informações completas
-      const activities = (analyticsData || []).map(activity => {
-        const profileData = activity.profiles as any;
-        const solutionData = activity.solutions as any;
+        // Novos usuários
+        supabase
+          .from('profiles')
+          .select('id, created_at', { count: 'exact' })
+          .gte('created_at', startDateISO),
         
-        return {
-          ...activity,
-          user_name: profileData?.name || profileData?.email?.split('@')[0] || 'Usuário',
-          event_description: getEnhancedEventDescription(
-            activity.event_type, 
-            activity.event_data,
-            solutionData?.title,
-            profileData?.name
-          )
-        };
+        // Implementações ativas e completas
+        supabase
+          .from('progress')
+          .select('id, is_completed, created_at, completed_at', { count: 'exact' })
+          .gte('created_at', startDateISO),
+        
+        // Atividade do fórum - tópicos
+        supabase
+          .from('forum_topics')
+          .select('id, created_at', { count: 'exact' })
+          .gte('created_at', startDateISO),
+        
+        // Atividade do fórum - posts
+        supabase
+          .from('forum_posts')
+          .select('id, created_at', { count: 'exact' })
+          .gte('created_at', startDateISO),
+        
+        // Progresso de aprendizagem
+        supabase
+          .from('learning_progress')
+          .select('id, progress_percentage, created_at', { count: 'exact' })
+          .gte('created_at', startDateISO),
+        
+        // Cliques em benefícios
+        supabase
+          .from('benefit_clicks')
+          .select('id, clicked_at', { count: 'exact' })
+          .gte('clicked_at', startDateISO)
+      ]);
+
+      // Processar dados de login
+      const loginEvents = (analyticsResult.data || []).filter(
+        event => event.event_type === 'login' || event.event_type === 'session_start'
+      );
+
+      // Implementações ativas vs completas
+      const progressData = progressResult.data || [];
+      const activeImplementations = progressData.filter(p => !p.is_completed).length;
+      const completedSolutions = progressData.filter(p => p.is_completed).length;
+
+      // Progresso de aprendizagem significativo (>= 50%)
+      const learningData = learningProgressResult.data || [];
+      const significantProgress = learningData.filter(
+        lp => (lp.progress_percentage || 0) >= 50
+      ).length;
+
+      // Calcular horas de pico de uso baseado nos analytics
+      const hourlyUsage = new Map<number, Set<string>>();
+      (analyticsResult.data || []).forEach(event => {
+        if (event.user_id) {
+          const hour = new Date(event.created_at).getHours();
+          if (!hourlyUsage.has(hour)) {
+            hourlyUsage.set(hour, new Set());
+          }
+          hourlyUsage.get(hour)?.add(event.user_id);
+        }
       });
 
-      // Contar eventos por tipo
-      const eventsByTypeObj: Record<string, number> = {};
-      activities.forEach(activity => {
-        const eventType = mapEventTypeToStandard(activity.event_type);
-        eventsByTypeObj[eventType] = (eventsByTypeObj[eventType] || 0) + 1;
-      });
+      const peakUsageHours = Array.from(hourlyUsage.entries())
+        .map(([hour, users]) => ({ hour, users: users.size }))
+        .sort((a, b) => b.users - a.users)
+        .slice(0, 6);
 
-      // Converter para array como esperado pelo frontend
-      const eventsByTypeArray = Object.entries(eventsByTypeObj).map(([type, count]) => ({
-        type,
-        count
-      }));
+      // Atividades recentes diversificadas
+      const recentActivities = [
+        ...(forumTopicsResult.data || []).slice(0, 3).map(topic => ({
+          id: topic.id,
+          type: 'forum',
+          description: 'Novo tópico criado no fórum',
+          timestamp: topic.created_at
+        })),
+        ...(progressResult.data || [])
+          .filter(p => p.completed_at)
+          .slice(0, 2)
+          .map(progress => ({
+            id: progress.id,
+            type: 'implementation',
+            description: 'Solução implementada com sucesso',
+            timestamp: progress.completed_at
+          })),
+        ...(learningData || [])
+          .filter(lp => lp.progress_percentage === 100)
+          .slice(0, 2)
+          .map(lesson => ({
+            id: lesson.id,
+            type: 'learning',
+            description: 'Aula concluída',
+            timestamp: lesson.created_at
+          }))
+      ].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+        .slice(0, 10);
 
-      // Preparar atividades recentes com dados completos
-      const recentActivities = activities.slice(0, 10).map(activity => ({
-        id: activity.id,
-        user_id: activity.user_id,
-        event_type: activity.event_type,
-        created_at: activity.created_at,
-        description: activity.event_description,
-        user_name: activity.user_name
-      }));
-
-      // Preparar atividades do usuário com estrutura completa
-      const userActivities = activities.map(activity => ({
-        id: activity.id,
-        user_id: activity.user_id,
-        event_type: activity.event_type,
-        created_at: activity.created_at,
-        metadata: activity.event_data,
-        user_name: activity.user_name,
-        event_description: activity.event_description
-      }));
+      // Determinar saúde do sistema
+      const totalActivity = loginEvents.length + progressData.length + 
+                           (forumTopicsResult.count || 0) + (forumPostsResult.count || 0);
+      
+      let systemHealth: 'healthy' | 'warning' | 'critical' = 'healthy';
+      if (totalActivity < 10) {
+        systemHealth = 'critical';
+      } else if (totalActivity < 50) {
+        systemHealth = 'warning';
+      }
 
       setActivityData({
-        totalEvents: activities.length,
-        userActivities,
-        eventsByType: eventsByTypeArray,
+        totalLogins: loginEvents.length,
+        newUsers: profilesResult.count || 0,
+        activeImplementations,
+        completedSolutions,
+        forumActivity: (forumTopicsResult.count || 0) + (forumPostsResult.count || 0),
+        learningProgress: significantProgress,
+        benefitClicks: benefitClicksResult.count || 0,
+        systemHealth,
+        peakUsageHours,
         recentActivities
       });
 
+      console.log(`✅ Atividade do sistema otimizada para período ${timeRange}:`, {
+        totalLogins: loginEvents.length,
+        newUsers: profilesResult.count || 0,
+        activeImplementations,
+        completedSolutions,
+        systemHealth,
+        period: timeRange,
+        startDate: startDateISO
+      });
+
     } catch (error) {
-      logger.error('Erro ao buscar dados de atividade', error);
+      console.error('Erro ao buscar atividade do sistema:', error);
       
-      // Fallback com dados mock estruturados
+      // Fallback com dados estruturados
       setActivityData({
-        totalEvents: 0,
-        userActivities: [],
-        eventsByType: [],
+        totalLogins: 0,
+        newUsers: 0,
+        activeImplementations: 0,
+        completedSolutions: 0,
+        forumActivity: 0,
+        learningProgress: 0,
+        benefitClicks: 0,
+        systemHealth: 'critical',
+        peakUsageHours: [],
         recentActivities: []
       });
     } finally {
@@ -199,92 +238,8 @@ export const useRealSystemActivity = (timeRange: string) => {
   };
 
   useEffect(() => {
-    fetchData();
+    fetchSystemActivity();
   }, [timeRange]);
 
-  return {
-    activityData,
-    loading,
-    refetch: fetchData
-  };
-};
-
-// Função para mapear tipos de eventos para tipos padrão
-const mapEventTypeToStandard = (eventType: string): string => {
-  const eventMapping: Record<string, string> = {
-    'user_login': 'login',
-    'solution_viewed': 'solution_view',
-    'lesson_viewed': 'lesson_view',
-    'solution_started': 'solution_start',
-    'implementation_started': 'implementation_start',
-    'solution_completed': 'solution_complete',
-    'lesson_completed': 'lesson_complete',
-    'implementation_completed': 'implementation_complete'
-  };
-  
-  return eventMapping[eventType] || eventType;
-};
-
-// Função para gerar descrições mais informativas dos eventos
-const getEnhancedEventDescription = (
-  eventType: string, 
-  eventData?: any, 
-  solutionTitle?: string,
-  userName?: string
-): string => {
-  const userPrefix = userName ? `${userName}` : 'Usuário';
-  
-  switch (eventType) {
-    case 'login':
-    case 'user_login':
-      return `${userPrefix} fez login na plataforma`;
-      
-    case 'solution_view':
-    case 'solution_viewed':
-      return solutionTitle 
-        ? `${userPrefix} visualizou a solução: ${solutionTitle}`
-        : `${userPrefix} visualizou uma solução`;
-        
-    case 'lesson_view':
-    case 'lesson_viewed':
-      const lessonName = eventData?.lesson_name || eventData?.title;
-      return lessonName
-        ? `${userPrefix} assistiu à aula: ${lessonName}`
-        : `${userPrefix} assistiu a uma aula`;
-        
-    case 'solution_start':
-    case 'implementation_start':
-    case 'solution_started':
-    case 'implementation_started':
-      return solutionTitle 
-        ? `${userPrefix} iniciou implementação: ${solutionTitle}`
-        : `${userPrefix} iniciou uma implementação`;
-        
-    case 'solution_complete':
-    case 'implementation_complete':
-    case 'solution_completed':
-    case 'implementation_completed':
-      return solutionTitle 
-        ? `${userPrefix} completou implementação: ${solutionTitle}`
-        : `${userPrefix} completou uma implementação`;
-        
-    case 'lesson_complete':
-    case 'lesson_completed':
-      const completedLessonName = eventData?.lesson_name || eventData?.title;
-      return completedLessonName
-        ? `${userPrefix} completou a aula: ${completedLessonName}`
-        : `${userPrefix} completou uma aula`;
-        
-    case 'profile_update':
-      return `${userPrefix} atualizou seu perfil`;
-      
-    case 'comment_created':
-      return `${userPrefix} fez um comentário`;
-      
-    case 'forum_post':
-      return `${userPrefix} criou um post no fórum`;
-      
-    default:
-      return `${userPrefix} realizou: ${eventType.replace('_', ' ')}`;
-  }
+  return { activityData, loading, refetch: fetchSystemActivity };
 };
