@@ -25,17 +25,22 @@ export const RealAnalyticsOverview = ({
     metadata
   } = useOptimizedAnalyticsData({
     timeRange: '30d',
+    category: 'all',
+    difficulty: 'all',
+    searchTerm: '',
     enableCache: true,
     debounceDelay: 300
   });
 
-  // Hook original como fallback
+  // Hook original como fallback - com todas as propriedades necessárias
   const {
     data: originalData,
     loading: originalLoading,
     error: originalError
   } = useAnalyticsData({
-    timeRange: '30d'
+    timeRange: '30d',
+    category: 'all',
+    difficulty: 'all'
   });
 
   // Determinar qual dados usar
