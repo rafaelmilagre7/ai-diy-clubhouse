@@ -1,15 +1,11 @@
 
 import React, { useState, useCallback } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { OverviewTabContent } from '@/components/admin/analytics/OverviewTabContent';
+import { RealAnalyticsOverview } from '@/components/admin/analytics/RealAnalyticsOverview';
 import { AnalyticsHeader } from '@/components/admin/analytics/AnalyticsHeader';
 import { PlaceholderTabContent } from '@/components/admin/analytics/PlaceholderTabContent';
-import { LmsAnalyticsTabContent } from '@/components/admin/analytics/lms/LmsAnalyticsTabContent';
-import { UserAnalyticsTabContent } from '@/components/admin/analytics/users/UserAnalyticsTabContent';
-import { SolutionsAnalyticsTabContent } from '@/components/admin/analytics/solutions/SolutionsAnalyticsTabContent';
-import { ImplementationsAnalyticsTabContent } from '@/components/admin/analytics/implementations/ImplementationsAnalyticsTabContent';
-import { useAnalyticsData } from '@/hooks/analytics/useAnalyticsData';
+import { useRealAdminAnalytics } from '@/hooks/admin/useRealAdminAnalytics';
 import { PermissionGuard } from '@/components/auth/PermissionGuard';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertCircle, RefreshCw } from 'lucide-react';
@@ -17,33 +13,19 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 
 const AdminAnalytics = () => {
-  const [timeRange, setTimeRange] = useState('7d');
-  const [category, setCategory] = useState('all');
-  const [difficulty, setDifficulty] = useState('all');
+  const [timeRange, setTimeRange] = useState('30d');
   const { toast } = useToast();
   
-  // Buscar dados de análise para a visão geral
+  // Usar o hook de analytics real
   const { 
     data: analyticsData, 
     loading: analyticsLoading, 
     error: analyticsError,
     refresh: refreshAnalytics 
-  } = useAnalyticsData({
-    timeRange,
-    category,
-    difficulty
-  });
+  } = useRealAdminAnalytics(timeRange);
 
   const handleTimeRangeChange = (value: string) => {
     setTimeRange(value);
-  };
-
-  const handleCategoryChange = (value: string) => {
-    setCategory(value);
-  };
-
-  const handleDifficultyChange = (value: string) => {
-    setDifficulty(value);
   };
 
   const handleRefresh = useCallback(() => {
@@ -70,7 +52,14 @@ const AdminAnalytics = () => {
     >
       <div className="space-y-6">
         <div className="flex items-center justify-between mb-6">
-          <h1 className="text-3xl font-bold tracking-tight text-neutral-900 dark:text-white">Analytics</h1>
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight text-neutral-900 dark:text-white">
+              Analytics Administrativo
+            </h1>
+            <p className="text-muted-foreground">
+              Dados em tempo real da plataforma
+            </p>
+          </div>
           <Button 
             variant="outline"
             size="sm"
@@ -88,63 +77,58 @@ const AdminAnalytics = () => {
             <AnalyticsHeader 
               timeRange={timeRange}
               setTimeRange={handleTimeRangeChange}
-              category={category}
-              setCategory={handleCategoryChange}
-              difficulty={difficulty}
-              setDifficulty={handleDifficultyChange}
+              category="all"
+              setCategory={() => {}}
+              difficulty="all"
+              setDifficulty={() => {}}
             />
           </CardContent>
         </Card>
 
-        {analyticsError && (
-          <Alert variant="destructive" className="mb-6">
-            <AlertCircle className="h-4 w-4" />
-            <AlertTitle>Erro ao carregar dados</AlertTitle>
-            <AlertDescription>{analyticsError}</AlertDescription>
-          </Alert>
-        )}
-
         <Tabs defaultValue="overview" className="space-y-6">
           <div className="bg-white dark:bg-gray-900 p-1 rounded-lg border border-gray-200 dark:border-gray-800 shadow-sm">
-            <TabsList className="grid grid-cols-6 max-w-4xl gap-1">
-              <TabsTrigger value="overview" className="text-neutral-700 dark:text-gray-300 data-[state=active]:bg-[#0ABAB5] data-[state=active]:text-white data-[state=active]:shadow-sm">Visão Geral</TabsTrigger>
-              <TabsTrigger value="lms" className="text-neutral-700 dark:text-gray-300 data-[state=active]:bg-[#0ABAB5] data-[state=active]:text-white data-[state=active]:shadow-sm">LMS</TabsTrigger>
-              <TabsTrigger value="users" className="text-neutral-700 dark:text-gray-300 data-[state=active]:bg-[#0ABAB5] data-[state=active]:text-white data-[state=active]:shadow-sm">Usuários</TabsTrigger>
-              <TabsTrigger value="solutions" className="text-neutral-700 dark:text-gray-300 data-[state=active]:bg-[#0ABAB5] data-[state=active]:text-white data-[state=active]:shadow-sm">Soluções</TabsTrigger>
-              <TabsTrigger value="implementations" className="text-neutral-700 dark:text-gray-300 data-[state=active]:bg-[#0ABAB5] data-[state=active]:text-white data-[state=active]:shadow-sm">Implementações</TabsTrigger>
-              <TabsTrigger value="engagement" className="text-neutral-700 dark:text-gray-300 data-[state=active]:bg-[#0ABAB5] data-[state=active]:text-white data-[state=active]:shadow-sm">Engajamento</TabsTrigger>
+            <TabsList className="grid grid-cols-4 max-w-2xl gap-1">
+              <TabsTrigger value="overview" className="text-neutral-700 dark:text-gray-300 data-[state=active]:bg-[#0ABAB5] data-[state=active]:text-white data-[state=active]:shadow-sm">
+                Visão Geral
+              </TabsTrigger>
+              <TabsTrigger value="users" className="text-neutral-700 dark:text-gray-300 data-[state=active]:bg-[#0ABAB5] data-[state=active]:text-white data-[state=active]:shadow-sm">
+                Usuários
+              </TabsTrigger>
+              <TabsTrigger value="solutions" className="text-neutral-700 dark:text-gray-300 data-[state=active]:bg-[#0ABAB5] data-[state=active]:text-white data-[state=active]:shadow-sm">
+                Soluções
+              </TabsTrigger>
+              <TabsTrigger value="learning" className="text-neutral-700 dark:text-gray-300 data-[state=active]:bg-[#0ABAB5] data-[state=active]:text-white data-[state=active]:shadow-sm">
+                Aprendizado
+              </TabsTrigger>
             </TabsList>
           </div>
           
           <TabsContent value="overview" className="space-y-4">
-            <OverviewTabContent 
-              timeRange={timeRange} 
+            <RealAnalyticsOverview 
+              data={analyticsData}
               loading={analyticsLoading} 
-              data={analyticsData} 
-              onRefresh={handleRefresh} 
+              error={analyticsError}
             />
           </TabsContent>
           
-          <TabsContent value="lms" className="space-y-4">
-            <LmsAnalyticsTabContent timeRange={timeRange} />
-          </TabsContent>
-          
           <TabsContent value="users" className="space-y-4">
-            <UserAnalyticsTabContent timeRange={timeRange} />
+            <PlaceholderTabContent 
+              title="Análise Detalhada de Usuários" 
+              description="Métricas específicas sobre o comportamento e engajamento dos usuários."
+            />
           </TabsContent>
           
           <TabsContent value="solutions" className="space-y-4">
-            <SolutionsAnalyticsTabContent timeRange={timeRange} />
-          </TabsContent>
-          
-          <TabsContent value="implementations" className="space-y-4">
-            <ImplementationsAnalyticsTabContent timeRange={timeRange} />
-          </TabsContent>
-          
-          <TabsContent value="engagement" className="space-y-4">
             <PlaceholderTabContent 
-              title="Análise de Engajamento" 
-              description="Métricas de interação e atividade dos usuários na plataforma."
+              title="Performance de Soluções" 
+              description="Análise detalhada da performance e adoção das soluções disponíveis."
+            />
+          </TabsContent>
+          
+          <TabsContent value="learning" className="space-y-4">
+            <PlaceholderTabContent 
+              title="Analytics de Aprendizado" 
+              description="Métricas sobre o progresso e engajamento nos cursos e aulas."
             />
           </TabsContent>
         </Tabs>
