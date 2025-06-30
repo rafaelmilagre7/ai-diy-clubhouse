@@ -1,70 +1,70 @@
 
 import React from 'react';
-import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
+import { TrendingUp, TrendingDown } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 
 interface TrendIndicatorProps {
   value: number;
-  suffix?: string;
-  showBadge?: boolean;
   size?: 'sm' | 'md' | 'lg';
+  showBadge?: boolean;
   className?: string;
 }
 
 export const TrendIndicator = ({ 
   value, 
-  suffix = '%',
+  size = 'md', 
   showBadge = true,
-  size = 'md',
   className 
 }: TrendIndicatorProps) => {
-  const isPositive = value > 0;
-  const isNeutral = value === 0;
+  const isPositive = value >= 0;
+  const absValue = Math.abs(value);
   
-  const getIcon = () => {
-    if (isNeutral) return Minus;
-    return isPositive ? TrendingUp : TrendingDown;
+  const sizeClasses = {
+    sm: 'h-3 w-3',
+    md: 'h-4 w-4', 
+    lg: 'h-5 w-5'
   };
   
-  const getColor = () => {
-    if (isNeutral) return 'text-gray-500';
-    return isPositive ? 'text-green-500' : 'text-red-500';
+  const textSizes = {
+    sm: 'text-xs',
+    md: 'text-sm',
+    lg: 'text-base'
   };
-  
-  const getBadgeVariant = () => {
-    if (isNeutral) return 'neutral';
-    return isPositive ? 'success' : 'destructive';
-  };
-  
-  const getSizeClasses = () => {
-    switch (size) {
-      case 'sm': return 'h-3 w-3';
-      case 'lg': return 'h-5 w-5';
-      default: return 'h-4 w-4';
-    }
-  };
-  
-  const Icon = getIcon();
-  
-  if (showBadge) {
-    return (
-      <Badge 
-        variant={getBadgeVariant()} 
-        className={cn("flex items-center gap-1 text-xs", className)}
-      >
-        <Icon className={getSizeClasses()} />
-        {Math.abs(value)}{suffix}
-      </Badge>
-    );
-  }
-  
-  return (
-    <div className={cn("flex items-center gap-1", getColor(), className)}>
-      <Icon className={getSizeClasses()} />
-      <span className="text-sm font-medium">
-        {Math.abs(value)}{suffix}
+
+  const content = (
+    <div className={cn(
+      "flex items-center gap-1",
+      isPositive ? "text-emerald-600 dark:text-emerald-400" : "text-red-600 dark:text-red-400",
+      textSizes[size],
+      className
+    )}>
+      {isPositive ? (
+        <TrendingUp className={sizeClasses[size]} />
+      ) : (
+        <TrendingDown className={sizeClasses[size]} />
+      )}
+      <span className="font-medium">
+        {isPositive ? '+' : ''}{value}%
       </span>
     </div>
   );
+
+  if (showBadge) {
+    return (
+      <Badge 
+        variant="secondary" 
+        className={cn(
+          "px-2 py-1",
+          isPositive 
+            ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-300 dark:border-emerald-800" 
+            : "bg-red-50 text-red-700 border-red-200 dark:bg-red-900/20 dark:text-red-300 dark:border-red-800"
+        )}
+      >
+        {content}
+      </Badge>
+    );
+  }
+
+  return content;
 };

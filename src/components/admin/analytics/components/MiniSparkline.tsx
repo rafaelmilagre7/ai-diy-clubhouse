@@ -1,50 +1,36 @@
 
 import React from 'react';
 import { LineChart, Line, ResponsiveContainer } from 'recharts';
-import { chartColors } from '@/lib/chart-utils';
-
-interface SparklineData {
-  value: number;
-  date?: string;
-}
 
 interface MiniSparklineProps {
-  data: SparklineData[];
+  data: Array<{ value: number; date?: string }>;
   color?: string;
   height?: number;
-  strokeWidth?: number;
   className?: string;
 }
 
 export const MiniSparkline = ({ 
   data, 
-  color = chartColors.primary,
+  color = '#0ABAB5', 
   height = 40,
-  strokeWidth = 2,
-  className 
+  className = '' 
 }: MiniSparklineProps) => {
   if (!data || data.length === 0) {
     return (
-      <div 
-        className={`bg-gray-100 dark:bg-gray-800 rounded ${className}`}
-        style={{ height }}
-      >
-        <div className="flex items-center justify-center h-full text-xs text-gray-400">
-          Sem dados
-        </div>
-      </div>
+      <div className={`h-${height} bg-muted/20 rounded ${className}`} 
+           style={{ height: `${height}px` }} />
     );
   }
 
   return (
-    <div className={className} style={{ height }}>
+    <div className={className} style={{ height: `${height}px` }}>
       <ResponsiveContainer width="100%" height="100%">
-        <LineChart data={data} margin={{ top: 2, right: 2, left: 2, bottom: 2 }}>
+        <LineChart data={data}>
           <Line
             type="monotone"
             dataKey="value"
             stroke={color}
-            strokeWidth={strokeWidth}
+            strokeWidth={2}
             dot={false}
             activeDot={false}
           />
