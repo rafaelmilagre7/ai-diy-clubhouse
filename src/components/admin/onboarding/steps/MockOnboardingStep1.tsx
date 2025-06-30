@@ -3,13 +3,13 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
 import { OnboardingData } from '@/components/onboarding/types/onboardingTypes';
 import { BirthDateSelector } from '@/components/onboarding/components/BirthDateSelector';
 import { LocationSelector } from '@/components/onboarding/components/LocationSelector';
 import { WhatsAppInput } from '@/components/onboarding/components/WhatsAppInput';
 import { ProfilePictureUpload } from '@/components/onboarding/components/ProfilePictureUpload';
-import { User } from 'lucide-react';
+import { User, Instagram, Linkedin, Lightbulb } from 'lucide-react';
 
 interface MockOnboardingStep1Props {
   data: OnboardingData;
@@ -139,10 +139,72 @@ const MockOnboardingStep1: React.FC<MockOnboardingStep1Props> = ({
             />
           </div>
 
+          {/* Redes Sociais */}
+          <div className="space-y-4">
+            <Label className="text-slate-200 font-medium">
+              Redes Sociais (Opcional)
+            </Label>
+            
+            {/* Instagram */}
+            <div className="space-y-2">
+              <Label htmlFor="instagram" className="text-slate-200 font-medium flex items-center gap-2">
+                <Instagram className="h-4 w-4" />
+                Instagram
+              </Label>
+              <Input
+                id="instagram"
+                value={data.instagram || ''}
+                onChange={(e) => handleInputChange('instagram', e.target.value)}
+                placeholder="@seuusuario ou https://instagram.com/seuusuario"
+                className="bg-slate-800/50 border-slate-600 text-white placeholder:text-slate-400 focus:border-viverblue"
+              />
+              {getFieldError?.('instagram') && (
+                <p className="text-red-400 text-sm">{getFieldError('instagram')}</p>
+              )}
+            </div>
+
+            {/* LinkedIn */}
+            <div className="space-y-2">
+              <Label htmlFor="linkedin" className="text-slate-200 font-medium flex items-center gap-2">
+                <Linkedin className="h-4 w-4" />
+                LinkedIn
+              </Label>
+              <Input
+                id="linkedin"
+                value={data.linkedin || ''}
+                onChange={(e) => handleInputChange('linkedin', e.target.value)}
+                placeholder="https://linkedin.com/in/seuperfil"
+                className="bg-slate-800/50 border-slate-600 text-white placeholder:text-slate-400 focus:border-viverblue"
+              />
+              {getFieldError?.('linkedin') && (
+                <p className="text-red-400 text-sm">{getFieldError('linkedin')}</p>
+              )}
+            </div>
+          </div>
+
+          {/* Curiosidade */}
+          <div className="space-y-2">
+            <Label htmlFor="curiosity" className="text-slate-200 font-medium flex items-center gap-2">
+              <Lightbulb className="h-4 w-4" />
+              Conte algo interessante sobre você (Opcional)
+            </Label>
+            <Textarea
+              id="curiosity"
+              value={data.curiosity || ''}
+              onChange={(e) => handleInputChange('curiosity', e.target.value)}
+              placeholder="Um hobby, uma paixão, algo que te define..."
+              className="bg-slate-800/50 border-slate-600 text-white placeholder:text-slate-400 focus:border-viverblue min-h-[100px]"
+              rows={4}
+            />
+            {getFieldError?.('curiosity') && (
+              <p className="text-red-400 text-sm">{getFieldError('curiosity')}</p>
+            )}
+          </div>
+
           {/* Foto de Perfil */}
           <div className="space-y-2">
             <Label className="text-slate-200 font-medium">
-              Foto de Perfil
+              Foto de Perfil (Opcional)
             </Label>
             <ProfilePictureUpload
               value={data.profilePicture || ''}
