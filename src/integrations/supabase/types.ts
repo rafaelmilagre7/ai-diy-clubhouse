@@ -701,6 +701,13 @@ export type Database = {
             foreignKeyName: "course_access_control_course_id_fkey"
             columns: ["course_id"]
             isOneToOne: false
+            referencedRelation: "learning_analytics_data"
+            referencedColumns: ["course_id"]
+          },
+          {
+            foreignKeyName: "course_access_control_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
             referencedRelation: "learning_courses"
             referencedColumns: ["id"]
           },
@@ -1451,6 +1458,13 @@ export type Database = {
             foreignKeyName: "learning_certificates_course_id_fkey"
             columns: ["course_id"]
             isOneToOne: false
+            referencedRelation: "learning_analytics_data"
+            referencedColumns: ["course_id"]
+          },
+          {
+            foreignKeyName: "learning_certificates_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
             referencedRelation: "learning_courses"
             referencedColumns: ["id"]
           },
@@ -1836,6 +1850,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "learning_modules_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "learning_analytics_data"
+            referencedColumns: ["course_id"]
+          },
           {
             foreignKeyName: "learning_modules_course_id_fkey"
             columns: ["course_id"]
@@ -3241,6 +3262,13 @@ export type Database = {
             foreignKeyName: "solution_certificates_solution_id_fkey"
             columns: ["solution_id"]
             isOneToOne: false
+            referencedRelation: "solution_performance_data"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "solution_certificates_solution_id_fkey"
+            columns: ["solution_id"]
+            isOneToOne: false
             referencedRelation: "solutions"
             referencedColumns: ["id"]
           },
@@ -4307,6 +4335,25 @@ export type Database = {
       }
     }
     Views: {
+      admin_stats_overview: {
+        Row: {
+          active_implementations: number | null
+          active_learners_7d: number | null
+          active_users_7d: number | null
+          avg_implementation_time_days: number | null
+          completed_implementations: number | null
+          completed_lessons: number | null
+          forum_topics: number | null
+          new_implementations_30d: number | null
+          new_users_30d: number | null
+          overall_completion_rate: number | null
+          total_benefit_clicks: number | null
+          total_courses: number | null
+          total_solutions: number | null
+          total_users: number | null
+        }
+        Relationships: []
+      }
       benefits: {
         Row: {
           benefit_badge_url: string | null
@@ -4376,6 +4423,17 @@ export type Database = {
         }
         Relationships: []
       }
+      learning_analytics_data: {
+        Row: {
+          avg_progress_percentage: number | null
+          completed_lessons_count: number | null
+          course_id: string | null
+          course_title: string | null
+          enrolled_users: number | null
+          total_lessons: number | null
+        }
+        Relationships: []
+      }
       learning_courses_with_stats: {
         Row: {
           cover_image_url: string | null
@@ -4425,6 +4483,18 @@ export type Database = {
           },
         ]
       }
+      solution_performance_data: {
+        Row: {
+          category: string | null
+          completed_implementations: number | null
+          completion_rate: number | null
+          difficulty: string | null
+          id: string | null
+          title: string | null
+          total_implementations: number | null
+        }
+        Relationships: []
+      }
       suggestions_with_profiles: {
         Row: {
           category_id: string | null
@@ -4469,6 +4539,22 @@ export type Database = {
           },
         ]
       }
+      user_engagement_metrics: {
+        Row: {
+          date: string | null
+          name: string | null
+          new_users: number | null
+        }
+        Relationships: []
+      }
+      user_role_distribution: {
+        Row: {
+          percentage: number | null
+          role_name: string | null
+          user_count: number | null
+        }
+        Relationships: []
+      }
       users_with_roles: {
         Row: {
           avatar_url: string | null
@@ -4480,6 +4566,14 @@ export type Database = {
           name: string | null
           role_description: string | null
           role_name: string | null
+        }
+        Relationships: []
+      }
+      weekly_activity_pattern: {
+        Row: {
+          activity_count: number | null
+          day_name: string | null
+          day_of_week: number | null
         }
         Relationships: []
       }

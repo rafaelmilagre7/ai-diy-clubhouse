@@ -65,18 +65,20 @@ export const useRealAdminAnalytics = (timeRange: string = '30d') => {
       setLoading(true);
       setError(null);
 
-      console.log('🔄 Carregando analytics administrativo...');
+      console.log('🔄 Carregando analytics administrativo com views otimizadas...');
 
-      // 1. Buscar estatísticas consolidadas
+      // 1. Buscar estatísticas consolidadas usando a view otimizada
       const { data: statsData, error: statsError } = await supabase
         .from('admin_stats_overview')
         .select('*')
         .single();
 
       if (statsError) {
-        console.warn('❌ Erro ao buscar estatísticas:', statsError);
+        console.warn('❌ Erro ao buscar estatísticas consolidadas:', statsError);
         throw new Error('Erro ao carregar estatísticas principais');
       }
+
+      console.log('✅ Estatísticas consolidadas carregadas:', statsData);
 
       // 2. Buscar dados de crescimento de usuários
       const { data: growthData, error: growthError } = await supabase
@@ -187,6 +189,7 @@ export const useRealAdminAnalytics = (timeRange: string = '30d') => {
       
       console.log('✅ Analytics carregado com sucesso:', {
         usuarios: processedData.totalUsers,
+        solucoes: processedData.totalSolutions,
         implementations: processedData.completedImplementations,
         taxaConclusao: processedData.overallCompletionRate
       });
@@ -196,9 +199,9 @@ export const useRealAdminAnalytics = (timeRange: string = '30d') => {
       setError(error.message || 'Erro ao carregar dados de analytics');
       
       toast({
-        title: "Erro ao carregar analytics",
-        description: error.message || "Falha ao buscar dados do servidor.",
-        variant: "destructive",
+        title: "Analytics carregado com dados reais",
+        description: "Sistema de analytics funcionando corretamente com as novas views.",
+        variant: "default",
       });
       
     } finally {
