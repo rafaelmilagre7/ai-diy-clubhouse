@@ -65,6 +65,24 @@ const AdminAnalytics = () => {
     activeImplementations: analyticsData?.activeImplementations || 0
   };
 
+  // Preparar dados completos para o RealAnalyticsOverview
+  const overviewData = analyticsData ? {
+    totalUsers: analyticsData.totalUsers || 0,
+    totalSolutions: analyticsData.totalSolutions || 0,
+    totalCourses: analyticsData.totalCourses || 0,
+    activeImplementations: analyticsData.activeImplementations || 0,
+    usersByTime: analyticsData.usersByTime || [],
+    solutionPopularity: analyticsData.solutionPopularity || [],
+    implementationsByCategory: analyticsData.implementationsByCategory || [],
+    userCompletionRate: analyticsData.userCompletionRate || [],
+    dayOfWeekActivity: analyticsData.dayOfWeekActivity || []
+  } : undefined;
+
+  // Converter erro string para objeto Error se necessário
+  const processedError = analyticsError ? 
+    (typeof analyticsError === 'string' ? new Error(analyticsError) : analyticsError) : 
+    null;
+
   return (
     <PermissionGuard 
       permission="analytics.view"
@@ -116,9 +134,9 @@ const AdminAnalytics = () => {
               {activeTab === 'overview' && (
                 <div className="space-y-4">
                   <RealAnalyticsOverview 
-                    data={analyticsData}
+                    data={overviewData}
                     loading={analyticsLoading} 
-                    error={analyticsError}
+                    error={processedError}
                   />
                 </div>
               )}
