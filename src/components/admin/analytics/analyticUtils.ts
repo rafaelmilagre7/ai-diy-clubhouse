@@ -1,94 +1,87 @@
 
-// Utilitários para processamento de dados de analytics
-
-export const processUsersByTime = (users: any[]) => {
-  if (!users || users.length === 0) return [];
+// Utilitários para processamento de dados analytics
+export const processUsersByTime = (data: any[]) => {
+  if (!data || data.length === 0) return [];
   
-  const grouped = users.reduce((acc, user) => {
-    const date = new Date(user.created_at).toISOString().split('T')[0];
-    acc[date] = (acc[date] || 0) + 1;
+  return data.map(item => ({
+    date: item.date || item.created_at,
+    name: item.name || new Date(item.date || item.created_at).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }),
+    usuarios: item.novos || item.usuarios || 1,
+    total: item.total || item.usuarios || 1,
+    novos: item.novos || item.usuarios || 1
+  }));
+};
+
+export const processSolutionPopularity = (progressData: any[], solutionsData: any[]) => {
+  if (!progressData || !solutionsData) return [];
+  
+  const solutionCounts = progressData.reduce((acc: any, progress) => {
+    const solutionId = progress.solution_id;
+    acc[solutionId] = (acc[solutionId] || 0) + 1;
     return acc;
   }, {});
-  
-  return Object.entries(grouped)
-    .map(([date, count]) => ({ 
-      date, 
-      usuarios: count,
-      name: new Date(date).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })
+
+  return solutionsData
+    .map(solution => ({
+      name: solution.title?.length > 25 ? solution.title.substring(0, 25) + '...' : solution.title || 'Solução',
+      value: solutionCounts[solution.id] || 0
     }))
-    .sort((a, b) => a.date.localeCompare(b.date));
+    .filter(item => item.value > 0)
+    .sort((a, b) => b.value - a.value)
+    .slice(0, 5);
 };
 
-export const processSolutionPopularity = (progress: any[], solutions: any[]) => {
-  if (!progress || !solutions || progress.length === 0) return [];
+export const processImplementationsByCategory = (progressData: any[], solutionsData: any[]) => {
+  if (!progressData || !solutionsData) return [];
   
-  const solutionMap = solutions.reduce((acc, solution) => {
-    acc[solution.id] = solution;
+  const categoryMap = solutionsData.reduce((acc: any, solution) => {
+    acc[solution.id] = solution.category || 'Outros';
     return acc;
   }, {});
-  
-  const grouped = progress.reduce((acc, item) => {
-    const solution = solutionMap[item.solution_id];
-    if (solution) {
-      const title = solution.title || 'Solução sem título';
-      acc[title] = (acc[title] || 0) + 1;
-    }
+
+  const categoryCounts = progressData.reduce((acc: any, progress) => {
+    const category = categoryMap[progress.solution_id] || 'Outros';
+    acc[category] = (acc[category] || 0) + 1;
     return acc;
   }, {});
-  
-  return Object.entries(grouped)
-    .map(([name, value]) => ({ name, value }))
-    .sort((a, b) => (b.value as number) - (a.value as number))
-    .slice(0, 10); // Top 10
+
+  return Object.entries(categoryCounts).map(([name, value]) => ({
+    name,
+    value: value as number
+  }));
 };
 
-export const processImplementationsByCategory = (progress: any[], solutions: any[]) => {
-  if (!progress || !solutions || progress.length === 0) return [];
+export const processCompletionRate = (progressData: any[]) => {
+  if (!progressData || progressData.length === 0) {
+    return [
+      { name: 'Concluídas', value: 0 },
+      { name: 'Em andamento', value: 0 }
+    ];
+  }
   
-  const solutionMap = solutions.reduce((acc, solution) => {
-    acc[solution.id] = solution;
-    return acc;
-  }, {});
-  
-  const grouped = progress.reduce((acc, item) => {
-    const solution = solutionMap[item.solution_id];
-    if (solution && item.is_completed) {
-      const category = solution.category || 'Outros';
-      acc[category] = (acc[category] || 0) + 1;
-    }
-    return acc;
-  }, {});
-  
-  return Object.entries(grouped)
-    .map(([name, value]) => ({ name, value }));
-};
-
-export const processCompletionRate = (progress: any[]) => {
-  if (!progress || progress.length === 0) return [];
-  
-  const total = progress.length;
-  const completed = progress.filter(item => item.is_completed).length;
-  const completionRate = total > 0 ? (completed / total) * 100 : 0;
+  const completed = progressData.filter(p => p.is_completed).length;
+  const inProgress = progressData.length - completed;
   
   return [
     { name: 'Concluídas', value: completed },
-    { name: 'Em andamento', value: total - completed }
+    { name: 'Em andamento', value: inProgress }
   ];
 };
 
-export const processDayOfWeekActivity = (progress: any[]) => {
-  if (!progress || progress.length === 0) return [];
+export const processDayOfWeekActivity = (data: any[]) => {
+  if (!data || data.length === 0) return [];
   
   const dayNames = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
-  const grouped = progress.reduce((acc, item) => {
-    const dayIndex = new Date(item.created_at).getDay();
-    const dayName = dayNames[dayIndex];
-    acc[dayName] = (acc[dayName] || 0) + 1;
-    return acc;
-  }, {});
+  const activityByDay = new Array(7).fill(0);
   
-  return dayNames.map(day => ({
+  data.forEach(item => {
+    const date = new Date(item.created_at || item.last_activity || item.updated_at);
+    const dayIndex = date.getDay();
+    activityByDay[dayIndex]++;
+  });
+  
+  return dayNames.map((day, index) => ({
     day,
-    atividade: grouped[day] || 0
+    atividade: activityByDay[index]
   }));
 };
