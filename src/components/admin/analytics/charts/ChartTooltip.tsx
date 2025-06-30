@@ -1,0 +1,88 @@
+
+import React from 'react';
+import { chartTheme } from './chartTheme';
+
+interface ChartTooltipProps {
+  active?: boolean;
+  payload?: any[];
+  label?: string;
+  valueFormatter?: (value: number) => string;
+  labelFormatter?: (label: string) => string;
+  colorMap?: Record<string, string>;
+}
+
+export const ChartTooltip: React.FC<ChartTooltipProps> = ({
+  active,
+  payload,
+  label,
+  valueFormatter = (value) => value.toLocaleString(),
+  labelFormatter = (label) => label,
+  colorMap = {}
+}) => {
+  if (!active || !payload || !payload.length) {
+    return null;
+  }
+
+  return (
+    <div 
+      className="bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm rounded-lg border border-gray-200 dark:border-gray-700 shadow-lg p-3 max-w-xs"
+      style={chartTheme.styles.tooltip}
+    >
+      {label && (
+        <div className="font-medium text-gray-900 dark:text-gray-100 mb-2 text-sm">
+          {labelFormatter(label)}
+        </div>
+      )}
+      <div className="space-y-1">
+        {payload.map((entry, index) => (
+          <div key={index} className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2">
+              <div
+                className="w-3 h-3 rounded-full flex-shrink-0"
+                style={{ 
+                  backgroundColor: colorMap[entry.dataKey] || entry.color 
+                }}
+              />
+              <span className="text-gray-700 dark:text-gray-300 text-sm">
+                {entry.name || entry.dataKey}
+              </span>
+            </div>
+            <span className="font-medium text-gray-900 dark:text-gray-100 text-sm">
+              {valueFormatter(entry.value)}
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+// Tooltip especializado para gráficos de área
+export const AreaChartTooltip: React.FC<ChartTooltipProps> = (props) => {
+  return (
+    <ChartTooltip
+      {...props}
+      valueFormatter={(value) => `${value.toLocaleString()} usuários`}
+    />
+  );
+};
+
+// Tooltip especializado para gráficos de barra
+export const BarChartTooltip: React.FC<ChartTooltipProps> = (props) => {
+  return (
+    <ChartTooltip
+      {...props}
+      valueFormatter={(value) => `${value.toLocaleString()} implementações`}
+    />
+  );
+};
+
+// Tooltip especializado para gráficos de pizza
+export const PieChartTooltip: React.FC<ChartTooltipProps> = (props) => {
+  return (
+    <ChartTooltip
+      {...props}
+      valueFormatter={(value) => `${value.toLocaleString()} (${((value / props.payload?.[0]?.payload?.total) * 100 || 0).toFixed(1)}%)`}
+    />
+  );
+};

@@ -1,9 +1,7 @@
 
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { UserGrowthChart } from './UserGrowthChart';
-import { PopularSolutionsChart } from './PopularSolutionsChart';
-import { WeeklyActivityChart } from './WeeklyActivityChart';
+import { EnhancedAreaChart, EnhancedBarChart, EnhancedPieChart } from './charts';
 import { EnhancedMetricCard } from './components/EnhancedMetricCard';
 import { MetricsGrid } from './components/MetricsGrid';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -174,22 +172,54 @@ export const RealAnalyticsOverview = ({ data, loading, error }: RealAnalyticsOve
         ))}
       </MetricsGrid>
 
-      {/* Gráficos */}
+      {/* Enhanced Charts */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <UserGrowthChart data={data.userGrowthData} />
-        <PopularSolutionsChart data={data.solutionPerformance} />
-        <WeeklyActivityChart data={data.weeklyActivity} />
+        <EnhancedAreaChart
+          data={data.userGrowthData || []}
+          title="Crescimento de Usuários"
+          description="Novos usuários registrados ao longo do tempo"
+          categories={['novos', 'total']}
+          index="name"
+          colors={['#3B82F6', '#0ABAB5']}
+          valueFormatter={(value) => `${value} usuário${value !== 1 ? 's' : ''}`}
+          size="medium"
+          curved={true}
+        />
+
+        <EnhancedBarChart
+          data={data.solutionPerformance || []}
+          title="Soluções Mais Populares"
+          description="Top 5 soluções mais implementadas"
+          categories={['value']}
+          index="name"
+          colors={['#F59E0B']}
+          valueFormatter={(value) => `${value} implementação${value !== 1 ? 'ões' : ''}`}
+          size="medium"
+          layout="vertical"
+        />
+
+        <EnhancedBarChart
+          data={data.weeklyActivity || []}
+          title="Atividade Semanal"
+          description="Atividade dos usuários por dia da semana"
+          categories={['atividade']}
+          index="day"
+          colors={['#0ABAB5']}
+          valueFormatter={(value) => `${value} atividade${value !== 1 ? 's' : ''}`}
+          size="medium"
+          layout="horizontal"
+        />
       </div>
 
       {/* Status do Sistema */}
       <Alert className="bg-green-50 border-green-200 dark:bg-green-900/20 dark:border-green-800">
         <CheckCircle className="h-4 w-4 text-green-600" />
         <AlertTitle className="text-green-800 dark:text-green-200">
-          Sistema de Analytics Operacional
+          Sistema de Analytics Avançado Operacional
         </AlertTitle>
         <AlertDescription className="text-green-700 dark:text-green-300">
           Exibindo dados reais de {data.totalUsers} usuários e {data.totalSolutions} soluções. 
-          Enhanced Metric Cards implementados com sucesso.
+          Sistema de gráficos modernizado com animações, tooltips avançados e design responsivo implementado com sucesso.
         </AlertDescription>
       </Alert>
     </div>
