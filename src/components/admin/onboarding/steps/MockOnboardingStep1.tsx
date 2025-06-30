@@ -5,11 +5,11 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { OnboardingData } from '@/components/onboarding/types/onboardingTypes';
+import { User, MapPin, Calendar, MessageCircle, Camera } from 'lucide-react';
 import { WhatsAppInput } from '@/components/onboarding/components/WhatsAppInput';
 import { LocationSelector } from '@/components/onboarding/components/LocationSelector';
 import { BirthDateSelector } from '@/components/onboarding/components/BirthDateSelector';
 import { ProfilePictureUpload } from '@/components/onboarding/components/ProfilePictureUpload';
-import { User, Globe, MapPin, Calendar, Camera } from 'lucide-react';
 
 interface MockOnboardingStep1Props {
   data: OnboardingData;
@@ -26,22 +26,12 @@ const MockOnboardingStep1: React.FC<MockOnboardingStep1Props> = ({
     onUpdateData({ [field]: value });
   };
 
-  const handleBirthDateChange = (day: string, month: string, year: string) => {
-    const birthDate = day && month && year ? `${day}/${month}/${year}` : '';
-    onUpdateData({ 
-      birthDate,
-      birthDay: day,
-      birthMonth: month,
-      birthYear: year
-    });
-  };
-
-  const handleLocationChange = (field: 'state' | 'city', value: string) => {
-    onUpdateData({ [field]: value });
-  };
+  // Simular que email e WhatsApp podem vir pré-preenchidos
+  const isEmailPreFilled = !!data.email;
+  const isPhonePreFilled = !!data.phone;
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       {/* Informações Básicas */}
       <Card className="bg-white/5 border-white/10 backdrop-blur-sm">
         <CardHeader className="pb-4">
@@ -60,7 +50,7 @@ const MockOnboardingStep1: React.FC<MockOnboardingStep1Props> = ({
               id="name"
               value={data.name || ''}
               onChange={(e) => handleInputChange('name', e.target.value)}
-              placeholder="Informe seu nome completo"
+              placeholder="Seu nome completo"
               className="bg-slate-800/50 border-slate-600 text-white placeholder:text-slate-400 focus:border-viverblue"
             />
             {getFieldError?.('name') && (
@@ -68,68 +58,54 @@ const MockOnboardingStep1: React.FC<MockOnboardingStep1Props> = ({
             )}
           </div>
 
-          {/* Email */}
+          {/* E-mail (travado se pré-preenchido) */}
           <div className="space-y-2">
             <Label htmlFor="email" className="text-slate-200 font-medium">
-              Email Corporativo *
+              E-mail *
             </Label>
             <Input
               id="email"
               type="email"
               value={data.email || ''}
               onChange={(e) => handleInputChange('email', e.target.value)}
-              placeholder="exemplo@empresa.com.br"
-              className="bg-slate-800/50 border-slate-600 text-white placeholder:text-slate-400 focus:border-viverblue"
+              placeholder="seu@email.com"
+              disabled={isEmailPreFilled}
+              className={`${
+                isEmailPreFilled 
+                  ? 'bg-slate-700/30 border-slate-700 text-slate-300 cursor-not-allowed' 
+                  : 'bg-slate-800/50 border-slate-600 text-white focus:border-viverblue'
+              } placeholder:text-slate-400`}
             />
+            {isEmailPreFilled && (
+              <p className="text-slate-400 text-xs">E-mail fornecido pelo convite</p>
+            )}
             {getFieldError?.('email') && (
               <p className="text-red-400 text-sm">{getFieldError('email')}</p>
             )}
           </div>
 
-          {/* WhatsApp */}
-          <WhatsAppInput
-            value={data.phone || ''}
-            onChange={(value) => handleInputChange('phone', value)}
-            getFieldError={getFieldError}
-          />
-        </CardContent>
-      </Card>
-
-      {/* Redes Sociais */}
-      <Card className="bg-white/5 border-white/10 backdrop-blur-sm">
-        <CardHeader className="pb-4">
-          <CardTitle className="text-white text-lg font-semibold flex items-center gap-3">
-            <Globe className="h-5 w-5 text-viverblue" />
-            Redes Sociais Profissionais
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          {/* Instagram */}
+          {/* WhatsApp (travado se pré-preenchido) */}
           <div className="space-y-2">
-            <Label htmlFor="instagram" className="text-slate-200 font-medium">
-              Instagram Empresarial
+            <Label htmlFor="phone" className="text-slate-200 font-medium">
+              WhatsApp *
             </Label>
-            <Input
-              id="instagram"
-              value={data.instagram || ''}
-              onChange={(e) => handleInputChange('instagram', e.target.value)}
-              placeholder="@empresa ou link completo"
-              className="bg-slate-800/50 border-slate-600 text-white placeholder:text-slate-400 focus:border-viverblue"
-            />
-          </div>
-
-          {/* LinkedIn */}
-          <div className="space-y-2">
-            <Label htmlFor="linkedin" className="text-slate-200 font-medium">
-              Perfil LinkedIn
-            </Label>
-            <Input
-              id="linkedin"
-              value={data.linkedin || ''}
-              onChange={(e) => handleInputChange('linkedin', e.target.value)}
-              placeholder="URL do perfil LinkedIn"
-              className="bg-slate-800/50 border-slate-600 text-white placeholder:text-slate-400 focus:border-viverblue"
-            />
+            {isPhonePreFilled ? (
+              <div>
+                <Input
+                  id="phone"
+                  value={data.phone || ''}
+                  disabled
+                  className="bg-slate-700/30 border-slate-700 text-slate-300 cursor-not-allowed placeholder:text-slate-400"
+                />
+                <p className="text-slate-400 text-xs mt-1">WhatsApp fornecido pelo convite</p>
+              </div>
+            ) : (
+              <WhatsAppInput
+                value={data.phone || ''}
+                onChange={(value) => handleInputChange('phone', value)}
+                getFieldError={getFieldError}
+              />
+            )}
           </div>
         </CardContent>
       </Card>
@@ -144,53 +120,90 @@ const MockOnboardingStep1: React.FC<MockOnboardingStep1Props> = ({
         </CardHeader>
         <CardContent>
           <LocationSelector
-            selectedState={data.state}
-            selectedCity={data.city}
-            onStateChange={(value) => handleLocationChange('state', value)}
-            onCityChange={(value) => handleLocationChange('city', value)}
+            selectedState={data.state || ''}
+            selectedCity={data.city || ''}
+            onStateChange={(value) => handleInputChange('state', value)}
+            onCityChange={(value) => handleInputChange('city', value)}
             getFieldError={getFieldError}
           />
         </CardContent>
       </Card>
 
-      {/* Informações Complementares */}
+      {/* Redes Sociais */}
+      <Card className="bg-white/5 border-white/10 backdrop-blur-sm">
+        <CardHeader className="pb-4">
+          <CardTitle className="text-white text-lg font-semibold flex items-center gap-3">
+            <MessageCircle className="h-5 w-5 text-viverblue" />
+            Redes Sociais
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {/* Instagram */}
+          <div className="space-y-2">
+            <Label htmlFor="instagram" className="text-slate-200 font-medium">
+              Instagram
+            </Label>
+            <Input
+              id="instagram"
+              value={data.instagram || ''}
+              onChange={(e) => handleInputChange('instagram', e.target.value)}
+              placeholder="@seuusuario ou link completo"
+              className="bg-slate-800/50 border-slate-600 text-white placeholder:text-slate-400 focus:border-viverblue"
+            />
+          </div>
+
+          {/* LinkedIn */}
+          <div className="space-y-2">
+            <Label htmlFor="linkedin" className="text-slate-200 font-medium">
+              LinkedIn
+            </Label>
+            <Input
+              id="linkedin"
+              value={data.linkedin || ''}
+              onChange={(e) => handleInputChange('linkedin', e.target.value)}
+              placeholder="https://linkedin.com/in/seuperfil"
+              className="bg-slate-800/50 border-slate-600 text-white placeholder:text-slate-400 focus:border-viverblue"
+            />
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Informações Adicionais */}
       <Card className="bg-white/5 border-white/10 backdrop-blur-sm">
         <CardHeader className="pb-4">
           <CardTitle className="text-white text-lg font-semibold flex items-center gap-3">
             <Calendar className="h-5 w-5 text-viverblue" />
-            Informações Complementares
+            Informações Adicionais
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
           {/* Data de Nascimento */}
-          <BirthDateSelector
-            birthDay={data.birthDay}
-            birthMonth={data.birthMonth}
-            birthYear={data.birthYear}
-            onChange={handleBirthDateChange}
-            getFieldError={getFieldError}
-          />
+          <div className="space-y-2">
+            <Label className="text-slate-200 font-medium">
+              Data de Nascimento
+            </Label>
+            <BirthDateSelector
+              birthDay={data.birthDay || ''}
+              birthMonth={data.birthMonth || ''}
+              birthYear={data.birthYear || ''}
+              onDayChange={(value) => handleInputChange('birthDay', value)}
+              onMonthChange={(value) => handleInputChange('birthMonth', value)}
+              onYearChange={(value) => handleInputChange('birthYear', value)}
+            />
+          </div>
 
-          {/* Apresentação Pessoal */}
+          {/* Curiosidade */}
           <div className="space-y-2">
             <Label htmlFor="curiosity" className="text-slate-200 font-medium">
-              Apresentação Pessoal
+              Conte-nos uma curiosidade sobre você
             </Label>
             <Textarea
               id="curiosity"
               value={data.curiosity || ''}
               onChange={(e) => handleInputChange('curiosity', e.target.value)}
-              placeholder="Conte brevemente sobre sua trajetória profissional ou área de interesse..."
-              className="bg-slate-800/50 border-slate-600 text-white placeholder:text-slate-400 focus:border-viverblue resize-none"
-              rows={3}
-              maxLength={300}
+              placeholder="Algo interessante sobre sua trajetória, hobbies ou experiências..."
+              className="bg-slate-800/50 border-slate-600 text-white placeholder:text-slate-400 focus:border-viverblue min-h-[100px]"
             />
-            <div className="flex justify-between text-xs">
-              <span className="text-slate-500">Opcional</span>
-              <span className="text-slate-400">
-                {(data.curiosity || '').length}/300 caracteres
-              </span>
-            </div>
           </div>
         </CardContent>
       </Card>
@@ -205,9 +218,8 @@ const MockOnboardingStep1: React.FC<MockOnboardingStep1Props> = ({
         </CardHeader>
         <CardContent>
           <ProfilePictureUpload
-            value={data.profilePicture}
-            onChange={(value) => handleInputChange('profilePicture', value)}
-            userName={data.name}
+            currentImage={data.profilePicture || ''}
+            onImageChange={(value) => handleInputChange('profilePicture', value)}
           />
         </CardContent>
       </Card>

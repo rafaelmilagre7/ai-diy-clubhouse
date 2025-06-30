@@ -5,7 +5,7 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { OnboardingData } from '@/components/onboarding/types/onboardingTypes';
-import { Building2 } from 'lucide-react';
+import { Briefcase } from 'lucide-react';
 
 interface MockOnboardingStep2Props {
   data: OnboardingData;
@@ -27,40 +27,43 @@ const MockOnboardingStep2: React.FC<MockOnboardingStep2Props> = ({
       <Card className="bg-white/5 border-white/10 backdrop-blur-sm">
         <CardHeader className="pb-4">
           <CardTitle className="text-white text-lg font-semibold flex items-center gap-3">
-            <Building2 className="h-5 w-5 text-viverblue" />
-            Perfil Empresarial
+            <Briefcase className="h-5 w-5 text-viverblue" />
+            Informações Profissionais
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
-          {/* Nome da Empresa */}
+          {/* Nome da Empresa onde trabalha */}
           <div className="space-y-2">
             <Label htmlFor="companyName" className="text-slate-200 font-medium">
-              Nome da Empresa
+              Empresa onde trabalha
             </Label>
             <Input
               id="companyName"
               value={data.companyName || ''}
               onChange={(e) => handleInputChange('companyName', e.target.value)}
-              placeholder="Razão social ou nome fantasia"
+              placeholder="Nome da empresa atual"
               className="bg-slate-800/50 border-slate-600 text-white placeholder:text-slate-400 focus:border-viverblue"
             />
           </div>
 
-          {/* Website */}
+          {/* Cargo/Posição */}
           <div className="space-y-2">
-            <Label htmlFor="companyWebsite" className="text-slate-200 font-medium">
-              Website Corporativo
+            <Label htmlFor="position" className="text-slate-200 font-medium">
+              Cargo/Posição *
             </Label>
             <Input
-              id="companyWebsite"
-              value={data.companyWebsite || ''}
-              onChange={(e) => handleInputChange('companyWebsite', e.target.value)}
-              placeholder="https://www.empresa.com.br"
+              id="position"
+              value={data.position || ''}
+              onChange={(e) => handleInputChange('position', e.target.value)}
+              placeholder="CEO, Diretor, Gerente, Coordenador..."
               className="bg-slate-800/50 border-slate-600 text-white placeholder:text-slate-400 focus:border-viverblue"
             />
+            {getFieldError?.('position') && (
+              <p className="text-red-400 text-sm">{getFieldError('position')}</p>
+            )}
           </div>
 
-          {/* Setor */}
+          {/* Setor de Atuação */}
           <div className="space-y-2">
             <Label htmlFor="businessSector" className="text-slate-200 font-medium">
               Setor de Atuação *
@@ -81,6 +84,8 @@ const MockOnboardingStep2: React.FC<MockOnboardingStep2Props> = ({
                 <SelectItem value="financeiro" className="text-white hover:bg-slate-700">Financeiro</SelectItem>
                 <SelectItem value="industrial" className="text-white hover:bg-slate-700">Industrial</SelectItem>
                 <SelectItem value="consultoria" className="text-white hover:bg-slate-700">Consultoria</SelectItem>
+                <SelectItem value="agronegocio" className="text-white hover:bg-slate-700">Agronegócio</SelectItem>
+                <SelectItem value="construcao" className="text-white hover:bg-slate-700">Construção</SelectItem>
                 <SelectItem value="outros" className="text-white hover:bg-slate-700">Outros</SelectItem>
               </SelectContent>
             </Select>
@@ -89,43 +94,40 @@ const MockOnboardingStep2: React.FC<MockOnboardingStep2Props> = ({
             )}
           </div>
 
-          {/* Tamanho da Empresa */}
+          {/* Porte da Empresa */}
           <div className="space-y-2">
             <Label htmlFor="companySize" className="text-slate-200 font-medium">
-              Porte da Empresa
+              Porte da Empresa onde trabalha
             </Label>
             <Select 
               value={data.companySize || ''} 
               onValueChange={(value) => handleInputChange('companySize', value)}
             >
               <SelectTrigger className="bg-slate-800/50 border-slate-600 text-white focus:border-viverblue">
-                <SelectValue placeholder="Selecione o porte" />
+                <SelectValue placeholder="Selecione o porte da empresa" />
               </SelectTrigger>
               <SelectContent className="bg-slate-800 border-slate-600">
                 <SelectItem value="1-10" className="text-white hover:bg-slate-700">Microempresa (1-10 funcionários)</SelectItem>
-                <SelectItem value="11-50" className="text-white hover:bg-slate-700">Pequena (11-50 funcionários)</SelectItem>
-                <SelectItem value="51-200" className="text-white hover:bg-slate-700">Média (51-200 funcionários)</SelectItem>
-                <SelectItem value="201-500" className="text-white hover:bg-slate-700">Grande (201-500 funcionários)</SelectItem>
+                <SelectItem value="11-50" className="text-white hover:bg-slate-700">Pequena empresa (11-50 funcionários)</SelectItem>
+                <SelectItem value="51-200" className="text-white hover:bg-slate-700">Média empresa (51-200 funcionários)</SelectItem>
+                <SelectItem value="201-500" className="text-white hover:bg-slate-700">Grande empresa (201-500 funcionários)</SelectItem>
                 <SelectItem value="500+" className="text-white hover:bg-slate-700">Corporação (+500 funcionários)</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
-          {/* Cargo */}
+          {/* Website da Empresa (opcional) */}
           <div className="space-y-2">
-            <Label htmlFor="position" className="text-slate-200 font-medium">
-              Cargo/Posição *
+            <Label htmlFor="companyWebsite" className="text-slate-200 font-medium">
+              Website da Empresa
             </Label>
             <Input
-              id="position"
-              value={data.position || ''}
-              onChange={(e) => handleInputChange('position', e.target.value)}
-              placeholder="CEO, Diretor, Gerente, Coordenador..."
+              id="companyWebsite"
+              value={data.companyWebsite || ''}
+              onChange={(e) => handleInputChange('companyWebsite', e.target.value)}
+              placeholder="https://www.empresa.com.br"
               className="bg-slate-800/50 border-slate-600 text-white placeholder:text-slate-400 focus:border-viverblue"
             />
-            {getFieldError?.('position') && (
-              <p className="text-red-400 text-sm">{getFieldError('position')}</p>
-            )}
           </div>
         </CardContent>
       </Card>
