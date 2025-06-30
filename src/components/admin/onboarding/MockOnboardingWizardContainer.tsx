@@ -31,28 +31,37 @@ export const useMockOnboarding = () => {
 
 const initialData: OnboardingData = {
   memberType: 'club',
-  firstName: '',
-  lastName: '',
+  name: '',
   email: '',
   phone: '',
-  whatsapp: '',
-  birthDate: '',
+  instagram: '',
+  linkedin: '',
   state: '',
   city: '',
+  birthDate: '',
+  curiosity: '',
   profilePicture: '',
   companyName: '',
-  role: '',
+  companyWebsite: '',
+  businessSector: '',
   companySize: '',
-  industry: '',
-  currentChallenges: [],
-  aiMaturityLevel: 1,
-  previousExperience: [],
-  toolsUsed: [],
-  primaryGoals: [],
-  expectations: [],
-  preferredLearningStyle: '',
-  timeAvailability: '',
-  communicationPreferences: []
+  annualRevenue: '',
+  position: '',
+  hasImplementedAI: '',
+  aiToolsUsed: [],
+  aiKnowledgeLevel: '',
+  dailyTools: [],
+  whoWillImplement: '',
+  mainObjective: '',
+  areaToImpact: '',
+  expectedResult90Days: '',
+  aiImplementationBudget: '',
+  weeklyLearningTime: '',
+  contentPreference: [],
+  wantsNetworking: '',
+  bestDays: [],
+  bestPeriods: [],
+  acceptsCaseStudy: ''
 };
 
 interface MockOnboardingWizardContainerProps {
@@ -128,7 +137,7 @@ export const MockOnboardingWizardContainer: React.FC<MockOnboardingWizardContain
     setHasError(!hasError);
     if (!hasError) {
       setValidationErrors([
-        { field: 'firstName', message: 'Erro simulado: Nome é obrigatório' },
+        { field: 'name', message: 'Erro simulado: Nome é obrigatório' },
         { field: 'email', message: 'Erro simulado: Email inválido' }
       ]);
     } else {
