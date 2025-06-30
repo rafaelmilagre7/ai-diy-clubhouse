@@ -51,21 +51,21 @@ export const LmsAnalyticsTabContent = ({ timeRange }: LmsAnalyticsTabContentProp
   const lmsStatsCards = [
     {
       title: "Total de Cursos",
-      value: data.totalCourses,
+      value: data.totalCourses.toLocaleString(),
       icon: GraduationCap,
       color: "text-blue-500",
       bgColor: "bg-blue-50 dark:bg-blue-900/20"
     },
     {
       title: "Total de Aulas",
-      value: data.totalLessons,
+      value: data.totalLessons.toLocaleString(),
       icon: BookOpen,
       color: "text-green-500",
       bgColor: "bg-green-50 dark:bg-green-900/20"
     },
     {
       title: "Matrículas Ativas",
-      value: data.totalEnrollments,
+      value: data.totalEnrollments.toLocaleString(),
       icon: Users,
       color: "text-purple-500",
       bgColor: "bg-purple-50 dark:bg-purple-900/20"

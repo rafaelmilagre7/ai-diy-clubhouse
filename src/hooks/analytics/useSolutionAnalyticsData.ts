@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
 
@@ -8,104 +8,133 @@ interface SolutionAnalyticsData {
   publishedSolutions: number;
   totalImplementations: number;
   averageCompletionRate: number;
-  solutionsByCategory: Array<{ name: string; value: number }>;
-  solutionsByDifficulty: Array<{ name: string; value: number }>;
-  topSolutions: Array<{ 
-    title: string; 
-    implementations: number; 
-    completionRate: number;
+  solutionsByCategory: Array<{
+    name: string;
+    value: number;
+  }>;
+  solutionsByDifficulty: Array<{
+    name: string;
+    value: number;
+  }>;
+  topSolutions: Array<{
+    title: string;
     category: string;
+    implementations: number;
+    completionRate: number;
   }>;
 }
 
-const defaultData: SolutionAnalyticsData = {
-  totalSolutions: 0,
-  publishedSolutions: 0,
-  totalImplementations: 0,
-  averageCompletionRate: 0,
-  solutionsByCategory: [],
-  solutionsByDifficulty: [],
-  topSolutions: []
-};
-
 export const useSolutionAnalyticsData = (timeRange: string) => {
   const { toast } = useToast();
-  const [data, setData] = useState<SolutionAnalyticsData>(defaultData);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
-  const fetchSolutionAnalytics = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError(null);
-
-      // Buscar dados da view de performance de soluções
-      const { data: solutionsData, error: solutionsError } = await supabase
-        .from('solution_performance_data')
-        .select('*');
-
-      if (solutionsError) {
-        throw new Error('Erro ao carregar dados de soluções');
-      }
-
-      // Processar dados
-      const totalSolutions = solutionsData?.length || 0;
-      const publishedSolutions = totalSolutions; // já filtrada na view
-      const totalImplementations = solutionsData?.reduce((sum, s) => sum + s.total_implementations, 0) || 0;
-      const averageCompletionRate = totalSolutions > 0 ? 
-        Math.round(solutionsData.reduce((sum, s) => sum + s.completion_rate, 0) / totalSolutions) : 0;
-
-      // Agrupar por categoria
-      const categoryMap = new Map();
-      solutionsData?.forEach(solution => {
-        const category = solution.category || 'Sem categoria';
-        categoryMap.set(category, (categoryMap.get(category) || 0) + 1);
-      });
-      const solutionsByCategory = Array.from(categoryMap.entries()).map(([name, value]) => ({ name, value }));
-
-      // Agrupar por dificuldade
-      const difficultyMap = new Map();
-      solutionsData?.forEach(solution => {
-        const difficulty = solution.difficulty || 'Não definida';
-        const difficultyLabel = difficulty === 'easy' ? 'Fácil' :
-                               difficulty === 'medium' ? 'Médio' :
-                               difficulty === 'hard' ? 'Difícil' : 'Não definida';
-        difficultyMap.set(difficultyLabel, (difficultyMap.get(difficultyLabel) || 0) + 1);
-      });
-      const solutionsByDifficulty = Array.from(difficultyMap.entries()).map(([name, value]) => ({ name, value }));
-
-      // Top soluções
-      const topSolutions = (solutionsData || [])
-        .sort((a, b) => b.total_implementations - a.total_implementations)
-        .slice(0, 10)
-        .map(s => ({
-          title: s.title,
-          implementations: s.total_implementations,
-          completionRate: s.completion_rate,
-          category: s.category || 'Sem categoria'
-        }));
-
-      setData({
-        totalSolutions,
-        publishedSolutions,
-        totalImplementations,
-        averageCompletionRate,
-        solutionsByCategory,
-        solutionsByDifficulty,
-        topSolutions
-      });
-
-    } catch (error: any) {
-      console.error('Erro ao carregar analytics de soluções:', error);
-      setError(error.message || 'Erro ao carregar dados de soluções');
-    } finally {
-      setLoading(false);
-    }
-  }, [timeRange]);
+  const [data, setData] = useState<SolutionAnalyticsData>({
+    totalSolutions: 0,
+    publishedSolutions: 0,
+    totalImplementations: 0,
+    averageCompletionRate: 0,
+    solutionsByCategory: [],
+    solutionsByDifficulty: [],
+    topSolutions: []
+  });
 
   useEffect(() => {
-    fetchSolutionAnalytics();
-  }, [fetchSolutionAnalytics]);
+    const fetchSolutionAnalytics = async () => {
+      try {
+        setLoading(true);
+        setError(null);
 
-  return { data, loading, error, refresh: fetchSolutionAnalytics };
+        // Buscar métricas de performance das soluções
+        const { data: performanceData, error: performanceError } = await supabase
+          .from('solution_performance_metrics')
+          .select('*')
+          .order('total_implementations', { ascending: false });
+
+        if (performanceError) {
+          console.warn('Erro ao buscar performance de soluções:', performanceError);
+        }
+
+        // Buscar contagem total de soluções
+        const { count: totalSolutions, error: countError } = await supabase
+          .from('solutions')
+          .select('*', { count: 'exact', head: true });
+
+        const { count: publishedSolutions, error: publishedError } = await supabase
+          .from('solutions')
+          .select('*', { count: 'exact', head: true })
+          .eq('published', true);
+
+        if (countError || publishedError) {
+          console.warn('Erro ao buscar contagens:', countError || publishedError);
+        }
+
+        // Processar dados
+        const totalImplementations = performanceData?.reduce((sum, item) => sum + item.total_implementations, 0) || 0;
+        const avgCompletionRate = performanceData?.length > 0 
+          ? Math.round(performanceData.reduce((sum, item) => sum + item.completion_rate, 0) / performanceData.length)
+          : 0;
+
+        // Agrupar por categoria
+        const categoryMap = new Map();
+        performanceData?.forEach(item => {
+          const category = item.category || 'Outros';
+          categoryMap.set(category, (categoryMap.get(category) || 0) + item.total_implementations);
+        });
+
+        // Agrupar por dificuldade
+        const difficultyMap = new Map();
+        performanceData?.forEach(item => {
+          const difficulty = item.difficulty || 'não definida';
+          const difficultyName = difficulty === 'beginner' ? 'Iniciante' :
+                                difficulty === 'intermediate' ? 'Intermediário' :
+                                difficulty === 'advanced' ? 'Avançado' : 'Não definida';
+          difficultyMap.set(difficultyName, (difficultyMap.get(difficultyName) || 0) + 1);
+        });
+
+        const processedData: SolutionAnalyticsData = {
+          totalSolutions: totalSolutions || 0,
+          publishedSolutions: publishedSolutions || 0,
+          totalImplementations,
+          averageCompletionRate: avgCompletionRate,
+          solutionsByCategory: Array.from(categoryMap.entries()).map(([name, value]) => ({
+            name,
+            value
+          })),
+          solutionsByDifficulty: Array.from(difficultyMap.entries()).map(([name, value]) => ({
+            name,
+            value
+          })),
+          topSolutions: performanceData?.slice(0, 10).map(item => ({
+            title: item.title,
+            category: item.category || 'Outros',
+            implementations: item.total_implementations,
+            completionRate: item.completion_rate
+          })) || []
+        };
+
+        setData(processedData);
+        
+        console.log('🎯 Dados de soluções carregados:', {
+          totalSolutions: processedData.totalSolutions,
+          totalImplementations: processedData.totalImplementations,
+          avgCompletionRate: processedData.averageCompletionRate
+        });
+
+      } catch (error: any) {
+        console.error('Erro ao carregar analytics de soluções:', error);
+        setError(error.message || 'Erro ao carregar dados de soluções');
+        toast({
+          title: "Erro ao carregar dados de soluções",
+          description: "Não foi possível carregar os dados. Verifique sua conexão.",
+          variant: "destructive"
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchSolutionAnalytics();
+  }, [timeRange, toast]);
+
+  return { data, loading, error };
 };

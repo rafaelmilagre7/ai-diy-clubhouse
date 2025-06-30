@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Users, UserPlus, Activity, TrendingUp, AlertCircle } from 'lucide-react';
-import { BarChart, PieChart } from '@/components/ui/chart';
+import { BarChart, PieChart, AreaChart } from '@/components/ui/chart';
 import { useUserAnalyticsData } from '@/hooks/analytics/useUserAnalyticsData';
 
 interface UserAnalyticsTabContentProps {
@@ -54,21 +54,23 @@ export const UserAnalyticsTabContent = ({ timeRange }: UserAnalyticsTabContentPr
   const userStatsCards = [
     {
       title: "Total de Usuários",
-      value: data.totalUsers,
+      value: data.totalUsers.toLocaleString(),
       icon: Users,
       color: "text-blue-500",
       bgColor: "bg-blue-50 dark:bg-blue-900/20"
     },
     {
-      title: "Usuários Ativos",
-      value: data.activeUsers,
+      title: "Usuários Ativos (7d)",
+      value: data.activeUsers.toLocaleString(),
       icon: Activity,
       color: "text-green-500",
       bgColor: "bg-green-50 dark:bg-green-900/20"
     },
     {
       title: "Novos Usuários",
-      value: data.usersByTime.length > 0 ? data.usersByTime[data.usersByTime.length - 1]?.usuarios || 0 : 0,
+      value: data.usersByTime.length > 0 
+        ? data.usersByTime[data.usersByTime.length - 1]?.novos?.toLocaleString() || '0'
+        : '0',
       icon: UserPlus,
       color: "text-purple-500",
       bgColor: "bg-purple-50 dark:bg-purple-900/20"
@@ -124,11 +126,11 @@ export const UserAnalyticsTabContent = ({ timeRange }: UserAnalyticsTabContentPr
           <CardContent>
             <div className="h-64">
               {data.usersByTime.length > 0 ? (
-                <BarChart
+                <AreaChart
                   data={data.usersByTime}
-                  index="date"
-                  categories={["usuarios"]}
-                  colors={["#0ABAB5"]}
+                  index="name"
+                  categories={["novos", "total"]}
+                  colors={["#0ABAB5", "#3B82F6"]}
                   valueFormatter={(value) => `${value} usuários`}
                 />
               ) : (
@@ -177,14 +179,20 @@ export const UserAnalyticsTabContent = ({ timeRange }: UserAnalyticsTabContentPr
         </CardHeader>
         <CardContent>
           <div className="h-64">
-            <BarChart
-              data={data.userActivityByDay}
-              index="day"
-              categories={["atividade"]}
-              colors={["#8B5CF6"]}
-              valueFormatter={(value) => `${value} atividades`}
-              layout="vertical"
-            />
+            {data.userActivityByDay.length > 0 ? (
+              <BarChart
+                data={data.userActivityByDay}
+                index="day"
+                categories={["atividade"]}
+                colors={["#8B5CF6"]}
+                valueFormatter={(value) => `${value} atividades`}
+                layout="vertical"
+              />
+            ) : (
+              <div className="flex items-center justify-center h-full text-muted-foreground">
+                Sem dados de atividade disponíveis
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>

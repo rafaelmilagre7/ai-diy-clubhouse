@@ -51,21 +51,21 @@ export const SolutionAnalyticsTabContent = ({ timeRange }: SolutionAnalyticsTabC
   const solutionStatsCards = [
     {
       title: "Total de Soluções",
-      value: data.totalSolutions,
+      value: data.totalSolutions.toLocaleString(),
       icon: FileText,
       color: "text-blue-500",
       bgColor: "bg-blue-50 dark:bg-blue-900/20"
     },
     {
       title: "Soluções Publicadas",
-      value: data.publishedSolutions,
+      value: data.publishedSolutions.toLocaleString(),
       icon: CheckCircle,
       color: "text-green-500",
       bgColor: "bg-green-50 dark:bg-green-900/20"
     },
     {
       title: "Total de Implementações",
-      value: data.totalImplementations,
+      value: data.totalImplementations.toLocaleString(),
       icon: BarChart3,
       color: "text-purple-500",
       bgColor: "bg-purple-50 dark:bg-purple-900/20"
@@ -111,9 +111,9 @@ export const SolutionAnalyticsTabContent = ({ timeRange }: SolutionAnalyticsTabC
         {/* Distribuição por Categoria */}
         <Card>
           <CardHeader>
-            <CardTitle>Soluções por Categoria</CardTitle>
+            <CardTitle>Implementações por Categoria</CardTitle>
             <CardDescription>
-              Distribuição das soluções publicadas por categoria
+              Distribuição das implementações por categoria de solução
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -123,7 +123,7 @@ export const SolutionAnalyticsTabContent = ({ timeRange }: SolutionAnalyticsTabC
                   data={data.solutionsByCategory}
                   category="value"
                   index="name"
-                  valueFormatter={(value) => `${value} soluções`}
+                  valueFormatter={(value) => `${value} implementações`}
                 />
               ) : (
                 <div className="flex items-center justify-center h-full text-muted-foreground">

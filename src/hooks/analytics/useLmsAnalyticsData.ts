@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
 
@@ -14,97 +14,111 @@ interface LmsAnalyticsData {
     avgProgress: number;
     completions: number;
   }>;
-  progressDistribution: Array<{ name: string; value: number }>;
+  progressDistribution: Array<{
+    name: string;
+    value: number;
+  }>;
 }
-
-const defaultData: LmsAnalyticsData = {
-  totalCourses: 0,
-  totalLessons: 0,
-  totalEnrollments: 0,
-  averageProgress: 0,
-  coursePerformance: [],
-  progressDistribution: []
-};
 
 export const useLmsAnalyticsData = (timeRange: string) => {
   const { toast } = useToast();
-  const [data, setData] = useState<LmsAnalyticsData>(defaultData);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
-  const fetchLmsAnalytics = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError(null);
-
-      // Buscar dados da view de analytics de aprendizado
-      const { data: learningData, error: learningError } = await supabase
-        .from('learning_analytics_data')
-        .select('*');
-
-      if (learningError) {
-        throw new Error('Erro ao carregar dados de aprendizado');
-      }
-
-      // Buscar estatísticas gerais
-      const [coursesResult, lessonsResult, progressResult] = await Promise.all([
-        supabase.from('learning_courses').select('*', { count: 'exact', head: true }).eq('published', true),
-        supabase.from('learning_lessons').select('*', { count: 'exact', head: true }).eq('published', true),
-        supabase.from('learning_progress').select('progress_percentage')
-      ]);
-
-      const totalCourses = coursesResult.count || 0;
-      const totalLessons = lessonsResult.count || 0;
-      
-      // Calcular métricas de progresso
-      const progressData = progressResult.data || [];
-      const totalEnrollments = progressData.length;
-      const averageProgress = totalEnrollments > 0 ? 
-        Math.round(progressData.reduce((sum, p) => sum + (p.progress_percentage || 0), 0) / totalEnrollments) : 0;
-
-      // Processar performance dos cursos
-      const coursePerformance = (learningData || []).map(course => ({
-        courseName: course.course_title,
-        enrolled: course.enrolled_users,
-        avgProgress: course.avg_progress_percentage,
-        completions: Math.round((course.enrolled_users * course.avg_progress_percentage) / 100)
-      }));
-
-      // Distribuição de progresso
-      const progressRanges = [
-        { name: '0-25%', min: 0, max: 25 },
-        { name: '26-50%', min: 26, max: 50 },
-        { name: '51-75%', min: 51, max: 75 },
-        { name: '76-100%', min: 76, max: 100 }
-      ];
-
-      const progressDistribution = progressRanges.map(range => ({
-        name: range.name,
-        value: progressData.filter(p => 
-          p.progress_percentage >= range.min && p.progress_percentage <= range.max
-        ).length
-      }));
-
-      setData({
-        totalCourses,
-        totalLessons,
-        totalEnrollments,
-        averageProgress,
-        coursePerformance,
-        progressDistribution
-      });
-
-    } catch (error: any) {
-      console.error('Erro ao carregar analytics LMS:', error);
-      setError(error.message || 'Erro ao carregar dados de aprendizado');
-    } finally {
-      setLoading(false);
-    }
-  }, [timeRange]);
+  const [data, setData] = useState<LmsAnalyticsData>({
+    totalCourses: 0,
+    totalLessons: 0,
+    totalEnrollments: 0,
+    averageProgress: 0,
+    coursePerformance: [],
+    progressDistribution: []
+  });
 
   useEffect(() => {
-    fetchLmsAnalytics();
-  }, [fetchLmsAnalytics]);
+    const fetchLmsAnalytics = async () => {
+      try {
+        setLoading(true);
+        setError(null);
 
-  return { data, loading, error, refresh: fetchLmsAnalytics };
+        // Buscar métricas de performance dos cursos
+        const { data: courseData, error: courseError } = await supabase
+          .from('course_performance_metrics')
+          .select('*')
+          .order('enrolled_users', { ascending: false });
+
+        if (courseError) {
+          console.warn('Erro ao buscar performance de cursos:', courseError);
+        }
+
+        // Buscar contagens gerais
+        const { count: totalCourses } = await supabase
+          .from('learning_courses')
+          .select('*', { count: 'exact', head: true })
+          .eq('published', true);
+
+        const { count: totalLessons } = await supabase
+          .from('learning_lessons')
+          .select('*', { count: 'exact', head: true })
+          .eq('published', true);
+
+        // Processar dados
+        const totalEnrollments = courseData?.reduce((sum, item) => sum + item.enrolled_users, 0) || 0;
+        const averageProgress = courseData?.length > 0 
+          ? Math.round(courseData.reduce((sum, item) => sum + item.avg_progress_percentage, 0) / courseData.length)
+          : 0;
+
+        // Distribuição de progresso (simulada baseada nos dados disponíveis)
+        const progressRanges = [
+          { name: '0-25%', value: 0 },
+          { name: '26-50%', value: 0 },
+          { name: '51-75%', value: 0 },
+          { name: '76-100%', value: 0 }
+        ];
+
+        courseData?.forEach(course => {
+          const progress = course.avg_progress_percentage;
+          if (progress <= 25) progressRanges[0].value += course.enrolled_users;
+          else if (progress <= 50) progressRanges[1].value += course.enrolled_users;
+          else if (progress <= 75) progressRanges[2].value += course.enrolled_users;
+          else progressRanges[3].value += course.enrolled_users;
+        });
+
+        const processedData: LmsAnalyticsData = {
+          totalCourses: totalCourses || 0,
+          totalLessons: totalLessons || 0,
+          totalEnrollments,
+          averageProgress,
+          coursePerformance: courseData?.map(item => ({
+            courseName: item.course_title,
+            enrolled: item.enrolled_users,
+            avgProgress: item.avg_progress_percentage,
+            completions: Math.round(item.enrolled_users * (item.avg_progress_percentage / 100))
+          })) || [],
+          progressDistribution: progressRanges.filter(range => range.value > 0)
+        };
+
+        setData(processedData);
+        
+        console.log('🎓 Dados de LMS carregados:', {
+          totalCourses: processedData.totalCourses,
+          totalEnrollments: processedData.totalEnrollments,
+          averageProgress: processedData.averageProgress
+        });
+
+      } catch (error: any) {
+        console.error('Erro ao carregar analytics de LMS:', error);
+        setError(error.message || 'Erro ao carregar dados de aprendizado');
+        toast({
+          title: "Erro ao carregar dados de aprendizado",
+          description: "Não foi possível carregar os dados. Verifique sua conexão.",
+          variant: "destructive"
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchLmsAnalytics();
+  }, [timeRange, toast]);
+
+  return { data, loading, error };
 };
