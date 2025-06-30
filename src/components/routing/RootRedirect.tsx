@@ -1,7 +1,6 @@
 
 import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/auth";
-import { useOnboardingStatus } from "@/components/onboarding/hooks/useOnboardingStatus";
 import LoadingScreen from "@/components/common/LoadingScreen";
 import { useEffect, useState, useRef } from "react";
 import { getUserRoleName } from "@/lib/supabase/types";
@@ -22,7 +21,6 @@ const RootRedirect = () => {
   }
 
   const { user, profile, isAdmin, isLoading: authLoading } = authContext;
-  const { isRequired: onboardingRequired, isLoading: onboardingLoading } = useOnboardingStatus();
   
   // OTIMIZAÇÃO 1: Verificação de cache para navegação rápida
   const hasCachedAdminAccess = user && navigationCache.isAdminVerified(user.id);
@@ -136,19 +134,6 @@ const RootRedirect = () => {
     console.log("[ROOT-REDIRECT] Circuit breaker + sem perfil - redirecionando para dashboard");
     clearTimeout(timeoutRef.current!);
     return <Navigate to="/dashboard" replace />;
-  }
-  
-  // APENAS para não-admins: verificação rápida de onboarding
-  if (onboardingLoading && !forceRedirect) {
-    console.log("[ROOT-REDIRECT] Verificando onboarding...");
-    return <LoadingScreen message="Verificando seu progresso..." />;
-  }
-  
-  // Se precisa de onboarding (apenas para não-admins)
-  if (onboardingRequired && !forceRedirect) {
-    console.log("📝 [ROOT REDIRECT] Onboarding necessário - redirecionando para /onboarding");
-    clearTimeout(timeoutRef.current!);
-    return <Navigate to="/onboarding" replace />;
   }
   
   // Caso padrão: dashboard de membro (MUDANÇA PRINCIPAL)

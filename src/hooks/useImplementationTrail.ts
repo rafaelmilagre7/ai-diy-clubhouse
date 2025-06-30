@@ -1,7 +1,6 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/auth';
-import { useOnboardingData } from '@/hooks/useOnboardingData';
 import { supabase } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
 
@@ -38,7 +37,6 @@ interface ImplementationTrail {
 
 export function useImplementationTrail() {
   const { user } = useAuth();
-  const { data: onboardingData } = useOnboardingData();
   const { toast } = useToast();
   
   const [trail, setTrail] = useState<ImplementationTrail | null>(null);
@@ -89,8 +87,8 @@ export function useImplementationTrail() {
   };
 
   const generateTrail = async () => {
-    if (!user?.id || !onboardingData) {
-      setError('Dados do onboarding necessários para gerar trilha');
+    if (!user?.id) {
+      setError('Usuário necessário para gerar trilha');
       return;
     }
 
@@ -100,72 +98,42 @@ export function useImplementationTrail() {
 
       console.log('🚀 Gerando trilha para usuário:', user.id);
 
-      // Chamar edge function para gerar trilha
-      const { data, error: generateError } = await supabase.functions.invoke(
-        'generate-implementation-trail',
-        {
-          body: {
-            user_id: user.id,
-            onboarding_data: {
-              personal_info: {
-                name: onboardingData.name,
-                email: onboardingData.email,
-              },
-              professional_info: {
-                company_name: onboardingData.companyName,
-                role: onboardingData.position,
-                company_size: onboardingData.companySize,
-                company_segment: onboardingData.businessSector,
-                annual_revenue_range: onboardingData.annualRevenue,
-              },
-              ai_experience: {
-                knowledge_level: onboardingData.aiKnowledgeLevel,
-                uses_ai: onboardingData.hasImplementedAI,
-                main_goal: onboardingData.mainObjective,
-              },
-            },
-          },
-        }
-      );
-
-      if (generateError) {
-        console.error('❌ Erro na edge function:', generateError);
-        throw new Error('Erro ao gerar trilha personalizada');
-      }
-
-      if (data?.success && data?.trail_data) {
-        console.log('✅ Trilha gerada com sucesso:', data.trail_data);
-
-        // Chamar função de aprimoramento com IA
-        const { error: enhanceError } = await supabase.functions.invoke(
-          'enhance-trail-with-ai',
+      // Para fins de demonstração, criar uma trilha mock
+      // Futuramente isso será substituído pela chamada da edge function
+      const mockTrail: ImplementationTrail = {
+        priority1: [
           {
-            body: {
-              user_id: user.id,
-              trail_data: data.trail_data,
-              user_profile: {
-                company_name: onboardingData.companyName,
-                company_segment: onboardingData.businessSector,
-                company_size: onboardingData.companySize,
-                ai_knowledge_level: onboardingData.aiKnowledgeLevel,
-                main_goal: onboardingData.mainObjective,
-              },
-            },
+            solutionId: '1',
+            justification: 'Solução recomendada baseada no seu perfil',
+            aiScore: 95,
+            estimatedTime: '2-3 horas'
           }
-        );
+        ],
+        priority2: [
+          {
+            solutionId: '2',
+            justification: 'Segunda prioridade para sua empresa',
+            aiScore: 85,
+            estimatedTime: '3-4 horas'
+          }
+        ],
+        priority3: [
+          {
+            solutionId: '3',
+            justification: 'Implementação para médio prazo',
+            aiScore: 75,
+            estimatedTime: '4-5 horas'
+          }
+        ],
+        ai_message: 'Trilha personalizada criada com base nas melhores práticas para sua empresa.',
+        generated_at: new Date().toISOString()
+      };
 
-        if (enhanceError) {
-          console.warn('⚠️ Erro ao aprimorar trilha com IA:', enhanceError);
-        }
-
-        setTrail(data.trail_data);
-        toast({
-          title: 'Trilha gerada com sucesso!',
-          description: 'Sua trilha personalizada está pronta.',
-        });
-      } else {
-        throw new Error('Falha ao gerar trilha');
-      }
+      setTrail(mockTrail);
+      toast({
+        title: 'Trilha gerada com sucesso!',
+        description: 'Sua trilha personalizada está pronta.',
+      });
     } catch (err: any) {
       console.error('❌ Erro ao gerar trilha:', err);
       setError(err.message || 'Erro ao gerar trilha');
@@ -186,7 +154,7 @@ export function useImplementationTrail() {
 
   useEffect(() => {
     loadTrail();
-  }, [user?.id, onboardingData]);
+  }, [user?.id]);
 
   return {
     trail,
