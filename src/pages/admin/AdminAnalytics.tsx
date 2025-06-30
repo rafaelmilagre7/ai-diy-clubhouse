@@ -50,29 +50,33 @@ const AdminAnalytics = () => {
         </Alert>
       }
     >
-      <div className="space-y-6">
-        <div className="flex items-center justify-between mb-6">
+      <div className="space-y-6 p-6">
+        {/* Header melhorado */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
           <div>
             <h1 className="text-3xl font-bold tracking-tight text-neutral-900 dark:text-white">
               Analytics Administrativo
             </h1>
-            <p className="text-muted-foreground">
-              Dados em tempo real da plataforma
+            <p className="text-muted-foreground mt-1">
+              Visão geral completa dos dados da plataforma em tempo real
             </p>
           </div>
-          <Button 
-            variant="outline"
-            size="sm"
-            onClick={handleRefresh}
-            disabled={analyticsLoading}
-            className="text-neutral-700 dark:text-white"
-          >
-            <RefreshCw className={`h-4 w-4 mr-2 ${analyticsLoading ? 'animate-spin' : ''}`} />
-            Atualizar dados
-          </Button>
+          <div className="flex items-center gap-3">
+            <Button 
+              variant="outline"
+              size="sm"
+              onClick={handleRefresh}
+              disabled={analyticsLoading}
+              className="text-neutral-700 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-800"
+            >
+              <RefreshCw className={`h-4 w-4 mr-2 ${analyticsLoading ? 'animate-spin' : ''}`} />
+              Atualizar
+            </Button>
+          </div>
         </div>
 
-        <Card className="border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-md mb-6">
+        {/* Filtros de período */}
+        <Card className="border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm">
           <CardContent className="pt-6">
             <AnalyticsHeader 
               timeRange={timeRange}
@@ -87,17 +91,29 @@ const AdminAnalytics = () => {
 
         <Tabs defaultValue="overview" className="space-y-6">
           <div className="bg-white dark:bg-gray-900 p-1 rounded-lg border border-gray-200 dark:border-gray-800 shadow-sm">
-            <TabsList className="grid grid-cols-4 max-w-2xl gap-1">
-              <TabsTrigger value="overview" className="text-neutral-700 dark:text-gray-300 data-[state=active]:bg-[#0ABAB5] data-[state=active]:text-white data-[state=active]:shadow-sm">
+            <TabsList className="grid grid-cols-4 max-w-2xl gap-1 bg-gray-50 dark:bg-gray-800">
+              <TabsTrigger 
+                value="overview" 
+                className="text-neutral-700 dark:text-gray-300 data-[state=active]:bg-[#0ABAB5] data-[state=active]:text-white data-[state=active]:shadow-sm transition-all duration-200"
+              >
                 Visão Geral
               </TabsTrigger>
-              <TabsTrigger value="users" className="text-neutral-700 dark:text-gray-300 data-[state=active]:bg-[#0ABAB5] data-[state=active]:text-white data-[state=active]:shadow-sm">
+              <TabsTrigger 
+                value="users" 
+                className="text-neutral-700 dark:text-gray-300 data-[state=active]:bg-[#0ABAB5] data-[state=active]:text-white data-[state=active]:shadow-sm transition-all duration-200"
+              >
                 Usuários
               </TabsTrigger>
-              <TabsTrigger value="solutions" className="text-neutral-700 dark:text-gray-300 data-[state=active]:bg-[#0ABAB5] data-[state=active]:text-white data-[state=active]:shadow-sm">
+              <TabsTrigger 
+                value="solutions" 
+                className="text-neutral-700 dark:text-gray-300 data-[state=active]:bg-[#0ABAB5] data-[state=active]:text-white data-[state=active]:shadow-sm transition-all duration-200"
+              >
                 Soluções
               </TabsTrigger>
-              <TabsTrigger value="learning" className="text-neutral-700 dark:text-gray-300 data-[state=active]:bg-[#0ABAB5] data-[state=active]:text-white data-[state=active]:shadow-sm">
+              <TabsTrigger 
+                value="learning" 
+                className="text-neutral-700 dark:text-gray-300 data-[state=active]:bg-[#0ABAB5] data-[state=active]:text-white data-[state=active]:shadow-sm transition-all duration-200"
+              >
                 Aprendizado
               </TabsTrigger>
             </TabsList>

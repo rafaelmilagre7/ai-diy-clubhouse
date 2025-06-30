@@ -22,39 +22,41 @@ interface AdminAnalyticsData {
   activeUsers7d: number;
   activeLearners7d: number;
   overallCompletionRate: number;
-  avgImplementationTimeMinutes: number;
+  avgImplementationTimeDays: number;
   
   // Dados para gráficos
   userGrowthData: Array<{ date: string; users: number; name: string }>;
   solutionPerformance: Array<{ name: string; implementations: number; completionRate: number }>;
   learningProgress: Array<{ courseName: string; enrolled: number; avgProgress: number }>;
   weeklyActivity: Array<{ day: string; atividade: number }>;
-  userRoleDistribution: Array<{ role: string; count: number }>;
+  userRoleDistribution: Array<{ role: string; count: number; percentage: number }>;
 }
+
+const defaultData: AdminAnalyticsData = {
+  totalUsers: 0,
+  totalSolutions: 0,
+  totalCourses: 0,
+  completedImplementations: 0,
+  activeImplementations: 0,
+  completedLessons: 0,
+  forumTopics: 0,
+  totalBenefitClicks: 0,
+  newUsers30d: 0,
+  newImplementations30d: 0,
+  activeUsers7d: 0,
+  activeLearners7d: 0,
+  overallCompletionRate: 0,
+  avgImplementationTimeDays: 0,
+  userGrowthData: [],
+  solutionPerformance: [],
+  learningProgress: [],
+  weeklyActivity: [],
+  userRoleDistribution: []
+};
 
 export const useRealAdminAnalytics = (timeRange: string = '30d') => {
   const { toast } = useToast();
-  const [data, setData] = useState<AdminAnalyticsData>({
-    totalUsers: 0,
-    totalSolutions: 0,
-    totalCourses: 0,
-    completedImplementations: 0,
-    activeImplementations: 0,
-    completedLessons: 0,
-    forumTopics: 0,
-    totalBenefitClicks: 0,
-    newUsers30d: 0,
-    newImplementations30d: 0,
-    activeUsers7d: 0,
-    activeLearners7d: 0,
-    overallCompletionRate: 0,
-    avgImplementationTimeMinutes: 0,
-    userGrowthData: [],
-    solutionPerformance: [],
-    learningProgress: [],
-    weeklyActivity: [],
-    userRoleDistribution: []
-  });
+  const [data, setData] = useState<AdminAnalyticsData>(defaultData);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -72,17 +74,19 @@ export const useRealAdminAnalytics = (timeRange: string = '30d') => {
         .single();
 
       if (statsError) {
-        console.warn('Erro ao buscar estatísticas:', statsError);
+        console.warn('❌ Erro ao buscar estatísticas:', statsError);
+        throw new Error('Erro ao carregar estatísticas principais');
       }
 
       // 2. Buscar dados de crescimento de usuários
       const { data: growthData, error: growthError } = await supabase
         .from('user_engagement_metrics')
         .select('*')
-        .order('date', { ascending: true });
+        .order('date', { ascending: true })
+        .limit(30);
 
       if (growthError) {
-        console.warn('Erro ao buscar crescimento:', growthError);
+        console.warn('⚠️ Erro ao buscar crescimento:', growthError);
       }
 
       // 3. Buscar performance de soluções
@@ -93,7 +97,7 @@ export const useRealAdminAnalytics = (timeRange: string = '30d') => {
         .limit(10);
 
       if (solutionsError) {
-        console.warn('Erro ao buscar soluções:', solutionsError);
+        console.warn('⚠️ Erro ao buscar soluções:', solutionsError);
       }
 
       // 4. Buscar dados de aprendizado
@@ -103,7 +107,7 @@ export const useRealAdminAnalytics = (timeRange: string = '30d') => {
         .order('enrolled_users', { ascending: false });
 
       if (learningError) {
-        console.warn('Erro ao buscar aprendizado:', learningError);
+        console.warn('⚠️ Erro ao buscar aprendizado:', learningError);
       }
 
       // 5. Buscar atividade semanal
@@ -113,7 +117,7 @@ export const useRealAdminAnalytics = (timeRange: string = '30d') => {
         .order('day_of_week');
 
       if (weeklyError) {
-        console.warn('Erro ao buscar atividade semanal:', weeklyError);
+        console.warn('⚠️ Erro ao buscar atividade semanal:', weeklyError);
       }
 
       // 6. Buscar distribuição de roles
@@ -123,7 +127,7 @@ export const useRealAdminAnalytics = (timeRange: string = '30d') => {
         .order('user_count', { ascending: false });
 
       if (rolesError) {
-        console.warn('Erro ao buscar distribuição de roles:', rolesError);
+        console.warn('⚠️ Erro ao buscar distribuição de roles:', rolesError);
       }
 
       // Processar dados para o frontend
@@ -146,16 +150,16 @@ export const useRealAdminAnalytics = (timeRange: string = '30d') => {
         activeUsers7d: statsData?.active_users_7d || 0,
         activeLearners7d: statsData?.active_learners_7d || 0,
         overallCompletionRate: statsData?.overall_completion_rate || 0,
-        avgImplementationTimeMinutes: statsData?.avg_implementation_time_minutes || 0,
+        avgImplementationTimeDays: statsData?.avg_implementation_time_days || 0,
         
         // Dados para gráficos
         userGrowthData: (growthData || []).map(item => ({
           date: item.date,
           users: item.new_users,
-          name: new Date(item.date).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })
+          name: item.name
         })),
         
-        solutionPerformance: (solutionsData || []).map(item => ({
+        solutionPerformance: (solutionsData || []).slice(0, 5).map(item => ({
           name: item.title,
           implementations: item.total_implementations,
           completionRate: item.completion_rate
@@ -174,7 +178,8 @@ export const useRealAdminAnalytics = (timeRange: string = '30d') => {
         
         userRoleDistribution: (rolesData || []).map(item => ({
           role: item.role_name,
-          count: item.user_count
+          count: item.user_count,
+          percentage: item.percentage
         }))
       };
 
@@ -182,8 +187,7 @@ export const useRealAdminAnalytics = (timeRange: string = '30d') => {
       
       console.log('✅ Analytics carregado com sucesso:', {
         usuarios: processedData.totalUsers,
-        solucoes: processedData.totalSolutions,
-        implementacoes: processedData.completedImplementations,
+        implementations: processedData.completedImplementations,
         taxaConclusao: processedData.overallCompletionRate
       });
 
@@ -193,7 +197,7 @@ export const useRealAdminAnalytics = (timeRange: string = '30d') => {
       
       toast({
         title: "Erro ao carregar analytics",
-        description: "Alguns dados podem não estar disponíveis.",
+        description: error.message || "Falha ao buscar dados do servidor.",
         variant: "destructive",
       });
       
