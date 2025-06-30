@@ -37,7 +37,7 @@ export const RealAnalyticsOverview = ({
         {/* Stats Cards Skeleton */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {Array(4).fill(0).map((_, i) => (
-            <Card key={i}>
+            <Card key={i} className="bg-card border-border">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div className="space-y-2">
@@ -53,7 +53,7 @@ export const RealAnalyticsOverview = ({
 
         {/* Charts Skeleton */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <Card>
+          <Card className="bg-card border-border">
             <CardHeader>
               <Skeleton className="h-5 w-48" />
               <Skeleton className="h-4 w-64" />
@@ -62,7 +62,7 @@ export const RealAnalyticsOverview = ({
               <Skeleton className="h-[300px] w-full" />
             </CardContent>
           </Card>
-          <Card>
+          <Card className="bg-card border-border">
             <CardHeader>
               <Skeleton className="h-5 w-48" />
               <Skeleton className="h-4 w-64" />
@@ -75,7 +75,7 @@ export const RealAnalyticsOverview = ({
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {Array(3).fill(0).map((_, i) => (
-            <Card key={i}>
+            <Card key={i} className="bg-card border-border">
               <CardHeader>
                 <Skeleton className="h-5 w-32" />
                 <Skeleton className="h-4 w-48" />
@@ -92,7 +92,7 @@ export const RealAnalyticsOverview = ({
 
   if (error) {
     return (
-      <Alert variant="destructive">
+      <Alert variant="destructive" className="bg-destructive/10 border-destructive/20">
         <AlertTriangle className="h-4 w-4" />
         <AlertTitle>Erro ao carregar dados</AlertTitle>
         <AlertDescription>
@@ -104,7 +104,7 @@ export const RealAnalyticsOverview = ({
 
   if (!data) {
     return (
-      <Alert>
+      <Alert className="bg-muted/10 border-muted/20">
         <AlertTriangle className="h-4 w-4" />
         <AlertTitle>Sem dados disponíveis</AlertTitle>
         <AlertDescription>
@@ -118,14 +118,14 @@ export const RealAnalyticsOverview = ({
     <div className="space-y-6">
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card>
+        <Card className="bg-card border-border">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-muted-foreground">
                   Total de Usuários
                 </p>
-                <p className="text-3xl font-bold text-foreground">
+                <p className="text-3xl font-bold text-card-foreground">
                   {data.totalUsers?.toLocaleString() || '0'}
                 </p>
               </div>
@@ -136,14 +136,14 @@ export const RealAnalyticsOverview = ({
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="bg-card border-border">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-muted-foreground">
                   Total de Soluções
                 </p>
-                <p className="text-3xl font-bold text-foreground">
+                <p className="text-3xl font-bold text-card-foreground">
                   {data.totalSolutions?.toLocaleString() || '0'}
                 </p>
               </div>
@@ -154,14 +154,14 @@ export const RealAnalyticsOverview = ({
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="bg-card border-border">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-muted-foreground">
                   Cursos Ativos
                 </p>
-                <p className="text-3xl font-bold text-foreground">
+                <p className="text-3xl font-bold text-card-foreground">
                   {data.totalCourses?.toLocaleString() || '0'}
                 </p>
               </div>
@@ -172,14 +172,14 @@ export const RealAnalyticsOverview = ({
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="bg-card border-border">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-muted-foreground">
                   Implementações Ativas
                 </p>
-                <p className="text-3xl font-bold text-foreground">
+                <p className="text-3xl font-bold text-card-foreground">
                   {data.activeImplementations?.toLocaleString() || '0'}
                 </p>
               </div>

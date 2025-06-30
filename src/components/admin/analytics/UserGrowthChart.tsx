@@ -10,10 +10,10 @@ interface UserGrowthChartProps {
 export const UserGrowthChart = ({ data }: UserGrowthChartProps) => {
   if (!data || data.length === 0) {
     return (
-      <Card>
+      <Card className="bg-card border-border">
         <CardHeader className="pb-2">
-          <CardTitle className="text-lg font-semibold">Crescimento de Usuários</CardTitle>
-          <CardDescription>
+          <CardTitle className="text-lg font-semibold text-card-foreground">Crescimento de Usuários</CardTitle>
+          <CardDescription className="text-muted-foreground">
             Novos usuários registrados ao longo do tempo
           </CardDescription>
         </CardHeader>
@@ -27,10 +27,10 @@ export const UserGrowthChart = ({ data }: UserGrowthChartProps) => {
   }
 
   return (
-    <Card>
+    <Card className="bg-card border-border">
       <CardHeader className="pb-2">
-        <CardTitle className="text-lg font-semibold">Crescimento de Usuários</CardTitle>
-        <CardDescription>
+        <CardTitle className="text-lg font-semibold text-card-foreground">Crescimento de Usuários</CardTitle>
+        <CardDescription className="text-muted-foreground">
           Novos usuários registrados ao longo do tempo
         </CardDescription>
       </CardHeader>

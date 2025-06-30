@@ -9,10 +9,10 @@ interface CompletionRateChartProps {
 
 export const CompletionRateChart = ({ data }: CompletionRateChartProps) => {
   return (
-    <Card>
+    <Card className="bg-card border-border">
       <CardHeader className="pb-2">
-        <CardTitle className="text-lg font-semibold">Taxa de Conclusão</CardTitle>
-        <CardDescription>
+        <CardTitle className="text-lg font-semibold text-card-foreground">Taxa de Conclusão</CardTitle>
+        <CardDescription className="text-muted-foreground">
           Implementações concluídas vs. em andamento
         </CardDescription>
       </CardHeader>

@@ -33,18 +33,17 @@ export const ChartContainer: React.FC<ChartContainerProps> = ({
 
   return (
     <Card className={cn(
-      "border border-gray-200 dark:border-gray-800 shadow-sm hover:shadow-md transition-all duration-300",
-      "bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm",
+      "bg-card border-border shadow-sm hover:shadow-md transition-all duration-300",
       className
     )}>
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
           <div>
-            <CardTitle className="text-lg font-semibold text-neutral-800 dark:text-white">
+            <CardTitle className="text-lg font-semibold text-card-foreground">
               {title}
             </CardTitle>
             {description && (
-              <CardDescription className="text-neutral-600 dark:text-neutral-300 mt-1">
+              <CardDescription className="text-muted-foreground mt-1">
                 {description}
               </CardDescription>
             )}

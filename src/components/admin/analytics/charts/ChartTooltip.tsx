@@ -25,11 +25,15 @@ export const ChartTooltip: React.FC<ChartTooltipProps> = ({
 
   return (
     <div 
-      className="bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm rounded-lg border border-gray-200 dark:border-gray-700 shadow-lg p-3 max-w-xs"
-      style={chartTheme.styles.tooltip}
+      className="bg-card/95 backdrop-blur-sm rounded-lg border border-border shadow-lg p-3 max-w-xs"
+      style={{
+        backgroundColor: 'hsl(var(--card) / 0.95)',
+        borderColor: 'hsl(var(--border))',
+        color: 'hsl(var(--card-foreground))'
+      }}
     >
       {label && (
-        <div className="font-medium text-gray-900 dark:text-gray-100 mb-2 text-sm">
+        <div className="font-medium text-card-foreground mb-2 text-sm">
           {labelFormatter(label)}
         </div>
       )}
@@ -43,11 +47,11 @@ export const ChartTooltip: React.FC<ChartTooltipProps> = ({
                   backgroundColor: colorMap[entry.dataKey] || entry.color 
                 }}
               />
-              <span className="text-gray-700 dark:text-gray-300 text-sm">
+              <span className="text-muted-foreground text-sm">
                 {entry.name || entry.dataKey}
               </span>
             </div>
-            <span className="font-medium text-gray-900 dark:text-gray-100 text-sm">
+            <span className="font-medium text-card-foreground text-sm">
               {valueFormatter(entry.value)}
             </span>
           </div>

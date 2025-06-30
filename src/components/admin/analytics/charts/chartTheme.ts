@@ -1,3 +1,4 @@
+
 export const chartTheme = {
   colors: {
     primary: '#0ABAB5',
@@ -7,7 +8,7 @@ export const chartTheme = {
     danger: '#EF4444',
     info: '#3B82F6',
     
-    // Paleta categórica expandida
+    // Paleta categórica expandida para dark mode
     categorical: [
       '#0ABAB5', // Teal
       '#8B5CF6', // Purple
@@ -21,48 +22,49 @@ export const chartTheme = {
       '#8B5A2B'  // Brown
     ],
 
-    // Gradientes para área charts
+    // Gradientes para área charts (dark mode)
     gradients: {
-      primary: ['#0ABAB5', '#0ABAB520'],
-      secondary: ['#8B5CF6', '#8B5CF620'],
-      success: ['#10B981', '#10B98120'],
-      warning: ['#F59E0B', '#F59E0B20'],
-      danger: ['#EF4444', '#EF444420'],
-      info: ['#3B82F6', '#3B82F620']
+      primary: ['#0ABAB5', '#0ABAB530'],
+      secondary: ['#8B5CF6', '#8B5CF630'],
+      success: ['#10B981', '#10B98130'],
+      warning: ['#F59E0B', '#F59E0B30'],
+      danger: ['#EF4444', '#EF444430'],
+      info: ['#3B82F6', '#3B82F630']
     }
   },
 
-  // Configurações de estilo
+  // Configurações de estilo para dark mode
   styles: {
     grid: {
       strokeDasharray: '3 3',
-      stroke: '#E5E7EB',
-      strokeOpacity: 0.5
+      stroke: '#374151', // Dark grid lines
+      strokeOpacity: 0.3
     },
     
     axis: {
-      stroke: '#9CA3AF',
+      stroke: '#9CA3AF', // Lighter text for dark background
       fontSize: 12,
       fontFamily: 'Inter, sans-serif'
     },
 
     tooltip: {
-      backgroundColor: 'rgba(255, 255, 255, 0.95)',
-      border: '1px solid #E5E7EB',
+      backgroundColor: 'hsl(var(--card))', // Use CSS custom property
+      border: '1px solid hsl(var(--border))',
       borderRadius: '8px',
-      boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+      boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.3)',
       padding: '12px',
-      fontSize: '14px'
+      fontSize: '14px',
+      color: 'hsl(var(--card-foreground))'
     },
 
     legend: {
       fontSize: 12,
       fontFamily: 'Inter, sans-serif',
-      color: '#6B7280'
+      color: 'hsl(var(--muted-foreground))'
     }
   },
 
-  // Configurações de animação (apenas duração - Recharts não suporta easing customizado)
+  // Configurações de animação
   animations: {
     duration: 800,
     delay: 100

@@ -10,10 +10,10 @@ interface WeeklyActivityChartProps {
 export const WeeklyActivityChart: React.FC<WeeklyActivityChartProps> = ({ data }) => {
   if (!data || data.length === 0) {
     return (
-      <Card>
+      <Card className="bg-card border-border">
         <CardHeader className="pb-2">
-          <CardTitle className="text-lg font-semibold">Atividade Semanal</CardTitle>
-          <CardDescription>
+          <CardTitle className="text-lg font-semibold text-card-foreground">Atividade Semanal</CardTitle>
+          <CardDescription className="text-muted-foreground">
             Atividade dos usuários por dia da semana
           </CardDescription>
         </CardHeader>
@@ -27,10 +27,10 @@ export const WeeklyActivityChart: React.FC<WeeklyActivityChartProps> = ({ data }
   }
 
   return (
-    <Card>
+    <Card className="bg-card border-border">
       <CardHeader className="pb-2">
-        <CardTitle className="text-lg font-semibold">Atividade Semanal</CardTitle>
-        <CardDescription>
+        <CardTitle className="text-lg font-semibold text-card-foreground">Atividade Semanal</CardTitle>
+        <CardDescription className="text-muted-foreground">
           Atividade dos usuários por dia da semana
         </CardDescription>
       </CardHeader>

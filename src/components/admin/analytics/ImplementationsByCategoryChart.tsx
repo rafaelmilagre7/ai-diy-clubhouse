@@ -9,10 +9,10 @@ interface ImplementationsByCategoryChartProps {
 
 export const ImplementationsByCategoryChart = ({ data }: ImplementationsByCategoryChartProps) => {
   return (
-    <Card>
+    <Card className="bg-card border-border">
       <CardHeader className="pb-2">
-        <CardTitle className="text-lg font-semibold">Implementações por Categoria</CardTitle>
-        <CardDescription>
+        <CardTitle className="text-lg font-semibold text-card-foreground">Implementações por Categoria</CardTitle>
+        <CardDescription className="text-muted-foreground">
           Distribuição por tipo de solução
         </CardDescription>
       </CardHeader>

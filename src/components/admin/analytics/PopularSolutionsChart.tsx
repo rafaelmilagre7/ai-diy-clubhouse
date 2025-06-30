@@ -9,10 +9,10 @@ interface PopularSolutionsChartProps {
 
 export const PopularSolutionsChart = ({ data }: PopularSolutionsChartProps) => {
   return (
-    <Card>
+    <Card className="bg-card border-border">
       <CardHeader className="pb-2">
-        <CardTitle className="text-lg font-semibold">Soluções Mais Populares</CardTitle>
-        <CardDescription>
+        <CardTitle className="text-lg font-semibold text-card-foreground">Soluções Mais Populares</CardTitle>
+        <CardDescription className="text-muted-foreground">
           Top 5 soluções mais implementadas
         </CardDescription>
       </CardHeader>

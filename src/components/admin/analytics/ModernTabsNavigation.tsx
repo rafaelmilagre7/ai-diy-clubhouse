@@ -65,20 +65,20 @@ export const ModernTabsNavigation = ({
 
   const getStatusColor = (status?: string) => {
     switch (status) {
-      case 'success': return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
-      case 'warning': return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200';
-      case 'error': return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200';
-      case 'active': return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200';
-      default: return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200';
+      case 'success': return 'bg-green-500/10 text-green-500 border-green-500/20';
+      case 'warning': return 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20';
+      case 'error': return 'bg-red-500/10 text-red-500 border-red-500/20';
+      case 'active': return 'bg-blue-500/10 text-blue-500 border-blue-500/20';
+      default: return 'bg-muted/10 text-muted-foreground border-muted/20';
     }
   };
 
   return (
     <div className="space-y-4">
-      {/* Tabs Navigation */}
+      {/* Modern Tabs Navigation */}
       <Tabs value={activeTab} onValueChange={onTabChange} className="w-full">
-        <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 shadow-sm p-2">
-          <TabsList className="grid grid-cols-4 w-full bg-gray-50 dark:bg-gray-800 rounded-md p-1">
+        <div className="bg-card rounded-lg border border-border shadow-sm p-2">
+          <TabsList className="grid grid-cols-4 w-full bg-muted/30 rounded-md p-1">
             {tabs.map((tab) => {
               const IconComponent = tab.icon;
               const isActive = activeTab === tab.value;
@@ -91,7 +91,7 @@ export const ModernTabsNavigation = ({
                     relative flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium transition-all duration-200 rounded-sm
                     ${isActive 
                       ? 'bg-[#0ABAB5] text-white shadow-lg transform scale-105' 
-                      : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-accent'
                     }
                   `}
                 >
@@ -104,7 +104,7 @@ export const ModernTabsNavigation = ({
                       variant="secondary" 
                       className={`
                         ml-1 text-xs px-1.5 py-0.5 min-w-[20px] h-5 flex items-center justify-center
-                        ${isActive ? 'bg-white/20 text-white' : 'bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-300'}
+                        ${isActive ? 'bg-white/20 text-white border-white/20' : 'bg-muted text-muted-foreground border-muted'}
                       `}
                     >
                       {tab.count > 999 ? '999+' : tab.count}
@@ -114,7 +114,7 @@ export const ModernTabsNavigation = ({
                   {/* Status Indicator */}
                   {tab.status && (
                     <div className={`
-                      absolute -top-1 -right-1 w-3 h-3 rounded-full border-2 border-white dark:border-gray-900
+                      absolute -top-1 -right-1 w-3 h-3 rounded-full border-2 border-card
                       ${tab.status === 'active' && 'bg-blue-500 animate-pulse'}
                       ${tab.status === 'success' && 'bg-green-500'}
                       ${tab.status === 'warning' && 'bg-yellow-500'}

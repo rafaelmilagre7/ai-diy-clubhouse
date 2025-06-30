@@ -49,21 +49,21 @@ export const ModernAnalyticsHeader = ({
             <span className="text-foreground font-medium">Analytics</span>
           </nav>
           <div className="flex items-center space-x-3">
-            <h1 className="text-3xl font-bold tracking-tight">
+            <h1 className="text-3xl font-bold tracking-tight text-foreground">
               Dashboard Analytics
             </h1>
-            <Badge variant="secondary" className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+            <Badge variant="secondary" className="bg-green-500/10 text-green-500 border-green-500/20">
               <div className="w-2 h-2 bg-green-500 rounded-full mr-2 animate-pulse"></div>
               Ao Vivo
             </Badge>
             {isOptimizationEnabled && (
-              <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+              <Badge variant="outline" className="bg-blue-500/10 text-blue-500 border-blue-500/20">
                 <Zap className="w-3 h-3 mr-1" />
                 Otimizado
               </Badge>
             )}
             {cacheEnabled && stats && (
-              <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200">
+              <Badge variant="outline" className="bg-purple-500/10 text-purple-500 border-purple-500/20">
                 Cache: {stats.hitRate}
               </Badge>
             )}
@@ -76,7 +76,7 @@ export const ModernAnalyticsHeader = ({
             variant="outline" 
             size="sm"
             onClick={onExport}
-            className="hidden sm:flex"
+            className="hidden sm:flex bg-card border-border hover:bg-accent"
           >
             <Download className="h-4 w-4 mr-2" />
             Exportar
@@ -85,7 +85,7 @@ export const ModernAnalyticsHeader = ({
             variant="outline" 
             size="sm"
             onClick={onSettings}
-            className="hidden sm:flex"
+            className="hidden sm:flex bg-card border-border hover:bg-accent"
           >
             <Settings className="h-4 w-4 mr-2" />
             Configurar
@@ -95,6 +95,7 @@ export const ModernAnalyticsHeader = ({
             size="sm"
             onClick={onRefresh}
             disabled={isLoading}
+            className="bg-card border-border hover:bg-accent"
           >
             <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
             Atualizar
@@ -104,54 +105,54 @@ export const ModernAnalyticsHeader = ({
 
       {/* Status Cards Row */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card className="border-l-4 border-l-blue-500">
+        <Card className="border-l-4 border-l-blue-500 bg-card border-border">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Usuários Totais</p>
-                <p className="text-2xl font-bold">{totalUsers.toLocaleString()}</p>
+                <p className="text-2xl font-bold text-card-foreground">{totalUsers.toLocaleString()}</p>
               </div>
-              <div className="h-8 w-8 bg-blue-100 rounded-lg flex items-center justify-center">
-                <TrendingUp className="h-4 w-4 text-blue-600" />
+              <div className="h-8 w-8 bg-blue-500/10 rounded-lg flex items-center justify-center">
+                <TrendingUp className="h-4 w-4 text-blue-500" />
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="border-l-4 border-l-green-500">
+        <Card className="border-l-4 border-l-green-500 bg-card border-border">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Total de Soluções</p>
-                <p className="text-2xl font-bold">{totalSolutions.toLocaleString()}</p>
+                <p className="text-2xl font-bold text-card-foreground">{totalSolutions.toLocaleString()}</p>
               </div>
-              <div className="h-8 w-8 bg-green-100 rounded-lg flex items-center justify-center">
-                <TrendingUp className="h-4 w-4 text-green-600" />
+              <div className="h-8 w-8 bg-green-500/10 rounded-lg flex items-center justify-center">
+                <TrendingUp className="h-4 w-4 text-green-500" />
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="border-l-4 border-l-purple-500">
+        <Card className="border-l-4 border-l-purple-500 bg-card border-border">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Cursos Ativos</p>
-                <p className="text-2xl font-bold">{totalCourses.toLocaleString()}</p>
+                <p className="text-2xl font-bold text-card-foreground">{totalCourses.toLocaleString()}</p>
               </div>
-              <div className="h-8 w-8 bg-purple-100 rounded-lg flex items-center justify-center">
-                <TrendingUp className="h-4 w-4 text-purple-600" />
+              <div className="h-8 w-8 bg-purple-500/10 rounded-lg flex items-center justify-center">
+                <TrendingUp className="h-4 w-4 text-purple-500" />
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="border-l-4 border-l-orange-500">
+        <Card className="border-l-4 border-l-orange-500 bg-card border-border">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Última Atualização</p>
-                <p className="text-sm font-medium flex items-center">
+                <p className="text-sm font-medium flex items-center text-card-foreground">
                   <Clock className="h-3 w-3 mr-1" />
                   {formatDistanceToNow(lastUpdated, { 
                     addSuffix: true, 
@@ -159,8 +160,8 @@ export const ModernAnalyticsHeader = ({
                   })}
                 </p>
               </div>
-              <div className="h-8 w-8 bg-orange-100 rounded-lg flex items-center justify-center">
-                <Clock className="h-4 w-4 text-orange-600" />
+              <div className="h-8 w-8 bg-orange-500/10 rounded-lg flex items-center justify-center">
+                <Clock className="h-4 w-4 text-orange-500" />
               </div>
             </div>
           </CardContent>
