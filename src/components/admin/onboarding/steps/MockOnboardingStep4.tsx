@@ -15,26 +15,26 @@ interface MockOnboardingStep4Props {
 }
 
 const mainObjectives = [
-  'Aumentar produtividade e eficiência',
-  'Reduzir custos operacionais',
-  'Melhorar atendimento ao cliente',
-  'Automatizar processos repetitivos',
-  'Gerar insights de dados',
-  'Criar novos produtos/serviços',
-  'Otimizar marketing e vendas',
-  'Melhorar tomada de decisões',
-  'Inovar no mercado',
-  'Outros'
+  'Aumentar produtividade e eficiência operacional',
+  'Reduzir custos e otimizar processos',
+  'Melhorar experiência e atendimento ao cliente',
+  'Automatizar tarefas repetitivas',
+  'Gerar insights estratégicos de dados',
+  'Desenvolver novos produtos ou serviços',
+  'Otimizar estratégias de marketing e vendas',
+  'Aprimorar processo de tomada de decisões',
+  'Inovar e se diferenciar no mercado',
+  'Outros objetivos específicos'
 ];
 
 const budgetRanges = [
-  'Até R$ 5.000',
-  'R$ 5.000 - R$ 15.000',
-  'R$ 15.000 - R$ 30.000',
-  'R$ 30.000 - R$ 50.000',
+  'Até R$ 10.000',
+  'R$ 10.000 - R$ 25.000',
+  'R$ 25.000 - R$ 50.000',
   'R$ 50.000 - R$ 100.000',
-  'Acima de R$ 100.000',
-  'Ainda não defini'
+  'R$ 100.000 - R$ 250.000',
+  'Acima de R$ 250.000',
+  'Orçamento a definir'
 ];
 
 const MockOnboardingStep4: React.FC<MockOnboardingStep4Props> = ({
@@ -47,7 +47,7 @@ const MockOnboardingStep4: React.FC<MockOnboardingStep4Props> = ({
       initial={{ opacity: 0, x: 20 }}
       animate={{ opacity: 1, x: 0 }}
       exit={{ opacity: 0, x: -20 }}
-      className="space-y-6"
+      className="space-y-8"
     >
       <div className="text-center mb-8">
         <motion.div
@@ -59,112 +59,131 @@ const MockOnboardingStep4: React.FC<MockOnboardingStep4Props> = ({
           <Target className="w-8 h-8 text-viverblue" />
         </motion.div>
         <h2 className="text-2xl font-bold text-white mb-2">
-          Objetivos e Expectativas
+          Objetivos Estratégicos
         </h2>
         <p className="text-slate-400">
-          Vamos definir seus objetivos para criar uma experiência personalizada
+          Defina seus objetivos para criar uma estratégia de implementação personalizada
         </p>
       </div>
 
-      <div className="space-y-6">
-        {/* Objetivo Principal */}
-        <Card className="p-6 bg-[#1A1E2E]/80 backdrop-blur-sm border-white/10">
+      <div className="space-y-8">
+        {/* Objetivos Principais */}
+        <Card className="p-6 bg-white/5 border-white/10 backdrop-blur-sm">
           <div className="space-y-6">
-            <div>
+            <div className="flex items-center gap-3 mb-4">
+              <Target className="w-5 h-5 text-viverblue" />
+              <h3 className="text-lg font-semibold text-white">Objetivos Principais</h3>
+            </div>
+
+            <div className="space-y-2">
               <Label className="text-slate-200 text-base font-medium">
-                Qual o seu principal objetivo com IA? *
+                Qual o principal objetivo da sua empresa com IA? *
               </Label>
               <Select 
                 value={data.mainObjective || ''} 
                 onValueChange={(value) => onUpdateData({ mainObjective: value })}
               >
-                <SelectTrigger className="mt-3 bg-[#151823] border-white/20 text-white">
-                  <SelectValue placeholder="Selecione seu objetivo principal" />
+                <SelectTrigger className="bg-slate-800/50 border-slate-600 text-white focus:border-viverblue">
+                  <SelectValue placeholder="Selecione o objetivo estratégico principal" />
                 </SelectTrigger>
-                <SelectContent className="bg-[#151823] border-white/20">
+                <SelectContent className="bg-slate-800 border-slate-600 max-h-60">
                   {mainObjectives.map((objective) => (
-                    <SelectItem key={objective} value={objective} className="text-white hover:bg-white/10">
+                    <SelectItem key={objective} value={objective} className="text-white hover:bg-slate-700">
                       {objective}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
               {getFieldError?.('mainObjective') && (
-                <p className="text-red-400 text-sm mt-1">{getFieldError('mainObjective')}</p>
+                <p className="text-red-400 text-sm">{getFieldError('mainObjective')}</p>
               )}
             </div>
 
-            <div>
+            <div className="space-y-2">
               <Label className="text-slate-200 text-base font-medium">
-                Qual área do seu negócio você quer impactar primeiro? *
+                Qual área do negócio será impactada prioritariamente? *
               </Label>
               <Textarea
                 value={data.areaToImpact || ''}
                 onChange={(e) => onUpdateData({ areaToImpact: e.target.value })}
-                className="mt-3 bg-[#151823] border-white/20 text-white placeholder:text-slate-500 min-h-[100px]"
-                placeholder="Ex: Atendimento ao cliente, vendas, operações, marketing..."
+                className="bg-slate-800/50 border-slate-600 text-white placeholder:text-slate-400 focus:border-viverblue min-h-[100px] resize-none"
+                placeholder="Descreva a área específica (ex: atendimento ao cliente, vendas, operações, marketing, RH, etc.)"
+                maxLength={500}
               />
+              <div className="flex justify-between text-xs">
+                <span className="text-slate-500">Seja específico sobre o departamento ou processo</span>
+                <span className="text-slate-400">
+                  {(data.areaToImpact || '').length}/500
+                </span>
+              </div>
               {getFieldError?.('areaToImpact') && (
-                <p className="text-red-400 text-sm mt-1">{getFieldError('areaToImpact')}</p>
+                <p className="text-red-400 text-sm">{getFieldError('areaToImpact')}</p>
               )}
             </div>
           </div>
         </Card>
 
-        {/* Expectativas */}
-        <Card className="p-6 bg-[#1A1E2E]/80 backdrop-blur-sm border-white/10">
+        {/* Expectativas e Resultados */}
+        <Card className="p-6 bg-white/5 border-white/10 backdrop-blur-sm">
           <div className="space-y-6">
-            <div className="flex items-center gap-2 mb-4">
+            <div className="flex items-center gap-3 mb-4">
               <TrendingUp className="w-5 h-5 text-viverblue" />
-              <h3 className="text-lg font-semibold text-white">Expectativas</h3>
+              <h3 className="text-lg font-semibold text-white">Expectativas de Resultados</h3>
             </div>
 
-            <div>
+            <div className="space-y-2">
               <Label className="text-slate-200 text-base font-medium">
-                Que resultado você espera alcançar em 90 dias? *
+                Quais resultados espera alcançar nos primeiros 90 dias? *
               </Label>
               <Textarea
                 value={data.expectedResult90Days || ''}
                 onChange={(e) => onUpdateData({ expectedResult90Days: e.target.value })}
-                className="mt-3 bg-[#151823] border-white/20 text-white placeholder:text-slate-500 min-h-[100px]"
-                placeholder="Ex: Reduzir 30% do tempo gasto em tarefas manuais..."
+                className="bg-slate-800/50 border-slate-600 text-white placeholder:text-slate-400 focus:border-viverblue min-h-[120px] resize-none"
+                placeholder="Descreva resultados mensuráveis esperados (ex: redução de 30% no tempo de atendimento, aumento de 20% na eficiência, etc.)"
+                maxLength={600}
               />
+              <div className="flex justify-between text-xs">
+                <span className="text-slate-500">Inclua métricas específicas quando possível</span>
+                <span className="text-slate-400">
+                  {(data.expectedResult90Days || '').length}/600
+                </span>
+              </div>
               {getFieldError?.('expectedResult90Days') && (
-                <p className="text-red-400 text-sm mt-1">{getFieldError('expectedResult90Days')}</p>
+                <p className="text-red-400 text-sm">{getFieldError('expectedResult90Days')}</p>
               )}
             </div>
           </div>
         </Card>
 
-        {/* Orçamento */}
-        <Card className="p-6 bg-[#1A1E2E]/80 backdrop-blur-sm border-white/10">
+        {/* Investimento */}
+        <Card className="p-6 bg-white/5 border-white/10 backdrop-blur-sm">
           <div className="space-y-6">
-            <div className="flex items-center gap-2 mb-4">
+            <div className="flex items-center gap-3 mb-4">
               <DollarSign className="w-5 h-5 text-viverblue" />
-              <h3 className="text-lg font-semibold text-white">Investimento</h3>
+              <h3 className="text-lg font-semibold text-white">Investimento Disponível</h3>
             </div>
 
-            <div>
+            <div className="space-y-2">
               <Label className="text-slate-200 text-base font-medium">
-                Qual o orçamento disponível para implementar IA? *
+                Qual o orçamento disponível para implementação de IA? *
               </Label>
               <Select 
                 value={data.aiImplementationBudget || ''} 
                 onValueChange={(value) => onUpdateData({ aiImplementationBudget: value })}
               >
-                <SelectTrigger className="mt-3 bg-[#151823] border-white/20 text-white">
-                  <SelectValue placeholder="Selecione a faixa de orçamento" />
+                <SelectTrigger className="bg-slate-800/50 border-slate-600 text-white focus:border-viverblue">
+                  <SelectValue placeholder="Selecione a faixa de investimento" />
                 </SelectTrigger>
-                <SelectContent className="bg-[#151823] border-white/20">
+                <SelectContent className="bg-slate-800 border-slate-600">
                   {budgetRanges.map((budget) => (
-                    <SelectItem key={budget} value={budget} className="text-white hover:bg-white/10">
+                    <SelectItem key={budget} value={budget} className="text-white hover:bg-slate-700">
                       {budget}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
               {getFieldError?.('aiImplementationBudget') && (
-                <p className="text-red-400 text-sm mt-1">{getFieldError('aiImplementationBudget')}</p>
+                <p className="text-red-400 text-sm">{getFieldError('aiImplementationBudget')}</p>
               )}
             </div>
           </div>

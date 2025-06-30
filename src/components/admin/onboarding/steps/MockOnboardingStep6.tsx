@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { CheckCircle, Sparkles } from 'lucide-react';
+import { CheckCircle, Target } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { OnboardingPreview } from '@/components/onboarding/components/OnboardingPreview';
@@ -23,7 +23,7 @@ const MockOnboardingStep6: React.FC<MockOnboardingStep6Props> = ({
       initial={{ opacity: 0, x: 20 }}
       animate={{ opacity: 1, x: 0 }}
       exit={{ opacity: 0, x: -20 }}
-      className="space-y-6"
+      className="space-y-8"
     >
       <div className="text-center mb-8">
         <motion.div
@@ -35,44 +35,43 @@ const MockOnboardingStep6: React.FC<MockOnboardingStep6Props> = ({
           <CheckCircle className="w-8 h-8 text-green-500" />
         </motion.div>
         <h2 className="text-2xl font-bold text-white mb-2">
-          Finalização
+          Revisão Final
         </h2>
         <p className="text-slate-400">
-          Revise suas informações e finalize seu onboarding
+          Revise suas informações antes de finalizar o processo
         </p>
       </div>
 
-      <Card className="p-6 bg-[#1A1E2E]/80 backdrop-blur-sm border-white/10">
+      <Card className="p-6 bg-white/5 border-white/10 backdrop-blur-sm">
         <OnboardingPreview data={data} />
       </Card>
 
-      <Card className="p-6 bg-gradient-to-r from-viverblue/20 to-purple-600/20 backdrop-blur-sm border-white/10">
-        <div className="text-center space-y-4">
-          <div className="flex items-center justify-center gap-2">
-            <Sparkles className="w-5 h-5 text-viverblue" />
-            <h3 className="text-lg font-semibold text-white">Próximos Passos</h3>
-            <Sparkles className="w-5 h-5 text-viverblue" />
+      <Card className="p-8 bg-gradient-to-r from-viverblue/10 to-purple-600/10 backdrop-blur-sm border-white/10">
+        <div className="text-center space-y-6">
+          <div className="flex items-center justify-center gap-3">
+            <Target className="w-6 h-6 text-viverblue" />
+            <h3 className="text-xl font-semibold text-white">Próximas Etapas</h3>
           </div>
           
-          <p className="text-slate-300 max-w-2xl mx-auto">
-            Com base no seu perfil, criaremos uma trilha personalizada de implementação de IA 
-            para sua empresa. Você receberá acesso a conteúdos, ferramentas e uma comunidade 
-            exclusiva de empreendedores inovadores.
+          <p className="text-slate-300 max-w-2xl mx-auto leading-relaxed">
+            Com base no perfil da sua empresa, desenvolveremos uma estratégia personalizada 
+            de implementação de IA. Você terá acesso a conteúdos especializados, ferramentas 
+            práticas e uma rede exclusiva de executivos inovadores.
           </p>
           
           <div className="pt-4">
             <Button
               onClick={onComplete}
               disabled={isCompleting}
-              className="bg-viverblue hover:bg-viverblue/90 text-white px-8 py-3 text-lg font-semibold"
+              className="bg-viverblue hover:bg-viverblue/90 text-white px-12 py-4 text-lg font-semibold rounded-lg transition-all"
             >
               {isCompleting ? (
                 <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                  Finalizando...
+                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-3"></div>
+                  Processando...
                 </>
               ) : (
-                'Finalizar Onboarding'
+                'Finalizar Cadastro'
               )}
             </Button>
           </div>
