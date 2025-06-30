@@ -9,17 +9,15 @@ import { VideoTutorials } from './components/VideoTutorials';
 import { MemberBenefit } from './components/MemberBenefit';
 import { toolFormSchema } from './schema/toolFormSchema';
 import { ToolFormProps, ToolFormValues } from './types/toolFormTypes';
-import { BenefitType, ToolCategory } from '@/types/toolTypes';
+import { BenefitType } from '@/types/toolTypes';
 import { useEffect, useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 
 export const ToolForm = ({ initialData, onSubmit, isSubmitting }: ToolFormProps) => {
-  // Garantir que benefit_type seja sempre um dos valores válidos
   const defaultBenefitType = initialData?.benefit_type as BenefitType | undefined;
-  const [formChanged, setFormChanged] = useState(false);
+  const [hasChanges, setHasChanges] = useState(!initialData); // Novo formulário sempre tem mudanças
   const { toast } = useToast();
 
-  // Inicializa o formulário com valores padrão ou existentes, garantindo que category nunca seja string vazia
   const form = useForm<ToolFormValues>({
     resolver: zodResolver(toolFormSchema),
     defaultValues: {
@@ -37,40 +35,21 @@ export const ToolForm = ({ initialData, onSubmit, isSubmitting }: ToolFormProps)
       benefit_description: initialData?.benefit_description || '',
       benefit_link: initialData?.benefit_link || '',
       benefit_badge_url: initialData?.benefit_badge_url || '',
-      formModified: initialData ? false : true // Novos formulários começam como modificados
     }
   });
 
-  // Se for um novo formulário (sem initialData), marcar como modificado para habilitar o botão de salvar
+  // OTIMIZAÇÃO: Detectar mudanças de forma mais eficiente
   useEffect(() => {
-    if (!initialData) {
-      setFormChanged(true);
-    }
-  }, [initialData]);
-
-  // Monitorar o estado do formulário para detectar mudanças
-  useEffect(() => {
-    const subscription = form.watch((values) => {
-      // Verificar se o formulário foi explicitamente marcado como modificado via field
-      if (form.getValues('formModified')) {
-        console.log('Formulário marcado como modificado via formModified field');
-        setFormChanged(true);
-        return;
-      }
-      
-      // Se não houver dados iniciais, o formulário é novo e deve estar sempre habilitado
+    const subscription = form.watch(() => {
+      // Para formulário novo sempre considerar como tendo mudanças
       if (!initialData) {
-        setFormChanged(true);
+        setHasChanges(true);
         return;
       }
       
-      // Verificar se o formulário está "dirty" segundo o React Hook Form
+      // Para formulários existentes, verificar se está dirty
       const isDirty = form.formState.isDirty;
-      if (isDirty) {
-        console.log('Formulário marcado como dirty pelo React Hook Form');
-        setFormChanged(true);
-        return;
-      }
+      setHasChanges(isDirty);
     });
     
     return () => subscription.unsubscribe();
@@ -80,15 +59,19 @@ export const ToolForm = ({ initialData, onSubmit, isSubmitting }: ToolFormProps)
     try {
       console.log("Formulário enviado:", data);
       
-      // Remover campos auxiliares antes de enviar para o backend
-      const { formModified, ...submitData } = data;
-      
-      const success = await onSubmit(submitData);
+      const success = await onSubmit(data);
       
       if (success) {
-        // Reset o estado do formulário após salvar com sucesso
-        setFormChanged(false);
-        form.setValue("formModified", false);
+        // Reset o estado de mudanças após salvar com sucesso
+        setHasChanges(false);
+        form.reset(data); // Reset com os novos dados
+        
+        toast({
+          title: initialData ? "Ferramenta atualizada" : "Ferramenta criada",
+          description: initialData 
+            ? "As alterações foram salvas com sucesso" 
+            : "A nova ferramenta foi criada com sucesso",
+        });
       }
     } catch (error) {
       console.error("Erro ao enviar formulário:", error);
@@ -100,8 +83,8 @@ export const ToolForm = ({ initialData, onSubmit, isSubmitting }: ToolFormProps)
     }
   };
 
-  // Garantir que o botão de salvar seja habilitado quando houver mudanças ou for um novo formulário
-  const isSaveDisabled = isSubmitting || (!formChanged && initialData !== undefined);
+  // OTIMIZAÇÃO: Lógica simplificada para habilitar/desabilitar botão
+  const isSaveDisabled = isSubmitting || (!hasChanges && initialData !== undefined);
 
   return (
     <Form {...form}>
@@ -119,21 +102,25 @@ export const ToolForm = ({ initialData, onSubmit, isSubmitting }: ToolFormProps)
           >
             {isSubmitting ? 'Salvando...' : 'Salvar Ferramenta'}
           </Button>
-          {(!formChanged && initialData) && (
-            <p className="text-sm text-muted-foreground text-center mt-2">
-              Faça alterações no formulário para salvar
-            </p>
-          )}
-          {(formChanged && initialData) && (
-            <p className="text-sm text-primary text-center mt-2">
-              Alterações detectadas - clique para salvar
-            </p>
-          )}
-          {(!initialData) && (
-            <p className="text-sm text-primary text-center mt-2">
-              Preencha os campos e clique para criar a ferramenta
-            </p>
-          )}
+          
+          {/* OTIMIZAÇÃO: Feedback visual mais claro */}
+          <div className="text-sm text-center mt-2">
+            {!initialData && (
+              <p className="text-primary">
+                Preencha os campos e clique para criar a ferramenta
+              </p>
+            )}
+            {initialData && !hasChanges && (
+              <p className="text-muted-foreground">
+                Faça alterações no formulário para salvar
+              </p>
+            )}
+            {initialData && hasChanges && (
+              <p className="text-primary">
+                Alterações detectadas - clique para salvar
+              </p>
+            )}
+          </div>
         </div>
       </form>
     </Form>

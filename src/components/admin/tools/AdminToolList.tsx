@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Tool } from '@/types/toolTypes';
 import { Link } from 'react-router-dom';
@@ -33,13 +34,16 @@ export const AdminToolList = ({ refreshTrigger }: AdminToolListProps) => {
     selectedCategory, 
     setSelectedCategory, 
     searchQuery, 
-    setSearchQuery 
+    setSearchQuery,
+    refetch 
   } = useAdminTools();
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const { toast } = useToast();
 
   const handleDelete = async (id: string) => {
     try {
+      setDeletingId(id);
+      
       const { error } = await supabase
         .from('tools')
         .delete()
@@ -52,8 +56,9 @@ export const AdminToolList = ({ refreshTrigger }: AdminToolListProps) => {
         description: "A ferramenta foi excluída com sucesso.",
       });
       
-      // Recarregar a página para atualizar a lista
-      window.location.reload();
+      // CORREÇÃO: Usar refetch em vez de window.location.reload()
+      await refetch();
+      
     } catch (error: any) {
       console.error("Erro ao excluir ferramenta:", error);
       toast({
@@ -143,9 +148,13 @@ export const AdminToolList = ({ refreshTrigger }: AdminToolListProps) => {
                 </Link>
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
-                    <Button variant="destructive" size="sm">
+                    <Button 
+                      variant="destructive" 
+                      size="sm"
+                      disabled={deletingId === tool.id}
+                    >
                       <Trash className="h-4 w-4 mr-2" />
-                      Excluir
+                      {deletingId === tool.id ? 'Excluindo...' : 'Excluir'}
                     </Button>
                   </AlertDialogTrigger>
                   <AlertDialogContent>

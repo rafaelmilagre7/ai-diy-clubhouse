@@ -19,26 +19,22 @@ export const TagManager = ({ form }: TagManagerProps) => {
   const handleAddTag = () => {
     if (tagInput.trim() === '') return;
     
+    const newTag = tagInput.trim().toLowerCase();
+    
     // Verificar se a tag já existe
-    if (tags.includes(tagInput.trim().toLowerCase())) {
+    if (tags.includes(newTag)) {
       setTagInput('');
       return;
     }
     
-    // Adicionar a nova tag
-    const updatedTags = [...tags, tagInput.trim().toLowerCase()];
-    
-    // Atualizar o valor no formulário
+    // OTIMIZAÇÃO: Atualização mais direta
+    const updatedTags = [...tags, newTag];
     form.setValue('tags', updatedTags, { 
       shouldDirty: true,
       shouldTouch: true,
       shouldValidate: true 
     });
     
-    // Marcar o formulário como modificado
-    form.setValue('formModified', true);
-    
-    // Limpar o input
     setTagInput('');
   };
 
@@ -50,17 +46,13 @@ export const TagManager = ({ form }: TagManagerProps) => {
   };
 
   const handleRemoveTag = (tagToRemove: string) => {
+    // OTIMIZAÇÃO: Atualização mais direta
     const updatedTags = tags.filter(tag => tag !== tagToRemove);
-    
-    // Atualizar o valor no formulário
     form.setValue('tags', updatedTags, { 
       shouldDirty: true,
       shouldTouch: true,
       shouldValidate: true 
     });
-    
-    // Marcar o formulário como modificado
-    form.setValue('formModified', true);
   };
 
   return (

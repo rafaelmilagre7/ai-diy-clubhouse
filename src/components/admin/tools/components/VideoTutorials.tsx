@@ -22,14 +22,12 @@ export const VideoTutorials = ({ form }: VideoTutorialsProps) => {
     const currentTutorials = form.getValues('video_tutorials') || [];
     const updatedTutorials = [...currentTutorials, tutorial];
     
+    // OTIMIZAÇÃO: Atualização mais direta
     form.setValue('video_tutorials', updatedTutorials, {
       shouldDirty: true,
       shouldTouch: true,
       shouldValidate: true
     });
-    
-    // Marcar o formulário como modificado
-    form.setValue('formModified', true);
     
     setShowAddForm(false);
   };
@@ -38,14 +36,12 @@ export const VideoTutorials = ({ form }: VideoTutorialsProps) => {
     const currentTutorials = form.getValues('video_tutorials') || [];
     const updatedTutorials = currentTutorials.filter((_, i) => i !== index);
     
+    // OTIMIZAÇÃO: Atualização mais direta
     form.setValue('video_tutorials', updatedTutorials, {
       shouldDirty: true,
       shouldTouch: true,
       shouldValidate: true
     });
-    
-    // Marcar o formulário como modificado
-    form.setValue('formModified', true);
   };
 
   return (
