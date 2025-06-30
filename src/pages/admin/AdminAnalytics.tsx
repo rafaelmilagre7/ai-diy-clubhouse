@@ -3,8 +3,10 @@ import React, { useState, useCallback } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { RealAnalyticsOverview } from '@/components/admin/analytics/RealAnalyticsOverview';
+import { UserAnalyticsTabContent } from '@/components/admin/analytics/tabs/UserAnalyticsTabContent';
+import { SolutionAnalyticsTabContent } from '@/components/admin/analytics/tabs/SolutionAnalyticsTabContent';
+import { LmsAnalyticsTabContent } from '@/components/admin/analytics/tabs/LmsAnalyticsTabContent';
 import { AnalyticsHeader } from '@/components/admin/analytics/AnalyticsHeader';
-import { PlaceholderTabContent } from '@/components/admin/analytics/PlaceholderTabContent';
 import { useRealAdminAnalytics } from '@/hooks/admin/useRealAdminAnalytics';
 import { PermissionGuard } from '@/components/auth/PermissionGuard';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -128,24 +130,15 @@ const AdminAnalytics = () => {
           </TabsContent>
           
           <TabsContent value="users" className="space-y-4">
-            <PlaceholderTabContent 
-              title="Análise Detalhada de Usuários" 
-              description="Métricas específicas sobre o comportamento e engajamento dos usuários."
-            />
+            <UserAnalyticsTabContent timeRange={timeRange} />
           </TabsContent>
           
           <TabsContent value="solutions" className="space-y-4">
-            <PlaceholderTabContent 
-              title="Performance de Soluções" 
-              description="Análise detalhada da performance e adoção das soluções disponíveis."
-            />
+            <SolutionAnalyticsTabContent timeRange={timeRange} />
           </TabsContent>
           
           <TabsContent value="learning" className="space-y-4">
-            <PlaceholderTabContent 
-              title="Analytics de Aprendizado" 
-              description="Métricas sobre o progresso e engajamento nos cursos e aulas."
-            />
+            <LmsAnalyticsTabContent timeRange={timeRange} />
           </TabsContent>
         </Tabs>
       </div>
