@@ -1,93 +1,82 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Building2, Users, TrendingUp } from 'lucide-react';
+import { Building2, Briefcase, Calendar, DollarSign, Target } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { OnboardingData } from '@/components/onboarding/types/onboardingTypes';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { BirthDateSelector } from '@/components/onboarding/components/BirthDateSelector';
+import { OnboardingStepProps } from '../types/onboardingTypes';
 
-interface MockOnboardingStep2Props {
-  data: OnboardingData;
-  onUpdateData: (newData: Partial<OnboardingData>) => void;
-  getFieldError?: (field: string) => string | undefined;
-}
-
-const businessSectors = [
-  'Tecnologia',
-  'Varejo/Comércio',
-  'Serviços',
-  'Indústria/Manufatura',
-  'Saúde',
-  'Educação',
-  'Financeiro/Bancário',
-  'Imobiliário',
-  'Alimentação/Restaurantes',
-  'Consultoria',
-  'Marketing/Publicidade',
-  'Logística/Transporte',
-  'Turismo/Hotelaria',
-  'Construção Civil',
-  'Agronegócio',
-  'Energia/Utilities',
-  'Mídia/Entretenimento',
-  'Jurídico',
-  'Outros'
-];
-
-const annualRevenues = [
-  'Até R$ 50.000',
-  'R$ 50.001 - R$ 100.000',
-  'R$ 100.001 - R$ 250.000',
-  'R$ 250.001 - R$ 500.000',
-  'R$ 500.001 - R$ 1 milhão',
-  'R$ 1 - R$ 2 milhões',
-  'R$ 2 - R$ 5 milhões',
-  'R$ 5 - R$ 10 milhões',
-  'R$ 10 - R$ 20 milhões',
-  'R$ 20 - R$ 50 milhões',
-  'R$ 50 - R$ 100 milhões',
-  'Acima de R$ 100 milhões'
-];
-
-const companySize = [
-  'Apenas eu (Pessoa Física)',
-  '2-5 funcionários',
-  '6-10 funcionários',
-  '11-20 funcionários',
-  '21-50 funcionários',
-  '51-100 funcionários',
-  '101-500 funcionários',
-  'Acima de 500 funcionários'
-];
-
-const jobPositions = [
-  'CEO/Presidente',
-  'Diretor Executivo',
-  'Diretor',
-  'Gerente Geral',
-  'Gerente',
-  'Coordenador',
-  'Supervisor',
-  'Analista Sênior',
-  'Analista Pleno',
-  'Analista Júnior',
-  'Assistente',
-  'Consultor',
-  'Especialista',
-  'Empreendedor/Proprietário',
-  'Freelancer/Autônomo',
-  'Estagiário',
-  'Outro'
-];
-
-const MockOnboardingStep2: React.FC<MockOnboardingStep2Props> = ({
+const MockOnboardingStep2: React.FC<OnboardingStepProps> = ({
   data,
   onUpdateData,
   getFieldError
 }) => {
+  const handleBirthDateChange = (day: string, month: string, year: string) => {
+    const birthDate = day && month && year ? `${day}/${month}/${year}` : '';
+    onUpdateData({ 
+      birthDate,
+      birthDay: day,
+      birthMonth: month,
+      birthYear: year
+    });
+  };
+
+  const jobPositions = [
+    'CEO / Fundador',
+    'Diretor',
+    'Gerente',
+    'Coordenador',
+    'Supervisor',
+    'Analista',
+    'Assistente',
+    'Consultor',
+    'Especialista',
+    'Engenheiro',
+    'Desenvolvedor',
+    'Designer',
+    'Vendedor',
+    'Marketing',
+    'Recursos Humanos',
+    'Empresário',
+    'Freelancer'
+  ];
+
+  const businessSectors = [
+    'Tecnologia',
+    'Varejo',
+    'Serviços',
+    'Indústria',
+    'Saúde',
+    'Educação',
+    'Financeiro',
+    'Imobiliário',
+    'Alimentação',
+    'Beleza',
+    'Moda',
+    'Consultoria',
+    'Agronegócio',
+    'Outros'
+  ];
+
+  const revenueRanges = [
+    'Até R$ 10.000',
+    'R$ 10.001 - R$ 50.000',
+    'R$ 50.001 - R$ 100.000',
+    'R$ 100.001 - R$ 250.000',
+    'R$ 250.001 - R$ 500.000',
+    'R$ 500.001 - R$ 1.000.000',
+    'R$ 1.000.001 - R$ 2.500.000',
+    'R$ 2.500.001 - R$ 5.000.000',
+    'R$ 5.000.001 - R$ 10.000.000',
+    'R$ 10.000.001 - R$ 25.000.000',
+    'R$ 25.000.001 - R$ 50.000.000',
+    'Acima de R$ 50.000.000'
+  ];
+
   return (
     <motion.div
       initial={{ opacity: 0, x: 20 }}
@@ -102,68 +91,85 @@ const MockOnboardingStep2: React.FC<MockOnboardingStep2Props> = ({
           transition={{ delay: 0.2, type: "spring" }}
           className="w-16 h-16 bg-viverblue/20 rounded-full flex items-center justify-center mx-auto mb-4"
         >
-          <Building2 className="w-8 h-8 text-viverblue" />
+          <Briefcase className="w-8 h-8 text-viverblue" />
         </motion.div>
         <h2 className="text-2xl font-bold text-white mb-2">
-          Perfil Empresarial
+          Informações Profissionais
         </h2>
         <p className="text-slate-400">
-          Conte-nos sobre sua empresa e posição no mercado
+          Nos conte sobre seu trabalho e negócio
         </p>
       </div>
 
       <div className="space-y-6">
-        {/* Informações da Empresa */}
+        {/* Empresa */}
         <Card className="p-6 bg-[#1A1E2E]/80 backdrop-blur-sm border-white/10">
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="companyName" className="text-slate-200">
-                Nome da Empresa *
-              </Label>
+          <div>
+            <Label htmlFor="companyName" className="text-slate-200">
+              Nome da Empresa *
+            </Label>
+            <div className="relative mt-1">
+              <Building2 className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
               <Input
                 id="companyName"
                 value={data.companyName || ''}
                 onChange={(e) => onUpdateData({ companyName: e.target.value })}
-                className="mt-1 bg-[#151823] border-white/20 text-white"
+                className="pl-10 bg-[#151823] border-white/20 text-white"
                 placeholder="Nome da sua empresa"
               />
-              {getFieldError?.('companyName') && (
-                <p className="text-red-400 text-sm mt-1">{getFieldError('companyName')}</p>
+            </div>
+            {getFieldError?.('companyName') && (
+              <p className="text-red-400 text-sm mt-1">{getFieldError('companyName')}</p>
+            )}
+          </div>
+        </Card>
+
+        {/* Cargo e Setor */}
+        <Card className="p-6 bg-[#1A1E2E]/80 backdrop-blur-sm border-white/10">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="position" className="text-slate-200">
+                Cargo/Função *
+              </Label>
+              <div className="relative mt-1">
+                <Briefcase className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4 z-10" />
+                <Select value={data.position || ''} onValueChange={(value) => onUpdateData({ position: value })}>
+                  <SelectTrigger className="pl-10 bg-[#151823] border-white/20 text-white">
+                    <SelectValue placeholder="Selecione seu cargo" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {jobPositions.map((position) => (
+                      <SelectItem key={position} value={position}>
+                        {position}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              {getFieldError?.('position') && (
+                <p className="text-red-400 text-sm mt-1">{getFieldError('position')}</p>
               )}
             </div>
 
             <div>
-              <Label htmlFor="companyWebsite" className="text-slate-200">
-                Website da Empresa
+              <Label htmlFor="businessSector" className="text-slate-200">
+                Setor do Negócio *
               </Label>
-              <Input
-                id="companyWebsite"
-                value={data.companyWebsite || ''}
-                onChange={(e) => onUpdateData({ companyWebsite: e.target.value })}
-                className="mt-1 bg-[#151823] border-white/20 text-white"
-                placeholder="https://www.suaempresa.com"
-              />
-            </div>
-
-            <div>
-              <Label className="text-slate-200 text-base font-medium">
-                Setor/Segmento *
-              </Label>
-              <Select 
-                value={data.businessSector || ''} 
-                onValueChange={(value) => onUpdateData({ businessSector: value })}
-              >
-                <SelectTrigger className="mt-3 bg-[#151823] border-white/20 text-white">
-                  <SelectValue placeholder="Selecione o setor da empresa" />
-                </SelectTrigger>
-                <SelectContent className="bg-[#151823] border-white/20">
-                  {businessSectors.map((sector) => (
-                    <SelectItem key={sector} value={sector} className="text-white hover:bg-white/10">
-                      {sector}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <div className="relative mt-1">
+                <Target className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4 z-10" />
+                <Select value={data.businessSector || ''} onValueChange={(value) => onUpdateData({ businessSector: value })}>
+                  <SelectTrigger className="pl-10 bg-[#151823] border-white/20 text-white">
+                    <SelectValue placeholder="Selecione o setor" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {businessSectors.map((sector) => (
+                      <SelectItem key={sector} value={sector}>
+                        {sector}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
               {getFieldError?.('businessSector') && (
                 <p className="text-red-400 text-sm mt-1">{getFieldError('businessSector')}</p>
               )}
@@ -171,95 +177,39 @@ const MockOnboardingStep2: React.FC<MockOnboardingStep2Props> = ({
           </div>
         </Card>
 
-        {/* Porte da Empresa */}
+        {/* Data de Nascimento - MANTENDO O FORMATO ORIGINAL */}
         <Card className="p-6 bg-[#1A1E2E]/80 backdrop-blur-sm border-white/10">
-          <div className="space-y-6">
-            <div className="flex items-center gap-2 mb-4">
-              <Users className="w-5 h-5 text-viverblue" />
-              <h3 className="text-lg font-semibold text-white">Porte da Empresa</h3>
-            </div>
-
-            <div>
-              <Label className="text-slate-200 text-base font-medium">
-                Tamanho da Empresa *
-              </Label>
-              <Select 
-                value={data.companySize || ''} 
-                onValueChange={(value) => onUpdateData({ companySize: value })}
-              >
-                <SelectTrigger className="mt-3 bg-[#151823] border-white/20 text-white">
-                  <SelectValue placeholder="Selecione o tamanho da empresa" />
-                </SelectTrigger>
-                <SelectContent className="bg-[#151823] border-white/20">
-                  {companySize.map((size) => (
-                    <SelectItem key={size} value={size} className="text-white hover:bg-white/10">
-                      {size}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {getFieldError?.('companySize') && (
-                <p className="text-red-400 text-sm mt-1">{getFieldError('companySize')}</p>
-              )}
-            </div>
-
-            <div>
-              <Label className="text-slate-200 text-base font-medium">
-                Faturamento Anual *
-              </Label>
-              <Select 
-                value={data.annualRevenue || ''} 
-                onValueChange={(value) => onUpdateData({ annualRevenue: value })}
-              >
-                <SelectTrigger className="mt-3 bg-[#151823] border-white/20 text-white">
-                  <SelectValue placeholder="Selecione a faixa de faturamento" />
-                </SelectTrigger>
-                <SelectContent className="bg-[#151823] border-white/20">
-                  {annualRevenues.map((revenue) => (
-                    <SelectItem key={revenue} value={revenue} className="text-white hover:bg-white/10">
-                      {revenue}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {getFieldError?.('annualRevenue') && (
-                <p className="text-red-400 text-sm mt-1">{getFieldError('annualRevenue')}</p>
-              )}
-            </div>
-          </div>
+          <h3 className="text-lg font-semibold text-white mb-4">Data de Nascimento</h3>
+          <BirthDateSelector
+            birthDay={data.birthDay}
+            birthMonth={data.birthMonth}
+            birthYear={data.birthYear}
+            onChange={handleBirthDateChange}
+            getFieldError={getFieldError}
+          />
         </Card>
 
-        {/* Seu Papel na Empresa */}
+        {/* Faturamento Anual */}
         <Card className="p-6 bg-[#1A1E2E]/80 backdrop-blur-sm border-white/10">
-          <div className="space-y-6">
-            <div className="flex items-center gap-2 mb-4">
-              <TrendingUp className="w-5 h-5 text-viverblue" />
-              <h3 className="text-lg font-semibold text-white">Seu Papel na Empresa</h3>
-            </div>
-
-            <div>
-              <Label className="text-slate-200 text-base font-medium">
-                Cargo/Função *
-              </Label>
-              <Select 
-                value={data.position || ''} 
-                onValueChange={(value) => onUpdateData({ position: value })}
-              >
-                <SelectTrigger className="mt-3 bg-[#151823] border-white/20 text-white">
-                  <SelectValue placeholder="Selecione seu cargo/função" />
-                </SelectTrigger>
-                <SelectContent className="bg-[#151823] border-white/20">
-                  {jobPositions.map((position) => (
-                    <SelectItem key={position} value={position} className="text-white hover:bg-white/10">
-                      {position}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {getFieldError?.('position') && (
-                <p className="text-red-400 text-sm mt-1">{getFieldError('position')}</p>
-              )}
-            </div>
+          <div>
+            <Label className="text-slate-200 flex items-center gap-2 mb-4">
+              <DollarSign className="w-4 h-4" />
+              Faturamento Anual da Empresa
+            </Label>
+            <RadioGroup 
+              value={data.annualRevenue || ''} 
+              onValueChange={(value) => onUpdateData({ annualRevenue: value })}
+              className="grid grid-cols-1 md:grid-cols-2 gap-3"
+            >
+              {revenueRanges.map((range) => (
+                <div key={range} className="flex items-center space-x-2">
+                  <RadioGroupItem value={range} id={range} />
+                  <Label htmlFor={range} className="text-slate-300 text-sm cursor-pointer">
+                    {range}
+                  </Label>
+                </div>
+              ))}
+            </RadioGroup>
           </div>
         </Card>
       </div>
