@@ -4631,6 +4631,14 @@ export type Database = {
         Args: { row_id: string; table_name: string; column_name: string }
         Returns: undefined
       }
+      decrement_suggestion_downvote: {
+        Args: { suggestion_id: string }
+        Returns: undefined
+      }
+      decrement_suggestion_upvote: {
+        Args: { suggestion_id: string }
+        Returns: undefined
+      }
       detect_at_risk_users: {
         Args: Record<PropertyKey, never>
         Returns: undefined
@@ -4785,6 +4793,14 @@ export type Database = {
       }
       increment: {
         Args: { row_id: string; table_name: string; column_name: string }
+        Returns: undefined
+      }
+      increment_suggestion_downvote: {
+        Args: { suggestion_id: string }
+        Returns: undefined
+      }
+      increment_suggestion_upvote: {
+        Args: { suggestion_id: string }
         Returns: undefined
       }
       initialize_onboarding_for_all_users: {
