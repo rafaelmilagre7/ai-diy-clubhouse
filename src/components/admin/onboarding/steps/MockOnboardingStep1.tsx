@@ -4,13 +4,17 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { useMockOnboarding } from '../MockOnboardingWizardContainer';
 import { WhatsAppInput } from '@/components/onboarding/components/WhatsAppInput';
 import { BirthDateSelector } from '@/components/onboarding/components/BirthDateSelector';
+import { OnboardingData } from '@/components/onboarding/types/onboardingTypes';
 
-export const MockOnboardingStep1 = () => {
-  const { data, updateData, getFieldError } = useMockOnboarding();
+interface MockOnboardingStep1Props {
+  data: OnboardingData;
+  onUpdateData: (newData: Partial<OnboardingData>) => void;
+  getFieldError: (field: string) => string | undefined;
+}
 
+const MockOnboardingStep1 = ({ data, onUpdateData, getFieldError }: MockOnboardingStep1Props) => {
   // Função para extrair componentes da data
   const extractDateComponents = (dateString: string) => {
     if (!dateString) return { day: '', month: '', year: '' };
@@ -33,9 +37,9 @@ export const MockOnboardingStep1 = () => {
   const handleBirthDateChange = (day: string, month: string, year: string) => {
     if (day && month && year) {
       const birthDate = `${year}-${month}-${day}`;
-      updateData({ birthDate });
+      onUpdateData({ birthDate });
     } else {
-      updateData({ birthDate: '' });
+      onUpdateData({ birthDate: '' });
     }
   };
 
@@ -57,7 +61,7 @@ export const MockOnboardingStep1 = () => {
               <Label className="text-slate-200">Nome Completo *</Label>
               <Input
                 value={data.name || ''}
-                onChange={(e) => updateData({ name: e.target.value })}
+                onChange={(e) => onUpdateData({ name: e.target.value })}
                 className="bg-[#151823] border-white/20 text-white mt-1"
                 placeholder="Seu nome completo"
               />
@@ -71,7 +75,7 @@ export const MockOnboardingStep1 = () => {
               <Input
                 type="email"
                 value={data.email || ''}
-                onChange={(e) => updateData({ email: e.target.value })}
+                onChange={(e) => onUpdateData({ email: e.target.value })}
                 className="bg-[#151823] border-white/20 text-white mt-1"
                 placeholder="seu@email.com"
               />
@@ -82,7 +86,7 @@ export const MockOnboardingStep1 = () => {
 
             <WhatsAppInput
               value={data.phone || ''}
-              onChange={(value) => updateData({ phone: value })}
+              onChange={(value) => onUpdateData({ phone: value })}
               getFieldError={getFieldError}
             />
 
@@ -90,7 +94,7 @@ export const MockOnboardingStep1 = () => {
               <Label className="text-slate-200">Instagram</Label>
               <Input
                 value={data.instagram || ''}
-                onChange={(e) => updateData({ instagram: e.target.value })}
+                onChange={(e) => onUpdateData({ instagram: e.target.value })}
                 className="bg-[#151823] border-white/20 text-white mt-1"
                 placeholder="@seuinstagram"
               />
@@ -100,7 +104,7 @@ export const MockOnboardingStep1 = () => {
               <Label className="text-slate-200">LinkedIn</Label>
               <Input
                 value={data.linkedin || ''}
-                onChange={(e) => updateData({ linkedin: e.target.value })}
+                onChange={(e) => onUpdateData({ linkedin: e.target.value })}
                 className="bg-[#151823] border-white/20 text-white mt-1"
                 placeholder="https://linkedin.com/in/seuperfil"
               />
@@ -118,7 +122,7 @@ export const MockOnboardingStep1 = () => {
               <Label className="text-slate-200">Curiosidade sobre você</Label>
               <Textarea
                 value={data.curiosity || ''}
-                onChange={(e) => updateData({ curiosity: e.target.value })}
+                onChange={(e) => onUpdateData({ curiosity: e.target.value })}
                 className="bg-[#151823] border-white/20 text-white mt-1"
                 placeholder="Conte algo interessante sobre você..."
                 rows={3}
@@ -130,3 +134,5 @@ export const MockOnboardingStep1 = () => {
     </div>
   );
 };
+
+export default MockOnboardingStep1;
