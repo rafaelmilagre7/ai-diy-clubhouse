@@ -1,6 +1,6 @@
 
-import { useRealAdminStats } from "./dashboard/useRealAdminStats";
-import { useRealSystemActivity } from "./dashboard/useRealSystemActivity";
+import { useRealAdminStats } from "./admin/dashboard/useRealAdminStats";
+import { useRealSystemActivity } from "./admin/dashboard/useRealSystemActivity";
 
 export const useRealAdminDashboardData = (timeRange: string) => {
   const { statsData, loading: statsLoading, refetch: refetchStats } = useRealAdminStats(timeRange);
