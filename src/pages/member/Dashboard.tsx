@@ -51,12 +51,7 @@ const Dashboard = () => {
 
   return (
     <div className="space-y-6 animate-fade-in">
-      <DashboardHeader 
-        activeSolutionsCount={activeSolutions.length}
-        completedSolutionsCount={completedSolutions.length}
-        category="all"
-        onCategoryChange={() => {}}
-      />
+      <DashboardHeader />
       
       <RecommendedSolutions 
         solutions={recommendedSolutions}

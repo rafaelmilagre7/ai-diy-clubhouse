@@ -26,13 +26,6 @@ const MockOnboardingStep1: React.FC<MockOnboardingStep1Props> = ({
     onUpdateData({ [field]: value });
   };
 
-  const handleLocationChange = (location: { city: string; state: string }) => {
-    onUpdateData({
-      city: location.city,
-      state: location.state
-    });
-  };
-
   const handleBirthDateChange = (day: string, month: string, year: string) => {
     onUpdateData({
       birthDay: day,
@@ -43,6 +36,14 @@ const MockOnboardingStep1: React.FC<MockOnboardingStep1Props> = ({
 
   const handleProfilePictureChange = (value: string) => {
     onUpdateData({ profilePicture: value });
+  };
+
+  const handleStateChange = (state: string) => {
+    onUpdateData({ state });
+  };
+
+  const handleCityChange = (city: string) => {
+    onUpdateData({ city });
   };
 
   const currentPhone = data.phone || '';
@@ -130,15 +131,12 @@ const MockOnboardingStep1: React.FC<MockOnboardingStep1Props> = ({
               Localização *
             </Label>
             <LocationSelector
-              city={data.city || ''}
-              state={data.state || ''}
-              onChange={handleLocationChange}
+              selectedState={data.state || ''}
+              selectedCity={data.city || ''}
+              onStateChange={handleStateChange}
+              onCityChange={handleCityChange}
+              getFieldError={getFieldError}
             />
-            {(getFieldError?.('city') || getFieldError?.('state')) && (
-              <p className="text-red-400 text-sm">
-                {getFieldError?.('city') || getFieldError?.('state')}
-              </p>
-            )}
           </div>
 
           {/* Foto de Perfil */}
