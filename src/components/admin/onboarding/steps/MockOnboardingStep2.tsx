@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Building, Users, DollarSign } from 'lucide-react';
+import { Building, User, Briefcase, DollarSign } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -16,53 +16,34 @@ interface MockOnboardingStep2Props {
 }
 
 const jobRoles = [
-  'CEO/Presidente',
-  'COO/Diretor de Operações',
-  'CTO/Diretor de Tecnologia',
-  'CFO/Diretor Financeiro',
-  'CMO/Diretor de Marketing',
-  'CHRO/Diretor de RH',
-  'Diretor Geral',
-  'Diretor Comercial',
-  'Diretor de Vendas',
-  'Diretor de Produto',
-  'Diretor de Inovação',
-  'Gerente Geral',
-  'Gerente de Operações',
-  'Gerente de TI',
+  'CEO/Fundador(a)',
+  'Diretor(a) Executivo(a)',
+  'Diretor(a) de Operações',
+  'Diretor(a) de Marketing',
+  'Diretor(a) de Vendas',
+  'Diretor(a) de TI',
+  'Gerente de Projetos',
   'Gerente de Marketing',
   'Gerente de Vendas',
-  'Gerente de RH',
-  'Gerente de Produto',
-  'Coordenador de TI',
-  'Coordenador de Marketing',
-  'Coordenador de Vendas',
+  'Coordenador(a) de TI',
   'Analista de Sistemas',
-  'Analista de Marketing',
-  'Analista de Dados',
-  'Consultor',
-  'Especialista em IA',
-  'Desenvolvedor',
-  'Designer',
-  'Empreendedor/Sócio',
-  'Freelancer/Autônomo',
-  'Estudante',
-  'Professor/Educador',
-  'Pesquisador',
+  'Consultor(a)',
+  'Empreendedor(a)',
+  'Freelancer',
   'Outros'
 ];
 
 const companySizes = [
-  '1 colaborador (apenas eu)',
-  '2-5 colaboradores',
-  '6-10 colaboradores',
-  '11-20 colaboradores',
-  '21-50 colaboradores',
-  '51-100 colaboradores',
-  '101-250 colaboradores',
-  '251-500 colaboradores',
-  '501-1000 colaboradores',
-  'Mais de 1000 colaboradores'
+  '1 funcionário (apenas eu)',
+  '2-5 funcionários',
+  '6-10 funcionários',
+  '11-25 funcionários',
+  '26-50 funcionários',
+  '51-100 funcionários',
+  '101-250 funcionários',
+  '251-500 funcionários',
+  '501-1000 funcionários',
+  'Mais de 1000 funcionários'
 ];
 
 const annualRevenues = [
@@ -71,14 +52,35 @@ const annualRevenues = [
   'R$ 100.001 - R$ 250.000',
   'R$ 250.001 - R$ 500.000',
   'R$ 500.001 - R$ 1 milhão',
-  'R$ 1 milhão - R$ 2 milhões',
-  'R$ 2 milhões - R$ 5 milhões',
-  'R$ 5 milhões - R$ 10 milhões',
-  'R$ 10 milhões - R$ 20 milhões',
-  'R$ 20 milhões - R$ 50 milhões',
-  'R$ 50 milhões - R$ 100 milhões',
+  'R$ 1 - R$ 2 milhões',
+  'R$ 2 - R$ 5 milhões',
+  'R$ 5 - R$ 10 milhões',
+  'R$ 10 - R$ 20 milhões',
+  'R$ 20 - R$ 50 milhões',
+  'R$ 50 - R$ 100 milhões',
   'Acima de R$ 100 milhões',
   'Prefiro não informar'
+];
+
+const businessSectors = [
+  'Tecnologia e Software',
+  'E-commerce e Varejo',
+  'Serviços Profissionais',
+  'Saúde e Bem-estar',
+  'Educação e Treinamento',
+  'Marketing e Publicidade',
+  'Finanças e Contabilidade',
+  'Imobiliário',
+  'Alimentação e Bebidas',
+  'Moda e Beleza',
+  'Turismo e Hospitalidade',
+  'Construção e Engenharia',
+  'Automotivo',
+  'Energia',
+  'Logística e Transporte',
+  'Agricultura',
+  'Indústria',
+  'Outros'
 ];
 
 const MockOnboardingStep2: React.FC<MockOnboardingStep2Props> = ({
@@ -115,30 +117,33 @@ const MockOnboardingStep2: React.FC<MockOnboardingStep2Props> = ({
         <Card className="p-6 bg-[#1A1E2E]/80 backdrop-blur-sm border-white/10">
           <div className="space-y-6">
             <div>
-              <Label htmlFor="company" className="text-slate-200 text-base font-medium">
+              <Label htmlFor="companyName" className="text-slate-200 text-base font-medium">
                 Nome da Empresa *
               </Label>
-              <Input
-                id="company"
-                value={data.company || ''}
-                onChange={(e) => onUpdateData({ company: e.target.value })}
-                className="mt-2 bg-[#151823] border-white/20 text-white"
-                placeholder="Digite o nome da sua empresa"
-              />
-              {getFieldError?.('company') && (
-                <p className="text-red-400 text-sm mt-1">{getFieldError('company')}</p>
+              <div className="relative mt-3">
+                <Building className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
+                <Input
+                  id="companyName"
+                  value={data.companyName || ''}
+                  onChange={(e) => onUpdateData({ companyName: e.target.value })}
+                  className="pl-10 bg-[#151823] border-white/20 text-white"
+                  placeholder="Nome da sua empresa"
+                />
+              </div>
+              {getFieldError?.('companyName') && (
+                <p className="text-red-400 text-sm mt-1">{getFieldError('companyName')}</p>
               )}
             </div>
 
             <div>
-              <Label htmlFor="jobRole" className="text-slate-200 text-base font-medium">
-                Seu Cargo/Posição *
+              <Label htmlFor="position" className="text-slate-200 text-base font-medium">
+                Seu Cargo/Função *
               </Label>
               <Select 
-                value={data.jobRole || ''} 
-                onValueChange={(value) => onUpdateData({ jobRole: value })}
+                value={data.position || ''} 
+                onValueChange={(value) => onUpdateData({ position: value })}
               >
-                <SelectTrigger className="mt-2 bg-[#151823] border-white/20 text-white">
+                <SelectTrigger className="mt-3 bg-[#151823] border-white/20 text-white">
                   <SelectValue placeholder="Selecione seu cargo" />
                 </SelectTrigger>
                 <SelectContent className="bg-[#151823] border-white/20">
@@ -149,31 +154,68 @@ const MockOnboardingStep2: React.FC<MockOnboardingStep2Props> = ({
                   ))}
                 </SelectContent>
               </Select>
-              {getFieldError?.('jobRole') && (
-                <p className="text-red-400 text-sm mt-1">{getFieldError('jobRole')}</p>
+              {getFieldError?.('position') && (
+                <p className="text-red-400 text-sm mt-1">{getFieldError('position')}</p>
               )}
+            </div>
+
+            <div>
+              <Label htmlFor="companyWebsite" className="text-slate-200 text-base font-medium">
+                Site da Empresa
+              </Label>
+              <Input
+                id="companyWebsite"
+                value={data.companyWebsite || ''}
+                onChange={(e) => onUpdateData({ companyWebsite: e.target.value })}
+                className="mt-3 bg-[#151823] border-white/20 text-white"
+                placeholder="https://minhaempresa.com.br"
+              />
             </div>
           </div>
         </Card>
 
-        {/* Porte da Empresa */}
+        {/* Detalhes do Negócio */}
         <Card className="p-6 bg-[#1A1E2E]/80 backdrop-blur-sm border-white/10">
           <div className="space-y-6">
             <div className="flex items-center gap-2 mb-4">
-              <Users className="w-5 h-5 text-viverblue" />
-              <h3 className="text-lg font-semibold text-white">Porte da Empresa</h3>
+              <Briefcase className="w-5 h-5 text-viverblue" />
+              <h3 className="text-lg font-semibold text-white">Detalhes do Negócio</h3>
             </div>
 
             <div>
               <Label className="text-slate-200 text-base font-medium">
-                Quantos colaboradores a empresa tem? *
+                Setor de Atuação *
+              </Label>
+              <Select 
+                value={data.businessSector || ''} 
+                onValueChange={(value) => onUpdateData({ businessSector: value })}
+              >
+                <SelectTrigger className="mt-3 bg-[#151823] border-white/20 text-white">
+                  <SelectValue placeholder="Selecione o setor" />
+                </SelectTrigger>
+                <SelectContent className="bg-[#151823] border-white/20">
+                  {businessSectors.map((sector) => (
+                    <SelectItem key={sector} value={sector} className="text-white hover:bg-white/10">
+                      {sector}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {getFieldError?.('businessSector') && (
+                <p className="text-red-400 text-sm mt-1">{getFieldError('businessSector')}</p>
+              )}
+            </div>
+
+            <div>
+              <Label className="text-slate-200 text-base font-medium">
+                Tamanho da Empresa *
               </Label>
               <Select 
                 value={data.companySize || ''} 
                 onValueChange={(value) => onUpdateData({ companySize: value })}
               >
                 <SelectTrigger className="mt-3 bg-[#151823] border-white/20 text-white">
-                  <SelectValue placeholder="Selecione o número de colaboradores" />
+                  <SelectValue placeholder="Número de funcionários" />
                 </SelectTrigger>
                 <SelectContent className="bg-[#151823] border-white/20">
                   {companySizes.map((size) => (
@@ -186,6 +228,16 @@ const MockOnboardingStep2: React.FC<MockOnboardingStep2Props> = ({
               {getFieldError?.('companySize') && (
                 <p className="text-red-400 text-sm mt-1">{getFieldError('companySize')}</p>
               )}
+            </div>
+          </div>
+        </Card>
+
+        {/* Faturamento */}
+        <Card className="p-6 bg-[#1A1E2E]/80 backdrop-blur-sm border-white/10">
+          <div className="space-y-6">
+            <div className="flex items-center gap-2 mb-4">
+              <DollarSign className="w-5 h-5 text-viverblue" />
+              <h3 className="text-lg font-semibold text-white">Faturamento</h3>
             </div>
 
             <div>
@@ -210,43 +262,6 @@ const MockOnboardingStep2: React.FC<MockOnboardingStep2Props> = ({
               {getFieldError?.('annualRevenue') && (
                 <p className="text-red-400 text-sm mt-1">{getFieldError('annualRevenue')}</p>
               )}
-            </div>
-          </div>
-        </Card>
-
-        {/* Segmento da Empresa */}
-        <Card className="p-6 bg-[#1A1E2E]/80 backdrop-blur-sm border-white/10">
-          <div className="space-y-6">
-            <div className="flex items-center gap-2 mb-4">
-              <DollarSign className="w-5 h-5 text-viverblue" />
-              <h3 className="text-lg font-semibold text-white">Segmento</h3>
-            </div>
-
-            <div>
-              <Label className="text-slate-200 text-base font-medium">
-                Qual o segmento da sua empresa? *
-              </Label>
-              <Input
-                value={data.businessSegment || ''}
-                onChange={(e) => onUpdateData({ businessSegment: e.target.value })}
-                className="mt-3 bg-[#151823] border-white/20 text-white"
-                placeholder="Ex: E-commerce, Consultoria, Tecnologia, Saúde..."
-              />
-              {getFieldError?.('businessSegment') && (
-                <p className="text-red-400 text-sm mt-1">{getFieldError('businessSegment')}</p>
-              )}
-            </div>
-
-            <div>
-              <Label className="text-slate-200 text-base font-medium">
-                Descreva brevemente o que sua empresa faz
-              </Label>
-              <Textarea
-                value={data.companyDescription || ''}
-                onChange={(e) => onUpdateData({ companyDescription: e.target.value })}
-                className="mt-3 bg-[#151823] border-white/20 text-white placeholder:text-slate-500 min-h-[100px]"
-                placeholder="Conte um pouco sobre os produtos/serviços da sua empresa..."
-              />
             </div>
           </div>
         </Card>
