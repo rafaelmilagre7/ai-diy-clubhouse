@@ -1,12 +1,8 @@
 
 import React from 'react';
-import { motion } from 'framer-motion';
-import { User, Instagram, Linkedin, MapPin } from 'lucide-react';
-import { Card } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { OnboardingData } from '@/components/onboarding/types/onboardingTypes';
 
 interface MockOnboardingStep1Props {
@@ -15,243 +11,61 @@ interface MockOnboardingStep1Props {
   getFieldError?: (field: string) => string | undefined;
 }
 
-const states = [
-  'Acre', 'Alagoas', 'Amapá', 'Amazonas', 'Bahia', 'Ceará', 'Distrito Federal',
-  'Espírito Santo', 'Goiás', 'Maranhão', 'Mato Grosso', 'Mato Grosso do Sul',
-  'Minas Gerais', 'Pará', 'Paraíba', 'Paraná', 'Pernambuco', 'Piauí',
-  'Rio de Janeiro', 'Rio Grande do Norte', 'Rio Grande do Sul', 'Rondônia',
-  'Roraima', 'Santa Catarina', 'São Paulo', 'Sergipe', 'Tocantins'
-];
-
-const cities = [
-  'São Paulo', 'Rio de Janeiro', 'Brasília', 'Salvador', 'Fortaleza',
-  'Belo Horizonte', 'Manaus', 'Curitiba', 'Recife', 'Goiânia'
-];
-
 const MockOnboardingStep1: React.FC<MockOnboardingStep1Props> = ({
   data,
   onUpdateData,
   getFieldError
 }) => {
+  const handleInputChange = (field: keyof OnboardingData, value: string) => {
+    onUpdateData({ [field]: value });
+  };
+
   return (
-    <motion.div
-      initial={{ opacity: 0, x: 20 }}
-      animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, x: -20 }}
-      className="space-y-6"
-    >
-      <div className="text-center mb-8">
-        <motion.div
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-          transition={{ delay: 0.2, type: "spring" }}
-          className="w-16 h-16 bg-viverblue/20 rounded-full flex items-center justify-center mx-auto mb-4"
-        >
-          <User className="w-8 h-8 text-viverblue" />
-        </motion.div>
-        <h2 className="text-2xl font-bold text-white mb-2">
-          Informações Pessoais
-        </h2>
-        <p className="text-slate-400">
-          Vamos começar conhecendo você melhor
-        </p>
-      </div>
-
-      <div className="space-y-6">
-        {/* Foto de Perfil */}
-        <Card className="p-6 bg-[#1A1E2E]/80 backdrop-blur-sm border-white/10">
-          <div className="text-center">
-            <div className="w-24 h-24 bg-slate-700 rounded-full mx-auto mb-4 flex items-center justify-center">
-              <User className="w-12 h-12 text-slate-400" />
-            </div>
-            <p className="text-slate-400 text-sm">Foto de Perfil (Mock)</p>
+    <div className="space-y-6">
+      <Card className="bg-[#1a1f2e] border-white/10">
+        <CardHeader>
+          <CardTitle className="text-white text-xl">
+            👋 Informações Pessoais
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {/* Nome Completo */}
+          <div>
+            <Label htmlFor="name" className="text-slate-200">
+              Nome Completo *
+            </Label>
+            <Input
+              id="name"
+              value={data.name || ''}
+              onChange={(e) => handleInputChange('name', e.target.value)}
+              placeholder="Digite seu nome completo"
+              className="mt-1 bg-[#151823] border-white/20 text-white placeholder:text-gray-400"
+            />
+            {getFieldError?.('name') && (
+              <p className="text-red-400 text-sm mt-1">{getFieldError('name')}</p>
+            )}
           </div>
-        </Card>
 
-        {/* Informações Básicas */}
-        <Card className="p-6 bg-[#1A1E2E]/80 backdrop-blur-sm border-white/10">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <Label className="text-slate-200 text-base font-medium">
-                Nome completo *
-              </Label>
-              <Input
-                type="text"
-                value={data.name || ''}
-                onChange={(e) => onUpdateData({ name: e.target.value })}
-                className="mt-3 bg-[#151823] border-white/20 text-white placeholder:text-slate-500"
-                placeholder="Seu nome completo"
-              />
-              {getFieldError?.('name') && (
-                <p className="text-red-400 text-sm mt-1">{getFieldError('name')}</p>
-              )}
-            </div>
-
-            <div>
-              <Label className="text-slate-200 text-base font-medium">
-                E-mail *
-              </Label>
-              <Input
-                type="email"
-                value={data.email || ''}
-                onChange={(e) => onUpdateData({ email: e.target.value })}
-                className="mt-3 bg-[#151823] border-white/20 text-white placeholder:text-slate-500"
-                placeholder="seu@email.com"
-              />
-              {getFieldError?.('email') && (
-                <p className="text-red-400 text-sm mt-1">{getFieldError('email')}</p>
-              )}
-            </div>
+          {/* Email */}
+          <div>
+            <Label htmlFor="email" className="text-slate-200">
+              Email *
+            </Label>
+            <Input
+              id="email"
+              type="email"
+              value={data.email || ''}
+              onChange={(e) => handleInputChange('email', e.target.value)}
+              placeholder="seu@email.com"
+              className="mt-1 bg-[#151823] border-white/20 text-white placeholder:text-gray-400"
+            />
+            {getFieldError?.('email') && (
+              <p className="text-red-400 text-sm mt-1">{getFieldError('email')}</p>
+            )}
           </div>
-        </Card>
-
-        {/* Contato */}
-        <Card className="p-6 bg-[#1A1E2E]/80 backdrop-blur-sm border-white/10">
-          <div className="space-y-6">
-            <div>
-              <Label className="text-slate-200 text-base font-medium">
-                WhatsApp *
-              </Label>
-              <Input
-                type="tel"
-                value={data.phone || ''}
-                onChange={(e) => onUpdateData({ phone: e.target.value })}
-                className="mt-3 bg-[#151823] border-white/20 text-white placeholder:text-slate-500"
-                placeholder="(11) 99999-9999"
-              />
-              {getFieldError?.('phone') && (
-                <p className="text-red-400 text-sm mt-1">{getFieldError('phone')}</p>
-              )}
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <Label className="text-slate-200 text-base font-medium flex items-center gap-2">
-                  <Instagram className="w-4 h-4" />
-                  Instagram (opcional)
-                </Label>
-                <Input
-                  type="text"
-                  value={data.instagram || ''}
-                  onChange={(e) => onUpdateData({ instagram: e.target.value })}
-                  className="mt-3 bg-[#151823] border-white/20 text-white placeholder:text-slate-500"
-                  placeholder="@seuinstagram"
-                />
-              </div>
-
-              <div>
-                <Label className="text-slate-200 text-base font-medium flex items-center gap-2">
-                  <Linkedin className="w-4 h-4" />
-                  LinkedIn (opcional)
-                </Label>
-                <Input
-                  type="url"
-                  value={data.linkedin || ''}
-                  onChange={(e) => onUpdateData({ linkedin: e.target.value })}
-                  className="mt-3 bg-[#151823] border-white/20 text-white placeholder:text-slate-500"
-                  placeholder="linkedin.com/in/seuperfil"
-                />
-              </div>
-            </div>
-          </div>
-        </Card>
-
-        {/* Localização */}
-        <Card className="p-6 bg-[#1A1E2E]/80 backdrop-blur-sm border-white/10">
-          <div className="space-y-6">
-            <div className="flex items-center gap-2 mb-4">
-              <MapPin className="w-5 h-5 text-viverblue" />
-              <h3 className="text-lg font-semibold text-white">Localização</h3>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <Label className="text-slate-200 text-base font-medium">
-                  Estado *
-                </Label>
-                <Select 
-                  value={data.state || ''} 
-                  onValueChange={(value) => onUpdateData({ state: value })}
-                >
-                  <SelectTrigger className="mt-3 bg-[#151823] border-white/20 text-white">
-                    <SelectValue placeholder="Selecione seu estado" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-[#151823] border-white/20">
-                    {states.map((state) => (
-                      <SelectItem key={state} value={state} className="text-white hover:bg-white/10">
-                        {state}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {getFieldError?.('state') && (
-                  <p className="text-red-400 text-sm mt-1">{getFieldError('state')}</p>
-                )}
-              </div>
-
-              <div>
-                <Label className="text-slate-200 text-base font-medium">
-                  Cidade *
-                </Label>
-                <Select 
-                  value={data.city || ''} 
-                  onValueChange={(value) => onUpdateData({ city: value })}
-                >
-                  <SelectTrigger className="mt-3 bg-[#151823] border-white/20 text-white">
-                    <SelectValue placeholder="Selecione sua cidade" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-[#151823] border-white/20">
-                    {cities.map((city) => (
-                      <SelectItem key={city} value={city} className="text-white hover:bg-white/10">
-                        {city}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {getFieldError?.('city') && (
-                  <p className="text-red-400 text-sm mt-1">{getFieldError('city')}</p>
-                )}
-              </div>
-            </div>
-          </div>
-        </Card>
-
-        {/* Informações Pessoais */}
-        <Card className="p-6 bg-[#1A1E2E]/80 backdrop-blur-sm border-white/10">
-          <div className="space-y-6">
-            <div>
-              <Label className="text-slate-200 text-base font-medium">
-                Data de nascimento *
-              </Label>
-              <Input
-                type="date"
-                value={data.birthDate || ''}
-                onChange={(e) => onUpdateData({ birthDate: e.target.value })}
-                className="mt-3 bg-[#151823] border-white/20 text-white"
-              />
-              {getFieldError?.('birthDate') && (
-                <p className="text-red-400 text-sm mt-1">{getFieldError('birthDate')}</p>
-              )}
-            </div>
-
-            <div>
-              <Label className="text-slate-200 text-base font-medium">
-                Conte uma curiosidade sobre você *
-              </Label>
-              <Textarea
-                value={data.curiosity || ''}
-                onChange={(e) => onUpdateData({ curiosity: e.target.value })}
-                className="mt-3 bg-[#151823] border-white/20 text-white placeholder:text-slate-500 min-h-[100px]"
-                placeholder="Ex: Adoro café, tenho 3 gatos, sou apaixonado por tecnologia..."
-              />
-              {getFieldError?.('curiosity') && (
-                <p className="text-red-400 text-sm mt-1">{getFieldError('curiosity')}</p>
-              )}
-            </div>
-          </div>
-        </Card>
-      </div>
-    </motion.div>
+        </CardContent>
+      </Card>
+    </div>
   );
 };
 
