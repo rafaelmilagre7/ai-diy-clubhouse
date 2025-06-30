@@ -4,6 +4,8 @@ import { useRealAdminDashboardData } from "@/hooks/admin/useRealAdminDashboardDa
 import { RealAdminDashboardLayout } from "@/components/admin/dashboard/RealAdminDashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
+import { RefreshCw } from "lucide-react";
 import { logger } from "@/utils/logger";
 
 const AdminDashboard = () => {
@@ -13,7 +15,8 @@ const AdminDashboard = () => {
     const {
       statsData,
       activityData,
-      loading
+      loading,
+      refetch
     } = useRealAdminDashboardData(timeRange);
 
     // Loading state otimizado
@@ -73,6 +76,11 @@ const AdminDashboard = () => {
       component: 'ADMIN_DASHBOARD' 
     });
     
+    const handleRetry = () => {
+      // Force re-render by reloading component state
+      setTimeRange(prev => prev);
+    };
+    
     return (
       <div className="space-y-6">
         <div className="flex justify-between items-center">
@@ -83,10 +91,14 @@ const AdminDashboard = () => {
           <CardHeader>
             <CardTitle>Dashboard Temporariamente Indisponível</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-4">
             <p className="text-muted-foreground">
               Ocorreu um erro ao carregar o dashboard. Tente novamente em alguns instantes.
             </p>
+            <Button onClick={handleRetry} variant="outline">
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Tentar novamente
+            </Button>
           </CardContent>
         </Card>
       </div>

@@ -5,22 +5,26 @@ import { Button } from '@/components/ui/button';
 import { Bug, Copy, Eye, EyeOff } from 'lucide-react';
 import { toast } from 'sonner';
 import { logger } from '@/utils/logger';
+import { useNavigate } from 'react-router-dom';
 
 interface ErrorDebugInfoProps {
   error: Error | null;
   errorInfo?: React.ErrorInfo | null;
   context?: string;
   additionalData?: Record<string, any>;
+  onRetry?: () => void;
 }
 
 export const ErrorDebugInfo: React.FC<ErrorDebugInfoProps> = ({
   error,
   errorInfo,
   context,
-  additionalData
+  additionalData,
+  onRetry
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [showStack, setShowStack] = useState(false);
+  const navigate = useNavigate();
 
   // Só mostrar em desenvolvimento
   if (!import.meta.env.DEV || !error) {
@@ -57,6 +61,15 @@ export const ErrorDebugInfo: React.FC<ErrorDebugInfoProps> = ({
         error: err instanceof Error ? err.message : 'Erro desconhecido',
         component: 'ERROR_DEBUG_INFO'
       });
+    }
+  };
+
+  const handleReload = () => {
+    if (onRetry) {
+      onRetry();
+    } else {
+      // Fallback: voltar para dashboard em vez de reload
+      navigate('/dashboard');
     }
   };
 
@@ -169,10 +182,10 @@ export const ErrorDebugInfo: React.FC<ErrorDebugInfoProps> = ({
             <Button
               size="sm"
               variant="outline"
-              onClick={() => window.location.reload()}
+              onClick={handleReload}
               className="flex-1 text-xs"
             >
-              Reload
+              Tentar novamente
             </Button>
           </div>
         </CardContent>

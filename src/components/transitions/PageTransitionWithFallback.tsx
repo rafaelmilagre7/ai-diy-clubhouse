@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { Loader2 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 interface PageTransitionWithFallbackProps {
   children: React.ReactNode;
@@ -10,6 +11,7 @@ interface PageTransitionWithFallbackProps {
   isVisible?: boolean;
   fallbackTimeout?: number;
   fallbackMessage?: string;
+  onRetry?: () => void;
 }
 
 export const PageTransitionWithFallback: React.FC<PageTransitionWithFallbackProps> = ({
@@ -17,10 +19,12 @@ export const PageTransitionWithFallback: React.FC<PageTransitionWithFallbackProp
   className,
   isVisible = true,
   fallbackTimeout = 500,
-  fallbackMessage = "Carregando conteúdo..."
+  fallbackMessage = "Carregando conteúdo...",
+  onRetry
 }) => {
   const [showFallback, setShowFallback] = useState(false);
   const [contentFailedToLoad, setContentFailedToLoad] = useState(false);
+  const navigate = useNavigate();
   
   useEffect(() => {
     // Se o conteúdo deve estar visível, mas não apareceu após o timeout, mostrar fallback
@@ -46,9 +50,14 @@ export const PageTransitionWithFallback: React.FC<PageTransitionWithFallbackProp
     }
   }, [isVisible, fallbackTimeout]);
   
-  // Se o conteúdo demorar muito para carregar, dar ao usuário a opção de recarregar
+  // Se o conteúdo demorar muito para carregar, dar ao usuário a opção de retry
   const handleReload = () => {
-    window.location.reload();
+    if (onRetry) {
+      onRetry();
+    } else {
+      // Navigate to dashboard em vez de reload
+      navigate('/dashboard');
+    }
   };
 
   return (
@@ -91,7 +100,7 @@ export const PageTransitionWithFallback: React.FC<PageTransitionWithFallbackProp
                   onClick={handleReload}
                   className="px-4 py-2 text-sm bg-viverblue text-white rounded-md hover:bg-viverblue/90"
                 >
-                  Recarregar página
+                  Ir para Dashboard
                 </button>
               </div>
             )}

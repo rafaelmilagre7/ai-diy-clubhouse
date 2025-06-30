@@ -4,9 +4,20 @@ import { AlertTriangle, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 
-export const DashboardConnectionErrorState: React.FC = () => {
+interface DashboardConnectionErrorStateProps {
+  onRetry?: () => void;
+}
+
+export const DashboardConnectionErrorState: React.FC<DashboardConnectionErrorStateProps> = ({
+  onRetry
+}) => {
   const handleRefresh = () => {
-    window.location.reload();
+    if (onRetry) {
+      onRetry();
+    } else {
+      // Fallback: refresh da página atual em vez de reload
+      window.location.href = window.location.pathname;
+    }
   };
 
   return (

@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useUsers } from "@/hooks/admin/useUsers";
 import { UsersHeader } from "@/components/admin/users/UsersHeader";
@@ -13,6 +12,7 @@ import { ResetPasswordDialog } from "@/components/admin/users/ResetPasswordDialo
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/auth";
 import { Button } from "@/components/ui/button";
+import { useQueryClient } from "@tanstack/react-query";
 
 const UserManagement = () => {
   const {
@@ -33,6 +33,7 @@ const UserManagement = () => {
   } = useUsers();
 
   const { isAdmin } = useAuth();
+  const queryClient = useQueryClient();
   
   const [roleManagerOpen, setRoleManagerOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -64,9 +65,13 @@ const UserManagement = () => {
     fetchUsers();
   };
 
-  const handleForceRefresh = () => {
-    toast.info("Recarregando a página por completo...");
-    window.location.reload();
+  const handleForceRefresh = async () => {
+    toast.info("Forçando atualização dos dados...");
+    // Invalidar todas as queries relacionadas a usuários
+    await queryClient.invalidateQueries({ queryKey: ['users'] });
+    await queryClient.invalidateQueries({ queryKey: ['user-roles'] });
+    await queryClient.invalidateQueries({ queryKey: ['admin-users'] });
+    fetchUsers();
   };
 
   // Verificação de acesso usando o contexto de auth

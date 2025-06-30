@@ -3,6 +3,7 @@ import { useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { toast } from "sonner";
+import { useQueryClient } from '@tanstack/react-query';
 
 /**
  * Componente para atualizar automaticamente as durações dos vídeos da aula atual
@@ -11,6 +12,7 @@ import { toast } from "sonner";
  */
 export const AtualizarDuracoesAutomaticamente = () => {
   const { aulaId } = useParams<{ aulaId: string }>();
+  const queryClient = useQueryClient();
   
   // Componente desativado - não faz mais nada
   useEffect(() => {
@@ -46,10 +48,9 @@ export const AtualizarDuracoesAutomaticamente = () => {
           
           if (result && result.success > 0) {
             toast.success(`Duração de ${result.success} vídeo(s) atualizada com sucesso!`);
-            // Recarregar a página após 2 segundos para mostrar as novas durações
-            setTimeout(() => {
-              window.location.reload();
-            }, 2000);
+            // Invalidar queries em vez de reload
+            await queryClient.invalidateQueries({ queryKey: ['lesson-videos', aulaId] });
+            await queryClient.invalidateQueries({ queryKey: ['lessons'] });
           }
         }
       } catch (err) {
@@ -60,7 +61,7 @@ export const AtualizarDuracoesAutomaticamente = () => {
     // Executar a verificação quando o componente montar
     verificarEAtualizarVideos();
     */
-  }, [aulaId]);
+  }, [aulaId, queryClient]);
   
   // Este componente não renderiza nada
   return null;

@@ -89,7 +89,12 @@ class RouteErrorBoundary extends Component<RouteErrorBoundaryProps, RouteErrorBo
   };
 
   handleRetry = () => {
-    window.location.reload();
+    // Reset error state em vez de reload
+    this.setState({
+      hasError: false,
+      error: null,
+      isRouteError: false,
+    });
   };
 
   render() {
@@ -147,7 +152,7 @@ class RouteErrorBoundary extends Component<RouteErrorBoundaryProps, RouteErrorBo
                 
                 <Button onClick={this.handleRetry} variant="outline" className="flex items-center gap-2">
                   <MapPin className="w-4 h-4" />
-                  Recarregar
+                  Tentar novamente
                 </Button>
                 
                 <Button onClick={this.handleGoHome} className="flex items-center gap-2">

@@ -4,11 +4,13 @@ import { Loader2, AlertCircle, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { useGlobalLoading } from '@/hooks/useGlobalLoading';
+import { useNavigate } from 'react-router-dom';
 
 interface LoadingFallbackProps {
   message?: string;
   showForceButton?: boolean;
   onForceComplete?: () => void;
+  onRetry?: () => void;
   variant?: 'full' | 'partial' | 'inline';
 }
 
@@ -16,6 +18,7 @@ export const LoadingFallback: React.FC<LoadingFallbackProps> = ({
   message = "Carregando...",
   showForceButton = true,
   onForceComplete,
+  onRetry,
   variant = 'full'
 }) => {
   const { 
@@ -25,6 +28,7 @@ export const LoadingFallback: React.FC<LoadingFallbackProps> = ({
     forceComplete, 
     getLoadingDuration 
   } = useGlobalLoading();
+  const navigate = useNavigate();
 
   const duration = getLoadingDuration();
   const isSlowLoading = duration > 3000;
@@ -35,6 +39,15 @@ export const LoadingFallback: React.FC<LoadingFallbackProps> = ({
       onForceComplete();
     } else {
       forceComplete();
+    }
+  };
+
+  const handleReload = () => {
+    if (onRetry) {
+      onRetry();
+    } else {
+      // Navegar para dashboard em vez de reload
+      navigate('/dashboard');
     }
   };
 
@@ -145,10 +158,10 @@ export const LoadingFallback: React.FC<LoadingFallbackProps> = ({
                 <Button 
                   variant="ghost" 
                   size="sm"
-                  onClick={() => window.location.reload()}
+                  onClick={handleReload}
                   className="w-full text-xs"
                 >
-                  Recarregar página
+                  Ir para Dashboard
                 </Button>
               </div>
             )}

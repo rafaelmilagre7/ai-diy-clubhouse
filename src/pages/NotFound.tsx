@@ -1,5 +1,5 @@
 
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
@@ -9,6 +9,7 @@ import { logger } from "@/utils/logger";
 
 const NotFound = () => {
   const location = useLocation();
+  const navigate = useNavigate();
 
   useEffect(() => {
     // Log melhorado do erro 404
@@ -26,21 +27,22 @@ const NotFound = () => {
       localStorage.removeItem('supabase.auth.token');
       toast.success("Redirecionando para o login...");
       setTimeout(() => {
-        window.location.href = '/login';
+        navigate('/login');
       }, 500);
     } catch (error) {
       logger.error("Erro ao fazer logout da página 404", error);
       // Fallback direto
-      window.location.href = '/login';
+      navigate('/login');
     }
   };
 
   const handleReload = () => {
-    window.location.reload();
+    // Tentar navegar para a rota novamente
+    navigate(0);
   };
 
   const handleGoHome = () => {
-    window.location.href = '/dashboard';
+    navigate('/dashboard');
   };
 
   return (
@@ -82,7 +84,7 @@ const NotFound = () => {
               <div className="flex gap-3">
                 <Button variant="outline" onClick={handleReload} className="flex items-center gap-2 flex-1">
                   <RefreshCw className="h-4 w-4" />
-                  Recarregar
+                  Tentar novamente
                 </Button>
                 
                 <Button variant="outline" onClick={handleLogout} className="flex items-center gap-2 flex-1">

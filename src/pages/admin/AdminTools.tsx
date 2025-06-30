@@ -11,9 +11,9 @@ const AdminTools = () => {
   const { tools, isLoading, error, refetch } = useTools();
   const [refreshCounter, setRefreshCounter] = useState(0);
 
-  const handleRefresh = () => {
+  const handleRefresh = async () => {
     setRefreshCounter(prev => prev + 1);
-    refetch();
+    await refetch();
   };
 
   if (isLoading) {
