@@ -3,6 +3,9 @@ import { UserProfile } from '@/lib/supabase';
 import { logger } from '@/utils/logger';
 import { authCacheManager, debounceManager } from './authCacheManager';
 
+// Re-exportar o debounceManager para que outros arquivos possam usá-lo
+export { debounceManager } from './authCacheManager';
+
 /**
  * Valida a sessão do usuário de forma segura com retry
  */
