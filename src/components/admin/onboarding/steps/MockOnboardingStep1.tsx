@@ -5,10 +5,10 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { OnboardingData } from '@/components/onboarding/types/onboardingTypes';
+import { User, MapPin, Calendar } from 'lucide-react';
+import { WhatsAppInput } from '@/components/onboarding/components/WhatsAppInput';
 import { BirthDateSelector } from '@/components/onboarding/components/BirthDateSelector';
 import { ProfilePictureUpload } from '@/components/onboarding/components/ProfilePictureUpload';
-import { WhatsAppInput } from '@/components/onboarding/components/WhatsAppInput';
-import { User } from 'lucide-react';
 
 interface MockOnboardingStep1Props {
   data: OnboardingData;
@@ -25,21 +25,20 @@ const MockOnboardingStep1: React.FC<MockOnboardingStep1Props> = ({
     onUpdateData({ [field]: value });
   };
 
-  const handleBirthDateChange = (day: string, month: string, year: string) => {
+  const handleBirthDateChange = (dateData: { day: string; month: string; year: string }) => {
     onUpdateData({
-      birthDay: day,
-      birthMonth: month,
-      birthYear: year
+      birthDay: dateData.day,
+      birthMonth: dateData.month,
+      birthYear: dateData.year,
+      birthDate: dateData.day && dateData.month && dateData.year 
+        ? `${dateData.year}-${dateData.month.padStart(2, '0')}-${dateData.day.padStart(2, '0')}`
+        : undefined
     });
   };
 
-  const handleProfilePictureChange = (url: string) => {
-    onUpdateData({ profilePicture: url });
-  };
-
-  // Simulando que email e whatsapp podem vir preenchidos (da API ou convite)
-  const emailPreFilled = data.email || 'usuario@empresa.com';
-  const whatsappPreFilled = data.whatsapp || '';
+  // Verificar se email e telefone vieram preenchidos (simulando que vêm do convite)
+  const isEmailReadOnly = Boolean(data.email);
+  const isPhoneReadOnly = Boolean(data.phone);
 
   return (
     <div className="space-y-8">
@@ -52,41 +51,23 @@ const MockOnboardingStep1: React.FC<MockOnboardingStep1Props> = ({
         </CardHeader>
         <CardContent className="space-y-6">
           {/* Nome Completo */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="firstName" className="text-slate-200 font-medium">
-                Nome *
-              </Label>
-              <Input
-                id="firstName"
-                value={data.firstName || ''}
-                onChange={(e) => handleInputChange('firstName', e.target.value)}
-                placeholder="Seu primeiro nome"
-                className="bg-slate-800/50 border-slate-600 text-white placeholder:text-slate-400 focus:border-viverblue"
-              />
-              {getFieldError?.('firstName') && (
-                <p className="text-red-400 text-sm">{getFieldError('firstName')}</p>
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="lastName" className="text-slate-200 font-medium">
-                Sobrenome *
-              </Label>
-              <Input
-                id="lastName"
-                value={data.lastName || ''}
-                onChange={(e) => handleInputChange('lastName', e.target.value)}
-                placeholder="Seu sobrenome"
-                className="bg-slate-800/50 border-slate-600 text-white placeholder:text-slate-400 focus:border-viverblue"
-              />
-              {getFieldError?.('lastName') && (
-                <p className="text-red-400 text-sm">{getFieldError('lastName')}</p>
-              )}
-            </div>
+          <div className="space-y-2">
+            <Label htmlFor="name" className="text-slate-200 font-medium">
+              Nome Completo *
+            </Label>
+            <Input
+              id="name"
+              value={data.name || ''}
+              onChange={(e) => handleInputChange('name', e.target.value)}
+              placeholder="Seu nome completo"
+              className="bg-slate-800/50 border-slate-600 text-white placeholder:text-slate-400 focus:border-viverblue"
+            />
+            {getFieldError?.('name') && (
+              <p className="text-red-400 text-sm">{getFieldError('name')}</p>
+            )}
           </div>
 
-          {/* E-mail (travado se preenchido) */}
+          {/* E-mail */}
           <div className="space-y-2">
             <Label htmlFor="email" className="text-slate-200 font-medium">
               E-mail *
@@ -94,90 +75,187 @@ const MockOnboardingStep1: React.FC<MockOnboardingStep1Props> = ({
             <Input
               id="email"
               type="email"
-              value={emailPreFilled}
+              value={data.email || ''}
               onChange={(e) => handleInputChange('email', e.target.value)}
-              placeholder="seu.email@empresa.com"
-              disabled={!!emailPreFilled}
-              className={`bg-slate-800/50 border-slate-600 text-white placeholder:text-slate-400 focus:border-viverblue ${
-                emailPreFilled ? 'opacity-60 cursor-not-allowed' : ''
-              }`}
+              placeholder="seu@email.com"
+              className={`${
+                isEmailReadOnly 
+                  ? 'bg-slate-700/50 border-slate-500 text-slate-300' 
+                  : 'bg-slate-800/50 border-slate-600 text-white'
+              } placeholder:text-slate-400 focus:border-viverblue`}
+              readOnly={isEmailReadOnly}
             />
-            {emailPreFilled && (
-              <p className="text-slate-400 text-xs">E-mail fornecido pelo convite</p>
+            {isEmailReadOnly && (
+              <p className="text-xs text-slate-400">E-mail definido pelo convite</p>
             )}
             {getFieldError?.('email') && (
               <p className="text-red-400 text-sm">{getFieldError('email')}</p>
             )}
           </div>
 
-          {/* CPF */}
+          {/* WhatsApp */}
           <div className="space-y-2">
-            <Label htmlFor="cpf" className="text-slate-200 font-medium">
-              CPF *
-            </Label>
-            <Input
-              id="cpf"
-              value={data.cpf || ''}
-              onChange={(e) => handleInputChange('cpf', e.target.value)}
-              placeholder="000.000.000-00"
-              className="bg-slate-800/50 border-slate-600 text-white placeholder:text-slate-400 focus:border-viverblue"
-            />
-            {getFieldError?.('cpf') && (
-              <p className="text-red-400 text-sm">{getFieldError('cpf')}</p>
-            )}
-          </div>
-
-          {/* WhatsApp (travado se preenchido) */}
-          <div className="space-y-2">
-            <Label className="text-slate-200 font-medium">
-              WhatsApp
-            </Label>
-            <WhatsAppInput
-              value={whatsappPreFilled || data.whatsapp || ''}
-              onChange={(value) => handleInputChange('whatsapp', value)}
-              disabled={!!whatsappPreFilled}
-            />
-            {whatsappPreFilled && (
-              <p className="text-slate-400 text-xs">WhatsApp fornecido previamente</p>
-            )}
-          </div>
-
-          {/* Gênero */}
-          <div className="space-y-2">
-            <Label htmlFor="gender" className="text-slate-200 font-medium">
-              Gênero
-            </Label>
-            <Select 
-              value={data.gender || ''} 
-              onValueChange={(value) => handleInputChange('gender', value)}
-            >
-              <SelectTrigger className="bg-slate-800/50 border-slate-600 text-white focus:border-viverblue">
-                <SelectValue placeholder="Selecione seu gênero" />
-              </SelectTrigger>
-              <SelectContent className="bg-slate-800 border-slate-600">
-                <SelectItem value="masculino" className="text-white hover:bg-slate-700">Masculino</SelectItem>
-                <SelectItem value="feminino" className="text-white hover:bg-slate-700">Feminino</SelectItem>
-                <SelectItem value="nao_binario" className="text-white hover:bg-slate-700">Não Binário</SelectItem>
-                <SelectItem value="prefiro_nao_informar" className="text-white hover:bg-slate-700">Prefiro não informar</SelectItem>
-              </SelectContent>
-            </Select>
+            <div className="relative">
+              {isPhoneReadOnly ? (
+                <div>
+                  <Label htmlFor="phone" className="text-slate-200 font-medium">
+                    WhatsApp *
+                  </Label>
+                  <div className="mt-1">
+                    <Input
+                      id="phone"
+                      type="tel"
+                      value={data.phone || ''}
+                      className="bg-slate-700/50 border-slate-500 text-slate-300 placeholder:text-slate-400"
+                      readOnly
+                    />
+                    <p className="text-xs text-slate-400 mt-1">Telefone definido pelo convite</p>
+                  </div>
+                </div>
+              ) : (
+                <WhatsAppInput
+                  value={data.phone || ''}
+                  onChange={(value) => handleInputChange('phone', value)}
+                  getFieldError={getFieldError}
+                />
+              )}
+            </div>
           </div>
 
           {/* Data de Nascimento */}
-          <BirthDateSelector
-            birthDay={data.birthDay}
-            birthMonth={data.birthMonth}
-            birthYear={data.birthYear}
-            onChange={handleBirthDateChange}
-            getFieldError={getFieldError}
-          />
+          <div className="space-y-2">
+            <Label className="text-slate-200 font-medium">
+              Data de Nascimento
+            </Label>
+            <BirthDateSelector
+              birthDay={data.birthDay || ''}
+              birthMonth={data.birthMonth || ''}
+              birthYear={data.birthYear || ''}
+              onChange={handleBirthDateChange}
+            />
+          </div>
 
           {/* Foto de Perfil */}
           <ProfilePictureUpload
-            value={data.profilePicture}
-            onChange={handleProfilePictureChange}
-            userName={`${data.firstName || ''} ${data.lastName || ''}`.trim()}
+            value={data.profilePicture || ''}
+            onChange={(url) => handleInputChange('profilePicture', url)}
+            userName={data.name}
           />
+        </CardContent>
+      </Card>
+
+      <Card className="bg-white/5 border-white/10 backdrop-blur-sm">
+        <CardHeader className="pb-4">
+          <CardTitle className="text-white text-lg font-semibold flex items-center gap-3">
+            <MapPin className="h-5 w-5 text-viverblue" />
+            Localização
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {/* Estado */}
+          <div className="space-y-2">
+            <Label htmlFor="state" className="text-slate-200 font-medium">
+              Estado *
+            </Label>
+            <Select 
+              value={data.state || ''} 
+              onValueChange={(value) => handleInputChange('state', value)}
+            >
+              <SelectTrigger className="bg-slate-800/50 border-slate-600 text-white focus:border-viverblue">
+                <SelectValue placeholder="Selecione seu estado" />
+              </SelectTrigger>
+              <SelectContent className="bg-slate-800 border-slate-600">
+                <SelectItem value="SP" className="text-white hover:bg-slate-700">São Paulo</SelectItem>
+                <SelectItem value="RJ" className="text-white hover:bg-slate-700">Rio de Janeiro</SelectItem>
+                <SelectItem value="MG" className="text-white hover:bg-slate-700">Minas Gerais</SelectItem>
+                <SelectItem value="RS" className="text-white hover:bg-slate-700">Rio Grande do Sul</SelectItem>
+                <SelectItem value="PR" className="text-white hover:bg-slate-700">Paraná</SelectItem>
+                <SelectItem value="SC" className="text-white hover:bg-slate-700">Santa Catarina</SelectItem>
+                <SelectItem value="GO" className="text-white hover:bg-slate-700">Goiás</SelectItem>
+                <SelectItem value="ES" className="text-white hover:bg-slate-700">Espírito Santo</SelectItem>
+                <SelectItem value="DF" className="text-white hover:bg-slate-700">Distrito Federal</SelectItem>
+                <SelectItem value="BA" className="text-white hover:bg-slate-700">Bahia</SelectItem>
+                <SelectItem value="PE" className="text-white hover:bg-slate-700">Pernambuco</SelectItem>
+                <SelectItem value="CE" className="text-white hover:bg-slate-700">Ceará</SelectItem>
+                <SelectItem value="AM" className="text-white hover:bg-slate-700">Amazonas</SelectItem>
+                <SelectItem value="MT" className="text-white hover:bg-slate-700">Mato Grosso</SelectItem>
+                <SelectItem value="MS" className="text-white hover:bg-slate-700">Mato Grosso do Sul</SelectItem>
+                <SelectItem value="outros" className="text-white hover:bg-slate-700">Outros</SelectItem>
+              </SelectContent>
+            </Select>
+            {getFieldError?.('state') && (
+              <p className="text-red-400 text-sm">{getFieldError('state')}</p>
+            )}
+          </div>
+
+          {/* Cidade */}
+          <div className="space-y-2">
+            <Label htmlFor="city" className="text-slate-200 font-medium">
+              Cidade *
+            </Label>
+            <Input
+              id="city"
+              value={data.city || ''}
+              onChange={(e) => handleInputChange('city', e.target.value)}
+              placeholder="Sua cidade"
+              className="bg-slate-800/50 border-slate-600 text-white placeholder:text-slate-400 focus:border-viverblue"
+            />
+            {getFieldError?.('city') && (
+              <p className="text-red-400 text-sm">{getFieldError('city')}</p>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card className="bg-white/5 border-white/10 backdrop-blur-sm">
+        <CardHeader className="pb-4">
+          <CardTitle className="text-white text-lg font-semibold flex items-center gap-3">
+            <Calendar className="h-5 w-5 text-viverblue" />
+            Preferências Pessoais
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {/* Instagram */}
+          <div className="space-y-2">
+            <Label htmlFor="instagram" className="text-slate-200 font-medium">
+              Instagram
+            </Label>
+            <Input
+              id="instagram"
+              value={data.instagram || ''}
+              onChange={(e) => handleInputChange('instagram', e.target.value)}
+              placeholder="@seuusuario"
+              className="bg-slate-800/50 border-slate-600 text-white placeholder:text-slate-400 focus:border-viverblue"
+            />
+          </div>
+
+          {/* LinkedIn */}
+          <div className="space-y-2">
+            <Label htmlFor="linkedin" className="text-slate-200 font-medium">
+              LinkedIn
+            </Label>
+            <Input
+              id="linkedin"
+              value={data.linkedin || ''}
+              onChange={(e) => handleInputChange('linkedin', e.target.value)}
+              placeholder="https://linkedin.com/in/seuperfil"
+              className="bg-slate-800/50 border-slate-600 text-white placeholder:text-slate-400 focus:border-viverblue"
+            />
+          </div>
+
+          {/* Curiosidade */}
+          <div className="space-y-2">
+            <Label htmlFor="curiosity" className="text-slate-200 font-medium">
+              Algo interessante sobre você
+            </Label>
+            <Input
+              id="curiosity"
+              value={data.curiosity || ''}
+              onChange={(e) => handleInputChange('curiosity', e.target.value)}
+              placeholder="Compartilhe algo único sobre você"
+              className="bg-slate-800/50 border-slate-600 text-white placeholder:text-slate-400 focus:border-viverblue"
+            />
+          </div>
         </CardContent>
       </Card>
     </div>
