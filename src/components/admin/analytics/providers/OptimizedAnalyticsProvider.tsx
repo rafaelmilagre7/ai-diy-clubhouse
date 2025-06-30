@@ -6,10 +6,8 @@ interface OptimizedAnalyticsContextType {
   isOptimizationEnabled: boolean;
   cacheEnabled: boolean;
   debounceDelay: number;
-  showPerformanceMonitor: boolean;
   toggleOptimization: () => void;
   toggleCache: () => void;
-  togglePerformanceMonitor: () => void;
   setDebounceDelay: (delay: number) => void;
   invalidateAllCache: () => void;
   getPerformanceStats: () => any;
@@ -25,9 +23,6 @@ export const OptimizedAnalyticsProvider = ({ children }: OptimizedAnalyticsProvi
   const [isOptimizationEnabled, setIsOptimizationEnabled] = useState(true);
   const [cacheEnabled, setCacheEnabled] = useState(true);
   const [debounceDelay, setDebounceDelay] = useState(300);
-  const [showPerformanceMonitor, setShowPerformanceMonitor] = useState(
-    process.env.NODE_ENV === 'development'
-  );
 
   const { invalidateCache, getPerformanceStats } = useOptimizedAnalyticsCache();
 
@@ -44,10 +39,6 @@ export const OptimizedAnalyticsProvider = ({ children }: OptimizedAnalyticsProvi
     console.log('🗄️ [ANALYTICS] Cache:', !cacheEnabled ? 'ATIVADO' : 'DESATIVADO');
   }, [cacheEnabled, invalidateCache]);
 
-  const togglePerformanceMonitor = useCallback(() => {
-    setShowPerformanceMonitor(prev => !prev);
-  }, []);
-
   const invalidateAllCache = useCallback(() => {
     invalidateCache();
     console.log('🗑️ [ANALYTICS] Cache invalidado globalmente');
@@ -57,10 +48,8 @@ export const OptimizedAnalyticsProvider = ({ children }: OptimizedAnalyticsProvi
     isOptimizationEnabled,
     cacheEnabled,
     debounceDelay,
-    showPerformanceMonitor,
     toggleOptimization,
     toggleCache,
-    togglePerformanceMonitor,
     setDebounceDelay,
     invalidateAllCache,
     getPerformanceStats

@@ -6,7 +6,6 @@ import { Badge } from '@/components/ui/badge';
 import { RefreshCw, Download, Settings, Clock, TrendingUp, Zap } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { PerformanceMonitor } from './performance/PerformanceMonitor';
 import { useOptimizedAnalyticsContext } from './providers/OptimizedAnalyticsProvider';
 
 interface ModernAnalyticsHeaderProps {
@@ -32,9 +31,12 @@ export const ModernAnalyticsHeader = ({
 }: ModernAnalyticsHeaderProps) => {
   const { 
     isOptimizationEnabled, 
-    showPerformanceMonitor, 
-    togglePerformanceMonitor 
+    cacheEnabled,
+    getPerformanceStats
   } = useOptimizedAnalyticsContext();
+
+  // Obter estatísticas de performance
+  const stats = getPerformanceStats();
 
   return (
     <div className="space-y-6">
@@ -60,20 +62,16 @@ export const ModernAnalyticsHeader = ({
                 Otimizado
               </Badge>
             )}
+            {cacheEnabled && stats && (
+              <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200">
+                Cache: {stats.hitRate}
+              </Badge>
+            )}
           </div>
         </div>
 
         {/* Quick Actions */}
         <div className="flex items-center space-x-2">
-          <Button 
-            variant="outline" 
-            size="sm"
-            onClick={togglePerformanceMonitor}
-            className="hidden sm:flex"
-          >
-            <TrendingUp className="h-4 w-4 mr-2" />
-            Performance
-          </Button>
           <Button 
             variant="outline" 
             size="sm"
@@ -168,9 +166,6 @@ export const ModernAnalyticsHeader = ({
           </CardContent>
         </Card>
       </div>
-
-      {/* Performance Monitor */}
-      {showPerformanceMonitor && <PerformanceMonitor />}
     </div>
   );
 };
