@@ -66,26 +66,30 @@ export const AdvancedFilterBar = ({
   };
 
   return (
-    <Card className="border-0 shadow-sm bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800">
+    <Card className="bg-card border-border shadow-sm">
       <CardContent className="p-6">
         <div className="space-y-4">
           {/* Filtros Principais */}
           <div className="flex flex-wrap items-center gap-4">
             <div className="flex items-center space-x-2">
               <Filter className="h-4 w-4 text-muted-foreground" />
-              <span className="text-sm font-medium">Filtros:</span>
+              <span className="text-sm font-medium text-card-foreground">Filtros:</span>
             </div>
 
             {/* Time Range */}
             <div className="flex items-center space-x-2">
               <Calendar className="h-4 w-4 text-muted-foreground" />
               <Select value={timeRange} onValueChange={onTimeRangeChange}>
-                <SelectTrigger className="w-[180px] bg-white dark:bg-slate-800">
+                <SelectTrigger className="w-[180px] bg-background border-border text-foreground">
                   <SelectValue placeholder="Selecionar período" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-popover border-border">
                   {TIME_RANGES.map((range) => (
-                    <SelectItem key={range.value} value={range.value}>
+                    <SelectItem 
+                      key={range.value} 
+                      value={range.value}
+                      className="text-popover-foreground hover:bg-accent"
+                    >
                       {range.label}
                     </SelectItem>
                   ))}
@@ -96,16 +100,20 @@ export const AdvancedFilterBar = ({
             {/* Category Filter */}
             {onCategoryChange && (
               <Select value={category} onValueChange={onCategoryChange}>
-                <SelectTrigger className="w-[160px] bg-white dark:bg-slate-800">
+                <SelectTrigger className="w-[160px] bg-background border-border text-foreground">
                   <SelectValue placeholder="Categoria" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-popover border-border">
                   {CATEGORIES.map((cat) => (
-                    <SelectItem key={cat.value} value={cat.value}>
+                    <SelectItem 
+                      key={cat.value} 
+                      value={cat.value}
+                      className="text-popover-foreground hover:bg-accent"
+                    >
                       <div className="flex items-center justify-between w-full">
                         <span>{cat.label}</span>
                         {cat.count && (
-                          <Badge variant="secondary" className="ml-2 text-xs">
+                          <Badge variant="secondary" className="ml-2 text-xs bg-secondary text-secondary-foreground">
                             {cat.count}
                           </Badge>
                         )}
@@ -119,16 +127,20 @@ export const AdvancedFilterBar = ({
             {/* Difficulty Filter */}
             {onDifficultyChange && (
               <Select value={difficulty} onValueChange={onDifficultyChange}>
-                <SelectTrigger className="w-[160px] bg-white dark:bg-slate-800">
+                <SelectTrigger className="w-[160px] bg-background border-border text-foreground">
                   <SelectValue placeholder="Dificuldade" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-popover border-border">
                   {DIFFICULTIES.map((diff) => (
-                    <SelectItem key={diff.value} value={diff.value}>
+                    <SelectItem 
+                      key={diff.value} 
+                      value={diff.value}
+                      className="text-popover-foreground hover:bg-accent"
+                    >
                       <div className="flex items-center justify-between w-full">
                         <span>{diff.label}</span>
                         {diff.count && (
-                          <Badge variant="secondary" className="ml-2 text-xs">
+                          <Badge variant="secondary" className="ml-2 text-xs bg-secondary text-secondary-foreground">
                             {diff.count}
                           </Badge>
                         )}
@@ -142,18 +154,18 @@ export const AdvancedFilterBar = ({
 
           {/* Active Filters */}
           {activeFilters.length > 0 && (
-            <div className="flex flex-wrap items-center gap-2 pt-2 border-t">
+            <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-border">
               <span className="text-sm text-muted-foreground">Filtros ativos:</span>
               {activeFilters.map((filter) => (
                 <Badge 
                   key={filter} 
                   variant="secondary" 
-                  className="flex items-center gap-1 bg-primary/10 text-primary hover:bg-primary/20"
+                  className="flex items-center gap-1 bg-primary/10 text-primary hover:bg-primary/20 border-primary/20"
                 >
                   {filter}
                   {onRemoveFilter && (
                     <X 
-                      className="h-3 w-3 cursor-pointer" 
+                      className="h-3 w-3 cursor-pointer hover:text-primary/80" 
                       onClick={() => onRemoveFilter(filter)}
                     />
                   )}
@@ -164,7 +176,7 @@ export const AdvancedFilterBar = ({
                   variant="ghost" 
                   size="sm" 
                   onClick={onClearAll}
-                  className="text-xs h-6 px-2"
+                  className="text-xs h-6 px-2 text-muted-foreground hover:text-foreground hover:bg-accent"
                 >
                   Limpar todos
                 </Button>
@@ -178,7 +190,7 @@ export const AdvancedFilterBar = ({
             <Button
               variant="outline"
               size="sm"
-              className="h-6 px-2 text-xs"
+              className="h-6 px-2 text-xs border-border text-foreground hover:bg-accent hover:text-accent-foreground"
               onClick={() => onTimeRangeChange('24h')}
             >
               Hoje
@@ -186,7 +198,7 @@ export const AdvancedFilterBar = ({
             <Button
               variant="outline"
               size="sm"
-              className="h-6 px-2 text-xs"
+              className="h-6 px-2 text-xs border-border text-foreground hover:bg-accent hover:text-accent-foreground"
               onClick={() => onTimeRangeChange('7d')}
             >
               Esta semana
@@ -194,7 +206,7 @@ export const AdvancedFilterBar = ({
             <Button
               variant="outline"
               size="sm"
-              className="h-6 px-2 text-xs"
+              className="h-6 px-2 text-xs border-border text-foreground hover:bg-accent hover:text-accent-foreground"
               onClick={() => onTimeRangeChange('30d')}
             >
               Este mês
