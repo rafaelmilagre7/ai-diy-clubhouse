@@ -19,7 +19,7 @@ class AuthCacheManager {
       return undefined;
     }
     
-    logger.debug('[AUTH-CACHE] Cache hit para usuário:', userId.substring(0, 8) + '***');
+    logger.debug('[AUTH-CACHE] Cache hit para usuário', { userId: userId.substring(0, 8) + '***' });
     return cached.profile;
   }
 
@@ -31,13 +31,13 @@ class AuthCacheManager {
       timestamp: Date.now(),
       version: this.version
     });
-    logger.debug('[AUTH-CACHE] Cache atualizado para usuário:', userId.substring(0, 8) + '***');
+    logger.debug('[AUTH-CACHE] Cache atualizado para usuário', { userId: userId.substring(0, 8) + '***' });
   }
 
   // Invalidar cache específico
   invalidate(userId: string): void {
     this.cache.delete(userId);
-    logger.debug('[AUTH-CACHE] Cache invalidado para usuário:', userId.substring(0, 8) + '***');
+    logger.debug('[AUTH-CACHE] Cache invalidado para usuário', { userId: userId.substring(0, 8) + '***' });
   }
 
   // Limpar todo o cache
@@ -82,7 +82,7 @@ export class DebounceManager {
   ): Promise<T | null> {
     // Se já está executando, aguardar
     if (this.executing.has(key)) {
-      logger.debug('[DEBOUNCE] Operação já em execução, ignorando:', key);
+      logger.debug('[DEBOUNCE] Operação já em execução, ignorando', { key });
       return null;
     }
 
@@ -96,11 +96,11 @@ export class DebounceManager {
       const timer = setTimeout(async () => {
         try {
           this.executing.add(key);
-          logger.debug('[DEBOUNCE] Executando operação:', key);
+          logger.debug('[DEBOUNCE] Executando operação', { key });
           const result = await fn();
           resolve(result);
         } catch (error) {
-          logger.error('[DEBOUNCE] Erro na operação:', key, error);
+          logger.error('[DEBOUNCE] Erro na operação', { key, error });
           resolve(null);
         } finally {
           this.executing.delete(key);

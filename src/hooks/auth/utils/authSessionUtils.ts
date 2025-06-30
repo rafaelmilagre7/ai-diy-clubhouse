@@ -1,4 +1,3 @@
-
 import { supabase } from '@/lib/supabase';
 import { UserProfile } from '@/lib/supabase';
 import { logger } from '@/utils/logger';
@@ -16,7 +15,7 @@ export const validateUserSession = async (retries: number = 2) => {
       
       if (error) {
         if (attempt === retries + 1) {
-          logger.error('[AUTH-SESSION] Erro final na validação:', error);
+          logger.error('[AUTH-SESSION] Erro final na validação', { error });
           return { session: null, user: null };
         }
         
@@ -31,7 +30,7 @@ export const validateUserSession = async (retries: number = 2) => {
       };
     } catch (error) {
       if (attempt === retries + 1) {
-        logger.error('[AUTH-SESSION] Erro crítico na validação:', error);
+        logger.error('[AUTH-SESSION] Erro crítico na validação', { error });
         return { session: null, user: null };
       }
       
@@ -102,7 +101,7 @@ export const fetchUserProfileSecurely = async (userId: string): Promise<UserProf
           .single();
         
         if (directError) {
-          logger.error('[PROFILE-FETCH] Erro no fallback direto:', directError);
+          logger.error('[PROFILE-FETCH] Erro no fallback direto', { error: directError });
           authCacheManager.set(userId, null);
           return null;
         }
@@ -110,7 +109,7 @@ export const fetchUserProfileSecurely = async (userId: string): Promise<UserProf
         const profile = directData as UserProfile;
         authCacheManager.set(userId, profile);
         
-        logger.info('[PROFILE-FETCH] Perfil carregado via fallback:', {
+        logger.info('[PROFILE-FETCH] Perfil carregado via fallback', {
           userId: profile.id.substring(0, 8) + '***',
           hasRole: !!profile.user_roles,
           roleName: profile.user_roles?.name || 'sem role'
@@ -124,7 +123,7 @@ export const fetchUserProfileSecurely = async (userId: string): Promise<UserProf
     return result;
     
   } catch (error) {
-    logger.error('[PROFILE-FETCH] Erro crítico:', error);
+    logger.error('[PROFILE-FETCH] Erro crítico', { error });
     authCacheManager.set(userId, null);
     return null;
   }
@@ -165,7 +164,7 @@ export const processUserProfile = async (
         .single();
       
       if (createError) {
-        logger.error('[PROFILE-PROCESS] Erro ao criar perfil:', createError);
+        logger.error('[PROFILE-PROCESS] Erro ao criar perfil', { error: createError });
         return null;
       }
       
@@ -179,7 +178,7 @@ export const processUserProfile = async (
     return profile;
     
   } catch (error) {
-    logger.error('[PROFILE-PROCESS] Erro no processamento:', error);
+    logger.error('[PROFILE-PROCESS] Erro no processamento', { error });
     return null;
   }
 };
