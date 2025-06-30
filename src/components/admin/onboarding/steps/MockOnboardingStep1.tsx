@@ -17,48 +17,32 @@ interface MockOnboardingStep1Props {
   getFieldError?: (field: string) => string | undefined;
 }
 
-const MockOnboardingStep1: React.FC<MockOnboardingStep1Props> = ({
-  data,
-  onUpdateData,
-  getFieldError
-}) => {
+export default function MockOnboardingStep1({ 
+  data, 
+  onUpdateData, 
+  getFieldError 
+}: MockOnboardingStep1Props) {
   const handleInputChange = (field: keyof OnboardingData, value: string) => {
     onUpdateData({ [field]: value });
   };
 
-  const handleBirthDateChange = (day: string, month: string, year: string) => {
-    onUpdateData({
-      birthDay: day,
-      birthMonth: month,
-      birthYear: year
-    });
-  };
-
-  const handleProfilePictureChange = (value: string) => {
-    onUpdateData({ profilePicture: value });
-  };
-
-  const handleStateChange = (state: string) => {
-    onUpdateData({ state });
-  };
-
-  const handleCityChange = (city: string) => {
-    onUpdateData({ city });
-  };
-
-  const currentPhone = data.phone || '';
-
   return (
-    <div className="space-y-8">
-      <Card className="bg-white/5 border-white/10 backdrop-blur-sm">
-        <CardHeader className="pb-4">
-          <CardTitle className="text-white text-lg font-semibold flex items-center gap-3">
-            <User className="h-5 w-5 text-viverblue" />
-            Informações Pessoais
+    <div className="space-y-6">
+      <Card className="bg-gradient-to-br from-slate-900 to-slate-800 border-slate-700">
+        <CardHeader className="text-center pb-4">
+          <div className="mx-auto w-16 h-16 bg-gradient-to-br from-viverblue to-blue-600 rounded-full flex items-center justify-center mb-4">
+            <User className="h-8 w-8 text-white" />
+          </div>
+          <CardTitle className="text-2xl text-white">
+            Vamos nos conhecer melhor!
           </CardTitle>
+          <p className="text-slate-300 mt-2">
+            Conte-nos sobre você para personalizarmos sua experiência na plataforma
+          </p>
         </CardHeader>
+
         <CardContent className="space-y-6">
-          {/* Nome Completo */}
+          {/* Nome */}
           <div className="space-y-2">
             <Label htmlFor="name" className="text-slate-200 font-medium">
               Nome Completo *
@@ -78,7 +62,7 @@ const MockOnboardingStep1: React.FC<MockOnboardingStep1Props> = ({
           {/* Email */}
           <div className="space-y-2">
             <Label htmlFor="email" className="text-slate-200 font-medium">
-              Email *
+              E-mail *
             </Label>
             <Input
               id="email"
@@ -93,18 +77,13 @@ const MockOnboardingStep1: React.FC<MockOnboardingStep1Props> = ({
             )}
           </div>
 
-          {/* WhatsApp */}
+          {/* WhatsApp - removido o label duplicado */}
           <div className="space-y-2">
-            <Label htmlFor="phone" className="text-slate-200 font-medium">
-              WhatsApp *
-            </Label>
             <WhatsAppInput
-              value={currentPhone}
-              onChange={(value: string) => handleInputChange('phone', value)}
+              value={data.phone || ''}
+              onChange={(value) => handleInputChange('phone', value)}
+              getFieldError={getFieldError}
             />
-            {getFieldError?.('phone') && (
-              <p className="text-red-400 text-sm">{getFieldError('phone')}</p>
-            )}
           </div>
 
           {/* Data de Nascimento */}
@@ -113,16 +92,10 @@ const MockOnboardingStep1: React.FC<MockOnboardingStep1Props> = ({
               Data de Nascimento *
             </Label>
             <BirthDateSelector
-              birthDay={data.birthDay || ''}
-              birthMonth={data.birthMonth || ''}
-              birthYear={data.birthYear || ''}
-              onChange={handleBirthDateChange}
+              value={data.birthDate || ''}
+              onChange={(value) => handleInputChange('birthDate', value)}
+              getFieldError={getFieldError}
             />
-            {(getFieldError?.('birthDay') || getFieldError?.('birthMonth') || getFieldError?.('birthYear')) && (
-              <p className="text-red-400 text-sm">
-                {getFieldError?.('birthDay') || getFieldError?.('birthMonth') || getFieldError?.('birthYear')}
-              </p>
-            )}
           </div>
 
           {/* Localização */}
@@ -133,8 +106,8 @@ const MockOnboardingStep1: React.FC<MockOnboardingStep1Props> = ({
             <LocationSelector
               selectedState={data.state || ''}
               selectedCity={data.city || ''}
-              onStateChange={handleStateChange}
-              onCityChange={handleCityChange}
+              onStateChange={(value) => handleInputChange('state', value)}
+              onCityChange={(value) => handleInputChange('city', value)}
               getFieldError={getFieldError}
             />
           </div>
@@ -208,13 +181,11 @@ const MockOnboardingStep1: React.FC<MockOnboardingStep1Props> = ({
             </Label>
             <ProfilePictureUpload
               value={data.profilePicture || ''}
-              onChange={handleProfilePictureChange}
+              onChange={(value) => handleInputChange('profilePicture', value)}
             />
           </div>
         </CardContent>
       </Card>
     </div>
   );
-};
-
-export default MockOnboardingStep1;
+}

@@ -31,37 +31,37 @@ export const useMockOnboarding = () => {
 
 const initialData: OnboardingData = {
   memberType: 'club',
-  name: '',
-  email: '',
-  phone: '',
-  instagram: '',
-  linkedin: '',
-  state: '',
-  city: '',
-  birthDate: '',
-  curiosity: '',
+  name: 'Ana Silva Demo',
+  email: 'ana.silva.demo@exemplo.com',
+  phone: '(11) 99888-7766',
+  instagram: '@anasilva.tech',
+  linkedin: 'https://linkedin.com/in/anasilva',
+  state: 'São Paulo',
+  city: 'São Paulo',
+  birthDate: '1985-03-15',
+  curiosity: 'Apaixonada por tecnologia e inovação, sempre buscando aprender sobre IA.',
   profilePicture: '',
-  companyName: '',
-  companyWebsite: '',
-  businessSector: '',
-  companySize: '',
-  annualRevenue: '',
-  position: '',
-  hasImplementedAI: '',
-  aiToolsUsed: [],
-  aiKnowledgeLevel: '',
-  dailyTools: [],
-  whoWillImplement: '',
-  mainObjective: '',
-  areaToImpact: '',
-  expectedResult90Days: '',
-  aiImplementationBudget: '',
-  weeklyLearningTime: '',
-  contentPreference: [],
-  wantsNetworking: '',
-  bestDays: [],
-  bestPeriods: [],
-  acceptsCaseStudy: ''
+  companyName: 'TechNova Solutions',
+  companyWebsite: 'https://technova.com.br',
+  businessSector: 'Tecnologia',
+  companySize: '11-50',
+  annualRevenue: '500k-1m',
+  position: 'Diretora de Tecnologia',
+  hasImplementedAI: 'yes',
+  aiToolsUsed: ['ChatGPT', 'Google Bard'],
+  aiKnowledgeLevel: 'intermediate',
+  dailyTools: ['Excel', 'PowerBI', 'Slack'],
+  whoWillImplement: 'team',
+  mainObjective: 'automate',
+  areaToImpact: 'Atendimento ao Cliente',
+  expectedResult90Days: 'Reduzir em 50% o tempo de resposta aos clientes',
+  aiImplementationBudget: '10k-25k',
+  weeklyLearningTime: '3-5',
+  contentPreference: ['videos', 'exercises'],
+  wantsNetworking: 'yes',
+  bestDays: ['tuesday', 'thursday'],
+  bestPeriods: ['morning', 'evening'],
+  acceptsCaseStudy: 'yes'
 };
 
 interface MockOnboardingWizardContainerProps {
@@ -86,7 +86,9 @@ export const MockOnboardingWizardContainer: React.FC<MockOnboardingWizardContain
     
     if (savedData) {
       try {
-        setData(JSON.parse(savedData));
+        const parsedData = JSON.parse(savedData);
+        // Merge with initialData to ensure all demo fields are present
+        setData({ ...initialData, ...parsedData });
       } catch (e) {
         console.warn('Failed to parse saved onboarding data');
       }
