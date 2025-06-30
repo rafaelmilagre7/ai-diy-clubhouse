@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Building2, Users, DollarSign, Briefcase } from 'lucide-react';
+import { Building2, Users, TrendingUp } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -17,32 +17,24 @@ interface MockOnboardingStep2Props {
 
 const businessSectors = [
   'Tecnologia',
-  'E-commerce',
-  'Educação',
+  'Varejo/Comércio',
+  'Serviços',
+  'Indústria/Manufatura',
   'Saúde',
-  'Consultoria',
-  'Marketing e Publicidade',
-  'Varejo',
-  'Serviços Financeiros',
+  'Educação',
+  'Financeiro/Bancário',
   'Imobiliário',
-  'Alimentação',
-  'Indústria',
-  'Agricultura',
-  'Construção',
-  'Turismo',
-  'Transporte e Logística',
+  'Alimentação/Restaurantes',
+  'Consultoria',
+  'Marketing/Publicidade',
+  'Logística/Transporte',
+  'Turismo/Hotelaria',
+  'Construção Civil',
+  'Agronegócio',
+  'Energia/Utilities',
+  'Mídia/Entretenimento',
+  'Jurídico',
   'Outros'
-];
-
-const companySizes = [
-  'Apenas eu (pessoa física)',
-  '2-5 funcionários',
-  '6-10 funcionários',
-  '11-20 funcionários',
-  '21-50 funcionários',
-  '51-100 funcionários',
-  '101-500 funcionários',
-  'Mais de 500 funcionários'
 ];
 
 const annualRevenues = [
@@ -58,6 +50,37 @@ const annualRevenues = [
   'R$ 20 - R$ 50 milhões',
   'R$ 50 - R$ 100 milhões',
   'Acima de R$ 100 milhões'
+];
+
+const companySize = [
+  'Apenas eu (Pessoa Física)',
+  '2-5 funcionários',
+  '6-10 funcionários',
+  '11-20 funcionários',
+  '21-50 funcionários',
+  '51-100 funcionários',
+  '101-500 funcionários',
+  'Acima de 500 funcionários'
+];
+
+const jobPositions = [
+  'CEO/Presidente',
+  'Diretor Executivo',
+  'Diretor',
+  'Gerente Geral',
+  'Gerente',
+  'Coordenador',
+  'Supervisor',
+  'Analista Sênior',
+  'Analista Pleno',
+  'Analista Júnior',
+  'Assistente',
+  'Consultor',
+  'Especialista',
+  'Empreendedor/Proprietário',
+  'Freelancer/Autônomo',
+  'Estagiário',
+  'Outro'
 ];
 
 const MockOnboardingStep2: React.FC<MockOnboardingStep2Props> = ({
@@ -85,28 +108,25 @@ const MockOnboardingStep2: React.FC<MockOnboardingStep2Props> = ({
           Perfil Empresarial
         </h2>
         <p className="text-slate-400">
-          Agora vamos conhecer sua empresa e negócio
+          Conte-nos sobre sua empresa e posição no mercado
         </p>
       </div>
 
       <div className="space-y-6">
         {/* Informações da Empresa */}
         <Card className="p-6 bg-[#1A1E2E]/80 backdrop-blur-sm border-white/10">
-          <div className="space-y-6">
+          <div className="space-y-4">
             <div>
               <Label htmlFor="companyName" className="text-slate-200">
-                Nome da Empresa/Negócio *
+                Nome da Empresa *
               </Label>
-              <div className="relative mt-1">
-                <Building2 className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
-                <Input
-                  id="companyName"
-                  value={data.companyName || ''}
-                  onChange={(e) => onUpdateData({ companyName: e.target.value })}
-                  className="pl-10 bg-[#151823] border-white/20 text-white"
-                  placeholder="Nome da sua empresa"
-                />
-              </div>
+              <Input
+                id="companyName"
+                value={data.companyName || ''}
+                onChange={(e) => onUpdateData({ companyName: e.target.value })}
+                className="mt-1 bg-[#151823] border-white/20 text-white"
+                placeholder="Nome da sua empresa"
+              />
               {getFieldError?.('companyName') && (
                 <p className="text-red-400 text-sm mt-1">{getFieldError('companyName')}</p>
               )}
@@ -121,20 +141,20 @@ const MockOnboardingStep2: React.FC<MockOnboardingStep2Props> = ({
                 value={data.companyWebsite || ''}
                 onChange={(e) => onUpdateData({ companyWebsite: e.target.value })}
                 className="mt-1 bg-[#151823] border-white/20 text-white"
-                placeholder="https://suaempresa.com"
+                placeholder="https://www.suaempresa.com"
               />
             </div>
 
             <div>
-              <Label htmlFor="businessSector" className="text-slate-200">
-                Setor de Atuação *
+              <Label className="text-slate-200 text-base font-medium">
+                Setor/Segmento *
               </Label>
               <Select 
                 value={data.businessSector || ''} 
                 onValueChange={(value) => onUpdateData({ businessSector: value })}
               >
-                <SelectTrigger className="mt-1 bg-[#151823] border-white/20 text-white">
-                  <SelectValue placeholder="Selecione o setor" />
+                <SelectTrigger className="mt-3 bg-[#151823] border-white/20 text-white">
+                  <SelectValue placeholder="Selecione o setor da empresa" />
                 </SelectTrigger>
                 <SelectContent className="bg-[#151823] border-white/20">
                   {businessSectors.map((sector) => (
@@ -160,18 +180,18 @@ const MockOnboardingStep2: React.FC<MockOnboardingStep2Props> = ({
             </div>
 
             <div>
-              <Label htmlFor="companySize" className="text-slate-200">
-                Tamanho da Equipe *
+              <Label className="text-slate-200 text-base font-medium">
+                Tamanho da Empresa *
               </Label>
               <Select 
                 value={data.companySize || ''} 
                 onValueChange={(value) => onUpdateData({ companySize: value })}
               >
-                <SelectTrigger className="mt-1 bg-[#151823] border-white/20 text-white">
-                  <SelectValue placeholder="Selecione o tamanho da equipe" />
+                <SelectTrigger className="mt-3 bg-[#151823] border-white/20 text-white">
+                  <SelectValue placeholder="Selecione o tamanho da empresa" />
                 </SelectTrigger>
                 <SelectContent className="bg-[#151823] border-white/20">
-                  {companySizes.map((size) => (
+                  {companySize.map((size) => (
                     <SelectItem key={size} value={size} className="text-white hover:bg-white/10">
                       {size}
                     </SelectItem>
@@ -184,14 +204,14 @@ const MockOnboardingStep2: React.FC<MockOnboardingStep2Props> = ({
             </div>
 
             <div>
-              <Label htmlFor="annualRevenue" className="text-slate-200">
+              <Label className="text-slate-200 text-base font-medium">
                 Faturamento Anual *
               </Label>
               <Select 
                 value={data.annualRevenue || ''} 
                 onValueChange={(value) => onUpdateData({ annualRevenue: value })}
               >
-                <SelectTrigger className="mt-1 bg-[#151823] border-white/20 text-white">
+                <SelectTrigger className="mt-3 bg-[#151823] border-white/20 text-white">
                   <SelectValue placeholder="Selecione a faixa de faturamento" />
                 </SelectTrigger>
                 <SelectContent className="bg-[#151823] border-white/20">
@@ -209,25 +229,33 @@ const MockOnboardingStep2: React.FC<MockOnboardingStep2Props> = ({
           </div>
         </Card>
 
-        {/* Posição */}
+        {/* Seu Papel na Empresa */}
         <Card className="p-6 bg-[#1A1E2E]/80 backdrop-blur-sm border-white/10">
           <div className="space-y-6">
             <div className="flex items-center gap-2 mb-4">
-              <Briefcase className="w-5 h-5 text-viverblue" />
-              <h3 className="text-lg font-semibold text-white">Sua Posição</h3>
+              <TrendingUp className="w-5 h-5 text-viverblue" />
+              <h3 className="text-lg font-semibold text-white">Seu Papel na Empresa</h3>
             </div>
 
             <div>
-              <Label htmlFor="position" className="text-slate-200">
+              <Label className="text-slate-200 text-base font-medium">
                 Cargo/Função *
               </Label>
-              <Input
-                id="position"
-                value={data.position || ''}
-                onChange={(e) => onUpdateData({ position: e.target.value })}
-                className="mt-1 bg-[#151823] border-white/20 text-white"
-                placeholder="Ex: CEO, Diretor, Gerente, Coordenador..."
-              />
+              <Select 
+                value={data.position || ''} 
+                onValueChange={(value) => onUpdateData({ position: value })}
+              >
+                <SelectTrigger className="mt-3 bg-[#151823] border-white/20 text-white">
+                  <SelectValue placeholder="Selecione seu cargo/função" />
+                </SelectTrigger>
+                <SelectContent className="bg-[#151823] border-white/20">
+                  {jobPositions.map((position) => (
+                    <SelectItem key={position} value={position} className="text-white hover:bg-white/10">
+                      {position}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               {getFieldError?.('position') && (
                 <p className="text-red-400 text-sm mt-1">{getFieldError('position')}</p>
               )}
