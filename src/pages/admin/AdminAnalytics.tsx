@@ -1,194 +1,84 @@
 
-import React, { useState, useCallback } from 'react';
-import { TabsContent } from '@/components/ui/tabs';
+import React, { useState } from 'react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { RealAnalyticsOverview } from '@/components/admin/analytics/RealAnalyticsOverview';
-import { UserAnalyticsTabContent } from '@/components/admin/analytics/tabs/UserAnalyticsTabContent';
-import { SolutionAnalyticsTabContent } from '@/components/admin/analytics/tabs/SolutionAnalyticsTabContent';
+import { OptimizedRealtimeStats } from '@/components/admin/analytics/OptimizedRealtimeStats';
+import { UserAnalyticsTabContent } from '@/components/admin/analytics/users/UserAnalyticsTabContent';
+import { SolutionsAnalyticsTabContent } from '@/components/admin/analytics/solutions/SolutionsAnalyticsTabContent';
 import { LmsAnalyticsTabContent } from '@/components/admin/analytics/tabs/LmsAnalyticsTabContent';
-import { ModernAnalyticsHeader } from '@/components/admin/analytics/ModernAnalyticsHeader';
-import { AdvancedFilterBar } from '@/components/admin/analytics/AdvancedFilterBar';
-import { ModernTabsNavigation } from '@/components/admin/analytics/ModernTabsNavigation';
-import { OptimizedAnalyticsProvider } from '@/components/admin/analytics/providers/OptimizedAnalyticsProvider';
-import { TabTransition } from '@/components/admin/analytics/components/TransitionWrapper';
-import { useRealAdminAnalytics } from '@/hooks/admin/useRealAdminAnalytics';
-import { PermissionGuard } from '@/components/auth/PermissionGuard';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { AlertCircle } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+import { ImplementationsAnalyticsTabContent } from '@/components/admin/analytics/implementations/ImplementationsAnalyticsTabContent';
 
-const AdminAnalytics = () => {
+export default function AdminAnalytics() {
   const [timeRange, setTimeRange] = useState('30d');
-  const [activeTab, setActiveTab] = useState('overview');
-  const [category, setCategory] = useState('all');
-  const [difficulty, setDifficulty] = useState('all');
-  const { toast } = useToast();
-  
-  // Usar o hook de analytics real
-  const { 
-    data: analyticsData, 
-    loading: analyticsLoading, 
-    error: analyticsError,
-    refresh: refreshAnalytics 
-  } = useRealAdminAnalytics(timeRange);
-
-  const handleTimeRangeChange = (value: string) => {
-    setTimeRange(value);
-  };
-
-  const handleRefresh = useCallback(() => {
-    toast({
-      title: "Atualizando dados",
-      description: "Os dados estão sendo atualizados...",
-    });
-    refreshAnalytics();
-  }, [refreshAnalytics, toast]);
-
-  const handleExport = () => {
-    toast({
-      title: "Exportando dados",
-      description: "O relatório será preparado em breve...",
-    });
-  };
-
-  const handleSettings = () => {
-    toast({
-      title: "Configurações",
-      description: "Funcionalidade em desenvolvimento...",
-    });
-  };
-
-  // Preparar dados para os componentes
-  const tabsData = {
-    totalUsers: analyticsData?.totalUsers || 0,
-    totalSolutions: analyticsData?.totalSolutions || 0,
-    totalCourses: analyticsData?.totalCourses || 0,
-    activeImplementations: analyticsData?.activeImplementations || 0
-  };
-
-  // Preparar dados completos para o RealAnalyticsOverview com fallbacks
-  const overviewData = analyticsData ? {
-    totalUsers: analyticsData.totalUsers || 0,
-    totalSolutions: analyticsData.totalSolutions || 0,
-    totalCourses: analyticsData.totalCourses || 0,
-    activeImplementations: analyticsData.activeImplementations || 0,
-    // Dados de gráficos com fallbacks baseados nos dados disponíveis
-    usersByTime: [
-      { name: 'Janeiro', novos: Math.floor((analyticsData.totalUsers || 0) * 0.1), total: Math.floor((analyticsData.totalUsers || 0) * 0.6) },
-      { name: 'Fevereiro', novos: Math.floor((analyticsData.totalUsers || 0) * 0.15), total: Math.floor((analyticsData.totalUsers || 0) * 0.75) },
-      { name: 'Março', novos: Math.floor((analyticsData.totalUsers || 0) * 0.25), total: analyticsData.totalUsers || 0 }
-    ],
-    solutionPopularity: [
-      { name: 'WhatsApp Business', value: Math.floor((analyticsData.activeImplementations || 0) * 0.4) },
-      { name: 'Automação Email', value: Math.floor((analyticsData.activeImplementations || 0) * 0.3) },
-      { name: 'Chatbot', value: Math.floor((analyticsData.activeImplementations || 0) * 0.2) },
-      { name: 'CRM', value: Math.floor((analyticsData.activeImplementations || 0) * 0.1) }
-    ],
-    implementationsByCategory: [
-      { name: 'Receita', value: Math.floor((analyticsData.activeImplementations || 0) * 0.5) },
-      { name: 'Operacional', value: Math.floor((analyticsData.activeImplementations || 0) * 0.3) },
-      { name: 'Estratégia', value: Math.floor((analyticsData.activeImplementations || 0) * 0.2) }
-    ],
-    userCompletionRate: [
-      { name: 'Concluídas', value: Math.floor((analyticsData.activeImplementations || 0) * 0.7) },
-      { name: 'Em andamento', value: Math.floor((analyticsData.activeImplementations || 0) * 0.3) }
-    ],
-    dayOfWeekActivity: [
-      { day: 'Seg', atividade: Math.floor((analyticsData.totalUsers || 0) * 0.15) },
-      { day: 'Ter', atividade: Math.floor((analyticsData.totalUsers || 0) * 0.18) },
-      { day: 'Qua', atividade: Math.floor((analyticsData.totalUsers || 0) * 0.22) },
-      { day: 'Qui', atividade: Math.floor((analyticsData.totalUsers || 0) * 0.19) },
-      { day: 'Sex', atividade: Math.floor((analyticsData.totalUsers || 0) * 0.25) },
-      { day: 'Sáb', atividade: Math.floor((analyticsData.totalUsers || 0) * 0.08) },
-      { day: 'Dom', atividade: Math.floor((analyticsData.totalUsers || 0) * 0.05) }
-    ]
-  } : undefined;
-
-  // Converter erro string para objeto Error se necessário
-  const processedError = analyticsError ? 
-    (typeof analyticsError === 'string' ? new Error(analyticsError) : analyticsError) : 
-    null;
 
   return (
-    <PermissionGuard 
-      permission="analytics.view"
-      fallback={
-        <Alert variant="destructive" className="max-w-4xl mx-auto my-8">
-          <AlertCircle className="h-4 w-4" />
-          <AlertTitle>Acesso Restrito</AlertTitle>
-          <AlertDescription>
-            Você não tem permissão para visualizar os dados de analytics.
-            Entre em contato com um administrador se precisar de acesso a este recurso.
-          </AlertDescription>
-        </Alert>
-      }
-    >
-      <OptimizedAnalyticsProvider>
-        <div className="min-h-screen bg-background">
-          <div className="space-y-6 p-6 max-w-7xl mx-auto">
-            {/* Modern Header */}
-            <ModernAnalyticsHeader
-              lastUpdated={new Date()}
-              onRefresh={handleRefresh}
-              onExport={handleExport}
-              onSettings={handleSettings}
-              isLoading={analyticsLoading}
-              totalUsers={tabsData.totalUsers}
-              totalSolutions={tabsData.totalSolutions}
-              totalCourses={tabsData.totalCourses}
-            />
-
-            {/* Advanced Filters */}
-            <AdvancedFilterBar
-              timeRange={timeRange}
-              onTimeRangeChange={handleTimeRangeChange}
-              category={category}
-              onCategoryChange={setCategory}
-              difficulty={difficulty}
-              onDifficultyChange={setDifficulty}
-            />
-
-            {/* Modern Tabs Navigation */}
-            <ModernTabsNavigation
-              activeTab={activeTab}
-              onTabChange={setActiveTab}
-              tabsData={tabsData}
-            />
-
-            {/* Tab Contents with Transitions */}
-            <TabTransition tabKey={activeTab} className="mt-6">
-              {activeTab === 'overview' && (
-                <div className="space-y-4">
-                  <RealAnalyticsOverview 
-                    data={overviewData}
-                    loading={analyticsLoading} 
-                    error={processedError}
-                  />
-                </div>
-              )}
-              
-              {activeTab === 'users' && (
-                <div className="space-y-4">
-                  <UserAnalyticsTabContent timeRange={timeRange} />
-                </div>
-              )}
-              
-              {activeTab === 'solutions' && (
-                <div className="space-y-4">
-                  <SolutionAnalyticsTabContent timeRange={timeRange} />
-                </div>
-              )}
-              
-              {activeTab === 'learning' && (
-                <div className="space-y-4">
-                  <LmsAnalyticsTabContent timeRange={timeRange} />
-                </div>
-              )}
-            </TabTransition>
-          </div>
+    <div className="space-y-6 p-6">
+      {/* Header */}
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-3xl font-bold">Analytics Administrativo</h1>
+          <p className="text-muted-foreground">
+            Dados completos e em tempo real da plataforma
+          </p>
         </div>
-      </OptimizedAnalyticsProvider>
-    </PermissionGuard>
-  );
-};
+        <Select value={timeRange} onValueChange={setTimeRange}>
+          <SelectTrigger className="w-40">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="7d">Últimos 7 dias</SelectItem>
+            <SelectItem value="30d">Últimos 30 dias</SelectItem>
+            <SelectItem value="90d">Últimos 90 dias</SelectItem>
+            <SelectItem value="all">Todo o período</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
 
-export default AdminAnalytics;
+      {/* Real-time Stats */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Estatísticas em Tempo Real</CardTitle>
+          <CardDescription>
+            Métricas atualizadas a cada 5 minutos
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <OptimizedRealtimeStats />
+        </CardContent>
+      </Card>
+
+      {/* Main Analytics Tabs */}
+      <Tabs defaultValue="overview" className="space-y-6">
+        <TabsList className="grid w-full grid-cols-5">
+          <TabsTrigger value="overview">Visão Geral</TabsTrigger>
+          <TabsTrigger value="users">Usuários</TabsTrigger>
+          <TabsTrigger value="solutions">Soluções</TabsTrigger>
+          <TabsTrigger value="learning">Aprendizado</TabsTrigger>
+          <TabsTrigger value="implementations">Implementações</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="overview">
+          <RealAnalyticsOverview timeRange={timeRange} />
+        </TabsContent>
+
+        <TabsContent value="users">
+          <UserAnalyticsTabContent timeRange={timeRange} />
+        </TabsContent>
+
+        <TabsContent value="solutions">
+          <SolutionsAnalyticsTabContent timeRange={timeRange} />
+        </TabsContent>
+
+        <TabsContent value="learning">
+          <LmsAnalyticsTabContent timeRange={timeRange} />
+        </TabsContent>
+
+        <TabsContent value="implementations">
+          <ImplementationsAnalyticsTabContent timeRange={timeRange} />
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
+}
