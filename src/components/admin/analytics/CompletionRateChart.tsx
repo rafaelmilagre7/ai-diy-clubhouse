@@ -9,10 +9,10 @@ interface CompletionRateChartProps {
 
 export const CompletionRateChart = ({ data }: CompletionRateChartProps) => {
   return (
-    <Card className="border border-gray-200 dark:border-gray-800 shadow-sm hover:shadow-md transition-shadow duration-300">
+    <Card>
       <CardHeader className="pb-2">
-        <CardTitle className="text-lg font-semibold text-neutral-800 dark:text-white">Taxa de Conclusão</CardTitle>
-        <CardDescription className="text-neutral-600 dark:text-neutral-300">
+        <CardTitle className="text-lg font-semibold">Taxa de Conclusão</CardTitle>
+        <CardDescription>
           Implementações concluídas vs. em andamento
         </CardDescription>
       </CardHeader>
@@ -23,11 +23,11 @@ export const CompletionRateChart = ({ data }: CompletionRateChartProps) => {
             category="value"
             index="name"
             valueFormatter={(value) => `${value} implementações`}
-            colors={['#10B981', '#3B82F6']}
+            colors={['#10B981', '#0ABAB5']}
             className="h-[200px]"
           />
         ) : (
-          <div className="flex items-center justify-center h-[200px] text-neutral-500 dark:text-neutral-400">
+          <div className="flex items-center justify-center h-[200px] text-muted-foreground">
             Sem dados disponíveis para exibição
           </div>
         )}

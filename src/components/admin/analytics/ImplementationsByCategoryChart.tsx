@@ -9,10 +9,10 @@ interface ImplementationsByCategoryChartProps {
 
 export const ImplementationsByCategoryChart = ({ data }: ImplementationsByCategoryChartProps) => {
   return (
-    <Card className="border border-gray-200 dark:border-gray-800 shadow-sm hover:shadow-md transition-shadow duration-300">
+    <Card>
       <CardHeader className="pb-2">
-        <CardTitle className="text-lg font-semibold text-neutral-800 dark:text-white">Implementações por Categoria</CardTitle>
-        <CardDescription className="text-neutral-600 dark:text-neutral-300">
+        <CardTitle className="text-lg font-semibold">Implementações por Categoria</CardTitle>
+        <CardDescription>
           Distribuição por tipo de solução
         </CardDescription>
       </CardHeader>
@@ -23,11 +23,11 @@ export const ImplementationsByCategoryChart = ({ data }: ImplementationsByCatego
             category="value"
             index="name"
             valueFormatter={(value) => `${value} implementações`}
-            colors={['#EC4899', '#8B5CF6', '#3B82F6', '#10B981', '#F59E0B']}
+            colors={['#0ABAB5', '#8B5CF6', '#3B82F6', '#10B981', '#F59E0B']}
             className="h-[200px]"
           />
         ) : (
-          <div className="flex items-center justify-center h-[200px] text-neutral-500 dark:text-neutral-400">
+          <div className="flex items-center justify-center h-[200px] text-muted-foreground">
             Sem dados disponíveis para exibição
           </div>
         )}

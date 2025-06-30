@@ -10,15 +10,15 @@ interface UserGrowthChartProps {
 export const UserGrowthChart = ({ data }: UserGrowthChartProps) => {
   if (!data || data.length === 0) {
     return (
-      <Card className="border border-gray-200 dark:border-gray-800 shadow-sm hover:shadow-md transition-shadow duration-300">
+      <Card>
         <CardHeader className="pb-2">
-          <CardTitle className="text-lg font-semibold text-neutral-800 dark:text-white">Crescimento de Usuários</CardTitle>
-          <CardDescription className="text-neutral-600 dark:text-neutral-300">
+          <CardTitle className="text-lg font-semibold">Crescimento de Usuários</CardTitle>
+          <CardDescription>
             Novos usuários registrados ao longo do tempo
           </CardDescription>
         </CardHeader>
         <CardContent className="h-[300px] flex items-center justify-center">
-          <p className="text-neutral-500 dark:text-neutral-400">
+          <p className="text-muted-foreground">
             Sem dados disponíveis para exibição
           </p>
         </CardContent>
@@ -27,10 +27,10 @@ export const UserGrowthChart = ({ data }: UserGrowthChartProps) => {
   }
 
   return (
-    <Card className="border border-gray-200 dark:border-gray-800 shadow-sm hover:shadow-md transition-shadow duration-300">
+    <Card>
       <CardHeader className="pb-2">
-        <CardTitle className="text-lg font-semibold text-neutral-800 dark:text-white">Crescimento de Usuários</CardTitle>
-        <CardDescription className="text-neutral-600 dark:text-neutral-300">
+        <CardTitle className="text-lg font-semibold">Crescimento de Usuários</CardTitle>
+        <CardDescription>
           Novos usuários registrados ao longo do tempo
         </CardDescription>
       </CardHeader>
