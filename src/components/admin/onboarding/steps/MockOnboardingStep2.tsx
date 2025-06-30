@@ -1,80 +1,81 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Building2, Briefcase, Calendar, DollarSign, Target } from 'lucide-react';
-import { Card } from '@/components/ui/card';
+import { Building, Calendar, MapPin, User, Briefcase } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { BirthDateSelector } from '@/components/onboarding/components/BirthDateSelector';
-import { OnboardingStepProps } from '../types/onboardingTypes';
+import { LocationSelector } from '@/components/onboarding/components/LocationSelector';
+import { OnboardingData } from '@/components/onboarding/types/onboardingTypes';
 
-const MockOnboardingStep2: React.FC<OnboardingStepProps> = ({
-  data,
-  onUpdateData,
-  getFieldError
-}) => {
+interface MockOnboardingStep2Props {
+  data: OnboardingData;
+  onUpdateData: (stepData: Partial<OnboardingData>) => void;
+  onNext: () => void;
+  onPrev: () => void;
+  validationErrors?: Array<{ field: string; message: string }>;
+  getFieldError?: (field: string) => string | undefined;
+}
+
+const MockOnboardingStep2 = ({ 
+  data, 
+  onUpdateData, 
+  onNext, 
+  onPrev,
+  getFieldError 
+}: MockOnboardingStep2Props) => {
+  const handleInputChange = (field: string, value: string) => {
+    onUpdateData({ [field]: value });
+  };
+
+  const handleLocationChange = (state: string, city: string) => {
+    onUpdateData({ state, city });
+  };
+
   const handleBirthDateChange = (day: string, month: string, year: string) => {
-    const birthDate = day && month && year ? `${day}/${month}/${year}` : '';
     onUpdateData({ 
-      birthDate,
-      birthDay: day,
-      birthMonth: month,
-      birthYear: year
+      birthDay: day, 
+      birthMonth: month, 
+      birthYear: year,
+      birthDate: day && month && year ? `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}` : undefined
     });
   };
 
-  const jobPositions = [
-    'CEO / Fundador',
-    'Diretor',
-    'Gerente',
-    'Coordenador',
-    'Supervisor',
-    'Analista',
-    'Assistente',
-    'Consultor',
-    'Especialista',
-    'Engenheiro',
-    'Desenvolvedor',
-    'Designer',
-    'Vendedor',
-    'Marketing',
-    'Recursos Humanos',
-    'Empresário',
-    'Freelancer'
+  const revenueOptions = [
+    { value: 'até-50k', label: 'Até R$ 50.000' },
+    { value: '50k-100k', label: 'R$ 50.000 - R$ 100.000' },
+    { value: '100k-250k', label: 'R$ 100.000 - R$ 250.000' },
+    { value: '250k-500k', label: 'R$ 250.000 - R$ 500.000' },
+    { value: '500k-1m', label: 'R$ 500.000 - R$ 1.000.000' },
+    { value: '1m-2m', label: 'R$ 1.000.000 - R$ 2.000.000' },
+    { value: '2m-5m', label: 'R$ 2.000.000 - R$ 5.000.000' },
+    { value: '5m-10m', label: 'R$ 5.000.000 - R$ 10.000.000' },
+    { value: '10m-25m', label: 'R$ 10.000.000 - R$ 25.000.000' },
+    { value: '25m-50m', label: 'R$ 25.000.000 - R$ 50.000.000' },
+    { value: '50m-100m', label: 'R$ 50.000.000 - R$ 100.000.000' },
+    { value: 'acima-100m', label: 'Acima de R$ 100.000.000' }
   ];
 
-  const businessSectors = [
-    'Tecnologia',
-    'Varejo',
-    'Serviços',
-    'Indústria',
-    'Saúde',
-    'Educação',
-    'Financeiro',
-    'Imobiliário',
-    'Alimentação',
-    'Beleza',
-    'Moda',
-    'Consultoria',
-    'Agronegócio',
-    'Outros'
-  ];
-
-  const revenueRanges = [
-    'Até R$ 10.000',
-    'R$ 10.001 - R$ 50.000',
-    'R$ 50.001 - R$ 100.000',
-    'R$ 100.001 - R$ 250.000',
-    'R$ 250.001 - R$ 500.000',
-    'R$ 500.001 - R$ 1.000.000',
-    'R$ 1.000.001 - R$ 2.500.000',
-    'R$ 2.500.001 - R$ 5.000.000',
-    'R$ 5.000.001 - R$ 10.000.000',
-    'R$ 10.000.001 - R$ 25.000.000',
-    'R$ 25.000.001 - R$ 50.000.000',
-    'Acima de R$ 50.000.000'
+  const positionOptions = [
+    { value: 'ceo', label: 'CEO/Presidente' },
+    { value: 'diretor', label: 'Diretor' },
+    { value: 'gerente', label: 'Gerente' },
+    { value: 'coordenador', label: 'Coordenador' },
+    { value: 'supervisor', label: 'Supervisor' },
+    { value: 'analista-senior', label: 'Analista Sênior' },
+    { value: 'analista-pleno', label: 'Analista Pleno' },
+    { value: 'analista-junior', label: 'Analista Júnior' },
+    { value: 'especialista', label: 'Especialista' },
+    { value: 'consultor', label: 'Consultor' },
+    { value: 'tecnico', label: 'Técnico' },
+    { value: 'assistente', label: 'Assistente' },
+    { value: 'estagiario', label: 'Estagiário' },
+    { value: 'proprietario', label: 'Proprietário' },
+    { value: 'socio', label: 'Sócio' },
+    { value: 'empreendedor', label: 'Empreendedor' },
+    { value: 'freelancer', label: 'Freelancer/Autônomo' }
   ];
 
   return (
@@ -82,136 +83,173 @@ const MockOnboardingStep2: React.FC<OnboardingStepProps> = ({
       initial={{ opacity: 0, x: 20 }}
       animate={{ opacity: 1, x: 0 }}
       exit={{ opacity: 0, x: -20 }}
-      className="space-y-6"
+      className="space-y-8"
     >
-      <div className="text-center mb-8">
-        <motion.div
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-          transition={{ delay: 0.2, type: "spring" }}
-          className="w-16 h-16 bg-viverblue/20 rounded-full flex items-center justify-center mx-auto mb-4"
-        >
-          <Briefcase className="w-8 h-8 text-viverblue" />
-        </motion.div>
-        <h2 className="text-2xl font-bold text-white mb-2">
-          Informações Profissionais
+      <div className="text-center space-y-3">
+        <div className="w-16 h-16 rounded-full bg-viverblue/20 flex items-center justify-center mx-auto">
+          <Building className="w-8 h-8 text-viverblue" />
+        </div>
+        <h2 className="text-3xl font-heading font-bold text-white">
+          Perfil Empresarial
         </h2>
-        <p className="text-slate-400">
-          Nos conte sobre seu trabalho e negócio
+        <p className="text-neutral-300 text-lg">
+          Conte-nos mais sobre sua empresa e posição profissional
         </p>
       </div>
 
-      <div className="space-y-6">
-        {/* Empresa */}
-        <Card className="p-6 bg-[#1A1E2E]/80 backdrop-blur-sm border-white/10">
-          <div>
-            <Label htmlFor="companyName" className="text-slate-200">
-              Nome da Empresa *
-            </Label>
-            <div className="relative mt-1">
-              <Building2 className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
-              <Input
-                id="companyName"
-                value={data.companyName || ''}
-                onChange={(e) => onUpdateData({ companyName: e.target.value })}
-                className="pl-10 bg-[#151823] border-white/20 text-white"
-                placeholder="Nome da sua empresa"
-              />
-            </div>
-            {getFieldError?.('companyName') && (
-              <p className="text-red-400 text-sm mt-1">{getFieldError('companyName')}</p>
-            )}
-          </div>
-        </Card>
-
-        {/* Cargo e Setor */}
-        <Card className="p-6 bg-[#1A1E2E]/80 backdrop-blur-sm border-white/10">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="position" className="text-slate-200">
-                Cargo/Função *
-              </Label>
-              <div className="relative mt-1">
-                <Briefcase className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4 z-10" />
-                <Select value={data.position || ''} onValueChange={(value) => onUpdateData({ position: value })}>
-                  <SelectTrigger className="pl-10 bg-[#151823] border-white/20 text-white">
-                    <SelectValue placeholder="Selecione seu cargo" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {jobPositions.map((position) => (
-                      <SelectItem key={position} value={position}>
-                        {position}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              {getFieldError?.('position') && (
-                <p className="text-red-400 text-sm mt-1">{getFieldError('position')}</p>
-              )}
-            </div>
-
-            <div>
-              <Label htmlFor="businessSector" className="text-slate-200">
-                Setor do Negócio *
-              </Label>
-              <div className="relative mt-1">
-                <Target className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4 z-10" />
-                <Select value={data.businessSector || ''} onValueChange={(value) => onUpdateData({ businessSector: value })}>
-                  <SelectTrigger className="pl-10 bg-[#151823] border-white/20 text-white">
-                    <SelectValue placeholder="Selecione o setor" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {businessSectors.map((sector) => (
-                      <SelectItem key={sector} value={sector}>
-                        {sector}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              {getFieldError?.('businessSector') && (
-                <p className="text-red-400 text-sm mt-1">{getFieldError('businessSector')}</p>
-              )}
-            </div>
-          </div>
-        </Card>
-
-        {/* Data de Nascimento - MANTENDO O FORMATO ORIGINAL */}
-        <Card className="p-6 bg-[#1A1E2E]/80 backdrop-blur-sm border-white/10">
-          <h3 className="text-lg font-semibold text-white mb-4">Data de Nascimento</h3>
-          <BirthDateSelector
-            birthDay={data.birthDay}
-            birthMonth={data.birthMonth}
-            birthYear={data.birthYear}
-            onChange={handleBirthDateChange}
-            getFieldError={getFieldError}
+      <div className="grid gap-6">
+        <div className="space-y-2">
+          <Label htmlFor="companyName" className="text-neutral-200 flex items-center gap-2">
+            <Building className="w-4 h-4" />
+            Nome da Empresa *
+          </Label>
+          <Input
+            id="companyName"
+            value={data.companyName || ''}
+            onChange={(e) => handleInputChange('companyName', e.target.value)}
+            placeholder="Ex: Viver de IA"
+            className="bg-[#151823] border-white/10 text-white placeholder:text-neutral-500"
           />
-        </Card>
+          {getFieldError?.('companyName') && (
+            <p className="text-red-400 text-sm">{getFieldError('companyName')}</p>
+          )}
+        </div>
 
-        {/* Faturamento Anual */}
-        <Card className="p-6 bg-[#1A1E2E]/80 backdrop-blur-sm border-white/10">
-          <div>
-            <Label className="text-slate-200 flex items-center gap-2 mb-4">
-              <DollarSign className="w-4 h-4" />
-              Faturamento Anual da Empresa
-            </Label>
-            <RadioGroup 
-              value={data.annualRevenue || ''} 
-              onValueChange={(value) => onUpdateData({ annualRevenue: value })}
-              className="grid grid-cols-1 md:grid-cols-2 gap-3"
-            >
-              {revenueRanges.map((range) => (
-                <div key={range} className="flex items-center space-x-2">
-                  <RadioGroupItem value={range} id={range} />
-                  <Label htmlFor={range} className="text-slate-300 text-sm cursor-pointer">
-                    {range}
-                  </Label>
-                </div>
+        <div className="space-y-2">
+          <Label htmlFor="companyWebsite" className="text-neutral-200">
+            Site da Empresa
+          </Label>
+          <Input
+            id="companyWebsite"
+            value={data.companyWebsite || ''}
+            onChange={(e) => handleInputChange('companyWebsite', e.target.value)}
+            placeholder="https://www.suaempresa.com.br"
+            className="bg-[#151823] border-white/10 text-white placeholder:text-neutral-500"
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="businessSector" className="text-neutral-200">
+            Setor de Atuação *
+          </Label>
+          <Input
+            id="businessSector"
+            value={data.businessSector || ''}
+            onChange={(e) => handleInputChange('businessSector', e.target.value)}
+            placeholder="Ex: Tecnologia, Consultoria, E-commerce"
+            className="bg-[#151823] border-white/10 text-white placeholder:text-neutral-500"
+          />
+          {getFieldError?.('businessSector') && (
+            <p className="text-red-400 text-sm">{getFieldError('businessSector')}</p>
+          )}
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="companySize" className="text-neutral-200 flex items-center gap-2">
+            <User className="w-4 h-4" />
+            Tamanho da Empresa *
+          </Label>
+          <Select value={data.companySize || ''} onValueChange={(value) => handleInputChange('companySize', value)}>
+            <SelectTrigger className="bg-[#151823] border-white/10 text-white">
+              <SelectValue placeholder="Selecione o tamanho da empresa" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="1-10">1-10 funcionários</SelectItem>
+              <SelectItem value="11-50">11-50 funcionários</SelectItem>
+              <SelectItem value="51-200">51-200 funcionários</SelectItem>
+              <SelectItem value="201-500">201-500 funcionários</SelectItem>
+              <SelectItem value="501-1000">501-1000 funcionários</SelectItem>
+              <SelectItem value="1000+">Mais de 1000 funcionários</SelectItem>
+            </SelectContent>
+          </Select>
+          {getFieldError?.('companySize') && (
+            <p className="text-red-400 text-sm">{getFieldError('companySize')}</p>
+          )}
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="annualRevenue" className="text-neutral-200">
+            Faturamento Anual *
+          </Label>
+          <Select value={data.annualRevenue || ''} onValueChange={(value) => handleInputChange('annualRevenue', value)}>
+            <SelectTrigger className="bg-[#151823] border-white/10 text-white">
+              <SelectValue placeholder="Selecione o faturamento anual" />
+            </SelectTrigger>
+            <SelectContent>
+              {revenueOptions.map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
               ))}
-            </RadioGroup>
-          </div>
-        </Card>
+            </SelectContent>
+          </Select>
+          {getFieldError?.('annualRevenue') && (
+            <p className="text-red-400 text-sm">{getFieldError('annualRevenue')}</p>
+          )}
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="position" className="text-neutral-200 flex items-center gap-2">
+            <Briefcase className="w-4 h-4" />
+            Cargo/Função *
+          </Label>
+          <Select value={data.position || ''} onValueChange={(value) => handleInputChange('position', value)}>
+            <SelectTrigger className="bg-[#151823] border-white/10 text-white">
+              <SelectValue placeholder="Selecione seu cargo/função" />
+            </SelectTrigger>
+            <SelectContent>
+              {positionOptions.map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {getFieldError?.('position') && (
+            <p className="text-red-400 text-sm">{getFieldError('position')}</p>
+          )}
+        </div>
+
+        <div className="space-y-2">
+          <Label className="text-neutral-200 flex items-center gap-2">
+            <MapPin className="w-4 h-4" />
+            Localização
+          </Label>
+          <LocationSelector
+            selectedState={data.state || ''}
+            selectedCity={data.city || ''}
+            onLocationChange={handleLocationChange}
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label className="text-neutral-200 flex items-center gap-2">
+            <Calendar className="w-4 h-4" />
+            Data de Nascimento
+          </Label>
+          <BirthDateSelector
+            selectedDay={data.birthDay || ''}
+            selectedMonth={data.birthMonth || ''}
+            selectedYear={data.birthYear || ''}
+            onBirthDateChange={handleBirthDateChange}
+          />
+        </div>
+      </div>
+
+      <div className="flex justify-between pt-6">
+        <Button
+          variant="outline"
+          onClick={onPrev}
+          className="bg-transparent border-white/20 text-white hover:bg-white/10"
+        >
+          Voltar
+        </Button>
+        <Button 
+          onClick={onNext}
+          className="bg-viverblue hover:bg-viverblue/90 text-white"
+        >
+          Continuar
+        </Button>
       </div>
     </motion.div>
   );
