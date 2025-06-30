@@ -8,7 +8,13 @@ interface UserGrowthChartProps {
 }
 
 export const UserGrowthChart = ({ data }: UserGrowthChartProps) => {
-  if (!data || data.length === 0) {
+  console.log('📊 [USER-GROWTH] Dados recebidos:', data);
+
+  // Validação mais flexível dos dados
+  const hasValidData = data && Array.isArray(data) && data.length > 0;
+  
+  if (!hasValidData) {
+    console.log('📊 [USER-GROWTH] Sem dados válidos, exibindo placeholder');
     return (
       <Card className="bg-card border-border">
         <CardHeader className="pb-2">
@@ -18,13 +24,23 @@ export const UserGrowthChart = ({ data }: UserGrowthChartProps) => {
           </CardDescription>
         </CardHeader>
         <CardContent className="h-[300px] flex items-center justify-center">
-          <p className="text-muted-foreground">
-            Sem dados disponíveis para exibição
-          </p>
+          <div className="text-center text-muted-foreground">
+            <div className="text-2xl mb-2">📈</div>
+            <p>Carregando dados de crescimento...</p>
+          </div>
         </CardContent>
       </Card>
     );
   }
+
+  // Garantir que os dados têm a estrutura correta
+  const chartData = data.map(item => ({
+    name: item.name || item.date || 'Data',
+    novos: Number(item.novos) || Number(item.users) || 0,
+    total: Number(item.total) || 0
+  }));
+
+  console.log('📊 [USER-GROWTH] Dados formatados para gráfico:', chartData.slice(0, 3));
 
   return (
     <Card className="bg-card border-border">
@@ -36,7 +52,7 @@ export const UserGrowthChart = ({ data }: UserGrowthChartProps) => {
       </CardHeader>
       <CardContent>
         <AreaChart 
-          data={data}
+          data={chartData}
           categories={['novos', 'total']}
           index="name"
           colors={['#3B82F6', '#0ABAB5']}

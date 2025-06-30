@@ -19,13 +19,30 @@ export const formatChartData = (data: any[]): any[] => {
 };
 
 export const validateChartData = (data: any[], requiredFields: string[]): boolean => {
-  if (!Array.isArray(data) || data.length === 0) return false;
+  console.log('🔍 [CHART-VALIDATION] Validando dados:', { 
+    dataLength: data?.length, 
+    requiredFields,
+    sampleData: data?.[0]
+  });
   
-  return data.some(item => 
-    requiredFields.every(field => 
-      item && typeof item === 'object' && field in item
-    )
-  );
+  if (!Array.isArray(data) || data.length === 0) {
+    console.log('❌ [CHART-VALIDATION] Dados inválidos: não é array ou está vazio');
+    return false;
+  }
+  
+  // Validação mais flexível - pelo menos um item deve ter pelo menos um campo necessário
+  const hasValidItems = data.some(item => {
+    if (!item || typeof item !== 'object') return false;
+    
+    // Se tem pelo menos um campo necessário com valor válido, considera válido
+    return requiredFields.some(field => {
+      const value = item[field];
+      return value !== undefined && value !== null && value !== '';
+    });
+  });
+  
+  console.log('✅ [CHART-VALIDATION] Resultado:', hasValidItems);
+  return hasValidItems;
 };
 
 export const formatNumber = (value: number): string => {
