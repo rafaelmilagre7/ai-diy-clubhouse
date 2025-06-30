@@ -12,7 +12,7 @@ export interface ActivitySummary {
     created_at: string;
     metadata?: any;
   }>;
-  eventsByType: Record<string, number>;
+  eventsByType: Array<{ type: string; count: number }>; // Alterado de Record<string, number> para Array
   recentActivities: Array<{
     id: string;
     user_id: string;
@@ -26,7 +26,7 @@ export const useRealSystemActivity = (timeRange: string) => {
   const [activityData, setActivityData] = useState<ActivitySummary>({
     totalEvents: 0,
     userActivities: [],
-    eventsByType: {},
+    eventsByType: [], // Alterado de {} para []
     recentActivities: []
   });
   const [loading, setLoading] = useState(true);
@@ -64,7 +64,7 @@ export const useRealSystemActivity = (timeRange: string) => {
       if (error) {
         logger.warn('Erro ao buscar analytics, usando dados mock', error);
         
-        // Dados mock como fallback
+        // Dados mock como fallback - agora com eventsByType como array
         setActivityData({
           totalEvents: 150,
           userActivities: [
@@ -81,12 +81,12 @@ export const useRealSystemActivity = (timeRange: string) => {
               created_at: new Date(Date.now() - 1000 * 60 * 30).toISOString()
             }
           ],
-          eventsByType: {
-            'login': 45,
-            'solution_view': 32,
-            'implementation_start': 28,
-            'implementation_complete': 18
-          },
+          eventsByType: [ // Convertido para array
+            { type: 'login', count: 45 },
+            { type: 'solution_view', count: 32 },
+            { type: 'implementation_start', count: 28 },
+            { type: 'implementation_complete', count: 18 }
+          ],
           recentActivities: [
             {
               id: '1',
@@ -109,11 +109,17 @@ export const useRealSystemActivity = (timeRange: string) => {
 
       // Processar dados reais
       const activities = analyticsData || [];
-      const eventsByType: Record<string, number> = {};
+      const eventsByTypeObj: Record<string, number> = {};
       
       activities.forEach(activity => {
-        eventsByType[activity.event_type] = (eventsByType[activity.event_type] || 0) + 1;
+        eventsByTypeObj[activity.event_type] = (eventsByTypeObj[activity.event_type] || 0) + 1;
       });
+
+      // Converter objeto para array como esperado pelo frontend
+      const eventsByTypeArray = Object.entries(eventsByTypeObj).map(([type, count]) => ({
+        type,
+        count
+      }));
 
       const recentActivities = activities.slice(0, 10).map(activity => ({
         id: activity.id,
@@ -126,18 +132,18 @@ export const useRealSystemActivity = (timeRange: string) => {
       setActivityData({
         totalEvents: activities.length,
         userActivities: activities,
-        eventsByType,
+        eventsByType: eventsByTypeArray, // Agora é um array
         recentActivities
       });
 
     } catch (error) {
       logger.error('Erro ao buscar dados de atividade', error);
       
-      // Fallback com dados mock
+      // Fallback com dados mock - também como array
       setActivityData({
         totalEvents: 0,
         userActivities: [],
-        eventsByType: {},
+        eventsByType: [], // Array vazio em caso de erro
         recentActivities: []
       });
     } finally {
