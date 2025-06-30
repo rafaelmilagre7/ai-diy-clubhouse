@@ -65,7 +65,7 @@ export const useOptimizedAnalyticsData = (options: OptimizedAnalyticsOptions) =>
       // Verificar cache primeiro
       if (enableCache && hasCache(cacheKey)) {
         const cachedData = getCachedData(cacheKey);
-        if (cachedData) {
+        if (cachedData && typeof cachedData === 'object' && cachedData !== null) {
           console.log('📊 Cache hit para analytics:', filterHash);
           return {
             ...cachedData,
@@ -127,14 +127,14 @@ export const useOptimizedAnalyticsData = (options: OptimizedAnalyticsOptions) =>
   });
 
   // Processar dados com tipagem segura
-  const processedData = queryData ? {
+  const processedData = queryData && typeof queryData === 'object' && queryData !== null ? {
     ...queryData,
     // Remover _meta dos dados finais para compatibilidade
     _meta: undefined
   } : fallbackData;
 
   // Extrair metadados com verificação de tipo
-  const metadata = queryData && typeof queryData === 'object' && '_meta' in queryData 
+  const metadata = queryData && typeof queryData === 'object' && queryData !== null && '_meta' in queryData 
     ? queryData._meta as AnalyticsQueryMeta
     : undefined;
 
