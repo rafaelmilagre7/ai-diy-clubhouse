@@ -46,7 +46,7 @@ export const useUserAnalyticsData = ({ timeRange, role = 'all' }: UseUserAnalyti
         setLoading(true);
         setError(null);
 
-        // Buscar dados de crescimento de usuários
+        // Buscar dados de crescimento de usuários da nova view
         const { data: userGrowthData, error: userGrowthError } = await supabase
           .from('user_growth_by_date')
           .select('*')
@@ -56,7 +56,7 @@ export const useUserAnalyticsData = ({ timeRange, role = 'all' }: UseUserAnalyti
           console.warn('Erro ao buscar crescimento de usuários:', userGrowthError);
         }
 
-        // Buscar segmentação de usuários
+        // Buscar segmentação de usuários da nova view
         const { data: segmentationData, error: segmentationError } = await supabase
           .from('user_segmentation_analytics')
           .select('*')
@@ -66,7 +66,7 @@ export const useUserAnalyticsData = ({ timeRange, role = 'all' }: UseUserAnalyti
           console.warn('Erro ao buscar segmentação:', segmentationError);
         }
 
-        // Buscar padrões de atividade semanal
+        // Buscar padrões de atividade semanal da nova view
         const { data: weeklyData, error: weeklyError } = await supabase
           .from('weekly_activity_patterns')
           .select('*')
@@ -105,7 +105,7 @@ export const useUserAnalyticsData = ({ timeRange, role = 'all' }: UseUserAnalyti
 
         setData(processedData);
         
-        console.log('📊 Dados de usuários carregados:', {
+        console.log('📊 Dados de usuários carregados (sincronizados):', {
           totalUsers: processedData.totalUsers,
           activeUsers: processedData.activeUsers,
           growthData: processedData.usersByTime.length,

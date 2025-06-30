@@ -44,7 +44,7 @@ export const useSolutionAnalyticsData = (timeRange: string) => {
         setLoading(true);
         setError(null);
 
-        // Buscar métricas de performance das soluções
+        // Buscar métricas de performance das soluções da nova view
         const { data: performanceData, error: performanceError } = await supabase
           .from('solution_performance_metrics')
           .select('*')
@@ -114,7 +114,7 @@ export const useSolutionAnalyticsData = (timeRange: string) => {
 
         setData(processedData);
         
-        console.log('🎯 Dados de soluções carregados:', {
+        console.log('🎯 Dados de soluções carregados (sincronizados):', {
           totalSolutions: processedData.totalSolutions,
           totalImplementations: processedData.totalImplementations,
           avgCompletionRate: processedData.averageCompletionRate

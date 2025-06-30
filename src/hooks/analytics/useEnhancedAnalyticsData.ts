@@ -1,124 +1,166 @@
 
-import { useMemo } from 'react';
-import { useRealAnalyticsData } from './useRealAnalyticsData';
+import { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabase';
+import { useToast } from '@/hooks/use-toast';
 
-export const useEnhancedAnalyticsData = (timeRange: string = '30d') => {
-  const { data: rawData, loading, error } = useRealAnalyticsData(timeRange);
+interface EnhancedAnalyticsData {
+  metrics: {
+    totalUsers: number;
+    activeUsers: number;
+    totalImplementations: number;
+    completionRate: number;
+  };
+  solutionPopularity: Array<{
+    name: string;
+    value: number;
+  }>;
+  implementationsByCategory: Array<{
+    name: string;
+    value: number;
+  }>;
+  userCompletionRate: Array<{
+    name: string;
+    value: number;
+  }>;
+  usersByTime: Array<{
+    date: string;
+    name: string;
+    usuarios: number;
+    total: number;
+    novos: number;
+  }>;
+  dayOfWeekActivity: Array<{
+    day: string;
+    atividade: number;
+  }>;
+  contentPerformance: Array<{
+    title: string;
+    category: string;
+    engagement: number;
+    unit: string;
+  }>;
+}
 
-  const processedData = useMemo(() => {
-    if (loading || error) return null;
+export const useEnhancedAnalyticsData = (timeRange: string) => {
+  const { toast } = useToast();
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [data, setData] = useState<EnhancedAnalyticsData | null>(null);
 
-    // Transformar dados para os formatos esperados pelos gráficos
-    const usersByTime = rawData.userGrowth.map(item => ({
-      date: item.date,
-      name: item.name,
-      usuarios: item.novos,
-      total: item.total,
-      novos: item.novos
-    }));
+  useEffect(() => {
+    const fetchEnhancedAnalytics = async () => {
+      try {
+        setLoading(true);
+        setError(null);
 
-    const solutionPopularity = rawData.solutionPerformance
-      .slice(0, 5)
-      .map(item => ({
-        name: item.title.length > 25 ? item.title.substring(0, 25) + '...' : item.title,
-        value: item.total_implementations
-      }));
+        // Buscar overview geral
+        const { data: overviewData, error: overviewError } = await supabase
+          .from('admin_analytics_overview')
+          .select('*')
+          .single();
 
-    const implementationsByCategory = rawData.solutionPerformance
-      .reduce((acc: any, item) => {
-        const existing = acc.find((a: any) => a.name === item.category);
-        if (existing) {
-          existing.value += item.total_implementations;
-        } else {
-          acc.push({
-            name: item.category,
-            value: item.total_implementations
-          });
+        if (overviewError && overviewError.code !== 'PGRST116') {
+          console.warn('Erro ao buscar overview:', overviewError);
         }
-        return acc;
-      }, []);
 
-    const userCompletionRate = [
-      {
-        name: 'Concluídas',
-        value: rawData.solutionPerformance.reduce((sum, item) => sum + item.completed_implementations, 0)
-      },
-      {
-        name: 'Em andamento',
-        value: rawData.solutionPerformance.reduce((sum, item) => sum + (item.total_implementations - item.completed_implementations), 0)
-      }
-    ];
+        // Buscar crescimento de usuários
+        const { data: userGrowthData, error: userGrowthError } = await supabase
+          .from('user_growth_by_date')
+          .select('*')
+          .order('date', { ascending: true });
 
-    const dayOfWeekActivity = rawData.weeklyActivity.map(item => ({
-      day: item.day,
-      atividade: item.atividade
-    }));
+        if (userGrowthError) {
+          console.warn('Erro ao buscar crescimento de usuários:', userGrowthError);
+        }
 
-    // Dados de engajamento avançado
-    const engagementData = rawData.engagementScores
-      .slice(0, 20)
-      .map(item => ({
-        name: item.name || 'Usuário',
-        score: item.total_engagement_score,
-        level: item.engagement_level,
-        implementations: item.implementation_score / 2,
-        completions: item.completion_score / 5
-      }));
+        // Buscar atividade semanal
+        const { data: weeklyActivityData, error: weeklyError } = await supabase
+          .from('weekly_activity_patterns')
+          .select('*')
+          .order('day_of_week', { ascending: true });
 
-    // Dados de retenção
-    const retentionData = rawData.retentionAnalysis.map(item => ({
-      cohort: item.cohort_name,
-      size: item.cohort_size,
-      month1: item.month_1_retention_rate || 0,
-      month2: item.month_2_retention_rate || 0,
-      month3: item.month_3_retention_rate || 0
-    }));
+        if (weeklyError) {
+          console.warn('Erro ao buscar atividade semanal:', weeklyError);
+        }
 
-    // Performance de conteúdo
-    const contentPerformance = rawData.topContent.map(item => ({
-      type: item.content_type,
-      title: item.content_title,
-      category: item.category,
-      engagement: item.engagement_count,
-      completions: item.completion_count,
-      unit: item.engagement_unit
-    }));
+        // Buscar performance de soluções
+        const { data: solutionPerformanceData, error: solutionError } = await supabase
+          .from('solution_performance_metrics')
+          .select('*')
+          .order('total_implementations', { ascending: false })
+          .limit(10);
 
-    return {
-      // Dados básicos para gráficos existentes
-      usersByTime,
-      solutionPopularity,
-      implementationsByCategory,
-      userCompletionRate,
-      dayOfWeekActivity,
+        if (solutionError) {
+          console.warn('Erro ao buscar performance de soluções:', solutionError);
+        }
 
-      // Dados avançados
-      engagementData,
-      retentionData,
-      contentPerformance,
-      userSegmentation: rawData.userSegmentation,
-      coursePerformance: rawData.coursePerformance,
-      forumEngagement: rawData.forumEngagement,
+        // Processar dados
+        const processedData: EnhancedAnalyticsData = {
+          metrics: {
+            totalUsers: overviewData?.total_users || 0,
+            activeUsers: overviewData?.active_users_7d || 0,
+            totalImplementations: (overviewData?.completed_implementations || 0) + (overviewData?.active_implementations || 0),
+            completionRate: overviewData?.overall_completion_rate || 0
+          },
+          solutionPopularity: solutionPerformanceData?.slice(0, 5).map(item => ({
+            name: item.title?.length > 25 ? item.title.substring(0, 25) + '...' : item.title || 'Sem título',
+            value: item.total_implementations || 0
+          })) || [],
+          implementationsByCategory: (() => {
+            const categoryMap = new Map();
+            solutionPerformanceData?.forEach(item => {
+              const category = item.category || 'Outros';
+              categoryMap.set(category, (categoryMap.get(category) || 0) + item.total_implementations);
+            });
+            return Array.from(categoryMap.entries()).map(([name, value]) => ({ name, value }));
+          })(),
+          userCompletionRate: [
+            { name: 'Concluídas', value: overviewData?.completed_implementations || 0 },
+            { name: 'Em andamento', value: overviewData?.active_implementations || 0 }
+          ],
+          usersByTime: userGrowthData?.map(item => ({
+            date: item.date,
+            name: item.name,
+            usuarios: item.novos,
+            total: item.total,
+            novos: item.novos
+          })) || [],
+          dayOfWeekActivity: weeklyActivityData?.map(item => ({
+            day: item.day,
+            atividade: item.atividade
+          })) || [],
+          contentPerformance: solutionPerformanceData?.slice(0, 5).map(item => ({
+            title: item.title || 'Sem título',
+            category: item.category || 'Outros',
+            engagement: item.total_implementations || 0,
+            unit: 'implementações'
+          })) || []
+        };
 
-      // Métricas resumidas
-      metrics: {
-        totalUsers: rawData.userSegmentation.reduce((sum, item) => sum + item.user_count, 0),
-        activeUsers: rawData.userSegmentation.reduce((sum, item) => sum + item.active_users_7d, 0),
-        totalImplementations: rawData.solutionPerformance.reduce((sum, item) => sum + item.total_implementations, 0),
-        completionRate: rawData.solutionPerformance.length > 0 
-          ? Math.round(rawData.solutionPerformance.reduce((sum, item) => sum + item.completion_rate, 0) / rawData.solutionPerformance.length)
-          : 0,
-        avgEngagementScore: rawData.engagementScores.length > 0
-          ? Math.round(rawData.engagementScores.reduce((sum, item) => sum + item.total_engagement_score, 0) / rawData.engagementScores.length)
-          : 0
+        setData(processedData);
+        
+        console.log('📊 Enhanced Analytics carregados:', {
+          totalUsers: processedData.metrics.totalUsers,
+          activeUsers: processedData.metrics.activeUsers,
+          solutionPopularity: processedData.solutionPopularity.length,
+          userGrowth: processedData.usersByTime.length
+        });
+
+      } catch (error: any) {
+        console.error('Erro ao carregar enhanced analytics:', error);
+        setError(error.message || 'Erro ao carregar dados de analytics');
+        toast({
+          title: "Erro ao carregar analytics",
+          description: "Não foi possível carregar os dados. Verifique sua conexão.",
+          variant: "destructive"
+        });
+      } finally {
+        setLoading(false);
       }
     };
-  }, [rawData, loading, error]);
 
-  return {
-    data: processedData,
-    loading,
-    error,
-    rawData
-  };
+    fetchEnhancedAnalytics();
+  }, [timeRange, toast]);
+
+  return { data, loading, error };
 };

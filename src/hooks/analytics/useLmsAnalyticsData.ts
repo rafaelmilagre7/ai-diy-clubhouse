@@ -39,7 +39,7 @@ export const useLmsAnalyticsData = (timeRange: string) => {
         setLoading(true);
         setError(null);
 
-        // Buscar métricas de performance dos cursos
+        // Buscar métricas de performance dos cursos da nova view
         const { data: courseData, error: courseError } = await supabase
           .from('course_performance_metrics')
           .select('*')
@@ -66,7 +66,7 @@ export const useLmsAnalyticsData = (timeRange: string) => {
           ? Math.round(courseData.reduce((sum, item) => sum + item.avg_progress_percentage, 0) / courseData.length)
           : 0;
 
-        // Distribuição de progresso (simulada baseada nos dados disponíveis)
+        // Distribuição de progresso baseada nos dados reais
         const progressRanges = [
           { name: '0-25%', value: 0 },
           { name: '26-50%', value: 0 },
@@ -98,7 +98,7 @@ export const useLmsAnalyticsData = (timeRange: string) => {
 
         setData(processedData);
         
-        console.log('🎓 Dados de LMS carregados:', {
+        console.log('🎓 Dados de LMS carregados (sincronizados):', {
           totalCourses: processedData.totalCourses,
           totalEnrollments: processedData.totalEnrollments,
           averageProgress: processedData.averageProgress

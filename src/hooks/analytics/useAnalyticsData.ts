@@ -53,21 +53,24 @@ export const useAnalyticsData = ({ timeRange, category = 'all', difficulty = 'al
         setLoading(true);
         setError(null);
 
-        // Buscar dados das views
+        // Buscar dados das views sincronizadas
         const [
           solutionPerformanceResult,
           userGrowthResult,
-          weeklyActivityResult
+          weeklyActivityResult,
+          overviewResult
         ] = await Promise.allSettled([
           supabase.from('solution_performance_metrics').select('*').order('total_implementations', { ascending: false }).limit(10),
           supabase.from('user_growth_by_date').select('*').order('date'),
-          supabase.from('weekly_activity_patterns').select('*').order('day_of_week')
+          supabase.from('weekly_activity_patterns').select('*').order('day_of_week'),
+          supabase.from('admin_analytics_overview').select('*').single()
         ]);
 
         // Processar resultados
         const solutionData = solutionPerformanceResult.status === 'fulfilled' ? solutionPerformanceResult.value.data || [] : [];
         const userGrowthData = userGrowthResult.status === 'fulfilled' ? userGrowthResult.value.data || [] : [];
         const weeklyData = weeklyActivityResult.status === 'fulfilled' ? weeklyActivityResult.value.data || [] : [];
+        const overviewData = overviewResult.status === 'fulfilled' ? overviewResult.value.data : null;
 
         // Processar dados de popularidade de soluções
         const solutionPopularity = solutionData.slice(0, 5).map(item => ({
@@ -87,13 +90,10 @@ export const useAnalyticsData = ({ timeRange, category = 'all', difficulty = 'al
           value
         }));
 
-        // Calcular taxa de conclusão geral
-        const totalImplementations = solutionData.reduce((sum, item) => sum + item.total_implementations, 0);
-        const completedImplementations = solutionData.reduce((sum, item) => sum + item.completed_implementations, 0);
-        
+        // Taxa de conclusão baseada em dados reais
         const userCompletionRate = [
-          { name: 'Concluídas', value: completedImplementations },
-          { name: 'Em andamento', value: totalImplementations - completedImplementations }
+          { name: 'Concluídas', value: overviewData?.completed_implementations || 0 },
+          { name: 'Em andamento', value: overviewData?.active_implementations || 0 }
         ];
 
         const processedData: AnalyticsData = {
@@ -115,7 +115,7 @@ export const useAnalyticsData = ({ timeRange, category = 'all', difficulty = 'al
 
         setData(processedData);
         
-        console.log('📈 Dados analytics gerais carregados:', {
+        console.log('📈 Dados analytics gerais carregados (sincronizados):', {
           solutionPopularity: processedData.solutionPopularity.length,
           implementationsByCategory: processedData.implementationsByCategory.length,
           userGrowth: processedData.usersByTime.length

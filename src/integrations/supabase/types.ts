@@ -701,6 +701,13 @@ export type Database = {
             foreignKeyName: "course_access_control_course_id_fkey"
             columns: ["course_id"]
             isOneToOne: false
+            referencedRelation: "course_performance_metrics"
+            referencedColumns: ["course_id"]
+          },
+          {
+            foreignKeyName: "course_access_control_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
             referencedRelation: "learning_analytics_data"
             referencedColumns: ["course_id"]
           },
@@ -1458,6 +1465,13 @@ export type Database = {
             foreignKeyName: "learning_certificates_course_id_fkey"
             columns: ["course_id"]
             isOneToOne: false
+            referencedRelation: "course_performance_metrics"
+            referencedColumns: ["course_id"]
+          },
+          {
+            foreignKeyName: "learning_certificates_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
             referencedRelation: "learning_analytics_data"
             referencedColumns: ["course_id"]
           },
@@ -1850,6 +1864,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "learning_modules_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "course_performance_metrics"
+            referencedColumns: ["course_id"]
+          },
           {
             foreignKeyName: "learning_modules_course_id_fkey"
             columns: ["course_id"]
@@ -3269,6 +3290,13 @@ export type Database = {
             foreignKeyName: "solution_certificates_solution_id_fkey"
             columns: ["solution_id"]
             isOneToOne: false
+            referencedRelation: "solution_performance_metrics"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "solution_certificates_solution_id_fkey"
+            columns: ["solution_id"]
+            isOneToOne: false
             referencedRelation: "solutions"
             referencedColumns: ["id"]
           },
@@ -4335,6 +4363,23 @@ export type Database = {
       }
     }
     Views: {
+      admin_analytics_overview: {
+        Row: {
+          active_implementations: number | null
+          active_learners_7d: number | null
+          active_users_7d: number | null
+          completed_implementations: number | null
+          completed_lessons: number | null
+          forum_topics: number | null
+          new_implementations_30d: number | null
+          new_users_30d: number | null
+          overall_completion_rate: number | null
+          total_courses: number | null
+          total_solutions: number | null
+          total_users: number | null
+        }
+        Relationships: []
+      }
       admin_stats_overview: {
         Row: {
           active_implementations: number | null
@@ -4423,6 +4468,19 @@ export type Database = {
         }
         Relationships: []
       }
+      course_performance_metrics: {
+        Row: {
+          avg_progress_percentage: number | null
+          completed_lessons_count: number | null
+          course_id: string | null
+          course_title: string | null
+          created_at: string | null
+          enrolled_users: number | null
+          total_lessons: number | null
+          updated_at: string | null
+        }
+        Relationships: []
+      }
       learning_analytics_data: {
         Row: {
           avg_progress_percentage: number | null
@@ -4495,6 +4553,20 @@ export type Database = {
         }
         Relationships: []
       }
+      solution_performance_metrics: {
+        Row: {
+          category: string | null
+          completed_implementations: number | null
+          completion_rate: number | null
+          created_at: string | null
+          difficulty: string | null
+          id: string | null
+          title: string | null
+          total_implementations: number | null
+          updated_at: string | null
+        }
+        Relationships: []
+      }
       suggestions_with_profiles: {
         Row: {
           category_id: string | null
@@ -4547,8 +4619,26 @@ export type Database = {
         }
         Relationships: []
       }
+      user_growth_by_date: {
+        Row: {
+          date: string | null
+          name: string | null
+          novos: number | null
+          total: number | null
+        }
+        Relationships: []
+      }
       user_role_distribution: {
         Row: {
+          percentage: number | null
+          role_name: string | null
+          user_count: number | null
+        }
+        Relationships: []
+      }
+      user_segmentation_analytics: {
+        Row: {
+          active_users_7d: number | null
           percentage: number | null
           role_name: string | null
           user_count: number | null
@@ -4573,6 +4663,14 @@ export type Database = {
         Row: {
           activity_count: number | null
           day_name: string | null
+          day_of_week: number | null
+        }
+        Relationships: []
+      }
+      weekly_activity_patterns: {
+        Row: {
+          atividade: number | null
+          day: string | null
           day_of_week: number | null
         }
         Relationships: []
