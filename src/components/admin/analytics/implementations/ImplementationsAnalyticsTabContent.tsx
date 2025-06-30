@@ -1,14 +1,12 @@
 
 import React from 'react';
-import { CompletionRateChart } from '../CompletionRateChart';
-import { WeeklyActivityChart } from '../WeeklyActivityChart';
 import { EnhancedAreaChart, EnhancedBarChart, EnhancedPieChart } from '../charts';
 import { EnhancedMetricCard } from '../components/EnhancedMetricCard';
 import { MetricsGrid } from '../components/MetricsGrid';
 import { useAnalyticsData } from '@/hooks/analytics/useAnalyticsData';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
-import { AlertTriangle, CheckCircle, Clock, TrendingUp, Users, Target, Zap, BarChart3 } from 'lucide-react';
+import { AlertTriangle, PlayCircle, CheckCircle, Clock, TrendingUp, Users, Target, Activity } from 'lucide-react';
 
 interface ImplementationsAnalyticsTabContentProps {
   timeRange: string;
@@ -24,7 +22,7 @@ export const ImplementationsAnalyticsTabContent = ({ timeRange }: Implementation
   const renderSkeleton = () => (
     <div className="space-y-6">
       <MetricsGrid>
-        {Array(8).fill(0).map((_, i) => (
+        {Array(6).fill(0).map((_, i) => (
           <EnhancedMetricCard
             key={i}
             title="Carregando..."
@@ -49,7 +47,7 @@ export const ImplementationsAnalyticsTabContent = ({ timeRange }: Implementation
     return (
       <Alert variant="destructive">
         <AlertTriangle className="h-4 w-4" />
-        <AlertTitle>Erro ao carregar dados</AlertTitle>
+        <AlertTitle>Erro ao carregar dados de implementações</AlertTitle>
         <AlertDescription>{error}</AlertDescription>
       </Alert>
     );
@@ -63,110 +61,83 @@ export const ImplementationsAnalyticsTabContent = ({ timeRange }: Implementation
     }));
   };
 
-  // Cálculo de métricas
-  const completionData = data?.userCompletionRate || [];
-  const totalCompleted = completionData.find(item => item.name === 'Concluídas')?.value || 0;
-  const totalInProgress = completionData.find(item => item.name === 'Em andamento')?.value || 0;
-  const totalImplementations = totalCompleted + totalInProgress;
-  const completionRate = totalImplementations > 0 ? Math.round((totalCompleted / totalImplementations) * 100) : 0;
-  
-  // Métricas adicionais simuladas
-  const avgCompletionTime = 16; // dias
-  const engagementScore = 78; // %
-  const successRate = 85; // %
-  const abandonmentRate = 15; // %
-  const weeklyGrowth = 12; // %
+  // Calcular métricas baseadas nos dados disponíveis
+  const totalImplementations = data.implementationsByCategory?.reduce((sum, cat) => sum + cat.value, 0) || 0;
+  const completedImplementations = data.userCompletionRate?.find(item => item.name === 'Concluídas')?.value || 0;
+  const inProgressImplementations = data.userCompletionRate?.find(item => item.name === 'Em andamento')?.value || 0;
+  const completionRate = totalImplementations > 0 
+    ? Math.round((completedImplementations / (completedImplementations + inProgressImplementations)) * 100) 
+    : 0;
+  const avgTimeToComplete = 4.2; // Mock - em produção viria dos dados
 
   const enhancedMetrics = [
     {
+      title: "Total de Implementações",
+      value: totalImplementations.toLocaleString(),
+      icon: <PlayCircle className="h-5 w-5" />,
+      colorScheme: 'blue' as const,
+      priority: 'high' as const,
+      trend: {
+        value: 18,
+        label: "crescimento mensal"
+      },
+      sparklineData: generateSparklineData(totalImplementations, 15)
+    },
+    {
       title: "Implementações Concluídas",
-      value: totalCompleted.toLocaleString(),
+      value: completedImplementations.toLocaleString(),
       icon: <CheckCircle className="h-5 w-5" />,
       colorScheme: 'green' as const,
       priority: 'high' as const,
       trend: {
-        value: 18,
-        label: "concluídas esta semana"
+        value: 12,
+        label: "finalizações por semana"
       },
-      sparklineData: generateSparklineData(totalCompleted, 25)
-    },
-    {
-      title: "Em Andamento",
-      value: totalInProgress.toLocaleString(),
-      icon: <Clock className="h-5 w-5" />,
-      colorScheme: 'orange' as const,
-      priority: 'high' as const,
-      trend: {
-        value: weeklyGrowth,
-        label: "novas implementações"
-      },
-      sparklineData: generateSparklineData(totalInProgress, 15)
+      sparklineData: generateSparklineData(completedImplementations, 8)
     },
     {
       title: "Taxa de Conclusão",
       value: `${completionRate}%`,
-      icon: <TrendingUp className="h-5 w-5" />,
-      colorScheme: 'blue' as const,
+      icon: <Target className="h-5 w-5" />,
+      colorScheme: 'cyan' as const,
       priority: 'high' as const,
       trend: {
-        value: 5,
+        value: 6,
         label: "melhoria contínua"
       }
     },
     {
-      title: "Usuários Ativos",
-      value: totalImplementations.toLocaleString(),
-      icon: <Users className="h-5 w-5" />,
-      colorScheme: 'cyan' as const,
+      title: "Em Andamento",
+      value: inProgressImplementations.toLocaleString(),
+      icon: <Activity className="h-5 w-5" />,
+      colorScheme: 'orange' as const,
       priority: 'medium' as const,
       trend: {
-        value: 8,
-        label: "implementando ativamente"
+        value: 22,
+        label: "novas implementações"
       },
-      sparklineData: generateSparklineData(totalImplementations, 30)
+      sparklineData: generateSparklineData(inProgressImplementations, 12)
     },
     {
-      title: "Tempo Médio",
-      value: `${avgCompletionTime} dias`,
-      icon: <Target className="h-5 w-5" />,
+      title: "Tempo Médio Conclusão",
+      value: `${avgTimeToComplete} dias`,
+      icon: <Clock className="h-5 w-5" />,
       colorScheme: 'purple' as const,
       priority: 'medium' as const,
       trend: {
-        value: -3,
-        label: "otimização de tempo"
+        value: -15,
+        label: "otimização de processo"
       }
     },
     {
-      title: "Score de Engajamento",
-      value: `${engagementScore}%`,
-      icon: <Zap className="h-5 w-5" />,
+      title: "Usuários Ativos",
+      value: "156",
+      icon: <Users className="h-5 w-5" />,
       colorScheme: 'indigo' as const,
-      priority: 'medium' as const,
-      trend: {
-        value: 7,
-        label: "usuários engajados"
-      }
-    },
-    {
-      title: "Taxa de Sucesso",
-      value: `${successRate}%`,
-      icon: <BarChart3 className="h-5 w-5" />,
-      colorScheme: 'green' as const,
       priority: 'low' as const,
       trend: {
-        value: 4,
-        label: "implementações bem-sucedidas"
-      }
-    },
-    {
-      title: "Taxa de Abandono",
-      value: `${abandonmentRate}%`,
-      icon: <AlertTriangle className="h-5 w-5" />,
-      colorScheme: 'pink' as const,
-      priority: 'low' as const,
-      trend: {
-        value: -2,
-        label: "redução do abandono"
+        value: 9,
+        label: "engajamento alto"
       }
     }
   ];
@@ -174,7 +145,7 @@ export const ImplementationsAnalyticsTabContent = ({ timeRange }: Implementation
   return (
     <div className="space-y-6">
       {/* Enhanced Metric Cards */}
-      <MetricsGrid columns={4} gap="md">
+      <MetricsGrid columns={3} gap="md">
         {enhancedMetrics.map((metric, index) => (
           <EnhancedMetricCard
             key={index}
@@ -192,49 +163,41 @@ export const ImplementationsAnalyticsTabContent = ({ timeRange }: Implementation
       {/* Enhanced Charts */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <EnhancedPieChart
-          data={completionData}
+          data={data.userCompletionRate || []}
           title="Status das Implementações"
-          description="Distribuição de implementações por status atual"
+          description="Distribuição entre implementações concluídas e em andamento"
           category="value"
           index="name"
-          colors={['#10B981', '#F59E0B', '#EF4444']}
+          colors={['#10B981', '#F59E0B']}
           valueFormatter={(value) => `${value} implementação${value !== 1 ? 'ões' : ''}`}
           size="medium"
           showLegend={true}
-          innerRadius={80}
-          outerRadius={140}
         />
         
         <EnhancedBarChart
-          data={data?.dayOfWeekActivity || []}
-          title="Atividade por Dia da Semana"
-          description="Padrão de atividade de implementações"
-          categories={['atividade']}
-          index="day"
-          colors={['#0ABAB5']}
-          valueFormatter={(value) => `${value} atividade${value !== 1 ? 's' : ''}`}
+          data={data.implementationsByCategory || []}
+          title="Implementações por Categoria"
+          description="Distribuição das implementações por área de negócio"
+          categories={['value']}
+          index="name"
+          colors={['#3B82F6']}
+          valueFormatter={(value) => `${value} implementação${value !== 1 ? 'ões' : ''}`}
           size="medium"
           layout="horizontal"
         />
       </div>
       
-      {/* Implementation Progress Over Time */}
+      {/* Activity by Day Chart */}
       <EnhancedAreaChart
-        data={data?.implementationProgressOverTime || [
-          { week: 'Sem 1', concluidas: 8, em_andamento: 15, novas: 12 },
-          { week: 'Sem 2', concluidas: 12, em_andamento: 18, novas: 14 },
-          { week: 'Sem 3', concluidas: 15, em_andamento: 22, novas: 16 },
-          { week: 'Sem 4', concluidas: 18, em_andamento: 25, novas: 18 }
-        ]}
-        title="Progresso das Implementações ao Longo do Tempo"
-        description="Evolução semanal do status das implementações"
-        categories={['concluidas', 'em_andamento', 'novas']}
-        index="week"
-        colors={['#10B981', '#F59E0B', '#3B82F6']}
-        valueFormatter={(value) => `${value} implementação${value !== 1 ? 'ões' : ''}`}
+        data={data.dayOfWeekActivity || []}
+        title="Atividade de Implementação por Dia"
+        description="Padrão de atividade das implementações ao longo da semana"
+        categories={['atividade']}
+        index="day"
+        colors={['#8B5CF6']}
+        valueFormatter={(value) => `${value} atividade${value !== 1 ? 's' : ''}`}
         size="large"
         curved={true}
-        showLegend={true}
       />
     </div>
   );

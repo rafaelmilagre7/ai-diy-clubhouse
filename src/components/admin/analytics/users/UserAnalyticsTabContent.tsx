@@ -66,6 +66,11 @@ export const UserAnalyticsTabContent = ({ timeRange }: UserAnalyticsTabContentPr
   const activityRate = data.totalUsers > 0 ? Math.round((data.activeUsers / data.totalUsers) * 100) : 0;
   const newUsersGrowth = 15; // Mock - em produção viria dos dados
   const retentionRate = 78; // Mock - em produção viria dos dados
+  
+  // Calcular novos usuários baseado nos dados disponíveis
+  const newUsersCount = data.usersByTime && data.usersByTime.length > 0 
+    ? data.usersByTime[data.usersByTime.length - 1]?.novos || 0
+    : 0;
 
   const enhancedMetrics = [
     {
@@ -105,7 +110,7 @@ export const UserAnalyticsTabContent = ({ timeRange }: UserAnalyticsTabContentPr
     },
     {
       title: "Novos Usuários (30d)",
-      value: data.newUsersToday?.toLocaleString() || '0',
+      value: newUsersCount?.toLocaleString() || '0',
       icon: <UserPlus className="h-5 w-5" />,
       colorScheme: 'purple' as const,
       priority: 'medium' as const,
@@ -113,7 +118,7 @@ export const UserAnalyticsTabContent = ({ timeRange }: UserAnalyticsTabContentPr
         value: newUsersGrowth,
         label: "crescimento mensal"
       },
-      sparklineData: generateSparklineData(data.newUsersToday || 0, 15)
+      sparklineData: generateSparklineData(newUsersCount || 0, 15)
     },
     {
       title: "Taxa de Retenção",
