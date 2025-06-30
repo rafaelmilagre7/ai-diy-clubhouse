@@ -40,7 +40,7 @@ export const useAdminTools = () => {
     });
   }, [tools, selectedCategory, searchQuery]);
 
-  // OTIMIZAÇÃO: Função de refresh melhorada
+  // CORREÇÃO: Wrapper para converter Promise<QueryObserverResult> para Promise<void>
   const refreshTools = async () => {
     try {
       await refetch();
@@ -48,7 +48,9 @@ export const useAdminTools = () => {
       await handleError(refreshError, 'refresh de ferramentas', {
         queryKeys: [['tools']],
         customMessage: 'Erro ao atualizar lista de ferramentas',
-        retryFn: refetch
+        retryFn: async () => {
+          await refetch();
+        }
       });
     }
   };
