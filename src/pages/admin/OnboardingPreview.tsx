@@ -7,7 +7,7 @@ import { ArrowLeft, TestTube, Users, Settings } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { MockOnboardingWizardContainer, useMockOnboarding } from '@/components/admin/onboarding/MockOnboardingWizardContainer';
 import { OnboardingDebugPanel } from '@/components/admin/onboarding/OnboardingDebugPanel';
-import { OnboardingStepRenderer } from '@/components/onboarding/components/OnboardingStepRenderer';
+import { MockOnboardingStepRenderer } from '@/components/admin/onboarding/MockOnboardingStepRenderer';
 import { OnboardingProgress } from '@/components/onboarding/OnboardingProgress';
 
 const stepTitles = [
@@ -79,14 +79,11 @@ const OnboardingPreviewContent = () => {
               <CardTitle>Preview do Onboarding - Etapa {currentStep}</CardTitle>
             </CardHeader>
             <CardContent className="p-8">
-              <OnboardingStepRenderer
+              <MockOnboardingStepRenderer
                 currentStep={currentStep}
                 data={data}
                 onUpdateData={updateData}
-                onNext={handleNext}
-                onPrev={handlePrev}
                 onComplete={handleComplete}
-                memberType={data.memberType || 'club'}
                 validationErrors={validationErrors}
                 getFieldError={getFieldError}
                 isCompleting={isLoading}
