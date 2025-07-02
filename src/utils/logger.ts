@@ -25,7 +25,8 @@ class Logger {
   private enableConsole: boolean = isDevelopment;
 
   private shouldLog(level: LogLevel): boolean {
-    if (isProduction) return false; // Nunca logar em produção
+    // Em produção, apenas logs de erro críticos são permitidos
+    if (isProduction && level !== 'error') return false;
     
     const levels: Record<LogLevel, number> = {
       debug: 0,
@@ -94,12 +95,17 @@ class Logger {
   }
 
   error(message: string, context?: LogContext) {
-    if (isProduction) return; // Nunca logar erros em produção para evitar quebrar build
-    
     try {
-      if (this.enableConsole && isDevelopment) {
-        const sanitizedContext = context ? this.sanitizeData(context) : {};
-        console.error(`❌ [ERROR] ${message}`, sanitizedContext);
+      if (isDevelopment || this.shouldLog('error')) {
+        const prefix = isProduction ? '[CRITICAL]' : '❌ [ERROR]';
+        const sanitizedContext = this.sanitizeData(context);
+        
+        if (isDevelopment) {
+          console.error(`${prefix} ${message}`, sanitizedContext);
+        } else {
+          // Em produção, usar formato minimalista para erros críticos
+          console.log(`${prefix} ${message}`);
+        }
       }
     } catch {
       // Falha silenciosamente
@@ -133,9 +139,8 @@ export const logPerformance = (operation: string, startTime: number) => {
 };
 
 export const logNetworkError = (operation: string, error: any) => {
-  if (isProduction) return;
-  
   try {
+    // Log crítico permitido em produção para debugging
     logger.error(`Network error in ${operation}`, {
       error: error?.message || 'Unknown error',
       component: 'NETWORK'

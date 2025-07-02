@@ -26,23 +26,21 @@ const RootRedirect = () => {
   const hasCachedAdminAccess = user && navigationCache.isAdminVerified(user.id);
   const hasCachedFormacaoAccess = user && navigationCache.isFormacaoVerified(user.id);
   
-  console.log("[ROOT-REDIRECT] Estado atual:", {
-    currentPath: location.pathname,
-    hasUser: !!user,
-    hasProfile: !!profile,
-    isAdmin,
-    authLoading,
-    hasCachedAdminAccess,
-    hasCachedFormacaoAccess,
-    forceRedirect
-  });
+  // Log simplificado apenas em desenvolvimento
+  if (process.env.NODE_ENV === 'development') {
+    console.log("[ROOT-REDIRECT]", {
+      path: location.pathname,
+      hasUser: !!user,
+      hasProfile: !!profile,
+      loading: authLoading
+    });
+  }
   
-  // OTIMIZAÇÃO 2: Circuit breaker reduzido para 2 segundos
+  // Circuit breaker para evitar loading infinito
   useEffect(() => {
     timeoutRef.current = window.setTimeout(() => {
-      console.warn("⚠️ [ROOT REDIRECT] Circuit breaker ativado (2s), forçando redirecionamento");
       setForceRedirect(true);
-    }, 2000); // Reduzido de 4s para 2s
+    }, 3000);
     
     return () => {
       if (timeoutRef.current) {
@@ -51,94 +49,62 @@ const RootRedirect = () => {
     };
   }, []);
   
-  // OTIMIZAÇÃO 3: Limpeza de timeout para usuários com cache válido
+  // Limpar timeout quando auth está pronto
   useEffect(() => {
     if (user && (profile || hasCachedAdminAccess || hasCachedFormacaoAccess)) {
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
-        console.log("⚡ [ROOT REDIRECT] Cache/auth válido - timeout cancelado");
       }
     }
   }, [user, profile, hasCachedAdminAccess, hasCachedFormacaoAccess]);
   
-  // OTIMIZAÇÃO 4: Navegação rápida com cache apenas para formação
+  // Navegação rápida com cache para formação
   if (user && hasCachedFormacaoAccess && location.pathname !== '/formacao') {
-    console.log("🎯 [ROOT REDIRECT] Cache formação válido - redirecionamento direto");
     return <Navigate to="/formacao" replace />;
   }
   
-  // OTIMIZAÇÃO 5: Fallback mais rápido
+  // Circuit breaker ativo - redirecionamento forçado
   if (forceRedirect) {
-    console.log("🚨 [ROOT REDIRECT] Circuit breaker ativo - redirecionamento forçado");
-    
     if (user && profile) {
       const roleName = getUserRoleName(profile);
-      if (roleName === 'formacao') {
-        console.log("🎯 [ROOT REDIRECT] Formação no circuit breaker - /formacao");
-        return <Navigate to="/formacao" replace />;
-      }
-      console.log("🎯 [ROOT REDIRECT] Usuário no circuit breaker - /dashboard");
-      return <Navigate to="/dashboard" replace />;
+      return <Navigate to={roleName === 'formacao' ? '/formacao' : '/dashboard'} replace />;
     }
-    console.log("🎯 [ROOT REDIRECT] Sem usuário no circuit breaker - /login");
     return <Navigate to="/login" replace />;
   }
   
-  // Se usuário está em /login mas já está autenticado, redirecionar
+  // Usuário autenticado em /login deve ser redirecionado
   if (location.pathname === '/login' && user && profile) {
-    console.log("🔄 [ROOT REDIRECT] Usuário autenticado em /login, redirecionando...");
-    
     const roleName = getUserRoleName(profile);
-    
-    if (roleName === 'formacao') {
-      console.log("🎯 [ROOT REDIRECT] Formação em /login - redirecionando para /formacao");
-      clearTimeout(timeoutRef.current!);
-      return <Navigate to="/formacao" replace />;
-    }
-    
-    console.log("🎯 [ROOT REDIRECT] Usuário em /login - redirecionando para /dashboard");
-    clearTimeout(timeoutRef.current!);
-    return <Navigate to="/dashboard" replace />;
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    return <Navigate to={roleName === 'formacao' ? '/formacao' : '/dashboard'} replace />;
   }
   
-  // OTIMIZAÇÃO 6: Loading reduzido para 1.5s máximo
+  // Aguardando autenticação
   if (authLoading && !forceRedirect) {
-    console.log("[ROOT-REDIRECT] Aguardando autenticação...");
     return <LoadingScreen message="Verificando sua sessão..." />;
   }
   
-  // Se não há usuário, vai para login
+  // Sem usuário, vai para login
   if (!user) {
-    console.log("[ROOT-REDIRECT] Sem usuário - redirecionando para login");
     return <Navigate to="/login" replace />;
   }
   
-  // Verificação de roles APÓS verificação básica de usuário
+  // Verificação de roles
   const roleName = getUserRoleName(profile);
   
-  // Se é formação, ir direto para área de formação
+  // Formação vai direto para área específica
   if (roleName === 'formacao') {
-    console.log("🎯 [ROOT REDIRECT] Formação detectado - redirecionando para /formacao");
-    clearTimeout(timeoutRef.current!);
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
     return <Navigate to="/formacao" replace />;
   }
   
-  // Se há usuário mas não há perfil, aguardar menos tempo
+  // Aguardando perfil
   if (!profile && !forceRedirect) {
-    console.log("[ROOT-REDIRECT] Usuário sem perfil - aguardando...");
     return <LoadingScreen message="Carregando seu perfil..." />;
   }
   
-  // Se não há perfil mas circuit breaker está ativo, ir para dashboard
-  if (!profile && forceRedirect) {
-    console.log("[ROOT-REDIRECT] Circuit breaker + sem perfil - redirecionando para dashboard");
-    clearTimeout(timeoutRef.current!);
-    return <Navigate to="/dashboard" replace />;
-  }
-  
-  // Caso padrão: dashboard de membro (MUDANÇA PRINCIPAL)
-  console.log("🏠 [ROOT REDIRECT] Redirecionando para dashboard de membro");
-  clearTimeout(timeoutRef.current!);
+  // Fallback: dashboard
+  if (timeoutRef.current) clearTimeout(timeoutRef.current);
   return <Navigate to="/dashboard" replace />;
 };
 
