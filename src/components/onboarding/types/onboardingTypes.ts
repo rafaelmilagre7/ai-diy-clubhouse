@@ -30,6 +30,9 @@ export interface OnboardingData {
   aiKnowledgeLevel?: string;
   dailyTools?: string[];
   whoWillImplement?: string;
+  aiImplementationObjective?: string;
+  aiImplementationUrgency?: string;
+  aiMainChallenge?: string;
   
   // Etapa 4 - Objetivos e Expectativas
   mainObjective?: string;
