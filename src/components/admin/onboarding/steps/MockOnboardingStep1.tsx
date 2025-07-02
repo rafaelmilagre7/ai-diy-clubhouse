@@ -6,6 +6,8 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { WhatsAppInput } from '@/components/onboarding/components/WhatsAppInput';
 import { BirthDateSelector } from '@/components/onboarding/components/BirthDateSelector';
+import { LocationSelector } from '@/components/onboarding/components/LocationSelector';
+import { ProfilePictureUpload } from '@/components/onboarding/components/ProfilePictureUpload';
 import { OnboardingData } from '@/components/onboarding/types/onboardingTypes';
 
 interface MockOnboardingStep1Props {
@@ -110,12 +112,26 @@ const MockOnboardingStep1 = ({ data, onUpdateData, getFieldError }: MockOnboardi
               />
             </div>
 
+            <LocationSelector
+              selectedState={data.state || ''}
+              selectedCity={data.city || ''}
+              onStateChange={(state) => onUpdateData({ state, city: '' })}
+              onCityChange={(city) => onUpdateData({ city })}
+              getFieldError={getFieldError}
+            />
+
             <BirthDateSelector
               birthDay={birthDay}
               birthMonth={birthMonth}
               birthYear={birthYear}
               onChange={handleBirthDateChange}
               getFieldError={getFieldError}
+            />
+
+            <ProfilePictureUpload
+              value={data.profilePicture || ''}
+              onChange={(url) => onUpdateData({ profilePicture: url })}
+              userName={data.name}
             />
 
             <div>
