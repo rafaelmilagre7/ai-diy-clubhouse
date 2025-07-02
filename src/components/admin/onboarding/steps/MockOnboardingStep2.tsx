@@ -168,7 +168,6 @@ const MockOnboardingStep2: React.FC<MockOnboardingStep2Props> = ({
                 <SelectItem value="50m-100m" className="text-white hover:bg-slate-700">R$ 50 milhões - R$ 100 milhões</SelectItem>
                 <SelectItem value="100m-500m" className="text-white hover:bg-slate-700">R$ 100 milhões - R$ 500 milhões</SelectItem>
                 <SelectItem value="500m+" className="text-white hover:bg-slate-700">Acima de R$ 500 milhões</SelectItem>
-                <SelectItem value="nao-informar" className="text-white hover:bg-slate-700">Prefiro não informar</SelectItem>
               </SelectContent>
             </Select>
           </div>
