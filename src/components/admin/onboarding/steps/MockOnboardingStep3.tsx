@@ -19,21 +19,33 @@ const MockOnboardingStep3: React.FC<MockOnboardingStep3Props> = ({
   onUpdateData,
   getFieldError
 }) => {
-  const [tools, setTools] = useState<Array<{id: string, name: string, category: string}>>([]);
+  const [tools, setTools] = useState<Array<{id: string, name: string, category: string, logo_url?: string}>>([]);
   const [loading, setLoading] = useState(true);
+  const [toolsByCategory, setToolsByCategory] = useState<Record<string, Array<{id: string, name: string, category: string, logo_url?: string}>>>({});
 
   useEffect(() => {
     const fetchTools = async () => {
       try {
         const { data: toolsData, error } = await supabase
           .from('tools')
-          .select('id, name, category')
+          .select('id, name, category, logo_url')
           .eq('status', true)
           .order('category')
           .order('name');
 
         if (error) throw error;
         setTools(toolsData || []);
+        
+        // Agrupar ferramentas por categoria
+        const grouped = (toolsData || []).reduce((acc, tool) => {
+          if (!acc[tool.category]) {
+            acc[tool.category] = [];
+          }
+          acc[tool.category].push(tool);
+          return acc;
+        }, {} as Record<string, typeof toolsData>);
+        
+        setToolsByCategory(grouped);
       } catch (error) {
         console.error('Erro ao carregar ferramentas:', error);
       } finally {
@@ -112,38 +124,97 @@ const MockOnboardingStep3: React.FC<MockOnboardingStep3Props> = ({
             <p className="text-slate-400 text-sm">Selecione todas as opções que se aplicam</p>
             
             {loading ? (
-              <div className="text-slate-400 text-center py-4">Carregando ferramentas...</div>
+              <div className="text-slate-400 text-center py-8">
+                <div className="animate-spin h-8 w-8 border-2 border-viverblue border-t-transparent rounded-full mx-auto mb-2"></div>
+                Carregando ferramentas...
+              </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-96 overflow-y-auto">
-                {tools.map((tool) => (
-                  <div key={tool.id} className="flex items-center space-x-3 p-3 rounded-lg bg-slate-800/30 border border-slate-700">
-                    <Checkbox
-                      id={`tool-${tool.id}`}
-                      checked={(data.aiToolsUsed || []).includes(tool.name)}
-                      onCheckedChange={(checked) => 
-                        handleCheckboxChange('aiToolsUsed', data.aiToolsUsed || [], tool.name, checked as boolean)
-                      }
-                      className="border-slate-400"
-                    />
-                    <Label htmlFor={`tool-${tool.id}`} className="text-white font-normal cursor-pointer flex-1">
-                      {tool.name}
-                    </Label>
+              <div className="space-y-6">
+                {Object.entries(toolsByCategory).map(([category, categoryTools]) => (
+                  <div key={category} className="space-y-3">
+                    <h4 className="text-slate-300 font-medium text-sm uppercase tracking-wider border-b border-slate-700 pb-2">
+                      {category}
+                    </h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                      {categoryTools.map((tool) => (
+                        <div 
+                          key={tool.id} 
+                          className={`flex items-center space-x-3 p-4 rounded-xl border transition-all duration-200 cursor-pointer hover:scale-[1.02] ${
+                            (data.aiToolsUsed || []).includes(tool.name)
+                              ? 'bg-viverblue/20 border-viverblue shadow-lg shadow-viverblue/20'
+                              : 'bg-slate-800/40 border-slate-600 hover:border-slate-500'
+                          }`}
+                          onClick={() => {
+                            const isChecked = (data.aiToolsUsed || []).includes(tool.name);
+                            handleCheckboxChange('aiToolsUsed', data.aiToolsUsed || [], tool.name, !isChecked);
+                          }}
+                        >
+                          <Checkbox
+                            id={`tool-${tool.id}`}
+                            checked={(data.aiToolsUsed || []).includes(tool.name)}
+                            onCheckedChange={(checked) => 
+                              handleCheckboxChange('aiToolsUsed', data.aiToolsUsed || [], tool.name, checked as boolean)
+                            }
+                            className="border-slate-400 data-[state=checked]:bg-viverblue data-[state=checked]:border-viverblue"
+                          />
+                          
+                          <div className="flex items-center space-x-3 flex-1 min-w-0">
+                            {tool.logo_url && (
+                              <div className="w-8 h-8 rounded-lg overflow-hidden flex-shrink-0 bg-white/10 flex items-center justify-center">
+                                <img 
+                                  src={tool.logo_url} 
+                                  alt={`${tool.name} logo`}
+                                  className="w-6 h-6 object-contain"
+                                  onError={(e) => {
+                                    // Se a imagem falhar, esconder o container
+                                    (e.target as HTMLImageElement).style.display = 'none';
+                                  }}
+                                />
+                              </div>
+                            )}
+                            <Label 
+                              htmlFor={`tool-${tool.id}`} 
+                              className="text-white font-medium cursor-pointer flex-1 truncate text-sm"
+                            >
+                              {tool.name}
+                            </Label>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 ))}
                 
                 {/* Opção "Outras" */}
-                <div className="flex items-center space-x-3 p-3 rounded-lg bg-slate-800/30 border border-slate-700">
-                  <Checkbox
-                    id="tool-outras"
-                    checked={(data.aiToolsUsed || []).includes('Outras ferramentas')}
-                    onCheckedChange={(checked) => 
-                      handleCheckboxChange('aiToolsUsed', data.aiToolsUsed || [], 'Outras ferramentas', checked as boolean)
-                    }
-                    className="border-slate-400"
-                  />
-                  <Label htmlFor="tool-outras" className="text-white font-normal cursor-pointer flex-1">
-                    Outras ferramentas
-                  </Label>
+                <div className="pt-4 border-t border-slate-700">
+                  <div 
+                    className={`flex items-center space-x-3 p-4 rounded-xl border transition-all duration-200 cursor-pointer hover:scale-[1.02] ${
+                      (data.aiToolsUsed || []).includes('Outras ferramentas')
+                        ? 'bg-viverblue/20 border-viverblue shadow-lg shadow-viverblue/20'
+                        : 'bg-slate-800/40 border-slate-600 hover:border-slate-500'
+                    }`}
+                    onClick={() => {
+                      const isChecked = (data.aiToolsUsed || []).includes('Outras ferramentas');
+                      handleCheckboxChange('aiToolsUsed', data.aiToolsUsed || [], 'Outras ferramentas', !isChecked);
+                    }}
+                  >
+                    <Checkbox
+                      id="tool-outras"
+                      checked={(data.aiToolsUsed || []).includes('Outras ferramentas')}
+                      onCheckedChange={(checked) => 
+                        handleCheckboxChange('aiToolsUsed', data.aiToolsUsed || [], 'Outras ferramentas', checked as boolean)
+                      }
+                      className="border-slate-400 data-[state=checked]:bg-viverblue data-[state=checked]:border-viverblue"
+                    />
+                    <div className="flex items-center space-x-3 flex-1">
+                      <div className="w-8 h-8 rounded-lg bg-slate-700 flex items-center justify-center flex-shrink-0">
+                        <Settings className="w-4 h-4 text-slate-400" />
+                      </div>
+                      <Label htmlFor="tool-outras" className="text-white font-medium cursor-pointer flex-1 text-sm">
+                        Outras ferramentas
+                      </Label>
+                    </div>
+                  </div>
                 </div>
               </div>
             )}
