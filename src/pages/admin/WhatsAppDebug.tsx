@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 import { 
@@ -21,7 +22,10 @@ import {
   TestTube,
   Key,
   Phone,
-  Building
+  Building,
+  Search,
+  Clock,
+  Shield
 } from 'lucide-react';
 import { JsonViewer } from '@/components/debug/JsonViewer';
 import { StatusCard } from '@/components/debug/StatusCard';
@@ -38,15 +42,39 @@ interface ConfigStatus {
   phoneNumberIdMasked: string | null;
   businessIdMasked: string | null;
   currentBusinessId: string;
-  suggestedBusinessId: string;
+  discoveredBusinessId: string | null;
+  autoDiscoveryWorked: boolean;
+  needsBusinessIdUpdate: boolean;
+}
+
+interface ConnectivityTest {
+  name: string;
+  success: boolean;
+  status?: number;
+  data?: any;
+  latency?: string;
+  error?: string;
+  scopes?: string[];
+}
+
+interface TemplatesData {
+  success: boolean;
+  businessId: string;
+  templates: any[];
+  fromCache?: boolean;
+  fallback?: boolean;
+  message: string;
 }
 
 const WhatsAppDebug: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [config, setConfig] = useState<ConfigStatus | null>(null);
-  const [templates, setTemplates] = useState<any[]>([]);
-  const [connectivity, setConnectivity] = useState<any>(null);
-  const [businessIdTests, setBusinessIdTests] = useState<any[]>([]);
+  const [connectivity, setConnectivity] = useState<{
+    success: boolean;
+    tests: ConnectivityTest[];
+    summary: { total: number; passed: number; failed: number };
+  } | null>(null);
+  const [templatesData, setTemplatesData] = useState<TemplatesData | null>(null);
   const [testPhone, setTestPhone] = useState('');
   const [selectedTemplate, setSelectedTemplate] = useState('hello_world');
   const [testResult, setTestResult] = useState<any>(null);
@@ -57,9 +85,11 @@ const WhatsAppDebug: React.FC = () => {
     setLogs(prev => [`[${timestamp}] ${message}`, ...prev]);
   };
 
+  const clearLogs = () => setLogs([]);
+
   const checkConfiguration = async () => {
     setLoading(true);
-    addLog('Verificando configuração do WhatsApp...');
+    addLog('🔍 Verificando configuração e descobrindo Business ID...');
     
     try {
       const { data, error } = await supabase.functions.invoke('whatsapp-config-check', {
@@ -71,6 +101,15 @@ const WhatsAppDebug: React.FC = () => {
       if (data.success) {
         setConfig(data.config);
         addLog('✅ Configuração verificada com sucesso');
+        
+        if (data.config.autoDiscoveryWorked) {
+          addLog(`🎉 Business ID descoberto automaticamente: ${data.config.discoveredBusinessId}`);
+        }
+        
+        if (data.config.needsBusinessIdUpdate) {
+          addLog('⚠️ Business ID configurado difere do descoberto');
+        }
+        
         toast.success('Configuração verificada');
       } else {
         throw new Error(data.message || 'Erro na verificação');
@@ -85,7 +124,7 @@ const WhatsAppDebug: React.FC = () => {
 
   const testConnectivity = async () => {
     setLoading(true);
-    addLog('Testando conectividade com API do WhatsApp...');
+    addLog('🌐 Executando testes avançados de conectividade...');
     
     try {
       const { data, error } = await supabase.functions.invoke('whatsapp-config-check', {
@@ -97,11 +136,11 @@ const WhatsAppDebug: React.FC = () => {
       setConnectivity(data);
       
       if (data.success) {
-        addLog('✅ Conectividade OK com WhatsApp API');
-        toast.success('Conectividade confirmada');
+        addLog(`✅ Conectividade OK - ${data.summary.passed}/${data.summary.total} testes passaram`);
+        toast.success('Todos os testes de conectividade passaram');
       } else {
-        addLog(`❌ Erro de conectividade: Status ${data.status}`);
-        toast.error('Erro de conectividade');
+        addLog(`❌ Problemas de conectividade - ${data.summary.failed}/${data.summary.total} testes falharam`);
+        toast.error('Alguns testes de conectividade falharam');
       }
     } catch (error: any) {
       addLog(`❌ Erro no teste: ${error.message}`);
@@ -111,62 +150,36 @@ const WhatsAppDebug: React.FC = () => {
     }
   };
 
-  const testBusinessIds = async () => {
+  const autoDiscoverTemplates = async () => {
     setLoading(true);
-    addLog('Testando diferentes Business IDs para templates...');
+    addLog('🔍 Descobrindo Business ID e carregando templates automaticamente...');
     
     try {
       const { data, error } = await supabase.functions.invoke('whatsapp-config-check', {
-        body: { action: 'test-business-ids' }
+        body: { action: 'auto-discover' }
       });
 
       if (error) throw error;
 
       if (data.success) {
-        setBusinessIdTests(data.results);
-        addLog(`✅ Teste concluído. Business ID recomendado: ${data.recommendation || 'Nenhum funcionou'}`);
-        toast.success('Teste de Business IDs concluído');
+        setTemplatesData(data);
         
-        if (data.recommendation) {
-          toast.success(`Business ID recomendado: ${data.recommendation}`);
+        if (data.fromCache) {
+          addLog(`📦 Templates carregados do cache (${data.templates.length} encontrados)`);
+        } else if (data.fallback) {
+          addLog(`🔄 Usando Business ID configurado como fallback (${data.templates.length} templates)`);
+        } else {
+          addLog(`✅ Business ID descoberto automaticamente: ${data.businessId} (${data.templates.length} templates)`);
         }
-      } else {
-        addLog(`❌ Erro no teste: ${data.message}`);
-        toast.error('Erro no teste de Business IDs');
-      }
-    } catch (error: any) {
-      addLog(`❌ Erro no teste: ${error.message}`);
-      toast.error('Erro ao testar Business IDs');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const listTemplates = async (businessIdToTest?: string) => {
-    setLoading(true);
-    addLog(`Buscando templates${businessIdToTest ? ` usando Business ID: ${businessIdToTest}` : ''}...`);
-    
-    try {
-      const { data, error } = await supabase.functions.invoke('whatsapp-config-check', {
-        body: { 
-          action: 'list-templates',
-          businessIdToTest
-        }
-      });
-
-      if (error) throw error;
-
-      if (data.success) {
-        setTemplates(data.templates);
-        addLog(`✅ ${data.templates.length} templates encontrados (Business ID: ${data.businessIdUsed})`);
+        
         toast.success(`${data.templates.length} templates carregados`);
       } else {
-        addLog(`❌ Erro ao buscar templates: ${data.message} (Business ID: ${data.businessIdUsed})`);
-        toast.error(data.message || 'Erro ao carregar templates');
+        addLog(`❌ Erro na descoberta automática: ${data.message}`);
+        toast.error(data.message || 'Erro ao descobrir templates');
       }
     } catch (error: any) {
-      addLog(`❌ Erro ao buscar templates: ${error.message}`);
-      toast.error('Erro ao carregar templates');
+      addLog(`❌ Erro na descoberta: ${error.message}`);
+      toast.error('Erro ao descobrir templates');
     } finally {
       setLoading(false);
     }
@@ -179,7 +192,7 @@ const WhatsAppDebug: React.FC = () => {
     }
 
     setLoading(true);
-    addLog(`Enviando mensagem de teste para ${testPhone} com template ${selectedTemplate}...`);
+    addLog(`📱 Enviando mensagem de teste para ${testPhone} com template ${selectedTemplate}...`);
     
     try {
       const { data, error } = await supabase.functions.invoke('whatsapp-config-check', {
@@ -209,6 +222,15 @@ const WhatsAppDebug: React.FC = () => {
     }
   };
 
+  const getStatusIcon = (success: boolean, warning = false) => {
+    if (warning) return <AlertTriangle className="h-5 w-5 text-amber-400" />;
+    return success ? (
+      <CheckCircle2 className="h-5 w-5 text-emerald-400" />
+    ) : (
+      <XCircle className="h-5 w-5 text-red-400" />
+    );
+  };
+
   return (
     <div className="p-6 space-y-6 bg-gradient-to-br from-slate-900 to-slate-800 min-h-screen">
       <div className="mb-8">
@@ -219,12 +241,12 @@ const WhatsAppDebug: React.FC = () => {
           WhatsApp Debug Center
         </h1>
         <p className="text-slate-300 text-lg mt-2">
-          Diagnóstico avançado e teste da integração WhatsApp Business API
+          Diagnóstico inteligente e automático da integração WhatsApp Business API
         </p>
       </div>
 
       <Tabs defaultValue="config" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-5 bg-slate-800/50 border border-slate-700 h-auto p-1">
+        <TabsList className="grid w-full grid-cols-4 bg-slate-800/50 border border-slate-700 h-auto p-1">
           <TabsTrigger 
             value="config" 
             className="flex items-center gap-2 data-[state=active]:bg-viverblue data-[state=active]:text-white text-slate-300 py-3"
@@ -242,18 +264,10 @@ const WhatsAppDebug: React.FC = () => {
             <span className="sm:hidden">API</span>
           </TabsTrigger>
           <TabsTrigger 
-            value="business-test" 
-            className="flex items-center gap-2 data-[state=active]:bg-viverblue data-[state=active]:text-white text-slate-300 py-3"
-          >
-            <TestTube className="h-4 w-4" />
-            <span className="hidden sm:inline">Business IDs</span>
-            <span className="sm:hidden">IDs</span>
-          </TabsTrigger>
-          <TabsTrigger 
             value="templates" 
             className="flex items-center gap-2 data-[state=active]:bg-viverblue data-[state=active]:text-white text-slate-300 py-3"
           >
-            <FileText className="h-4 w-4" />
+            <Search className="h-4 w-4" />
             <span className="hidden sm:inline">Templates</span>
             <span className="sm:hidden">TPL</span>
           </TabsTrigger>
@@ -267,15 +281,16 @@ const WhatsAppDebug: React.FC = () => {
           </TabsTrigger>
         </TabsList>
 
+        {/* Configuração */}
         <TabsContent value="config" className="space-y-6">
           <Card className="bg-slate-800/50 border-slate-700">
             <CardHeader className="pb-4">
               <CardTitle className="text-xl text-white flex items-center gap-2">
                 <Settings className="h-5 w-5 text-viverblue" />
-                Verificação de Configuração
+                Verificação Inteligente de Configuração
               </CardTitle>
               <CardDescription className="text-slate-300">
-                Verifica se as variáveis de ambiente estão configuradas corretamente
+                Verifica variáveis de ambiente e descobre automaticamente o Business ID correto
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
@@ -285,43 +300,62 @@ const WhatsAppDebug: React.FC = () => {
                 className="w-full bg-viverblue hover:bg-viverblue-dark text-white font-medium py-3 text-base"
               >
                 {loading && <Loader2 className="mr-2 h-5 w-5 animate-spin" />}
-                {loading ? 'Verificando...' : 'Verificar Configuração'}
+                {loading ? 'Analisando Configuração...' : 'Analisar Configuração'}
               </Button>
 
               {config && (
                 <div className="space-y-4">
-                  <StatusCard
-                    title="Access Token"
-                    success={config.hasToken}
-                    value={config.hasToken ? `${config.tokenLength} chars` : 'Não configurado'}
-                    icon={<Key className="h-4 w-4" />}
-                  />
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <StatusCard
+                      title="Access Token"
+                      success={config.hasToken}
+                      value={config.hasToken ? `${config.tokenLength} chars` : 'Não configurado'}
+                      icon={<Key className="h-4 w-4" />}
+                    />
 
-                  <StatusCard
-                    title="Phone Number ID"
-                    success={config.hasPhoneNumberId}
-                    value={config.hasPhoneNumberId ? `${config.phoneNumberIdLength} chars` : 'Não configurado'}
-                    icon={<Phone className="h-4 w-4" />}
-                  />
+                    <StatusCard
+                      title="Phone Number ID"
+                      success={config.hasPhoneNumberId}
+                      value={config.hasPhoneNumberId ? `${config.phoneNumberIdLength} chars` : 'Não configurado'}
+                      icon={<Phone className="h-4 w-4" />}
+                    />
 
-                  <StatusCard
-                    title="Business ID"
-                    success={config.hasBusinessId}
-                    value={config.hasBusinessId ? `${config.businessIdLength} chars` : 'Não configurado'}
-                    icon={<Building className="h-4 w-4" />}
-                    warning={config.currentBusinessId !== config.suggestedBusinessId}
-                  />
+                    <StatusCard
+                      title="Business ID Discovery"
+                      success={config.autoDiscoveryWorked}
+                      value={config.autoDiscoveryWorked ? 'Descoberto Automaticamente' : 'Falha na Descoberta'}
+                      icon={<Building className="h-4 w-4" />}
+                      warning={config.needsBusinessIdUpdate}
+                    />
+                  </div>
 
-                  {config.currentBusinessId !== config.suggestedBusinessId && (
+                  {config.autoDiscoveryWorked && (
+                    <Alert className="border-emerald-500/30 bg-emerald-500/5">
+                      <CheckCircle2 className="h-4 w-4 text-emerald-400" />
+                      <AlertDescription className="text-slate-200">
+                        <strong className="text-emerald-400">Business ID descoberto automaticamente!</strong><br />
+                        <span className="text-slate-300">
+                          ID Descoberto: <code className="bg-slate-800 px-2 py-1 rounded text-emerald-300">{config.discoveredBusinessId}</code><br />
+                          {config.needsBusinessIdUpdate && (
+                            <>
+                              ID Configurado: <code className="bg-slate-800 px-2 py-1 rounded text-amber-300">{config.currentBusinessId}</code><br />
+                              <strong className="text-amber-400">Considere atualizar a variável de ambiente WHATSAPP_BUSINESS_ID</strong>
+                            </>
+                          )}
+                        </span>
+                      </AlertDescription>
+                    </Alert>
+                  )}
+
+                  {!config.autoDiscoveryWorked && config.hasToken && (
                     <Alert className="border-amber-500/30 bg-amber-500/5">
                       <AlertTriangle className="h-4 w-4 text-amber-400" />
                       <AlertDescription className="text-slate-200">
-                        <strong className="text-amber-400">Business ID pode estar incorreto!</strong><br />
+                        <strong className="text-amber-400">Não foi possível descobrir o Business ID automaticamente.</strong><br />
                         <span className="text-slate-300">
-                          Atual: <code className="bg-slate-800 px-2 py-1 rounded text-amber-300">{config.currentBusinessId}</code><br />
-                          Sugerido: <code className="bg-slate-800 px-2 py-1 rounded text-emerald-300">{config.suggestedBusinessId}</code><br />
+                          Isso pode indicar problemas de permissão no token ou configuração da conta.<br />
+                          Verifique se o token tem as permissões necessárias para acessar informações de negócio.
                         </span>
-                        <strong className="text-amber-400">Execute o teste de Business IDs para confirmar.</strong>
                       </AlertDescription>
                     </Alert>
                   )}
@@ -331,80 +365,16 @@ const WhatsAppDebug: React.FC = () => {
           </Card>
         </TabsContent>
 
-        <TabsContent value="business-test" className="space-y-6">
-          <Card className="bg-slate-800/50 border-slate-700">
-            <CardHeader className="pb-4">
-              <CardTitle className="text-xl text-white flex items-center gap-2">
-                <TestTube className="h-5 w-5 text-viverblue" />
-                Teste de Business IDs
-              </CardTitle>
-              <CardDescription className="text-slate-300">
-                Testa diferentes Business IDs para encontrar o correto para templates
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <Button 
-                onClick={testBusinessIds} 
-                disabled={loading}
-                className="w-full bg-viverblue hover:bg-viverblue-dark text-white font-medium py-3 text-base"
-              >
-                {loading && <Loader2 className="mr-2 h-5 w-5 animate-spin" />}
-                {loading ? 'Testando IDs...' : 'Testar Business IDs'}
-              </Button>
-
-              {businessIdTests.length > 0 && (
-                <div className="space-y-4">
-                  {businessIdTests.map((test, index) => (
-                    <div key={index} className="p-4 border border-slate-600 rounded-lg space-y-3 bg-slate-800/30">
-                      <div className="flex items-center justify-between">
-                        <span className="font-medium text-slate-200 text-base">{test.label}</span>
-                        <div className="flex items-center gap-3">
-                          {test.success ? (
-                            <CheckCircle2 className="h-5 w-5 text-emerald-400" />
-                          ) : (
-                            <XCircle className="h-5 w-5 text-red-400" />
-                          )}
-                          <Badge variant={test.success ? "default" : "destructive"} className="font-medium">
-                            {test.success ? `${test.templatesFound} templates` : 'Erro'}
-                          </Badge>
-                        </div>
-                      </div>
-                      <p className="text-sm text-slate-400">
-                        Business ID: <code className="bg-slate-700 px-2 py-1 rounded text-slate-200">{test.businessId}</code>
-                      </p>
-                      {test.error && (
-                        <div className="p-3 bg-red-500/10 border border-red-500/20 rounded text-red-400 text-sm">
-                          <strong>Erro:</strong> {test.error.message || test.error}
-                        </div>
-                      )}
-                      {test.success && test.templatesFound > 0 && (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => listTemplates(test.businessId)}
-                          disabled={loading}
-                          className="border-viverblue text-viverblue hover:bg-viverblue hover:text-white"
-                        >
-                          Ver Templates
-                        </Button>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-
+        {/* Conectividade */}
         <TabsContent value="connectivity" className="space-y-6">
           <Card className="bg-slate-800/50 border-slate-700">
             <CardHeader className="pb-4">
               <CardTitle className="text-xl text-white flex items-center gap-2">
                 <Wifi className="h-5 w-5 text-viverblue" />
-                Teste de Conectividade
+                Teste Avançado de Conectividade
               </CardTitle>
               <CardDescription className="text-slate-300">
-                Testa a conexão com a API do WhatsApp Business e valida a resposta
+                Testa conexão, permissões, latência e validação de tokens
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
@@ -414,36 +384,157 @@ const WhatsAppDebug: React.FC = () => {
                 className="w-full bg-viverblue hover:bg-viverblue-dark text-white font-medium py-3 text-base"
               >
                 {loading && <Loader2 className="mr-2 h-5 w-5 animate-spin" />}
-                {loading ? 'Testando Conexão...' : 'Testar Conectividade'}
+                {loading ? 'Executando Testes...' : 'Executar Testes de Conectividade'}
               </Button>
 
               {connectivity && (
                 <div className="space-y-4">
-                  <Alert className={connectivity.success ? "border-emerald-500/30 bg-emerald-500/5" : "border-red-500/30 bg-red-500/5"}>
-                    {connectivity.success ? (
-                      <CheckCircle2 className="h-5 w-5 text-emerald-400" />
-                    ) : (
-                      <XCircle className="h-5 w-5 text-red-400" />
-                    )}
-                    <AlertDescription className="text-slate-200">
-                      <div className="flex items-center gap-2 mb-2">
-                        <span className="font-medium">Status HTTP:</span>
-                        <Badge 
-                          variant={connectivity.success ? "default" : "destructive"}
-                          className="font-mono"
-                        >
-                          {connectivity.status}
-                        </Badge>
+                  {/* Resumo */}
+                  <div className="grid grid-cols-3 gap-4">
+                    <StatusCard
+                      title="Total de Testes"
+                      success={true}
+                      value={connectivity.summary.total.toString()}
+                      icon={<TestTube className="h-4 w-4" />}
+                    />
+                    <StatusCard
+                      title="Testes Aprovados"
+                      success={connectivity.summary.passed > 0}
+                      value={connectivity.summary.passed.toString()}
+                      icon={<CheckCircle2 className="h-4 w-4" />}
+                    />
+                    <StatusCard
+                      title="Testes Falharam"
+                      success={connectivity.summary.failed === 0}
+                      value={connectivity.summary.failed.toString()}
+                      icon={<XCircle className="h-4 w-4" />}
+                    />
+                  </div>
+
+                  {/* Detalhes dos testes */}
+                  <div className="space-y-3">
+                    {connectivity.tests.map((test, index) => (
+                      <div key={index} className="p-4 border border-slate-600 rounded-lg bg-slate-800/30">
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center gap-3">
+                            {getStatusIcon(test.success)}
+                            <span className="font-medium text-slate-200">{test.name}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            {test.latency && (
+                              <Badge variant="outline" className="border-viverblue text-viverblue">
+                                <Clock className="w-3 h-3 mr-1" />
+                                {test.latency}
+                              </Badge>
+                            )}
+                            {test.status && (
+                              <Badge variant={test.success ? "default" : "destructive"}>
+                                {test.status}
+                              </Badge>
+                            )}
+                          </div>
+                        </div>
+                        
+                        {test.scopes && test.scopes.length > 0 && (
+                          <div className="text-sm text-slate-400 mb-2">
+                            <span className="font-medium">Permissões:</span> {test.scopes.join(', ')}
+                          </div>
+                        )}
+                        
+                        {test.error && (
+                          <div className="text-sm text-red-400 bg-red-500/10 p-2 rounded border border-red-500/20">
+                            <strong>Erro:</strong> {test.error}
+                          </div>
+                        )}
+                        
+                        {test.data && (
+                          <JsonViewer data={test.data} title="Dados da Resposta" className="mt-2" />
+                        )}
                       </div>
-                      <p className="text-sm">{connectivity.message}</p>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Templates */}
+        <TabsContent value="templates" className="space-y-6">
+          <Card className="bg-slate-800/50 border-slate-700">
+            <CardHeader className="pb-4">
+              <CardTitle className="text-xl text-white flex items-center gap-2">
+                <Search className="h-5 w-5 text-viverblue" />
+                Descoberta Automática de Templates
+              </CardTitle>
+              <CardDescription className="text-slate-300">
+                Descobre automaticamente o Business ID correto e lista todos os templates disponíveis
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <Button 
+                onClick={autoDiscoverTemplates} 
+                disabled={loading}
+                className="w-full bg-viverblue hover:bg-viverblue-dark text-white font-medium py-3 text-base"
+              >
+                {loading && <Loader2 className="mr-2 h-5 w-5 animate-spin" />}
+                {loading ? 'Descobrindo Templates...' : 'Descobrir Templates Automaticamente'}
+              </Button>
+
+              {templatesData && (
+                <div className="space-y-4">
+                  <Alert className="border-emerald-500/30 bg-emerald-500/5">
+                    <CheckCircle2 className="h-4 w-4 text-emerald-400" />
+                    <AlertDescription className="text-slate-200">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <strong className="text-emerald-400">Business ID:</strong> {templatesData.businessId}<br />
+                          <strong className="text-emerald-400">Templates encontrados:</strong> {templatesData.templates.length}
+                        </div>
+                        <div className="flex items-center gap-2">
+                          {templatesData.fromCache && (
+                            <Badge variant="outline" className="border-blue-400 text-blue-400">
+                              <Clock className="w-3 h-3 mr-1" />
+                              Cache
+                            </Badge>
+                          )}
+                          {templatesData.fallback && (
+                            <Badge variant="outline" className="border-amber-400 text-amber-400">
+                              <AlertTriangle className="w-3 h-3 mr-1" />
+                              Fallback
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
                     </AlertDescription>
                   </Alert>
-                  
-                  {connectivity.data && (
-                    <JsonViewer 
-                      data={connectivity.data} 
-                      title="Resposta da API"
-                    />
+
+                  {templatesData.templates.length > 0 && (
+                    <div className="space-y-3">
+                      <h4 className="text-lg font-semibold text-white">Templates Disponíveis:</h4>
+                      <div className="grid gap-3 max-h-96 overflow-y-auto">
+                        {templatesData.templates.map((template, index) => (
+                          <div key={index} className="p-4 border border-slate-600 rounded-lg bg-slate-800/30">
+                            <div className="flex items-center justify-between mb-2">
+                              <span className="font-medium text-slate-200">{template.name}</span>
+                              <Badge variant={template.status === 'APPROVED' ? 'default' : 'destructive'}>
+                                {template.status}
+                              </Badge>
+                            </div>
+                            {template.category && (
+                              <p className="text-sm text-slate-400 mb-1">
+                                <strong>Categoria:</strong> {template.category}
+                              </p>
+                            )}
+                            {template.language && (
+                              <p className="text-sm text-slate-400">
+                                <strong>Idioma:</strong> {template.language}
+                              </p>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
                   )}
                 </div>
               )}
@@ -451,154 +542,88 @@ const WhatsAppDebug: React.FC = () => {
           </Card>
         </TabsContent>
 
-        <TabsContent value="templates" className="space-y-6">
-          <Card className="bg-slate-800/50 border-slate-700">
-            <CardHeader className="pb-4">
-              <CardTitle className="text-xl text-white flex items-center gap-2">
-                <FileText className="h-5 w-5 text-viverblue" />
-                Templates do WhatsApp
-              </CardTitle>
-              <CardDescription className="text-slate-300">
-                Lista os templates aprovados no WhatsApp Business (usando Business ID correto)
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <Button 
-                onClick={() => listTemplates()} 
-                disabled={loading}
-                className="w-full bg-viverblue hover:bg-viverblue-dark text-white font-medium py-3 text-base"
-              >
-                {loading && <Loader2 className="mr-2 h-5 w-5 animate-spin" />}
-                {loading ? 'Carregando...' : 'Carregar Templates'}
-              </Button>
-
-              {templates.length > 0 && (
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between mb-4">
-                    <h4 className="text-lg font-medium text-slate-200">Templates Encontrados</h4>
-                    <Badge variant="secondary" className="font-medium">
-                      {templates.length} total
-                    </Badge>
-                  </div>
-                  
-                  {templates.map((template, index) => (
-                    <div key={index} className="p-4 border border-slate-600 rounded-lg space-y-3 bg-slate-800/30">
-                      <div className="flex items-center justify-between">
-                        <span className="font-medium text-slate-200 text-base">{template.name}</span>
-                        <Badge 
-                          variant={template.status === 'APPROVED' ? 'default' : 'secondary'}
-                          className={template.status === 'APPROVED' ? 'bg-emerald-600 text-emerald-100' : ''}
-                        >
-                          {template.status}
-                        </Badge>
-                      </div>
-                      <div className="flex items-center gap-4 text-sm text-slate-400">
-                        <span>Idioma: <code className="bg-slate-700 px-2 py-1 rounded text-slate-200">{template.language}</code></span>
-                        <span>Categoria: <code className="bg-slate-700 px-2 py-1 rounded text-slate-200">{template.category}</code></span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-
+        {/* Teste de Envio */}
         <TabsContent value="test" className="space-y-6">
           <Card className="bg-slate-800/50 border-slate-700">
             <CardHeader className="pb-4">
               <CardTitle className="text-xl text-white flex items-center gap-2">
                 <Send className="h-5 w-5 text-viverblue" />
-                Envio de Teste
+                Teste de Envio de Mensagem
               </CardTitle>
               <CardDescription className="text-slate-300">
-                Envia mensagens de teste para validar a integração completa
+                Envia uma mensagem de teste usando os templates disponíveis
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="testPhone" className="text-slate-200 font-medium">
-                    Número de Telefone
+                  <Label htmlFor="testPhone" className="text-slate-200">
+                    Número de Telefone (Brasil)
                   </Label>
                   <Input
                     id="testPhone"
+                    placeholder="(11) 99999-9999"
                     value={testPhone}
                     onChange={(e) => setTestPhone(e.target.value)}
-                    placeholder="5511999999999"
-                    className="bg-slate-700 border-slate-600 text-white placeholder:text-slate-400 text-base py-3"
+                    className="bg-slate-700 border-slate-600 text-white"
                   />
-                  <p className="text-xs text-slate-400">
-                    Formato: código do país + DDD + número (ex: 5511999999999)
-                  </p>
                 </div>
-
+                
                 <div className="space-y-2">
-                  <Label htmlFor="templateSelect" className="text-slate-200 font-medium">
-                    Template a Testar
+                  <Label htmlFor="template" className="text-slate-200">
+                    Template
                   </Label>
-                  <select 
-                    id="templateSelect"
-                    value={selectedTemplate}
-                    onChange={(e) => setSelectedTemplate(e.target.value)}
-                    className="w-full p-3 bg-slate-700 border border-slate-600 rounded-md text-white text-base"
-                  >
-                    <option value="convite_acesso">convite_acesso (Convites)</option>
-                    <option value="hello_world">hello_world (Teste Básico)</option>
-                  </select>
+                  <Select value={selectedTemplate} onValueChange={setSelectedTemplate}>
+                    <SelectTrigger className="bg-slate-700 border-slate-600 text-white">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="bg-slate-700 border-slate-600">
+                      <SelectItem value="hello_world">Hello World</SelectItem>
+                      <SelectItem value="convite_acesso">Convite de Acesso</SelectItem>
+                      {templatesData?.templates.filter(t => t.status === 'APPROVED').map((template) => (
+                        <SelectItem key={template.name} value={template.name}>
+                          {template.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
 
               <Button 
                 onClick={sendTestMessage} 
                 disabled={loading || !testPhone}
-                className="w-full bg-viverblue hover:bg-viverblue-dark text-white font-medium py-4 text-base disabled:opacity-50"
+                className="w-full bg-viverblue hover:bg-viverblue-dark text-white font-medium py-3 text-base"
               >
                 {loading && <Loader2 className="mr-2 h-5 w-5 animate-spin" />}
-                {loading ? 'Enviando Mensagem...' : 'Enviar Teste de WhatsApp'}
+                {loading ? 'Enviando Teste...' : 'Enviar Mensagem de Teste'}
               </Button>
 
               {testResult && (
-                <div className="space-y-4">
-                  <Alert className={testResult.success ? "border-emerald-500/30 bg-emerald-500/5" : "border-red-500/30 bg-red-500/5"}>
-                    {testResult.success ? (
-                      <CheckCircle2 className="h-5 w-5 text-emerald-400" />
-                    ) : (
-                      <XCircle className="h-5 w-5 text-red-400" />
-                    )}
-                    <AlertDescription className="text-slate-200">
-                      <p className="font-medium mb-2">{testResult.message}</p>
-                      {testResult.templateUsed && (
-                        <p className="text-sm text-slate-300">
-                          Template utilizado: <code className="bg-slate-700 px-2 py-1 rounded">{testResult.templateUsed}</code>
-                        </p>
+                <Alert className={testResult.success ? "border-emerald-500/30 bg-emerald-500/5" : "border-red-500/30 bg-red-500/5"}>
+                  {getStatusIcon(testResult.success)}
+                  <AlertDescription className="text-slate-200">
+                    <div className="space-y-2">
+                      <div>
+                        <strong>Status:</strong> {testResult.success ? 'Sucesso' : 'Erro'}<br />
+                        <strong>Template:</strong> {testResult.templateUsed}<br />
+                        <strong>Telefone:</strong> {testResult.phoneFormatted}
+                      </div>
+                      
+                      {testResult.result && (
+                        <JsonViewer data={testResult.result} title="Resposta da API" />
                       )}
-                      {testResult.phoneFormatted && (
-                        <p className="text-sm text-slate-300">
-                          Enviado para: <code className="bg-slate-700 px-2 py-1 rounded">{testResult.phoneFormatted}</code>
-                        </p>
-                      )}
-                    </AlertDescription>
-                  </Alert>
-                  
-                  {testResult.result && (
-                    <JsonViewer 
-                      data={testResult.result} 
-                      title="Resposta Completa da API"
-                    />
-                  )}
-                </div>
+                    </div>
+                  </AlertDescription>
+                </Alert>
               )}
             </CardContent>
           </Card>
         </TabsContent>
       </Tabs>
 
-      <LogsViewer 
-        logs={logs} 
-        onClear={() => setLogs([])} 
-        className="mt-8"
-      />
+      {/* Logs */}
+      <LogsViewer logs={logs} onClear={clearLogs} />
     </div>
   );
 };

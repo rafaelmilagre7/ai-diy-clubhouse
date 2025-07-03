@@ -6,6 +6,143 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+// Cache para evitar requests desnecessários
+let businessIdCache: string | null = null
+let templatesCache: any[] | null = null
+let cacheTimestamp: number = 0
+const CACHE_DURATION = 5 * 60 * 1000 // 5 minutos
+
+// Função para descobrir automaticamente o Business ID correto
+async function discoverBusinessId(token: string): Promise<string | null> {
+  console.log('🔍 Descobrindo Business ID automaticamente...')
+  
+  try {
+    // Primeira tentativa: usar a API para obter informações do usuário
+    const meResponse = await fetch('https://graph.facebook.com/v18.0/me', {
+      headers: { 'Authorization': `Bearer ${token}` }
+    })
+    
+    if (meResponse.ok) {
+      const meData = await meResponse.json()
+      console.log('👤 Dados do usuário:', meData)
+      
+      if (meData.id) {
+        // Testar se o ID do usuário funciona para templates
+        const testResponse = await fetch(
+          `https://graph.facebook.com/v18.0/${meData.id}/message_templates?limit=1`,
+          { headers: { 'Authorization': `Bearer ${token}` } }
+        )
+        
+        if (testResponse.ok) {
+          console.log(`✅ Business ID descoberto: ${meData.id}`)
+          return meData.id
+        }
+      }
+    }
+    
+    // Segunda tentativa: usar a API de contas de negócios
+    const businessResponse = await fetch(
+      'https://graph.facebook.com/v18.0/me/businesses',
+      { headers: { 'Authorization': `Bearer ${token}` } }
+    )
+    
+    if (businessResponse.ok) {
+      const businessData = await businessResponse.json()
+      console.log('🏢 Contas de negócio:', businessData)
+      
+      if (businessData.data && businessData.data.length > 0) {
+        const businessId = businessData.data[0].id
+        console.log(`✅ Business ID encontrado: ${businessId}`)
+        return businessId
+      }
+    }
+    
+    console.log('⚠️ Não foi possível descobrir o Business ID automaticamente')
+    return null
+    
+  } catch (error) {
+    console.error('❌ Erro ao descobrir Business ID:', error)
+    return null
+  }
+}
+
+// Função para validar conectividade com mais detalhes
+async function validateConnectivity(token: string, phoneNumberId: string) {
+  const tests = []
+  
+  // Teste 1: Verificar Phone Number
+  try {
+    const phoneResponse = await fetch(
+      `https://graph.facebook.com/v18.0/${phoneNumberId}`,
+      { headers: { 'Authorization': `Bearer ${token}` } }
+    )
+    
+    const phoneData = await phoneResponse.json()
+    
+    tests.push({
+      name: 'Phone Number Validation',
+      success: phoneResponse.ok,
+      status: phoneResponse.status,
+      data: phoneData,
+      latency: null
+    })
+  } catch (error) {
+    tests.push({
+      name: 'Phone Number Validation',
+      success: false,
+      error: error.message
+    })
+  }
+  
+  // Teste 2: Verificar permissões de token
+  try {
+    const debugResponse = await fetch(
+      `https://graph.facebook.com/debug_token?input_token=${token}&access_token=${token}`,
+      { headers: { 'Authorization': `Bearer ${token}` } }
+    )
+    
+    const debugData = await debugResponse.json()
+    
+    tests.push({
+      name: 'Token Permissions',
+      success: debugResponse.ok,
+      status: debugResponse.status,
+      data: debugData,
+      scopes: debugData.data?.scopes || []
+    })
+  } catch (error) {
+    tests.push({
+      name: 'Token Permissions',
+      success: false,
+      error: error.message
+    })
+  }
+  
+  // Teste 3: Teste de latência
+  const start = Date.now()
+  try {
+    await fetch('https://graph.facebook.com/v18.0/', {
+      headers: { 'Authorization': `Bearer ${token}` }
+    })
+    const latency = Date.now() - start
+    
+    tests.push({
+      name: 'API Latency',
+      success: true,
+      latency: `${latency}ms`,
+      status: latency < 1000 ? 'Good' : latency < 3000 ? 'Fair' : 'Poor'
+    })
+  } catch (error) {
+    tests.push({
+      name: 'API Latency',
+      success: false,
+      error: error.message
+    })
+  }
+  
+  return tests
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
@@ -32,8 +169,18 @@ serve(async (req) => {
     const phoneNumberId = Deno.env.get('WHATSAPP_PHONE_NUMBER_ID')
     const businessId = Deno.env.get('WHATSAPP_BUSINESS_ID')
 
-    // Verificar configuração básica
+    // Verificar configuração básica e descobrir Business ID automaticamente
     if (action === 'check-config') {
+      let discoveredBusinessId = null
+      
+      if (whatsappToken) {
+        discoveredBusinessId = await discoverBusinessId(whatsappToken)
+        if (discoveredBusinessId) {
+          businessIdCache = discoveredBusinessId
+          cacheTimestamp = Date.now()
+        }
+      }
+
       const config = {
         hasToken: !!whatsappToken,
         hasPhoneNumberId: !!phoneNumberId,
@@ -45,7 +192,9 @@ serve(async (req) => {
         phoneNumberIdMasked: phoneNumberId ? `${phoneNumberId.substring(0, 6)}...` : null,
         businessIdMasked: businessId ? `${businessId.substring(0, 6)}...` : null,
         currentBusinessId: businessId,
-        suggestedBusinessId: '385516967985232' // Do print fornecido
+        discoveredBusinessId,
+        autoDiscoveryWorked: !!discoveredBusinessId,
+        needsBusinessIdUpdate: discoveredBusinessId && discoveredBusinessId !== businessId
       }
 
       console.log('📋 Configuração WhatsApp:', config)
@@ -53,109 +202,142 @@ serve(async (req) => {
       return new Response(JSON.stringify({
         success: true,
         config,
-        message: 'Configuração verificada'
+        message: 'Configuração verificada e Business ID descoberto automaticamente'
       }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
     }
 
-    // Testar conectividade com API do WhatsApp
+    // Testar conectividade avançada com API do WhatsApp
     if (action === 'test-connectivity') {
       if (!whatsappToken || !phoneNumberId) {
         throw new Error('Token ou Phone Number ID não configurados')
       }
 
-      console.log('🌐 Testando conectividade com WhatsApp API...')
+      console.log('🌐 Executando testes avançados de conectividade...')
 
-      const response = await fetch(
-        `https://graph.facebook.com/v18.0/${phoneNumberId}`,
-        {
-          method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${whatsappToken}`,
-            'Content-Type': 'application/json',
-          },
-        }
-      )
-
-      const data = await response.json()
-
-      console.log('📡 Resposta da API WhatsApp:', data)
+      const connectivityTests = await validateConnectivity(whatsappToken, phoneNumberId)
+      const overallSuccess = connectivityTests.every(test => test.success)
 
       return new Response(JSON.stringify({
-        success: response.ok,
-        status: response.status,
-        data,
-        message: response.ok ? 'Conectividade OK' : 'Erro de conectividade'
+        success: overallSuccess,
+        tests: connectivityTests,
+        summary: {
+          total: connectivityTests.length,
+          passed: connectivityTests.filter(t => t.success).length,
+          failed: connectivityTests.filter(t => !t.success).length
+        },
+        message: overallSuccess ? 'Todos os testes de conectividade passaram' : 'Alguns testes falharam'
       }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
     }
 
-    // Testar diferentes Business IDs para templates
-    if (action === 'test-business-ids') {
+    // Descobrir automaticamente o Business ID e listar templates
+    if (action === 'auto-discover') {
       if (!whatsappToken) {
         throw new Error('Token do WhatsApp não configurado')
       }
 
-      const businessIdsToTest = [
-        { id: businessId, label: 'Business ID Atual (do .env)' },
-        { id: '385516967985232', label: 'Business ID do Print' },
-        { id: '385471239079413', label: 'Business ID Alternativo' }
-      ]
+      console.log('🔍 Iniciando descoberta automática...')
 
-      const results = []
-
-      for (const businessIdTest of businessIdsToTest) {
-        if (!businessIdTest.id) continue
-
-        console.log(`🧪 Testando Business ID: ${businessIdTest.id} (${businessIdTest.label})`)
-
+      // Usar cache se disponível e válido
+      if (businessIdCache && (Date.now() - cacheTimestamp) < CACHE_DURATION) {
+        console.log('📦 Usando Business ID do cache:', businessIdCache)
+        
         try {
           const response = await fetch(
-            `https://graph.facebook.com/v18.0/${businessIdTest.id}/message_templates`,
-            {
-              method: 'GET',
-              headers: {
-                'Authorization': `Bearer ${whatsappToken}`,
-                'Content-Type': 'application/json',
-              },
-            }
+            `https://graph.facebook.com/v18.0/${businessIdCache}/message_templates`,
+            { headers: { 'Authorization': `Bearer ${whatsappToken}` } }
           )
-
-          const data = await response.json()
-
-          results.push({
-            businessId: businessIdTest.id,
-            label: businessIdTest.label,
-            success: response.ok,
-            status: response.status,
-            templatesFound: response.ok ? (data.data ? data.data.length : 0) : 0,
-            error: response.ok ? null : data.error,
-            templates: response.ok ? (data.data || []).slice(0, 5) : null // Primeiros 5 templates
-          })
-
-          console.log(`📊 Resultado ${businessIdTest.label}: ${response.ok ? 'Sucesso' : 'Erro'} - ${response.ok ? data.data?.length || 0 : 'N/A'} templates`)
-
+          
+          if (response.ok) {
+            const data = await response.json()
+            return new Response(JSON.stringify({
+              success: true,
+              businessId: businessIdCache,
+              templates: data.data || [],
+              fromCache: true,
+              message: `Business ID descoberto (cache): ${businessIdCache}`
+            }), {
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            })
+          }
         } catch (error) {
-          results.push({
-            businessId: businessIdTest.id,
-            label: businessIdTest.label,
-            success: false,
-            error: error.message,
-            templatesFound: 0
-          })
-          console.log(`❌ Erro ao testar ${businessIdTest.label}: ${error.message}`)
+          console.log('❌ Cache inválido, redescobrir...')
+          businessIdCache = null
         }
       }
 
+      // Descobrir novo Business ID
+      const discoveredId = await discoverBusinessId(whatsappToken)
+      
+      if (!discoveredId) {
+        // Fallback: tentar Business ID do env se não conseguir descobrir
+        if (businessId) {
+          console.log('🔄 Usando Business ID do .env como fallback')
+          const response = await fetch(
+            `https://graph.facebook.com/v18.0/${businessId}/message_templates`,
+            { headers: { 'Authorization': `Bearer ${whatsappToken}` } }
+          )
+          
+          if (response.ok) {
+            const data = await response.json()
+            return new Response(JSON.stringify({
+              success: true,
+              businessId: businessId,
+              templates: data.data || [],
+              fallback: true,
+              message: `Usando Business ID configurado: ${businessId}`
+            }), {
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            })
+          }
+        }
+        
+        return new Response(JSON.stringify({
+          success: false,
+          message: 'Não foi possível descobrir o Business ID automaticamente'
+        }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 404,
+        })
+      }
+
+      // Buscar templates com o Business ID descoberto
+      try {
+        const response = await fetch(
+          `https://graph.facebook.com/v18.0/${discoveredId}/message_templates`,
+          { headers: { 'Authorization': `Bearer ${whatsappToken}` } }
+        )
+        
+        if (response.ok) {
+          const data = await response.json()
+          
+          // Atualizar cache
+          businessIdCache = discoveredId
+          templatesCache = data.data || []
+          cacheTimestamp = Date.now()
+          
+          return new Response(JSON.stringify({
+            success: true,
+            businessId: discoveredId,
+            templates: data.data || [],
+            message: `Business ID descoberto: ${discoveredId}`
+          }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          })
+        }
+      } catch (error) {
+        console.error('❌ Erro ao buscar templates:', error)
+      }
+
       return new Response(JSON.stringify({
-        success: true,
-        results,
-        message: `Testados ${results.length} Business IDs`,
-        recommendation: results.find(r => r.success && r.templatesFound > 0)?.businessId || null
+        success: false,
+        message: 'Business ID descoberto mas não foi possível buscar templates'
       }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 500,
       })
     }
 
