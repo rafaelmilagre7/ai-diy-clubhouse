@@ -11,6 +11,7 @@ import { StatusCard } from '@/components/debug/StatusCard';
 import { JsonViewer } from '@/components/debug/JsonViewer';
 import { LogsViewer } from '@/components/debug/LogsViewer';
 import { Phone, CheckCircle, XCircle, AlertTriangle, Settings, MessageSquare, Zap, Shield, Smartphone, Loader2, RefreshCw, Eye, Search, Bug, Globe, Key, ArrowRight, BookOpen, ExternalLink, HelpCircle, Rocket, Play, Info } from 'lucide-react';
+import { TemplateCard } from '@/components/admin/whatsapp/TemplateCard';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 interface ConfigTestResult {
@@ -100,6 +101,30 @@ const WhatsAppDebug: React.FC = () => {
     results: null,
     isValid: null
   });
+
+  const [templatesStatus, setTemplatesStatus] = useState<{
+    loading: boolean;
+    lastChecked: Date | null;
+    templates: any[];
+    stats: any | null;
+    filters: {
+      search: string;
+      status: string;
+      category: string;
+    };
+  }>({
+    loading: false,
+    lastChecked: null,
+    templates: [],
+    stats: null,
+    filters: {
+      search: '',
+      status: '',
+      category: ''
+    }
+  });
+
+
   const wizardSteps: WizardStep[] = [{
     id: 'token',
     title: 'Token de Acesso',
@@ -445,6 +470,72 @@ const WhatsAppDebug: React.FC = () => {
       setIsLoadingDiagnostics(false);
     }
   };
+
+  const searchTemplates = async () => {
+    if (!config.token) {
+      toast.error('Access Token é obrigatório para buscar templates');
+      return;
+    }
+    
+    setTemplatesStatus(prev => ({ ...prev, loading: true }));
+    addLog('📋 Iniciando busca de templates...', 'info');
+    
+    try {
+      const configForEdgeFunction = {
+        access_token: config.token,
+        business_account_id: config.businessId,
+        phone_number_id: config.phoneNumberId
+      };
+      
+      const filtersToSend = {
+        status: templatesStatus.filters.status || undefined,
+        name: templatesStatus.filters.search || undefined,
+        category: templatesStatus.filters.category || undefined
+      };
+      
+      const { data, error } = await supabase.functions.invoke('whatsapp-config-check', {
+        body: {
+          action: 'search-templates',
+          config: configForEdgeFunction,
+          filters: filtersToSend
+        }
+      });
+      
+      if (error) {
+        addLog(`❌ Erro ao buscar templates: ${error.message}`, 'error');
+        throw error;
+      }
+      
+      if (data.success) {
+        setTemplatesStatus(prev => ({
+          ...prev,
+          templates: data.templates,
+          stats: data.stats,
+          lastChecked: new Date()
+        }));
+        
+        addLog(`✅ ${data.templates.length} templates encontrados`, 'success');
+        addLog(`📊 ${data.stats.approved} aprovados, ${data.stats.pending} pendentes, ${data.stats.rejected} rejeitados`, 'info');
+        
+        if (data.businessId && !config.businessId) {
+          addLog(`🎉 Business ID descoberto: ${data.businessId}`, 'success');
+          setConfig(prev => ({ ...prev, businessId: data.businessId }));
+        }
+        
+        toast.success(`${data.templates.length} templates encontrados!`);
+      } else {
+        addLog(`❌ Erro na busca: ${data.error}`, 'error');
+        toast.error(`Erro ao buscar templates: ${data.error}`);
+      }
+      
+    } catch (error: any) {
+      addLog(`❌ Erro inesperado: ${error.message}`, 'error');
+      toast.error(`Erro ao buscar templates: ${error.message}`);
+    } finally {
+      setTemplatesStatus(prev => ({ ...prev, loading: false }));
+    }
+  };
+
   const testSupabaseSecrets = async () => {
     setSupabaseSecretsStatus(prev => ({ ...prev, testing: true }));
     addLog('🔐 Testando secrets do Supabase...', 'info');

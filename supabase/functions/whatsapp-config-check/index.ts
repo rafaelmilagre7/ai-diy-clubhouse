@@ -480,6 +480,105 @@ async function discoverViaOwnedApps(token: string) {
   return null
 }
 
+// Nova função para buscar templates WhatsApp
+async function handleTemplatesSearch(parsed: any, requestId: string, corsHeaders: any) {
+  console.log(`📋 [${requestId}] Iniciando busca de templates WhatsApp`)
+  
+  const { config, filters = {} } = parsed
+  
+  if (!config?.access_token) {
+    throw new Error('Access Token não fornecido')
+  }
+  
+  // Auto-descobrir Business ID se não fornecido
+  let businessId = config.business_account_id
+  if (!businessId) {
+    console.log('🔍 Business ID não fornecido, tentando descoberta automática...')
+    const discovery = await discoverBusinessIdAdvanced(config.access_token)
+    businessId = discovery.businessId
+    if (!businessId) {
+      throw new Error('Business ID não fornecido e não foi possível descobrir automaticamente')
+    }
+  }
+  
+  const searchResult = await searchWhatsAppTemplates(config.access_token, businessId, filters)
+  
+  return new Response(
+    JSON.stringify(searchResult),
+    { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+  )
+}
+
+// Função para buscar templates do WhatsApp
+async function searchWhatsAppTemplates(token: string, businessId: string, filters: any = {}) {
+  console.log(`📋 Buscando templates para Business ID: ${businessId}`)
+  
+  try {
+    let url = `https://graph.facebook.com/v18.0/${businessId}/message_templates?limit=50`
+    
+    // Aplicar filtros
+    if (filters.status) {
+      url += `&status=${filters.status}`
+    }
+    
+    if (filters.name) {
+      url += `&name=${encodeURIComponent(filters.name)}`
+    }
+    
+    const response = await fetch(url, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    })
+    
+    if (!response.ok) {
+      const errorData = await response.json()
+      throw new Error(`Erro da API: ${errorData.error?.message || response.statusText}`)
+    }
+    
+    const data = await response.json()
+    
+    const templates = data.data || []
+    
+    // Calcular estatísticas
+    const stats = {
+      total: templates.length,
+      approved: templates.filter(t => t.status === 'APPROVED').length,
+      pending: templates.filter(t => t.status === 'PENDING').length,
+      rejected: templates.filter(t => t.status === 'REJECTED').length,
+      categories: {
+        MARKETING: templates.filter(t => t.category === 'MARKETING').length,
+        UTILITY: templates.filter(t => t.category === 'UTILITY').length,
+        AUTHENTICATION: templates.filter(t => t.category === 'AUTHENTICATION').length
+      }
+    }
+    
+    console.log(`📊 Templates encontrados: ${stats.total}`)
+    console.log(`📊 Estatísticas: ${stats.approved} aprovados, ${stats.pending} pendentes, ${stats.rejected} rejeitados`)
+    
+    return {
+      success: true,
+      businessId,
+      templates,
+      stats,
+      pagination: {
+        hasNext: !!data.paging?.next,
+        next: data.paging?.next,
+        total: templates.length
+      },
+      timestamp: new Date().toISOString()
+    }
+    
+  } catch (error) {
+    console.error('❌ Erro ao buscar templates:', error)
+    return {
+      success: false,
+      error: error.message,
+      templates: [],
+      stats: { total: 0, approved: 0, pending: 0, rejected: 0 },
+      timestamp: new Date().toISOString()
+    }
+  }
+}
+
 // Nova função para testar secrets do Supabase
 async function handleSupabaseSecretsCheck(requestId: string, corsHeaders: any) {
   console.log(`🔐 [${requestId}] Iniciando teste dos secrets do Supabase`)
