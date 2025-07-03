@@ -84,10 +84,21 @@ const WhatsAppDebug: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [logs, setLogs] = useState<string[]>([]);
   const [activeTab, setActiveTab] = useState('basic');
+  const [credentialsStatus, setCredentialsStatus] = useState<{
+    loaded: boolean;
+    lastChecked: Date | null;
+    isValid: boolean | null;
+    autoVerifying: boolean;
+  }>({
+    loaded: false,
+    lastChecked: null,
+    isValid: null,
+    autoVerifying: false
+  });
 
-  // Carregar configuração salva
+  // Carregar configuração salva e auto-verificar
   useEffect(() => {
-    loadSavedConfig();
+    loadSavedConfigAndVerify();
   }, []);
 
   const addLog = (message: string, category: string = 'info') => {
@@ -96,41 +107,122 @@ const WhatsAppDebug: React.FC = () => {
     setLogs(prev => [...prev, logMessage]);
   };
 
-  const loadSavedConfig = async () => {
+  const loadSavedConfigAndVerify = async () => {
     try {
       const { data, error } = await supabase
         .from('admin_settings')
-        .select('setting_value')
-        .eq('setting_key', 'whatsapp_config')
+        .select('value')
+        .eq('key', 'whatsapp_config')
         .single();
 
       if (data && !error) {
-        const savedConfig = JSON.parse(data.setting_value);
-        setConfig(savedConfig);
+        const savedConfig = data.value;
+        setConfig({
+          token: savedConfig.access_token || '',
+          businessId: savedConfig.business_account_id || '',
+          phoneNumberId: savedConfig.phone_number_id || '',
+          webhookToken: savedConfig.webhook_verify_token || ''
+        });
+        
+        setCredentialsStatus(prev => ({ ...prev, loaded: true }));
         addLog('Configuração carregada do banco de dados', 'success');
+        
+        // Auto-verificar se temos credenciais válidas
+        if (savedConfig.access_token && savedConfig.phone_number_id) {
+          addLog('Credenciais encontradas - executando verificação automática...', 'info');
+          await autoVerifyCredentials({
+            token: savedConfig.access_token,
+            businessId: savedConfig.business_account_id || '',
+            phoneNumberId: savedConfig.phone_number_id,
+            webhookToken: savedConfig.webhook_verify_token || ''
+          });
+        }
+      } else {
+        setCredentialsStatus(prev => ({ ...prev, loaded: true }));
+        addLog('Nenhuma configuração salva encontrada', 'warning');
       }
     } catch (error) {
+      setCredentialsStatus(prev => ({ ...prev, loaded: true }));
       addLog(`Erro ao carregar configuração: ${error}`, 'error');
+    }
+  };
+
+  const autoVerifyCredentials = async (configToVerify: any) => {
+    setCredentialsStatus(prev => ({ ...prev, autoVerifying: true }));
+    
+    try {
+      const { data, error } = await supabase.functions.invoke('whatsapp-config-check', {
+        body: { 
+          action: 'basic_test',
+          config: configToVerify
+        }
+      });
+
+      const isValid = data?.results?.every((result: ConfigTestResult) => result.success) || false;
+      
+      setCredentialsStatus(prev => ({
+        ...prev,
+        isValid,
+        lastChecked: new Date(),
+        autoVerifying: false
+      }));
+
+      if (isValid) {
+        addLog('✅ Verificação automática: Credenciais válidas e funcionando', 'success');
+      } else {
+        addLog('❌ Verificação automática: Problemas detectados nas credenciais', 'error');
+      }
+      
+    } catch (error) {
+      setCredentialsStatus(prev => ({
+        ...prev,
+        isValid: false,
+        lastChecked: new Date(),
+        autoVerifying: false
+      }));
+      addLog(`Erro na verificação automática: ${error}`, 'error');
     }
   };
 
   const saveConfig = async () => {
     try {
+      const configToSave = {
+        access_token: config.token,
+        business_account_id: config.businessId,
+        phone_number_id: config.phoneNumberId,
+        webhook_verify_token: config.webhookToken
+      };
+
       const { error } = await supabase
         .from('admin_settings')
         .upsert({
-          setting_key: 'whatsapp_config',
-          setting_value: JSON.stringify(config)
+          key: 'whatsapp_config',
+          value: configToSave
         });
 
       if (error) throw error;
       
       addLog('Configuração salva com sucesso', 'success');
       toast.success('Configuração salva!');
+      
+      // Re-verificar credenciais após salvar
+      if (config.token && config.phoneNumberId) {
+        await autoVerifyCredentials(config);
+      }
     } catch (error) {
       addLog(`Erro ao salvar configuração: ${error}`, 'error');
       toast.error('Erro ao salvar configuração');
     }
+  };
+
+  const reVerifyCredentials = async () => {
+    if (!config.token || !config.phoneNumberId) {
+      toast.error('Preencha pelo menos o Token e Phone Number ID');
+      return;
+    }
+    
+    addLog('Executando re-verificação manual das credenciais...', 'info');
+    await autoVerifyCredentials(config);
   };
 
   const runBasicTests = async () => {
@@ -405,6 +497,78 @@ const WhatsAppDebug: React.FC = () => {
         </TabsList>
 
         <TabsContent value="basic" className="space-y-6">
+          {/* Status das Credenciais */}
+          {credentialsStatus.loaded && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Shield className="h-5 w-5" />
+                  Status das Credenciais
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <StatusCard
+                    title="Status das Credenciais"
+                    success={credentialsStatus.isValid === true}
+                    warning={credentialsStatus.isValid === null}
+                    value={
+                      credentialsStatus.autoVerifying ? 'Verificando...' :
+                      credentialsStatus.isValid === true ? 'Válidas' :
+                      credentialsStatus.isValid === false ? 'Inválidas' :
+                      'Não testadas'
+                    }
+                    icon={
+                      credentialsStatus.autoVerifying ? 
+                        <Loader2 className="h-4 w-4 animate-spin" /> :
+                        credentialsStatus.isValid === true ? 
+                          <CheckCircle className="h-4 w-4" /> : 
+                          credentialsStatus.isValid === false ?
+                            <XCircle className="h-4 w-4" /> :
+                            <AlertTriangle className="h-4 w-4" />
+                    }
+                  />
+                  
+                  <StatusCard
+                    title="Última Verificação"
+                    success={credentialsStatus.lastChecked !== null}
+                    value={
+                      credentialsStatus.lastChecked ? 
+                        credentialsStatus.lastChecked.toLocaleString() : 
+                        'Nunca'
+                    }
+                    icon={<RefreshCw className="h-4 w-4" />}
+                  />
+                  
+                  <div className="flex items-center justify-center">
+                    <Button 
+                      variant="outline" 
+                      onClick={reVerifyCredentials}
+                      disabled={credentialsStatus.autoVerifying || !config.token}
+                      className="w-full"
+                    >
+                      {credentialsStatus.autoVerifying ? (
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      ) : (
+                        <RefreshCw className="h-4 w-4 mr-2" />
+                      )}
+                      Re-verificar
+                    </Button>
+                  </div>
+                </div>
+                
+                {credentialsStatus.isValid === false && (
+                  <Alert className="mt-4">
+                    <AlertTriangle className="h-4 w-4" />
+                    <AlertDescription>
+                      As credenciais salvas apresentam problemas. Verifique e atualize a configuração abaixo.
+                    </AlertDescription>
+                  </Alert>
+                )}
+              </CardContent>
+            </Card>
+          )}
+
           <Card>
             <CardHeader>
               <CardTitle>Configuração do WhatsApp Business API</CardTitle>
