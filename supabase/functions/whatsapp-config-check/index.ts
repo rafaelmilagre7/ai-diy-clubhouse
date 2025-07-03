@@ -480,6 +480,124 @@ async function discoverViaOwnedApps(token: string) {
   return null
 }
 
+// Nova função para testar secrets do Supabase
+async function handleSupabaseSecretsCheck(requestId: string, corsHeaders: any) {
+  console.log(`🔐 [${requestId}] Iniciando teste dos secrets do Supabase`)
+  
+  const whatsappToken = Deno.env.get('WHATSAPP_ACCESS_TOKEN')
+  const phoneNumberId = Deno.env.get('WHATSAPP_PHONE_NUMBER_ID')
+  const businessId = Deno.env.get('WHATSAPP_BUSINESS_ID')
+  
+  const diagnostics = {
+    timestamp: new Date().toISOString(),
+    results: [],
+    summary: {
+      total: 0,
+      passed: 0,
+      failed: 0,
+      warnings: 0
+    }
+  }
+
+  // Configuração baseada nos secrets do Supabase
+  const config = {
+    access_token: whatsappToken,
+    phone_number_id: phoneNumberId,
+    business_account_id: businessId
+  }
+
+  console.log(`📋 [${requestId}] Secrets disponíveis:`, {
+    hasToken: !!whatsappToken,
+    hasPhoneNumberId: !!phoneNumberId,
+    hasBusinessId: !!businessId
+  })
+
+  // Executar os mesmos testes da nova API
+  try {
+    // Diagnóstico 1: Validação Básica
+    const basicValidation = await validateBasicConfig(config)
+    diagnostics.results.push(basicValidation)
+    
+    // Diagnóstico 2: Teste de Token de Acesso
+    if (whatsappToken) {
+      const tokenTest = await testAccessToken(config)
+      diagnostics.results.push(tokenTest)
+    } else {
+      diagnostics.results.push({
+        test: 'Teste de Access Token',
+        success: false,
+        details: [],
+        warnings: [],
+        errors: ['WHATSAPP_ACCESS_TOKEN não configurado no Supabase']
+      })
+    }
+    
+    // Diagnóstico 3: Verificação de Business Account
+    if (whatsappToken) {
+      const businessTest = await verifyBusinessAccount(config)
+      diagnostics.results.push(businessTest)
+    } else {
+      diagnostics.results.push({
+        test: 'Verificação de Business Account',
+        success: false,
+        details: [],
+        warnings: [],
+        errors: ['Access Token necessário para verificação']
+      })
+    }
+    
+    // Diagnóstico 4: Teste de Phone Number
+    if (whatsappToken && phoneNumberId) {
+      const phoneTest = await testPhoneNumber(config)
+      diagnostics.results.push(phoneTest)
+    } else {
+      diagnostics.results.push({
+        test: 'Teste de Phone Number',
+        success: false,
+        details: [],
+        warnings: [],
+        errors: [
+          !whatsappToken ? 'WHATSAPP_ACCESS_TOKEN não configurado' : '',
+          !phoneNumberId ? 'WHATSAPP_PHONE_NUMBER_ID não configurado' : ''
+        ].filter(Boolean)
+      })
+    }
+
+    // Calcular resumo
+    diagnostics.summary.total = diagnostics.results.length
+    diagnostics.results.forEach(result => {
+      if (result.success) {
+        diagnostics.summary.passed++
+      } else {
+        diagnostics.summary.failed++
+      }
+      if (result.warnings && result.warnings.length > 0) {
+        diagnostics.summary.warnings++
+      }
+    })
+
+    console.log(`✅ [${requestId}] Teste de secrets concluído:`, diagnostics.summary)
+
+    return new Response(
+      JSON.stringify(diagnostics),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    )
+
+  } catch (error) {
+    console.error(`❌ [${requestId}] Erro no teste de secrets:`, error)
+    
+    return new Response(
+      JSON.stringify({
+        success: false,
+        error: error.message,
+        timestamp: new Date().toISOString(),
+        requestId
+      }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+    )
+  }
+}
+
 // Nova função para lidar com diagnósticos avançados
 async function handleAdvancedDiagnostics(parsed: any, requestId: string, corsHeaders: any) {
   console.log(`🔬 [${requestId}] Iniciando diagnóstico avançado com descoberta automática`)
@@ -644,6 +762,12 @@ serve(async (req) => {
     if (parsed.action === 'advanced_diagnostics') {
       console.log(`🔍 [${requestId}] Executando diagnóstico avançado com descoberta de Business ID`)
       return await handleAdvancedDiagnostics(parsed, requestId, corsHeaders)
+    }
+
+    // Verificar se é ação de teste dos secrets do Supabase
+    if (parsed.action === 'check-config') {
+      console.log(`🔐 [${requestId}] Testando secrets do Supabase`)
+      return await handleSupabaseSecretsCheck(requestId, corsHeaders)
     }
 
     // API legada para compatibilidade

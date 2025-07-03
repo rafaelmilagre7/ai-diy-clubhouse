@@ -88,6 +88,18 @@ const WhatsAppDebug: React.FC = () => {
     autoVerifying: false,
     score: 0
   });
+
+  const [supabaseSecretsStatus, setSupabaseSecretsStatus] = useState<{
+    testing: boolean;
+    lastChecked: Date | null;
+    results: any | null;
+    isValid: boolean | null;
+  }>({
+    testing: false,
+    lastChecked: null,
+    results: null,
+    isValid: null
+  });
   const wizardSteps: WizardStep[] = [{
     id: 'token',
     title: 'Token de Acesso',
@@ -433,6 +445,53 @@ const WhatsAppDebug: React.FC = () => {
       setIsLoadingDiagnostics(false);
     }
   };
+  const testSupabaseSecrets = async () => {
+    setSupabaseSecretsStatus(prev => ({ ...prev, testing: true }));
+    addLog('🔐 Testando secrets do Supabase...', 'info');
+    
+    try {
+      const { data, error } = await supabase.functions.invoke('whatsapp-config-check', {
+        body: {
+          action: 'check-config'
+        }
+      });
+      
+      if (error) {
+        addLog(`❌ Erro ao testar secrets: ${error.message}`, 'error');
+        throw error;
+      }
+      
+      const isValid = data?.results?.some((r: any) => r.success) || false;
+      
+      setSupabaseSecretsStatus({
+        testing: false,
+        lastChecked: new Date(),
+        results: data,
+        isValid
+      });
+      
+      if (isValid) {
+        addLog('✅ Secrets do Supabase válidos e funcionando', 'success');
+        toast.success('Secrets do Supabase configurados corretamente!');
+      } else {
+        addLog('❌ Problemas detectados nos secrets do Supabase', 'error');
+        toast.error('Problemas nos secrets do Supabase');
+      }
+      
+    } catch (error: any) {
+      setSupabaseSecretsStatus({
+        testing: false,
+        lastChecked: new Date(),
+        results: null,
+        isValid: false
+      });
+      
+      const errorMessage = error?.message || 'Erro desconhecido';
+      addLog(`❌ Erro ao testar secrets do Supabase: ${errorMessage}`, 'error');
+      toast.error(`Erro ao testar secrets: ${errorMessage}`);
+    }
+  };
+
   const testManualBusinessId = async (businessId: string) => {
     if (!businessId.trim()) return;
     addLog(`🔍 Testando Business ID manual: ${businessId}`, 'info');
@@ -982,6 +1041,156 @@ const WhatsAppDebug: React.FC = () => {
                   Testar Conectividade
                 </Button>
               </div>
+            </CardContent>
+          </Card>
+
+          {/* Status dos Secrets do Supabase */}
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle className="flex items-center gap-2">
+                  <Shield className="h-5 w-5" />
+                  Configuração Atual do Supabase
+                </CardTitle>
+                <Button 
+                  variant="outline" 
+                  onClick={testSupabaseSecrets}
+                  disabled={supabaseSecretsStatus.testing}
+                  size="sm"
+                >
+                  {supabaseSecretsStatus.testing ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Testando...
+                    </>
+                  ) : (
+                    <>
+                      <RefreshCw className="h-4 w-4 mr-2" />
+                      Testar Secrets
+                    </>
+                  )}
+                </Button>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Validação dos secrets configurados no Supabase (WHATSAPP_ACCESS_TOKEN, WHATSAPP_PHONE_NUMBER_ID, WHATSAPP_BUSINESS_ID)
+              </p>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <StatusCard 
+                  title="Status dos Secrets"
+                  success={supabaseSecretsStatus.isValid === true}
+                  value={
+                    supabaseSecretsStatus.testing ? 'Testando...' :
+                    supabaseSecretsStatus.isValid === true ? 'Válidos' :
+                    supabaseSecretsStatus.isValid === false ? 'Com Problemas' :
+                    'Não Testado'
+                  }
+                  icon={supabaseSecretsStatus.testing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Shield className="h-4 w-4" />}
+                />
+                
+                <StatusCard 
+                  title="Última Verificação"
+                  success={supabaseSecretsStatus.lastChecked !== null}
+                  value={
+                    supabaseSecretsStatus.lastChecked 
+                      ? supabaseSecretsStatus.lastChecked.toLocaleTimeString()
+                      : 'Nunca'
+                  }
+                  icon={<AlertTriangle className="h-4 w-4" />}
+                />
+                
+                <StatusCard 
+                  title="Comparação"
+                  success={
+                    supabaseSecretsStatus.isValid === true && 
+                    credentialsStatus.isValid === true
+                  }
+                  value={
+                    supabaseSecretsStatus.isValid === true && credentialsStatus.isValid === true ? 'Sincronizado' :
+                    supabaseSecretsStatus.isValid === null || credentialsStatus.isValid === null ? 'Pendente' :
+                    'Divergente'
+                  }
+                  icon={<Zap className="h-4 w-4" />}
+                />
+              </div>
+
+              {supabaseSecretsStatus.results && (
+                <div className="space-y-4">
+                  <h4 className="font-semibold">Resultados da Validação dos Secrets:</h4>
+                  <div className="grid gap-2">
+                    {supabaseSecretsStatus.results.results?.map((result: any, index: number) => (
+                      <div key={index} className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
+                        <span className="text-sm font-medium">{result.test}</span>
+                        <div className="flex items-center gap-2">
+                          {result.success ? (
+                            <CheckCircle className="h-4 w-4 text-green-500" />
+                          ) : (
+                            <XCircle className="h-4 w-4 text-red-500" />
+                          )}
+                          <Badge variant={result.success ? "default" : "destructive"}>
+                            {result.success ? 'OK' : 'Erro'}
+                          </Badge>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  
+                  {supabaseSecretsStatus.results.summary && (
+                    <div className="grid grid-cols-4 gap-4 p-4 bg-muted/20 rounded-lg">
+                      <div className="text-center">
+                        <div className="text-2xl font-bold text-green-600">
+                          {supabaseSecretsStatus.results.summary.passed || 0}
+                        </div>
+                        <div className="text-sm text-muted-foreground">Passou</div>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-2xl font-bold text-red-600">
+                          {supabaseSecretsStatus.results.summary.failed || 0}
+                        </div>
+                        <div className="text-sm text-muted-foreground">Falhou</div>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-2xl font-bold text-yellow-600">
+                          {supabaseSecretsStatus.results.summary.warnings || 0}
+                        </div>
+                        <div className="text-sm text-muted-foreground">Avisos</div>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-2xl font-bold text-blue-600">
+                          {supabaseSecretsStatus.results.summary.total || 0}
+                        </div>
+                        <div className="text-sm text-muted-foreground">Total</div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {supabaseSecretsStatus.isValid === false && supabaseSecretsStatus.results && (
+                <Alert variant="destructive">
+                  <XCircle className="h-4 w-4" />
+                  <AlertDescription>
+                    <div className="space-y-2">
+                      <p><strong>Problemas detectados nos secrets do Supabase:</strong></p>
+                      <ul className="list-disc list-inside space-y-1 text-sm">
+                        <li>Verifique se os secrets WHATSAPP_ACCESS_TOKEN, WHATSAPP_PHONE_NUMBER_ID e WHATSAPP_BUSINESS_ID estão configurados</li>
+                        <li>Acesse as configurações de Edge Functions no Supabase para verificar</li>
+                        <li>Compare com a configuração do formulário acima para sincronizar</li>
+                      </ul>
+                    </div>
+                  </AlertDescription>
+                </Alert>
+              )}
+
+              {supabaseSecretsStatus.isValid === true && (
+                <Alert>
+                  <CheckCircle className="h-4 w-4" />
+                  <AlertDescription>
+                    ✅ Secrets do Supabase configurados e funcionando corretamente!
+                  </AlertDescription>
+                </Alert>
+              )}
             </CardContent>
           </Card>
 
