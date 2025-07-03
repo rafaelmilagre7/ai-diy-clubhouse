@@ -30,6 +30,7 @@ import {
 import { JsonViewer } from '@/components/debug/JsonViewer';
 import { StatusCard } from '@/components/debug/StatusCard';
 import { LogsViewer } from '@/components/debug/LogsViewer';
+import { AdvancedLogsViewer } from '@/components/debug/AdvancedLogsViewer';
 
 interface ConfigStatus {
   hasToken: boolean;
@@ -45,9 +46,33 @@ interface ConfigStatus {
   discoveredBusinessId: string | null;
   autoDiscoveryWorked: boolean;
   needsBusinessIdUpdate: boolean;
+  
+  // Novos campos para diagnóstico avançado
+  tokenAnalysis?: {
+    isValid: boolean;
+    permissions: string[];
+    missingPermissions: string[];
+    type: string;
+    expiresAt: number | null;
+    hasBusinessAccess: boolean;
+    hasWhatsAppAccess: boolean;
+  };
+  discoveryStrategies?: Array<{
+    name: string;
+    success: boolean;
+    businessId: string | null;
+    duration: string;
+    error: string | null;
+  }>;
+  permissionIssues?: string[];
+  tokenType?: string;
+  tokenExpiry?: number | null;
+  hasBusinessAccess?: boolean;
+  hasWhatsAppAccess?: boolean;
 }
 
 interface ConnectivityTest {
+  category?: string;
   name: string;
   success: boolean;
   status?: number;
@@ -55,6 +80,7 @@ interface ConnectivityTest {
   latency?: string;
   error?: string;
   scopes?: string[];
+  details?: any;
 }
 
 interface TemplatesData {
@@ -72,7 +98,8 @@ const WhatsAppDebug: React.FC = () => {
   const [connectivity, setConnectivity] = useState<{
     success: boolean;
     tests: ConnectivityTest[];
-    summary: { total: number; passed: number; failed: number };
+    categories: Record<string, { total: number; passed: number; failed: number; tests: ConnectivityTest[] }>;
+    summary: { total: number; passed: number; failed: number; criticalFailures: number };
   } | null>(null);
   const [templatesData, setTemplatesData] = useState<TemplatesData | null>(null);
   const [testPhone, setTestPhone] = useState('');
@@ -357,13 +384,107 @@ const WhatsAppDebug: React.FC = () => {
                     <Alert className="border-amber-500/30 bg-amber-500/5">
                       <AlertTriangle className="h-4 w-4 text-amber-400" />
                       <AlertDescription className="text-slate-200">
-                        <strong className="text-amber-400">Não foi possível descobrir o Business ID automaticamente.</strong><br />
+                        <strong className="text-amber-400">Diagnóstico da Falha na Descoberta</strong><br />
                         <span className="text-slate-300">
-                          Isso pode indicar problemas de permissão no token ou configuração da conta.<br />
-                          Verifique se o token tem as permissões necessárias para acessar informações de negócio.
+                          {config.permissionIssues && config.permissionIssues.length > 0 && (
+                            <>
+                              <strong>Permissões em falta:</strong> {config.permissionIssues.join(', ')}<br />
+                            </>
+                          )}
+                          {config.tokenAnalysis && (
+                            <>
+                              <strong>Tipo do token:</strong> {config.tokenAnalysis.type || 'Desconhecido'}<br />
+                              <strong>Acesso a negócios:</strong> {config.tokenAnalysis.hasBusinessAccess ? 'Sim' : 'Não'}<br />
+                              <strong>Acesso WhatsApp:</strong> {config.tokenAnalysis.hasWhatsAppAccess ? 'Sim' : 'Não'}<br />
+                            </>
+                          )}
+                          {config.discoveryStrategies && (
+                            <>
+                              <strong>Estratégias testadas:</strong> {config.discoveryStrategies.filter(s => s.success).length}/{config.discoveryStrategies.length} funcionaram
+                            </>
+                          )}
                         </span>
                       </AlertDescription>
                     </Alert>
+                  )}
+
+                  {/* Seção de Diagnóstico Avançado */}
+                  {config.tokenAnalysis && (
+                    <Card className="bg-slate-900/50 border-slate-600">
+                      <CardHeader className="pb-3">
+                        <CardTitle className="text-lg text-white flex items-center gap-2">
+                          <Shield className="h-5 w-5 text-viverblue" />
+                          Diagnóstico Avançado do Token
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <StatusCard
+                            title="Token Válido"
+                            success={config.tokenAnalysis.isValid}
+                            value={config.tokenAnalysis.isValid ? 'Válido' : 'Inválido'}
+                            icon={<Shield className="h-4 w-4" />}
+                          />
+                          <StatusCard
+                            title="Permissões"
+                            success={config.tokenAnalysis.missingPermissions.length === 0}
+                            value={`${config.tokenAnalysis.permissions.length} concedidas`}
+                            warning={config.tokenAnalysis.missingPermissions.length > 0}
+                            icon={<Key className="h-4 w-4" />}
+                          />
+                        </div>
+                        
+                        {config.tokenAnalysis.missingPermissions.length > 0 && (
+                          <Alert className="border-red-500/30 bg-red-500/5">
+                            <XCircle className="h-4 w-4 text-red-400" />
+                            <AlertDescription className="text-slate-200">
+                              <strong className="text-red-400">Permissões necessárias em falta:</strong><br />
+                              <code className="bg-slate-800 px-2 py-1 rounded text-red-300">
+                                {config.tokenAnalysis.missingPermissions.join(', ')}
+                              </code><br />
+                              <span className="text-slate-300 text-sm mt-2 block">
+                                Configure essas permissões no Meta for Developers para corrigir o problema.
+                              </span>
+                            </AlertDescription>
+                          </Alert>
+                        )}
+                      </CardContent>
+                    </Card>
+                  )}
+
+                  {/* Estratégias de Descoberta */}
+                  {config.discoveryStrategies && config.discoveryStrategies.length > 0 && (
+                    <Card className="bg-slate-900/50 border-slate-600">
+                      <CardHeader className="pb-3">
+                        <CardTitle className="text-lg text-white flex items-center gap-2">
+                          <Search className="h-5 w-5 text-viverblue" />
+                          Estratégias de Descoberta Testadas
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-3">
+                          {config.discoveryStrategies.map((strategy, index) => (
+                            <div key={index} className="flex items-center justify-between p-3 border border-slate-600 rounded-lg bg-slate-800/30">
+                              <div className="flex items-center gap-3">
+                                {getStatusIcon(strategy.success)}
+                                <span className="font-medium text-slate-200">{strategy.name}</span>
+                              </div>
+                              <div className="flex items-center gap-2 text-sm">
+                                <Badge variant="outline" className="border-slate-500 text-slate-300">
+                                  <Clock className="w-3 h-3 mr-1" />
+                                  {strategy.duration}
+                                </Badge>
+                                {strategy.success && strategy.businessId && (
+                                  <code className="bg-emerald-800/20 text-emerald-300 px-2 py-1 rounded text-xs">
+                                    {strategy.businessId}
+                                  </code>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </CardContent>
+                    </Card>
                   )}
                 </div>
               )}
@@ -417,48 +538,95 @@ const WhatsAppDebug: React.FC = () => {
                     />
                   </div>
 
-                  {/* Detalhes dos testes */}
-                  <div className="space-y-3">
-                    {connectivity.tests.map((test, index) => (
-                      <div key={index} className="p-4 border border-slate-600 rounded-lg bg-slate-800/30">
-                        <div className="flex items-center justify-between mb-2">
-                          <div className="flex items-center gap-3">
-                            {getStatusIcon(test.success)}
-                            <span className="font-medium text-slate-200">{test.name}</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            {test.latency && (
-                              <Badge variant="outline" className="border-viverblue text-viverblue">
-                                <Clock className="w-3 h-3 mr-1" />
-                                {test.latency}
-                              </Badge>
-                            )}
-                            {test.status && (
-                              <Badge variant={test.success ? "default" : "destructive"}>
-                                {test.status}
-                              </Badge>
-                            )}
-                          </div>
-                        </div>
-                        
-                        {test.scopes && Array.isArray(test.scopes) && test.scopes.length > 0 && (
-                          <div className="text-sm text-slate-400 mb-2">
-                            <span className="font-medium">Permissões:</span> {test.scopes.join(', ')}
-                          </div>
-                        )}
-                        
-                        {test.error && (
-                          <div className="text-sm text-red-400 bg-red-500/10 p-2 rounded border border-red-500/20">
-                            <strong>Erro:</strong> {test.error}
-                          </div>
-                        )}
-                        
-                        {test.data && (
-                          <JsonViewer data={test.data} title="Dados da Resposta" className="mt-2" />
-                        )}
+                  {/* Resumo por Categorias */}
+                  {connectivity.categories && (
+                    <div className="mb-6">
+                      <h3 className="text-lg font-semibold text-white mb-4">Resumo por Categoria</h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                        {Object.entries(connectivity.categories).map(([category, stats]) => (
+                          <StatusCard
+                            key={category}
+                            title={category}
+                            success={stats.failed === 0}
+                            value={`${stats.passed}/${stats.total}`}
+                            warning={stats.failed > 0 && stats.passed > 0}
+                            icon={
+                              category === 'Token Validation' ? <Shield className="h-4 w-4" /> :
+                              category === 'WhatsApp API' ? <Phone className="h-4 w-4" /> :
+                              category === 'Performance' ? <Clock className="h-4 w-4" /> :
+                              category === 'Business Access' ? <Building className="h-4 w-4" /> :
+                              <TestTube className="h-4 w-4" />
+                            }
+                          />
+                        ))}
                       </div>
-                    ))}
+                    </div>
+                  )}
+
+                  {/* Detalhes dos testes por categoria */}
+                  <div className="space-y-6">
+                    {connectivity.categories && Object.entries(connectivity.categories).map(([category, stats]) => (
+                      <Card key={category} className="bg-slate-900/30 border-slate-600">
+                        <CardHeader className="pb-3">
+                          <CardTitle className="text-base text-white flex items-center gap-2">
+                            {category === 'Token Validation' && <Shield className="h-4 w-4 text-viverblue" />}
+                            {category === 'WhatsApp API' && <Phone className="h-4 w-4 text-viverblue" />}
+                            {category === 'Performance' && <Clock className="h-4 w-4 text-viverblue" />}
+                            {category === 'Business Access' && <Building className="h-4 w-4 text-viverblue" />}
+                            {category} ({stats.passed}/{stats.total})
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="space-y-3">
+                            {stats.tests.map((test, index) => (
+                              <div key={index} className="p-3 border border-slate-600 rounded-lg bg-slate-800/20">
+                                <div className="flex items-center justify-between mb-2">
+                                  <div className="flex items-center gap-3">
+                                    {getStatusIcon(test.success)}
+                                    <span className="font-medium text-slate-200">{test.name}</span>
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    {test.latency && (
+                                      <Badge variant="outline" className="border-viverblue text-viverblue">
+                                        <Clock className="w-3 h-3 mr-1" />
+                                        {test.latency}
+                                      </Badge>
+                                    )}
+                                     {test.status && (
+                                        <Badge variant={test.success ? "default" : "destructive"}>
+                                          {test.status}
+                                        </Badge>
+                                      )}
+                                    </div>
+                                  </div>
+                                  
+                                  {test.scopes && Array.isArray(test.scopes) && test.scopes.length > 0 && (
+                                    <div className="text-sm text-slate-400 mb-2">
+                                      <span className="font-medium">Permissões:</span> {test.scopes.join(', ')}
+                                    </div>
+                                  )}
+                                  
+                                  {test.error && (
+                                    <div className="text-sm text-red-400 bg-red-500/10 p-2 rounded border border-red-500/20">
+                                      <strong>Erro:</strong> {test.error}
+                                    </div>
+                                  )}
+                                  
+                                  {test.data && (
+                                    <JsonViewer data={test.data} title="Dados da Resposta" className="mt-2" />
+                                  )}
+                                </div>
+                              ))}
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
                   </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
                 </div>
               )}
             </CardContent>
@@ -628,8 +796,8 @@ const WhatsAppDebug: React.FC = () => {
         </TabsContent>
       </Tabs>
 
-      {/* Logs */}
-      <LogsViewer logs={logs} onClear={clearLogs} />
+      {/* Logs de Debug Avançados */}
+      <AdvancedLogsViewer logs={logs} onClear={clearLogs} className="bg-slate-800/50 border-slate-700" />
     </div>
   );
 };
