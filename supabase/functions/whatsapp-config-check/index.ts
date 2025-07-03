@@ -1,9 +1,266 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+}
+
+// Nova API para validação de configuração (usada pelo WhatsApp Debug Center)
+async function handleNewConfigAPI(parsed: any, requestId: string, corsHeaders: any) {
+  console.log(`🆕 [${requestId}] Processando nova API de configuração`)
+  
+  const { config } = parsed
+  if (!config) {
+    throw new Error('Objeto de configuração não fornecido')
+  }
+
+  console.log(`📋 [${requestId}] Configuração recebida:`, {
+    hasPhoneNumberId: !!config.phone_number_id,
+    hasAccessToken: !!config.access_token,
+    hasBusinessAccountId: !!config.business_account_id
+  })
+
+  const diagnostics = {
+    timestamp: new Date().toISOString(),
+    results: [],
+    summary: {
+      total: 0,
+      passed: 0,
+      failed: 0,
+      warnings: 0
+    }
+  }
+
+  console.log('🧪 Iniciando diagnósticos...')
+
+  // Diagnóstico 1: Validação Básica de Configuração
+  const basicValidation = await validateBasicConfig(config)
+  diagnostics.results.push(basicValidation)
+  
+  // Diagnóstico 2: Teste de Token de Acesso
+  const tokenTest = await testAccessToken(config)
+  diagnostics.results.push(tokenTest)
+  
+  // Diagnóstico 3: Verificação de Business Account
+  const businessTest = await verifyBusinessAccount(config)
+  diagnostics.results.push(businessTest)
+  
+  // Diagnóstico 4: Teste de Phone Number
+  const phoneTest = await testPhoneNumber(config)
+  diagnostics.results.push(phoneTest)
+
+  // Calcular resumo
+  diagnostics.summary.total = diagnostics.results.length
+  diagnostics.results.forEach(result => {
+    if (result.success) {
+      diagnostics.summary.passed++
+    } else {
+      diagnostics.summary.failed++
+    }
+    if (result.warning) {
+      diagnostics.summary.warnings++
+    }
+  })
+
+  console.log(`✅ [${requestId}] Diagnósticos concluídos:`, diagnostics.summary)
+
+  return new Response(
+    JSON.stringify(diagnostics),
+    { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+  )
+}
+
+// Funções de validação básica
+async function validateBasicConfig(config: any) {
+  console.log('🔍 Validando configuração básica...')
+  
+  const result = {
+    test: 'Validação Básica',
+    success: true,
+    details: [],
+    warnings: [],
+    errors: []
+  }
+
+  // Verificar campos obrigatórios
+  if (!config.phone_number_id) {
+    result.success = false
+    result.errors.push('Phone Number ID não fornecido')
+  } else if (config.phone_number_id.length < 10) {
+    result.warnings.push('Phone Number ID parece muito curto')
+  }
+
+  if (!config.access_token) {
+    result.success = false
+    result.errors.push('Access Token não fornecido')
+  } else if (config.access_token.length < 50) {
+    result.warnings.push('Access Token parece muito curto')
+  }
+
+  if (!config.business_account_id) {
+    result.warnings.push('Business Account ID não fornecido (pode ser descoberto automaticamente)')
+  }
+
+  result.details.push(`Phone Number ID: ${config.phone_number_id ? '✓' : '✗'}`)
+  result.details.push(`Access Token: ${config.access_token ? '✓' : '✗'}`)
+  result.details.push(`Business Account ID: ${config.business_account_id ? '✓' : '⚠️'}`)
+
+  console.log('📋 Validação básica concluída:', result.success ? 'PASSOU' : 'FALHOU')
+  return result
+}
+
+async function testAccessToken(config: any) {
+  console.log('🔑 Testando Access Token...')
+  
+  const result = {
+    test: 'Teste de Access Token',
+    success: false,
+    details: [],
+    warnings: [],
+    errors: []
+  }
+
+  if (!config.access_token) {
+    result.errors.push('Access Token não fornecido')
+    return result
+  }
+
+  try {
+    const response = await fetch(`https://graph.facebook.com/v18.0/me?access_token=${config.access_token}`)
+    const data = await response.json()
+
+    if (response.ok) {
+      result.success = true
+      result.details.push(`Token válido para usuário: ${data.name || data.id}`)
+      
+      // Testar permissões específicas
+      const debugResponse = await fetch(
+        `https://graph.facebook.com/debug_token?input_token=${config.access_token}&access_token=${config.access_token}`
+      )
+      
+      if (debugResponse.ok) {
+        const debugData = await debugResponse.json()
+        const scopes = debugData.data?.scopes || []
+        
+        const requiredScopes = ['whatsapp_business_management', 'business_management']
+        const missingScopes = requiredScopes.filter(scope => !scopes.includes(scope))
+        
+        if (missingScopes.length > 0) {
+          result.warnings.push(`Permissões em falta: ${missingScopes.join(', ')}`)
+        }
+        
+        result.details.push(`Permissões: ${scopes.join(', ')}`)
+      }
+    } else {
+      result.errors.push(`Token inválido: ${data.error?.message || 'Erro desconhecido'}`)
+    }
+  } catch (error) {
+    result.errors.push(`Erro na verificação: ${error.message}`)
+  }
+
+  console.log('🔑 Teste de token concluído:', result.success ? 'PASSOU' : 'FALHOU')
+  return result
+}
+
+async function verifyBusinessAccount(config: any) {
+  console.log('🏢 Verificando Business Account...')
+  
+  const result = {
+    test: 'Verificação de Business Account',
+    success: false,
+    details: [],
+    warnings: [],
+    errors: []
+  }
+
+  if (!config.access_token) {
+    result.errors.push('Access Token necessário para verificação')
+    return result
+  }
+
+  try {
+    // Tentar buscar business accounts
+    const response = await fetch(
+      `https://graph.facebook.com/v18.0/me/businesses?access_token=${config.access_token}`
+    )
+    const data = await response.json()
+
+    if (response.ok && data.data && data.data.length > 0) {
+      result.success = true
+      result.details.push(`${data.data.length} Business Account(s) encontrado(s)`)
+      
+      if (config.business_account_id) {
+        const found = data.data.find((b: any) => b.id === config.business_account_id)
+        if (found) {
+          result.details.push(`Business Account configurado encontrado: ${found.name}`)
+        } else {
+          result.warnings.push('Business Account ID configurado não encontrado na lista')
+        }
+      } else {
+        result.details.push(`Primeiro Business Account: ${data.data[0].name} (${data.data[0].id})`)
+        result.warnings.push('Considere configurar o Business Account ID')
+      }
+    } else {
+      result.warnings.push('Nenhum Business Account encontrado ou erro na busca')
+      if (data.error) {
+        result.errors.push(`Erro: ${data.error.message}`)
+      }
+    }
+  } catch (error) {
+    result.errors.push(`Erro na verificação: ${error.message}`)
+  }
+
+  console.log('🏢 Verificação de business concluída:', result.success ? 'PASSOU' : 'FALHOU')
+  return result
+}
+
+async function testPhoneNumber(config: any) {
+  console.log('📱 Testando Phone Number...')
+  
+  const result = {
+    test: 'Teste de Phone Number',
+    success: false,
+    details: [],
+    warnings: [],
+    errors: []
+  }
+
+  if (!config.access_token || !config.phone_number_id) {
+    result.errors.push('Access Token e Phone Number ID necessários')
+    return result
+  }
+
+  try {
+    const response = await fetch(
+      `https://graph.facebook.com/v18.0/${config.phone_number_id}?access_token=${config.access_token}`
+    )
+    const data = await response.json()
+
+    if (response.ok) {
+      result.success = true
+      result.details.push(`Phone Number válido: ${data.display_phone_number || data.id}`)
+      
+      if (data.verified_name) {
+        result.details.push(`Nome verificado: ${data.verified_name}`)
+      }
+      
+      if (data.code_verification_status) {
+        result.details.push(`Status de verificação: ${data.code_verification_status}`)
+      }
+      
+      if (data.quality_rating) {
+        result.details.push(`Qualidade: ${data.quality_rating}`)
+      }
+    } else {
+      result.errors.push(`Phone Number inválido: ${data.error?.message || 'Erro desconhecido'}`)
+    }
+  } catch (error) {
+    result.errors.push(`Erro na verificação: ${error.message}`)
+  }
+
+  console.log('📱 Teste de phone concluído:', result.success ? 'PASSOU' : 'FALHOU')
+  return result
 }
 
 // Cache para evitar requests desnecessários
@@ -209,221 +466,6 @@ async function discoverViaOwnedApps(token: string) {
   return null
 }
 
-// Testes de conectividade avançados e categorizados
-async function validateConnectivityAdvanced(token: string, phoneNumberId: string) {
-  console.log('🌐 Iniciando testes avançados de conectividade...')
-  
-  const tests = []
-  
-  // CATEGORIA 1: Validação de Token
-  console.log('🔐 Categoria: Validação de Token')
-  
-  // Teste 1.1: Token Debug
-  try {
-    const start = Date.now()
-    const debugResponse = await fetch(
-      `https://graph.facebook.com/debug_token?input_token=${token}&access_token=${token}`
-    )
-    const latency = Date.now() - start
-    const debugData = await debugResponse.json()
-    
-    tests.push({
-      category: 'Token Validation',
-      name: 'Token Debug & Permissions',
-      success: debugResponse.ok && debugData.data?.is_valid,
-      status: debugResponse.status,
-      data: debugData,
-      latency: `${latency}ms`,
-      scopes: debugData.data?.scopes || [],
-      details: {
-        isValid: debugData.data?.is_valid,
-        type: debugData.data?.type,
-        expiresAt: debugData.data?.expires_at,
-        appId: debugData.data?.app_id
-      }
-    })
-  } catch (error) {
-    tests.push({
-      category: 'Token Validation',
-      name: 'Token Debug & Permissions',
-      success: false,
-      error: error.message
-    })
-  }
-  
-  // Teste 1.2: User Info
-  try {
-    const start = Date.now()
-    const userResponse = await fetch('https://graph.facebook.com/v18.0/me', {
-      headers: { 'Authorization': `Bearer ${token}` }
-    })
-    const latency = Date.now() - start
-    const userData = await userResponse.json()
-    
-    tests.push({
-      category: 'Token Validation',
-      name: 'User Information Access',
-      success: userResponse.ok,
-      status: userResponse.status,
-      data: userData,
-      latency: `${latency}ms`,
-      details: {
-        userId: userData.id,
-        name: userData.name
-      }
-    })
-  } catch (error) {
-    tests.push({
-      category: 'Token Validation',
-      name: 'User Information Access',
-      success: false,
-      error: error.message
-    })
-  }
-  
-  // CATEGORIA 2: WhatsApp API
-  console.log('📱 Categoria: WhatsApp API')
-  
-  // Teste 2.1: Phone Number Validation
-  try {
-    const start = Date.now()
-    const phoneResponse = await fetch(
-      `https://graph.facebook.com/v18.0/${phoneNumberId}`,
-      { headers: { 'Authorization': `Bearer ${token}` } }
-    )
-    const latency = Date.now() - start
-    const phoneData = await phoneResponse.json()
-    
-    tests.push({
-      category: 'WhatsApp API',
-      name: 'Phone Number Validation',
-      success: phoneResponse.ok,
-      status: phoneResponse.status,
-      data: phoneData,
-      latency: `${latency}ms`,
-      details: {
-        phoneNumberId: phoneNumberId,
-        verified: phoneData.verified_name,
-        status: phoneData.code_verification_status
-      }
-    })
-  } catch (error) {
-    tests.push({
-      category: 'WhatsApp API',
-      name: 'Phone Number Validation',
-      success: false,
-      error: error.message
-    })
-  }
-  
-  // Teste 2.2: Messages API Availability
-  try {
-    const start = Date.now()
-    const messagesResponse = await fetch(
-      `https://graph.facebook.com/v18.0/${phoneNumberId}/messages`,
-      { 
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messaging_product: "whatsapp" })
-      }
-    )
-    const latency = Date.now() - start
-    const responseData = await messagesResponse.json()
-    
-    // 400 é esperado pois não enviamos dados válidos, mas significa que a API está acessível
-    const isAccessible = messagesResponse.status === 400 || messagesResponse.ok
-    
-    tests.push({
-      category: 'WhatsApp API',
-      name: 'Messages API Accessibility',
-      success: isAccessible,
-      status: messagesResponse.status,
-      data: responseData,
-      latency: `${latency}ms`,
-      details: {
-        accessible: isAccessible,
-        errorCode: responseData.error?.code
-      }
-    })
-  } catch (error) {
-    tests.push({
-      category: 'WhatsApp API',
-      name: 'Messages API Accessibility',
-      success: false,
-      error: error.message
-    })
-  }
-  
-  // CATEGORIA 3: Performance & Network
-  console.log('⚡ Categoria: Performance & Network')
-  
-  // Teste 3.1: API Latency
-  const latencyTests = []
-  for (let i = 0; i < 3; i++) {
-    try {
-      const start = Date.now()
-      await fetch('https://graph.facebook.com/v18.0/', {
-        headers: { 'Authorization': `Bearer ${token}` }
-      })
-      const latency = Date.now() - start
-      latencyTests.push(latency)
-    } catch (error) {
-      latencyTests.push(null)
-    }
-  }
-  
-  const validLatencies = latencyTests.filter(l => l !== null)
-  const avgLatency = validLatencies.length > 0 
-    ? Math.round(validLatencies.reduce((a, b) => a + b, 0) / validLatencies.length)
-    : null
-  
-  tests.push({
-    category: 'Performance',
-    name: 'API Latency (avg of 3 tests)',
-    success: avgLatency !== null && avgLatency < 3000,
-    latency: avgLatency ? `${avgLatency}ms` : 'Failed',
-    data: { individual: latencyTests, average: avgLatency },
-    details: {
-      rating: avgLatency < 500 ? 'Excellent' : avgLatency < 1000 ? 'Good' : avgLatency < 3000 ? 'Fair' : 'Poor'
-    }
-  })
-  
-  // CATEGORIA 4: Business Access
-  console.log('🏢 Categoria: Business Access')
-  
-  // Teste 4.1: Business Accounts Access
-  try {
-    const start = Date.now()
-    const businessResponse = await fetch('https://graph.facebook.com/v18.0/me/businesses', {
-      headers: { 'Authorization': `Bearer ${token}` }
-    })
-    const latency = Date.now() - start
-    const businessData = await businessResponse.json()
-    
-    tests.push({
-      category: 'Business Access',
-      name: 'Business Accounts Access',
-      success: businessResponse.ok,
-      status: businessResponse.status,
-      data: businessData,
-      latency: `${latency}ms`,
-      details: {
-        businessCount: businessData.data?.length || 0,
-        hasBusinessAccess: businessResponse.ok && businessData.data?.length > 0
-      }
-    })
-  } catch (error) {
-    tests.push({
-      category: 'Business Access',
-      name: 'Business Accounts Access',
-      success: false,
-      error: error.message
-    })
-  }
-  
-  return tests
-}
-
 serve(async (req) => {
   // Gerar ID único para esta requisição para tracking
   const requestId = Math.random().toString(36).substr(2, 9)
@@ -439,22 +481,27 @@ serve(async (req) => {
     const body = await req.text()
     console.log(`📨 [${requestId}] Body recebido (${body.length} chars):`, body.substring(0, 200))
     
-    let action, phone, templateName, businessIdToTest
+    let parsed
     
     try {
-      const parsed = JSON.parse(body)
-      action = parsed.action
-      phone = parsed.phone
-      templateName = parsed.templateName
-      businessIdToTest = parsed.businessIdToTest
+      parsed = JSON.parse(body)
       console.log(`✅ [${requestId}] JSON parseado com sucesso`)
     } catch (e) {
       console.error(`❌ [${requestId}] Erro ao parsear JSON:`, e)
       throw new Error('JSON inválido')
     }
 
-    console.log(`🔍 [${requestId}] WhatsApp Debug - Ação: ${action}`)
     console.log(`⏱️ [${requestId}] Tempo de parse: ${Date.now() - startTime}ms`)
+
+    // Verificar se é requisição nova API (config object no body)
+    if (typeof parsed === 'object' && parsed.config) {
+      console.log(`🆕 [${requestId}] Detectada nova API com objeto config`)
+      return await handleNewConfigAPI(parsed, requestId, corsHeaders)
+    }
+
+    // API legada para compatibilidade
+    const { action, phone, templateName, businessIdToTest } = parsed
+    console.log(`🔍 [${requestId}] WhatsApp Debug - Ação: ${action}`)
 
     const whatsappToken = Deno.env.get('WHATSAPP_ACCESS_TOKEN')
     const phoneNumberId = Deno.env.get('WHATSAPP_PHONE_NUMBER_ID')
@@ -525,320 +572,10 @@ serve(async (req) => {
       })
     }
 
-    // AÇÃO: Testes avançados de conectividade categorizados
-    if (action === 'test-connectivity') {
-      if (!whatsappToken || !phoneNumberId) {
-        throw new Error('Token ou Phone Number ID não configurados')
-      }
-
-      console.log(`🌐 [${requestId}] Executando testes avançados e categorizados de conectividade...`)
-
-      const connectivityTests = await validateConnectivityAdvanced(whatsappToken, phoneNumberId)
-      
-      // Análise por categoria
-      const categories = {}
-      connectivityTests.forEach(test => {
-        const category = test.category || 'Other'
-        if (!categories[category]) {
-          categories[category] = { total: 0, passed: 0, failed: 0, tests: [] }
-        }
-        categories[category].total++
-        categories[category].tests.push(test)
-        if (test.success) {
-          categories[category].passed++
-        } else {
-          categories[category].failed++
-        }
-      })
-      
-      const overallSuccess = connectivityTests.every(test => test.success)
-      const criticalFailures = connectivityTests.filter(test => 
-        !test.success && ['Token Validation', 'WhatsApp API'].includes(test.category)
-      )
-      
-      console.log(`📊 [${requestId}] Testes concluídos - Sucesso geral: ${overallSuccess}`)
-      console.log(`🔍 [${requestId}] Categorias analisadas:`, Object.keys(categories))
-
-      return new Response(JSON.stringify({
-        success: overallSuccess,
-        tests: connectivityTests,
-        categories,
-        summary: {
-          total: connectivityTests.length,
-          passed: connectivityTests.filter(t => t.success).length,
-          failed: connectivityTests.filter(t => !t.success).length,
-          criticalFailures: criticalFailures.length
-        },
-        message: overallSuccess 
-          ? 'Todos os testes de conectividade passaram' 
-          : `${connectivityTests.filter(t => !t.success).length} teste(s) falharam`
-      }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
-    }
-
-    // Descobrir automaticamente o Business ID e listar templates
-    if (action === 'auto-discover') {
-      if (!whatsappToken) {
-        throw new Error('Token do WhatsApp não configurado')
-      }
-
-      console.log('🔍 Iniciando descoberta automática...')
-
-      // Usar cache se disponível e válido
-      if (businessIdCache && (Date.now() - cacheTimestamp) < CACHE_DURATION) {
-        console.log('📦 Usando Business ID do cache:', businessIdCache)
-        
-        try {
-          const response = await fetch(
-            `https://graph.facebook.com/v18.0/${businessIdCache}/message_templates`,
-            { headers: { 'Authorization': `Bearer ${whatsappToken}` } }
-          )
-          
-          if (response.ok) {
-            const data = await response.json()
-            return new Response(JSON.stringify({
-              success: true,
-              businessId: businessIdCache,
-              templates: data.data || [],
-              fromCache: true,
-              message: `Business ID descoberto (cache): ${businessIdCache}`
-            }), {
-              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-            })
-          }
-        } catch (error) {
-          console.log('❌ Cache inválido, redescobrir...')
-          businessIdCache = null
-        }
-      }
-
-      // Descobrir novo Business ID com estratégias avançadas
-      const discoveryResult = await discoverBusinessIdAdvanced(whatsappToken)
-      
-      if (!discoveryResult.businessId) {
-        // Fallback: tentar Business ID do env se não conseguir descobrir
-        if (businessId) {
-          console.log('🔄 Usando Business ID do .env como fallback')
-          const response = await fetch(
-            `https://graph.facebook.com/v18.0/${businessId}/message_templates`,
-            { headers: { 'Authorization': `Bearer ${whatsappToken}` } }
-          )
-          
-          if (response.ok) {
-            const data = await response.json()
-            return new Response(JSON.stringify({
-              success: true,
-              businessId: businessId,
-              templates: data.data || [],
-              fallback: true,
-              message: `Usando Business ID configurado: ${businessId}`
-            }), {
-              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-            })
-          }
-        }
-        
-        return new Response(JSON.stringify({
-          success: false,
-          message: 'Não foi possível descobrir o Business ID automaticamente'
-        }), {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 404,
-        })
-      }
-
-      // Buscar templates com o Business ID descoberto
-      try {
-        const response = await fetch(
-          `https://graph.facebook.com/v18.0/${discoveryResult.businessId}/message_templates`,
-          { headers: { 'Authorization': `Bearer ${whatsappToken}` } }
-        )
-        
-        if (response.ok) {
-          const data = await response.json()
-          
-          // Atualizar cache
-          businessIdCache = discoveryResult.businessId
-          templatesCache = data.data || []
-          cacheTimestamp = Date.now()
-          
-          return new Response(JSON.stringify({
-            success: true,
-            businessId: discoveryResult.businessId,
-            templates: data.data || [],
-            discoveryStrategies: discoveryResult.strategies,
-            message: `Business ID descoberto: ${discoveryResult.businessId}`
-          }), {
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          })
-        }
-      } catch (error) {
-        console.error('❌ Erro ao buscar templates:', error)
-      }
-
-      return new Response(JSON.stringify({
-        success: false,
-        message: 'Business ID descoberto mas não foi possível buscar templates'
-      }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 500,
-      })
-    }
-
-    // Listar templates aprovados usando Business ID específico ou padrão
-    if (action === 'list-templates') {
-      if (!whatsappToken) {
-        throw new Error('Token do WhatsApp não configurado')
-      }
-
-      const businessIdToUse = businessIdToTest || businessId
-
-      if (!businessIdToUse) {
-        throw new Error('Business ID não configurado')
-      }
-
-      console.log(`📋 Buscando templates usando Business ID: ${businessIdToUse}`)
-
-      const response = await fetch(
-        `https://graph.facebook.com/v18.0/${businessIdToUse}/message_templates`,
-        {
-          method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${whatsappToken}`,
-            'Content-Type': 'application/json',
-          },
-        }
-      )
-
-      const data = await response.json()
-
-      console.log('📄 Templates encontrados:', data)
-
-      if (!response.ok) {
-        console.error('❌ Erro ao buscar templates:', data)
-        return new Response(JSON.stringify({
-          success: false,
-          error: data.error || 'Erro desconhecido',
-          businessIdUsed: businessIdToUse,
-          message: `Erro ${response.status}: ${data.error?.message || 'Não foi possível buscar templates'}`
-        }), {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: response.status,
-        })
-      }
-
-      return new Response(JSON.stringify({
-        success: response.ok,
-        templates: data.data || [],
-        businessIdUsed: businessIdToUse,
-        message: `${data.data?.length || 0} templates encontrados`
-      }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
-    }
-
-    // Enviar mensagem de teste
-    if (action === 'send-test') {
-      if (!whatsappToken || !phoneNumberId) {
-        throw new Error('Configuração WhatsApp incompleta')
-      }
-
-      if (!phone) {
-        throw new Error('Número de telefone é obrigatório')
-      }
-
-      const templateToUse = templateName || 'hello_world'
-
-      console.log(`📱 Enviando teste para ${phone} com template ${templateToUse}`)
-
-      // Limpar e formatar número brasileiro
-      const cleanPhone = phone.replace(/\D/g, '')
-      let formattedPhone = cleanPhone
-
-      // Adicionar código do país se não tiver
-      if (!formattedPhone.startsWith('55') && formattedPhone.length === 11) {
-        formattedPhone = '55' + formattedPhone
-      } else if (!formattedPhone.startsWith('55') && formattedPhone.length === 10) {
-        formattedPhone = '55' + formattedPhone
-      }
-
-      const templateData = {
-        messaging_product: "whatsapp",
-        to: formattedPhone,
-        type: "template",
-        template: {
-          name: templateToUse,
-          language: {
-            code: "pt_BR"
-          }
-        }
-      }
-
-      // Adicionar parâmetros específicos para template de convite
-      if (templateToUse === 'convite_acesso') {
-        templateData.template.components = [
-          {
-            type: "body",
-            parameters: [
-              {
-                type: "text",
-                text: "https://viverdeia.ai/convite/teste"
-              }
-            ]
-          }
-        ]
-      }
-
-      const response = await fetch(
-        `https://graph.facebook.com/v18.0/${phoneNumberId}/messages`,
-        {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${whatsappToken}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(templateData),
-        }
-      )
-
-      const result = await response.json()
-
-      console.log('📨 Resultado do envio:', result)
-
-      if (!response.ok) {
-        console.error('❌ Erro no envio:', result)
-        return new Response(JSON.stringify({
-          success: false,
-          error: result.error || 'Erro desconhecido',
-          result,
-          templateUsed: templateToUse,
-          phoneFormatted: formattedPhone,
-          message: `Erro ${response.status}: ${result.error?.message || 'Não foi possível enviar mensagem'}`
-        }), {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: response.status,
-        })
-      }
-
-      return new Response(JSON.stringify({
-        success: response.ok,
-        result,
-        templateUsed: templateToUse,
-        phoneFormatted: formattedPhone,
-        message: response.ok ? 'Mensagem enviada com sucesso' : 'Erro no envio'
-      }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
-    }
-
-    throw new Error('Ação não reconhecida')
+    throw new Error('Ação não reconhecida ou não implementada')
 
   } catch (error) {
     console.error(`❌ [${requestId}] Erro crítico no debug WhatsApp:`, error)
-    console.error(`❌ [${requestId}] Stack trace:`, error.stack)
-    console.error(`❌ [${requestId}] Tipo do erro:`, typeof error)
-    console.error(`❌ [${requestId}] Dados do erro:`, JSON.stringify(error, Object.getOwnPropertyNames(error)))
 
     return new Response(JSON.stringify({
       success: false,
