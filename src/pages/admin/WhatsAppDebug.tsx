@@ -10,34 +10,9 @@ import { Progress } from '@/components/ui/progress';
 import { StatusCard } from '@/components/debug/StatusCard';
 import { JsonViewer } from '@/components/debug/JsonViewer';
 import { LogsViewer } from '@/components/debug/LogsViewer';
-import { 
-  Phone, 
-  CheckCircle, 
-  XCircle, 
-  AlertTriangle, 
-  Settings, 
-  MessageSquare, 
-  Zap,
-  Shield,
-  Smartphone,
-  Loader2,
-  RefreshCw,
-  Eye,
-  Search,
-  Bug,
-  Globe,
-  Key,
-  ArrowRight,
-  BookOpen,
-  ExternalLink,
-  HelpCircle,
-  Rocket,
-  Play,
-  Info
-} from 'lucide-react';
+import { Phone, CheckCircle, XCircle, AlertTriangle, Settings, MessageSquare, Zap, Shield, Smartphone, Loader2, RefreshCw, Eye, Search, Bug, Globe, Key, ArrowRight, BookOpen, ExternalLink, HelpCircle, Rocket, Play, Info } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
-
 interface ConfigTestResult {
   test: string;
   success: boolean;
@@ -46,13 +21,11 @@ interface ConfigTestResult {
   category?: 'config' | 'connectivity' | 'templates' | 'permissions';
   suggestion?: string;
 }
-
 interface BusinessAccount {
   id: string;
   name: string;
   verification_status: string;
 }
-
 interface AdvancedConfigCheck {
   tokenAnalysis: {
     type: string;
@@ -78,7 +51,6 @@ interface AdvancedConfigCheck {
     rejected: number;
   };
 }
-
 interface WizardStep {
   id: string;
   title: string;
@@ -86,7 +58,6 @@ interface WizardStep {
   completed: boolean;
   required: boolean;
 }
-
 const WhatsAppDebug: React.FC = () => {
   const [config, setConfig] = useState({
     token: '',
@@ -94,7 +65,6 @@ const WhatsAppDebug: React.FC = () => {
     phoneNumberId: '',
     webhookToken: ''
   });
-  
   const [testResults, setTestResults] = useState<ConfigTestResult[]>([]);
   const [advancedResults, setAdvancedResults] = useState<AdvancedConfigCheck | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -105,7 +75,6 @@ const WhatsAppDebug: React.FC = () => {
   const [currentStep, setCurrentStep] = useState(0);
   const [showPassword, setShowPassword] = useState(false);
   const [autoTestEnabled, setAutoTestEnabled] = useState(true);
-  
   const [credentialsStatus, setCredentialsStatus] = useState<{
     loaded: boolean;
     lastChecked: Date | null;
@@ -119,47 +88,39 @@ const WhatsAppDebug: React.FC = () => {
     autoVerifying: false,
     score: 0
   });
-
-  const wizardSteps: WizardStep[] = [
-    {
-      id: 'token',
-      title: 'Token de Acesso',
-      description: 'Configure seu token de acesso do WhatsApp Business API',
-      completed: !!config.token,
-      required: true
-    },
-    {
-      id: 'phone',
-      title: 'Phone Number ID',
-      description: 'Informe o ID do número de telefone autorizado',
-      completed: !!config.phoneNumberId,
-      required: true
-    },
-    {
-      id: 'business',
-      title: 'Business Account ID',
-      description: 'Configure o ID da conta comercial (opcional - pode ser descoberto automaticamente)',
-      completed: !!config.businessId,
-      required: false
-    },
-    {
-      id: 'webhook',
-      title: 'Webhook Token',
-      description: 'Token de verificação para webhooks (opcional)',
-      completed: !!config.webhookToken,
-      required: false
-    },
-    {
-      id: 'test',
-      title: 'Teste Final',
-      description: 'Validar toda a configuração',
-      completed: credentialsStatus.isValid === true,
-      required: true
-    }
-  ];
-
+  const wizardSteps: WizardStep[] = [{
+    id: 'token',
+    title: 'Token de Acesso',
+    description: 'Configure seu token de acesso do WhatsApp Business API',
+    completed: !!config.token,
+    required: true
+  }, {
+    id: 'phone',
+    title: 'Phone Number ID',
+    description: 'Informe o ID do número de telefone autorizado',
+    completed: !!config.phoneNumberId,
+    required: true
+  }, {
+    id: 'business',
+    title: 'Business Account ID',
+    description: 'Configure o ID da conta comercial (opcional - pode ser descoberto automaticamente)',
+    completed: !!config.businessId,
+    required: false
+  }, {
+    id: 'webhook',
+    title: 'Webhook Token',
+    description: 'Token de verificação para webhooks (opcional)',
+    completed: !!config.webhookToken,
+    required: false
+  }, {
+    id: 'test',
+    title: 'Teste Final',
+    description: 'Validar toda a configuração',
+    completed: credentialsStatus.isValid === true,
+    required: true
+  }];
   const completedSteps = wizardSteps.filter(step => step.completed).length;
-  const wizardProgress = (completedSteps / wizardSteps.length) * 100;
+  const wizardProgress = completedSteps / wizardSteps.length * 100;
 
   // Carregar configuração salva e auto-verificar
   useEffect(() => {
@@ -175,13 +136,11 @@ const WhatsAppDebug: React.FC = () => {
       return () => clearTimeout(timer);
     }
   }, [config.token, config.phoneNumberId, autoTestEnabled]);
-
   const addLog = (message: string, category: string = 'info') => {
     const timestamp = new Date().toLocaleTimeString();
     const logMessage = `[${timestamp}] [${category.toUpperCase()}] ${message}`;
     setLogs(prev => [...prev, logMessage]);
   };
-
   const calculateCredentialScore = (configToCheck: any) => {
     let score = 0;
     if (configToCheck.token) score += 40;
@@ -190,15 +149,12 @@ const WhatsAppDebug: React.FC = () => {
     if (configToCheck.webhookToken) score += 5;
     return score;
   };
-
   const loadSavedConfigAndVerify = async () => {
     try {
-      const { data, error } = await supabase
-        .from('admin_settings')
-        .select('value')
-        .eq('key', 'whatsapp_config')
-        .single();
-
+      const {
+        data,
+        error
+      } = await supabase.from('admin_settings').select('value').eq('key', 'whatsapp_config').single();
       if (data && !error) {
         const savedConfig = data.value;
         const newConfig = {
@@ -207,34 +163,40 @@ const WhatsAppDebug: React.FC = () => {
           phoneNumberId: savedConfig.phone_number_id || '',
           webhookToken: savedConfig.webhook_verify_token || ''
         };
-        
         setConfig(newConfig);
-        setCredentialsStatus(prev => ({ 
-          ...prev, 
+        setCredentialsStatus(prev => ({
+          ...prev,
           loaded: true,
           score: calculateCredentialScore(newConfig)
         }));
         addLog('✅ Configuração carregada do banco de dados', 'success');
-        
+
         // Auto-verificar se temos credenciais válidas
         if (savedConfig.access_token && savedConfig.phone_number_id) {
           addLog('🔍 Credenciais encontradas - executando verificação automática...', 'info');
           await autoVerifyCredentials(newConfig);
         }
       } else {
-        setCredentialsStatus(prev => ({ ...prev, loaded: true }));
+        setCredentialsStatus(prev => ({
+          ...prev,
+          loaded: true
+        }));
         addLog('⚠️ Nenhuma configuração salva encontrada', 'warning');
       }
     } catch (error) {
-      setCredentialsStatus(prev => ({ ...prev, loaded: true }));
+      setCredentialsStatus(prev => ({
+        ...prev,
+        loaded: true
+      }));
       addLog(`❌ Erro ao carregar configuração: ${error}`, 'error');
     }
   };
-
   const autoVerifyCredentials = async (configToVerify: any) => {
-    setCredentialsStatus(prev => ({ ...prev, autoVerifying: true }));
+    setCredentialsStatus(prev => ({
+      ...prev,
+      autoVerifying: true
+    }));
     addLog('🔍 Iniciando verificação automática das credenciais...', 'info');
-    
     try {
       // Converter formato para o edge function
       const configForEdgeFunction = {
@@ -243,22 +205,21 @@ const WhatsAppDebug: React.FC = () => {
         business_account_id: configToVerify.businessId || configToVerify.business_account_id,
         webhook_verify_token: configToVerify.webhookToken || configToVerify.webhook_verify_token
       };
-
       addLog('📤 Enviando configuração para edge function:', 'info');
       addLog(`  • Token: ${configForEdgeFunction.access_token ? '✓' : '✗'}`, 'info');
       addLog(`  • Phone ID: ${configForEdgeFunction.phone_number_id ? '✓' : '✗'}`, 'info');
-
-      const { data, error } = await supabase.functions.invoke('whatsapp-config-check', {
-        body: { 
+      const {
+        data,
+        error
+      } = await supabase.functions.invoke('whatsapp-config-check', {
+        body: {
           config: configForEdgeFunction
         }
       });
-
       if (error) {
         addLog(`❌ Erro na chamada da edge function: ${error.message}`, 'error');
         throw error;
       }
-
       addLog('📥 Resposta recebida da edge function', 'info');
       console.log('Resposta da edge function:', data);
 
@@ -268,13 +229,12 @@ const WhatsAppDebug: React.FC = () => {
         const successCount = data.results.filter((r: any) => r.success).length;
         const totalTests = data.results.length;
         isValid = successCount >= totalTests * 0.75; // 75% dos testes devem passar
-        
+
         addLog(`📊 Resultados: ${successCount}/${totalTests} testes passaram`, 'info');
       } else if (data?.summary) {
         isValid = data.summary.passed > 0 && data.summary.failed === 0;
         addLog(`📊 Resumo: ${data.summary.passed} sucessos, ${data.summary.failed} falhas`, 'info');
       }
-      
       setCredentialsStatus(prev => ({
         ...prev,
         isValid,
@@ -282,13 +242,12 @@ const WhatsAppDebug: React.FC = () => {
         autoVerifying: false,
         score: calculateCredentialScore(configToVerify)
       }));
-
       if (isValid) {
         addLog('✅ Verificação automática: Credenciais válidas e funcionando', 'success');
         toast.success('WhatsApp configurado corretamente!');
       } else {
         addLog('❌ Verificação automática: Problemas detectados nas credenciais', 'error');
-        
+
         // Log detalhado dos problemas
         if (data?.results) {
           data.results.forEach((result: any) => {
@@ -305,19 +264,16 @@ const WhatsAppDebug: React.FC = () => {
           });
         }
       }
-      
     } catch (error: any) {
       const errorMessage = error?.message || error?.toString() || 'Erro desconhecido';
-      
       setCredentialsStatus(prev => ({
         ...prev,
         isValid: false,
         lastChecked: new Date(),
         autoVerifying: false
       }));
-      
       addLog(`❌ Erro na verificação automática: ${errorMessage}`, 'error');
-      
+
       // Sugestões específicas baseadas no tipo de erro
       if (errorMessage.includes('Function not found')) {
         addLog('💡 Sugestão: A edge function whatsapp-config-check não foi encontrada', 'info');
@@ -326,21 +282,17 @@ const WhatsAppDebug: React.FC = () => {
       } else if (errorMessage.includes('timeout')) {
         addLog('💡 Sugestão: Timeout na verificação - tente novamente', 'info');
       }
-      
       console.error('Erro completo na verificação:', error);
     }
   };
-
   const saveConfig = async () => {
     if (!config.token || !config.phoneNumberId) {
       addLog('❌ Token e Phone Number ID são obrigatórios', 'error');
       toast.error('Preencha pelo menos o Token e Phone Number ID');
       return;
     }
-
     setIsLoading(true);
     addLog('💾 Iniciando salvamento da configuração...', 'info');
-    
     try {
       const configToSave = {
         access_token: config.token.trim(),
@@ -348,40 +300,37 @@ const WhatsAppDebug: React.FC = () => {
         phone_number_id: config.phoneNumberId.trim(),
         webhook_verify_token: config.webhookToken.trim()
       };
-
       addLog('📝 Dados a serem salvos:', 'info');
       addLog(`  • access_token: ${configToSave.access_token ? '✓ Preenchido' : '✗ Vazio'}`, 'info');
       addLog(`  • phone_number_id: ${configToSave.phone_number_id ? '✓ Preenchido' : '✗ Vazio'}`, 'info');
       addLog(`  • business_account_id: ${configToSave.business_account_id ? '✓ Preenchido' : '✗ Vazio'}`, 'info');
-
-      const { error, data } = await supabase
-        .from('admin_settings')
-        .upsert({
-          key: 'whatsapp_config',
-          value: configToSave,
-          category: 'whatsapp',
-          description: 'Configurações da API do WhatsApp Business',
-          updated_by: (await supabase.auth.getUser()).data.user?.id
-        }, {
-          onConflict: 'key'
-        });
-
+      const {
+        error,
+        data
+      } = await supabase.from('admin_settings').upsert({
+        key: 'whatsapp_config',
+        value: configToSave,
+        category: 'whatsapp',
+        description: 'Configurações da API do WhatsApp Business',
+        updated_by: (await supabase.auth.getUser()).data.user?.id
+      }, {
+        onConflict: 'key'
+      });
       if (error) {
         addLog(`❌ Erro do Supabase: ${error.message}`, 'error');
         addLog(`❌ Detalhes: ${JSON.stringify(error)}`, 'error');
         throw new Error(`Erro ao salvar no banco: ${error.message}`);
       }
-      
       addLog('✅ Configuração salva com sucesso no banco de dados', 'success');
       toast.success('Configuração salva com sucesso!');
-      
+
       // Atualizar score das credenciais
       setCredentialsStatus(prev => ({
         ...prev,
         score: calculateCredentialScore(config),
         lastChecked: new Date()
       }));
-      
+
       // Re-verificar credenciais após salvar
       if (config.token && config.phoneNumberId) {
         addLog('🔍 Executando verificação automática...', 'info');
@@ -390,7 +339,7 @@ const WhatsAppDebug: React.FC = () => {
     } catch (error: any) {
       const errorMessage = error?.message || error?.toString() || 'Erro desconhecido';
       addLog(`❌ Erro ao salvar configuração: ${errorMessage}`, 'error');
-      
+
       // Erro específico para diferentes tipos de problemas
       if (errorMessage.includes('permission')) {
         addLog('💡 Sugestão: Verifique se você tem permissões de administrador', 'info');
@@ -401,22 +350,18 @@ const WhatsAppDebug: React.FC = () => {
       } else {
         toast.error(`Erro ao salvar: ${errorMessage}`);
       }
-      
       console.error('Erro completo ao salvar configuração:', error);
     } finally {
       setIsLoading(false);
     }
   };
-
   const runAdvancedDiagnostics = async () => {
     if (!config.token || !config.phoneNumberId) {
       toast.error("Access Token e Phone Number ID são obrigatórios para diagnósticos avançados");
       return;
     }
-
     setIsLoadingDiagnostics(true);
     addLog('🔍 Iniciando diagnósticos avançados com descoberta automática...', 'info');
-
     try {
       const configForEdgeFunction = {
         access_token: config.token,
@@ -424,32 +369,30 @@ const WhatsAppDebug: React.FC = () => {
         phone_number_id: config.phoneNumberId,
         webhook_verify_token: config.webhookToken
       };
-
-      const { data, error } = await supabase.functions.invoke('whatsapp-config-check', {
-        body: { 
+      const {
+        data,
+        error
+      } = await supabase.functions.invoke('whatsapp-config-check', {
+        body: {
           action: 'advanced_diagnostics',
           config: configForEdgeFunction
         }
       });
-
       addLog('📥 Resposta recebida da edge function', 'info');
       console.log('Resposta da edge function:', data);
-
       if (error) {
         addLog(`❌ Erro na edge function: ${error.message}`, 'error');
         toast.error(`Erro nos diagnósticos: ${error.message}`);
         setLastDiagnostics(null);
         return;
       }
-
       if (data) {
         setLastDiagnostics(data);
         addLog('✅ Diagnósticos avançados concluídos', 'success');
-        
         if (data.businessId) {
           addLog(`🎉 Business ID descoberto: ${data.businessId}`, 'success');
           toast.success(`🎉 Business ID descoberto automaticamente: ${data.businessId}`);
-          
+
           // Perguntar se o usuário quer aplicar automaticamente
           if (confirm(`Business ID descoberto: ${data.businessId}\n\nDeseja aplicar automaticamente?`)) {
             setConfig(prev => ({
@@ -484,25 +427,29 @@ const WhatsAppDebug: React.FC = () => {
       setIsLoadingDiagnostics(false);
     }
   };
-
   const testManualBusinessId = async (businessId: string) => {
     if (!businessId.trim()) return;
-    
     addLog(`🔍 Testando Business ID manual: ${businessId}`, 'info');
-    
     try {
-      const { data, error } = await supabase.functions.invoke('whatsapp-config-check', {
-        body: { 
+      const {
+        data,
+        error
+      } = await supabase.functions.invoke('whatsapp-config-check', {
+        body: {
           action: 'test_business_id',
-          config: { ...config, businessId }
+          config: {
+            ...config,
+            businessId
+          }
         }
       });
-
       if (error) throw error;
-
       if (data.success) {
         addLog(`✅ Business ID ${businessId} validado com sucesso`, 'success');
-        setConfig(prev => ({ ...prev, businessId }));
+        setConfig(prev => ({
+          ...prev,
+          businessId
+        }));
         toast.success('Business ID válido!');
       } else {
         addLog(`❌ Business ID ${businessId} inválido: ${data.message}`, 'error');
@@ -512,49 +459,33 @@ const WhatsAppDebug: React.FC = () => {
       addLog(`❌ Erro ao testar Business ID: ${error}`, 'error');
     }
   };
-
   const clearLogs = () => {
     setLogs([]);
     addLog('🧹 Logs limpos', 'info');
   };
-
   const nextStep = () => {
     if (currentStep < wizardSteps.length - 1) {
       setCurrentStep(currentStep + 1);
     }
   };
-
   const prevStep = () => {
     if (currentStep > 0) {
       setCurrentStep(currentStep - 1);
     }
   };
-
   const renderWizardStep = () => {
     const step = wizardSteps[currentStep];
-    
     switch (step.id) {
       case 'token':
-        return (
-          <div className="space-y-6">
+        return <div className="space-y-6">
             <div className="space-y-2">
               <Label htmlFor="token">Token de Acesso do WhatsApp Business API</Label>
               <div className="relative">
-                <Input
-                  id="token"
-                  type={showPassword ? "text" : "password"}
-                  value={config.token}
-                  onChange={(e) => setConfig(prev => ({ ...prev, token: e.target.value }))}
-                  placeholder="Seu token de acesso da Meta for Developers"
-                  className="pr-10"
-                />
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                  onClick={() => setShowPassword(!showPassword)}
-                >
+                <Input id="token" type={showPassword ? "text" : "password"} value={config.token} onChange={e => setConfig(prev => ({
+                ...prev,
+                token: e.target.value
+              }))} placeholder="Seu token de acesso da Meta for Developers" className="pr-10" />
+                <Button type="button" variant="ghost" size="sm" className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent" onClick={() => setShowPassword(!showPassword)}>
                   <Eye className="h-4 w-4" />
                 </Button>
               </div>
@@ -576,20 +507,15 @@ const WhatsAppDebug: React.FC = () => {
                 </div>
               </AlertDescription>
             </Alert>
-          </div>
-        );
-        
+          </div>;
       case 'phone':
-        return (
-          <div className="space-y-6">
+        return <div className="space-y-6">
             <div className="space-y-2">
               <Label htmlFor="phoneNumberId">Phone Number ID</Label>
-              <Input
-                id="phoneNumberId"
-                value={config.phoneNumberId}
-                onChange={(e) => setConfig(prev => ({ ...prev, phoneNumberId: e.target.value }))}
-                placeholder="ex: 123456789012345"
-              />
+              <Input id="phoneNumberId" value={config.phoneNumberId} onChange={e => setConfig(prev => ({
+              ...prev,
+              phoneNumberId: e.target.value
+            }))} placeholder="ex: 123456789012345" />
               <p className="text-sm text-muted-foreground">
                 ID do número de telefone registrado no WhatsApp Business
               </p>
@@ -608,55 +534,39 @@ const WhatsAppDebug: React.FC = () => {
                 </div>
               </AlertDescription>
             </Alert>
-          </div>
-        );
-        
+          </div>;
       case 'business':
-        return (
-          <div className="space-y-6">
+        return <div className="space-y-6">
             <div className="space-y-2">
               <Label htmlFor="businessId">Business Account ID (Opcional)</Label>
-              <Input
-                id="businessId"
-                value={config.businessId}
-                onChange={(e) => setConfig(prev => ({ ...prev, businessId: e.target.value }))}
-                placeholder="ex: 123456789012345"
-              />
+              <Input id="businessId" value={config.businessId} onChange={e => setConfig(prev => ({
+              ...prev,
+              businessId: e.target.value
+            }))} placeholder="ex: 123456789012345" />
               <p className="text-sm text-muted-foreground">
                 Deixe em branco para descoberta automática
               </p>
             </div>
             
-            <Button 
-              variant="outline" 
-              onClick={runAdvancedDiagnostics}
-              disabled={isLoadingDiagnostics || !config.token}
-            >
-              {isLoadingDiagnostics ? (
-                <>
+            <Button variant="outline" onClick={runAdvancedDiagnostics} disabled={isLoadingDiagnostics || !config.token}>
+              {isLoadingDiagnostics ? <>
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                   Descobrindo...
-                </>
-              ) : (
-                <>
+                </> : <>
                   <Search className="h-4 w-4 mr-2" />
                   Descobrir Business ID Automaticamente
-                </>
-              )}
+                </>}
             </Button>
 
             {/* Mostrar resultados da descoberta */}
-            {lastDiagnostics && (
-              <Card className="mt-6">
+            {lastDiagnostics && <Card className="mt-6">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <CheckCircle className="h-5 w-5 text-green-500" />
                     Resultado da Descoberta
-                    {lastDiagnostics.businessId && (
-                      <Badge variant="secondary" className="ml-2">
+                    {lastDiagnostics.businessId && <Badge variant="secondary" className="ml-2">
                         Business ID Descoberto
-                      </Badge>
-                    )}
+                      </Badge>}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -681,73 +591,53 @@ const WhatsAppDebug: React.FC = () => {
                   </div>
 
                   {/* Business ID Descoberto */}
-                  {lastDiagnostics.businessId && (
-                    <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
+                  {lastDiagnostics.businessId && <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
                       <div className="flex items-center gap-2 mb-2">
                         <CheckCircle className="h-5 w-5 text-green-500" />
                         <span className="font-semibold text-green-800">Business ID Descoberto!</span>
                       </div>
                       <div className="text-green-700 font-mono text-sm">{lastDiagnostics.businessId}</div>
-                      <Button 
-                        size="sm" 
-                        className="mt-2"
-                        onClick={() => {
-                          setConfig(prev => ({
-                            ...prev,
-                            businessId: lastDiagnostics.businessId
-                          }));
-                          toast.success("Business ID aplicado!");
-                        }}
-                      >
+                      <Button size="sm" className="mt-2" onClick={() => {
+                  setConfig(prev => ({
+                    ...prev,
+                    businessId: lastDiagnostics.businessId
+                  }));
+                  toast.success("Business ID aplicado!");
+                }}>
                         Aplicar Business ID
                       </Button>
-                    </div>
-                  )}
+                    </div>}
 
                   {/* Estratégias de Descoberta */}
-                  {lastDiagnostics.discoveryStrategies && lastDiagnostics.discoveryStrategies.length > 0 && (
-                    <div className="space-y-2">
+                  {lastDiagnostics.discoveryStrategies && lastDiagnostics.discoveryStrategies.length > 0 && <div className="space-y-2">
                       <h4 className="font-semibold">Estratégias de Descoberta Testadas:</h4>
-                      {lastDiagnostics.discoveryStrategies.map((strategy: any, index: number) => (
-                        <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded">
+                      {lastDiagnostics.discoveryStrategies.map((strategy: any, index: number) => <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded">
                           <span className="text-sm">{strategy.name}</span>
                           <div className="flex items-center gap-2">
                             <span className="text-xs text-gray-500">{strategy.duration}</span>
-                            {strategy.success ? (
-                              <CheckCircle className="h-4 w-4 text-green-500" />
-                            ) : (
-                              <XCircle className="h-4 w-4 text-red-500" />
-                            )}
+                            {strategy.success ? <CheckCircle className="h-4 w-4 text-green-500" /> : <XCircle className="h-4 w-4 text-red-500" />}
                           </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
+                        </div>)}
+                    </div>}
 
                   {/* Resultados Detalhados */}
                   <details className="mt-4">
                     <summary className="cursor-pointer text-sm font-medium">Ver Diagnósticos Detalhados</summary>
-                    <pre className="whitespace-pre-wrap text-xs bg-gray-100 p-4 rounded mt-2 overflow-auto max-h-96">
+                    <pre className="whitespace-pre-wrap text-xs p-4 rounded mt-2 overflow-auto max-h-96 bg-slate-900">
                       {JSON.stringify(lastDiagnostics, null, 2)}
                     </pre>
                   </details>
                 </CardContent>
-              </Card>
-            )}
-          </div>
-        );
-        
+              </Card>}
+          </div>;
       case 'webhook':
-        return (
-          <div className="space-y-6">
+        return <div className="space-y-6">
             <div className="space-y-2">
               <Label htmlFor="webhookToken">Webhook Verify Token (Opcional)</Label>
-              <Input
-                id="webhookToken"
-                value={config.webhookToken}
-                onChange={(e) => setConfig(prev => ({ ...prev, webhookToken: e.target.value }))}
-                placeholder="Token personalizado para verificação"
-              />
+              <Input id="webhookToken" value={config.webhookToken} onChange={e => setConfig(prev => ({
+              ...prev,
+              webhookToken: e.target.value
+            }))} placeholder="Token personalizado para verificação" />
               <p className="text-sm text-muted-foreground">
                 Token usado para verificar webhooks do WhatsApp
               </p>
@@ -760,12 +650,9 @@ const WhatsAppDebug: React.FC = () => {
                 Para apenas enviar mensagens, pode deixar em branco.
               </AlertDescription>
             </Alert>
-          </div>
-        );
-        
+          </div>;
       case 'test':
-        return (
-          <div className="space-y-6">
+        return <div className="space-y-6">
             <div className="text-center space-y-4">
               <Rocket className="h-16 w-16 mx-auto text-green-400" />
               <h3 className="text-xl font-semibold">Pronto para Testar!</h3>
@@ -775,67 +662,31 @@ const WhatsAppDebug: React.FC = () => {
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <StatusCard
-                title="Token de Acesso"
-                success={!!config.token}
-                value={config.token ? 'Configurado' : 'Pendente'}
-                icon={<Key className="h-4 w-4" />}
-              />
-              <StatusCard
-                title="Phone Number ID"
-                success={!!config.phoneNumberId}
-                value={config.phoneNumberId ? 'Configurado' : 'Pendente'}
-                icon={<Phone className="h-4 w-4" />}
-              />
-              <StatusCard
-                title="Business ID"
-                success={true}
-                value={config.businessId ? 'Configurado' : 'Auto-descoberta'}
-                icon={<Globe className="h-4 w-4" />}
-              />
-              <StatusCard
-                title="Status Geral"
-                success={credentialsStatus.isValid === true}
-                warning={credentialsStatus.autoVerifying}
-                value={
-                  credentialsStatus.autoVerifying ? 'Testando...' :
-                  credentialsStatus.isValid === true ? 'Válido' :
-                  credentialsStatus.isValid === false ? 'Erro' :
-                  'Não testado'
-                }
-                icon={credentialsStatus.autoVerifying ? 
-                  <Loader2 className="h-4 w-4 animate-spin" /> : 
-                  <Shield className="h-4 w-4" />}
-              />
+              <StatusCard title="Token de Acesso" success={!!config.token} value={config.token ? 'Configurado' : 'Pendente'} icon={<Key className="h-4 w-4" />} />
+              <StatusCard title="Phone Number ID" success={!!config.phoneNumberId} value={config.phoneNumberId ? 'Configurado' : 'Pendente'} icon={<Phone className="h-4 w-4" />} />
+              <StatusCard title="Business ID" success={true} value={config.businessId ? 'Configurado' : 'Auto-descoberta'} icon={<Globe className="h-4 w-4" />} />
+              <StatusCard title="Status Geral" success={credentialsStatus.isValid === true} warning={credentialsStatus.autoVerifying} value={credentialsStatus.autoVerifying ? 'Testando...' : credentialsStatus.isValid === true ? 'Válido' : credentialsStatus.isValid === false ? 'Erro' : 'Não testado'} icon={credentialsStatus.autoVerifying ? <Loader2 className="h-4 w-4 animate-spin" /> : <Shield className="h-4 w-4" />} />
             </div>
             
-            {credentialsStatus.isValid === true && (
-              <Alert>
+            {credentialsStatus.isValid === true && <Alert>
                 <CheckCircle className="h-4 w-4" />
                 <AlertDescription>
                   ✅ Parabéns! Sua configuração do WhatsApp está funcionando perfeitamente.
                 </AlertDescription>
-              </Alert>
-            )}
+              </Alert>}
             
-            {credentialsStatus.isValid === false && (
-              <Alert variant="destructive">
+            {credentialsStatus.isValid === false && <Alert variant="destructive">
                 <XCircle className="h-4 w-4" />
                 <AlertDescription>
                   Problemas detectados na configuração. Verifique os logs na aba "Monitoramento" para mais detalhes.
                 </AlertDescription>
-              </Alert>
-            )}
-          </div>
-        );
-        
+              </Alert>}
+          </div>;
       default:
         return null;
     }
   };
-
-  return (
-    <div className="container mx-auto p-6 space-y-6">
+  return <div className="container mx-auto p-6 space-y-6">
       <div className="flex items-center gap-3 mb-6">
         <MessageSquare className="h-8 w-8 text-green-400" />
         <div>
@@ -851,16 +702,9 @@ const WhatsAppDebug: React.FC = () => {
             <div className="space-y-2">
               <p className="text-sm text-muted-foreground">Status Geral</p>
               <div className="flex items-center gap-2">
-                {credentialsStatus.isValid === true ? (
-                  <CheckCircle className="h-5 w-5 text-green-400" />
-                ) : credentialsStatus.isValid === false ? (
-                  <XCircle className="h-5 w-5 text-red-400" />
-                ) : (
-                  <AlertTriangle className="h-5 w-5 text-amber-400" />
-                )}
+                {credentialsStatus.isValid === true ? <CheckCircle className="h-5 w-5 text-green-400" /> : credentialsStatus.isValid === false ? <XCircle className="h-5 w-5 text-red-400" /> : <AlertTriangle className="h-5 w-5 text-amber-400" />}
                 <span className="font-medium">
-                  {credentialsStatus.isValid === true ? 'Operacional' : 
-                   credentialsStatus.isValid === false ? 'Com Problemas' : 'Não Configurado'}
+                  {credentialsStatus.isValid === true ? 'Operacional' : credentialsStatus.isValid === false ? 'Com Problemas' : 'Não Configurado'}
                 </span>
               </div>
             </div>
@@ -881,21 +725,14 @@ const WhatsAppDebug: React.FC = () => {
             <div className="space-y-2">
               <p className="text-sm text-muted-foreground">Última Verificação</p>
               <p className="font-medium">
-                {credentialsStatus.lastChecked 
-                  ? credentialsStatus.lastChecked.toLocaleString() 
-                  : 'Nunca'}
+                {credentialsStatus.lastChecked ? credentialsStatus.lastChecked.toLocaleString() : 'Nunca'}
               </p>
             </div>
             
             <div className="space-y-2">
               <p className="text-sm text-muted-foreground">Auto-teste</p>
               <div className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  checked={autoTestEnabled}
-                  onChange={(e) => setAutoTestEnabled(e.target.checked)}
-                  className="rounded"
-                />
+                <input type="checkbox" checked={autoTestEnabled} onChange={e => setAutoTestEnabled(e.target.checked)} className="rounded" />
                 <span className="text-sm">Ativado</span>
               </div>
             </div>
@@ -940,11 +777,9 @@ const WhatsAppDebug: React.FC = () => {
               <div className="space-y-2">
                 <Progress value={wizardProgress} className="h-2" />
                 <div className="flex justify-between text-xs text-muted-foreground">
-                  {wizardSteps.map((step, index) => (
-                    <span key={step.id} className={index === currentStep ? "text-primary font-medium" : ""}>
+                  {wizardSteps.map((step, index) => <span key={step.id} className={index === currentStep ? "text-primary font-medium" : ""}>
                       {step.title}
-                    </span>
-                  ))}
+                    </span>)}
                 </div>
               </div>
             </CardHeader>
@@ -952,46 +787,23 @@ const WhatsAppDebug: React.FC = () => {
               {renderWizardStep()}
               
               <div className="flex items-center justify-between pt-4">
-                <Button 
-                  variant="outline" 
-                  onClick={prevStep}
-                  disabled={currentStep === 0}
-                >
+                <Button variant="outline" onClick={prevStep} disabled={currentStep === 0}>
                   Anterior
                 </Button>
                 
                 <div className="flex gap-2">
-                  <Button 
-                    onClick={saveConfig}
-                    disabled={isLoading}
-                    variant="outline"
-                  >
-                    {isLoading ? (
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    ) : (
-                      <Settings className="h-4 w-4 mr-2" />
-                    )}
+                  <Button onClick={saveConfig} disabled={isLoading} variant="outline">
+                    {isLoading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Settings className="h-4 w-4 mr-2" />}
                     Salvar
                   </Button>
                   
-                  {currentStep < wizardSteps.length - 1 ? (
-                    <Button onClick={nextStep}>
+                  {currentStep < wizardSteps.length - 1 ? <Button onClick={nextStep}>
                       Próximo
                       <ArrowRight className="h-4 w-4 ml-2" />
-                    </Button>
-                  ) : (
-                    <Button 
-                      onClick={() => autoVerifyCredentials(config)}
-                      disabled={credentialsStatus.autoVerifying || !config.token || !config.phoneNumberId}
-                    >
-                      {credentialsStatus.autoVerifying ? (
-                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      ) : (
-                        <Play className="h-4 w-4 mr-2" />
-                      )}
+                    </Button> : <Button onClick={() => autoVerifyCredentials(config)} disabled={credentialsStatus.autoVerifying || !config.token || !config.phoneNumberId}>
+                      {credentialsStatus.autoVerifying ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Play className="h-4 w-4 mr-2" />}
                       Testar Configuração
-                    </Button>
-                  )}
+                    </Button>}
                 </div>
               </div>
             </CardContent>
@@ -1000,15 +812,8 @@ const WhatsAppDebug: React.FC = () => {
 
         <TabsContent value="advanced" className="space-y-6">
           <div className="flex gap-3 mb-4">
-            <Button 
-              onClick={runAdvancedDiagnostics}
-              disabled={isLoadingDiagnostics || !config.token}
-            >
-              {isLoadingDiagnostics ? (
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-              ) : (
-                <Bug className="h-4 w-4 mr-2" />
-              )}
+            <Button onClick={runAdvancedDiagnostics} disabled={isLoadingDiagnostics || !config.token}>
+              {isLoadingDiagnostics ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Bug className="h-4 w-4 mr-2" />}
               Executar Diagnósticos Completos
             </Button>
             
@@ -1021,11 +826,9 @@ const WhatsAppDebug: React.FC = () => {
             </Button>
           </div>
 
-          {advancedResults && (
-            <div className="space-y-6">
+          {advancedResults && <div className="space-y-6">
               {/* Token Analysis */}
-              {advancedResults.tokenAnalysis && (
-                <Card>
+              {advancedResults.tokenAnalysis && <Card>
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <Key className="h-5 w-5" />
@@ -1034,43 +837,26 @@ const WhatsAppDebug: React.FC = () => {
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <StatusCard
-                        title="Tipo do Token"
-                        success={advancedResults.tokenAnalysis.type === 'page'}
-                        value={advancedResults.tokenAnalysis.type}
-                        icon={<Shield className="h-4 w-4" />}
-                      />
+                      <StatusCard title="Tipo do Token" success={advancedResults.tokenAnalysis.type === 'page'} value={advancedResults.tokenAnalysis.type} icon={<Shield className="h-4 w-4" />} />
                       
-                      {advancedResults.tokenAnalysis.expiresAt && (
-                        <StatusCard
-                          title="Expira em"
-                          success={new Date(advancedResults.tokenAnalysis.expiresAt) > new Date()}
-                          value={new Date(advancedResults.tokenAnalysis.expiresAt).toLocaleDateString()}
-                          icon={<AlertTriangle className="h-4 w-4" />}
-                        />
-                      )}
+                      {advancedResults.tokenAnalysis.expiresAt && <StatusCard title="Expira em" success={new Date(advancedResults.tokenAnalysis.expiresAt) > new Date()} value={new Date(advancedResults.tokenAnalysis.expiresAt).toLocaleDateString()} icon={<AlertTriangle className="h-4 w-4" />} />}
                     </div>
 
                     <div className="space-y-2">
                       <h4 className="font-semibold text-green-400">Permissões Disponíveis:</h4>
                       <div className="flex flex-wrap gap-2">
-                        {advancedResults.tokenAnalysis.permissions.map(permission => (
-                          <Badge key={permission} variant="secondary" className="bg-green-900/20 text-green-400">
+                        {advancedResults.tokenAnalysis.permissions.map(permission => <Badge key={permission} variant="secondary" className="bg-green-900/20 text-green-400">
                             {permission}
-                          </Badge>
-                        ))}
+                          </Badge>)}
                       </div>
                     </div>
 
-                    {advancedResults.tokenAnalysis.missingPermissions.length > 0 && (
-                      <div className="space-y-2">
+                    {advancedResults.tokenAnalysis.missingPermissions.length > 0 && <div className="space-y-2">
                         <h4 className="font-semibold text-red-400">Permissões em Falta:</h4>
                         <div className="flex flex-wrap gap-2">
-                          {advancedResults.tokenAnalysis.missingPermissions.map(permission => (
-                            <Badge key={permission} variant="destructive">
+                          {advancedResults.tokenAnalysis.missingPermissions.map(permission => <Badge key={permission} variant="destructive">
                               {permission}
-                            </Badge>
-                          ))}
+                            </Badge>)}
                         </div>
                         <Alert>
                           <AlertTriangle className="h-4 w-4" />
@@ -1078,15 +864,12 @@ const WhatsAppDebug: React.FC = () => {
                             Configure as permissões faltantes no Meta for Developers → App Settings → Permissions.
                           </AlertDescription>
                         </Alert>
-                      </div>
-                    )}
+                      </div>}
                   </CardContent>
-                </Card>
-              )}
+                </Card>}
 
               {/* Business Discovery */}
-              {advancedResults.businessDiscovery && (
-                <Card>
+              {advancedResults.businessDiscovery && <Card>
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <Globe className="h-5 w-5" />
@@ -1094,42 +877,27 @@ const WhatsAppDebug: React.FC = () => {
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    {advancedResults.businessDiscovery.recommendedBusinessId && (
-                      <Alert>
+                    {advancedResults.businessDiscovery.recommendedBusinessId && <Alert>
                         <CheckCircle className="h-4 w-4" />
                         <AlertDescription>
                           <div className="flex items-center justify-between">
                             <span>Business ID recomendado: <strong>{advancedResults.businessDiscovery.recommendedBusinessId}</strong></span>
-                            <Button 
-                              size="sm" 
-                              onClick={() => testManualBusinessId(advancedResults.businessDiscovery.recommendedBusinessId!)}
-                            >
+                            <Button size="sm" onClick={() => testManualBusinessId(advancedResults.businessDiscovery.recommendedBusinessId!)}>
                               Usar este ID
                             </Button>
                           </div>
                         </AlertDescription>
-                      </Alert>
-                    )}
+                      </Alert>}
 
                     <div className="space-y-3">
                       <h4 className="font-semibold">Estratégias de Descoberta:</h4>
-                      {advancedResults.businessDiscovery.strategies.map((strategy, index) => (
-                        <StatusCard
-                          key={index}
-                          title={strategy.name}
-                          success={strategy.success}
-                          value={strategy.success ? 'Sucesso' : 'Falhou'}
-                          icon={strategy.success ? <CheckCircle className="h-4 w-4" /> : <XCircle className="h-4 w-4" />}
-                        />
-                      ))}
+                      {advancedResults.businessDiscovery.strategies.map((strategy, index) => <StatusCard key={index} title={strategy.name} success={strategy.success} value={strategy.success ? 'Sucesso' : 'Falhou'} icon={strategy.success ? <CheckCircle className="h-4 w-4" /> : <XCircle className="h-4 w-4" />} />)}
                     </div>
                   </CardContent>
-                </Card>
-              )}
+                </Card>}
 
               {/* Templates */}
-              {advancedResults.templates && (
-                <Card>
+              {advancedResults.templates && <Card>
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <MessageSquare className="h-5 w-5" />
@@ -1138,35 +906,15 @@ const WhatsAppDebug: React.FC = () => {
                   </CardHeader>
                   <CardContent>
                     <div className="grid grid-cols-3 gap-4 mb-4">
-                      <StatusCard
-                        title="Aprovados"
-                        success={advancedResults.templates.approved > 0}
-                        value={advancedResults.templates.approved.toString()}
-                      />
-                      <StatusCard
-                        title="Pendentes"
-                        success={advancedResults.templates.pending === 0}
-                        value={advancedResults.templates.pending.toString()}
-                        warning={advancedResults.templates.pending > 0}
-                      />
-                      <StatusCard
-                        title="Rejeitados"
-                        success={advancedResults.templates.rejected === 0}
-                        value={advancedResults.templates.rejected.toString()}
-                      />
+                      <StatusCard title="Aprovados" success={advancedResults.templates.approved > 0} value={advancedResults.templates.approved.toString()} />
+                      <StatusCard title="Pendentes" success={advancedResults.templates.pending === 0} value={advancedResults.templates.pending.toString()} warning={advancedResults.templates.pending > 0} />
+                      <StatusCard title="Rejeitados" success={advancedResults.templates.rejected === 0} value={advancedResults.templates.rejected.toString()} />
                     </div>
                     
-                    {advancedResults.templates.available.length > 0 && (
-                      <JsonViewer 
-                        data={advancedResults.templates.available} 
-                        title="Templates Disponíveis"
-                      />
-                    )}
+                    {advancedResults.templates.available.length > 0 && <JsonViewer data={advancedResults.templates.available} title="Templates Disponíveis" />}
                   </CardContent>
-                </Card>
-              )}
-            </div>
-          )}
+                </Card>}
+            </div>}
         </TabsContent>
 
         <TabsContent value="manual" className="space-y-6">
@@ -1182,20 +930,11 @@ const WhatsAppDebug: React.FC = () => {
                 <div className="space-y-2">
                   <Label htmlFor="manual-token">Token de Acesso</Label>
                   <div className="relative">
-                    <Input
-                      id="manual-token"
-                      type={showPassword ? "text" : "password"}
-                      value={config.token}
-                      onChange={(e) => setConfig(prev => ({ ...prev, token: e.target.value }))}
-                      placeholder="Token da API do WhatsApp"
-                    />
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                      onClick={() => setShowPassword(!showPassword)}
-                    >
+                    <Input id="manual-token" type={showPassword ? "text" : "password"} value={config.token} onChange={e => setConfig(prev => ({
+                    ...prev,
+                    token: e.target.value
+                  }))} placeholder="Token da API do WhatsApp" />
+                    <Button type="button" variant="ghost" size="sm" className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent" onClick={() => setShowPassword(!showPassword)}>
                       <Eye className="h-4 w-4" />
                     </Button>
                   </div>
@@ -1203,55 +942,37 @@ const WhatsAppDebug: React.FC = () => {
 
                 <div className="space-y-2">
                   <Label htmlFor="manual-businessId">Business Account ID</Label>
-                  <Input
-                    id="manual-businessId"
-                    value={config.businessId}
-                    onChange={(e) => setConfig(prev => ({ ...prev, businessId: e.target.value }))}
-                    placeholder="ID da conta de negócios"
-                  />
+                  <Input id="manual-businessId" value={config.businessId} onChange={e => setConfig(prev => ({
+                  ...prev,
+                  businessId: e.target.value
+                }))} placeholder="ID da conta de negócios" />
                 </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="manual-phoneNumberId">Phone Number ID</Label>
-                  <Input
-                    id="manual-phoneNumberId"
-                    value={config.phoneNumberId}
-                    onChange={(e) => setConfig(prev => ({ ...prev, phoneNumberId: e.target.value }))}
-                    placeholder="ID do número de telefone"
-                  />
+                  <Input id="manual-phoneNumberId" value={config.phoneNumberId} onChange={e => setConfig(prev => ({
+                  ...prev,
+                  phoneNumberId: e.target.value
+                }))} placeholder="ID do número de telefone" />
                 </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="manual-webhookToken">Webhook Token</Label>
-                  <Input
-                    id="manual-webhookToken"
-                    value={config.webhookToken}
-                    onChange={(e) => setConfig(prev => ({ ...prev, webhookToken: e.target.value }))}
-                    placeholder="Token do webhook"
-                  />
+                  <Input id="manual-webhookToken" value={config.webhookToken} onChange={e => setConfig(prev => ({
+                  ...prev,
+                  webhookToken: e.target.value
+                }))} placeholder="Token do webhook" />
                 </div>
               </div>
 
               <div className="flex gap-3">
                 <Button onClick={saveConfig} disabled={isLoading}>
-                  {isLoading ? (
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  ) : (
-                    <Settings className="h-4 w-4 mr-2" />
-                  )}
+                  {isLoading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Settings className="h-4 w-4 mr-2" />}
                   Salvar Configuração
                 </Button>
                 
-                <Button 
-                  variant="outline" 
-                  onClick={() => autoVerifyCredentials(config)}
-                  disabled={credentialsStatus.autoVerifying || !config.token}
-                >
-                  {credentialsStatus.autoVerifying ? (
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  ) : (
-                    <Zap className="h-4 w-4 mr-2" />
-                  )}
+                <Button variant="outline" onClick={() => autoVerifyCredentials(config)} disabled={credentialsStatus.autoVerifying || !config.token}>
+                  {credentialsStatus.autoVerifying ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Zap className="h-4 w-4 mr-2" />}
                   Testar Conectividade
                 </Button>
               </div>
@@ -1267,21 +988,16 @@ const WhatsAppDebug: React.FC = () => {
               <div className="space-y-2">
                 <Label>Testar Business ID Específico</Label>
                 <div className="flex gap-2">
-                  <Input
-                    placeholder="Digite o Business ID para testar"
-                    onKeyPress={(e) => {
-                      if (e.key === 'Enter') {
-                        const target = e.target as HTMLInputElement;
-                        testManualBusinessId(target.value);
-                      }
-                    }}
-                  />
-                  <Button 
-                    onClick={(e) => {
-                      const input = e.currentTarget.parentElement?.querySelector('input');
-                      if (input?.value) testManualBusinessId(input.value);
-                    }}
-                  >
+                  <Input placeholder="Digite o Business ID para testar" onKeyPress={e => {
+                  if (e.key === 'Enter') {
+                    const target = e.target as HTMLInputElement;
+                    testManualBusinessId(target.value);
+                  }
+                }} />
+                  <Button onClick={e => {
+                  const input = e.currentTarget.parentElement?.querySelector('input');
+                  if (input?.value) testManualBusinessId(input.value);
+                }}>
                     <Search className="h-4 w-4 mr-2" />
                     Testar
                   </Button>
@@ -1291,41 +1007,28 @@ const WhatsAppDebug: React.FC = () => {
           </Card>
 
           {/* Resultados dos Testes */}
-          {testResults.length > 0 && (
-            <Card>
+          {testResults.length > 0 && <Card>
               <CardHeader>
                 <CardTitle>Resultados dos Testes</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="grid gap-3">
-                  {testResults.map((result, index) => (
-                    <div key={index} className="space-y-2">
-                      <StatusCard
-                        title={result.test}
-                        success={result.success}
-                        value={result.success ? 'OK' : 'Erro'}
-                      />
-                      {!result.success && result.suggestion && (
-                        <Alert>
+                  {testResults.map((result, index) => <div key={index} className="space-y-2">
+                      <StatusCard title={result.test} success={result.success} value={result.success ? 'OK' : 'Erro'} />
+                      {!result.success && result.suggestion && <Alert>
                           <Info className="h-4 w-4" />
                           <AlertDescription>
                             <strong>Sugestão:</strong> {result.suggestion}
                           </AlertDescription>
-                        </Alert>
-                      )}
-                    </div>
-                  ))}
+                        </Alert>}
+                    </div>)}
                 </div>
               </CardContent>
-            </Card>
-          )}
+            </Card>}
         </TabsContent>
 
         <TabsContent value="logs" className="space-y-6">
-          <LogsViewer 
-            logs={logs} 
-            onClear={clearLogs}
-          />
+          <LogsViewer logs={logs} onClear={clearLogs} />
           
           {/* Links Úteis */}
           <Card>
@@ -1366,8 +1069,6 @@ const WhatsAppDebug: React.FC = () => {
           </Card>
         </TabsContent>
       </Tabs>
-    </div>
-  );
+    </div>;
 };
-
 export default WhatsAppDebug;
