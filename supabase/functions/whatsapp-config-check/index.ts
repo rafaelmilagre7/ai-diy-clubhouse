@@ -484,29 +484,89 @@ async function discoverViaOwnedApps(token: string) {
 async function handleTemplatesSearch(parsed: any, requestId: string, corsHeaders: any) {
   console.log(`📋 [${requestId}] Iniciando busca de templates WhatsApp`)
   
-  const { config, filters = {} } = parsed
-  
-  if (!config?.access_token) {
-    throw new Error('Access Token não fornecido')
-  }
-  
-  // Auto-descobrir Business ID se não fornecido
-  let businessId = config.business_account_id
-  if (!businessId) {
-    console.log('🔍 Business ID não fornecido, tentando descoberta automática...')
-    const discovery = await discoverBusinessIdAdvanced(config.access_token)
-    businessId = discovery.businessId
-    if (!businessId) {
-      throw new Error('Business ID não fornecido e não foi possível descobrir automaticamente')
+  try {
+    const { config, filters = {} } = parsed
+    
+    if (!config?.access_token) {
+      console.error(`❌ [${requestId}] Access Token não fornecido`)
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: 'Access Token é obrigatório para buscar templates',
+          templates: [],
+          stats: { total: 0, approved: 0, pending: 0, rejected: 0 },
+          timestamp: new Date().toISOString(),
+          requestId
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+      )
     }
+    
+    // Auto-descobrir Business ID se não fornecido
+    let businessId = config.business_account_id
+    if (!businessId) {
+      console.log(`🔍 [${requestId}] Business ID não fornecido, tentando descoberta automática...`)
+      try {
+        const discovery = await discoverBusinessIdAdvanced(config.access_token)
+        businessId = discovery.businessId
+        if (!businessId) {
+          console.error(`❌ [${requestId}] Não foi possível descobrir Business ID automaticamente`)
+          return new Response(
+            JSON.stringify({
+              success: false,
+              error: 'Business ID não fornecido e não foi possível descobrir automaticamente',
+              templates: [],
+              stats: { total: 0, approved: 0, pending: 0, rejected: 0 },
+              timestamp: new Date().toISOString(),
+              requestId
+            }),
+            { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+          )
+        }
+        console.log(`✅ [${requestId}] Business ID descoberto: ${businessId}`)
+      } catch (discoveryError) {
+        console.error(`❌ [${requestId}] Erro na descoberta de Business ID:`, discoveryError)
+        return new Response(
+          JSON.stringify({
+            success: false,
+            error: `Erro na descoberta de Business ID: ${discoveryError.message}`,
+            templates: [],
+            stats: { total: 0, approved: 0, pending: 0, rejected: 0 },
+            timestamp: new Date().toISOString(),
+            requestId
+          }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+        )
+      }
+    }
+    
+    console.log(`📋 [${requestId}] Buscando templates para Business ID: ${businessId}`)
+    const searchResult = await searchWhatsAppTemplates(config.access_token, businessId, filters)
+    
+    // Adicionar requestId ao resultado
+    searchResult.requestId = requestId
+    
+    console.log(`✅ [${requestId}] Busca de templates concluída com sucesso`)
+    return new Response(
+      JSON.stringify(searchResult),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    )
+    
+  } catch (error) {
+    console.error(`❌ [${requestId}] Erro inesperado na busca de templates:`, error)
+    
+    return new Response(
+      JSON.stringify({
+        success: false,
+        error: `Erro inesperado: ${error.message}`,
+        templates: [],
+        stats: { total: 0, approved: 0, pending: 0, rejected: 0 },
+        timestamp: new Date().toISOString(),
+        requestId
+      }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+    )
   }
-  
-  const searchResult = await searchWhatsAppTemplates(config.access_token, businessId, filters)
-  
-  return new Response(
-    JSON.stringify(searchResult),
-    { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-  )
 }
 
 // Função para buscar templates do WhatsApp
