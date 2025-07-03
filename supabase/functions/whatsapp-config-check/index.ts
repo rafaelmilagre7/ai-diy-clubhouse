@@ -857,6 +857,12 @@ serve(async (req) => {
       return await handleNewConfigAPI(parsed, requestId, corsHeaders)
     }
 
+    // Verificar se é ação de busca de templates
+    if (parsed.action === 'search-templates') {
+      console.log(`📋 [${requestId}] Executando busca de templates WhatsApp`)
+      return await handleTemplatesSearch(parsed, requestId, corsHeaders)
+    }
+
     // Verificar se é ação de diagnóstico avançado
     if (parsed.action === 'advanced_diagnostics') {
       console.log(`🔍 [${requestId}] Executando diagnóstico avançado com descoberta de Business ID`)
