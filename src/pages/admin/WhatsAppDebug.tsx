@@ -231,16 +231,47 @@ const WhatsAppDebug: React.FC = () => {
 
   const autoVerifyCredentials = async (configToVerify: any) => {
     setCredentialsStatus(prev => ({ ...prev, autoVerifying: true }));
+    addLog('🔍 Iniciando verificação automática das credenciais...', 'info');
     
     try {
+      // Converter formato para o edge function
+      const configForEdgeFunction = {
+        access_token: configToVerify.token || configToVerify.access_token,
+        phone_number_id: configToVerify.phoneNumberId || configToVerify.phone_number_id,
+        business_account_id: configToVerify.businessId || configToVerify.business_account_id,
+        webhook_verify_token: configToVerify.webhookToken || configToVerify.webhook_verify_token
+      };
+
+      addLog('📤 Enviando configuração para edge function:', 'info');
+      addLog(`  • Token: ${configForEdgeFunction.access_token ? '✓' : '✗'}`, 'info');
+      addLog(`  • Phone ID: ${configForEdgeFunction.phone_number_id ? '✓' : '✗'}`, 'info');
+
       const { data, error } = await supabase.functions.invoke('whatsapp-config-check', {
         body: { 
-          action: 'basic_test',
-          config: configToVerify
+          config: configForEdgeFunction
         }
       });
 
-      const isValid = data?.results?.every((result: ConfigTestResult) => result.success) || false;
+      if (error) {
+        addLog(`❌ Erro na chamada da edge function: ${error.message}`, 'error');
+        throw error;
+      }
+
+      addLog('📥 Resposta recebida da edge function', 'info');
+      console.log('Resposta da edge function:', data);
+
+      // Analisar resultados
+      let isValid = false;
+      if (data?.results) {
+        const successCount = data.results.filter((r: any) => r.success).length;
+        const totalTests = data.results.length;
+        isValid = successCount >= totalTests * 0.75; // 75% dos testes devem passar
+        
+        addLog(`📊 Resultados: ${successCount}/${totalTests} testes passaram`, 'info');
+      } else if (data?.summary) {
+        isValid = data.summary.passed > 0 && data.summary.failed === 0;
+        addLog(`📊 Resumo: ${data.summary.passed} sucessos, ${data.summary.failed} falhas`, 'info');
+      }
       
       setCredentialsStatus(prev => ({
         ...prev,
@@ -255,58 +286,121 @@ const WhatsAppDebug: React.FC = () => {
         toast.success('WhatsApp configurado corretamente!');
       } else {
         addLog('❌ Verificação automática: Problemas detectados nas credenciais', 'error');
+        
+        // Log detalhado dos problemas
         if (data?.results) {
-          data.results.forEach((result: ConfigTestResult) => {
+          data.results.forEach((result: any) => {
             if (!result.success) {
-              addLog(`  • ${result.test}: ${result.message}`, 'error');
-              if (result.suggestion) {
-                addLog(`    💡 Sugestão: ${result.suggestion}`, 'info');
+              addLog(`  • ${result.test}: ${result.errors?.[0] || 'Erro desconhecido'}`, 'error');
+              if (result.warnings?.length > 0) {
+                result.warnings.forEach((warning: string) => {
+                  addLog(`    ⚠️ ${warning}`, 'warning');
+                });
               }
+            } else {
+              addLog(`  ✅ ${result.test}: OK`, 'success');
             }
           });
         }
       }
       
-    } catch (error) {
+    } catch (error: any) {
+      const errorMessage = error?.message || error?.toString() || 'Erro desconhecido';
+      
       setCredentialsStatus(prev => ({
         ...prev,
         isValid: false,
         lastChecked: new Date(),
         autoVerifying: false
       }));
-      addLog(`❌ Erro na verificação automática: ${error}`, 'error');
+      
+      addLog(`❌ Erro na verificação automática: ${errorMessage}`, 'error');
+      
+      // Sugestões específicas baseadas no tipo de erro
+      if (errorMessage.includes('Function not found')) {
+        addLog('💡 Sugestão: A edge function whatsapp-config-check não foi encontrada', 'info');
+      } else if (errorMessage.includes('Unauthorized')) {
+        addLog('💡 Sugestão: Verifique suas permissões de acesso', 'info');
+      } else if (errorMessage.includes('timeout')) {
+        addLog('💡 Sugestão: Timeout na verificação - tente novamente', 'info');
+      }
+      
+      console.error('Erro completo na verificação:', error);
     }
   };
 
   const saveConfig = async () => {
+    if (!config.token || !config.phoneNumberId) {
+      addLog('❌ Token e Phone Number ID são obrigatórios', 'error');
+      toast.error('Preencha pelo menos o Token e Phone Number ID');
+      return;
+    }
+
     setIsLoading(true);
+    addLog('💾 Iniciando salvamento da configuração...', 'info');
+    
     try {
       const configToSave = {
-        access_token: config.token,
-        business_account_id: config.businessId,
-        phone_number_id: config.phoneNumberId,
-        webhook_verify_token: config.webhookToken
+        access_token: config.token.trim(),
+        business_account_id: config.businessId.trim(),
+        phone_number_id: config.phoneNumberId.trim(),
+        webhook_verify_token: config.webhookToken.trim()
       };
 
-      const { error } = await supabase
+      addLog('📝 Dados a serem salvos:', 'info');
+      addLog(`  • access_token: ${configToSave.access_token ? '✓ Preenchido' : '✗ Vazio'}`, 'info');
+      addLog(`  • phone_number_id: ${configToSave.phone_number_id ? '✓ Preenchido' : '✗ Vazio'}`, 'info');
+      addLog(`  • business_account_id: ${configToSave.business_account_id ? '✓ Preenchido' : '✗ Vazio'}`, 'info');
+
+      const { error, data } = await supabase
         .from('admin_settings')
         .upsert({
           key: 'whatsapp_config',
-          value: configToSave
+          value: configToSave,
+          category: 'whatsapp',
+          description: 'Configurações da API do WhatsApp Business',
+          updated_by: (await supabase.auth.getUser()).data.user?.id
+        }, {
+          onConflict: 'key'
         });
 
-      if (error) throw error;
+      if (error) {
+        addLog(`❌ Erro do Supabase: ${error.message}`, 'error');
+        addLog(`❌ Detalhes: ${JSON.stringify(error)}`, 'error');
+        throw new Error(`Erro ao salvar no banco: ${error.message}`);
+      }
       
-      addLog('✅ Configuração salva com sucesso', 'success');
-      toast.success('Configuração salva!');
+      addLog('✅ Configuração salva com sucesso no banco de dados', 'success');
+      toast.success('Configuração salva com sucesso!');
+      
+      // Atualizar score das credenciais
+      setCredentialsStatus(prev => ({
+        ...prev,
+        score: calculateCredentialScore(config),
+        lastChecked: new Date()
+      }));
       
       // Re-verificar credenciais após salvar
       if (config.token && config.phoneNumberId) {
+        addLog('🔍 Executando verificação automática...', 'info');
         await autoVerifyCredentials(config);
       }
-    } catch (error) {
-      addLog(`❌ Erro ao salvar configuração: ${error}`, 'error');
-      toast.error('Erro ao salvar configuração');
+    } catch (error: any) {
+      const errorMessage = error?.message || error?.toString() || 'Erro desconhecido';
+      addLog(`❌ Erro ao salvar configuração: ${errorMessage}`, 'error');
+      
+      // Erro específico para diferentes tipos de problemas
+      if (errorMessage.includes('permission')) {
+        addLog('💡 Sugestão: Verifique se você tem permissões de administrador', 'info');
+        toast.error('Erro de permissão - Verifique se você é administrador');
+      } else if (errorMessage.includes('network')) {
+        addLog('💡 Sugestão: Verifique sua conexão com a internet', 'info');
+        toast.error('Erro de conectividade - Verifique sua internet');
+      } else {
+        toast.error(`Erro ao salvar: ${errorMessage}`);
+      }
+      
+      console.error('Erro completo ao salvar configuração:', error);
     } finally {
       setIsLoading(false);
     }
