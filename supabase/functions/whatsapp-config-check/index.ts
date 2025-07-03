@@ -851,12 +851,8 @@ serve(async (req) => {
 
     console.log(`⏱️ [${requestId}] Tempo de parse: ${Date.now() - startTime}ms`)
 
-    // Verificar se é requisição nova API (config object no body)
-    if (typeof parsed === 'object' && parsed.config) {
-      console.log(`🆕 [${requestId}] Detectada nova API com objeto config`)
-      return await handleNewConfigAPI(parsed, requestId, corsHeaders)
-    }
-
+    // Verificar ações específicas primeiro (para evitar conflict com verificação genérica de config)
+    
     // Verificar se é ação de busca de templates
     if (parsed.action === 'search-templates') {
       console.log(`📋 [${requestId}] Executando busca de templates WhatsApp`)
@@ -873,6 +869,12 @@ serve(async (req) => {
     if (parsed.action === 'check-config') {
       console.log(`🔐 [${requestId}] Testando secrets do Supabase`)
       return await handleSupabaseSecretsCheck(requestId, corsHeaders)
+    }
+
+    // Verificar se é requisição nova API (config object no body) - como fallback
+    if (typeof parsed === 'object' && parsed.config) {
+      console.log(`🆕 [${requestId}] Detectada nova API com objeto config`)
+      return await handleNewConfigAPI(parsed, requestId, corsHeaders)
     }
 
     // API legada para compatibilidade
