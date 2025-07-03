@@ -391,16 +391,22 @@ const WhatsAppDebug: React.FC = () => {
         addLog('✅ Diagnósticos avançados concluídos', 'success');
         if (data.businessId) {
           addLog(`🎉 Business ID descoberto: ${data.businessId}`, 'success');
-          toast.success(`🎉 Business ID descoberto automaticamente: ${data.businessId}`);
-
-          // Perguntar se o usuário quer aplicar automaticamente
-          if (confirm(`Business ID descoberto: ${data.businessId}\n\nDeseja aplicar automaticamente?`)) {
-            setConfig(prev => ({
-              ...prev,
-              businessId: data.businessId
-            }));
-            addLog('✅ Business ID aplicado automaticamente', 'success');
-            toast.success("Business ID aplicado automaticamente!");
+          
+          // Aplicar automaticamente o Business ID descoberto
+          setConfig(prev => ({
+            ...prev,
+            businessId: data.businessId
+          }));
+          
+          addLog('✅ Business ID aplicado automaticamente', 'success');
+          toast.success(`🎉 Business ID descoberto e aplicado: ${data.businessId}`);
+          
+          // Salvar automaticamente se temos os campos obrigatórios
+          if (config.token && config.phoneNumberId) {
+            addLog('💾 Salvando configuração atualizada...', 'info');
+            setTimeout(async () => {
+              await saveConfig();
+            }, 1000);
           }
         } else {
           addLog('⚠️ Não foi possível descobrir o Business ID automaticamente', 'warning');

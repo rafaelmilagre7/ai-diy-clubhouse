@@ -34,8 +34,19 @@ async function handleNewConfigAPI(parsed: any, requestId: string, corsHeaders: a
 
   console.log('🧪 Iniciando diagnósticos...')
 
-  // Diagnóstico 1: Validação Básica de Configuração
-  const basicValidation = await validateBasicConfig(config)
+  // Primeiro, tentar descoberta automática para melhorar validação básica
+  let discoveredBusinessId = null
+  if (config.access_token && !config.business_account_id) {
+    console.log('🔍 Tentando descoberta automática de Business ID...')
+    const discovery = await discoverBusinessIdAdvanced(config.access_token)
+    discoveredBusinessId = discovery.businessId
+    if (discoveredBusinessId) {
+      console.log(`✅ Business ID descoberto: ${discoveredBusinessId}`)
+    }
+  }
+
+  // Diagnóstico 1: Validação Básica de Configuração (com Business ID descoberto)
+  const basicValidation = await validateBasicConfig(config, discoveredBusinessId)
   diagnostics.results.push(basicValidation)
   
   // Diagnóstico 2: Teste de Token de Acesso
@@ -72,7 +83,7 @@ async function handleNewConfigAPI(parsed: any, requestId: string, corsHeaders: a
 }
 
 // Funções de validação básica
-async function validateBasicConfig(config: any) {
+async function validateBasicConfig(config: any, discoveredBusinessId?: string | null) {
   console.log('🔍 Validando configuração básica...')
   
   const result = {
@@ -98,13 +109,16 @@ async function validateBasicConfig(config: any) {
     result.warnings.push('Access Token parece muito curto')
   }
 
-  if (!config.business_account_id) {
+  // Verificar Business ID - só mostrar aviso se não foi descoberto automaticamente
+  if (!config.business_account_id && !discoveredBusinessId) {
     result.warnings.push('Business Account ID não fornecido (pode ser descoberto automaticamente)')
+  } else if (discoveredBusinessId && !config.business_account_id) {
+    result.details.push(`Business ID descoberto automaticamente: ${discoveredBusinessId}`)
   }
 
   result.details.push(`Phone Number ID: ${config.phone_number_id ? '✓' : '✗'}`)
   result.details.push(`Access Token: ${config.access_token ? '✓' : '✗'}`)
-  result.details.push(`Business Account ID: ${config.business_account_id ? '✓' : '⚠️'}`)
+  result.details.push(`Business Account ID: ${config.business_account_id ? '✓' : (discoveredBusinessId ? '🔍' : '⚠️')}`)
 
   console.log('📋 Validação básica concluída:', result.success ? 'PASSOU' : 'FALHOU')
   return result
@@ -499,7 +513,15 @@ async function handleAdvancedDiagnostics(parsed: any, requestId: string, corsHea
     // 1. Executar diagnósticos padrão
     console.log(`📋 [${requestId}] Executando diagnósticos padrão...`)
     
-    const basicValidation = await validateBasicConfig(config)
+    // Primeiro, tentar descoberta automática para melhorar validação básica
+    let earlyDiscoveredBusinessId = null
+    if (config.access_token && !config.business_account_id) {
+      console.log(`🔍 [${requestId}] Descoberta prévia de Business ID...`)
+      const discovery = await discoverBusinessIdAdvanced(config.access_token)
+      earlyDiscoveredBusinessId = discovery.businessId
+    }
+    
+    const basicValidation = await validateBasicConfig(config, earlyDiscoveredBusinessId)
     diagnostics.results.push(basicValidation)
     
     const tokenTest = await testAccessToken(config)
