@@ -928,6 +928,10 @@ const WhatsAppDebug: React.FC = () => {
             <MessageSquare className="h-4 w-4" />
             Monitoramento
           </TabsTrigger>
+          <TabsTrigger value="templates" className="flex items-center gap-2">
+            <BookOpen className="h-4 w-4" />
+            Templates
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="wizard" className="space-y-6">
@@ -1424,6 +1428,189 @@ const WhatsAppDebug: React.FC = () => {
                   </a>
                 </Button>
               </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="templates" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="flex items-center gap-2">
+                    <BookOpen className="h-5 w-5" />
+                    Templates WhatsApp Business
+                  </CardTitle>
+                  <p className="text-sm text-muted-foreground">
+                    Busque e visualize templates da sua conta WhatsApp Business
+                  </p>
+                </div>
+                <Button 
+                  onClick={searchTemplates}
+                  disabled={templatesStatus.loading || !config.token}
+                  variant="outline"
+                >
+                  {templatesStatus.loading ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Buscando...
+                    </>
+                  ) : (
+                    <>
+                      <Search className="h-4 w-4 mr-2" />
+                      Buscar Templates
+                    </>
+                  )}
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* Filtros */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <Label>Buscar por nome</Label>
+                  <Input
+                    placeholder="Nome do template..."
+                    value={templatesStatus.filters.search}
+                    onChange={(e) => setTemplatesStatus(prev => ({
+                      ...prev,
+                      filters: { ...prev.filters, search: e.target.value }
+                    }))}
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label>Status</Label>
+                  <select
+                    className="w-full p-2 border border-input bg-background rounded-md"
+                    value={templatesStatus.filters.status}
+                    onChange={(e) => setTemplatesStatus(prev => ({
+                      ...prev,
+                      filters: { ...prev.filters, status: e.target.value }
+                    }))}
+                  >
+                    <option value="">Todos</option>
+                    <option value="APPROVED">Aprovados</option>
+                    <option value="PENDING">Pendentes</option>
+                    <option value="REJECTED">Rejeitados</option>
+                  </select>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label>Categoria</Label>
+                  <select
+                    className="w-full p-2 border border-input bg-background rounded-md"
+                    value={templatesStatus.filters.category}
+                    onChange={(e) => setTemplatesStatus(prev => ({
+                      ...prev,
+                      filters: { ...prev.filters, category: e.target.value }
+                    }))}
+                  >
+                    <option value="">Todas</option>
+                    <option value="MARKETING">Marketing</option>
+                    <option value="UTILITY">Utilitário</option>
+                    <option value="AUTHENTICATION">Autenticação</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Estatísticas */}
+              {templatesStatus.stats && (
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="text-center p-4 bg-muted/30 rounded-lg">
+                    <div className="text-2xl font-bold text-blue-600">
+                      {templatesStatus.stats.total || 0}
+                    </div>
+                    <div className="text-sm text-muted-foreground">Total</div>
+                  </div>
+                  <div className="text-center p-4 bg-muted/30 rounded-lg">
+                    <div className="text-2xl font-bold text-green-600">
+                      {templatesStatus.stats.approved || 0}
+                    </div>
+                    <div className="text-sm text-muted-foreground">Aprovados</div>
+                  </div>
+                  <div className="text-center p-4 bg-muted/30 rounded-lg">
+                    <div className="text-2xl font-bold text-yellow-600">
+                      {templatesStatus.stats.pending || 0}
+                    </div>
+                    <div className="text-sm text-muted-foreground">Pendentes</div>
+                  </div>
+                  <div className="text-center p-4 bg-muted/30 rounded-lg">
+                    <div className="text-2xl font-bold text-red-600">
+                      {templatesStatus.stats.rejected || 0}
+                    </div>
+                    <div className="text-sm text-muted-foreground">Rejeitados</div>
+                  </div>
+                </div>
+              )}
+
+              {/* Templates */}
+              {templatesStatus.loading && (
+                <div className="text-center py-8">
+                  <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
+                  <p className="text-muted-foreground">Buscando templates...</p>
+                </div>
+              )}
+
+              {!templatesStatus.loading && templatesStatus.templates.length === 0 && templatesStatus.lastChecked && (
+                <div className="text-center py-8">
+                  <BookOpen className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+                  <p className="text-muted-foreground">Nenhum template encontrado</p>
+                  <p className="text-sm text-muted-foreground">
+                    Clique em "Buscar Templates" para carregar os templates da sua conta
+                  </p>
+                </div>
+              )}
+
+              {!templatesStatus.loading && templatesStatus.templates.length === 0 && !templatesStatus.lastChecked && (
+                <div className="text-center py-8">
+                  <BookOpen className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+                  <p className="text-muted-foreground">Busque templates da sua conta WhatsApp Business</p>
+                  <p className="text-sm text-muted-foreground">
+                    Configure seu token de acesso e clique em "Buscar Templates"
+                  </p>
+                </div>
+              )}
+
+              {templatesStatus.templates.length > 0 && (
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h4 className="font-semibold">
+                      {templatesStatus.templates.filter(template => {
+                        const searchMatch = !templatesStatus.filters.search || 
+                          template.name.toLowerCase().includes(templatesStatus.filters.search.toLowerCase());
+                        const statusMatch = !templatesStatus.filters.status || 
+                          template.status === templatesStatus.filters.status;
+                        const categoryMatch = !templatesStatus.filters.category || 
+                          template.category === templatesStatus.filters.category;
+                        return searchMatch && statusMatch && categoryMatch;
+                      }).length} templates encontrados
+                    </h4>
+                    {templatesStatus.lastChecked && (
+                      <p className="text-sm text-muted-foreground">
+                        Última busca: {templatesStatus.lastChecked.toLocaleTimeString()}
+                      </p>
+                    )}
+                  </div>
+                  
+                  <div className="grid gap-4">
+                    {templatesStatus.templates
+                      .filter(template => {
+                        const searchMatch = !templatesStatus.filters.search || 
+                          template.name.toLowerCase().includes(templatesStatus.filters.search.toLowerCase());
+                        const statusMatch = !templatesStatus.filters.status || 
+                          template.status === templatesStatus.filters.status;
+                        const categoryMatch = !templatesStatus.filters.category || 
+                          template.category === templatesStatus.filters.category;
+                        return searchMatch && statusMatch && categoryMatch;
+                      })
+                      .map((template, index) => (
+                        <TemplateCard key={template.id || index} template={template} />
+                      ))
+                    }
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
