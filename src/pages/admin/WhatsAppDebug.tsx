@@ -98,6 +98,8 @@ const WhatsAppDebug: React.FC = () => {
   const [testResults, setTestResults] = useState<ConfigTestResult[]>([]);
   const [advancedResults, setAdvancedResults] = useState<AdvancedConfigCheck | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingDiagnostics, setIsLoadingDiagnostics] = useState(false);
+  const [lastDiagnostics, setLastDiagnostics] = useState<any>(null);
   const [logs, setLogs] = useState<string[]>([]);
   const [activeTab, setActiveTab] = useState('wizard');
   const [currentStep, setCurrentStep] = useState(0);
@@ -407,41 +409,79 @@ const WhatsAppDebug: React.FC = () => {
   };
 
   const runAdvancedDiagnostics = async () => {
-    setIsLoading(true);
-    setAdvancedResults(null);
-    addLog('🔍 Iniciando diagnósticos avançados', 'info');
+    if (!config.token || !config.phoneNumberId) {
+      toast.error("Access Token e Phone Number ID são obrigatórios para diagnósticos avançados");
+      return;
+    }
+
+    setIsLoadingDiagnostics(true);
+    addLog('🔍 Iniciando diagnósticos avançados com descoberta automática...', 'info');
 
     try {
+      const configForEdgeFunction = {
+        access_token: config.token,
+        business_account_id: config.businessId,
+        phone_number_id: config.phoneNumberId,
+        webhook_verify_token: config.webhookToken
+      };
+
       const { data, error } = await supabase.functions.invoke('whatsapp-config-check', {
         body: { 
           action: 'advanced_diagnostics',
-          config 
+          config: configForEdgeFunction
         }
       });
 
-      if (error) throw error;
+      addLog('📥 Resposta recebida da edge function', 'info');
+      console.log('Resposta da edge function:', data);
 
-      setAdvancedResults(data);
-      addLog('✅ Diagnósticos avançados concluídos', 'success');
+      if (error) {
+        addLog(`❌ Erro na edge function: ${error.message}`, 'error');
+        toast.error(`Erro nos diagnósticos: ${error.message}`);
+        setLastDiagnostics(null);
+        return;
+      }
 
-      // Log dos resultados detalhados
-      if (data.tokenAnalysis) {
-        addLog(`🔑 Token Type: ${data.tokenAnalysis.type}`, 'info');
-        addLog(`📋 Permissões: ${data.tokenAnalysis.permissions.join(', ')}`, 'info');
-        if (data.tokenAnalysis.missingPermissions.length > 0) {
-          addLog(`⚠️ Permissões em falta: ${data.tokenAnalysis.missingPermissions.join(', ')}`, 'warning');
+      if (data) {
+        setLastDiagnostics(data);
+        addLog('✅ Diagnósticos avançados concluídos', 'success');
+        
+        if (data.businessId) {
+          addLog(`🎉 Business ID descoberto: ${data.businessId}`, 'success');
+          toast.success(`🎉 Business ID descoberto automaticamente: ${data.businessId}`);
+          
+          // Perguntar se o usuário quer aplicar automaticamente
+          if (confirm(`Business ID descoberto: ${data.businessId}\n\nDeseja aplicar automaticamente?`)) {
+            setConfig(prev => ({
+              ...prev,
+              businessId: data.businessId
+            }));
+            addLog('✅ Business ID aplicado automaticamente', 'success');
+            toast.success("Business ID aplicado automaticamente!");
+          }
+        } else {
+          addLog('⚠️ Não foi possível descobrir o Business ID automaticamente', 'warning');
+          toast.warning("⚠️ Não foi possível descobrir o Business ID automaticamente");
+        }
+
+        // Log estratégias de descoberta
+        if (data.discoveryStrategies && data.discoveryStrategies.length > 0) {
+          addLog(`📊 Estratégias testadas: ${data.discoveryStrategies.length}`, 'info');
+          data.discoveryStrategies.forEach((strategy: any) => {
+            const status = strategy.success ? '✅' : '❌';
+            addLog(`  ${status} ${strategy.name} (${strategy.duration})`, strategy.success ? 'success' : 'error');
+            if (!strategy.success && strategy.error) {
+              addLog(`    └─ Erro: ${strategy.error}`, 'error');
+            }
+          });
         }
       }
-
-      if (data.businessDiscovery?.recommendedBusinessId) {
-        addLog(`💼 Business ID recomendado: ${data.businessDiscovery.recommendedBusinessId}`, 'success');
-      }
-
-    } catch (error) {
-      addLog(`❌ Erro nos diagnósticos avançados: ${error}`, 'error');
-      toast.error('Erro ao executar diagnósticos avançados');
+    } catch (error: any) {
+      addLog(`❌ Erro inesperado: ${error.message}`, 'error');
+      toast.error("Erro inesperado ao executar diagnósticos");
+      setLastDiagnostics(null);
     } finally {
-      setIsLoading(false);
+      setIsLoadingDiagnostics(false);
     }
   };
 
@@ -587,31 +627,113 @@ const WhatsAppDebug: React.FC = () => {
               </p>
             </div>
             
-            {advancedResults?.businessDiscovery?.recommendedBusinessId && (
-              <Alert>
-                <CheckCircle className="h-4 w-4" />
-                <AlertDescription>
-                  <div className="flex items-center justify-between">
-                    <span>Business ID recomendado: <strong>{advancedResults.businessDiscovery.recommendedBusinessId}</strong></span>
-                    <Button 
-                      size="sm" 
-                      onClick={() => testManualBusinessId(advancedResults.businessDiscovery.recommendedBusinessId!)}
-                    >
-                      Usar este ID
-                    </Button>
-                  </div>
-                </AlertDescription>
-              </Alert>
-            )}
-            
             <Button 
               variant="outline" 
               onClick={runAdvancedDiagnostics}
-              disabled={!config.token}
+              disabled={isLoadingDiagnostics || !config.token}
             >
-              <Search className="h-4 w-4 mr-2" />
-              Descobrir Business ID Automaticamente
+              {isLoadingDiagnostics ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Descobrindo...
+                </>
+              ) : (
+                <>
+                  <Search className="h-4 w-4 mr-2" />
+                  Descobrir Business ID Automaticamente
+                </>
+              )}
             </Button>
+
+            {/* Mostrar resultados da descoberta */}
+            {lastDiagnostics && (
+              <Card className="mt-6">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <CheckCircle className="h-5 w-5 text-green-500" />
+                    Resultado da Descoberta
+                    {lastDiagnostics.businessId && (
+                      <Badge variant="secondary" className="ml-2">
+                        Business ID Descoberto
+                      </Badge>
+                    )}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {/* Resumo dos Resultados */}
+                  <div className="grid grid-cols-4 gap-4 p-4 bg-gray-50 rounded-lg">
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-green-600">{lastDiagnostics.summary?.passed || 0}</div>
+                      <div className="text-sm text-gray-600">Passou</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-red-600">{lastDiagnostics.summary?.failed || 0}</div>
+                      <div className="text-sm text-gray-600">Falhou</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-yellow-600">{lastDiagnostics.summary?.warnings || 0}</div>
+                      <div className="text-sm text-gray-600">Avisos</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-blue-600">{lastDiagnostics.summary?.total || 0}</div>
+                      <div className="text-sm text-gray-600">Total</div>
+                    </div>
+                  </div>
+
+                  {/* Business ID Descoberto */}
+                  {lastDiagnostics.businessId && (
+                    <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
+                      <div className="flex items-center gap-2 mb-2">
+                        <CheckCircle className="h-5 w-5 text-green-500" />
+                        <span className="font-semibold text-green-800">Business ID Descoberto!</span>
+                      </div>
+                      <div className="text-green-700 font-mono text-sm">{lastDiagnostics.businessId}</div>
+                      <Button 
+                        size="sm" 
+                        className="mt-2"
+                        onClick={() => {
+                          setConfig(prev => ({
+                            ...prev,
+                            businessId: lastDiagnostics.businessId
+                          }));
+                          toast.success("Business ID aplicado!");
+                        }}
+                      >
+                        Aplicar Business ID
+                      </Button>
+                    </div>
+                  )}
+
+                  {/* Estratégias de Descoberta */}
+                  {lastDiagnostics.discoveryStrategies && lastDiagnostics.discoveryStrategies.length > 0 && (
+                    <div className="space-y-2">
+                      <h4 className="font-semibold">Estratégias de Descoberta Testadas:</h4>
+                      {lastDiagnostics.discoveryStrategies.map((strategy: any, index: number) => (
+                        <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded">
+                          <span className="text-sm">{strategy.name}</span>
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs text-gray-500">{strategy.duration}</span>
+                            {strategy.success ? (
+                              <CheckCircle className="h-4 w-4 text-green-500" />
+                            ) : (
+                              <XCircle className="h-4 w-4 text-red-500" />
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Resultados Detalhados */}
+                  <details className="mt-4">
+                    <summary className="cursor-pointer text-sm font-medium">Ver Diagnósticos Detalhados</summary>
+                    <pre className="whitespace-pre-wrap text-xs bg-gray-100 p-4 rounded mt-2 overflow-auto max-h-96">
+                      {JSON.stringify(lastDiagnostics, null, 2)}
+                    </pre>
+                  </details>
+                </CardContent>
+              </Card>
+            )}
           </div>
         );
         
@@ -880,9 +1002,9 @@ const WhatsAppDebug: React.FC = () => {
           <div className="flex gap-3 mb-4">
             <Button 
               onClick={runAdvancedDiagnostics}
-              disabled={isLoading || !config.token}
+              disabled={isLoadingDiagnostics || !config.token}
             >
-              {isLoading ? (
+              {isLoadingDiagnostics ? (
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
               ) : (
                 <Bug className="h-4 w-4 mr-2" />

@@ -466,6 +466,125 @@ async function discoverViaOwnedApps(token: string) {
   return null
 }
 
+// Nova função para lidar com diagnósticos avançados
+async function handleAdvancedDiagnostics(parsed: any, requestId: string, corsHeaders: any) {
+  console.log(`🔬 [${requestId}] Iniciando diagnóstico avançado com descoberta automática`)
+  
+  const { config } = parsed
+  if (!config || !config.access_token) {
+    return new Response(
+      JSON.stringify({
+        success: false,
+        error: 'Access Token é obrigatório para descoberta automática de Business ID',
+        timestamp: new Date().toISOString()
+      }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+    )
+  }
+
+  const diagnostics = {
+    timestamp: new Date().toISOString(),
+    results: [],
+    businessId: null,
+    discoveryStrategies: [],
+    summary: {
+      total: 0,
+      passed: 0,
+      failed: 0,
+      warnings: 0
+    }
+  }
+
+  try {
+    // 1. Executar diagnósticos padrão
+    console.log(`📋 [${requestId}] Executando diagnósticos padrão...`)
+    
+    const basicValidation = await validateBasicConfig(config)
+    diagnostics.results.push(basicValidation)
+    
+    const tokenTest = await testAccessToken(config)
+    diagnostics.results.push(tokenTest)
+    
+    const businessTest = await verifyBusinessAccount(config)
+    diagnostics.results.push(businessTest)
+    
+    const phoneTest = await testPhoneNumber(config)
+    diagnostics.results.push(phoneTest)
+
+    // 2. Descoberta automática de Business ID
+    console.log(`🔍 [${requestId}] Iniciando descoberta automática de Business ID...`)
+    
+    const discoveryResult = await discoverBusinessIdAdvanced(config.access_token)
+    diagnostics.discoveryStrategies = discoveryResult.strategies
+    
+    if (discoveryResult.businessId) {
+      diagnostics.businessId = discoveryResult.businessId
+      console.log(`✅ [${requestId}] Business ID descoberto: ${discoveryResult.businessId}`)
+      
+      // Adicionar resultado de descoberta aos diagnósticos
+      diagnostics.results.push({
+        test: 'Descoberta Automática de Business ID',
+        success: true,
+        details: [
+          `Business ID descoberto: ${discoveryResult.businessId}`,
+          `Estratégias testadas: ${discoveryResult.strategies.length}`,
+          `Estratégia bem-sucedida: ${discoveryResult.strategies.find(s => s.success)?.name || 'N/A'}`
+        ],
+        warnings: [],
+        errors: []
+      })
+    } else {
+      console.log(`❌ [${requestId}] Falha na descoberta automática`)
+      
+      diagnostics.results.push({
+        test: 'Descoberta Automática de Business ID',
+        success: false,
+        details: [`Estratégias testadas: ${discoveryResult.strategies.length}`],
+        warnings: [
+          'Não foi possível descobrir o Business ID automaticamente',
+          'Verifique as permissões do token ou configure manualmente'
+        ],
+        errors: discoveryResult.strategies
+          .filter(s => !s.success && s.error)
+          .map(s => `${s.name}: ${s.error}`)
+      })
+    }
+
+    // Calcular resumo
+    diagnostics.summary.total = diagnostics.results.length
+    diagnostics.results.forEach(result => {
+      if (result.success) {
+        diagnostics.summary.passed++
+      } else {
+        diagnostics.summary.failed++
+      }
+      if (result.warnings && result.warnings.length > 0) {
+        diagnostics.summary.warnings++
+      }
+    })
+
+    console.log(`✅ [${requestId}] Diagnóstico avançado concluído`)
+
+    return new Response(
+      JSON.stringify(diagnostics),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    )
+
+  } catch (error) {
+    console.error(`❌ [${requestId}] Erro no diagnóstico avançado:`, error)
+    
+    return new Response(
+      JSON.stringify({
+        success: false,
+        error: error.message,
+        timestamp: new Date().toISOString(),
+        requestId
+      }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+    )
+  }
+}
+
 serve(async (req) => {
   // Gerar ID único para esta requisição para tracking
   const requestId = Math.random().toString(36).substr(2, 9)
@@ -497,6 +616,12 @@ serve(async (req) => {
     if (typeof parsed === 'object' && parsed.config) {
       console.log(`🆕 [${requestId}] Detectada nova API com objeto config`)
       return await handleNewConfigAPI(parsed, requestId, corsHeaders)
+    }
+
+    // Verificar se é ação de diagnóstico avançado
+    if (parsed.action === 'advanced_diagnostics') {
+      console.log(`🔍 [${requestId}] Executando diagnóstico avançado com descoberta de Business ID`)
+      return await handleAdvancedDiagnostics(parsed, requestId, corsHeaders)
     }
 
     // API legada para compatibilidade
