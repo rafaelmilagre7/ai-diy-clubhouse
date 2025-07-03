@@ -4677,10 +4677,10 @@ export type Database = {
       }
       user_segmentation_analytics: {
         Row: {
-          active_users_7d: number | null
-          percentage: number | null
-          role_name: string | null
+          avg_lessons_per_user: number | null
+          avg_solutions_per_user: number | null
           user_count: number | null
+          user_segment: string | null
         }
         Relationships: []
       }
