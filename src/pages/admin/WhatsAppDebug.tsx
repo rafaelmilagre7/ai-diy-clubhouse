@@ -75,7 +75,7 @@ const WhatsAppDebug: React.FC = () => {
   const [activeTab, setActiveTab] = useState('wizard');
   const [currentStep, setCurrentStep] = useState(0);
   const [showPassword, setShowPassword] = useState(false);
-  const [autoTestEnabled, setAutoTestEnabled] = useState(true);
+  const [autoTestEnabled, setAutoTestEnabled] = useState(false);
   const [credentialsStatus, setCredentialsStatus] = useState<{
     loaded: boolean;
     lastChecked: Date | null;
@@ -164,12 +164,22 @@ const WhatsAppDebug: React.FC = () => {
     loadSavedConfigAndVerify();
   }, []);
 
-  // Auto-teste quando config mudar
+  // Auto-teste quando config mudar (com rate limiting)
   useEffect(() => {
     if (autoTestEnabled && config.token && config.phoneNumberId) {
+      // Verificar se a última verificação foi há menos de 2 minutos
+      const lastCheck = credentialsStatus.lastChecked;
+      const now = new Date();
+      const twoMinutesAgo = new Date(now.getTime() - 2 * 60 * 1000);
+      
+      if (lastCheck && lastCheck > twoMinutesAgo) {
+        addLog('⏱️ Auto-teste pulado - última verificação muito recente', 'info');
+        return;
+      }
+      
       const timer = setTimeout(() => {
         autoVerifyCredentials(config);
-      }, 1000);
+      }, 30000); // Aumentado para 30 segundos
       return () => clearTimeout(timer);
     }
   }, [config.token, config.phoneNumberId, autoTestEnabled]);
@@ -208,10 +218,12 @@ const WhatsAppDebug: React.FC = () => {
         }));
         addLog('✅ Configuração carregada do banco de dados', 'success');
 
-        // Auto-verificar se temos credenciais válidas
-        if (savedConfig.access_token && savedConfig.phone_number_id) {
+        // Auto-verificar se temos credenciais válidas (somente se auto-teste estiver habilitado)
+        if (autoTestEnabled && savedConfig.access_token && savedConfig.phone_number_id) {
           addLog('🔍 Credenciais encontradas - executando verificação automática...', 'info');
           await autoVerifyCredentials(newConfig);
+        } else if (savedConfig.access_token && savedConfig.phone_number_id) {
+          addLog('ℹ️ Auto-teste desabilitado - use o botão "Testar Configuração" para verificar', 'info');
         }
       } else {
         setCredentialsStatus(prev => ({
@@ -368,10 +380,12 @@ const WhatsAppDebug: React.FC = () => {
         lastChecked: new Date()
       }));
 
-      // Re-verificar credenciais após salvar
-      if (config.token && config.phoneNumberId) {
+      // Re-verificar credenciais após salvar (somente se auto-teste estiver habilitado)
+      if (autoTestEnabled && config.token && config.phoneNumberId) {
         addLog('🔍 Executando verificação automática...', 'info');
         await autoVerifyCredentials(config);
+      } else if (config.token && config.phoneNumberId) {
+        addLog('ℹ️ Auto-teste desabilitado - use "Testar Configuração" para verificar', 'info');
       }
     } catch (error: any) {
       const errorMessage = error?.message || error?.toString() || 'Erro desconhecido';
@@ -1285,12 +1299,51 @@ const WhatsAppDebug: React.FC = () => {
             </CardContent>
           </Card>
 
-          {/* Testes Manuais */}
+          {/* Configurações de Auto-Teste */}
           <Card>
             <CardHeader>
-              <CardTitle>Testes Manuais</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <Settings className="h-5 w-5" />
+                Configurações de Verificação
+              </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
+              <div className="flex items-center justify-between p-4 bg-muted/30 rounded-lg">
+                <div className="space-y-1">
+                  <Label className="text-sm font-medium">Auto-Teste Habilitado</Label>
+                  <p className="text-sm text-muted-foreground">
+                    Executa verificação automática a cada 30 segundos quando as credenciais mudam
+                  </p>
+                  {!autoTestEnabled && (
+                    <p className="text-xs text-orange-600">
+                      ⚠️ Desabilitado para evitar rate limiting da API do Facebook
+                    </p>
+                  )}
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant={autoTestEnabled ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => {
+                      setAutoTestEnabled(!autoTestEnabled);
+                      addLog(`${!autoTestEnabled ? '✅' : '⏸️'} Auto-teste ${!autoTestEnabled ? 'habilitado' : 'desabilitado'}`, 'info');
+                    }}
+                  >
+                    {autoTestEnabled ? (
+                      <>
+                        <Zap className="h-4 w-4 mr-2" />
+                        Ativo
+                      </>
+                    ) : (
+                      <>
+                        <Play className="h-4 w-4 mr-2" />
+                        Ativar
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </div>
+
               <div className="space-y-2">
                 <Label>Testar Business ID Específico</Label>
                 <div className="flex gap-2">
