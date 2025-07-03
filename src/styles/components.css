@@ -1,360 +1,118 @@
+/* ===== COMPONENTES DO ONBOARDING ===== */
 
-/* Componentes reutilizáveis (cards, glass, badges, progress, etc) */
+/* --- Progress Circle --- */
+.progress-ring {
+  transform: rotate(-90deg);
+  transition: var(--transition-slow);
+}
 
-@layer components {
-  .glass-card, .glassmorphism {
-    @apply bg-white/5 backdrop-blur-sm border border-white/10 shadow-md;
-  }
-  .glass-effect {
-    @apply glassmorphism bg-white/5 backdrop-blur-xl shadow-[0_4px_20px_-2px_rgba(0,0,0,0.5)];
-  }
-  .container {
-    @apply max-w-7xl mx-auto px-4 md:px-8;
-  }
-  .progress-step {
-    @apply relative flex items-center justify-center w-8 h-8 rounded-full bg-neutral-800 text-neutral-400 transition-colors;
-  }
-  .progress-step.active {
-    @apply bg-viverblue text-white shadow-lg;
-  }
-  .progress-step.completed {
-    @apply bg-green-600 text-white shadow-md;
-  }
-  .progress-line {
-    @apply flex-1 h-1 bg-neutral-800 transition-all;
-  }
-  .progress-line.completed {
-    @apply bg-green-600;
-  }
-  .solution-card {
-    @apply relative overflow-hidden rounded-xl border bg-card text-white shadow-sm transition-all duration-200 hover:shadow-md hover:-translate-y-1;
-  }
-  .solution-card.revenue {
-    @apply border-l-4 border-l-revenue shadow-revenue/10;
-  }
-  .solution-card.operational {
-    @apply border-l-4 border-l-operational shadow-operational/10;
-  }
-  .solution-card.strategy {
-    @apply border-l-4 border-l-strategy shadow-strategy/10;
-  }
-  
-  /* Badge classes com melhor contraste */
-  .badge-revenue {
-    @apply bg-revenue/30 text-revenue border-revenue/50;
-  }
-  .badge-operational {
-    @apply bg-operational/30 text-operational border-operational/50;
-  }
-  .badge-strategy {
-    @apply bg-strategy/30 text-strategy border-strategy/50;
-  }
-  
-  .card-hover-effect {
-    @apply transition-all duration-300 hover:shadow-lg hover:-translate-y-1;
-  }
-  .gradient-text {
-    @apply bg-clip-text text-transparent bg-gradient-to-r from-viverblue to-viverblue-light;
-  }
-  .gradient-border {
-    @apply relative before:absolute before:inset-0 before:p-[1px] before:rounded-lg before:bg-gradient-to-r before:from-viverblue before:to-viverblue-light before:-z-10;
-  }
-  .glassmorphism {
-    @apply backdrop-blur-xl bg-white/5 border border-white/10 shadow-xl;
-  }
-  .glass-effect {
-    @apply glassmorphism bg-white/3 backdrop-blur-xl shadow-[0_4px_20px_-2px_rgba(0,0,0,0.5)];
-  }
-  .section-title {
-    @apply font-heading text-2xl md:text-3xl font-bold text-white mb-6;
-  }
-  .gradient-card {
-    @apply bg-gradient-to-br from-neutral-900 to-neutral-950 rounded-2xl shadow-md border border-neutral-800;
-  }
-  .gradient-card-revenue {
-    @apply bg-gradient-to-br from-revenue-darker to-black rounded-2xl shadow-md border-l-4 border-l-revenue border-t border-r border-b border-neutral-800;
-  }
-  .gradient-card-operational {
-    @apply bg-gradient-to-br from-operational-darker to-black rounded-2xl shadow-md border-l-4 border-l-operational border-t border-r border-b border-neutral-800;
-  }
-  .gradient-card-strategy {
-    @apply bg-gradient-to-br from-strategy-darker to-black rounded-2xl shadow-md border-l-4 border-l-strategy border-t border-r border-b border-neutral-800;
-  }
-  .dot-bg {
-    @apply bg-dot-pattern bg-[length:20px_20px];
-  }
-  .animated-gradient {
-    @apply bg-gradient-to-r from-viverblue via-viverblue-light to-viverblue bg-size-200 animate-gradient-shift;
-  }
+.progress-ring-circle {
+  transition: stroke-dashoffset 0.5s ease-in-out;
+  filter: drop-shadow(0 0 10px hsl(var(--viverblue) / 0.5));
+}
 
-  .depth-effect {
-    box-shadow: 
-      0 1px 1px rgba(0,0,0,0.05), 
-      0 2px 2px rgba(0,0,0,0.05), 
-      0 4px 4px rgba(0,0,0,0.05), 
-      0 8px 8px rgba(0,0,0,0.05),
-      0 16px 16px rgba(0,0,0,0.05);
-    transition: all 0.3s ease;
-  }
-  .depth-effect:hover {
-    box-shadow: 
-      0 1px 1px rgba(0,0,0,0.1), 
-      0 2px 2px rgba(0,0,0,0.1), 
-      0 4px 4px rgba(0,0,0,0.1), 
-      0 8px 8px rgba(0,0,0,0.1),
-      0 16px 16px rgba(0,0,0,0.1);
-    transform: translateY(-5px);
-  }
+/* --- Cards --- */
+.card-onboarding {
+  background: hsl(var(--card) / 0.8);
+  backdrop-filter: blur(20px);
+  border: 1px solid hsl(var(--border));
+  border-radius: 1.5rem;
+  transition: var(--transition-slow);
+}
 
-  /* Destaque extra para badges e cards desbloqueados recentemente */
-  .badge-highlight {
-    @apply shadow-lg ring-2 ring-viverblue/60;
-    animation: highlight-flash 1.3s cubic-bezier(0.24,0.7,0.75,0.67);
-  }
+.card-onboarding:hover {
+  background: hsl(var(--card) / 0.9);
+  border-color: hsl(var(--viverblue) / 0.3);
+  box-shadow: 0 0 30px hsl(var(--viverblue) / 0.1);
+  transform: translateY(-2px);
+}
 
-  .achievement-flash {
-    @apply ring-2 ring-viverblue/50 shadow-viverblue/20;
-    animation: highlight-flash 1.2s linear;
-  }
+/* --- Tooltips --- */
+.tooltip-container {
+  position: relative;
+  display: inline-block;
+}
 
-  /* Feedback visual para conquista/implementação */
-  .badge-pop {
-    @apply scale-105 z-10 border-2 border-viverblue;
-    animation: item-pop 0.7s cubic-bezier(0.21,0.67,0.71,0.85);
-  }
-  
-  /* Nova classe para o menu lateral com estilo Hubla */
-  .hubla-sidebar {
-    @apply bg-[#0F111A] border-r border-white/5 shadow-xl;
-  }
-  
-  /* Nova classe para botões com o estilo Hubla */
-  .hubla-button {
-    @apply bg-viverblue hover:bg-viverblue-dark text-white rounded-lg transition-all;
-  }
-  
-  /* Nova classe para cards com o estilo Hubla */
-  .hubla-card {
-    @apply bg-[#151823] border border-white/10 rounded-xl shadow-lg;
-  }
+.tooltip-content {
+  position: absolute;
+  bottom: 125%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: hsl(var(--popover));
+  color: hsl(var(--popover-foreground));
+  padding: 0.75rem 1rem;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  line-height: 1.4;
+  white-space: nowrap;
+  z-index: 1000;
+  border: 1px solid hsl(var(--border));
+  box-shadow: 0 10px 25px hsl(var(--foreground) / 0.1);
+  opacity: 0;
+  visibility: hidden;
+  transition: var(--transition-base);
+}
 
-  /* Adicionando estilo para navegação ativa */
-  .hubla-active-nav {
-    @apply bg-[#1A1E2E] border-l-2 border-viverblue text-viverblue font-medium;
-  }
+.tooltip-content::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 5px solid transparent;
+  border-top-color: hsl(var(--popover));
+}
 
-  /* Adicionar efeito de brilho nas bordas dos cards */
-  .hubla-border-glow {
-    @apply relative;
-    box-shadow: 0 0 15px 1px rgba(0, 234, 217, 0.1);
-  }
-  
-  /* Novos estilos para badges para melhor contraste */
-  .badge-dark-success {
-    @apply bg-green-900/40 text-green-300 border-green-700;
-  }
-  
-  .badge-dark-warning {
-    @apply bg-amber-900/40 text-amber-300 border-amber-700;
-  }
-  
-  .badge-dark-info {
-    @apply bg-blue-900/40 text-blue-300 border-blue-700;
-  }
-  
-  .badge-dark-neutral {
-    @apply bg-gray-800/60 text-gray-300 border-gray-700;
-  }
-  
-  /* Badges com cores melhoradas para o modo claro */
-  .badge-light-success {
-    @apply bg-green-100 text-green-800 border-green-300;
-  }
-  
-  .badge-light-warning {
-    @apply bg-amber-100 text-amber-800 border-amber-300;
-  }
-  
-  .badge-light-info {
-    @apply bg-blue-100 text-blue-800 border-blue-300;
-  }
-  
-  .badge-light-neutral {
-    @apply bg-gray-100 text-gray-800 border-gray-300;
-  }
-  
-  /* Melhoria para o hover das tabelas */
-  .table-hover-row {
-    @apply hover:bg-neutral-800/50 transition-colors;
-  }
-  
-  /* Estilo consistente para badges de status */
-  .status-badge {
-    @apply inline-flex items-center px-2 py-1 rounded-full text-xs font-medium;
-  }
-  .status-badge-active {
-    @apply bg-green-900/30 text-green-300 border border-green-700;
-  }
-  .status-badge-inactive {
-    @apply bg-gray-800/50 text-gray-300 border border-gray-700;
-  }
-  
-  /* Melhorias para legibilidade no modo escuro */
-  .text-high-contrast {
-    @apply text-white;
-  }
-  .text-medium-contrast {
-    @apply text-neutral-100;
-  }
-  .text-low-contrast {
-    @apply text-neutral-300;
-  }
-  
-  /* Melhorar contraste para textos em badges */
-  .badge-high-contrast {
-    @apply font-medium;
-  }
-  
-  /* Estilo para headers de tabela */
-  .table-header-sortable {
-    @apply cursor-pointer hover:text-viverblue transition-colors;
-  }
-  
-  /* Estilo para menu dropdown consistente */
-  .dropdown-menu-item {
-    @apply cursor-pointer flex w-full items-center rounded-sm px-2 py-1.5 text-sm outline-none focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50;
-  }
+.tooltip-container:hover .tooltip-content {
+  opacity: 1;
+  visibility: visible;
+}
 
-  /* Melhorar a visibilidade das linhas da tabela no modo escuro */
-  .table-border-enhanced {
-    @apply border-neutral-700;
-  }
+/* --- Step Indicators --- */
+.step-indicator {
+  position: relative;
+  z-index: 1;
+  transition: var(--transition-bounce);
+}
 
-  /* Melhorar o contraste dos badges para acessibilidade */
-  .badge-admin {
-    @apply bg-blue-900/30 text-blue-300 border border-blue-700;
-  }
-  
-  .badge-formacao {
-    @apply bg-amber-900/30 text-amber-300 border border-amber-700;
-  }
-  
-  .badge-membro {
-    @apply bg-gray-800/50 text-gray-300 border border-gray-700;
-  }
+.step-indicator.completed {
+  background: linear-gradient(135deg, #10B981, #34D399);
+  color: white;
+  box-shadow: 0 0 20px rgba(16, 185, 129, 0.4);
+}
 
-  /* Classes especiais para tooltip e estados de alerta */
-  .tooltip {
-    @apply bg-[#151823] text-white border border-white/10 shadow-lg py-1.5 px-3 rounded text-sm z-50;
-  }
+.step-indicator.current {
+  background: linear-gradient(135deg, hsl(var(--viverblue)), hsl(var(--viverblue-light)));
+  color: white;
+  box-shadow: 0 0 20px hsl(var(--viverblue) / 0.4);
+  animation: pulse-glow 2s infinite;
+}
 
-  /* Estilo para separadores com melhor visibilidade */
-  .separator {
-    @apply border-t border-white/10 my-4;
-  }
+.step-indicator.pending {
+  background: hsl(var(--muted));
+  color: hsl(var(--muted-foreground));
+  border: 2px solid hsl(var(--border));
+}
 
-  /* Contraste melhorado para elementos de interface */
-  .input-label {
-    @apply text-white text-sm mb-1.5;
-  }
-  
-  .input-field {
-    @apply bg-[#181A2A] border border-white/10 text-white rounded-md px-3 py-2 placeholder:text-neutral-500;
-  }
+/* --- AI Messages --- */
+.ai-message {
+  background: linear-gradient(135deg, hsl(var(--viverblue) / 0.1), hsl(var(--viverblue-light) / 0.1));
+  border-left: 4px solid hsl(var(--viverblue));
+  padding: 1.5rem;
+  border-radius: 0.75rem;
+  margin: 1rem 0;
+  position: relative;
+}
 
-  /* Redefinição dos elementos de interface principal para garantir legibilidade */
-  .page-title {
-    @apply text-3xl font-bold text-white mb-2;
-  }
-  
-  .page-description {
-    @apply text-neutral-300 text-lg mb-6;
-  }
+.typing-cursor {
+  display: inline-block;
+  background-color: hsl(var(--viverblue));
+  margin-left: 0.1rem;
+  width: 2px;
+  animation: blink 1s infinite;
+}
 
-  /* Estilo para notificações e alertas */
-  .alert-success {
-    @apply bg-green-900/20 border border-green-700 text-green-300 px-4 py-3 rounded;
-  }
-  
-  .alert-warning {
-    @apply bg-amber-900/20 border border-amber-700 text-amber-300 px-4 py-3 rounded;
-  }
-  
-  .alert-error {
-    @apply bg-red-900/20 border border-red-700 text-red-300 px-4 py-3 rounded;
-  }
-  
-  .alert-info {
-    @apply bg-blue-900/20 border border-blue-700 text-blue-300 px-4 py-3 rounded;
-  }
-
-  /* Estado vazio consistente */
-  .empty-state {
-    @apply flex flex-col items-center justify-center py-12 px-4 text-center;
-  }
-  
-  .empty-state-icon {
-    @apply text-neutral-500 mb-3 h-12 w-12;
-  }
-  
-  .empty-state-title {
-    @apply text-white text-lg font-medium mb-1;
-  }
-  
-  .empty-state-description {
-    @apply text-neutral-400 max-w-sm mx-auto;
-  }
-
-  /* Novas classes para melhorar a visualização no modo escuro */
-  .dark-mode-card {
-    @apply bg-gradient-to-br from-[#1A1E2E] to-[#151823] border-neutral-700;
-  }
-
-  .dark-mode-input {
-    @apply bg-[#1A1E2E] border-neutral-700 text-white placeholder:text-neutral-500;
-  }
-
-  .dark-mode-badge {
-    @apply bg-[#252842] text-white border-neutral-600;
-  }
-  
-  /* Melhoria para hover dos cards no tema escuro */
-  .card-hover-dark {
-    @apply hover:shadow-[0_5px_15px_rgba(0,234,217,0.1)] hover:border-viverblue/30;
-  }
-
-  /* Melhorar ainda mais o contraste para badges no modo escuro */
-  .badge-high-contrast-dark {
-    @apply font-medium shadow-sm;
-  }
-  
-  /* Classe para scrollbar escondida */
-  .scrollbar-hide {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
-  }
-  
-  .scrollbar-hide::-webkit-scrollbar {
-    display: none;
-  }
-
-  /* Efeito de gradiente vibrante para destaques */
-  .vibrant-gradient {
-    @apply bg-gradient-to-r from-viverblue via-viverblue-light to-viverblue-dark bg-size-200 animate-gradient-shift;
-  }
-
-  /* Efeito de glassmorphism aprimorado para o tema escuro */
-  .glass-dark {
-    @apply bg-[#151823]/90 backdrop-blur-lg border border-white/5;
-  }
-  
-  /* Efeito de cartão elevado para destacar elementos importantes */
-  .elevated-card {
-    @apply shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1;
-  }
-  
-  /* Melhoria para inputs no tema escuro com foco em viverblue */
-  .input-focus-viverblue {
-    @apply focus:border-viverblue focus:ring-2 focus:ring-viverblue/20;
-  }
+@keyframes blink {
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: 0; }
 }
