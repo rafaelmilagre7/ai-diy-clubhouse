@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Target, TrendingUp, DollarSign, Clock, AlertTriangle } from 'lucide-react';
+import { Target, TrendingUp, DollarSign, AlertTriangle } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -52,14 +52,6 @@ const resultTypes = [
   'Melhoria na tomada de decisões',
   'Aumento da produtividade da equipe',
   'Outros resultados'
-];
-
-const metaPercentages = [
-  '10% - 20%',
-  '20% - 30%',
-  '30% - 50%',
-  'Acima de 50%',
-  'Meta ainda não definida'
 ];
 
 const implementationTimelines = [
@@ -242,60 +234,15 @@ const MockOnboardingStep4: React.FC<MockOnboardingStep4Props> = ({
                 <p className="text-red-400 text-sm">{getFieldError('expectedResult90Days')}</p>
               )}
             </div>
-
-            <div className="space-y-2">
-              <Label className="text-slate-200 text-base font-medium">
-                Qual a meta percentual de melhoria esperada?
-              </Label>
-              <Select 
-                value={data.expectedResultPercentage || ''} 
-                onValueChange={(value) => onUpdateData({ expectedResultPercentage: value })}
-              >
-                <SelectTrigger className="bg-slate-800/50 border-slate-600 text-white focus:border-viverblue">
-                  <SelectValue placeholder="Selecione a meta de melhoria" />
-                </SelectTrigger>
-                <SelectContent className="bg-slate-800 border-slate-600">
-                  {metaPercentages.map((percentage) => (
-                    <SelectItem key={percentage} value={percentage} className="text-white hover:bg-slate-700">
-                      {percentage}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
           </div>
         </Card>
 
-        {/* Cronograma e Urgência */}
+        {/* Urgência */}
         <Card className="p-6 bg-white/5 border-white/10 backdrop-blur-sm">
           <div className="space-y-6">
             <div className="flex items-center gap-3 mb-4">
-              <Clock className="w-5 h-5 text-viverblue" />
-              <h3 className="text-lg font-semibold text-white">Cronograma de Implementação</h3>
-            </div>
-
-            <div className="space-y-2">
-              <Label className="text-slate-200 text-base font-medium">
-                Qual o prazo ideal para implementação? *
-              </Label>
-              <Select 
-                value={data.implementationTimeline || ''} 
-                onValueChange={(value) => onUpdateData({ implementationTimeline: value })}
-              >
-                <SelectTrigger className="bg-slate-800/50 border-slate-600 text-white focus:border-viverblue">
-                  <SelectValue placeholder="Selecione o prazo desejado" />
-                </SelectTrigger>
-                <SelectContent className="bg-slate-800 border-slate-600">
-                  {implementationTimelines.map((timeline) => (
-                    <SelectItem key={timeline} value={timeline} className="text-white hover:bg-slate-700">
-                      {timeline}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {getFieldError?.('implementationTimeline') && (
-                <p className="text-red-400 text-sm">{getFieldError('implementationTimeline')}</p>
-              )}
+              <AlertTriangle className="w-5 h-5 text-viverblue" />
+              <h3 className="text-lg font-semibold text-white">Nível de Urgência</h3>
             </div>
 
             <div className="space-y-2">

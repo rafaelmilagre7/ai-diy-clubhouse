@@ -38,8 +38,6 @@ export interface OnboardingData {
   mainObjective?: string;
   areaToImpact?: string;
   expectedResult90Days?: string;
-  expectedResultPercentage?: string;
-  implementationTimeline?: string;
   urgencyLevel?: string;
   successMetric?: string;
   mainObstacle?: string;
