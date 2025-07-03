@@ -38,6 +38,12 @@ export interface OnboardingData {
   mainObjective?: string;
   areaToImpact?: string;
   expectedResult90Days?: string;
+  expectedResultPercentage?: string;
+  implementationTimeline?: string;
+  urgencyLevel?: string;
+  successMetric?: string;
+  mainObstacle?: string;
+  preferredSupport?: string;
   aiImplementationBudget?: string;
   
   // Etapa 5 - Personalização da Experiência
