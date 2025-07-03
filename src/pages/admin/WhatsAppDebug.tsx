@@ -98,25 +98,26 @@ const WhatsAppDebug: React.FC = () => {
 
       if (error) throw error;
 
-      if (data.success) {
-        setConfig(data.config);
+      if (data?.success) {
+        setConfig(data.config || null);
         addLog('✅ Configuração verificada com sucesso');
         
-        if (data.config.autoDiscoveryWorked) {
+        if (data.config?.autoDiscoveryWorked) {
           addLog(`🎉 Business ID descoberto automaticamente: ${data.config.discoveredBusinessId}`);
         }
         
-        if (data.config.needsBusinessIdUpdate) {
+        if (data.config?.needsBusinessIdUpdate) {
           addLog('⚠️ Business ID configurado difere do descoberto');
         }
         
         toast.success('Configuração verificada');
       } else {
-        throw new Error(data.message || 'Erro na verificação');
+        throw new Error(data?.message || 'Erro na verificação');
       }
     } catch (error: any) {
-      addLog(`❌ Erro na verificação: ${error.message}`);
+      addLog(`❌ Erro na verificação: ${error?.message || 'Erro desconhecido'}`);
       toast.error('Erro ao verificar configuração');
+      console.error('Erro detalhado:', error);
     } finally {
       setLoading(false);
     }
@@ -133,18 +134,19 @@ const WhatsAppDebug: React.FC = () => {
 
       if (error) throw error;
 
-      setConnectivity(data);
+      setConnectivity(data || null);
       
-      if (data.success) {
-        addLog(`✅ Conectividade OK - ${data.summary.passed}/${data.summary.total} testes passaram`);
+      if (data?.success) {
+        addLog(`✅ Conectividade OK - ${data.summary?.passed || 0}/${data.summary?.total || 0} testes passaram`);
         toast.success('Todos os testes de conectividade passaram');
       } else {
-        addLog(`❌ Problemas de conectividade - ${data.summary.failed}/${data.summary.total} testes falharam`);
+        addLog(`❌ Problemas de conectividade - ${data?.summary?.failed || 0}/${data?.summary?.total || 0} testes falharam`);
         toast.error('Alguns testes de conectividade falharam');
       }
     } catch (error: any) {
-      addLog(`❌ Erro no teste: ${error.message}`);
+      addLog(`❌ Erro no teste: ${error?.message || 'Erro desconhecido'}`);
       toast.error('Erro ao testar conectividade');
+      console.error('Erro detalhado:', error);
     } finally {
       setLoading(false);
     }
@@ -161,25 +163,28 @@ const WhatsAppDebug: React.FC = () => {
 
       if (error) throw error;
 
-      if (data.success) {
+      if (data?.success) {
         setTemplatesData(data);
         
+        const templatesCount = data.templates?.length || 0;
+        
         if (data.fromCache) {
-          addLog(`📦 Templates carregados do cache (${data.templates.length} encontrados)`);
+          addLog(`📦 Templates carregados do cache (${templatesCount} encontrados)`);
         } else if (data.fallback) {
-          addLog(`🔄 Usando Business ID configurado como fallback (${data.templates.length} templates)`);
+          addLog(`🔄 Usando Business ID configurado como fallback (${templatesCount} templates)`);
         } else {
-          addLog(`✅ Business ID descoberto automaticamente: ${data.businessId} (${data.templates.length} templates)`);
+          addLog(`✅ Business ID descoberto automaticamente: ${data.businessId || 'N/A'} (${templatesCount} templates)`);
         }
         
-        toast.success(`${data.templates.length} templates carregados`);
+        toast.success(`${templatesCount} templates carregados`);
       } else {
-        addLog(`❌ Erro na descoberta automática: ${data.message}`);
-        toast.error(data.message || 'Erro ao descobrir templates');
+        addLog(`❌ Erro na descoberta automática: ${data?.message || 'Erro desconhecido'}`);
+        toast.error(data?.message || 'Erro ao descobrir templates');
       }
     } catch (error: any) {
-      addLog(`❌ Erro na descoberta: ${error.message}`);
+      addLog(`❌ Erro na descoberta: ${error?.message || 'Erro desconhecido'}`);
       toast.error('Erro ao descobrir templates');
+      console.error('Erro detalhado:', error);
     } finally {
       setLoading(false);
     }
@@ -205,18 +210,19 @@ const WhatsAppDebug: React.FC = () => {
 
       if (error) throw error;
 
-      setTestResult(data);
+      setTestResult(data || null);
       
-      if (data.success) {
-        addLog(`✅ Mensagem enviada com sucesso (${data.templateUsed} para ${data.phoneFormatted})`);
+      if (data?.success) {
+        addLog(`✅ Mensagem enviada com sucesso (${data.templateUsed || selectedTemplate} para ${data.phoneFormatted || testPhone})`);
         toast.success('Mensagem enviada!');
       } else {
-        addLog(`❌ Erro no envio: ${data.message} (Template: ${data.templateUsed})`);
-        toast.error(data.message || 'Erro ao enviar mensagem');
+        addLog(`❌ Erro no envio: ${data?.message || 'Erro desconhecido'} (Template: ${data?.templateUsed || selectedTemplate})`);
+        toast.error(data?.message || 'Erro ao enviar mensagem');
       }
     } catch (error: any) {
-      addLog(`❌ Erro no envio: ${error.message}`);
+      addLog(`❌ Erro no envio: ${error?.message || 'Erro desconhecido'}`);
       toast.error('Erro ao enviar teste');
+      console.error('Erro detalhado:', error);
     } finally {
       setLoading(false);
     }
@@ -435,7 +441,7 @@ const WhatsAppDebug: React.FC = () => {
                           </div>
                         </div>
                         
-                        {test.scopes && test.scopes.length > 0 && (
+                        {test.scopes && Array.isArray(test.scopes) && test.scopes.length > 0 && (
                           <div className="text-sm text-slate-400 mb-2">
                             <span className="font-medium">Permissões:</span> {test.scopes.join(', ')}
                           </div>
@@ -580,11 +586,11 @@ const WhatsAppDebug: React.FC = () => {
                     <SelectContent className="bg-slate-700 border-slate-600">
                       <SelectItem value="hello_world">Hello World</SelectItem>
                       <SelectItem value="convite_acesso">Convite de Acesso</SelectItem>
-                      {templatesData?.templates.filter(t => t.status === 'APPROVED').map((template) => (
-                        <SelectItem key={template.name} value={template.name}>
-                          {template.name}
+                      {templatesData?.templates?.filter(t => t?.status === 'APPROVED')?.map((template) => (
+                        <SelectItem key={template?.name || Math.random()} value={template?.name || ''}>
+                          {template?.name || 'Template sem nome'}
                         </SelectItem>
-                      ))}
+                      )) || []}
                     </SelectContent>
                   </Select>
                 </div>

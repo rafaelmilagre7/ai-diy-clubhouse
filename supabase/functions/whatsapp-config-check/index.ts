@@ -144,12 +144,20 @@ async function validateConnectivity(token: string, phoneNumberId: string) {
 }
 
 serve(async (req) => {
+  // Gerar ID único para esta requisição para tracking
+  const requestId = Math.random().toString(36).substr(2, 9)
+  console.log(`🚀 [${requestId}] Nova requisição WhatsApp Debug iniciada`)
+  
   if (req.method === 'OPTIONS') {
+    console.log(`✅ [${requestId}] Resposta CORS enviada`)
     return new Response('ok', { headers: corsHeaders })
   }
 
   try {
+    const startTime = Date.now()
     const body = await req.text()
+    console.log(`📨 [${requestId}] Body recebido (${body.length} chars):`, body.substring(0, 200))
+    
     let action, phone, templateName, businessIdToTest
     
     try {
@@ -158,12 +166,14 @@ serve(async (req) => {
       phone = parsed.phone
       templateName = parsed.templateName
       businessIdToTest = parsed.businessIdToTest
+      console.log(`✅ [${requestId}] JSON parseado com sucesso`)
     } catch (e) {
-      console.error('❌ Erro ao parsear JSON:', e)
+      console.error(`❌ [${requestId}] Erro ao parsear JSON:`, e)
       throw new Error('JSON inválido')
     }
 
-    console.log('🔍 WhatsApp Debug - Ação:', action)
+    console.log(`🔍 [${requestId}] WhatsApp Debug - Ação: ${action}`)
+    console.log(`⏱️ [${requestId}] Tempo de parse: ${Date.now() - startTime}ms`)
 
     const whatsappToken = Deno.env.get('WHATSAPP_ACCESS_TOKEN')
     const phoneNumberId = Deno.env.get('WHATSAPP_PHONE_NUMBER_ID')
@@ -171,14 +181,21 @@ serve(async (req) => {
 
     // Verificar configuração básica e descobrir Business ID automaticamente
     if (action === 'check-config') {
+      console.log(`⚙️ [${requestId}] Iniciando verificação de configuração`)
       let discoveredBusinessId = null
       
       if (whatsappToken) {
+        console.log(`🔍 [${requestId}] Token disponível, iniciando descoberta automática`)
         discoveredBusinessId = await discoverBusinessId(whatsappToken)
         if (discoveredBusinessId) {
           businessIdCache = discoveredBusinessId
           cacheTimestamp = Date.now()
+          console.log(`✅ [${requestId}] Business ID descoberto e armazenado em cache`)
+        } else {
+          console.log(`⚠️ [${requestId}] Descoberta automática falhou`)
         }
+      } else {
+        console.log(`❌ [${requestId}] Token WhatsApp não configurado`)
       }
 
       const config = {
@@ -197,7 +214,8 @@ serve(async (req) => {
         needsBusinessIdUpdate: discoveredBusinessId && discoveredBusinessId !== businessId
       }
 
-      console.log('📋 Configuração WhatsApp:', config)
+      console.log(`📋 [${requestId}] Configuração compilada:`, config)
+      console.log(`✅ [${requestId}] Configuração verificada com sucesso`)
 
       return new Response(JSON.stringify({
         success: true,
@@ -490,12 +508,17 @@ serve(async (req) => {
     throw new Error('Ação não reconhecida')
 
   } catch (error) {
-    console.error('❌ Erro no debug WhatsApp:', error)
+    console.error(`❌ [${requestId}] Erro crítico no debug WhatsApp:`, error)
+    console.error(`❌ [${requestId}] Stack trace:`, error.stack)
+    console.error(`❌ [${requestId}] Tipo do erro:`, typeof error)
+    console.error(`❌ [${requestId}] Dados do erro:`, JSON.stringify(error, Object.getOwnPropertyNames(error)))
 
     return new Response(JSON.stringify({
       success: false,
-      error: error.message,
-      message: 'Erro durante o debug'
+      error: error?.message || 'Erro desconhecido',
+      message: 'Erro durante o debug',
+      requestId: requestId,
+      timestamp: new Date().toISOString()
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 500,
