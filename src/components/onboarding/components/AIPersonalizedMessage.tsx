@@ -14,62 +14,62 @@ interface AIPersonalizedMessageProps {
 
 // Mensagens contextuais baseadas nos dados coletados
 const generateContextualMessage = (data: OnboardingData, step: number): string => {
-  const { personalInfo, professionalInfo, aiMaturityLevel, objectives } = data;
+  const { name, companyName, position, aiKnowledgeLevel, mainObjective, weeklyLearningTime } = data;
 
   // Mensagens para cada step baseadas no contexto
   switch (step) {
     case 1:
-      if (personalInfo?.name) {
-        return `Olá, ${personalInfo.name}! 👋 É um prazer te conhecer. Vou te ajudar a criar um perfil personalizado para maximizar seu aprendizado em IA.`;
+      if (name) {
+        return `Olá, ${name}! 👋 É um prazer te conhecer. Vou te ajudar a criar um perfil personalizado para maximizar seu aprendizado em IA.`;
       }
       return "Bem-vindo(a)! 🌟 Vou te acompanhar nesta jornada personalizada de aprendizado em IA. Vamos começar?";
 
     case 2:
-      if (professionalInfo?.companyName && professionalInfo?.role) {
-        return `Interessante! Como ${professionalInfo.role} na ${professionalInfo.companyName}, você tem uma perspectiva única. Vou personalizar as recomendações baseadas no seu setor.`;
-      } else if (professionalInfo?.role) {
-        return `Como ${professionalInfo.role}, você deve ter desafios específicos. Vou focar em soluções práticas para sua área.`;
+      if (companyName && position) {
+        return `Interessante! Como ${position} na ${companyName}, você tem uma perspectiva única. Vou personalizar as recomendações baseadas no seu setor.`;
+      } else if (position) {
+        return `Como ${position}, você deve ter desafios específicos. Vou focar em soluções práticas para sua área.`;
       }
       return "Entender seu contexto profissional me ajuda a recomendar as melhores ferramentas e estratégias para você! 💼";
 
     case 3:
-      if (aiMaturityLevel === 'beginner') {
+      if (aiKnowledgeLevel === 'beginner' || aiKnowledgeLevel === 'iniciante') {
         return "Perfeito! Começar do básico é sempre a melhor estratégia. Vou focar em fundamentos sólidos e aplicações práticas. 🌱";
-      } else if (aiMaturityLevel === 'intermediate') {
+      } else if (aiKnowledgeLevel === 'intermediate' || aiKnowledgeLevel === 'intermediario') {
         return "Ótimo! Com sua base em IA, posso sugerir implementações mais avançadas e cases práticos. 🚀";
-      } else if (aiMaturityLevel === 'advanced') {
+      } else if (aiKnowledgeLevel === 'advanced' || aiKnowledgeLevel === 'avancado') {
         return "Excelente! Sua experiência permite explorarmos estratégias avançadas e casos de uso complexos. 🎯";
       }
       return "Conhecer seu nível em IA me permite personalizar totalmente sua experiência de aprendizado! 🤖";
 
     case 4:
-      if (objectives?.includes('increase_productivity')) {
+      if (mainObjective?.includes('produtividade')) {
         return "Produtividade é fundamental! Vou priorizar ferramentas que otimizam processos e economizam tempo. ⚡";
-      } else if (objectives?.includes('automate_processes')) {
+      } else if (mainObjective?.includes('automacao')) {
         return "Automação é o futuro! Focaremos em soluções que eliminam tarefas repetitivas. 🔄";
-      } else if (objectives?.includes('improve_decision_making')) {
+      } else if (mainObjective?.includes('decisao')) {
         return "Decisões baseadas em dados são mais assertivas! Vou mostrar como a IA pode ajudar. 📊";
       }
       return "Seus objetivos são o compass da sua jornada. Vou personalizar tudo baseado no que você quer alcançar! 🎯";
 
     case 5:
-      const hasTimeConstraints = data.preferences?.availableTime === 'low';
+      const hasTimeConstraints = weeklyLearningTime === 'baixo' || weeklyLearningTime === 'pouco';
       if (hasTimeConstraints) {
         return "Entendo que seu tempo é limitado. Vou priorizar conteúdos práticos e de impacto imediato. ⏰";
       }
       return "Quase lá! Suas preferências garantem que você tenha a melhor experiência possível. 🎨";
 
     case 6:
-      let message = `Parabéns, ${personalInfo?.name || 'pessoa incrível'}! 🎉 `;
+      let message = `Parabéns, ${name || 'pessoa incrível'}! 🎉 `;
       
-      if (professionalInfo?.role && aiMaturityLevel) {
-        message += `Como ${professionalInfo.role} ${getMaturityDescription(aiMaturityLevel)}, `;
+      if (position && aiKnowledgeLevel) {
+        message += `Como ${position} ${getMaturityDescription(aiKnowledgeLevel)}, `;
       }
       
       message += "criei um plano personalizado baseado em tudo que compartilhou comigo. ";
       
-      if (objectives?.length > 0) {
-        message += `Focaremos especialmente em ${getObjectivesDescription(objectives)}. `;
+      if (mainObjective) {
+        message += `Focaremos especialmente em ${mainObjective}. `;
       }
       
       message += "Está pronto(a) para começar sua transformação com IA? 🚀";
@@ -83,28 +83,18 @@ const generateContextualMessage = (data: OnboardingData, step: number): string =
 
 const getMaturityDescription = (level: string): string => {
   switch (level) {
-    case 'beginner': return 'iniciante em IA';
-    case 'intermediate': return 'com conhecimento intermediário em IA';
-    case 'advanced': return 'experiente em IA';
-    default: return '';
+    case 'beginner':
+    case 'iniciante': 
+      return 'iniciante em IA';
+    case 'intermediate':
+    case 'intermediario': 
+      return 'com conhecimento intermediário em IA';
+    case 'advanced':
+    case 'avancado': 
+      return 'experiente em IA';
+    default: 
+      return '';
   }
-};
-
-const getObjectivesDescription = (objectives: string[]): string => {
-  const descriptions: { [key: string]: string } = {
-    'increase_productivity': 'aumentar produtividade',
-    'automate_processes': 'automatizar processos',
-    'improve_decision_making': 'melhorar tomada de decisões',
-    'enhance_creativity': 'potencializar criatividade',
-    'optimize_costs': 'otimizar custos',
-    'competitive_advantage': 'obter vantagem competitiva'
-  };
-
-  const mapped = objectives.map(obj => descriptions[obj] || obj).filter(Boolean);
-  
-  if (mapped.length === 1) return mapped[0];
-  if (mapped.length === 2) return `${mapped[0]} e ${mapped[1]}`;
-  return `${mapped.slice(0, -1).join(', ')} e ${mapped[mapped.length - 1]}`;
 };
 
 export const AIPersonalizedMessage: React.FC<AIPersonalizedMessageProps> = ({
