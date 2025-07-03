@@ -47,7 +47,12 @@ export interface OnboardingData {
   // Etapa 5 - Personalização da Experiência
   weeklyLearningTime?: string;
   contentPreference?: string[]; // Corrigido para array
+  contentFrequency?: string; // Nova questão
   wantsNetworking?: string;
+  communityInteractionStyle?: string; // Nova questão
+  preferredCommunicationChannel?: string; // Nova questão
+  followUpType?: string; // Nova questão
+  learningMotivators?: string[]; // Nova questão
   bestDays?: string[]; // Novo campo obrigatório
   bestPeriods?: string[]; // Novo campo obrigatório
   acceptsCaseStudy?: string; // Novo campo obrigatório
