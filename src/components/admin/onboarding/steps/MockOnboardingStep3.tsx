@@ -76,38 +76,42 @@ const MockOnboardingStep3: React.FC<MockOnboardingStep3Props> = ({
     <div className="space-y-8">
       <Card className="bg-white/5 border-white/10 backdrop-blur-sm">
         <CardHeader className="pb-4">
-          <CardTitle className="text-white text-lg font-semibold flex items-center gap-3">
-            <Settings className="h-5 w-5 text-viverblue" />
-            Maturidade Tecnológica em IA
+          <CardTitle className="text-white text-xl font-bold flex items-center gap-3">
+            <Settings className="h-6 w-6 text-viverblue animate-pulse" />
+            Sua Jornada com IA até Agora 🧠
           </CardTitle>
+          <p className="text-slate-400 text-sm mt-2">
+            🎯 Vou descobrir seu nível e criar um plano sob medida para você
+          </p>
         </CardHeader>
         <CardContent className="space-y-8">
           {/* Status de Implementação */}
           <div className="space-y-4">
             <Label className="text-slate-200 font-medium text-base">
-              Sua empresa já implementou soluções de Inteligência Artificial? *
+              🚀 Sua empresa já embarcou na revolução da IA? *
             </Label>
+            <p className="text-xs text-slate-500 mb-4">💡 Seja honesto(a) - isso me ajuda a calibrar suas recomendações</p>
             <RadioGroup
               value={data.hasImplementedAI || ''}
               onValueChange={(value) => handleRadioChange('hasImplementedAI', value)}
               className="space-y-3"
             >
-              <div className="flex items-center space-x-3 p-3 rounded-lg bg-slate-800/30 border border-slate-700">
+              <div className="flex items-center space-x-3 p-3 rounded-lg bg-slate-800/30 border border-slate-700 hover:border-viverblue/50 transition-colors cursor-pointer">
                 <RadioGroupItem value="sim" id="implemented-yes" className="border-slate-400" />
                 <Label htmlFor="implemented-yes" className="text-white font-normal cursor-pointer flex-1">
-                  Sim, já implementamos soluções de IA
+                  ✅ Sim! Já somos pioneiros em IA
                 </Label>
               </div>
-              <div className="flex items-center space-x-3 p-3 rounded-lg bg-slate-800/30 border border-slate-700">
-                <RadioGroupItem value="nao" id="implemented-no" className="border-slate-400" />
-                <Label htmlFor="implemented-no" className="text-white font-normal cursor-pointer flex-1">
-                  Não, ainda não implementamos
-                </Label>
-              </div>
-              <div className="flex items-center space-x-3 p-3 rounded-lg bg-slate-800/30 border border-slate-700">
+              <div className="flex items-center space-x-3 p-3 rounded-lg bg-slate-800/30 border border-slate-700 hover:border-orange-500/50 transition-colors cursor-pointer">
                 <RadioGroupItem value="parcial" id="implemented-partial" className="border-slate-400" />
                 <Label htmlFor="implemented-partial" className="text-white font-normal cursor-pointer flex-1">
-                  Parcialmente, estamos em fase de testes
+                  🧪 Estamos testando e experimentando
+                </Label>
+              </div>
+              <div className="flex items-center space-x-3 p-3 rounded-lg bg-slate-800/30 border border-slate-700 hover:border-blue-500/50 transition-colors cursor-pointer">
+                <RadioGroupItem value="nao" id="implemented-no" className="border-slate-400" />
+                <Label htmlFor="implemented-no" className="text-white font-normal cursor-pointer flex-1">
+                  🌱 Não ainda, mas estamos prontos para começar!
                 </Label>
               </div>
             </RadioGroup>

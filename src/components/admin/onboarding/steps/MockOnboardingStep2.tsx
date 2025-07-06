@@ -26,37 +26,42 @@ const MockOnboardingStep2: React.FC<MockOnboardingStep2Props> = ({
     <div className="space-y-8">
       <Card className="bg-white/5 border-white/10 backdrop-blur-sm">
         <CardHeader className="pb-4">
-          <CardTitle className="text-white text-lg font-semibold flex items-center gap-3">
-            <Briefcase className="h-5 w-5 text-viverblue" />
-            Informações Profissionais
+          <CardTitle className="text-white text-xl font-bold flex items-center gap-3">
+            <Briefcase className="h-6 w-6 text-viverblue animate-pulse" />
+            Conte-me sobre seu mundo profissional 💼
           </CardTitle>
+          <p className="text-slate-400 text-sm mt-2">
+            ✨ Essas informações me ajudam a personalizar suas recomendações de IA
+          </p>
         </CardHeader>
         <CardContent className="space-y-6">
           {/* Nome da Empresa onde trabalha */}
           <div className="space-y-2">
             <Label htmlFor="companyName" className="text-slate-200 font-medium">
-              Empresa onde trabalha
+              🏢 Em qual empresa você brilha profissionalmente?
             </Label>
             <Input
               id="companyName"
               value={data.companyName || ''}
               onChange={(e) => handleInputChange('companyName', e.target.value)}
-              placeholder="Nome da empresa atual"
-              className="bg-slate-800/50 border-slate-600 text-white placeholder:text-slate-400 focus:border-viverblue"
+              placeholder="Ex: Google, Microsoft, Minha Startup Incrível..."
+              className="bg-slate-800/50 border-slate-600 text-white placeholder:text-slate-400 focus:border-viverblue hover:border-viverblue/50 transition-colors"
             />
+            <p className="text-xs text-slate-500">💡 Isso me ajuda a entender seu contexto empresarial</p>
           </div>
 
           {/* Cargo/Posição */}
           <div className="space-y-2">
             <Label htmlFor="position" className="text-slate-200 font-medium">
-              Cargo/Posição *
+              🎯 Qual é seu papel de liderança? *
             </Label>
+            <p className="text-xs text-slate-500">⭐ Seu cargo me ajuda a sugerir as melhores estratégias de IA</p>
             <Select 
               value={data.position || ''} 
               onValueChange={(value) => handleInputChange('position', value)}
             >
-              <SelectTrigger className="bg-slate-800/50 border-slate-600 text-white focus:border-viverblue">
-                <SelectValue placeholder="Selecione seu cargo/posição" />
+              <SelectTrigger className="bg-slate-800/50 border-slate-600 text-white focus:border-viverblue hover:border-viverblue/50 transition-colors">
+                <SelectValue placeholder="👑 Escolha sua posição de impacto..." />
               </SelectTrigger>
               <SelectContent className="bg-slate-800 border-slate-600">
                 <SelectItem value="ceo" className="text-white hover:bg-slate-700">CEO</SelectItem>
@@ -78,14 +83,15 @@ const MockOnboardingStep2: React.FC<MockOnboardingStep2Props> = ({
           {/* Setor de Atuação */}
           <div className="space-y-2">
             <Label htmlFor="businessSector" className="text-slate-200 font-medium">
-              Setor de Atuação *
+              🎯 Em qual setor você está revolucionando? *
             </Label>
+            <p className="text-xs text-slate-500">🔍 Cada setor tem oportunidades únicas de IA</p>
             <Select 
               value={data.businessSector || ''} 
               onValueChange={(value) => handleInputChange('businessSector', value)}
             >
-              <SelectTrigger className="bg-slate-800/50 border-slate-600 text-white focus:border-viverblue">
-                <SelectValue placeholder="Selecione o setor principal" />
+              <SelectTrigger className="bg-slate-800/50 border-slate-600 text-white focus:border-viverblue hover:border-viverblue/50 transition-colors">
+                <SelectValue placeholder="🚀 Escolha seu setor de impacto..." />
               </SelectTrigger>
               <SelectContent className="bg-slate-800 border-slate-600">
                 <SelectItem value="inteligencia-artificial" className="text-white hover:bg-slate-700">Inteligência Artificial</SelectItem>
