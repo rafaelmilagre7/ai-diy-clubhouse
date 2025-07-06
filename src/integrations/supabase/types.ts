@@ -5194,6 +5194,10 @@ export type Database = {
         Args: { invite_token: string; user_id: string }
         Returns: Json
       }
+      use_invite_enhanced: {
+        Args: { invite_token: string; user_id: string }
+        Returns: Json
+      }
       user_can_access_feature: {
         Args: { p_user_id: string; p_feature: string }
         Returns: Json
@@ -5210,6 +5214,24 @@ export type Database = {
           policy_count: number
           security_status: string
           risk_level: string
+        }[]
+      }
+      validate_invite_token_enhanced: {
+        Args: { p_token: string }
+        Returns: {
+          id: string
+          email: string
+          role_id: string
+          token: string
+          expires_at: string
+          used_at: string
+          created_at: string
+          created_by: string
+          notes: string
+          whatsapp_number: string
+          preferred_channel: string
+          send_attempts: number
+          last_sent_at: string
         }[]
       }
       validate_password_strength: {

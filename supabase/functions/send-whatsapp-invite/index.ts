@@ -30,10 +30,13 @@ serve(async (req) => {
 
     const { phone, inviteUrl, roleName, expiresAt, senderName, notes, inviteId }: WhatsAppInviteRequest = await req.json()
 
-    console.log('📱 Iniciando envio de convite via WhatsApp para:', phone)
+    console.log('📱 [WHATSAPP] Iniciando envio de convite para:', phone?.substring(0, 5) + '***')
+    console.log('📱 [WHATSAPP] URL do convite:', inviteUrl)
+    console.log('📱 [WHATSAPP] Role:', roleName)
 
     // Validar dados obrigatórios
     if (!phone || !inviteUrl) {
+      console.error('❌ [WHATSAPP] Dados obrigatórios faltando:', { phone: !!phone, inviteUrl: !!inviteUrl })
       throw new Error('Telefone e URL do convite são obrigatórios')
     }
 
@@ -48,7 +51,7 @@ serve(async (req) => {
       formattedPhone = '55' + formattedPhone
     }
 
-    console.log('📱 Telefone formatado:', formattedPhone)
+    console.log('📱 [WHATSAPP] Telefone formatado:', formattedPhone)
 
     // Dados para o template do WhatsApp
     const templateData = {
@@ -79,10 +82,16 @@ serve(async (req) => {
     const phoneNumberId = Deno.env.get('WHATSAPP_PHONE_NUMBER_ID')
 
     if (!whatsappToken || !phoneNumberId) {
+      console.error('❌ [WHATSAPP] Credenciais não configuradas:', { 
+        hasToken: !!whatsappToken, 
+        hasPhoneId: !!phoneNumberId 
+      })
       throw new Error('Credenciais do WhatsApp não configuradas')
     }
 
-    console.log('📱 Enviando template via WhatsApp API...')
+    console.log('📱 [WHATSAPP] Enviando template via API...')
+    console.log('📱 [WHATSAPP] Phone Number ID:', phoneNumberId)
+    console.log('📱 [WHATSAPP] Template data:', JSON.stringify(templateData, null, 2))
 
     const whatsappResponse = await fetch(
       `https://graph.facebook.com/v18.0/${phoneNumberId}/messages`,
@@ -98,10 +107,17 @@ serve(async (req) => {
 
     const whatsappResult = await whatsappResponse.json()
 
-    console.log('📱 Resposta do WhatsApp:', whatsappResult)
+    console.log('📱 [WHATSAPP] Resposta completa:', {
+      status: whatsappResponse.status,
+      statusText: whatsappResponse.statusText,
+      result: whatsappResult
+    })
 
     if (!whatsappResponse.ok) {
-      throw new Error(`Erro do WhatsApp API: ${whatsappResult.error?.message || 'Erro desconhecido'}`)
+      const errorMsg = `Erro ${whatsappResponse.status}: ${whatsappResult.error?.message || whatsappResult.message || 'Erro desconhecido'}`
+      console.error('❌ [WHATSAPP] Erro da API:', errorMsg)
+      console.error('❌ [WHATSAPP] Detalhes do erro:', whatsappResult)
+      throw new Error(errorMsg)
     }
 
     // Atualizar estatísticas do convite se tiver ID

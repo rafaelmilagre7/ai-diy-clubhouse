@@ -16,6 +16,7 @@ import AdminSuggestions from '@/pages/admin/AdminSuggestions';
 import AdminEvents from '@/pages/admin/AdminEvents';
 import AdminRoles from '@/pages/admin/AdminRoles';
 import InvitesManagement from '@/pages/admin/invites/InvitesManagement';
+import InviteDebug from '@/pages/admin/InviteDebug';
 import BenefitStats from '@/pages/admin/BenefitStats';
 import WhatsAppDebug from '@/pages/admin/WhatsAppDebug';
 import AdminCommunications from '@/pages/admin/AdminCommunications';
@@ -50,6 +51,7 @@ export const adminRoutes: RouteObject[] = [
   createAdminRoute("/admin/events", AdminEvents),
   createAdminRoute("/admin/roles", AdminRoles),
   createAdminRoute("/admin/invites", InvitesManagement),
+  createAdminRoute("/admin/invite-debug", InviteDebug),
   createAdminRoute("/admin/communications", AdminCommunications),
   createAdminRoute("/admin/security", AdminSecurity),
   createAdminRoute("/admin/whatsapp-debug", WhatsAppDebug),
