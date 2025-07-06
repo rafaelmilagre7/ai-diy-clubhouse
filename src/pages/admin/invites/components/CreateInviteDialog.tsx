@@ -78,10 +78,10 @@ const CreateInviteDialog = ({ roles, onInviteCreated }: CreateInviteDialogProps)
           Novo Convite
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto bg-card border border-border">
         <form onSubmit={handleSubmit} className="space-y-6">
           <DialogHeader className="space-y-3">
-            <DialogTitle className="text-xl font-semibold">Criar Novo Convite</DialogTitle>
+            <DialogTitle className="text-xl font-semibold text-foreground">Criar Novo Convite</DialogTitle>
             <DialogDescription className="text-muted-foreground">
               Envie um convite para novos membros acessarem a plataforma.
             </DialogDescription>
@@ -92,16 +92,16 @@ const CreateInviteDialog = ({ roles, onInviteCreated }: CreateInviteDialogProps)
             {validationState.errors.length > 0 && (
               <Alert variant="destructive" className="border-destructive/50 bg-destructive/5">
                 <AlertCircle className="h-4 w-4" />
-                <AlertDescription className="text-sm">
+                <AlertDescription className="text-sm text-destructive-foreground">
                   {validationState.errors.join(', ')}
                 </AlertDescription>
               </Alert>
             )}
 
             {validationState.warnings.length > 0 && (
-              <Alert className="border-warning/50 bg-warning/5">
-                <AlertCircle className="h-4 w-4" />
-                <AlertDescription className="text-sm">
+              <Alert className="border-orange-500/50 bg-orange-500/5">
+                <AlertCircle className="h-4 w-4 text-orange-500" />
+                <AlertDescription className="text-sm text-orange-500">
                   {validationState.warnings.join(', ')}
                 </AlertDescription>
               </Alert>
@@ -110,7 +110,7 @@ const CreateInviteDialog = ({ roles, onInviteCreated }: CreateInviteDialogProps)
             {/* Formulário */}
             <div className="space-y-5">
               <div className="space-y-2">
-                <Label htmlFor="email" className="text-sm font-medium">
+                <Label htmlFor="email" className="text-sm font-medium text-foreground">
                   Email *
                 </Label>
                 <Input
@@ -120,21 +120,21 @@ const CreateInviteDialog = ({ roles, onInviteCreated }: CreateInviteDialogProps)
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  className="h-10"
+                  className="h-10 bg-input border-border text-foreground placeholder:text-muted-foreground"
                 />
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="role" className="text-sm font-medium">
+                <Label htmlFor="role" className="text-sm font-medium text-foreground">
                   Papel *
                 </Label>
                 <Select value={roleId} onValueChange={setRoleId} required>
-                  <SelectTrigger id="role" className="h-10">
+                  <SelectTrigger id="role" className="h-10 bg-input border-border text-foreground">
                     <SelectValue placeholder="Selecione um papel" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="bg-popover border-border">
                     {roles.map((role) => (
-                      <SelectItem key={role.id} value={role.id}>
+                      <SelectItem key={role.id} value={role.id} className="text-foreground hover:bg-accent">
                         {role.name}
                       </SelectItem>
                     ))}
@@ -143,25 +143,25 @@ const CreateInviteDialog = ({ roles, onInviteCreated }: CreateInviteDialogProps)
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="expiration" className="text-sm font-medium">
+                <Label htmlFor="expiration" className="text-sm font-medium text-foreground">
                   Expira em
                 </Label>
                 <Select value={expiration} onValueChange={setExpiration}>
-                  <SelectTrigger id="expiration" className="h-10">
+                  <SelectTrigger id="expiration" className="h-10 bg-input border-border text-foreground">
                     <SelectValue placeholder="Período de expiração" />
                   </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="1 day">1 dia</SelectItem>
-                    <SelectItem value="3 days">3 dias</SelectItem>
-                    <SelectItem value="7 days">7 dias</SelectItem>
-                    <SelectItem value="14 days">14 dias</SelectItem>
-                    <SelectItem value="30 days">30 dias</SelectItem>
+                  <SelectContent className="bg-popover border-border">
+                    <SelectItem value="1 day" className="text-foreground hover:bg-accent">1 dia</SelectItem>
+                    <SelectItem value="3 days" className="text-foreground hover:bg-accent">3 dias</SelectItem>
+                    <SelectItem value="7 days" className="text-foreground hover:bg-accent">7 dias</SelectItem>
+                    <SelectItem value="14 days" className="text-foreground hover:bg-accent">14 dias</SelectItem>
+                    <SelectItem value="30 days" className="text-foreground hover:bg-accent">30 dias</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="notes" className="text-sm font-medium">
+                <Label htmlFor="notes" className="text-sm font-medium text-foreground">
                   Observações (opcional)
                 </Label>
                 <Textarea
@@ -169,7 +169,7 @@ const CreateInviteDialog = ({ roles, onInviteCreated }: CreateInviteDialogProps)
                   placeholder="Informações adicionais sobre o convite"
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
-                  className="min-h-[80px] resize-none"
+                  className="min-h-[80px] resize-none bg-input border-border text-foreground placeholder:text-muted-foreground"
                 />
               </div>
             </div>
