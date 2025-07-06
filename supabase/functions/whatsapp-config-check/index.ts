@@ -1,775 +1,457 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-// Cache para evitar requests desnecessários
-let businessIdCache: string | null = null
-let cacheTimestamp: number = 0
-const CACHE_DURATION = 5 * 60 * 1000 // 5 minutos
-
-// Nova API para validação de configuração (usada pelo WhatsApp Debug Center)
-async function handleNewConfigAPI(parsed: any, requestId: string, corsHeaders: any) {
-  console.log(`🆕 [${requestId}] Processando nova API de configuração`)
-  
-  const { config } = parsed
-  if (!config) {
-    throw new Error('Objeto de configuração não fornecido')
+serve(async (req) => {
+  if (req.method === 'OPTIONS') {
+    return new Response('ok', { headers: corsHeaders })
   }
 
-  console.log(`📋 [${requestId}] Configuração recebida:`, {
-    hasPhoneNumberId: !!config.phone_number_id,
-    hasAccessToken: !!config.access_token,
-    hasBusinessAccountId: !!config.business_account_id
-  })
+  try {
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    )
 
+    const requestBody = await req.json()
+    const { action = 'check', testPhone } = requestBody
+
+    console.log('🔍 [WHATSAPP-CHECK] Ação solicitada:', action)
+
+    // Ação: Verificar configuração completa do Supabase
+    if (action === 'check') {
+      const diagnostics = await runCompleteDiagnostics()
+      return new Response(JSON.stringify(diagnostics), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      })
+    }
+
+    // Ação: Verificar template específico
+    if (action === 'check-template') {
+      const templateStatus = await checkConviteTemplate()
+      return new Response(JSON.stringify(templateStatus), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      })
+    }
+
+    // Ação: Testar envio real
+    if (action === 'test-send') {
+      const testResult = await testWhatsAppSending(testPhone)
+      return new Response(JSON.stringify(testResult), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      })
+    }
+
+    // Ação: Buscar logs recentes
+    if (action === 'get-logs') {
+      const logs = await getRecentWhatsAppLogs()
+      return new Response(JSON.stringify(logs), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      })
+    }
+
+    return new Response(JSON.stringify({ error: 'Ação não reconhecida' }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      status: 400
+    })
+
+  } catch (error) {
+    console.error('❌ [WHATSAPP-CHECK] Erro:', error)
+    return new Response(JSON.stringify({
+      success: false,
+      error: error.message,
+      timestamp: new Date().toISOString()
+    }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      status: 500
+    })
+  }
+})
+
+// Função principal de diagnósticos
+async function runCompleteDiagnostics() {
+  console.log('🔍 Iniciando diagnósticos completos...')
+  
   const diagnostics = {
     timestamp: new Date().toISOString(),
-    results: [],
+    overall_status: 'unknown',
+    credentials: await checkSupabaseCredentials(),
+    whatsapp_api: null,
+    template_status: null,
+    phone_number: null,
     summary: {
-      total: 0,
+      total_checks: 4,
       passed: 0,
       failed: 0,
       warnings: 0
     }
   }
 
-  console.log('🧪 Iniciando diagnósticos...')
-
-  // Primeiro, tentar descoberta automática para melhorar validação básica
-  let discoveredBusinessId = null
-  if (config.access_token && !config.business_account_id) {
-    console.log('🔍 Tentando descoberta automática de Business ID...')
-    const discovery = await discoverBusinessIdAdvanced(config.access_token)
-    discoveredBusinessId = discovery.businessId
-    if (discoveredBusinessId) {
-      console.log(`✅ Business ID descoberto: ${discoveredBusinessId}`)
-    }
+  // Se as credenciais estão OK, testar APIs
+  if (diagnostics.credentials.success) {
+    diagnostics.whatsapp_api = await testWhatsAppAPI()
+    diagnostics.template_status = await checkConviteTemplate()
+    diagnostics.phone_number = await checkPhoneNumberStatus()
   }
-
-  // Diagnóstico 1: Validação Básica de Configuração (com Business ID descoberto)
-  const basicValidation = await validateBasicConfig(config, discoveredBusinessId)
-  diagnostics.results.push(basicValidation)
-  
-  // Diagnóstico 2: Teste de Token de Acesso
-  const tokenTest = await testAccessToken(config)
-  diagnostics.results.push(tokenTest)
-  
-  // Diagnóstico 3: Verificação de Business Account
-  const businessTest = await verifyBusinessAccount(config)
-  diagnostics.results.push(businessTest)
-  
-  // Diagnóstico 4: Teste de Phone Number
-  const phoneTest = await testPhoneNumber(config)
-  diagnostics.results.push(phoneTest)
 
   // Calcular resumo
-  diagnostics.summary.total = diagnostics.results.length
-  diagnostics.results.forEach(result => {
+  const checks = [
+    diagnostics.credentials,
+    diagnostics.whatsapp_api,
+    diagnostics.template_status,
+    diagnostics.phone_number
+  ].filter(Boolean)
+
+  diagnostics.summary.passed = checks.filter(c => c.success).length
+  diagnostics.summary.failed = checks.filter(c => !c.success).length
+  diagnostics.summary.warnings = checks.filter(c => c.warnings?.length > 0).length
+
+  diagnostics.overall_status = diagnostics.summary.failed === 0 ? 'success' : 'error'
+
+  console.log('✅ Diagnósticos concluídos:', diagnostics.summary)
+  return diagnostics
+}
+
+// Verificar credenciais do Supabase
+async function checkSupabaseCredentials() {
+  console.log('🔑 Verificando credenciais do Supabase...')
+  
+  const result = {
+    test: 'Credenciais Supabase',
+    success: false,
+    details: [],
+    warnings: [],
+    errors: [],
+    credentials: {
+      access_token: false,
+      phone_number_id: false
+    }
+  }
+
+  try {
+    // Verificar WHATSAPP_ACCESS_TOKEN
+    const accessToken = Deno.env.get('WHATSAPP_ACCESS_TOKEN')
+    if (accessToken && accessToken.length > 50) {
+      result.credentials.access_token = true
+      result.details.push('✅ WHATSAPP_ACCESS_TOKEN configurado')
+    } else {
+      result.errors.push('❌ WHATSAPP_ACCESS_TOKEN não encontrado ou inválido')
+    }
+
+    // Verificar WHATSAPP_PHONE_NUMBER_ID
+    const phoneNumberId = Deno.env.get('WHATSAPP_PHONE_NUMBER_ID')
+    if (phoneNumberId && phoneNumberId.length > 10) {
+      result.credentials.phone_number_id = true
+      result.details.push('✅ WHATSAPP_PHONE_NUMBER_ID configurado')
+    } else {
+      result.errors.push('❌ WHATSAPP_PHONE_NUMBER_ID não encontrado ou inválido')
+    }
+
+    result.success = result.credentials.access_token && result.credentials.phone_number_id
+
     if (result.success) {
-      diagnostics.summary.passed++
+      result.details.push('🎉 Todas as credenciais estão configuradas!')
     } else {
-      diagnostics.summary.failed++
+      result.errors.push('⚠️ Configure as credenciais em Supabase > Settings > Edge Functions')
     }
-    if (result.warning) {
-      diagnostics.summary.warnings++
-    }
-  })
 
-  console.log(`✅ [${requestId}] Diagnósticos concluídos:`, diagnostics.summary)
-
-  return new Response(
-    JSON.stringify(diagnostics),
-    { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-  )
-}
-
-// Funções de validação básica
-async function validateBasicConfig(config: any, discoveredBusinessId?: string | null) {
-  console.log('🔍 Validando configuração básica...')
-  
-  const result = {
-    test: 'Validação Básica',
-    success: true,
-    details: [],
-    warnings: [],
-    errors: []
-  }
-
-  // Verificar campos obrigatórios
-  if (!config.phone_number_id) {
-    result.success = false
-    result.errors.push('Phone Number ID não fornecido')
-  } else if (config.phone_number_id.length < 10) {
-    result.warnings.push('Phone Number ID parece muito curto')
-  }
-
-  if (!config.access_token) {
-    result.success = false
-    result.errors.push('Access Token não fornecido')
-  } else if (config.access_token.length < 50) {
-    result.warnings.push('Access Token parece muito curto')
-  }
-
-  // Verificar Business ID - só mostrar aviso se não foi descoberto automaticamente
-  if (!config.business_account_id && !discoveredBusinessId) {
-    result.warnings.push('Business Account ID não fornecido (pode ser descoberto automaticamente)')
-  } else if (discoveredBusinessId && !config.business_account_id) {
-    result.details.push(`Business ID descoberto automaticamente: ${discoveredBusinessId}`)
-  }
-
-  result.details.push(`Phone Number ID: ${config.phone_number_id ? '✓' : '✗'}`)
-  result.details.push(`Access Token: ${config.access_token ? '✓' : '✗'}`)
-  result.details.push(`Business Account ID: ${config.business_account_id ? '✓' : (discoveredBusinessId ? '🔍' : '⚠️')}`)
-
-  console.log('📋 Validação básica concluída:', result.success ? 'PASSOU' : 'FALHOU')
-  return result
-}
-
-async function testAccessToken(config: any) {
-  console.log('🔑 Testando Access Token...')
-  
-  const result = {
-    test: 'Teste de Access Token',
-    success: false,
-    details: [],
-    warnings: [],
-    errors: []
-  }
-
-  if (!config.access_token) {
-    result.errors.push('Access Token não fornecido')
-    return result
-  }
-
-  try {
-    const response = await fetch(`https://graph.facebook.com/v18.0/me?access_token=${config.access_token}`)
-    const data = await response.json()
-
-    if (response.ok) {
-      result.success = true
-      result.details.push(`Token válido para usuário: ${data.name || data.id}`)
-      
-      // Testar permissões específicas
-      const debugResponse = await fetch(
-        `https://graph.facebook.com/debug_token?input_token=${config.access_token}&access_token=${config.access_token}`
-      )
-      
-      if (debugResponse.ok) {
-        const debugData = await debugResponse.json()
-        const scopes = debugData.data?.scopes || []
-        
-        const requiredScopes = ['whatsapp_business_management', 'business_management']
-        const missingScopes = requiredScopes.filter(scope => !scopes.includes(scope))
-        
-        if (missingScopes.length > 0) {
-          result.warnings.push(`Permissões em falta: ${missingScopes.join(', ')}`)
-        }
-        
-        result.details.push(`Permissões: ${scopes.join(', ')}`)
-      }
-    } else {
-      result.errors.push(`Token inválido: ${data.error?.message || 'Erro desconhecido'}`)
-    }
   } catch (error) {
-    result.errors.push(`Erro na verificação: ${error.message}`)
+    result.errors.push(`Erro ao verificar credenciais: ${error.message}`)
   }
 
-  console.log('🔑 Teste de token concluído:', result.success ? 'PASSOU' : 'FALHOU')
   return result
 }
 
-async function verifyBusinessAccount(config: any) {
-  console.log('🏢 Verificando Business Account...')
+// Testar API do WhatsApp
+async function testWhatsAppAPI() {
+  console.log('📱 Testando API do WhatsApp...')
   
   const result = {
-    test: 'Verificação de Business Account',
+    test: 'API WhatsApp',
     success: false,
     details: [],
     warnings: [],
     errors: []
   }
 
-  if (!config.access_token) {
-    result.errors.push('Access Token necessário para verificação')
+  const accessToken = Deno.env.get('WHATSAPP_ACCESS_TOKEN')
+  const phoneNumberId = Deno.env.get('WHATSAPP_PHONE_NUMBER_ID')
+
+  if (!accessToken || !phoneNumberId) {
+    result.errors.push('Credenciais não configuradas')
     return result
   }
 
   try {
-    // Tentar buscar business accounts
-    const response = await fetch(
-      `https://graph.facebook.com/v18.0/me/businesses?access_token=${config.access_token}`
-    )
-    const data = await response.json()
+    // Testar validação do token
+    const tokenResponse = await fetch(`https://graph.facebook.com/debug_token?input_token=${accessToken}&access_token=${accessToken}`)
+    const tokenData = await tokenResponse.json()
 
-    if (response.ok && data.data && data.data.length > 0) {
-      result.success = true
-      result.details.push(`${data.data.length} Business Account(s) encontrado(s)`)
+    if (tokenResponse.ok && tokenData.data?.is_valid) {
+      result.details.push('✅ Token válido')
       
-      if (config.business_account_id) {
-        const found = data.data.find((b: any) => b.id === config.business_account_id)
-        if (found) {
-          result.details.push(`Business Account configurado encontrado: ${found.name}`)
-        } else {
-          result.warnings.push('Business Account ID configurado não encontrado na lista')
-        }
+      const scopes = tokenData.data.scopes || []
+      const requiredScopes = ['whatsapp_business_management', 'business_management']
+      const missingScopes = requiredScopes.filter(scope => !scopes.includes(scope))
+      
+      if (missingScopes.length > 0) {
+        result.warnings.push(`Permissões em falta: ${missingScopes.join(', ')}`)
       } else {
-        result.details.push(`Primeiro Business Account: ${data.data[0].name} (${data.data[0].id})`)
-        result.warnings.push('Considere configurar o Business Account ID')
+        result.details.push('✅ Permissões adequadas')
       }
     } else {
-      result.warnings.push('Nenhum Business Account encontrado ou erro na busca')
-      if (data.error) {
-        result.errors.push(`Erro: ${data.error.message}`)
-      }
+      result.errors.push('Token inválido ou expirado')
+      return result
     }
+
+    // Testar Phone Number
+    const phoneResponse = await fetch(`https://graph.facebook.com/v18.0/${phoneNumberId}?access_token=${accessToken}`)
+    const phoneData = await phoneResponse.json()
+
+    if (phoneResponse.ok) {
+      result.success = true
+      result.details.push(`✅ Phone Number ativo: ${phoneData.display_phone_number || phoneNumberId}`)
+      
+      if (phoneData.verified_name) {
+        result.details.push(`📝 Nome verificado: ${phoneData.verified_name}`)
+      }
+      
+      if (phoneData.quality_rating) {
+        result.details.push(`⭐ Qualidade: ${phoneData.quality_rating}`)
+      }
+    } else {
+      result.errors.push(`Phone Number inválido: ${phoneData.error?.message || 'Erro desconhecido'}`)
+    }
+
   } catch (error) {
-    result.errors.push(`Erro na verificação: ${error.message}`)
+    result.errors.push(`Erro na verificação da API: ${error.message}`)
   }
 
-  console.log('🏢 Verificação de business concluída:', result.success ? 'PASSOU' : 'FALHOU')
   return result
 }
 
-async function testPhoneNumber(config: any) {
-  console.log('📱 Testando Phone Number...')
+// Verificar template "convitevia"
+async function checkConviteTemplate() {
+  console.log('📋 Verificando template "convitevia"...')
   
   const result = {
-    test: 'Teste de Phone Number',
+    test: 'Template "convitevia"',
     success: false,
     details: [],
     warnings: [],
-    errors: []
+    errors: [],
+    template: null
   }
 
-  if (!config.access_token || !config.phone_number_id) {
-    result.errors.push('Access Token e Phone Number ID necessários')
+  const accessToken = Deno.env.get('WHATSAPP_ACCESS_TOKEN')
+  if (!accessToken) {
+    result.errors.push('Access Token não configurado')
     return result
   }
 
   try {
-    const response = await fetch(
-      `https://graph.facebook.com/v18.0/${config.phone_number_id}?access_token=${config.access_token}`
-    )
-    const data = await response.json()
+    // Buscar business accounts
+    const businessResponse = await fetch(`https://graph.facebook.com/v18.0/me/businesses?access_token=${accessToken}`)
+    const businessData = await businessResponse.json()
 
-    if (response.ok) {
-      result.success = true
-      result.details.push(`Phone Number válido: ${data.display_phone_number || data.id}`)
-      
-      if (data.verified_name) {
-        result.details.push(`Nome verificado: ${data.verified_name}`)
-      }
-      
-      if (data.code_verification_status) {
-        result.details.push(`Status de verificação: ${data.code_verification_status}`)
-      }
-      
-      if (data.quality_rating) {
-        result.details.push(`Qualidade: ${data.quality_rating}`)
-      }
-    } else {
-      result.errors.push(`Phone Number inválido: ${data.error?.message || 'Erro desconhecido'}`)
-    }
-  } catch (error) {
-    result.errors.push(`Erro na verificação: ${error.message}`)
-  }
-
-  console.log('📱 Teste de phone concluído:', result.success ? 'PASSOU' : 'FALHOU')
-  return result
-}
-
-// Estratégias múltiplas para descoberta de Business ID
-async function discoverBusinessIdAdvanced(token: string) {
-  console.log('🔍 Iniciando descoberta avançada de Business ID...')
-  
-  const strategies = [
-    { name: 'API /me/businesses', attempt: discoverViaBusinesses },
-    { name: 'API /me direct ID', attempt: discoverViaUserMe },
-    { name: 'WhatsApp Business Accounts', attempt: discoverViaWhatsAppAccounts },
-    { name: 'Pages API', attempt: discoverViaPages },
-    { name: 'Owned Apps', attempt: discoverViaOwnedApps }
-  ]
-  
-  const results = []
-  
-  for (const strategy of strategies) {
-    console.log(`🎯 Tentando estratégia: ${strategy.name}`)
-    
-    try {
-      const startTime = Date.now()
-      const result = await strategy.attempt(token)
-      const duration = Date.now() - startTime
-      
-      const strategyResult = {
-        name: strategy.name,
-        success: !!result,
-        businessId: result,
-        duration: `${duration}ms`,
-        error: null
-      }
-      
-      results.push(strategyResult)
-      
-      if (result) {
-        console.log(`✅ Sucesso com ${strategy.name}: ${result}`)
-        return { businessId: result, strategies: results }
-      }
-      
-    } catch (error) {
-      console.log(`❌ Falha em ${strategy.name}:`, error.message)
-      results.push({
-        name: strategy.name,
-        success: false,
-        businessId: null,
-        duration: '0ms',
-        error: error.message
-      })
-    }
-  }
-  
-  console.log('⚠️ Todas as estratégias falharam')
-  return { businessId: null, strategies: results }
-}
-
-// Estratégia 1: Via /me/businesses
-async function discoverViaBusinesses(token: string) {
-  const response = await fetch('https://graph.facebook.com/v18.0/me/businesses', {
-    headers: { 'Authorization': `Bearer ${token}` }
-  })
-  
-  if (response.ok) {
-    const data = await response.json()
-    if (data.data && data.data.length > 0) {
-      return data.data[0].id
-    }
-  }
-  
-  return null
-}
-
-// Estratégia 2: Via /me direto
-async function discoverViaUserMe(token: string) {
-  const response = await fetch('https://graph.facebook.com/v18.0/me', {
-    headers: { 'Authorization': `Bearer ${token}` }
-  })
-  
-  if (response.ok) {
-    const data = await response.json()
-    if (data.id) {
-      // Testar se funciona para templates
-      const testResponse = await fetch(
-        `https://graph.facebook.com/v18.0/${data.id}/message_templates?limit=1`,
-        { headers: { 'Authorization': `Bearer ${token}` } }
-      )
-      
-      if (testResponse.ok) {
-        return data.id
-      }
-    }
-  }
-  
-  return null
-}
-
-// Estratégia 3: Via WhatsApp Business Accounts
-async function discoverViaWhatsAppAccounts(token: string) {
-  const response = await fetch('https://graph.facebook.com/v18.0/me/businesses?fields=owned_whatsapp_business_accounts', {
-    headers: { 'Authorization': `Bearer ${token}` }
-  })
-  
-  if (response.ok) {
-    const data = await response.json()
-    if (data.data && data.data.length > 0) {
-      const business = data.data.find(b => b.owned_whatsapp_business_accounts?.data?.length > 0)
-      if (business) {
-        return business.id
-      }
-    }
-  }
-  
-  return null
-}
-
-// Estratégia 4: Via Pages
-async function discoverViaPages(token: string) {
-  const response = await fetch('https://graph.facebook.com/v18.0/me/accounts', {
-    headers: { 'Authorization': `Bearer ${token}` }
-  })
-  
-  if (response.ok) {
-    const data = await response.json()
-    if (data.data && data.data.length > 0) {
-      // Pegar a primeira página e tentar usar seu ID
-      return data.data[0].id
-    }
-  }
-  
-  return null
-}
-
-// Estratégia 5: Via Owned Apps
-async function discoverViaOwnedApps(token: string) {
-  const response = await fetch('https://graph.facebook.com/v18.0/me/applications/developer', {
-    headers: { 'Authorization': `Bearer ${token}` }
-  })
-  
-  if (response.ok) {
-    const data = await response.json()
-    if (data.data && data.data.length > 0) {
-      return data.data[0].id
-    }
-  }
-  
-  return null
-}
-
-// Nova função para buscar templates WhatsApp com Business ID manual
-async function handleTemplatesSearch(parsed: any, requestId: string, corsHeaders: any) {
-  console.log(`📋 [${requestId}] Iniciando busca avançada de templates WhatsApp`)
-  
-  try {
-    const { config, filters = {} } = parsed
-    
-    if (!config?.access_token) {
-      console.error(`❌ [${requestId}] Access Token não fornecido`)
-      return new Response(
-        JSON.stringify({
-          success: false,
-          error: 'Access Token é obrigatório para buscar templates',
-          templates: [],
-          stats: { total: 0, approved: 0, pending: 0, rejected: 0 },
-          businessIds: [],
-          timestamp: new Date().toISOString(),
-          requestId
-        }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
-      )
+    if (!businessResponse.ok || !businessData.data?.length) {
+      result.errors.push('Nenhum Business Account encontrado')
+      return result
     }
 
-    // Usar Business ID manual com prioridade
-    const manualBusinessId = config.manual_business_id
-    const configBusinessId = config.business_account_id
-    
-    console.log(`🎯 [${requestId}] Business IDs disponíveis:`, {
-      manual: manualBusinessId,
-      config: configBusinessId
-    })
-
-    let allTemplates = []
-    let discoveredBusinessIds = []
-    let workingBusinessId = null
-
-    // Estratégia 1: Tentar Business ID manual primeiro (prioridade)
-    if (manualBusinessId) {
-      console.log(`🎯 [${requestId}] Testando Business ID manual: ${manualBusinessId}`)
-      const result = await searchTemplatesInBusiness(config.access_token, manualBusinessId, filters, requestId)
-      
-      discoveredBusinessIds.push({
-        id: manualBusinessId,
-        name: 'Manual (Prioritário)',
-        templatesCount: result.templates.length,
-        source: 'manual'
-      })
-
-      if (result.templates.length > 0) {
-        console.log(`✅ [${requestId}] Sucesso com Business ID manual: ${result.templates.length} templates`)
-        allTemplates = result.templates
-        workingBusinessId = manualBusinessId
-      }
-    }
-
-    // Estratégia 2: Se não achou no manual, tentar Business ID configurado
-    if (allTemplates.length === 0 && configBusinessId && configBusinessId !== manualBusinessId) {
-      console.log(`🎯 [${requestId}] Testando Business ID configurado: ${configBusinessId}`)
-      const result = await searchTemplatesInBusiness(config.access_token, configBusinessId, filters, requestId)
-      
-      discoveredBusinessIds.push({
-        id: configBusinessId,
-        name: 'Configurado',
-        templatesCount: result.templates.length,
-        source: 'config'
-      })
-
-      if (result.templates.length > 0) {
-        console.log(`✅ [${requestId}] Sucesso com Business ID configurado: ${result.templates.length} templates`)
-        allTemplates = result.templates
-        workingBusinessId = configBusinessId
-      }
-    }
-
-    // Estratégia 3: Se ainda não achou, fazer descoberta automática
-    if (allTemplates.length === 0) {
-      console.log(`🔍 [${requestId}] Fazendo descoberta automática de Business IDs...`)
-      const discovery = await discoverBusinessIdAdvanced(config.access_token)
-      
-      if (discovery.businessId) {
-        console.log(`🎯 [${requestId}] Testando Business ID descoberto: ${discovery.businessId}`)
-        const result = await searchTemplatesInBusiness(config.access_token, discovery.businessId, filters, requestId)
-        
-        discoveredBusinessIds.push({
-          id: discovery.businessId,
-          name: 'Descoberto Automaticamente',
-          templatesCount: result.templates.length,
-          source: 'discovered'
-        })
-
-        if (result.templates.length > 0) {
-          console.log(`✅ [${requestId}] Sucesso com Business ID descoberto: ${result.templates.length} templates`)
-          allTemplates = result.templates
-          workingBusinessId = discovery.businessId
-        }
-      }
-
-      // Adicionar todos os Business IDs testados durante a descoberta
-      if (discovery.strategies) {
-        discovery.strategies.forEach((strategy: any) => {
-          if (strategy.businessId && strategy.businessId !== discovery.businessId) {
-            discoveredBusinessIds.push({
-              id: strategy.businessId,
-              name: `Via ${strategy.name}`,
-              templatesCount: 0, // Não testamos templates nestes
-              source: 'strategy'
-            })
-          }
-        })
-      }
-    }
-
-    // Estratégia 4: Busca ampla em múltiplos Business IDs se ainda não encontrou
-    if (allTemplates.length === 0) {
-      console.log(`🔍 [${requestId}] Tentando busca ampla em múltiplos Business IDs...`)
-      
+    // Procurar template em cada business account
+    for (const business of businessData.data) {
       try {
-        // Buscar todos os businesses acessíveis
-        const businessResponse = await fetch(
-          `https://graph.facebook.com/v18.0/me/businesses?access_token=${config.access_token}`
+        const templatesResponse = await fetch(
+          `https://graph.facebook.com/v18.0/${business.id}/message_templates?fields=name,status,language,category,components,quality_score&access_token=${accessToken}`
         )
-        
-        if (businessResponse.ok) {
-          const businessData = await businessResponse.json()
-          
-          if (businessData.data && businessData.data.length > 0) {
-            console.log(`🔍 [${requestId}] Encontrados ${businessData.data.length} Business IDs para testar`)
-            
-            // Testar cada Business ID
-            for (const business of businessData.data.slice(0, 5)) { // Máximo 5 para evitar timeout
-              if (business.id && !discoveredBusinessIds.find(b => b.id === business.id)) {
-                console.log(`🎯 [${requestId}] Testando Business ID da lista: ${business.id}`)
-                const result = await searchTemplatesInBusiness(config.access_token, business.id, filters, requestId)
-                
-                discoveredBusinessIds.push({
-                  id: business.id,
-                  name: business.name || 'Business Account',
-                  templatesCount: result.templates.length,
-                  source: 'business_list'
-                })
+        const templatesData = await templatesResponse.json()
 
-                if (result.templates.length > 0 && allTemplates.length === 0) {
-                  console.log(`✅ [${requestId}] Sucesso com Business ID da lista: ${result.templates.length} templates`)
-                  allTemplates = result.templates
-                  workingBusinessId = business.id
-                }
-              }
+        if (templatesResponse.ok && templatesData.data) {
+          const conviteTemplate = templatesData.data.find((t: any) => t.name === 'convitevia')
+          
+          if (conviteTemplate) {
+            result.template = conviteTemplate
+            result.success = conviteTemplate.status === 'APPROVED'
+            
+            result.details.push(`✅ Template encontrado: ${conviteTemplate.name}`)
+            result.details.push(`📊 Status: ${conviteTemplate.status}`)
+            result.details.push(`🌐 Idioma: ${conviteTemplate.language}`)
+            result.details.push(`📁 Categoria: ${conviteTemplate.category}`)
+            
+            if (conviteTemplate.quality_score) {
+              result.details.push(`⭐ Qualidade: ${conviteTemplate.quality_score.score}/5`)
             }
+
+            if (conviteTemplate.status !== 'APPROVED') {
+              result.warnings.push('Template não está aprovado pelo Facebook')
+            }
+
+            break
           }
         }
       } catch (error) {
-        console.log(`⚠️ [${requestId}] Erro na busca ampla:`, error.message)
+        console.log(`Erro ao buscar templates para business ${business.id}:`, error.message)
       }
     }
 
-    // Calcular estatísticas
-    const stats = {
-      total: allTemplates.length,
-      approved: allTemplates.filter((t: any) => t.status === 'APPROVED').length,
-      pending: allTemplates.filter((t: any) => t.status === 'PENDING').length,
-      rejected: allTemplates.filter((t: any) => t.status === 'REJECTED').length
+    if (!result.template) {
+      result.errors.push('Template "convitevia" não encontrado')
+      result.warnings.push('Certifique-se de que o template foi criado e enviado para aprovação')
     }
-
-    console.log(`✅ [${requestId}] Busca concluída:`, {
-      totalTemplates: allTemplates.length,
-      businessIdsTested: discoveredBusinessIds.length,
-      workingBusinessId
-    })
-
-    return new Response(
-      JSON.stringify({
-        success: true,
-        templates: allTemplates,
-        stats,
-        businessIds: discoveredBusinessIds,
-        workingBusinessId,
-        timestamp: new Date().toISOString(),
-        requestId
-      }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    )
 
   } catch (error) {
-    console.error(`❌ [${requestId}] Erro na busca de templates:`, error)
-    return new Response(
-      JSON.stringify({
-        success: false,
-        error: error.message,
-        templates: [],
-        stats: { total: 0, approved: 0, pending: 0, rejected: 0 },
-        businessIds: [],
-        timestamp: new Date().toISOString(),
-        requestId
-      }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    )
+    result.errors.push(`Erro ao verificar template: ${error.message}`)
   }
+
+  return result
 }
 
-// Função para buscar templates em um Business ID específico
-async function searchTemplatesInBusiness(accessToken: string, businessId: string, filters: any = {}, requestId: string) {
-  console.log(`📋 [${requestId}] Buscando templates no Business ID: ${businessId}`)
+// Verificar status do Phone Number
+async function checkPhoneNumberStatus() {
+  console.log('📞 Verificando status do Phone Number...')
   
+  const result = {
+    test: 'Status Phone Number',
+    success: false,
+    details: [],
+    warnings: [],
+    errors: []
+  }
+
+  const accessToken = Deno.env.get('WHATSAPP_ACCESS_TOKEN')
+  const phoneNumberId = Deno.env.get('WHATSAPP_PHONE_NUMBER_ID')
+
+  if (!accessToken || !phoneNumberId) {
+    result.errors.push('Credenciais não configuradas')
+    return result
+  }
+
   try {
-    // Construir URL com filtros
-    let url = `https://graph.facebook.com/v18.0/${businessId}/message_templates?access_token=${accessToken}&limit=100`
-    
-    // Adicionar filtros se especificados
-    if (filters.status) {
-      url += `&status=${filters.status}`
-    }
-    if (filters.category) {
-      url += `&category=${filters.category}`
-    }
-
-    const response = await fetch(url)
-    
-    if (!response.ok) {
-      const errorData = await response.json()
-      console.log(`❌ [${requestId}] Erro na busca (${businessId}):`, errorData.error?.message)
-      return { templates: [], error: errorData.error?.message }
-    }
-
+    const response = await fetch(
+      `https://graph.facebook.com/v18.0/${phoneNumberId}?fields=id,verified_name,display_phone_number,quality_rating,code_verification_status,throughput&access_token=${accessToken}`
+    )
     const data = await response.json()
-    let templates = data.data || []
 
-    // Aplicar filtro de busca por nome no cliente (pois a API não suporta)
-    if (filters.search) {
-      const searchLower = filters.search.toLowerCase()
-      templates = templates.filter((template: any) => 
-        template.name?.toLowerCase().includes(searchLower)
-      )
-    }
-
-    console.log(`✅ [${requestId}] Encontrados ${templates.length} templates no Business ID: ${businessId}`)
-    return { templates, error: null }
-
-  } catch (error) {
-    console.log(`❌ [${requestId}] Erro na busca no Business ID ${businessId}:`, error.message)
-    return { templates: [], error: error.message }
-  }
-}
-
-// Funções auxiliares para diagnósticos avançados
-async function handleAdvancedDiagnostics(parsed: any, requestId: string, corsHeaders: any) {
-  console.log(`🔍 [${requestId}] Executando diagnósticos avançados`)
-  
-  // Implementação futura de diagnósticos avançados
-  return new Response(
-    JSON.stringify({
-      success: false,
-      error: 'Diagnósticos avançados não implementados ainda',
-      requestId
-    }),
-    { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 501 }
-  )
-}
-
-async function handleSupabaseSecretsCheck(requestId: string, corsHeaders: any) {
-  console.log(`🔐 [${requestId}] Verificando secrets do Supabase`)
-  
-  const secrets = {
-    whatsapp_token: !!Deno.env.get('WHATSAPP_ACCESS_TOKEN'),
-    whatsapp_phone: !!Deno.env.get('WHATSAPP_PHONE_NUMBER_ID'),
-    whatsapp_business: !!Deno.env.get('WHATSAPP_BUSINESS_ID')
-  }
-  
-  return new Response(
-    JSON.stringify({
-      success: true,
-      secrets,
-      message: 'Verificação de secrets concluída',
-      requestId
-    }),
-    { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-  )
-}
-
-serve(async (req) => {
-  const requestId = Math.random().toString(36).substring(7)
-  console.log(`🚀 [${requestId}] Nova requisição recebida`)
-  
-  if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
-  }
-
-  try {
-    const body = await req.text()
-    console.log(`📋 [${requestId}] Body da requisição:`, body)
-    
-    let parsed;
-    try {
-      parsed = JSON.parse(body)
-    } catch (parseError) {
-      console.error(`❌ [${requestId}] Erro no parse do JSON:`, parseError)
-      return new Response(
-        JSON.stringify({ 
-          success: false, 
-          error: 'JSON inválido na requisição',
-          requestId 
-        }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
-      )
-    }
-
-    console.log(`🔍 [${requestId}] Dados parseados:`, JSON.stringify(parsed, null, 2))
-
-    // Determinar o tipo de operação baseado nos parâmetros
-    if (parsed.action === 'search-templates' || parsed.search_templates) {
-      console.log(`📋 [${requestId}] Ação: Busca de templates`)
-      return await handleTemplatesSearch(parsed, requestId, corsHeaders)
-    } else if (parsed.config) {
-      console.log(`⚙️ [${requestId}] Ação: Diagnósticos de configuração`)
-      return await handleNewConfigAPI(parsed, requestId, corsHeaders)
-    } else {
-      // Fallback para compatibilidade com formato antigo
-      console.log(`🔄 [${requestId}] Usando fallback para formato legado`)
-      const legacyParsed = {
-        config: {
-          access_token: parsed.access_token,
-          manual_business_id: parsed.manual_business_id,
-          business_account_id: parsed.business_account_id
-        }
+    if (response.ok) {
+      result.success = true
+      result.details.push(`📱 Número: ${data.display_phone_number || phoneNumberId}`)
+      
+      if (data.verified_name) {
+        result.details.push(`✅ Nome verificado: ${data.verified_name}`)
+      } else {
+        result.warnings.push('Nome não verificado')
       }
       
-      if (parsed.search_templates) {
-        return await handleTemplatesSearch({ 
-          ...legacyParsed, 
-          action: 'search-templates' 
-        }, requestId, corsHeaders)
-      } else {
-        return await handleNewConfigAPI(legacyParsed, requestId, corsHeaders)
+      if (data.code_verification_status) {
+        result.details.push(`🔐 Verificação: ${data.code_verification_status}`)
       }
+      
+      if (data.quality_rating) {
+        result.details.push(`⭐ Qualidade: ${data.quality_rating}`)
+        if (data.quality_rating === 'RED') {
+          result.warnings.push('Qualidade baixa - pode afetar entregas')
+        }
+      }
+
+      if (data.throughput) {
+        result.details.push(`📊 Throughput: ${data.throughput.level}`)
+      }
+
+    } else {
+      result.errors.push(`Erro: ${data.error?.message || 'Erro desconhecido'}`)
     }
 
   } catch (error) {
-    console.error(`❌ [${requestId}] Erro geral:`, error)
-    return new Response(
-      JSON.stringify({
-        success: false,
-        error: `Erro interno: ${error.message}`,
-        requestId
-      }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
-    )
+    result.errors.push(`Erro ao verificar phone number: ${error.message}`)
   }
-})
+
+  return result
+}
+
+// Testar envio real de WhatsApp
+async function testWhatsAppSending(testPhone?: string) {
+  console.log('🧪 Testando envio real do WhatsApp...')
+  
+  const result = {
+    test: 'Teste de Envio',
+    success: false,
+    details: [],
+    warnings: [],
+    errors: [],
+    messageId: null
+  }
+
+  if (!testPhone) {
+    result.errors.push('Número de teste não fornecido')
+    return result
+  }
+
+  try {
+    // Usar a função de envio existente
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    )
+
+    const { data, error } = await supabase.functions.invoke('send-whatsapp-invite', {
+      body: {
+        phone: testPhone,
+        inviteUrl: 'https://test.example.com/convite/TEST123',
+        roleName: 'Teste Debug',
+        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+        senderName: 'Sistema de Debug',
+        notes: 'Teste automatizado da página de debug'
+      }
+    })
+
+    if (error) {
+      result.errors.push(`Erro no envio: ${error.message}`)
+    } else if (data?.success) {
+      result.success = true
+      result.messageId = data.whatsappId
+      result.details.push('✅ Mensagem enviada com sucesso!')
+      result.details.push(`📬 ID da mensagem: ${data.whatsappId}`)
+      result.details.push(`📱 Número de destino: ${data.phone}`)
+    } else {
+      result.errors.push(`Falha no envio: ${data?.message || 'Erro desconhecido'}`)
+    }
+
+  } catch (error) {
+    result.errors.push(`Erro no teste de envio: ${error.message}`)
+  }
+
+  return result
+}
+
+// Buscar logs recentes do WhatsApp
+async function getRecentWhatsAppLogs() {
+  console.log('📋 Buscando logs recentes...')
+  
+  try {
+    // Aqui você pode implementar busca nos logs do Supabase
+    // Por enquanto, retornar estrutura básica
+    return {
+      logs: [
+        {
+          timestamp: new Date().toISOString(),
+          level: 'info',
+          message: 'Sistema de logs em desenvolvimento',
+          source: 'whatsapp-debug'
+        }
+      ],
+      total: 1,
+      filters: ['info', 'warning', 'error']
+    }
+  } catch (error) {
+    return {
+      logs: [],
+      total: 0,
+      error: error.message
+    }
+  }
+}
