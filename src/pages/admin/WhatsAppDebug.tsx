@@ -59,10 +59,10 @@ interface StatusCardProps {
 }
 
 const StatusCard: React.FC<StatusCardProps> = ({ title, success, value, icon, details }) => (
-  <div className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
+  <div className="flex items-center justify-between p-3 bg-card border rounded-lg">
     <div className="flex items-center gap-2">
-      {icon || (success ? <CheckCircle className="h-4 w-4 text-green-500" /> : <XCircle className="h-4 w-4 text-red-500" />)}
-      <span className="text-sm font-medium">{title}</span>
+      {icon || (success ? <CheckCircle className="h-4 w-4 text-primary" /> : <XCircle className="h-4 w-4 text-destructive" />)}
+      <span className="text-sm font-medium text-foreground">{title}</span>
     </div>
     <div className="text-right">
       <Badge variant={success ? "default" : "destructive"}>{value}</Badge>
@@ -72,10 +72,10 @@ const StatusCard: React.FC<StatusCardProps> = ({ title, success, value, icon, de
 );
 
 const TemplateCard: React.FC<{ template: WhatsAppTemplate }> = ({ template }) => (
-  <Card className="p-4">
+  <Card className="p-4 bg-card border">
     <div className="flex items-center justify-between mb-2">
-      <h5 className="font-medium">{template.name}</h5>
-      <Badge variant={template.status === 'APPROVED' ? 'default' : 'secondary'}>
+      <h5 className="font-medium text-foreground">{template.name}</h5>
+      <Badge variant={template.status === 'APPROVED' ? 'default' : template.status === 'PENDING' ? 'secondary' : 'destructive'}>
         {template.status}
       </Badge>
     </div>
@@ -157,8 +157,10 @@ const WhatsAppDebug: React.FC = () => {
     try {
       const { data, error } = await supabase.functions.invoke('whatsapp-config-check', {
         body: { 
-          access_token: accessToken,
-          manual_business_id: manualBusinessId || undefined
+          config: {
+            access_token: accessToken,
+            manual_business_id: manualBusinessId || undefined
+          }
         }
       });
 
@@ -218,9 +220,12 @@ const WhatsAppDebug: React.FC = () => {
     try {
       const { data, error } = await supabase.functions.invoke('whatsapp-config-check', {
         body: { 
-          access_token: accessToken,
-          manual_business_id: manualBusinessId || undefined,
-          search_templates: true
+          action: 'search-templates',
+          config: {
+            access_token: accessToken,
+            manual_business_id: manualBusinessId || undefined
+          },
+          filters: templatesStatus.filters
         }
       });
 
@@ -230,7 +235,7 @@ const WhatsAppDebug: React.FC = () => {
         ...prev,
         loading: false,
         templates: data.templates || [],
-        discoveredBusinessIds: data.business_discovery?.accounts || [],
+        discoveredBusinessIds: data.businessIds || [],
         lastChecked: new Date()
       }));
 
@@ -240,15 +245,17 @@ const WhatsAppDebug: React.FC = () => {
       });
     } catch (error) {
       console.error('Erro na busca de templates:', error);
+      const errorMessage = error?.message || 'Erro desconhecido ao buscar templates'
+      
       setTemplatesStatus(prev => ({
         ...prev,
         loading: false,
-        error: 'Erro ao buscar templates'
+        error: errorMessage
       }));
       
       toast({
         title: "Erro na busca",
-        description: "Erro ao buscar templates",
+        description: errorMessage,
         variant: "destructive",
       });
     }
@@ -456,6 +463,15 @@ const WhatsAppDebug: React.FC = () => {
                   </Button>
                 </div>
 
+                {templatesStatus.error && (
+                  <Alert className="bg-destructive/10 border-destructive">
+                    <AlertTriangle className="h-4 w-4" />
+                    <AlertDescription className="text-destructive">
+                      {templatesStatus.error}
+                    </AlertDescription>
+                  </Alert>
+                )}
+
                 {templatesStatus.loading && (
                   <div className="text-center py-8">
                     <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
@@ -471,14 +487,14 @@ const WhatsAppDebug: React.FC = () => {
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                       {templatesStatus.discoveredBusinessIds.map((biz: any, idx: number) => (
-                        <div key={idx} className="p-3 border rounded-lg">
+                        <div key={idx} className="p-3 bg-card border rounded-lg">
                           <div className="flex items-center justify-between">
                             <div>
-                              <div className="font-mono text-sm">{biz.id}</div>
+                              <div className="font-mono text-sm text-foreground">{biz.id}</div>
                               {biz.name && <div className="text-xs text-muted-foreground">{biz.name}</div>}
                             </div>
-                            <Badge variant={biz.templates_count > 0 ? "default" : "secondary"}>
-                              {biz.templates_count || 0} templates
+                            <Badge variant={(biz.templates_count || biz.templatesCount) > 0 ? "default" : "secondary"}>
+                              {biz.templates_count || biz.templatesCount || 0} templates
                             </Badge>
                           </div>
                         </div>

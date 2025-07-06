@@ -1385,6 +1385,74 @@ async function handleAdvancedDiagnostics(parsed: any, requestId: string, corsHea
 }
 
 serve(async (req) => {
+  const requestId = Math.random().toString(36).substring(7)
+  console.log(`🚀 [${requestId}] Nova requisição recebida`)
+  
+  if (req.method === 'OPTIONS') {
+    return new Response('ok', { headers: corsHeaders })
+  }
+
+  try {
+    const body = await req.text()
+    console.log(`📋 [${requestId}] Body da requisição:`, body)
+    
+    let parsed;
+    try {
+      parsed = JSON.parse(body)
+    } catch (parseError) {
+      console.error(`❌ [${requestId}] Erro no parse do JSON:`, parseError)
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          error: 'JSON inválido na requisição',
+          requestId 
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+      )
+    }
+
+    console.log(`🔍 [${requestId}] Dados parseados:`, JSON.stringify(parsed, null, 2))
+
+    // Determinar o tipo de operação baseado nos parâmetros
+    if (parsed.action === 'search-templates') {
+      console.log(`📋 [${requestId}] Ação: Busca de templates`)
+      return await handleTemplatesSearch(parsed, requestId, corsHeaders)
+    } else if (parsed.config) {
+      console.log(`⚙️ [${requestId}] Ação: Diagnósticos de configuração`)
+      return await handleNewConfigAPI(parsed, requestId, corsHeaders)
+    } else {
+      // Fallback para compatibilidade com formato antigo
+      console.log(`🔄 [${requestId}] Usando fallback para formato legado`)
+      const legacyParsed = {
+        config: {
+          access_token: parsed.access_token,
+          manual_business_id: parsed.manual_business_id,
+          business_account_id: parsed.business_account_id
+        }
+      }
+      
+      if (parsed.search_templates) {
+        return await handleTemplatesSearch({ 
+          ...legacyParsed, 
+          action: 'search-templates' 
+        }, requestId, corsHeaders)
+      } else {
+        return await handleNewConfigAPI(legacyParsed, requestId, corsHeaders)
+      }
+    }
+
+  } catch (error) {
+    console.error(`❌ [${requestId}] Erro geral:`, error)
+    return new Response(
+      JSON.stringify({
+        success: false,
+        error: `Erro interno: ${error.message}`,
+        requestId
+      }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+    )
+  }
+})
   // Gerar ID único para esta requisição para tracking
   const requestId = Math.random().toString(36).substr(2, 9)
   console.log(`🚀 [${requestId}] Nova requisição WhatsApp Debug iniciada`)
@@ -1414,7 +1482,7 @@ serve(async (req) => {
     // Verificar ações específicas primeiro (para evitar conflict com verificação genérica de config)
     
     // Verificar se é ação de busca de templates
-    if (parsed.action === 'search-templates') {
+    if (parsed.action === 'search-templates' || parsed.search_templates) {
       console.log(`📋 [${requestId}] Executando busca de templates WhatsApp`)
       return await handleTemplatesSearch(parsed, requestId, corsHeaders)
     }

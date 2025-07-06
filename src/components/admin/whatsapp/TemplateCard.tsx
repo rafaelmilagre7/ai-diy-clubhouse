@@ -11,14 +11,14 @@ export const TemplateCard: React.FC<TemplateCardProps> = ({ template }) => {
   const [expanded, setExpanded] = useState(false);
   
   const getStatusBadge = (status: string) => {
-    const variants = {
-      APPROVED: 'bg-green-100 text-green-800',
-      PENDING: 'bg-yellow-100 text-yellow-800',
-      REJECTED: 'bg-red-100 text-red-800'
+    const variants: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
+      APPROVED: 'default',
+      PENDING: 'secondary', 
+      REJECTED: 'destructive'
     };
     
     return (
-      <Badge className={variants[status as keyof typeof variants] || 'bg-gray-100 text-gray-800'}>
+      <Badge variant={variants[status] || 'outline'}>
         {status}
       </Badge>
     );
@@ -60,16 +60,16 @@ export const TemplateCard: React.FC<TemplateCardProps> = ({ template }) => {
       </div>
       
       {expanded && (
-        <div className="mt-4 p-4 bg-muted rounded-lg">
-          <h5 className="font-semibold mb-2">Componentes:</h5>
+        <div className="mt-4 p-4 bg-muted/50 rounded-lg border">
+          <h5 className="font-semibold mb-2 text-foreground">Componentes:</h5>
           {template.components?.map((component: any, index: number) => (
-            <div key={index} className="mb-2 p-2 bg-background rounded border-l-2 border-primary">
-              <div className="font-medium text-sm">{component.type.toUpperCase()}</div>
+            <div key={index} className="mb-2 p-2 bg-card rounded border-l-2 border-primary">
+              <div className="font-medium text-sm text-foreground">{component.type.toUpperCase()}</div>
               {component.text && (
-                <div className="text-sm mt-1">{component.text}</div>
+                <div className="text-sm mt-1 text-muted-foreground">{component.text}</div>
               )}
               {component.buttons && (
-                <div className="text-sm mt-1">
+                <div className="text-sm mt-1 text-muted-foreground">
                   <strong>Botões:</strong> {component.buttons.map((b: any) => b.text).join(', ')}
                 </div>
               )}
@@ -78,7 +78,7 @@ export const TemplateCard: React.FC<TemplateCardProps> = ({ template }) => {
           
           {template.quality_score && (
             <div className="mt-2">
-              <span className="text-sm font-medium">Qualidade: </span>
+              <span className="text-sm font-medium text-foreground">Qualidade: </span>
               <Badge variant="outline">{template.quality_score.score}</Badge>
             </div>
           )}
