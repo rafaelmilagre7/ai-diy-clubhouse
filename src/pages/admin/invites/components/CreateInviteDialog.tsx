@@ -78,96 +78,117 @@ const CreateInviteDialog = ({ roles, onInviteCreated }: CreateInviteDialogProps)
           Novo Convite
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[500px]">
-        <form onSubmit={handleSubmit}>
-          <DialogHeader>
-            <DialogTitle>Criar Novo Convite</DialogTitle>
-            <DialogDescription>
+      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <DialogHeader className="space-y-3">
+            <DialogTitle className="text-xl font-semibold">Criar Novo Convite</DialogTitle>
+            <DialogDescription className="text-muted-foreground">
               Envie um convite para novos membros acessarem a plataforma.
             </DialogDescription>
           </DialogHeader>
           
-          <div className="grid gap-4 py-4">
-            {/* Mostrar erros de validação */}
+          <div className="space-y-6">
+            {/* Alertas de validação */}
             {validationState.errors.length > 0 && (
-              <Alert variant="destructive">
+              <Alert variant="destructive" className="border-destructive/50 bg-destructive/5">
                 <AlertCircle className="h-4 w-4" />
-                <AlertDescription>
+                <AlertDescription className="text-sm">
                   {validationState.errors.join(', ')}
                 </AlertDescription>
               </Alert>
             )}
 
-            {/* Mostrar avisos de validação */}
             {validationState.warnings.length > 0 && (
-              <Alert>
+              <Alert className="border-warning/50 bg-warning/5">
                 <AlertCircle className="h-4 w-4" />
-                <AlertDescription>
+                <AlertDescription className="text-sm">
                   {validationState.warnings.join(', ')}
                 </AlertDescription>
               </Alert>
             )}
 
-            <div className="grid gap-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="usuario@exemplo.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
-            </div>
-            
-            <div className="grid gap-2">
-              <Label htmlFor="role">Papel</Label>
-              <Select value={roleId} onValueChange={setRoleId} required>
-                <SelectTrigger id="role">
-                  <SelectValue placeholder="Selecione um papel" />
-                </SelectTrigger>
-                <SelectContent>
-                  {roles.map((role) => (
-                    <SelectItem key={role.id} value={role.id}>
-                      {role.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div className="grid gap-2">
-              <Label htmlFor="expiration">Expira em</Label>
-              <Select value={expiration} onValueChange={setExpiration}>
-                <SelectTrigger id="expiration">
-                  <SelectValue placeholder="Período de expiração" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="1 day">1 dia</SelectItem>
-                  <SelectItem value="3 days">3 dias</SelectItem>
-                  <SelectItem value="7 days">7 dias</SelectItem>
-                  <SelectItem value="14 days">14 dias</SelectItem>
-                  <SelectItem value="30 days">30 dias</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div className="grid gap-2">
-              <Label htmlFor="notes">Observações (opcional)</Label>
-              <Textarea
-                id="notes"
-                placeholder="Informações adicionais sobre o convite"
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-              />
+            {/* Formulário */}
+            <div className="space-y-5">
+              <div className="space-y-2">
+                <Label htmlFor="email" className="text-sm font-medium">
+                  Email *
+                </Label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="usuario@exemplo.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  className="h-10"
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="role" className="text-sm font-medium">
+                  Papel *
+                </Label>
+                <Select value={roleId} onValueChange={setRoleId} required>
+                  <SelectTrigger id="role" className="h-10">
+                    <SelectValue placeholder="Selecione um papel" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {roles.map((role) => (
+                      <SelectItem key={role.id} value={role.id}>
+                        {role.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="expiration" className="text-sm font-medium">
+                  Expira em
+                </Label>
+                <Select value={expiration} onValueChange={setExpiration}>
+                  <SelectTrigger id="expiration" className="h-10">
+                    <SelectValue placeholder="Período de expiração" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="1 day">1 dia</SelectItem>
+                    <SelectItem value="3 days">3 dias</SelectItem>
+                    <SelectItem value="7 days">7 dias</SelectItem>
+                    <SelectItem value="14 days">14 dias</SelectItem>
+                    <SelectItem value="30 days">30 dias</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="notes" className="text-sm font-medium">
+                  Observações (opcional)
+                </Label>
+                <Textarea
+                  id="notes"
+                  placeholder="Informações adicionais sobre o convite"
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  className="min-h-[80px] resize-none"
+                />
+              </div>
             </div>
           </div>
           
-          <DialogFooter>
-            <Button variant="outline" type="button" onClick={() => setOpen(false)}>
+          <DialogFooter className="flex flex-col-reverse sm:flex-row gap-2 pt-4">
+            <Button 
+              variant="outline" 
+              type="button" 
+              onClick={() => setOpen(false)}
+              className="h-10"
+            >
               Cancelar
             </Button>
-            <Button type="submit" disabled={isCreating || !validationState.isValid}>
+            <Button 
+              type="submit" 
+              disabled={isCreating || !validationState.isValid}
+              className="h-10"
+            >
               {isCreating ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
