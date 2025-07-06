@@ -107,6 +107,8 @@ const WhatsAppDebug: React.FC = () => {
     lastChecked: Date | null;
     templates: any[];
     stats: any | null;
+    manualBusinessId: string;
+    discoveredBusinessIds: any[];
     filters: {
       search: string;
       status: string;
@@ -117,6 +119,8 @@ const WhatsAppDebug: React.FC = () => {
     lastChecked: null,
     templates: [],
     stats: null,
+    manualBusinessId: '385471239079413', // Business ID descoberto pela URL
+    discoveredBusinessIds: [],
     filters: {
       search: '',
       status: '',
@@ -490,9 +494,83 @@ const WhatsAppDebug: React.FC = () => {
       toast.error('Access Token é obrigatório para buscar templates');
       return;
     }
-    
-    setTemplatesStatus(prev => ({ ...prev, loading: true }));
-    addLog('📋 Iniciando busca de templates...', 'info');
+
+    setTemplatesStatus(prev => ({ ...prev, loading: true, discoveredBusinessIds: [] }));
+    addLog('🔍 Iniciando busca avançada de templates WhatsApp...', 'info');
+
+    try {
+      // Usar Business ID manual se fornecido, senão o configurado
+      const targetBusinessId = templatesStatus.manualBusinessId || config.businessId;
+      
+      if (targetBusinessId) {
+        addLog(`🎯 Usando Business ID específico: ${targetBusinessId}`, 'info');
+      }
+
+      // Preparar configuração para a edge function
+      const configForEdgeFunction = {
+        access_token: config.token,
+        business_account_id: targetBusinessId,
+        phone_number_id: config.phoneNumberId,
+        manual_business_id: templatesStatus.manualBusinessId // Novo campo
+      };
+
+      const { data, error } = await supabase.functions.invoke('whatsapp-config-check', {
+        body: {
+          action: 'search_templates',
+          config: configForEdgeFunction,
+          filters: templatesStatus.filters
+        }
+      });
+
+      if (error) {
+        addLog(`❌ Erro na busca de templates: ${error.message}`, 'error');
+        toast.error(`Erro na busca: ${error.message}`);
+        return;
+      }
+
+      if (data) {
+        const templates = data.templates || [];
+        const stats = data.stats || { total: 0, approved: 0, pending: 0, rejected: 0 };
+        const discoveredBusinessIds = data.businessIds || [];
+        
+        addLog(`✅ Busca concluída: ${templates.length} templates encontrados`, 'success');
+        addLog(`📊 Estatísticas: ${stats.approved} aprovados, ${stats.pending} pendentes, ${stats.rejected} rejeitados`, 'info');
+        
+        if (discoveredBusinessIds.length > 0) {
+          addLog(`🔍 Business IDs testados: ${discoveredBusinessIds.length}`, 'info');
+          discoveredBusinessIds.forEach((biz: any) => {
+            addLog(`  • ${biz.id} (${biz.name || 'Sem nome'}): ${biz.templatesCount || 0} templates`, 'info');
+          });
+        }
+        
+        setTemplatesStatus(prev => ({
+          ...prev,
+          templates,
+          stats,
+          discoveredBusinessIds,
+          lastChecked: new Date()
+        }));
+
+        if (templates.length === 0) {
+          addLog('⚠️ Nenhum template encontrado - tente outro Business ID', 'warning');
+          toast.warning('Nenhum template encontrado');
+        } else {
+          toast.success(`${templates.length} templates encontrados!`);
+          
+          // Se encontrou templates e não tinha Business ID configurado, sugerir usar o que funcionou
+          if (!config.businessId && data.workingBusinessId) {
+            addLog(`💡 Sugestão: Configure o Business ID ${data.workingBusinessId} que funcionou`, 'info');
+          }
+        }
+      }
+    } catch (error: any) {
+      const errorMessage = error?.message || 'Erro desconhecido';
+      addLog(`❌ Erro na busca de templates: ${errorMessage}`, 'error');
+      toast.error(`Erro: ${errorMessage}`);
+    } finally {
+      setTemplatesStatus(prev => ({ ...prev, loading: false }));
+    }
+  };
     
     try {
       const configForEdgeFunction = {
@@ -543,8 +621,9 @@ const WhatsAppDebug: React.FC = () => {
       }
       
     } catch (error: any) {
-      addLog(`❌ Erro inesperado: ${error.message}`, 'error');
-      toast.error(`Erro ao buscar templates: ${error.message}`);
+      const errorMessage = error?.message || 'Erro desconhecido';
+      addLog(`❌ Erro na busca de templates: ${errorMessage}`, 'error');
+      toast.error(`Erro: ${errorMessage}`);
     } finally {
       setTemplatesStatus(prev => ({ ...prev, loading: false }));
     }
@@ -1465,6 +1544,52 @@ const WhatsAppDebug: React.FC = () => {
               </div>
             </CardHeader>
             <CardContent className="space-y-6">
+              {/* Business ID Manual */}
+              <div className="p-4 bg-muted/50 rounded-lg border-2 border-dashed border-primary/20">
+                <div className="flex items-center gap-2 mb-3">
+                  <Key className="h-4 w-4 text-primary" />
+                  <Label className="font-semibold">Business ID Específico (Recomendado)</Label>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Input
+                      placeholder="Informe o Business ID..."
+                      value={templatesStatus.manualBusinessId}
+                      onChange={(e) => setTemplatesStatus(prev => ({
+                        ...prev,
+                        manualBusinessId: e.target.value
+                      }))}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Business ID da URL: <code className="bg-muted px-1 rounded">385471239079413</code>
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => setTemplatesStatus(prev => ({
+                        ...prev,
+                        manualBusinessId: '385471239079413'
+                      }))}
+                    >
+                      Usar ID da URL
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setTemplatesStatus(prev => ({
+                        ...prev,
+                        manualBusinessId: config.businessId
+                      }))}
+                      disabled={!config.businessId}
+                    >
+                      Usar Configurado
+                    </Button>
+                  </div>
+                </div>
+              </div>
+
               {/* Filtros */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="space-y-2">
@@ -1544,6 +1669,49 @@ const WhatsAppDebug: React.FC = () => {
                 </div>
               )}
 
+              {/* Business IDs Descobertos */}
+              {templatesStatus.discoveredBusinessIds.length > 0 && (
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2">
+                    <Globe className="h-4 w-4 text-primary" />
+                    <h3 className="font-semibold">Business IDs Testados</h3>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {templatesStatus.discoveredBusinessIds.map((biz: any, idx: number) => (
+                      <div key={idx} className="p-3 border rounded-lg">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <div className="font-mono text-sm">{biz.id}</div>
+                            <div className="text-xs text-muted-foreground">
+                              {biz.name || 'Sem nome'}
+                            </div>
+                          </div>
+                          <Badge variant={biz.templatesCount > 0 ? "success" : "secondary"}>
+                            {biz.templatesCount || 0} templates
+                          </Badge>
+                        </div>
+                        {biz.templatesCount > 0 && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="mt-2 w-full"
+                            onClick={() => {
+                              setTemplatesStatus(prev => ({
+                                ...prev,
+                                manualBusinessId: biz.id
+                              }));
+                              addLog(`🎯 Business ID selecionado: ${biz.id}`, 'info');
+                            }}
+                          >
+                            Usar este Business ID
+                          </Button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {/* Templates */}
               {templatesStatus.loading && (
                 <div className="text-center py-8">
@@ -1615,6 +1783,8 @@ const WhatsAppDebug: React.FC = () => {
           </Card>
         </TabsContent>
       </Tabs>
-    </div>;
+    </div>
+  );
 };
+
 export default WhatsAppDebug;

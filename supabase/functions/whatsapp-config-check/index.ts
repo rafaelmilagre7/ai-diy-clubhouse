@@ -480,9 +480,9 @@ async function discoverViaOwnedApps(token: string) {
   return null
 }
 
-// Nova função para buscar templates WhatsApp
+// Nova função para buscar templates WhatsApp com Business ID manual
 async function handleTemplatesSearch(parsed: any, requestId: string, corsHeaders: any) {
-  console.log(`📋 [${requestId}] Iniciando busca de templates WhatsApp`)
+  console.log(`📋 [${requestId}] Iniciando busca avançada de templates WhatsApp`)
   
   try {
     const { config, filters = {} } = parsed
@@ -495,9 +495,233 @@ async function handleTemplatesSearch(parsed: any, requestId: string, corsHeaders
           error: 'Access Token é obrigatório para buscar templates',
           templates: [],
           stats: { total: 0, approved: 0, pending: 0, rejected: 0 },
+          businessIds: [],
           timestamp: new Date().toISOString(),
           requestId
         }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    // Usar Business ID manual com prioridade
+    const manualBusinessId = config.manual_business_id
+    const configBusinessId = config.business_account_id
+    
+    console.log(`🎯 [${requestId}] Business IDs disponíveis:`, {
+      manual: manualBusinessId,
+      config: configBusinessId
+    })
+
+    let allTemplates = []
+    let discoveredBusinessIds = []
+    let workingBusinessId = null
+
+    // Estratégia 1: Tentar Business ID manual primeiro (prioridade)
+    if (manualBusinessId) {
+      console.log(`🎯 [${requestId}] Testando Business ID manual: ${manualBusinessId}`)
+      const result = await searchTemplatesInBusiness(config.access_token, manualBusinessId, filters, requestId)
+      
+      discoveredBusinessIds.push({
+        id: manualBusinessId,
+        name: 'Manual (Prioritário)',
+        templatesCount: result.templates.length,
+        source: 'manual'
+      })
+
+      if (result.templates.length > 0) {
+        console.log(`✅ [${requestId}] Sucesso com Business ID manual: ${result.templates.length} templates`)
+        allTemplates = result.templates
+        workingBusinessId = manualBusinessId
+      }
+    }
+
+    // Estratégia 2: Se não achou no manual, tentar Business ID configurado
+    if (allTemplates.length === 0 && configBusinessId && configBusinessId !== manualBusinessId) {
+      console.log(`🎯 [${requestId}] Testando Business ID configurado: ${configBusinessId}`)
+      const result = await searchTemplatesInBusiness(config.access_token, configBusinessId, filters, requestId)
+      
+      discoveredBusinessIds.push({
+        id: configBusinessId,
+        name: 'Configurado',
+        templatesCount: result.templates.length,
+        source: 'config'
+      })
+
+      if (result.templates.length > 0) {
+        console.log(`✅ [${requestId}] Sucesso com Business ID configurado: ${result.templates.length} templates`)
+        allTemplates = result.templates
+        workingBusinessId = configBusinessId
+      }
+    }
+
+    // Estratégia 3: Se ainda não achou, fazer descoberta automática
+    if (allTemplates.length === 0) {
+      console.log(`🔍 [${requestId}] Fazendo descoberta automática de Business IDs...`)
+      const discovery = await discoverBusinessIdAdvanced(config.access_token)
+      
+      if (discovery.businessId) {
+        console.log(`🎯 [${requestId}] Testando Business ID descoberto: ${discovery.businessId}`)
+        const result = await searchTemplatesInBusiness(config.access_token, discovery.businessId, filters, requestId)
+        
+        discoveredBusinessIds.push({
+          id: discovery.businessId,
+          name: 'Descoberto Automaticamente',
+          templatesCount: result.templates.length,
+          source: 'discovered'
+        })
+
+        if (result.templates.length > 0) {
+          console.log(`✅ [${requestId}] Sucesso com Business ID descoberto: ${result.templates.length} templates`)
+          allTemplates = result.templates
+          workingBusinessId = discovery.businessId
+        }
+      }
+
+      // Adicionar todos os Business IDs testados durante a descoberta
+      if (discovery.strategies) {
+        discovery.strategies.forEach((strategy: any) => {
+          if (strategy.businessId && strategy.businessId !== discovery.businessId) {
+            discoveredBusinessIds.push({
+              id: strategy.businessId,
+              name: `Via ${strategy.name}`,
+              templatesCount: 0, // Não testamos templates nestes
+              source: 'strategy'
+            })
+          }
+        })
+      }
+    }
+
+    // Estratégia 4: Busca ampla em múltiplos Business IDs se ainda não encontrou
+    if (allTemplates.length === 0) {
+      console.log(`🔍 [${requestId}] Tentando busca ampla em múltiplos Business IDs...`)
+      
+      try {
+        // Buscar todos os businesses acessíveis
+        const businessResponse = await fetch(
+          `https://graph.facebook.com/v18.0/me/businesses?access_token=${config.access_token}`
+        )
+        
+        if (businessResponse.ok) {
+          const businessData = await businessResponse.json()
+          
+          if (businessData.data && businessData.data.length > 0) {
+            console.log(`🔍 [${requestId}] Encontrados ${businessData.data.length} Business IDs para testar`)
+            
+            // Testar cada Business ID
+            for (const business of businessData.data.slice(0, 5)) { // Máximo 5 para evitar timeout
+              if (business.id && !discoveredBusinessIds.find(b => b.id === business.id)) {
+                console.log(`🎯 [${requestId}] Testando Business ID da lista: ${business.id}`)
+                const result = await searchTemplatesInBusiness(config.access_token, business.id, filters, requestId)
+                
+                discoveredBusinessIds.push({
+                  id: business.id,
+                  name: business.name || 'Business Account',
+                  templatesCount: result.templates.length,
+                  source: 'business_list'
+                })
+
+                if (result.templates.length > 0 && allTemplates.length === 0) {
+                  console.log(`✅ [${requestId}] Sucesso com Business ID da lista: ${result.templates.length} templates`)
+                  allTemplates = result.templates
+                  workingBusinessId = business.id
+                }
+              }
+            }
+          }
+        }
+      } catch (error) {
+        console.log(`⚠️ [${requestId}] Erro na busca ampla:`, error.message)
+      }
+    }
+
+    // Calcular estatísticas
+    const stats = {
+      total: allTemplates.length,
+      approved: allTemplates.filter((t: any) => t.status === 'APPROVED').length,
+      pending: allTemplates.filter((t: any) => t.status === 'PENDING').length,
+      rejected: allTemplates.filter((t: any) => t.status === 'REJECTED').length
+    }
+
+    console.log(`✅ [${requestId}] Busca concluída:`, {
+      totalTemplates: allTemplates.length,
+      businessIdsTested: discoveredBusinessIds.length,
+      workingBusinessId
+    })
+
+    return new Response(
+      JSON.stringify({
+        success: true,
+        templates: allTemplates,
+        stats,
+        businessIds: discoveredBusinessIds,
+        workingBusinessId,
+        timestamp: new Date().toISOString(),
+        requestId
+      }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    )
+
+  } catch (error) {
+    console.error(`❌ [${requestId}] Erro na busca de templates:`, error)
+    return new Response(
+      JSON.stringify({
+        success: false,
+        error: error.message,
+        templates: [],
+        stats: { total: 0, approved: 0, pending: 0, rejected: 0 },
+        businessIds: [],
+        timestamp: new Date().toISOString(),
+        requestId
+      }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    )
+  }
+}
+
+// Função para buscar templates em um Business ID específico
+async function searchTemplatesInBusiness(accessToken: string, businessId: string, filters: any = {}, requestId: string) {
+  console.log(`📋 [${requestId}] Buscando templates no Business ID: ${businessId}`)
+  
+  try {
+    // Construir URL com filtros
+    let url = `https://graph.facebook.com/v18.0/${businessId}/message_templates?access_token=${accessToken}&limit=100`
+    
+    // Adicionar filtros se especificados
+    if (filters.status) {
+      url += `&status=${filters.status}`
+    }
+    if (filters.category) {
+      url += `&category=${filters.category}`
+    }
+
+    const response = await fetch(url)
+    
+    if (!response.ok) {
+      const errorData = await response.json()
+      console.log(`❌ [${requestId}] Erro na busca (${businessId}):`, errorData.error?.message)
+      return { templates: [], error: errorData.error?.message }
+    }
+
+    const data = await response.json()
+    let templates = data.data || []
+
+    // Aplicar filtro de busca por nome no cliente (pois a API não suporta)
+    if (filters.search) {
+      const searchLower = filters.search.toLowerCase()
+      templates = templates.filter((template: any) => 
+        template.name?.toLowerCase().includes(searchLower)
+      )
+    }
+
+    console.log(`✅ [${requestId}] Encontrados ${templates.length} templates no Business ID: ${businessId}`)
+    return { templates, error: null }
+
+  } catch (error) {
+    console.log(`❌ [${requestId}] Erro na busca no Business ID ${businessId}:`, error.message)
+    return { templates: [], error: error.message }
+  }
+}
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
       )
     }
