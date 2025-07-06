@@ -1,57 +1,57 @@
 
 export const chartTheme = {
   colors: {
-    primary: '#0ABAB5',
-    secondary: '#8B5CF6', 
-    success: '#10B981',
-    warning: '#F59E0B',
-    danger: '#EF4444',
-    info: '#3B82F6',
+    primary: 'hsl(var(--viverblue))',
+    secondary: 'hsl(262 83% 58%)', 
+    success: 'hsl(142 76% 36%)',
+    warning: 'hsl(48 96% 53%)',
+    danger: 'hsl(var(--destructive))',
+    info: 'hsl(221 83% 53%)',
     
-    // Paleta categórica expandida para dark mode
+    // Paleta categórica expandida usando design system
     categorical: [
-      '#0ABAB5', // Teal
-      '#8B5CF6', // Purple
-      '#10B981', // Green
-      '#F59E0B', // Amber
-      '#EF4444', // Red
-      '#3B82F6', // Blue
-      '#EC4899', // Pink
-      '#F97316', // Orange
-      '#06B6D4', // Cyan
-      '#8B5A2B'  // Brown
+      'hsl(var(--viverblue))', // Teal principal
+      'hsl(262 83% 58%)', // Purple
+      'hsl(142 76% 36%)', // Green
+      'hsl(48 96% 53%)', // Amber
+      'hsl(var(--destructive))', // Red
+      'hsl(221 83% 53%)', // Blue
+      'hsl(330 81% 60%)', // Pink
+      'hsl(25 95% 53%)', // Orange
+      'hsl(189 94% 43%)', // Cyan
+      'hsl(20 14% 29%)'  // Brown
     ],
 
-    // Gradientes para área charts (dark mode)
+    // Gradientes para área charts usando design system
     gradients: {
-      primary: ['#0ABAB5', '#0ABAB530'],
-      secondary: ['#8B5CF6', '#8B5CF630'],
-      success: ['#10B981', '#10B98130'],
-      warning: ['#F59E0B', '#F59E0B30'],
-      danger: ['#EF4444', '#EF444430'],
-      info: ['#3B82F6', '#3B82F630']
+      primary: ['hsl(var(--viverblue))', 'hsl(var(--viverblue) / 0.3)'],
+      secondary: ['hsl(262 83% 58%)', 'hsl(262 83% 58% / 0.3)'],
+      success: ['hsl(142 76% 36%)', 'hsl(142 76% 36% / 0.3)'],
+      warning: ['hsl(48 96% 53%)', 'hsl(48 96% 53% / 0.3)'],
+      danger: ['hsl(var(--destructive))', 'hsl(var(--destructive) / 0.3)'],
+      info: ['hsl(221 83% 53%)', 'hsl(221 83% 53% / 0.3)']
     }
   },
 
-  // Configurações de estilo para dark mode
+  // Configurações de estilo usando design system
   styles: {
     grid: {
       strokeDasharray: '3 3',
-      stroke: '#374151', // Dark grid lines
+      stroke: 'hsl(var(--border))',
       strokeOpacity: 0.3
     },
     
     axis: {
-      stroke: '#9CA3AF', // Lighter text for dark background
+      stroke: 'hsl(var(--muted-foreground))',
       fontSize: 12,
       fontFamily: 'Inter, sans-serif'
     },
 
     tooltip: {
-      backgroundColor: 'hsl(var(--card))', // Use CSS custom property
+      backgroundColor: 'hsl(var(--card))',
       border: '1px solid hsl(var(--border))',
       borderRadius: '8px',
-      boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.3)',
+      boxShadow: '0 4px 6px -1px hsl(var(--foreground) / 0.1)',
       padding: '12px',
       fontSize: '14px',
       color: 'hsl(var(--card-foreground))'

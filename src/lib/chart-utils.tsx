@@ -1,49 +1,48 @@
 
 import React from 'react';
-import { theme } from '@/lib/theme';
 
+// Cores usando variáveis CSS padronizadas
 export const chartColors = {
-  // Cores principais baseadas no tema
-  primary: theme.colors.primary,
-  primaryLight: theme.colors.primaryLight,
-  primaryDark: theme.colors.primaryDark,
-  secondary: theme.colors.secondary,
-  accent: theme.colors.accent,
-  success: theme.colors.success,
-  error: theme.colors.error,
-  warning: theme.colors.warning,
-  info: theme.colors.info,
+  // Cores principais baseadas no design system
+  primary: 'hsl(var(--viverblue))',
+  primaryLight: 'hsl(var(--viverblue-light))',
+  primaryDark: 'hsl(var(--viverblue-dark))',
+  secondary: 'hsl(var(--secondary))',
+  success: 'hsl(142 76% 36%)',
+  error: 'hsl(var(--destructive))',
+  warning: 'hsl(48 96% 53%)',
+  info: 'hsl(221 83% 53%)',
   
   // Paletas para diferentes tipos de dados
   categorical: [
-    theme.colors.primary,
-    theme.colors.accent,
-    theme.colors.secondary,
-    theme.colors.info,
-    theme.colors.success,
-    theme.colors.warning,
+    'hsl(var(--viverblue))',
+    'hsl(262 83% 58%)',
+    'hsl(142 76% 36%)',
+    'hsl(48 96% 53%)',
+    'hsl(var(--destructive))',
+    'hsl(221 83% 53%)',
   ],
   
   // Paleta para gráficos sequenciais
   sequential: [
-    theme.colors.primaryLight,
-    theme.colors.primary,
-    theme.colors.primaryDark,
+    'hsl(var(--viverblue-light))',
+    'hsl(var(--viverblue))',
+    'hsl(var(--viverblue-dark))',
   ],
   
   // Paleta para gráficos divergentes
   divergent: [
-    theme.colors.error,
-    theme.colors.warning,
-    theme.colors.success,
+    'hsl(var(--destructive))',
+    'hsl(48 96% 53%)',
+    'hsl(142 76% 36%)',
   ],
   
   // Gradientes para áreas
   areaGradient: {
     id: "areaGradient",
     colors: [
-      { offset: "0%", color: `${theme.colors.primary}50` },
-      { offset: "100%", color: `${theme.colors.primary}05` },
+      { offset: "0%", color: 'hsl(var(--viverblue) / 0.3)' },
+      { offset: "100%", color: 'hsl(var(--viverblue) / 0.05)' },
     ]
   },
   
@@ -51,8 +50,8 @@ export const chartColors = {
   barGradient: {
     id: "barGradient",
     colors: [
-      { offset: "0%", color: theme.colors.primary },
-      { offset: "100%", color: theme.colors.primaryLight },
+      { offset: "0%", color: 'hsl(var(--viverblue))' },
+      { offset: "100%", color: 'hsl(var(--viverblue-light))' },
     ]
   }
 };
@@ -60,7 +59,7 @@ export const chartColors = {
 export const chartConfig = {
   // Configurações globais de estilo para gráficos
   defaultProps: {
-    stroke: theme.colors.primary,
+    stroke: 'hsl(var(--viverblue))',
     strokeWidth: 2,
     animationDuration: 300,
     animationEasing: "ease-in-out",
@@ -80,8 +79,8 @@ export const chartConfig = {
   cardStyles: {
     shadowClass: "shadow-md hover:shadow-lg",
     transitionClass: "transition-all duration-300",
-    borderClass: "border border-gray-100 dark:border-gray-800",
-    glassClass: "bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm",
+    borderClass: "border border-border",
+    glassClass: "bg-card/80 backdrop-blur-sm",
   },
   
   // Formatadores específicos
@@ -116,25 +115,25 @@ export const getChartGradient = (id: string, colors: { offset: string, color: st
 
 // Estilos comuns para tooltips personalizados
 export const tooltipStyle = {
-  backgroundColor: 'rgba(255, 255, 255, 0.95)',
-  border: `1px solid ${theme.colors.borderLight}`,
+  backgroundColor: 'hsl(var(--card) / 0.95)',
+  border: '1px solid hsl(var(--border))',
   borderRadius: '6px',
-  boxShadow: '0 2px 10px rgba(0, 0, 0, 0.1)',
+  boxShadow: '0 2px 10px hsl(var(--foreground) / 0.1)',
   padding: '8px 12px',
   fontSize: '12px',
-  color: theme.colors.textPrimary,
+  color: 'hsl(var(--card-foreground))',
 };
 
 // Configurações específicas para diferentes tipos de gráficos
 export const chartTypeConfig = {
   area: {
-    stroke: theme.colors.primary,
+    stroke: 'hsl(var(--viverblue))',
     fill: `url(#${chartColors.areaGradient.id})`,
     activeDot: {
       r: 6,
-      stroke: theme.colors.primary,
+      stroke: 'hsl(var(--viverblue))',
       strokeWidth: 2,
-      fill: '#fff',
+      fill: 'hsl(var(--card))',
     }
   },
   bar: {

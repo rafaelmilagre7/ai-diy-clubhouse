@@ -53,49 +53,37 @@ export default {
 					DEFAULT: 'hsl(var(--card))',
 					foreground: 'hsl(var(--card-foreground))'
 				},
-                // VIVER DE IA colors com novo azul claro
+                // VIVER DE IA colors usando variáveis CSS
                 viverblue: {
-                    DEFAULT: '#00EAD9',
-                    light: '#6DF2E9',
-                    lighter: '#9FF7F2',
-                    dark: '#00BAB0',
-                    darker: '#008B84',
+                    DEFAULT: 'hsl(var(--viverblue))',
+                    light: 'hsl(var(--viverblue-light))',
+                    lighter: 'hsl(var(--viverblue-lighter))',
+                    dark: 'hsl(var(--viverblue-dark))',
+                    darker: 'hsl(var(--viverblue-darker))',
                 },
-                // Revenue track colors - enhanced
+                // Revenue track colors usando variáveis CSS
                 revenue: {
-                    DEFAULT: '#3949AB',
-                    light: '#7986CB',
-                    lighter: '#C5CAE9',
-                    dark: '#1A237E',
-                    darker: '#0D1642',
+                    DEFAULT: 'hsl(var(--revenue))',
+                    light: 'hsl(var(--revenue-light))',
+                    lighter: 'hsl(var(--revenue-lighter))',
+                    dark: 'hsl(var(--revenue-dark))',
+                    darker: 'hsl(var(--revenue-darker))',
                 },
-                // Operational track colors - substituindo o roxo por azul
+                // Operational track colors usando variáveis CSS
                 operational: {
-                    DEFAULT: '#0078B7',
-                    light: '#2D9CDB',
-                    lighter: '#BFE5FF',
-                    dark: '#005A8D',
-                    darker: '#004671',
+                    DEFAULT: 'hsl(var(--operational))',
+                    light: 'hsl(var(--operational-light))',
+                    lighter: 'hsl(var(--operational-lighter))',
+                    dark: 'hsl(var(--operational-dark))',
+                    darker: 'hsl(var(--operational-darker))',
                 },
-                // Strategy track colors - enhanced
+                // Strategy track colors usando variáveis CSS
                 strategy: {
-                    DEFAULT: '#00897B',
-                    light: '#4DB6AC',
-                    lighter: '#B2DFDB',
-                    dark: '#004D40',
-                    darker: '#002B23',
-                },
-                // Neutral palette melhorada para contraste - cores mais claras no dark mode
-                neutral: {
-                    100: '#F8FAFC',  // Muito claro para backgrounds light
-                    200: '#F1F5F9',  // Claro para backgrounds light
-                    300: '#E2E8F0',  // Texto muito claro no dark mode (substitui text-neutral-700)
-                    400: '#CBD5E1',  // Texto claro no dark mode (substitui text-neutral-600)
-                    500: '#94A3B8',  // Texto secundário no dark mode (substitui text-neutral-500) 
-                    600: '#64748B',  // Texto mais escuro, usar apenas em light mode
-                    700: '#475569',  // Apenas para light mode
-                    800: '#334155',  // Backgrounds escuros
-                    900: '#1E293B',  // Backgrounds muito escuros
+                    DEFAULT: 'hsl(var(--strategy))',
+                    light: 'hsl(var(--strategy-light))',
+                    lighter: 'hsl(var(--strategy-lighter))',
+                    dark: 'hsl(var(--strategy-dark))',
+                    darker: 'hsl(var(--strategy-darker))',
                 },
 			},
 			borderRadius: {
@@ -136,10 +124,10 @@ export default {
                 },
                 'pulse-glow': {
                     '0%, 100%': { 
-                        boxShadow: '0 0 0 0 rgba(0, 234, 217, 0.7)' 
+                        boxShadow: '0 0 0 0 hsl(var(--viverblue) / 0.7)' 
                     },
                     '50%': { 
-                        boxShadow: '0 0 20px 10px rgba(0, 234, 217, 0.4)' 
+                        boxShadow: '0 0 20px 10px hsl(var(--viverblue) / 0.4)' 
                     }
                 },
                 'fade-in': {
@@ -182,13 +170,13 @@ export default {
             backgroundImage: {
                 'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
                 'gradient-conic': 'conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))',
-                'gradient-viver': 'linear-gradient(135deg, #0ABAB5 0%, #6de2de 100%)',
-                'gradient-revenue': 'linear-gradient(135deg, #1A237E 0%, #3949AB 100%)',
-                'gradient-operational': 'linear-gradient(135deg, #4A148C 0%, #8E24AA 100%)',
-                'gradient-strategy': 'linear-gradient(135deg, #004D40 0%, #00897B 100%)',
-                'gradient-card': 'linear-gradient(135deg, #ffffff 0%, #f5f5f5 100%)',
-                'dot-pattern': 'radial-gradient(circle, #0ABAB5 1px, transparent 1px)',
-                'dot-pattern-dark': 'radial-gradient(circle, #00EAD9 1px, transparent 1px)',
+                'gradient-viver': 'linear-gradient(135deg, hsl(var(--viverblue)) 0%, hsl(var(--viverblue-light)) 100%)',
+                'gradient-revenue': 'linear-gradient(135deg, hsl(var(--revenue-dark)) 0%, hsl(var(--revenue)) 100%)',
+                'gradient-operational': 'linear-gradient(135deg, hsl(var(--operational-dark)) 0%, hsl(var(--operational)) 100%)',
+                'gradient-strategy': 'linear-gradient(135deg, hsl(var(--strategy-dark)) 0%, hsl(var(--strategy)) 100%)',
+                'gradient-card': 'linear-gradient(135deg, hsl(var(--card)) 0%, hsl(var(--muted)) 100%)',
+                'dot-pattern': 'radial-gradient(circle, hsl(var(--viverblue)) 1px, transparent 1px)',
+                'dot-pattern-dark': 'radial-gradient(circle, hsl(var(--viverblue-light)) 1px, transparent 1px)',
             },
             backgroundSize: {
                 '200': '200% 200%',
