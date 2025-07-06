@@ -4838,6 +4838,17 @@ export type Database = {
         }
         Returns: Json
       }
+      create_invite_hybrid: {
+        Args: {
+          p_email: string
+          p_role_id: string
+          p_phone?: string
+          p_expires_in?: unknown
+          p_notes?: string
+          p_channel_preference?: string
+        }
+        Returns: Json
+      }
       create_learning_certificate_if_eligible: {
         Args: { p_user_id: string; p_course_id: string }
         Returns: string
