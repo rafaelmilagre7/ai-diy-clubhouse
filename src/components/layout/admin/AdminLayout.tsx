@@ -115,7 +115,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
   // OTIMIZAÇÃO 7: Loading state otimista e menos complexo
   if (!isMounted || (isLoading && !forceReady && !optimisticLoad && retryCount < maxRetries)) {
     return (
-      <div className="flex min-h-screen w-full bg-background">
+      <div className="flex min-h-screen w-full bg-background dark">
         {isMobile && sidebarOpen && (
           <div 
             className="fixed inset-0 bg-black/50 z-40 md:hidden"
@@ -158,7 +158,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
   // OTIMIZAÇÃO 9: Renderização com verificações reduzidas
   if (forceReady || optimisticLoad || (!isLoading && user && isAdmin)) {
     return (
-      <div className="flex min-h-screen w-full bg-background">
+      <div className="flex min-h-screen w-full bg-background dark">
         {isMobile && sidebarOpen && (
           <div 
             className="fixed inset-0 bg-black/50 z-40 md:hidden"
