@@ -38,7 +38,7 @@ export const TableActions: React.FC<TableActionsProps> = ({
           <MoreVertical className="h-4 w-4" />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="bg-[#1A1E2E] border-neutral-700 text-white">
+      <DropdownMenuContent align="end" className="bg-popover border text-popover-foreground">
         <DropdownMenuItem className="hover:bg-neutral-800 text-white cursor-pointer" onClick={onEdit}>
           <FileEdit className="mr-2 h-4 w-4" />
           <span>Editar</span>

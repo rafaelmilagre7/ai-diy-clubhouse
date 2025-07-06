@@ -36,7 +36,7 @@ const TabNav = ({ activeTab, setActiveTab }: TabNavProps) => {
               <TabsTrigger
                 value={tab.id}
                 className={`flex items-center gap-2 ${
-                  activeTab === tab.id ? "bg-[#0ABAB5]/10 text-[#0ABAB5]" : ""
+                  activeTab === tab.id ? "bg-primary/10 text-primary" : ""
                 }`}
                 onClick={() => setActiveTab(tab.id)}
               >

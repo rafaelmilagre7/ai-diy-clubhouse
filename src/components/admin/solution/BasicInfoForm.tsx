@@ -51,7 +51,7 @@ const BasicInfoForm = ({
           <BasicInfoRightColumn form={form} difficulty={difficulty} />
         </div>
 
-        <Button type="submit" disabled={saving} className="bg-[#0ABAB5] hover:bg-[#0ABAB5]/90">
+        <Button type="submit" disabled={saving} className="bg-primary hover:bg-primary/90">
           {saving ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />

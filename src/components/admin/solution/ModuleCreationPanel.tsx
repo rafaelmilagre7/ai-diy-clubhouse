@@ -28,7 +28,7 @@ const ModuleCreationPanel: React.FC = () => {
         </Button>
         <Button 
           onClick={handleConfirmModuleCreation}
-          className="bg-[#0ABAB5] hover:bg-[#0ABAB5]/90"
+          className="bg-primary hover:bg-primary/90"
         >
           Criar Módulo
         </Button>

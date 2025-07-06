@@ -67,7 +67,7 @@ const NavigationButtons: React.FC<NavigationButtonsProps> = ({
         <Button
           onClick={handleNext}
           disabled={saving}
-          className="flex items-center bg-[#0ABAB5] hover:bg-[#0ABAB5]/90"
+          className="flex items-center bg-primary hover:bg-primary/90"
         >
           Próximo
           <ChevronRight className="w-4 h-4 ml-2" />

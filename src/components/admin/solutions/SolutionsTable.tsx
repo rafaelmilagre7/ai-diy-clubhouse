@@ -35,21 +35,21 @@ export const SolutionsTable: React.FC<SolutionsTableProps> = ({
 
   return (
     <Table className="border-collapse">
-      <TableHeader className="bg-[#151823]">
+      <TableHeader className="bg-card">
         <TableRow>
-          <TableHead className="text-white font-medium">Título</TableHead>
-          <TableHead className="text-white font-medium">Categoria</TableHead>
-          <TableHead className="text-white font-medium">Dificuldade</TableHead>
-          <TableHead className="text-white font-medium">Status</TableHead>
-          <TableHead className="text-white font-medium">Criada em</TableHead>
-          <TableHead className="text-right text-white font-medium">Ações</TableHead>
+          <TableHead className="text-card-foreground font-medium">Título</TableHead>
+          <TableHead className="text-card-foreground font-medium">Categoria</TableHead>
+          <TableHead className="text-card-foreground font-medium">Dificuldade</TableHead>
+          <TableHead className="text-card-foreground font-medium">Status</TableHead>
+          <TableHead className="text-card-foreground font-medium">Criada em</TableHead>
+          <TableHead className="text-right text-card-foreground font-medium">Ações</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
         {solutions.map((solution) => (
-          <TableRow key={solution.id} className="bg-[#1A1E2E] border-neutral-700">
-            <TableCell className="font-medium text-white">{solution.title}</TableCell>
-            <TableCell className="text-white">{getCategoryText(solution.category)}</TableCell>
+          <TableRow key={solution.id} className="bg-card border-border hover:bg-muted/50">
+            <TableCell className="font-medium text-card-foreground">{solution.title}</TableCell>
+            <TableCell className="text-card-foreground">{getCategoryText(solution.category)}</TableCell>
             <TableCell>
               <SolutionDifficultyBadge difficulty={solution.difficulty} />
             </TableCell>
@@ -59,7 +59,7 @@ export const SolutionsTable: React.FC<SolutionsTableProps> = ({
                 onToggle={() => handleTogglePublish(solution.id, solution.published)}
               />
             </TableCell>
-            <TableCell className="text-white">{formatDateDistance(solution.created_at)}</TableCell>
+            <TableCell className="text-card-foreground">{formatDateDistance(solution.created_at)}</TableCell>
             <TableCell className="text-right">
               <TableActions 
                 solutionId={solution.id} 

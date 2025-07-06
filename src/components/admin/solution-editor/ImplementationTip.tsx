@@ -32,11 +32,11 @@ const ImplementationTip: React.FC<ImplementationTipProps> = ({ currentStep }) =>
   };
 
   return (
-    <Card className="bg-gray-50">
+    <Card className="bg-muted">
       <CardContent className="p-4 flex items-center gap-3">
         <Eye className="h-5 w-5 text-muted-foreground" />
         <div>
-          <p className="text-sm font-medium mb-1">Dica de Implementação</p>
+          <p className="text-sm font-medium mb-1 text-foreground">Dica de Implementação</p>
           <p className="text-sm text-muted-foreground">
             {getTipContent(currentStep)}
           </p>
