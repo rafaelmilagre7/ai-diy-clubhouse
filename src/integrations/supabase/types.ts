@@ -4812,6 +4812,10 @@ export type Database = {
         Args: { p_token: string; p_user_id: string }
         Returns: Json
       }
+      complete_onboarding: {
+        Args: { p_user_id: string }
+        Returns: Json
+      }
       complete_onboarding_and_unlock_features: {
         Args: { p_user_id: string; p_onboarding_data: Json }
         Returns: Json

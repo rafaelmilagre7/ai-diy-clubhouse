@@ -65,20 +65,45 @@ const RegisterForm = ({ inviteToken, prefilledEmail }: RegisterFormProps = {}) =
       
       if (error) throw error;
       
-      // Se há um token de convite, marcar como usado após o cadastro bem-sucedido
+      // Se há um token de convite, aplicar usando a função do Supabase
       if (inviteToken && data.user) {
         try {
-          await supabase
-            .from('invites')
-            .update({ 
-              used_at: new Date().toISOString(),
-              used_by: data.user.id 
-            })
-            .eq('token', inviteToken);
+          const { data: inviteResult, error: inviteError } = await supabase.rpc('use_invite', {
+            invite_token: inviteToken,
+            user_id: data.user.id
+          });
+          
+          if (inviteError) {
+            console.error('Erro ao aplicar convite:', inviteError);
+            toast({
+              title: "Aviso",
+              description: "Conta criada, mas houve um problema ao aplicar o convite. Entre em contato com o suporte.",
+              variant: "destructive",
+            });
+          } else if (inviteResult?.status === 'success') {
+            toast({
+              title: "Convite aplicado!",
+              description: "Seu convite foi aplicado com sucesso. Redirecionando para o onboarding...",
+            });
+            
+            // Redirecionar para onboarding após sucesso
+            setTimeout(() => {
+              window.location.href = '/onboarding';
+            }, 2000);
+          }
         } catch (inviteError) {
-          console.warn('Erro ao marcar convite como usado:', inviteError);
-          // Não bloquear o fluxo se falhar ao marcar o convite
+          console.warn('Erro ao aplicar convite:', inviteError);
+          toast({
+            title: "Aviso",
+            description: "Conta criada, mas houve um problema ao aplicar o convite.",
+            variant: "destructive",
+          });
         }
+      } else {
+        // Se não há convite, redirecionar para dashboard
+        setTimeout(() => {
+          window.location.href = '/dashboard';
+        }, 2000);
       }
       
       toast({
