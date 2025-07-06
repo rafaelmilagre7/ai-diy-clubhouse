@@ -541,12 +541,89 @@ async function handleTemplatesSearch(parsed: any, requestId: string, corsHeaders
     }
     
     console.log(`📋 [${requestId}] Buscando templates para Business ID: ${businessId}`)
+    console.log(`📋 [${requestId}] Filtros aplicados:`, filters)
+    
+    // Buscar templates com a função melhorada
     const searchResult = await searchWhatsAppTemplates(config.access_token, businessId, filters)
+    
+    // Se não encontrar templates no Business ID principal, tentar descobrir outros
+    if (!searchResult.success || searchResult.templates.length === 0) {
+      console.log(`⚠️ [${requestId}] Nenhum template encontrado no Business ID ${businessId}, tentando descobrir outros...`)
+      
+      const multiDiscovery = await discoverMultipleBusinessIds(config.access_token)
+      console.log(`🔍 [${requestId}] Descobertos ${multiDiscovery.totalFound} Business IDs para testar`)
+      
+      // Testar templates em cada Business ID descoberto
+      const businessIdResults = []
+      
+      for (const altBusinessId of multiDiscovery.businessIds) {
+        console.log(`🧪 [${requestId}] Testando templates no Business ID: ${altBusinessId}`)
+        const altResult = await searchTemplatesForBusinessId(config.access_token, altBusinessId, {})
+        
+        businessIdResults.push({
+          businessId: altBusinessId,
+          success: altResult.success,
+          templatesCount: altResult.templates?.length || 0,
+          stats: altResult.stats,
+          error: altResult.error,
+          details: multiDiscovery.discoveryDetails.find(d => d.businessId === altBusinessId)
+        })
+        
+        // Se encontrar templates, usar este resultado
+        if (altResult.success && altResult.templates.length > 0) {
+          console.log(`✅ [${requestId}] Encontrados ${altResult.templates.length} templates no Business ID: ${altBusinessId}`)
+          
+          // Aplicar filtros se fornecidos
+          let filteredTemplates = altResult.templates
+          if (filters.status && filters.status !== 'ALL') {
+            filteredTemplates = filteredTemplates.filter(t => t.status === filters.status)
+          }
+          if (filters.name) {
+            filteredTemplates = filteredTemplates.filter(t => 
+              t.name.toLowerCase().includes(filters.name.toLowerCase())
+            )
+          }
+          
+          const enhancedResult = {
+            ...altResult,
+            templates: filteredTemplates,
+            stats: {
+              ...altResult.stats,
+              filtered: filteredTemplates.length
+            },
+            debug: {
+              originalBusinessId: businessId,
+              discoveredBusinessId: altBusinessId,
+              discoveryDetails: multiDiscovery.discoveryDetails,
+              businessIdResults,
+              filtersApplied: filters
+            },
+            requestId
+          }
+          
+          console.log(`✅ [${requestId}] Busca de templates concluída com Business ID alternativo`)
+          return new Response(
+            JSON.stringify(enhancedResult),
+            { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          )
+        }
+      }
+      
+      // Se ainda não encontrou templates, retornar resultado detalhado
+      searchResult.debug = {
+        ...searchResult.debug,
+        originalBusinessId: businessId,
+        discoveryAttempted: true,
+        discoveryDetails: multiDiscovery.discoveryDetails,
+        businessIdResults,
+        message: 'Nenhum template encontrado em nenhum Business ID descoberto'
+      }
+    }
     
     // Adicionar requestId ao resultado
     searchResult.requestId = requestId
     
-    console.log(`✅ [${requestId}] Busca de templates concluída com sucesso`)
+    console.log(`✅ [${requestId}] Busca de templates concluída`)
     return new Response(
       JSON.stringify(searchResult),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -569,56 +646,120 @@ async function handleTemplatesSearch(parsed: any, requestId: string, corsHeaders
   }
 }
 
-// Função para buscar templates do WhatsApp
+// Função melhorada para buscar templates do WhatsApp com descoberta automática
 async function searchWhatsAppTemplates(token: string, businessId: string, filters: any = {}) {
   console.log(`📋 Buscando templates para Business ID: ${businessId}`)
   
   try {
-    let url = `https://graph.facebook.com/v18.0/${businessId}/message_templates?limit=50`
+    // 1. Primeiro, testar se o Business ID tem templates
+    console.log(`🔍 Testando templates para Business ID: ${businessId}`)
     
-    // Aplicar filtros
-    if (filters.status) {
-      url += `&status=${filters.status}`
-    }
+    let url = `https://graph.facebook.com/v18.0/${businessId}/message_templates?limit=100`
     
-    if (filters.name) {
-      url += `&name=${encodeURIComponent(filters.name)}`
-    }
+    // Não aplicar filtros restritivos por padrão - buscar TODOS os templates primeiro
+    console.log(`📡 URL da requisição: ${url}`)
     
     const response = await fetch(url, {
       headers: { 'Authorization': `Bearer ${token}` }
     })
     
+    console.log(`📥 Status da resposta: ${response.status} ${response.statusText}`)
+    
     if (!response.ok) {
       const errorData = await response.json()
+      console.error(`❌ Erro da API Facebook:`, errorData)
+      
+      // Se falhar, tentar descobrir outros Business IDs
+      console.log(`🔍 Business ID ${businessId} falhou, tentando descobrir outros...`)
+      const discovery = await discoverMultipleBusinessIds(token)
+      
+      if (discovery.businessIds.length > 0) {
+        console.log(`🎯 Encontrados ${discovery.businessIds.length} Business IDs alternativos`)
+        
+        // Tentar cada Business ID encontrado
+        for (const altBusinessId of discovery.businessIds) {
+          if (altBusinessId !== businessId) {
+            console.log(`🔄 Tentando Business ID alternativo: ${altBusinessId}`)
+            const altResult = await searchTemplatesForBusinessId(token, altBusinessId, filters)
+            if (altResult.success && altResult.templates.length > 0) {
+              console.log(`✅ Sucesso com Business ID alternativo: ${altBusinessId}`)
+              return altResult
+            }
+          }
+        }
+      }
+      
       throw new Error(`Erro da API: ${errorData.error?.message || response.statusText}`)
     }
     
     const data = await response.json()
+    console.log(`📊 Resposta da API:`, {
+      total: data.data?.length || 0,
+      hasNext: !!data.paging?.next,
+      sampleTemplates: data.data?.slice(0, 3)?.map(t => ({ name: t.name, status: t.status, category: t.category }))
+    })
     
-    const templates = data.data || []
+    let templates = data.data || []
     
-    // Calcular estatísticas
-    const stats = {
-      total: templates.length,
-      approved: templates.filter(t => t.status === 'APPROVED').length,
-      pending: templates.filter(t => t.status === 'PENDING').length,
-      rejected: templates.filter(t => t.status === 'REJECTED').length,
-      categories: {
-        MARKETING: templates.filter(t => t.category === 'MARKETING').length,
-        UTILITY: templates.filter(t => t.category === 'UTILITY').length,
-        AUTHENTICATION: templates.filter(t => t.category === 'AUTHENTICATION').length
-      }
+    // Aplicar filtros DEPOIS de buscar todos os templates
+    if (filters.status && filters.status !== 'ALL') {
+      const originalCount = templates.length
+      templates = templates.filter(t => t.status === filters.status)
+      console.log(`🔍 Filtro por status '${filters.status}': ${originalCount} → ${templates.length}`)
     }
     
-    console.log(`📊 Templates encontrados: ${stats.total}`)
-    console.log(`📊 Estatísticas: ${stats.approved} aprovados, ${stats.pending} pendentes, ${stats.rejected} rejeitados`)
+    if (filters.name) {
+      const originalCount = templates.length
+      templates = templates.filter(t => 
+        t.name.toLowerCase().includes(filters.name.toLowerCase())
+      )
+      console.log(`🔍 Filtro por nome '${filters.name}': ${originalCount} → ${templates.length}`)
+    }
+    
+    if (filters.category && filters.category !== 'ALL') {
+      const originalCount = templates.length
+      templates = templates.filter(t => t.category === filters.category)
+      console.log(`🔍 Filtro por categoria '${filters.category}': ${originalCount} → ${templates.length}`)
+    }
+    
+    // Calcular estatísticas detalhadas
+    const allTemplates = data.data || []
+    const stats = {
+      total: allTemplates.length,
+      filtered: templates.length,
+      approved: allTemplates.filter(t => t.status === 'APPROVED').length,
+      pending: allTemplates.filter(t => t.status === 'PENDING').length,
+      rejected: allTemplates.filter(t => t.status === 'REJECTED').length,
+      categories: {
+        MARKETING: allTemplates.filter(t => t.category === 'MARKETING').length,
+        UTILITY: allTemplates.filter(t => t.category === 'UTILITY').length,
+        AUTHENTICATION: allTemplates.filter(t => t.category === 'AUTHENTICATION').length
+      },
+      byStatus: {},
+      templateNames: allTemplates.map(t => t.name)
+    }
+    
+    // Contar por status
+    allTemplates.forEach(t => {
+      stats.byStatus[t.status] = (stats.byStatus[t.status] || 0) + 1
+    })
+    
+    console.log(`📊 Templates encontrados: ${stats.total} total, ${stats.filtered} após filtros`)
+    console.log(`📊 Por status: ${stats.approved} aprovados, ${stats.pending} pendentes, ${stats.rejected} rejeitados`)
+    console.log(`📊 Nomes dos templates:`, stats.templateNames)
     
     return {
       success: true,
       businessId,
       templates,
       stats,
+      debug: {
+        url,
+        businessIdTested: businessId,
+        responseStatus: response.status,
+        filtersApplied: filters,
+        discoveryAttempted: false
+      },
       pagination: {
         hasNext: !!data.paging?.next,
         next: data.paging?.next,
@@ -632,10 +773,145 @@ async function searchWhatsAppTemplates(token: string, businessId: string, filter
     return {
       success: false,
       error: error.message,
+      businessId,
       templates: [],
       stats: { total: 0, approved: 0, pending: 0, rejected: 0 },
+      debug: {
+        businessIdTested: businessId,
+        errorDetails: error.message
+      },
       timestamp: new Date().toISOString()
     }
+  }
+}
+
+// Nova função para buscar templates em um Business ID específico
+async function searchTemplatesForBusinessId(token: string, businessId: string, filters: any = {}) {
+  try {
+    let url = `https://graph.facebook.com/v18.0/${businessId}/message_templates?limit=100`
+    
+    const response = await fetch(url, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    })
+    
+    if (!response.ok) {
+      const errorData = await response.json()
+      return {
+        success: false,
+        error: errorData.error?.message || response.statusText,
+        businessId,
+        templates: [],
+        stats: { total: 0, approved: 0, pending: 0, rejected: 0 }
+      }
+    }
+    
+    const data = await response.json()
+    const templates = data.data || []
+    
+    const stats = {
+      total: templates.length,
+      approved: templates.filter(t => t.status === 'APPROVED').length,
+      pending: templates.filter(t => t.status === 'PENDING').length,
+      rejected: templates.filter(t => t.status === 'REJECTED').length
+    }
+    
+    return {
+      success: true,
+      businessId,
+      templates,
+      stats,
+      timestamp: new Date().toISOString()
+    }
+    
+  } catch (error) {
+    return {
+      success: false,
+      error: error.message,
+      businessId,
+      templates: [],
+      stats: { total: 0, approved: 0, pending: 0, rejected: 0 }
+    }
+  }
+}
+
+// Nova função para descobrir múltiplos Business IDs
+async function discoverMultipleBusinessIds(token: string) {
+  console.log('🔍 Descobrindo múltiplos Business IDs...')
+  
+  const businessIds = new Set<string>()
+  const discoveryDetails = []
+  
+  const strategies = [
+    {
+      name: 'me/businesses', 
+      url: 'https://graph.facebook.com/v18.0/me/businesses?fields=id,name,verification_status'
+    },
+    {
+      name: 'me/accounts',
+      url: 'https://graph.facebook.com/v18.0/me/accounts?fields=id,name'
+    },
+    {
+      name: 'me (direct)',
+      url: 'https://graph.facebook.com/v18.0/me'
+    }
+  ]
+  
+  for (const strategy of strategies) {
+    try {
+      console.log(`🎯 Tentando estratégia: ${strategy.name}`)
+      
+      const response = await fetch(strategy.url, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+      
+      if (response.ok) {
+        const data = await response.json()
+        
+        if (strategy.name === 'me (direct)' && data.id) {
+          businessIds.add(data.id)
+          discoveryDetails.push({
+            strategy: strategy.name,
+            success: true,
+            businessId: data.id,
+            name: data.name || 'Direct User ID'
+          })
+        } else if (data.data && Array.isArray(data.data)) {
+          data.data.forEach((item: any) => {
+            if (item.id) {
+              businessIds.add(item.id)
+              discoveryDetails.push({
+                strategy: strategy.name,
+                success: true,
+                businessId: item.id,
+                name: item.name || 'Unknown'
+              })
+            }
+          })
+        }
+      } else {
+        discoveryDetails.push({
+          strategy: strategy.name,
+          success: false,
+          error: `${response.status} ${response.statusText}`
+        })
+      }
+    } catch (error) {
+      console.error(`❌ Erro em ${strategy.name}:`, error)
+      discoveryDetails.push({
+        strategy: strategy.name,
+        success: false,
+        error: error.message
+      })
+    }
+  }
+  
+  const businessIdsArray = Array.from(businessIds)
+  console.log(`📊 Descobertos ${businessIdsArray.length} Business IDs únicos:`, businessIdsArray)
+  
+  return {
+    businessIds: businessIdsArray,
+    discoveryDetails,
+    totalFound: businessIdsArray.length
   }
 }
 
