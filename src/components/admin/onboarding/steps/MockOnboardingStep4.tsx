@@ -132,37 +132,46 @@ const MockOnboardingStep4: React.FC<MockOnboardingStep4Props> = ({
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
           transition={{ delay: 0.2, type: "spring" }}
-          className="w-16 h-16 bg-viverblue/20 rounded-full flex items-center justify-center mx-auto mb-4"
+          className="w-20 h-20 bg-gradient-to-br from-viverblue/20 to-strategy/20 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg shadow-viverblue/25"
         >
-          <Target className="w-8 h-8 text-viverblue" />
+          <Target className="w-10 h-10 text-viverblue animate-pulse" />
         </motion.div>
-        <h2 className="text-2xl font-bold text-white mb-2">
-          Objetivos Estratégicos
+        <h2 className="text-3xl font-bold text-white mb-3 bg-gradient-to-r from-white to-viverblue-light bg-clip-text text-transparent">
+          Seus Objetivos de Impacto 🎯
         </h2>
-        <p className="text-slate-400">
-          Defina seus objetivos para criar uma estratégia de implementação personalizada
+        <p className="text-slate-300 text-lg">
+          ✨ Agora vamos definir exatamente onde você quer chegar com a IA
+        </p>
+        <p className="text-slate-400 text-sm mt-2">
+          💡 Cada objetivo que você compartilha molda suas recomendações personalizadas
         </p>
       </div>
 
       <div className="space-y-8">
         {/* Objetivos Principais */}
-        <Card className="p-6 bg-white/5 border-white/10 backdrop-blur-sm">
-          <div className="space-y-6">
-            <div className="flex items-center gap-3 mb-4">
-              <Target className="w-5 h-5 text-viverblue" />
-              <h3 className="text-lg font-semibold text-white">Objetivos Principais</h3>
+        <Card className="p-8 bg-gradient-to-br from-white/10 to-white/5 border border-viverblue/20 backdrop-blur-sm shadow-xl">
+          <div className="space-y-8">
+            <div className="flex items-center gap-4 mb-6">
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-viverblue to-viverblue-light flex items-center justify-center shadow-lg">
+                <Target className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <h3 className="text-xl font-bold text-white">Sua Meta Principal 🚀</h3>
+                <p className="text-slate-400 text-sm">O que mais te motiva a implementar IA?</p>
+              </div>
             </div>
 
-            <div className="space-y-2">
-              <Label className="text-slate-200 text-base font-medium">
-                Qual o principal objetivo da sua empresa com IA? *
+            <div className="space-y-4">
+              <Label className="text-slate-200 text-lg font-medium">
+                🎯 Qual resultado você mais deseja alcançar com IA? *
               </Label>
+              <p className="text-slate-400 text-sm">💡 Seja específico - isso me ajuda a priorizar suas recomendações</p>
               <Select 
                 value={data.mainObjective || ''} 
                 onValueChange={(value) => onUpdateData({ mainObjective: value })}
               >
-                <SelectTrigger className="bg-slate-800/50 border-slate-600 text-white focus:border-viverblue">
-                  <SelectValue placeholder="Selecione o objetivo estratégico principal" />
+                <SelectTrigger className="bg-slate-800/60 border-slate-500 text-white focus:border-viverblue hover:border-viverblue/50 transition-all duration-300 h-14">
+                  <SelectValue placeholder="🎯 Escolha sua meta de transformação..." />
                 </SelectTrigger>
                 <SelectContent className="bg-slate-800 border-slate-600 max-h-60">
                   {mainObjectives.map((objective) => (
@@ -177,16 +186,17 @@ const MockOnboardingStep4: React.FC<MockOnboardingStep4Props> = ({
               )}
             </div>
 
-            <div className="space-y-2">
-              <Label className="text-slate-200 text-base font-medium">
-                Qual área do negócio será impactada prioritariamente? *
+            <div className="space-y-4">
+              <Label className="text-slate-200 text-lg font-medium">
+                💼 Que área do seu negócio vai sentir o maior impacto? *
               </Label>
+              <p className="text-slate-400 text-sm">🔥 Vamos focar onde você pode gerar mais resultados</p>
               <Select 
                 value={data.areaToImpact || ''} 
                 onValueChange={(value) => onUpdateData({ areaToImpact: value })}
               >
-                <SelectTrigger className="bg-slate-800/50 border-slate-600 text-white focus:border-viverblue">
-                  <SelectValue placeholder="Selecione a área de negócio prioritária" />
+                <SelectTrigger className="bg-slate-800/60 border-slate-500 text-white focus:border-viverblue hover:border-viverblue/50 transition-all duration-300 h-14">
+                  <SelectValue placeholder="🚀 Selecione a área de maior impacto..." />
                 </SelectTrigger>
                 <SelectContent className="bg-slate-800 border-slate-600 max-h-60">
                   {businessAreas.map((area) => (

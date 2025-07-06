@@ -45,10 +45,23 @@ const MockOnboardingStep5: React.FC<MockOnboardingStep5Props> = ({
 
   return (
     <div className="space-y-6">
-      <div className="text-center space-y-2 mb-8">
-        <h2 className="text-2xl font-bold text-white">Personalização da Experiência</h2>
-        <p className="text-slate-300">
-          Configure suas preferências para uma experiência totalmente personalizada
+      <div className="text-center space-y-4 mb-10">
+        <motion.div
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          transition={{ delay: 0.2, type: "spring" }}
+          className="w-20 h-20 bg-gradient-to-br from-strategy/20 to-operational/20 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg shadow-strategy/25"
+        >
+          <Heart className="w-10 h-10 text-strategy animate-pulse" />
+        </motion.div>
+        <h2 className="text-3xl font-bold text-white mb-3 bg-gradient-to-r from-white to-strategy-light bg-clip-text text-transparent">
+          Sua Experiência Personalizada ✨
+        </h2>
+        <p className="text-slate-300 text-lg">
+          🎨 Vamos ajustar tudo para funcionar perfeitamente com seu estilo
+        </p>
+        <p className="text-slate-400 text-sm">
+          ⚡ Cada preferência torna sua jornada mais eficiente e prazerosa
         </p>
       </div>
 
@@ -59,18 +72,24 @@ const MockOnboardingStep5: React.FC<MockOnboardingStep5Props> = ({
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
         >
-          <Card className="p-6 bg-white/5 border-white/10 backdrop-blur-sm">
-            <div className="flex items-center gap-3 mb-6">
-              <Clock className="w-5 h-5 text-viverblue" />
-              <h3 className="text-lg font-semibold text-white">Disponibilidade & Horários</h3>
+          <Card className="p-8 bg-gradient-to-br from-white/10 to-white/5 border border-strategy/20 backdrop-blur-sm shadow-xl">
+            <div className="flex items-center gap-4 mb-8">
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-strategy to-strategy-light flex items-center justify-center shadow-lg">
+                <Clock className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <h3 className="text-xl font-bold text-white">Seu Tempo Disponível ⏰</h3>
+                <p className="text-slate-400 text-sm">Como você prefere organizar seu aprendizado?</p>
+              </div>
             </div>
 
             <div className="space-y-6">
               {/* Tempo Semanal */}
-              <div className="space-y-3">
-                <Label className="text-slate-200 font-medium text-base">
-                  Quanto tempo semanal está disponível para capacitação? *
+              <div className="space-y-4">
+                <Label className="text-slate-200 font-medium text-lg">
+                  ⚡ Quantas horas por semana você pode investir em seu crescimento? *
                 </Label>
+                <p className="text-slate-400 text-sm">🎯 Seja realista - qualidade supera quantidade sempre!</p>
                 <RadioGroup
                   value={data.weeklyLearningTime || ''}
                   onValueChange={(value) => handleRadioChange('weeklyLearningTime', value)}
