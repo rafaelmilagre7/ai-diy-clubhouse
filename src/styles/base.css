@@ -2,24 +2,24 @@
 
 :root {
   /* --- Design System Colors (HSL) - Dark Theme como padrão --- */
-  --background: 240 10% 3.9%;
+  --background: 216 28% 7%;
   --foreground: 0 0% 98%;
-  --card: 240 7% 8%;
+  --card: 217 32% 9%;
   --card-foreground: 0 0% 98%;
-  --popover: 240 7% 8%;
+  --popover: 217 32% 9%;
   --popover-foreground: 0 0% 98%;
   --primary: 173 100% 46%;
   --primary-foreground: 240 10% 3.9%;
-  --secondary: 240 7% 15%;
+  --secondary: 217 32% 12%;
   --secondary-foreground: 0 0% 98%;
-  --muted: 240 7% 15%;
+  --muted: 217 32% 12%;
   --muted-foreground: 240 4% 70%;
-  --accent: 240 7% 15%;
+  --accent: 217 32% 12%;
   --accent-foreground: 0 0% 98%;
   --destructive: 0 62.8% 30.6%;
   --destructive-foreground: 0 0% 98%;
-  --border: 240 7% 15%;
-  --input: 240 7% 15%;
+  --border: 217 32% 15%;
+  --input: 217 32% 12%;
   --ring: 173 100% 46%;
   --radius: 0.5rem;
 
@@ -50,12 +50,12 @@
   --strategy-darker: 174 100% 7%;
 
   /* --- Onboarding Specific --- */
-  --onboarding-bg: 240 10% 3.9%;
-  --onboarding-card: 240 7% 8%;
-  --onboarding-card-hover: 240 7% 12%;
+  --onboarding-bg: 216 28% 7%;
+  --onboarding-card: 217 32% 9%;
+  --onboarding-card-hover: 217 32% 12%;
   --onboarding-text: 0 0% 98%;
   --onboarding-text-muted: 240 4% 70%;
-  --onboarding-border: 240 7% 15%;
+  --onboarding-border: 217 32% 15%;
   --onboarding-accent: 173 100% 46%;
 
   /* --- Animations --- */
