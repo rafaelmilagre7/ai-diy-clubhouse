@@ -89,6 +89,26 @@ const RootRedirect = () => {
     return <Navigate to="/login" replace />;
   }
   
+  // Aguardando perfil
+  if (!profile && !forceRedirect) {
+    return <LoadingScreen message="Carregando seu perfil..." />;
+  }
+  
+  // VERIFICAÇÃO DO ONBOARDING - Prioridade máxima
+  if (profile && !profile.onboarding_completed && location.pathname !== '/onboarding') {
+    console.log("[ROOT-REDIRECT] Redirecionando para onboarding - usuário não completou");
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    return <Navigate to="/onboarding" replace />;
+  }
+  
+  // Se está na página de onboarding mas já completou, redireciona
+  if (profile && profile.onboarding_completed && location.pathname === '/onboarding') {
+    console.log("[ROOT-REDIRECT] Usuário já completou onboarding, redirecionando para dashboard");
+    const roleName = getUserRoleName(profile);
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    return <Navigate to={roleName === 'formacao' ? '/formacao' : '/dashboard'} replace />;
+  }
+  
   // Verificação de roles
   const roleName = getUserRoleName(profile);
   

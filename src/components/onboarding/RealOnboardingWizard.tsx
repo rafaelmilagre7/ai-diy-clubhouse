@@ -17,6 +17,7 @@ import { OnboardingProgress } from './OnboardingProgress';
 import { MotivationalMessage } from './components/MotivationalMessage';
 import { StepNavigation } from './components/StepNavigation';
 import { createProfileBadges } from './components/GamificationBadge';
+import { OnboardingCelebration } from './components/OnboardingCelebration';
 
 interface OnboardingData {
   user_id?: string;
@@ -56,6 +57,7 @@ export const RealOnboardingWizard: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isCompleting, setIsCompleting] = useState(false);
+  const [showCelebration, setShowCelebration] = useState(false);
 
   // Carregar dados existentes do onboarding
   useEffect(() => {
@@ -189,10 +191,8 @@ export const RealOnboardingWizard: React.FC = () => {
           description: "Seu onboarding foi concluído com sucesso!",
         });
 
-        // Redirecionar para dashboard após 2 segundos
-        setTimeout(() => {
-          navigate('/dashboard');
-        }, 2000);
+        // Mostrar celebração em vez de redirecionar diretamente
+        setShowCelebration(true);
       } else {
         throw new Error(data?.message || 'Erro desconhecido');
       }
@@ -207,6 +207,11 @@ export const RealOnboardingWizard: React.FC = () => {
     } finally {
       setIsCompleting(false);
     }
+  };
+
+  const handleCelebrationComplete = () => {
+    setShowCelebration(false);
+    navigate('/dashboard');
   };
 
   if (isLoading) {
@@ -306,6 +311,13 @@ export const RealOnboardingWizard: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Celebração de conclusão */}
+      <OnboardingCelebration
+        isVisible={showCelebration}
+        onComplete={handleCelebrationComplete}
+        userName={onboardingData.personal_info?.name || 'Aventureiro'}
+      />
     </div>
   );
 };
