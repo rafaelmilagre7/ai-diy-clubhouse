@@ -176,7 +176,7 @@ export const OnboardingStep5: React.FC<OnboardingStep5Props> = ({
             </motion.div>
           ))}
         </div>
-      </div>
+      </motion.div>
 
       {/* Timeline */}
       <motion.div

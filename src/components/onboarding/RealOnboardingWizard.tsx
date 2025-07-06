@@ -255,7 +255,15 @@ export const RealOnboardingWizard: React.FC = () => {
           <OnboardingProgress
             currentStep={currentStep}
             totalSteps={TOTAL_STEPS}
-            badges={badges}
+            stepTitles={[
+              'Informações Pessoais',
+              'Localização',
+              'Como nos encontrou',
+              'Contexto Empresarial',
+              'Objetivos',
+              'Finalização'
+            ]}
+            userData={onboardingData}
           />
         </div>
 
