@@ -116,18 +116,18 @@ const SimpleCreateInviteDialog = ({ roles, onInviteCreated }: SimpleCreateInvite
           Novo Convite
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
+      <DialogContent className="dark max-w-md max-h-[90vh] overflow-y-auto bg-gray-900 text-white border-gray-700">
         <form onSubmit={handleSubmit}>
           <DialogHeader className="pb-3">
-            <DialogTitle>Criar Convite</DialogTitle>
-            <DialogDescription className="text-sm">
+            <DialogTitle className="text-white">Criar Convite</DialogTitle>
+            <DialogDescription className="text-sm text-gray-300">
               Convide um novo usuário via email e/ou WhatsApp.
             </DialogDescription>
           </DialogHeader>
           
           <div className="space-y-3 py-2">
             <div className="space-y-1.5">
-              <Label htmlFor="email" className="text-sm">Email *</Label>
+              <Label htmlFor="email" className="text-sm text-white">Email *</Label>
               <Input
                 id="email"
                 type="email"
@@ -135,12 +135,12 @@ const SimpleCreateInviteDialog = ({ roles, onInviteCreated }: SimpleCreateInvite
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="h-9"
+                className="h-9 bg-gray-800 border-gray-700 text-white placeholder:text-gray-400"
               />
             </div>
 
             <div className="space-y-1.5">
-              <Label htmlFor="phone" className="text-sm">
+              <Label htmlFor="phone" className="text-sm text-white">
                 Telefone {(channelPreference === 'whatsapp' || channelPreference === 'both') && '*'}
               </Label>
               <Input
@@ -150,22 +150,22 @@ const SimpleCreateInviteDialog = ({ roles, onInviteCreated }: SimpleCreateInvite
                 value={phone}
                 onChange={handlePhoneChange}
                 maxLength={15}
-                className="h-9"
+                className="h-9 bg-gray-800 border-gray-700 text-white placeholder:text-gray-400"
               />
-              <p className="text-xs text-muted-foreground">
+              <p className="text-xs text-gray-400">
                 Necessário para WhatsApp
               </p>
             </div>
             
             <div className="space-y-1.5">
-              <Label htmlFor="role" className="text-sm">Papel *</Label>
+              <Label htmlFor="role" className="text-sm text-white">Papel *</Label>
               <Select value={roleId} onValueChange={setRoleId} required>
-                <SelectTrigger className="h-9">
-                  <SelectValue placeholder="Selecione o papel" />
+                <SelectTrigger className="h-9 bg-gray-800 border-gray-700 text-white">
+                  <SelectValue placeholder="Selecione o papel" className="text-gray-400" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-gray-800 border-gray-700">
                   {roles.map((role) => (
-                    <SelectItem key={role.id} value={role.id}>
+                    <SelectItem key={role.id} value={role.id} className="text-white hover:bg-gray-700">
                       {role.name}
                     </SelectItem>
                   ))}
@@ -174,16 +174,16 @@ const SimpleCreateInviteDialog = ({ roles, onInviteCreated }: SimpleCreateInvite
             </div>
 
             <div className="space-y-2">
-              <Label className="text-sm">Canal de Envio *</Label>
+              <Label className="text-sm text-white">Canal de Envio *</Label>
               <RadioGroup 
                 value={channelPreference} 
                 onValueChange={(value: 'email' | 'whatsapp' | 'both') => setChannelPreference(value)}
                 className="grid grid-cols-1 gap-1.5"
               >
                 {(['email', 'whatsapp', 'both'] as const).map((channel) => (
-                  <div key={channel} className="flex items-center space-x-2 border rounded-md p-2 hover:bg-muted/50">
-                    <RadioGroupItem value={channel} id={channel} />
-                    <Label htmlFor={channel} className="flex items-center gap-2 cursor-pointer flex-1 text-sm">
+                  <div key={channel} className="flex items-center space-x-2 border border-gray-700 rounded-md p-2 hover:bg-gray-800/50">
+                    <RadioGroupItem value={channel} id={channel} className="border-gray-700 text-white" />
+                    <Label htmlFor={channel} className="flex items-center gap-2 cursor-pointer flex-1 text-sm text-white">
                       {getChannelIcon(channel)}
                       <div>
                         <div className="font-medium">
@@ -198,40 +198,40 @@ const SimpleCreateInviteDialog = ({ roles, onInviteCreated }: SimpleCreateInvite
             
             <div className="grid grid-cols-2 gap-2">
               <div className="space-y-1.5">
-                <Label htmlFor="expiration" className="text-sm">Válido por</Label>
+                <Label htmlFor="expiration" className="text-sm text-white">Válido por</Label>
                 <Select value={expiration} onValueChange={setExpiration}>
-                  <SelectTrigger className="h-9">
+                  <SelectTrigger className="h-9 bg-gray-800 border-gray-700 text-white">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="1 day">1 dia</SelectItem>
-                    <SelectItem value="3 days">3 dias</SelectItem>
-                    <SelectItem value="7 days">7 dias</SelectItem>
-                    <SelectItem value="14 days">14 dias</SelectItem>
-                    <SelectItem value="30 days">30 dias</SelectItem>
+                  <SelectContent className="bg-gray-800 border-gray-700">
+                    <SelectItem value="1 day" className="text-white hover:bg-gray-700">1 dia</SelectItem>
+                    <SelectItem value="3 days" className="text-white hover:bg-gray-700">3 dias</SelectItem>
+                    <SelectItem value="7 days" className="text-white hover:bg-gray-700">7 dias</SelectItem>
+                    <SelectItem value="14 days" className="text-white hover:bg-gray-700">14 dias</SelectItem>
+                    <SelectItem value="30 days" className="text-white hover:bg-gray-700">30 dias</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
             </div>
             
             <div className="space-y-1.5">
-              <Label htmlFor="notes" className="text-sm">Observações (opcional)</Label>
+              <Label htmlFor="notes" className="text-sm text-white">Observações (opcional)</Label>
               <Textarea
                 id="notes"
                 placeholder="Informações extras..."
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 rows={2}
-                className="resize-none text-sm"
+                className="resize-none text-sm bg-gray-800 border-gray-700 text-white placeholder:text-gray-400"
               />
             </div>
           </div>
           
           <DialogFooter className="pt-3">
-            <Button type="button" variant="outline" onClick={() => setOpen(false)} className="h-9">
+            <Button type="button" variant="outline" onClick={() => setOpen(false)} className="h-9 border-gray-700 text-gray-300 hover:bg-gray-800 hover:text-white">
               Cancelar
             </Button>
-            <Button type="submit" disabled={isCreating} className="h-9">
+            <Button type="submit" disabled={isCreating} className="h-9 bg-blue-600 hover:bg-blue-700 text-white">
               {isCreating ? "Criando..." : "Criar Convite"}
             </Button>
           </DialogFooter>
