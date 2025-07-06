@@ -56,7 +56,7 @@ serve(async (req) => {
       to: formattedPhone,
       type: "template",
       template: {
-        name: "convite_acesso",
+        name: "convitevia",
         language: {
           code: "pt_BR"
         },

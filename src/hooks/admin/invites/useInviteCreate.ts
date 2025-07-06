@@ -139,37 +139,125 @@ const sendInviteNotification = async ({
       throw new Error('URL de convite inválida');
     }
 
-    // Chamar a edge function de envio de email (principal)
-    const { data, error } = await supabase.functions.invoke('send-invite-email', {
-      body: {
-        email,
-        inviteUrl,
-        roleName,
-        expiresAt,
-        senderName,
-        notes,
-        inviteId,
-        phone,
-        channelPreference,
-        forceResend: true
+    // Usar sistema híbrido baseado na preferência de canal
+    if (channelPreference === 'whatsapp' && phone) {
+      // Enviar apenas via WhatsApp
+      const { data, error } = await supabase.functions.invoke('send-whatsapp-invite', {
+        body: {
+          phone,
+          inviteUrl,
+          roleName,
+          expiresAt,
+          senderName,
+          notes,
+          inviteId
+        }
+      });
+
+      if (error) {
+        console.error("❌ [INVITE-SEND] Erro na função WhatsApp:", error);
+        throw error;
       }
-    });
 
-    if (error) {
-      console.error("❌ [INVITE-SEND] Erro na edge function:", error);
-      throw error;
+      if (!data.success) {
+        throw new Error(data.error || data.message || 'Erro no envio via WhatsApp');
+      }
+
+      return {
+        success: true,
+        method: 'whatsapp'
+      };
+    } else if (channelPreference === 'both' && phone) {
+      // Enviar via ambos os canais
+      let emailSuccess = false;
+      let whatsappSuccess = false;
+      let lastError = '';
+
+      // Tentar email primeiro
+      try {
+        const { data: emailData, error: emailError } = await supabase.functions.invoke('send-invite-email', {
+          body: {
+            email,
+            inviteUrl,
+            roleName,
+            expiresAt,
+            senderName,
+            notes,
+            inviteId,
+            forceResend: true
+          }
+        });
+
+        if (!emailError && emailData.success) {
+          emailSuccess = true;
+        } else {
+          lastError += `Email: ${emailData?.error || emailError?.message || 'Erro desconhecido'}; `;
+        }
+      } catch (err: any) {
+        lastError += `Email: ${err.message}; `;
+      }
+
+      // Tentar WhatsApp
+      try {
+        const { data: whatsappData, error: whatsappError } = await supabase.functions.invoke('send-whatsapp-invite', {
+          body: {
+            phone,
+            inviteUrl,
+            roleName,
+            expiresAt,
+            senderName,
+            notes,
+            inviteId
+          }
+        });
+
+        if (!whatsappError && whatsappData.success) {
+          whatsappSuccess = true;
+        } else {
+          lastError += `WhatsApp: ${whatsappData?.error || whatsappError?.message || 'Erro desconhecido'}`;
+        }
+      } catch (err: any) {
+        lastError += `WhatsApp: ${err.message}`;
+      }
+
+      if (!emailSuccess && !whatsappSuccess) {
+        throw new Error(`Falha em ambos os canais: ${lastError}`);
+      }
+
+      return {
+        success: true,
+        method: emailSuccess && whatsappSuccess ? 'email+whatsapp' : 
+                emailSuccess ? 'email' : 'whatsapp'
+      };
+    } else {
+      // Enviar apenas via email (padrão)
+      const { data, error } = await supabase.functions.invoke('send-invite-email', {
+        body: {
+          email,
+          inviteUrl,
+          roleName,
+          expiresAt,
+          senderName,
+          notes,
+          inviteId,
+          forceResend: true
+        }
+      });
+
+      if (error) {
+        console.error("❌ [INVITE-SEND] Erro na edge function:", error);
+        throw error;
+      }
+
+      if (!data.success) {
+        throw new Error(data.error || data.message || 'Erro no envio');
+      }
+
+      return {
+        success: true,
+        method: 'email'
+      };
     }
-
-    console.log("✅ [INVITE-SEND] Resposta da edge function:", data);
-
-    if (!data.success) {
-      throw new Error(data.error || data.message || 'Erro no envio');
-    }
-
-    return {
-      success: true,
-      method: data.method || 'email'
-    };
   } catch (err: any) {
     console.error('❌ [INVITE-SEND] Erro no envio:', err);
     return {
