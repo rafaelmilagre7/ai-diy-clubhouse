@@ -33,16 +33,51 @@ interface CreateInviteDialogProps {
 
 const CreateInviteDialog = ({ roles, onInviteCreated }: CreateInviteDialogProps) => {
   const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
   const [roleId, setRoleId] = useState("");
   const [notes, setNotes] = useState("");
   const [expiration, setExpiration] = useState("7 days");
+  const [channelPreference, setChannelPreference] = useState<'email' | 'whatsapp' | 'both'>('email');
   const [open, setOpen] = useState(false);
   const { createInvite, isCreating } = useInviteCreate();
   const { validationState, validateInviteData } = useInviteValidation();
 
+  const formatPhone = (value: string) => {
+    const numbers = value.replace(/\D/g, '');
+    if (numbers.length <= 11) {
+      return numbers.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
+    }
+    return value;
+  };
+
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const formatted = formatPhone(e.target.value);
+    setPhone(formatted);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    // Validações adicionais
+    if (!email || !roleId) {
+      toast.error("Email e papel são obrigatórios");
+      return;
+    }
+
+    if ((channelPreference === 'whatsapp' || channelPreference === 'both') && !phone) {
+      toast.error("Telefone é obrigatório para envio via WhatsApp");
+      return;
+    }
+
+    // Validar formato do telefone se fornecido
+    if (phone) {
+      const cleanPhone = phone.replace(/\D/g, '');
+      if (cleanPhone.length < 10 || cleanPhone.length > 11) {
+        toast.error("Formato de telefone inválido");
+        return;
+      }
+    }
+
     // Validar dados antes de enviar
     const validation = validateInviteData(email, roleId);
     if (!validation.isValid) {
@@ -59,12 +94,14 @@ const CreateInviteDialog = ({ roles, onInviteCreated }: CreateInviteDialogProps)
       });
     }
     
-    const result = await createInvite(email, roleId, notes, expiration);
+    const result = await createInvite(email, roleId, notes, expiration, phone, channelPreference);
     if (result) {
       setEmail("");
+      setPhone("");
       setRoleId("");
       setNotes("");
       setExpiration("7 days");
+      setChannelPreference('email');
       setOpen(false);
       onInviteCreated();
     }
@@ -123,6 +160,42 @@ const CreateInviteDialog = ({ roles, onInviteCreated }: CreateInviteDialogProps)
                   className="h-10 bg-gray-800 border-gray-700 text-white placeholder:text-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
               </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="channel" className="text-sm font-medium text-white">
+                  Canal de Envio *
+                </Label>
+                <Select value={channelPreference} onValueChange={(value: 'email' | 'whatsapp' | 'both') => setChannelPreference(value)}>
+                  <SelectTrigger id="channel" className="h-10 bg-gray-800 border-gray-700 text-white">
+                    <SelectValue placeholder="Como enviar o convite?" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-gray-800 border-gray-700">
+                    <SelectItem value="email" className="text-white hover:bg-gray-700">📧 Apenas Email</SelectItem>
+                    <SelectItem value="whatsapp" className="text-white hover:bg-gray-700">📱 Apenas WhatsApp</SelectItem>
+                    <SelectItem value="both" className="text-white hover:bg-gray-700">📧📱 Email + WhatsApp</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {(channelPreference === 'whatsapp' || channelPreference === 'both') && (
+                <div className="space-y-2">
+                  <Label htmlFor="phone" className="text-sm font-medium text-white">
+                    Telefone *
+                  </Label>
+                  <Input
+                    id="phone"
+                    type="tel"
+                    placeholder="(11) 99999-9999"
+                    value={phone}
+                    onChange={handlePhoneChange}
+                    required
+                    className="h-10 bg-gray-800 border-gray-700 text-white placeholder:text-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                  <p className="text-xs text-gray-400">
+                    Formato: (11) 99999-9999
+                  </p>
+                </div>
+              )}
               
               <div className="space-y-2">
                 <Label htmlFor="role" className="text-sm font-medium text-white">

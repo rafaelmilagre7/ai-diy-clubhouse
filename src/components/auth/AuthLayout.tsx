@@ -1,23 +1,33 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { toast } from "@/hooks/use-toast";
-import { motion } from "framer-motion";
-import { useNavigate } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/contexts/auth";
-import { useEffect } from "react";
+import SignUpForm from "./SignUpForm";
 
 const AuthLayout = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isSignUp, setIsSignUp] = useState(false);
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { user, profile, isAdmin } = useAuth();
+
+  // Verificar se há token de convite na URL para mostrar registro
+  useEffect(() => {
+    const token = searchParams.get('token');
+    if (token) {
+      setIsSignUp(true);
+    }
+  }, [searchParams]);
 
   // CORREÇÃO CRÍTICA 1: Verificar se usuário já está logado e redirecionar
   useEffect(() => {
@@ -140,88 +150,111 @@ const AuthLayout = () => {
           </p>
         </div>
 
-        {/* Card de Login */}
-        <div className="bg-gray-800 border border-gray-700 rounded-lg shadow-xl p-6 mb-8">
-          <div className="text-center pb-4">
-            <h2 className="text-2xl text-white mb-2">
-              Acesse sua conta
-            </h2>
-            <p className="text-gray-300">
-              Entre para acessar suas soluções de IA exclusivas
-            </p>
-          </div>
-          
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="email" className="text-gray-200">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="seu@email.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                disabled={isLoading}
-                required
-                className="bg-gray-700 border-gray-600 text-white placeholder-gray-400 focus:ring-blue-500 focus:border-blue-500"
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="password" className="text-gray-200">Senha</Label>
-                <Button
-                  type="button"
-                  variant="link"
-                  onClick={() => console.log("[AUTH-LAYOUT] Reset password clicked")}
-                  className="text-xs text-blue-400 hover:text-blue-300 p-0 h-auto"
-                >
-                  Esqueceu a senha?
-                </Button>
+        {/* Card de Login/Registro */}
+        <AnimatePresence mode="wait">
+          {!isSignUp ? (
+            <motion.div
+              key="login"
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 20 }}
+              className="bg-gray-800 border border-gray-700 rounded-lg shadow-xl p-6 mb-8"
+            >
+              <div className="text-center pb-4">
+                <h2 className="text-2xl text-white mb-2">
+                  Acesse sua conta
+                </h2>
+                <p className="text-gray-300">
+                  Entre para acessar suas soluções de IA exclusivas
+                </p>
               </div>
-              <div className="relative">
-                <Input
-                  id="password"
-                  type={showPassword ? "text" : "password"}
-                  placeholder="********"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  disabled={isLoading}
-                  required
-                  className="bg-gray-700 border-gray-600 text-white placeholder-gray-400 focus:ring-blue-500 focus:border-blue-500"
-                />
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent text-gray-400 hover:text-gray-300"
-                  onClick={() => setShowPassword(!showPassword)}
+              
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="email" className="text-gray-200">Email</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="seu@email.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    disabled={isLoading}
+                    required
+                    className="bg-gray-700 border-gray-600 text-white placeholder-gray-400 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="password" className="text-gray-200">Senha</Label>
+                    <Button
+                      type="button"
+                      variant="link"
+                      onClick={() => console.log("[AUTH-LAYOUT] Reset password clicked")}
+                      className="text-xs text-blue-400 hover:text-blue-300 p-0 h-auto"
+                    >
+                      Esqueceu a senha?
+                    </Button>
+                  </div>
+                  <div className="relative">
+                    <Input
+                      id="password"
+                      type={showPassword ? "text" : "password"}
+                      placeholder="********"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      disabled={isLoading}
+                      required
+                      className="bg-gray-700 border-gray-600 text-white placeholder-gray-400 focus:ring-blue-500 focus:border-blue-500"
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent text-gray-400 hover:text-gray-300"
+                      onClick={() => setShowPassword(!showPassword)}
+                      disabled={isLoading}
+                    >
+                      {showPassword ? (
+                        <EyeOff className="h-4 w-4" />
+                      ) : (
+                        <Eye className="h-4 w-4" />
+                      )}
+                    </Button>
+                  </div>
+                </div>
+
+                <Button 
+                  type="submit" 
+                  className="w-full bg-cyan-500 hover:bg-cyan-600 text-white font-semibold uppercase tracking-wide" 
                   disabled={isLoading}
                 >
-                  {showPassword ? (
-                    <EyeOff className="h-4 w-4" />
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Entrando...
+                    </>
                   ) : (
-                    <Eye className="h-4 w-4" />
+                    "ENTRAR"
                   )}
                 </Button>
-              </div>
-            </div>
 
-            <Button 
-              type="submit" 
-              className="w-full bg-cyan-500 hover:bg-cyan-600 text-white font-semibold uppercase tracking-wide" 
-              disabled={isLoading}
-            >
-              {isLoading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Entrando...
-                </>
-              ) : (
-                "ENTRAR"
-              )}
-            </Button>
-          </form>
-        </div>
+                {/* Botão para registro */}
+                <Button 
+                  type="button" 
+                  variant="ghost"
+                  className="w-full text-gray-300 hover:text-white"
+                  onClick={() => setIsSignUp(true)}
+                  disabled={isLoading}
+                >
+                  Não tenho conta - Criar conta
+                </Button>
+              </form>
+            </motion.div>
+          ) : (
+            <SignUpForm onBackToLogin={() => setIsSignUp(false)} />
+          )}
+        </AnimatePresence>
 
         {/* Seção Inferior - Acesso Exclusivo */}
         <div className="text-center bg-gray-800/50 border border-gray-700/50 rounded-lg p-4">
