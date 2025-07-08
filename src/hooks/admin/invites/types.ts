@@ -50,4 +50,5 @@ export interface WhatsAppInviteData {
   senderName?: string;
   notes?: string;
   inviteId?: string;
+  email?: string;
 }

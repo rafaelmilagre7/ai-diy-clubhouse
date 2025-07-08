@@ -15,6 +15,7 @@ interface WhatsAppInviteRequest {
   senderName?: string;
   notes?: string;
   inviteId?: string;
+  email?: string;
 }
 
 serve(async (req) => {
@@ -28,11 +29,12 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    const { phone, inviteUrl, roleName, expiresAt, senderName, notes, inviteId }: WhatsAppInviteRequest = await req.json()
+    const { phone, inviteUrl, roleName, expiresAt, senderName, notes, inviteId, email }: WhatsAppInviteRequest = await req.json()
 
     console.log('📱 [WHATSAPP] Iniciando envio de convite para:', phone?.substring(0, 5) + '***')
     console.log('📱 [WHATSAPP] URL do convite:', inviteUrl)
     console.log('📱 [WHATSAPP] Role:', roleName)
+    console.log('📱 [WHATSAPP] Email:', email?.substring(0, 5) + '***')
 
     // Validar dados obrigatórios
     if (!phone || !inviteUrl) {
@@ -53,7 +55,12 @@ serve(async (req) => {
 
     console.log('📱 [WHATSAPP] Telefone formatado:', formattedPhone)
 
-    // Dados para o template do WhatsApp
+    // Extrair nome do email ou usar um padrão
+    const userName = senderName || (email ? email.split('@')[0].replace(/[._-]/g, ' ').trim() : 'Novo Membro')
+    
+    console.log('📱 [WHATSAPP] Nome do usuário para template:', userName)
+
+    // Dados para o template do WhatsApp (template "convitevia" precisa de 2 parâmetros)
     const templateData = {
       messaging_product: "whatsapp",
       to: formattedPhone,
@@ -69,6 +76,10 @@ serve(async (req) => {
             parameters: [
               {
                 type: "text",
+                text: userName
+              },
+              {
+                type: "text", 
                 text: inviteUrl
               }
             ]

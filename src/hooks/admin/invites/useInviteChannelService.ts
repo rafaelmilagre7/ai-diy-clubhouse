@@ -84,7 +84,8 @@ export function useInviteChannelService() {
     expiresAt,
     senderName,
     notes,
-    inviteId
+    inviteId,
+    email
   }: WhatsAppInviteData): Promise<SendInviteResponse> => {
     try {
       console.log("📱 Enviando WhatsApp para:", phone);
@@ -97,7 +98,8 @@ export function useInviteChannelService() {
           expiresAt,
           senderName,
           notes,
-          inviteId
+          inviteId,
+          email
         }
       });
       
@@ -187,7 +189,8 @@ export function useInviteChannelService() {
           expiresAt,
           senderName,
           notes,
-          inviteId
+          inviteId,
+          email
         });
 
         if (!whatsappResult.success) {
