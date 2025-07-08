@@ -84,7 +84,7 @@ const InvitePage = () => {
 
   if (showRegisterForm && validationResult.invite) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-background via-background to-viverblue/5">
+      <div className="min-h-screen bg-background">
         <div className="container mx-auto px-4 py-8">
           <div className="max-w-6xl mx-auto">
             <div className="grid lg:grid-cols-2 gap-12 items-center">
@@ -95,7 +95,7 @@ const InvitePage = () => {
               
               {/* Register Form */}
               <div className="order-1 lg:order-2">
-                <div className="bg-card/80 backdrop-blur-sm border border-border rounded-2xl p-8 shadow-xl">
+                <div className="bg-card border border-border rounded-lg p-8 shadow-lg">
                   <ModernRegisterForm 
                     inviteToken={token}
                     prefilledEmail={validationResult.invite.email}

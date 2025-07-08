@@ -114,12 +114,12 @@ const ModernRegisterForm: React.FC<ModernRegisterFormProps> = ({
   if (step === 'success') {
     return (
       <div className="text-center space-y-6 py-8">
-        <div className="w-16 h-16 bg-viverblue/10 rounded-full flex items-center justify-center mx-auto animate-scale-in">
-          <CheckCircle className="h-8 w-8 text-viverblue" />
+        <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto animate-scale-in">
+          <CheckCircle className="h-8 w-8 text-primary" />
         </div>
         
         <div className="space-y-2">
-          <h3 className="font-heading text-2xl font-bold text-viverblue">
+          <h3 className="font-heading text-2xl font-bold text-primary">
             Conta criada com sucesso!
           </h3>
           <p className="text-muted-foreground">
@@ -127,8 +127,8 @@ const ModernRegisterForm: React.FC<ModernRegisterFormProps> = ({
           </p>
         </div>
 
-        <div className="bg-viverblue/5 border border-viverblue/20 rounded-lg p-4">
-          <p className="text-sm font-medium text-viverblue mb-2">Próximos passos:</p>
+        <div className="bg-primary/5 border border-primary/20 rounded-lg p-4">
+          <p className="text-sm font-medium text-primary mb-2">Próximos passos:</p>
           <ul className="text-sm text-muted-foreground space-y-1">
             <li>• Confirme seu e-mail</li>
             <li>• Complete seu perfil</li>
@@ -162,7 +162,7 @@ const ModernRegisterForm: React.FC<ModernRegisterFormProps> = ({
               placeholder="Seu nome completo"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="pl-10 h-12 bg-background border-border focus:border-viverblue focus:ring-viverblue"
+              className="pl-10 h-12"
             />
           </div>
         </div>
@@ -181,7 +181,7 @@ const ModernRegisterForm: React.FC<ModernRegisterFormProps> = ({
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               disabled={!!prefilledEmail}
-              className="pl-10 h-12 bg-background border-border focus:border-viverblue focus:ring-viverblue disabled:opacity-50"
+              className="pl-10 h-12"
             />
           </div>
         </div>
@@ -199,7 +199,7 @@ const ModernRegisterForm: React.FC<ModernRegisterFormProps> = ({
               placeholder="Crie uma senha forte"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="pl-10 pr-10 h-12 bg-background border-border focus:border-viverblue focus:ring-viverblue"
+              className="pl-10 pr-10 h-12"
             />
             <button
               type="button"
@@ -238,7 +238,7 @@ const ModernRegisterForm: React.FC<ModernRegisterFormProps> = ({
 
         <Button
           type="submit"
-          className="w-full h-12 bg-viverblue hover:bg-viverblue-dark text-white font-medium transition-all duration-200 group"
+          className="w-full h-12 font-medium transition-all duration-200 group"
           disabled={isLoading || !isPasswordValid}
         >
           {isLoading ? (
@@ -255,9 +255,9 @@ const ModernRegisterForm: React.FC<ModernRegisterFormProps> = ({
       <div className="text-center">
         <p className="text-xs text-muted-foreground">
           Ao criar sua conta, você concorda com nossos{" "}
-          <a href="#" className="text-viverblue hover:underline">Termos de Uso</a>
+          <a href="#" className="text-primary hover:underline">Termos de Uso</a>
           {" "}e{" "}
-          <a href="#" className="text-viverblue hover:underline">Política de Privacidade</a>
+          <a href="#" className="text-primary hover:underline">Política de Privacidade</a>
         </p>
       </div>
     </div>

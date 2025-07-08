@@ -81,21 +81,21 @@ const InviteErrorState: React.FC<InviteErrorStateProps> = ({
   const IconComponent = errorConfig.icon;
 
   return (
-    <div className={`min-h-screen bg-gradient-to-br ${errorConfig.bgColor} flex items-center justify-center p-4`}>
+    <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <div className="w-full max-w-lg">
-        <div className="bg-white/80 backdrop-blur-sm border border-gray-200 rounded-2xl p-8 shadow-xl">
+        <div className="bg-card border border-border rounded-lg p-8 shadow-lg">
           <div className="text-center space-y-6">
             {/* Error Icon */}
-            <div className={`w-16 h-16 ${errorConfig.iconBg} rounded-full flex items-center justify-center mx-auto`}>
-              <IconComponent className={`h-8 w-8 ${errorConfig.iconColor}`} />
+            <div className="w-16 h-16 bg-destructive/10 rounded-full flex items-center justify-center mx-auto">
+              <IconComponent className="h-8 w-8 text-destructive" />
             </div>
 
             {/* Error Title */}
             <div className="space-y-2">
-              <h2 className={`font-heading text-2xl font-bold ${errorConfig.color}`}>
+              <h2 className="font-heading text-2xl font-bold text-destructive">
                 {errorConfig.title}
               </h2>
-              <p className="text-gray-600">
+              <p className="text-muted-foreground">
                 Não foi possível processar seu convite
               </p>
             </div>
@@ -109,15 +109,15 @@ const InviteErrorState: React.FC<InviteErrorStateProps> = ({
 
             {/* Suggestions */}
             {suggestions.length > 0 && (
-              <div className="bg-gray-50 rounded-lg p-4 text-left">
+              <div className="bg-muted/50 rounded-lg p-4 text-left">
                 <div className="flex items-start gap-2">
-                  <HelpCircle className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
+                  <HelpCircle className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
                   <div>
-                    <h4 className="font-medium text-gray-900 mb-2">O que você pode fazer:</h4>
-                    <ul className="text-sm text-gray-600 space-y-1">
+                    <h4 className="font-medium text-foreground mb-2">O que você pode fazer:</h4>
+                    <ul className="text-sm text-muted-foreground space-y-1">
                       {suggestions.map((suggestion, index) => (
                         <li key={index} className="flex items-start gap-2">
-                          <span className="text-blue-600">•</span>
+                          <span className="text-primary">•</span>
                           <span>{suggestion}</span>
                         </li>
                       ))}
@@ -133,7 +133,7 @@ const InviteErrorState: React.FC<InviteErrorStateProps> = ({
                 <Button 
                   onClick={onLogout} 
                   variant="outline" 
-                  className="w-full h-12 border-orange-200 text-orange-700 hover:bg-orange-50"
+                  className="w-full h-12"
                 >
                   <RefreshCw className="mr-2 h-4 w-4" />
                   Fazer Logout e Tentar Novamente
@@ -153,7 +153,7 @@ const InviteErrorState: React.FC<InviteErrorStateProps> = ({
 
               <Button 
                 onClick={() => navigate('/auth')} 
-                className="w-full h-12 bg-viverblue hover:bg-viverblue-dark"
+                className="w-full h-12"
               >
                 <Home className="mr-2 h-4 w-4" />
                 Ir para Login
@@ -161,14 +161,14 @@ const InviteErrorState: React.FC<InviteErrorStateProps> = ({
             </div>
 
             {/* Support */}
-            <div className="text-center pt-4 border-t border-gray-200">
-              <p className="text-xs text-gray-500 mb-2">
+            <div className="text-center pt-4 border-t border-border">
+              <p className="text-xs text-muted-foreground mb-2">
                 Precisa de ajuda?
               </p>
               <Button 
                 variant="ghost" 
                 size="sm" 
-                className="text-viverblue hover:text-viverblue-dark hover:bg-viverblue/5"
+                className="text-primary hover:text-primary/80"
               >
                 <HelpCircle className="mr-2 h-3 w-3" />
                 Falar com Suporte

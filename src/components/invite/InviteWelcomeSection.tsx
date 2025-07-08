@@ -37,13 +37,13 @@ const InviteWelcomeSection: React.FC<InviteWelcomeSectionProps> = ({ inviteData 
   return (
     <div className="space-y-8">
       {/* Header Section */}
-      <div className="text-center space-y-4">
-        <div className="inline-flex items-center gap-2 px-4 py-2 bg-viverblue/10 border border-viverblue/20 rounded-full text-sm font-medium text-viverblue mb-4">
+      <div className="text-center space-y-6">
+        <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 border border-primary/20 rounded-full text-sm font-medium text-primary mb-4">
           <Sparkles className="h-4 w-4" />
           Convite Especial
         </div>
         
-        <h1 className="font-heading text-4xl md:text-5xl font-bold bg-gradient-to-r from-viverblue to-viverblue-light bg-clip-text text-transparent">
+        <h1 className="font-heading text-4xl md:text-5xl font-bold text-foreground mb-4">
           Bem-vindo ao futuro dos negócios
         </h1>
         
@@ -51,11 +51,11 @@ const InviteWelcomeSection: React.FC<InviteWelcomeSectionProps> = ({ inviteData 
           Você foi convidado para fazer parte da comunidade mais inovadora de IA empresarial do Brasil
         </p>
 
-        <div className="bg-card/50 border border-border rounded-lg p-4 max-w-md mx-auto">
-          <p className="text-sm text-muted-foreground mb-1">Convite para:</p>
-          <p className="font-semibold text-lg text-viverblue">{inviteData.email}</p>
+        <div className="bg-card border border-border rounded-lg p-6 max-w-md mx-auto">
+          <p className="text-sm text-muted-foreground mb-2">Convite para:</p>
+          <p className="font-semibold text-lg text-primary">{inviteData.email}</p>
           {inviteData.role && (
-            <p className="text-sm text-muted-foreground mt-1">
+            <p className="text-sm text-muted-foreground mt-2">
               Função: <span className="text-foreground font-medium">{inviteData.role.name}</span>
             </p>
           )}
@@ -67,14 +67,14 @@ const InviteWelcomeSection: React.FC<InviteWelcomeSectionProps> = ({ inviteData 
         {features.map((feature, index) => (
           <div 
             key={index}
-            className="group bg-card/30 border border-border rounded-xl p-6 hover:bg-card/50 transition-all duration-300 hover:shadow-lg hover:shadow-viverblue/10"
+            className="group bg-card border border-border rounded-lg p-6 hover:bg-accent transition-all duration-200"
           >
             <div className="flex items-start gap-4">
-              <div className="flex-shrink-0 w-12 h-12 bg-viverblue/10 rounded-lg flex items-center justify-center group-hover:bg-viverblue/20 transition-colors">
-                <feature.icon className="h-6 w-6 text-viverblue" />
+              <div className="flex-shrink-0 w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center group-hover:bg-primary/20 transition-colors">
+                <feature.icon className="h-6 w-6 text-primary" />
               </div>
               <div>
-                <h3 className="font-heading font-semibold text-lg mb-2">{feature.title}</h3>
+                <h3 className="font-heading font-semibold text-lg mb-2 text-foreground">{feature.title}</h3>
                 <p className="text-muted-foreground">{feature.description}</p>
               </div>
             </div>
@@ -83,18 +83,18 @@ const InviteWelcomeSection: React.FC<InviteWelcomeSectionProps> = ({ inviteData 
       </div>
 
       {/* Stats Section */}
-      <div className="bg-gradient-to-r from-viverblue/5 to-transparent border border-viverblue/20 rounded-xl p-8">
+      <div className="bg-gradient-to-r from-primary/5 to-transparent border border-primary/20 rounded-lg p-8">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
           <div>
-            <div className="text-3xl font-bold text-viverblue mb-2">500+</div>
+            <div className="text-3xl font-bold text-primary mb-2">500+</div>
             <div className="text-muted-foreground">Empresas Transformadas</div>
           </div>
           <div>
-            <div className="text-3xl font-bold text-viverblue mb-2">98%</div>
+            <div className="text-3xl font-bold text-primary mb-2">98%</div>
             <div className="text-muted-foreground">Taxa de Sucesso</div>
           </div>
           <div>
-            <div className="text-3xl font-bold text-viverblue mb-2">2M+</div>
+            <div className="text-3xl font-bold text-primary mb-2">2M+</div>
             <div className="text-muted-foreground">Em Receita Gerada</div>
           </div>
         </div>
