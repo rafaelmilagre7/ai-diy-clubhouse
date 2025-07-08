@@ -78,15 +78,15 @@ serve(async (req) => {
     }
 
     // Enviar via WhatsApp Business API
-    const whatsappToken = Deno.env.get('WHATSAPP_ACCESS_TOKEN')
-    const phoneNumberId = Deno.env.get('WHATSAPP_PHONE_NUMBER_ID')
+    const whatsappToken = Deno.env.get('WHATSAPP_BUSINESS_TOKEN')
+    const phoneNumberId = Deno.env.get('WHATSAPP_BUSINESS_PHONE_ID')
 
     if (!whatsappToken || !phoneNumberId) {
       console.error('❌ [WHATSAPP] Credenciais não configuradas:', { 
         hasToken: !!whatsappToken, 
         hasPhoneId: !!phoneNumberId 
       })
-      throw new Error('Credenciais do WhatsApp não configuradas')
+      throw new Error('Credenciais do WhatsApp Business não configuradas')
     }
 
     console.log('📱 [WHATSAPP] Enviando template via API...')
