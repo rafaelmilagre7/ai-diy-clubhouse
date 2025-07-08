@@ -163,6 +163,12 @@ const WhatsAppDebug: React.FC = () => {
   const [loadingTemplates, setLoadingTemplates] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState('');
   const [testingSpecificTemplate, setTestingSpecificTemplate] = useState(false);
+  
+  // Estados para teste de template de convite
+  const [inviteEmail, setInviteEmail] = useState('teste@exemplo.com');
+  const [invitePhone, setInvitePhone] = useState('5511999999999');
+  const [templateTestResult, setTemplateTestResult] = useState<any>(null);
+  const [templateTesting, setTemplateTesting] = useState(false);
 
   // Executar diagnósticos automaticamente ao carregar
   useEffect(() => {
@@ -402,6 +408,125 @@ const WhatsAppDebug: React.FC = () => {
       });
     } finally {
       setTestingSpecificTemplate(false);
+    }
+  };
+
+  const testInviteTemplate = async () => {
+    if (!inviteEmail || !invitePhone) {
+      toast({
+        title: "Erro",
+        description: "Digite email e telefone para testar",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setTemplateTesting(true);
+    setTemplateTestResult(null);
+
+    try {
+      console.log('🎯 [TESTE TEMPLATE] Iniciando teste completo de convite...');
+      
+      // Passo 1: Buscar role_id de 'member' (ou usar um padrão)
+      const { data: roles, error: rolesError } = await supabase
+        .from('user_roles')
+        .select('id')
+        .eq('name', 'member')
+        .limit(1);
+
+      if (rolesError || !roles?.length) {
+        throw new Error('Role "member" não encontrado');
+      }
+
+      const roleId = roles[0].id;
+      console.log('🎯 [TESTE TEMPLATE] Role ID:', roleId);
+
+      // Passo 2: Criar convite híbrido usando a função SQL
+      const { data: inviteResult, error: inviteError } = await supabase
+        .rpc('create_invite_hybrid', {
+          p_email: inviteEmail,
+          p_role_id: roleId,
+          p_phone: invitePhone,
+          p_expires_in: '7 days',
+          p_notes: 'Teste de template de convite via debug',
+          p_channel_preference: 'whatsapp'
+        });
+
+      console.log('🎯 [TESTE TEMPLATE] Resultado do convite:', inviteResult);
+
+      if (inviteError || inviteResult?.status !== 'success') {
+        throw new Error(inviteResult?.message || inviteError?.message || 'Erro ao criar convite');
+      }
+
+      const inviteToken = inviteResult.token;
+      const inviteId = inviteResult.invite_id;
+      const inviteUrl = `${window.location.origin}/convite/${inviteToken}`;
+
+      console.log('🎯 [TESTE TEMPLATE] Convite criado:', {
+        id: inviteId,
+        token: inviteToken,
+        url: inviteUrl
+      });
+
+      // Passo 3: Enviar via WhatsApp usando o template "convitevia"
+      const { data: whatsappResult, error: whatsappError } = await supabase.functions.invoke('send-whatsapp-invite', {
+        body: {
+          phone: invitePhone,
+          inviteUrl: inviteUrl,
+          roleName: 'Member',
+          expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+          senderName: 'Sistema de Teste',
+          notes: 'Teste de template via debug',
+          inviteId: inviteId
+        }
+      });
+
+      console.log('🎯 [TESTE TEMPLATE] Resultado WhatsApp:', whatsappResult);
+
+      const result = {
+        success: !whatsappError && whatsappResult?.success,
+        invite: {
+          id: inviteId,
+          token: inviteToken,
+          url: inviteUrl,
+          email: inviteEmail,
+          phone: invitePhone
+        },
+        whatsapp: whatsappResult,
+        error: whatsappError?.message,
+        timestamp: new Date().toISOString()
+      };
+
+      setTemplateTestResult(result);
+
+      if (result.success) {
+        toast({
+          title: "✅ Template de Convite Enviado",
+          description: `Template "convitevia" enviado para ${invitePhone}`,
+        });
+      } else {
+        toast({
+          title: "❌ Erro no Template",
+          description: result.error || 'Erro desconhecido',
+          variant: "destructive",
+        });
+      }
+
+    } catch (error) {
+      console.error('🎯 [TESTE TEMPLATE] Erro:', error);
+      const errorResult = {
+        success: false,
+        error: error.message,
+        timestamp: new Date().toISOString()
+      };
+      setTemplateTestResult(errorResult);
+      toast({
+        title: "Erro no Teste",
+        description: `Falha ao testar template de convite: ${error.message}`,
+        variant: "destructive",
+      });
+    } finally {
+      setTemplateTesting(false);
     }
   };
 
@@ -763,6 +888,137 @@ const WhatsAppDebug: React.FC = () => {
                 </div>
               </Alert>
             )}
+          </CardContent>
+        </Card>
+
+        <Separator />
+
+        {/* Teste de Template de Convite */}
+        <Card>
+          <CardHeader>
+            <div className="flex items-center gap-3">
+              <MessageSquare className="h-6 w-6 text-primary" />
+              <div>
+                <CardTitle>🎯 Teste de Template de Convite</CardTitle>
+                <CardDescription>
+                  Teste completo do fluxo de convite: criação → envio via WhatsApp → template "convitevia"
+                </CardDescription>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="invite-email">Email do Convite</Label>
+                <Input
+                  id="invite-email"
+                  value={inviteEmail}
+                  onChange={(e) => setInviteEmail(e.target.value)}
+                  placeholder="teste@exemplo.com"
+                  type="email"
+                />
+              </div>
+              <div>
+                <Label htmlFor="invite-phone">Telefone (WhatsApp)</Label>
+                <Input
+                  id="invite-phone"
+                  value={invitePhone}
+                  onChange={(e) => setInvitePhone(e.target.value)}
+                  placeholder="5511999999999"
+                  type="tel"
+                />
+              </div>
+            </div>
+
+            <Button 
+              onClick={testInviteTemplate} 
+              disabled={templateTesting}
+              className="w-full"
+              size="lg"
+            >
+              {templateTesting ? (
+                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+              ) : (
+                <Send className="h-4 w-4 mr-2" />
+              )}
+              {templateTesting ? 'Enviando Template de Convite...' : 'Testar Template de Convite Completo'}
+            </Button>
+
+            {templateTestResult && (
+              <Alert className={templateTestResult.success ? 'bg-primary/5 border-primary' : 'bg-destructive/5 border-destructive'}>
+                <div className="flex items-start gap-3">
+                  {templateTestResult.success ? (
+                    <CheckCircle className="h-5 w-5 text-primary mt-0.5" />
+                  ) : (
+                    <XCircle className="h-5 w-5 text-destructive mt-0.5" />
+                  )}
+                  <div className="space-y-3 flex-1">
+                    <AlertDescription>
+                      <div className="font-medium">
+                        {templateTestResult.success ? '✅ Template Enviado com Sucesso!' : '❌ Erro no Envio do Template'}
+                      </div>
+                    </AlertDescription>
+                    
+                    {templateTestResult.invite && (
+                      <div className="bg-background/50 p-3 rounded border">
+                        <div className="text-sm font-medium mb-2">📋 Convite Criado:</div>
+                        <div className="space-y-1 text-sm">
+                          <div>ID: <code className="bg-muted px-1 rounded">{templateTestResult.invite.id}</code></div>
+                          <div>Token: <code className="bg-muted px-1 rounded">{templateTestResult.invite.token}</code></div>
+                          <div>URL: <a href={templateTestResult.invite.url} target="_blank" className="text-primary underline break-all">{templateTestResult.invite.url}</a></div>
+                        </div>
+                      </div>
+                    )}
+
+                    {templateTestResult.whatsapp && (
+                      <div className="bg-background/50 p-3 rounded border">
+                        <div className="text-sm font-medium mb-2">📱 WhatsApp:</div>
+                        <div className="space-y-1 text-sm">
+                          <div className="flex items-center gap-2">
+                            <span>Status:</span>
+                            <Badge variant={templateTestResult.whatsapp.success ? 'default' : 'destructive'}>
+                              {templateTestResult.whatsapp.success ? 'Enviado' : 'Falhou'}
+                            </Badge>
+                          </div>
+                          <div>Método: <code className="bg-muted px-1 rounded">{templateTestResult.whatsapp.method}</code></div>
+                          <div>Telefone: <code className="bg-muted px-1 rounded">{templateTestResult.whatsapp.phone}</code></div>
+                          {templateTestResult.whatsapp.whatsappId && (
+                            <div>Message ID: <code className="bg-muted px-1 rounded">{templateTestResult.whatsapp.whatsappId}</code></div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {templateTestResult.error && (
+                      <div className="bg-destructive/10 p-3 rounded border border-destructive/20">
+                        <div className="text-sm font-medium text-destructive mb-1">🚨 Erro Detalhado:</div>
+                        <div className="text-sm text-destructive">{templateTestResult.error}</div>
+                      </div>
+                    )}
+
+                    <details className="text-xs">
+                      <summary className="cursor-pointer text-muted-foreground hover:text-foreground">
+                        🔍 Ver Logs Completos (JSON)
+                      </summary>
+                      <pre className="bg-muted p-3 rounded mt-2 overflow-auto max-h-40 text-xs">
+                        {JSON.stringify(templateTestResult, null, 2)}
+                      </pre>
+                    </details>
+                  </div>
+                </div>
+              </Alert>
+            )}
+
+            <div className="bg-muted/30 p-4 rounded-lg">
+              <div className="text-sm font-medium mb-2">ℹ️ Como funciona este teste:</div>
+              <ol className="text-sm text-muted-foreground space-y-1 list-decimal list-inside">
+                <li>Cria um convite real no banco usando <code>create_invite_hybrid</code></li>
+                <li>Gera URL válida de convite (<code>/convite/TOKEN</code>)</li>
+                <li>Envia template "convitevia" via WhatsApp Business API</li>
+                <li>Atualiza estatísticas de envio no banco</li>
+                <li>Mostra logs detalhados de cada etapa</li>
+              </ol>
+            </div>
           </CardContent>
         </Card>
 
