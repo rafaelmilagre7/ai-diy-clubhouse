@@ -38,6 +38,23 @@ serve(async (req) => {
       })
     }
 
+    // Ação: Buscar todos os templates
+    if (action === 'get-all-templates') {
+      const allTemplates = await getAllTemplates()
+      return new Response(JSON.stringify(allTemplates), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      })
+    }
+
+    // Ação: Testar template específico
+    if (action === 'test-template') {
+      const { templateName, testPhone } = requestBody
+      const testResult = await testSpecificTemplate(templateName, testPhone)
+      return new Response(JSON.stringify(testResult), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      })
+    }
+
     // Ação: Testar envio real
     if (action === 'test-send') {
       const testResult = await testWhatsAppSending(testPhone)
@@ -133,25 +150,34 @@ async function checkSupabaseCredentials() {
   }
 
   try {
-    // Verificar WHATSAPP_ACCESS_TOKEN
-    const accessToken = Deno.env.get('WHATSAPP_ACCESS_TOKEN')
+    // Verificar WHATSAPP_BUSINESS_TOKEN
+    const accessToken = Deno.env.get('WHATSAPP_BUSINESS_TOKEN')
     if (accessToken && accessToken.length > 50) {
       result.credentials.access_token = true
-      result.details.push('✅ WHATSAPP_ACCESS_TOKEN configurado')
+      result.details.push('✅ WHATSAPP_BUSINESS_TOKEN configurado')
     } else {
-      result.errors.push('❌ WHATSAPP_ACCESS_TOKEN não encontrado ou inválido')
+      result.errors.push('❌ WHATSAPP_BUSINESS_TOKEN não encontrado ou inválido')
     }
 
-    // Verificar WHATSAPP_PHONE_NUMBER_ID
-    const phoneNumberId = Deno.env.get('WHATSAPP_PHONE_NUMBER_ID')
+    // Verificar WHATSAPP_BUSINESS_PHONE_ID
+    const phoneNumberId = Deno.env.get('WHATSAPP_BUSINESS_PHONE_ID')
     if (phoneNumberId && phoneNumberId.length > 10) {
       result.credentials.phone_number_id = true
-      result.details.push('✅ WHATSAPP_PHONE_NUMBER_ID configurado')
+      result.details.push('✅ WHATSAPP_BUSINESS_PHONE_ID configurado')
     } else {
-      result.errors.push('❌ WHATSAPP_PHONE_NUMBER_ID não encontrado ou inválido')
+      result.errors.push('❌ WHATSAPP_BUSINESS_PHONE_ID não encontrado ou inválido')
     }
 
-    result.success = result.credentials.access_token && result.credentials.phone_number_id
+    // Verificar WHATSAPP_BUSINESS_ACCOUNT_ID
+    const accountId = Deno.env.get('WHATSAPP_BUSINESS_ACCOUNT_ID')
+    if (accountId && accountId.length > 10) {
+      result.credentials.account_id = true
+      result.details.push('✅ WHATSAPP_BUSINESS_ACCOUNT_ID configurado')
+    } else {
+      result.errors.push('❌ WHATSAPP_BUSINESS_ACCOUNT_ID não encontrado ou inválido')
+    }
+
+    result.success = result.credentials.access_token && result.credentials.phone_number_id && result.credentials.account_id
 
     if (result.success) {
       result.details.push('🎉 Todas as credenciais estão configuradas!')
@@ -178,8 +204,8 @@ async function testWhatsAppAPI() {
     errors: []
   }
 
-  const accessToken = Deno.env.get('WHATSAPP_ACCESS_TOKEN')
-  const phoneNumberId = Deno.env.get('WHATSAPP_PHONE_NUMBER_ID')
+  const accessToken = Deno.env.get('WHATSAPP_BUSINESS_TOKEN')
+  const phoneNumberId = Deno.env.get('WHATSAPP_BUSINESS_PHONE_ID')
 
   if (!accessToken || !phoneNumberId) {
     result.errors.push('Credenciais não configuradas')
@@ -247,56 +273,56 @@ async function checkConviteTemplate() {
     template: null
   }
 
-  const accessToken = Deno.env.get('WHATSAPP_ACCESS_TOKEN')
+  const accessToken = Deno.env.get('WHATSAPP_BUSINESS_TOKEN')
+  const accountId = Deno.env.get('WHATSAPP_BUSINESS_ACCOUNT_ID')
+  
   if (!accessToken) {
-    result.errors.push('Access Token não configurado')
+    result.errors.push('WHATSAPP_BUSINESS_TOKEN não configurado')
+    return result
+  }
+  
+  if (!accountId) {
+    result.errors.push('WHATSAPP_BUSINESS_ACCOUNT_ID não configurado')
     return result
   }
 
   try {
-    // Buscar business accounts
-    const businessResponse = await fetch(`https://graph.facebook.com/v18.0/me/businesses?access_token=${accessToken}`)
-    const businessData = await businessResponse.json()
+    // Buscar templates diretamente do account ID configurado
+    const templatesResponse = await fetch(
+      `https://graph.facebook.com/v18.0/${accountId}/message_templates?fields=name,status,language,category,components,quality_score&access_token=${accessToken}`
+    )
+    const templatesData = await templatesResponse.json()
 
-    if (!businessResponse.ok || !businessData.data?.length) {
-      result.errors.push('Nenhum Business Account encontrado')
+    if (!templatesResponse.ok) {
+      result.errors.push(`Erro ao buscar templates: ${templatesData.error?.message || 'Erro desconhecido'}`)
       return result
     }
 
-    // Procurar template em cada business account
-    for (const business of businessData.data) {
-      try {
-        const templatesResponse = await fetch(
-          `https://graph.facebook.com/v18.0/${business.id}/message_templates?fields=name,status,language,category,components,quality_score&access_token=${accessToken}`
-        )
-        const templatesData = await templatesResponse.json()
-
-        if (templatesResponse.ok && templatesData.data) {
-          const conviteTemplate = templatesData.data.find((t: any) => t.name === 'convitevia')
-          
-          if (conviteTemplate) {
-            result.template = conviteTemplate
-            result.success = conviteTemplate.status === 'APPROVED'
-            
-            result.details.push(`✅ Template encontrado: ${conviteTemplate.name}`)
-            result.details.push(`📊 Status: ${conviteTemplate.status}`)
-            result.details.push(`🌐 Idioma: ${conviteTemplate.language}`)
-            result.details.push(`📁 Categoria: ${conviteTemplate.category}`)
-            
-            if (conviteTemplate.quality_score) {
-              result.details.push(`⭐ Qualidade: ${conviteTemplate.quality_score.score}/5`)
-            }
-
-            if (conviteTemplate.status !== 'APPROVED') {
-              result.warnings.push('Template não está aprovado pelo Facebook')
-            }
-
-            break
-          }
+    if (templatesData.data) {
+      const conviteTemplate = templatesData.data.find((t: any) => t.name === 'convitevia')
+      
+      if (conviteTemplate) {
+        result.template = conviteTemplate
+        result.success = conviteTemplate.status === 'APPROVED'
+        
+        result.details.push(`✅ Template encontrado: ${conviteTemplate.name}`)
+        result.details.push(`📊 Status: ${conviteTemplate.status}`)
+        result.details.push(`🌐 Idioma: ${conviteTemplate.language}`)
+        result.details.push(`📁 Categoria: ${conviteTemplate.category}`)
+        
+        if (conviteTemplate.quality_score) {
+          result.details.push(`⭐ Qualidade: ${conviteTemplate.quality_score.score}/5`)
         }
-      } catch (error) {
-        console.log(`Erro ao buscar templates para business ${business.id}:`, error.message)
+
+        if (conviteTemplate.status !== 'APPROVED') {
+          result.warnings.push('Template não está aprovado pelo Facebook')
+        }
+      } else {
+        result.errors.push('Template "convitevia" não encontrado')
+        result.warnings.push('Certifique-se de que o template foi criado e enviado para aprovação')
       }
+    } else {
+      result.errors.push('Nenhum template encontrado no Business Account')
     }
 
     if (!result.template) {
@@ -323,8 +349,8 @@ async function checkPhoneNumberStatus() {
     errors: []
   }
 
-  const accessToken = Deno.env.get('WHATSAPP_ACCESS_TOKEN')
-  const phoneNumberId = Deno.env.get('WHATSAPP_PHONE_NUMBER_ID')
+  const accessToken = Deno.env.get('WHATSAPP_BUSINESS_TOKEN')
+  const phoneNumberId = Deno.env.get('WHATSAPP_BUSINESS_PHONE_ID')
 
   if (!accessToken || !phoneNumberId) {
     result.errors.push('Credenciais não configuradas')
@@ -454,4 +480,215 @@ async function getRecentWhatsAppLogs() {
       error: error.message
     }
   }
+}
+
+// NOVA FUNÇÃO: Buscar todos os templates
+async function getAllTemplates() {
+  console.log('📋 Buscando todos os templates...')
+  
+  const result = {
+    test: 'Todos os Templates',
+    success: false,
+    details: [],
+    warnings: [],
+    errors: [],
+    templates: [],
+    summary: {
+      total: 0,
+      approved: 0,
+      pending: 0,
+      rejected: 0,
+      paused: 0
+    }
+  }
+
+  const accessToken = Deno.env.get('WHATSAPP_BUSINESS_TOKEN')
+  const accountId = Deno.env.get('WHATSAPP_BUSINESS_ACCOUNT_ID')
+  
+  if (!accessToken) {
+    result.errors.push('WHATSAPP_BUSINESS_TOKEN não configurado')
+    return result
+  }
+  
+  if (!accountId) {
+    result.errors.push('WHATSAPP_BUSINESS_ACCOUNT_ID não configurado')
+    return result
+  }
+
+  try {
+    console.log(`🔍 Buscando templates do Business Account: ${accountId}`)
+    
+    const templatesResponse = await fetch(
+      `https://graph.facebook.com/v18.0/${accountId}/message_templates?fields=name,status,language,category,components,quality_score,created_time,previous_category&limit=100&access_token=${accessToken}`
+    )
+    const templatesData = await templatesResponse.json()
+
+    if (!templatesResponse.ok) {
+      result.errors.push(`Erro ao buscar templates: ${templatesData.error?.message || 'Erro desconhecido'}`)
+      console.error('❌ Erro na API:', templatesData.error)
+      return result
+    }
+
+    if (templatesData.data && Array.isArray(templatesData.data)) {
+      result.templates = templatesData.data
+      result.summary.total = templatesData.data.length
+      
+      // Contar por status
+      templatesData.data.forEach((template: any) => {
+        switch (template.status) {
+          case 'APPROVED':
+            result.summary.approved++
+            break
+          case 'PENDING':
+            result.summary.pending++
+            break
+          case 'REJECTED':
+            result.summary.rejected++
+            break
+          case 'PAUSED':
+            result.summary.paused++
+            break
+        }
+      })
+
+      result.success = true
+      result.details.push(`✅ Encontrados ${result.summary.total} templates`)
+      result.details.push(`✅ Aprovados: ${result.summary.approved}`)
+      result.details.push(`⏳ Pendentes: ${result.summary.pending}`)
+      result.details.push(`❌ Rejeitados: ${result.summary.rejected}`)
+      result.details.push(`⏸️ Pausados: ${result.summary.paused}`)
+
+      if (result.summary.approved === 0) {
+        result.warnings.push('Nenhum template aprovado encontrado')
+      }
+      
+    } else {
+      result.errors.push('Nenhum template encontrado no Business Account')
+    }
+
+  } catch (error) {
+    console.error('❌ Erro ao buscar templates:', error)
+    result.errors.push(`Erro ao buscar templates: ${error.message}`)
+  }
+
+  return result
+}
+
+// NOVA FUNÇÃO: Testar template específico
+async function testSpecificTemplate(templateName: string, testPhone: string) {
+  console.log(`🧪 Testando template "${templateName}" para ${testPhone}...`)
+  
+  const result = {
+    test: `Teste Template "${templateName}"`,
+    success: false,
+    details: [],
+    warnings: [],
+    errors: [],
+    messageId: null,
+    template: null
+  }
+
+  if (!templateName || !testPhone) {
+    result.errors.push('Nome do template e telefone são obrigatórios')
+    return result
+  }
+
+  const accessToken = Deno.env.get('WHATSAPP_BUSINESS_TOKEN')
+  const phoneNumberId = Deno.env.get('WHATSAPP_BUSINESS_PHONE_ID')
+  const accountId = Deno.env.get('WHATSAPP_BUSINESS_ACCOUNT_ID')
+  
+  if (!accessToken || !phoneNumberId || !accountId) {
+    result.errors.push('Credenciais não configuradas completamente')
+    return result
+  }
+
+  try {
+    // Primeiro, buscar o template para verificar se existe e está aprovado
+    const templatesResponse = await fetch(
+      `https://graph.facebook.com/v18.0/${accountId}/message_templates?fields=name,status,language,category,components&access_token=${accessToken}`
+    )
+    const templatesData = await templatesResponse.json()
+
+    if (!templatesResponse.ok) {
+      result.errors.push(`Erro ao buscar template: ${templatesData.error?.message}`)
+      return result
+    }
+
+    const template = templatesData.data?.find((t: any) => t.name === templateName)
+    if (!template) {
+      result.errors.push(`Template "${templateName}" não encontrado`)
+      return result
+    }
+
+    if (template.status !== 'APPROVED') {
+      result.errors.push(`Template "${templateName}" não está aprovado (status: ${template.status})`)
+      return result
+    }
+
+    result.template = template
+    result.details.push(`✅ Template encontrado: ${template.name}`)
+    result.details.push(`📊 Status: ${template.status}`)
+    result.details.push(`🌐 Idioma: ${template.language}`)
+
+    // Preparar dados do template para envio
+    const templateData = {
+      messaging_product: "whatsapp",
+      to: testPhone.replace(/\D/g, '').replace(/^(\d{11})$/, '55$1'), // Formatar número
+      type: "template",
+      template: {
+        name: templateName,
+        language: {
+          code: template.language || "pt_BR"
+        },
+        components: []
+      }
+    }
+
+    // Se o template tem componentes de parâmetros, adicionar valores de teste
+    if (template.components && Array.isArray(template.components)) {
+      template.components.forEach((component: any) => {
+        if (component.type === 'BODY' && component.parameters) {
+          templateData.template.components.push({
+            type: "body",
+            parameters: component.parameters.map((param: any, index: number) => ({
+              type: "text",
+              text: `TESTE_${index + 1}`
+            }))
+          })
+        }
+      })
+    }
+
+    // Enviar mensagem via API
+    const sendResponse = await fetch(
+      `https://graph.facebook.com/v18.0/${phoneNumberId}/messages`,
+      {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(templateData),
+      }
+    )
+
+    const sendData = await sendResponse.json()
+
+    if (sendResponse.ok && sendData.messages?.[0]?.id) {
+      result.success = true
+      result.messageId = sendData.messages[0].id
+      result.details.push('✅ Mensagem enviada com sucesso!')
+      result.details.push(`📬 ID da mensagem: ${result.messageId}`)
+      result.details.push(`📱 Número de destino: ${templateData.to}`)
+    } else {
+      result.errors.push(`Falha no envio: ${sendData.error?.message || 'Erro desconhecido'}`)
+      console.error('❌ Erro no envio:', sendData)
+    }
+
+  } catch (error) {
+    console.error('❌ Erro no teste do template:', error)
+    result.errors.push(`Erro no teste: ${error.message}`)
+  }
+
+  return result
 }

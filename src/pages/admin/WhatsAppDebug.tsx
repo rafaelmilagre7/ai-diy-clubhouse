@@ -159,6 +159,10 @@ const WhatsAppDebug: React.FC = () => {
   const [testPhone, setTestPhone] = useState('5511999999999');
   const [sendTestResult, setSendTestResult] = useState<any>(null);
   const [autoRefresh, setAutoRefresh] = useState(false);
+  const [allTemplates, setAllTemplates] = useState<any>(null);
+  const [loadingTemplates, setLoadingTemplates] = useState(false);
+  const [selectedTemplate, setSelectedTemplate] = useState('');
+  const [testingSpecificTemplate, setTestingSpecificTemplate] = useState(false);
 
   // Executar diagnósticos automaticamente ao carregar
   useEffect(() => {
@@ -315,6 +319,87 @@ const WhatsAppDebug: React.FC = () => {
     }
   };
 
+  const loadAllTemplates = async () => {
+    setLoadingTemplates(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('whatsapp-config-check', {
+        body: { action: 'get-all-templates' }
+      });
+
+      if (error) throw error;
+
+      setAllTemplates(data);
+      
+      if (data.success) {
+        toast({
+          title: "✅ Templates Carregados",
+          description: `${data.summary.total} templates encontrados`,
+        });
+      } else {
+        toast({
+          title: "⚠️ Problema nos Templates",
+          description: data.errors?.[0] || "Erro ao carregar templates",
+          variant: "destructive",
+        });
+      }
+
+    } catch (error) {
+      toast({
+        title: "Erro ao Carregar Templates",
+        description: `Falha: ${error.message}`,
+        variant: "destructive",
+      });
+    } finally {
+      setLoadingTemplates(false);
+    }
+  };
+
+  const testSpecificTemplate = async () => {
+    if (!selectedTemplate || !testPhone) {
+      toast({
+        title: "Erro",
+        description: "Selecione um template e digite um número para teste",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setTestingSpecificTemplate(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('whatsapp-config-check', {
+        body: { 
+          action: 'test-template',
+          templateName: selectedTemplate,
+          testPhone: testPhone
+        }
+      });
+
+      if (error) throw error;
+
+      if (data.success) {
+        toast({
+          title: "✅ Template Testado",
+          description: `Template "${selectedTemplate}" enviado para ${testPhone}`,
+        });
+      } else {
+        toast({
+          title: "❌ Falha no Teste",
+          description: data.errors?.[0] || "Não foi possível testar o template",
+          variant: "destructive",
+        });
+      }
+
+    } catch (error) {
+      toast({
+        title: "Erro no Teste",
+        description: `Falha: ${error.message}`,
+        variant: "destructive",
+      });
+    } finally {
+      setTestingSpecificTemplate(false);
+    }
+  };
+
   const getOverallStatus = (): 'success' | 'error' | 'warning' | 'loading' => {
     if (loading) return 'loading';
     if (!diagnostics) return 'error';
@@ -454,6 +539,162 @@ const WhatsAppDebug: React.FC = () => {
 
         <Separator />
 
+        {/* Seção de Templates */}
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <FileText className="h-6 w-6 text-primary" />
+                <div>
+                  <CardTitle>Gerenciamento de Templates</CardTitle>
+                  <CardDescription>
+                    Visualize todos os templates disponíveis e teste envios específicos
+                  </CardDescription>
+                </div>
+              </div>
+              <Button 
+                onClick={loadAllTemplates} 
+                disabled={loadingTemplates}
+                variant="outline"
+                size="sm"
+              >
+                {loadingTemplates ? (
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                ) : (
+                  <RefreshCw className="h-4 w-4 mr-2" />
+                )}
+                Carregar Templates
+              </Button>
+            </div>
+          </CardHeader>
+          
+          {allTemplates && (
+            <CardContent className="space-y-4">
+              {/* Resumo dos Templates */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="text-center p-3 bg-primary/5 rounded-lg">
+                  <div className="text-2xl font-bold text-primary">{allTemplates.summary.total}</div>
+                  <div className="text-sm text-muted-foreground">Total</div>
+                </div>
+                <div className="text-center p-3 bg-green-500/5 rounded-lg">
+                  <div className="text-2xl font-bold text-green-600">{allTemplates.summary.approved}</div>
+                  <div className="text-sm text-muted-foreground">Aprovados</div>
+                </div>
+                <div className="text-center p-3 bg-yellow-500/5 rounded-lg">
+                  <div className="text-2xl font-bold text-yellow-600">{allTemplates.summary.pending}</div>
+                  <div className="text-sm text-muted-foreground">Pendentes</div>
+                </div>
+                <div className="text-center p-3 bg-red-500/5 rounded-lg">
+                  <div className="text-2xl font-bold text-red-600">{allTemplates.summary.rejected}</div>
+                  <div className="text-sm text-muted-foreground">Rejeitados</div>
+                </div>
+              </div>
+
+              {/* Lista de Templates */}
+              {allTemplates.templates && allTemplates.templates.length > 0 && (
+                <div className="space-y-3">
+                  <h4 className="font-semibold">Templates Disponíveis:</h4>
+                  <div className="grid gap-3 max-h-96 overflow-y-auto">
+                    {allTemplates.templates.map((template: any, index: number) => (
+                      <div key={index} className="border rounded-lg p-3 hover:bg-muted/50 transition-colors">
+                        <div className="flex items-center justify-between">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2">
+                              <h5 className="font-medium">{template.name}</h5>
+                              <Badge variant={
+                                template.status === 'APPROVED' ? 'default' :
+                                template.status === 'PENDING' ? 'secondary' :
+                                template.status === 'REJECTED' ? 'destructive' : 'outline'
+                              }>
+                                {template.status}
+                              </Badge>
+                            </div>
+                            <div className="text-sm text-muted-foreground flex gap-4 mt-1">
+                              <span>🌐 {template.language}</span>
+                              <span>📁 {template.category}</span>
+                              {template.quality_score && (
+                                <span>⭐ {template.quality_score.score}/5</span>
+                              )}
+                            </div>
+                          </div>
+                          
+                          {template.status === 'APPROVED' && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                setSelectedTemplate(template.name);
+                                testSpecificTemplate();
+                              }}
+                              disabled={testingSpecificTemplate}
+                            >
+                              {testingSpecificTemplate && selectedTemplate === template.name ? (
+                                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                              ) : (
+                                <Send className="h-4 w-4 mr-2" />
+                              )}
+                              Testar
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Teste Manual de Template */}
+              <div className="border-t pt-4">
+                <h4 className="font-semibold mb-3">Teste Manual de Template</h4>
+                <div className="grid md:grid-cols-3 gap-4">
+                  <div>
+                    <Label htmlFor="template-select">Template</Label>
+                    <select
+                      id="template-select"
+                      value={selectedTemplate}
+                      onChange={(e) => setSelectedTemplate(e.target.value)}
+                      className="w-full p-2 border rounded-md text-sm"
+                    >
+                      <option value="">Selecione um template...</option>
+                      {allTemplates?.templates?.filter((t: any) => t.status === 'APPROVED').map((template: any) => (
+                        <option key={template.name} value={template.name}>
+                          {template.name} ({template.language})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <Label htmlFor="template-phone">Número de Teste</Label>
+                    <Input
+                      id="template-phone"
+                      value={testPhone}
+                      onChange={(e) => setTestPhone(e.target.value)}
+                      placeholder="5511999999999"
+                      type="tel"
+                    />
+                  </div>
+                  <div className="flex items-end">
+                    <Button
+                      onClick={testSpecificTemplate}
+                      disabled={testingSpecificTemplate || !selectedTemplate || !testPhone}
+                      className="w-full"
+                    >
+                      {testingSpecificTemplate ? (
+                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                      ) : (
+                        <Send className="h-4 w-4 mr-2" />
+                      )}
+                      Testar Template
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          )}
+        </Card>
+
+        <Separator />
+
         {/* Teste de Envio */}
         <Card>
           <CardHeader>
@@ -537,8 +778,9 @@ const WhatsAppDebug: React.FC = () => {
                     Vá para Supabase → Settings → Edge Functions e adicione:
                   </p>
                   <ul className="text-sm text-muted-foreground ml-4 space-y-1">
-                    <li>• <code>WHATSAPP_ACCESS_TOKEN</code> - Token do Facebook Developers</li>
-                    <li>• <code>WHATSAPP_PHONE_NUMBER_ID</code> - ID do número do WhatsApp Business</li>
+                    <li>• <code>WHATSAPP_BUSINESS_TOKEN</code> - Token do WhatsApp Business API</li>
+                    <li>• <code>WHATSAPP_BUSINESS_PHONE_ID</code> - ID do número do WhatsApp Business</li>
+                    <li>• <code>WHATSAPP_BUSINESS_ACCOUNT_ID</code> - ID da conta Business (385471239079413)</li>
                   </ul>
                 </div>
                 
