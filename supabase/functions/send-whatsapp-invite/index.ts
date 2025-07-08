@@ -120,14 +120,21 @@ serve(async (req) => {
       throw new Error(errorMsg)
     }
 
-    // Atualizar estatísticas do convite se tiver ID
+    // Atualizar estatísticas do convite se tiver ID (não crítico)
     if (inviteId) {
-      const { error: updateError } = await supabase.rpc('update_invite_send_attempt', {
-        invite_id: inviteId
-      })
+      try {
+        const { error: updateError } = await supabase.rpc('update_invite_send_attempt', {
+          invite_id: inviteId
+        })
 
-      if (updateError) {
-        console.error('⚠️ Erro ao atualizar estatísticas do convite:', updateError)
+        if (updateError) {
+          console.error('⚠️ Erro ao atualizar estatísticas do convite (não crítico):', updateError)
+        } else {
+          console.log('✅ Estatísticas do convite atualizadas com sucesso')
+        }
+      } catch (statError) {
+        console.error('⚠️ Erro não crítico ao atualizar estatísticas:', statError)
+        // Não falhar o envio por causa das estatísticas
       }
     }
 
