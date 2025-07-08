@@ -333,12 +333,12 @@ const WhatsAppDebug: React.FC = () => {
       if (data.success) {
         toast({
           title: "✅ Templates Carregados",
-          description: `${data.summary.total} templates encontrados`,
+          description: `${data.templates?.length || 0} templates encontrados`,
         });
       } else {
         toast({
           title: "⚠️ Problema nos Templates",
-          description: data.errors?.[0] || "Erro ao carregar templates",
+          description: data.message || "Erro ao carregar templates",
           variant: "destructive",
         });
       }
@@ -353,6 +353,11 @@ const WhatsAppDebug: React.FC = () => {
       setLoadingTemplates(false);
     }
   };
+
+  // Carregar templates automaticamente ao montar o componente
+  useEffect(() => {
+    loadAllTemplates();
+  }, []);
 
   const testSpecificTemplate = async () => {
     if (!selectedTemplate || !testPhone) {
