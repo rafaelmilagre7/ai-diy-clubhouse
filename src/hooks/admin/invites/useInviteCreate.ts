@@ -150,7 +150,8 @@ const sendInviteNotification = async ({
           expiresAt,
           senderName,
           notes,
-          inviteId
+          inviteId,
+          email
         }
       });
 
@@ -207,7 +208,8 @@ const sendInviteNotification = async ({
             expiresAt,
             senderName,
             notes,
-            inviteId
+            inviteId,
+            email
           }
         });
 
