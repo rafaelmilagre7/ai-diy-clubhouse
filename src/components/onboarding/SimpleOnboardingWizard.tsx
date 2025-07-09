@@ -168,6 +168,8 @@ export const SimpleOnboardingWizard: React.FC = () => {
     
     if (currentStep < TOTAL_STEPS) {
       setCurrentStep(currentStep + 1);
+      // Scroll para o topo ao avançar para próxima etapa
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     } else {
       await completeOnboarding();
     }
@@ -176,6 +178,8 @@ export const SimpleOnboardingWizard: React.FC = () => {
   const handlePrevious = () => {
     if (currentStep > 1) {
       setCurrentStep(currentStep - 1);
+      // Scroll para o topo ao voltar para etapa anterior
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
 
