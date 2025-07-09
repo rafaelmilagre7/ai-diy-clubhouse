@@ -87,30 +87,30 @@ export const SimpleOnboardingStep2: React.FC<SimpleOnboardingStep2Props> = ({
           {/* Nome da Empresa */}
           <div className="space-y-2">
             <Label htmlFor="companyName" className="text-foreground font-medium">
-              🏢 Em qual empresa você trabalha?
+              Empresa onde trabalha
             </Label>
             <Input
               id="companyName"
               value={formData.companyName}
               onChange={(e) => handleInputChange('companyName', e.target.value)}
-              placeholder="Ex: Google, Microsoft, Minha Startup Incrível..."
+              placeholder="Ex: Google, Microsoft, Empresa XYZ..."
               className="bg-background border-border text-foreground"
             />
-            <p className="text-xs text-muted-foreground">💡 Isso me ajuda a entender seu contexto empresarial</p>
+            <p className="text-xs text-muted-foreground">Isso nos ajuda a entender seu contexto empresarial</p>
           </div>
 
           {/* Cargo/Posição */}
           <div className="space-y-2">
             <Label htmlFor="position" className="text-foreground font-medium">
-              🎯 Qual é seu papel de liderança? *
+              Cargo/Posição *
             </Label>
-            <p className="text-xs text-muted-foreground">⭐ Seu cargo me ajuda a sugerir as melhores estratégias de IA</p>
+            <p className="text-xs text-muted-foreground">Seu cargo nos ajuda a sugerir as melhores estratégias de IA</p>
             <Select 
               value={formData.position} 
               onValueChange={(value) => handleInputChange('position', value)}
             >
               <SelectTrigger className="bg-background border-border text-foreground">
-                <SelectValue placeholder="👑 Escolha sua posição de impacto..." />
+                <SelectValue placeholder="Selecione seu cargo..." />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="ceo">CEO</SelectItem>
@@ -132,15 +132,15 @@ export const SimpleOnboardingStep2: React.FC<SimpleOnboardingStep2Props> = ({
           {/* Setor de Atuação */}
           <div className="space-y-2">
             <Label htmlFor="businessSector" className="text-foreground font-medium">
-              🎯 Em qual setor você está revolucionando? *
+              Setor de Atuação *
             </Label>
-            <p className="text-xs text-muted-foreground">🔍 Cada setor tem oportunidades únicas de IA</p>
+            <p className="text-xs text-muted-foreground">Cada setor tem oportunidades únicas de IA</p>
             <Select 
               value={formData.businessSector} 
               onValueChange={(value) => handleInputChange('businessSector', value)}
             >
               <SelectTrigger className="bg-background border-border text-foreground">
-                <SelectValue placeholder="🚀 Escolha seu setor de impacto..." />
+                <SelectValue placeholder="Selecione seu setor..." />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="inteligencia-artificial">Inteligência Artificial</SelectItem>

@@ -19,6 +19,7 @@ export const SimpleOnboardingStep3: React.FC<SimpleOnboardingStep3Props> = ({
   isLoading = false,
   getFieldError
 }) => {
+  const [formData, setFormData] = useState(data || {});
   const [tools, setTools] = useState<Array<{id: string, name: string, category: string, logo_url?: string}>>([]);
   const [loading, setLoading] = useState(true);
   const [toolsByCategory, setToolsByCategory] = useState<Record<string, Array<{id: string, name: string, category: string, logo_url?: string}>>>({});
@@ -56,8 +57,16 @@ export const SimpleOnboardingStep3: React.FC<SimpleOnboardingStep3Props> = ({
     fetchTools();
   }, []);
 
+  // Função para atualizar dados sem navegar automaticamente
+  const updateStepData = (field: string, value: string | string[]) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
   const handleRadioChange = (field: string, value: string) => {
-    onNext({ ...data, [field]: value });
+    updateStepData(field, value);
   };
 
   const handleCheckboxChange = (field: string, values: string[], value: string, checked: boolean) => {
@@ -69,11 +78,21 @@ export const SimpleOnboardingStep3: React.FC<SimpleOnboardingStep3Props> = ({
     } else {
       newValues = newValues.filter(v => v !== value);
     }
-    onNext({ ...data, [field]: newValues });
+    updateStepData(field, newValues);
   };
 
   const handleNext = () => {
-    onNext(data);
+    // Validar campos obrigatórios antes de avançar
+    const requiredFields = ['hasImplementedAI', 'aiKnowledgeLevel', 'whoWillImplement', 'aiImplementationObjective', 'aiImplementationUrgency'];
+    const missingFields = requiredFields.filter(field => !formData[field]);
+    
+    if (missingFields.length > 0) {
+      // Aqui você pode mostrar uma mensagem de erro ou destacar campos obrigatórios
+      console.warn('Campos obrigatórios não preenchidos:', missingFields);
+      return;
+    }
+    
+    onNext(formData);
   };
 
   return (
@@ -81,41 +100,41 @@ export const SimpleOnboardingStep3: React.FC<SimpleOnboardingStep3Props> = ({
       <Card className="bg-card border-border backdrop-blur-sm">
         <CardHeader className="pb-4">
           <CardTitle className="text-foreground text-xl font-bold flex items-center gap-3">
-            <Settings className="h-6 w-6 text-primary animate-pulse" />
-            Sua Jornada com IA até Agora 🧠
+            <Settings className="h-6 w-6 text-primary" />
+            Experiência com Inteligência Artificial
           </CardTitle>
           <p className="text-muted-foreground text-sm mt-2">
-            🎯 Vou descobrir seu nível e criar um plano sob medida para você
+            Vamos avaliar seu nível atual e criar um plano personalizado
           </p>
         </CardHeader>
         <CardContent className="space-y-8">
           {/* Status de Implementação */}
           <div className="space-y-4">
             <Label className="text-foreground font-medium text-base">
-              🚀 Sua empresa já embarcou na revolução da IA? *
+              Sua empresa já implementou IA? *
             </Label>
-            <p className="text-xs text-muted-foreground mb-4">💡 Seja honesto(a) - isso me ajuda a calibrar suas recomendações</p>
+            <p className="text-xs text-muted-foreground mb-4">Seja honesto - isso nos ajuda a calibrar suas recomendações</p>
             <RadioGroup
-              value={data.hasImplementedAI || ''}
+              value={formData.hasImplementedAI || ''}
               onValueChange={(value) => handleRadioChange('hasImplementedAI', value)}
               className="space-y-3"
             >
               <div className="flex items-center space-x-3 p-3 rounded-lg bg-card border border-border hover:border-primary/50 transition-colors cursor-pointer">
                 <RadioGroupItem value="sim" id="implemented-yes" />
                 <Label htmlFor="implemented-yes" className="text-foreground font-normal cursor-pointer flex-1">
-                  ✅ Sim! Já somos pioneiros em IA
+                  Sim, já implementamos IA
                 </Label>
               </div>
               <div className="flex items-center space-x-3 p-3 rounded-lg bg-card border border-border hover:border-orange-500/50 transition-colors cursor-pointer">
                 <RadioGroupItem value="parcial" id="implemented-partial" />
                 <Label htmlFor="implemented-partial" className="text-foreground font-normal cursor-pointer flex-1">
-                  🧪 Estamos testando e experimentando
+                  Estamos testando e experimentando
                 </Label>
               </div>
               <div className="flex items-center space-x-3 p-3 rounded-lg bg-card border border-border hover:border-blue-500/50 transition-colors cursor-pointer">
                 <RadioGroupItem value="nao" id="implemented-no" />
                 <Label htmlFor="implemented-no" className="text-foreground font-normal cursor-pointer flex-1">
-                  🌱 Não ainda, mas estamos prontos para começar!
+                  Não ainda, mas estamos prontos para começar
                 </Label>
               </div>
             </RadioGroup>
@@ -147,23 +166,23 @@ export const SimpleOnboardingStep3: React.FC<SimpleOnboardingStep3Props> = ({
                       {categoryTools.map((tool) => (
                         <div 
                           key={tool.id} 
-                          className={`flex items-center space-x-3 p-4 rounded-xl border transition-all duration-200 cursor-pointer hover:scale-[1.02] ${
-                            (data.aiToolsUsed || []).includes(tool.name)
-                              ? 'bg-primary/20 border-primary shadow-lg shadow-primary/20'
-                              : 'bg-card border-border hover:border-muted-foreground'
-                          }`}
-                          onClick={() => {
-                            const isChecked = (data.aiToolsUsed || []).includes(tool.name);
-                            handleCheckboxChange('aiToolsUsed', data.aiToolsUsed || [], tool.name, !isChecked);
-                          }}
+                           className={`flex items-center space-x-3 p-4 rounded-xl border transition-all duration-200 cursor-pointer hover:scale-[1.02] ${
+                             (formData.aiToolsUsed || []).includes(tool.name)
+                               ? 'bg-primary/20 border-primary shadow-lg shadow-primary/20'
+                               : 'bg-card border-border hover:border-muted-foreground'
+                           }`}
+                           onClick={() => {
+                             const isChecked = (formData.aiToolsUsed || []).includes(tool.name);
+                             handleCheckboxChange('aiToolsUsed', formData.aiToolsUsed || [], tool.name, !isChecked);
+                           }}
                         >
-                          <Checkbox
-                            id={`tool-${tool.id}`}
-                            checked={(data.aiToolsUsed || []).includes(tool.name)}
-                            onCheckedChange={(checked) => 
-                              handleCheckboxChange('aiToolsUsed', data.aiToolsUsed || [], tool.name, checked as boolean)
-                            }
-                          />
+                           <Checkbox
+                             id={`tool-${tool.id}`}
+                             checked={(formData.aiToolsUsed || []).includes(tool.name)}
+                             onCheckedChange={(checked) => 
+                               handleCheckboxChange('aiToolsUsed', formData.aiToolsUsed || [], tool.name, checked as boolean)
+                             }
+                           />
                           
                           <div className="flex items-center space-x-3 flex-1 min-w-0">
                             {tool.logo_url && (
@@ -194,23 +213,23 @@ export const SimpleOnboardingStep3: React.FC<SimpleOnboardingStep3Props> = ({
                 {/* Opção "Outras" */}
                 <div className="pt-4 border-t border-border">
                   <div 
-                    className={`flex items-center space-x-3 p-4 rounded-xl border transition-all duration-200 cursor-pointer hover:scale-[1.02] ${
-                      (data.aiToolsUsed || []).includes('Outras ferramentas')
-                        ? 'bg-primary/20 border-primary shadow-lg shadow-primary/20'
-                        : 'bg-card border-border hover:border-muted-foreground'
-                    }`}
-                    onClick={() => {
-                      const isChecked = (data.aiToolsUsed || []).includes('Outras ferramentas');
-                      handleCheckboxChange('aiToolsUsed', data.aiToolsUsed || [], 'Outras ferramentas', !isChecked);
-                    }}
+                     className={`flex items-center space-x-3 p-4 rounded-xl border transition-all duration-200 cursor-pointer hover:scale-[1.02] ${
+                       (formData.aiToolsUsed || []).includes('Outras ferramentas')
+                         ? 'bg-primary/20 border-primary shadow-lg shadow-primary/20'
+                         : 'bg-card border-border hover:border-muted-foreground'
+                     }`}
+                     onClick={() => {
+                       const isChecked = (formData.aiToolsUsed || []).includes('Outras ferramentas');
+                       handleCheckboxChange('aiToolsUsed', formData.aiToolsUsed || [], 'Outras ferramentas', !isChecked);
+                     }}
                   >
-                    <Checkbox
-                      id="tool-outras"
-                      checked={(data.aiToolsUsed || []).includes('Outras ferramentas')}
-                      onCheckedChange={(checked) => 
-                        handleCheckboxChange('aiToolsUsed', data.aiToolsUsed || [], 'Outras ferramentas', checked as boolean)
-                      }
-                    />
+                     <Checkbox
+                       id="tool-outras"
+                       checked={(formData.aiToolsUsed || []).includes('Outras ferramentas')}
+                       onCheckedChange={(checked) => 
+                         handleCheckboxChange('aiToolsUsed', formData.aiToolsUsed || [], 'Outras ferramentas', checked as boolean)
+                       }
+                     />
                     <div className="flex items-center space-x-3 flex-1">
                       <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center flex-shrink-0">
                         <Settings className="w-4 h-4 text-muted-foreground" />
@@ -231,7 +250,7 @@ export const SimpleOnboardingStep3: React.FC<SimpleOnboardingStep3Props> = ({
               Como avalia o nível de conhecimento em IA da sua equipe? *
             </Label>
             <RadioGroup
-              value={data.aiKnowledgeLevel || ''}
+              value={formData.aiKnowledgeLevel || ''}
               onValueChange={(value) => handleRadioChange('aiKnowledgeLevel', value)}
               className="space-y-3"
             >
@@ -271,7 +290,7 @@ export const SimpleOnboardingStep3: React.FC<SimpleOnboardingStep3Props> = ({
               Quem será responsável pela implementação de IA na sua empresa? *
             </Label>
             <RadioGroup
-              value={data.whoWillImplement || ''}
+              value={formData.whoWillImplement || ''}
               onValueChange={(value) => handleRadioChange('whoWillImplement', value)}
               className="space-y-3"
             >
@@ -305,7 +324,7 @@ export const SimpleOnboardingStep3: React.FC<SimpleOnboardingStep3Props> = ({
               Qual o principal objetivo da sua empresa com a IA? *
             </Label>
             <RadioGroup
-              value={data.aiImplementationObjective || ''}
+              value={formData.aiImplementationObjective || ''}
               onValueChange={(value) => handleRadioChange('aiImplementationObjective', value)}
               className="space-y-3"
             >
@@ -351,7 +370,7 @@ export const SimpleOnboardingStep3: React.FC<SimpleOnboardingStep3Props> = ({
               Qual a urgência para implementar IA na sua empresa? *
             </Label>
             <RadioGroup
-              value={data.aiImplementationUrgency || ''}
+              value={formData.aiImplementationUrgency || ''}
               onValueChange={(value) => handleRadioChange('aiImplementationUrgency', value)}
               className="space-y-3"
             >

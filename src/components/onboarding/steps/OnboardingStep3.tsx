@@ -26,12 +26,12 @@ export const OnboardingStep3: React.FC<OnboardingStep3Props> = ({
   });
 
   const discoveryOptions = [
-    { id: 'google', label: '🔍 Pesquisa no Google', icon: Search },
-    { id: 'social_media', label: '📱 Redes Sociais', icon: Users },
-    { id: 'referral', label: '👥 Indicação de amigo/colega', icon: Users },
-    { id: 'content', label: '📚 Conteúdo/Blog', icon: BookOpen },
-    { id: 'event', label: '🎯 Evento/Webinar', icon: Lightbulb },
-    { id: 'other', label: '💡 Outro', icon: Lightbulb }
+    { id: 'google', label: 'Pesquisa no Google', icon: Search },
+    { id: 'social_media', label: 'Redes Sociais', icon: Users },
+    { id: 'referral', label: 'Indicação de amigo/colega', icon: Users },
+    { id: 'content', label: 'Conteúdo/Blog', icon: BookOpen },
+    { id: 'event', label: 'Evento/Webinar', icon: Lightbulb },
+    { id: 'other', label: 'Outro', icon: Lightbulb }
   ];
 
   const contentTypes = [
@@ -81,7 +81,7 @@ export const OnboardingStep3: React.FC<OnboardingStep3Props> = ({
         </motion.div>
         
         <h2 className="text-3xl font-bold text-white">
-          Como você nos descobriu? 🕵️
+          Como você nos descobriu?
         </h2>
         <p className="text-slate-300 text-lg leading-relaxed max-w-2xl mx-auto">
           Entender como você chegou até nós nos ajuda a melhorar nossa comunicação 

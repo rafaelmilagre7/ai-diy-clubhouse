@@ -265,7 +265,7 @@ export const SimpleOnboardingStep1: React.FC<SimpleOnboardingStep1Props> = ({
       {/* Privacy note */}
       <div className="bg-muted/50 rounded-lg p-4 text-center">
         <p className="text-sm text-muted-foreground">
-          🔒 Suas informações estão seguras - Utilizamos criptografia avançada 
+          Suas informações estão seguras - Utilizamos criptografia avançada 
           e seguimos as melhores práticas de segurança para proteger seus dados.
         </p>
       </div>
