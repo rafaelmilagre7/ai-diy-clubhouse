@@ -33,10 +33,10 @@ interface OnboardingData {
 const TOTAL_STEPS = 6;
 const STEP_TITLES = [
   'Informações Pessoais',
-  'Localização',
+  'Contexto Empresarial', 
   'Como nos encontrou',
-  'Contexto Empresarial',
   'Objetivos',
+  'Experiência com IA',
   'Finalização'
 ];
 
@@ -107,22 +107,29 @@ export const SimpleOnboardingWizard: React.FC = () => {
       // Atualizar dados do step específico
       switch (stepNumber) {
         case 1:
-          updatedData.personal_info = { ...updatedData.personal_info, ...stepData };
+          // Step 1: Informações pessoais + localização
+          updatedData.personal_info = { ...updatedData.personal_info, ...stepData.personal_info };
+          updatedData.location_info = { ...updatedData.location_info, ...stepData.location_info };
           break;
         case 2:
-          updatedData.location_info = { ...updatedData.location_info, ...stepData };
+          // Step 2: Contexto empresarial
+          updatedData.business_info = { ...updatedData.business_info, ...stepData };
           break;
         case 3:
+          // Step 3: Como nos encontrou
           updatedData.discovery_info = { ...updatedData.discovery_info, ...stepData };
           break;
         case 4:
-          updatedData.business_info = { ...updatedData.business_info, ...stepData };
-          break;
-        case 5:
+          // Step 4: Objetivos
           updatedData.goals_info = { ...updatedData.goals_info, ...stepData };
           break;
-        case 6:
+        case 5:
+          // Step 5: Experiência com IA
           updatedData.ai_experience = { ...updatedData.ai_experience, ...stepData };
+          break;
+        case 6:
+          // Step 6: Finalização
+          updatedData.personalization = { ...updatedData.personalization, ...stepData };
           break;
       }
 

@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
-import { Input } from '@/components/ui/input';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Briefcase } from 'lucide-react';
 
 interface SimpleOnboardingStep2Props {
   data: any;
@@ -15,86 +17,231 @@ export const SimpleOnboardingStep2: React.FC<SimpleOnboardingStep2Props> = ({
   isLoading = false
 }) => {
   const [formData, setFormData] = useState({
-    country: data.location_info?.country || 'Brasil',
-    state: data.location_info?.state || '',
-    city: data.location_info?.city || '',
-    timezone: data.location_info?.timezone || 'America/Sao_Paulo',
-    ...data.location_info
+    companyName: data.business_info?.companyName || '',
+    position: data.business_info?.position || '',
+    businessSector: data.business_info?.businessSector || '',
+    companySize: data.business_info?.companySize || '',
+    annualRevenue: data.business_info?.annualRevenue || '',
+    companyWebsite: data.business_info?.companyWebsite || '',
+    ...data.business_info
   });
+
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
+  const getFieldError = (field: string) => errors[field];
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({
       ...prev,
       [field]: value
     }));
+
+    // Limpar erro do campo quando usuário interagir
+    if (errors[field]) {
+      setErrors(prev => ({
+        ...prev,
+        [field]: ''
+      }));
+    }
+  };
+
+  const validateForm = () => {
+    const newErrors: Record<string, string> = {};
+
+    if (!formData.position) {
+      newErrors.position = 'Posição é obrigatória';
+    }
+
+    if (!formData.businessSector) {
+      newErrors.businessSector = 'Setor de atuação é obrigatório';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
   const handleNext = () => {
+    if (!validateForm()) {
+      return;
+    }
     onNext(formData);
   };
 
-  const brazilStates = [
-    'Acre', 'Alagoas', 'Amapá', 'Amazonas', 'Bahia', 'Ceará', 'Distrito Federal',
-    'Espírito Santo', 'Goiás', 'Maranhão', 'Mato Grosso', 'Mato Grosso do Sul',
-    'Minas Gerais', 'Pará', 'Paraíba', 'Paraná', 'Pernambuco', 'Piauí',
-    'Rio de Janeiro', 'Rio Grande do Norte', 'Rio Grande do Sul', 'Rondônia',
-    'Roraima', 'Santa Catarina', 'São Paulo', 'Sergipe', 'Tocantins'
-  ];
-
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {/* Header */}
-      <div className="text-center space-y-2">
-        <h2 className="text-2xl font-bold">
-          Onde você está localizado?
+      <div className="text-center space-y-3">
+        <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto">
+          <Briefcase className="h-8 w-8 text-primary" />
+        </div>
+        <h2 className="text-3xl font-bold text-foreground">
+          Conte-me sobre seu mundo profissional
         </h2>
-        <p className="text-muted-foreground">
-          Conhecer sua localização nos ajuda a personalizar horários e eventos regionais.
+        <p className="text-muted-foreground text-lg">
+          Essas informações me ajudam a personalizar suas recomendações de IA
         </p>
       </div>
 
-      {/* Form */}
-      <div className="grid gap-4">
-        <div className="grid md:grid-cols-2 gap-4">
+      <Card className="bg-card border border-border">
+        <CardContent className="space-y-6 pt-6">
+          {/* Nome da Empresa */}
           <div className="space-y-2">
-            <Label htmlFor="country">País</Label>
+            <Label htmlFor="companyName" className="text-foreground font-medium">
+              🏢 Em qual empresa você trabalha?
+            </Label>
             <Input
-              id="country"
-              type="text"
-              value={formData.country}
-              onChange={(e) => handleInputChange('country', e.target.value)}
-              readOnly
+              id="companyName"
+              value={formData.companyName}
+              onChange={(e) => handleInputChange('companyName', e.target.value)}
+              placeholder="Ex: Google, Microsoft, Minha Startup Incrível..."
+              className="bg-background border-border text-foreground"
             />
+            <p className="text-xs text-muted-foreground">💡 Isso me ajuda a entender seu contexto empresarial</p>
           </div>
 
+          {/* Cargo/Posição */}
           <div className="space-y-2">
-            <Label htmlFor="state">Estado</Label>
-            <Select value={formData.state} onValueChange={(value) => handleInputChange('state', value)}>
-              <SelectTrigger>
-                <SelectValue placeholder="Selecione seu estado" />
+            <Label htmlFor="position" className="text-foreground font-medium">
+              🎯 Qual é seu papel de liderança? *
+            </Label>
+            <p className="text-xs text-muted-foreground">⭐ Seu cargo me ajuda a sugerir as melhores estratégias de IA</p>
+            <Select 
+              value={formData.position} 
+              onValueChange={(value) => handleInputChange('position', value)}
+            >
+              <SelectTrigger className="bg-background border-border text-foreground">
+                <SelectValue placeholder="👑 Escolha sua posição de impacto..." />
               </SelectTrigger>
               <SelectContent>
-                {brazilStates.map((state) => (
-                  <SelectItem key={state} value={state}>
-                    {state}
-                  </SelectItem>
-                ))}
+                <SelectItem value="ceo">CEO</SelectItem>
+                <SelectItem value="diretor">Diretor</SelectItem>
+                <SelectItem value="gerente">Gerente</SelectItem>
+                <SelectItem value="coordenador">Coordenador</SelectItem>
+                <SelectItem value="analista">Analista</SelectItem>
+                <SelectItem value="consultor">Consultor</SelectItem>
+                <SelectItem value="empreendedor">Empreendedor</SelectItem>
+                <SelectItem value="estudante">Estudante</SelectItem>
+                <SelectItem value="outros">Outros</SelectItem>
+              </SelectContent>
+            </Select>
+            {getFieldError('position') && (
+              <p className="text-destructive text-sm">{getFieldError('position')}</p>
+            )}
+          </div>
+
+          {/* Setor de Atuação */}
+          <div className="space-y-2">
+            <Label htmlFor="businessSector" className="text-foreground font-medium">
+              🎯 Em qual setor você está revolucionando? *
+            </Label>
+            <p className="text-xs text-muted-foreground">🔍 Cada setor tem oportunidades únicas de IA</p>
+            <Select 
+              value={formData.businessSector} 
+              onValueChange={(value) => handleInputChange('businessSector', value)}
+            >
+              <SelectTrigger className="bg-background border-border text-foreground">
+                <SelectValue placeholder="🚀 Escolha seu setor de impacto..." />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="inteligencia-artificial">Inteligência Artificial</SelectItem>
+                <SelectItem value="tecnologia">Tecnologia</SelectItem>
+                <SelectItem value="marketing-digital">Marketing Digital</SelectItem>
+                <SelectItem value="e-commerce">E-commerce</SelectItem>
+                <SelectItem value="financeiro">Financeiro</SelectItem>
+                <SelectItem value="saude">Saúde</SelectItem>
+                <SelectItem value="educacao">Educação</SelectItem>
+                <SelectItem value="consultoria">Consultoria</SelectItem>
+                <SelectItem value="juridico">Jurídico</SelectItem>
+                <SelectItem value="recursos-humanos">Recursos Humanos</SelectItem>
+                <SelectItem value="varejo">Varejo</SelectItem>
+                <SelectItem value="servicos">Serviços</SelectItem>
+                <SelectItem value="industrial">Industrial</SelectItem>
+                <SelectItem value="logistica">Logística</SelectItem>
+                <SelectItem value="imobiliario">Imobiliário</SelectItem>
+                <SelectItem value="alimenticio">Alimentício</SelectItem>
+                <SelectItem value="energia">Energia</SelectItem>
+                <SelectItem value="telecomunicacoes">Telecomunicações</SelectItem>
+                <SelectItem value="agronegocio">Agronegócio</SelectItem>
+                <SelectItem value="construcao">Construção</SelectItem>
+                <SelectItem value="governo">Governo</SelectItem>
+                <SelectItem value="ongs">ONGs</SelectItem>
+                <SelectItem value="outros">Outros</SelectItem>
+              </SelectContent>
+            </Select>
+            {getFieldError('businessSector') && (
+              <p className="text-destructive text-sm">{getFieldError('businessSector')}</p>
+            )}
+          </div>
+
+          {/* Porte da Empresa */}
+          <div className="space-y-2">
+            <Label htmlFor="companySize" className="text-foreground font-medium">
+              Número de Funcionários da Empresa
+            </Label>
+            <Select 
+              value={formData.companySize} 
+              onValueChange={(value) => handleInputChange('companySize', value)}
+            >
+              <SelectTrigger className="bg-background border-border text-foreground">
+                <SelectValue placeholder="Selecione o número de funcionários" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="1">1 funcionário</SelectItem>
+                <SelectItem value="2-5">2-5 funcionários</SelectItem>
+                <SelectItem value="6-10">6-10 funcionários</SelectItem>
+                <SelectItem value="11-25">11-25 funcionários</SelectItem>
+                <SelectItem value="26-50">26-50 funcionários</SelectItem>
+                <SelectItem value="51-100">51-100 funcionários</SelectItem>
+                <SelectItem value="101-250">101-250 funcionários</SelectItem>
+                <SelectItem value="251-500">251-500 funcionários</SelectItem>
+                <SelectItem value="501-1000">501-1000 funcionários</SelectItem>
+                <SelectItem value="1001+">1001+ funcionários</SelectItem>
               </SelectContent>
             </Select>
           </div>
-        </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="city">Cidade</Label>
-          <Input
-            id="city"
-            type="text"
-            placeholder="Sua cidade"
-            value={formData.city}
-            onChange={(e) => handleInputChange('city', e.target.value)}
-          />
-        </div>
-      </div>
+          {/* Faturamento Anual */}
+          <div className="space-y-2">
+            <Label htmlFor="annualRevenue" className="text-foreground font-medium">
+              Faturamento Anual da Empresa
+            </Label>
+            <Select 
+              value={formData.annualRevenue} 
+              onValueChange={(value) => handleInputChange('annualRevenue', value)}
+            >
+              <SelectTrigger className="bg-background border-border text-foreground">
+                <SelectValue placeholder="Selecione o faturamento anual" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="ate-100k">Até R$ 100 mil</SelectItem>
+                <SelectItem value="100k-500k">R$ 100 mil - R$ 500 mil</SelectItem>
+                <SelectItem value="500k-1m">R$ 500 mil - R$ 1 milhão</SelectItem>
+                <SelectItem value="1m-5m">R$ 1 milhão - R$ 5 milhões</SelectItem>
+                <SelectItem value="5m-10m">R$ 5 milhões - R$ 10 milhões</SelectItem>
+                <SelectItem value="10m-25m">R$ 10 milhões - R$ 25 milhões</SelectItem>
+                <SelectItem value="25m-50m">R$ 25 milhões - R$ 50 milhões</SelectItem>
+                <SelectItem value="50m-100m">R$ 50 milhões - R$ 100 milhões</SelectItem>
+                <SelectItem value="100m-500m">R$ 100 milhões - R$ 500 milhões</SelectItem>
+                <SelectItem value="500m+">Acima de R$ 500 milhões</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Website da Empresa */}
+          <div className="space-y-2">
+            <Label htmlFor="companyWebsite" className="text-foreground font-medium">
+              Website da Empresa
+            </Label>
+            <Input
+              id="companyWebsite"
+              value={formData.companyWebsite}
+              onChange={(e) => handleInputChange('companyWebsite', e.target.value)}
+              placeholder="https://www.empresa.com.br"
+              className="bg-background border-border text-foreground"
+            />
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };

@@ -62,14 +62,14 @@ export const LocationSelector: React.FC<LocationSelectorProps> = ({
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       {/* Seleção de Estado */}
       <div>
-        <Label htmlFor="state" className="text-slate-200">
+        <Label htmlFor="state" className="text-foreground">
           Estado *
         </Label>
         <Select value={selectedState || ''} onValueChange={handleStateChange}>
-          <SelectTrigger className="mt-1 bg-[#151823] border-white/20 text-white">
+          <SelectTrigger className="mt-1 bg-background border-border text-foreground">
             <SelectValue placeholder={isLoading ? "Carregando estados..." : "Selecione seu estado"} />
           </SelectTrigger>
-          <SelectContent className="bg-[#151823] border-white/20">
+          <SelectContent className="bg-background border-border">
             {isLoading ? (
               <div className="flex items-center justify-center p-4">
                 <Loader2 className="w-4 h-4 animate-spin mr-2" />
@@ -80,7 +80,7 @@ export const LocationSelector: React.FC<LocationSelectorProps> = ({
                 <SelectItem 
                   key={estado.code} 
                   value={estado.code}
-                  className="text-white hover:bg-white/10"
+                  className="text-foreground hover:bg-accent"
                 >
                   {estado.name}
                 </SelectItem>
@@ -95,7 +95,7 @@ export const LocationSelector: React.FC<LocationSelectorProps> = ({
 
       {/* Seleção de Cidade */}
       <div>
-        <Label htmlFor="city" className="text-slate-200">
+        <Label htmlFor="city" className="text-foreground">
           Cidade *
         </Label>
         <Select 
@@ -103,7 +103,7 @@ export const LocationSelector: React.FC<LocationSelectorProps> = ({
           onValueChange={handleCityChange}
           disabled={!selectedState}
         >
-          <SelectTrigger className="mt-1 bg-[#151823] border-white/20 text-white">
+          <SelectTrigger className="mt-1 bg-background border-border text-foreground">
             <SelectValue 
               placeholder={
                 !selectedState 
@@ -114,7 +114,7 @@ export const LocationSelector: React.FC<LocationSelectorProps> = ({
               } 
             />
           </SelectTrigger>
-          <SelectContent className="bg-[#151823] border-white/20">
+          <SelectContent className="bg-background border-border">
             {isCitiesLoading ? (
               <div className="flex items-center justify-center p-4">
                 <Loader2 className="w-4 h-4 animate-spin mr-2" />
@@ -125,13 +125,13 @@ export const LocationSelector: React.FC<LocationSelectorProps> = ({
                 <SelectItem 
                   key={cidade.name} 
                   value={cidade.name}
-                  className="text-white hover:bg-white/10"
+                  className="text-foreground hover:bg-accent"
                 >
                   {cidade.name}
                 </SelectItem>
               ))
             ) : selectedState ? (
-              <div className="p-4 text-center text-sm text-slate-400">
+              <div className="p-4 text-center text-sm text-muted-foreground">
                 Nenhuma cidade encontrada
               </div>
             ) : null}

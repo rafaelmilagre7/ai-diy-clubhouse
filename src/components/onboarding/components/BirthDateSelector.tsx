@@ -117,14 +117,14 @@ export const BirthDateSelector: React.FC<BirthDateSelectorProps> = ({
 
   return (
     <div>
-      <Label className="text-slate-200">
+      <Label className="text-foreground">
         Data de Nascimento *
       </Label>
       
       <div className="grid grid-cols-3 gap-2 mt-1">
         {/* Dia */}
         <Select value={selectedDay} onValueChange={handleDayChange}>
-          <SelectTrigger className="bg-[#151823] border-white/20 text-white">
+          <SelectTrigger className="bg-background border-border text-foreground">
             <SelectValue placeholder="Dia" />
           </SelectTrigger>
           <SelectContent>
@@ -138,7 +138,7 @@ export const BirthDateSelector: React.FC<BirthDateSelectorProps> = ({
 
         {/* Mês */}
         <Select value={selectedMonth} onValueChange={handleMonthChange}>
-          <SelectTrigger className="bg-[#151823] border-white/20 text-white">
+          <SelectTrigger className="bg-background border-border text-foreground">
             <SelectValue placeholder="Mês" />
           </SelectTrigger>
           <SelectContent>
@@ -152,7 +152,7 @@ export const BirthDateSelector: React.FC<BirthDateSelectorProps> = ({
 
         {/* Ano */}
         <Select value={selectedYear} onValueChange={handleYearChange}>
-          <SelectTrigger className="bg-[#151823] border-white/20 text-white">
+          <SelectTrigger className="bg-background border-border text-foreground">
             <SelectValue placeholder="Ano" />
           </SelectTrigger>
           <SelectContent>

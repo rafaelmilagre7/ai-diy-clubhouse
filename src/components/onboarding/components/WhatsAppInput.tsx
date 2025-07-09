@@ -100,11 +100,11 @@ export const WhatsAppInput: React.FC<WhatsAppInputProps> = ({
 
   return (
     <div>
-      <Label htmlFor="phone" className="text-slate-200">
+      <Label htmlFor="phone" className="text-foreground">
         WhatsApp *
       </Label>
       <div className="relative mt-1">
-        <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
+        <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
         <Input
           id="phone"
           type="tel"
@@ -112,7 +112,7 @@ export const WhatsAppInput: React.FC<WhatsAppInputProps> = ({
           onChange={handleChange}
           onFocus={handleFocus}
           onBlur={handleBlur}
-          className={`pl-10 pr-10 bg-[#151823] border-white/20 text-white ${
+          className={`pl-10 pr-10 bg-background border-border text-foreground ${
             showValidation 
               ? isValid 
                 ? 'border-green-500 focus:border-green-500' 
@@ -144,7 +144,7 @@ export const WhatsAppInput: React.FC<WhatsAppInputProps> = ({
       
       {/* Dica de formato */}
       {isFocused && !value && (
-        <p className="text-xs text-slate-400 mt-1">
+        <p className="text-xs text-muted-foreground mt-1">
           Formato: (11) 99999-9999
         </p>
       )}
