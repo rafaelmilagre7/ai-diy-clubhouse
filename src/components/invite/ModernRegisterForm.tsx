@@ -90,6 +90,7 @@ const ModernRegisterForm: React.FC<ModernRegisterFormProps> = ({
     
     try {
       setIsLoading(true);
+      console.log('🚀 [REGISTER] Iniciando criação de conta...', { email, inviteToken });
       
       const { data, error } = await supabase.auth.signUp({
         email,
@@ -103,7 +104,12 @@ const ModernRegisterForm: React.FC<ModernRegisterFormProps> = ({
         },
       });
       
-      if (error) throw error;
+      console.log('📝 [REGISTER] Resultado signUp:', { data: !!data, error, userId: data?.user?.id });
+      
+      if (error) {
+        console.error('❌ [REGISTER] Erro no signUp:', error);
+        throw error;
+      }
       
       // Se há um token de convite, aplicar usando a função do Supabase
       if (inviteToken && data.user) {
