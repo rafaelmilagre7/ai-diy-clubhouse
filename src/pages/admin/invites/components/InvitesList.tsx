@@ -20,6 +20,7 @@ import {
 import { Invite } from "@/hooks/admin/invites/types";
 import { formatDate } from "../utils/formatters";
 import { useState } from "react";
+import { APP_CONFIG } from '@/config/app';
 
 interface InvitesListProps {
   invites: Invite[];
@@ -143,7 +144,6 @@ const InvitesList = ({ invites, onResend, onDelete }: InvitesListProps) => {
                           variant="outline"
                           size="sm"
                           onClick={() => {
-                            const { APP_CONFIG } = require('@/config/app');
                             copyToClipboard(APP_CONFIG.getAppUrl(`/convite/${invite.token}`));
                           }}
                         >

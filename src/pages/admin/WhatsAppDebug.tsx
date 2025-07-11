@@ -26,6 +26,7 @@ import {
   Clock,
   AlertCircle
 } from "lucide-react";
+import { APP_CONFIG } from '@/config/app';
 
 interface DiagnosticResult {
   test: string;
@@ -460,7 +461,6 @@ const WhatsAppDebug: React.FC = () => {
 
       const inviteToken = inviteResult.token;
       const inviteId = inviteResult.invite_id;
-      const { APP_CONFIG } = require('@/config/app');
       const inviteUrl = APP_CONFIG.getAppUrl(`/convite/${inviteToken}`);
 
       console.log('🎯 [TESTE TEMPLATE] Convite criado:', {

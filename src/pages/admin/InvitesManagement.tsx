@@ -44,6 +44,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { APP_CONFIG } from '@/config/app';
 
 // Componente para criar novo convite
 const CreateInviteDialog = ({ roles, onInviteCreated }: { roles: any[], onInviteCreated: () => void }) => {
@@ -502,7 +503,6 @@ const InvitesList = ({
                           variant="outline"
                           size="sm"
                           onClick={() => {
-                            const { APP_CONFIG } = require('@/config/app');
                             copyToClipboard(APP_CONFIG.getAppUrl(`/convite/${invite.token}`));
                           }}
                         >

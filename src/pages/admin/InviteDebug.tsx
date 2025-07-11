@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
+import { APP_CONFIG } from '@/config/app';
 
 const InviteDebug = () => {
   const [token, setToken] = useState('');
@@ -162,7 +163,6 @@ const InviteDebug = () => {
 
       const inviteToken = inviteResult.token;
       const inviteId = inviteResult.invite_id;
-      const { APP_CONFIG } = require('@/config/app');
       const inviteUrl = APP_CONFIG.getAppUrl(`/convite/${inviteToken}`);
 
       console.log('🎯 [TESTE TEMPLATE] Convite criado:', {

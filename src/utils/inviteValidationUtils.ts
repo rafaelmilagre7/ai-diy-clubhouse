@@ -1,5 +1,6 @@
 
 import { supabase } from '@/lib/supabase';
+import { APP_CONFIG } from '@/config/app';
 
 export interface InviteValidationResult {
   isValid: boolean;
@@ -239,7 +240,6 @@ export const generateInviteUrl = (token: string): string => {
   const cleanToken = token.trim().replace(/\s+/g, '');
   
   // Usar sempre o domínio configurado (app.viverdeia.ai em produção)
-  const { APP_CONFIG } = require('@/config/app');
   const inviteUrl = APP_CONFIG.getAppUrl(`/convite/${encodeURIComponent(cleanToken)}`);
   
   console.log("🔗 [URL-GENERATION] URL gerada:", inviteUrl);

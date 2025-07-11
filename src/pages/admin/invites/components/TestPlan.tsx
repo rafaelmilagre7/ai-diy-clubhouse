@@ -12,6 +12,7 @@ import { useDeleteUser } from '@/hooks/admin/useDeleteUser';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 import { Switch } from '@/components/ui/switch';
+import { APP_CONFIG } from '@/config/app';
 
 export const TestPlan: React.FC = () => {
   const [testEmail, setTestEmail] = useState('rafaelkinojo@gmail.com');
@@ -157,7 +158,6 @@ export const TestPlan: React.FC = () => {
     try {
       addTestResult('EMAIL DIRETO', 'success', 'Testando envio direto via Resend...');
 
-      const { APP_CONFIG } = require('@/config/app');
       const testInviteUrl = APP_CONFIG.getAppUrl('/convite/TEST-TOKEN-123');
       
       const result = await sendInviteEmail({

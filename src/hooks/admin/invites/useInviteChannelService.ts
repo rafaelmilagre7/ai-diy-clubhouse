@@ -3,6 +3,7 @@ import { useState, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 import { SendInviteResponse, WhatsAppInviteData } from './types';
+import { APP_CONFIG } from '@/config/app';
 
 export function useInviteChannelService() {
   const [sendingChannels, setSendingChannels] = useState<Set<string>>(new Set());
@@ -12,8 +13,6 @@ export function useInviteChannelService() {
       console.error("Erro: Token vazio ao gerar link de convite");
       return "";
     }
-    
-    const { APP_CONFIG } = require('@/config/app');
     const cleanToken = token.trim().replace(/\s+/g, '');
     const baseUrl = APP_CONFIG.getAppUrl(`/convite/${cleanToken}`);
     console.log("URL do convite gerado:", baseUrl);

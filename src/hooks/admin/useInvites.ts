@@ -3,6 +3,7 @@ import { useState, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/auth';
 import { toast } from 'sonner';
+import { APP_CONFIG } from '@/config/app';
 
 export interface Invite {
   id: string;
@@ -337,7 +338,6 @@ export function useInvites() {
     }
     
     // Construir URL absoluta com domínio configurado
-    const { APP_CONFIG } = require('@/config/app');
     const baseUrl = APP_CONFIG.getAppUrl(`/convite/${cleanToken}`);
     console.log("URL do convite gerado:", baseUrl);
     

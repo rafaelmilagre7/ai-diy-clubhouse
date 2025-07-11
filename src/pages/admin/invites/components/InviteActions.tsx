@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/tooltip";
 import { toast } from "sonner";
 import { Invite } from "@/hooks/admin/invites/types";
+import { APP_CONFIG } from '@/config/app';
 
 interface InviteActionsProps {
   invite: Invite;
@@ -19,7 +20,6 @@ interface InviteActionsProps {
 
 const InviteActions = ({ invite, onResend, onDelete, isResending }: InviteActionsProps) => {
   const copyInviteLink = () => {
-    const { APP_CONFIG } = require('@/config/app');
     const link = APP_CONFIG.getAppUrl(`/convite/${invite.token}`);
     navigator.clipboard.writeText(link);
     toast.success("Link copiado!");
