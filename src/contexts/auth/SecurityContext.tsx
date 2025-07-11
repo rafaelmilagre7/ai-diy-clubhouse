@@ -20,9 +20,9 @@ interface SecurityProviderProps {
 export const SecurityProvider: React.FC<SecurityProviderProps> = ({ children }) => {
   const { user } = useAuth();
   const secureSession = useSecureSession({
-    maxIdleTime: 30, // 30 minutos
-    checkInterval: 30, // verificar a cada 30 segundos
-    autoLogoutWarning: 5 // avisar 5 minutos antes
+    maxIdleTime: 120, // 2 horas (menos agressivo)
+    checkInterval: 300, // verificar a cada 5 minutos (menos frequente)
+    autoLogoutWarning: 15 // avisar 15 minutos antes (mais tempo)
   });
 
   // Log de eventos de segurança (sem dados sensíveis)
