@@ -20,7 +20,9 @@ const ModernRegisterForm: React.FC<ModernRegisterFormProps> = ({
   const [name, setName] = useState("");
   const [email, setEmail] = useState(prefilledEmail || "");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [step, setStep] = useState<'form' | 'success'>('form');
 
@@ -41,14 +43,24 @@ const ModernRegisterForm: React.FC<ModernRegisterFormProps> = ({
 
   const passwordValidation = validatePassword(password);
   const isPasswordValid = passwordValidation.score >= 4; // Requer pelo menos 4 critérios
+  const passwordsMatch = password && confirmPassword && password === confirmPassword;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!name || !email || !password) {
+    if (!name || !email || !password || !confirmPassword) {
       toast({
         title: "Campos obrigatórios",
         description: "Por favor, preencha todos os campos.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (!passwordsMatch) {
+      toast({
+        title: "Senhas não coincidem",
+        description: "As senhas digitadas são diferentes. Verifique e tente novamente.",
         variant: "destructive",
       });
       return;
@@ -293,10 +305,45 @@ const ModernRegisterForm: React.FC<ModernRegisterFormProps> = ({
           )}
         </div>
 
+        {/* Confirmar Senha */}
+        <div className="space-y-2">
+          <Label htmlFor="confirm-password" className="text-sm font-medium">
+            Confirmar senha
+          </Label>
+          <div className="relative">
+            <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              id="confirm-password"
+              type={showConfirmPassword ? "text" : "password"}
+              placeholder="Digite a senha novamente"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              className="pl-10 pr-10 h-12"
+            />
+            <button
+              type="button"
+              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+            >
+              {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            </button>
+          </div>
+
+          {/* Validação de confirmação */}
+          {confirmPassword && (
+            <div className={`flex items-center gap-2 text-sm ${
+              passwordsMatch ? 'text-green-600' : 'text-red-600'
+            }`}>
+              <CheckCircle className={`h-4 w-4 ${passwordsMatch ? 'text-green-600' : 'text-red-600'}`} />
+              {passwordsMatch ? 'Senhas coincidem' : 'As senhas não coincidem'}
+            </div>
+          )}
+        </div>
+
         <Button
           type="submit"
           className="w-full h-14 font-semibold text-lg transition-all duration-200 group bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 shadow-lg hover:shadow-xl"
-          disabled={isLoading || !isPasswordValid}
+          disabled={isLoading || !isPasswordValid || !passwordsMatch}
         >
           {isLoading ? (
             <>

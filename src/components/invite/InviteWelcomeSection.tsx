@@ -36,6 +36,15 @@ const InviteWelcomeSection: React.FC<InviteWelcomeSectionProps> = ({ inviteData 
 
   return (
     <div className="space-y-8">
+      {/* Logo Section */}
+      <div className="text-center mb-8">
+        <img 
+          src="https://milagredigital.com/wp-content/uploads/2025/04/viverdeiaclub.avif"
+          alt="VIVER DE IA Club"
+          className="w-32 h-auto mx-auto mb-6"
+        />
+      </div>
+
       {/* Header Section */}
       <div className="text-center space-y-6">
         <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-primary/20 to-primary/10 border border-primary/30 rounded-full text-sm font-semibold text-primary mb-6 animate-pulse">
@@ -90,23 +99,23 @@ const InviteWelcomeSection: React.FC<InviteWelcomeSectionProps> = ({ inviteData 
       {/* Stats Section */}
       <div className="bg-gradient-to-br from-primary/10 via-primary/5 to-transparent border-2 border-primary/30 rounded-xl p-8 shadow-xl">
         <h3 className="text-center text-lg font-semibold text-foreground mb-6">
-          Resultados comprovados da nossa comunidade:
+          Por que escolher nossa comunidade:
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
           <div className="space-y-2">
-            <div className="text-4xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">1.200+</div>
-            <div className="text-sm font-medium text-muted-foreground">Empresas já transformadas</div>
-            <div className="text-xs text-muted-foreground">Desde 2023</div>
+            <div className="text-4xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">300+</div>
+            <div className="text-sm font-medium text-muted-foreground">Empresas transformadas</div>
+            <div className="text-xs text-muted-foreground">Confiança comprovada</div>
           </div>
           <div className="space-y-2">
-            <div className="text-4xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">300%</div>
-            <div className="text-sm font-medium text-muted-foreground">Aumento médio de receita</div>
-            <div className="text-xs text-muted-foreground">Nos primeiros 6 meses</div>
+            <div className="text-4xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">+Eficiência</div>
+            <div className="text-sm font-medium text-muted-foreground">Aumento de eficiência operacional</div>
+            <div className="text-xs text-muted-foreground">Processos automatizados</div>
           </div>
           <div className="space-y-2">
-            <div className="text-4xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">R$ 50M+</div>
-            <div className="text-sm font-medium text-muted-foreground">Em receita gerada pelos membros</div>
-            <div className="text-xs text-muted-foreground">Só em 2024</div>
+            <div className="text-4xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">Escale</div>
+            <div className="text-sm font-medium text-muted-foreground">Escale sua empresa sem precisar</div>
+            <div className="text-xs text-muted-foreground">escalar pessoas</div>
           </div>
         </div>
       </div>
