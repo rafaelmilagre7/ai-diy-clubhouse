@@ -193,6 +193,8 @@ export function useInviteChannelService() {
 
       // Enviar por WhatsApp
       if (shouldSendWhatsApp) {
+        console.log("🔄 [HYBRID] INICIANDO envio WhatsApp...", { phone, channelPreference });
+        
         whatsappResult = await sendWhatsAppInvite({
           phone: phone!,
           inviteUrl,
@@ -204,10 +206,17 @@ export function useInviteChannelService() {
           email
         });
 
+        console.log("🔄 [HYBRID] RESULTADO WhatsApp:", whatsappResult);
+
         if (!whatsappResult.success) {
           hasError = true;
           errors.push(`WhatsApp: ${whatsappResult.error}`);
+          console.error("❌ [HYBRID] ERRO WhatsApp:", whatsappResult.error);
+        } else {
+          console.log("✅ [HYBRID] WhatsApp SUCESSO:", whatsappResult.message);
         }
+      } else {
+        console.log("⏭️ [HYBRID] WhatsApp PULADO - shouldSendWhatsApp:", shouldSendWhatsApp, "phone:", !!phone);
       }
 
       // Determinar resultado final
