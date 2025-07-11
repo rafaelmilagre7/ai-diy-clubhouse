@@ -48,14 +48,17 @@ const ModernRegisterForm: React.FC<ModernRegisterFormProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    console.log('🔄 [REGISTER] Iniciando submissão do formulário:', {
+    console.log('🔄 [REGISTER] === INICIANDO PROCESSO DE REGISTRO ===');
+    console.log('🔄 [REGISTER] Dados do formulário:', {
       name: !!name,
       email: !!email,
       password: !!password,
       confirmPassword: !!confirmPassword,
       passwordsMatch,
       isPasswordValid,
-      passwordScore: passwordValidation.score
+      passwordScore: passwordValidation.score,
+      inviteToken: inviteToken ? `${inviteToken.substring(0, 6)}***` : 'sem token',
+      timestamp: new Date().toISOString()
     });
     
     if (!name || !email || !password || !confirmPassword) {
@@ -88,62 +91,162 @@ const ModernRegisterForm: React.FC<ModernRegisterFormProps> = ({
       return;
     }
     
-    try {
-      setIsLoading(true);
-      console.log('🚀 [REGISTER] Iniciando criação de conta...', { email, inviteToken });
+    // Função para tentar o signUp com retry
+    const attemptSignUp = async (attempt: number = 1, maxAttempts: number = 3): Promise<any> => {
+      console.log(`🚀 [REGISTER] Tentativa ${attempt}/${maxAttempts} - Iniciando signUp...`);
       
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            name,
-            invite_token: inviteToken,
+      try {
+        // Primeiro, testar conectividade básica
+        console.log('🔍 [REGISTER] Testando conectividade com Supabase...');
+        const { data: healthCheck } = await supabase.from('user_roles').select('count').limit(1);
+        console.log('✅ [REGISTER] Conectividade OK:', !!healthCheck);
+        
+        console.log('📨 [REGISTER] Iniciando signUp com dados:', {
+          email,
+          hasPassword: !!password,
+          hasName: !!name,
+          hasInviteToken: !!inviteToken,
+          redirectUrl: `${window.location.origin}/onboarding`
+        });
+        
+        const signUpData = {
+          email,
+          password,
+          options: {
+            data: {
+              name,
+              ...(inviteToken && { invite_token: inviteToken })
+            },
+            emailRedirectTo: `${window.location.origin}/onboarding`
           },
-          emailRedirectTo: `${window.location.origin}/onboarding`
-        },
-      });
-      
-      console.log('📝 [REGISTER] Resultado signUp:', { data: !!data, error, userId: data?.user?.id });
-      
-      if (error) {
-        console.error('❌ [REGISTER] Erro no signUp:', error);
+        };
+        
+        console.log('📤 [REGISTER] Enviando para supabase.auth.signUp...');
+        const result = await supabase.auth.signUp(signUpData);
+        
+        console.log('📥 [REGISTER] Resposta do signUp:', {
+          hasData: !!result.data,
+          hasUser: !!result.data?.user,
+          userId: result.data?.user?.id,
+          userEmail: result.data?.user?.email,
+          hasError: !!result.error,
+          errorCode: result.error?.status,
+          errorMessage: result.error?.message,
+          fullError: result.error
+        });
+        
+        return result;
+        
+      } catch (error: any) {
+        console.error(`❌ [REGISTER] Erro na tentativa ${attempt}:`, {
+          name: error.name,
+          message: error.message,
+          code: error.code,
+          status: error.status,
+          stack: error.stack?.substring(0, 200),
+          fullError: error
+        });
+        
+        if (attempt < maxAttempts) {
+          const delay = attempt * 1000; // 1s, 2s, 3s
+          console.log(`⏳ [REGISTER] Aguardando ${delay}ms antes da próxima tentativa...`);
+          await new Promise(resolve => setTimeout(resolve, delay));
+          return attemptSignUp(attempt + 1, maxAttempts);
+        }
+        
         throw error;
       }
+    };
+    
+    try {
+      setIsLoading(true);
       
-      // Se há um token de convite, aplicar usando a função do Supabase
+      // Tentar o signUp com retry
+      const { data, error } = await attemptSignUp();
+      
+      if (error) {
+        console.error('❌ [REGISTER] Erro final no signUp:', error);
+        
+        // Análise detalhada do erro
+        let userMessage = "Não foi possível criar sua conta. ";
+        
+        if (error.message?.includes("User already registered")) {
+          userMessage = "Este email já possui uma conta. Tente fazer login ou usar 'Esqueci minha senha'.";
+        } else if (error.message?.includes("signup disabled")) {
+          userMessage = "O cadastro está temporariamente desabilitado. Entre em contato com o suporte.";
+        } else if (error.message?.includes("invalid_request")) {
+          userMessage = "Dados inválidos fornecidos. Verifique o email e tente novamente.";
+        } else if (error.status === 500) {
+          userMessage = "Erro interno do servidor. Nossa equipe foi notificada. Tente novamente em alguns minutos.";
+        } else {
+          userMessage += `Erro: ${error.message}`;
+        }
+        
+        toast({
+          title: "Erro no cadastro",
+          description: userMessage,
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      console.log('✅ [REGISTER] SignUp concluído com sucesso!', {
+        userId: data?.user?.id,
+        userEmail: data?.user?.email,
+        needsConfirmation: !data?.user?.email_confirmed_at
+      });
+      
+      // Se há um token de convite, aplicar
       if (inviteToken && data.user) {
+        console.log('🎫 [REGISTER] Aplicando token de convite...');
         try {
           const { data: inviteResult, error: inviteError } = await supabase.rpc('use_invite', {
             invite_token: inviteToken,
             user_id: data.user.id
           });
           
+          console.log('🎫 [REGISTER] Resultado do convite:', {
+            success: !inviteError,
+            result: inviteResult,
+            error: inviteError?.message
+          });
+          
           if (inviteError) {
-            console.error('Erro ao aplicar convite:', inviteError);
+            console.error('⚠️ [REGISTER] Erro ao aplicar convite:', inviteError);
             toast({
-              title: "Aviso",
-              description: "Conta criada, mas houve um problema ao aplicar o convite. Entre em contato com o suporte.",
+              title: "Conta criada com sucesso",
+              description: "Sua conta foi criada, mas houve um problema ao aplicar o convite. Entre em contato com o suporte.",
               variant: "destructive",
             });
+          } else {
+            console.log('✅ [REGISTER] Convite aplicado com sucesso!');
           }
         } catch (inviteError) {
-          console.warn('Erro ao aplicar convite:', inviteError);
+          console.warn('⚠️ [REGISTER] Erro inesperado ao aplicar convite:', inviteError);
         }
       }
       
+      console.log('🎉 [REGISTER] === PROCESSO CONCLUÍDO COM SUCESSO ===');
       setStep('success');
       onSuccess?.();
       
     } catch (error: any) {
-      console.error("Erro ao criar conta:", error);
+      console.error("💥 [REGISTER] Erro fatal não tratado:", {
+        name: error.name,
+        message: error.message,
+        code: error.code,
+        stack: error.stack,
+        fullError: error
+      });
+      
       toast({
-        title: "Erro no cadastro",
-        description: error.message || "Não foi possível criar sua conta. Tente novamente.",
+        title: "Erro inesperado",
+        description: "Ocorreu um erro inesperado. Nossa equipe foi notificada. Tente novamente ou entre em contato com o suporte.",
         variant: "destructive",
       });
     } finally {
       setIsLoading(false);
+      console.log('🏁 [REGISTER] Processo finalizado, loading=false');
     }
   };
 
