@@ -171,6 +171,15 @@ export function useInviteChannelService() {
       // Determinar quais canais enviar
       const shouldSendEmail = channelPreference === 'email' || channelPreference === 'both';
       const shouldSendWhatsApp = (channelPreference === 'whatsapp' || channelPreference === 'both') && phone;
+      
+      console.log("🔍 [DEBUG] Análise de canais:", {
+        channelPreference,
+        phone,
+        shouldSendEmail,
+        shouldSendWhatsApp,
+        phoneExists: !!phone,
+        phoneLength: phone?.length
+      });
 
       // Enviar por email
       if (shouldSendEmail) {
