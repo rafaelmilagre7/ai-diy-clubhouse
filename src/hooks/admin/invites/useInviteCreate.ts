@@ -200,6 +200,13 @@ const sendInviteNotification = async ({
 
       // Tentar WhatsApp
       try {
+        console.log("📱 [DEBUG] Iniciando chamada WhatsApp com dados:", {
+          phone,
+          inviteUrl: inviteUrl.substring(0, 50) + "...",
+          roleName,
+          email
+        });
+
         const { data: whatsappData, error: whatsappError } = await supabase.functions.invoke('send-whatsapp-invite', {
           body: {
             phone,
@@ -213,12 +220,22 @@ const sendInviteNotification = async ({
           }
         });
 
+        console.log("📱 [DEBUG] Resposta WhatsApp:", { 
+          data: whatsappData, 
+          error: whatsappError,
+          hasData: !!whatsappData,
+          hasError: !!whatsappError 
+        });
+
         if (!whatsappError && whatsappData.success) {
           whatsappSuccess = true;
+          console.log("✅ [DEBUG] WhatsApp enviado com sucesso!");
         } else {
+          console.error("❌ [DEBUG] Erro no WhatsApp:", whatsappData?.error || whatsappError?.message);
           lastError += `WhatsApp: ${whatsappData?.error || whatsappError?.message || 'Erro desconhecido'}`;
         }
       } catch (err: any) {
+        console.error("❌ [DEBUG] Exceção no WhatsApp:", err);
         lastError += `WhatsApp: ${err.message}`;
       }
 
