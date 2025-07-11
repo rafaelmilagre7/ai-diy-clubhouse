@@ -31,6 +31,14 @@ serve(async (req) => {
 
     const { phone, inviteUrl, roleName, expiresAt, senderName, notes, inviteId, email }: WhatsAppInviteRequest = await req.json()
 
+    console.log('🚨 [WHATSAPP-DEBUG] FUNÇÃO CHAMADA! Dados recebidos:', {
+      phone: phone?.substring(0, 5) + '***',
+      hasInviteUrl: !!inviteUrl,
+      roleName,
+      email: email?.substring(0, 5) + '***',
+      timestamp: new Date().toISOString()
+    })
+
     console.log('📱 [WHATSAPP] Iniciando envio de convite para:', phone?.substring(0, 5) + '***')
     console.log('📱 [WHATSAPP] URL do convite:', inviteUrl)
     console.log('📱 [WHATSAPP] Role:', roleName)
