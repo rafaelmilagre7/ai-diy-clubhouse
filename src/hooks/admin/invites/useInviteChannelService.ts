@@ -88,7 +88,7 @@ export function useInviteChannelService() {
     email
   }: WhatsAppInviteData): Promise<SendInviteResponse> => {
     try {
-      console.log("📱 Enviando WhatsApp para:", phone);
+      console.log("📱 [DEBUG] Iniciando envio WhatsApp:", { phone, inviteUrl, roleName, email });
       
       const { data, error } = await supabase.functions.invoke('send-whatsapp-invite', {
         body: {
@@ -103,8 +103,19 @@ export function useInviteChannelService() {
         }
       });
       
-      if (error) throw error;
-      if (!data.success) throw new Error(data.message || data.error);
+      console.log("📱 [DEBUG] Resposta da função WhatsApp:", { data, error });
+      
+      if (error) {
+        console.error('❌ [DEBUG] Erro da função:', error);
+        throw error;
+      }
+      
+      if (!data.success) {
+        console.error('❌ [DEBUG] Função reportou falha:', data);
+        throw new Error(data.message || data.error);
+      }
+      
+      console.log("✅ [DEBUG] WhatsApp enviado com sucesso:", data);
       
       return {
         success: true,
@@ -115,7 +126,7 @@ export function useInviteChannelService() {
         channel: 'whatsapp'
       };
     } catch (err: any) {
-      console.error('❌ Erro ao enviar WhatsApp:', err);
+      console.error('❌ [DEBUG] Erro completo no envio WhatsApp:', err);
       return {
         success: false,
         message: 'Erro ao enviar WhatsApp',
