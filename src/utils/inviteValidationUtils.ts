@@ -194,12 +194,7 @@ const logValidationAttempt = async (
   errorMessage?: string
 ): Promise<void> => {
   try {
-    // Remover temporariamente o log para evitar problemas de constraint
-    // await supabase.rpc('log_invite_validation_attempt', {
-    //   p_token: token,
-    //   p_success: success,
-    //   p_error_message: errorMessage
-    // });
+    // Log simples no console por enquanto
     console.log(`📊 [VALIDATION-LOG] Token: ${token.substring(0, 4)}***, Success: ${success}, Error: ${errorMessage || 'N/A'}`);
   } catch (error) {
     // Falhar silenciosamente para não quebrar o fluxo principal
