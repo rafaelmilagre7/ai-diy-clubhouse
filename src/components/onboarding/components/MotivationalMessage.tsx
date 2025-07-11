@@ -16,28 +16,28 @@ const getMotivationalContent = (step: number, completedSteps: number, totalSteps
   if (percentage >= 80) {
     return {
       icon: TrendingUp,
-      message: "🚀 Incrível! Você está quase lá! Sua transformação com IA está tomando forma.",
+      message: "Incrível! Você está quase lá! Sua transformação com IA está tomando forma.",
       color: "text-green-400",
       bgColor: "from-green-500/10 to-green-400/5"
     };
   } else if (percentage >= 50) {
     return {
       icon: Zap,
-      message: "⚡ Fantástico progresso! Você está na metade da jornada. Continue assim!",
+      message: "Fantástico progresso! Você está na metade da jornada. Continue assim!",
       color: "text-viverblue",
       bgColor: "from-viverblue/10 to-viverblue-light/5"
     };
   } else if (percentage >= 25) {
     return {
       icon: Sparkles,
-      message: "✨ Ótimo começo! Cada resposta me ajuda a conhecer você melhor.",
+      message: "Ótimo começo! Cada resposta me ajuda a conhecer você melhor.",
       color: "text-yellow-400",
       bgColor: "from-yellow-500/10 to-yellow-400/5"
     };
   } else {
     return {
       icon: Heart,
-      message: "💡 Bem-vindo(a) à sua jornada personalizada! Vamos descobrir seu potencial juntos.",
+      message: "Bem-vindo(a) à sua jornada personalizada! Vamos descobrir seu potencial juntos.",
       color: "text-pink-400",
       bgColor: "from-pink-500/10 to-pink-400/5"
     };
@@ -87,13 +87,13 @@ export const MotivationalMessage: React.FC<MotivationalMessageProps> = ({
 // Quick tips based on current step
 export const getQuickTip = (step: number): string => {
   const tips = {
-    1: "💡 Dica: Seja autêntico! Essas informações me ajudam a criar recomendações precisas.",
-    2: "🎯 Dica: Quanto mais detalhes sobre seu trabalho, melhor posso personalizar suas estratégias.",
-    3: "🧠 Dica: Não há problema em ser iniciante - todos os experts começaram do zero!",
-    4: "🚀 Dica: Objetivos claros geram resultados claros. Pense no que mais te motiva.",
-    5: "⏰ Dica: Seja realista com seu tempo disponível - qualidade supera quantidade!",
-    6: "🎉 Dica: Parabéns! Agora você tem um plano personalizado para dominar a IA!"
+    1: "Dica: Seja autêntico! Essas informações me ajudam a criar recomendações precisas.",
+    2: "Dica: Quanto mais detalhes sobre seu trabalho, melhor posso personalizar suas estratégias.",
+    3: "Dica: Não há problema em ser iniciante - todos os experts começaram do zero!",
+    4: "Dica: Objetivos claros geram resultados claros. Pense no que mais te motiva.",
+    5: "Dica: Seja realista com seu tempo disponível - qualidade supera quantidade!",
+    6: "Dica: Parabéns! Agora você tem um plano personalizado para dominar a IA!"
   };
   
-  return tips[step as keyof typeof tips] || "✨ Continue assim! Você está no caminho certo.";
+  return tips[step as keyof typeof tips] || "Continue assim! Você está no caminho certo.";
 };

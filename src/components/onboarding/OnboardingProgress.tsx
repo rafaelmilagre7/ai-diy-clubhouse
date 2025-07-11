@@ -35,21 +35,21 @@ export const OnboardingProgress: React.FC<OnboardingProgressProps> = ({
 
   const getMilestoneMessage = () => {
     if (currentStep === Math.ceil(totalSteps / 2)) {
-      return "🎉 Você chegou na metade! Continue assim!";
+      return "Você chegou na metade! Continue assim!";
     }
     if (currentStep === totalSteps) {
-      return "🚀 Perfil completado! Sua jornada começa agora!";
+      return "Perfil completado! Sua jornada começa agora!";
     }
     return "";
   };
 
   const getMotivationalMessage = () => {
     const messages = [
-      "✨ Cada etapa te aproxima do domínio da IA",
-      "🎯 Você está construindo algo incrível",
-      "💡 Sua transformação já começou",
-      "🌟 Parabéns pelo seu progresso!",
-      "🚀 Falta pouco para decolar!"
+      "Cada etapa te aproxima do domínio da IA",
+      "Você está construindo algo incrível",
+      "Sua transformação já começou",
+      "Parabéns pelo seu progresso!",
+      "Falta pouco para decolar!"
     ];
     return messages[Math.min(currentStep - 1, messages.length - 1)];
   };

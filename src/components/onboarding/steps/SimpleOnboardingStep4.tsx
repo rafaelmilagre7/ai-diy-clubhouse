@@ -150,13 +150,13 @@ export const SimpleOnboardingStep4: React.FC<SimpleOnboardingStep4Props> = ({
           <Target className="w-10 h-10 text-primary animate-pulse" />
         </motion.div>
         <h2 className="text-3xl font-bold text-foreground mb-3 bg-gradient-to-r from-foreground to-primary bg-clip-text text-transparent">
-          Seus Objetivos de Impacto 🎯
+          Seus Objetivos de Impacto
         </h2>
         <p className="text-muted-foreground text-lg">
-          ✨ Agora vamos definir exatamente onde você quer chegar com a IA
+          Agora vamos definir exatamente onde você quer chegar com a IA
         </p>
         <p className="text-muted-foreground text-sm mt-2">
-          💡 Cada objetivo que você compartilha molda suas recomendações personalizadas
+          Cada objetivo que você compartilha molda suas recomendações personalizadas
         </p>
       </div>
 
@@ -169,22 +169,22 @@ export const SimpleOnboardingStep4: React.FC<SimpleOnboardingStep4Props> = ({
                 <Target className="w-6 h-6 text-primary-foreground" />
               </div>
               <div>
-                <h3 className="text-xl font-bold text-foreground">Sua Meta Principal 🚀</h3>
+                <h3 className="text-xl font-bold text-foreground">Sua Meta Principal</h3>
                 <p className="text-muted-foreground text-sm">O que mais te motiva a implementar IA?</p>
               </div>
             </div>
 
             <div className="space-y-4">
               <Label className="text-foreground text-lg font-medium">
-                🎯 Qual resultado você mais deseja alcançar com IA? *
+                Qual resultado você mais deseja alcançar com IA? *
               </Label>
-              <p className="text-muted-foreground text-sm">💡 Seja específico - isso me ajuda a priorizar suas recomendações</p>
+              <p className="text-muted-foreground text-sm">Seja específico - isso me ajuda a priorizar suas recomendações</p>
               <Select 
                 value={formData.mainObjective} 
                 onValueChange={(value) => handleInputChange('mainObjective', value)}
               >
                 <SelectTrigger className="bg-background border-border text-foreground focus:border-primary hover:border-primary/50 transition-all duration-300 h-14">
-                  <SelectValue placeholder="🎯 Escolha sua meta de transformação..." />
+                  <SelectValue placeholder="Escolha sua meta de transformação..." />
                 </SelectTrigger>
                 <SelectContent className="bg-card border-border max-h-60">
                   {mainObjectives.map((objective) => (
@@ -198,15 +198,15 @@ export const SimpleOnboardingStep4: React.FC<SimpleOnboardingStep4Props> = ({
 
             <div className="space-y-4">
               <Label className="text-foreground text-lg font-medium">
-                💼 Que área do seu negócio vai sentir o maior impacto? *
+                Que área do seu negócio vai sentir o maior impacto? *
               </Label>
-              <p className="text-muted-foreground text-sm">🔥 Vamos focar onde você pode gerar mais resultados</p>
+              <p className="text-muted-foreground text-sm">Vamos focar onde você pode gerar mais resultados</p>
               <Select 
                 value={formData.areaToImpact} 
                 onValueChange={(value) => handleInputChange('areaToImpact', value)}
               >
                 <SelectTrigger className="bg-background border-border text-foreground focus:border-primary hover:border-primary/50 transition-all duration-300 h-14">
-                  <SelectValue placeholder="🚀 Selecione a área de maior impacto..." />
+                  <SelectValue placeholder="Selecione a área de maior impacto..." />
                 </SelectTrigger>
                 <SelectContent className="bg-card border-border max-h-60">
                   {businessAreas.map((area) => (

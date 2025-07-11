@@ -33,8 +33,8 @@ export const StepNavigation: React.FC<StepNavigationProps> = ({
 
   const getNextButtonText = () => {
     if (nextLabel) return nextLabel;
-    if (isLastStep) return "🚀 Finalizar Minha Jornada";
-    if (currentStep === totalSteps - 1) return "✨ Quase Lá!";
+    if (isLastStep) return "Finalizar Minha Jornada";
+    if (currentStep === totalSteps - 1) return "Quase Lá!";
     return "Continuar Descobrindo →";
   };
 

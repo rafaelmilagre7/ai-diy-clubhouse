@@ -111,7 +111,7 @@ export const OnboardingCelebration: React.FC<OnboardingCelebrationProps> = ({
             className="space-y-4"
           >
             <h1 className="text-4xl md:text-5xl font-bold text-white">
-              Parabéns, {userName}! 🎉
+              Parabéns, {userName}!
             </h1>
             <p className="text-xl text-slate-300 leading-relaxed">
               Você completou seu perfil e está oficialmente pronto para 
@@ -197,7 +197,7 @@ export const OnboardingCelebration: React.FC<OnboardingCelebrationProps> = ({
                   variant="primary"
                   className="px-16 py-4 text-lg font-semibold animate-pulse-glow"
                 >
-                  🚀 Começar Minha Jornada IA
+                  Começar Minha Jornada IA
                 </EnhancedButton>
                 
                 <p className="text-slate-400 text-sm mt-3">

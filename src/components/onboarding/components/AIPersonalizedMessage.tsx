@@ -25,19 +25,19 @@ const generateContextualMessage = (data: OnboardingData, step: number): string =
     const recommendations = [];
     
     if (aiKnowledgeLevel === 'iniciante') {
-      recommendations.push("📚 Vou começar com fundamentos práticos e casos reais");
+      recommendations.push("Vou começar com fundamentos práticos e casos reais");
     } else if (aiKnowledgeLevel === 'avancado') {
-      recommendations.push("🚀 Podemos partir direto para implementações complexas");
+      recommendations.push("Podemos partir direto para implementações complexas");
     }
     
     if (weeklyLearningTime === '1-2h') {
-      recommendations.push("⏰ Conteúdos objetivos e de alta densidade");
+      recommendations.push("Conteúdos objetivos e de alta densidade");
     } else if (weeklyLearningTime === '10h+') {
-      recommendations.push("📈 Trilha completa com projetos hands-on");
+      recommendations.push("Trilha completa com projetos hands-on");
     }
     
     if (urgencyLevel?.includes('urgente')) {
-      recommendations.push("🔥 Foco em resultados rápidos e impacto imediato");
+      recommendations.push("Foco em resultados rápidos e impacto imediato");
     }
     
     return recommendations.length > 0 ? recommendations.join(" • ") : "";
@@ -49,9 +49,9 @@ const generateContextualMessage = (data: OnboardingData, step: number): string =
       if (name) {
         const timeOfDay = new Date().getHours();
         const greeting = timeOfDay < 12 ? "Bom dia" : timeOfDay < 18 ? "Boa tarde" : "Boa noite";
-        return `${greeting}, ${name}! 👋 Que incrível te conhecer! Sou sua IA assistente e vou criar uma experiência única de aprendizado, moldada especificamente para você. Pronto(a) para descobrir seu potencial em IA?`;
+        return `${greeting}, ${name}! Que incrível te conhecer! Sou sua IA assistente e vou criar uma experiência única de aprendizado, moldada especificamente para você. Pronto(a) para descobrir seu potencial em IA?`;
       }
-      return "Olá! 🌟 Sou sua IA assistente pessoal e estou aqui para criar uma jornada de aprendizado única e personalizada. Cada pergunta que faço me ajuda a entender melhor como transformar sua relação com a inteligência artificial. Vamos começar?";
+      return "Olá! Sou sua IA assistente pessoal e estou aqui para criar uma jornada de aprendizado única e personalizada. Cada pergunta que faço me ajuda a entender melhor como transformar sua relação com a inteligência artificial. Vamos começar?";
 
     case 2:
       let businessMessage = "";
@@ -64,7 +64,7 @@ const generateContextualMessage = (data: OnboardingData, step: number): string =
       const sectorInsight = businessSector ? 
         `No setor de ${businessSector}, vejo oportunidades incríveis para automação e otimização. ` : "";
       
-      return `${businessMessage}${sectorInsight}Estou mapeando seu contexto profissional para criar recomendações cirúrgicas. Cada empresa tem sua DNA única! 💼✨`;
+      return `${businessMessage}${sectorInsight}Estou mapeando seu contexto profissional para criar recomendações cirúrgicas. Cada empresa tem sua DNA única!`;
 
     case 3:
       let aiMaturityMessage = "";
@@ -84,7 +84,7 @@ const generateContextualMessage = (data: OnboardingData, step: number): string =
         "Seu conhecimento intermediário é uma base sólida para voar mais alto." :
         "Seu perfil iniciante me permite construir uma base inabalável.";
       
-      return `${aiMaturityMessage}${knowledgeBoost} 🧠⚡`;
+      return `${aiMaturityMessage}${knowledgeBoost}`;
 
     case 4:
       let objectiveInsight = "";
@@ -105,10 +105,10 @@ const generateContextualMessage = (data: OnboardingData, step: number): string =
         "Seu investimento abre portas para transformações significativas. " : "";
       
       const urgencyInsight = urgencyLevel?.includes('urgente') ?
-        "🔥 Sua urgência me inspira - vamos focar em resultados tangíveis e rápidos!" :
-        "📅 Com planejamento estratégico, construiremos algo duradouro.";
+        "Sua urgência me inspira - vamos focar em resultados tangíveis e rápidos!" :
+        "Com planejamento estratégico, construiremos algo duradouro.";
       
-      return `${objectiveInsight}${budgetInsight}${urgencyInsight} Seus objetivos são meu GPS! 🎯`;
+      return `${objectiveInsight}${budgetInsight}${urgencyInsight} Seus objetivos são meu GPS!`;
 
     case 5:
       const timeInsight = weeklyLearningTime === '10h+' ? 
@@ -122,14 +122,14 @@ const generateContextualMessage = (data: OnboardingData, step: number): string =
         "Exercícios hands-on vão acelerar seu aprendizado. " : "";
       
       const networkingNote = data.wantsNetworking === 'yes' ?
-        "🤝 E que bom que quer networking - as melhores oportunidades nascem das conexões!" :
-        "🎯 Foco total no conteúdo - respeito sua preferência por aprendizado individual.";
+        "E que bom que quer networking - as melhores oportunidades nascem das conexões!" :
+        "Foco total no conteúdo - respeito sua preferência por aprendizado individual.";
       
-      return `${timeInsight}${contentStrategy}${networkingNote} Suas preferências moldam sua experiência! 🎨`;
+      return `${timeInsight}${contentStrategy}${networkingNote} Suas preferências moldam sua experiência!`;
 
     case 6:
       const personalizedPlan = getPersonalizedRecommendation();
-      let finalMessage = `🎉 ${name || 'Incrível pessoa'}, acabamos de criar algo especial juntos! `;
+      let finalMessage = `${name || 'Incrível pessoa'}, acabamos de criar algo especial juntos! `;
       
       if (position && businessSector) {
         finalMessage += `Como ${position} no setor de ${businessSector}, `;
@@ -146,8 +146,8 @@ const generateContextualMessage = (data: OnboardingData, step: number): string =
       }
       
       const motivationalClose = urgencyLevel?.includes('urgente') ?
-        "🚀 Vamos começar AGORA sua revolução com IA!" :
-        "🌟 Está pronto(a) para se tornar um(a) especialista em IA?";
+        "Vamos começar AGORA sua revolução com IA!" :
+        "Está pronto(a) para se tornar um(a) especialista em IA?";
       
       finalMessage += motivationalClose;
       
@@ -155,11 +155,11 @@ const generateContextualMessage = (data: OnboardingData, step: number): string =
 
     default:
       const stepMotivation = [
-        "✨ Cada resposta sua me ajuda a conhecê-lo(a) melhor",
-        "🎯 Estamos construindo seu perfil ideal de aprendizado", 
-        "💡 Sua jornada de transformação já começou",
-        "🚀 Faltam poucos cliques para sua revolução pessoal",
-        "🌟 Você está moldando seu futuro com IA"
+        "Cada resposta sua me ajuda a conhecê-lo(a) melhor",
+        "Estamos construindo seu perfil ideal de aprendizado", 
+        "Sua jornada de transformação já começou",
+        "Faltam poucos cliques para sua revolução pessoal",
+        "Você está moldando seu futuro com IA"
       ];
       return stepMotivation[Math.min(step - 1, stepMotivation.length - 1)] + "!";
   }

@@ -28,14 +28,14 @@ export const OnboardingStep5: React.FC<OnboardingStep5Props> = ({
   });
 
   const objectives = [
-    { id: 'productivity', label: '🚀 Aumentar produtividade', icon: Zap },
-    { id: 'automation', label: '⚙️ Automatizar processos', icon: Target },
-    { id: 'revenue', label: '💰 Aumentar receita', icon: TrendingUp },
-    { id: 'efficiency', label: '⏱️ Melhorar eficiência operacional', icon: Clock },
-    { id: 'innovation', label: '💡 Inovar produtos/serviços', icon: Star },
-    { id: 'decisions', label: '📊 Melhorar tomada de decisões', icon: Target },
-    { id: 'customer', label: '👥 Melhorar experiência do cliente', icon: Star },
-    { id: 'costs', label: '💸 Reduzir custos operacionais', icon: TrendingUp }
+    { id: 'productivity', label: 'Aumentar produtividade', icon: Zap },
+    { id: 'automation', label: 'Automatizar processos', icon: Target },
+    { id: 'revenue', label: 'Aumentar receita', icon: TrendingUp },
+    { id: 'efficiency', label: 'Melhorar eficiência operacional', icon: Clock },
+    { id: 'innovation', label: 'Inovar produtos/serviços', icon: Star },
+    { id: 'decisions', label: 'Melhorar tomada de decisões', icon: Target },
+    { id: 'customer', label: 'Melhorar experiência do cliente', icon: Star },
+    { id: 'costs', label: 'Reduzir custos operacionais', icon: TrendingUp }
   ];
 
   const priorityAreas = [
@@ -104,7 +104,7 @@ export const OnboardingStep5: React.FC<OnboardingStep5Props> = ({
         </motion.div>
         
         <h2 className="text-3xl font-bold text-white">
-          Quais são seus objetivos? 🎯
+          Quais são seus objetivos?
         </h2>
         <p className="text-slate-300 text-lg leading-relaxed max-w-2xl mx-auto">
           Conhecer seus objetivos nos permite criar um plano personalizado 

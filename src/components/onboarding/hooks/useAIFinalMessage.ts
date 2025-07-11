@@ -17,7 +17,7 @@ export const useAIFinalMessage = (data: OnboardingData): AIFinalMessageResult =>
   useEffect(() => {
     const generateFinalMessage = async () => {
       if (!data.name) {
-        setMessage('Parabéns! Seu onboarding foi concluído com sucesso. Bem-vindo à comunidade Viver de IA! 🚀');
+        setMessage('Parabéns! Seu onboarding foi concluído com sucesso. Bem-vindo à comunidade Viver de IA!');
         setIsLoading(false);
         return;
       }
@@ -48,7 +48,7 @@ export const useAIFinalMessage = (data: OnboardingData): AIFinalMessageResult =>
         setError('Erro ao gerar mensagem personalizada');
         
         // Fallback para mensagem personalizada básica
-        const fallbackMessage = `Parabéns ${data.name}! Seu onboarding foi concluído com sucesso. ${data.companyName ? `Estamos empolgados para ajudar a ${data.companyName} ` : 'Estamos empolgados para ajudar você '}a transformar ${data.areaToImpact || 'seu negócio'} com inteligência artificial. ${data.mainObjective ? `Vamos juntos alcançar seu objetivo de ${data.mainObjective.replace('-', ' ')}.` : ''} Bem-vindo à comunidade Viver de IA! 🚀`;
+        const fallbackMessage = `Parabéns ${data.name}! Seu onboarding foi concluído com sucesso. ${data.companyName ? `Estamos empolgados para ajudar a ${data.companyName} ` : 'Estamos empolgados para ajudar você '}a transformar ${data.areaToImpact || 'seu negócio'} com inteligência artificial. ${data.mainObjective ? `Vamos juntos alcançar seu objetivo de ${data.mainObjective.replace('-', ' ')}.` : ''} Bem-vindo à comunidade Viver de IA!`;
         
         setMessage(fallbackMessage);
       } finally {
