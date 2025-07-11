@@ -48,7 +48,18 @@ const ModernRegisterForm: React.FC<ModernRegisterFormProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    console.log('🔄 [REGISTER] Iniciando submissão do formulário:', {
+      name: !!name,
+      email: !!email,
+      password: !!password,
+      confirmPassword: !!confirmPassword,
+      passwordsMatch,
+      isPasswordValid,
+      passwordScore: passwordValidation.score
+    });
+    
     if (!name || !email || !password || !confirmPassword) {
+      console.log('❌ [REGISTER] Campos obrigatórios não preenchidos');
       toast({
         title: "Campos obrigatórios",
         description: "Por favor, preencha todos os campos.",
@@ -58,6 +69,7 @@ const ModernRegisterForm: React.FC<ModernRegisterFormProps> = ({
     }
     
     if (!passwordsMatch) {
+      console.log('❌ [REGISTER] Senhas não coincidem');
       toast({
         title: "Senhas não coincidem",
         description: "As senhas digitadas são diferentes. Verifique e tente novamente.",
@@ -67,9 +79,10 @@ const ModernRegisterForm: React.FC<ModernRegisterFormProps> = ({
     }
     
     if (!isPasswordValid) {
+      console.log('❌ [REGISTER] Senha não atende os critérios:', passwordValidation);
       toast({
         title: "Senha não atende os critérios",
-        description: "Por favor, crie uma senha que atenda todos os requisitos.",
+        description: "Por favor, crie uma senha que atenda pelo menos 4 dos 5 requisitos.",
         variant: "destructive",
       });
       return;
