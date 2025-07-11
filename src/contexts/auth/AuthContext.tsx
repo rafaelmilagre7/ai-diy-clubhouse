@@ -14,7 +14,13 @@ interface AuthContextType {
   isAdmin: boolean;
   isFormacao: boolean;
   isLoading: boolean;
+  authError: Error | null;
+  signIn: (email: string, password: string) => Promise<{ error?: Error }>;
   signOut: () => Promise<{ success: boolean; error?: string }>;
+  signInAsMember: (email: string, password: string) => Promise<{ error?: Error }>;
+  signInAsAdmin: (email: string, password: string) => Promise<{ error?: Error }>;
+  setSession: React.Dispatch<React.SetStateAction<Session | null>>;
+  setUser: React.Dispatch<React.SetStateAction<User | null>>;
   setProfile: (profile: UserProfile | null) => void;
   setIsLoading: (loading: boolean) => void;
 }
@@ -38,6 +44,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [authError, setAuthError] = useState<Error | null>(null);
 
   // Usar o hook de gerenciamento de estado otimizado
   const { setupAuthSession } = useAuthStateManager({
@@ -152,6 +159,33 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     }
   }, []);
 
+  // Método signIn
+  const signIn = useCallback(async (email: string, password: string): Promise<{ error?: Error }> => {
+    try {
+      setAuthError(null);
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) {
+        setAuthError(error);
+        return { error };
+      }
+      return {};
+    } catch (error) {
+      const err = error instanceof Error ? error : new Error('Erro desconhecido');
+      setAuthError(err);
+      return { error: err };
+    }
+  }, []);
+
+  // Método signInAsMember (alias para signIn)
+  const signInAsMember = useCallback(async (email: string, password: string): Promise<{ error?: Error }> => {
+    return signIn(email, password);
+  }, [signIn]);
+
+  // Método signInAsAdmin (alias para signIn)
+  const signInAsAdmin = useCallback(async (email: string, password: string): Promise<{ error?: Error }> => {
+    return signIn(email, password);
+  }, [signIn]);
+
   const contextValue: AuthContextType = {
     user,
     session,
@@ -159,7 +193,13 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     isAdmin,
     isFormacao,
     isLoading,
+    authError,
+    signIn,
     signOut,
+    signInAsMember,
+    signInAsAdmin,
+    setSession,
+    setUser,
     setProfile,
     setIsLoading,
   };
