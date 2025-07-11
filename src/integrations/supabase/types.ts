@@ -5263,6 +5263,10 @@ export type Database = {
         Args: { p_token: string; p_user_id?: string }
         Returns: Json
       }
+      validate_user_password: {
+        Args: { password: string }
+        Returns: Json
+      }
     }
     Enums: {
       connection_status: "pending" | "accepted" | "rejected"
