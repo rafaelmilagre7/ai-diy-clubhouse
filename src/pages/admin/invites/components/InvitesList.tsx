@@ -142,7 +142,10 @@ const InvitesList = ({ invites, onResend, onDelete }: InvitesListProps) => {
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => copyToClipboard(`${window.location.origin}/convite/${invite.token}`)}
+                          onClick={() => {
+                            const { APP_CONFIG } = require('@/config/app');
+                            copyToClipboard(APP_CONFIG.getAppUrl(`/convite/${invite.token}`));
+                          }}
                         >
                           <Copy className="h-4 w-4" />
                         </Button>

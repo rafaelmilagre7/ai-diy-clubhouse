@@ -19,7 +19,8 @@ interface InviteActionsProps {
 
 const InviteActions = ({ invite, onResend, onDelete, isResending }: InviteActionsProps) => {
   const copyInviteLink = () => {
-    const link = `${window.location.origin}/convite/${invite.token}`;
+    const { APP_CONFIG } = require('@/config/app');
+    const link = APP_CONFIG.getAppUrl(`/convite/${invite.token}`);
     navigator.clipboard.writeText(link);
     toast.success("Link copiado!");
   };

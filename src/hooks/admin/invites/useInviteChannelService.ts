@@ -13,8 +13,9 @@ export function useInviteChannelService() {
       return "";
     }
     
+    const { APP_CONFIG } = require('@/config/app');
     const cleanToken = token.trim().replace(/\s+/g, '');
-    const baseUrl = `${window.location.origin}/convite/${cleanToken}`;
+    const baseUrl = APP_CONFIG.getAppUrl(`/convite/${cleanToken}`);
     console.log("URL do convite gerado:", baseUrl);
     
     return baseUrl;

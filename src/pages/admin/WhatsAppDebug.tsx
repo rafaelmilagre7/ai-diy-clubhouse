@@ -460,7 +460,8 @@ const WhatsAppDebug: React.FC = () => {
 
       const inviteToken = inviteResult.token;
       const inviteId = inviteResult.invite_id;
-      const inviteUrl = `${window.location.origin}/convite/${inviteToken}`;
+      const { APP_CONFIG } = require('@/config/app');
+      const inviteUrl = APP_CONFIG.getAppUrl(`/convite/${inviteToken}`);
 
       console.log('🎯 [TESTE TEMPLATE] Convite criado:', {
         id: inviteId,

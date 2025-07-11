@@ -157,7 +157,8 @@ export const TestPlan: React.FC = () => {
     try {
       addTestResult('EMAIL DIRETO', 'success', 'Testando envio direto via Resend...');
 
-      const testInviteUrl = `${window.location.origin}/convite/TEST-TOKEN-123`;
+      const { APP_CONFIG } = require('@/config/app');
+      const testInviteUrl = APP_CONFIG.getAppUrl('/convite/TEST-TOKEN-123');
       
       const result = await sendInviteEmail({
         email: testEmail,

@@ -238,9 +238,9 @@ export const generateInviteUrl = (token: string): string => {
   // Limpar o token
   const cleanToken = token.trim().replace(/\s+/g, '');
   
-  // Usar sempre o domínio correto em produção
-  const baseUrl = window.location.origin;
-  const inviteUrl = `${baseUrl}/convite/${encodeURIComponent(cleanToken)}`;
+  // Usar sempre o domínio configurado (app.viverdeia.ai em produção)
+  const { APP_CONFIG } = require('@/config/app');
+  const inviteUrl = APP_CONFIG.getAppUrl(`/convite/${encodeURIComponent(cleanToken)}`);
   
   console.log("🔗 [URL-GENERATION] URL gerada:", inviteUrl);
   return inviteUrl;

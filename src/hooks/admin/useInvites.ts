@@ -336,8 +336,9 @@ export function useInvites() {
       console.warn("Token foi limpo antes de gerar o link. Original:", token, "Limpo:", cleanToken);
     }
     
-    // Construir URL absoluta com origem da janela atual
-    const baseUrl = `${window.location.origin}/convite/${cleanToken}`;
+    // Construir URL absoluta com domínio configurado
+    const { APP_CONFIG } = require('@/config/app');
+    const baseUrl = APP_CONFIG.getAppUrl(`/convite/${cleanToken}`);
     console.log("URL do convite gerado:", baseUrl);
     
     return baseUrl;
