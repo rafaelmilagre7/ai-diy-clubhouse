@@ -91,35 +91,61 @@ const ModernRegisterForm: React.FC<ModernRegisterFormProps> = ({
       return;
     }
     
-    // Função para tentar o signUp com retry
+    // Função para tentar o signUp com diferentes estratégias
     const attemptSignUp = async (attempt: number = 1, maxAttempts: number = 3): Promise<any> => {
       console.log(`🚀 [REGISTER] Tentativa ${attempt}/${maxAttempts} - Iniciando signUp...`);
       
       try {
-        // Primeiro, testar conectividade básica
+        // Teste de conectividade básica
         console.log('🔍 [REGISTER] Testando conectividade com Supabase...');
         const { data: healthCheck } = await supabase.from('user_roles').select('count').limit(1);
         console.log('✅ [REGISTER] Conectividade OK:', !!healthCheck);
         
-        console.log('📨 [REGISTER] Iniciando signUp com dados:', {
+        // Estratégias diferentes para cada tentativa
+        let signUpData;
+        
+        if (attempt === 1) {
+          // Tentativa 1: Configuração completa
+          signUpData = {
+            email,
+            password,
+            options: {
+              data: {
+                name,
+                full_name: name,
+                display_name: name,
+                ...(inviteToken && { invite_token: inviteToken })
+              },
+              emailRedirectTo: `${window.location.origin}/onboarding`
+            },
+          };
+        } else if (attempt === 2) {
+          // Tentativa 2: Sem redirect
+          signUpData = {
+            email,
+            password,
+            options: {
+              data: {
+                name,
+                ...(inviteToken && { invite_token: inviteToken })
+              }
+            },
+          };
+        } else {
+          // Tentativa 3: Dados mínimos
+          signUpData = {
+            email,
+            password
+          };
+        }
+        
+        console.log(`📨 [REGISTER] Tentativa ${attempt} com dados:`, {
           email,
           hasPassword: !!password,
-          hasName: !!name,
-          hasInviteToken: !!inviteToken,
-          redirectUrl: `${window.location.origin}/onboarding`
+          hasMetadata: !!signUpData.options?.data,
+          hasRedirect: !!signUpData.options?.emailRedirectTo,
+          metadataKeys: signUpData.options?.data ? Object.keys(signUpData.options.data) : []
         });
-        
-        const signUpData = {
-          email,
-          password,
-          options: {
-            data: {
-              name,
-              ...(inviteToken && { invite_token: inviteToken })
-            },
-            emailRedirectTo: `${window.location.origin}/onboarding`
-          },
-        };
         
         console.log('📤 [REGISTER] Enviando para supabase.auth.signUp...');
         const result = await supabase.auth.signUp(signUpData);
@@ -129,11 +155,18 @@ const ModernRegisterForm: React.FC<ModernRegisterFormProps> = ({
           hasUser: !!result.data?.user,
           userId: result.data?.user?.id,
           userEmail: result.data?.user?.email,
+          userConfirmed: result.data?.user?.email_confirmed_at,
+          hasSession: !!result.data?.session,
           hasError: !!result.error,
           errorCode: result.error?.status,
-          errorMessage: result.error?.message,
-          fullError: result.error
+          errorMessage: result.error?.message
         });
+        
+        // Se tem erro e não é o último attempt, tentar novamente
+        if (result.error && attempt < maxAttempts) {
+          console.log(`⚠️ [REGISTER] Erro na tentativa ${attempt}, tentando estratégia diferente...`);
+          throw result.error;
+        }
         
         return result;
         
@@ -143,8 +176,7 @@ const ModernRegisterForm: React.FC<ModernRegisterFormProps> = ({
           message: error.message,
           code: error.code,
           status: error.status,
-          stack: error.stack?.substring(0, 200),
-          fullError: error
+          stack: error.stack?.substring(0, 200)
         });
         
         if (attempt < maxAttempts) {
@@ -195,12 +227,48 @@ const ModernRegisterForm: React.FC<ModernRegisterFormProps> = ({
         userEmail: data?.user?.email,
         needsConfirmation: !data?.user?.email_confirmed_at
       });
+
+      // Verificar se o perfil foi criado automaticamente
+      if (data.user) {
+        console.log('🔍 [REGISTER] Verificando se perfil foi criado...');
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('id, name, email')
+          .eq('id', data.user.id)
+          .maybeSingle();
+        
+        if (!profile) {
+          console.log('⚠️ [REGISTER] Perfil não foi criado automaticamente, criando manualmente...');
+          try {
+            const { error: profileError } = await supabase
+              .from('profiles')
+              .insert({
+                id: data.user.id,
+                email: data.user.email || email,
+                name: name
+              });
+            
+            if (profileError) {
+              console.error('❌ [REGISTER] Erro ao criar perfil:', profileError);
+            } else {
+              console.log('✅ [REGISTER] Perfil criado manualmente com sucesso');
+            }
+          } catch (profileErr) {
+            console.error('❌ [REGISTER] Erro inesperado ao criar perfil:', profileErr);
+          }
+        } else {
+          console.log('✅ [REGISTER] Perfil já existe:', profile);
+        }
+      }
       
       // Se há um token de convite, aplicar
       if (inviteToken && data.user) {
         console.log('🎫 [REGISTER] Aplicando token de convite...');
         try {
-          const { data: inviteResult, error: inviteError } = await supabase.rpc('use_invite', {
+          // Aguardar um pouco para garantir que o usuário foi criado completamente
+          await new Promise(resolve => setTimeout(resolve, 500));
+          
+          const { data: inviteResult, error: inviteError } = await supabase.rpc('use_invite_enhanced', {
             invite_token: inviteToken,
             user_id: data.user.id
           });
@@ -220,6 +288,10 @@ const ModernRegisterForm: React.FC<ModernRegisterFormProps> = ({
             });
           } else {
             console.log('✅ [REGISTER] Convite aplicado com sucesso!');
+            toast({
+              title: "Convite aplicado!",
+              description: "Seu convite foi aplicado com sucesso. Redirecionando...",
+            });
           }
         } catch (inviteError) {
           console.warn('⚠️ [REGISTER] Erro inesperado ao aplicar convite:', inviteError);
@@ -238,6 +310,17 @@ const ModernRegisterForm: React.FC<ModernRegisterFormProps> = ({
         stack: error.stack,
         fullError: error
       });
+
+      // Se o erro é do signUp e temos um token de convite, tentar registro alternativo
+      if (inviteToken && (error.status === 500 || error.message?.includes('unexpected_failure'))) {
+        console.log('🔄 [REGISTER] Tentando método alternativo de registro...');
+        try {
+          await handleAlternativeSignup();
+          return; // Se deu certo, sair da função
+        } catch (altError) {
+          console.error('❌ [REGISTER] Método alternativo também falhou:', altError);
+        }
+      }
       
       toast({
         title: "Erro inesperado",
@@ -248,6 +331,82 @@ const ModernRegisterForm: React.FC<ModernRegisterFormProps> = ({
       setIsLoading(false);
       console.log('🏁 [REGISTER] Processo finalizado, loading=false');
     }
+  };
+
+  // Método alternativo de registro quando o signUp falha
+  const handleAlternativeSignup = async () => {
+    console.log('🚀 [ALTERNATIVE] Iniciando registro alternativo...');
+    
+    if (!inviteToken) {
+      throw new Error('Método alternativo requer token de convite');
+    }
+
+    // 1. Validar o convite primeiro
+    console.log('🔍 [ALTERNATIVE] Validando convite...');
+    const { data: inviteData } = await supabase.rpc('validate_invite_token_enhanced', {
+      p_token: inviteToken
+    });
+
+    const invite = inviteData?.[0];
+    if (!invite) {
+      throw new Error('Convite inválido para registro alternativo');
+    }
+
+    console.log('✅ [ALTERNATIVE] Convite validado:', invite.email);
+
+    // 2. Tentar criar usuário com método simples
+    console.log('📝 [ALTERNATIVE] Criando usuário com dados mínimos...');
+    const simpleSignUp = await supabase.auth.signUp({
+      email,
+      password
+    });
+
+    if (simpleSignUp.error) {
+      throw simpleSignUp.error;
+    }
+
+    if (!simpleSignUp.data.user) {
+      throw new Error('Usuário não foi criado');
+    }
+
+    console.log('✅ [ALTERNATIVE] Usuário criado:', simpleSignUp.data.user.id);
+
+    // 3. Criar perfil manualmente
+    console.log('👤 [ALTERNATIVE] Criando perfil...');
+    const { error: profileError } = await supabase
+      .from('profiles')
+      .insert({
+        id: simpleSignUp.data.user.id,
+        email: email,
+        name: name,
+        role_id: invite.role_id
+      });
+
+    if (profileError && !profileError.message.includes('duplicate')) {
+      console.error('❌ [ALTERNATIVE] Erro ao criar perfil:', profileError);
+      // Não falhar aqui, tentar aplicar convite mesmo assim
+    }
+
+    // 4. Aplicar convite
+    console.log('🎫 [ALTERNATIVE] Aplicando convite...');
+    const { error: inviteError } = await supabase.rpc('use_invite_enhanced', {
+      invite_token: inviteToken,
+      user_id: simpleSignUp.data.user.id
+    });
+
+    if (inviteError) {
+      console.error('⚠️ [ALTERNATIVE] Erro ao aplicar convite:', inviteError);
+    }
+
+    // 5. Sucesso!
+    console.log('🎉 [ALTERNATIVE] Registro alternativo concluído com sucesso!');
+    toast({
+      title: "Conta criada com sucesso!",
+      description: "Sua conta foi criada usando um método alternativo. Bem-vindo!",
+    });
+
+    setStep('success');
+    onSuccess?.();
   };
 
   if (step === 'success') {
