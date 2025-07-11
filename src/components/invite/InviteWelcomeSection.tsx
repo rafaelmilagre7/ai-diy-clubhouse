@@ -15,22 +15,22 @@ const InviteWelcomeSection: React.FC<InviteWelcomeSectionProps> = ({ inviteData 
     {
       icon: Sparkles,
       title: "IA Revolucionária",
-      description: "Transforme sua empresa com soluções de inteligência artificial"
+      description: "Automatize processos e aumente sua receita em até 300% com IA personalizada para seu negócio"
     },
     {
       icon: Users,
-      title: "Comunidade Expert",
-      description: "Conecte-se com outros profissionais e especialistas"
+      title: "Rede Exclusiva",
+      description: "Acesso direto a CEOs, especialistas e líderes que já implementaram IA com sucesso"
     },
     {
       icon: Zap,
-      title: "Implementação Rápida",
-      description: "Soluções práticas que geram resultados imediatos"
+      title: "Resultados em 30 dias",
+      description: "Metodologia comprovada para implementar IA e ver resultados práticos no primeiro mês"
     },
     {
       icon: Target,
-      title: "Resultados Garantidos",
-      description: "Metodologias comprovadas para maximizar seus lucros"
+      title: "ROI Garantido",
+      description: "Acompanhamento personalizado até você alcançar o retorno esperado do investimento"
     }
   ];
 
@@ -38,26 +38,31 @@ const InviteWelcomeSection: React.FC<InviteWelcomeSectionProps> = ({ inviteData 
     <div className="space-y-8">
       {/* Header Section */}
       <div className="text-center space-y-6">
-        <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 border border-primary/20 rounded-full text-sm font-medium text-primary mb-4">
+        <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-primary/20 to-primary/10 border border-primary/30 rounded-full text-sm font-semibold text-primary mb-6 animate-pulse">
           <Sparkles className="h-4 w-4" />
-          Convite Especial
+          Convite Exclusivo
         </div>
         
-        <h1 className="font-heading text-4xl md:text-5xl font-bold text-foreground mb-4">
-          Bem-vindo ao futuro dos negócios
+        <h1 className="font-heading text-4xl md:text-6xl font-bold bg-gradient-to-r from-primary via-primary/80 to-primary/60 bg-clip-text text-transparent mb-6 leading-tight">
+          Transforme sua empresa com IA
         </h1>
         
-        <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-          Você foi convidado para fazer parte da comunidade mais inovadora de IA empresarial do Brasil
+        <p className="text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
+          Você recebeu um convite exclusivo para entrar na <span className="text-primary font-semibold">comunidade líder em IA empresarial</span> e acelerar seus resultados
         </p>
 
-        <div className="bg-card border border-border rounded-lg p-6 max-w-md mx-auto">
-          <p className="text-sm text-muted-foreground mb-2">Convite para:</p>
-          <p className="font-semibold text-lg text-primary">{inviteData.email}</p>
+        <div className="bg-gradient-to-br from-card to-primary/5 border-2 border-primary/20 rounded-xl p-6 max-w-md mx-auto shadow-lg">
+          <div className="flex items-center gap-2 mb-3">
+            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+            <p className="text-sm font-medium text-primary">Convite ativo para:</p>
+          </div>
+          <p className="font-bold text-xl text-foreground">{inviteData.email}</p>
           {inviteData.role && (
-            <p className="text-sm text-muted-foreground mt-2">
-              Função: <span className="text-foreground font-medium">{inviteData.role.name}</span>
-            </p>
+            <div className="mt-3 px-3 py-1 bg-primary/10 border border-primary/30 rounded-full inline-block">
+              <p className="text-sm font-medium text-primary">
+                {inviteData.role.name}
+              </p>
+            </div>
           )}
         </div>
       </div>
@@ -83,19 +88,25 @@ const InviteWelcomeSection: React.FC<InviteWelcomeSectionProps> = ({ inviteData 
       </div>
 
       {/* Stats Section */}
-      <div className="bg-gradient-to-r from-primary/5 to-transparent border border-primary/20 rounded-lg p-8">
+      <div className="bg-gradient-to-br from-primary/10 via-primary/5 to-transparent border-2 border-primary/30 rounded-xl p-8 shadow-xl">
+        <h3 className="text-center text-lg font-semibold text-foreground mb-6">
+          Resultados comprovados da nossa comunidade:
+        </h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
-          <div>
-            <div className="text-3xl font-bold text-primary mb-2">500+</div>
-            <div className="text-muted-foreground">Empresas Transformadas</div>
+          <div className="space-y-2">
+            <div className="text-4xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">1.200+</div>
+            <div className="text-sm font-medium text-muted-foreground">Empresas já transformadas</div>
+            <div className="text-xs text-muted-foreground">Desde 2023</div>
           </div>
-          <div>
-            <div className="text-3xl font-bold text-primary mb-2">98%</div>
-            <div className="text-muted-foreground">Taxa de Sucesso</div>
+          <div className="space-y-2">
+            <div className="text-4xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">300%</div>
+            <div className="text-sm font-medium text-muted-foreground">Aumento médio de receita</div>
+            <div className="text-xs text-muted-foreground">Nos primeiros 6 meses</div>
           </div>
-          <div>
-            <div className="text-3xl font-bold text-primary mb-2">2M+</div>
-            <div className="text-muted-foreground">Em Receita Gerada</div>
+          <div className="space-y-2">
+            <div className="text-4xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">R$ 50M+</div>
+            <div className="text-sm font-medium text-muted-foreground">Em receita gerada pelos membros</div>
+            <div className="text-xs text-muted-foreground">Só em 2024</div>
           </div>
         </div>
       </div>
