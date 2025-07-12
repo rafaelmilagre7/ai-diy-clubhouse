@@ -5251,7 +5251,7 @@ export type Database = {
               p_old_values?: string
               p_new_values?: string
             }
-        Returns: undefined
+        Returns: string
       }
       log_security_violation: {
         Args:
