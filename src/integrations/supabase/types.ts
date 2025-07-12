@@ -2967,6 +2967,39 @@ export type Database = {
         }
         Relationships: []
       }
+      rate_limits: {
+        Row: {
+          action_type: string
+          attempt_count: number
+          blocked_until: string | null
+          created_at: string
+          id: string
+          identifier: string
+          updated_at: string
+          window_start: string
+        }
+        Insert: {
+          action_type: string
+          attempt_count?: number
+          blocked_until?: string | null
+          created_at?: string
+          id?: string
+          identifier: string
+          updated_at?: string
+          window_start?: string
+        }
+        Update: {
+          action_type?: string
+          attempt_count?: number
+          blocked_until?: string | null
+          created_at?: string
+          id?: string
+          identifier?: string
+          updated_at?: string
+          window_start?: string
+        }
+        Relationships: []
+      }
       referral_benefits: {
         Row: {
           benefit_type: string
@@ -3246,6 +3279,57 @@ export type Database = {
           metric_type?: string
           metric_value?: number
           recorded_at?: string
+        }
+        Relationships: []
+      }
+      security_violations: {
+        Row: {
+          additional_data: Json | null
+          auto_blocked: boolean | null
+          created_at: string
+          description: string
+          id: string
+          ip_address: string | null
+          resolved: boolean | null
+          resolved_at: string | null
+          resolved_by: string | null
+          resource_accessed: string | null
+          severity: string
+          user_agent: string | null
+          user_id: string | null
+          violation_type: string
+        }
+        Insert: {
+          additional_data?: Json | null
+          auto_blocked?: boolean | null
+          created_at?: string
+          description: string
+          id?: string
+          ip_address?: string | null
+          resolved?: boolean | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          resource_accessed?: string | null
+          severity: string
+          user_agent?: string | null
+          user_id?: string | null
+          violation_type: string
+        }
+        Update: {
+          additional_data?: Json | null
+          auto_blocked?: boolean | null
+          created_at?: string
+          description?: string
+          id?: string
+          ip_address?: string | null
+          resolved?: boolean | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          resource_accessed?: string | null
+          severity?: string
+          user_agent?: string | null
+          user_id?: string | null
+          violation_type?: string
         }
         Relationships: []
       }
@@ -4351,6 +4435,42 @@ export type Database = {
         }
         Relationships: []
       }
+      user_sessions: {
+        Row: {
+          created_at: string
+          expires_at: string
+          id: string
+          ip_address: string | null
+          is_active: boolean
+          last_activity: string
+          session_token: string
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string
+          id?: string
+          ip_address?: string | null
+          is_active?: boolean
+          last_activity?: string
+          session_token: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string
+          id?: string
+          ip_address?: string | null
+          is_active?: boolean
+          last_activity?: string
+          session_token?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       users: {
         Row: {
           created_at: string
@@ -4768,11 +4888,18 @@ export type Database = {
         Returns: Json
       }
       check_rate_limit: {
-        Args: {
-          action_type: string
-          max_attempts?: number
-          window_minutes?: number
-        }
+        Args:
+          | {
+              action_type: string
+              max_attempts?: number
+              window_minutes?: number
+            }
+          | {
+              p_identifier: string
+              p_action_type: string
+              p_max_attempts?: number
+              p_window_minutes?: number
+            }
         Returns: boolean
       }
       check_referral: {
@@ -5142,6 +5269,15 @@ export type Database = {
           details?: Json
         }
         Returns: undefined
+      }
+      manage_user_session: {
+        Args: {
+          p_user_id: string
+          p_session_token: string
+          p_ip_address?: string
+          p_user_agent?: string
+        }
+        Returns: string
       }
       merge_json_data: {
         Args: { target: Json; source: Json }
