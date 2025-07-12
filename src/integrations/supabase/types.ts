@@ -4635,12 +4635,10 @@ export type Database = {
       }
       learning_analytics_data: {
         Row: {
-          avg_progress: number | null
+          avg_completion_rate: number | null
           completed_lessons: number | null
           course_id: string | null
           course_title: string | null
-          total_certificates: number | null
-          total_lessons: number | null
           total_students: number | null
         }
         Relationships: []
@@ -4696,72 +4694,42 @@ export type Database = {
       }
       solution_performance_data: {
         Row: {
-          message: string | null
+          implementation_count: number | null
+          solution_id: string | null
+          title: string | null
         }
         Relationships: []
       }
       solution_performance_metrics: {
         Row: {
-          message: string | null
+          completion_rate: number | null
+          solution_id: string | null
+          title: string | null
         }
         Relationships: []
       }
       suggestions_with_profiles: {
         Row: {
-          category_id: string | null
-          comment_count: number | null
-          created_at: string | null
           description: string | null
-          downvotes: number | null
           id: string | null
-          image_url: string | null
-          is_hidden: boolean | null
-          is_pinned: boolean | null
-          status: string | null
           title: string | null
-          updated_at: string | null
-          upvotes: number | null
-          user_avatar: string | null
-          user_id: string | null
-          user_name: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "suggestions_category_id_fkey"
-            columns: ["category_id"]
-            isOneToOne: false
-            referencedRelation: "suggestion_categories"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "suggestions_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "suggestions_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "users_with_roles"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       user_engagement_metrics: {
         Row: {
-          active_users: number | null
-          date: string | null
-          total_events: number | null
+          metric_date: string | null
+          metric_type: string | null
+          metric_unit: string | null
+          metric_value: string | null
         }
         Relationships: []
       }
       user_growth_by_date: {
         Row: {
-          cumulative_users: number | null
           date: string | null
           new_users: number | null
+          total_users: number | null
         }
         Relationships: []
       }
@@ -4774,7 +4742,10 @@ export type Database = {
       }
       user_segmentation_analytics: {
         Row: {
-          message: string | null
+          avg_lessons_per_user: number | null
+          avg_solutions_per_user: number | null
+          user_count: number | null
+          user_segment: string | null
         }
         Relationships: []
       }
@@ -4787,13 +4758,9 @@ export type Database = {
           id: string | null
           industry: string | null
           name: string | null
-          onboarding_completed: boolean | null
-          onboarding_completed_at: string | null
           role: string | null
-          role_description: string | null
           role_id: string | null
-          role_name: string | null
-          role_permissions: Json | null
+          user_roles: Json | null
         }
         Relationships: [
           {
@@ -4807,13 +4774,15 @@ export type Database = {
       }
       weekly_activity_pattern: {
         Row: {
-          message: string | null
+          activity_count: number | null
+          day_of_week: number | null
         }
         Relationships: []
       }
       weekly_activity_patterns: {
         Row: {
-          message: string | null
+          activity_count: number | null
+          day_of_week: number | null
         }
         Relationships: []
       }
