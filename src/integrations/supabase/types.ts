@@ -5628,6 +5628,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: number
       }
+      cleanup_old_audit_logs: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       cleanup_old_rate_limits: {
         Args: Record<PropertyKey, never>
         Returns: undefined
@@ -5930,6 +5934,10 @@ export type Database = {
         Args: { user_id?: string }
         Returns: boolean
       }
+      is_user_admin_enhanced: {
+        Args: { user_id?: string }
+        Returns: boolean
+      }
       log_invite_delivery: {
         Args: {
           p_invite_id: string
@@ -6209,6 +6217,15 @@ export type Database = {
       validate_user_password: {
         Args: { password: string }
         Returns: Json
+      }
+      verify_permissions_integrity: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          issue_type: string
+          description: string
+          affected_resource: string
+          severity: string
+        }[]
       }
     }
     Enums: {
