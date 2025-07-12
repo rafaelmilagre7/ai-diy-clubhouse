@@ -50,18 +50,18 @@ const NPSAnalytics: React.FC = () => {
   const [filterScore, setFilterScore] = useState<string>('all');
   const [timeRange, setTimeRange] = useState<string>('all');
 
-  // Calcular range de datas
-  const getDateRange = () => {
+  // Calcular range de datas de forma estável
+  const dateRange = React.useMemo(() => {
     const now = new Date();
     if (timeRange === 'all') {
       return { from: new Date(2020, 0, 1), to: now };
     }
     const daysAgo = parseInt(timeRange);
     return { from: new Date(now.getTime() - daysAgo * 24 * 60 * 60 * 1000), to: now };
-  };
+  }, [timeRange]);
 
   // Usar o hook otimizado
-  const { data: analyticsData, isLoading: analyticsLoading, error, isError } = useLMSAnalytics(getDateRange());
+  const { data: analyticsData, isLoading: analyticsLoading, error, isError } = useLMSAnalytics(dateRange);
 
   // Log de depuração
   console.log('NPSAnalytics - Estado:', { analyticsLoading, isError, error, analyticsData });

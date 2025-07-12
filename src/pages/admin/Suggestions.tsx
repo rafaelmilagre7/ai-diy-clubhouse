@@ -50,13 +50,10 @@ const AdminSuggestionsPage = () => {
     console.log('Estado de carregamento:', suggestionsLoading);
     console.log('Erro:', error);
     
-    // Efetuar refetch ao montar o componente
-    refetch();
-    
     return () => {
       console.log('AdminSuggestionsPage desmontado');
     };
-  }, []);
+  }, [suggestions, suggestionsLoading, error]);
 
   const handleRemoveSuggestion = async () => {
     if (selectedSuggestion) {
