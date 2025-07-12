@@ -2,17 +2,31 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types/database.types';
 
-// CONFIGURAÇÃO SEGURA: Usar credenciais da configuração do projeto
-const supabaseUrl = 'https://zotzvtepvpnkcoobdubt.supabase.co';
-const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpvdHp2dGVwdnBua2Nvb2JkdWJ0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQzNzgzODAsImV4cCI6MjA1OTk1NDM4MH0.dxjPkqTPnK8gjjxJbooPX5_kpu3INciLeDpuU8dszHQ';
+// CONFIGURAÇÃO SEGURA: Usar credenciais de configuração
+const getSupabaseConfig = () => {
+  // Configuração para Lovable (hardcoded permitido para chaves públicas)
+  const config = {
+    url: 'https://zotzvtepvpnkcoobdubt.supabase.co',
+    anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpvdHp2dGVwdnBua2Nvb2JkdWJ0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQzNzgzODAsImV4cCI6MjA1OTk1NDM4MH0.dxjPkqTPnK8gjjxJbooPX5_kpu3INciLeDpuU8dszHQ'
+  };
+  
+  // Validação de configuração
+  if (!config.url || !config.anonKey) {
+    throw new Error('ERRO CRÍTICO: Configuração do Supabase não encontrada');
+  }
+  
+  // Validação adicional de segurança
+  if (!config.url.startsWith('https://')) {
+    throw new Error('ERRO DE SEGURANÇA: URL do Supabase deve usar HTTPS');
+  }
+  
+  return config;
+};
 
-// Validação de configuração
-if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error('ERRO CRÍTICO: Configuração do Supabase não encontrada');
-}
+const supabaseConfig = getSupabaseConfig();
 
 // Criação do cliente Supabase com configurações de segurança
-export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
+export const supabase = createClient<Database>(supabaseConfig.url, supabaseConfig.anonKey, {
   auth: {
     autoRefreshToken: true,
     persistSession: true,

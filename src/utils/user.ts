@@ -37,12 +37,12 @@ export const getAvatarUrl = (url: string | null | undefined): string | undefined
   
   // Se começar com / (caminho relativo), adicionar domínio da API
   if (url.startsWith('/')) {
-    return `${import.meta.env.VITE_SUPABASE_URL}${url}`;
+    return `https://zotzvtepvpnkcoobdubt.supabase.co${url}`;
   }
   
   // Se for um ID de storage do Supabase
   if (url.includes('storage/v1')) {
-    return `${import.meta.env.VITE_SUPABASE_URL}/${url}`;
+    return `https://zotzvtepvpnkcoobdubt.supabase.co/${url}`;
   }
   
   return url;
