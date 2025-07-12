@@ -76,6 +76,9 @@ verify_jwt = true
 [functions.classify-lessons-simple]
 verify_jwt = true
 
+[functions.classify-lessons-test]
+verify_jwt = false
+
 [auth]
 enabled = true
 port = 54324

@@ -114,9 +114,9 @@ export const ClassificacaoAulasModal: React.FC<ClassificacaoAulasModalProps> = (
                 onClick={testConfiguration}
                 variant="outline"
                 size="sm"
-                className="gap-2"
+                className="gap-2 border-green-200 text-green-700 hover:bg-green-50"
               >
-                🧪 Testar Config
+                ✅ Testar OpenAI
               </Button>
               {lessonIds && lessonIds.length === 1 && (
                 <Button
