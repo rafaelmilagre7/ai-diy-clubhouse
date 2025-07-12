@@ -6,9 +6,11 @@ import { supabase } from "@/lib/supabase";
 import { LearningModule, LearningLesson } from "@/lib/supabase/types";
 import { LearningLessonWithRelations } from "@/lib/supabase/types/extended";
 import { convertToLearningLessonsWithRelations } from "@/lib/supabase/utils/typeConverters";
+import { useAllLessons } from "@/hooks/learning/useAllLessons";
 import { toast } from "sonner";
 import { FormacaoAulasHeader } from "@/components/formacao/aulas/FormacaoAulasHeader";
 import { AulasList } from "@/components/formacao/aulas/AulasList";
+import { AllLessonsList } from "@/components/formacao/aulas/AllLessonsList";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 import { NovaAulaButton } from "@/components/formacao/aulas/NovaAulaButton";
@@ -18,10 +20,19 @@ const FormacaoAulas = () => {
   const navigate = useNavigate();
   const { profile } = useAuth();
   
+  // Para visualização geral de todas as aulas (sem ID de módulo)
+  const { lessons: allLessons, loading: loadingAllLessons, refetch: refetchAllLessons } = useAllLessons();
+  
+  // Para visualização específica de um módulo (com ID)
   const [modulo, setModulo] = useState<LearningModule | null>(null);
   const [aulas, setAulas] = useState<LearningLesson[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingAulas, setLoadingAulas] = useState(true);
+
+  // Detectar se estamos na rota geral ou específica
+  const isGeneralView = !id;
+  
+  console.log('FormacaoAulas: Modo de visualização:', isGeneralView ? 'Geral' : 'Módulo específico', { id });
 
   // Buscar detalhes do módulo
   const fetchModulo = async () => {
@@ -83,9 +94,15 @@ const FormacaoAulas = () => {
 
   // Carregar dados iniciais
   useEffect(() => {
-    fetchModulo();
-    fetchAulas();
-  }, [id]);
+    if (!isGeneralView) {
+      fetchModulo();
+      fetchAulas();
+    } else {
+      // Para visualização geral, não precisamos buscar módulo específico
+      setLoading(false);
+      setLoadingAulas(false);
+    }
+  }, [id, isGeneralView]);
 
   // Excluir aula
   const handleExcluirAula = async (aulaId: string) => {
@@ -129,10 +146,15 @@ const FormacaoAulas = () => {
 
   // Função para atualizar a lista após operações bem-sucedidas
   const handleSuccess = () => {
-    fetchAulas();
+    if (isGeneralView) {
+      refetchAllLessons();
+    } else {
+      fetchAulas();
+    }
   };
 
-  if (loading) {
+  // Loading state para visualização geral
+  if (isGeneralView && loadingAllLessons) {
     return (
       <div className="flex justify-center items-center py-12">
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
@@ -140,7 +162,17 @@ const FormacaoAulas = () => {
     );
   }
 
-  if (!modulo) {
+  // Loading state para visualização específica
+  if (!isGeneralView && loading) {
+    return (
+      <div className="flex justify-center items-center py-12">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  // Erro quando procurando módulo específico que não existe
+  if (!isGeneralView && !loading && !modulo) {
     return (
       <div className="text-center py-12">
         <h2 className="text-xl font-semibold">Módulo não encontrado</h2>
@@ -152,12 +184,34 @@ const FormacaoAulas = () => {
 
   const isAdmin = profile?.role === 'admin';
 
+  // Renderizar visualização geral de todas as aulas
+  if (isGeneralView) {
+    return (
+      <div className="space-y-6">
+        <FormacaoAulasHeader 
+          titulo="Todas as Aulas"
+          breadcrumb={false}
+        />
+        
+        <AllLessonsList 
+          lessons={allLessons}
+          loading={loadingAllLessons} 
+          onEdit={handleEditarAula}
+          onDelete={handleExcluirAula}
+          isAdmin={isAdmin}
+          onRefresh={refetchAllLessons}
+        />
+      </div>
+    );
+  }
+
+  // Renderizar visualização específica do módulo
   return (
     <div className="space-y-6">
       <FormacaoAulasHeader 
-        titulo={modulo.title}
+        titulo={modulo?.title || 'Aulas'}
         breadcrumb={true}
-        moduloId={modulo.course_id}
+        moduloId={modulo?.course_id}
       >
         {isAdmin && (
           <NovaAulaButton 
