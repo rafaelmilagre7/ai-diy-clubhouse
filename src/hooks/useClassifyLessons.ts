@@ -226,48 +226,70 @@ export const useClassifyLessons = () => {
 
   const testConfiguration = async () => {
     try {
-      console.log('🧪 Testando configuração...');
+      console.log('🧪 Testando configuração com função simples...');
       
-      const { data, error } = await supabase.functions.invoke('classify-lessons', {
-        body: { mode: 'test' }
+      // Primeiro testar com função simples
+      const { data: simpleData, error: simpleError } = await supabase.functions.invoke('classify-lessons-simple', {
+        body: { test: 'simple configuration test' }
       });
 
-      if (error) {
-        console.error('❌ Erro no teste:', error);
-        toast.error(`Erro no teste de configuração: ${error.message}`);
+      console.log('📊 Resultado teste simples:', { simpleData, simpleError });
+
+      if (simpleError) {
+        console.error('❌ Erro no teste simples:', simpleError);
+        toast.error(`Erro no teste simples: ${simpleError.message}`);
         return false;
       }
 
-      console.log('✅ Resultado do teste:', data);
-      
-      if (data?.test_results) {
-        const { 
-          openai_configured, 
-          openai_working, 
-          openai_error,
-          supabase_configured 
-        } = data.test_results;
+      if (simpleData?.success) {
+        console.log('✅ Teste simples OK, testando função principal...');
         
-        if (!openai_configured) {
-          toast.error('❌ Chave OpenAI não configurada');
+        // Agora testar função principal
+        const { data, error } = await supabase.functions.invoke('classify-lessons', {
+          body: { mode: 'test' }
+        });
+
+        if (error) {
+          console.error('❌ Erro no teste:', error);
+          toast.error(`Erro no teste de configuração: ${error.message}`);
           return false;
         }
+
+        console.log('✅ Resultado do teste:', data);
         
-        if (!openai_working) {
-          toast.error(`❌ OpenAI não funcionando: ${openai_error || 'Erro desconhecido'}`);
-          return false;
+        if (data?.test_results) {
+          const { 
+            openai_configured, 
+            openai_working, 
+            openai_error,
+            supabase_configured 
+          } = data.test_results;
+          
+          if (!openai_configured) {
+            toast.error('❌ Chave OpenAI não configurada');
+            return false;
+          }
+          
+          if (!openai_working) {
+            toast.error(`❌ OpenAI não funcionando: ${openai_error || 'Erro desconhecido'}`);
+            return false;
+          }
+          
+          if (!supabase_configured) {
+            toast.error('❌ Configuração Supabase incompleta');
+            return false;
+          }
+          
+          toast.success('✅ Configuração OK - Sistema pronto para análise');
+          return true;
         }
         
-        if (!supabase_configured) {
-          toast.error('❌ Configuração Supabase incompleta');
-          return false;
-        }
-        
-        toast.success('✅ Configuração OK - Sistema pronto para análise');
-        return true;
+        return false;
+      } else {
+        toast.error('❌ Teste simples falhou');
+        return false;
       }
       
-      return false;
     } catch (error) {
       console.error('❌ Erro no teste de configuração:', error);
       toast.error('Erro ao testar configuração');
