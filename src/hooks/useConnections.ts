@@ -71,9 +71,9 @@ export const useConnections = () => {
       .or(
         `and(requester_id.eq.${user.user.id},recipient_id.eq.${otherUserId}),and(requester_id.eq.${otherUserId},recipient_id.eq.${user.user.id})`
       )
-      .single();
+      .maybeSingle();
 
-    if (error && error.code !== 'PGRST116') throw error;
+    if (error) throw error;
     return data;
   };
 
@@ -108,7 +108,7 @@ export const useConnections = () => {
         .insert({
           user_id: recipientId,
           sender_id: user.user.id,
-          type: 'connection_request'
+          type: 'request'
         });
 
       return data;
@@ -147,7 +147,7 @@ export const useConnections = () => {
         .insert({
           user_id: data.requester_id,
           sender_id: data.recipient_id,
-          type: 'connection_accepted'
+          type: 'accepted'
         });
 
       return data;
