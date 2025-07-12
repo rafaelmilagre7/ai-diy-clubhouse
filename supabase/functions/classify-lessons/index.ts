@@ -149,6 +149,11 @@ Responda APENAS com um JSON válido no seguinte formato:
         }),
       });
 
+      if (!response.ok) {
+        console.error(`OpenAI API error: ${response.status} ${response.statusText}`);
+        throw new Error(`OpenAI API error: ${response.status}`);
+      }
+
       const data = await response.json();
       
       try {

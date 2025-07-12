@@ -101,6 +101,7 @@ export const useClassifyLessons = () => {
 
           if (analysisError) {
             console.error('Erro na análise do batch:', analysisError);
+            toast.error(`Erro na análise: ${analysisError.message || 'Erro desconhecido'}`);
             // Continuar com próximo batch mesmo se um falhar
             continue;
           }
