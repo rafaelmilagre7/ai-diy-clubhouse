@@ -1,12 +1,12 @@
-import { Brain, Users, Bell, Settings, BarChart3, Calendar } from 'lucide-react';
+import { Brain, Users, Bell, Settings, BarChart3, Calendar, MessageCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { motion } from 'framer-motion';
 import { useNetworkingStats } from '@/hooks/useNetworkingStats';
 
 interface NetworkingHeaderProps {
-  activeTab: 'matches' | 'connections' | 'notifications' | 'preferences' | 'analytics' | 'meetings';
-  onTabChange: (tab: 'matches' | 'connections' | 'notifications' | 'preferences' | 'analytics' | 'meetings') => void;
+  activeTab: 'matches' | 'connections' | 'messages' | 'meetings' | 'notifications' | 'analytics' | 'preferences';
+  onTabChange: (tab: 'matches' | 'connections' | 'messages' | 'meetings' | 'notifications' | 'analytics' | 'preferences') => void;
 }
 
 export const NetworkingHeader = ({
@@ -18,6 +18,7 @@ export const NetworkingHeader = ({
   const tabs = [
     { id: 'matches', label: 'Matches IA', icon: Brain, count: stats?.matches || 0 },
     { id: 'connections', label: 'Conexões', icon: Users, count: stats?.connections || 0 },
+    { id: 'messages', label: 'Mensagens', icon: MessageCircle, count: 0 }, // TODO: implementar contador de mensagens não lidas
     { id: 'meetings', label: 'Reuniões', icon: Calendar, count: null },
     { id: 'notifications', label: 'Notificações', icon: Bell, count: stats?.notifications || 0 },
     { id: 'analytics', label: 'Analytics', icon: BarChart3, count: null },
@@ -56,6 +57,7 @@ export const NetworkingHeader = ({
               <Button
                 variant={isActive ? "default" : "outline"}
                 onClick={() => onTabChange(tab.id as any)}
+                data-tab={tab.id}
                 className={`
                   flex items-center gap-2 whitespace-nowrap
                   ${isActive 

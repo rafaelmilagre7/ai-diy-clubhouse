@@ -5,10 +5,11 @@ import { ConnectionNotifications } from '@/components/networking/ConnectionNotif
 import { NetworkingPreferences } from '@/components/networking/NetworkingPreferences';
 import { NetworkingAnalytics } from '@/components/networking/NetworkingAnalytics';
 import { MeetingsList } from '@/components/networking/MeetingScheduler';
+import { MessagesGrid } from '@/components/networking/MessagesGrid';
 import { useDynamicSEO } from '@/hooks/seo/useDynamicSEO';
 
 const Networking = () => {
-  const [activeTab, setActiveTab] = useState<'matches' | 'connections' | 'notifications' | 'preferences' | 'analytics' | 'meetings'>('matches');
+  const [activeTab, setActiveTab] = useState<'matches' | 'connections' | 'messages' | 'meetings' | 'notifications' | 'analytics' | 'preferences'>('matches');
 
   useDynamicSEO({
     title: 'Networking AI - Networking Inteligente',
@@ -30,6 +31,8 @@ const Networking = () => {
         <NetworkingAnalytics />
       ) : activeTab === 'meetings' ? (
         <MeetingsList />
+      ) : activeTab === 'messages' ? (
+        <MessagesGrid />
       ) : (
         <NetworkingDashboard activeTab={activeTab} />
       )}
