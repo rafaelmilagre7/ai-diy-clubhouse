@@ -19,11 +19,19 @@ export const useAllLessons = (): UseAllLessonsResult => {
       setLoading(true);
       setError(null);
 
+      // Query direta para admin - busca todas as aulas com informações de módulo e curso
       const { data, error: queryError } = await supabase
-        .from('learning_lessons_with_relations')
-        .select('*')
-        .order('module_order_index', { ascending: true })
-        .order('order_index', { ascending: true });
+        .from('learning_lessons')
+        .select(`
+          *,
+          module:learning_modules!inner(
+            *,
+            course:learning_courses!inner(*)
+          ),
+          videos:learning_lesson_videos(*),
+          resources:learning_resources(*)
+        `)
+        .order('created_at', { ascending: false });
 
       if (queryError) {
         throw queryError;
