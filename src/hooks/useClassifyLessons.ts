@@ -237,36 +237,40 @@ export const useClassifyLessons = () => {
 
       if (testError) {
         console.error('❌ Erro no teste básico:', testError);
-        toast.error(`Erro no teste: ${testError.message}`);
+        
+        // Verificar tipos específicos de erro
+        if (testError.message?.includes('404')) {
+          toast.error('❌ Função classify-lessons-test não encontrada. Aguarde o deploy.');
+        } else if (testError.message?.includes('OpenAI')) {
+          toast.error('❌ Chave OpenAI não configurada ou inválida');
+        } else {
+          toast.error(`❌ Erro no teste: ${testError.message}`);
+        }
         return false;
       }
 
       if (testData?.success) {
-        console.log('✅ Teste básico OK');
-        toast.success('✅ OpenAI configurado e funcionando!');
-        
-        // Agora testar função principal com modo test
-        const { data, error } = await supabase.functions.invoke('classify-lessons', {
-          body: { mode: 'test' }
-        });
-
-        if (error) {
-          console.error('❌ Erro no teste da função principal:', error);
-          toast.error(`Erro na função principal: ${error.message}`);
-          return false;
-        }
-
-        console.log('✅ Função principal também funcionando:', data);
+        console.log('✅ Teste básico OK:', testData);
+        toast.success(`✅ ${testData.message || 'OpenAI configurado e funcionando!'}`);
         return true;
       } else {
-        const errorMsg = testData?.error || 'Erro desconhecido';
-        toast.error(`❌ Configuração com problema: ${errorMsg}`);
+        const errorMsg = testData?.error || 'Erro desconhecido no teste';
+        console.error('❌ Teste falhou:', testData);
+        toast.error(`❌ ${errorMsg}`);
         return false;
       }
       
     } catch (error) {
-      console.error('❌ Erro no teste de configuração:', error);
-      toast.error('Erro ao testar configuração');
+      console.error('❌ Erro fatal no teste:', error);
+      
+      // Verificar se é erro de rede ou timeout
+      if (error.name === 'AbortError') {
+        toast.error('❌ Timeout na função - ela pode estar muito lenta');
+      } else if (error.message?.includes('fetch')) {
+        toast.error('❌ Erro de conexão com a função');
+      } else {
+        toast.error(`❌ Erro: ${error.message || 'Desconhecido'}`);
+      }
       return false;
     }
   };
