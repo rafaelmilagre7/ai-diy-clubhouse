@@ -3,8 +3,10 @@ import { supabase } from '@/lib/supabase';
 import { LmsAnalyticsData } from './types';
 
 export const useLMSAnalytics = (dateRange?: { from: Date; to: Date }) => {
+  const dateKey = dateRange ? `${dateRange.from.toISOString()}-${dateRange.to.toISOString()}` : 'all';
+  
   return useQuery({
-    queryKey: ['lms-analytics', dateRange],
+    queryKey: ['lms-analytics', dateKey],
     queryFn: async (): Promise<LmsAnalyticsData> => {
       try {
         // Construir filtro de data
