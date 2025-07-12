@@ -34,6 +34,18 @@ export function useUserRoles() {
         console.log(`🔄 [USER-ROLES] Iniciando atribuição de role: userId=${userId.substring(0, 8)}***, roleId=${roleId}`);
       }
       
+      // Validação de segurança usando a nova função
+      const { data: isValid, error: validationError } = await supabase.rpc('validate_role_change', {
+        target_user_id: userId,
+        new_role_id: roleId,
+        current_user_id: user?.id
+      });
+      
+      if (validationError || !isValid) {
+        console.error('❌ [USER-ROLES] Mudança de papel não autorizada:', validationError);
+        throw new Error('Você não tem permissão para alterar este papel');
+      }
+      
       // Buscar dados antigos para auditoria
       const { data: oldProfileData } = await supabase
         .from("profiles")
@@ -49,6 +61,7 @@ export function useUserRoles() {
       );
       
       // Atualizar o papel do usuário - apenas role_id
+      // A nova política RLS irá validar automaticamente se esta operação é permitida
       const { data, error } = await supabase
         .from("profiles")
         .update({ role_id: roleId })
@@ -58,6 +71,12 @@ export function useUserRoles() {
       if (error) {
         // Log de erro sempre visível (crítico)
         console.error('❌ [USER-ROLES] Erro ao atualizar role:', error);
+        
+        // Verificar se é violação de segurança
+        if (error.message?.includes('row-level security') || error.message?.includes('policy')) {
+          throw new Error('Operação não autorizada - violação de segurança detectada');
+        }
+        
         throw error;
       }
       

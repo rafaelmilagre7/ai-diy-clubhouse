@@ -41,6 +41,25 @@ const ModernRegisterForm: React.FC<ModernRegisterFormProps> = ({
     return { ...checks, score, strength };
   };
 
+  // Validação de senha no servidor
+  const validatePasswordOnServer = async (password: string) => {
+    try {
+      const { data, error } = await supabase.rpc('validate_password_strength_server', {
+        password: password
+      });
+      
+      if (error) {
+        console.error('Erro na validação de senha:', error);
+        return null;
+      }
+      
+      return data;
+    } catch (err) {
+      console.error('Erro ao validar senha no servidor:', err);
+      return null;
+    }
+  };
+
   const passwordValidation = validatePassword(password);
   const isPasswordValid = passwordValidation.score >= 4; // Requer pelo menos 4 critérios
   const passwordsMatch = password && confirmPassword && password === confirmPassword;
@@ -86,6 +105,19 @@ const ModernRegisterForm: React.FC<ModernRegisterFormProps> = ({
       toast({
         title: "Senha não atende os critérios",
         description: "Por favor, crie uma senha que atenda pelo menos 4 dos 5 requisitos.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validação adicional no servidor
+    console.log('🔍 [REGISTER] Validando senha no servidor...');
+    const serverValidation = await validatePasswordOnServer(password);
+    if (serverValidation && !serverValidation.is_valid) {
+      console.log('❌ [REGISTER] Senha rejeitada pelo servidor:', serverValidation);
+      toast({
+        title: "Senha muito fraca",
+        description: "Sua senha não atende aos critérios de segurança. Evite senhas comuns e use uma combinação mais forte.",
         variant: "destructive",
       });
       return;

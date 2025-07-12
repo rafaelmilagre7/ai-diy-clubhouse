@@ -31,9 +31,9 @@ export const validateInviteToken = async (
     
     console.log(`🔍 [VALIDATION] Token limpo: ${cleanToken.substring(0, 8)}*** (comprimento: ${cleanToken.length})`);
 
-    // Usar a nova função SQL melhorada
+    // Usar a nova função SQL de segurança
     const { data: invites, error: inviteError } = await supabase
-      .rpc('validate_invite_token_enhanced', { p_token: cleanToken });
+      .rpc('validate_invite_token_secure', { p_token: cleanToken });
 
     if (inviteError) {
       console.error("❌ [VALIDATION] Erro ao buscar convite:", inviteError);

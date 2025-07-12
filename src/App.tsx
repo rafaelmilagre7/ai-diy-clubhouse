@@ -7,6 +7,7 @@ import { Toaster } from 'sonner';
 import { ThemeProvider } from 'next-themes';
 import { AuthProvider } from '@/contexts/auth';
 import { LoggingProvider } from '@/contexts/logging';
+import { SecurityEnforcementProvider } from '@/components/security/SecurityEnforcementProvider';
 import { AppRoutes } from '@/routes';
 import { SEOWrapper } from '@/components/seo/SEOWrapper';
 
@@ -25,21 +26,23 @@ function App() {
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
           <LoggingProvider>
-            <Router>
-              <SEOWrapper>
-                <div className="App">
-                  <AppRoutes />
-                  <Toaster 
-                    position="top-right"
-                    theme="dark"
-                    richColors
-                    expand
-                    visibleToasts={3}
-                  />
-                  <ReactQueryDevtools initialIsOpen={false} />
-                </div>
-              </SEOWrapper>
-            </Router>
+            <SecurityEnforcementProvider>
+              <Router>
+                <SEOWrapper>
+                  <div className="App">
+                    <AppRoutes />
+                    <Toaster 
+                      position="top-right"
+                      theme="dark"
+                      richColors
+                      expand
+                      visibleToasts={3}
+                    />
+                    <ReactQueryDevtools initialIsOpen={false} />
+                  </div>
+                </SEOWrapper>
+              </Router>
+            </SecurityEnforcementProvider>
           </LoggingProvider>
         </AuthProvider>
       </QueryClientProvider>

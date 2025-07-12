@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { SecurityDashboard } from '@/components/admin/security/SecurityDashboard';
+import { SecurityViolationsMonitor } from '@/components/admin/security/SecurityViolationsMonitor';
 
 const AdminSecurity: React.FC = () => {
   return (
@@ -12,7 +13,10 @@ const AdminSecurity: React.FC = () => {
         </p>
       </div>
       
-      <SecurityDashboard />
+      <div className="space-y-8">
+        <SecurityViolationsMonitor />
+        <SecurityDashboard />
+      </div>
     </div>
   );
 };

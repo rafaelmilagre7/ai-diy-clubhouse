@@ -5239,9 +5239,23 @@ export type Database = {
           last_sent_at: string
         }[]
       }
+      validate_invite_token_secure: {
+        Args: { p_token: string }
+        Returns: {
+          id: string
+          email: string
+          role_id: string
+          expires_at: string
+          is_valid: boolean
+        }[]
+      }
       validate_password_strength: {
         Args: { password: string }
         Returns: boolean
+      }
+      validate_password_strength_server: {
+        Args: { password: string }
+        Returns: Json
       }
       validate_profile_roles: {
         Args: Record<PropertyKey, never>
@@ -5254,6 +5268,14 @@ export type Database = {
           expected_role_id: string
           issue_type: string
         }[]
+      }
+      validate_role_change: {
+        Args: {
+          target_user_id: string
+          new_role_id: string
+          current_user_id?: string
+        }
+        Returns: boolean
       }
       validate_solution_certificate: {
         Args: { p_validation_code: string }
