@@ -48,7 +48,7 @@ interface NPSAnalytics {
 const NPSAnalytics: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterScore, setFilterScore] = useState<string>('all');
-  const [timeRange, setTimeRange] = useState<string>('30');
+  const [timeRange, setTimeRange] = useState<string>('all');
 
   // Calcular range de datas
   const getDateRange = () => {
