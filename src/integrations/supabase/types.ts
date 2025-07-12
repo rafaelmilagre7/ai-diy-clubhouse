@@ -5374,6 +5374,10 @@ export type Database = {
         Args: { user_id: string; permission_code: string }
         Returns: boolean
       }
+      validate_admin_access: {
+        Args: { user_id: string }
+        Returns: Json
+      }
       validate_complete_rls_security: {
         Args: Record<PropertyKey, never>
         Returns: {

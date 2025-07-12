@@ -62,6 +62,12 @@ verify_jwt = true
 [functions.auth-rate-limiter]
 verify_jwt = false
 
+[functions.admin-delete-user]
+verify_jwt = true
+
+[functions.security-log-processor]
+verify_jwt = true
+
 [auth]
 enabled = true
 port = 54324

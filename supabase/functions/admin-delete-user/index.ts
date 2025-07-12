@@ -35,6 +35,75 @@ const handler = async (req: Request): Promise<Response> => {
   try {
     console.log("🗑️ === INICIANDO PROCESSO DE EXCLUSÃO DE USUÁRIO ===");
 
+    // VALIDAÇÃO DE SEGURANÇA CRÍTICA: Verificar autenticação e autorização
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      console.error("❌ SECURITY VIOLATION: Tentativa de acesso sem token de autenticação");
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          error: 'Token de autenticação obrigatório',
+          code: 'UNAUTHORIZED' 
+        }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Criar cliente administrativo para validação de autorização
+    const supabaseAdmin = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+      {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false
+        }
+      }
+    );
+
+    // Validar token e extrair usuário
+    const token = authHeader.replace('Bearer ', '');
+    const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token);
+    
+    if (authError || !user) {
+      console.error("❌ SECURITY VIOLATION: Token inválido ou expirado", authError);
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          error: 'Token de autenticação inválido',
+          code: 'INVALID_TOKEN' 
+        }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // VALIDAÇÃO CRÍTICA: Verificar se o usuário é admin
+    const { data: adminValidation } = await supabaseAdmin.rpc('validate_admin_access', {
+      user_id: user.id
+    });
+
+    if (!adminValidation?.is_admin) {
+      console.error("❌ SECURITY VIOLATION: Usuário não-admin tentando deletar usuário", {
+        userId: user.id,
+        userRole: adminValidation?.user_role,
+        attemptedAction: 'delete_user'
+      });
+      
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          error: 'Acesso negado: privilégios de administrador obrigatórios',
+          code: 'INSUFFICIENT_PRIVILEGES' 
+        }),
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    console.log("✅ SECURITY CHECK PASSED: Admin access validated", {
+      adminUserId: user.id,
+      adminRole: adminValidation.user_role
+    });
+
     const { userId, forceDelete = false, softDelete = false }: DeleteUserRequest = await req.json();
     
     if (!userId) {
@@ -51,17 +120,7 @@ const handler = async (req: Request): Promise<Response> => {
       timestamp: new Date().toISOString()
     });
 
-    // Criar cliente administrativo
-    const supabaseAdmin = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
-      {
-        auth: {
-          autoRefreshToken: false,
-          persistSession: false
-        }
-      }
-    );
+    // Cliente já criado acima para validação de segurança
 
     // Buscar dados do usuário ANTES da exclusão
     console.log("📋 Buscando dados do usuário...");

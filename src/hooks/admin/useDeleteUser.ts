@@ -30,7 +30,16 @@ export const useDeleteUser = () => {
 
       console.log("🗑️ Iniciando exclusão do usuário:", { userId, userEmail, softDelete });
 
+      // Buscar token de autenticação para a requisição segura
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) {
+        throw new Error('Token de autenticação não encontrado');
+      }
+
       const { data, error } = await supabase.functions.invoke('admin-delete-user', {
+        headers: {
+          Authorization: `Bearer ${session.access_token}`
+        },
         body: { 
           userId,
           forceDelete: true, // Sempre forçar delete para contornar erros menores

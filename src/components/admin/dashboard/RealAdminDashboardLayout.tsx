@@ -3,6 +3,7 @@ import { DashboardHeader } from "./DashboardHeader";
 import { RealStatsOverview } from "./RealStatsOverview";
 import { RealSystemActivity } from "./RealSystemActivity";
 import { UserDistributionChart } from "./UserDistributionChart";
+import { SecurityMonitor } from "../SecurityMonitor";
 
 interface RealAdminDashboardLayoutProps {
   timeRange: string;
@@ -36,6 +37,8 @@ export const RealAdminDashboardLayout = ({
           <UserDistributionChart data={statsData.usersByRole || []} loading={loading} />
         </div>
       </div>
+      
+      <SecurityMonitor />
     </div>
   );
 };
