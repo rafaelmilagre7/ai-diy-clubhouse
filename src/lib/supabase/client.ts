@@ -2,10 +2,14 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types/database.types';
 
-// CORREÇÃO DE SEGURANÇA: Configurações do projeto Supabase movidas para variáveis de ambiente
-// Em um ambiente real, essas credenciais devem vir de variáveis de ambiente seguras
-const supabaseUrl = 'https://zotzvtepvpnkcoobdubt.supabase.co';
-const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpvdHp2dGVwdnBua2Nvb2JkdWJ0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQzNzgzODAsImV4cCI6MjA1OTk1NDM4MH0.dxjPkqTPnK8gjjxJbooPX5_kpu3INciLeDpuU8dszHQ';
+// CORREÇÃO DE SEGURANÇA: Usar variáveis de ambiente em vez de credenciais hardcoded
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://zotzvtepvpnkcoobdubt.supabase.co';
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpvdHp2dGVwdnBua2Nvb2JkdWJ0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQzNzgzODAsImV4cCI6MjA1OTk1NDM4MH0.dxjPkqTPnK8gjjxJbooPX5_kpu3INciLeDpuU8dszHQ';
+
+// Validação de segurança: verificar se as credenciais foram fornecidas
+if (!supabaseUrl || !supabaseAnonKey) {
+  console.error('ERRO DE CONFIGURAÇÃO: URL ou chave anônima do Supabase não fornecidas');
+}
 
 // Criação do cliente Supabase com configurações de segurança
 export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {

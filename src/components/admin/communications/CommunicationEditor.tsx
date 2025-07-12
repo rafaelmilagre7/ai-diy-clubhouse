@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createSafeHTML } from '@/utils/htmlSanitizer';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -242,7 +243,7 @@ export const CommunicationEditor: React.FC<CommunicationEditorProps> = ({
                     <h3 className="font-semibold text-lg mb-2">{formData.title}</h3>
                     <div 
                       className="prose prose-sm max-w-none"
-                      dangerouslySetInnerHTML={{ __html: formData.content }}
+                      dangerouslySetInnerHTML={createSafeHTML(formData.content)}
                     />
                   </div>
                 </CardContent>

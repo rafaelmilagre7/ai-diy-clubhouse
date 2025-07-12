@@ -1,5 +1,6 @@
 
 import { Solution } from "@/lib/supabase";
+import { createSafeHTML } from '@/utils/htmlSanitizer';
 
 interface SolutionContentSectionProps {
   solution: Solution;
@@ -19,7 +20,7 @@ export const SolutionContentSection = ({ solution }: SolutionContentSectionProps
         {solution.overview ? (
           <div 
             className="text-neutral-200 prose-headings:text-neutral-100 prose-p:text-neutral-200 prose-strong:text-neutral-100 prose-em:text-neutral-200 prose-li:text-neutral-200" 
-            dangerouslySetInnerHTML={renderContent(solution.overview)} 
+            dangerouslySetInnerHTML={createSafeHTML(renderContent(solution.overview).__html)} 
           />
         ) : (
           <p className="text-neutral-200">{solution.description}</p>

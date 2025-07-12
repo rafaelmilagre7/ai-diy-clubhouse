@@ -23,6 +23,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { createSafeHTML } from '@/utils/htmlSanitizer';
 import { Separator } from "@/components/ui/separator";
 import { v4 as uuidv4 } from "uuid";
 
@@ -309,7 +310,7 @@ export const QuickPostEditor = ({
           {isPreview ? (
             <div 
               className="prose prose-sm dark:prose-invert max-w-none min-h-[200px] p-2" 
-              dangerouslySetInnerHTML={{ __html: renderMarkdown(content) }}
+              dangerouslySetInnerHTML={createSafeHTML(renderMarkdown(content))}
             />
           ) : (
             <Textarea

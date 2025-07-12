@@ -1,6 +1,7 @@
 
 import * as React from "react"
 import { ChartConfig, THEMES } from "./context"
+import { sanitizeCSS } from '@/utils/htmlSanitizer';
 
 export const ChartStyle = ({ id, config }: { id: string; config: ChartConfig }) => {
   const colorConfig = Object.entries(config).filter(
@@ -14,7 +15,7 @@ export const ChartStyle = ({ id, config }: { id: string; config: ChartConfig }) 
   return (
     <style
       dangerouslySetInnerHTML={{
-        __html: Object.entries(THEMES)
+        __html: sanitizeCSS(Object.entries(THEMES)
           .map(
             ([theme, prefix]) => `
 ${prefix} [data-chart=${id}] {
@@ -29,7 +30,7 @@ ${colorConfig
 }
 `
           )
-          .join("\n"),
+          .join("\n"))
       }}
     />
   )

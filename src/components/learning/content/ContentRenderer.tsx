@@ -1,6 +1,7 @@
 
 import React from "react";
 import DOMPurify from "dompurify";
+import { createSafeHTML } from '@/utils/htmlSanitizer';
 
 interface ContentRendererProps {
   content: any;
@@ -38,11 +39,11 @@ export const ContentRenderer = ({ content }: ContentRendererProps) => {
   const renderContent = () => {
     try {
       if (typeof content === "string") {
-        return <div dangerouslySetInnerHTML={{ __html: processSafeHTML(content) }} />;
+        return <div dangerouslySetInnerHTML={createSafeHTML(content)} />;
       }
       
       if (content?.html) {
-        return <div dangerouslySetInnerHTML={{ __html: processSafeHTML(content.html) }} />;
+        return <div dangerouslySetInnerHTML={createSafeHTML(content.html)} />;
       }
       
       if (content?.text) {
@@ -50,7 +51,7 @@ export const ContentRenderer = ({ content }: ContentRendererProps) => {
       }
       
       if (content?.overview) {
-        return <div dangerouslySetInnerHTML={{ __html: processSafeHTML(content.overview) }} />;
+        return <div dangerouslySetInnerHTML={createSafeHTML(content.overview)} />;
       }
 
       return <p className="text-neutral-200">Conteúdo não disponível.</p>;

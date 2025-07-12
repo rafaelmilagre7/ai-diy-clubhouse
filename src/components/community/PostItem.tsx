@@ -5,6 +5,7 @@ import { CheckCircle } from "lucide-react";
 import { Post } from "@/types/forumTypes";
 import { ModerationActions } from "./ModerationActions";
 import { useReporting } from "@/hooks/community/useReporting";
+import { createSafeHTML } from '@/utils/htmlSanitizer';
 
 interface PostItemProps {
   post: Post;
@@ -92,7 +93,7 @@ export const PostItem = ({ post, showTopicContext = false }: PostItemProps) => {
             <div className="prose prose-sm max-w-none text-foreground">
               <div 
                 className="break-words"
-                dangerouslySetInnerHTML={{ __html: convertMarkdownToHtml(post.content) }}
+                dangerouslySetInnerHTML={createSafeHTML(convertMarkdownToHtml(post.content))}
               />
             </div>
           </div>

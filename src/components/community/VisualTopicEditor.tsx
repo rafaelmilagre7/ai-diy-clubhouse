@@ -8,6 +8,7 @@ import { useAuth } from "@/contexts/auth";
 import { supabase } from "@/lib/supabase";
 import { v4 as uuidv4 } from "uuid";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { createSafeHTML } from '@/utils/htmlSanitizer';
 
 interface VisualTopicEditorProps {
   content: string;
@@ -230,7 +231,7 @@ export function VisualTopicEditor({ content, onChange, placeholder = "Conteúdo.
     return (
       <div 
         className="prose prose-sm max-w-none"
-        dangerouslySetInnerHTML={{ __html: htmlContent }}
+        dangerouslySetInnerHTML={createSafeHTML(htmlContent)}
         style={{
           // Garantir que imagens sejam responsivas
           wordWrap: 'break-word',

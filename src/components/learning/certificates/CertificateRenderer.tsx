@@ -1,5 +1,6 @@
 
 import React, { useEffect, useState } from "react";
+import { sanitizeCertificateHTML, sanitizeCSS, createSafeHTML } from '@/utils/htmlSanitizer';
 
 interface CertificateRendererProps {
   template: {
@@ -92,8 +93,8 @@ export const CertificateRenderer = ({ template, data }: CertificateRendererProps
 
   return (
     <div className="certificate-container">
-      <style dangerouslySetInnerHTML={{ __html: optimizedCSS }} />
-      <div dangerouslySetInnerHTML={{ __html: processedHtml }} />
+      <style dangerouslySetInnerHTML={{ __html: sanitizeCSS(optimizedCSS) }} />
+      <div dangerouslySetInnerHTML={createSafeHTML(processedHtml)} />
     </div>
   );
 };

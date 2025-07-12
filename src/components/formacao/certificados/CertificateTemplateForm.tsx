@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { createSafeHTML } from '@/utils/htmlSanitizer';
 import { CertificateTemplate } from "@/types/learningTypes";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -136,13 +137,12 @@ export const CertificateTemplateForm = ({
           <div className="border rounded-lg p-4 h-80 overflow-auto">
             <div
               className="certificate-preview"
-              dangerouslySetInnerHTML={{
-                __html: (formData.html_template || "")
-                  .replace(/\{\{nome\}\}/g, "Nome do Aluno")
-                  .replace(/\{\{curso\}\}/g, "Nome do Curso")
-                  .replace(/\{\{data\}\}/g, new Date().toLocaleDateString("pt-BR"))
-                  .replace(/\{\{codigo\}\}/g, "ABC-123-XYZ")
-              }}
+              dangerouslySetInnerHTML={createSafeHTML((formData.html_template || "")
+                .replace(/\{\{nome\}\}/g, "Nome do Aluno")
+                .replace(/\{\{curso\}\}/g, "Nome do Curso")
+                .replace(/\{\{data\}\}/g, new Date().toLocaleDateString("pt-BR"))
+                .replace(/\{\{codigo\}\}/g, "ABC-123-XYZ")
+              )}
             />
           </div>
         </TabsContent>

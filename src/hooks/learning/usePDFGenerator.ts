@@ -4,6 +4,7 @@ import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
+import { safeDocumentWrite } from '@/utils/htmlSanitizer';
 
 export const usePDFGenerator = () => {
   const isGenerating = useRef(false);
@@ -214,12 +215,11 @@ export const usePDFGenerator = () => {
         </html>
       `;
 
-      // Abrir em nova aba
+      // Abrir em nova aba usando método seguro
       const newWindow = window.open('', '_blank');
       if (newWindow) {
-        newWindow.document.write(fullHtml);
-        newWindow.document.close();
-        console.log('✅ Página de impressão aberta em nova aba');
+        safeDocumentWrite(fullHtml, newWindow);
+        console.log('✅ Página de impressão aberta em nova aba (método seguro)');
       } else {
         throw new Error('Não foi possível abrir nova aba');
       }
