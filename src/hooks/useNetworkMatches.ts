@@ -53,12 +53,13 @@ export const useNetworkMatches = (filters?: MatchFilters) => {
           query = query.in('match_type', filters.types);
         }
 
-        // Filtro por compatibilidade
-        if (filters.compatibilityRange[0] > 0) {
-          query = query.gte('compatibility_score', filters.compatibilityRange[0]);
-        }
-        if (filters.compatibilityRange[1] < 100) {
-          query = query.lte('compatibility_score', filters.compatibilityRange[1]);
+        // Filtro por compatibilidade - aplicar apenas se range foi modificado do padrão [0, 100]
+        const isCompatibilityFiltered = filters.compatibilityRange[0] > 0 || filters.compatibilityRange[1] < 100;
+        
+        if (isCompatibilityFiltered) {
+          query = query
+            .gte('compatibility_score', filters.compatibilityRange[0])
+            .lte('compatibility_score', filters.compatibilityRange[1]);
         }
 
         // Filtro "apenas não lidos" - por enquanto vamos considerar todos como não lidos
