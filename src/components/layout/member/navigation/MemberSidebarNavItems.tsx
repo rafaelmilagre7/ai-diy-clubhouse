@@ -73,7 +73,7 @@ export const MemberSidebarNavItems: React.FC<MemberSidebarNavItemsProps> = ({ si
       type: "regular"
     },
     {
-      title: "Conecta AI",
+      title: "Networking AI",
       href: "/networking",
       icon: Brain,
       type: "regular"

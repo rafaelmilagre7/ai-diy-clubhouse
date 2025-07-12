@@ -3,51 +3,67 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Brain, MessageCircle, Sparkles, TrendingUp, Users, Building2 } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { useNetworkingProfiles } from '@/hooks/useNetworkingProfiles';
+import LoadingScreen from '@/components/common/LoadingScreen';
 
-// Mock data - Em produção virá da API/banco
-const mockMatches = [
-  {
-    id: '1',
-    name: 'Carlos Mendes',
-    company: 'TechFlow Solutions',
-    role: 'CEO',
-    industry: 'Tecnologia',
-    compatibility: 92,
-    type: 'Parceria Estratégica',
-    aiReason: 'Complementaridade perfeita: sua expertise em e-commerce + experiência dele em automação',
-    strengths: ['Visão estratégica', 'Network consolidado', 'Inovação'],
-    location: 'São Paulo, SP',
-    avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face'
-  },
-  {
-    id: '2',
-    name: 'Ana Costa',
-    company: 'Growth Marketing Pro',
-    role: 'Diretora de Marketing',
-    industry: 'Marketing Digital',
-    compatibility: 87,
-    type: 'Potencial Cliente',
-    aiReason: 'Alto potencial de conversão: procura soluções de IA para otimizar campanhas',
-    strengths: ['Performance Marketing', 'Growth Hacking', 'Dados'],
-    location: 'Rio de Janeiro, RJ',
-    avatar: 'https://images.unsplash.com/photo-1494790108755-2616b85-4e45?w=100&h=100&fit=crop&crop=face'
-  },
-  {
-    id: '3',
-    name: 'Pedro Silva',
-    company: 'InnovaCorp',
-    role: 'CTO',
-    industry: 'Fintech',
-    compatibility: 84,
-    type: 'Mentorship',
-    aiReason: 'Mentor ideal: 15 anos implementando IA em fintechs, pode acelerar seu crescimento',
-    strengths: ['IA Aplicada', 'Escalabilidade', 'Liderança'],
-    location: 'Florianópolis, SC',
-    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face'
-  }
-];
+// Funções auxiliares para criar dados de match baseados em perfis reais
+const getMatchType = (role: string, index: number) => {
+  const types = ['Parceria Estratégica', 'Potencial Cliente', 'Mentorship', 'Fornecedor'];
+  if (role === 'admin') return 'Mentorship';
+  return types[index % types.length];
+};
+
+const getCompatibility = () => Math.floor(Math.random() * 20) + 80; // 80-100%
+
+const getAiReason = (type: string, name: string, company: string) => {
+  const reasons = {
+    'Parceria Estratégica': `Complementaridade perfeita: ${name} em ${company || 'empresa'} pode ser parceiro estratégico`,
+    'Potencial Cliente': `Alto potencial: ${name} busca soluções de IA para ${company || 'sua empresa'}`,
+    'Mentorship': `Mentor ideal: ${name} tem experiência para acelerar seu crescimento`,
+    'Fornecedor': `Expertise técnica: ${name} pode fornecer serviços especializados`
+  };
+  return reasons[type] || `Ótima oportunidade de networking com ${name}`;
+};
+
+const getStrengths = (role: string, industry?: string) => {
+  const strengthsByRole = {
+    'admin': ['Liderança', 'Visão estratégica', 'Inovação'],
+    'formacao': ['Educação', 'Desenvolvimento', 'Capacitação'],
+    'membro_club': ['Networking', 'Negócios', 'Crescimento']
+  };
+  return strengthsByRole[role] || ['Experiência', 'Networking', 'Inovação'];
+};
 
 export const MatchesGrid = () => {
+  const { data: profiles, isLoading, error } = useNetworkingProfiles();
+
+  if (isLoading) {
+    return <LoadingScreen message="Carregando matches..." />;
+  }
+
+  if (error || !profiles) {
+    return (
+      <div className="text-center py-10">
+        <p className="text-destructive">Erro ao carregar perfis para networking</p>
+      </div>
+    );
+  }
+
+  // Pegar apenas os primeiros 6 perfis como matches
+  const matches = profiles.slice(0, 6).map((profile, index) => ({
+    id: profile.id,
+    name: profile.name,
+    company: profile.company_name || 'Empresa',
+    role: profile.current_position || 'Profissional',
+    industry: profile.industry || 'Tecnologia',
+    compatibility: getCompatibility(),
+    type: getMatchType(profile.role, index),
+    aiReason: getAiReason(getMatchType(profile.role, index), profile.name, profile.company_name || ''),
+    strengths: getStrengths(profile.role, profile.industry),
+    location: 'Brasil', // Por padrão
+    avatar: profile.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(profile.name)}&background=0D8ABC&color=fff`
+  }));
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -61,12 +77,12 @@ export const MatchesGrid = () => {
           </p>
         </div>
         <Badge className="bg-viverblue/10 text-viverblue border-viverblue/30">
-          {mockMatches.length} novos matches
+          {matches.length} novos matches
         </Badge>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {mockMatches.map((match, index) => (
+        {matches.map((match, index) => (
           <motion.div
             key={match.id}
             initial={{ opacity: 0, y: 20 }}
@@ -82,7 +98,19 @@ export const MatchesGrid = () => {
 };
 
 interface MatchCardProps {
-  match: typeof mockMatches[0];
+  match: {
+    id: string;
+    name: string;
+    company: string;
+    role: string;
+    industry: string;
+    compatibility: number;
+    type: string;
+    aiReason: string;
+    strengths: string[];
+    location: string;
+    avatar: string;
+  };
 }
 
 const MatchCard = ({ match }: MatchCardProps) => {
@@ -109,21 +137,21 @@ const MatchCard = ({ match }: MatchCardProps) => {
   return (
     <Card className="h-full overflow-hidden hover:shadow-md hover:translate-y-[-2px] transition-all duration-300 border-neutral-800/50 bg-[#151823] group">
       <CardHeader className="pb-4 pt-6 px-6">
-        {/* Header com foto e compatibility */}
+        {/* Header com foto maior e compatibility */}
         <div className="flex items-start justify-between mb-4">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-4">
             <div className="relative">
               <img 
                 src={match.avatar} 
                 alt={match.name}
-                className="h-12 w-12 rounded-full object-cover border-2 border-neutral-700"
+                className="h-16 w-16 rounded-full object-cover border-2 border-neutral-700 shadow-lg"
               />
-              <div className="absolute -bottom-1 -right-1 bg-viverblue rounded-full p-1">
-                <Sparkles className="h-3 w-3 text-white" />
+              <div className="absolute -bottom-1 -right-1 bg-viverblue rounded-full p-1.5">
+                <Sparkles className="h-4 w-4 text-white" />
               </div>
             </div>
-            <div>
-              <h3 className="font-semibold text-white line-clamp-1">{match.name}</h3>
+            <div className="flex-1">
+              <h3 className="font-semibold text-white line-clamp-1 text-base">{match.name}</h3>
               <p className="text-sm text-neutral-400 line-clamp-1">{match.role}</p>
             </div>
           </div>

@@ -24,7 +24,7 @@ export const NetworkingHeader = ({
         <div>
           <h1 className="text-2xl font-bold text-textPrimary flex items-center gap-2">
             <Brain className="h-6 w-6 text-viverblue" />
-            Conecta AI
+            Networking AI
           </h1>
           <p className="text-textSecondary mt-1">
             Sua IA especialista em networking empresarial e parcerias estratégicas

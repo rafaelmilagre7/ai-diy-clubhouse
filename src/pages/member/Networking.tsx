@@ -7,9 +7,9 @@ const Networking = () => {
   const [activeTab, setActiveTab] = useState<'matches' | 'connections' | 'goals'>('matches');
 
   useDynamicSEO({
-    title: 'Conecta AI - Networking Inteligente',
+    title: 'Networking AI - Networking Inteligente',
     description: 'Encontre parcerias estratégicas e oportunidades de negócios com nossa IA especializada em networking empresarial.',
-    keywords: 'networking, parcerias, IA, conexões empresariais, business matching'
+    keywords: 'networking AI, parcerias, IA, conexões empresariais, business matching'
   });
 
   return (
