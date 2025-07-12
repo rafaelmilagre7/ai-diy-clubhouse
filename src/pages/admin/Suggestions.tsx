@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
 import { 
   Table, 
   TableBody, 
@@ -29,7 +30,17 @@ import {
 import { useSuggestions } from '@/hooks/suggestions/useSuggestions';
 import { useAdminSuggestions } from '@/hooks/suggestions/useAdminSuggestions';
 import { getStatusLabel, getStatusColor } from '@/utils/suggestionUtils';
-import { MoreVertical, Trash2, Play, Eye, CheckCircle, XCircle, Clock } from 'lucide-react';
+import { 
+  MoreVertical, 
+  Trash2, 
+  Play, 
+  Eye, 
+  CheckCircle, 
+  XCircle, 
+  Clock,
+  AlertTriangle,
+  AlertCircle
+} from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -42,6 +53,54 @@ const AdminSuggestionsPage = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedSuggestion, setSelectedSuggestion] = useState<string | null>(null);
   const navigate = useNavigate();
+
+  // Função para configuração de status
+  const getStatusConfig = (status: string) => {
+    switch (status) {
+      case 'new':
+        return {
+          label: 'Nova',
+          icon: AlertCircle,
+          className: 'bg-blue-500/10 text-blue-700 border-blue-500/20 dark:text-blue-400',
+          dotColor: 'bg-blue-500'
+        };
+      case 'under_review':
+        return {
+          label: 'Em Análise',
+          icon: Clock,
+          className: 'bg-yellow-500/10 text-yellow-700 border-yellow-500/20 dark:text-yellow-400',
+          dotColor: 'bg-yellow-500'
+        };
+      case 'in_development':
+        return {
+          label: 'Em Desenvolvimento',
+          icon: Clock,
+          className: 'bg-orange-500/10 text-orange-700 border-orange-500/20 dark:text-orange-400',
+          dotColor: 'bg-orange-500'
+        };
+      case 'completed':
+        return {
+          label: 'Implementada',
+          icon: CheckCircle,
+          className: 'bg-green-500/10 text-green-700 border-green-500/20 dark:text-green-400',
+          dotColor: 'bg-green-500'
+        };
+      case 'declined':
+        return {
+          label: 'Recusada',
+          icon: XCircle,
+          className: 'bg-red-500/10 text-red-700 border-red-500/20 dark:text-red-400',
+          dotColor: 'bg-red-500'
+        };
+      default:
+        return {
+          label: getStatusLabel(status),
+          icon: AlertCircle,
+          className: getStatusColor(status),
+          dotColor: 'bg-muted-foreground'
+        };
+    }
+  };
 
   // Log para debug
   useEffect(() => {
@@ -119,113 +178,150 @@ const AdminSuggestionsPage = () => {
   }
 
   return (
-    <div className="container py-6">
-      <h1 className="text-2xl font-bold mb-6">Gerenciar Sugestões</h1>
+    <div className="container py-6 space-y-6">
+      {/* Header */}
+      <div className="flex flex-col gap-2">
+        <h1 className="text-3xl font-bold tracking-tight text-foreground">Gerenciar Sugestões</h1>
+        <p className="text-muted-foreground">
+          Gerencie e acompanhe as sugestões da comunidade
+        </p>
+      </div>
       
       {suggestions.length === 0 ? (
-        <div className="p-8 text-center border rounded-md">
-          <h3 className="text-lg font-medium">Nenhuma sugestão encontrada</h3>
-          <p className="text-muted-foreground mt-2">
-            Não há sugestões registradas no sistema no momento.
-          </p>
-        </div>
+        <Card className="border-border bg-card">
+          <CardContent className="p-12 text-center">
+            <div className="mx-auto w-24 h-24 bg-muted rounded-full flex items-center justify-center mb-4">
+              <AlertTriangle className="h-12 w-12 text-muted-foreground" />
+            </div>
+            <h3 className="text-lg font-semibold text-foreground mb-2">
+              Nenhuma sugestão encontrada
+            </h3>
+            <p className="text-muted-foreground max-w-md mx-auto">
+              Não há sugestões registradas no sistema no momento. As sugestões aparecerão aqui quando forem criadas pela comunidade.
+            </p>
+          </CardContent>
+        </Card>
       ) : (
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Título</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Votos Líquidos</TableHead>
-              <TableHead className="text-right">Ações</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {suggestions.map((suggestion) => {
-              const netVotes = (suggestion.upvotes || 0) - (suggestion.downvotes || 0);
-              return (
-                <TableRow key={suggestion.id}>
-                  <TableCell className="font-medium">{suggestion.title}</TableCell>
-                  <TableCell>
-                    <Badge className={getStatusColor(suggestion.status)}>
-                      {getStatusLabel(suggestion.status)}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <span className={`font-semibold ${netVotes >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                      {netVotes > 0 ? `+${netVotes}` : netVotes}
-                    </span>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon">
-                          <MoreVertical className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem 
-                          onClick={() => viewSuggestionDetails(suggestion.id)}
-                        >
-                          <Eye className="mr-2 h-4 w-4" />
-                          Ver Detalhes
-                        </DropdownMenuItem>
-                        
-                        <DropdownMenuSeparator />
-                        
-                        {/* Alterar Status */}
-                        <DropdownMenuItem 
-                          onClick={() => handleUpdateStatus('under_review', suggestion.id)}
-                          disabled={suggestion.status === 'under_review' || loading}
-                        >
-                          <Clock className="mr-2 h-4 w-4" />
-                          {suggestion.status === 'under_review' ? 'Já em Análise' : 'Marcar como Em Análise'}
-                        </DropdownMenuItem>
-                        
-                        <DropdownMenuItem 
-                          onClick={() => handleUpdateStatus('in_development', suggestion.id)}
-                          disabled={suggestion.status === 'in_development' || loading}
-                        >
-                          <Play className="mr-2 h-4 w-4" />
-                          {suggestion.status === 'in_development' ? 'Já em Desenvolvimento' : 'Marcar como Em Desenvolvimento'}
-                        </DropdownMenuItem>
-                        
-                        <DropdownMenuItem 
-                          onClick={() => handleUpdateStatus('completed', suggestion.id)}
-                          disabled={suggestion.status === 'completed' || loading}
-                        >
-                          <CheckCircle className="mr-2 h-4 w-4" />
-                          {suggestion.status === 'completed' ? 'Já Implementada' : 'Marcar como Implementada'}
-                        </DropdownMenuItem>
-                        
-                        <DropdownMenuItem 
-                          onClick={() => handleUpdateStatus('declined', suggestion.id)}
-                          disabled={suggestion.status === 'declined' || loading}
-                        >
-                          <XCircle className="mr-2 h-4 w-4" />
-                          {suggestion.status === 'declined' ? 'Já Recusada' : 'Marcar como Recusada'}
-                        </DropdownMenuItem>
-                        
-                        <DropdownMenuSeparator />
-                        
-                        <DropdownMenuItem 
-                          onClick={() => {
-                            setSelectedSuggestion(suggestion.id);
-                            setDeleteDialogOpen(true);
-                          }}
-                          className="text-destructive"
-                          disabled={loading}
-                        >
-                          <Trash2 className="mr-2 h-4 w-4" />
-                          Remover Sugestão
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
+        <Card className="border-border bg-card">
+          <CardContent className="p-0">
+            <Table>
+              <TableHeader>
+                <TableRow className="border-border hover:bg-muted/50">
+                  <TableHead className="text-foreground font-semibold">Título</TableHead>
+                  <TableHead className="text-foreground font-semibold">Status</TableHead>
+                  <TableHead className="text-foreground font-semibold">Votos Líquidos</TableHead>
+                  <TableHead className="text-right text-foreground font-semibold">Ações</TableHead>
                 </TableRow>
-              );
-            })}
-          </TableBody>
-        </Table>
+              </TableHeader>
+              <TableBody>
+                {suggestions.map((suggestion) => {
+                  const netVotes = (suggestion.upvotes || 0) - (suggestion.downvotes || 0);
+                  const statusConfig = getStatusConfig(suggestion.status);
+                  const StatusIcon = statusConfig.icon;
+                  
+                  return (
+                    <TableRow key={suggestion.id} className="border-border hover:bg-muted/50">
+                      <TableCell className="font-medium text-foreground">
+                        <div className="flex items-center gap-3">
+                          <div className={`p-1 rounded-full ${statusConfig.dotColor.replace('bg-', 'bg-opacity-20 bg-')} flex-shrink-0`}>
+                            <div className={`w-2 h-2 rounded-full ${statusConfig.dotColor}`}></div>
+                          </div>
+                          <span>{suggestion.title}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className={statusConfig.className}>
+                          <StatusIcon className="h-3 w-3 mr-1" />
+                          {statusConfig.label}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <span className={`font-semibold ${
+                          netVotes > 0 ? 'text-green-600 dark:text-green-400' : 
+                          netVotes < 0 ? 'text-red-600 dark:text-red-400' : 
+                          'text-muted-foreground'
+                        }`}>
+                          {netVotes > 0 ? `+${netVotes}` : netVotes}
+                        </span>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground">
+                              <MoreVertical className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="bg-popover border-border">
+                            <DropdownMenuItem 
+                              onClick={() => viewSuggestionDetails(suggestion.id)}
+                              className="text-foreground hover:bg-muted"
+                            >
+                              <Eye className="mr-2 h-4 w-4" />
+                              Ver Detalhes
+                            </DropdownMenuItem>
+                            
+                            <DropdownMenuSeparator className="bg-border" />
+                            
+                            {/* Alterar Status */}
+                            <DropdownMenuItem 
+                              onClick={() => handleUpdateStatus('under_review', suggestion.id)}
+                              disabled={suggestion.status === 'under_review' || loading}
+                              className="text-foreground hover:bg-muted"
+                            >
+                              <Clock className="mr-2 h-4 w-4" />
+                              {suggestion.status === 'under_review' ? 'Já em Análise' : 'Marcar como Em Análise'}
+                            </DropdownMenuItem>
+                            
+                            <DropdownMenuItem 
+                              onClick={() => handleUpdateStatus('in_development', suggestion.id)}
+                              disabled={suggestion.status === 'in_development' || loading}
+                              className="text-foreground hover:bg-muted"
+                            >
+                              <Play className="mr-2 h-4 w-4" />
+                              {suggestion.status === 'in_development' ? 'Já em Desenvolvimento' : 'Marcar como Em Desenvolvimento'}
+                            </DropdownMenuItem>
+                            
+                            <DropdownMenuItem 
+                              onClick={() => handleUpdateStatus('completed', suggestion.id)}
+                              disabled={suggestion.status === 'completed' || loading}
+                              className="text-foreground hover:bg-muted"
+                            >
+                              <CheckCircle className="mr-2 h-4 w-4" />
+                              {suggestion.status === 'completed' ? 'Já Implementada' : 'Marcar como Implementada'}
+                            </DropdownMenuItem>
+                            
+                            <DropdownMenuItem 
+                              onClick={() => handleUpdateStatus('declined', suggestion.id)}
+                              disabled={suggestion.status === 'declined' || loading}
+                              className="text-foreground hover:bg-muted"
+                            >
+                              <XCircle className="mr-2 h-4 w-4" />
+                              {suggestion.status === 'declined' ? 'Já Recusada' : 'Marcar como Recusada'}
+                            </DropdownMenuItem>
+                            
+                            <DropdownMenuSeparator className="bg-border" />
+                            
+                            <DropdownMenuItem 
+                              onClick={() => {
+                                setSelectedSuggestion(suggestion.id);
+                                setDeleteDialogOpen(true);
+                              }}
+                              className="text-destructive hover:bg-destructive/10 focus:text-destructive"
+                              disabled={loading}
+                            >
+                              <Trash2 className="mr-2 h-4 w-4" />
+                              Remover Sugestão
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
       )}
 
       <AlertDialog 
@@ -238,26 +334,29 @@ const AdminSuggestionsPage = () => {
           }
         }}
       >
-        <AlertDialogContent>
+        <AlertDialogContent className="bg-card border-border">
           <AlertDialogHeader>
-            <AlertDialogTitle>Remover Sugestão</AlertDialogTitle>
-            <AlertDialogDescription>
+            <AlertDialogTitle className="text-foreground">Remover Sugestão</AlertDialogTitle>
+            <AlertDialogDescription className="text-muted-foreground">
               Tem certeza que deseja remover esta sugestão? Esta ação não pode ser desfeita.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => {
-              setDeleteDialogOpen(false);
-              // Garantir que o foco é restaurado
-              setTimeout(() => {
-                document.body.style.pointerEvents = 'auto';
-              }, 100);
-            }}>
+            <AlertDialogCancel 
+              onClick={() => {
+                setDeleteDialogOpen(false);
+                // Garantir que o foco é restaurado
+                setTimeout(() => {
+                  document.body.style.pointerEvents = 'auto';
+                }, 100);
+              }}
+              className="border-border text-foreground hover:bg-muted"
+            >
               Cancelar
             </AlertDialogCancel>
             <AlertDialogAction 
               onClick={handleRemoveSuggestion} 
-              className="bg-destructive text-destructive-foreground"
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
               Remover
             </AlertDialogAction>
