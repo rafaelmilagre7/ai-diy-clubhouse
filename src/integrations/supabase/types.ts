@@ -2540,6 +2540,71 @@ export type Database = {
         }
         Relationships: []
       }
+      networking_meetings: {
+        Row: {
+          connection_id: string | null
+          created_at: string
+          description: string | null
+          duration_minutes: number
+          id: string
+          location: string | null
+          meeting_link: string | null
+          meeting_type: string
+          notes: string | null
+          organizer_id: string
+          participant_id: string
+          reminder_sent: boolean | null
+          scheduled_for: string
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          connection_id?: string | null
+          created_at?: string
+          description?: string | null
+          duration_minutes?: number
+          id?: string
+          location?: string | null
+          meeting_link?: string | null
+          meeting_type?: string
+          notes?: string | null
+          organizer_id: string
+          participant_id: string
+          reminder_sent?: boolean | null
+          scheduled_for: string
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          connection_id?: string | null
+          created_at?: string
+          description?: string | null
+          duration_minutes?: number
+          id?: string
+          location?: string | null
+          meeting_link?: string | null
+          meeting_type?: string
+          notes?: string | null
+          organizer_id?: string
+          participant_id?: string
+          reminder_sent?: boolean | null
+          scheduled_for?: string
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_networking_meetings_connection"
+            columns: ["connection_id"]
+            isOneToOne: false
+            referencedRelation: "member_connections"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       networking_preferences: {
         Row: {
           created_at: string

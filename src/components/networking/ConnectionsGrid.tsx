@@ -8,6 +8,7 @@ import LoadingScreen from '@/components/common/LoadingScreen';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { ChatWindow } from './ChatWindow';
+import { MeetingScheduler } from './MeetingScheduler';
 import { useState } from 'react';
 
 export const ConnectionsGrid = () => {
@@ -203,15 +204,11 @@ const ConnectionCard = ({ connection, onOpenChat }: ConnectionCardProps) => {
             <MessageCircle className="h-3 w-3 mr-1" />
             Mensagem
           </Button>
-          <Button 
-            size="sm" 
-            variant="outline" 
-            className="border-neutral-700 text-neutral-300 hover:bg-neutral-800/50 text-xs"
-            disabled
-          >
-            <Calendar className="h-3 w-3 mr-1" />
-            Agendar
-          </Button>
+          <MeetingScheduler
+            participantId={otherUser.id}
+            participantName={otherUser.name}
+            connectionId={connection.id}
+          />
         </div>
       </CardContent>
     </Card>
