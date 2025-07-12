@@ -13,7 +13,8 @@ import {
   Stethoscope,
   GraduationCap,
   Shield,
-  TestTube
+  TestTube,
+  Star
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -48,6 +49,11 @@ const navigationItems = [
     title: "Formação (LMS)",
     href: "/formacao",
     icon: GraduationCap,
+  },
+  {
+    title: "NPS Analytics",
+    href: "/admin/nps",
+    icon: Star,
   },
   {
     title: "Analytics",

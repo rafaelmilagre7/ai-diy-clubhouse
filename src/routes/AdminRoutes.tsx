@@ -23,6 +23,7 @@ import AdminCommunications from '@/pages/admin/AdminCommunications';
 import SupabaseDiagnostics from '@/pages/admin/SupabaseDiagnostics';
 import AdminSecurity from '@/pages/admin/AdminSecurity';
 import OnboardingPreview from '@/pages/admin/OnboardingPreview';
+import NPSAnalytics from '@/pages/admin/NPSAnalytics';
 
 // Função helper para criar rotas protegidas com AdminLayout (sempre aberto)
 const createAdminRoute = (path: string, Component: React.ComponentType<any>) => ({
@@ -57,4 +58,5 @@ export const adminRoutes: RouteObject[] = [
   createAdminRoute("/admin/whatsapp-debug", WhatsAppDebug),
   createAdminRoute("/admin/diagnostics", SupabaseDiagnostics),
   createAdminRoute("/admin/onboarding-preview", OnboardingPreview),
+  createAdminRoute("/admin/nps", NPSAnalytics),
 ];
