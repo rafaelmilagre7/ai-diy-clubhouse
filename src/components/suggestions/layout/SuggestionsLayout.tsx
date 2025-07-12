@@ -48,71 +48,55 @@ const SuggestionsLayout = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50">
-        <div className="container py-8 space-y-8">
-          <SuggestionsHeader 
-            searchQuery={searchQuery}
-            onSearchChange={setSearchQuery}
-            filter={filter}
-            onFilterChange={handleFilterChange}
-          />
-          <div className="space-y-6">
-            <div className="flex items-center justify-between">
-              <div className="h-6 w-48 bg-gray-200 rounded animate-pulse"></div>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-              {[1, 2, 3, 4, 5, 6].map((i) => (
-                <Card key={i} className="bg-white/80 backdrop-blur-sm">
-                  <div className="p-6 space-y-4">
-                    <div className="flex justify-between items-start">
-                      <Skeleton className="h-6 w-20" />
-                      <Skeleton className="h-10 w-10 rounded-full" />
-                    </div>
-                    <Skeleton className="h-6 w-4/5" />
-                    <Skeleton className="h-20 w-full" />
-                    <div className="flex justify-between pt-2">
-                      <Skeleton className="h-4 w-24" />
-                      <Skeleton className="h-4 w-16" />
-                    </div>
-                  </div>
-                </Card>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50">
-      <div className="container py-8 space-y-8">
+      <div className="container py-6 space-y-6">
         <SuggestionsHeader 
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}
           filter={filter}
           onFilterChange={handleFilterChange}
         />
-        
-        {error ? (
-          <Alert variant="destructive" className="mb-4 bg-white/80 backdrop-blur-sm border-red-200">
-            <AlertCircle className="h-4 w-4" />
-            <AlertTitle>Erro ao carregar sugestões</AlertTitle>
-            <AlertDescription className="flex flex-col gap-2">
-              <p>Não foi possível carregar as sugestões. Por favor, tente novamente.</p>
-              <Button variant="outline" size="sm" onClick={handleRetry} className="gap-2 w-fit">
-                <RefreshCw size={14} />
-                Tentar novamente
-              </Button>
-            </AlertDescription>
-          </Alert>
-        ) : (
-          <SuggestionsContent 
-            suggestions={suggestions} 
-            searchQuery={searchQuery}
-          />
-        )}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {[1, 2, 3, 4, 5, 6].map((i) => (
+            <Card key={i}>
+              <div className="p-4 space-y-3">
+                <Skeleton className="h-6 w-4/5 mb-2" />
+                <Skeleton className="h-4 w-2/5" />
+                <Skeleton className="h-20 w-full" />
+              </div>
+            </Card>
+          ))}
+        </div>
       </div>
+    );
+  }
+
+  return (
+    <div className="container py-6 space-y-6">
+      <SuggestionsHeader 
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        filter={filter}
+        onFilterChange={handleFilterChange}
+      />
+      
+      {error ? (
+        <Alert variant="destructive" className="mb-4">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Erro ao carregar sugestões</AlertTitle>
+          <AlertDescription className="flex flex-col gap-2">
+            <p>Não foi possível carregar as sugestões. Por favor, tente novamente.</p>
+            <Button variant="outline" size="sm" onClick={handleRetry} className="gap-2 w-fit">
+              <RefreshCw size={14} />
+              Tentar novamente
+            </Button>
+          </AlertDescription>
+        </Alert>
+      ) : (
+        <SuggestionsContent 
+          suggestions={suggestions} 
+          searchQuery={searchQuery}
+        />
+      )}
     </div>
   );
 };
