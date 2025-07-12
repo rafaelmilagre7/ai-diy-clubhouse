@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useRateLimit } from '@/hooks/security/useRateLimit';
+import { useAdvancedRateLimit } from '@/hooks/security/useAdvancedRateLimit';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Shield, Clock, AlertTriangle } from 'lucide-react';
 
@@ -20,7 +20,7 @@ export const RateLimitGuard: React.FC<RateLimitGuardProps> = ({
   onBlocked,
   showWarning = true
 }) => {
-  const { checkRateLimit, isBlocked, remainingAttempts, resetTime } = useRateLimit();
+  const { checkRateLimit, isBlocked, remainingAttempts, resetTime, escalationLevel, blockReason } = useAdvancedRateLimit();
   const [hasChecked, setHasChecked] = useState(false);
 
   useEffect(() => {
@@ -50,9 +50,14 @@ export const RateLimitGuard: React.FC<RateLimitGuardProps> = ({
         <AlertTriangle className="h-4 w-4" />
         <AlertDescription>
           <div className="space-y-2">
-            <p className="font-medium">Muitas tentativas detectadas</p>
+            <p className="font-medium">Acesso temporariamente bloqueado</p>
+            <p className="text-sm">{blockReason || 'Limite de tentativas excedido'}</p>
+            {escalationLevel > 0 && (
+              <p className="text-sm text-destructive">
+                Nível de escalação: {escalationLevel} - Violações repetidas resultam em penalidades maiores
+              </p>
+            )}
             <p className="text-sm">
-              Você excedeu o limite de {maxAttempts} tentativas em {windowMinutes} minutos.
               Tente novamente em {resetTime ? formatTimeRemaining(resetTime) : 'alguns minutos'}.
             </p>
           </div>
