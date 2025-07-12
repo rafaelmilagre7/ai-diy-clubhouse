@@ -1,11 +1,11 @@
-import { Brain, Target, Users } from 'lucide-react';
+import { Brain, Target, Users, Bell } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { motion } from 'framer-motion';
 
 interface NetworkingHeaderProps {
-  activeTab: 'matches' | 'connections' | 'goals';
-  onTabChange: (tab: 'matches' | 'connections' | 'goals') => void;
+  activeTab: 'matches' | 'connections' | 'goals' | 'notifications';
+  onTabChange: (tab: 'matches' | 'connections' | 'goals' | 'notifications') => void;
 }
 
 export const NetworkingHeader = ({
@@ -16,6 +16,7 @@ export const NetworkingHeader = ({
     { id: 'matches', label: 'Matches IA', icon: Brain, count: 3 },
     { id: 'connections', label: 'Conexões', icon: Users, count: 12 },
     { id: 'goals', label: 'Metas', icon: Target, count: 2 },
+    { id: 'notifications', label: 'Notificações', icon: Bell, count: 0 },
   ];
 
   return (

@@ -7,6 +7,7 @@ import { useNetworkingProfiles } from '@/hooks/useNetworkingProfiles';
 import { useAIMatches } from '@/hooks/useAIMatches';
 import { useAuth } from '@/contexts/auth';
 import LoadingScreen from '@/components/common/LoadingScreen';
+import { ConnectionButton } from './ConnectionButton';
 
 // Funções auxiliares para criar dados de match baseados em perfis reais
 const getMatchType = (role: string, index: number) => {
@@ -235,13 +236,10 @@ const MatchCard = ({ match }: MatchCardProps) => {
 
         {/* Actions */}
         <div className="flex gap-2">
-          <Button 
-            size="sm" 
-            className="flex-1 bg-viverblue hover:bg-viverblue/90 text-white text-xs"
-          >
-            <MessageCircle className="h-3 w-3 mr-1" />
-            Conectar
-          </Button>
+          <ConnectionButton 
+            userId={match.id}
+            className="flex-1 text-xs"
+          />
           <Button 
             size="sm" 
             variant="outline" 
