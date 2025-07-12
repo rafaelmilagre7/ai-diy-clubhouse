@@ -1,5 +1,4 @@
-
-project_id = "djkxhfyicvjkmgvbofvp"
+project_id = "zotzvtepvpnkcoobdubt"
 
 [api]
 enabled = true
@@ -69,6 +68,12 @@ verify_jwt = true
 verify_jwt = true
 
 [functions.generate-ai-matches]
+verify_jwt = true
+
+[functions.classify-lessons]
+verify_jwt = true
+
+[functions.classify-lessons-simple]
 verify_jwt = true
 
 [auth]
