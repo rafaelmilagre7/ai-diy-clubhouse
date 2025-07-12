@@ -4764,11 +4764,46 @@ export type Database = {
       }
       suggestions_with_profiles: {
         Row: {
+          category_id: string | null
+          comment_count: number | null
+          created_at: string | null
           description: string | null
+          downvotes: number | null
           id: string | null
+          image_url: string | null
+          is_hidden: boolean | null
+          is_pinned: boolean | null
+          status: string | null
           title: string | null
+          updated_at: string | null
+          upvotes: number | null
+          user_avatar: string | null
+          user_id: string | null
+          user_name: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "suggestions_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "suggestion_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "suggestions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "suggestions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users_with_roles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_engagement_metrics: {
         Row: {
