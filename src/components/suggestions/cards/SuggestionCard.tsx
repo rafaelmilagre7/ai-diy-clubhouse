@@ -29,54 +29,57 @@ export const SuggestionCard: React.FC<SuggestionCardProps> = ({
   
   return (
     <Card 
-      className="h-full cursor-pointer transition-shadow hover:shadow-md"
+      className="h-full cursor-pointer transition-all duration-200 hover:shadow-lg hover:scale-[1.02] border-border/50"
       onClick={handleCardClick}
     >
-      <CardHeader className="pb-2">
-        <div className="flex justify-between items-start">
-          <div className="space-y-1 flex-1">
-            <h3 className="font-semibold text-lg line-clamp-2">{suggestion.title}</h3>
-            <div className="flex items-center gap-2">
-              <Badge className={getStatusColor(suggestion.status)}>
-                {getStatusLabel(suggestion.status)}
-              </Badge>
-            </div>
+      <CardHeader className="pb-3">
+        <div className="flex justify-between items-start gap-3">
+          <div className="space-y-2 flex-1 min-w-0">
+            <h3 className="font-semibold text-lg leading-tight line-clamp-2">{suggestion.title}</h3>
+            <Badge 
+              variant="secondary" 
+              className={`${getStatusColor(suggestion.status)} text-xs font-medium w-fit`}
+            >
+              {getStatusLabel(suggestion.status)}
+            </Badge>
           </div>
           
-          {/* Destaque dos votos líquidos */}
-          <div className="flex flex-col items-center bg-gray-50 rounded-lg p-2 min-w-[60px]">
-            <div className="text-lg font-bold text-viverblue">
+          {/* Score de votos mais prominente */}
+          <div className="flex flex-col items-center bg-muted/50 rounded-xl p-3 min-w-[70px] border">
+            <div className={`text-xl font-bold ${netVotes > 0 ? 'text-green-600' : netVotes < 0 ? 'text-red-500' : 'text-muted-foreground'}`}>
               {netVotes > 0 ? `+${netVotes}` : netVotes}
             </div>
-            <div className="text-xs text-gray-500">votos</div>
+            <div className="text-xs text-muted-foreground font-medium">votos</div>
           </div>
         </div>
       </CardHeader>
       
-      <CardContent className="pb-2">
-        <p className="text-muted-foreground line-clamp-3">{suggestion.description}</p>
+      <CardContent className="pb-4">
+        <p className="text-muted-foreground line-clamp-3 leading-relaxed">{suggestion.description}</p>
       </CardContent>
       
-      <CardFooter className="pt-2 flex justify-between text-sm text-muted-foreground">
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-1">
-            <ThumbsUp className="h-4 w-4" />
-            <span>{suggestion.upvotes || 0}</span>
+      <CardFooter className="pt-3 border-t border-border/50">
+        <div className="flex items-center justify-between w-full text-sm">
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-1.5 text-green-600">
+              <ThumbsUp className="h-4 w-4" />
+              <span className="font-medium">{suggestion.upvotes || 0}</span>
+            </div>
+            
+            <div className="flex items-center gap-1.5 text-red-500">
+              <ThumbsDown className="h-4 w-4" />
+              <span className="font-medium">{suggestion.downvotes || 0}</span>
+            </div>
           </div>
           
-          <div className="flex items-center gap-1">
-            <ThumbsDown className="h-4 w-4" />
-            <span>{suggestion.downvotes || 0}</span>
-          </div>
+          {/* Mostrar contador de comentários apenas para admins */}
+          {isAdmin && (
+            <div className="flex items-center gap-1.5 text-muted-foreground">
+              <MessageSquare className="h-4 w-4" />
+              <span className="font-medium">{suggestion.comment_count || 0}</span>
+            </div>
+          )}
         </div>
-        
-        {/* Mostrar contador de comentários apenas para admins */}
-        {isAdmin && (
-          <div className="flex items-center gap-1">
-            <MessageSquare className="h-4 w-4" />
-            <span>{suggestion.comment_count || 0}</span>
-          </div>
-        )}
       </CardFooter>
     </Card>
   );

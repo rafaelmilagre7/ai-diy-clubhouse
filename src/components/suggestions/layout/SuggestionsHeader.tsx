@@ -23,9 +23,15 @@ export const SuggestionsHeader: React.FC<SuggestionsHeaderProps> = ({
   const navigate = useNavigate();
 
   return (
-    <div className="flex flex-col space-y-4">
+    <div className="flex flex-col space-y-6">
+      {/* Header com título e ação principal */}
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Sugestões</h1>
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Sugestões</h1>
+          <p className="text-muted-foreground mt-1">
+            Compartilhe suas ideias e vote nas propostas da comunidade
+          </p>
+        </div>
         <Button 
           onClick={() => navigate('/suggestions/new')}
           className="gap-2"
@@ -35,53 +41,57 @@ export const SuggestionsHeader: React.FC<SuggestionsHeaderProps> = ({
         </Button>
       </div>
       
-      <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
-        <div className="relative w-full sm:w-auto flex-1">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-          <Input
-            placeholder="Buscar sugestões..."
-            value={searchQuery}
-            onChange={(e) => onSearchChange(e.target.value)}
-            className="pl-10"
-          />
-        </div>
-        
-        <div className="flex flex-col sm:flex-row gap-2 flex-shrink-0">
-          {/* Filtros gerais */}
+      {/* Barra de busca */}
+      <div className="relative w-full max-w-md">
+        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+        <Input
+          placeholder="Buscar sugestões..."
+          value={searchQuery}
+          onChange={(e) => onSearchChange(e.target.value)}
+          className="pl-10"
+        />
+      </div>
+      
+      {/* Filtros organizados */}
+      <div className="flex flex-wrap gap-3">
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-medium text-muted-foreground">Ordenar:</span>
           <ToggleGroup 
             type="single" 
             value={filter}
             onValueChange={(value) => value && onFilterChange(value as SuggestionFilter)}
-            className="justify-start"
+            className="h-9"
           >
-            <ToggleGroupItem value="popular" className="gap-1 whitespace-nowrap">
+            <ToggleGroupItem value="popular" className="gap-2 px-3">
               <TrendingUp className="h-4 w-4" />
-              <span className="hidden md:inline">Populares</span>
+              <span>Populares</span>
             </ToggleGroupItem>
-            <ToggleGroupItem value="recent" className="gap-1 whitespace-nowrap">
+            <ToggleGroupItem value="recent" className="gap-2 px-3">
               <Clock className="h-4 w-4" />
-              <span className="hidden md:inline">Recentes</span>
+              <span>Recentes</span>
             </ToggleGroupItem>
           </ToggleGroup>
-          
-          {/* Filtros por status */}
+        </div>
+        
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-medium text-muted-foreground">Status:</span>
           <ToggleGroup 
             type="single" 
             value={filter}
             onValueChange={(value) => value && onFilterChange(value as SuggestionFilter)}
-            className="justify-start"
+            className="h-9"
           >
-            <ToggleGroupItem value="new" className="gap-1 whitespace-nowrap">
+            <ToggleGroupItem value="new" className="gap-2 px-3">
               <Lightbulb className="h-4 w-4" />
-              <span className="hidden md:inline">Novas</span>
+              <span>Novas</span>
             </ToggleGroupItem>
-            <ToggleGroupItem value="in_development" className="gap-1 whitespace-nowrap">
+            <ToggleGroupItem value="in_development" className="gap-2 px-3">
               <Wrench className="h-4 w-4" />
-              <span className="hidden md:inline">Em Desenvolvimento</span>
+              <span>Em Desenvolvimento</span>
             </ToggleGroupItem>
-            <ToggleGroupItem value="implemented" className="gap-1 whitespace-nowrap">
+            <ToggleGroupItem value="implemented" className="gap-2 px-3">
               <CheckCircle className="h-4 w-4" />
-              <span className="hidden md:inline">Implementadas</span>
+              <span>Implementadas</span>
             </ToggleGroupItem>
           </ToggleGroup>
         </div>
