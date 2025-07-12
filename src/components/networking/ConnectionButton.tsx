@@ -11,7 +11,7 @@ interface ConnectionButtonProps {
 
 export const ConnectionButton = ({ userId, className }: ConnectionButtonProps) => {
   const [user, setUser] = useState<any>(null);
-  const { checkConnection, sendConnectionRequest } = useConnections();
+  const { checkConnection, sendConnectionRequest, acceptConnection, rejectConnection } = useConnections();
   
   useEffect(() => {
     const getUser = async () => {
@@ -73,6 +73,34 @@ export const ConnectionButton = ({ userId, className }: ConnectionButtonProps) =
     }
   };
 
+  const handleAccept = async () => {
+    if (!connectionStatus.connectionId || isLoading) return;
+    
+    setIsLoading(true);
+    try {
+      await acceptConnection.mutateAsync(connectionStatus.connectionId);
+      setConnectionStatus(prev => ({ ...prev, status: 'accepted' }));
+    } catch (error) {
+      console.error('Erro ao aceitar conexão:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleReject = async () => {
+    if (!connectionStatus.connectionId || isLoading) return;
+    
+    setIsLoading(true);
+    try {
+      await rejectConnection.mutateAsync(connectionStatus.connectionId);
+      setConnectionStatus(prev => ({ ...prev, status: 'rejected' }));
+    } catch (error) {
+      console.error('Erro ao rejeitar conexão:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   // Não mostrar botão para o próprio usuário
   if (!user || user.id === userId) return null;
 
@@ -114,15 +142,17 @@ export const ConnectionButton = ({ userId, className }: ConnectionButtonProps) =
           variant="default"
           size="sm"
           className="bg-viverblue hover:bg-viverblue/90"
-          disabled // Será implementado na próxima etapa
+          onClick={handleAccept}
+          disabled={isLoading}
         >
           <Check className="h-4 w-4 mr-2" />
-          Aceitar
+          {isLoading ? 'Aceitando...' : 'Aceitar'}
         </Button>
         <Button
           variant="outline"
           size="sm"
-          disabled // Será implementado na próxima etapa
+          onClick={handleReject}
+          disabled={isLoading}
         >
           <X className="h-4 w-4" />
         </Button>
