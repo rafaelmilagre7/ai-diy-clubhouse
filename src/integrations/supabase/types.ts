@@ -3411,20 +3411,6 @@ export type Database = {
             foreignKeyName: "solution_certificates_solution_id_fkey"
             columns: ["solution_id"]
             isOneToOne: false
-            referencedRelation: "solution_performance_data"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "solution_certificates_solution_id_fkey"
-            columns: ["solution_id"]
-            isOneToOne: false
-            referencedRelation: "solution_performance_metrics"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "solution_certificates_solution_id_fkey"
-            columns: ["solution_id"]
-            isOneToOne: false
             referencedRelation: "solutions"
             referencedColumns: ["id"]
           },
@@ -4532,12 +4518,14 @@ export type Database = {
           active_implementations: number | null
           active_learners_7d: number | null
           active_users_7d: number | null
+          avg_implementation_time_days: number | null
           completed_implementations: number | null
           completed_lessons: number | null
           forum_topics: number | null
           new_implementations_30d: number | null
           new_users_30d: number | null
           overall_completion_rate: number | null
+          total_benefit_clicks: number | null
           total_courses: number | null
           total_solutions: number | null
           total_users: number | null
@@ -4647,12 +4635,13 @@ export type Database = {
       }
       learning_analytics_data: {
         Row: {
-          avg_progress_percentage: number | null
-          completed_lessons_count: number | null
+          avg_progress: number | null
+          completed_lessons: number | null
           course_id: string | null
           course_title: string | null
-          enrolled_users: number | null
+          total_certificates: number | null
           total_lessons: number | null
+          total_students: number | null
         }
         Relationships: []
       }
@@ -4707,27 +4696,13 @@ export type Database = {
       }
       solution_performance_data: {
         Row: {
-          category: string | null
-          completed_implementations: number | null
-          completion_rate: number | null
-          difficulty: string | null
-          id: string | null
-          title: string | null
-          total_implementations: number | null
+          message: string | null
         }
         Relationships: []
       }
       solution_performance_metrics: {
         Row: {
-          category: string | null
-          completed_implementations: number | null
-          completion_rate: number | null
-          created_at: string | null
-          difficulty: string | null
-          id: string | null
-          title: string | null
-          total_implementations: number | null
-          updated_at: string | null
+          message: string | null
         }
         Relationships: []
       }
@@ -4742,7 +4717,6 @@ export type Database = {
           image_url: string | null
           is_hidden: boolean | null
           is_pinned: boolean | null
-          profiles: Json | null
           status: string | null
           title: string | null
           updated_at: string | null
@@ -4777,24 +4751,22 @@ export type Database = {
       }
       user_engagement_metrics: {
         Row: {
+          active_users: number | null
           date: string | null
-          name: string | null
-          new_users: number | null
+          total_events: number | null
         }
         Relationships: []
       }
       user_growth_by_date: {
         Row: {
+          cumulative_users: number | null
           date: string | null
-          name: string | null
-          novos: number | null
-          total: number | null
+          new_users: number | null
         }
         Relationships: []
       }
       user_role_distribution: {
         Row: {
-          percentage: number | null
           role_name: string | null
           user_count: number | null
         }
@@ -4802,10 +4774,7 @@ export type Database = {
       }
       user_segmentation_analytics: {
         Row: {
-          avg_lessons_per_user: number | null
-          avg_solutions_per_user: number | null
-          user_count: number | null
-          user_segment: string | null
+          message: string | null
         }
         Relationships: []
       }
@@ -4818,24 +4787,33 @@ export type Database = {
           id: string | null
           industry: string | null
           name: string | null
+          onboarding_completed: boolean | null
+          onboarding_completed_at: string | null
+          role: string | null
           role_description: string | null
+          role_id: string | null
           role_name: string | null
+          role_permissions: Json | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_role_id_fkey"
+            columns: ["role_id"]
+            isOneToOne: false
+            referencedRelation: "user_roles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       weekly_activity_pattern: {
         Row: {
-          activity_count: number | null
-          day_name: string | null
-          day_of_week: number | null
+          message: string | null
         }
         Relationships: []
       }
       weekly_activity_patterns: {
         Row: {
-          atividade: number | null
-          day: string | null
-          day_of_week: number | null
+          message: string | null
         }
         Relationships: []
       }
