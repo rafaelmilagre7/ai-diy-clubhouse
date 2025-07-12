@@ -112,7 +112,7 @@ const handler = async (req: Request): Promise<Response> => {
       console.log("📧 Enviando via Resend...");
       
       const resendResponse = await resend.emails.send({
-        from: 'Viver de IA <convites@viverdeia.ai>',
+        from: Deno.env.get("INVITE_FROM_EMAIL") || 'Viver de IA <convites@viverdeia.ai>',
         to: [email],
         subject: `🚀 Convite para Viver de IA - ${roleName}`,
         html: emailHtml,

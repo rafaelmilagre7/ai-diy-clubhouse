@@ -18,12 +18,16 @@ serve(async (req) => {
     const openaiKey = Deno.env.get("OPENAI_API_KEY");
     
     if (!openaiKey) {
+      console.error("OpenAI API key not configured");
       throw new Error("OpenAI API key não configurada no servidor");
     }
     
     if (!threadId) {
+      console.error("ThreadId missing in request");
       throw new Error("ThreadId é obrigatório");
     }
+    
+    console.log("Fetching messages for thread:", threadId);
     
     // Obter todas as mensagens do thread
     const messagesResponse = await fetch(`https://api.openai.com/v1/threads/${threadId}/messages`, {

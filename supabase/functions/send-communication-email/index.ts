@@ -95,8 +95,10 @@ const handler = async (req: Request): Promise<Response> => {
 
     const emailHtml = getEmailTemplate(content, templateType, priority);
 
+    const fromEmail = Deno.env.get("FROM_EMAIL") || "Viver de IA <comunicados@viverdeia.ai>";
+    
     const emailResponse = await resend.emails.send({
-      from: "Viver de IA <comunicados@viverdeia.ai>",
+      from: fromEmail,
       to: [to],
       subject: subject,
       html: emailHtml,

@@ -118,7 +118,7 @@ Deno.serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        from: 'VIVER DE IA Club <rafael@viverdeia.ai>',
+        from: Deno.env.get("FROM_EMAIL") || 'VIVER DE IA Club <rafael@viverdeia.ai>',
         to: [recipientEmail],
         subject: 'Nova solicitação de conexão no VIVER DE IA Club',
         html: emailHtml,

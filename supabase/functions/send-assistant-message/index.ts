@@ -48,8 +48,13 @@ serve(async (req) => {
     const messageData = await addMessageResponse.json();
     console.log("Mensagem adicionada:", messageData);
     
-    // Se não foi fornecido um ID de assistente específico, usar um fallback
-    const effectiveAssistantId = assistantId || "asst_default"; // Deve ser substituído por um ID válido em produção
+    // Verificar se o assistantId foi fornecido
+    if (!assistantId) {
+      console.error("Assistant ID not provided");
+      throw new Error("Assistant ID é obrigatório");
+    }
+    
+    const effectiveAssistantId = assistantId;
     
     // Preparar contexto adicional apenas se necessário
     let additionalInstructions = "";
