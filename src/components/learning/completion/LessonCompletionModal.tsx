@@ -38,40 +38,37 @@ export const LessonCompletionModal: React.FC<LessonCompletionModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen} modal>
-      <DialogContent className="sm:max-w-2xl border-0 shadow-2xl bg-background p-0 overflow-hidden max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-md border-0 shadow-lg bg-background p-0 overflow-hidden">
         {/* Close button */}
         <Button
           variant="ghost"
           size="sm"
-          className="absolute right-4 top-4 z-10 rounded-full h-8 w-8 p-0 text-primary-foreground/80 hover:text-primary-foreground hover:bg-white/20"
+          className="absolute right-3 top-3 z-10 rounded-full h-7 w-7 p-0 text-muted-foreground hover:text-foreground hover:bg-muted"
           onClick={() => setIsOpen(false)}
         >
           <X className="h-4 w-4" />
         </Button>
         
         {/* Header with celebration animation */}
-        <div className="relative bg-gradient-to-r from-primary to-accent p-8 text-primary-foreground">
-          <div className="absolute inset-0 bg-[url('/pattern.svg')] opacity-10"></div>
-          <div className="relative">
-            <DialogHeader className="text-center space-y-4">
-              <div className="flex justify-center">
-                <div className="relative">
-                  <CheckCircle2 className="h-16 w-16 text-primary-foreground animate-scale-in" />
-                  <Sparkles className="h-6 w-6 absolute -top-2 -right-2 text-accent-foreground animate-pulse" />
-                </div>
+        <div className="relative bg-background border-b p-6 text-center">
+          <div className="space-y-3">
+            <div className="flex justify-center">
+              <div className="relative">
+                <CheckCircle2 className="h-12 w-12 text-primary animate-scale-in" />
+                <Sparkles className="h-4 w-4 absolute -top-1 -right-1 text-primary animate-pulse" />
               </div>
-              <DialogTitle className="text-3xl font-bold text-primary-foreground">
-                Parabéns!
-              </DialogTitle>
-              <DialogDescription className="text-xl text-primary-foreground/90 font-medium">
-                Você concluiu a aula "{lesson.title}"
-              </DialogDescription>
-            </DialogHeader>
+            </div>
+            <DialogTitle className="text-xl font-bold text-foreground">
+              Parabéns!
+            </DialogTitle>
+            <DialogDescription className="text-sm text-muted-foreground">
+              Você concluiu a aula "{lesson.title}"
+            </DialogDescription>
           </div>
         </div>
 
         {/* Content area */}
-        <div className="p-8">
+        <div className="p-6">
           <LessonNPSForm
             lessonId={lesson.id}
             onCompleted={handleNPSCompleted}

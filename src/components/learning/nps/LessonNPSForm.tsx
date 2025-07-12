@@ -29,9 +29,9 @@ const NPSRatingButton: React.FC<NPSRatingButtonProps> = ({ value, selectedValue,
       type="button"
       variant="outline"
       className={`
-        w-11 h-11 sm:w-12 sm:h-12 p-0 flex-shrink-0 transition-all duration-200 font-semibold text-base rounded-lg
+        w-9 h-9 p-0 flex-shrink-0 transition-all duration-200 font-medium text-sm rounded-md
         ${getButtonStyles()}
-        hover:scale-102 active:scale-98 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:ring-offset-2
+        hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:ring-offset-1
       `}
       onClick={() => onClick(value)}
     >
@@ -113,47 +113,21 @@ export const LessonNPSForm: React.FC<LessonNPSFormProps> = ({
       <form onSubmit={handleSubmit}>
         <CardContent className="space-y-8 p-0">
           {/* Escala NPS */}
-          <div className="space-y-6">
-            <div className="text-center space-y-3">
-              <h3 className="text-2xl font-bold text-foreground">
+          <div className="space-y-4">
+            <div className="text-center space-y-2">
+              <h3 className="text-lg font-bold text-foreground">
                 Como foi sua experiência?
               </h3>
-              <p className="text-lg text-muted-foreground max-w-md mx-auto">
+              <p className="text-sm text-muted-foreground">
                 De 0 a 10, qual a probabilidade de você recomendar esta aula?
               </p>
             </div>
             
-            {/* Botões NPS com layout responsivo otimizado */}
-            <div className="space-y-4">
-              {/* Desktop: uma linha, Mobile: duas linhas */}
-              <div className="block sm:hidden space-y-3">
-                {/* Mobile: 0-5 */}
-                <div className="flex justify-center gap-2">
-                  {Array.from({ length: 6 }, (_, i) => (
-                    <NPSRatingButton
-                      key={i}
-                      value={i}
-                      selectedValue={score}
-                      onClick={setScore}
-                    />
-                  ))}
-                </div>
-                {/* Mobile: 6-10 */}
-                <div className="flex justify-center gap-2">
-                  {Array.from({ length: 5 }, (_, i) => (
-                    <NPSRatingButton
-                      key={i + 6}
-                      value={i + 6}
-                      selectedValue={score}
-                      onClick={setScore}
-                    />
-                  ))}
-                </div>
-              </div>
-              
-              {/* Desktop: linha única */}
-              <div className="hidden sm:flex justify-center gap-2 max-w-4xl mx-auto">
-                {Array.from({ length: 11 }, (_, i) => (
+            {/* Botões NPS em duas linhas compactas */}
+            <div className="space-y-3">
+              {/* Primeira linha: 0-5 */}
+              <div className="flex justify-center gap-1.5">
+                {Array.from({ length: 6 }, (_, i) => (
                   <NPSRatingButton
                     key={i}
                     value={i}
@@ -162,24 +136,35 @@ export const LessonNPSForm: React.FC<LessonNPSFormProps> = ({
                   />
                 ))}
               </div>
+              {/* Segunda linha: 6-10 */}
+              <div className="flex justify-center gap-1.5">
+                {Array.from({ length: 5 }, (_, i) => (
+                  <NPSRatingButton
+                    key={i + 6}
+                    value={i + 6}
+                    selectedValue={score}
+                    onClick={setScore}
+                  />
+                ))}
+              </div>
               
               {/* Labels da escala */}
-              <div className="flex justify-between text-sm font-medium text-muted-foreground px-2 max-w-4xl mx-auto">
+              <div className="flex justify-between text-xs text-muted-foreground px-1">
                 <span>Não recomendaria</span>
                 <span>Recomendaria totalmente</span>
               </div>
             </div>
             
-            {/* Feedback da nota selecionada - altura fixa para evitar layout shift */}
-            <div className="h-20 flex items-center justify-center">
+            {/* Feedback da nota selecionada */}
+            <div className="h-12 flex items-center justify-center">
               {score !== null && (
                 <div className="text-center animate-fade-in">
-                  <div className="inline-flex items-center gap-3 bg-primary/5 border border-primary/20 px-6 py-3 rounded-xl">
-                    <div className="text-xl font-bold text-primary">
+                  <div className="inline-flex items-center gap-2 bg-primary/10 border border-primary/20 px-4 py-2 rounded-lg">
+                    <div className="text-sm font-bold text-primary">
                       {getScoreLabel()}
                     </div>
-                    <div className="text-lg font-semibold text-foreground">
-                      Sua nota: {score}
+                    <div className="text-sm font-medium text-foreground">
+                      Nota: {score}
                     </div>
                   </div>
                 </div>
@@ -189,37 +174,36 @@ export const LessonNPSForm: React.FC<LessonNPSFormProps> = ({
           
           {/* Campo de feedback opcional */}
           {score !== null && (
-            <div className="space-y-4 animate-fade-in">
-              <label htmlFor="feedback" className="block text-lg font-semibold text-foreground">
-                Quer nos contar mais sobre sua experiência? (opcional)
+            <div className="space-y-3 animate-fade-in">
+              <label htmlFor="feedback" className="block text-sm font-medium text-foreground">
+                Quer nos contar mais? (opcional)
               </label>
               <Textarea
                 id="feedback"
-                placeholder="Compartilhe o que mais gostou ou como podemos melhorar..."
+                placeholder="Compartilhe sua experiência..."
                 value={feedback}
                 onChange={(e) => setFeedback(e.target.value)}
-                rows={4}
-                className="resize-none border-border focus:border-primary focus:ring-primary/20 text-base rounded-xl transition-colors"
+                rows={3}
+                className="resize-none border-border focus:border-primary focus:ring-primary/20 text-sm rounded-lg transition-colors"
               />
             </div>
           )}
         </CardContent>
         
-        <CardFooter className="p-0 pt-8">
+        <CardFooter className="p-0 pt-6">
           <Button 
             type="submit" 
-            className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold py-4 text-lg shadow-md transition-all duration-200 hover:shadow-lg hover:scale-[1.02] rounded-xl" 
+            className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-medium py-3 text-sm shadow-sm transition-all duration-200 hover:shadow-md rounded-lg" 
             disabled={score === null || isSubmitting}
-            size="lg"
           >
             {isSubmitting ? (
               <>
-                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                Enviando sua avaliação...
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Enviando avaliação...
               </>
             ) : (
               <>
-                <Star className="mr-2 h-5 w-5" />
+                <Star className="mr-2 h-4 w-4" />
                 Enviar avaliação
               </>
             )}
