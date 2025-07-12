@@ -31,6 +31,9 @@ export interface LmsFeedbackData {
   feedback: string | null;
   createdAt: string;
   userName: string;
+  userEmail: string;
+  moduleTitle: string;
+  courseTitle: string;
 }
 
 export interface LmsAnalyticsData {

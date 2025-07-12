@@ -89,7 +89,10 @@ export const useNpsData = (startDate: string | null) => {
                 score: 9,
                 feedback: 'Conteúdo excelente, muito útil para meu trabalho.',
                 createdAt: new Date().toISOString(),
-                userName: 'João Silva'
+                userName: 'João Silva',
+                userEmail: 'joao@exemplo.com',
+                moduleTitle: 'Módulo Inicial',
+                courseTitle: 'Curso de IA'
               },
               {
                 id: '2',
@@ -98,7 +101,10 @@ export const useNpsData = (startDate: string | null) => {
                 score: 7,
                 feedback: 'Bom conteúdo mas poderia ter mais exemplos práticos.',
                 createdAt: new Date().toISOString(),
-                userName: 'Maria Santos'
+                userName: 'Maria Santos',
+                userEmail: 'maria@exemplo.com',
+                moduleTitle: 'Módulo Avançado',
+                courseTitle: 'Curso de IA'
               },
               {
                 id: '3',
@@ -107,7 +113,10 @@ export const useNpsData = (startDate: string | null) => {
                 score: 5,
                 feedback: 'Conteúdo muito teórico, precisa de mais casos reais.',
                 createdAt: new Date().toISOString(),
-                userName: 'Pedro Oliveira'
+                userName: 'Pedro Oliveira',
+                userEmail: 'pedro@exemplo.com',
+                moduleTitle: 'Módulo Prático',
+                courseTitle: 'Curso de IA'
               }
             ]
           };
@@ -147,6 +156,18 @@ export const useNpsData = (startDate: string | null) => {
         // Filtrar feedbacks com comentários
         const feedbackData = npsResponses
           .filter(response => response.feedback)
+          .map(response => ({
+            id: response.id,
+            lessonId: response.lessonId,
+            lessonTitle: response.lessonTitle,
+            score: response.score,
+            feedback: response.feedback,
+            createdAt: response.createdAt,
+            userName: response.userName,
+            userEmail: '', // Placeholder - será preenchido pela view
+            moduleTitle: 'Módulo', // Placeholder - será preenchido pela view
+            courseTitle: 'Curso' // Placeholder - será preenchido pela view
+          }))
           .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
         
         // Log para depuração
@@ -199,7 +220,10 @@ export const useNpsData = (startDate: string | null) => {
               score: 8,
               feedback: 'Este é um feedback simulado devido a um erro na recuperação dos dados.',
               createdAt: new Date().toISOString(),
-              userName: 'Sistema'
+              userName: 'Sistema',
+              userEmail: 'sistema@exemplo.com',
+              moduleTitle: 'Módulo Simulado',
+              courseTitle: 'Curso Simulado'
             }
           ]
         };

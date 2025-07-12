@@ -770,6 +770,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "course_access_control_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "nps_analytics_view"
+            referencedColumns: ["course_id"]
+          },
+          {
             foreignKeyName: "course_access_control_role_id_fkey"
             columns: ["role_id"]
             isOneToOne: false
@@ -1533,6 +1540,13 @@ export type Database = {
             referencedRelation: "learning_courses_with_stats"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "learning_certificates_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "nps_analytics_view"
+            referencedColumns: ["course_id"]
+          },
         ]
       }
       learning_comment_likes: {
@@ -1935,6 +1949,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "learning_courses_with_stats"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "learning_modules_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "nps_analytics_view"
+            referencedColumns: ["course_id"]
           },
         ]
       }
@@ -4688,6 +4709,39 @@ export type Database = {
             columns: ["module_id"]
             isOneToOne: false
             referencedRelation: "learning_modules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      nps_analytics_view: {
+        Row: {
+          course_id: string | null
+          course_title: string | null
+          created_at: string | null
+          feedback: string | null
+          id: string | null
+          lesson_id: string | null
+          lesson_title: string | null
+          module_title: string | null
+          score: number | null
+          updated_at: string | null
+          user_email: string | null
+          user_id: string | null
+          user_name: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "learning_lesson_nps_lesson_id_fkey"
+            columns: ["lesson_id"]
+            isOneToOne: false
+            referencedRelation: "learning_lessons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "learning_lesson_nps_lesson_id_fkey"
+            columns: ["lesson_id"]
+            isOneToOne: false
+            referencedRelation: "learning_lessons_with_relations"
             referencedColumns: ["id"]
           },
         ]

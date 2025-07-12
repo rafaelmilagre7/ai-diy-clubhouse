@@ -61,7 +61,14 @@ const NPSAnalytics: React.FC = () => {
   };
 
   // Usar o hook otimizado
-  const { data: analyticsData, isLoading: analyticsLoading } = useLMSAnalytics(getDateRange());
+  const { data: analyticsData, isLoading: analyticsLoading, error, isError } = useLMSAnalytics(getDateRange());
+
+  // Log de depuração
+  console.log('NPSAnalytics - Estado:', { analyticsLoading, isError, error, analyticsData });
+
+  if (error) {
+    console.error('Erro no NPSAnalytics:', error);
+  }
 
   // Mapear dados para interface anterior (compatibilidade)
   const analytics = analyticsData ? {
@@ -83,7 +90,7 @@ const NPSAnalytics: React.FC = () => {
       created_at: f.createdAt,
       updated_at: f.createdAt,
       lesson: { title: f.lessonTitle },
-      user: { name: f.userName, email: '' }
+      user: { name: f.userName, email: f.userEmail }
     }))
   } : null;
 

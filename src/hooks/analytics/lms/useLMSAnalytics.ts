@@ -1,72 +1,48 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
-import { LmsAnalyticsData, LessonNpsResponse, ProgressResponse } from './types';
+import { LmsAnalyticsData } from './types';
 
 export const useLMSAnalytics = (dateRange?: { from: Date; to: Date }) => {
   return useQuery({
     queryKey: ['lms-analytics', dateRange],
     queryFn: async (): Promise<LmsAnalyticsData> => {
-      const startDate = dateRange?.from ? dateRange.from.toISOString() : 
-        new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
-      const endDate = dateRange?.to ? dateRange.to.toISOString() : new Date().toISOString();
-
       try {
-        // Buscar avaliações NPS (query simples primeiro)
-        const { data: npsData, error: npsError } = await supabase
-          .from('learning_lesson_nps')
-          .select('*')
-          .gte('created_at', startDate)
-          .lte('created_at', endDate)
-          .order('created_at', { ascending: false });
-
-        if (npsError) {
-          console.error('Erro ao buscar dados NPS:', npsError);
-          throw npsError;
-        }
-
-        // Buscar aulas separadamente
-        const lessonIds = [...new Set(npsData?.map(r => r.lesson_id) || [])];
+        // Construir filtro de data
+        let query = supabase.from('nps_analytics_view').select('*');
         
-        const { data: lessonsData, error: lessonsError } = await supabase
-          .from('learning_lessons')
-          .select('id, title, module_id')
-          .in('id', lessonIds);
-
-        if (lessonsError) {
-          console.error('Erro ao buscar aulas:', lessonsError);
+        if (dateRange?.from && dateRange?.to) {
+          query = query
+            .gte('created_at', dateRange.from.toISOString())
+            .lte('created_at', dateRange.to.toISOString());
         }
 
-        // Buscar módulos separadamente
-        const moduleIds = [...new Set(lessonsData?.map(l => l.module_id) || [])];
-        const { data: modulesData, error: modulesError } = await supabase
-          .from('learning_modules')
-          .select('id, title, course_id')
-          .in('id', moduleIds);
+        const { data: npsViewData, error: viewError } = await query.order('created_at', { ascending: false });
 
-        if (modulesError) {
-          console.error('Erro ao buscar módulos:', modulesError);
+        if (viewError) {
+          console.error('Erro ao buscar dados da view NPS:', viewError);
+          throw viewError;
         }
 
-        // Buscar cursos separadamente
-        const courseIds = [...new Set(modulesData?.map(m => m.course_id) || [])];
-        const { data: coursesData, error: coursesError } = await supabase
-          .from('learning_courses')
-          .select('id, title')
-          .in('id', courseIds);
-
-        if (coursesError) {
-          console.error('Erro ao buscar cursos:', coursesError);
+        if (!npsViewData || npsViewData.length === 0) {
+          console.warn('Nenhum dado encontrado na view NPS');
+          return {
+            npsData: {
+              overall: 0,
+              distribution: { promoters: 0, neutrals: 0, detractors: 0 },
+              perLesson: []
+            },
+            statsData: {
+              totalStudents: 0,
+              totalLessons: 0,
+              completionRate: 0,
+              npsScore: 0
+            },
+            feedbackData: []
+          };
         }
-
-        // Buscar perfis dos usuários
-        const userIds = [...new Set(npsData?.map(r => r.user_id) || [])];
-        const { data: profilesData } = await supabase
-          .from('profiles')
-          .select('id, name')
-          .in('id', userIds);
 
         // Processar dados NPS
-        const responses = npsData || [];
+        const responses = npsViewData;
         const totalResponses = responses.length;
         
         const promoters = responses.filter(r => r.score >= 9).length;
@@ -78,43 +54,34 @@ export const useLMSAnalytics = (dateRange?: { from: Date; to: Date }) => {
           : 0;
 
         // Buscar estatísticas gerais
-        const { count: totalStudents } = await supabase
-          .from('profiles')
-          .select('*', { count: 'exact', head: true });
+        const [studentsResult, lessonsResult] = await Promise.all([
+          supabase.from('profiles').select('*', { count: 'exact', head: true }),
+          supabase.from('learning_lessons').select('*', { count: 'exact', head: true }).eq('published', true)
+        ]);
 
-        const { count: totalLessons } = await supabase
-          .from('learning_lessons')
-          .select('*', { count: 'exact', head: true })
-          .eq('published', true);
+        // Mapear dados de feedback
+        const feedbackData = responses.map(r => ({
+          id: r.id,
+          lessonId: r.lesson_id,
+          lessonTitle: r.lesson_title || 'Aula sem título',
+          score: r.score,
+          feedback: r.feedback,
+          createdAt: r.created_at,
+          userName: r.user_name || 'Usuário',
+          userEmail: r.user_email || '',
+          moduleTitle: r.module_title || 'Módulo sem título',
+          courseTitle: r.course_title || 'Curso sem título'
+        }));
 
-        // Mapear dados com informações relacionadas
-        const feedbackData = responses.map(r => {
-          const lesson = lessonsData?.find(l => l.id === r.lesson_id);
-          const profile = profilesData?.find(p => p.id === r.user_id);
-          
-          return {
-            id: r.id,
-            lessonId: r.lesson_id,
-            lessonTitle: lesson?.title || 'Aula sem título',
-            score: r.score,
-            feedback: r.feedback,
-            createdAt: r.created_at,
-            userName: profile?.name || 'Usuário'
-          };
-        });
-
-        // Agrupar por aula
-        const lessonScores = responses.reduce((acc, response: any) => {
+        // Agrupar por aula para calcular NPS por aula
+        const lessonScores = responses.reduce((acc, response) => {
           const lessonId = response.lesson_id;
-          const lesson = lessonsData?.find(l => l.id === lessonId);
-          const module = modulesData?.find(m => m.id === lesson?.module_id);
-          const course = coursesData?.find(c => c.id === module?.course_id);
           
           if (!acc[lessonId]) {
             acc[lessonId] = {
               lessonId,
-              lessonTitle: lesson?.title || 'Aula sem título',
-              courseTitle: course?.title || 'Curso sem título',
+              lessonTitle: response.lesson_title || 'Aula sem título',
+              courseTitle: response.course_title || 'Curso sem título',
               scores: []
             };
           }
@@ -143,15 +110,15 @@ export const useLMSAnalytics = (dateRange?: { from: Date; to: Date }) => {
             perLesson
           },
           statsData: {
-            totalStudents: totalStudents || 0,
-            totalLessons: totalLessons || 0,
-            completionRate: 85, // Placeholder por enquanto
+            totalStudents: studentsResult.count || 0,
+            totalLessons: lessonsResult.count || 0,
+            completionRate: 85, // Placeholder - pode ser calculado depois
             npsScore
           },
           feedbackData
         };
       } catch (error) {
-        console.error('Erro geral na query de analytics:', error);
+        console.error('Erro ao buscar analytics do LMS:', error);
         throw error;
       }
     },
