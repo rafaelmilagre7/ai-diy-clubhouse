@@ -5,6 +5,8 @@ import { Badge } from "@/components/ui/badge";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
 import { CheckCircle, Play } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { TagBadge } from "../../tags/TagBadge";
+import { useLessonTagsForLesson } from "@/hooks/useLessonTags";
 
 interface LessonThumbnailProps {
   lesson: LearningLesson;
@@ -21,6 +23,7 @@ export const LessonThumbnail = ({
   inProgress, 
   progress 
 }: LessonThumbnailProps) => {
+  const { data: lessonTags } = useLessonTagsForLesson(lesson.id);
   return (
     <Link 
       to={`/learning/course/${courseId}/lesson/${lesson.id}`}
@@ -91,9 +94,10 @@ export const LessonThumbnail = ({
         </AspectRatio>
       </div>
       
-      <div className="mt-2">
+      <div className="mt-2 space-y-2">
         <div className="font-medium line-clamp-1">{lesson.title}</div>
-        <div className="flex items-center gap-2 mt-1">
+        
+        <div className="flex items-center gap-2">
           {inProgress && !isCompleted && (
             <Badge variant="secondary" className="text-xs">
               {progress}% concluído
@@ -106,6 +110,25 @@ export const LessonThumbnail = ({
             </Badge>
           )}
         </div>
+
+        {/* Tags */}
+        {lessonTags && lessonTags.length > 0 && (
+          <div className="flex flex-wrap gap-1">
+            {lessonTags.slice(0, 3).map(({ lesson_tags: tag }) => (
+              <TagBadge
+                key={tag.id}
+                tag={tag}
+                size="sm"
+                className="text-xs"
+              />
+            ))}
+            {lessonTags.length > 3 && (
+              <span className="text-xs text-muted-foreground">
+                +{lessonTags.length - 3}
+              </span>
+            )}
+          </div>
+        )}
       </div>
     </Link>
   );

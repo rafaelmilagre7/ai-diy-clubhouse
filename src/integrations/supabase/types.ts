@@ -1815,6 +1815,49 @@ export type Database = {
           },
         ]
       }
+      learning_lesson_tags: {
+        Row: {
+          created_at: string
+          id: string
+          lesson_id: string
+          tag_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          lesson_id: string
+          tag_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          lesson_id?: string
+          tag_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "learning_lesson_tags_lesson_id_fkey"
+            columns: ["lesson_id"]
+            isOneToOne: false
+            referencedRelation: "learning_lessons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "learning_lesson_tags_lesson_id_fkey"
+            columns: ["lesson_id"]
+            isOneToOne: false
+            referencedRelation: "learning_lessons_with_relations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "learning_lesson_tags_tag_id_fkey"
+            columns: ["tag_id"]
+            isOneToOne: false
+            referencedRelation: "lesson_tags"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       learning_lesson_tools: {
         Row: {
           created_at: string
@@ -2175,6 +2218,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      lesson_tags: {
+        Row: {
+          category: string | null
+          color: string
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          order_index: number | null
+          updated_at: string
+        }
+        Insert: {
+          category?: string | null
+          color?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          order_index?: number | null
+          updated_at?: string
+        }
+        Update: {
+          category?: string | null
+          color?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          order_index?: number | null
+          updated_at?: string
+        }
+        Relationships: []
       }
       member_connections: {
         Row: {

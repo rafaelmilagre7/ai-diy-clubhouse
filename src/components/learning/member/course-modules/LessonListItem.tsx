@@ -4,6 +4,8 @@ import { LearningLesson } from "@/lib/supabase/types";
 import { Badge } from "@/components/ui/badge";
 import { CheckCircle, Play } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { TagBadge } from "../../tags/TagBadge";
+import { useLessonTagsForLesson } from "@/hooks/useLessonTags";
 
 interface LessonListItemProps {
   lesson: LearningLesson;
@@ -20,6 +22,7 @@ export const LessonListItem = ({
   inProgress,
   progress
 }: LessonListItemProps) => {
+  const { data: lessonTags } = useLessonTagsForLesson(lesson.id);
   return (
     <Link 
       key={lesson.id}
@@ -46,7 +49,7 @@ export const LessonListItem = ({
           )}
         </div>
         
-        <div>
+        <div className="flex-1">
           <div className="font-medium">{lesson.title}</div>
           <div className="flex items-center gap-2 mt-1">
             {lesson.difficulty_level && (
@@ -68,6 +71,25 @@ export const LessonListItem = ({
               </Badge>
             )}
           </div>
+
+          {/* Tags */}
+          {lessonTags && lessonTags.length > 0 && (
+            <div className="flex flex-wrap gap-1 mt-2">
+              {lessonTags.slice(0, 4).map(({ lesson_tags: tag }) => (
+                <TagBadge
+                  key={tag.id}
+                  tag={tag}
+                  size="sm"
+                  className="text-xs"
+                />
+              ))}
+              {lessonTags.length > 4 && (
+                <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded-full">
+                  +{lessonTags.length - 4}
+                </span>
+              )}
+            </div>
+          )}
         </div>
       </div>
       
