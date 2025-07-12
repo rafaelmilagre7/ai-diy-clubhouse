@@ -2,14 +2,17 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { MessageCircle, Calendar, CheckCircle2, Clock, Building2, Users } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useConnections } from '@/hooks/useConnections';
 import LoadingScreen from '@/components/common/LoadingScreen';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { ChatWindow } from './ChatWindow';
+import { useState } from 'react';
 
 export const ConnectionsGrid = () => {
   const { connections, isLoading } = useConnections();
+  const [activeChat, setActiveChat] = useState<string | null>(null);
 
   if (isLoading) {
     return <LoadingScreen message="Carregando conexões..." />;
@@ -65,10 +68,22 @@ export const ConnectionsGrid = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: index * 0.1 }}
           >
-            <ConnectionCard connection={connection} />
+            <ConnectionCard 
+              connection={connection} 
+              onOpenChat={() => setActiveChat(connection.id)}
+            />
           </motion.div>
         ))}
       </div>
+
+      <AnimatePresence>
+        {activeChat && (
+          <ChatWindow
+            connection={acceptedConnections.find(c => c.id === activeChat)!}
+            onClose={() => setActiveChat(null)}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 };
@@ -96,9 +111,10 @@ interface ConnectionCardProps {
       avatar_url?: string;
     };
   };
+  onOpenChat: () => void;
 }
 
-const ConnectionCard = ({ connection }: ConnectionCardProps) => {
+const ConnectionCard = ({ connection, onOpenChat }: ConnectionCardProps) => {
   // Determinar o outro usuário na conexão
   const otherUser = connection.requester || connection.recipient;
   
@@ -182,7 +198,7 @@ const ConnectionCard = ({ connection }: ConnectionCardProps) => {
           <Button 
             size="sm" 
             className="flex-1 bg-viverblue hover:bg-viverblue/90 text-white text-xs"
-            disabled
+            onClick={onOpenChat}
           >
             <MessageCircle className="h-3 w-3 mr-1" />
             Mensagem

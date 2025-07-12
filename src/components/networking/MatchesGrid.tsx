@@ -3,13 +3,14 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Brain, MessageCircle, Sparkles, TrendingUp, Users, Building2, Loader2 } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useNetworkMatches } from '@/hooks/useNetworkMatches';
 import { useAIMatches } from '@/hooks/useAIMatches';
 import { useAuth } from '@/contexts/auth';
 import LoadingScreen from '@/components/common/LoadingScreen';
 import { ConnectionButton } from './ConnectionButton';
 import { MatchFilters } from './MatchFilters';
+import { ChatWindow } from './ChatWindow';
 import type { MatchFilters as MatchFiltersType } from './MatchFilters';
 
 // Função para traduzir tipos de match
@@ -31,6 +32,7 @@ export const MatchesGrid = () => {
     compatibilityRange: [0, 100],
     showOnlyUnread: false
   });
+  const [activeChatMatch, setActiveChatMatch] = useState<string | null>(null);
   
   const { matches, isLoading, error, refetch } = useNetworkMatches(filters);
   const { generateMatches, isGenerating } = useAIMatches();
@@ -151,10 +153,27 @@ export const MatchesGrid = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: index * 0.1 }}
           >
-            <MatchCard match={match} />
+            <MatchCard 
+              match={match} 
+              onOpenChat={() => setActiveChatMatch(match.id)}
+            />
           </motion.div>
         ))}
       </div>
+
+      <AnimatePresence>
+        {activeChatMatch && (
+          <ChatWindow
+            connection={{
+              id: activeChatMatch,
+              requester_id: user?.id || '',
+              recipient_id: matches.find(m => m.id === activeChatMatch)?.matched_user_id || '',
+              recipient: matches.find(m => m.id === activeChatMatch)?.matched_user
+            }}
+            onClose={() => setActiveChatMatch(null)}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 };
@@ -181,9 +200,10 @@ interface MatchCardProps {
       avatar_url?: string;
     };
   };
+  onOpenChat: () => void;
 }
 
-const MatchCard = ({ match }: MatchCardProps) => {
+const MatchCard = ({ match, onOpenChat }: MatchCardProps) => {
   const translatedType = translateMatchType(match.match_type);
   
   const getTypeColor = (type: string) => {
@@ -289,8 +309,10 @@ const MatchCard = ({ match }: MatchCardProps) => {
             size="sm" 
             variant="outline" 
             className="border-neutral-700 text-neutral-300 hover:bg-neutral-800/50 text-xs"
+            onClick={onOpenChat}
           >
-            Ver perfil
+            <MessageCircle className="h-3 w-3 mr-1" />
+            Chat
           </Button>
         </div>
       </CardContent>
