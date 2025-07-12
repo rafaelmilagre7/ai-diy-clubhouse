@@ -12,8 +12,9 @@ import { FormacaoAulasHeader } from "@/components/formacao/aulas/FormacaoAulasHe
 import { AulasList } from "@/components/formacao/aulas/AulasList";
 import { AllLessonsList } from "@/components/formacao/aulas/AllLessonsList";
 import { Button } from "@/components/ui/button";
-import { Loader2 } from "lucide-react";
+import { Loader2, Bot } from "lucide-react";
 import { NovaAulaButton } from "@/components/formacao/aulas/NovaAulaButton";
+import { ClassificacaoAulasModal } from "@/components/formacao/aulas/ClassificacaoAulasModal";
 
 const FormacaoAulas = () => {
   const { id } = useParams<{ id: string }>();
@@ -28,6 +29,7 @@ const FormacaoAulas = () => {
   const [aulas, setAulas] = useState<LearningLesson[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingAulas, setLoadingAulas] = useState(true);
+  const [showClassificationModal, setShowClassificationModal] = useState(false);
 
   // Detectar se estamos na rota geral ou específica
   const isGeneralView = !id;
@@ -193,12 +195,22 @@ const FormacaoAulas = () => {
           breadcrumb={false}
         >
           {isAdmin && (
-            <NovaAulaButton 
-              moduleId=""
-              buttonText="Nova Aula"
-              onSuccess={handleSuccess}
-              allowModuleSelection={true}
-            />
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                onClick={() => setShowClassificationModal(true)}
+                className="gap-2"
+              >
+                <Bot className="h-4 w-4" />
+                Classificar com IA
+              </Button>
+              <NovaAulaButton 
+                moduleId=""
+                buttonText="Nova Aula"
+                onSuccess={handleSuccess}
+                allowModuleSelection={true}
+              />
+            </div>
           )}
         </FormacaoAulasHeader>
         
@@ -209,6 +221,11 @@ const FormacaoAulas = () => {
           onDelete={handleExcluirAula}
           isAdmin={isAdmin}
           onRefresh={refetchAllLessons}
+        />
+        
+        <ClassificacaoAulasModal
+          open={showClassificationModal}
+          onOpenChange={setShowClassificationModal}
         />
       </div>
     );
@@ -238,6 +255,12 @@ const FormacaoAulas = () => {
         onDelete={handleExcluirAula}
         isAdmin={isAdmin}
         onRefresh={fetchAulas}
+      />
+      
+      <ClassificacaoAulasModal
+        open={showClassificationModal}
+        onOpenChange={setShowClassificationModal}
+        lessonIds={aulas.map(aula => aula.id)}
       />
     </div>
   );
