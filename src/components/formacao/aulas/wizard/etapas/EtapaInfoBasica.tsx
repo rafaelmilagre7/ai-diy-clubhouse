@@ -23,12 +23,14 @@ interface EtapaInfoBasicaProps {
   onNext: () => void;
   onPrevious: () => void;
   isSaving: boolean;
+  allowModuleSelection?: boolean;
 }
 
 const EtapaInfoBasica: React.FC<EtapaInfoBasicaProps> = ({
   form,
   modules,
-  onNext
+  onNext,
+  allowModuleSelection = false
 }) => {
   const handleContinue = async () => {
     // Validar apenas os campos desta etapa
@@ -81,33 +83,35 @@ const EtapaInfoBasica: React.FC<EtapaInfoBasicaProps> = ({
           />
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <FormField
-              control={form.control}
-              name="moduleId"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Módulo</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione um módulo" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {modules.map((module) => (
-                        <SelectItem key={module.id} value={module.id}>
-                          {module.title}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormDescription>
-                    O módulo ao qual esta aula pertence
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            {allowModuleSelection && (
+              <FormField
+                control={form.control}
+                name="moduleId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Módulo</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione um módulo" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {modules.map((module) => (
+                          <SelectItem key={module.id} value={module.id}>
+                            {module.title}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormDescription>
+                      O módulo ao qual esta aula pertence
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
             
             <FormField
               control={form.control}

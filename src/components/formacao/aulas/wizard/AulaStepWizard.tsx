@@ -28,6 +28,7 @@ interface AulaStepWizardProps {
   onOpenChange: (open: boolean) => void;
   aula?: LearningLesson | null;
   moduleId?: string | null;
+  allowModuleSelection?: boolean;
   onSuccess?: () => void;
   onClose?: () => void;
 }
@@ -37,6 +38,7 @@ const AulaStepWizard: React.FC<AulaStepWizardProps> = ({
   onOpenChange,
   aula,
   moduleId,
+  allowModuleSelection = false,
   onSuccess,
   onClose,
 }) => {
@@ -110,7 +112,11 @@ const AulaStepWizard: React.FC<AulaStepWizardProps> = ({
     
     switch (currentStep) {
       case 0:
-        return <EtapaInfoBasica {...formProps} modules={modules as LearningModule[]} />;
+        return <EtapaInfoBasica 
+          {...formProps} 
+          modules={modules as LearningModule[]} 
+          allowModuleSelection={allowModuleSelection}
+        />;
       case 1:
         return <EtapaMidia {...formProps} />;
       case 2:

@@ -191,7 +191,16 @@ const FormacaoAulas = () => {
         <FormacaoAulasHeader 
           titulo="Todas as Aulas"
           breadcrumb={false}
-        />
+        >
+          {isAdmin && (
+            <NovaAulaButton 
+              moduleId=""
+              buttonText="Nova Aula"
+              onSuccess={handleSuccess}
+              allowModuleSelection={true}
+            />
+          )}
+        </FormacaoAulasHeader>
         
         <AllLessonsList 
           lessons={allLessons}
