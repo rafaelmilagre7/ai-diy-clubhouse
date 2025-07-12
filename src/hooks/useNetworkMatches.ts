@@ -46,7 +46,10 @@ export const useNetworkMatches = () => {
         .eq('status', 'pending')
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Erro ao buscar matches:', error);
+        throw error;
+      }
       return (data || []) as NetworkMatch[];
     },
     staleTime: 2 * 60 * 1000, // 2 minutos
