@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { useEffect } from 'react';
 
 export interface ConnectionNotification {
   id: string;
@@ -43,6 +44,29 @@ export const useConnectionNotifications = () => {
       return data as ConnectionNotification[];
     },
   });
+
+  // Configurar Realtime para atualizações instantâneas
+  useEffect(() => {
+    const channel = supabase
+      .channel('connection-notifications-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'connection_notifications'
+        },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ['connection-notifications'] });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [queryClient]);
+
 
   // Marcar notificação como lida
   const markAsRead = useMutation({

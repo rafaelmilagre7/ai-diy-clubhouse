@@ -6,10 +6,11 @@ import { useConnectionNotifications } from '@/hooks/useConnectionNotifications';
 import { useConnections } from '@/hooks/useConnections';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { supabase } from '@/integrations/supabase/client';
 
 export const ConnectionNotifications = () => {
   const { notifications, unreadCount, markAsRead, markAllAsRead } = useConnectionNotifications();
-  const { acceptConnection, rejectConnection } = useConnections();
+  const { acceptConnection, rejectConnection, checkConnection } = useConnections();
 
   const handleAccept = async (notificationId: string, senderId: string) => {
     // Encontrar a conexão correspondente
@@ -29,9 +30,7 @@ export const ConnectionNotifications = () => {
   };
 
   const findConnectionBetweenUsers = async (otherUserId: string) => {
-    // Esta função seria implementada para buscar a conexão específica
-    // Por agora, vamos assumir que existe uma função para isso
-    return null; // Placeholder
+    return await checkConnection(otherUserId);
   };
 
   if (notifications.length === 0) {
