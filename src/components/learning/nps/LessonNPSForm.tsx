@@ -18,10 +18,10 @@ const NPSRatingButton: React.FC<NPSRatingButtonProps> = ({ value, selectedValue,
   
   const getButtonStyles = () => {
     if (isSelected) {
-      return "bg-viverblue text-white border-viverblue shadow-md ring-2 ring-viverblue/20";
+      return "bg-primary text-primary-foreground border-primary shadow-md ring-2 ring-primary/20";
     }
     
-    return "bg-white text-gray-700 border-gray-200 hover:border-viverblue hover:bg-viverblue/5 hover:text-viverblue";
+    return "bg-background text-foreground border-border hover:border-primary hover:bg-primary/5 hover:text-primary";
   };
 
   return (
@@ -31,7 +31,7 @@ const NPSRatingButton: React.FC<NPSRatingButtonProps> = ({ value, selectedValue,
       className={`
         w-11 h-11 sm:w-12 sm:h-12 p-0 flex-shrink-0 transition-all duration-200 font-semibold text-base rounded-lg
         ${getButtonStyles()}
-        hover:scale-102 active:scale-98 focus:outline-none focus:ring-2 focus:ring-viverblue/30 focus:ring-offset-2
+        hover:scale-102 active:scale-98 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:ring-offset-2
       `}
       onClick={() => onClick(value)}
     >
@@ -82,8 +82,8 @@ export const LessonNPSForm: React.FC<LessonNPSFormProps> = ({
     return (
       <div className="flex items-center justify-center py-12">
         <div className="text-center space-y-3">
-          <Loader2 className="w-8 h-8 animate-spin text-viverblue mx-auto" />
-          <p className="text-gray-600">Carregando avaliação...</p>
+          <Loader2 className="w-8 h-8 animate-spin text-primary mx-auto" />
+          <p className="text-muted-foreground">Carregando avaliação...</p>
         </div>
       </div>
     );
@@ -93,12 +93,12 @@ export const LessonNPSForm: React.FC<LessonNPSFormProps> = ({
     return (
       <div className="text-center py-8 space-y-4">
         <div className="flex justify-center">
-          <CheckCircle2 className="h-16 w-16 text-viverblue animate-bounce" />
+          <CheckCircle2 className="h-16 w-16 text-primary animate-bounce" />
         </div>
-        <h3 className="text-2xl font-bold text-viverblue">
+        <h3 className="text-2xl font-bold text-primary">
           Avaliação enviada com sucesso!
         </h3>
-        <p className="text-gray-600">
+        <p className="text-muted-foreground">
           {nextLesson 
             ? `Redirecionando para a próxima aula: ${nextLesson.title}...`
             : "Redirecionando..."
@@ -115,10 +115,10 @@ export const LessonNPSForm: React.FC<LessonNPSFormProps> = ({
           {/* Escala NPS */}
           <div className="space-y-6">
             <div className="text-center space-y-3">
-              <h3 className="text-2xl font-bold text-gray-800">
+              <h3 className="text-2xl font-bold text-foreground">
                 Como foi sua experiência?
               </h3>
-              <p className="text-lg text-gray-600 max-w-md mx-auto">
+              <p className="text-lg text-muted-foreground max-w-md mx-auto">
                 De 0 a 10, qual a probabilidade de você recomendar esta aula?
               </p>
             </div>
@@ -164,7 +164,7 @@ export const LessonNPSForm: React.FC<LessonNPSFormProps> = ({
               </div>
               
               {/* Labels da escala */}
-              <div className="flex justify-between text-sm font-medium text-gray-500 px-2 max-w-4xl mx-auto">
+              <div className="flex justify-between text-sm font-medium text-muted-foreground px-2 max-w-4xl mx-auto">
                 <span>Não recomendaria</span>
                 <span>Recomendaria totalmente</span>
               </div>
@@ -174,11 +174,11 @@ export const LessonNPSForm: React.FC<LessonNPSFormProps> = ({
             <div className="h-20 flex items-center justify-center">
               {score !== null && (
                 <div className="text-center animate-fade-in">
-                  <div className="inline-flex items-center gap-3 bg-viverblue/5 border border-viverblue/20 px-6 py-3 rounded-xl">
-                    <div className="text-xl font-bold text-viverblue">
+                  <div className="inline-flex items-center gap-3 bg-primary/5 border border-primary/20 px-6 py-3 rounded-xl">
+                    <div className="text-xl font-bold text-primary">
                       {getScoreLabel()}
                     </div>
-                    <div className="text-lg font-semibold text-gray-700">
+                    <div className="text-lg font-semibold text-foreground">
                       Sua nota: {score}
                     </div>
                   </div>
@@ -190,7 +190,7 @@ export const LessonNPSForm: React.FC<LessonNPSFormProps> = ({
           {/* Campo de feedback opcional */}
           {score !== null && (
             <div className="space-y-4 animate-fade-in">
-              <label htmlFor="feedback" className="block text-lg font-semibold text-gray-800">
+              <label htmlFor="feedback" className="block text-lg font-semibold text-foreground">
                 Quer nos contar mais sobre sua experiência? (opcional)
               </label>
               <Textarea
@@ -199,7 +199,7 @@ export const LessonNPSForm: React.FC<LessonNPSFormProps> = ({
                 value={feedback}
                 onChange={(e) => setFeedback(e.target.value)}
                 rows={4}
-                className="resize-none border-gray-200 focus:border-viverblue focus:ring-viverblue/20 text-base rounded-xl transition-colors"
+                className="resize-none border-border focus:border-primary focus:ring-primary/20 text-base rounded-xl transition-colors"
               />
             </div>
           )}
@@ -208,7 +208,7 @@ export const LessonNPSForm: React.FC<LessonNPSFormProps> = ({
         <CardFooter className="p-0 pt-8">
           <Button 
             type="submit" 
-            className="w-full bg-viverblue hover:bg-viverblue-dark text-white font-semibold py-4 text-lg shadow-md transition-all duration-200 hover:shadow-lg hover:scale-[1.02] rounded-xl" 
+            className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold py-4 text-lg shadow-md transition-all duration-200 hover:shadow-lg hover:scale-[1.02] rounded-xl" 
             disabled={score === null || isSubmitting}
             size="lg"
           >
