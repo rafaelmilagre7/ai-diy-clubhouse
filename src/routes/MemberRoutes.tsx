@@ -21,6 +21,7 @@ import SuggestionDetails from '@/pages/member/SuggestionDetails';
 import NewSuggestion from '@/pages/member/NewSuggestion';
 import Events from '@/pages/member/Events';
 import SolutionCertificate from '@/pages/member/SolutionCertificate';
+import Networking from '@/pages/member/Networking';
 
 // Member Learning pages
 import LearningPage from '@/pages/member/learning/LearningPage';
@@ -68,6 +69,7 @@ export const memberRoutes: RouteObject[] = [
   createProtectedRoute("/trilha-implementacao", ImplementationTrail),
   createProtectedRoute("/tools", Tools),
   createProtectedRoute("/tools/:id", ToolDetails),
+  createProtectedRoute("/networking", Networking),
   createProtectedRoute("/profile", Profile),
   createProtectedRoute("/profile/edit", EditProfile),
   createProtectedRoute("/profile/notifications", NotificationSettingsPage),

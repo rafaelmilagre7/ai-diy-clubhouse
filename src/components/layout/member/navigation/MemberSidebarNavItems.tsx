@@ -15,7 +15,8 @@ import {
   Sparkles,
   Shield,
   Gift,
-  MessageCircle
+  MessageCircle,
+  Brain
 } from 'lucide-react';
 import { useAuth } from '@/contexts/auth';
 import { getUserRoleName } from '@/lib/supabase/types';
@@ -69,6 +70,12 @@ export const MemberSidebarNavItems: React.FC<MemberSidebarNavItemsProps> = ({ si
       title: "Benefícios",
       href: "/benefits",
       icon: Gift,
+      type: "regular"
+    },
+    {
+      title: "Conecta AI",
+      href: "/networking",
+      icon: Brain,
       type: "regular"
     },
     {
@@ -262,7 +269,7 @@ export const MemberSidebarNavItems: React.FC<MemberSidebarNavItemsProps> = ({ si
         
         {/* Grupo de Recursos */}
         <div className="space-y-1">
-          {navigationItems.slice(5, 10).map(item => renderNavButton(item))}
+          {navigationItems.slice(5, 11).map(item => renderNavButton(item))}
         </div>
       </div>
       
