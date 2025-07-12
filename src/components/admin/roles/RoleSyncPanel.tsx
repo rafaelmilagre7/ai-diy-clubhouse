@@ -22,31 +22,47 @@ export const RoleSyncPanel = () => {
     isLoading, 
     issues, 
     auditData, 
+    hasHealthCheck,
     validateRoles, 
     auditRoles, 
     syncRoles,
-    runFullDiagnostic
+    runFullDiagnostic,
+    checkSystemHealth
   } = useRoleSync();
 
   const [hasRunInitialCheck, setHasRunInitialCheck] = useState(false);
   const [showMigrationSuccess, setShowMigrationSuccess] = useState(true);
+  const [systemHealthy, setSystemHealthy] = useState<boolean | null>(null);
 
   useEffect(() => {
-    // Executar diagnóstico inicial automaticamente
+    // Verificar saúde do sistema primeiro, depois executar diagnóstico se seguro
     if (!hasRunInitialCheck) {
       const runInitialCheck = async () => {
         try {
-          await runFullDiagnostic();
+          // Verificar saúde do sistema primeiro
+          const isHealthy = await checkSystemHealth();
+          setSystemHealthy(isHealthy);
+          
+          if (isHealthy) {
+            console.log('Sistema saudável, executando diagnóstico inicial...');
+            await runFullDiagnostic();
+          } else {
+            console.warn('Sistema instável, pulando diagnóstico automático inicial');
+          }
+          
           setHasRunInitialCheck(true);
         } catch (error) {
           console.error('Erro na verificação inicial:', error);
+          setSystemHealthy(false);
           setHasRunInitialCheck(true); // Marcar como executado mesmo com erro
         }
       };
       
-      runInitialCheck();
+      // Executar com delay para evitar múltiplas chamadas
+      const timeoutId = setTimeout(runInitialCheck, 1000);
+      return () => clearTimeout(timeoutId);
     }
-  }, [hasRunInitialCheck, runFullDiagnostic]);
+  }, [hasRunInitialCheck, runFullDiagnostic, checkSystemHealth]);
 
   const handleSyncRoles = async () => {
     try {
@@ -126,6 +142,25 @@ export const RoleSyncPanel = () => {
           </CardTitle>
         </CardHeader>
         <CardContent>
+          {/* Status de Saúde do Sistema */}
+          {systemHealthy !== null && (
+            <div className="mb-4 p-3 rounded-lg border">
+              <div className="flex items-center gap-2">
+                {systemHealthy ? (
+                  <>
+                    <CheckCircle className="h-5 w-5 text-green-600" />
+                    <span className="text-green-800 font-medium">Sistema Operacional</span>
+                  </>
+                ) : (
+                  <>
+                    <AlertTriangle className="h-5 w-5 text-orange-600" />
+                    <span className="text-orange-800 font-medium">Sistema Instável - Operações limitadas</span>
+                  </>
+                )}
+              </div>
+            </div>
+          )}
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {/* Total de Usuários */}
             <div className="text-center p-4 border rounded-lg">
