@@ -64,7 +64,8 @@ export const ClassificacaoAulasModal: React.FC<ClassificacaoAulasModalProps> = (
     approveAll,
     rejectAll,
     applyClassifications,
-    testConfiguration
+    testConfiguration,
+    debugSingleLesson
   } = useClassifyLessons();
 
   const handleAnalyze = () => {
@@ -117,6 +118,16 @@ export const ClassificacaoAulasModal: React.FC<ClassificacaoAulasModalProps> = (
               >
                 🧪 Testar Config
               </Button>
+              {lessonIds && lessonIds.length === 1 && (
+                <Button
+                  onClick={() => debugSingleLesson(lessonIds[0])}
+                  variant="outline"
+                  size="sm"
+                  className="gap-2"
+                >
+                  🐛 Debug
+                </Button>
+              )}
               <Button
                 onClick={handleAnalyze}
                 disabled={isAnalyzing}

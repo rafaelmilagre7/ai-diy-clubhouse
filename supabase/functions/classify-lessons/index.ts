@@ -26,14 +26,16 @@ serve(async (req) => {
   }
 
   const startTime = Date.now();
-  console.log('🚀 Classify Lessons function started');
+  console.log('🚀 Classify Lessons function started at', new Date().toISOString());
+  console.log('📊 Memory usage:', Deno.memoryUsage());
 
   try {
     const requestBody = await req.json();
     console.log('📥 Request received:', { 
       mode: requestBody.mode, 
       lessonsCount: requestBody.lessons?.length || 0,
-      hasClassifications: !!requestBody.classifications
+      hasClassifications: !!requestBody.classifications,
+      requestSize: JSON.stringify(requestBody).length + ' bytes'
     });
 
     const { lessons, mode = 'analyze' } = requestBody;
@@ -46,13 +48,41 @@ serve(async (req) => {
       const supabaseUrl = Deno.env.get('SUPABASE_URL');
       const supabaseKey = Deno.env.get('SUPABASE_ANON_KEY');
       
+      // Teste mais detalhado da OpenAI
+      let openaiTest = { configured: !!openAIApiKey, working: false, error: null };
+      if (openAIApiKey) {
+        try {
+          console.log('🔑 Testando conexão com OpenAI...');
+          const testResponse = await fetch('https://api.openai.com/v1/models', {
+            headers: {
+              'Authorization': `Bearer ${openAIApiKey}`
+            }
+          });
+          
+          openaiTest.working = testResponse.ok;
+          if (!testResponse.ok) {
+            const errorText = await testResponse.text();
+            openaiTest.error = `${testResponse.status}: ${errorText}`;
+            console.error('❌ Erro na conexão OpenAI:', openaiTest.error);
+          } else {
+            console.log('✅ OpenAI conectada com sucesso');
+          }
+        } catch (error) {
+          openaiTest.error = error.message;
+          console.error('❌ Erro ao testar OpenAI:', error);
+        }
+      }
+      
       const testResults = {
         openai_configured: !!openAIApiKey,
+        openai_working: openaiTest.working,
+        openai_error: openaiTest.error,
         supabase_configured: !!(supabaseUrl && supabaseKey),
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        function_version: '2.0.0'
       };
       
-      console.log('🔍 Resultados do teste:', testResults);
+      console.log('🔍 Resultados do teste completo:', testResults);
       
       return new Response(JSON.stringify({ 
         success: true, 
@@ -61,6 +91,39 @@ serve(async (req) => {
       }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
+    }
+
+    // Modo debug para análise granular
+    if (mode === 'debug') {
+      console.log('🐛 Modo debug ativado - processando apenas 1 aula');
+      
+      if (!lessons || lessons.length === 0) {
+        throw new Error('Nenhuma aula fornecida para debug');
+      }
+      
+      const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
+      if (!openAIApiKey) {
+        throw new Error('OpenAI API key não configurada');
+      }
+      
+      const lesson = lessons[0];
+      console.log('📖 Debug da aula:', { id: lesson.id, title: lesson.title?.substring(0, 50) });
+      
+      try {
+        const debugAnalysis = await analyzeLesson(lesson, openAIApiKey);
+        console.log('✅ Análise debug concluída:', debugAnalysis);
+        
+        return new Response(JSON.stringify({ 
+          success: true, 
+          debug_analysis: debugAnalysis,
+          message: 'Debug concluído com sucesso'
+        }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      } catch (debugError) {
+        console.error('❌ Erro no debug:', debugError);
+        throw new Error(`Debug falhou: ${debugError.message}`);
+      }
     }
     
     // Verificar configuração da OpenAI
@@ -167,48 +230,104 @@ serve(async (req) => {
     
     console.log(`📚 Processando ${lessonsToProcess.length} aulas válidas de ${lessons.length} recebidas`);
 
-    // Analisar aulas
+    // Analisar aulas com logging detalhado
     const analyses: LessonAnalysis[] = [];
+    let successCount = 0;
+    let fallbackCount = 0;
+    let errorCount = 0;
+
+    console.log(`🔄 Iniciando análise de ${lessonsToProcess.length} aulas...`);
 
     for (let i = 0; i < lessonsToProcess.length; i++) {
       const lesson = lessonsToProcess[i];
-      console.log(`🔍 Analisando aula ${i + 1}/${lessonsToProcess.length}: ${lesson.title.substring(0, 50)}...`);
+      const lessonStart = Date.now();
+      
+      console.log(`🔍 [${i + 1}/${lessonsToProcess.length}] Analisando: "${lesson.title?.substring(0, 50)}..."`);
+      console.log(`📋 Dados da aula:`, {
+        id: lesson.id,
+        hasTitle: !!lesson.title,
+        titleLength: lesson.title?.length || 0,
+        hasDescription: !!lesson.description,
+        descriptionLength: lesson.description?.length || 0,
+        difficulty: lesson.difficulty_level
+      });
       
       // Validar dados da aula
       if (!lesson.title || lesson.title.trim().length === 0) {
         console.warn('⚠️ Aula sem título válido, usando fallback');
         analyses.push(createFallbackAnalysis(lesson.id, 'Aula sem título'));
+        fallbackCount++;
         continue;
       }
+
       try {
+        console.log(`🚀 Enviando para análise IA...`);
         const analysis = await analyzeLesson(lesson, openAIApiKey);
         analyses.push(analysis);
-        console.log(`✅ Aula analisada com sucesso: ${lesson.title.substring(0, 30)}... (confidence: ${analysis.confidence})`);
+        successCount++;
+        
+        const lessonTime = Date.now() - lessonStart;
+        console.log(`✅ [${i + 1}/${lessonsToProcess.length}] Sucesso em ${lessonTime}ms:`, {
+          confidence: analysis.confidence,
+          tagsCount: Object.values(analysis.suggestedTags).flat().length,
+          reasoning: analysis.reasoning?.substring(0, 50) + '...'
+        });
+        
       } catch (error) {
-        console.error(`❌ Erro ao analisar aula ${lesson.id}:`, error);
+        errorCount++;
+        const lessonTime = Date.now() - lessonStart;
+        
+        console.error(`❌ [${i + 1}/${lessonsToProcess.length}] Erro após ${lessonTime}ms:`, {
+          error: error.message,
+          type: error.constructor.name,
+          lessonId: lesson.id
+        });
+        
         // Usar análise fallback em caso de erro
         const fallbackAnalysis = createFallbackAnalysis(lesson.id, lesson.title);
         analyses.push(fallbackAnalysis);
-        console.log(`🔄 Usando análise fallback para aula: ${lesson.title.substring(0, 30)}...`);
+        fallbackCount++;
+        
+        console.log(`🔄 Aplicado fallback para: ${lesson.title.substring(0, 30)}...`);
+      }
+      
+      // Pequena pausa entre análises para evitar rate limit
+      if (i < lessonsToProcess.length - 1) {
+        await new Promise(resolve => setTimeout(resolve, 500));
       }
     }
 
     const endTime = Date.now();
     const totalTime = endTime - startTime;
-    const avgTimePerLesson = Math.round(totalTime / analyses.length);
+    const avgTimePerLesson = analyses.length > 0 ? Math.round(totalTime / analyses.length) : 0;
+    const avgConfidence = analyses.length > 0 ? analyses.reduce((sum, a) => sum + a.confidence, 0) / analyses.length : 0;
     
-    console.log(`✅ Análise concluída com sucesso!`);
-    console.log(`📊 Estatísticas: ${analyses.length} aulas processadas em ${totalTime}ms (média: ${avgTimePerLesson}ms por aula)`);
-    console.log(`🎯 Confiança média: ${(analyses.reduce((sum, a) => sum + a.confidence, 0) / analyses.length).toFixed(2)}`);
+    console.log(`✅ Análise concluída!`);
+    console.log(`📊 Estatísticas finais:`, {
+      totalProcessed: analyses.length,
+      successCount,
+      fallbackCount,
+      errorCount,
+      totalTimeMs: totalTime,
+      avgTimePerLessonMs: avgTimePerLesson,
+      avgConfidence: avgConfidence.toFixed(2),
+      memoryUsage: Deno.memoryUsage()
+    });
+
+    const stats = {
+      processedCount: analyses.length,
+      successCount,
+      fallbackCount,
+      errorCount,
+      totalTimeMs: totalTime,
+      avgTimePerLessonMs: avgTimePerLesson,
+      avgConfidence: avgConfidence,
+      timestamp: new Date().toISOString()
+    };
 
     return new Response(JSON.stringify({ 
       analyses,
-      stats: {
-        processedCount: analyses.length,
-        totalTimeMs: totalTime,
-        avgTimePerLessonMs: avgTimePerLesson,
-        avgConfidence: analyses.reduce((sum, a) => sum + a.confidence, 0) / analyses.length
-      }
+      stats
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     });
@@ -217,16 +336,47 @@ serve(async (req) => {
     const endTime = Date.now();
     const totalTime = endTime - startTime;
     
-    console.error('❌ Erro na classificação de aulas:', {
+    // Log detalhado do erro
+    console.error('❌ ERRO CRÍTICO na classificação de aulas:', {
       error: error.message,
+      errorType: error.constructor.name,
       stack: error.stack,
-      totalTime: totalTime + 'ms'
+      totalTime: totalTime + 'ms',
+      memoryUsage: Deno.memoryUsage(),
+      timestamp: new Date().toISOString()
     });
     
+    // Categorizar tipo de erro
+    let errorCategory = 'unknown';
+    let userMessage = error.message;
+    
+    if (error.message?.includes('OpenAI API key')) {
+      errorCategory = 'openai_auth';
+      userMessage = 'Erro de autenticação OpenAI - verifique a configuração da API key';
+    } else if (error.message?.includes('rate limit') || error.message?.includes('429')) {
+      errorCategory = 'rate_limit';
+      userMessage = 'Limite de requisições atingido - tente novamente em alguns minutos';
+    } else if (error.message?.includes('timeout') || error.message?.includes('AbortError')) {
+      errorCategory = 'timeout';
+      userMessage = 'Timeout na análise - tente processar menos aulas por vez';
+    } else if (error.message?.includes('Supabase')) {
+      errorCategory = 'supabase';
+      userMessage = 'Erro na conexão com banco de dados';
+    } else if (error.message?.includes('JSON')) {
+      errorCategory = 'parsing';
+      userMessage = 'Erro ao processar resposta da IA';
+    }
+    
     return new Response(JSON.stringify({ 
-      error: error.message,
-      details: error.stack || 'Stack trace não disponível',
-      processingTimeMs: totalTime
+      success: false,
+      error: userMessage,
+      errorCategory,
+      details: {
+        originalError: error.message,
+        stack: error.stack || 'Stack trace não disponível',
+        processingTimeMs: totalTime,
+        timestamp: new Date().toISOString()
+      }
     }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -285,8 +435,8 @@ function getTagColor(tagName: string): string {
   return colors[tagName] || '#6b7280';
 }
 
-// Função para analisar uma aula individual com retry automático
-async function analyzeLesson(lesson: any, openAIApiKey: string, maxRetries = 2): Promise<LessonAnalysis> {
+// Função para analisar uma aula individual com retry automático e timeout
+async function analyzeLesson(lesson: any, openAIApiKey: string, maxRetries = 3): Promise<LessonAnalysis> {
   const prompt = `
 Analise o seguinte conteúdo de aula e sugira tags apropriadas:
 
@@ -317,8 +467,14 @@ Responda APENAS com um JSON válido no seguinte formato:
       console.log(`🔄 Tentativa ${attempt}/${maxRetries} para análise da aula ${lesson.id}`);
       
       const requestStart = Date.now();
+      
+      // Timeout específico para cada chamada
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 segundos por chamada
+      
       const response = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
+        signal: controller.signal,
         headers: {
           'Authorization': `Bearer ${openAIApiKey}`,
           'Content-Type': 'application/json',
@@ -332,11 +488,12 @@ Responda APENAS com um JSON válido no seguinte formato:
             },
             { role: 'user', content: prompt }
           ],
-          temperature: 0.3,
-          max_tokens: 500,
+          temperature: 0.1,
+          max_tokens: 300,
         }),
       });
 
+      clearTimeout(timeoutId);
       const requestTime = Date.now() - requestStart;
       console.log(`⏱️ Tempo de resposta OpenAI: ${requestTime}ms`);
 

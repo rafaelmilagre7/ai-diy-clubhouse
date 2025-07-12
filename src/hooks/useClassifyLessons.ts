@@ -241,10 +241,20 @@ export const useClassifyLessons = () => {
       console.log('✅ Resultado do teste:', data);
       
       if (data?.test_results) {
-        const { openai_configured, supabase_configured } = data.test_results;
+        const { 
+          openai_configured, 
+          openai_working, 
+          openai_error,
+          supabase_configured 
+        } = data.test_results;
         
         if (!openai_configured) {
           toast.error('❌ Chave OpenAI não configurada');
+          return false;
+        }
+        
+        if (!openai_working) {
+          toast.error(`❌ OpenAI não funcionando: ${openai_error || 'Erro desconhecido'}`);
           return false;
         }
         
@@ -265,6 +275,42 @@ export const useClassifyLessons = () => {
     }
   };
 
+  const debugSingleLesson = async (lessonId: string) => {
+    try {
+      console.log('🐛 Iniciando debug de aula única...');
+      
+      // Buscar dados da aula
+      const { data: lesson, error } = await supabase
+        .from('learning_lessons')
+        .select('id, title, description, difficulty_level')
+        .eq('id', lessonId)
+        .single();
+
+      if (error) throw error;
+
+      const { data, error: debugError } = await supabase.functions.invoke('classify-lessons', {
+        body: { 
+          mode: 'debug',
+          lessons: [lesson]
+        }
+      });
+
+      if (debugError) {
+        console.error('❌ Erro no debug:', debugError);
+        toast.error(`Erro no debug: ${debugError.message}`);
+        return false;
+      }
+
+      console.log('✅ Debug concluído:', data);
+      toast.success('✅ Debug concluído - verifique o console para detalhes');
+      return true;
+    } catch (error) {
+      console.error('❌ Erro no debug:', error);
+      toast.error('Erro no debug da aula');
+      return false;
+    }
+  };
+
   return {
     isAnalyzing,
     isApplying,
@@ -275,6 +321,7 @@ export const useClassifyLessons = () => {
     approveAll,
     rejectAll,
     applyClassifications,
-    testConfiguration
+    testConfiguration,
+    debugSingleLesson
   };
 };
