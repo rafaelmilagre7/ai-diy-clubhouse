@@ -2,10 +2,11 @@ import { useState } from 'react';
 import { NetworkingHeader } from '@/components/networking/NetworkingHeader';
 import { NetworkingDashboard } from '@/components/networking/NetworkingDashboard';
 import { ConnectionNotifications } from '@/components/networking/ConnectionNotifications';
+import { NetworkingPreferences } from '@/components/networking/NetworkingPreferences';
 import { useDynamicSEO } from '@/hooks/seo/useDynamicSEO';
 
 const Networking = () => {
-  const [activeTab, setActiveTab] = useState<'matches' | 'connections' | 'notifications'>('matches');
+  const [activeTab, setActiveTab] = useState<'matches' | 'connections' | 'notifications' | 'preferences'>('matches');
 
   useDynamicSEO({
     title: 'Networking AI - Networking Inteligente',
@@ -21,6 +22,8 @@ const Networking = () => {
       />
       {activeTab === 'notifications' ? (
         <ConnectionNotifications />
+      ) : activeTab === 'preferences' ? (
+        <NetworkingPreferences />
       ) : (
         <NetworkingDashboard activeTab={activeTab} />
       )}

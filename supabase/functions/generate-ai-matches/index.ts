@@ -27,7 +27,7 @@ serve(async (req) => {
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Verificar se o usuário existe
+    // Verificar se o usuário existe e buscar suas preferências
     const { data: userProfile, error: userError } = await supabase
       .from('profiles')
       .select('*')
@@ -39,7 +39,15 @@ serve(async (req) => {
       throw new Error(`Usuário não encontrado: ${userError.message}`);
     }
 
+    // Buscar preferências de networking do usuário
+    const { data: userPreferences } = await supabase
+      .from('networking_preferences')
+      .select('*')
+      .eq('user_id', user_id)
+      .single();
+
     console.log('Perfil do usuário encontrado:', userProfile.name);
+    console.log('Preferências do usuário:', userPreferences);
 
     const currentDate = new Date();
     const monthYear = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}`;
@@ -62,8 +70,15 @@ serve(async (req) => {
       });
     }
 
-    // Buscar outros usuários para criar matches simulados (excluindo conexões já existentes)
-    const { data: potentialMatches, error: matchesError } = await supabase
+    // Configurar filtros baseados nas preferências do usuário
+    const maxMatches = userPreferences?.preferred_connections_per_week || 5;
+    const minCompatibility = userPreferences?.min_compatibility || 0.7;
+    const preferredTypes = userPreferences?.looking_for?.types || ['customer', 'supplier', 'partner'];
+    const preferredIndustries = userPreferences?.looking_for?.industries || [];
+    const excludedSectors = userPreferences?.exclude_sectors || [];
+
+    // Construir query para buscar potenciais matches com base nas preferências
+    let query = supabase
       .from('profiles')
       .select('id, name, company_name, current_position, industry, role')
       .neq('id', user_id)
@@ -75,7 +90,19 @@ serve(async (req) => {
         FROM member_connections 
         WHERE (requester_id = '${user_id}' OR recipient_id = '${user_id}')
       )`)
-      .limit(5);
+      .limit(maxMatches);
+
+    // Aplicar filtros de indústria se especificados
+    if (preferredIndustries.length > 0) {
+      query = query.in('industry', preferredIndustries);
+    }
+
+    // Aplicar filtros de exclusão de setores
+    if (excludedSectors.length > 0) {
+      query = query.not('industry', 'in', `(${excludedSectors.map(s => `'${s}'`).join(',')})`);
+    }
+
+    const { data: potentialMatches, error: matchesError } = await query;
 
     if (matchesError) {
       console.error('Erro ao buscar potenciais matches:', matchesError);
@@ -93,12 +120,26 @@ serve(async (req) => {
     }
 
     let matchesGenerated = 0;
-    const matchTypes = ['customer', 'supplier', 'partner', 'mentor'];
 
     // Gerar matches para cada usuário encontrado
     for (const match of potentialMatches) {
-      const compatibilityScore = Math.floor(Math.random() * 30) + 70; // 70-100%
-      const matchType = matchTypes[Math.floor(Math.random() * matchTypes.length)];
+      // Calcular compatibilidade baseada nas preferências do usuário
+      let baseCompatibility = Math.floor(Math.random() * 30) + 70; // 70-100%
+      
+      // Ajustar compatibilidade baseado em preferências
+      if (preferredIndustries.length > 0 && preferredIndustries.includes(match.industry)) {
+        baseCompatibility = Math.min(100, baseCompatibility + 10); // Boost por indústria preferida
+      }
+      
+      // Verificar se atende ao mínimo de compatibilidade
+      const finalCompatibility = baseCompatibility / 100;
+      if (finalCompatibility < minCompatibility) {
+        console.log(`Match com ${match.name} rejeitado por baixa compatibilidade: ${Math.round(finalCompatibility * 100)}%`);
+        continue;
+      }
+      
+      // Selecionar tipo de match baseado nas preferências
+      const matchType = preferredTypes[Math.floor(Math.random() * preferredTypes.length)];
       
       // Personalizar análise baseada no tipo de match
       const getAnalysisByType = (type: string) => {
@@ -169,7 +210,7 @@ serve(async (req) => {
       };
 
       const aiAnalysis = getAnalysisByType(matchType);
-      const matchReason = `Match baseado em análise de perfil: ${matchType === 'customer' ? 'potencial cliente' : matchType === 'supplier' ? 'fornecedor especializado' : matchType === 'partner' ? 'parceria estratégica' : 'mentorship'} com alta compatibilidade de ${compatibilityScore}%.`;
+      const matchReason = `Match personalizado baseado em suas preferências: ${matchType === 'customer' ? 'potencial cliente' : matchType === 'supplier' ? 'fornecedor especializado' : matchType === 'partner' ? 'parceria estratégica' : 'mentorship'} com ${Math.round(finalCompatibility * 100)}% de compatibilidade${preferredIndustries.includes(match.industry) ? ' e setor preferido' : ''}.`;
 
       // Verificar se já existe match entre estes usuários
       const { data: existingMatch } = await supabase
@@ -191,7 +232,7 @@ serve(async (req) => {
           user_id: user_id,
           matched_user_id: match.id,
           match_type: matchType,
-          compatibility_score: compatibilityScore,
+          compatibility_score: Math.round(finalCompatibility * 100),
           match_reason: matchReason,
           ai_analysis: aiAnalysis,
           month_year: monthYear,
@@ -204,12 +245,12 @@ serve(async (req) => {
           user_id,
           matched_user_id: match.id,
           match_type: matchType,
-          compatibility_score: compatibilityScore,
+          compatibility_score: Math.round(finalCompatibility * 100),
           month_year: monthYear
         });
       } else {
         matchesGenerated++;
-        console.log(`Match ${matchType} criado com ${match.name} (${compatibilityScore}% compatibilidade)`);
+        console.log(`Match ${matchType} criado com ${match.name} (${Math.round(finalCompatibility * 100)}% compatibilidade)`);
       }
     }
 

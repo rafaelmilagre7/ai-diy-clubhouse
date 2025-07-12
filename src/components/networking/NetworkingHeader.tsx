@@ -1,12 +1,12 @@
-import { Brain, Users, Bell } from 'lucide-react';
+import { Brain, Users, Bell, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { motion } from 'framer-motion';
 import { useNetworkingStats } from '@/hooks/useNetworkingStats';
 
 interface NetworkingHeaderProps {
-  activeTab: 'matches' | 'connections' | 'notifications';
-  onTabChange: (tab: 'matches' | 'connections' | 'notifications') => void;
+  activeTab: 'matches' | 'connections' | 'notifications' | 'preferences';
+  onTabChange: (tab: 'matches' | 'connections' | 'notifications' | 'preferences') => void;
 }
 
 export const NetworkingHeader = ({
@@ -19,6 +19,7 @@ export const NetworkingHeader = ({
     { id: 'matches', label: 'Matches IA', icon: Brain, count: stats?.matches || 0 },
     { id: 'connections', label: 'Conexões', icon: Users, count: stats?.connections || 0 },
     { id: 'notifications', label: 'Notificações', icon: Bell, count: stats?.notifications || 0 },
+    { id: 'preferences', label: 'Configurações', icon: Settings, count: null },
   ];
 
   return (
@@ -63,18 +64,20 @@ export const NetworkingHeader = ({
               >
                 <Icon className="h-4 w-4" />
                 {tab.label}
-                <Badge 
-                  variant="secondary" 
-                  className={`
-                    ml-1 text-xs
-                    ${isActive 
-                      ? 'bg-white/20 text-white' 
-                      : 'bg-backgroundLight text-textSecondary'
-                    }
-                  `}
-                >
-                  {tab.count}
-                </Badge>
+                {tab.count !== null && (
+                  <Badge 
+                    variant="secondary" 
+                    className={`
+                      ml-1 text-xs
+                      ${isActive 
+                        ? 'bg-white/20 text-white' 
+                        : 'bg-backgroundLight text-textSecondary'
+                      }
+                    `}
+                  >
+                    {tab.count}
+                  </Badge>
+                )}
               </Button>
             </motion.div>
           );
