@@ -38,10 +38,11 @@ serve(async (req) => {
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const anthropicKey = Deno.env.get('ANTHROPIC_API_KEY');
     const openaiKey = Deno.env.get('OPENAI_API_KEY');
 
-    if (!openaiKey) {
-      throw new Error('OPENAI_API_KEY não configurada');
+    if (!anthropicKey && !openaiKey) {
+      throw new Error('Nenhuma chave de IA configurada (ANTHROPIC_API_KEY ou OPENAI_API_KEY)');
     }
 
     const supabase = createClient(supabaseUrl, supabaseKey);
@@ -96,7 +97,7 @@ serve(async (req) => {
     // Analisar cada potencial match com IA
     for (const match of potentialMatches || []) {
       try {
-        const analysis = await analyzeMatchWithAI(currentUser, match, openaiKey);
+        const analysis = await analyzeMatchWithAI(currentUser, match, anthropicKey || openaiKey, anthropicKey ? 'anthropic' : 'openai');
         
         if (analysis.compatibility_score >= 60) {
           // Inserir match na base de dados
@@ -151,7 +152,7 @@ serve(async (req) => {
   }
 });
 
-async function analyzeMatchWithAI(currentUser: any, potentialMatch: any, openaiKey: string): Promise<MatchAnalysis> {
+async function analyzeMatchWithAI(currentUser: any, potentialMatch: any, apiKey: string, provider: 'anthropic' | 'openai'): Promise<MatchAnalysis> {
   const prompt = `
 Você é um especialista em networking empresarial e matching de negócios. Analise a compatibilidade entre estes dois perfis:
 
@@ -188,42 +189,79 @@ Considere:
 - Compatibilidade de níveis profissionais
 `;
 
-  const response = await fetch('https://api.openai.com/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${openaiKey}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      model: 'gpt-4o-mini',
-      messages: [
-        {
-          role: 'system',
-          content: 'Você é um especialista em networking empresarial. Responda sempre com JSON válido.'
-        },
-        {
-          role: 'user',
-          content: prompt
-        }
-      ],
-      temperature: 0.7,
-      max_tokens: 800
-    }),
-  });
+  if (provider === 'anthropic') {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'claude-3-5-haiku-20241022',
+        max_tokens: 800,
+        messages: [
+          {
+            role: 'user',
+            content: prompt
+          }
+        ]
+      }),
+    });
 
-  if (!response.ok) {
-    throw new Error(`Erro na API OpenAI: ${response.status}`);
-  }
+    if (!response.ok) {
+      throw new Error(`Erro na API Anthropic: ${response.status}`);
+    }
 
-  const data = await response.json();
-  const content = data.choices[0].message.content;
-  
-  try {
-    const analysis = JSON.parse(content);
-    return analysis;
-  } catch (parseError) {
-    console.error('Erro ao fazer parse da resposta da IA:', content);
-    throw new Error('Resposta inválida da IA');
+    const data = await response.json();
+    const content = data.content[0].text;
+    
+    try {
+      const analysis = JSON.parse(content);
+      return analysis;
+    } catch (parseError) {
+      console.error('Erro ao fazer parse da resposta da IA:', content);
+      throw new Error('Resposta inválida da IA');
+    }
+  } else {
+    // OpenAI
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'gpt-4o-mini',
+        messages: [
+          {
+            role: 'system',
+            content: 'Você é um especialista em networking empresarial. Responda sempre com JSON válido.'
+          },
+          {
+            role: 'user',
+            content: prompt
+          }
+        ],
+        temperature: 0.7,
+        max_tokens: 800
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Erro na API OpenAI: ${response.status}`);
+    }
+
+    const data = await response.json();
+    const content = data.choices[0].message.content;
+    
+    try {
+      const analysis = JSON.parse(content);
+      return analysis;
+    } catch (parseError) {
+      console.error('Erro ao fazer parse da resposta da IA:', content);
+      throw new Error('Resposta inválida da IA');
+    }
   }
 }
 
