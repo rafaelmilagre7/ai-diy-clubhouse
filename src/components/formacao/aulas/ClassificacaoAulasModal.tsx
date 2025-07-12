@@ -63,7 +63,8 @@ export const ClassificacaoAulasModal: React.FC<ClassificacaoAulasModalProps> = (
     toggleApproval,
     approveAll,
     rejectAll,
-    applyClassifications
+    applyClassifications,
+    testConfiguration
   } = useClassifyLessons();
 
   const handleAnalyze = () => {
@@ -108,6 +109,14 @@ export const ClassificacaoAulasModal: React.FC<ClassificacaoAulasModalProps> = (
           {/* Controles principais */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
+              <Button
+                onClick={testConfiguration}
+                variant="outline"
+                size="sm"
+                className="gap-2"
+              >
+                🧪 Testar Config
+              </Button>
               <Button
                 onClick={handleAnalyze}
                 disabled={isAnalyzing}

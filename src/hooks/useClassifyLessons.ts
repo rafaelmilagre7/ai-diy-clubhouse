@@ -68,15 +68,17 @@ export const useClassifyLessons = () => {
       setProgress({ current: 0, total: lessonsToProcess.length });
 
       // Processar em batches menores para evitar timeout
-      const batchSize = 5;
+      const batchSize = 3; // Reduzido para 3 aulas por batch
       const allClassifications: ClassificationWithApproval[] = [];
 
       for (let i = 0; i < lessonsToProcess.length; i += batchSize) {
         const batch = lessonsToProcess.slice(i, i + batchSize);
         
-        // Timeout controller
+        console.log(`📊 Processando batch ${Math.floor(i / batchSize) + 1}/${Math.ceil(lessonsToProcess.length / batchSize)} com ${batch.length} aulas`);
+        
+        // Timeout controller com tempo aumentado
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 45000); // 45 segundos
+        const timeoutId = setTimeout(() => controller.abort(), 90000); // 90 segundos
 
         try {
           const { data: analysisData, error: analysisError } = await supabase.functions.invoke(
@@ -101,12 +103,32 @@ export const useClassifyLessons = () => {
 
           if (analysisError) {
             console.error('Erro na análise do batch:', analysisError);
-            toast.error(`Erro na análise: ${analysisError.message || 'Erro desconhecido'}`);
+            
+            // Mostrar erro mais específico baseado no tipo
+            let errorMessage = 'Erro desconhecido';
+            if (analysisError.message?.includes('OpenAI API key')) {
+              errorMessage = 'Erro na configuração da chave OpenAI';
+            } else if (analysisError.message?.includes('timeout')) {
+              errorMessage = 'Timeout na análise - batch muito grande';
+            } else if (analysisError.message?.includes('rate limit')) {
+              errorMessage = 'Limite de taxa da OpenAI atingido';
+            } else if (analysisError.message) {
+              errorMessage = analysisError.message;
+            }
+            
+            toast.error(`Erro na análise: ${errorMessage}`);
             // Continuar com próximo batch mesmo se um falhar
             continue;
           }
 
           if (analysisData?.analyses) {
+            console.log(`✅ Batch processado com sucesso: ${analysisData.analyses.length} aulas analisadas`);
+            
+            // Log das estatísticas se disponível
+            if (analysisData.stats) {
+              console.log(`📊 Estatísticas do batch:`, analysisData.stats);
+            }
+            
             // Combinar resultados com dados das aulas
             const batchClassifications: ClassificationWithApproval[] = analysisData.analyses.map(
               (analysis: LessonAnalysis) => {
@@ -120,6 +142,8 @@ export const useClassifyLessons = () => {
             );
 
             allClassifications.push(...batchClassifications);
+          } else {
+            console.warn('⚠️ Resposta vazia do batch - nenhuma análise retornada');
           }
 
           setProgress({ current: Math.min(i + batchSize, lessonsToProcess.length), total: lessonsToProcess.length });
@@ -200,6 +224,47 @@ export const useClassifyLessons = () => {
     }
   };
 
+  const testConfiguration = async () => {
+    try {
+      console.log('🧪 Testando configuração...');
+      
+      const { data, error } = await supabase.functions.invoke('classify-lessons', {
+        body: { mode: 'test' }
+      });
+
+      if (error) {
+        console.error('❌ Erro no teste:', error);
+        toast.error(`Erro no teste de configuração: ${error.message}`);
+        return false;
+      }
+
+      console.log('✅ Resultado do teste:', data);
+      
+      if (data?.test_results) {
+        const { openai_configured, supabase_configured } = data.test_results;
+        
+        if (!openai_configured) {
+          toast.error('❌ Chave OpenAI não configurada');
+          return false;
+        }
+        
+        if (!supabase_configured) {
+          toast.error('❌ Configuração Supabase incompleta');
+          return false;
+        }
+        
+        toast.success('✅ Configuração OK - Sistema pronto para análise');
+        return true;
+      }
+      
+      return false;
+    } catch (error) {
+      console.error('❌ Erro no teste de configuração:', error);
+      toast.error('Erro ao testar configuração');
+      return false;
+    }
+  };
+
   return {
     isAnalyzing,
     isApplying,
@@ -209,6 +274,7 @@ export const useClassifyLessons = () => {
     toggleApproval,
     approveAll,
     rejectAll,
-    applyClassifications
+    applyClassifications,
+    testConfiguration
   };
 };
