@@ -2419,6 +2419,48 @@ export type Database = {
         }
         Relationships: []
       }
+      network_matches: {
+        Row: {
+          ai_analysis: Json | null
+          compatibility_score: number | null
+          created_at: string
+          id: string
+          match_reason: string | null
+          match_type: string
+          matched_user_id: string
+          month_year: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          ai_analysis?: Json | null
+          compatibility_score?: number | null
+          created_at?: string
+          id?: string
+          match_reason?: string | null
+          match_type: string
+          matched_user_id: string
+          month_year: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          ai_analysis?: Json | null
+          compatibility_score?: number | null
+          created_at?: string
+          id?: string
+          match_reason?: string | null
+          match_type?: string
+          matched_user_id?: string
+          month_year?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       networking_preferences: {
         Row: {
           created_at: string
@@ -3216,6 +3258,56 @@ export type Database = {
             columns: ["referrer_id"]
             isOneToOne: false
             referencedRelation: "users_with_roles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      referrals: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          email: string
+          expires_at: string
+          id: string
+          referrer_id: string
+          role_id: string | null
+          status: string
+          token: string
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          email: string
+          expires_at?: string
+          id?: string
+          referrer_id: string
+          role_id?: string | null
+          status?: string
+          token: string
+          type?: string
+          updated_at?: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          email?: string
+          expires_at?: string
+          id?: string
+          referrer_id?: string
+          role_id?: string | null
+          status?: string
+          token?: string
+          type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "referrals_role_id_fkey"
+            columns: ["role_id"]
+            isOneToOne: false
+            referencedRelation: "user_roles"
             referencedColumns: ["id"]
           },
         ]
