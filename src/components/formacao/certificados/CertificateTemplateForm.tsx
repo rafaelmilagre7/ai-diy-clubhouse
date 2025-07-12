@@ -141,8 +141,7 @@ export const CertificateTemplateForm = ({
                 .replace(/\{\{nome\}\}/g, "Nome do Aluno")
                 .replace(/\{\{curso\}\}/g, "Nome do Curso")
                 .replace(/\{\{data\}\}/g, new Date().toLocaleDateString("pt-BR"))
-                .replace(/\{\{codigo\}\}/g, "ABC-123-XYZ")
-              )}
+                .replace(/\{\{codigo\}\}/g, "ABC-123-XYZ"))}
             />
           </div>
         </TabsContent>

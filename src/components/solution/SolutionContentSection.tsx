@@ -20,7 +20,7 @@ export const SolutionContentSection = ({ solution }: SolutionContentSectionProps
         {solution.overview ? (
           <div 
             className="text-neutral-200 prose-headings:text-neutral-100 prose-p:text-neutral-200 prose-strong:text-neutral-100 prose-em:text-neutral-200 prose-li:text-neutral-200" 
-            dangerouslySetInnerHTML={createSafeHTML(renderContent(solution.overview).__html)} 
+            dangerouslySetInnerHTML={createSafeHTML(solution.overview || '')} 
           />
         ) : (
           <p className="text-neutral-200">{solution.description}</p>

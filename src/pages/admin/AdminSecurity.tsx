@@ -2,6 +2,7 @@
 import React from 'react';
 import { SecurityViolationsMonitor } from '@/components/admin/security/SecurityViolationsMonitor';
 import { SecurityDashboard } from '@/components/security/SecurityDashboard';
+import { SecurityAlertsWidget } from '@/components/security/SecurityAlertsWidget';
 
 const AdminSecurity: React.FC = () => {
   return (
@@ -14,8 +15,13 @@ const AdminSecurity: React.FC = () => {
       </div>
       
       <div className="space-y-8">
-        <SecurityViolationsMonitor />
+        {/* Widget de Alertas de Segurança */}
+        <SecurityAlertsWidget />
+        
+        {/* Dashboard Principal */}
         <SecurityDashboard />
+        
+        <SecurityViolationsMonitor />
       </div>
     </div>
   );
