@@ -24,19 +24,39 @@ export const useLMSAnalytics = (dateRange?: { from: Date; to: Date }) => {
           throw npsError;
         }
 
-        // Buscar aulas para fazer o mapeamento manualmente
+        // Buscar aulas separadamente
         const lessonIds = [...new Set(npsData?.map(r => r.lesson_id) || [])];
-        const { data: lessonsData } = await supabase
+        
+        const { data: lessonsData, error: lessonsError } = await supabase
           .from('learning_lessons')
-          .select(`
-            id,
-            title,
-            learning_modules!inner(
-              title,
-              learning_courses!inner(title)
-            )
-          `)
+          .select('id, title, module_id')
           .in('id', lessonIds);
+
+        if (lessonsError) {
+          console.error('Erro ao buscar aulas:', lessonsError);
+        }
+
+        // Buscar módulos separadamente
+        const moduleIds = [...new Set(lessonsData?.map(l => l.module_id) || [])];
+        const { data: modulesData, error: modulesError } = await supabase
+          .from('learning_modules')
+          .select('id, title, course_id')
+          .in('id', moduleIds);
+
+        if (modulesError) {
+          console.error('Erro ao buscar módulos:', modulesError);
+        }
+
+        // Buscar cursos separadamente
+        const courseIds = [...new Set(modulesData?.map(m => m.course_id) || [])];
+        const { data: coursesData, error: coursesError } = await supabase
+          .from('learning_courses')
+          .select('id, title')
+          .in('id', courseIds);
+
+        if (coursesError) {
+          console.error('Erro ao buscar cursos:', coursesError);
+        }
 
         // Buscar perfis dos usuários
         const userIds = [...new Set(npsData?.map(r => r.user_id) || [])];
@@ -87,12 +107,14 @@ export const useLMSAnalytics = (dateRange?: { from: Date; to: Date }) => {
         const lessonScores = responses.reduce((acc, response: any) => {
           const lessonId = response.lesson_id;
           const lesson = lessonsData?.find(l => l.id === lessonId);
+          const module = modulesData?.find(m => m.id === lesson?.module_id);
+          const course = coursesData?.find(c => c.id === module?.course_id);
           
           if (!acc[lessonId]) {
             acc[lessonId] = {
               lessonId,
               lessonTitle: lesson?.title || 'Aula sem título',
-              courseTitle: lesson?.learning_modules?.[0]?.learning_courses?.[0]?.title || 'Curso sem título',
+              courseTitle: course?.title || 'Curso sem título',
               scores: []
             };
           }
