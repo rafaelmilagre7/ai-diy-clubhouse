@@ -27,7 +27,16 @@ interface SecurityEnforcementProviderProps {
 }
 
 export const SecurityEnforcementProvider: React.FC<SecurityEnforcementProviderProps> = ({ children }) => {
-  const { user } = useAuth();
+  // Usar try/catch para lidar com contexto não disponível
+  let user = null;
+  try {
+    const auth = useAuth();
+    user = auth.user;
+  } catch (error) {
+    // Se o contexto não estiver disponível, usar null
+    console.warn('SecurityEnforcementProvider: AuthContext não disponível ainda, continuando sem auth');
+  }
+  
   const [securityMetrics, setSecurityMetrics] = useState({
     violationCount: 0,
     lastViolation: undefined as Date | undefined
