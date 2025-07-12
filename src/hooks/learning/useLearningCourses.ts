@@ -1,7 +1,8 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
-import { LearningCourseWithStats, LearningLesson, LearningModule } from "@/lib/supabase/types";
+import { LearningLesson, LearningModule } from "@/lib/supabase/types";
+import { LearningCourseWithStats } from "@/lib/supabase/types/extended";
 import { useAuth } from "@/contexts/auth";
 
 export const useLearningCourses = () => {

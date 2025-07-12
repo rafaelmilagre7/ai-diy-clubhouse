@@ -1,7 +1,8 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
-import { LearningLessonWithRelations, LearningLessonVideo, LearningResource } from "@/lib/supabase/types";
+import { LearningLessonVideo, LearningResource } from "@/lib/supabase/types";
+import { LearningLessonWithRelations } from "@/lib/supabase/types/extended";
 import { sortLessonsByNumber } from "@/components/learning/member/course-modules/CourseModulesHelpers";
 
 interface UseLessonDataProps {

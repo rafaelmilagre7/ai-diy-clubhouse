@@ -3,7 +3,8 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/auth";
 import { supabase } from "@/lib/supabase";
-import { LearningModule, LearningLesson } from "@/lib/supabase";
+import { LearningModule, LearningLesson } from "@/lib/supabase/types";
+import { LearningLessonWithRelations } from "@/lib/supabase/types/extended";
 import { convertToLearningLessonsWithRelations } from "@/lib/supabase/utils/typeConverters";
 import { toast } from "sonner";
 import { FormacaoAulasHeader } from "@/components/formacao/aulas/FormacaoAulasHeader";
@@ -48,9 +49,14 @@ const FormacaoAulas = () => {
 
   // Buscar aulas do módulo
   const fetchAulas = async () => {
-    if (!id) return;
+    if (!id) {
+      console.warn("FormacaoAulas: ID do módulo não encontrado");
+      return;
+    }
     
+    console.log("FormacaoAulas: Buscando aulas para módulo", id);
     setLoadingAulas(true);
+    
     try {
       const { data, error } = await supabase
         .from('learning_lessons')
@@ -58,11 +64,17 @@ const FormacaoAulas = () => {
         .eq('module_id', id)
         .order('order_index');
       
-      if (error) throw error;
+      console.log("FormacaoAulas: Resposta do Supabase:", { data, error });
       
+      if (error) {
+        console.error("FormacaoAulas: Erro na query:", error);
+        throw error;
+      }
+      
+      console.log("FormacaoAulas: Aulas encontradas:", data?.length || 0);
       setAulas(data || []);
     } catch (error) {
-      console.error("Erro ao buscar aulas:", error);
+      console.error("FormacaoAulas: Erro ao buscar aulas:", error);
       toast.error("Erro ao buscar aulas");
     } finally {
       setLoadingAulas(false);
@@ -111,7 +123,7 @@ const FormacaoAulas = () => {
   };
 
   // Função para editar aula
-  const handleEditarAula = (aula: LearningLesson) => {
+  const handleEditarAula = (aula: LearningLessonWithRelations) => {
     navigate(`/formacao/aulas/${aula.id}`);
   };
 
@@ -162,6 +174,7 @@ const FormacaoAulas = () => {
         onEdit={handleEditarAula}
         onDelete={handleExcluirAula}
         isAdmin={isAdmin}
+        onRefresh={fetchAulas}
       />
     </div>
   );

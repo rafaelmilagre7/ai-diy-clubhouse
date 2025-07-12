@@ -51,23 +51,7 @@ export type LearningCertificate = Database['public']['Tables'] extends { learnin
 
 export type LearningLessonNps = Database['public']['Tables']['learning_lesson_nps']['Row'];
 
-// Tipos estendidos para queries com JOINs
-export interface LearningLessonWithRelations extends LearningLesson {
-  videos?: LearningLessonVideo[];
-  resources?: LearningResource[];
-  module?: LearningModuleWithCourse;
-}
-
-export interface LearningModuleWithCourse extends LearningModule {
-  learning_courses?: LearningCourse;
-  course?: LearningCourse;
-}
-
-export interface LearningCourseWithStats extends LearningCourse {
-  module_count: number;
-  lesson_count: number;
-  is_restricted: boolean;
-}
+// Remover tipos duplicados - agora estão em extended.ts
 
 // =============================================================================
 // TIPOS DE COMPATIBILIDADE PARA SISTEMA LEGADO

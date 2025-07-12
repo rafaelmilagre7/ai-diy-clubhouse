@@ -7,7 +7,7 @@ import { Pencil, ArrowLeft, FileText, Trash2 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { LearningLessonWithRelations } from "@/lib/supabase/types";
+import { LearningLessonWithRelations } from "@/lib/supabase/types/extended";
 import { PublishLessonButton } from "./PublishLessonButton";
 
 interface AulaDetailsProps {

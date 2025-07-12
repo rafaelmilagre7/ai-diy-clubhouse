@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { LearningLessonWithRelations } from "@/lib/supabase/types";
+import { LearningLessonWithRelations } from "@/lib/supabase/types/extended";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -23,6 +23,14 @@ interface AulasListProps {
 export const AulasList = ({ aulas, loading, onEdit, onDelete, isAdmin, onRefresh }: AulasListProps) => {
   const [aulaParaExcluir, setAulaParaExcluir] = useState<LearningLessonWithRelations | null>(null);
   const [publishingStates, setPublishingStates] = useState<Record<string, boolean>>({});
+
+  // Log de debug para verificar se os dados estão chegando
+  console.log("AulasList: Recebendo props:", { 
+    aulasCount: aulas?.length || 0, 
+    loading, 
+    isAdmin, 
+    aulas: aulas?.slice(0, 2) // Primeiras 2 aulas para debug
+  });
 
   // Abrir diálogo de confirmação para excluir
   const handleOpenDelete = (aula: LearningLessonWithRelations) => {

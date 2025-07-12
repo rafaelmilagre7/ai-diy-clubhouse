@@ -1,5 +1,6 @@
 
-import { LearningLesson, LearningLessonWithRelations } from '../types';
+import { LearningLesson } from '../types';
+import { LearningLessonWithRelations } from '../types/extended';
 
 /**
  * Converte um array de LearningLesson para LearningLessonWithRelations
@@ -8,16 +9,7 @@ import { LearningLesson, LearningLessonWithRelations } from '../types';
 export function convertToLearningLessonsWithRelations(
   lessons: LearningLesson[]
 ): LearningLessonWithRelations[] {
-  return lessons.map(lesson => ({
-    ...lesson,
-    videos: lesson.videos || [],
-    resources: lesson.resources || [],
-    module: lesson.module ? {
-      ...lesson.module,
-      description: lesson.module.description,
-      cover_image_url: lesson.module.cover_image_url
-    } : undefined
-  }));
+  return lessons.map(lesson => convertToLearningLessonWithRelations(lesson));
 }
 
 /**
@@ -26,14 +18,13 @@ export function convertToLearningLessonsWithRelations(
 export function convertToLearningLessonWithRelations(
   lesson: LearningLesson
 ): LearningLessonWithRelations {
+  // Verificar se o objeto já possui as propriedades relacionais
+  const lessonAny = lesson as any;
+  
   return {
     ...lesson,
-    videos: lesson.videos || [],
-    resources: lesson.resources || [],
-    module: lesson.module ? {
-      ...lesson.module,
-      description: lesson.module.description,
-      cover_image_url: lesson.module.cover_image_url
-    } : undefined
+    videos: lessonAny.videos || [],
+    resources: lessonAny.resources || [],
+    module: lessonAny.module || undefined
   };
 }
