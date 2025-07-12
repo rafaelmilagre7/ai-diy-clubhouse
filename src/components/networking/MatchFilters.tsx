@@ -97,24 +97,6 @@ export const MatchFilters = ({ onFiltersChange, className }: MatchFiltersProps) 
                 ))}
                 
                 <DropdownMenuSeparator />
-                <DropdownMenuLabel>Compatibilidade</DropdownMenuLabel>
-                <div className="px-3 py-2">
-                  <div className="mb-2 flex items-center justify-between text-xs text-muted-foreground">
-                    <span>{filters.compatibilityRange[0]}%</span>
-                    <span>{filters.compatibilityRange[1]}%</span>
-                  </div>
-                  <Slider
-                    value={filters.compatibilityRange}
-                    onValueChange={(value) => updateFilters({ compatibilityRange: value as [number, number] })}
-                    min={0}
-                    max={100}
-                    step={5}
-                    className="w-full"
-                  />
-                </div>
-                
-                <DropdownMenuSeparator />
-                <DropdownMenuLabel>Opções</DropdownMenuLabel>
                 <DropdownMenuCheckboxItem
                   checked={filters.showOnlyUnread}
                   onCheckedChange={(checked) => updateFilters({ showOnlyUnread: checked })}
