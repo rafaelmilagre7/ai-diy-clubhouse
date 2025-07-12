@@ -5272,7 +5272,7 @@ export type Database = {
               resource_id?: string
               details?: Json
             }
-        Returns: undefined
+        Returns: string
       }
       log_user_action: {
         Args: { user_id: string; action_type: string; details?: Json }
