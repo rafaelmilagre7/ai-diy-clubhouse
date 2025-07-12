@@ -95,10 +95,16 @@ serve(async (req) => {
       });
     }
 
+    // Limitar número de aulas para evitar timeout
+    const maxLessons = 5;
+    const lessonsToProcess = lessons.slice(0, maxLessons);
+    
+    console.log(`Processando ${lessonsToProcess.length} aulas de ${lessons.length} recebidas`);
+
     // Analisar aulas
     const analyses: LessonAnalysis[] = [];
 
-    for (const lesson of lessons) {
+    for (const lesson of lessonsToProcess) {
       const prompt = `
 Analise o seguinte conteúdo de aula e sugira tags apropriadas:
 

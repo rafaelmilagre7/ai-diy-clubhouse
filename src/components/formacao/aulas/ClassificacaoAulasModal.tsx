@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Progress } from '@/components/ui/progress';
 import { Loader2, CheckCircle, XCircle, Bot, Sparkles } from 'lucide-react';
 import { useClassifyLessons } from '@/hooks/useClassifyLessons';
 
@@ -57,6 +58,7 @@ export const ClassificacaoAulasModal: React.FC<ClassificacaoAulasModalProps> = (
     isAnalyzing,
     isApplying,
     classifications,
+    progress,
     analyzeLessons,
     toggleApproval,
     approveAll,
@@ -124,6 +126,19 @@ export const ClassificacaoAulasModal: React.FC<ClassificacaoAulasModalProps> = (
                 )}
               </Button>
             </div>
+
+            {/* Barra de progresso durante análise */}
+            {isAnalyzing && progress.total > 0 && (
+              <div className="flex items-center gap-2 min-w-[200px]">
+                <Progress 
+                  value={(progress.current / progress.total) * 100} 
+                  className="flex-1"
+                />
+                <span className="text-xs text-muted-foreground">
+                  {progress.current} / {progress.total}
+                </span>
+              </div>
+            )}
 
             {totalCount > 0 && (
               <div className="flex items-center gap-2">
