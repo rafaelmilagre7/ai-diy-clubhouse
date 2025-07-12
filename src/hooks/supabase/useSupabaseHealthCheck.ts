@@ -51,11 +51,13 @@ export const useSupabaseHealthCheck = () => {
         issues.push(`Erro de autenticação: ${authError.message}`);
       }
 
-      // Testar banco de dados
-      const dbTest = await supabase.rpc('audit_role_assignments');
+      // Testar banco de dados usando função segura
+      const dbTest = await supabase.rpc('check_system_health');
       const databaseStatus: HealthStatus['databaseStatus'] = dbTest.error ? 'error' : 'operational';
       if (dbTest.error) {
         issues.push(`Erro no banco: ${dbTest.error.message}`);
+      } else if (dbTest.data?.database_status === 'error') {
+        issues.push('Erro interno no banco de dados');
       }
 
       // Testar storage (simplificado)

@@ -5308,13 +5308,7 @@ export type Database = {
       }
       audit_role_assignments: {
         Args: Record<PropertyKey, never>
-        Returns: {
-          user_count_by_role: Json
-          inconsistencies_count: number
-          total_users: number
-          roles_without_users: string[]
-          users_without_roles: number
-        }[]
+        Returns: Json
       }
       can_access_benefit: {
         Args: { user_id: string; tool_id: string }
@@ -5376,6 +5370,10 @@ export type Database = {
       check_solution_certificate_eligibility: {
         Args: { p_user_id: string; p_solution_id: string }
         Returns: boolean
+      }
+      check_system_health: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
       }
       clean_user_onboarding_data: {
         Args: { p_user_id: string }

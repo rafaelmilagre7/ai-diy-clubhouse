@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { useSupabaseHealthCheck } from '@/hooks/supabase/useSupabaseHealthCheck';
 import { RoleSyncPanel } from '@/components/admin/roles/RoleSyncPanel';
+import { SystemErrorLogs } from './SystemErrorLogs';
 
 export const SupabaseErrorDiagnostics: React.FC = () => {
   const { healthStatus, isChecking, performHealthCheck } = useSupabaseHealthCheck();
@@ -162,9 +163,10 @@ export const SupabaseErrorDiagnostics: React.FC = () => {
 
       {/* Abas de Diagnóstico */}
       <Tabs defaultValue="system" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-2">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="system">Sistema & Performance</TabsTrigger>
           <TabsTrigger value="roles">Roles & Permissões</TabsTrigger>
+          <TabsTrigger value="logs">Logs de Erro</TabsTrigger>
         </TabsList>
 
         <TabsContent value="system" className="space-y-6">
@@ -204,6 +206,10 @@ export const SupabaseErrorDiagnostics: React.FC = () => {
 
         <TabsContent value="roles" className="space-y-6">
           <RoleSyncPanel />
+        </TabsContent>
+
+        <TabsContent value="logs" className="space-y-6">
+          <SystemErrorLogs />
         </TabsContent>
       </Tabs>
     </div>

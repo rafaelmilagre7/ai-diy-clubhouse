@@ -79,11 +79,11 @@ export const useRoleSync = () => {
       
       console.log('Resultado da auditoria:', data);
       
-      if (data && data.length > 0) {
-        const auditResult = data[0];
-        setAuditData(auditResult);
+      if (data) {
+        // A função agora retorna JSONB diretamente
+        setAuditData(data);
         toast.success('📊 Auditoria de roles concluída com sucesso');
-        return auditResult;
+        return data;
       }
       
       toast.info('Auditoria executada, mas nenhum dado retornado');
