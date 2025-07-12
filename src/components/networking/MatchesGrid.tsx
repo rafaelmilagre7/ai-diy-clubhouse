@@ -9,9 +9,7 @@ import { useAIMatches } from '@/hooks/useAIMatches';
 import { useAuth } from '@/contexts/auth';
 import LoadingScreen from '@/components/common/LoadingScreen';
 import { ConnectionButton } from './ConnectionButton';
-import { MatchFilters } from './MatchFilters';
 import { ChatWindow } from './ChatWindow';
-import type { MatchFilters as MatchFiltersType } from './MatchFilters';
 
 // Função para traduzir tipos de match
 const translateMatchType = (type: string) => {
@@ -27,20 +25,11 @@ const translateMatchType = (type: string) => {
 };
 
 export const MatchesGrid = () => {
-  const [filters, setFilters] = useState<MatchFiltersType>({
-    types: [],
-    compatibilityRange: [0, 100],
-    showOnlyUnread: false
-  });
   const [activeChatMatch, setActiveChatMatch] = useState<string | null>(null);
   
-  const { matches, isLoading, error, refetch } = useNetworkMatches(filters);
+  const { matches, isLoading, error, refetch } = useNetworkMatches();
   const { generateMatches, isGenerating } = useAIMatches();
   const { user } = useAuth();
-
-  const handleFiltersChange = (newFilters: MatchFiltersType) => {
-    setFilters(newFilters);
-  };
 
   const handleGenerateMatches = async () => {
     if (user?.id) {
@@ -132,18 +121,7 @@ export const MatchesGrid = () => {
         </Button>
       </div>
 
-      {/* Filtros Inteligentes */}
-      <MatchFilters onFiltersChange={handleFiltersChange} />
-
-      {/* Indicador de resultados */}
-      <div className="flex items-center justify-between text-sm text-textSecondary">
-        <span>
-          {matches.length === 1 ? '1 match encontrado' : `${matches.length} matches encontrados`}
-        </span>
-        {(filters.types.length > 0 || filters.compatibilityRange[0] > 0 || filters.compatibilityRange[1] < 100) && (
-          <span className="text-viverblue">Filtros ativos</span>
-        )}
-      </div>
+      {/* Grid de Matches */}
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {matches.map((match, index) => (

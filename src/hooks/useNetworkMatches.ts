@@ -1,6 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { MatchFilters } from '@/components/networking/MatchFilters';
 
 export interface NetworkMatch {
   id: string;
@@ -27,11 +26,11 @@ export interface NetworkMatch {
   };
 }
 
-export const useNetworkMatches = (filters?: MatchFilters) => {
+export const useNetworkMatches = () => {
   const query = useQuery({
-    queryKey: ['network-matches', filters],
+    queryKey: ['network-matches'],
     queryFn: async () => {
-      let query = supabase
+      const query = supabase
         .from('network_matches')
         .select(`
           *,
@@ -44,29 +43,10 @@ export const useNetworkMatches = (filters?: MatchFilters) => {
             avatar_url
           )
         `)
-        .eq('status', 'pending');
+        .eq('status', 'pending')
+        .order('created_at', { ascending: false });
 
-      // Aplicar filtros se fornecidos
-      if (filters) {
-        // Filtro por tipos de match
-        if (filters.types.length > 0) {
-          query = query.in('match_type', filters.types);
-        }
-
-        // Filtro por compatibilidade - aplicar apenas se range foi modificado do padrão [0, 100]
-        const isCompatibilityFiltered = filters.compatibilityRange[0] > 0 || filters.compatibilityRange[1] < 100;
-        
-        if (isCompatibilityFiltered) {
-          query = query
-            .gte('compatibility_score', filters.compatibilityRange[0])
-            .lte('compatibility_score', filters.compatibilityRange[1]);
-        }
-
-        // Filtro "apenas não lidos" - por enquanto vamos considerar todos como não lidos
-        // TODO: Implementar sistema de leitura de matches
-      }
-
-      const { data, error } = await query.order('created_at', { ascending: false });
+      const { data, error } = await query;
 
       if (error) {
         console.error('Erro ao buscar matches:', error);
