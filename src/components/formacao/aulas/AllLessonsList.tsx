@@ -51,13 +51,17 @@ export const AllLessonsList = ({
   // Filtrar e agrupar aulas
   const { filteredLessons, groupedLessons, courses } = useMemo(() => {
     let filtered = lessons.filter(lesson => {
+      const moduleData = lesson.module as any;
+      const courseData = moduleData?.course;
+      
       const matchesSearch = !searchTerm || 
         lesson.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
         lesson.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (lesson.module as any)?.title?.toLowerCase().includes(searchTerm.toLowerCase());
+        moduleData?.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        courseData?.title?.toLowerCase().includes(searchTerm.toLowerCase());
       
       const matchesCourse = selectedCourse === "all" || 
-        (lesson.module as any)?.course_title === selectedCourse;
+        courseData?.title === selectedCourse;
       
       const isPublished = lesson.id in publishingStates 
         ? publishingStates[lesson.id] 
@@ -75,8 +79,10 @@ export const AllLessonsList = ({
     const coursesSet = new Set<string>();
 
     filtered.forEach(lesson => {
-      const courseTitle = (lesson.module as any)?.course_title || "Curso sem nome";
-      const moduleTitle = (lesson.module as any)?.title || "Módulo sem nome";
+      const moduleData = lesson.module as any;
+      const courseData = moduleData?.course;
+      const courseTitle = courseData?.title || "Curso sem nome";
+      const moduleTitle = moduleData?.title || "Módulo sem nome";
       
       coursesSet.add(courseTitle);
 
