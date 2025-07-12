@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Filter, X } from 'lucide-react';
+import { Slider } from '@/components/ui/slider';
+import { Filter, X, Sliders } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -96,6 +97,23 @@ export const MatchFilters = ({ onFiltersChange, className }: MatchFiltersProps) 
                 ))}
                 
                 <DropdownMenuSeparator />
+                <DropdownMenuLabel>Compatibilidade</DropdownMenuLabel>
+                <div className="px-3 py-2">
+                  <div className="mb-2 flex items-center justify-between text-xs text-muted-foreground">
+                    <span>{filters.compatibilityRange[0]}%</span>
+                    <span>{filters.compatibilityRange[1]}%</span>
+                  </div>
+                  <Slider
+                    value={filters.compatibilityRange}
+                    onValueChange={(value) => updateFilters({ compatibilityRange: value as [number, number] })}
+                    min={0}
+                    max={100}
+                    step={5}
+                    className="w-full"
+                  />
+                </div>
+                
+                <DropdownMenuSeparator />
                 <DropdownMenuLabel>Opções</DropdownMenuLabel>
                 <DropdownMenuCheckboxItem
                   checked={filters.showOnlyUnread}
@@ -103,6 +121,37 @@ export const MatchFilters = ({ onFiltersChange, className }: MatchFiltersProps) 
                 >
                   Apenas não lidos
                 </DropdownMenuCheckboxItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            {/* Slider de compatibilidade como filtro separado */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm" className="gap-2">
+                  <Sliders className="h-4 w-4" />
+                  Compatibilidade: {filters.compatibilityRange[0]}%-{filters.compatibilityRange[1]}%
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-64">
+                <DropdownMenuLabel>Faixa de Compatibilidade</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <div className="px-3 py-4">
+                  <div className="mb-3 flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">Mínimo: {filters.compatibilityRange[0]}%</span>
+                    <span className="text-muted-foreground">Máximo: {filters.compatibilityRange[1]}%</span>
+                  </div>
+                  <Slider
+                    value={filters.compatibilityRange}
+                    onValueChange={(value) => updateFilters({ compatibilityRange: value as [number, number] })}
+                    min={0}
+                    max={100}
+                    step={5}
+                    className="w-full"
+                  />
+                  <div className="mt-2 text-xs text-muted-foreground text-center">
+                    Arraste para ajustar a faixa de compatibilidade
+                  </div>
+                </div>
               </DropdownMenuContent>
             </DropdownMenu>
 

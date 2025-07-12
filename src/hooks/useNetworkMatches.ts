@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { MatchFilters } from '@/components/networking/MatchFilters';
 
 export interface NetworkMatch {
   id: string;
@@ -26,11 +27,11 @@ export interface NetworkMatch {
   };
 }
 
-export const useNetworkMatches = () => {
+export const useNetworkMatches = (filters?: MatchFilters) => {
   const query = useQuery({
-    queryKey: ['network-matches'],
+    queryKey: ['network-matches', filters],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from('network_matches')
         .select(`
           *,
@@ -43,8 +44,28 @@ export const useNetworkMatches = () => {
             avatar_url
           )
         `)
-        .eq('status', 'pending')
-        .order('created_at', { ascending: false });
+        .eq('status', 'pending');
+
+      // Aplicar filtros se fornecidos
+      if (filters) {
+        // Filtro por tipos de match
+        if (filters.types.length > 0) {
+          query = query.in('match_type', filters.types);
+        }
+
+        // Filtro por compatibilidade
+        if (filters.compatibilityRange[0] > 0) {
+          query = query.gte('compatibility_score', filters.compatibilityRange[0]);
+        }
+        if (filters.compatibilityRange[1] < 100) {
+          query = query.lte('compatibility_score', filters.compatibilityRange[1]);
+        }
+
+        // Filtro "apenas não lidos" - por enquanto vamos considerar todos como não lidos
+        // TODO: Implementar sistema de leitura de matches
+      }
+
+      const { data, error } = await query.order('created_at', { ascending: false });
 
       if (error) {
         console.error('Erro ao buscar matches:', error);
