@@ -3,14 +3,18 @@ import { Button } from '@/components/ui/button';
 import { UserPlus, Clock, Check, X, MessageCircle } from 'lucide-react';
 import { useConnections, type ConnectionStatus } from '@/hooks/useConnections';
 import { supabase } from '@/integrations/supabase/client';
+import { ChatModal } from './ChatModal';
 
 interface ConnectionButtonProps {
   userId: string;
+  userName?: string;
+  userAvatar?: string;
   className?: string;
 }
 
-export const ConnectionButton = ({ userId, className }: ConnectionButtonProps) => {
+export const ConnectionButton = ({ userId, userName, userAvatar, className }: ConnectionButtonProps) => {
   const [user, setUser] = useState<any>(null);
+  const [showChat, setShowChat] = useState(false);
   const { checkConnection, sendConnectionRequest, acceptConnection, rejectConnection } = useConnections();
   
   useEffect(() => {
@@ -107,15 +111,26 @@ export const ConnectionButton = ({ userId, className }: ConnectionButtonProps) =
   // Se é uma conexão aceita, mostrar botão de mensagem
   if (connectionStatus.exists && connectionStatus.status === 'accepted') {
     return (
-      <Button
-        variant="outline"
-        size="sm"
-        className={className}
-        disabled // Será habilitado quando implementarmos mensagens
-      >
-        <MessageCircle className="h-4 w-4 mr-2" />
-        Mensagem
-      </Button>
+      <>
+        <Button
+          variant="outline"
+          size="sm"
+          className={className}
+          onClick={() => setShowChat(true)}
+        >
+          <MessageCircle className="h-4 w-4 mr-2" />
+          Mensagem
+        </Button>
+        {showChat && userName && (
+          <ChatModal
+            isOpen={showChat}
+            onClose={() => setShowChat(false)}
+            recipientId={userId}
+            recipientName={userName}
+            recipientAvatar={userAvatar}
+          />
+        )}
+      </>
     );
   }
 
