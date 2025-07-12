@@ -4822,8 +4822,16 @@ export type Database = {
         Args: { user_id: string; course_id: string }
         Returns: boolean
       }
+      can_manage_role: {
+        Args: { user_id: string; target_role_name: string }
+        Returns: boolean
+      }
       can_use_invite: {
         Args: { invite_token: string; user_email: string }
+        Returns: Json
+      }
+      change_user_role: {
+        Args: { target_user_id: string; new_role_id: string }
         Returns: Json
       }
       check_and_fix_onboarding_data: {
@@ -4940,6 +4948,15 @@ export type Database = {
         Args: { p_user_id: string; p_backup_type?: string }
         Returns: string
       }
+      create_referral: {
+        Args: {
+          p_type: string
+          p_referrer_id: string
+          p_role_id?: string
+          p_expires_in?: unknown
+        }
+        Returns: Json
+      }
       create_solution_certificate_if_eligible: {
         Args: { p_user_id: string; p_solution_id: string }
         Returns: string
@@ -4947,6 +4964,10 @@ export type Database = {
       create_storage_public_policy: {
         Args: { bucket_name: string }
         Returns: boolean
+      }
+      create_user_badge: {
+        Args: { user_id: string; badge_id: string }
+        Returns: string
       }
       current_user_is_admin: {
         Args: Record<PropertyKey, never>
@@ -4967,6 +4988,10 @@ export type Database = {
       decrement_suggestion_upvote: {
         Args: { suggestion_id: string }
         Returns: undefined
+      }
+      delete_user_complete: {
+        Args: { target_user_id: string }
+        Returns: Json
       }
       detect_at_risk_users: {
         Args: Record<PropertyKey, never>
@@ -5018,6 +5043,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      get_admin_stats: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
       get_courses_with_stats: {
         Args: Record<PropertyKey, never>
         Returns: {
@@ -5067,9 +5096,17 @@ export type Database = {
         Args: { p_user_id?: string; p_days?: number }
         Returns: Json
       }
+      get_user_permissions: {
+        Args: { user_id: string }
+        Returns: Json
+      }
       get_user_profile_safe: {
         Args: { p_user_id?: string }
         Returns: Json
+      }
+      get_user_role: {
+        Args: { user_id: string }
+        Returns: string
       }
       get_user_security_permissions: {
         Args: { user_id: string }
@@ -5237,6 +5274,10 @@ export type Database = {
             }
         Returns: undefined
       }
+      log_user_action: {
+        Args: { user_id: string; action_type: string; details?: Json }
+        Returns: undefined
+      }
       manage_user_session: {
         Args: {
           p_user_id: string
@@ -5281,6 +5322,25 @@ export type Database = {
       reset_user_complete: {
         Args: { target_user_id: string }
         Returns: Json
+      }
+      search_users: {
+        Args: {
+          search_term?: string
+          role_filter?: string
+          limit_count?: number
+          offset_count?: number
+        }
+        Returns: {
+          id: string
+          email: string
+          name: string
+          avatar_url: string
+          company_name: string
+          industry: string
+          role: string
+          role_id: string
+          created_at: string
+        }[]
       }
       setup_learning_storage_buckets: {
         Args: Record<PropertyKey, never>
@@ -5327,6 +5387,19 @@ export type Database = {
       validate_input_security: {
         Args: { p_input: string; p_type?: string }
         Returns: boolean
+      }
+      validate_invite_token: {
+        Args: { p_token: string }
+        Returns: {
+          id: string
+          email: string
+          role_id: string
+          expires_at: string
+          used_at: string
+          created_at: string
+          created_by: string
+          notes: string
+        }[]
       }
       validate_invite_token_enhanced: {
         Args: { p_token: string }
