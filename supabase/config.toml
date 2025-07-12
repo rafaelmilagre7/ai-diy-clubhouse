@@ -68,6 +68,9 @@ verify_jwt = true
 [functions.security-log-processor]
 verify_jwt = true
 
+[functions.generate-ai-matches]
+verify_jwt = true
+
 [auth]
 enabled = true
 port = 54324

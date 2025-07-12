@@ -17,7 +17,7 @@ export interface NetworkingProfile {
 }
 
 export const useNetworkingProfiles = () => {
-  return useQuery({
+  const query = useQuery({
     queryKey: ['networking-profiles'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -36,8 +36,7 @@ export const useNetworkingProfiles = () => {
           skills,
           created_at
         `)
-        .eq('available_for_networking', true)
-        .not('avatar_url', 'is', null)
+        .not('name', 'is', null)
         .limit(20);
 
       if (error) throw error;
@@ -45,4 +44,9 @@ export const useNetworkingProfiles = () => {
     },
     staleTime: 5 * 60 * 1000, // 5 minutos
   });
+
+  return {
+    ...query,
+    refetch: query.refetch
+  };
 };

@@ -1,9 +1,11 @@
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Brain, MessageCircle, Sparkles, TrendingUp, Users, Building2 } from 'lucide-react';
+import { Brain, MessageCircle, Sparkles, TrendingUp, Users, Building2, Loader2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useNetworkingProfiles } from '@/hooks/useNetworkingProfiles';
+import { useAIMatches } from '@/hooks/useAIMatches';
+import { useAuth } from '@/contexts/auth';
 import LoadingScreen from '@/components/common/LoadingScreen';
 
 // Funções auxiliares para criar dados de match baseados em perfis reais
@@ -35,7 +37,20 @@ const getStrengths = (role: string, industry?: string) => {
 };
 
 export const MatchesGrid = () => {
-  const { data: profiles, isLoading, error } = useNetworkingProfiles();
+  const { data: profiles, isLoading, error, refetch } = useNetworkingProfiles();
+  const { generateMatches, isGenerating } = useAIMatches();
+  const { user } = useAuth();
+
+  const handleGenerateMatches = async () => {
+    if (user?.id) {
+      try {
+        await generateMatches(user.id);
+        refetch(); // Atualizar a lista de matches
+      } catch (error) {
+        console.error('Erro ao gerar matches:', error);
+      }
+    }
+  };
 
   if (isLoading) {
     return <LoadingScreen message="Carregando matches..." />;
@@ -70,15 +85,30 @@ export const MatchesGrid = () => {
         <div>
           <h2 className="text-lg font-semibold text-textPrimary flex items-center gap-2">
             <Sparkles className="h-5 w-5 text-viverblue" />
-            Matches desta semana
+            Matches IA
           </h2>
           <p className="text-sm text-textSecondary">
-            Conexões estratégicas selecionadas pela IA baseadas no seu perfil
+            Conexões estratégicas personalizadas pela IA baseadas no seu perfil
           </p>
         </div>
-        <Badge className="bg-viverblue/10 text-viverblue border-viverblue/30">
-          {matches.length} novos matches
-        </Badge>
+        <Button 
+          size="sm" 
+          className="bg-viverblue hover:bg-viverblue/90 text-white"
+          onClick={handleGenerateMatches}
+          disabled={isGenerating || !user?.id}
+        >
+          {isGenerating ? (
+            <>
+              <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+              Gerando...
+            </>
+          ) : (
+            <>
+              <Sparkles className="h-4 w-4 mr-1" />
+              Gerar Matches IA
+            </>
+          )}
+        </Button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
