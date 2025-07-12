@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
+import { useNetworkingAnalytics } from '@/hooks/useNetworkingAnalytics';
 
 export interface DirectMessage {
   id: string;
@@ -26,6 +27,7 @@ export interface DirectMessage {
 export const useDirectMessages = (conversationUserId?: string) => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { logEvent } = useNetworkingAnalytics();
 
   // Buscar mensagens da conversa
   const { data: messages, isLoading } = useQuery({
@@ -71,7 +73,14 @@ export const useDirectMessages = (conversationUserId?: string) => {
       if (error) throw error;
       return data;
     },
-    onSuccess: () => {
+    onSuccess: (data, variables) => {
+      // Log evento de mensagem enviada
+      logEvent.mutate({
+        event_type: 'message_sent',
+        partner_id: variables.recipientId,
+        event_data: { message_id: data.id, content_length: variables.content.length }
+      });
+
       queryClient.invalidateQueries({ queryKey: ['direct-messages', conversationUserId] });
     },
     onError: (error: any) => {

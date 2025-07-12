@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useQueryClient, useQuery, useMutation } from '@tanstack/react-query';
+import { useNetworkingAnalytics } from '@/hooks/useNetworkingAnalytics';
 
 export type ConnectionStatus = 'pending' | 'accepted' | 'rejected';
 
@@ -33,6 +34,7 @@ export interface Connection {
 export const useConnections = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { logEvent } = useNetworkingAnalytics();
 
   // Buscar conexões do usuário atual
   const { data: connections, isLoading } = useQuery({
@@ -113,7 +115,14 @@ export const useConnections = () => {
 
       return data;
     },
-    onSuccess: () => {
+    onSuccess: (data, recipientId) => {
+      // Log evento de conexão enviada
+      logEvent.mutate({
+        event_type: 'connection_sent',
+        partner_id: recipientId,
+        event_data: { connection_id: data.id }
+      });
+
       toast({
         title: "Solicitação enviada",
         description: "Sua solicitação de conexão foi enviada com sucesso!"
@@ -152,7 +161,14 @@ export const useConnections = () => {
 
       return data;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      // Log evento de conexão aceita
+      logEvent.mutate({
+        event_type: 'connection_accepted',
+        partner_id: data.requester_id,
+        event_data: { connection_id: data.id }
+      });
+
       toast({
         title: "Conexão aceita",
         description: "Vocês agora estão conectados!"

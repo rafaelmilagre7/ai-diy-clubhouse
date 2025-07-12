@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useNetworkingAnalytics } from '@/hooks/useNetworkingAnalytics';
 
 export const useAIMatches = () => {
   const [isGenerating, setIsGenerating] = useState(false);
   const { toast } = useToast();
+  const { logEvent } = useNetworkingAnalytics();
 
   const generateMatches = async (userId: string) => {
     setIsGenerating(true);
@@ -24,6 +26,15 @@ export const useAIMatches = () => {
       console.log('Resposta da função:', data);
 
       if (data.success) {
+        // Log evento de sucesso
+        logEvent.mutate({
+          event_type: 'match_generated',
+          event_data: { 
+            matches_count: data.matches_generated || 0,
+            user_id: userId 
+          }
+        });
+
         toast({
           title: "Matches IA Gerados!",
           description: data.message,

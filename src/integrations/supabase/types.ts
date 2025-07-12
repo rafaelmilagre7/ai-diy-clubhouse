@@ -2504,6 +2504,42 @@ export type Database = {
           },
         ]
       }
+      networking_analytics: {
+        Row: {
+          compatibility_score: number | null
+          created_at: string
+          event_data: Json
+          event_type: string
+          id: string
+          match_type: string | null
+          month_year: string
+          partner_id: string | null
+          user_id: string
+        }
+        Insert: {
+          compatibility_score?: number | null
+          created_at?: string
+          event_data?: Json
+          event_type: string
+          id?: string
+          match_type?: string | null
+          month_year?: string
+          partner_id?: string | null
+          user_id: string
+        }
+        Update: {
+          compatibility_score?: number | null
+          created_at?: string
+          event_data?: Json
+          event_type?: string
+          id?: string
+          match_type?: string | null
+          month_year?: string
+          partner_id?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       networking_preferences: {
         Row: {
           created_at: string
@@ -5129,6 +5165,20 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      networking_metrics: {
+        Row: {
+          avg_compatibility_score: number | null
+          connection_success_rate: number | null
+          connections_accepted: number | null
+          connections_sent: number | null
+          matches_generated: number | null
+          meetings_scheduled: number | null
+          messages_sent: number | null
+          month_year: string | null
+          user_id: string | null
+        }
+        Relationships: []
       }
       nps_analytics_view: {
         Row: {
