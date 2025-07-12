@@ -15,7 +15,9 @@ const translateMatchType = (type: string) => {
     'customer': 'Potencial Cliente',
     'supplier': 'Fornecedor',
     'partner': 'Parceria Estratégica',
-    'mentor': 'Mentorship'
+    'mentor': 'Mentorship',
+    'ai_generated': 'Match IA',
+    'strategic': 'Estratégico'
   };
   return translations[type] || type;
 };

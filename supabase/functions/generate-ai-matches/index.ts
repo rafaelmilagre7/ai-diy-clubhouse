@@ -41,11 +41,40 @@ serve(async (req) => {
 
     console.log('Perfil do usuário encontrado:', userProfile.name);
 
-    // Buscar outros usuários para criar matches simulados
+    const currentDate = new Date();
+    const monthYear = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}`;
+
+    // Verificar se já existem matches para este usuário neste mês
+    const { data: existingMatches } = await supabase
+      .from('network_matches')
+      .select('id')
+      .eq('user_id', user_id)
+      .eq('month_year', monthYear);
+
+    if (existingMatches && existingMatches.length > 0) {
+      console.log('Usuário já possui matches gerados neste mês');
+      return new Response(JSON.stringify({
+        success: true,
+        matches_generated: 0,
+        message: 'Você já possui matches gerados para este mês. Novos matches estarão disponíveis no próximo mês!'
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    // Buscar outros usuários para criar matches simulados (excluindo conexões já existentes)
     const { data: potentialMatches, error: matchesError } = await supabase
       .from('profiles')
-      .select('id, name, company_name, current_position, industry')
+      .select('id, name, company_name, current_position, industry, role')
       .neq('id', user_id)
+      .not('id', 'in', `(
+        SELECT CASE 
+          WHEN requester_id = '${user_id}' THEN recipient_id 
+          ELSE requester_id 
+        END 
+        FROM member_connections 
+        WHERE (requester_id = '${user_id}' OR recipient_id = '${user_id}')
+      )`)
       .limit(5);
 
     if (matchesError) {
@@ -53,30 +82,107 @@ serve(async (req) => {
       throw new Error(`Erro ao buscar potenciais matches: ${matchesError.message}`);
     }
 
-    const currentDate = new Date();
-    const monthYear = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}`;
+    if (!potentialMatches || potentialMatches.length === 0) {
+      return new Response(JSON.stringify({
+        success: true,
+        matches_generated: 0,
+        message: 'Não há novos usuários disponíveis para matches no momento.'
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
 
     let matchesGenerated = 0;
+    const matchTypes = ['customer', 'supplier', 'partner', 'mentor'];
 
     // Gerar matches para cada usuário encontrado
     for (const match of potentialMatches) {
       const compatibilityScore = Math.floor(Math.random() * 30) + 70; // 70-100%
+      const matchType = matchTypes[Math.floor(Math.random() * matchTypes.length)];
       
-      const aiAnalysis = {
-        strengths: [
-          "Experiência complementar em setores estratégicos",
-          "Potencial de sinergia em projetos colaborativos",
-          "Rede de contatos alinhada com objetivos mútuos"
-        ],
-        opportunities: [
-          "Desenvolvimento de parcerias comerciais",
-          "Troca de conhecimentos e melhores práticas",
-          "Expansão de mercado através de colaboração"
-        ],
-        recommended_approach: "Iniciar com reunião informal para explorar sinergias e identificar oportunidades de colaboração mútua."
+      // Personalizar análise baseada no tipo de match
+      const getAnalysisByType = (type: string) => {
+        switch (type) {
+          case 'customer':
+            return {
+              strengths: [
+                "Perfil de empresa com potencial de demanda",
+                "Setor compatível com suas soluções",
+                "Tamanho de empresa adequado para seus serviços"
+              ],
+              opportunities: [
+                "Desenvolvimento de parcerias comerciais",
+                "Apresentação de soluções customizadas",
+                "Expansão de carteira de clientes"
+              ],
+              recommended_approach: "Iniciar conversa apresentando cases de sucesso em empresas similares e identificando necessidades específicas."
+            };
+          case 'supplier':
+            return {
+              strengths: [
+                "Expertise técnica complementar",
+                "Experiência em fornecimento especializado",
+                "Rede de contatos estratégica"
+              ],
+              opportunities: [
+                "Otimização de processos internos",
+                "Redução de custos operacionais",
+                "Acesso a novas tecnologias"
+              ],
+              recommended_approach: "Explorar sinergias operacionais e apresentar demandas específicas da sua empresa."
+            };
+          case 'partner':
+            return {
+              strengths: [
+                "Experiência complementar em setores estratégicos",
+                "Potencial de sinergia em projetos colaborativos",
+                "Rede de contatos alinhada com objetivos mútuos"
+              ],
+              opportunities: [
+                "Desenvolvimento de parcerias estratégicas",
+                "Troca de conhecimentos e melhores práticas",
+                "Expansão de mercado através de colaboração"
+              ],
+              recommended_approach: "Iniciar com reunião informal para explorar sinergias e identificar oportunidades de colaboração mútua."
+            };
+          case 'mentor':
+            return {
+              strengths: [
+                "Experiência senior na área",
+                "Histórico de sucesso comprovado",
+                "Rede de contatos consolidada"
+              ],
+              opportunities: [
+                "Aprendizado acelerado",
+                "Expansão de network",
+                "Orientação estratégica"
+              ],
+              recommended_approach: "Apresentar desafios específicos e solicitar orientação baseada na experiência do profissional."
+            };
+          default:
+            return {
+              strengths: ["Perfil profissional alinhado", "Experiência relevante"],
+              opportunities: ["Networking estratégico", "Troca de experiências"],
+              recommended_approach: "Iniciar conversa para explorar pontos de interesse comum."
+            };
+        }
       };
 
-      const matchReason = `Match baseado em complementaridade de experiência e potencial de sinergia entre ${userProfile.current_position || 'sua posição'} e ${match.current_position || 'a posição do profissional'}.`;
+      const aiAnalysis = getAnalysisByType(matchType);
+      const matchReason = `Match baseado em análise de perfil: ${matchType === 'customer' ? 'potencial cliente' : matchType === 'supplier' ? 'fornecedor especializado' : matchType === 'partner' ? 'parceria estratégica' : 'mentorship'} com alta compatibilidade de ${compatibilityScore}%.`;
+
+      // Verificar se já existe match entre estes usuários
+      const { data: existingMatch } = await supabase
+        .from('network_matches')
+        .select('id')
+        .eq('user_id', user_id)
+        .eq('matched_user_id', match.id)
+        .single();
+
+      if (existingMatch) {
+        console.log(`Match já existe com ${match.name}, pulando...`);
+        continue;
+      }
 
       // Inserir o match na tabela
       const { error: insertError } = await supabase
@@ -84,7 +190,7 @@ serve(async (req) => {
         .insert({
           user_id: user_id,
           matched_user_id: match.id,
-          match_type: 'ai_generated',
+          match_type: matchType,
           compatibility_score: compatibilityScore,
           match_reason: matchReason,
           ai_analysis: aiAnalysis,
@@ -94,9 +200,16 @@ serve(async (req) => {
 
       if (insertError) {
         console.error('Erro ao inserir match:', insertError);
+        console.error('Dados do match:', {
+          user_id,
+          matched_user_id: match.id,
+          match_type: matchType,
+          compatibility_score: compatibilityScore,
+          month_year: monthYear
+        });
       } else {
         matchesGenerated++;
-        console.log(`Match criado com ${match.name}`);
+        console.log(`Match ${matchType} criado com ${match.name} (${compatibilityScore}% compatibilidade)`);
       }
     }
 
@@ -105,7 +218,9 @@ serve(async (req) => {
     return new Response(JSON.stringify({
       success: true,
       matches_generated: matchesGenerated,
-      message: `${matchesGenerated} novos matches foram gerados para você!`
+      message: matchesGenerated > 0 
+        ? `${matchesGenerated} novos matches foram gerados para você!` 
+        : 'Nenhum novo match foi gerado. Tente novamente mais tarde.'
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
