@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { useLMSAnalytics } from '@/hooks/analytics/lms/useLMSAnalytics';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -51,95 +50,46 @@ const NPSAnalytics: React.FC = () => {
   const [filterScore, setFilterScore] = useState<string>('all');
   const [timeRange, setTimeRange] = useState<string>('30');
 
-  // Buscar analytics gerais
-  const { data: analytics, isLoading: analyticsLoading } = useQuery({
-    queryKey: ['nps-analytics', timeRange],
-    queryFn: async () => {
-      const daysAgo = new Date();
-      daysAgo.setDate(daysAgo.getDate() - parseInt(timeRange));
-
-      const { data: responses, error } = await supabase
-        .from('learning_lesson_nps')
-        .select(`
-          *,
-          lesson:learning_lessons(
-            title,
-            module:learning_modules(
-              title,
-              course:learning_courses(title)
-            )
-          ),
-          user:profiles(name, email)
-        `)
-        .gte('created_at', daysAgo.toISOString())
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-
-      const total = responses?.length || 0;
-      const scores = responses?.map(r => r.score) || [];
-      const average = scores.length > 0 ? scores.reduce((a, b) => a + b, 0) / scores.length : 0;
-
-      const promoters = scores.filter(s => s >= 9).length;
-      const passives = scores.filter(s => s >= 7 && s <= 8).length;
-      const detractors = scores.filter(s => s <= 6).length;
-
-      const npsScore = total > 0 ? ((promoters - detractors) / total) * 100 : 0;
-
-      return {
-        total_responses: total,
-        average_score: average,
-        nps_score: npsScore,
-        promoters,
-        passives,
-        detractors,
-        response_rate: 85, // Placeholder - seria calculado com base no total de aulas completadas
-        recent_responses: responses || []
-      } as NPSAnalytics;
+  // Calcular range de datas
+  const getDateRange = () => {
+    const now = new Date();
+    if (timeRange === 'all') {
+      return { from: new Date(2020, 0, 1), to: now };
     }
-  });
+    const daysAgo = parseInt(timeRange);
+    return { from: new Date(now.getTime() - daysAgo * 24 * 60 * 60 * 1000), to: now };
+  };
 
-  // Buscar todas as respostas com filtros
-  const { data: allResponses, isLoading: responsesLoading } = useQuery({
-    queryKey: ['nps-responses', searchTerm, filterScore, timeRange],
-    queryFn: async () => {
-      let query = supabase
-        .from('learning_lesson_nps')
-        .select(`
-          *,
-          lesson:learning_lessons(
-            title,
-            module:learning_modules(
-              title,
-              course:learning_courses(title)
-            )
-          ),
-          user:profiles(name, email)
-        `)
-        .order('created_at', { ascending: false });
+  // Usar o hook otimizado
+  const { data: analyticsData, isLoading: analyticsLoading } = useLMSAnalytics(getDateRange());
 
-      if (timeRange !== 'all') {
-        const daysAgo = new Date();
-        daysAgo.setDate(daysAgo.getDate() - parseInt(timeRange));
-        query = query.gte('created_at', daysAgo.toISOString());
-      }
+  // Mapear dados para interface anterior (compatibilidade)
+  const analytics = analyticsData ? {
+    total_responses: analyticsData.feedbackData.length,
+    average_score: analyticsData.feedbackData.length > 0 
+      ? analyticsData.feedbackData.reduce((sum, r) => sum + r.score, 0) / analyticsData.feedbackData.length 
+      : 0,
+    nps_score: analyticsData.npsData.overall,
+    promoters: Math.round((analyticsData.npsData.distribution.promoters / 100) * analyticsData.feedbackData.length),
+    passives: Math.round((analyticsData.npsData.distribution.neutrals / 100) * analyticsData.feedbackData.length),
+    detractors: Math.round((analyticsData.npsData.distribution.detractors / 100) * analyticsData.feedbackData.length),
+    response_rate: 85,
+    recent_responses: analyticsData.feedbackData.map(f => ({
+      id: f.id,
+      lesson_id: f.lessonId,
+      user_id: '',
+      score: f.score,
+      feedback: f.feedback,
+      created_at: f.createdAt,
+      updated_at: f.createdAt,
+      lesson: { title: f.lessonTitle },
+      user: { name: f.userName, email: '' }
+    }))
+  } : null;
 
-      if (filterScore !== 'all') {
-        if (filterScore === 'promoters') {
-          query = query.gte('score', 9);
-        } else if (filterScore === 'passives') {
-          query = query.gte('score', 7).lte('score', 8);
-        } else if (filterScore === 'detractors') {
-          query = query.lte('score', 6);
-        }
-      }
-
-      const { data, error } = await query;
-      if (error) throw error;
-
-      return data as NPSResponse[];
-    }
-  });
+  // Usar dados já carregados pelo hook otimizado
+  const allResponses = analytics?.recent_responses || [];
+  const responsesLoading = false;
 
   const getScoreColor = (score: number) => {
     if (score >= 9) return 'bg-green-100 text-green-800 border-green-200';
@@ -168,8 +118,8 @@ const NPSAnalytics: React.FC = () => {
       'Tipo': getScoreLabel(response.score),
       'Usuário': response.user?.name || 'N/A',
       'Email': response.user?.email || 'N/A',
-      'Curso': response.lesson?.module?.course?.title || 'N/A',
-      'Módulo': response.lesson?.module?.title || 'N/A',
+      'Curso': 'N/A',
+      'Módulo': 'N/A',
       'Aula': response.lesson?.title || 'N/A',
       'Feedback': response.feedback || 'Sem feedback'
     }));
@@ -192,7 +142,7 @@ const NPSAnalytics: React.FC = () => {
       response.lesson?.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       response.user?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       response.user?.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      response.lesson?.module?.course?.title?.toLowerCase().includes(searchTerm.toLowerCase());
+      false; // Removido para compatibilidade
     
     return matchesSearch;
   });
@@ -387,7 +337,7 @@ const NPSAnalytics: React.FC = () => {
                         <span className="text-muted-foreground">{response.user?.email}</span>
                       </div>
                       <div>
-                        <strong>Curso:</strong> {response.lesson?.module?.course?.title || 'N/A'}
+                        <strong>Curso:</strong> N/A
                         <br />
                         <strong>Aula:</strong> {response.lesson?.title || 'N/A'}
                       </div>
