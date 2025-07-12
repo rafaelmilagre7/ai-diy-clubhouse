@@ -526,17 +526,18 @@ const ModernRegisterForm: React.FC<ModernRegisterFormProps> = ({
           <div className="w-16 h-16 bg-gradient-to-br from-primary/20 to-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
             <User className="h-8 w-8 text-primary" />
           </div>
-        <h2 className="font-heading text-3xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
-          Finalize seu acesso
-        </h2>
-        <p className="text-muted-foreground text-lg">
-          Últimos passos para entrar na comunidade mais exclusiva de IA empresarial
-        </p>
+          <h2 className="font-heading text-3xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
+            Finalize seu acesso
+          </h2>
+          <p className="text-muted-foreground text-lg">
+            Últimos passos para entrar na comunidade mais exclusiva de IA empresarial
+          </p>
           <div className="bg-primary/5 border border-primary/20 rounded-lg p-3 max-w-sm mx-auto">
             <p className="text-sm text-primary font-medium">
               ⚡ Acesso liberado em menos de 2 minutos
             </p>
           </div>
+        </div>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">

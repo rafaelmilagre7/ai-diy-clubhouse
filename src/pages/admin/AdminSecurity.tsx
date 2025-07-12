@@ -1,6 +1,5 @@
 
 import React from 'react';
-import { SecurityDashboard } from '@/components/admin/security/SecurityDashboard';
 import { SecurityViolationsMonitor } from '@/components/admin/security/SecurityViolationsMonitor';
 import { SecurityDashboard } from '@/components/security/SecurityDashboard';
 
