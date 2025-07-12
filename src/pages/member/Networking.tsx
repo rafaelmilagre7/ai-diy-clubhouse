@@ -5,7 +5,7 @@ import { ConnectionNotifications } from '@/components/networking/ConnectionNotif
 import { useDynamicSEO } from '@/hooks/seo/useDynamicSEO';
 
 const Networking = () => {
-  const [activeTab, setActiveTab] = useState<'matches' | 'connections' | 'goals' | 'notifications'>('matches');
+  const [activeTab, setActiveTab] = useState<'matches' | 'connections' | 'notifications'>('matches');
 
   useDynamicSEO({
     title: 'Networking AI - Networking Inteligente',

@@ -1,9 +1,8 @@
 import { MatchesGrid } from './MatchesGrid';
 import { ConnectionsGrid } from './ConnectionsGrid';
-import { GoalsGrid } from './GoalsGrid';
 
 interface NetworkingDashboardProps {
-  activeTab: 'matches' | 'connections' | 'goals';
+  activeTab: 'matches' | 'connections';
 }
 
 export const NetworkingDashboard = ({ activeTab }: NetworkingDashboardProps) => {
@@ -11,7 +10,6 @@ export const NetworkingDashboard = ({ activeTab }: NetworkingDashboardProps) => 
     <div className="min-h-[400px]">
       {activeTab === 'matches' && <MatchesGrid />}
       {activeTab === 'connections' && <ConnectionsGrid />}
-      {activeTab === 'goals' && <GoalsGrid />}
     </div>
   );
 };
