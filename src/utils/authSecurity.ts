@@ -257,10 +257,7 @@ export const secureSignIn = async (email: string, password: string): Promise<{
     const redirectUrl = `${window.location.origin}/`;
     const { data, error } = await supabase.auth.signInWithPassword({
       email: sanitizeAuthInput(email),
-      password,
-      options: {
-        emailRedirectTo: redirectUrl
-      }
+      password
     });
     
     if (error) {
@@ -333,10 +330,7 @@ export const secureSignUp = async (email: string, password: string): Promise<{
     const redirectUrl = `${window.location.origin}/`;
     const { data, error } = await supabase.auth.signUp({
       email: sanitizeAuthInput(email),
-      password,
-      options: {
-        emailRedirectTo: redirectUrl
-      }
+      password
     });
     
     if (error) {
