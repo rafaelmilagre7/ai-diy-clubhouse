@@ -23,6 +23,8 @@ interface AuthContextType {
   setUser: React.Dispatch<React.SetStateAction<User | null>>;
   setProfile: (profile: UserProfile | null) => void;
   setIsLoading: (loading: boolean) => void;
+  refreshProfile: () => Promise<void>;
+  validatePermissions: () => Promise<{ isAdmin: boolean; profile: UserProfile | null }>;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -54,8 +56,12 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     setIsLoading,
   });
 
-  // CORREÇÃO DE SEGURANÇA: Verificação de admin APENAS via banco de dados
-  const isAdmin = Boolean(profile?.user_roles?.name === 'admin');
+  // CORREÇÃO DE ADMIN: Verificação robusta com fallback para compatibilidade
+  const isAdmin = Boolean(
+    profile?.user_roles?.name === 'admin' || 
+    profile?.role === 'admin' ||
+    (profile?.user_roles?.permissions as any)?.all === true
+  );
 
   const isFormacao = Boolean(
     profile?.user_roles?.name === 'formacao' || 
@@ -186,6 +192,92 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     return signIn(email, password);
   }, [signIn]);
 
+  // NOVA FUNÇÃO: Revalidar perfil forçadamente
+  const refreshProfile = useCallback(async (): Promise<void> => {
+    if (!user?.id) return;
+    
+    logger.info('[AUTH-CONTEXT] Revalidando perfil manualmente');
+    
+    try {
+      // Limpar cache primeiro
+      clearProfileCache(user.id);
+      
+      // Buscar perfil atualizado
+      const { data: profileData, error } = await supabase
+        .from('profiles')
+        .select(`
+          *,
+          user_roles (
+            id,
+            name,
+            description,
+            permissions
+          )
+        `)
+        .eq('id', user.id)
+        .single();
+      
+      if (error) {
+        logger.error('[AUTH-CONTEXT] Erro ao revalidar perfil:', error);
+        return;
+      }
+      
+      setProfile(profileData as UserProfile);
+      logger.info('[AUTH-CONTEXT] Perfil revalidado com sucesso');
+      
+    } catch (error) {
+      logger.error('[AUTH-CONTEXT] Erro crítico na revalidação:', error);
+    }
+  }, [user?.id]);
+
+  // NOVA FUNÇÃO: Validar permissões em tempo real
+  const validatePermissions = useCallback(async (): Promise<{ isAdmin: boolean; profile: UserProfile | null }> => {
+    if (!user?.id) {
+      return { isAdmin: false, profile: null };
+    }
+    
+    try {
+      const { data: profileData, error } = await supabase
+        .from('profiles')
+        .select(`
+          *,
+          user_roles (
+            id,
+            name,
+            description,
+            permissions
+          )
+        `)
+        .eq('id', user.id)
+        .single();
+      
+      if (error || !profileData) {
+        logger.error('[AUTH-CONTEXT] Erro na validação de permissões:', error);
+        return { isAdmin: false, profile: null };
+      }
+      
+      const userProfile = profileData as UserProfile;
+      const adminCheck = Boolean(
+        userProfile?.user_roles?.name === 'admin' || 
+        userProfile?.role === 'admin' ||
+        (userProfile?.user_roles?.permissions as any)?.all === true
+      );
+      
+      logger.info('[AUTH-CONTEXT] Validação de permissões:', {
+        userId: user.id.substring(0, 8) + '***',
+        isAdmin: adminCheck,
+        roleName: userProfile?.user_roles?.name,
+        permissions: userProfile?.user_roles?.permissions
+      });
+      
+      return { isAdmin: adminCheck, profile: userProfile };
+      
+    } catch (error) {
+      logger.error('[AUTH-CONTEXT] Erro crítico na validação:', error);
+      return { isAdmin: false, profile: null };
+    }
+  }, [user?.id]);
+
   const contextValue: AuthContextType = {
     user,
     session,
@@ -202,6 +294,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     setUser,
     setProfile,
     setIsLoading,
+    refreshProfile,
+    validatePermissions,
   };
 
   return (

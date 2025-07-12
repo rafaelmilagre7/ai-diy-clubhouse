@@ -7,6 +7,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { RefreshCw } from "lucide-react";
 import { logger } from "@/utils/logger";
+import { AdminPermissionsDiagnostic } from "@/components/admin/AdminPermissionsDiagnostic";
 
 const AdminDashboard = () => {
   const [timeRange, setTimeRange] = useState('30d');
@@ -68,13 +69,18 @@ const AdminDashboard = () => {
     });
 
     return (
-      <RealAdminDashboardLayout
-        timeRange={timeRange}
-        setTimeRange={setTimeRange}
-        statsData={statsData}
-        activityData={activityData}
-        loading={loading}
-      />
+      <div className="space-y-6">
+        {/* Diagnóstico de Permissões */}
+        <AdminPermissionsDiagnostic />
+        
+        <RealAdminDashboardLayout
+          timeRange={timeRange}
+          setTimeRange={setTimeRange}
+          statsData={statsData}
+          activityData={activityData}
+          loading={loading}
+        />
+      </div>
     );
   } catch (error) {
     logger.error("Erro crítico no AdminDashboard", { 
