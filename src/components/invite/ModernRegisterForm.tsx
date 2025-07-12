@@ -5,6 +5,9 @@ import { Label } from "@/components/ui/label";
 import { Mail, Lock, User, Eye, EyeOff, ArrowRight, CheckCircle } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { toast } from "@/hooks/use-toast";
+import { RateLimitGuard } from '@/components/security/RateLimitGuard';
+import { useRateLimit } from '@/hooks/security/useRateLimit';
+import { useSecurityMetrics } from '@/hooks/security/useSecurityMetrics';
 
 interface ModernRegisterFormProps {
   inviteToken?: string;
@@ -25,6 +28,8 @@ const ModernRegisterForm: React.FC<ModernRegisterFormProps> = ({
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [step, setStep] = useState<'form' | 'success'>('form');
+  const { checkRateLimit } = useRateLimit();
+  const { logSecurityViolation } = useSecurityMetrics();
 
   const validatePassword = (password: string) => {
     const checks = {
@@ -67,6 +72,22 @@ const ModernRegisterForm: React.FC<ModernRegisterFormProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    // Check rate limit first
+    const rateLimitAllowed = await checkRateLimit('registration', {
+      maxAttempts: 3,
+      windowMinutes: 60
+    });
+
+    if (!rateLimitAllowed) {
+      toast({
+        title: "Muitas tentativas",
+        description: "Você excedeu o limite de tentativas de registro. Tente novamente em 1 hora.",
+        variant: "destructive",
+      });
+      await logSecurityViolation('registration_rate_limit', 'medium', 'Usuário excedeu limite de tentativas de registro');
+      return;
+    }
+    
     console.log('🔄 [REGISTER] === INICIANDO PROCESSO DE REGISTRO ===');
     console.log('🔄 [REGISTER] Dados do formulário:', {
       name: !!name,
@@ -102,6 +123,10 @@ const ModernRegisterForm: React.FC<ModernRegisterFormProps> = ({
     
     if (!isPasswordValid) {
       console.log('❌ [REGISTER] Senha não atende os critérios:', passwordValidation);
+      await logSecurityViolation('weak_password_attempt', 'low', 'Tentativa de registro com senha fraca', {
+        passwordScore: passwordValidation.score,
+        passwordStrength: passwordValidation.strength
+      });
       toast({
         title: "Senha não atende os critérios",
         description: "Por favor, crie uma senha que atenda pelo menos 4 dos 5 requisitos.",
@@ -490,25 +515,31 @@ const ModernRegisterForm: React.FC<ModernRegisterFormProps> = ({
   }
 
   return (
-    <div className="space-y-6">
-      <div className="text-center space-y-3">
-        <div className="w-16 h-16 bg-gradient-to-br from-primary/20 to-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-          <User className="h-8 w-8 text-primary" />
-        </div>
+    <RateLimitGuard 
+      actionType="registration" 
+      maxAttempts={3} 
+      windowMinutes={60}
+      showWarning={true}
+    >
+      <div className="space-y-6">
+        <div className="text-center space-y-3">
+          <div className="w-16 h-16 bg-gradient-to-br from-primary/20 to-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+            <User className="h-8 w-8 text-primary" />
+          </div>
         <h2 className="font-heading text-3xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
           Finalize seu acesso
         </h2>
         <p className="text-muted-foreground text-lg">
           Últimos passos para entrar na comunidade mais exclusiva de IA empresarial
         </p>
-        <div className="bg-primary/5 border border-primary/20 rounded-lg p-3 max-w-sm mx-auto">
-          <p className="text-sm text-primary font-medium">
-            ⚡ Acesso liberado em menos de 2 minutos
-          </p>
+          <div className="bg-primary/5 border border-primary/20 rounded-lg p-3 max-w-sm mx-auto">
+            <p className="text-sm text-primary font-medium">
+              ⚡ Acesso liberado em menos de 2 minutos
+            </p>
+          </div>
         </div>
-      </div>
 
-      <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-6">
         {/* Nome */}
         <div className="space-y-2">
           <Label htmlFor="name" className="text-sm font-medium">
@@ -670,9 +701,9 @@ const ModernRegisterForm: React.FC<ModernRegisterFormProps> = ({
             </>
           )}
         </Button>
-      </form>
+        </form>
 
-      <div className="text-center">
+        <div className="text-center">
         <div className="bg-muted/30 border border-border rounded-lg p-4 space-y-2">
           <div className="flex items-center gap-2 text-primary">
             <CheckCircle className="h-4 w-4" />
@@ -687,7 +718,7 @@ const ModernRegisterForm: React.FC<ModernRegisterFormProps> = ({
           </p>
         </div>
       </div>
-    </div>
+    </RateLimitGuard>
   );
 };
 

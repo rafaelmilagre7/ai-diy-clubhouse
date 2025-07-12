@@ -4932,6 +4932,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      cleanup_expired_sessions_enhanced: {
+        Args: Record<PropertyKey, never>
+        Returns: number
+      }
       cleanup_old_rate_limits: {
         Args: Record<PropertyKey, never>
         Returns: undefined
@@ -5112,6 +5116,10 @@ export type Database = {
           resources: Json
         }[]
       }
+      get_security_metrics: {
+        Args: { p_user_id?: string; p_days?: number }
+        Returns: Json
+      }
       get_user_profile_safe: {
         Args: { p_user_id?: string }
         Returns: Json
@@ -5262,12 +5270,24 @@ export type Database = {
         Returns: undefined
       }
       log_security_violation: {
-        Args: {
-          violation_type: string
-          resource_type: string
-          resource_id?: string
-          details?: Json
-        }
+        Args:
+          | {
+              p_user_id?: string
+              p_violation_type?: string
+              p_severity?: string
+              p_description?: string
+              p_ip_address?: string
+              p_user_agent?: string
+              p_resource_accessed?: string
+              p_additional_data?: Json
+              p_auto_block?: boolean
+            }
+          | {
+              violation_type: string
+              resource_type: string
+              resource_id?: string
+              details?: Json
+            }
         Returns: undefined
       }
       manage_user_session: {
@@ -5356,6 +5376,10 @@ export type Database = {
           security_status: string
           risk_level: string
         }[]
+      }
+      validate_input_security: {
+        Args: { p_input: string; p_type?: string }
+        Returns: boolean
       }
       validate_invite_token_enhanced: {
         Args: { p_token: string }

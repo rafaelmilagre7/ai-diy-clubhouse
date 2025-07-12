@@ -7,6 +7,7 @@ import { useAuthMethods } from './hooks/useAuthMethods';
 import { useAuthStateManager } from '../../hooks/auth/useAuthStateManager';
 import { clearProfileCache } from '@/hooks/auth/utils/authSessionUtils';
 import { AuthContextType } from './types';
+import { useSessionManager } from '@/hooks/security/useSessionManager';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -45,6 +46,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const { signIn, signOut, signInAsMember, signInAsAdmin } = useAuthMethods({
     setIsLoading,
   });
+
+  // Initialize session manager
+  useSessionManager();
 
   // Circuit breaker - timeout de 5 segundos para inicialização
   useEffect(() => {
