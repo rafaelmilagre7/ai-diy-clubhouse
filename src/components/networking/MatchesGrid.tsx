@@ -237,11 +237,16 @@ const MatchCard = ({ match, onOpenChat }: MatchCardProps) => {
         <div className="flex items-start justify-between mb-4">
           <div className="flex items-center gap-4">
             <div className="relative">
-              <img 
-                src={avatar} 
-                alt={match.matched_user.name}
-                className="h-16 w-16 rounded-full object-cover border-2 border-neutral-700 shadow-lg"
-              />
+              <div className="h-16 w-16 rounded-full border-2 border-neutral-700 shadow-lg overflow-hidden bg-neutral-800 flex-shrink-0">
+                <img 
+                  src={avatar} 
+                  alt={match.matched_user.name}
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(match.matched_user.name)}&background=0D8ABC&color=fff&size=64`;
+                  }}
+                />
+              </div>
               <div className="absolute -bottom-1 -right-1 bg-viverblue rounded-full p-1.5">
                 <Sparkles className="h-4 w-4 text-white" />
               </div>
@@ -276,7 +281,7 @@ const MatchCard = ({ match, onOpenChat }: MatchCardProps) => {
         {/* AI Analysis */}
         <div className="bg-neutral-800/50 rounded-lg p-3 border border-neutral-700/50">
           <p className="text-xs text-neutral-300 leading-relaxed">
-            <span className="text-viverblue font-medium">IA diz:</span> {match.match_reason}
+            <span className="text-viverblue font-medium">IA diz:</span> {match.match_reason || match.ai_analysis?.recommended_approach || `${match.matched_user.name} tem alta compatibilidade com seu perfil profissional. Recomendo iniciar uma conversa sobre ${match.match_type === 'customer' ? 'oportunidades de negócio' : match.match_type === 'partner' ? 'possíveis parcerias estratégicas' : 'colaboração mútua'}.`}
           </p>
         </div>
 

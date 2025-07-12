@@ -160,11 +160,16 @@ const ConnectionCard = ({ connection, onOpenChat }: ConnectionCardProps) => {
       <CardHeader className="pb-4 pt-6 px-6">
         <div className="flex items-start justify-between mb-3">
           <div className="flex items-center gap-3">
-            <img 
-              src={avatar} 
-              alt={otherUser.name}
-              className="h-12 w-12 rounded-full object-cover border-2 border-neutral-700"
-            />
+            <div className="h-12 w-12 rounded-full border-2 border-neutral-700 overflow-hidden bg-neutral-800 flex-shrink-0">
+              <img 
+                src={avatar} 
+                alt={otherUser.name}
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(otherUser.name)}&background=0D8ABC&color=fff&size=48`;
+                }}
+              />
+            </div>
             <div>
               <h3 className="font-semibold text-white line-clamp-1">{otherUser.name}</h3>
               <p className="text-sm text-neutral-400 line-clamp-1">{otherUser.current_position || 'Profissional'}</p>
