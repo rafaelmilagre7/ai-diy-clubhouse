@@ -1,49 +1,40 @@
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { MessageCircle, Calendar, CheckCircle2, Clock, Building2 } from 'lucide-react';
+import { MessageCircle, Calendar, CheckCircle2, Clock, Building2, Users } from 'lucide-react';
 import { motion } from 'framer-motion';
-
-// Mock data
-const mockConnections = [
-  {
-    id: '1',
-    name: 'Maria Santos',
-    company: 'DataDriven Co.',
-    role: 'Head of Sales',
-    status: 'active',
-    lastContact: '2 dias atrás',
-    nextAction: 'Agendar reunião de follow-up',
-    avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop&crop=face',
-    industry: 'SaaS'
-  },
-  {
-    id: '2',
-    name: 'João Oliveira',
-    company: 'StartupXYZ',
-    role: 'Founder',
-    status: 'pending',
-    lastContact: '1 semana atrás',
-    nextAction: 'Aguardando resposta da proposta',
-    avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&h=100&fit=crop&crop=face',
-    industry: 'E-commerce'
-  },
-  {
-    id: '3',
-    name: 'Laura Costa',
-    company: 'TechBoost',
-    role: 'COO',
-    status: 'completed',
-    lastContact: '3 dias atrás',
-    nextAction: 'Parceria finalizada ✅',
-    avatar: 'https://images.unsplash.com/photo-1494790108755-2616b85-4e45?w=100&h=100&fit=crop&crop=face',
-    industry: 'Consultoria'
-  }
-];
+import { useConnections } from '@/hooks/useConnections';
+import LoadingScreen from '@/components/common/LoadingScreen';
+import { formatDistanceToNow } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
 export const ConnectionsGrid = () => {
-  const activeConnections = mockConnections.filter(c => c.status === 'active').length;
-  const pendingConnections = mockConnections.filter(c => c.status === 'pending').length;
+  const { connections, isLoading } = useConnections();
+
+  if (isLoading) {
+    return <LoadingScreen message="Carregando conexões..." />;
+  }
+
+  const acceptedConnections = connections.filter(c => c.status === 'accepted');
+  const pendingConnections = connections.filter(c => c.status === 'pending');
+
+  if (!acceptedConnections.length) {
+    return (
+      <div className="text-center py-16 space-y-4">
+        <div className="flex justify-center">
+          <div className="bg-viverblue/10 rounded-full p-4">
+            <Users className="h-8 w-8 text-viverblue" />
+          </div>
+        </div>
+        <div>
+          <h3 className="text-lg font-semibold text-textPrimary mb-2">Nenhuma conexão ainda</h3>
+          <p className="text-textSecondary">
+            Suas conexões aceitas aparecerão aqui. Vá para a aba Matches para encontrar novas oportunidades!
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -56,16 +47,18 @@ export const ConnectionsGrid = () => {
         </div>
         <div className="flex gap-2">
           <Badge className="bg-green-500/10 text-green-400 border-green-500/30">
-            {activeConnections} ativas
+            {acceptedConnections.length} ativas
           </Badge>
-          <Badge className="bg-yellow-500/10 text-yellow-400 border-yellow-500/30">
-            {pendingConnections} pendentes
-          </Badge>
+          {pendingConnections.length > 0 && (
+            <Badge className="bg-yellow-500/10 text-yellow-400 border-yellow-500/30">
+              {pendingConnections.length} pendentes
+            </Badge>
+          )}
         </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {mockConnections.map((connection, index) => (
+        {acceptedConnections.map((connection, index) => (
           <motion.div
             key={connection.id}
             initial={{ opacity: 0, y: 20 }}
@@ -81,29 +74,49 @@ export const ConnectionsGrid = () => {
 };
 
 interface ConnectionCardProps {
-  connection: typeof mockConnections[0];
+  connection: {
+    id: string;
+    requester_id: string;
+    recipient_id: string;
+    status: string;
+    created_at: string;
+    updated_at: string | null;
+    requester?: {
+      id: string;
+      name: string;
+      company_name?: string;
+      current_position?: string;
+      avatar_url?: string;
+    };
+    recipient?: {
+      id: string;
+      name: string;
+      company_name?: string;
+      current_position?: string;
+      avatar_url?: string;
+    };
+  };
 }
 
 const ConnectionCard = ({ connection }: ConnectionCardProps) => {
+  // Determinar o outro usuário na conexão
+  const otherUser = connection.requester || connection.recipient;
+  
+  if (!otherUser) return null;
+
   const getStatusConfig = (status: string) => {
     switch (status) {
-      case 'active': 
+      case 'accepted': 
         return { 
           color: 'bg-green-500/10 text-green-400 border-green-500/30',
           icon: CheckCircle2,
-          label: 'Ativa'
+          label: 'Conectado'
         };
       case 'pending': 
         return { 
           color: 'bg-yellow-500/10 text-yellow-400 border-yellow-500/30',
           icon: Clock,
           label: 'Pendente'
-        };
-      case 'completed': 
-        return { 
-          color: 'bg-blue-500/10 text-blue-400 border-blue-500/30',
-          icon: CheckCircle2,
-          label: 'Concluída'
         };
       default: 
         return { 
@@ -116,6 +129,14 @@ const ConnectionCard = ({ connection }: ConnectionCardProps) => {
 
   const statusConfig = getStatusConfig(connection.status);
   const StatusIcon = statusConfig.icon;
+  
+  const avatar = otherUser.avatar_url || 
+    `https://ui-avatars.com/api/?name=${encodeURIComponent(otherUser.name)}&background=0D8ABC&color=fff`;
+  
+  const timeAgo = formatDistanceToNow(new Date(connection.created_at), { 
+    addSuffix: true, 
+    locale: ptBR 
+  });
 
   return (
     <Card className="h-full overflow-hidden hover:shadow-md hover:translate-y-[-2px] transition-all duration-300 border-neutral-800/50 bg-[#151823]">
@@ -123,13 +144,13 @@ const ConnectionCard = ({ connection }: ConnectionCardProps) => {
         <div className="flex items-start justify-between mb-3">
           <div className="flex items-center gap-3">
             <img 
-              src={connection.avatar} 
-              alt={connection.name}
+              src={avatar} 
+              alt={otherUser.name}
               className="h-12 w-12 rounded-full object-cover border-2 border-neutral-700"
             />
             <div>
-              <h3 className="font-semibold text-white line-clamp-1">{connection.name}</h3>
-              <p className="text-sm text-neutral-400 line-clamp-1">{connection.role}</p>
+              <h3 className="font-semibold text-white line-clamp-1">{otherUser.name}</h3>
+              <p className="text-sm text-neutral-400 line-clamp-1">{otherUser.current_position || 'Profissional'}</p>
             </div>
           </div>
           <Badge className={`text-xs ${statusConfig.color}`}>
@@ -140,18 +161,20 @@ const ConnectionCard = ({ connection }: ConnectionCardProps) => {
 
         <div className="flex items-center gap-2 text-sm text-neutral-300">
           <Building2 className="h-4 w-4" />
-          <span className="line-clamp-1">{connection.company}</span>
+          <span className="line-clamp-1">{otherUser.company_name || 'Empresa'}</span>
         </div>
       </CardHeader>
 
       <CardContent className="px-6 pb-6 space-y-4">
         <div className="space-y-2">
           <div className="text-xs text-neutral-400">
-            Último contato: <span className="text-neutral-300">{connection.lastContact}</span>
+            Conectados: <span className="text-neutral-300">{timeAgo}</span>
           </div>
           <div className="text-xs">
-            <span className="text-neutral-400">Próxima ação:</span>
-            <p className="text-neutral-300 mt-1">{connection.nextAction}</p>
+            <span className="text-neutral-400">Status:</span>
+            <p className="text-neutral-300 mt-1">
+              {connection.status === 'accepted' ? 'Parceria ativa' : 'Aguardando confirmação'}
+            </p>
           </div>
         </div>
 
