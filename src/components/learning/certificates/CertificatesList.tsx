@@ -1,12 +1,11 @@
-
 import React, { useMemo } from "react";
 import { CertificateCard } from "./CertificateCard";
-import { SolutionCertificateCard } from "./SolutionCertificateCard";
 import { useCertificates } from "@/hooks/learning/useCertificates";
 import { Skeleton } from "@/components/ui/skeleton";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, Award, BookOpen, TrendingUp, Sparkles } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
+import { motion } from "framer-motion";
 
 interface CertificatesListProps {
   courseId?: string;
@@ -28,31 +27,24 @@ export const CertificatesList = ({
     downloadCertificate
   } = useCertificates(courseId);
   
-  // Funções wrapper para compatibilizar tipos
-  const handleSolutionDownload = async (certificateId: string) => {
-    await downloadCertificate(certificateId);
-    return { needsModal: false };
-  };
-
-  const handleCourseDownload = (certificateId: string) => {
+  const handleDownload = (certificateId: string) => {
     downloadCertificate(certificateId);
   };
 
   // Filtrar e ordenar certificados
-  const filteredAndSortedData = useMemo(() => {
-    // Separar certificados por tipo
-    const courseCerts = certificates.filter(cert => cert.type === 'course');
-    const solutionCerts = certificates.filter(cert => cert.type === 'solution');
-
-    let filteredCourses = courseCerts.filter(cert => {
-      const matchesSearch = !searchTerm || cert.title?.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesCategory = selectedCategory === "all" || selectedCategory === "courses";
-      return matchesSearch && matchesCategory;
-    });
-
-    let filteredSolutions = solutionCerts.filter(cert => {
-      const matchesSearch = !searchTerm || cert.title?.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesCategory = selectedCategory === "all" || selectedCategory === "solutions";
+  const filteredAndSortedCertificates = useMemo(() => {
+    let filtered = certificates.filter(cert => {
+      const matchesSearch = !searchTerm || (cert as any).title?.toLowerCase().includes(searchTerm.toLowerCase());
+      
+      let matchesCategory = true;
+      if (selectedCategory !== "all") {
+        if (selectedCategory === "courses") {
+          matchesCategory = (cert as any).type === 'course';
+        } else if (selectedCategory === "solutions") {
+          matchesCategory = (cert as any).type === 'solution';
+        }
+      }
+      
       return matchesSearch && matchesCategory;
     });
 
@@ -75,169 +67,166 @@ export const CertificatesList = ({
       }
     };
 
-    filteredCourses.sort(sortFunction);
-    filteredSolutions.sort(sortFunction);
-
-    return {
-      courseCertificates: filteredCourses,
-      solutionCertificates: filteredSolutions
-    };
+    return filtered.sort(sortFunction);
   }, [certificates, searchTerm, selectedCategory, sortBy]);
   
   if (isLoading) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {[1, 2, 3, 4, 5, 6].map((i) => (
-          <div key={i} className="space-y-4">
-            <Skeleton className="h-48 w-full rounded-xl" />
-            <Skeleton className="h-6 w-3/4" />
-            <Skeleton className="h-4 w-1/2" />
-            <div className="flex gap-2">
-              <Skeleton className="h-9 w-24" />
-              <Skeleton className="h-9 w-24" />
-            </div>
-          </div>
-        ))}
+      <div className="space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {[1, 2, 3, 4, 5, 6].map((i) => (
+            <motion.div
+              key={i}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: i * 0.1 }}
+              className="space-y-4"
+            >
+              <Skeleton className="h-64 w-full rounded-2xl bg-muted/20" />
+              <Skeleton className="h-6 w-3/4 bg-muted/20" />
+              <Skeleton className="h-4 w-1/2 bg-muted/20" />
+              <div className="flex gap-2">
+                <Skeleton className="h-10 w-24 bg-muted/20" />
+                <Skeleton className="h-10 w-24 bg-muted/20" />
+              </div>
+            </motion.div>
+          ))}
+        </div>
       </div>
     );
   }
   
   if (error) {
     return (
-      <Alert variant="destructive">
-        <AlertCircle className="h-4 w-4" />
-        <AlertTitle>Erro</AlertTitle>
-        <AlertDescription>
-          Ocorreu um erro ao carregar seus certificados. Por favor, tente novamente mais tarde.
-        </AlertDescription>
-      </Alert>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+      >
+        <Alert variant="destructive" className="bg-destructive/10 border-destructive/20">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Erro ao carregar certificados</AlertTitle>
+          <AlertDescription>
+            Não foi possível carregar seus certificados. Tente recarregar a página.
+          </AlertDescription>
+        </Alert>
+      </motion.div>
     );
   }
 
-  const totalCertificates = filteredAndSortedData.courseCertificates.length + filteredAndSortedData.solutionCertificates.length;
-  
-  if (totalCertificates === 0) {
+  if (filteredAndSortedCertificates.length === 0) {
+    const hasNoCertificates = certificates.length === 0;
+    const hasNoFilterResults = certificates.length > 0 && filteredAndSortedCertificates.length === 0;
+
     return (
-      <div className="text-center py-12">
-        <div className="bg-[#151823]/80 backdrop-blur-sm border border-neutral-700/50 rounded-xl p-8">
-          <AlertCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-xl font-semibold text-white mb-2">
-            {searchTerm || selectedCategory !== "all" ? "Nenhum certificado encontrado" : "Nenhum certificado ainda"}
-          </h3>
-          <p className="text-gray-400">
-            {searchTerm || selectedCategory !== "all" 
-              ? "Tente ajustar os filtros de busca para encontrar seus certificados."
-              : "Complete cursos e implemente soluções para receber certificados."}
-          </p>
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.6 }}
+        className="text-center py-16 space-y-8"
+      >
+        <div className="flex justify-center">
+          <motion.div
+            animate={{ 
+              scale: [1, 1.1, 1],
+              rotate: [0, 5, -5, 0]
+            }}
+            transition={{ 
+              duration: 3,
+              repeat: Infinity,
+              ease: "easeInOut"
+            }}
+            className="relative"
+          >
+            <div className="bg-gradient-to-br from-primary/20 via-accent/20 to-primary/10 rounded-full p-8 backdrop-blur-sm border border-primary/20">
+              <Award className="h-20 w-20 text-primary" />
+            </div>
+            <motion.div
+              animate={{ rotate: 360 }}
+              transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
+              className="absolute -top-2 -right-2"
+            >
+              <Sparkles className="h-8 w-8 text-yellow-400" />
+            </motion.div>
+          </motion.div>
         </div>
-      </div>
+        
+        <div className="space-y-4 max-w-2xl mx-auto">
+          {hasNoCertificates ? (
+            <>
+              <h3 className="text-2xl font-bold text-foreground">
+                Sua jornada de certificação começa aqui! 🚀
+              </h3>
+              <p className="text-lg text-muted-foreground">
+                Complete cursos e implemente soluções para conquistar seus primeiros certificados
+                e construir um portfólio sólido de competências.
+              </p>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-8 max-w-md mx-auto">
+                <motion.div
+                  whileHover={{ scale: 1.05 }}
+                  className="p-4 rounded-xl bg-gradient-to-br from-yellow-400/10 to-amber-400/10 border border-yellow-400/20"
+                >
+                  <BookOpen className="h-8 w-8 text-yellow-400 mx-auto mb-2" />
+                  <p className="text-sm font-medium text-yellow-400">Cursos Disponíveis</p>
+                  <p className="text-xs text-muted-foreground">Complete aulas e conquiste certificados</p>
+                </motion.div>
+                
+                <motion.div
+                  whileHover={{ scale: 1.05 }}
+                  className="p-4 rounded-xl bg-gradient-to-br from-blue-400/10 to-purple-400/10 border border-blue-400/20"
+                >
+                  <TrendingUp className="h-8 w-8 text-blue-400 mx-auto mb-2" />
+                  <p className="text-sm font-medium text-blue-400">Soluções Práticas</p>
+                  <p className="text-xs text-muted-foreground">Implemente e certifique seu conhecimento</p>
+                </motion.div>
+              </div>
+            </>
+          ) : (
+            <>
+              <h3 className="text-2xl font-bold text-foreground">
+                Nenhum certificado encontrado 🔍
+              </h3>
+              <p className="text-lg text-muted-foreground">
+                Ajuste os filtros ou termos de busca para encontrar seus certificados.
+              </p>
+            </>
+          )}
+        </div>
+      </motion.div>
     );
   }
 
-  // Se é para um curso específico, mostrar apenas certificados do curso
-  if (courseId) {
-    return (
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.6 }}
+      className="space-y-6"
+    >
+      {/* Resultados Header */}
+      <div className="flex items-center justify-between">
+        <p className="text-muted-foreground">
+          Exibindo <span className="font-semibold text-foreground">{filteredAndSortedCertificates.length}</span> certificado{filteredAndSortedCertificates.length !== 1 ? 's' : ''}
+        </p>
+      </div>
+
+      {/* Grid de Certificados */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredAndSortedData.courseCertificates.map((certificate) => (
-          <CertificateCard
+        {filteredAndSortedCertificates.map((certificate, index) => (
+          <motion.div
             key={certificate.id}
-            certificate={certificate}
-            onDownload={handleCourseDownload}
-          />
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: index * 0.1 }}
+          >
+            <CertificateCard
+              certificate={certificate}
+              onDownload={handleDownload}
+            />
+          </motion.div>
         ))}
       </div>
-    );
-  }
-
-  // Para a página geral de certificados, mostrar ambos os tipos em abas
-  return (
-    <Tabs defaultValue="all" className="w-full">
-      <TabsList className="w-full bg-[#151823]/80 backdrop-blur-sm border border-neutral-700/50 p-1">
-        <TabsTrigger 
-          value="all" 
-          className="flex-1 data-[state=active]:bg-viverblue data-[state=active]:text-white text-gray-300"
-        >
-          Todos ({totalCertificates})
-        </TabsTrigger>
-        <TabsTrigger 
-          value="solutions" 
-          className="flex-1 data-[state=active]:bg-viverblue data-[state=active]:text-white text-gray-300"
-        >
-          Soluções ({filteredAndSortedData.solutionCertificates.length})
-        </TabsTrigger>
-        <TabsTrigger 
-          value="courses" 
-          className="flex-1 data-[state=active]:bg-viverblue data-[state=active]:text-white text-gray-300"
-        >
-          Cursos ({filteredAndSortedData.courseCertificates.length})
-        </TabsTrigger>
-      </TabsList>
-      
-      <TabsContent value="all" className="mt-8">
-        <div className="space-y-8">
-          {/* Certificados de Soluções */}
-          {filteredAndSortedData.solutionCertificates.length > 0 && (
-            <div>
-              <h3 className="text-2xl font-semibold text-white mb-6 flex items-center gap-2">
-                <div className="w-1 h-6 bg-viverblue rounded-full"></div>
-                Certificados de Implementação
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredAndSortedData.solutionCertificates.map((certificate) => (
-                  <SolutionCertificateCard
-                    key={certificate.id}
-                    certificate={certificate}
-                    onDownload={handleSolutionDownload}
-                  />
-                ))}
-              </div>
-            </div>
-          )}
-          
-          {/* Certificados de Cursos */}
-          {filteredAndSortedData.courseCertificates.length > 0 && (
-            <div>
-              <h3 className="text-2xl font-semibold text-white mb-6 flex items-center gap-2">
-                <div className="w-1 h-6 bg-yellow-400 rounded-full"></div>
-                Certificados de Cursos
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredAndSortedData.courseCertificates.map((certificate) => (
-                  <CertificateCard
-                    key={certificate.id}
-                    certificate={certificate}
-                    onDownload={handleCourseDownload}
-                  />
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-      </TabsContent>
-      
-      <TabsContent value="solutions" className="mt-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredAndSortedData.solutionCertificates.map((certificate) => (
-            <SolutionCertificateCard
-              key={certificate.id}
-              certificate={certificate}
-              onDownload={handleSolutionDownload}
-            />
-          ))}
-        </div>
-      </TabsContent>
-      
-      <TabsContent value="courses" className="mt-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredAndSortedData.courseCertificates.map((certificate) => (
-            <CertificateCard
-              key={certificate.id}
-              certificate={certificate}
-              onDownload={handleCourseDownload}
-            />
-          ))}
-        </div>
-      </TabsContent>
-    </Tabs>
+    </motion.div>
   );
 };

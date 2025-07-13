@@ -12,24 +12,31 @@ const MemberCertificates = () => {
   const [sortBy, setSortBy] = useState("recent");
   
   return (
-    <div className="container mx-auto py-8 space-y-8">
-      <div className="flex flex-col gap-8">
-        <CertificatesHeader />
-        
-        <CertificatesFilters
-          searchTerm={searchTerm}
-          onSearchChange={setSearchTerm}
-          selectedCategory={selectedCategory}
-          onCategoryChange={setSelectedCategory}
-          sortBy={sortBy}
-          onSortChange={setSortBy}
-        />
-        
-        <CertificatesList 
-          searchTerm={searchTerm}
-          selectedCategory={selectedCategory}
-          sortBy={sortBy}
-        />
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-accent/5">
+      {/* Background Pattern */}
+      <div className="absolute inset-0 bg-grid-pattern opacity-5"></div>
+      
+      <div className="relative z-10">
+        <div className="container mx-auto px-4 py-8 space-y-8 max-w-7xl">
+          <CertificatesHeader />
+          
+          <div className="space-y-6">
+            <CertificatesFilters
+              searchTerm={searchTerm}
+              onSearchChange={setSearchTerm}
+              selectedCategory={selectedCategory}
+              onCategoryChange={setSelectedCategory}
+              sortBy={sortBy}
+              onSortChange={setSortBy}
+            />
+            
+            <CertificatesList 
+              searchTerm={searchTerm}
+              selectedCategory={selectedCategory}
+              sortBy={sortBy}
+            />
+          </div>
+        </div>
       </div>
     </div>
   );
