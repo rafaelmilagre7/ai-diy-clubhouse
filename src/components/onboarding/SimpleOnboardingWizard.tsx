@@ -64,6 +64,26 @@ export const SimpleOnboardingWizard: React.FC = () => {
   const [isCompleting, setIsCompleting] = useState(false);
   const [saveTimeout, setSaveTimeout] = useState<NodeJS.Timeout | null>(null);
 
+  // TODOS OS HOOKS DEVEM ESTAR AQUI - ANTES DE QUALQUER RETURN CONDICIONAL
+  const handleDataChange = useCallback((stepData: any) => {
+    console.log('🔄 [DATA-CHANGE] Atualizando dados em tempo real:', stepData);
+    setOnboardingData(prev => ({
+      ...prev,
+      ...stepData
+    }));
+    
+    // Debounce do auto-save: aguarda 1 segundo sem mudanças antes de salvar
+    if (saveTimeout) {
+      clearTimeout(saveTimeout);
+    }
+    
+    const newTimeout = setTimeout(() => {
+      autoSaveData();
+    }, 1000);
+    
+    setSaveTimeout(newTimeout);
+  }, []); // Removido saveTimeout da dependência para evitar recriações
+
   // Carregar dados existentes do onboarding
   useEffect(() => {
     if (user) {
@@ -469,24 +489,6 @@ export const SimpleOnboardingWizard: React.FC = () => {
     );
   }
 
-  const handleDataChange = useCallback((stepData: any) => {
-    console.log('🔄 [DATA-CHANGE] Atualizando dados em tempo real:', stepData);
-    setOnboardingData(prev => ({
-      ...prev,
-      ...stepData
-    }));
-    
-    // Debounce do auto-save: aguarda 1 segundo sem mudanças antes de salvar
-    if (saveTimeout) {
-      clearTimeout(saveTimeout);
-    }
-    
-    const newTimeout = setTimeout(() => {
-      autoSaveData();
-    }, 1000); // Aumentei para 1 segundo para reduzir chamadas
-    
-    setSaveTimeout(newTimeout);
-  }, []); // Removido saveTimeout da dependência para evitar recriações
 
   const renderCurrentStep = () => {
     const stepProps = {
