@@ -86,8 +86,8 @@ export const MemberSidebarNavItems: React.FC<MemberSidebarNavItemsProps> = ({ si
       type: "regular"
     },
     {
-      title: "Wiki de IA",
-      href: "/wiki",
+      title: "Glossário IA",
+      href: "/glossario",
       icon: BookOpen,
       type: "regular"
     },

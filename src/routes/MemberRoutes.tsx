@@ -36,9 +36,9 @@ import TopicView from '@/pages/member/community/TopicView';
 import CategoryView from '@/pages/member/community/CategoryView';
 import NewTopic from '@/pages/member/community/NewTopic';
 
-// Wiki pages
-import { WikiPage } from '@/pages/WikiPage';
-import { WikiArticlePage } from '@/pages/WikiArticlePage';
+// Glossary pages
+import { GlossaryPage } from '@/pages/GlossaryPage';
+import { GlossaryTermPage } from '@/pages/GlossaryTermPage';
 
 // Profile pages
 import NotificationSettingsPage from '@/pages/profile/NotificationSettingsPage';
@@ -104,8 +104,8 @@ export const memberRoutes: RouteObject[] = [
   createProtectedRoute("/comunidade/categoria/:slug", CategoryView),
   createProtectedRoute("/comunidade/novo-topico/:categorySlug", NewTopic),
   
-  // Wiki Routes
-  createProtectedRoute("/wiki", WikiPage),
-  createProtectedRoute("/wiki/categoria/:categorySlug", WikiPage),
-  createProtectedRoute("/wiki/artigo/:slug", WikiArticlePage),
+  // Glossary Routes
+  createProtectedRoute("/glossario", GlossaryPage),
+  createProtectedRoute("/glossario/categoria/:categorySlug", GlossaryPage),
+  createProtectedRoute("/glossario/termo/:slug", GlossaryTermPage),
 ];

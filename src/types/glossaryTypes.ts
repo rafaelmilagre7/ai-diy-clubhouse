@@ -1,4 +1,4 @@
-export interface WikiCategory {
+export interface GlossaryCategory {
   id: string;
   name: string;
   slug: string;
@@ -11,14 +11,17 @@ export interface WikiCategory {
   updated_at: string;
 }
 
-export interface WikiArticle {
+export interface GlossaryTerm {
   id: string;
   title: string;
   slug: string;
-  content: string;
-  excerpt?: string;
+  definition: string;
+  short_definition?: string;
   category_id?: string;
   tags?: string[];
+  related_terms?: string[];
+  synonyms?: string[];
+  examples?: string[];
   difficulty_level?: 'iniciante' | 'intermediario' | 'avancado';
   reading_time_minutes?: number;
   view_count?: number;
@@ -29,7 +32,7 @@ export interface WikiArticle {
   updated_at: string;
 }
 
-export interface WikiArticleWithCategory extends WikiArticle {
+export interface GlossaryTermWithCategory extends GlossaryTerm {
   category_name?: string;
   category_slug?: string;
   category_color?: string;
@@ -38,10 +41,10 @@ export interface WikiArticleWithCategory extends WikiArticle {
   author_avatar?: string;
 }
 
-export interface WikiArticleRelation {
+export interface GlossaryTermRelation {
   id: string;
-  article_id: string;
-  related_article_id: string;
+  term_id: string;
+  related_term_id: string;
   relation_type: 'related' | 'prerequisite' | 'next_step';
   created_at: string;
 }
