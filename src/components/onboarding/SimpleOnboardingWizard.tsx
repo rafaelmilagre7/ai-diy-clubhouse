@@ -236,11 +236,12 @@ export const SimpleOnboardingWizard: React.FC = () => {
         .from('onboarding_final')
         .select('*')
         .eq('user_id', user!.id)
-        .single();
+        .maybeSingle();
 
       console.log('📥 [ONBOARDING] Resultado da consulta:', { data, error });
 
-      if (error && error.code !== 'PGRST116') {
+      if (error) {
+        console.error('❌ [ONBOARDING] Erro na consulta:', error);
         throw error;
       }
 
