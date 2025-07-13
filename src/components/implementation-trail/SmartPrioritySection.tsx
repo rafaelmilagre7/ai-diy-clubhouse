@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { SmartSolutionCard } from './SmartSolutionCard';
-import { useSolutionData } from '@/hooks/implementation-trail/useSolutionData';
+import { useSolutionDataContext } from './contexts/SolutionDataContext';
 import { Skeleton } from '@/components/ui/skeleton';
 
 interface Recommendation {
@@ -24,9 +24,15 @@ export const SmartPrioritySection = ({
   priority
 }: SmartPrioritySectionProps) => {
   const solutionIds = recommendations.map(rec => rec.solutionId);
-  const { solutions, loading } = useSolutionData(solutionIds);
+  const { solutions, loading, loadSolutions } = useSolutionDataContext();
 
-  if (loading) {
+  useEffect(() => {
+    loadSolutions(solutionIds);
+  }, [solutionIds.join(',')]);
+
+  const hasAllSolutions = solutionIds.every(id => solutions[id]);
+
+  if (loading || !hasAllSolutions) {
     return (
       <div className="space-y-4">
         <div>

@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { ImplementationTrailTabs } from './ImplementationTrailTabs';
+import { SolutionDataProvider } from './contexts/SolutionDataContext';
 
 interface ImplementationTrail {
   priority1: Array<{
@@ -39,8 +40,10 @@ interface ImplementationTrailContentProps {
 
 export const ImplementationTrailContent = ({ trail }: ImplementationTrailContentProps) => {
   return (
-    <div className="space-y-6 pb-8">
-      <ImplementationTrailTabs trail={trail} />
-    </div>
+    <SolutionDataProvider>
+      <div className="space-y-6 pb-8">
+        <ImplementationTrailTabs trail={trail} />
+      </div>
+    </SolutionDataProvider>
   );
 };

@@ -3,7 +3,7 @@ import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Clock, TrendingUp, Settings, BarChart, Brain, Users, Lightbulb, Zap, ArrowRight } from 'lucide-react';
-import { SolutionData } from '@/hooks/implementation-trail/useSolutionData';
+import { SolutionData } from './contexts/SolutionDataContext';
 import { useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { CardContentSection } from '@/components/dashboard/CardContent';

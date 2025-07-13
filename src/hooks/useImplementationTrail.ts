@@ -172,8 +172,11 @@ export function useImplementationTrail() {
     generateTrail();
   };
 
+  // Evitar chamadas duplicadas usando useEffect com dependências específicas
   useEffect(() => {
-    loadTrail();
+    if (user?.id) {
+      loadTrail();
+    }
   }, [user?.id]);
 
   return {

@@ -4,7 +4,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Lightbulb, ArrowRight, Clock, Target, Sparkles, Zap, Star } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { useSolutionData } from '@/hooks/implementation-trail/useSolutionData';
+import { useSolutionDataContext } from './contexts/SolutionDataContext';
 import { useImageURL } from '@/hooks/useImageURL';
 
 interface Recommendation {
@@ -26,8 +26,12 @@ export const SolutionRecommendationCard = ({
   iconColor,
 }: SolutionRecommendationCardProps) => {
   const navigate = useNavigate();
-  const { solutions, loading } = useSolutionData([recommendation.solutionId]);
+  const { solutions, loading, loadSolutions } = useSolutionDataContext();
   const { optimizeImageURL } = useImageURL();
+  
+  React.useEffect(() => {
+    loadSolutions([recommendation.solutionId]);
+  }, [recommendation.solutionId]);
   
   const solutionData = solutions[recommendation.solutionId];
 
