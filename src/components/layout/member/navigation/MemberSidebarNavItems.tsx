@@ -270,16 +270,9 @@ export const MemberSidebarNavItems: React.FC<MemberSidebarNavItemsProps> = ({ si
         
         {/* Grupo de Recursos */}
         <div className="space-y-1">
-          {navigationItems.slice(5, 12).map(item => renderNavButton(item))}
+          {navigationItems.slice(5).map(item => renderNavButton(item))}
         </div>
       </div>
-      
-      {/* Admin no final se existir */}
-      {getUserRoleName(profile) === 'admin' && (
-        <div className="mt-auto pt-3 border-t border-white/10">
-          {renderNavButton(navigationItems[navigationItems.length - 1])}
-        </div>
-      )}
     </div>
   );
 };
