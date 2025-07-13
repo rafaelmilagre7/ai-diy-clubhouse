@@ -27,6 +27,7 @@ import Networking from '@/pages/member/Networking';
 import LearningPage from '@/pages/member/learning/LearningPage';
 import CourseDetails from '@/pages/member/learning/CourseDetails';
 import LessonView from '@/pages/member/learning/LessonView';
+import CertificatesPage from '@/pages/member/learning/CertificatesPage';
 import MemberCertificates from '@/pages/member/learning/MemberCertificates';
 
 // Member Community pages
@@ -86,7 +87,7 @@ export const memberRoutes: RouteObject[] = [
   createProtectedRoute("/learning", LearningPage),
   createProtectedRoute("/learning/course/:id", CourseDetails),
   createProtectedRoute("/learning/course/:courseId/lesson/:lessonId", LessonView),
-  createProtectedRoute("/learning/certificates", MemberCertificates),
+  createProtectedRoute("/learning/certificates", CertificatesPage),
   
   // Sugestões Routes
   createProtectedRoute("/suggestions", Suggestions),
