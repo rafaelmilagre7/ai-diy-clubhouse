@@ -309,6 +309,12 @@ export const SimpleOnboardingWizard: React.FC = () => {
     }
   };
 
+  const handleNextFromNavigation = async () => {
+    // Esta função é chamada pelos botões de navegação
+    // Não faz nada porque cada step deve chamar onNext com seus próprios dados
+    console.log('⚠️ [ONBOARDING] handleNextFromNavigation foi chamada - esta não deveria ser usada');
+  };
+
   const completeOnboarding = async () => {
     if (!user) return;
     
@@ -397,18 +403,20 @@ export const SimpleOnboardingWizard: React.FC = () => {
           {renderCurrentStep()}
           
           {/* Navegação */}
-          <div className="mt-8 pt-6 border-t">
-            <SimpleStepNavigation
-              currentStep={currentStep}
-              totalSteps={TOTAL_STEPS}
-              onPrevious={handlePrevious}
-              onNext={() => handleNext()}
-              onComplete={completeOnboarding}
-              canGoNext={true}
-              canGoPrevious={currentStep > 1}
-              isLoading={isSaving || isCompleting}
-            />
-          </div>
+          {currentStep > 1 && (
+            <div className="mt-8 pt-6 border-t">
+              <SimpleStepNavigation
+                currentStep={currentStep}
+                totalSteps={TOTAL_STEPS}
+                onPrevious={handlePrevious}
+                onNext={handleNextFromNavigation}
+                onComplete={completeOnboarding}
+                canGoNext={true}
+                canGoPrevious={currentStep > 1}
+                isLoading={isSaving || isCompleting}
+              />
+            </div>
+          )}
         </div>
       </main>
     </div>

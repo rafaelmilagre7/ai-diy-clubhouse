@@ -3,11 +3,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Button } from '@/components/ui/button';
 import { WhatsAppInput } from '@/components/onboarding/components/WhatsAppInput';
 import { BirthDateSelector } from '@/components/onboarding/components/BirthDateSelector';
 import { LocationSelector } from '@/components/onboarding/components/LocationSelector';
 import { ProfilePictureUpload } from '@/components/onboarding/components/ProfilePictureUpload';
-import { User, MapPin } from 'lucide-react';
+import { User, MapPin, ChevronRight } from 'lucide-react';
 
 interface SimpleOnboardingStep1Props {
   data: any;
@@ -268,6 +269,22 @@ export const SimpleOnboardingStep1: React.FC<SimpleOnboardingStep1Props> = ({
           Suas informações estão seguras - Utilizamos criptografia avançada 
           e seguimos as melhores práticas de segurança para proteger seus dados.
         </p>
+      </div>
+
+      {/* Botão Continuar */}
+      <div className="flex justify-end pt-6">
+        <Button
+          onClick={handleNext}
+          disabled={isLoading}
+          className="min-w-[120px]"
+        >
+          {isLoading ? (
+            <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin mr-2" />
+          ) : (
+            <ChevronRight className="w-4 h-4 ml-2" />
+          )}
+          {isLoading ? "Salvando..." : "Continuar"}
+        </Button>
       </div>
     </div>
   );
