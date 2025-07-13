@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/auth';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
@@ -202,10 +202,38 @@ export const SimpleOnboardingWizard: React.FC = () => {
 
       if (data) {
         console.log('✅ [ONBOARDING] Dados carregados:', data);
-        setOnboardingData(data);
+        // Carregar dados de forma estruturada para evitar loops
+        const structuredData = {
+          personal_info: data.personal_info || {},
+          location_info: data.location_info || {},
+          discovery_info: data.discovery_info || {},
+          business_info: data.business_info || {},
+          business_context: data.business_context || {},
+          goals_info: data.goals_info || {},
+          ai_experience: data.ai_experience || {},
+          personalization: data.personalization || {},
+          current_step: data.current_step || 1,
+          completed_steps: data.completed_steps || [],
+          is_completed: data.is_completed || false
+        };
+        setOnboardingData(structuredData);
         setCurrentStep(data.current_step || 1);
       } else {
         console.log('📭 [ONBOARDING] Nenhum dado encontrado, iniciando do zero');
+        // Inicializar com estrutura padrão vazia
+        setOnboardingData({
+          personal_info: {},
+          location_info: {},
+          discovery_info: {},
+          business_info: {},
+          business_context: {},
+          goals_info: {},
+          ai_experience: {},
+          personalization: {},
+          current_step: 1,
+          completed_steps: [],
+          is_completed: false
+        });
       }
     } catch (error) {
       console.error('❌ [ONBOARDING] Erro ao carregar dados:', error);
@@ -441,24 +469,24 @@ export const SimpleOnboardingWizard: React.FC = () => {
     );
   }
 
-  const handleDataChange = (stepData: any) => {
+  const handleDataChange = useCallback((stepData: any) => {
     console.log('🔄 [DATA-CHANGE] Atualizando dados em tempo real:', stepData);
     setOnboardingData(prev => ({
       ...prev,
       ...stepData
     }));
     
-    // Debounce do auto-save: aguarda 500ms sem mudanças antes de salvar
+    // Debounce do auto-save: aguarda 1 segundo sem mudanças antes de salvar
     if (saveTimeout) {
       clearTimeout(saveTimeout);
     }
     
     const newTimeout = setTimeout(() => {
       autoSaveData();
-    }, 500);
+    }, 1000); // Aumentei para 1 segundo para reduzir chamadas
     
     setSaveTimeout(newTimeout);
-  };
+  }, []); // Removido saveTimeout da dependência para evitar recriações
 
   const renderCurrentStep = () => {
     const stepProps = {
