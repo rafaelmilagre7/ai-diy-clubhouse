@@ -63,7 +63,7 @@ export const SmartPrioritySection = ({
         <p className="text-medium-contrast">{subtitle}</p>
       </div>
       
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
+      <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2 2xl:grid-cols-3">
         {recommendations.map((recommendation) => {
           const solution = solutions[recommendation.solutionId];
           
