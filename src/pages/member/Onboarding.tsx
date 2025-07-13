@@ -31,7 +31,7 @@ const OnboardingPage = () => {
         <div className="bg-yellow-500/10 border-b border-yellow-500/20 p-4 text-center">
           <p className="text-sm text-yellow-700 dark:text-yellow-300">
             ⚠️ <strong>Você não está logado.</strong> Você pode visualizar o onboarding, mas os dados não serão salvos.{' '}
-            <Link to="/login-simple" className="underline font-medium">
+            <Link to="/login" className="underline font-medium">
               Faça login aqui
             </Link>
           </p>
