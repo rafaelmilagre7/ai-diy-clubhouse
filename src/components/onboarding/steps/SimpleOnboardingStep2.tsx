@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Briefcase } from 'lucide-react';
 
@@ -242,6 +243,20 @@ export const SimpleOnboardingStep2: React.FC<SimpleOnboardingStep2Props> = ({
           </div>
         </CardContent>
       </Card>
+
+      {/* Botão Continuar */}
+      <div className="flex justify-end pt-6">
+        <Button
+          onClick={handleNext}
+          disabled={isLoading}
+          className="min-w-[120px]"
+        >
+          {isLoading ? (
+            <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin mr-2" />
+          ) : null}
+          {isLoading ? "Salvando..." : "Continuar"}
+        </Button>
+      </div>
     </div>
   );
 };
