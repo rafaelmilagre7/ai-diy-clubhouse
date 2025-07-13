@@ -88,9 +88,23 @@ export const SimpleOnboardingWizard: React.FC = () => {
   }, [onboardingData, user, isLoading]);
 
   const autoSaveData = async () => {
-    if (!user || isSaving) return;
+    console.log('🔄 [AUTO-SAVE] Iniciando salvamento automático...');
+    console.log('🔍 [AUTO-SAVE] Verificações iniciais:', {
+      user: user ? 'Logado' : 'Não logado',
+      user_id: user?.id,
+      isSaving,
+      dataLength: Object.keys(onboardingData).length
+    });
     
-    console.log('🔄 [AUTO-SAVE] Executando salvamento automático...');
+    if (!user) {
+      console.warn('⚠️ [AUTO-SAVE] Usuário não autenticado, cancelando salvamento');
+      return;
+    }
+    
+    if (isSaving) {
+      console.warn('⚠️ [AUTO-SAVE] Já está salvando, cancelando');
+      return;
+    }
     
     try {
       const finalData = {
@@ -109,12 +123,20 @@ export const SimpleOnboardingWizard: React.FC = () => {
         // Removi updated_at - será gerenciado pelo trigger automaticamente
       };
 
+      console.log('💾 [AUTO-SAVE] Dados a serem salvos:', finalData);
+
       const { error } = await supabase
         .from('onboarding_final')
         .upsert(finalData);
 
       if (error) {
         console.error('❌ [AUTO-SAVE] Erro ao salvar:', error);
+        console.error('❌ [AUTO-SAVE] Detalhes do erro:', {
+          message: error.message,
+          code: error.code,
+          details: error.details,
+          hint: error.hint
+        });
       } else {
         console.log('✅ [AUTO-SAVE] Dados salvos automaticamente!');
       }
@@ -208,15 +230,29 @@ export const SimpleOnboardingWizard: React.FC = () => {
   };
 
   const saveOnboardingData = async (stepData: any, stepNumber: number) => {
-    if (!user) return;
-    
-    console.log('🔄 [ONBOARDING] Iniciando salvamento:', {
+    console.log('💾 [ONBOARDING] Iniciando salvamento de dados...');
+    console.log('💾 [ONBOARDING] Verificações iniciais:', {
+      user: user ? 'Logado' : 'Não logado',
+      user_id: user?.id,
+      isSaving,
       stepNumber,
-      stepData,
-      currentOnboardingData: onboardingData,
-      userId: user.id
+      stepDataKeys: Object.keys(stepData || {})
     });
-    
+
+    if (!user) {
+      console.error('❌ [ONBOARDING] Usuário não autenticado!');
+      toast({
+        title: "Erro de autenticação",
+        description: "Você precisa estar logado para salvar seus dados.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (isSaving) {
+      console.warn('⚠️ [ONBOARDING] Já está salvando, cancelando');
+      return;
+    }
     
     setIsSaving(true);
     try {
@@ -287,6 +323,12 @@ export const SimpleOnboardingWizard: React.FC = () => {
 
       if (error) {
         console.error('❌ [ONBOARDING] Erro ao salvar no Supabase:', error);
+        console.error('❌ [ONBOARDING] Detalhes do erro:', {
+          message: error.message,
+          code: error.code,
+          details: error.details,
+          hint: error.hint
+        });
         throw error;
       }
 
@@ -294,7 +336,7 @@ export const SimpleOnboardingWizard: React.FC = () => {
       setOnboardingData(updatedData);
 
     } catch (error) {
-      console.error('Erro ao salvar dados:', error);
+      console.error('❌ [ONBOARDING] Erro ao salvar dados:', error);
       toast({
         title: "Erro ao salvar",
         description: "Não foi possível salvar seu progresso. Tente novamente.",
