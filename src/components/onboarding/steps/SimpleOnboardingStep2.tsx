@@ -10,12 +10,14 @@ interface SimpleOnboardingStep2Props {
   data: any;
   onNext: (data: any) => void;
   isLoading?: boolean;
+  onDataChange?: (data: any) => void;
 }
 
 export const SimpleOnboardingStep2: React.FC<SimpleOnboardingStep2Props> = ({
   data,
   onNext,
-  isLoading = false
+  isLoading = false,
+  onDataChange
 }) => {
   const [formData, setFormData] = useState({
     companyName: data.business_info?.companyName || '',
@@ -28,14 +30,33 @@ export const SimpleOnboardingStep2: React.FC<SimpleOnboardingStep2Props> = ({
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [autoSaveTimeoutId, setAutoSaveTimeoutId] = useState<NodeJS.Timeout | null>(null);
 
   const getFieldError = (field: string) => errors[field];
 
   const handleInputChange = (field: string, value: string) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value
-    }));
+    setFormData(prev => {
+      const newFormData = {
+        ...prev,
+        [field]: value
+      };
+      
+      // Notificar mudanças para auto-save apenas após 500ms de inatividade
+      if (onDataChange) {
+        if (autoSaveTimeoutId) {
+          clearTimeout(autoSaveTimeoutId);
+        }
+        const newTimeoutId = setTimeout(() => {
+          const stepData = {
+            business_info: newFormData
+          };
+          onDataChange(stepData);
+        }, 500);
+        setAutoSaveTimeoutId(newTimeoutId);
+      }
+      
+      return newFormData;
+    });
 
     // Limpar erro do campo quando usuário interagir
     if (errors[field]) {

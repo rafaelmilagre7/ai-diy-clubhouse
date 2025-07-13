@@ -114,7 +114,7 @@ export const SimpleOnboardingWizard: React.FC = () => {
       case 1:
         return <SimpleOnboardingStep1 {...stepProps} onDataChange={handleDataChange} />;
       case 2:
-        return <SimpleOnboardingStep2 {...stepProps} />;
+        return <SimpleOnboardingStep2 {...stepProps} onDataChange={handleDataChange} />;
       case 3:
         return <SimpleOnboardingStep3 {...stepProps} onDataChange={handleDataChange} />;
       case 4:
@@ -122,7 +122,7 @@ export const SimpleOnboardingWizard: React.FC = () => {
       case 5:
         return <SimpleOnboardingStep5 {...stepProps} onDataChange={handleDataChange} />;
       case 6:
-        return <SimpleOnboardingStep6 {...stepProps} />;
+        return <SimpleOnboardingStep6 {...stepProps} onDataChange={handleDataChange} />;
       default:
         return <SimpleOnboardingStep1 {...stepProps} />;
     }

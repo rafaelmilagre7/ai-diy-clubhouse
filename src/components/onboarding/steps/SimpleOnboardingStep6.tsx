@@ -18,6 +18,7 @@ interface SimpleOnboardingStep6Props {
   data: any;
   onNext: (data: any) => void;
   isLoading?: boolean;
+  onDataChange?: (data: any) => void;
 }
 
 export const SimpleOnboardingStep6: React.FC<SimpleOnboardingStep6Props> = ({
