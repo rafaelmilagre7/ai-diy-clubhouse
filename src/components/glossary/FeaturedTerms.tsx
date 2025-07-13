@@ -1,7 +1,7 @@
 import React from "react";
 import { useFeaturedTerms } from "@/hooks/useGlossary";
 import { GlossaryTermCard } from "./GlossaryTermCard";
-import { Star, Rocket } from "lucide-react";
+import { Star, Rocket, Zap } from "lucide-react";
 
 export const FeaturedTerms = () => {
   const { data: featuredTerms, isLoading } = useFeaturedTerms();
