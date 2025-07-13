@@ -5645,8 +5645,8 @@ export type Database = {
           published: boolean
           created_at: string
           updated_at: string
-          order_index: number
           created_by: string
+          order_index: number
           module_count: number
           lesson_count: number
           is_restricted: boolean
