@@ -84,6 +84,32 @@ export const SimpleOnboardingWizard: React.FC = () => {
     setSaveTimeout(newTimeout);
   }, []); // Removido saveTimeout da dependência para evitar recriações
 
+  // TODAS AS FUNÇÕES DEVEM ESTAR ANTES DOS RETURNS CONDICIONAIS
+  const renderCurrentStep = () => {
+    const stepProps = {
+      data: onboardingData,
+      onNext: handleNext,
+      isLoading: isSaving
+    };
+
+    switch (currentStep) {
+      case 1:
+        return <SimpleOnboardingStep1 {...stepProps} onDataChange={handleDataChange} />;
+      case 2:
+        return <SimpleOnboardingStep2 {...stepProps} />;
+      case 3:
+        return <SimpleOnboardingStep3 {...stepProps} />;
+      case 4:
+        return <SimpleOnboardingStep4 {...stepProps} />;
+      case 5:
+        return <SimpleOnboardingStep5 {...stepProps} />;
+      case 6:
+        return <SimpleOnboardingStep6 {...stepProps} />;
+      default:
+        return <SimpleOnboardingStep1 {...stepProps} />;
+    }
+  };
+
   // Carregar dados existentes do onboarding
   useEffect(() => {
     if (user) {
@@ -490,30 +516,6 @@ export const SimpleOnboardingWizard: React.FC = () => {
   }
 
 
-  const renderCurrentStep = () => {
-    const stepProps = {
-      data: onboardingData,
-      onNext: handleNext,
-      isLoading: isSaving
-    };
-
-    switch (currentStep) {
-      case 1:
-        return <SimpleOnboardingStep1 {...stepProps} onDataChange={handleDataChange} />;
-      case 2:
-        return <SimpleOnboardingStep2 {...stepProps} />;
-      case 3:
-        return <SimpleOnboardingStep3 {...stepProps} />;
-      case 4:
-        return <SimpleOnboardingStep4 {...stepProps} />;
-      case 5:
-        return <SimpleOnboardingStep5 {...stepProps} />;
-      case 6:
-        return <SimpleOnboardingStep6 {...stepProps} />;
-      default:
-        return <SimpleOnboardingStep1 {...stepProps} />;
-    }
-  };
 
   return (
     <div className="min-h-screen bg-background">
