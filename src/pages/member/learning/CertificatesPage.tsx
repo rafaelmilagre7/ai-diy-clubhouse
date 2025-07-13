@@ -11,7 +11,7 @@ import { useUserProgress } from "@/hooks/learning/useUserProgress";
 import { useDynamicSEO } from "@/hooks/seo/useDynamicSEO";
 import { CertificatePreview } from "@/components/learning/certificates/CertificatePreview";
 import { CertificateEligibility } from "@/components/learning/certificates/CertificateEligibility";
-import { SocialShareButtons } from "@/components/learning/certificates/SocialShareButtons";
+
 import { 
   Award, 
   Download, 
@@ -261,8 +261,6 @@ export default function CertificatesPage() {
                         Baixar
                       </Button>
                     </div>
-
-                    <SocialShareButtons certificate={certificate} />
                   </CardContent>
                 </Card>
               ))}
