@@ -215,12 +215,26 @@ export const SimpleOnboardingWizard: React.FC = () => {
         ...updatedData
       });
 
+      const finalData = {
+        user_id: user.id,
+        personal_info: updatedData.personal_info || {},
+        location_info: updatedData.location_info || {},
+        discovery_info: updatedData.discovery_info || {},
+        business_info: updatedData.business_info || {},
+        business_context: updatedData.business_context || {},
+        goals_info: updatedData.goals_info || {},
+        ai_experience: updatedData.ai_experience || {},
+        personalization: updatedData.personalization || {},
+        current_step: updatedData.current_step || 1,
+        completed_steps: updatedData.completed_steps || [],
+        is_completed: updatedData.is_completed || false
+      };
+
+      console.log('💾 [ONBOARDING] Dados finais formatados para upsert:', finalData);
+
       const { error } = await supabase
         .from('onboarding_final')
-        .upsert({
-          user_id: user.id,
-          ...updatedData
-        });
+        .upsert(finalData);
 
       if (error) {
         console.error('❌ [ONBOARDING] Erro ao salvar no Supabase:', error);
