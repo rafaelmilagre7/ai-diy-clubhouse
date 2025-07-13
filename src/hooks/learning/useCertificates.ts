@@ -10,18 +10,19 @@ export const useCertificates = (courseId?: string) => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   
-  // Buscar certificados do usuário
+  // Buscar certificados do usuário (cursos e soluções)
   const { 
     data: certificates = [],
     isLoading,
     error
   } = useQuery({
-    queryKey: ['learning-certificates', user?.id, courseId],
+    queryKey: ['all-certificates', user?.id, courseId],
     queryFn: async () => {
       if (!user) return [];
       
       try {
-        let query = supabase
+        // Buscar certificados de cursos
+        let learningQuery = supabase
           .from('learning_certificates')
           .select(`
             *,
@@ -29,14 +30,43 @@ export const useCertificates = (courseId?: string) => {
           `);
           
         if (courseId) {
-          query = query.eq('course_id', courseId);
+          learningQuery = learningQuery.eq('course_id', courseId);
         }
         
-        const { data, error } = await query.eq('user_id', user.id);
+        const { data: learningCerts, error: learningError } = await learningQuery.eq('user_id', user.id);
         
-        if (error) throw error;
+        if (learningError) throw learningError;
+
+        // Buscar certificados de soluções
+        const { data: solutionCerts, error: solutionError } = await supabase
+          .from('solution_certificates')
+          .select(`
+            *,
+            solutions (title, description, logo_url)
+          `)
+          .eq('user_id', user.id);
         
-        return data as Certificate[];
+        if (solutionError) throw solutionError;
+
+        // Unificar os certificados com tipo identificador
+        const allCertificates = [
+          ...(learningCerts || []).map(cert => ({
+            ...cert,
+            type: 'course' as const,
+            title: cert.learning_courses?.title,
+            description: cert.learning_courses?.description,
+            image_url: cert.learning_courses?.cover_image_url
+          })),
+          ...(solutionCerts || []).map(cert => ({
+            ...cert,
+            type: 'solution' as const,
+            title: cert.solutions?.title,
+            description: cert.solutions?.description,
+            image_url: cert.solutions?.logo_url
+          }))
+        ];
+        
+        return allCertificates;
       } catch (error) {
         console.error("Erro ao buscar certificados:", error);
         return [];
@@ -149,10 +179,11 @@ export const useCertificates = (courseId?: string) => {
 const generateCertificatePDF = async (certificate: any) => {
   try {
     // Template profissional de certificado
-    const courseName = certificate.learning_courses?.title || "Curso";
-    const studentName = certificate.profiles?.name || "Estudante"; 
+    const courseName = certificate.title || certificate.learning_courses?.title || certificate.solutions?.title || "Curso";
+    const studentName = "Rafael Milagre"; // Você pode buscar do perfil do usuário se necessário
     const issueDate = new Date(certificate.issued_at).toLocaleDateString('pt-BR');
     const validationCode = certificate.validation_code;
+    const certificateType = certificate.type === 'solution' ? 'solução' : 'curso';
 
     const htmlContent = `
       <!DOCTYPE html>
@@ -426,7 +457,7 @@ const generateCertificatePDF = async (certificate: any) => {
             
             <h2 class="student-name">${studentName}</h2>
             
-            <p class="completion-text">concluiu com êxito o curso</p>
+            <p class="completion-text">concluiu com êxito ${certificateType === 'solução' ? 'a' : 'o'} ${certificateType}</p>
             
             <h3 class="course-name">${courseName}</h3>
             
