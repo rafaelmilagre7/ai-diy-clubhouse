@@ -104,14 +104,28 @@ export const SimpleOnboardingWizard: React.FC = () => {
 
       console.log('💾 [AUTO-SAVE] Dados a serem salvos:', finalData);
 
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('onboarding_final')
         .upsert(finalData);
 
       if (error) {
         console.error('❌ [AUTO-SAVE] Erro ao salvar:', error);
+        toast({
+          title: "Erro ao salvar",
+          description: "Falha no salvamento automático: " + error.message,
+          variant: "destructive",
+        });
       } else {
-        console.log('✅ [AUTO-SAVE] Dados salvos automaticamente!');
+        console.log('✅ [AUTO-SAVE] Dados salvos automaticamente!', data);
+        
+        // Verificar se realmente salvou
+        const { data: savedData } = await supabase
+          .from('onboarding_final')
+          .select('*')
+          .eq('user_id', user.id)
+          .single();
+        
+        console.log('🔍 [AUTO-SAVE] Verificação pós-salvamento:', savedData);
       }
     } catch (error) {
       console.error('❌ [AUTO-SAVE] Erro inesperado:', error);
