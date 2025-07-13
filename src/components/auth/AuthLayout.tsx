@@ -8,7 +8,6 @@ import { supabase } from "@/lib/supabase";
 import { toast } from "@/hooks/use-toast";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { useAuth } from "@/contexts/auth";
 import SignUpForm from "./SignUpForm";
 
 const AuthLayout = () => {
@@ -19,7 +18,8 @@ const AuthLayout = () => {
   const [isSignUp, setIsSignUp] = useState(false);
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { user, profile, isAdmin } = useAuth();
+  const [user, setUser] = useState(null);
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
 
   // Verificar se há token de convite na URL para mostrar registro
   useEffect(() => {
@@ -29,28 +29,25 @@ const AuthLayout = () => {
     }
   }, [searchParams]);
 
-  // CORREÇÃO CRÍTICA 1: Verificar se usuário já está logado e redirecionar
+  // Verificar se usuário já está logado e redirecionar
   useEffect(() => {
-    if (user && profile) {
-      console.log("[AUTH-LAYOUT] Usuário já autenticado detectado, redirecionando...", {
-        email: user.email,
-        isAdmin,
-        profileRole: profile.role_id
-      });
-      
-      // Usar apenas verificações seguras de admin
-      if (isAdmin) {
-        console.log("[AUTH-LAYOUT] Redirecionando admin para /admin");
-        navigate('/admin', { replace: true });
-      } else if (profile.user_roles?.name === 'formacao') {
-        console.log("[AUTH-LAYOUT] Redirecionando formação para /formacao");
-        navigate('/formacao', { replace: true });
-      } else {
-        console.log("[AUTH-LAYOUT] Redirecionando usuário comum para /dashboard");
-        navigate('/dashboard', { replace: true });
+    const checkAuth = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user) {
+          setUser(session.user);
+          console.log("[AUTH-LAYOUT] Usuário já autenticado, redirecionando para /");
+          navigate('/', { replace: true });
+        }
+      } catch (error) {
+        console.error("[AUTH-LAYOUT] Erro ao verificar autenticação:", error);
+      } finally {
+        setIsCheckingAuth(false);
       }
-    }
-  }, [user, profile, isAdmin, navigate]);
+    };
+
+    checkAuth();
+  }, [navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -85,8 +82,8 @@ const AuthLayout = () => {
           description: "Redirecionando...",
         });
         
-        // CORREÇÃO CRÍTICA 2: Redirecionar explicitamente para a raiz após login
-        console.log("[AUTH-LAYOUT] Redirecionando para / para acionar RootRedirect");
+        // Redirecionar para a raiz após login
+        console.log("[AUTH-LAYOUT] Redirecionando para /");
         navigate('/', { replace: true });
       }
       
@@ -114,11 +111,7 @@ const AuthLayout = () => {
         });
       }
     } finally {
-      // CORREÇÃO CRÍTICA 3: Timeout mais curto e sempre finalizar loading
-      setTimeout(() => {
-        setIsLoading(false);
-        console.log("[AUTH-LAYOUT] Loading finalizado");
-      }, 1000);
+      setIsLoading(false);
     }
   };
 
