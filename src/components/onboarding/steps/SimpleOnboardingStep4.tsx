@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Target, TrendingUp, DollarSign, AlertTriangle } from 'lucide-react';
 import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
@@ -395,6 +396,20 @@ export const SimpleOnboardingStep4: React.FC<SimpleOnboardingStep4Props> = ({
             </div>
           </div>
         </Card>
+
+        {/* Botão Continuar */}
+        <div className="flex justify-end pt-6">
+          <Button
+            onClick={handleNext}
+            disabled={isLoading}
+            className="min-w-[120px]"
+          >
+            {isLoading ? (
+              <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin mr-2" />
+            ) : null}
+            {isLoading ? "Salvando..." : "Continuar"}
+          </Button>
+        </div>
       </div>
     </motion.div>
   );

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -409,6 +410,20 @@ export const SimpleOnboardingStep5: React.FC<SimpleOnboardingStep5Props> = ({
             </div>
           </Card>
         </motion.div>
+
+        {/* Botão Continuar */}
+        <div className="flex justify-end pt-6">
+          <Button
+            onClick={handleNext}
+            disabled={isLoading}
+            className="min-w-[120px]"
+          >
+            {isLoading ? (
+              <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin mr-2" />
+            ) : null}
+            {isLoading ? "Salvando..." : "Continuar"}
+          </Button>
+        </div>
       </div>
     </div>
   );
