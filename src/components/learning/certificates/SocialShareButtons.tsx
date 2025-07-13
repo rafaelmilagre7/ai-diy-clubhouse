@@ -9,8 +9,12 @@ interface SocialShareButtonsProps {
 }
 
 export const SocialShareButtons = ({ certificate }: SocialShareButtonsProps) => {
-  const courseName = certificate.learning_courses?.title || "Curso";
-  const validationCode = certificate.validation_code;
+  console.log("🔍 [SocialShareButtons] Certificate data:", certificate);
+  
+  const courseName = certificate?.learning_courses?.title || certificate?.solutions?.title || "Curso";
+  const validationCode = certificate?.validation_code;
+  
+  console.log("📊 [SocialShareButtons] Dados extraídos:", { courseName, validationCode });
   
   const shareText = `🎉 Acabei de conquistar meu certificado do curso "${courseName}" na Viver de IA! 
   
@@ -21,37 +25,100 @@ export const SocialShareButtons = ({ certificate }: SocialShareButtonsProps) => 
 
   const shareUrl = `https://viverdeia.ai/validar/${validationCode}`;
 
+  console.log("🔗 [SocialShareButtons] URL de compartilhamento:", shareUrl);
+  console.log("📝 [SocialShareButtons] Texto de compartilhamento:", shareText);
+
   const handleLinkedInShare = () => {
-    const linkedInUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}&title=${encodeURIComponent('Novo Certificado Conquistado!')}&summary=${encodeURIComponent(shareText)}`;
-    window.open(linkedInUrl, '_blank', 'width=600,height=600');
+    console.log("📘 [LinkedIn] Iniciando compartilhamento...");
+    try {
+      const linkedInUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}&title=${encodeURIComponent('Novo Certificado Conquistado!')}&summary=${encodeURIComponent(shareText)}`;
+      console.log("📘 [LinkedIn] URL gerada:", linkedInUrl);
+      window.open(linkedInUrl, '_blank', 'width=600,height=600');
+      toast.success("Abrindo LinkedIn para compartilhamento!");
+    } catch (error) {
+      console.error("❌ [LinkedIn] Erro:", error);
+      toast.error("Erro ao abrir LinkedIn");
+    }
   };
 
   const handleTwitterShare = () => {
-    const twitterText = shareText.substring(0, 280); // Twitter character limit
-    const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(twitterText)}&url=${encodeURIComponent(shareUrl)}`;
-    window.open(twitterUrl, '_blank', 'width=600,height=400');
+    console.log("🐦 [Twitter] Iniciando compartilhamento...");
+    try {
+      const twitterText = shareText.substring(0, 280); // Twitter character limit
+      const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(twitterText)}&url=${encodeURIComponent(shareUrl)}`;
+      console.log("🐦 [Twitter] URL gerada:", twitterUrl);
+      window.open(twitterUrl, '_blank', 'width=600,height=400');
+      toast.success("Abrindo X (Twitter) para compartilhamento!");
+    } catch (error) {
+      console.error("❌ [Twitter] Erro:", error);
+      toast.error("Erro ao abrir X (Twitter)");
+    }
   };
 
   const handleWhatsAppShare = () => {
-    const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(shareText + '\n\n' + shareUrl)}`;
-    window.open(whatsappUrl, '_blank');
+    console.log("💬 [WhatsApp] Iniciando compartilhamento...");
+    try {
+      const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(shareText + '\n\n' + shareUrl)}`;
+      console.log("💬 [WhatsApp] URL gerada:", whatsappUrl);
+      window.open(whatsappUrl, '_blank');
+      toast.success("Abrindo WhatsApp para compartilhamento!");
+    } catch (error) {
+      console.error("❌ [WhatsApp] Erro:", error);
+      toast.error("Erro ao abrir WhatsApp");
+    }
   };
 
   const handleCopyLink = async () => {
+    console.log("📋 [Copy Link] Copiando link...");
     try {
+      if (!navigator.clipboard) {
+        throw new Error("Clipboard API não disponível");
+      }
       await navigator.clipboard.writeText(shareUrl);
+      console.log("✅ [Copy Link] Link copiado:", shareUrl);
       toast.success("Link copiado para área de transferência!");
     } catch (error) {
-      toast.error("Erro ao copiar link");
+      console.error("❌ [Copy Link] Erro:", error);
+      // Fallback para browsers mais antigos
+      try {
+        const textArea = document.createElement('textarea');
+        textArea.value = shareUrl;
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+        toast.success("Link copiado para área de transferência!");
+      } catch (fallbackError) {
+        console.error("❌ [Copy Link] Fallback falhou:", fallbackError);
+        toast.error("Erro ao copiar link. Tente copiar manualmente.");
+      }
     }
   };
 
   const handleCopyText = async () => {
+    console.log("📋 [Copy Text] Copiando texto...");
     try {
+      if (!navigator.clipboard) {
+        throw new Error("Clipboard API não disponível");
+      }
       await navigator.clipboard.writeText(shareText);
+      console.log("✅ [Copy Text] Texto copiado");
       toast.success("Texto copiado para área de transferência!");
     } catch (error) {
-      toast.error("Erro ao copiar texto");
+      console.error("❌ [Copy Text] Erro:", error);
+      // Fallback para browsers mais antigos
+      try {
+        const textArea = document.createElement('textarea');
+        textArea.value = shareText;
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+        toast.success("Texto copiado para área de transferência!");
+      } catch (fallbackError) {
+        console.error("❌ [Copy Text] Fallback falhou:", fallbackError);
+        toast.error("Erro ao copiar texto. Tente copiar manualmente.");
+      }
     }
   };
 
