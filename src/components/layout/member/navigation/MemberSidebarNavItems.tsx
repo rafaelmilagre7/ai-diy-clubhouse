@@ -86,12 +86,6 @@ export const MemberSidebarNavItems: React.FC<MemberSidebarNavItemsProps> = ({ si
       type: "regular"
     },
     {
-      title: "Glossário IA",
-      href: "/glossario",
-      icon: BookOpen,
-      type: "regular"
-    },
-    {
       title: "Comunidade",
       href: "/comunidade",
       icon: MessageSquare,
