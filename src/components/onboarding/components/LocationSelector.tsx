@@ -49,7 +49,7 @@ export const LocationSelector: React.FC<LocationSelectorProps> = ({
       console.log('[LocationSelector] Limpando cidade selecionada');
       onCityChange('');
     }
-  }, [onStateChange, onCityChange, selectedState]);
+  }, [onStateChange, onCityChange]); // Removido selectedState da dependência
 
   const handleCityChange = useCallback((cityName: string) => {
     console.log('[LocationSelector] Cidade selecionada:', cityName);

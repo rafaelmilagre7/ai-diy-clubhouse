@@ -75,17 +75,7 @@ export const SimpleOnboardingWizard: React.FC = () => {
     }
   }, [user, searchParams]);
 
-  // Auto-save: salvar dados automaticamente quando onboardingData muda
-  useEffect(() => {
-    if (user && !isLoading && onboardingData.personal_info && Object.keys(onboardingData.personal_info).length > 0) {
-      console.log('💾 [AUTO-SAVE] Salvando dados automaticamente...');
-      const timeoutId = setTimeout(() => {
-        autoSaveData();
-      }, 2000); // Salva após 2 segundos de inatividade
-
-      return () => clearTimeout(timeoutId);
-    }
-  }, [onboardingData, user, isLoading]);
+  // Auto-save removido: agora apenas através do debounce em handleDataChange
 
   const autoSaveData = async () => {
     console.log('🔄 [AUTO-SAVE] Iniciando salvamento automático...');
@@ -450,12 +440,25 @@ export const SimpleOnboardingWizard: React.FC = () => {
     );
   }
 
+  const [saveTimeout, setSaveTimeout] = useState<NodeJS.Timeout | null>(null);
+
   const handleDataChange = (stepData: any) => {
     console.log('🔄 [DATA-CHANGE] Atualizando dados em tempo real:', stepData);
     setOnboardingData(prev => ({
       ...prev,
       ...stepData
     }));
+    
+    // Debounce do auto-save: aguarda 500ms sem mudanças antes de salvar
+    if (saveTimeout) {
+      clearTimeout(saveTimeout);
+    }
+    
+    const newTimeout = setTimeout(() => {
+      autoSaveData();
+    }, 500);
+    
+    setSaveTimeout(newTimeout);
   };
 
   const renderCurrentStep = () => {
