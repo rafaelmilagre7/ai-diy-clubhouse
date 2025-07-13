@@ -10,6 +10,7 @@ interface SimpleOnboardingStep4Props {
   data: any;
   onNext: (data: any) => void;
   isLoading?: boolean;
+  onDataChange?: (data: any) => void;
 }
 
 const mainObjectives = [
@@ -109,7 +110,8 @@ const budgetRanges = [
 export const SimpleOnboardingStep4: React.FC<SimpleOnboardingStep4Props> = ({
   data,
   onNext,
-  isLoading = false
+  isLoading = false,
+  onDataChange
 }) => {
   const [formData, setFormData] = useState({
     mainObjective: data.goals_info?.mainObjective || '',

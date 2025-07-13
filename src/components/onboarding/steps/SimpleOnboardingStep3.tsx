@@ -12,13 +12,15 @@ interface SimpleOnboardingStep3Props {
   onNext: (data: any) => void;
   isLoading?: boolean;
   getFieldError?: (field: string) => string | undefined;
+  onDataChange?: (data: any) => void;
 }
 
 export const SimpleOnboardingStep3: React.FC<SimpleOnboardingStep3Props> = ({
   data,
   onNext,
   isLoading = false,
-  getFieldError
+  getFieldError,
+  onDataChange
 }) => {
   const [formData, setFormData] = useState(data || {});
   const [tools, setTools] = useState<Array<{id: string, name: string, category: string, logo_url?: string}>>([]);

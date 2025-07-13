@@ -19,12 +19,14 @@ interface SimpleOnboardingStep5Props {
   data: any;
   onNext: (data: any) => void;
   isLoading?: boolean;
+  onDataChange?: (data: any) => void;
 }
 
 export const SimpleOnboardingStep5: React.FC<SimpleOnboardingStep5Props> = ({
   data,
   onNext,
-  isLoading = false
+  isLoading = false,
+  onDataChange
 }) => {
   const [formData, setFormData] = useState({
     weeklyLearningTime: data.personalization?.weeklyLearningTime || '',
