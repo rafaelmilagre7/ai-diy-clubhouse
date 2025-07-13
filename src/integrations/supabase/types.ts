@@ -4335,6 +4335,13 @@ export type Database = {
             referencedRelation: "suggestions"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "suggestion_votes_suggestion_id_fkey"
+            columns: ["suggestion_id"]
+            isOneToOne: false
+            referencedRelation: "suggestions_with_profiles"
+            referencedColumns: ["id"]
+          },
         ]
       }
       suggestions: {
@@ -5278,6 +5285,14 @@ export type Database = {
           },
         ]
       }
+      networking_metrics: {
+        Row: {
+          date: string | null
+          metric_name: string | null
+          metric_value: number | null
+        }
+        Relationships: []
+      }
       retention_cohort_analysis: {
         Row: {
           active_users: number | null
@@ -5287,6 +5302,57 @@ export type Database = {
           retention_rate: number | null
         }
         Relationships: []
+      }
+      suggestions_with_profiles: {
+        Row: {
+          author_avatar: string | null
+          author_company: string | null
+          author_name: string | null
+          category_id: string | null
+          comment_count: number | null
+          created_at: string | null
+          description: string | null
+          downvotes: number | null
+          id: string | null
+          image_url: string | null
+          is_hidden: boolean | null
+          is_pinned: boolean | null
+          status: string | null
+          title: string | null
+          updated_at: string | null
+          upvotes: number | null
+          user_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "suggestions_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "suggestion_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "suggestions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "suggestions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user_engagement_score"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "suggestions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users_with_roles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       top_performing_content: {
         Row: {
