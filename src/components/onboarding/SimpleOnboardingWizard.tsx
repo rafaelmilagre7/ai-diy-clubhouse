@@ -75,6 +75,53 @@ export const SimpleOnboardingWizard: React.FC = () => {
     }
   }, [user, searchParams]);
 
+  // Auto-save: salvar dados automaticamente quando onboardingData muda
+  useEffect(() => {
+    if (user && !isLoading && onboardingData.personal_info && Object.keys(onboardingData.personal_info).length > 0) {
+      console.log('💾 [AUTO-SAVE] Salvando dados automaticamente...');
+      const timeoutId = setTimeout(() => {
+        autoSaveData();
+      }, 2000); // Salva após 2 segundos de inatividade
+
+      return () => clearTimeout(timeoutId);
+    }
+  }, [onboardingData, user, isLoading]);
+
+  const autoSaveData = async () => {
+    if (!user || isSaving) return;
+    
+    console.log('🔄 [AUTO-SAVE] Executando salvamento automático...');
+    
+    try {
+      const finalData = {
+        user_id: user.id,
+        personal_info: onboardingData.personal_info || {},
+        location_info: onboardingData.location_info || {},
+        discovery_info: onboardingData.discovery_info || {},
+        business_info: onboardingData.business_info || {},
+        business_context: onboardingData.business_context || {},
+        goals_info: onboardingData.goals_info || {},
+        ai_experience: onboardingData.ai_experience || {},
+        personalization: onboardingData.personalization || {},
+        current_step: onboardingData.current_step || 1,
+        completed_steps: onboardingData.completed_steps || [],
+        is_completed: onboardingData.is_completed || false
+      };
+
+      const { error } = await supabase
+        .from('onboarding_final')
+        .upsert(finalData);
+
+      if (error) {
+        console.error('❌ [AUTO-SAVE] Erro ao salvar:', error);
+      } else {
+        console.log('✅ [AUTO-SAVE] Dados salvos automaticamente!');
+      }
+    } catch (error) {
+      console.error('❌ [AUTO-SAVE] Erro inesperado:', error);
+    }
+  };
+
   const resetOnboardingData = async () => {
     console.log('🔄 [ONBOARDING] Resetando dados do onboarding...');
     
@@ -359,6 +406,14 @@ export const SimpleOnboardingWizard: React.FC = () => {
     );
   }
 
+  const handleDataChange = (stepData: any) => {
+    console.log('🔄 [DATA-CHANGE] Atualizando dados em tempo real:', stepData);
+    setOnboardingData(prev => ({
+      ...prev,
+      ...stepData
+    }));
+  };
+
   const renderCurrentStep = () => {
     const stepProps = {
       data: onboardingData,
@@ -368,7 +423,7 @@ export const SimpleOnboardingWizard: React.FC = () => {
 
     switch (currentStep) {
       case 1:
-        return <SimpleOnboardingStep1 {...stepProps} />;
+        return <SimpleOnboardingStep1 {...stepProps} onDataChange={handleDataChange} />;
       case 2:
         return <SimpleOnboardingStep2 {...stepProps} />;
       case 3:

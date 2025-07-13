@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -13,12 +13,14 @@ import { User, MapPin, ChevronRight } from 'lucide-react';
 interface SimpleOnboardingStep1Props {
   data: any;
   onNext: (data: any) => void;
+  onDataChange?: (data: any) => void;
   isLoading?: boolean;
 }
 
 export const SimpleOnboardingStep1: React.FC<SimpleOnboardingStep1Props> = ({
   data,
   onNext,
+  onDataChange,
   isLoading = false
 }) => {
   const [formData, setFormData] = useState({
@@ -40,6 +42,31 @@ export const SimpleOnboardingStep1: React.FC<SimpleOnboardingStep1Props> = ({
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  // Notificar o componente pai sobre mudanças nos dados
+  useEffect(() => {
+    if (onDataChange) {
+      const stepData = {
+        personal_info: {
+          name: formData.name,
+          email: formData.email,
+          phone: formData.phone,
+          instagram: formData.instagram,
+          linkedin: formData.linkedin,
+          birthDate: formData.birthDate,
+          profilePicture: formData.profilePicture,
+          curiosity: formData.curiosity
+        },
+        location_info: {
+          state: formData.state,
+          city: formData.city,
+          country: formData.country,
+          timezone: formData.timezone
+        }
+      };
+      onDataChange(stepData);
+    }
+  }, [formData, onDataChange]);
 
   const getFieldError = (field: string) => errors[field];
 
