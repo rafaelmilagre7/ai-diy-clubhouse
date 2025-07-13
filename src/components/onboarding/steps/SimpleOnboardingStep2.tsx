@@ -115,14 +115,42 @@ export const SimpleOnboardingStep2: React.FC<SimpleOnboardingStep2Props> = ({
                 <SelectValue placeholder="Selecione seu cargo..." />
               </SelectTrigger>
               <SelectContent>
+                {/* C-Level & Fundadores */}
+                <SelectItem value="fundador">Fundador</SelectItem>
+                <SelectItem value="co-fundador">Co-fundador</SelectItem>
                 <SelectItem value="ceo">CEO</SelectItem>
+                <SelectItem value="cto">CTO</SelectItem>
+                <SelectItem value="cfo">CFO</SelectItem>
+                <SelectItem value="coo">COO</SelectItem>
+                
+                {/* Executivos */}
+                <SelectItem value="presidente">Presidente</SelectItem>
+                <SelectItem value="diretor-executivo">Diretor Executivo</SelectItem>
                 <SelectItem value="diretor">Diretor</SelectItem>
+                <SelectItem value="vp">VP (Vice-Presidente)</SelectItem>
+                <SelectItem value="socio">Sócio</SelectItem>
+                
+                {/* Gerência */}
                 <SelectItem value="gerente">Gerente</SelectItem>
+                <SelectItem value="head">Head</SelectItem>
                 <SelectItem value="coordenador">Coordenador</SelectItem>
+                <SelectItem value="supervisor">Supervisor</SelectItem>
+                
+                {/* Técnico/Operacional */}
+                <SelectItem value="especialista">Especialista</SelectItem>
                 <SelectItem value="analista">Analista</SelectItem>
                 <SelectItem value="consultor">Consultor</SelectItem>
+                <SelectItem value="tecnico">Técnico</SelectItem>
+                <SelectItem value="assistente">Assistente</SelectItem>
+                
+                {/* Independentes */}
                 <SelectItem value="empreendedor">Empreendedor</SelectItem>
+                <SelectItem value="freelancer">Freelancer</SelectItem>
+                <SelectItem value="autonomo">Autônomo</SelectItem>
+                
+                {/* Outros */}
                 <SelectItem value="estudante">Estudante</SelectItem>
+                <SelectItem value="estagiario">Estagiário</SelectItem>
                 <SelectItem value="outros">Outros</SelectItem>
               </SelectContent>
             </Select>
