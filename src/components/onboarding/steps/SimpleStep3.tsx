@@ -4,13 +4,13 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Textarea } from '@/components/ui/textarea';
-import { SimpleOnboardingData } from '../types/simpleOnboardingTypes';
+import { OnboardingData, OnboardingStepProps } from '../types/simpleOnboardingTypes';
 
 interface SimpleStep3Props {
-  data: SimpleOnboardingData;
+  data: OnboardingData;
   onPrev: () => void;
   onComplete: () => void;
-  onUpdateData: (stepData: Partial<SimpleOnboardingData>) => void;
+  onUpdateData: (stepData: Partial<OnboardingData>) => void;
 }
 
 const SimpleStep3: React.FC<SimpleStep3Props> = ({
@@ -20,32 +20,18 @@ const SimpleStep3: React.FC<SimpleStep3Props> = ({
   onUpdateData
 }) => {
   const [formData, setFormData] = useState({
-    goals: data.goals || [],
-    expectations: data.expectations || ''
+    mainObjective: data.mainObjective || '',
+    expectedResult90Days: data.expectedResult90Days || ''
   });
 
-  const goalOptions = [
-    'Automatizar processos repetitivos',
-    'Melhorar atendimento ao cliente',
-    'Aumentar produtividade da equipe',
-    'Reduzir custos operacionais',
-    'Criar novos produtos/serviços',
-    'Melhorar análise de dados',
-    'Otimizar marketing digital'
-  ];
-
-  const handleGoalChange = (goal: string, checked: boolean) => {
-    const newGoals = checked 
-      ? [...formData.goals, goal]
-      : formData.goals.filter(g => g !== goal);
-    
-    const newData = { ...formData, goals: newGoals };
+  const handleObjectiveChange = (value: string) => {
+    const newData = { ...formData, mainObjective: value };
     setFormData(newData);
     onUpdateData(newData);
   };
 
   const handleExpectationsChange = (value: string) => {
-    const newData = { ...formData, expectations: value };
+    const newData = { ...formData, expectedResult90Days: value };
     setFormData(newData);
     onUpdateData(newData);
   };
@@ -64,32 +50,23 @@ const SimpleStep3: React.FC<SimpleStep3Props> = ({
       </CardHeader>
       
       <CardContent className="space-y-6">
-        <div className="space-y-4">
-          <Label className="text-base font-medium">
-            Quais são seus principais objetivos? (selecione todos que se aplicam)
-          </Label>
-          <div className="grid grid-cols-1 gap-3">
-            {goalOptions.map((goal) => (
-              <div key={goal} className="flex items-center space-x-2">
-                <Checkbox
-                  id={goal}
-                  checked={formData.goals.includes(goal)}
-                  onCheckedChange={(checked) => handleGoalChange(goal, !!checked)}
-                />
-                <Label htmlFor={goal} className="text-sm font-normal cursor-pointer">
-                  {goal}
-                </Label>
-              </div>
-            ))}
-          </div>
+        <div className="space-y-2">
+          <Label htmlFor="mainObjective">Qual é seu principal objetivo com a IA?</Label>
+          <Textarea
+            id="mainObjective"
+            placeholder="Exemplo: Automatizar processos, melhorar atendimento, aumentar vendas..."
+            value={formData.mainObjective}
+            onChange={(e) => handleObjectiveChange(e.target.value)}
+            className="w-full min-h-[100px]"
+          />
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="expectations">O que você espera desta plataforma?</Label>
+          <Label htmlFor="expectedResult90Days">O que você espera alcançar nos próximos 90 dias?</Label>
           <Textarea
-            id="expectations"
+            id="expectedResult90Days"
             placeholder="Compartilhe suas expectativas sobre como nossa plataforma pode ajudar você e sua empresa..."
-            value={formData.expectations}
+            value={formData.expectedResult90Days}
             onChange={(e) => handleExpectationsChange(e.target.value)}
             className="w-full min-h-[120px]"
           />

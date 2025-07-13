@@ -3,9 +3,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
-import { SimpleOnboardingStepProps } from '../types/simpleOnboardingTypes';
+import { OnboardingStepProps } from '../types/simpleOnboardingTypes';
 
-const SimpleStep1: React.FC<SimpleOnboardingStepProps> = ({
+const SimpleStep1: React.FC<OnboardingStepProps> = ({
   data,
   onNext,
   onUpdateData

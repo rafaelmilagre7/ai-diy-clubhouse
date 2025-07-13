@@ -5,19 +5,19 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { SimpleOnboardingStepProps } from '../types/simpleOnboardingTypes';
+import { OnboardingStepProps } from '../types/simpleOnboardingTypes';
 
-const SimpleStep2: React.FC<SimpleOnboardingStepProps> = ({
+const SimpleStep2: React.FC<OnboardingStepProps> = ({
   data,
   onNext,
   onPrev,
   onUpdateData
 }) => {
   const [formData, setFormData] = useState({
-    company_name: data.company_name || '',
-    role: data.role || '',
-    company_size: data.company_size || '',
-    main_challenge: data.main_challenge || ''
+    companyName: data.companyName || '',
+    position: data.position || '',
+    companySize: data.companySize || '',
+    aiMainChallenge: data.aiMainChallenge || ''
   });
 
   const handleInputChange = (field: string, value: string) => {
@@ -41,34 +41,34 @@ const SimpleStep2: React.FC<SimpleOnboardingStepProps> = ({
       
       <CardContent className="space-y-6">
         <div className="space-y-2">
-          <Label htmlFor="company_name">Nome da empresa</Label>
+          <Label htmlFor="companyName">Nome da empresa</Label>
           <Input
-            id="company_name"
+            id="companyName"
             type="text"
             placeholder="Nome da sua empresa"
-            value={formData.company_name}
-            onChange={(e) => handleInputChange('company_name', e.target.value)}
+            value={formData.companyName}
+            onChange={(e) => handleInputChange('companyName', e.target.value)}
             className="w-full"
           />
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="role">Seu cargo/função</Label>
+          <Label htmlFor="position">Seu cargo/função</Label>
           <Input
-            id="role"
+            id="position"
             type="text"
             placeholder="Ex: CEO, Diretor de Marketing, Analista..."
-            value={formData.role}
-            onChange={(e) => handleInputChange('role', e.target.value)}
+            value={formData.position}
+            onChange={(e) => handleInputChange('position', e.target.value)}
             className="w-full"
           />
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="company_size">Tamanho da empresa</Label>
+          <Label htmlFor="companySize">Tamanho da empresa</Label>
           <Select 
-            value={formData.company_size} 
-            onValueChange={(value) => handleInputChange('company_size', value)}
+            value={formData.companySize} 
+            onValueChange={(value) => handleInputChange('companySize', value)}
           >
             <SelectTrigger>
               <SelectValue placeholder="Selecione o tamanho da empresa" />
@@ -85,12 +85,12 @@ const SimpleStep2: React.FC<SimpleOnboardingStepProps> = ({
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="main_challenge">Principal desafio atual</Label>
+          <Label htmlFor="aiMainChallenge">Principal desafio atual</Label>
           <Textarea
-            id="main_challenge"
+            id="aiMainChallenge"
             placeholder="Qual é o maior desafio que você enfrenta atualmente no seu trabalho ou empresa?"
-            value={formData.main_challenge}
-            onChange={(e) => handleInputChange('main_challenge', e.target.value)}
+            value={formData.aiMainChallenge}
+            onChange={(e) => handleInputChange('aiMainChallenge', e.target.value)}
             className="w-full min-h-[100px]"
           />
           <p className="text-sm text-muted-foreground">

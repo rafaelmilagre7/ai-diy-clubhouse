@@ -1,126 +1,229 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/auth';
-import { SimpleOnboardingData } from '../types/simpleOnboardingTypes';
-import { toast } from '@/hooks/use-toast';
+import { OnboardingData } from '../types/simpleOnboardingTypes';
 
 export const useSimpleOnboarding = () => {
   const { user } = useAuth();
-  const [data, setData] = useState<SimpleOnboardingData>({
+  const [data, setData] = useState<OnboardingData>({
     current_step: 1,
-    is_completed: false,
-    goals: []
+    is_completed: false
   });
   const [isLoading, setIsLoading] = useState(true);
-  const [isSaving, setIsSaving] = useState(false);
 
   // Carregar dados existentes
+  useEffect(() => {
+    if (user?.id) {
+      loadData();
+    } else {
+      setIsLoading(false);
+    }
+  }, [user?.id]);
+
   const loadData = async () => {
-    if (!user?.id) return;
-    
     try {
-      const { data: existingData, error } = await supabase
+      const { data: existingData } = await supabase
         .from('onboarding_simple')
         .select('*')
-        .eq('user_id', user.id)
+        .eq('user_id', user?.id)
         .maybeSingle();
 
-      if (error && error.code !== 'PGRST116') {
-        console.error('Erro ao carregar dados:', error);
-        return;
-      }
-
       if (existingData) {
-        setData({
+        // Mapear do backend simplificado para a estrutura completa do frontend
+        const mappedData: OnboardingData = {
+          // Etapa 1 - Informações pessoais
           name: existingData.name || '',
           email: existingData.email || '',
           phone: existingData.phone || '',
-          company_name: existingData.company_name || '',
-          role: existingData.role || '',
-          company_size: existingData.company_size || '',
-          main_challenge: existingData.main_challenge || '',
-          goals: existingData.goals || [],
-          expectations: existingData.expectations || '',
+          instagram: existingData.data?.instagram || '',
+          linkedin: existingData.data?.linkedin || '',
+          state: existingData.data?.state || '',
+          city: existingData.data?.city || '',
+          birthDate: existingData.data?.birthDate || '',
+          birthDay: existingData.data?.birthDay || '',
+          birthMonth: existingData.data?.birthMonth || '',
+          birthYear: existingData.data?.birthYear || '',
+          curiosity: existingData.data?.curiosity || '',
+          profilePicture: existingData.data?.profilePicture || '',
+          
+          // Etapa 2 - Perfil Empresarial
+          companyName: existingData.company_name || '',
+          companyWebsite: existingData.data?.companyWebsite || '',
+          businessSector: existingData.business_sector || '',
+          companySize: existingData.data?.companySize || '',
+          annualRevenue: existingData.data?.annualRevenue || '',
+          position: existingData.data?.position || '',
+          
+          // Etapa 3 - Maturidade em IA
+          hasImplementedAI: existingData.data?.hasImplementedAI || '',
+          aiToolsUsed: existingData.data?.aiToolsUsed || [],
+          aiKnowledgeLevel: existingData.ai_knowledge_level || '',
+          dailyTools: existingData.data?.dailyTools || [],
+          whoWillImplement: existingData.data?.whoWillImplement || '',
+          aiImplementationObjective: existingData.data?.aiImplementationObjective || '',
+          aiImplementationUrgency: existingData.data?.aiImplementationUrgency || '',
+          aiMainChallenge: existingData.data?.aiMainChallenge || '',
+          
+          // Etapa 4 - Objetivos e Expectativas
+          mainObjective: existingData.main_objective || '',
+          areaToImpact: existingData.data?.areaToImpact || '',
+          expectedResult90Days: existingData.data?.expectedResult90Days || '',
+          urgencyLevel: existingData.data?.urgencyLevel || '',
+          successMetric: existingData.data?.successMetric || '',
+          mainObstacle: existingData.data?.mainObstacle || '',
+          preferredSupport: existingData.data?.preferredSupport || '',
+          aiImplementationBudget: existingData.data?.aiImplementationBudget || '',
+          
+          // Etapa 5 - Personalização da Experiência
+          weeklyLearningTime: existingData.data?.weeklyLearningTime || '',
+          contentPreference: existingData.data?.contentPreference || [],
+          contentFrequency: existingData.data?.contentFrequency || '',
+          wantsNetworking: existingData.data?.wantsNetworking || '',
+          communityInteractionStyle: existingData.data?.communityInteractionStyle || '',
+          preferredCommunicationChannel: existingData.data?.preferredCommunicationChannel || '',
+          followUpType: existingData.data?.followUpType || '',
+          learningMotivators: existingData.data?.learningMotivators || [],
+          bestDays: existingData.data?.bestDays || [],
+          bestPeriods: existingData.data?.bestPeriods || [],
+          acceptsCaseStudy: existingData.data?.acceptsCaseStudy || '',
+          
+          // Metadados
+          memberType: existingData.data?.memberType || 'club',
           current_step: existingData.current_step || 1,
           is_completed: existingData.is_completed || false,
-          completed_at: existingData.completed_at
-        });
-      } else {
-        // Pré-preencher com dados do usuário se disponível
-        setData(prev => ({
-          ...prev,
-          email: user.email || '',
-          name: user.user_metadata?.name || ''
-        }));
+          completedAt: existingData.completed_at,
+          startedAt: existingData.created_at,
+          updatedAt: existingData.updated_at,
+          
+          // IA Interativa
+          aiMessage1: existingData.data?.aiMessage1 || '',
+          aiMessage2: existingData.data?.aiMessage2 || '',
+          aiMessage3: existingData.data?.aiMessage3 || '',
+          aiMessage4: existingData.data?.aiMessage4 || '',
+          aiMessage5: existingData.data?.aiMessage5 || '',
+          aiFinalMessage: existingData.data?.aiFinalMessage || ''
+        };
+        
+        setData(mappedData);
       }
     } catch (error) {
-      console.error('Erro inesperado:', error);
+      console.error('Erro ao carregar dados do onboarding:', error);
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Salvar dados
-  const saveData = async (newData: Partial<SimpleOnboardingData>) => {
+  const saveData = async (stepData: Partial<OnboardingData>) => {
     if (!user?.id) return false;
-    
-    setIsSaving(true);
+
     try {
-      const updatedData = { ...data, ...newData };
-      
+      const updatedData = { ...data, ...stepData };
+      setData(updatedData);
+
+      // Mapear os dados principais para as colunas diretas
+      const mainData = {
+        user_id: user.id,
+        name: updatedData.name || '',
+        email: updatedData.email || '',
+        phone: updatedData.phone || '',
+        company_name: updatedData.companyName || '',
+        business_sector: updatedData.businessSector || '',
+        ai_knowledge_level: updatedData.aiKnowledgeLevel || '',
+        main_objective: updatedData.mainObjective || '',
+        current_step: updatedData.current_step || 1,
+        is_completed: updatedData.is_completed || false,
+        completed_at: updatedData.completedAt,
+        updated_at: new Date().toISOString()
+      };
+
+      // Todos os outros dados vão para o campo JSONB 'data'
+      const additionalData = {
+        // Etapa 1
+        instagram: updatedData.instagram,
+        linkedin: updatedData.linkedin,
+        state: updatedData.state,
+        city: updatedData.city,
+        birthDate: updatedData.birthDate,
+        birthDay: updatedData.birthDay,
+        birthMonth: updatedData.birthMonth,
+        birthYear: updatedData.birthYear,
+        curiosity: updatedData.curiosity,
+        profilePicture: updatedData.profilePicture,
+        
+        // Etapa 2
+        companyWebsite: updatedData.companyWebsite,
+        companySize: updatedData.companySize,
+        annualRevenue: updatedData.annualRevenue,
+        position: updatedData.position,
+        
+        // Etapa 3
+        hasImplementedAI: updatedData.hasImplementedAI,
+        aiToolsUsed: updatedData.aiToolsUsed,
+        dailyTools: updatedData.dailyTools,
+        whoWillImplement: updatedData.whoWillImplement,
+        aiImplementationObjective: updatedData.aiImplementationObjective,
+        aiImplementationUrgency: updatedData.aiImplementationUrgency,
+        aiMainChallenge: updatedData.aiMainChallenge,
+        
+        // Etapa 4
+        areaToImpact: updatedData.areaToImpact,
+        expectedResult90Days: updatedData.expectedResult90Days,
+        urgencyLevel: updatedData.urgencyLevel,
+        successMetric: updatedData.successMetric,
+        mainObstacle: updatedData.mainObstacle,
+        preferredSupport: updatedData.preferredSupport,
+        aiImplementationBudget: updatedData.aiImplementationBudget,
+        
+        // Etapa 5
+        weeklyLearningTime: updatedData.weeklyLearningTime,
+        contentPreference: updatedData.contentPreference,
+        contentFrequency: updatedData.contentFrequency,
+        wantsNetworking: updatedData.wantsNetworking,
+        communityInteractionStyle: updatedData.communityInteractionStyle,
+        preferredCommunicationChannel: updatedData.preferredCommunicationChannel,
+        followUpType: updatedData.followUpType,
+        learningMotivators: updatedData.learningMotivators,
+        bestDays: updatedData.bestDays,
+        bestPeriods: updatedData.bestPeriods,
+        acceptsCaseStudy: updatedData.acceptsCaseStudy,
+        
+        // Metadados
+        memberType: updatedData.memberType,
+        
+        // IA Interativa
+        aiMessage1: updatedData.aiMessage1,
+        aiMessage2: updatedData.aiMessage2,
+        aiMessage3: updatedData.aiMessage3,
+        aiMessage4: updatedData.aiMessage4,
+        aiMessage5: updatedData.aiMessage5,
+        aiFinalMessage: updatedData.aiFinalMessage
+      };
+
       const { error } = await supabase
         .from('onboarding_simple')
         .upsert({
-          user_id: user.id,
-          ...updatedData,
-          updated_at: new Date().toISOString()
+          ...mainData,
+          data: additionalData
         });
 
-      if (error) {
-        console.error('Erro ao salvar:', error);
-        toast({
-          title: 'Erro ao salvar',
-          description: 'Não foi possível salvar suas informações. Tente novamente.',
-          variant: 'destructive'
-        });
-        return false;
-      }
-
-      setData(updatedData);
+      if (error) throw error;
       return true;
     } catch (error) {
-      console.error('Erro inesperado ao salvar:', error);
+      console.error('Erro ao salvar dados:', error);
       return false;
-    } finally {
-      setIsSaving(false);
     }
   };
 
-  // Completar onboarding
   const completeOnboarding = async () => {
-    const success = await saveData({
+    return await saveData({
       is_completed: true,
-      completed_at: new Date().toISOString()
+      completedAt: new Date().toISOString()
     });
-    
-    if (success) {
-      toast({
-        title: 'Onboarding concluído!',
-        description: 'Bem-vindo à plataforma! Você será redirecionado.',
-      });
-    }
-    
-    return success;
   };
-
-  useEffect(() => {
-    loadData();
-  }, [user?.id]);
 
   return {
     data,
     isLoading,
-    isSaving,
     saveData,
     completeOnboarding
   };

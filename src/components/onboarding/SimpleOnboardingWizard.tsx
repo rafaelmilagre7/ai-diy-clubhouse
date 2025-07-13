@@ -58,6 +58,7 @@ export const SimpleOnboardingWizard = () => {
             data={data}
             onNext={handleNext}
             onUpdateData={updateData}
+            memberType="club"
           />
         );
       case 2:
@@ -67,6 +68,7 @@ export const SimpleOnboardingWizard = () => {
             onNext={handleNext}
             onPrev={handlePrev}
             onUpdateData={updateData}
+            memberType="club"
           />
         );
       case 3:
