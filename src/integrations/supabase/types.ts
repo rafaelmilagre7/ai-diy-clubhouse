@@ -3008,6 +3008,63 @@ export type Database = {
         }
         Relationships: []
       }
+      onboarding_simple: {
+        Row: {
+          company_name: string | null
+          company_size: string | null
+          completed_at: string | null
+          created_at: string
+          current_step: number
+          email: string | null
+          expectations: string | null
+          goals: string[] | null
+          id: string
+          is_completed: boolean
+          main_challenge: string | null
+          name: string | null
+          phone: string | null
+          role: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          company_name?: string | null
+          company_size?: string | null
+          completed_at?: string | null
+          created_at?: string
+          current_step?: number
+          email?: string | null
+          expectations?: string | null
+          goals?: string[] | null
+          id?: string
+          is_completed?: boolean
+          main_challenge?: string | null
+          name?: string | null
+          phone?: string | null
+          role?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          company_name?: string | null
+          company_size?: string | null
+          completed_at?: string | null
+          created_at?: string
+          current_step?: number
+          email?: string | null
+          expectations?: string | null
+          goals?: string[] | null
+          id?: string
+          is_completed?: boolean
+          main_challenge?: string | null
+          name?: string | null
+          phone?: string | null
+          role?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       onboarding_step_tracking: {
         Row: {
           attempts: number | null
