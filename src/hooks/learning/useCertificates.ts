@@ -18,7 +18,12 @@ export const useCertificates = (courseId?: string) => {
   } = useQuery({
     queryKey: ['all-certificates', user?.id, courseId],
     queryFn: async () => {
-      if (!user) return [];
+      if (!user) {
+        console.log('🔍 [CERTIFICATES] Usuário não autenticado');
+        return [];
+      }
+      
+      console.log('🔍 [CERTIFICATES] Buscando certificados para usuário:', user.id, user.email);
       
       try {
         // Buscar certificados de cursos
@@ -35,7 +40,12 @@ export const useCertificates = (courseId?: string) => {
         
         const { data: learningCerts, error: learningError } = await learningQuery.eq('user_id', user.id);
         
-        if (learningError) throw learningError;
+        if (learningError) {
+          console.error('❌ [CERTIFICATES] Erro ao buscar certificados de cursos:', learningError);
+          throw learningError;
+        }
+
+        console.log('📚 [CERTIFICATES] Certificados de cursos encontrados:', learningCerts?.length || 0);
 
         // Buscar certificados de soluções
         const { data: solutionCerts, error: solutionError } = await supabase
@@ -46,7 +56,12 @@ export const useCertificates = (courseId?: string) => {
           `)
           .eq('user_id', user.id);
         
-        if (solutionError) throw solutionError;
+        if (solutionError) {
+          console.error('❌ [CERTIFICATES] Erro ao buscar certificados de soluções:', solutionError);
+          throw solutionError;
+        }
+
+        console.log('💡 [CERTIFICATES] Certificados de soluções encontrados:', solutionCerts?.length || 0);
 
         // Unificar os certificados com tipo identificador
         const allCertificates = [
@@ -66,9 +81,11 @@ export const useCertificates = (courseId?: string) => {
           }))
         ];
         
+        console.log('✅ [CERTIFICATES] Total de certificados unificados:', allCertificates.length);
+        
         return allCertificates;
       } catch (error) {
-        console.error("Erro ao buscar certificados:", error);
+        console.error("❌ [CERTIFICATES] Erro geral ao buscar certificados:", error);
         return [];
       }
     },
