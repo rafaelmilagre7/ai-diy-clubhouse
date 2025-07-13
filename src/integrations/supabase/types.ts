@@ -2810,6 +2810,168 @@ export type Database = {
         }
         Relationships: []
       }
+      onboarding: {
+        Row: {
+          ai_implementation_budget: string | null
+          ai_implementation_objective: string | null
+          ai_implementation_urgency: string | null
+          ai_knowledge_level: string | null
+          ai_main_challenge: string | null
+          ai_tools_used: string[] | null
+          annual_revenue: string | null
+          area_to_impact: string | null
+          best_days: string[] | null
+          best_periods: string[] | null
+          birth_date: string | null
+          business_sector: string | null
+          city: string | null
+          community_interaction_style: string | null
+          company_name: string | null
+          company_size: string | null
+          company_website: string | null
+          completed_at: string | null
+          completed_steps: number[] | null
+          content_frequency: string | null
+          content_preference: string[] | null
+          country: string | null
+          created_at: string | null
+          curiosity: string | null
+          current_step: number | null
+          email: string | null
+          expected_result_90_days: string | null
+          follow_up_type: string | null
+          has_implemented_ai: string | null
+          id: string
+          instagram: string | null
+          is_completed: boolean | null
+          linkedin: string | null
+          main_objective: string | null
+          main_obstacle: string | null
+          motivation_sharing: string | null
+          name: string | null
+          phone: string | null
+          position: string | null
+          preferred_communication_channel: string | null
+          preferred_support: string | null
+          profile_picture: string | null
+          state: string | null
+          success_metric: string | null
+          timezone: string | null
+          updated_at: string | null
+          urgency_level: string | null
+          user_id: string
+          wants_networking: string | null
+          weekly_learning_time: string | null
+          who_will_implement: string | null
+        }
+        Insert: {
+          ai_implementation_budget?: string | null
+          ai_implementation_objective?: string | null
+          ai_implementation_urgency?: string | null
+          ai_knowledge_level?: string | null
+          ai_main_challenge?: string | null
+          ai_tools_used?: string[] | null
+          annual_revenue?: string | null
+          area_to_impact?: string | null
+          best_days?: string[] | null
+          best_periods?: string[] | null
+          birth_date?: string | null
+          business_sector?: string | null
+          city?: string | null
+          community_interaction_style?: string | null
+          company_name?: string | null
+          company_size?: string | null
+          company_website?: string | null
+          completed_at?: string | null
+          completed_steps?: number[] | null
+          content_frequency?: string | null
+          content_preference?: string[] | null
+          country?: string | null
+          created_at?: string | null
+          curiosity?: string | null
+          current_step?: number | null
+          email?: string | null
+          expected_result_90_days?: string | null
+          follow_up_type?: string | null
+          has_implemented_ai?: string | null
+          id?: string
+          instagram?: string | null
+          is_completed?: boolean | null
+          linkedin?: string | null
+          main_objective?: string | null
+          main_obstacle?: string | null
+          motivation_sharing?: string | null
+          name?: string | null
+          phone?: string | null
+          position?: string | null
+          preferred_communication_channel?: string | null
+          preferred_support?: string | null
+          profile_picture?: string | null
+          state?: string | null
+          success_metric?: string | null
+          timezone?: string | null
+          updated_at?: string | null
+          urgency_level?: string | null
+          user_id: string
+          wants_networking?: string | null
+          weekly_learning_time?: string | null
+          who_will_implement?: string | null
+        }
+        Update: {
+          ai_implementation_budget?: string | null
+          ai_implementation_objective?: string | null
+          ai_implementation_urgency?: string | null
+          ai_knowledge_level?: string | null
+          ai_main_challenge?: string | null
+          ai_tools_used?: string[] | null
+          annual_revenue?: string | null
+          area_to_impact?: string | null
+          best_days?: string[] | null
+          best_periods?: string[] | null
+          birth_date?: string | null
+          business_sector?: string | null
+          city?: string | null
+          community_interaction_style?: string | null
+          company_name?: string | null
+          company_size?: string | null
+          company_website?: string | null
+          completed_at?: string | null
+          completed_steps?: number[] | null
+          content_frequency?: string | null
+          content_preference?: string[] | null
+          country?: string | null
+          created_at?: string | null
+          curiosity?: string | null
+          current_step?: number | null
+          email?: string | null
+          expected_result_90_days?: string | null
+          follow_up_type?: string | null
+          has_implemented_ai?: string | null
+          id?: string
+          instagram?: string | null
+          is_completed?: boolean | null
+          linkedin?: string | null
+          main_objective?: string | null
+          main_obstacle?: string | null
+          motivation_sharing?: string | null
+          name?: string | null
+          phone?: string | null
+          position?: string | null
+          preferred_communication_channel?: string | null
+          preferred_support?: string | null
+          profile_picture?: string | null
+          state?: string | null
+          success_metric?: string | null
+          timezone?: string | null
+          updated_at?: string | null
+          urgency_level?: string | null
+          user_id?: string
+          wants_networking?: string | null
+          weekly_learning_time?: string | null
+          who_will_implement?: string | null
+        }
+        Relationships: []
+      }
       onboarding_abandonment_points: {
         Row: {
           abandoned_at: string

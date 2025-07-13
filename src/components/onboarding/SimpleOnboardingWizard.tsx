@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/auth';
 import { toast } from '@/hooks/use-toast';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { useSimpleOnboardingAdapter } from './hooks/useSimpleOnboardingAdapter';
+import { useDirectOnboardingAdapter } from './hooks/useDirectOnboardingAdapter';
 
 // Import dos steps simplificados
 import { SimpleOnboardingStep1 } from './steps/SimpleOnboardingStep1';
@@ -34,9 +34,9 @@ const TOTAL_STEPS = 6;
 const STEP_TITLES = [
   'Informações Pessoais',
   'Contexto Empresarial', 
-  'Como nos encontrou',
-  'Objetivos',
   'Experiência com IA',
+  'Objetivos',
+  'Personalização',
   'Finalização'
 ];
 
@@ -44,7 +44,7 @@ export const SimpleOnboardingWizard: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const adapter = useSimpleOnboardingAdapter();
+  const adapter = useDirectOnboardingAdapter();
   
   const [currentStep, setCurrentStep] = useState(1);
   const [onboardingData, setOnboardingData] = useState<OnboardingData>({
@@ -213,13 +213,22 @@ export const SimpleOnboardingWizard: React.FC = () => {
         updatedData.business_info = { ...updatedData.business_info, ...stepData };
         break;
       case 3:
-        updatedData.discovery_info = { ...updatedData.discovery_info, ...stepData };
+        // Step 3 envia dados diretos (ai_experience fields)
+        updatedData.ai_experience = { ...updatedData.ai_experience, ...stepData };
+        // Também mesclar campos diretos no onboardingData para o adapter
+        Object.assign(updatedData, stepData);
         break;
       case 4:
+        // Step 4 envia dados diretos (goals_info fields)
         updatedData.goals_info = { ...updatedData.goals_info, ...stepData };
+        // Também mesclar campos diretos no onboardingData para o adapter  
+        Object.assign(updatedData, stepData);
         break;
       case 5:
-        updatedData.ai_experience = { ...updatedData.ai_experience, ...stepData };
+        // Step 5 envia dados diretos (personalization fields)
+        updatedData.personalization = { ...updatedData.personalization, ...stepData };
+        // Também mesclar campos diretos no onboardingData para o adapter
+        Object.assign(updatedData, stepData);
         break;
       case 6:
         updatedData.personalization = { ...updatedData.personalization, ...stepData };
@@ -304,11 +313,11 @@ export const SimpleOnboardingWizard: React.FC = () => {
       case 2:
         return onboardingData.business_info;
       case 3:
-        return onboardingData.discovery_info;
+        return onboardingData.ai_experience || onboardingData; // dados diretos do step 3
       case 4:
-        return onboardingData.goals_info;
+        return onboardingData.goals_info || onboardingData; // dados diretos do step 4
       case 5:
-        return onboardingData.ai_experience;
+        return onboardingData.personalization || onboardingData; // dados diretos do step 5
       case 6:
         return onboardingData.personalization;
       default:
