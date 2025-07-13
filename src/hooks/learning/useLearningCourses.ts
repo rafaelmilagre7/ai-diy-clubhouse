@@ -23,9 +23,22 @@ export const useLearningCourses = () => {
         throw error;
       }
 
-      // Buscar módulos e aulas para cada curso
+      if (!data || data.length === 0) {
+        return [];
+      }
+
+      // Filtrar cursos únicos por ID (garantir não duplicação)
+      const uniqueCourses = data.reduce((acc: LearningCourseWithStats[], current: LearningCourseWithStats) => {
+        const exists = acc.find(course => course.id === current.id);
+        if (!exists) {
+          acc.push(current);
+        }
+        return acc;
+      }, []);
+
+      // Buscar módulos e aulas para cada curso único
       const coursesWithModules = await Promise.all(
-        data.map(async (course: LearningCourseWithStats) => {
+        uniqueCourses.map(async (course: LearningCourseWithStats) => {
           const { data: modules, error: modulesError } = await supabase
             .from("learning_modules")
             .select(`

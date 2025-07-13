@@ -21,8 +21,7 @@ export default function LearningPage() {
     keywords: 'cursos IA, aprendizado inteligência artificial, formação IA, educação AI'
   });
 
-  // Filtrar apenas cursos publicados
-  const allCourses = courses.filter(course => course.published);
+  // Os cursos já vêm filtrados (published = true) da função SQL
   return <div className="space-y-6">
       <MemberLearningHeader />
       
@@ -31,7 +30,7 @@ export default function LearningPage() {
       
       <div className="mt-12">
         <h2 className="text-2xl font-semibold mb-6 text-zinc-200">Todos os cursos</h2>
-        <MemberCoursesList courses={allCourses} userProgress={userProgress} />
+        <MemberCoursesList courses={courses} userProgress={userProgress} />
       </div>
     </div>;
 }
