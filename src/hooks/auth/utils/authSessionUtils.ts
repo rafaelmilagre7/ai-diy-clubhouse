@@ -87,38 +87,41 @@ export const fetchUserProfileSecurely = async (userId: string): Promise<UserProf
           return profile;
         }
         
-        // Fallback para query direta se função RPC falhar
+        // Fallback ROBUSTO para query direta se função RPC falhar
         logger.warn('[PROFILE-FETCH] Função segura falhou, usando fallback direto');
-        const { data: directData, error: directError } = await supabase
-          .from('profiles')
-          .select(`
-            *,
-            user_roles (
-              id,
-              name,
-              description,
-              permissions
-            )
-          `)
-          .eq('id', userId)
-          .single();
         
-        if (directError) {
-          logger.error('[PROFILE-FETCH] Erro no fallback direto', { error: directError });
-          authCacheManager.set(userId, null);
-          return null;
+        try {
+          const { data: directData, error: directError } = await supabase
+            .from('profiles')
+            .select(`
+              *,
+              user_roles:role_id (
+                id,
+                name,
+                description,
+                permissions
+              )
+            `)
+            .eq('id', userId)
+            .single();
+          
+          if (directError) {
+            logger.error('[PROFILE-FETCH] Erro no fallback direto:', directError);
+            return null;
+          }
+          
+          if (directData) {
+            // Cache o resultado do fallback
+            authCacheManager.set(userId, directData as UserProfile);
+            logger.info('[PROFILE-FETCH] ✅ Perfil carregado via fallback direto');
+            return directData as UserProfile;
+          }
+        } catch (fallbackError) {
+          logger.error('[PROFILE-FETCH] Erro crítico no fallback:', fallbackError);
         }
         
-        const profile = directData as UserProfile;
-        authCacheManager.set(userId, profile);
-        
-        logger.info('[PROFILE-FETCH] Perfil carregado via fallback', {
-          userId: profile.id.substring(0, 8) + '***',
-          hasRole: !!profile.user_roles,
-          roleName: profile.user_roles?.name || 'sem role'
-        });
-        
-        return profile;
+        // Se tudo falhar, retornar null
+        return null;
       },
       300 // 300ms debounce
     );

@@ -1,6 +1,7 @@
 
 import { useCallback } from 'react';
 import { Session, User } from '@supabase/supabase-js';
+import { supabase } from '@/lib/supabase';
 import { validateUserSession, fetchUserProfileSecurely, clearProfileCache } from '@/hooks/auth/utils/authSessionUtils';
 import { UserProfile } from '@/lib/supabase';
 import { logger } from '@/utils/logger';
@@ -94,19 +95,41 @@ export const useAuthStateManager = ({
         return;
       }
 
-      // OTIMIZAÇÃO 5: Buscar perfil com timeout reduzido para 1 segundo
+      // CORREÇÃO CRÍTICA: Buscar perfil com timeout mais generoso e fallback robusto
       try {
         const profilePromise = fetchUserProfileSecurely(user.id);
         const profileTimeoutPromise = new Promise((_, reject) => 
-          setTimeout(() => reject(new Error("Profile timeout")), 1000) // Reduzido de 2s para 1s
+          setTimeout(() => reject(new Error("Profile timeout")), 6000) // Aumentado para 6s
         );
 
         let profile;
         try {
           profile = await Promise.race([profilePromise, profileTimeoutPromise]) as UserProfile | null;
         } catch (profileTimeoutError) {
-          logger.warn('[AUTH-STATE] Timeout no perfil - continuando sem perfil');
-          profile = null;
+          logger.warn('[AUTH-STATE] Timeout no perfil - tentando fallback direto');
+          
+          // FALLBACK DIRETO: Tentar buscar direto do banco
+          try {
+            const { data: directProfile } = await supabase
+              .from('profiles')
+              .select(`
+                *,
+                user_roles:role_id (
+                  id,
+                  name,
+                  description,
+                  permissions
+                )
+              `)
+              .eq('id', user.id)
+              .single();
+              
+            profile = directProfile as UserProfile | null;
+            logger.info('[AUTH-STATE] ✅ Perfil carregado via fallback direto');
+          } catch (fallbackError) {
+            logger.error('[AUTH-STATE] Fallback direto falhou:', fallbackError);
+            profile = null;
+          }
         }
         
         if (profile) {
@@ -117,7 +140,7 @@ export const useAuthStateManager = ({
 
           setProfile(profile);
           
-          // OTIMIZAÇÃO 6: Atualizar cache de navegação baseado APENAS no role do banco
+          // Cache de navegação baseado no role do banco
           const roleName = profile.user_roles?.name;
           if (roleName === 'admin') {
             navigationCache.set(user.id, profile, 'admin');

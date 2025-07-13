@@ -73,11 +73,19 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
         return;
       }
 
+      // FALLBACK: Se não conseguiu verificar isAdmin, tentar verificação direta
       if (!isAdmin) {
-        console.warn("[SECURITY] Unauthorized admin access attempt");
-        toast.error("Acesso negado. Você não tem permissão para acessar a área administrativa.");
-        navigate("/dashboard", { replace: true });
-        return;
+        // Verificação de emergência usando email (fallback)
+        const isEmergencyAdmin = user?.email === 'rafael@viverdeia.ai';
+        
+        if (!isEmergencyAdmin) {
+          console.warn("[SECURITY] Unauthorized admin access attempt");
+          toast.error("Acesso negado. Você não tem permissão para acessar a área administrativa.");
+          navigate("/dashboard", { replace: true });
+          return;
+        } else {
+          console.warn("[SECURITY] Emergency admin access granted via email fallback");
+        }
       }
 
       // OTIMIZAÇÃO 5: Definir cache após verificação bem-sucedida
