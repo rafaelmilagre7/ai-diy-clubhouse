@@ -59,7 +59,8 @@ export const SimpleOnboardingStep5: React.FC<SimpleOnboardingStep5Props> = ({
   };
 
   const handleNext = () => {
-    onNext(formData);
+    // Enviar dados estruturados para o wizard
+    onNext({ personalization: formData });
   };
 
   const handleRadioChange = (field: string, value: string) => {

@@ -170,25 +170,16 @@ export const SimpleOnboardingWizard: React.FC = () => {
         updatedData.location_info = { ...updatedData.location_info, ...stepData.location_info };
         break;
       case 2:
-        updatedData.business_info = { ...updatedData.business_info, ...stepData };
+        updatedData.business_info = { ...updatedData.business_info, ...stepData.business_info };
         break;
       case 3:
-        // Step 3 envia dados diretos (ai_experience fields)
-        updatedData.ai_experience = { ...updatedData.ai_experience, ...stepData };
-        // Também mesclar campos diretos no onboardingData para o adapter
-        Object.assign(updatedData, stepData);
+        updatedData.ai_experience = { ...updatedData.ai_experience, ...stepData.ai_experience };
         break;
       case 4:
-        // Step 4 envia dados diretos (goals_info fields)
-        updatedData.goals_info = { ...updatedData.goals_info, ...stepData };
-        // Também mesclar campos diretos no onboardingData para o adapter  
-        Object.assign(updatedData, stepData);
+        updatedData.goals_info = { ...updatedData.goals_info, ...stepData.goals_info };
         break;
       case 5:
-        // Step 5 envia dados diretos (personalization fields)
-        updatedData.personalization = { ...updatedData.personalization, ...stepData };
-        // Também mesclar campos diretos no onboardingData para o adapter
-        Object.assign(updatedData, stepData);
+        updatedData.personalization = { ...updatedData.personalization, ...stepData.personalization };
         break;
       case 6:
         updatedData.personalization = { ...updatedData.personalization, ...stepData };

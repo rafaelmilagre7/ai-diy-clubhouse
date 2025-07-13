@@ -89,7 +89,8 @@ export const SimpleOnboardingStep6: React.FC<SimpleOnboardingStep6Props> = ({
   };
 
   const handleComplete = () => {
-    onNext({});
+    // Marcar onboarding como completo
+    onNext({ is_completed: true });
   };
 
   return (

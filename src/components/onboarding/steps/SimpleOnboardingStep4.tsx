@@ -142,7 +142,8 @@ export const SimpleOnboardingStep4: React.FC<SimpleOnboardingStep4Props> = ({
   };
 
   const handleNext = () => {
-    onNext(formData);
+    // Enviar dados estruturados para o wizard
+    onNext({ goals_info: formData });
   };
 
   return (
