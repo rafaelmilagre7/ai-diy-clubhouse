@@ -66,7 +66,8 @@ export const SimpleOnboardingStep2: React.FC<SimpleOnboardingStep2Props> = ({
     if (!validateForm()) {
       return;
     }
-    onNext(formData);
+    // Enviar dados estruturados para o wizard
+    onNext({ business_info: formData });
   };
 
   return (

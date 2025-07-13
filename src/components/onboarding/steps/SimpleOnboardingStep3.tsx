@@ -22,7 +22,7 @@ export const SimpleOnboardingStep3: React.FC<SimpleOnboardingStep3Props> = ({
   getFieldError,
   onDataChange
 }) => {
-  const [formData, setFormData] = useState(data || {});
+  const [formData, setFormData] = useState(data.ai_experience || {});
   const [tools, setTools] = useState<Array<{id: string, name: string, category: string, logo_url?: string}>>([]);
   const [loading, setLoading] = useState(true);
   const [toolsByCategory, setToolsByCategory] = useState<Record<string, Array<{id: string, name: string, category: string, logo_url?: string}>>>({});
@@ -104,7 +104,8 @@ export const SimpleOnboardingStep3: React.FC<SimpleOnboardingStep3Props> = ({
       return;
     }
     
-    onNext(formData);
+    // Enviar dados estruturados para o wizard
+    onNext({ ai_experience: formData });
   };
 
   return (
