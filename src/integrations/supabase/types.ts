@@ -3625,6 +3625,45 @@ export type Database = {
         }
         Relationships: []
       }
+      security_events: {
+        Row: {
+          created_at: string | null
+          event_data: Json | null
+          event_type: string
+          id: string
+          ip_address: unknown | null
+          resolved_at: string | null
+          resolved_by: string | null
+          severity: string | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          event_data?: Json | null
+          event_type: string
+          id?: string
+          ip_address?: unknown | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          event_data?: Json | null
+          event_type?: string
+          id?: string
+          ip_address?: unknown | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       security_incidents: {
         Row: {
           assigned_to: string | null
@@ -5806,6 +5845,14 @@ export type Database = {
               p_resource_id?: string
               p_old_values?: string
               p_new_values?: string
+            }
+          | {
+              p_event_type: string
+              p_severity?: string
+              p_user_id?: string
+              p_event_data?: Json
+              p_ip_address?: unknown
+              p_user_agent?: string
             }
         Returns: string
       }

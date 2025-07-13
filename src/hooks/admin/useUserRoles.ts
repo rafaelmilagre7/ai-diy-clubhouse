@@ -4,8 +4,9 @@ import { supabase } from '@/lib/supabase';
 import { UserProfile } from '@/lib/supabase';
 import { useAuth } from '@/contexts/auth';
 import { toast } from 'sonner';
-import { logSecurityEvent, clearPermissionCache } from '@/contexts/auth/utils/securityUtils';
+import { clearPermissionCache } from '@/contexts/auth/utils/securityUtils';
 import { clearProfileCache } from '@/hooks/auth/utils/authSessionUtils';
+import { secureLogger } from '@/utils/security/productionSafeLogging';
 
 interface UserRoleResult {
   roleId: string | null;
@@ -29,52 +30,63 @@ export function useUserRoles() {
       setIsUpdating(true);
       setError(null);
       
-      // CORREÇÃO BUG BAIXO 1: Proteger logs de debug em produção
-      if (process.env.NODE_ENV !== 'production') {
-        console.log(`🔄 [USER-ROLES] Iniciando atribuição de role: userId=${userId.substring(0, 8)}***, roleId=${roleId}`);
-      }
+      // SEGURANÇA: Log seguro da operação
+      secureLogger.info({
+        level: 'info',
+        message: 'Role assignment initiated',
+        userId: user?.id,
+        data: { targetUser: userId, newRole: roleId }
+      });
       
-      // SEGURANÇA: Usar função RPC segura para atribuição de papéis
+      // SEGURANÇA: Usar função RPC segura aprimorada com log de segurança
       const { data: result, error: rpcError } = await supabase.rpc('secure_assign_role', {
         target_user_id: userId,
         new_role_id: roleId
       });
       
       if (rpcError) {
-        console.error('❌ [USER-ROLES] Erro na função RPC segura:', rpcError);
+        secureLogger.error({
+          level: 'error',
+          message: 'RPC error in role assignment',
+          userId: user?.id,
+          data: { error: rpcError.message, targetUser: userId }
+        });
         throw new Error(`Falha na atribuição de papel: ${rpcError.message}`);
       }
       
       if (!result?.success) {
-        console.error('❌ [USER-ROLES] Atribuição de papel rejeitada:', result);
+        secureLogger.warn({
+          level: 'warn',
+          message: 'Role assignment rejected',
+          userId: user?.id,
+          data: { result, targetUser: userId }
+        });
         throw new Error(result?.message || 'Atribuição de papel não autorizada');
       }
       
-      if (process.env.NODE_ENV !== 'production') {
-        console.log('✅ [USER-ROLES] Role atualizado com sucesso via RPC segura:', result);
-      }
-      
-      // CORREÇÃO BUG MÉDIO 3: Invalidação de cache mais abrangente para sincronização imediata
+      // CORREÇÃO: Invalidação de cache mais abrangente para sincronização imediata
       roleCache.current.delete(userId);
       clearPermissionCache(userId);
-      
-      // CORREÇÃO: Limpar cache de perfil para forçar refresh na próxima busca
       clearProfileCache();
       
-      if (process.env.NODE_ENV !== 'production') {
-        console.log('🧹 [USER-ROLES] Cache de perfil e permissões limpo para sincronização imediata');
-      }
+      secureLogger.info({
+        level: 'info',
+        message: 'Role assignment completed successfully',
+        userId: user?.id,
+        data: { targetUser: userId, result }
+      });
       
       toast.success('Papel do usuário atualizado com sucesso');
-      
-      if (process.env.NODE_ENV !== 'production') {
-        console.log('🎉 [USER-ROLES] Operação concluída com sucesso');
-      }
-      
       return result;
+      
     } catch (err: any) {
-      // Log de erro sempre visível (crítico)
-      console.error('❌ [USER-ROLES] Erro ao atribuir papel:', err);
+      secureLogger.error({
+        level: 'error',
+        message: 'Role assignment failed',
+        userId: user?.id,
+        data: { error: err.message, targetUser: userId }
+      });
+      
       setError(err);
       toast.error('Erro ao atualizar papel', {
         description: err.message || 'Não foi possível atribuir o papel ao usuário.'
@@ -82,9 +94,6 @@ export function useUserRoles() {
       throw err;
     } finally {
       setIsUpdating(false);
-      if (process.env.NODE_ENV !== 'production') {
-        console.log('✅ [USER-ROLES] Finalizando operação assignRoleToUser');
-      }
     }
   }, [user?.id]);
 
