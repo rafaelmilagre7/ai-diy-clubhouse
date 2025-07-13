@@ -64,6 +64,62 @@ export const SimpleOnboardingWizard: React.FC = () => {
   const [isCompleting, setIsCompleting] = useState(false);
   const [saveTimeout, setSaveTimeout] = useState<NodeJS.Timeout | null>(null);
 
+  // Auto-save function - DEVE ESTAR ANTES DO handleDataChange
+  const autoSaveData = useCallback(async () => {
+    console.log('🔄 [AUTO-SAVE] Iniciando salvamento automático...');
+    console.log('🔍 [AUTO-SAVE] Verificações iniciais:', {
+      user: user ? 'Logado' : 'Não logado',
+      user_id: user?.id,
+      isSaving,
+      dataLength: Object.keys(onboardingData).length
+    });
+    
+    if (!user) {
+      console.warn('⚠️ [AUTO-SAVE] Usuário não autenticado, cancelando salvamento');
+      return;
+    }
+    
+    if (isSaving) {
+      console.warn('⚠️ [AUTO-SAVE] Já está salvando, cancelando');
+      return;
+    }
+    
+    try {
+      setIsSaving(true);
+      
+      const finalData = {
+        user_id: user.id,
+        personal_info: onboardingData.personal_info || {},
+        location_info: onboardingData.location_info || {},
+        discovery_info: onboardingData.discovery_info || {},
+        business_info: onboardingData.business_info || {},
+        business_context: onboardingData.business_context || {},
+        goals_info: onboardingData.goals_info || {},
+        ai_experience: onboardingData.ai_experience || {},
+        personalization: onboardingData.personalization || {},
+        current_step: onboardingData.current_step || 1,
+        completed_steps: onboardingData.completed_steps || [],
+        is_completed: onboardingData.is_completed || false
+      };
+
+      console.log('💾 [AUTO-SAVE] Dados a serem salvos:', finalData);
+
+      const { error } = await supabase
+        .from('onboarding_final')
+        .upsert(finalData);
+
+      if (error) {
+        console.error('❌ [AUTO-SAVE] Erro ao salvar:', error);
+      } else {
+        console.log('✅ [AUTO-SAVE] Dados salvos automaticamente!');
+      }
+    } catch (error) {
+      console.error('❌ [AUTO-SAVE] Erro inesperado:', error);
+    } finally {
+      setIsSaving(false);
+    }
+  }, [user, onboardingData, isSaving]);
+
   // TODOS OS HOOKS DEVEM ESTAR AQUI - ANTES DE QUALQUER RETURN CONDICIONAL
   const handleDataChange = useCallback((stepData: any) => {
     console.log('🔄 [DATA-CHANGE] Atualizando dados em tempo real:', stepData);
@@ -82,7 +138,7 @@ export const SimpleOnboardingWizard: React.FC = () => {
     }, 1000);
     
     setSaveTimeout(newTimeout);
-  }, []); // Removido saveTimeout da dependência para evitar recriações
+  }, [saveTimeout, autoSaveData]); // Dependências corretas para evitar problemas
 
   // TODAS AS FUNÇÕES DEVEM ESTAR ANTES DOS RETURNS CONDICIONAIS
   const renderCurrentStep = () => {
@@ -110,7 +166,7 @@ export const SimpleOnboardingWizard: React.FC = () => {
     }
   };
 
-  // Carregar dados existentes do onboarding
+  // Carregar dados existentes do onboarding - MELHORADO para evitar múltiplas chamadas
   useEffect(() => {
     if (user) {
       const shouldReset = searchParams.get('reset') === 'true';
@@ -120,67 +176,9 @@ export const SimpleOnboardingWizard: React.FC = () => {
         loadOnboardingData();
       }
     }
-  }, [user, searchParams]);
+  }, [user?.id, searchParams]); // Dependência mais específica para evitar re-execuções
 
   // Auto-save removido: agora apenas através do debounce em handleDataChange
-
-  const autoSaveData = async () => {
-    console.log('🔄 [AUTO-SAVE] Iniciando salvamento automático...');
-    console.log('🔍 [AUTO-SAVE] Verificações iniciais:', {
-      user: user ? 'Logado' : 'Não logado',
-      user_id: user?.id,
-      isSaving,
-      dataLength: Object.keys(onboardingData).length
-    });
-    
-    if (!user) {
-      console.warn('⚠️ [AUTO-SAVE] Usuário não autenticado, cancelando salvamento');
-      return;
-    }
-    
-    if (isSaving) {
-      console.warn('⚠️ [AUTO-SAVE] Já está salvando, cancelando');
-      return;
-    }
-    
-    try {
-      const finalData = {
-        user_id: user.id,
-        personal_info: onboardingData.personal_info || {},
-        location_info: onboardingData.location_info || {},
-        discovery_info: onboardingData.discovery_info || {},
-        business_info: onboardingData.business_info || {},
-        business_context: onboardingData.business_context || {},
-        goals_info: onboardingData.goals_info || {},
-        ai_experience: onboardingData.ai_experience || {},
-        personalization: onboardingData.personalization || {},
-        current_step: onboardingData.current_step || 1,
-        completed_steps: onboardingData.completed_steps || [],
-        is_completed: onboardingData.is_completed || false
-        // Removi updated_at - será gerenciado pelo trigger automaticamente
-      };
-
-      console.log('💾 [AUTO-SAVE] Dados a serem salvos:', finalData);
-
-      const { error } = await supabase
-        .from('onboarding_final')
-        .upsert(finalData);
-
-      if (error) {
-        console.error('❌ [AUTO-SAVE] Erro ao salvar:', error);
-        console.error('❌ [AUTO-SAVE] Detalhes do erro:', {
-          message: error.message,
-          code: error.code,
-          details: error.details,
-          hint: error.hint
-        });
-      } else {
-        console.log('✅ [AUTO-SAVE] Dados salvos automaticamente!');
-      }
-    } catch (error) {
-      console.error('❌ [AUTO-SAVE] Erro inesperado:', error);
-    }
-  };
 
   const resetOnboardingData = async () => {
     console.log('🔄 [ONBOARDING] Resetando dados do onboarding...');
