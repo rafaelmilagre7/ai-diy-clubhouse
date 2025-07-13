@@ -426,8 +426,13 @@ export const SimpleOnboardingWizard: React.FC = () => {
   };
 
   const handleNext = async (stepData?: any) => {
-    if (stepData) {
-      await saveOnboardingData(stepData, currentStep);
+    // Sempre salvar dados da etapa atual antes de navegar
+    console.log('➡️ [ONBOARDING] Navegando para próxima etapa, salvando dados...');
+    
+    // Salvar dados fornecidos pelo step ou dados atuais
+    const dataToSave = stepData || getCurrentStepData();
+    if (dataToSave && Object.keys(dataToSave).length > 0) {
+      await saveOnboardingData(dataToSave, currentStep);
     }
     
     if (currentStep < TOTAL_STEPS) {
@@ -555,7 +560,7 @@ export const SimpleOnboardingWizard: React.FC = () => {
                 currentStep={currentStep}
                 totalSteps={TOTAL_STEPS}
                 onPrevious={handlePrevious}
-                onNext={handleNextFromNavigation}
+                onNext={handleNext}
                 onComplete={completeOnboarding}
                 canGoNext={true}
                 canGoPrevious={currentStep > 1}
