@@ -62,6 +62,7 @@ export const SimpleOnboardingWizard: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isCompleting, setIsCompleting] = useState(false);
+  const [saveTimeout, setSaveTimeout] = useState<NodeJS.Timeout | null>(null);
 
   // Carregar dados existentes do onboarding
   useEffect(() => {
@@ -439,8 +440,6 @@ export const SimpleOnboardingWizard: React.FC = () => {
       </div>
     );
   }
-
-  const [saveTimeout, setSaveTimeout] = useState<NodeJS.Timeout | null>(null);
 
   const handleDataChange = (stepData: any) => {
     console.log('🔄 [DATA-CHANGE] Atualizando dados em tempo real:', stepData);
