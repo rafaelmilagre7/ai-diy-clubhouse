@@ -42,7 +42,7 @@ export const useCertificates = (courseId?: string) => {
           .from('solution_certificates')
           .select(`
             *,
-            solutions (title, description, logo_url)
+            solutions (title, description, thumbnail_url)
           `)
           .eq('user_id', user.id);
         
@@ -62,7 +62,7 @@ export const useCertificates = (courseId?: string) => {
             type: 'solution' as const,
             title: cert.solutions?.title,
             description: cert.solutions?.description,
-            image_url: cert.solutions?.logo_url
+            image_url: cert.solutions?.thumbnail_url
           }))
         ];
         
