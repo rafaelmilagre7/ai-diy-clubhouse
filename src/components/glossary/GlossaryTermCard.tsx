@@ -1,10 +1,9 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Clock, Eye, Tag, Star, ArrowRight } from "lucide-react";
+import { Star, ArrowRight, Lightbulb } from "lucide-react";
 import { GlossaryTermWithCategory } from "@/types/glossaryTypes";
-import { Button } from "@/components/ui/button";
 
 interface GlossaryTermCardProps {
   term: GlossaryTermWithCategory;
@@ -19,124 +18,113 @@ export const GlossaryTermCard = ({ term }: GlossaryTermCardProps) => {
 
   const getDifficultyColor = (level?: string) => {
     switch (level) {
-      case 'iniciante': return 'bg-green-100 text-green-800 border-green-200';
-      case 'intermediario': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      case 'avancado': return 'bg-red-100 text-red-800 border-red-200';
-      default: return 'bg-gray-100 text-gray-800 border-gray-200';
+      case 'iniciante': return { bg: 'bg-emerald-100', text: 'text-emerald-700', dot: 'bg-emerald-400' };
+      case 'intermediario': return { bg: 'bg-amber-100', text: 'text-amber-700', dot: 'bg-amber-400' };
+      case 'avancado': return { bg: 'bg-rose-100', text: 'text-rose-700', dot: 'bg-rose-400' };
+      default: return { bg: 'bg-gray-100', text: 'text-gray-700', dot: 'bg-gray-400' };
     }
   };
 
   const getDifficultyLabel = (level?: string) => {
     switch (level) {
-      case 'iniciante': return 'Iniciante';
+      case 'iniciante': return 'Fundamental';
       case 'intermediario': return 'Intermediário';
       case 'avancado': return 'Avançado';
-      default: return 'Iniciante';
+      default: return 'Fundamental';
     }
   };
 
+  const difficultyStyle = getDifficultyColor(term.difficulty_level);
+
   return (
-    <Card className="group hover:shadow-lg transition-all duration-200 border-l-4 hover:border-l-primary">
-      <CardHeader className="pb-3">
-        <div className="flex items-start justify-between gap-4">
-          <div className="flex-1 space-y-2">
-            <div className="flex items-center gap-2 flex-wrap">
+    <Card 
+      className="group hover:shadow-2xl hover:shadow-primary/10 transition-all duration-300 border-0 bg-gradient-to-r from-card to-card/50 overflow-hidden cursor-pointer"
+      onClick={handleClick}
+    >
+      <CardContent className="p-8">
+        <div className="flex items-start justify-between gap-6">
+          <div className="flex-1 space-y-4">
+            {/* Header with badges */}
+            <div className="flex items-center gap-3 flex-wrap">
               {term.is_featured && (
-                <Star className="h-4 w-4 text-yellow-500 fill-current" />
+                <div className="flex items-center gap-1 px-3 py-1 bg-gradient-to-r from-yellow-100 to-yellow-50 rounded-full border border-yellow-200">
+                  <Star className="h-3 w-3 text-yellow-600 fill-current" />
+                  <span className="text-xs font-medium text-yellow-700">Essencial</span>
+                </div>
               )}
+              
               {term.category_name && (
                 <Badge 
                   variant="outline" 
-                  className="text-xs"
+                  className="text-xs font-medium border-2"
                   style={{ 
-                    borderColor: term.category_color,
-                    color: term.category_color 
+                    borderColor: `${term.category_color}40`,
+                    color: term.category_color,
+                    backgroundColor: `${term.category_color}08`
                   }}
                 >
                   {term.category_name}
                 </Badge>
               )}
-              <Badge className={`text-xs ${getDifficultyColor(term.difficulty_level)}`}>
+              
+              <div className={`flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium ${difficultyStyle.bg} ${difficultyStyle.text}`}>
+                <div className={`w-2 h-2 rounded-full ${difficultyStyle.dot}`}></div>
                 {getDifficultyLabel(term.difficulty_level)}
-              </Badge>
+              </div>
             </div>
             
-            <h3 className="font-bold text-xl group-hover:text-primary transition-colors">
-              {term.title}
-            </h3>
-            
-            {term.synonyms && term.synonyms.length > 0 && (
-              <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                <span>Também conhecido como:</span>
-                <span>{term.synonyms.join(", ")}</span>
+            {/* Title and synonyms */}
+            <div className="space-y-2">
+              <h3 className="text-2xl font-bold text-foreground group-hover:text-primary transition-colors leading-tight">
+                {term.title}
+              </h3>
+              
+              {term.synonyms && term.synonyms.length > 0 && (
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <span className="font-medium">Também conhecido como:</span>
+                  <span className="italic">{term.synonyms.join(", ")}</span>
+                </div>
+              )}
+            </div>
+
+            {/* Definition */}
+            <div className="space-y-3">
+              <p className="text-lg text-muted-foreground leading-relaxed">
+                {term.short_definition}
+              </p>
+            </div>
+
+            {/* Examples */}
+            {term.examples && term.examples.length > 0 && (
+              <div className="space-y-3 pt-2">
+                <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                  <Lightbulb className="h-4 w-4 text-primary" />
+                  <span>Exemplos Práticos:</span>
+                </div>
+                <div className="space-y-2">
+                  {term.examples.slice(0, 2).map((example, index) => (
+                    <div key={index} className="flex items-start gap-3 p-3 bg-muted/30 rounded-xl border border-border/50">
+                      <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <span className="text-xs font-bold text-primary">{index + 1}</span>
+                      </div>
+                      <p className="text-sm text-muted-foreground leading-relaxed">{example}</p>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
           </div>
-          
-          <Button 
-            onClick={handleClick}
-            variant="ghost"
-            size="sm"
-            className="opacity-0 group-hover:opacity-100 transition-opacity"
-          >
-            <ArrowRight className="h-4 w-4" />
-          </Button>
-        </div>
-      </CardHeader>
 
-      <CardContent className="space-y-4 cursor-pointer" onClick={handleClick}>
-        <p className="text-muted-foreground leading-relaxed">
-          {term.short_definition}
-        </p>
-
-        {term.examples && term.examples.length > 0 && (
-          <div className="space-y-2">
-            <h4 className="text-sm font-medium text-muted-foreground">Exemplos:</h4>
-            <ul className="text-sm text-muted-foreground space-y-1">
-              {term.examples.slice(0, 2).map((example, index) => (
-                <li key={index} className="flex items-start gap-2">
-                  <span className="text-primary">•</span>
-                  <span>{example}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
-
-        {term.tags && term.tags.length > 0 && (
-          <div className="flex items-center gap-1 flex-wrap">
-            <Tag className="h-3 w-3 text-muted-foreground" />
-            {term.tags.slice(0, 4).map((tag, index) => (
-              <Badge key={index} variant="secondary" className="text-xs">
-                {tag}
-              </Badge>
-            ))}
-            {term.tags.length > 4 && (
-              <span className="text-xs text-muted-foreground">
-                +{term.tags.length - 4} mais
-              </span>
-            )}
-          </div>
-        )}
-
-        <div className="flex items-center justify-between text-xs text-muted-foreground pt-2 border-t">
-          <div className="flex items-center gap-4">
-            {term.reading_time_minutes && (
-              <div className="flex items-center gap-1">
-                <Clock className="h-3 w-3" />
-                <span>{term.reading_time_minutes} min</span>
-              </div>
-            )}
-            <div className="flex items-center gap-1">
-              <Eye className="h-3 w-3" />
-              <span>{term.view_count || 0} visualizações</span>
+          {/* Action Button */}
+          <div className="flex-shrink-0">
+            <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary group-hover:shadow-lg group-hover:shadow-primary/25 transition-all duration-300">
+              <ArrowRight className="h-5 w-5 text-primary group-hover:text-white group-hover:translate-x-0.5 transition-all duration-300" />
             </div>
           </div>
-          
-          <span className="text-primary font-medium group-hover:underline">
-            Ver definição completa →
-          </span>
         </div>
+
+        {/* Bottom gradient line */}
+        <div className="mt-6 h-1 w-full bg-gradient-to-r from-transparent via-primary/20 to-transparent rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
       </CardContent>
     </Card>
   );
