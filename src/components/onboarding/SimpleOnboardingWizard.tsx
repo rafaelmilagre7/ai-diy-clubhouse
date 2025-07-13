@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/auth';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 
 // Import dos steps simplificados
 import { SimpleOnboardingStep1 } from './steps/SimpleOnboardingStep1';
@@ -43,6 +43,7 @@ const STEP_TITLES = [
 export const SimpleOnboardingWizard: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   
   const [currentStep, setCurrentStep] = useState(1);
   const [onboardingData, setOnboardingData] = useState<OnboardingData>({
@@ -65,11 +66,66 @@ export const SimpleOnboardingWizard: React.FC = () => {
   // Carregar dados existentes do onboarding
   useEffect(() => {
     if (user) {
-      loadOnboardingData();
+      const shouldReset = searchParams.get('reset') === 'true';
+      if (shouldReset) {
+        resetOnboardingData();
+      } else {
+        loadOnboardingData();
+      }
     }
-  }, [user]);
+  }, [user, searchParams]);
+
+  const resetOnboardingData = async () => {
+    console.log('🔄 [ONBOARDING] Resetando dados do onboarding...');
+    
+    try {
+      const { error } = await supabase
+        .from('onboarding_final')
+        .delete()
+        .eq('user_id', user!.id);
+
+      if (error) {
+        console.error('❌ [ONBOARDING] Erro ao resetar:', error);
+        // Não impedir o usuário de continuar mesmo se houve erro ao deletar
+      }
+
+      console.log('✅ [ONBOARDING] Dados resetados com sucesso');
+      
+      // Inicializar com dados limpos
+      setOnboardingData({
+        personal_info: {},
+        location_info: {},
+        discovery_info: {},
+        business_info: {},
+        business_context: {},
+        goals_info: {},
+        ai_experience: {},
+        personalization: {},
+        current_step: 1,
+        completed_steps: [],
+        is_completed: false
+      });
+      setCurrentStep(1);
+      
+      toast({
+        title: "Onboarding resetado",
+        description: "Vamos começar do zero! 🚀",
+      });
+
+      // Limpar parâmetro da URL após reset
+      const newUrl = window.location.pathname;
+      window.history.replaceState({}, '', newUrl);
+      
+    } catch (error) {
+      console.error('❌ [ONBOARDING] Erro inesperado ao resetar:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const loadOnboardingData = async () => {
+    console.log('🔍 [ONBOARDING] Carregando dados existentes para usuário:', user!.id);
+    
     try {
       const { data, error } = await supabase
         .from('onboarding_final')
@@ -77,22 +133,28 @@ export const SimpleOnboardingWizard: React.FC = () => {
         .eq('user_id', user!.id)
         .single();
 
+      console.log('📥 [ONBOARDING] Resultado da consulta:', { data, error });
+
       if (error && error.code !== 'PGRST116') {
         throw error;
       }
 
       if (data) {
+        console.log('✅ [ONBOARDING] Dados carregados:', data);
         setOnboardingData(data);
         setCurrentStep(data.current_step || 1);
+      } else {
+        console.log('📭 [ONBOARDING] Nenhum dado encontrado, iniciando do zero');
       }
     } catch (error) {
-      console.error('Erro ao carregar dados do onboarding:', error);
+      console.error('❌ [ONBOARDING] Erro ao carregar dados:', error);
       toast({
         title: "Erro ao carregar dados",
         description: "Não foi possível carregar seus dados de onboarding.",
         variant: "destructive",
       });
     } finally {
+      console.log('🏁 [ONBOARDING] Carregamento finalizado');
       setIsLoading(false);
     }
   };
@@ -100,9 +162,19 @@ export const SimpleOnboardingWizard: React.FC = () => {
   const saveOnboardingData = async (stepData: any, stepNumber: number) => {
     if (!user) return;
     
+    console.log('🔄 [ONBOARDING] Iniciando salvamento:', {
+      stepNumber,
+      stepData,
+      currentOnboardingData: onboardingData,
+      userId: user.id
+    });
+    
+    
     setIsSaving(true);
     try {
       const updatedData = { ...onboardingData };
+      
+      console.log('📝 [ONBOARDING] Dados antes da atualização:', updatedData);
       
       // Atualizar dados do step específico
       switch (stepNumber) {
@@ -138,6 +210,11 @@ export const SimpleOnboardingWizard: React.FC = () => {
       updatedData.completed_steps = completedSteps;
       updatedData.current_step = Math.max(stepNumber + 1, updatedData.current_step);
 
+      console.log('💾 [ONBOARDING] Dados finais para salvar:', {
+        user_id: user.id,
+        ...updatedData
+      });
+
       const { error } = await supabase
         .from('onboarding_final')
         .upsert({
@@ -145,8 +222,12 @@ export const SimpleOnboardingWizard: React.FC = () => {
           ...updatedData
         });
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ [ONBOARDING] Erro ao salvar no Supabase:', error);
+        throw error;
+      }
 
+      console.log('✅ [ONBOARDING] Dados salvos com sucesso!');
       setOnboardingData(updatedData);
 
     } catch (error) {
@@ -175,11 +256,42 @@ export const SimpleOnboardingWizard: React.FC = () => {
     }
   };
 
-  const handlePrevious = () => {
+  const handlePrevious = async () => {
     if (currentStep > 1) {
+      // Salvar dados automaticamente antes de navegar
+      console.log('⬅️ [ONBOARDING] Navegando para etapa anterior, salvando dados da etapa atual...');
+      
+      const currentStepData = getCurrentStepData();
+      if (currentStepData && Object.keys(currentStepData).length > 0) {
+        await saveOnboardingData(currentStepData, currentStep);
+      }
+      
       setCurrentStep(currentStep - 1);
       // Scroll para o topo ao voltar para etapa anterior
       window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
+  const getCurrentStepData = () => {
+    // Retorna os dados da etapa atual baseado no step
+    switch (currentStep) {
+      case 1:
+        return {
+          personal_info: onboardingData.personal_info,
+          location_info: onboardingData.location_info
+        };
+      case 2:
+        return onboardingData.business_info;
+      case 3:
+        return onboardingData.discovery_info;
+      case 4:
+        return onboardingData.goals_info;
+      case 5:
+        return onboardingData.ai_experience;
+      case 6:
+        return onboardingData.personalization;
+      default:
+        return {};
     }
   };
 

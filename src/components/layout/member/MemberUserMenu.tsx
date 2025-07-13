@@ -60,7 +60,7 @@ export const MemberUserMenu = () => {
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
-          <Link to="/onboarding" className="cursor-pointer text-viverblue hover:text-viverblue-dark">
+          <Link to="/onboarding?reset=true" className="cursor-pointer text-viverblue hover:text-viverblue-dark">
             <Sparkles className="mr-2 h-4 w-4" />
             <span>Refazer Onboarding</span>
           </Link>
