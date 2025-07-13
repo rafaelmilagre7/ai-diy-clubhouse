@@ -106,6 +106,7 @@ export const SimpleOnboardingWizard: React.FC = () => {
         current_step: onboardingData.current_step || 1,
         completed_steps: onboardingData.completed_steps || [],
         is_completed: onboardingData.is_completed || false
+        // Removi updated_at - será gerenciado pelo trigger automaticamente
       };
 
       const { error } = await supabase
@@ -275,6 +276,7 @@ export const SimpleOnboardingWizard: React.FC = () => {
         current_step: updatedData.current_step || 1,
         completed_steps: updatedData.completed_steps || [],
         is_completed: updatedData.is_completed || false
+        // Removi updated_at - será gerenciado pelo trigger automaticamente
       };
 
       console.log('💾 [ONBOARDING] Dados finais formatados para upsert:', finalData);
