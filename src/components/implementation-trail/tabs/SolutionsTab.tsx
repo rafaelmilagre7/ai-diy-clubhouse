@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { PrioritySection } from '../PrioritySection';
+import { SmartPrioritySection } from '../SmartPrioritySection';
 
 interface ImplementationTrail {
   priority1: Array<{
@@ -29,37 +29,31 @@ interface SolutionsTabProps {
 
 export const SolutionsTab = ({ trail }: SolutionsTabProps) => {
   return (
-    <div className="space-y-12">
+    <div className="space-y-8">
       <div className="animate-fade-in">
-        <PrioritySection
-          title="🎯 Prioridade 1: Comece por aqui"
-          subtitle="Estas soluções foram selecionadas para gerar resultados imediatos"
+        <SmartPrioritySection
+          title="🎯 Prioridade Alta"
+          subtitle="Implementação imediata recomendada pela IA"
           recommendations={trail.priority1}
-          priority={1}
-          accentColor="border-green-500/40 bg-green-500/5"
-          iconColor="text-green-400"
+          priority="priority1"
         />
       </div>
 
       <div className="animate-fade-in" style={{ animationDelay: '200ms' }}>
-        <PrioritySection
-          title="🚀 Prioridade 2: Próximos passos"
+        <SmartPrioritySection
+          title="🚀 Prioridade Média"
           subtitle="Soluções complementares para expandir seus resultados"
           recommendations={trail.priority2}
-          priority={2}
-          accentColor="border-blue-500/40 bg-blue-500/5"
-          iconColor="text-blue-400"
+          priority="priority2"
         />
       </div>
 
       <div className="animate-fade-in" style={{ animationDelay: '400ms' }}>
-        <PrioritySection
-          title="💎 Prioridade 3: Para o futuro"
-          subtitle="Soluções avançadas para maximizar sua estratégia"
+        <SmartPrioritySection
+          title="💎 Prioridade Baixa"
+          subtitle="Planejamento para médio e longo prazo"
           recommendations={trail.priority3}
-          priority={3}
-          accentColor="border-purple-500/40 bg-purple-500/5"
-          iconColor="text-purple-400"
+          priority="priority3"
         />
       </div>
     </div>

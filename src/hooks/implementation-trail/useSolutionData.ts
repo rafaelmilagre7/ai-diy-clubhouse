@@ -10,6 +10,7 @@ export interface SolutionData {
   thumbnail_url?: string;
   category: string;
   difficulty: string;
+  tags?: string[];
 }
 
 export const useSolutionData = (solutionIds: string[]) => {
@@ -27,7 +28,7 @@ export const useSolutionData = (solutionIds: string[]) => {
 
         const { data, error } = await supabase
           .from('solutions')
-          .select('id, title, description, thumbnail_url, category, difficulty')
+          .select('id, title, description, thumbnail_url, category, difficulty, tags')
           .in('id', solutionIds);
 
         if (error) {
@@ -35,7 +36,11 @@ export const useSolutionData = (solutionIds: string[]) => {
         }
 
         const solutionsMap = data?.reduce((acc, solution) => {
-          acc[solution.id] = solution;
+          acc[solution.id] = {
+            ...solution,
+            // Garantir que tags seja sempre um array
+            tags: Array.isArray(solution.tags) ? solution.tags : []
+          };
           return acc;
         }, {} as Record<string, SolutionData>) || {};
 
@@ -52,5 +57,31 @@ export const useSolutionData = (solutionIds: string[]) => {
     fetchSolutions();
   }, [solutionIds.join(',')]);
 
-  return { solutions, loading };
+  // Função para obter uma solução específica
+  const getSolution = (solutionId: string): SolutionData | null => {
+    return solutions[solutionId] || null;
+  };
+
+  // Função para obter soluções de uma categoria específica
+  const getSolutionsByCategory = (category: string): SolutionData[] => {
+    return Object.values(solutions).filter(solution => 
+      solution.category === category
+    );
+  };
+
+  // Função para obter soluções por dificuldade
+  const getSolutionsByDifficulty = (difficulty: string): SolutionData[] => {
+    return Object.values(solutions).filter(solution => 
+      solution.difficulty === difficulty
+    );
+  };
+
+  return { 
+    solutions, 
+    loading, 
+    getSolution,
+    getSolutionsByCategory,
+    getSolutionsByDifficulty,
+    totalSolutions: Object.keys(solutions).length
+  };
 };

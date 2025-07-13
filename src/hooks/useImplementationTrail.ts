@@ -96,51 +96,71 @@ export function useImplementationTrail() {
       setIsRegenerating(true);
       setError(null);
 
-      console.log('🚀 Gerando trilha para usuário:', user.id);
+      console.log('🚀 Gerando trilha inteligente para usuário:', user.id);
 
-      // Para fins de demonstração, criar uma trilha mock
-      // Futuramente isso será substituído pela chamada da edge function
-      const mockTrail: ImplementationTrail = {
+      // Chamar a edge function de geração inteligente
+      const { data, error } = await supabase.functions.invoke('generate-smart-trail', {
+        body: { userId: user.id }
+      });
+
+      if (error) {
+        throw new Error(error.message || 'Erro ao gerar trilha');
+      }
+
+      if (!data.success) {
+        throw new Error(data.error || 'Erro desconhecido ao gerar trilha');
+      }
+
+      console.log('✅ Trilha inteligente gerada:', {
+        personalização: data.personalization_insights,
+        categorias: data.trail.priority1.length + data.trail.priority2.length + data.trail.priority3.length
+      });
+
+      setTrail(data.trail);
+      toast({
+        title: 'Trilha inteligente gerada!',
+        description: `Personalização: ${Math.round(data.personalization_insights.avg_score)}% de compatibilidade`,
+      });
+    } catch (err: any) {
+      console.error('❌ Erro ao gerar trilha:', err);
+      setError(err.message || 'Erro ao gerar trilha');
+      
+      // Fallback para trilha básica em caso de erro
+      console.log('📝 Gerando trilha básica como fallback...');
+      const fallbackTrail: ImplementationTrail = {
         priority1: [
           {
-            solutionId: '1',
-            justification: 'Solução recomendada baseada no seu perfil',
-            aiScore: 95,
+            solutionId: '9d867a8b-815b-42cb-b8f9-28190a60aaee',
+            justification: 'Solução recomendada para começar com IA no LinkedIn',
+            aiScore: 85,
             estimatedTime: '2-3 horas'
           }
         ],
         priority2: [
           {
-            solutionId: '2',
-            justification: 'Segunda prioridade para sua empresa',
-            aiScore: 85,
+            solutionId: 'ebc873b7-4f1e-408c-a041-fe346af8c22e',
+            justification: 'Assistente de IA para atendimento automatizado',
+            aiScore: 75,
             estimatedTime: '3-4 horas'
           }
         ],
         priority3: [
           {
-            solutionId: '3',
-            justification: 'Implementação para médio prazo',
-            aiScore: 75,
-            estimatedTime: '4-5 horas'
+            solutionId: 'e5520bbc-d876-4aa7-bdb0-66382ca1a4c4',
+            justification: 'Solução avançada para prospecção',
+            aiScore: 65,
+            estimatedTime: '1-2 dias'
           }
         ],
-        ai_message: 'Trilha personalizada criada com base nas melhores práticas para sua empresa.',
+        ai_message: 'Trilha básica criada. Complete seu onboarding para uma experiência mais personalizada.',
         generated_at: new Date().toISOString()
       };
 
-      setTrail(mockTrail);
+      setTrail(fallbackTrail);
       toast({
-        title: 'Trilha gerada com sucesso!',
-        description: 'Sua trilha personalizada está pronta.',
-      });
-    } catch (err: any) {
-      console.error('❌ Erro ao gerar trilha:', err);
-      setError(err.message || 'Erro ao gerar trilha');
-      toast({
-        title: 'Erro ao gerar trilha',
-        description: 'Não foi possível gerar sua trilha personalizada.',
-        variant: 'destructive',
+        title: 'Trilha básica criada',
+        description: 'Complete seu perfil para uma experiência mais personalizada.',
+        variant: 'default',
       });
     } finally {
       setIsRegenerating(false);
