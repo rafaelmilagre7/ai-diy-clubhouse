@@ -56,16 +56,14 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     setIsLoading,
   });
 
-  // CORREÇÃO DE ADMIN: Verificação robusta com fallback para compatibilidade
+  // SEGURANÇA: Usar apenas user_roles table (novo sistema seguro)
   const isAdmin = Boolean(
-    profile?.user_roles?.name === 'admin' || 
-    profile?.role === 'admin' ||
+    profile?.user_roles?.name === 'admin' ||
     (profile?.user_roles?.permissions as any)?.all === true
   );
 
   const isFormacao = Boolean(
-    profile?.user_roles?.name === 'formacao' || 
-    profile?.role === 'formacao'
+    profile?.user_roles?.name === 'formacao'
   );
 
   // OTIMIZAÇÃO: Configurar sessão na inicialização - APENAS UMA VEZ
@@ -258,8 +256,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       
       const userProfile = profileData as UserProfile;
       const adminCheck = Boolean(
-        userProfile?.user_roles?.name === 'admin' || 
-        userProfile?.role === 'admin' ||
+        userProfile?.user_roles?.name === 'admin' ||
         (userProfile?.user_roles?.permissions as any)?.all === true
       );
       

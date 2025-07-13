@@ -57,7 +57,7 @@ export const isSuperAdmin = async (userId: string): Promise<boolean> => {
       return false;
     }
 
-    // Check if user has admin role or admin permissions
+    // SEGURANÇA: Usar apenas user_roles table (sem fallback para role legacy)
     const userRoles = profile.user_roles as any;
     return (userRoles && userRoles.name === 'admin') ||
            (userRoles && userRoles.permissions && userRoles.permissions.all === true);

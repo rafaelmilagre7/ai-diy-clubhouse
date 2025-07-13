@@ -38,11 +38,11 @@ const AuthLayout = () => {
         profileRole: profile.role_id
       });
       
-      // Redirecionar baseado no papel do usuário
-      if (isAdmin || profile.role_id === 'admin') {
+      // Usar apenas verificações seguras de admin
+      if (isAdmin) {
         console.log("[AUTH-LAYOUT] Redirecionando admin para /admin");
         navigate('/admin', { replace: true });
-      } else if (profile.role_id === 'formacao') {
+      } else if (profile.user_roles?.name === 'formacao') {
         console.log("[AUTH-LAYOUT] Redirecionando formação para /formacao");
         navigate('/formacao', { replace: true });
       } else {
