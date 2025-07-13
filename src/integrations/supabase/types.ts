@@ -5886,6 +5886,10 @@ export type Database = {
           created_at: string
         }[]
       }
+      secure_assign_role: {
+        Args: { target_user_id: string; new_role_id: string }
+        Returns: Json
+      }
       setup_learning_storage_buckets: {
         Args: Record<PropertyKey, never>
         Returns: Json
@@ -5998,11 +6002,13 @@ export type Database = {
         }[]
       }
       validate_role_change: {
-        Args: {
-          target_user_id: string
-          new_role_id: string
-          current_user_id?: string
-        }
+        Args:
+          | { target_user_id: string; new_role_id: string }
+          | {
+              target_user_id: string
+              new_role_id: string
+              current_user_id?: string
+            }
         Returns: boolean
       }
       validate_solution_certificate: {
