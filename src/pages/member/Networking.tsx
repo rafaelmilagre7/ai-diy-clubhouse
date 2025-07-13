@@ -1,15 +1,11 @@
 import { useState } from 'react';
 import { NetworkingHeader } from '@/components/networking/NetworkingHeader';
-import { NetworkingDashboard } from '@/components/networking/NetworkingDashboard';
-import { ConnectionNotifications } from '@/components/networking/ConnectionNotifications';
-import { NetworkingPreferences } from '@/components/networking/NetworkingPreferences';
-import { NetworkingAnalytics } from '@/components/networking/NetworkingAnalytics';
-import { MeetingsList } from '@/components/networking/MeetingScheduler';
-import { MessagesGrid } from '@/components/networking/MessagesGrid';
+import { MatchesGrid } from '@/components/networking/MatchesGrid';
+import { ConnectionsGrid } from '@/components/networking/ConnectionsGrid';
 import { useDynamicSEO } from '@/hooks/seo/useDynamicSEO';
 
 const Networking = () => {
-  const [activeTab, setActiveTab] = useState<'matches' | 'connections' | 'messages' | 'meetings' | 'notifications' | 'analytics' | 'preferences'>('matches');
+  const [activeTab, setActiveTab] = useState<'matches' | 'connections'>('matches');
 
   useDynamicSEO({
     title: 'Networking AI - Networking Inteligente',
@@ -23,19 +19,11 @@ const Networking = () => {
         activeTab={activeTab}
         onTabChange={setActiveTab}
       />
-      {activeTab === 'notifications' ? (
-        <ConnectionNotifications />
-      ) : activeTab === 'preferences' ? (
-        <NetworkingPreferences />
-      ) : activeTab === 'analytics' ? (
-        <NetworkingAnalytics />
-      ) : activeTab === 'meetings' ? (
-        <MeetingsList />
-      ) : activeTab === 'messages' ? (
-        <MessagesGrid />
-      ) : (
-        <NetworkingDashboard activeTab={activeTab} />
-      )}
+      
+      <div className="min-h-[400px]">
+        {activeTab === 'matches' && <MatchesGrid />}
+        {activeTab === 'connections' && <ConnectionsGrid />}
+      </div>
     </div>
   );
 };
