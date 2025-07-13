@@ -409,19 +409,6 @@ export const SimpleOnboardingStep4: React.FC<SimpleOnboardingStep4Props> = ({
           </div>
         </Card>
 
-        {/* Botão Continuar */}
-        <div className="flex justify-end pt-6">
-          <Button
-            onClick={handleNext}
-            disabled={isLoading}
-            className="min-w-[120px]"
-          >
-            {isLoading ? (
-              <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin mr-2" />
-            ) : null}
-            {isLoading ? "Salvando..." : "Continuar"}
-          </Button>
-        </div>
       </div>
     </motion.div>
   );
