@@ -42,11 +42,6 @@ export const SimpleOnboardingStep1: React.FC<SimpleOnboardingStep1Props> = ({
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [autoSaveTimeoutId, setAutoSaveTimeoutId] = useState<NodeJS.Timeout | null>(null);
-
-  // Notificar o componente pai sobre mudanças nos dados - REMOVIDO useEffect problemático
-  // O salvamento agora acontece apenas quando o usuário interage com os campos
-
   const getFieldError = (field: string) => errors[field];
 
   const handleInputChange = (field: string, value: string) => {
@@ -56,33 +51,27 @@ export const SimpleOnboardingStep1: React.FC<SimpleOnboardingStep1Props> = ({
         [field]: value
       };
       
-      // Notificar mudanças para auto-save apenas após 500ms de inatividade
+      // Notificar mudanças para auto-save do componente pai
       if (onDataChange) {
-        if (autoSaveTimeoutId) {
-          clearTimeout(autoSaveTimeoutId);
-        }
-        const newTimeoutId = setTimeout(() => {
-          const stepData = {
-            personal_info: {
-              name: newFormData.name,
-              email: newFormData.email,
-              phone: newFormData.phone,
-              instagram: newFormData.instagram,
-              linkedin: newFormData.linkedin,
-              birthDate: newFormData.birthDate,
-              profilePicture: newFormData.profilePicture,
-              curiosity: newFormData.curiosity
-            },
-            location_info: {
-              state: newFormData.state,
-              city: newFormData.city,
-              country: newFormData.country,
-              timezone: newFormData.timezone
-            }
-          };
-          onDataChange(stepData);
-        }, 500);
-        setAutoSaveTimeoutId(newTimeoutId);
+        const stepData = {
+          personal_info: {
+            name: newFormData.name,
+            email: newFormData.email,
+            phone: newFormData.phone,
+            instagram: newFormData.instagram,
+            linkedin: newFormData.linkedin,
+            birthDate: newFormData.birthDate,
+            profilePicture: newFormData.profilePicture,
+            curiosity: newFormData.curiosity
+          },
+          location_info: {
+            state: newFormData.state,
+            city: newFormData.city,
+            country: newFormData.country,
+            timezone: newFormData.timezone
+          }
+        };
+        onDataChange(stepData);
       }
       
       return newFormData;

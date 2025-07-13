@@ -126,10 +126,19 @@ export const SimpleOnboardingStep4: React.FC<SimpleOnboardingStep4Props> = ({
   });
 
   const handleInputChange = (field: string, value: string) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value
-    }));
+    setFormData(prev => {
+      const newFormData = {
+        ...prev,
+        [field]: value
+      };
+      
+      // Notificar mudanças para auto-save do componente pai
+      if (onDataChange) {
+        onDataChange(newFormData);
+      }
+      
+      return newFormData;
+    });
   };
 
   const handleNext = () => {

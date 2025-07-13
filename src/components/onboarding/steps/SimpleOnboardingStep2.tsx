@@ -30,8 +30,6 @@ export const SimpleOnboardingStep2: React.FC<SimpleOnboardingStep2Props> = ({
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [autoSaveTimeoutId, setAutoSaveTimeoutId] = useState<NodeJS.Timeout | null>(null);
-
   const getFieldError = (field: string) => errors[field];
 
   const handleInputChange = (field: string, value: string) => {
@@ -41,18 +39,12 @@ export const SimpleOnboardingStep2: React.FC<SimpleOnboardingStep2Props> = ({
         [field]: value
       };
       
-      // Notificar mudanças para auto-save apenas após 500ms de inatividade
+      // Notificar mudanças para auto-save do componente pai
       if (onDataChange) {
-        if (autoSaveTimeoutId) {
-          clearTimeout(autoSaveTimeoutId);
-        }
-        const newTimeoutId = setTimeout(() => {
-          const stepData = {
-            business_info: newFormData
-          };
-          onDataChange(stepData);
-        }, 500);
-        setAutoSaveTimeoutId(newTimeoutId);
+        const stepData = {
+          business_info: newFormData
+        };
+        onDataChange(stepData);
       }
       
       return newFormData;

@@ -62,10 +62,19 @@ export const SimpleOnboardingStep3: React.FC<SimpleOnboardingStep3Props> = ({
 
   // Função para atualizar dados sem navegar automaticamente
   const updateStepData = (field: string, value: string | string[]) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value
-    }));
+    setFormData(prev => {
+      const newFormData = {
+        ...prev,
+        [field]: value
+      };
+      
+      // Notificar mudanças para auto-save do componente pai
+      if (onDataChange) {
+        onDataChange(newFormData);
+      }
+      
+      return newFormData;
+    });
   };
 
   const handleRadioChange = (field: string, value: string) => {
