@@ -33,22 +33,10 @@ export const SimpleOnboardingStep2: React.FC<SimpleOnboardingStep2Props> = ({
   const getFieldError = (field: string) => errors[field];
 
   const handleInputChange = (field: string, value: string) => {
-    setFormData(prev => {
-      const newFormData = {
-        ...prev,
-        [field]: value
-      };
-      
-      // Notificar mudanças para auto-save do componente pai
-      if (onDataChange) {
-        const stepData = {
-          business_info: newFormData
-        };
-        onDataChange(stepData);
-      }
-      
-      return newFormData;
-    });
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }));
 
     // Limpar erro do campo quando usuário interagir
     if (errors[field]) {

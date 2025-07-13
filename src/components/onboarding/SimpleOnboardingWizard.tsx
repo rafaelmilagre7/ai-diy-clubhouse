@@ -60,47 +60,7 @@ export const SimpleOnboardingWizard: React.FC = () => {
     completed_steps: [],
     is_completed: false
   });
-  const [saveTimeout, setSaveTimeout] = useState<NodeJS.Timeout | null>(null);
-
-  // Auto-save function usando o adapter
-  const autoSaveData = useCallback(async () => {
-    console.log('🔄 [AUTO-SAVE] Iniciando salvamento automático...');
-    
-    if (!user) {
-      console.warn('⚠️ [AUTO-SAVE] Usuário não autenticado, cancelando salvamento');
-      return;
-    }
-    
-    if (adapter.isSaving) {
-      console.warn('⚠️ [AUTO-SAVE] Já está salvando, cancelando');
-      return;
-    }
-    
-    const success = await adapter.saveOnboardingData(onboardingData);
-    if (success) {
-      console.log('✅ [AUTO-SAVE] Dados salvos automaticamente!');
-    }
-  }, [user, onboardingData, adapter]);
-
-  // TODOS OS HOOKS DEVEM ESTAR AQUI - ANTES DE QUALQUER RETURN CONDICIONAL
-  const handleDataChange = useCallback((stepData: any) => {
-    console.log('🔄 [DATA-CHANGE] Atualizando dados em tempo real:', stepData);
-    setOnboardingData(prev => ({
-      ...prev,
-      ...stepData
-    }));
-    
-    // Debounce do auto-save: aguarda 1 segundo sem mudanças antes de salvar
-    if (saveTimeout) {
-      clearTimeout(saveTimeout);
-    }
-    
-    const newTimeout = setTimeout(() => {
-      autoSaveData();
-    }, 1000);
-    
-    setSaveTimeout(newTimeout);
-  }, [saveTimeout, autoSaveData]); // Dependências corretas para evitar problemas
+  // Removido auto-save - salvamento apenas nos botões de navegação
 
   // TODAS AS FUNÇÕES DEVEM ESTAR ANTES DOS RETURNS CONDICIONAIS
   const renderCurrentStep = () => {
@@ -112,17 +72,17 @@ export const SimpleOnboardingWizard: React.FC = () => {
 
     switch (currentStep) {
       case 1:
-        return <SimpleOnboardingStep1 {...stepProps} onDataChange={handleDataChange} />;
+        return <SimpleOnboardingStep1 {...stepProps} />;
       case 2:
-        return <SimpleOnboardingStep2 {...stepProps} onDataChange={handleDataChange} />;
+        return <SimpleOnboardingStep2 {...stepProps} />;
       case 3:
-        return <SimpleOnboardingStep3 {...stepProps} onDataChange={handleDataChange} />;
+        return <SimpleOnboardingStep3 {...stepProps} />;
       case 4:
-        return <SimpleOnboardingStep4 {...stepProps} onDataChange={handleDataChange} />;
+        return <SimpleOnboardingStep4 {...stepProps} />;
       case 5:
-        return <SimpleOnboardingStep5 {...stepProps} onDataChange={handleDataChange} />;
+        return <SimpleOnboardingStep5 {...stepProps} />;
       case 6:
-        return <SimpleOnboardingStep6 {...stepProps} onDataChange={handleDataChange} />;
+        return <SimpleOnboardingStep6 {...stepProps} />;
       default:
         return <SimpleOnboardingStep1 {...stepProps} />;
     }

@@ -45,37 +45,10 @@ export const SimpleOnboardingStep1: React.FC<SimpleOnboardingStep1Props> = ({
   const getFieldError = (field: string) => errors[field];
 
   const handleInputChange = (field: string, value: string) => {
-    setFormData(prev => {
-      const newFormData = {
-        ...prev,
-        [field]: value
-      };
-      
-      // Notificar mudanças para auto-save do componente pai
-      if (onDataChange) {
-        const stepData = {
-          personal_info: {
-            name: newFormData.name,
-            email: newFormData.email,
-            phone: newFormData.phone,
-            instagram: newFormData.instagram,
-            linkedin: newFormData.linkedin,
-            birthDate: newFormData.birthDate,
-            profilePicture: newFormData.profilePicture,
-            curiosity: newFormData.curiosity
-          },
-          location_info: {
-            state: newFormData.state,
-            city: newFormData.city,
-            country: newFormData.country,
-            timezone: newFormData.timezone
-          }
-        };
-        onDataChange(stepData);
-      }
-      
-      return newFormData;
-    });
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }));
     
     // Limpar erro do campo quando usuário digitar
     if (errors[field]) {
