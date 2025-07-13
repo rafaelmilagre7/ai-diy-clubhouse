@@ -426,22 +426,33 @@ export const SimpleOnboardingWizard: React.FC = () => {
   };
 
   const handleNext = async (stepData?: any) => {
-    // Sempre salvar dados da etapa atual antes de navegar
-    console.log('➡️ [ONBOARDING] Navegando para próxima etapa, salvando dados...');
+    console.log('➡️ [ONBOARDING] === HANDLENEXT CHAMADO ===');
+    console.log('➡️ [ONBOARDING] stepData recebido:', JSON.stringify(stepData, null, 2));
+    console.log('➡️ [ONBOARDING] currentStep:', currentStep);
     
     // Salvar dados fornecidos pelo step ou dados atuais
     const dataToSave = stepData || getCurrentStepData();
+    console.log('➡️ [ONBOARDING] dataToSave preparado:', JSON.stringify(dataToSave, null, 2));
+    
     if (dataToSave && Object.keys(dataToSave).length > 0) {
+      console.log('➡️ [ONBOARDING] Chamando saveOnboardingData...');
       await saveOnboardingData(dataToSave, currentStep);
+      console.log('➡️ [ONBOARDING] saveOnboardingData finalizada');
+    } else {
+      console.log('⚠️ [ONBOARDING] Nenhum dado para salvar');
     }
     
     if (currentStep < TOTAL_STEPS) {
+      console.log('➡️ [ONBOARDING] Avançando para próxima etapa...');
       setCurrentStep(currentStep + 1);
       // Scroll para o topo ao avançar para próxima etapa
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } else {
+      console.log('➡️ [ONBOARDING] Completando onboarding...');
       await completeOnboarding();
     }
+    
+    console.log('➡️ [ONBOARDING] === HANDLENEXT FINALIZADO ===');
   };
 
   const handlePrevious = async () => {
