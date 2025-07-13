@@ -3,7 +3,6 @@ import React, { useMemo } from "react";
 import { CertificateCard } from "./CertificateCard";
 import { SolutionCertificateCard } from "./SolutionCertificateCard";
 import { useCertificates } from "@/hooks/learning/useCertificates";
-import { useSolutionCertificates } from "@/hooks/learning/useSolutionCertificates";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AlertCircle } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -23,33 +22,37 @@ export const CertificatesList = ({
   sortBy = "recent" 
 }: CertificatesListProps) => {
   const { 
-    certificates: courseCertificates, 
-    isLoading: isLoadingCourse, 
-    error: courseError, 
-    downloadCertificate: downloadCourseCertificate
+    certificates, 
+    isLoading, 
+    error, 
+    downloadCertificate
   } = useCertificates(courseId);
   
-  const {
-    certificates: solutionCertificates,
-    isLoading: isLoadingSolutions,
-    downloadCertificate: downloadSolutionCertificate
-  } = useSolutionCertificates();
-  
+  // Funções wrapper para compatibilizar tipos
+  const handleSolutionDownload = async (certificateId: string) => {
+    await downloadCertificate(certificateId);
+    return { needsModal: false };
+  };
+
+  const handleCourseDownload = (certificateId: string) => {
+    downloadCertificate(certificateId);
+  };
+
   // Filtrar e ordenar certificados
   const filteredAndSortedData = useMemo(() => {
-    let filteredCourses = courseCertificates.filter(cert => {
-      const course = (cert as any).learning_courses;
-      const matchesSearch = !searchTerm || course?.title?.toLowerCase().includes(searchTerm.toLowerCase());
+    // Separar certificados por tipo
+    const courseCerts = certificates.filter(cert => cert.type === 'course');
+    const solutionCerts = certificates.filter(cert => cert.type === 'solution');
+
+    let filteredCourses = courseCerts.filter(cert => {
+      const matchesSearch = !searchTerm || cert.title?.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesCategory = selectedCategory === "all" || selectedCategory === "courses";
       return matchesSearch && matchesCategory;
     });
 
-    let filteredSolutions = solutionCertificates.filter(cert => {
-      const solution = cert.solutions;
-      const matchesSearch = !searchTerm || solution?.title?.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesCategory = selectedCategory === "all" || 
-        selectedCategory === "solutions" || 
-        solution?.category?.toLowerCase() === selectedCategory.toLowerCase();
+    let filteredSolutions = solutionCerts.filter(cert => {
+      const matchesSearch = !searchTerm || cert.title?.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesCategory = selectedCategory === "all" || selectedCategory === "solutions";
       return matchesSearch && matchesCategory;
     });
 
@@ -59,12 +62,12 @@ export const CertificatesList = ({
         case "oldest":
           return new Date(a.issued_at).getTime() - new Date(b.issued_at).getTime();
         case "name":
-          const nameA = (a.learning_courses?.title || a.solutions?.title || "").toLowerCase();
-          const nameB = (b.learning_courses?.title || b.solutions?.title || "").toLowerCase();
+          const nameA = (a.title || "").toLowerCase();
+          const nameB = (b.title || "").toLowerCase();
           return nameA.localeCompare(nameB);
         case "name-desc":
-          const nameDescA = (a.learning_courses?.title || a.solutions?.title || "").toLowerCase();
-          const nameDescB = (b.learning_courses?.title || b.solutions?.title || "").toLowerCase();
+          const nameDescA = (a.title || "").toLowerCase();
+          const nameDescB = (b.title || "").toLowerCase();
           return nameDescB.localeCompare(nameDescA);
         case "recent":
         default:
@@ -79,10 +82,7 @@ export const CertificatesList = ({
       courseCertificates: filteredCourses,
       solutionCertificates: filteredSolutions
     };
-  }, [courseCertificates, solutionCertificates, searchTerm, selectedCategory, sortBy]);
-  
-  const isLoading = isLoadingCourse || isLoadingSolutions;
-  const error = courseError;
+  }, [certificates, searchTerm, selectedCategory, sortBy]);
   
   if (isLoading) {
     return (
@@ -142,7 +142,7 @@ export const CertificatesList = ({
           <CertificateCard
             key={certificate.id}
             certificate={certificate}
-            onDownload={downloadCourseCertificate}
+            onDownload={handleCourseDownload}
           />
         ))}
       </div>
@@ -187,7 +187,7 @@ export const CertificatesList = ({
                   <SolutionCertificateCard
                     key={certificate.id}
                     certificate={certificate}
-                    onDownload={downloadSolutionCertificate}
+                    onDownload={handleSolutionDownload}
                   />
                 ))}
               </div>
@@ -206,7 +206,7 @@ export const CertificatesList = ({
                   <CertificateCard
                     key={certificate.id}
                     certificate={certificate}
-                    onDownload={downloadCourseCertificate}
+                    onDownload={handleCourseDownload}
                   />
                 ))}
               </div>
@@ -221,7 +221,7 @@ export const CertificatesList = ({
             <SolutionCertificateCard
               key={certificate.id}
               certificate={certificate}
-              onDownload={downloadSolutionCertificate}
+              onDownload={handleSolutionDownload}
             />
           ))}
         </div>
@@ -233,7 +233,7 @@ export const CertificatesList = ({
             <CertificateCard
               key={certificate.id}
               certificate={certificate}
-              onDownload={downloadCourseCertificate}
+              onDownload={handleCourseDownload}
             />
           ))}
         </div>
