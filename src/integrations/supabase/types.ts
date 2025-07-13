@@ -5354,6 +5354,10 @@ export type Database = {
         Args: { user_id: string; course_id: string }
         Returns: boolean
       }
+      can_assign_role: {
+        Args: { admin_user_id: string; target_role_id: string }
+        Returns: boolean
+      }
       can_manage_role: {
         Args: { user_id: string; target_role_name: string }
         Returns: boolean
@@ -5402,6 +5406,10 @@ export type Database = {
           policy_count: number
           security_status: string
         }[]
+      }
+      check_role_system_integrity: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
       }
       check_solution_certificate_eligibility: {
         Args: { p_user_id: string; p_solution_id: string }
@@ -5648,6 +5656,10 @@ export type Database = {
         Args: { user_id: string }
         Returns: string
       }
+      get_user_role_safe: {
+        Args: { user_id?: string }
+        Returns: string
+      }
       get_user_security_permissions: {
         Args: { user_id: string }
         Returns: string[]
@@ -5817,6 +5829,10 @@ export type Database = {
               details?: Json
             }
         Returns: string
+      }
+      log_unauthorized_access: {
+        Args: { attempted_action: string; resource_details?: Json }
+        Returns: undefined
       }
       log_user_action: {
         Args: { user_id: string; action_type: string; details?: Json }
