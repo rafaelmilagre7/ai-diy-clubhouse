@@ -158,23 +158,13 @@ const ModernRegisterForm: React.FC<ModernRegisterFormProps> = ({
         description: "Por favor, aguarde enquanto preparamos tudo para você.",
       });
       
-      // ===== DIAGNÓSTICO COMPLETO =====
-      console.log('🔧 [DIAGNOSTIC] Estado atual do sistema:', {
-        url: window.location.href,
-        userAgent: navigator.userAgent,
-        timestamp: new Date().toISOString(),
-        hasSupabaseClient: !!supabase,
-        inviteToken: inviteToken ? `${inviteToken.substring(0, 4)}***` : 'none'
-      });
-      
-      // Limpar qualquer estado de auth anterior
-      console.log('🧹 [DIAGNOSTIC] Limpando estado anterior...');
-      await supabase.auth.signOut({ scope: 'global' });
-      
-      // Aguardar um pouco para garantir limpeza
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      console.log('🚀 [DIAGNOSTIC] Tentando signUp com configuração limpa...');
+      // Limpar qualquer estado de auth anterior silenciosamente
+      try {
+        await supabase.auth.signOut({ scope: 'global' });
+        await new Promise(resolve => setTimeout(resolve, 300));
+      } catch (e) {
+        // Ignorar erros de limpeza
+      }
       const { data, error } = await supabase.auth.signUp({
         email: email.trim().toLowerCase(),
         password,

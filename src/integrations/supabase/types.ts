@@ -5770,6 +5770,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      cleanup_orphaned_sessions: {
+        Args: Record<PropertyKey, never>
+        Returns: number
+      }
       cleanup_user_auth_state: {
         Args: { target_user_id?: string }
         Returns: boolean
