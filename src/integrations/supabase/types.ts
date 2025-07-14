@@ -5770,6 +5770,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      cleanup_user_auth_state: {
+        Args: { target_user_id?: string }
+        Returns: boolean
+      }
       clear_all_networking_data: {
         Args: Record<PropertyKey, never>
         Returns: Json
@@ -6314,12 +6318,6 @@ export type Database = {
           expires_at: string
           used_at: string
           created_at: string
-          created_by: string
-          notes: string
-          whatsapp_number: string
-          preferred_channel: string
-          send_attempts: number
-          last_sent_at: string
         }[]
       }
       validate_invite_token_secure: {
