@@ -94,11 +94,11 @@ const RootRedirect = () => {
     return <LoadingScreen message="Carregando seu perfil..." />;
   }
   
-  // VERIFICAÇÃO DO ONBOARDING - Prioridade máxima
+  // VERIFICAÇÃO DO ONBOARDING - Prioridade ABSOLUTA
+  // TODOS os usuários DEVEM completar o onboarding
   if (profile && !profile.onboarding_completed && !location.pathname.startsWith('/onboarding')) {
-    console.log("[ROOT-REDIRECT] Redirecionando para onboarding - usuário não completou");
+    console.log("[ROOT-REDIRECT] ONBOARDING OBRIGATÓRIO - Redirecionando usuário");
     if (timeoutRef.current) clearTimeout(timeoutRef.current);
-    // Redirecionar para a nova estrutura de etapas
     return <Navigate to="/onboarding/step/1" replace />;
   }
   

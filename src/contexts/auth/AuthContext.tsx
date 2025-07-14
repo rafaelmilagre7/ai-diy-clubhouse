@@ -13,6 +13,7 @@ interface AuthContextType {
   profile: UserProfile | null;
   isAdmin: boolean;
   isFormacao: boolean;
+  hasCompletedOnboarding: boolean;
   isLoading: boolean;
   authError: Error | null;
   signIn: (email: string, password: string) => Promise<{ error?: Error }>;
@@ -65,6 +66,9 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const isFormacao = Boolean(
     profile?.user_roles?.name === 'formacao'
   );
+
+  // VERIFICAÇÃO DE ONBOARDING COMPLETO
+  const hasCompletedOnboarding = Boolean(profile?.onboarding_completed);
 
   // OTIMIZAÇÃO: Configurar sessão na inicialização - APENAS UMA VEZ
   useEffect(() => {
@@ -281,6 +285,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     profile,
     isAdmin,
     isFormacao,
+    hasCompletedOnboarding,
     isLoading,
     authError,
     signIn,

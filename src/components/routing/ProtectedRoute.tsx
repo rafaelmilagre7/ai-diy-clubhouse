@@ -16,7 +16,7 @@ const ProtectedRoute = ({
   requireAdmin = false,
   requiredRole
 }: ProtectedRouteProps) => {
-  const { user, isAdmin, isLoading } = useAuth();
+  const { user, profile, isAdmin, hasCompletedOnboarding, isLoading } = useAuth();
   const location = useLocation();
   
   // Se estiver carregando, mostra tela de loading
@@ -28,6 +28,19 @@ const ProtectedRoute = ({
   if (!user) {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
+
+  // VERIFICAÇÃO OBRIGATÓRIA DE ONBOARDING
+  // Rotas permitidas sem onboarding completo
+  const allowedWithoutOnboarding = ['/login', '/onboarding', '/auth'];
+  const isOnboardingRoute = allowedWithoutOnboarding.some(route => 
+    location.pathname.startsWith(route)
+  );
+
+  // Se usuário não completou onboarding E não está em rota permitida
+  if (!hasCompletedOnboarding && !isOnboardingRoute) {
+    console.log("[PROTECTED-ROUTE] Onboarding obrigatório não completado");
+    return <Navigate to="/onboarding/step/1" replace />;
+  }
   
   // Verificar se requer admin e usuário não é admin
   if ((requiredRole === 'admin' || requireAdmin) && !isAdmin) {
@@ -35,7 +48,7 @@ const ProtectedRoute = ({
     return <Navigate to="/dashboard" replace />;
   }
 
-  // Usuário está autenticado e tem permissões necessárias
+  // Usuário está autenticado, tem onboarding completo e permissões necessárias
   return <>{children}</>;
 };
 
