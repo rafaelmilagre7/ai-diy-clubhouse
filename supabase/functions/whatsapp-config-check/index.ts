@@ -152,6 +152,7 @@ async function checkSupabaseCredentials() {
   try {
     // Verificar WHATSAPP_BUSINESS_TOKEN
     const accessToken = Deno.env.get('WHATSAPP_BUSINESS_TOKEN')
+    console.log('🔑 Verificando token:', { hasToken: !!accessToken, length: accessToken?.length });
     if (accessToken && accessToken.length > 50) {
       result.credentials.access_token = true
       result.details.push('✅ WHATSAPP_BUSINESS_TOKEN configurado')
@@ -161,6 +162,7 @@ async function checkSupabaseCredentials() {
 
     // Verificar WHATSAPP_BUSINESS_PHONE_ID
     const phoneNumberId = Deno.env.get('WHATSAPP_BUSINESS_PHONE_ID')
+    console.log('📱 Verificando phone ID:', { hasPhoneId: !!phoneNumberId, length: phoneNumberId?.length });
     if (phoneNumberId && phoneNumberId.length > 10) {
       result.credentials.phone_number_id = true
       result.details.push('✅ WHATSAPP_BUSINESS_PHONE_ID configurado')
