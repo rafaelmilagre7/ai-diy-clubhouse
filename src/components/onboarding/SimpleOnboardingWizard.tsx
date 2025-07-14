@@ -389,20 +389,18 @@ export const SimpleOnboardingWizard: React.FC = () => {
           {renderCurrentStep()}
           
           {/* Navegação */}
-          {currentStep > 1 && (
-            <div className="mt-8 pt-6 border-t">
-              <SimpleStepNavigation
-                currentStep={currentStep}
-                totalSteps={TOTAL_STEPS}
-                onPrevious={handlePrevious}
-                onNext={handleNext}
-                onComplete={() => {}}
-                canGoNext={true}
-                canGoPrevious={currentStep > 1}
-                isLoading={adapter.isSaving}
-              />
-            </div>
-          )}
+          <div className="mt-8 pt-6 border-t">
+            <SimpleStepNavigation
+              currentStep={currentStep}
+              totalSteps={TOTAL_STEPS}
+              onPrevious={handlePrevious}
+              onNext={handleNext}
+              onComplete={() => {}}
+              canGoNext={true}
+              canGoPrevious={currentStep > 1}
+              isLoading={adapter.isSaving}
+            />
+          </div>
         </div>
       </main>
     </div>
