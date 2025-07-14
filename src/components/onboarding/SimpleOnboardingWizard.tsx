@@ -170,7 +170,7 @@ export const SimpleOnboardingWizard: React.FC = () => {
         updatedData.location_info = { ...updatedData.location_info, ...stepData.location_info };
         break;
       case 2:
-        updatedData.business_info = { ...updatedData.business_info, ...stepData.business_info };
+        updatedData.location_info = { ...updatedData.location_info, ...stepData };
         break;
       case 3:
         updatedData.ai_experience = { ...updatedData.ai_experience, ...stepData.ai_experience };
@@ -262,7 +262,7 @@ export const SimpleOnboardingWizard: React.FC = () => {
           location_info: onboardingData.location_info
         };
       case 2:
-        return onboardingData.business_info;
+        return onboardingData.location_info;
       case 3:
         return onboardingData.ai_experience || onboardingData; // dados diretos do step 3
       case 4:
