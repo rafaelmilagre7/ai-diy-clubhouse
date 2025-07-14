@@ -316,8 +316,33 @@ export const useDirectOnboardingAdapter = () => {
       completed_at: new Date().toISOString()
     };
 
-    return await saveOnboardingData(completedData);
-  }, [saveOnboardingData]);
+    // Salvar dados do onboarding
+    const saveSuccess = await saveOnboardingData(completedData);
+    
+    if (saveSuccess) {
+      // Sincronizar tabela profiles
+      try {
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .update({ 
+            onboarding_completed: true,
+            onboarding_completed_at: new Date().toISOString()
+          })
+          .eq('id', user?.id);
+
+        if (profileError) {
+          console.error('❌ [DIRECT] Erro ao sincronizar profiles:', profileError);
+          // Continua mesmo com erro de sincronização
+        } else {
+          console.log('✅ [DIRECT] Profiles sincronizado!');
+        }
+      } catch (error) {
+        console.error('❌ [DIRECT] Erro inesperado ao sincronizar profiles:', error);
+      }
+    }
+
+    return saveSuccess;
+  }, [saveOnboardingData, user?.id]);
 
   return {
     loadOnboardingData,
