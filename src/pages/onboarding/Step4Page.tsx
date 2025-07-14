@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { OnboardingLayout } from '@/components/layout/OnboardingLayout';
 import { SimpleOnboardingStep4 } from '@/components/onboarding/steps/SimpleOnboardingStep4';
@@ -8,6 +8,7 @@ import { useOnboarding } from '@/hooks/useOnboarding';
 const OnboardingStep4Page: React.FC = () => {
   const navigate = useNavigate();
   const { data, saveAndNavigate, canAccessStep, isSaving } = useOnboarding();
+  const stepRef = useRef<{ getData: () => any; isValid: () => boolean }>(null);
 
   // Verificar se pode acessar esta etapa
   useEffect(() => {
@@ -19,11 +20,21 @@ const OnboardingStep4Page: React.FC = () => {
   const handleNext = async (stepData?: any) => {
     console.log('➡️ [STEP4] handleNext chamado com:', stepData);
     
-    const dataToSave = stepData || {
-      goals_info: data.goals_info
-    };
+    // Coletar dados do componente via ref se não fornecido
+    const formData = stepData || stepRef.current?.getData();
     
-    await saveAndNavigate(dataToSave, 4, 5);
+    if (!formData) {
+      console.error('❌ [STEP4] Dados não encontrados');
+      return;
+    }
+    
+    // Validar antes de salvar
+    if (stepRef.current && !stepRef.current.isValid()) {
+      console.warn('⚠️ [STEP4] Validação falhou');
+      return;
+    }
+    
+    await saveAndNavigate(formData, 4, 5);
   };
 
   const handlePrevious = () => {
@@ -35,10 +46,12 @@ const OnboardingStep4Page: React.FC = () => {
     onNext: handleNext,
     isLoading: isSaving
   };
+  
+  const canGoNext = stepRef.current ? stepRef.current.isValid() : true;
 
   return (
     <OnboardingLayout currentStep={4}>
-      <SimpleOnboardingStep4 {...stepProps} />
+      <SimpleOnboardingStep4 ref={stepRef} {...stepProps} />
       
       {/* Navegação */}
       <div className="mt-8 pt-6 border-t">
@@ -48,7 +61,7 @@ const OnboardingStep4Page: React.FC = () => {
           onPrevious={handlePrevious}
           onNext={handleNext}
           onComplete={() => {}}
-          canGoNext={true}
+          canGoNext={canGoNext}
           canGoPrevious={true}
           isLoading={isSaving}
         />

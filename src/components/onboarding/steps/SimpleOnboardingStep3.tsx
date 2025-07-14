@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, forwardRef, useImperativeHandle } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
@@ -15,13 +15,13 @@ interface SimpleOnboardingStep3Props {
   onDataChange?: (data: any) => void;
 }
 
-export const SimpleOnboardingStep3: React.FC<SimpleOnboardingStep3Props> = ({
+export const SimpleOnboardingStep3 = forwardRef<{ getData: () => any; isValid: () => boolean }, SimpleOnboardingStep3Props>(({
   data,
   onNext,
   isLoading = false,
   getFieldError,
   onDataChange
-}) => {
+}, ref) => {
   const [formData, setFormData] = useState(data.ai_experience || {});
   const [tools, setTools] = useState<Array<{id: string, name: string, category: string, logo_url?: string}>>([]);
   const [loading, setLoading] = useState(true);
@@ -93,20 +93,27 @@ export const SimpleOnboardingStep3: React.FC<SimpleOnboardingStep3Props> = ({
     updateStepData(field, newValues);
   };
 
-  const handleNext = () => {
-    // Validar campos obrigatórios antes de avançar
+  const validateForm = () => {
     const requiredFields = ['hasImplementedAI', 'aiKnowledgeLevel', 'whoWillImplement', 'aiImplementationObjective', 'aiImplementationUrgency'];
     const missingFields = requiredFields.filter(field => !formData[field]);
-    
-    if (missingFields.length > 0) {
-      // Aqui você pode mostrar uma mensagem de erro ou destacar campos obrigatórios
-      console.warn('Campos obrigatórios não preenchidos:', missingFields);
+    return missingFields.length === 0;
+  };
+
+  const handleNext = () => {
+    if (!validateForm()) {
+      console.warn('Campos obrigatórios não preenchidos');
       return;
     }
     
     // Enviar dados estruturados para o wizard
     onNext({ ai_experience: formData });
   };
+
+  // Expor funções através da ref
+  useImperativeHandle(ref, () => ({
+    getData: () => ({ ai_experience: formData }),
+    isValid: validateForm
+  }));
 
   return (
     <div className="space-y-8">
@@ -421,4 +428,4 @@ export const SimpleOnboardingStep3: React.FC<SimpleOnboardingStep3Props> = ({
 
     </div>
   );
-};
+});

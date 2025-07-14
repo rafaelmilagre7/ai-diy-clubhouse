@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, forwardRef, useImperativeHandle } from 'react';
 import { motion } from 'framer-motion';
 import { Target, TrendingUp, DollarSign, AlertTriangle } from 'lucide-react';
 import { Card } from '@/components/ui/card';
@@ -107,12 +107,12 @@ const budgetRanges = [
   'Orçamento a definir'
 ];
 
-export const SimpleOnboardingStep4: React.FC<SimpleOnboardingStep4Props> = ({
+export const SimpleOnboardingStep4 = forwardRef<{ getData: () => any; isValid: () => boolean }, SimpleOnboardingStep4Props>(({
   data,
   onNext,
   isLoading = false,
   onDataChange
-}) => {
+}, ref) => {
   const [formData, setFormData] = useState({
     mainObjective: data.goals_info?.mainObjective || '',
     areaToImpact: data.goals_info?.areaToImpact || '',
@@ -141,10 +141,27 @@ export const SimpleOnboardingStep4: React.FC<SimpleOnboardingStep4Props> = ({
     });
   };
 
+  const validateForm = () => {
+    const requiredFields = ['mainObjective', 'areaToImpact', 'expectedResult90Days', 'urgencyLevel', 'successMetric', 'mainObstacle', 'preferredSupport', 'aiImplementationBudget'];
+    const missingFields = requiredFields.filter(field => !formData[field]);
+    return missingFields.length === 0;
+  };
+
   const handleNext = () => {
+    if (!validateForm()) {
+      console.warn('Campos obrigatórios não preenchidos');
+      return;
+    }
+    
     // Enviar dados estruturados para o wizard
     onNext({ goals_info: formData });
   };
+
+  // Expor funções através da ref
+  useImperativeHandle(ref, () => ({
+    getData: () => ({ goals_info: formData }),
+    isValid: validateForm
+  }));
 
   return (
     <motion.div
@@ -413,4 +430,4 @@ export const SimpleOnboardingStep4: React.FC<SimpleOnboardingStep4Props> = ({
 
     </motion.div>
   );
-};
+});

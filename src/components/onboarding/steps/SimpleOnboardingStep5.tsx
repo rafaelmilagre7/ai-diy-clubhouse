@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, forwardRef, useImperativeHandle } from 'react';
 import { motion } from 'framer-motion';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -22,12 +22,12 @@ interface SimpleOnboardingStep5Props {
   onDataChange?: (data: any) => void;
 }
 
-export const SimpleOnboardingStep5: React.FC<SimpleOnboardingStep5Props> = ({
+export const SimpleOnboardingStep5 = forwardRef<{ getData: () => any; isValid: () => boolean }, SimpleOnboardingStep5Props>(({
   data,
   onNext,
   isLoading = false,
   onDataChange
-}) => {
+}, ref) => {
   const [formData, setFormData] = useState({
     weeklyLearningTime: data.personalization?.weeklyLearningTime || '',
     bestDays: data.personalization?.bestDays || [],
@@ -58,10 +58,33 @@ export const SimpleOnboardingStep5: React.FC<SimpleOnboardingStep5Props> = ({
     });
   };
 
+  const validateForm = () => {
+    const requiredFields = ['weeklyLearningTime', 'bestDays', 'bestPeriods', 'contentPreference', 'wantsNetworking'];
+    const missingFields = requiredFields.filter(field => {
+      const value = formData[field];
+      if (Array.isArray(value)) {
+        return value.length === 0;
+      }
+      return !value;
+    });
+    return missingFields.length === 0;
+  };
+
   const handleNext = () => {
+    if (!validateForm()) {
+      console.warn('Campos obrigatórios não preenchidos');
+      return;
+    }
+    
     // Enviar dados estruturados para o wizard
     onNext({ personalization: formData });
   };
+
+  // Expor funções através da ref
+  useImperativeHandle(ref, () => ({
+    getData: () => ({ personalization: formData }),
+    isValid: validateForm
+  }));
 
   const handleRadioChange = (field: string, value: string) => {
     handleInputChange(field, value);
@@ -427,4 +450,4 @@ export const SimpleOnboardingStep5: React.FC<SimpleOnboardingStep5Props> = ({
 
     </div>
   );
-};
+});

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, forwardRef, useImperativeHandle } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
@@ -13,12 +13,12 @@ interface SimpleOnboardingStep2Props {
   onDataChange?: (data: any) => void;
 }
 
-export const SimpleOnboardingStep2: React.FC<SimpleOnboardingStep2Props> = ({
+export const SimpleOnboardingStep2 = forwardRef<{ getData: () => any; isValid: () => boolean }, SimpleOnboardingStep2Props>(({
   data,
   onNext,
   isLoading = false,
   onDataChange
-}) => {
+}, ref) => {
   const [formData, setFormData] = useState({
     companyName: data.business_info?.companyName || '',
     position: data.business_info?.position || '',
@@ -69,6 +69,12 @@ export const SimpleOnboardingStep2: React.FC<SimpleOnboardingStep2Props> = ({
     // Enviar dados estruturados para o wizard
     onNext({ business_info: formData });
   };
+
+  // Expor funções através da ref
+  useImperativeHandle(ref, () => ({
+    getData: () => ({ business_info: formData }),
+    isValid: validateForm
+  }));
 
   return (
     <div className="space-y-8">
@@ -276,4 +282,4 @@ export const SimpleOnboardingStep2: React.FC<SimpleOnboardingStep2Props> = ({
 
     </div>
   );
-};
+});
