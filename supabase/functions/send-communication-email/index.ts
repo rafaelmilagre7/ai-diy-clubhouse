@@ -2,7 +2,13 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { Resend } from "npm:resend@2.0.0";
 
-const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
+// Verificar credenciais do Supabase Secrets
+const resendApiKey = Deno.env.get("RESEND_API_KEY");
+if (!resendApiKey) {
+  console.error("❌ RESEND_API_KEY não configurada no Supabase Secrets");
+}
+
+const resend = new Resend(resendApiKey);
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -91,7 +97,29 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
+    console.log("📧 [COMMUNICATION] Processando envio de comunicação...");
+    
+    // Verificar novamente as credenciais na execução
+    if (!resendApiKey) {
+      console.error("❌ [COMMUNICATION] RESEND_API_KEY não configurada no Supabase Secrets");
+      return new Response(
+        JSON.stringify({ 
+          success: false,
+          error: "RESEND_API_KEY não configurada no Supabase Secrets",
+          details: "Configure a chave da API do Resend nos Edge Function Secrets"
+        }),
+        { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
     const { to, name, subject, content, templateType, priority }: EmailRequest = await req.json();
+    
+    console.log("📧 [COMMUNICATION] Dados:", { 
+      to: to?.substring(0, 5) + "***", 
+      subject, 
+      templateType, 
+      priority 
+    });
 
     const emailHtml = getEmailTemplate(content, templateType, priority);
 
@@ -109,13 +137,19 @@ const handler = async (req: Request): Promise<Response> => {
       ],
     });
 
-    console.log("Email sent successfully:", emailResponse);
+    if (emailResponse.error) {
+      console.error("❌ [COMMUNICATION] Erro do Resend:", emailResponse.error);
+      throw new Error(`Resend API falhou: ${emailResponse.error.message}`);
+    }
+
+    console.log("✅ [COMMUNICATION] Email enviado com sucesso:", emailResponse.data?.id);
 
     return new Response(
       JSON.stringify({ 
         success: true, 
         email_id: emailResponse.data?.id,
-        message: "Email enviado com sucesso" 
+        message: "Email enviado com sucesso via Resend",
+        provider: "resend"
       }),
       {
         status: 200,
@@ -124,9 +158,14 @@ const handler = async (req: Request): Promise<Response> => {
     );
 
   } catch (error: any) {
-    console.error("Error in send-communication-email function:", error);
+    console.error("❌ [COMMUNICATION] Erro crítico:", error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        success: false,
+        error: error.message,
+        details: "Erro ao enviar email de comunicação",
+        provider: "resend"
+      }),
       {
         status: 500,
         headers: { "Content-Type": "application/json", ...corsHeaders },

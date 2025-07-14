@@ -96,16 +96,39 @@ serve(async (req) => {
       }
     }
 
-    // Enviar via WhatsApp Business API
+    // Verificar credenciais do Supabase Secrets
     const whatsappToken = Deno.env.get('WHATSAPP_BUSINESS_TOKEN')
     const phoneNumberId = Deno.env.get('WHATSAPP_BUSINESS_PHONE_ID')
 
+    console.log('🔑 [WHATSAPP] Verificação de credenciais:', { 
+      hasToken: !!whatsappToken, 
+      tokenLength: whatsappToken?.length,
+      hasPhoneId: !!phoneNumberId,
+      phoneIdLength: phoneNumberId?.length
+    })
+
     if (!whatsappToken || !phoneNumberId) {
-      console.error('❌ [WHATSAPP] Credenciais não configuradas:', { 
+      console.error('❌ [WHATSAPP] Credenciais não configuradas no Supabase Secrets:', { 
         hasToken: !!whatsappToken, 
         hasPhoneId: !!phoneNumberId 
       })
-      throw new Error('Credenciais do WhatsApp Business não configuradas')
+      
+      // Registrar tentativa falhada para auditoria
+      if (inviteId) {
+        try {
+          await supabase.from('invite_deliveries').insert({
+            invite_id: inviteId,
+            channel: 'whatsapp',
+            status: 'failed',
+            error_message: 'Credenciais WhatsApp não configuradas no Supabase Secrets',
+            metadata: { phone: formattedPhone, error_type: 'missing_credentials' }
+          })
+        } catch (logError) {
+          console.error('⚠️ Erro ao registrar falha:', logError)
+        }
+      }
+      
+      throw new Error('Credenciais do WhatsApp Business não configuradas no Supabase Secrets. Configure WHATSAPP_BUSINESS_TOKEN e WHATSAPP_BUSINESS_PHONE_ID nos Edge Function Secrets.')
     }
 
     console.log('📱 [WHATSAPP] Enviando template via API...')
@@ -136,12 +159,50 @@ serve(async (req) => {
       const errorMsg = `Erro ${whatsappResponse.status}: ${whatsappResult.error?.message || whatsappResult.message || 'Erro desconhecido'}`
       console.error('❌ [WHATSAPP] Erro da API:', errorMsg)
       console.error('❌ [WHATSAPP] Detalhes do erro:', whatsappResult)
+      
+      // Registrar falha detalhada para auditoria
+      if (inviteId) {
+        try {
+          await supabase.from('invite_deliveries').insert({
+            invite_id: inviteId,
+            channel: 'whatsapp',
+            status: 'failed',
+            error_message: errorMsg,
+            metadata: { 
+              phone: formattedPhone, 
+              http_status: whatsappResponse.status,
+              api_error: whatsappResult,
+              error_type: 'api_error'
+            }
+          })
+        } catch (logError) {
+          console.error('⚠️ Erro ao registrar falha da API:', logError)
+        }
+      }
+      
       throw new Error(errorMsg)
     }
 
-    // Atualizar estatísticas do convite se tiver ID (não crítico)
+    // Registrar sucesso e atualizar estatísticas
+    const messageId = whatsappResult.messages?.[0]?.id
+
     if (inviteId) {
       try {
+        // Registrar entrega bem-sucedida
+        await supabase.from('invite_deliveries').insert({
+          invite_id: inviteId,
+          channel: 'whatsapp',
+          status: 'sent',
+          sent_at: new Date().toISOString(),
+          provider_id: messageId,
+          metadata: { 
+            phone: formattedPhone,
+            message_id: messageId,
+            template_used: 'convitevia'
+          }
+        })
+
+        // Atualizar estatísticas do convite
         const { error: updateError } = await supabase.rpc('update_invite_send_attempt', {
           invite_id: inviteId
         })
