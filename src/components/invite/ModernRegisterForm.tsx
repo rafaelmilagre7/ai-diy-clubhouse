@@ -355,12 +355,12 @@ const ModernRegisterForm: React.FC<ModernRegisterFormProps> = ({
       // Não falhar aqui, tentar aplicar convite mesmo assim
     }
 
-    // 4. Aplicar convite
-    console.log('🎫 [ALTERNATIVE] Aplicando convite...');
-    const { error: inviteError } = await supabase.rpc('use_invite_enhanced', {
-      invite_token: inviteToken,
-      user_id: simpleSignUp.data.user.id
-    });
+        // 4. Aplicar convite E inicializar onboarding
+        console.log('🎫 [ALTERNATIVE] Aplicando convite e inicializando onboarding...');
+        const { data: inviteResult, error: inviteError } = await supabase.rpc('use_invite_with_onboarding', {
+          invite_token: inviteToken,
+          user_id: simpleSignUp.data.user.id
+        });
 
     if (inviteError) {
       console.error('⚠️ [ALTERNATIVE] Erro ao aplicar convite:', inviteError);

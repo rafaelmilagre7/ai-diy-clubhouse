@@ -3,6 +3,7 @@ import { useAuth } from '@/contexts/auth';
 import { useNavigate } from 'react-router-dom';
 import { useDirectOnboardingAdapter } from '@/components/onboarding/hooks/useDirectOnboardingAdapter';
 import { toast } from '@/hooks/use-toast';
+import { supabase } from '@/lib/supabase';
 
 interface OnboardingData {
   user_id?: string;
@@ -46,14 +47,38 @@ export const useOnboarding = () => {
   }, [user?.id]);
 
   const loadData = async () => {
-    console.log('🔍 [ONBOARDING] Carregando dados...');
+    if (!user?.id) {
+      console.warn('❌ [ONBOARDING] Usuário não identificado');
+      return;
+    }
+
+    console.log('🔍 [ONBOARDING] Carregando dados para usuário:', user.id);
     const loadedData = await adapter.loadOnboardingData();
     
     if (loadedData) {
       console.log('✅ [ONBOARDING] Dados carregados:', loadedData);
       setData(loadedData);
     } else {
-      console.log('📭 [ONBOARDING] Nenhum dado encontrado, iniciando do zero');
+      console.log('📭 [ONBOARDING] Nenhum dado encontrado, inicializando automaticamente...');
+      
+      try {
+        const { data: initResult, error: initError } = await supabase.rpc('initialize_onboarding_for_user', {
+          p_user_id: user.id
+        });
+        
+        if (initError) {
+          console.error('❌ [ONBOARDING] Erro ao inicializar:', initError);
+        } else if (initResult?.success) {
+          console.log('✅ [ONBOARDING] Inicializado com sucesso:', initResult);
+          // Recarregar dados após inicialização
+          const newData = await adapter.loadOnboardingData();
+          if (newData) {
+            setData(newData);
+          }
+        }
+      } catch (initError) {
+        console.error('❌ [ONBOARDING] Erro na inicialização automática:', initError);
+      }
     }
   };
 

@@ -5902,6 +5902,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      fix_existing_users_onboarding: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
       generate_certificate_validation_code: {
         Args: Record<PropertyKey, never>
         Returns: string
@@ -6074,6 +6078,10 @@ export type Database = {
       }
       initialize_onboarding_for_all_users: {
         Args: Record<PropertyKey, never>
+        Returns: Json
+      }
+      initialize_onboarding_for_user: {
+        Args: { p_user_id: string }
         Returns: Json
       }
       is_admin: {
@@ -6278,6 +6286,10 @@ export type Database = {
         Returns: Json
       }
       use_invite_enhanced: {
+        Args: { invite_token: string; user_id: string }
+        Returns: Json
+      }
+      use_invite_with_onboarding: {
         Args: { invite_token: string; user_id: string }
         Returns: Json
       }
