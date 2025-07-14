@@ -31,6 +31,8 @@ export const PostItem = ({ post, showTopicContext = false }: PostItemProps) => {
 
   // Converter markdown para HTML para renderização
   const convertMarkdownToHtml = (markdown: string) => {
+    console.log('🔍 PostItem - Markdown original:', markdown);
+    
     let html = markdown
       .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
       .replace(/\*(.*?)\*/g, '<em>$1</em>')
@@ -39,7 +41,25 @@ export const PostItem = ({ post, showTopicContext = false }: PostItemProps) => {
       .replace(/^- (.+)$/gm, '<li class="ml-4">$1</li>')
       .replace(/^1\. (.+)$/gm, '<li class="ml-4">$1</li>')
       .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" class="text-viverblue underline hover:text-viverblue/80" target="_blank" rel="noopener noreferrer">$1</a>')
-      .replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<img src="$2" alt="$1" class="max-w-full h-auto my-4 rounded shadow-sm" />')
+      .replace(/!\[([^\]]*)\]\(([^)]+)\)/g, (match, alt, src) => {
+        console.log('🖼️ PostItem - Imagem detectada:', { alt, src, match });
+        
+        // Verificar se é uma URL válida do Supabase Storage
+        if (src.includes('supabase') || src.includes('storage')) {
+          console.log('✅ PostItem - URL do Storage detectada:', src);
+        }
+        
+        // Melhorar a renderização das imagens com estilos mais robustos
+        return `<img 
+          src="${src}" 
+          alt="${alt}" 
+          class="max-w-full h-auto my-4 rounded-lg shadow-md border"
+          style="max-height: 500px; object-fit: contain; display: block; margin: 1rem 0;"
+          loading="lazy"
+          onerror="console.error('❌ Erro ao carregar imagem:', this.src); this.style.display='none';"
+          onload="console.log('✅ Imagem carregada com sucesso:', this.src);"
+        />`;
+      })
       .replace(/\n\n/g, '</p><p class="mb-3">')
       .replace(/\n/g, '<br />');
 
@@ -53,6 +73,7 @@ export const PostItem = ({ post, showTopicContext = false }: PostItemProps) => {
       html = '<p class="mb-3">' + html + '</p>';
     }
 
+    console.log('🎯 PostItem - HTML final:', html);
     return html;
   };
 
