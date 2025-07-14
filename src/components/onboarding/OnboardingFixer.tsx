@@ -25,9 +25,26 @@ export const OnboardingFixer = () => {
       if (onboardingProgress) {
         console.log('📊 [FIXER] Progresso do onboarding:', onboardingProgress);
         
-        // Se onboarding está completo mas profile não reflete isso
-        if (onboardingProgress.is_completed && !profile.onboarding_completed) {
-          console.log('🔧 [FIXER] Inconsistência detectada! Aplicando correção...');
+        // Verificar se o usuário deveria estar completo baseado nos steps concluídos
+        const allStepsCompleted = onboardingProgress.completed_steps && 
+          onboardingProgress.completed_steps.length >= 6 &&
+          onboardingProgress.completed_steps.includes(1) &&
+          onboardingProgress.completed_steps.includes(2) &&
+          onboardingProgress.completed_steps.includes(3) &&
+          onboardingProgress.completed_steps.includes(4) &&
+          onboardingProgress.completed_steps.includes(5) &&
+          onboardingProgress.completed_steps.includes(6);
+
+        const shouldBeCompleted = allStepsCompleted || onboardingProgress.current_step === 7;
+
+        // Se deveria estar completo mas não está, ou se há inconsistência com o profile
+        if (shouldBeCompleted && (!onboardingProgress.is_completed || !profile.onboarding_completed)) {
+          console.log('🔧 [FIXER] Inconsistência detectada! Aplicando correção...', {
+            allStepsCompleted,
+            currentStep: onboardingProgress.current_step,
+            isCompleted: onboardingProgress.is_completed,
+            profileCompleted: profile.onboarding_completed
+          });
           
           const success = await fixCurrentUserOnboarding();
           
@@ -43,7 +60,7 @@ export const OnboardingFixer = () => {
               window.location.href = '/dashboard';
             }, 1500);
           }
-        } else if (!onboardingProgress.is_completed) {
+        } else if (!shouldBeCompleted) {
           console.log('ℹ️ [FIXER] Onboarding realmente não está completo, redirecionando para etapa correta...');
         } else {
           console.log('✅ [FIXER] Onboarding já está correto e sincronizado');

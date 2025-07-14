@@ -154,7 +154,22 @@ export const useOnboarding = () => {
   };
 
   const canAccessStep = (step: number) => {
+    // Se já está completo, não deveria acessar nenhuma etapa específica
+    if (data.is_completed) {
+      return false;
+    }
+    
+    // Se current_step é 7, significa que já passou por todas as etapas
+    if (data.current_step === 7) {
+      return false;
+    }
+    
     // Pode acessar a etapa atual ou etapas anteriores completadas
+    // Para step 1, sempre permitir se não estiver completo
+    if (step === 1) {
+      return !data.is_completed;
+    }
+    
     return step <= data.current_step || data.completed_steps.includes(step);
   };
 
