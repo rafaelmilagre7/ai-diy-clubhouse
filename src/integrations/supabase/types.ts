@@ -3464,6 +3464,7 @@ export type Database = {
           role_id: string | null
           skills: string[] | null
           successful_referrals_count: number
+          updated_at: string | null
           whatsapp_number: string | null
         }
         Insert: {
@@ -3486,6 +3487,7 @@ export type Database = {
           role_id?: string | null
           skills?: string[] | null
           successful_referrals_count?: number
+          updated_at?: string | null
           whatsapp_number?: string | null
         }
         Update: {
@@ -3508,6 +3510,7 @@ export type Database = {
           role_id?: string | null
           skills?: string[] | null
           successful_referrals_count?: number
+          updated_at?: string | null
           whatsapp_number?: string | null
         }
         Relationships: [
