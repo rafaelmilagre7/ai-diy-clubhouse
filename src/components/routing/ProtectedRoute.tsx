@@ -38,8 +38,9 @@ const ProtectedRoute = ({
 
   // Se usuário não completou onboarding E não está em rota permitida
   if (!hasCompletedOnboarding && !isOnboardingRoute) {
-    console.log("[PROTECTED-ROUTE] Onboarding obrigatório não completado");
-    return <Navigate to="/onboarding/step/1" replace />;
+    console.log("[PROTECTED-ROUTE] Onboarding obrigatório não completado, redirecionando...");
+    // Redirecionar para a página de redirecionamento inteligente
+    return <Navigate to="/onboarding" replace />;
   }
   
   // Verificar se requer admin e usuário não é admin

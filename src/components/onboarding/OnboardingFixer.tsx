@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/auth';
-import { fixCurrentUserOnboarding } from '@/utils/onboardingFix';
+import { fixCurrentUserOnboarding, getOnboardingProgress } from '@/utils/onboardingFix';
 import { toast } from '@/hooks/use-toast';
 
 /**
@@ -14,23 +14,39 @@ export const OnboardingFixer = () => {
     const tryFix = async () => {
       if (!user || !profile || hasFixed) return;
 
-      // Detectar se o usuário tem o problema específico do Rafael
-      if (user.id === 'dc418224-acd7-4f5f-9a7e-e1c981b78fb6' && !profile.onboarding_completed) {
-        console.log('🔧 [FIXER] Aplicando correção automática para usuário Rafael...');
+      console.log('🔍 [FIXER] Verificando consistência do onboarding...', {
+        userId: user.id,
+        profileOnboardingCompleted: profile.onboarding_completed
+      });
+
+      // Verificar se há inconsistência entre onboarding e profile
+      const onboardingProgress = await getOnboardingProgress(user.id);
+      
+      if (onboardingProgress) {
+        console.log('📊 [FIXER] Progresso do onboarding:', onboardingProgress);
         
-        const success = await fixCurrentUserOnboarding();
-        
-        if (success) {
-          setHasFixed(true);
-          toast({
-            title: "Correção aplicada!",
-            description: "Seu progresso de onboarding foi corrigido. Recarregando...",
-          });
+        // Se onboarding está completo mas profile não reflete isso
+        if (onboardingProgress.is_completed && !profile.onboarding_completed) {
+          console.log('🔧 [FIXER] Inconsistência detectada! Aplicando correção...');
           
-          // Aguardar um pouco e recarregar
-          setTimeout(() => {
-            window.location.href = '/dashboard';
-          }, 2000);
+          const success = await fixCurrentUserOnboarding();
+          
+          if (success) {
+            setHasFixed(true);
+            toast({
+              title: "Correção aplicada!",
+              description: "Seu progresso de onboarding foi corrigido. Redirecionando...",
+            });
+            
+            // Aguardar um pouco e recarregar para sincronizar estado
+            setTimeout(() => {
+              window.location.href = '/dashboard';
+            }, 1500);
+          }
+        } else if (!onboardingProgress.is_completed) {
+          console.log('ℹ️ [FIXER] Onboarding realmente não está completo, redirecionando para etapa correta...');
+        } else {
+          console.log('✅ [FIXER] Onboarding já está correto e sincronizado');
         }
       }
     };

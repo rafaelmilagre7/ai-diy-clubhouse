@@ -16,35 +16,65 @@ export const fixCurrentUserOnboarding = async (): Promise<boolean> => {
 
     console.log('🔧 [FIX] Corrigindo onboarding para usuário:', user.id);
 
-    // 1. Marcar onboarding como completo
-    const { error: onboardingError } = await supabase
+    // 1. Primeiro verificar se existe registro de onboarding
+    const { data: existingOnboarding } = await supabase
       .from('onboarding')
-      .update({ 
-        is_completed: true,
-        completed_at: new Date().toISOString()
-      })
+      .select('*')
       .eq('user_id', user.id)
-      .eq('is_completed', false);
+      .maybeSingle();
 
-    if (onboardingError) {
-      console.error('❌ [FIX] Erro ao atualizar onboarding:', onboardingError);
+    if (!existingOnboarding) {
+      console.log('📝 [FIX] Criando registro de onboarding completo...');
+      // Criar registro de onboarding completo
+      const { error: createError } = await supabase
+        .from('onboarding')
+        .insert({
+          user_id: user.id,
+          is_completed: true,
+          completed_at: new Date().toISOString(),
+          current_step: 7,
+          completed_steps: [1, 2, 3, 4, 5, 6]
+        });
+
+      if (createError) {
+        console.error('❌ [FIX] Erro ao criar onboarding:', createError);
+        return false;
+      }
+    } else {
+      console.log('📝 [FIX] Atualizando registro de onboarding existente...');
+      // Atualizar registro existente
+      const { error: onboardingError } = await supabase
+        .from('onboarding')
+        .update({
+          is_completed: true,
+          completed_at: new Date().toISOString(),
+          current_step: 7,
+          completed_steps: [1, 2, 3, 4, 5, 6]
+        })
+        .eq('user_id', user.id);
+
+      if (onboardingError) {
+        console.error('❌ [FIX] Erro ao atualizar onboarding:', onboardingError);
+        return false;
+      }
     }
 
-    // 2. Sincronizar profiles
+    // 2. Atualizar profile para marcar onboarding como completo
+    console.log('👤 [FIX] Atualizando profile...');
     const { error: profileError } = await supabase
       .from('profiles')
-      .update({ 
+      .update({
         onboarding_completed: true,
         onboarding_completed_at: new Date().toISOString()
       })
-      .eq('id', user.id)
-      .eq('onboarding_completed', false);
+      .eq('id', user.id);
 
     if (profileError) {
-      console.error('❌ [FIX] Erro ao atualizar profiles:', profileError);
+      console.error('❌ [FIX] Erro ao atualizar profile:', profileError);
+      return false;
     }
 
-    console.log('✅ [FIX] Correção aplicada com sucesso!');
+    console.log('✅ [FIX] Onboarding corrigido com sucesso!');
     return true;
   } catch (error) {
     console.error('❌ [FIX] Erro inesperado:', error);
