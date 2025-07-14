@@ -100,9 +100,11 @@ const InvitePage = () => {
                     inviteToken={token}
                     prefilledEmail={validationResult.invite.email}
                     onSuccess={() => {
+                      console.log('🎯 [INVITE] Registro concluído, redirecionando para onboarding');
+                      // Aguardar um pouco mais para garantir que tudo foi processado
                       setTimeout(() => {
-                        navigate('/onboarding');
-                      }, 2000);
+                        navigate('/onboarding', { replace: true });
+                      }, 3000);
                     }}
                   />
                 </div>

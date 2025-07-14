@@ -9,12 +9,14 @@ const OnboardingRedirect: React.FC = () => {
 
   useEffect(() => {
     if (!isLoading) {
+      console.log('🎯 [ONBOARDING-REDIRECT] Estado:', { isCompleted, currentStep });
+      
       if (isCompleted) {
-        // Se já completou, vai para dashboard
+        console.log('✅ [ONBOARDING-REDIRECT] Onboarding completo, redirecionando para dashboard');
         navigate('/dashboard', { replace: true });
       } else {
-        // Redireciona para a etapa atual ou primeira etapa
         const targetStep = Math.max(1, currentStep || 1);
+        console.log(`🚀 [ONBOARDING-REDIRECT] Redirecionando para step ${targetStep}`);
         navigate(`/onboarding/step/${targetStep}`, { replace: true });
       }
     }

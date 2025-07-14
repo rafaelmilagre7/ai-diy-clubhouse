@@ -148,125 +148,37 @@ const ModernRegisterForm: React.FC<ModernRegisterFormProps> = ({
       return;
     }
     
-    // Função para tentar o signUp com diferentes estratégias
-    const attemptSignUp = async (attempt: number = 1, maxAttempts: number = 3): Promise<any> => {
-      console.log(`🚀 [REGISTER] Tentativa ${attempt}/${maxAttempts} - Iniciando signUp...`);
-      
-      try {
-        // Teste de conectividade básica
-        console.log('🔍 [REGISTER] Testando conectividade com Supabase...');
-        const { data: healthCheck } = await supabase.from('user_roles').select('count').limit(1);
-        console.log('✅ [REGISTER] Conectividade OK:', !!healthCheck);
-        
-        // Estratégias diferentes para cada tentativa
-        let signUpData;
-        
-        if (attempt === 1) {
-          // Tentativa 1: Configuração completa
-          signUpData = {
-            email,
-            password,
-            options: {
-              data: {
-                name,
-                full_name: name,
-                display_name: name,
-                ...(inviteToken && { invite_token: inviteToken })
-              },
-              emailRedirectTo: `${window.location.origin}/onboarding`
-            },
-          };
-        } else if (attempt === 2) {
-          // Tentativa 2: Sem redirect
-          signUpData = {
-            email,
-            password,
-            options: {
-              data: {
-                name,
-                ...(inviteToken && { invite_token: inviteToken })
-              }
-            },
-          };
-        } else {
-          // Tentativa 3: Dados mínimos
-          signUpData = {
-            email,
-            password
-          };
-        }
-        
-        console.log(`📨 [REGISTER] Tentativa ${attempt} com dados:`, {
-          email,
-          hasPassword: !!password,
-          hasMetadata: !!signUpData.options?.data,
-          hasRedirect: !!signUpData.options?.emailRedirectTo,
-          metadataKeys: signUpData.options?.data ? Object.keys(signUpData.options.data) : []
-        });
-        
-        console.log('📤 [REGISTER] Enviando para supabase.auth.signUp...');
-        const result = await supabase.auth.signUp(signUpData);
-        
-        console.log('📥 [REGISTER] Resposta do signUp:', {
-          hasData: !!result.data,
-          hasUser: !!result.data?.user,
-          userId: result.data?.user?.id,
-          userEmail: result.data?.user?.email,
-          userConfirmed: result.data?.user?.email_confirmed_at,
-          hasSession: !!result.data?.session,
-          hasError: !!result.error,
-          errorCode: result.error?.status,
-          errorMessage: result.error?.message
-        });
-        
-        // Se tem erro e não é o último attempt, tentar novamente
-        if (result.error && attempt < maxAttempts) {
-          console.log(`⚠️ [REGISTER] Erro na tentativa ${attempt}, tentando estratégia diferente...`);
-          throw result.error;
-        }
-        
-        return result;
-        
-      } catch (error: any) {
-        console.error(`❌ [REGISTER] Erro na tentativa ${attempt}:`, {
-          name: error.name,
-          message: error.message,
-          code: error.code,
-          status: error.status,
-          stack: error.stack?.substring(0, 200)
-        });
-        
-        if (attempt < maxAttempts) {
-          const delay = attempt * 1000; // 1s, 2s, 3s
-          console.log(`⏳ [REGISTER] Aguardando ${delay}ms antes da próxima tentativa...`);
-          await new Promise(resolve => setTimeout(resolve, delay));
-          return attemptSignUp(attempt + 1, maxAttempts);
-        }
-        
-        throw error;
-      }
-    };
-    
     try {
       setIsLoading(true);
       
-      // Tentar o signUp com retry
-      const { data, error } = await attemptSignUp();
+      console.log('🚀 [REGISTER] Iniciando registro com feedback visual');
+      toast({
+        title: "Criando sua conta...",
+        description: "Por favor, aguarde enquanto preparamos tudo para você.",
+      });
+      
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            name,
+            full_name: name,
+            display_name: name,
+            ...(inviteToken && { invite_token: inviteToken })
+          },
+          emailRedirectTo: `${window.location.origin}/onboarding`
+        }
+      });
       
       if (error) {
-        console.error('❌ [REGISTER] Erro final no signUp:', error);
+        console.error('❌ [REGISTER] Erro no signUp:', error);
         
-        // Análise detalhada do erro
         let userMessage = "Não foi possível criar sua conta. ";
-        
         if (error.message?.includes("User already registered")) {
           userMessage = "Este email já possui uma conta. Tente fazer login ou usar 'Esqueci minha senha'.";
         } else if (error.message?.includes("signup disabled")) {
           userMessage = "O cadastro está temporariamente desabilitado. Entre em contato com o suporte.";
-        } else if (error.message?.includes("invalid_request")) {
-          userMessage = "Dados inválidos fornecidos. Verifique o email e tente novamente.";
-        } else if (error.status === 500) {
-          userMessage = "Erro interno do servidor. Nossa equipe foi notificada. Tente novamente em alguns minutos.";
         } else {
           userMessage += `Erro: ${error.message}`;
         }
@@ -279,114 +191,70 @@ const ModernRegisterForm: React.FC<ModernRegisterFormProps> = ({
         return;
       }
       
-      console.log('✅ [REGISTER] SignUp concluído com sucesso!', {
-        userId: data?.user?.id,
-        userEmail: data?.user?.email,
-        needsConfirmation: !data?.user?.email_confirmed_at
-      });
-
-      // Verificar se o perfil foi criado automaticamente
-      if (data.user) {
-        console.log('🔍 [REGISTER] Verificando se perfil foi criado...');
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('id, name, email')
-          .eq('id', data.user.id)
-          .maybeSingle();
+      if (data?.user) {
+        console.log('✅ [REGISTER] Usuário criado:', data.user.id);
         
-        if (!profile) {
-          console.log('⚠️ [REGISTER] Perfil não foi criado automaticamente, criando manualmente...');
-          try {
-            const { error: profileError } = await supabase
-              .from('profiles')
-              .insert({
-                id: data.user.id,
-                email: data.user.email || email,
-                name: name
-              });
-            
-            if (profileError) {
-              console.error('❌ [REGISTER] Erro ao criar perfil:', profileError);
-            } else {
-              console.log('✅ [REGISTER] Perfil criado manualmente com sucesso');
-            }
-          } catch (profileErr) {
-            console.error('❌ [REGISTER] Erro inesperado ao criar perfil:', profileErr);
-          }
-        } else {
-          console.log('✅ [REGISTER] Perfil já existe:', profile);
-        }
-      }
-      
-      // Se há um token de convite, aplicar
-      if (inviteToken && data.user) {
-        console.log('🎫 [REGISTER] Aplicando token de convite...');
-        try {
-          // Aguardar um pouco para garantir que o usuário foi criado completamente
+        toast({
+          title: "Conta criada!",
+          description: "Preparando seu ambiente personalizado...",
+        });
+        
+        // Aguardar o trigger processar e verificar se o perfil foi criado
+        let profileCreated = false;
+        let attempts = 0;
+        const maxAttempts = 15; // Aumentar tentativas para dar mais tempo
+        
+        while (!profileCreated && attempts < maxAttempts) {
           await new Promise(resolve => setTimeout(resolve, 500));
           
-          const { data: inviteResult, error: inviteError } = await supabase.rpc('use_invite_enhanced', {
-            invite_token: inviteToken,
-            user_id: data.user.id
-          });
-          
-          console.log('🎫 [REGISTER] Resultado do convite:', {
-            success: !inviteError,
-            result: inviteResult,
-            error: inviteError?.message
-          });
-          
-          if (inviteError) {
-            console.error('⚠️ [REGISTER] Erro ao aplicar convite:', inviteError);
-            toast({
-              title: "Conta criada com sucesso",
-              description: "Sua conta foi criada, mas houve um problema ao aplicar o convite. Entre em contato com o suporte.",
-              variant: "destructive",
-            });
-          } else {
-            console.log('✅ [REGISTER] Convite aplicado com sucesso!');
-            toast({
-              title: "Convite aplicado!",
-              description: "Seu convite foi aplicado com sucesso. Redirecionando...",
-            });
+          try {
+            const { data: profile } = await supabase
+              .from('profiles')
+              .select('id, role_id, name')
+              .eq('id', data.user.id)
+              .single();
+            
+            if (profile) {
+              console.log('✅ [REGISTER] Perfil criado:', profile);
+              profileCreated = true;
+            }
+          } catch (err) {
+            console.log('⏳ [REGISTER] Aguardando criação do perfil... tentativa', attempts + 1);
           }
-        } catch (inviteError) {
-          console.warn('⚠️ [REGISTER] Erro inesperado ao aplicar convite:', inviteError);
+          
+          attempts++;
+        }
+        
+        if (profileCreated) {
+          toast({
+            title: "Tudo pronto!",
+            description: "Redirecionando para o onboarding...",
+          });
+          setTimeout(() => {
+            onSuccess?.();
+          }, 1500);
+        } else {
+          console.warn('⚠️ [REGISTER] Perfil não foi criado no tempo esperado');
+          toast({
+            title: "Conta criada!",
+            description: "Redirecionando... Se houver problemas, atualize a página.",
+          });
+          setTimeout(() => {
+            onSuccess?.();
+          }, 2000);
         }
       }
-      
-      console.log('🎉 [REGISTER] === PROCESSO CONCLUÍDO COM SUCESSO ===');
-      setStep('success');
-      onSuccess?.();
       
     } catch (error: any) {
-      console.error("💥 [REGISTER] Erro fatal não tratado:", {
-        name: error.name,
-        message: error.message,
-        code: error.code,
-        stack: error.stack,
-        fullError: error
-      });
-
-      // Se o erro é do signUp e temos um token de convite, tentar registro alternativo
-      if (inviteToken && (error.status === 500 || error.message?.includes('unexpected_failure'))) {
-        console.log('🔄 [REGISTER] Tentando método alternativo de registro...');
-        try {
-          await handleAlternativeSignup();
-          return; // Se deu certo, sair da função
-        } catch (altError) {
-          console.error('❌ [REGISTER] Método alternativo também falhou:', altError);
-        }
-      }
-      
+      console.error('❌ [REGISTER] Erro:', error);
+      const errorMessage = error.message || "Erro ao criar conta. Tente novamente.";
       toast({
         title: "Erro inesperado",
-        description: "Ocorreu um erro inesperado. Nossa equipe foi notificada. Tente novamente ou entre em contato com o suporte.",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
       setIsLoading(false);
-      console.log('🏁 [REGISTER] Processo finalizado, loading=false');
     }
   };
 
