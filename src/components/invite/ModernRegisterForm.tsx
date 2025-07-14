@@ -27,6 +27,7 @@ const ModernRegisterForm: React.FC<ModernRegisterFormProps> = ({
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
   const [step, setStep] = useState<'form' | 'success'>('form');
   const { checkRateLimit } = useRateLimit();
   const { logSecurityViolation } = useSecurityMetrics();
@@ -72,19 +73,19 @@ const ModernRegisterForm: React.FC<ModernRegisterFormProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Check rate limit first
-    const rateLimitAllowed = await checkRateLimit('registration', {
-      maxAttempts: 3,
-      windowMinutes: 60
+    // Check rate limit first - mais permissivo para convites válidos
+    const rateLimitAllowed = await checkRateLimit('invite_registration', {
+      maxAttempts: 10, // Mais tentativas para convites
+      windowMinutes: 60 // Janela maior
     });
 
     if (!rateLimitAllowed) {
       toast({
         title: "Muitas tentativas",
-        description: "Você excedeu o limite de tentativas de registro. Tente novamente em 1 hora.",
+        description: "Aguarde alguns minutos antes de tentar novamente.",
         variant: "destructive",
       });
-      await logSecurityViolation('registration_rate_limit', 'medium', 'Usuário excedeu limite de tentativas de registro');
+      setError('Rate limit atingido. Aguarde antes de tentar novamente.');
       return;
     }
     
