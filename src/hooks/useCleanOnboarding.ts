@@ -178,9 +178,9 @@ export const useCleanOnboarding = () => {
           },
           business_info: onboardingData.business_info || {},
           ai_experience: onboardingData.ai_experience || {},
-          goals: onboardingData.goals || {},
-          preferences: onboardingData.preferences || {},
-          personalization: onboardingData.preferences || {}, // Compatibilidade
+          goals: onboardingData.goals_info || {}, // Campo correto da tabela
+          preferences: onboardingData.personalization || {}, // Campo correto da tabela
+          personalization: onboardingData.personalization || {}, // Compatibilidade
           completed_steps: onboardingData.completed_steps || [],
           time_per_step: onboardingData.time_per_step || {},
           abandonment_points: onboardingData.abandonment_points || []
@@ -302,7 +302,7 @@ export const useCleanOnboarding = () => {
         updatedData.status = 'completed';
       }
 
-      // Salvar no banco (tabela correta: onboarding_final)
+      // Salvar no banco (usando campos corretos da tabela onboarding_final)
       const { error } = await supabase
         .from('onboarding_final')
         .upsert({
@@ -310,8 +310,8 @@ export const useCleanOnboarding = () => {
           personal_info: updatedData.personal_info,
           business_info: updatedData.business_info,
           ai_experience: updatedData.ai_experience,
-          goals: updatedData.goals,
-          preferences: updatedData.preferences,
+          goals_info: updatedData.goals, // Campo correto da tabela
+          personalization: updatedData.preferences, // Campo correto da tabela
           company_name: updatedData.company_name,
           annual_revenue: updatedData.annual_revenue,
           ai_knowledge_level: updatedData.ai_knowledge_level,
@@ -319,7 +319,6 @@ export const useCleanOnboarding = () => {
           completed_steps: updatedData.completed_steps,
           is_completed: updatedData.is_completed,
           completed_at: updatedData.completed_at,
-          status: updatedData.status,
           time_per_step: updatedData.time_per_step || {},
           completion_score: updatedData.completion_score,
           abandonment_points: updatedData.abandonment_points || [],
