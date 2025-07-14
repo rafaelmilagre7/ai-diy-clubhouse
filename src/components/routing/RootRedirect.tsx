@@ -95,14 +95,15 @@ const RootRedirect = () => {
   }
   
   // VERIFICAÇÃO DO ONBOARDING - Prioridade máxima
-  if (profile && !profile.onboarding_completed && location.pathname !== '/onboarding') {
+  if (profile && !profile.onboarding_completed && !location.pathname.startsWith('/onboarding')) {
     console.log("[ROOT-REDIRECT] Redirecionando para onboarding - usuário não completou");
     if (timeoutRef.current) clearTimeout(timeoutRef.current);
-    return <Navigate to="/onboarding" replace />;
+    // Redirecionar para a nova estrutura de etapas
+    return <Navigate to="/onboarding/step/1" replace />;
   }
   
   // Se está na página de onboarding mas já completou, redireciona
-  if (profile && profile.onboarding_completed && location.pathname === '/onboarding') {
+  if (profile && profile.onboarding_completed && location.pathname.startsWith('/onboarding')) {
     console.log("[ROOT-REDIRECT] Usuário já completou onboarding, redirecionando para dashboard");
     const roleName = getUserRoleName(profile);
     if (timeoutRef.current) clearTimeout(timeoutRef.current);

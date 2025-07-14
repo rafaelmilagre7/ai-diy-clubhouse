@@ -30,6 +30,15 @@ import LessonView from '@/pages/member/learning/LessonView';
 import CertificatesPage from '@/pages/member/learning/CertificatesPage';
 import MemberCertificates from '@/pages/member/learning/MemberCertificates';
 
+// Onboarding Step Pages
+import OnboardingStep1Page from '@/pages/onboarding/Step1Page';
+import OnboardingStep2Page from '@/pages/onboarding/Step2Page';
+import OnboardingStep3Page from '@/pages/onboarding/Step3Page';
+import OnboardingStep4Page from '@/pages/onboarding/Step4Page';
+import OnboardingStep5Page from '@/pages/onboarding/Step5Page';
+import OnboardingStep6Page from '@/pages/onboarding/Step6Page';
+import OnboardingRedirect from '@/pages/onboarding/OnboardingRedirect';
+
 // Member Community pages
 import CommunityHome from '@/pages/member/community/CommunityHome';
 import TopicView from '@/pages/member/community/TopicView';
@@ -59,10 +68,36 @@ export const memberRoutes: RouteObject[] = [
     element: <RootRedirect />
   },
   
-  // Rota de onboarding sem layout (fullscreen)
+  // Rota de onboarding principal (redireciona para etapa correta)
   {
     path: "/onboarding",
-    element: <ProtectedRoutes><OnboardingPage /></ProtectedRoutes>
+    element: <ProtectedRoutes><OnboardingRedirect /></ProtectedRoutes>
+  },
+  
+  // Novas rotas de onboarding por etapas (sem MemberLayout)
+  {
+    path: "/onboarding/step/1",
+    element: <ProtectedRoutes><OnboardingStep1Page /></ProtectedRoutes>
+  },
+  {
+    path: "/onboarding/step/2", 
+    element: <ProtectedRoutes><OnboardingStep2Page /></ProtectedRoutes>
+  },
+  {
+    path: "/onboarding/step/3",
+    element: <ProtectedRoutes><OnboardingStep3Page /></ProtectedRoutes>
+  },
+  {
+    path: "/onboarding/step/4",
+    element: <ProtectedRoutes><OnboardingStep4Page /></ProtectedRoutes>
+  },
+  {
+    path: "/onboarding/step/5",
+    element: <ProtectedRoutes><OnboardingStep5Page /></ProtectedRoutes>
+  },
+  {
+    path: "/onboarding/step/6",
+    element: <ProtectedRoutes><OnboardingStep6Page /></ProtectedRoutes>
   },
   
   createProtectedRoute("/dashboard", Dashboard),
