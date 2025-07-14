@@ -5770,6 +5770,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      cleanup_orphaned_data: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
       cleanup_orphaned_sessions: {
         Args: Record<PropertyKey, never>
         Returns: number
@@ -5883,6 +5887,10 @@ export type Database = {
       detect_login_anomaly: {
         Args: { p_user_id: string; p_ip_address: string }
         Returns: boolean
+      }
+      diagnose_auth_state: {
+        Args: { target_user_id?: string }
+        Returns: Json
       }
       ensure_audit_log: {
         Args: {
@@ -6323,6 +6331,10 @@ export type Database = {
           used_at: string
           created_at: string
         }[]
+      }
+      validate_invite_token_safe: {
+        Args: { p_token: string }
+        Returns: Json
       }
       validate_invite_token_secure: {
         Args: { p_token: string }
