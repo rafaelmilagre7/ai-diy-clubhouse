@@ -18,11 +18,10 @@ export const OnboardingStep2: React.FC<OnboardingStep2Props> = ({
   isLoading = false
 }) => {
   const [formData, setFormData] = useState({
-    country: data.location_info?.country || 'Brasil',
-    state: data.location_info?.state || '',
-    city: data.location_info?.city || '',
-    timezone: data.location_info?.timezone || 'America/Sao_Paulo',
-    ...data.location_info
+    country: data.country || data.location_info?.country || 'Brasil',
+    state: data.state || data.location_info?.state || '',
+    city: data.city || data.location_info?.city || '',
+    timezone: data.timezone || data.location_info?.timezone || 'America/Sao_Paulo'
   });
 
   const handleInputChange = (field: string, value: string) => {
