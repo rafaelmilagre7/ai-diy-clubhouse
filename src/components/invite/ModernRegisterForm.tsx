@@ -158,32 +158,84 @@ const ModernRegisterForm: React.FC<ModernRegisterFormProps> = ({
         description: "Por favor, aguarde enquanto preparamos tudo para você.",
       });
       
+      // ===== DIAGNÓSTICO COMPLETO =====
+      console.log('🔧 [DIAGNOSTIC] Estado atual do sistema:', {
+        url: window.location.href,
+        userAgent: navigator.userAgent,
+        timestamp: new Date().toISOString(),
+        hasSupabaseClient: !!supabase,
+        inviteToken: inviteToken ? `${inviteToken.substring(0, 4)}***` : 'none'
+      });
+      
+      // Limpar qualquer estado de auth anterior
+      console.log('🧹 [DIAGNOSTIC] Limpando estado anterior...');
+      await supabase.auth.signOut({ scope: 'global' });
+      
+      // Aguardar um pouco para garantir limpeza
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      console.log('🚀 [DIAGNOSTIC] Tentando signUp com configuração limpa...');
       const { data, error } = await supabase.auth.signUp({
-        email,
+        email: email.trim().toLowerCase(),
         password,
         options: {
           data: {
-            name,
-            full_name: name,
-            display_name: name,
-            ...(inviteToken && { invite_token: inviteToken })
+            name: name.trim(),
+            full_name: name.trim(),
+            display_name: name.trim(),
+            ...(inviteToken && { invite_token: inviteToken.trim() })
           },
           emailRedirectTo: `${window.location.origin}/onboarding`
         }
       });
       
+      console.log('📊 [DIAGNOSTIC] Resultado do signUp:', {
+        hasData: !!data,
+        hasUser: !!data?.user,
+        userId: data?.user?.id,
+        userEmail: data?.user?.email,
+        hasError: !!error,
+        errorCode: error?.status,
+        errorMessage: error?.message,
+        errorName: error?.name
+      });
+      
       if (error) {
         console.error('❌ [REGISTER] Erro no signUp:', error);
+        console.error('❌ [REGISTER] Detalhes completos do erro:', {
+          name: error.name,
+          message: error.message,
+          status: error.status,
+          details: JSON.stringify(error, null, 2)
+        });
+        
+        // Verificar se é erro de refresh token (estado de auth corrompido)
+        if (error.message?.includes("refresh_token_not_found") || error.message?.includes("Invalid Refresh Token")) {
+          console.log('🔄 [REGISTER] Detectado estado de auth corrompido, tentando método alternativo...');
+          
+          setError("Detectamos um problema com a sessão. Tentando resolver automaticamente...");
+          
+          try {
+            await handleAlternativeSignup();
+            return;
+          } catch (altError) {
+            console.error('❌ [REGISTER] Método alternativo também falhou:', altError);
+            setError(`Erro persistente: ${altError instanceof Error ? altError.message : 'Erro desconhecido'}`);
+          }
+        }
         
         let userMessage = "Não foi possível criar sua conta. ";
         if (error.message?.includes("User already registered")) {
           userMessage = "Este email já possui uma conta. Tente fazer login ou usar 'Esqueci minha senha'.";
         } else if (error.message?.includes("signup disabled")) {
           userMessage = "O cadastro está temporariamente desabilitado. Entre em contato com o suporte.";
+        } else if (error.message?.includes("refresh_token")) {
+          userMessage = "Problema com a sessão detectado. Recarregue a página e tente novamente.";
         } else {
           userMessage += `Erro: ${error.message}`;
         }
         
+        setError(userMessage);
         toast({
           title: "Erro no cadastro",
           description: userMessage,
@@ -410,6 +462,19 @@ const ModernRegisterForm: React.FC<ModernRegisterFormProps> = ({
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Exibir erro se houver */}
+        {error && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+            <p className="text-sm text-red-800 font-medium">⚠️ {error}</p>
+            <button 
+              onClick={() => setError("")}
+              className="text-xs text-red-600 hover:text-red-800 mt-2 underline"
+            >
+              Dispensar
+            </button>
+          </div>
+        )}
+
         {/* Nome */}
         <div className="space-y-2">
           <Label htmlFor="name" className="text-sm font-medium">
