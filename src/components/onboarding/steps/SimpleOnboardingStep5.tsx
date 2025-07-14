@@ -424,6 +424,25 @@ export const SimpleOnboardingStep5: React.FC<SimpleOnboardingStep5Props> = ({
         </motion.div>
 
       </div>
+
+      {/* Botão Continuar */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.8 }}
+        className="flex justify-end pt-6"
+      >
+        <Button
+          onClick={handleNext}
+          disabled={isLoading}
+          className="min-w-[120px]"
+        >
+          {isLoading ? (
+            <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin mr-2" />
+          ) : null}
+          {isLoading ? "Salvando..." : "Finalizar →"}
+        </Button>
+      </motion.div>
     </div>
   );
 };

@@ -160,29 +160,61 @@ export const SimpleOnboardingWizard: React.FC = () => {
 
   const saveOnboardingData = async (stepData: any, stepNumber: number) => {
     console.log('💾 [ONBOARDING] Iniciando salvamento via adapter...');
+    console.log('💾 [ONBOARDING] stepData recebido:', JSON.stringify(stepData, null, 2));
+    console.log('💾 [ONBOARDING] stepNumber:', stepNumber);
     
     const updatedData = { ...onboardingData };
     
-    // Atualizar dados do step específico
+    // Atualizar dados do step específico com mapeamento correto
     switch (stepNumber) {
       case 1:
-        updatedData.personal_info = { ...updatedData.personal_info, ...stepData.personal_info };
-        updatedData.location_info = { ...updatedData.location_info, ...stepData.location_info };
+        // Step 1: Dados pessoais + localização
+        if (stepData.personal_info) {
+          updatedData.personal_info = { ...updatedData.personal_info, ...stepData.personal_info };
+        }
+        if (stepData.location_info) {
+          updatedData.location_info = { ...updatedData.location_info, ...stepData.location_info };
+        }
+        console.log('💾 [ONBOARDING] Step 1 - Dados pessoais e localização atualizados');
         break;
       case 2:
-        updatedData.location_info = { ...updatedData.location_info, ...stepData };
+        // Step 2: Dados empresariais
+        if (stepData.business_info) {
+          updatedData.business_info = { ...updatedData.business_info, ...stepData.business_info };
+        }
+        console.log('💾 [ONBOARDING] Step 2 - Dados empresariais atualizados');
         break;
       case 3:
-        updatedData.ai_experience = { ...updatedData.ai_experience, ...stepData.ai_experience };
+        // Step 3: Experiência com IA
+        if (stepData.ai_experience) {
+          updatedData.ai_experience = { ...updatedData.ai_experience, ...stepData.ai_experience };
+        }
+        console.log('💾 [ONBOARDING] Step 3 - Experiência com IA atualizada');
         break;
       case 4:
-        updatedData.goals_info = { ...updatedData.goals_info, ...stepData.goals_info };
+        // Step 4: Objetivos
+        if (stepData.goals_info) {
+          updatedData.goals_info = { ...updatedData.goals_info, ...stepData.goals_info };
+        }
+        console.log('💾 [ONBOARDING] Step 4 - Objetivos atualizados');
         break;
       case 5:
-        updatedData.personalization = { ...updatedData.personalization, ...stepData.personalization };
+        // Step 5: Personalização
+        if (stepData.personalization) {
+          updatedData.personalization = { ...updatedData.personalization, ...stepData.personalization };
+        }
+        console.log('💾 [ONBOARDING] Step 5 - Personalização atualizada');
         break;
       case 6:
-        updatedData.personalization = { ...updatedData.personalization, ...stepData };
+        // Step 6: Finalização (completar onboarding)
+        if (stepData.personalization) {
+          updatedData.personalization = { ...updatedData.personalization, ...stepData.personalization };
+        }
+        updatedData.is_completed = true;
+        console.log('💾 [ONBOARDING] Step 6 - Finalizando onboarding');
+        break;
+      default:
+        console.warn('⚠️ [ONBOARDING] Step número inválido:', stepNumber);
         break;
     }
 
@@ -191,10 +223,29 @@ export const SimpleOnboardingWizard: React.FC = () => {
     updatedData.completed_steps = completedSteps;
     updatedData.current_step = Math.max(stepNumber + 1, updatedData.current_step);
 
+    console.log('💾 [ONBOARDING] Dados finais para salvamento:', JSON.stringify(updatedData, null, 2));
+    
     const success = await adapter.saveOnboardingData(updatedData);
     
     if (success) {
+      console.log('✅ [ONBOARDING] Dados salvos com sucesso, atualizando estado local');
       setOnboardingData(updatedData);
+      
+      // Toast de confirmação
+      toast({
+        title: "Dados salvos! ✅",
+        description: `Etapa ${stepNumber} concluída com sucesso.`,
+      });
+      
+      return true;
+    } else {
+      console.error('❌ [ONBOARDING] Falha ao salvar dados');
+      toast({
+        title: "Erro ao salvar",
+        description: "Não foi possível salvar seus dados. Tente novamente.",
+        variant: "destructive",
+      });
+      return false;
     }
   };
 
@@ -207,12 +258,20 @@ export const SimpleOnboardingWizard: React.FC = () => {
     const dataToSave = stepData || getCurrentStepData();
     console.log('➡️ [ONBOARDING] dataToSave preparado:', JSON.stringify(dataToSave, null, 2));
     
-    if (dataToSave && Object.keys(dataToSave).length > 0) {
-      console.log('➡️ [ONBOARDING] Chamando saveOnboardingData...');
-      await saveOnboardingData(dataToSave, currentStep);
-      console.log('➡️ [ONBOARDING] saveOnboardingData finalizada');
+    // Validar se há dados para salvar
+    if (!dataToSave || Object.keys(dataToSave).length === 0) {
+      console.log('⚠️ [ONBOARDING] Nenhum dado para salvar, avançando mesmo assim');
     } else {
-      console.log('⚠️ [ONBOARDING] Nenhum dado para salvar');
+      console.log('➡️ [ONBOARDING] Chamando saveOnboardingData...');
+      const saveSuccess = await saveOnboardingData(dataToSave, currentStep);
+      
+      // CRÍTICO: Só avançar se os dados foram salvos com sucesso
+      if (!saveSuccess) {
+        console.error('❌ [ONBOARDING] Falha ao salvar - IMPEDINDO avanço para próxima etapa');
+        return; // Para aqui se não conseguiu salvar
+      }
+      
+      console.log('✅ [ONBOARDING] Dados salvos com sucesso - Permitindo avanço');
     }
     
     if (currentStep < TOTAL_STEPS) {
@@ -231,6 +290,12 @@ export const SimpleOnboardingWizard: React.FC = () => {
           description: "Bem-vindo(a) à nossa plataforma!",
         });
         navigate('/dashboard');
+      } else {
+        toast({
+          title: "Erro ao finalizar",
+          description: "Não foi possível completar o onboarding. Tente novamente.",
+          variant: "destructive",
+        });
       }
     }
     
@@ -239,17 +304,17 @@ export const SimpleOnboardingWizard: React.FC = () => {
 
   const handlePrevious = async () => {
     if (currentStep > 1) {
-      // Salvar dados automaticamente antes de navegar
-      console.log('⬅️ [ONBOARDING] Navegando para etapa anterior, salvando dados da etapa atual...');
+      // Salvar dados automaticamente antes de navegar (opcional)
+      console.log('⬅️ [ONBOARDING] Navegando para etapa anterior...');
       
-      const currentStepData = getCurrentStepData();
-      if (currentStepData && Object.keys(currentStepData).length > 0) {
-        await saveOnboardingData(currentStepData, currentStep);
-      }
+      // Note: Não salvamos ao voltar para evitar sobrescrever dados
+      // Os dados já devem estar salvos quando o usuário avançou
       
       setCurrentStep(currentStep - 1);
       // Scroll para o topo ao voltar para etapa anterior
       window.scrollTo({ top: 0, behavior: 'smooth' });
+      
+      console.log('⬅️ [ONBOARDING] Navegação para etapa anterior concluída');
     }
   };
 
@@ -262,15 +327,25 @@ export const SimpleOnboardingWizard: React.FC = () => {
           location_info: onboardingData.location_info
         };
       case 2:
-        return onboardingData.location_info;
+        return {
+          business_info: onboardingData.business_info
+        };
       case 3:
-        return onboardingData.ai_experience || onboardingData; // dados diretos do step 3
+        return {
+          ai_experience: onboardingData.ai_experience
+        };
       case 4:
-        return onboardingData.goals_info || onboardingData; // dados diretos do step 4
+        return {
+          goals_info: onboardingData.goals_info
+        };
       case 5:
-        return onboardingData.personalization || onboardingData; // dados diretos do step 5
+        return {
+          personalization: onboardingData.personalization
+        };
       case 6:
-        return onboardingData.personalization;
+        return {
+          personalization: onboardingData.personalization
+        };
       default:
         return {};
     }
