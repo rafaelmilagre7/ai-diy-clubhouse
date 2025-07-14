@@ -280,7 +280,10 @@ export const useDirectOnboardingAdapter = () => {
 
       const { error } = await supabase
         .from('onboarding')
-        .upsert(backendData);
+        .upsert(backendData, {
+          onConflict: 'user_id',
+          ignoreDuplicates: false
+        });
 
       if (error) {
         console.error('❌ [DIRECT] Erro ao salvar:', error);
