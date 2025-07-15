@@ -32,11 +32,24 @@ export function useWhatsAppConfigCheck() {
 
       console.log('✅ [CONFIG-CHECK] Resultado:', data);
       
+      // Mapear corretamente os dados da edge function
+      const hasCredentials = data.credentials?.success || false;
+      const hasApiConnection = data.whatsapp_api?.success || false;
+      const hasTemplate = data.template_status?.success || false;
+      const hasPhoneNumber = data.phone_number?.success || false;
+      
+      const allIssues = [
+        ...(data.credentials?.errors || []),
+        ...(data.whatsapp_api?.errors || []),
+        ...(data.template_status?.errors || []),
+        ...(data.phone_number?.errors || [])
+      ];
+      
       const status: WhatsAppConfigStatus = {
-        configured: data.status?.configured || false,
-        apiConnectivity: data.status?.apiConnectivity || false,
-        readyToSend: data.status?.readyToSend || false,
-        issues: data.status?.issues || [],
+        configured: hasCredentials,
+        apiConnectivity: hasApiConnection,
+        readyToSend: hasCredentials && hasApiConnection && hasTemplate && hasPhoneNumber,
+        issues: allIssues,
         lastChecked: new Date().toISOString()
       };
 
