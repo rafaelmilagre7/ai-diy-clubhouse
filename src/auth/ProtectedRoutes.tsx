@@ -27,27 +27,38 @@ export const ProtectedRoutes = ({ children }: ProtectedRoutesProps) => {
 
   const { user, profile, isLoading } = authContext;
 
-  // Verificar progresso do onboarding usando nova função centralizada
+  // Verificar progresso do onboarding usando nova função centralizada (com throttle)
   useEffect(() => {
-    if (user && profile && !isCheckingProgress) {
-      checkOnboardingProgress();
+    if (user && profile && !isCheckingProgress && !hasTriedFix) {
+      const timer = setTimeout(() => {
+        checkOnboardingProgress();
+      }, 100); // Pequeno delay para evitar chamadas simultâneas
+      
+      return () => clearTimeout(timer);
     }
-  }, [user?.id, profile?.onboarding_completed]);
+  }, [user?.id, profile?.onboarding_completed, isCheckingProgress, hasTriedFix]);
 
   const checkOnboardingProgress = async () => {
-    if (!user) return;
+    if (!user || isCheckingProgress || hasTriedFix) return;
     
     setIsCheckingProgress(true);
     console.log("[PROTECTED] Verificando progresso do onboarding para:", user.id);
     
     try {
-      // Usar nova função centralizada
-      const { data, error } = await supabase.rpc('get_onboarding_next_step', {
+      // Timeout para evitar travamentos
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Timeout')), 5000)
+      );
+
+      const dataPromise = supabase.rpc('get_onboarding_next_step', {
         p_user_id: user.id
       });
 
+      const { data, error } = await Promise.race([dataPromise, timeoutPromise]) as any;
+
       if (error) {
         console.error("[PROTECTED] Erro ao verificar onboarding:", error);
+        setHasTriedFix(true);
         return;
       }
 
@@ -65,8 +76,18 @@ export const ProtectedRoutes = ({ children }: ProtectedRoutesProps) => {
       };
       
       setOnboardingProgress(progress);
+      setHasTriedFix(true);
     } catch (error) {
       console.error("[PROTECTED] Erro inesperado:", error);
+      setHasTriedFix(true);
+      // Em caso de erro, usar dados do perfil como fallback
+      if (profile?.onboarding_completed) {
+        setOnboardingProgress({
+          current_step: 7,
+          completed_steps: [1, 2, 3, 4, 5, 6],
+          is_completed: true
+        });
+      }
     } finally {
       setIsCheckingProgress(false);
     }

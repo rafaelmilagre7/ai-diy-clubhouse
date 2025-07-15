@@ -9,7 +9,9 @@ import { useOnboardingRedirect } from "@/hooks/useOnboardingRedirect";
 const RootRedirect = () => {
   const location = useLocation();
   const [forceRedirect, setForceRedirect] = useState(false);
+  const [hasRedirected, setHasRedirected] = useState(false);
   const timeoutRef = useRef<number | null>(null);
+  const lastPathRef = useRef<string>('');
   
   // Hook seguro de auth
   const { user, profile, isLoading: authLoading } = useAuth();
@@ -69,9 +71,24 @@ const RootRedirect = () => {
 
   // VERIFICAÇÃO DO ONBOARDING - Usar hook centralizado
   if (profile && !profile.onboarding_completed && !location.pathname.startsWith('/onboarding')) {
-    console.log("🔄 [ROOT-REDIRECT] Onboarding obrigatório - redirecionando");
-    redirectToNextStep();
-    return <LoadingScreen message="Redirecionando para onboarding..." />;
+    // Prevenir loops: só redirecionar se não é a mesma rota
+    if (lastPathRef.current !== location.pathname && !hasRedirected) {
+      console.log("🔄 [ROOT-REDIRECT] Onboarding obrigatório - redirecionando");
+      lastPathRef.current = location.pathname;
+      setHasRedirected(true);
+      
+      // Usar setTimeout para evitar problemas de React strict mode
+      setTimeout(() => {
+        redirectToNextStep();
+      }, 0);
+      
+      return <LoadingScreen message="Redirecionando para onboarding..." />;
+    }
+    
+    // Se já tentou redirecionar mas ainda está aqui, mostrar loading
+    if (hasRedirected) {
+      return <LoadingScreen message="Processando redirecionamento..." />;
+    }
   }
   
   // Se está na página de onboarding mas já completou, redireciona
