@@ -48,12 +48,12 @@ export const SimpleOnboardingStep1 = React.memo(forwardRef<Step1Ref, SimpleOnboa
   const [errors, setErrors] = useState<Record<string, string>>({});
   const getFieldError = (field: string) => errors[field];
 
-  // Detectar campos que vieram do convite
+  // Detectar campos que vieram do convite - com suporte aprimorado
   const fromInvite = useMemo(() => ({
-    email: data.personal_info?.from_invite === true,
-    phone: data.personal_info?.phone_from_invite === true,
-    name: data.personal_info?.name_from_invite === true
-  }), [data.personal_info?.from_invite, data.personal_info?.phone_from_invite, data.personal_info?.name_from_invite]);
+    email: data.personal_info?.from_invite === true || data.personal_info?.email_from_invite === true,
+    phone: data.personal_info?.phone_from_invite === true || (data.personal_info?.phone && data.personal_info?.phone.length > 0),
+    name: data.personal_info?.name_from_invite === true || data.personal_info?.from_invite === true
+  }), [data.personal_info?.from_invite, data.personal_info?.phone_from_invite, data.personal_info?.name_from_invite, data.personal_info?.email_from_invite, data.personal_info?.phone]);
 
   const handleInputChange = useCallback((field: string, value: string) => {
     setFormData(prev => {

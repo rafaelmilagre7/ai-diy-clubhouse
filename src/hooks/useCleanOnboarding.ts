@@ -6,6 +6,9 @@ import { toast } from '@/hooks/use-toast';
 import { useOnboardingPersistence } from './useOnboardingPersistence';
 import { debugOnboarding } from '@/utils/onboardingDebug';
 import { useOnboardingTelemetry } from './useOnboardingTelemetry';
+import { useDataEnrichment } from './useDataEnrichment';
+import { useInviteFlowTelemetry } from './useInviteFlowTelemetry';
+import { usePostOnboardingSetup } from './usePostOnboardingSetup';
 
 // Tipos limpos e corretos baseados na tabela onboarding_final
 export interface OnboardingFinalData {
@@ -122,6 +125,9 @@ export const useCleanOnboarding = () => {
   const navigate = useNavigate();
   const { saveToLocal, loadFromLocal, clearLocal, hasNewerLocalData } = useOnboardingPersistence(user?.id);
   const { logStepStarted, logStepCompleted, logValidationFailed, logOnboardingCompleted } = useOnboardingTelemetry();
+  const { enrichProfileData, validateDataCompleteness } = useDataEnrichment();
+  const { trackOnboardingCompleted, trackStepCompleted } = useInviteFlowTelemetry();
+  const { setupUserAccess } = usePostOnboardingSetup();
   
   const [data, setData] = useState<OnboardingFinalData>({
     user_id: user?.id || '',
@@ -270,9 +276,27 @@ export const useCleanOnboarding = () => {
     try {
       console.log('🚀 [CLEAN-ONBOARDING] Inicializando onboarding com dados do convite:', inviteData);
       
+      // Buscar dados do convite automaticamente se não fornecidos
+      let inviteDataToUse = inviteData;
+      if (!inviteDataToUse) {
+        const inviteToken = new URLSearchParams(window.location.search).get('invite');
+        if (inviteToken) {
+          console.log('🎫 [CLEAN-ONBOARDING] Buscando dados do convite automaticamente:', inviteToken.substring(0, 6) + '***');
+          
+          const { data: inviteInfo, error: inviteError } = await supabase.rpc('validate_invite_token_safe', {
+            p_token: inviteToken
+          });
+          
+          if (!inviteError && inviteInfo?.valid) {
+            inviteDataToUse = inviteInfo.invite;
+            console.log('✅ [CLEAN-ONBOARDING] Dados do convite obtidos:', inviteDataToUse);
+          }
+        }
+      }
+      
       const { data: result, error } = await supabase.rpc('initialize_onboarding_for_user', {
         p_user_id: user.id,
-        p_invite_data: inviteData || {}
+        p_invite_data: inviteDataToUse || {}
       });
 
       if (error) {
@@ -424,11 +448,21 @@ export const useCleanOnboarding = () => {
       console.log('✅ [CLEAN-ONBOARDING] Dados salvos com sucesso');
       setData(updatedData);
       
-      // Registrar telemetria de step completado
-      logStepCompleted(currentStep, stepData);
-      
-      // Salvar no localStorage após sucesso no servidor
-      saveToLocal(updatedData);
+        // Registrar telemetria de step completado
+        logStepCompleted(currentStep, stepData);
+        trackStepCompleted(user!.id, currentStep, stepData);
+        
+        // Validar completude dos dados
+        if (targetStep > 6) {
+          const completeness = validateDataCompleteness(updatedData);
+          console.log('📊 [CLEAN-ONBOARDING] Completude dos dados:', completeness);
+          
+          // Enriquecer dados do perfil
+          await enrichProfileData(user!.id, updatedData);
+        }
+        
+        // Salvar no localStorage após sucesso no servidor
+        saveToLocal(updatedData);
       
       toast({
         title: "Dados salvos! ✅",
@@ -450,6 +484,8 @@ export const useCleanOnboarding = () => {
             console.error('❌ [CLEAN-ONBOARDING] Erro ao finalizar:', completeError);
           } else {
             console.log('✅ [CLEAN-ONBOARDING] Onboarding finalizado via RPC:', completeResult);
+            // Registrar telemetria de conclusão
+            trackOnboardingCompleted(user!.id);
           }
         } catch (rpcError) {
           console.error('❌ [CLEAN-ONBOARDING] Falha no RPC de finalização:', rpcError);
@@ -457,6 +493,10 @@ export const useCleanOnboarding = () => {
         
         // Limpar dados locais
         clearLocal();
+        
+        // Verificar acesso pós-onboarding
+        await verifyPostOnboardingAccess();
+        
         toast({
           title: "Onboarding concluído! 🎉",
           description: "Bem-vindo(a) à nossa plataforma!",
@@ -478,6 +518,35 @@ export const useCleanOnboarding = () => {
       setIsSaving(false);
     }
   }, [data, isSaving, user?.id, navigate, saveToLocal, clearLocal]);
+
+  // Verificar acesso pós-onboarding
+  const verifyPostOnboardingAccess = useCallback(async () => {
+    try {
+      console.log('🔐 [CLEAN-ONBOARDING] Verificando acesso pós-onboarding...');
+      
+      if (!user?.id) {
+        console.warn('⚠️ [CLEAN-ONBOARDING] User ID não disponível');
+        return;
+      }
+      
+      // Usar o hook especializado para configurar acesso
+      const result = await setupUserAccess(user.id);
+      
+      if (result.success) {
+        console.log('✅ [CLEAN-ONBOARDING] Acesso configurado com sucesso');
+        
+        toast({
+          title: "Acesso liberado! 🎉",
+          description: "Você já pode usar todas as funcionalidades da plataforma.",
+        });
+      } else {
+        console.warn('⚠️ [CLEAN-ONBOARDING] Problemas na configuração de acesso');
+      }
+      
+    } catch (error) {
+      console.error('❌ [CLEAN-ONBOARDING] Falha na verificação de acesso:', error);
+    }
+  }, [user?.id, setupUserAccess]);
 
   const canAccessStep = useCallback((step: number) => {
     console.log('🔐 [CLEAN-ONBOARDING] Verificando acesso ao step:', step, {
