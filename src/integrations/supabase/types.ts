@@ -5842,6 +5842,17 @@ export type Database = {
         Args: { target_user_id?: string }
         Returns: Json
       }
+      diagnose_stuck_users: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          user_id: string
+          email: string
+          current_step: number
+          completed_steps: number[]
+          hours_stuck: number
+          suggested_action: string
+        }[]
+      }
       ensure_audit_log: {
         Args: {
           p_event_type: string
@@ -5857,6 +5868,10 @@ export type Database = {
         Returns: Json
       }
       fix_orphaned_invites: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
+      fix_stuck_onboarding_users: {
         Args: Record<PropertyKey, never>
         Returns: Json
       }
@@ -6073,6 +6088,15 @@ export type Database = {
       }
       log_invite_validation_attempt: {
         Args: { p_token: string; p_success: boolean; p_details: string }
+        Returns: undefined
+      }
+      log_onboarding_event: {
+        Args: {
+          p_user_id: string
+          p_event_type: string
+          p_step: number
+          p_event_data?: Json
+        }
         Returns: undefined
       }
       log_permission_change: {

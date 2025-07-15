@@ -5,6 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { useOnboardingPersistence } from './useOnboardingPersistence';
 import { debugOnboarding } from '@/utils/onboardingDebug';
+import { useOnboardingTelemetry } from './useOnboardingTelemetry';
 
 // Tipos limpos e corretos baseados na tabela onboarding_final
 export interface OnboardingFinalData {
@@ -120,6 +121,7 @@ export const useCleanOnboarding = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { saveToLocal, loadFromLocal, clearLocal, hasNewerLocalData } = useOnboardingPersistence(user?.id);
+  const { logStepStarted, logStepCompleted, logValidationFailed, logOnboardingCompleted } = useOnboardingTelemetry();
   
   const [data, setData] = useState<OnboardingFinalData>({
     user_id: user?.id || '',
@@ -409,6 +411,9 @@ export const useCleanOnboarding = () => {
 
       console.log('✅ [CLEAN-ONBOARDING] Dados salvos com sucesso');
       setData(updatedData);
+      
+      // Registrar telemetria de step completado
+      logStepCompleted(currentStep, stepData);
       
       // Salvar no localStorage após sucesso no servidor
       saveToLocal(updatedData);

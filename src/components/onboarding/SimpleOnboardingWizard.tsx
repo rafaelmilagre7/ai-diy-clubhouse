@@ -4,10 +4,10 @@ import { toast } from '@/hooks/use-toast';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useCleanOnboarding } from '@/hooks/useCleanOnboarding';
 
-// Import dos steps simplificados
+// Import dos steps simplificados (versões corrigidas)
 import { SimpleOnboardingStep1 } from './steps/SimpleOnboardingStep1';
-import { SimpleOnboardingStep2 } from './steps/SimpleOnboardingStep2';
-import { SimpleOnboardingStep3 } from './steps/SimpleOnboardingStep3';
+import { SimpleOnboardingStep2Fixed as SimpleOnboardingStep2 } from './steps/SimpleOnboardingStep2Fixed';
+import { SimpleOnboardingStep3Fixed as SimpleOnboardingStep3 } from './steps/SimpleOnboardingStep3Fixed';
 import { SimpleOnboardingStep4 } from './steps/SimpleOnboardingStep4';
 import { SimpleOnboardingStep5 } from './steps/SimpleOnboardingStep5';
 import { SimpleOnboardingStep6 } from './steps/SimpleOnboardingStep6';
