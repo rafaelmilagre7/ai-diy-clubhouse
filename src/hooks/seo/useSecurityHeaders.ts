@@ -34,15 +34,12 @@ export const useSecurityHeaders = () => {
         document.head.appendChild(contentTypeMeta);
       }
 
-      // X-Frame-Options - SAMEORIGIN para permitir alguns embeds, removendo se já existe
+      // X-Frame-Options removido - não funciona como meta tag, deve ser HTTP header
+      // Removendo qualquer meta tag X-Frame-Options existente para evitar conflitos
       let frameMeta = document.querySelector('meta[http-equiv="X-Frame-Options"]') as HTMLMetaElement;
       if (frameMeta) {
         frameMeta.remove();
       }
-      frameMeta = document.createElement('meta');
-      frameMeta.setAttribute('http-equiv', 'X-Frame-Options');
-      frameMeta.setAttribute('content', 'SAMEORIGIN');
-      document.head.appendChild(frameMeta);
 
       // Referrer Policy
       let referrerMeta = document.querySelector('meta[name="referrer"]') as HTMLMetaElement;
