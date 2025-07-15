@@ -42,12 +42,12 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
     }
   }, [user, isComingFromLMS]);
 
-  // OTIMIZAÇÃO 2: Timeout absoluto reduzido para 3 segundos
+  // OTIMIZAÇÃO 2: Timeout absoluto sincronizado
   useEffect(() => {
-    const timeoutDuration = isComingFromLMS ? 2000 : 3000; // Mais rápido vindo do LMS
+    const timeoutDuration = 1500; // Reduzido para 1.5s para sincronizar com outros componentes
     
     const absoluteTimeout = setTimeout(() => {
-      console.warn(`⚠️ [ADMIN-LAYOUT] Timeout de ${timeoutDuration/1000}s - forçando exibição`);
+      // Log reduzido para evitar poluir console
       setForceReady(true);
     }, timeoutDuration);
 

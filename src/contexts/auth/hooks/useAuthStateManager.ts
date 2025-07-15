@@ -115,10 +115,10 @@ export const useAuthStateManager = ({
             navigationCache.set(user.id, profile, 'formacao');
           }
           
-          logger.info('[AUTH-STATE] ✅ Perfil carregado com sucesso', {
-            userId: user.id.substring(0, 8) + '***',
-            roleName: roleName || 'sem role'
-          });
+          // Log reduzido para evitar spam no console
+          if (roleName) {
+            logger.info('[AUTH-STATE] ✅ Perfil carregado');
+          }
         } else {
           logger.warn('[AUTH-STATE] Perfil não encontrado');
           setProfile(null);

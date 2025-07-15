@@ -24,9 +24,8 @@ const RootRedirect = () => {
   // Circuit breaker otimizado
   useEffect(() => {
     timeoutRef.current = window.setTimeout(() => {
-      console.warn("⏰ [ROOT-REDIRECT] Timeout - forçando redirecionamento");
       setForceRedirect(true);
-    }, 3000);
+    }, 1500); // Sincronizado com AdminLayout
     
     return () => {
       if (timeoutRef.current) {
