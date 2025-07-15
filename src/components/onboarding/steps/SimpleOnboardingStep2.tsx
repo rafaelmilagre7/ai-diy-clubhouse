@@ -1,4 +1,4 @@
-import React, { useState, forwardRef, useImperativeHandle } from 'react';
+import React, { useState, forwardRef, useImperativeHandle, useCallback, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
@@ -13,7 +13,7 @@ interface SimpleOnboardingStep2Props {
   onDataChange?: (data: any) => void;
 }
 
-export const SimpleOnboardingStep2 = forwardRef<{ getData: () => any; isValid: () => boolean }, SimpleOnboardingStep2Props>(({
+export const SimpleOnboardingStep2 = React.memo(forwardRef<{ getData: () => any; isValid: () => boolean }, SimpleOnboardingStep2Props>(({
   data,
   onNext,
   isLoading = false,
@@ -32,7 +32,7 @@ export const SimpleOnboardingStep2 = forwardRef<{ getData: () => any; isValid: (
   const [errors, setErrors] = useState<Record<string, string>>({});
   const getFieldError = (field: string) => errors[field];
 
-  const handleInputChange = (field: string, value: string) => {
+  const handleInputChange = useCallback((field: string, value: string) => {
     const newFormData = {
       ...formData,
       [field]: value
@@ -40,7 +40,7 @@ export const SimpleOnboardingStep2 = forwardRef<{ getData: () => any; isValid: (
     
     setFormData(newFormData);
 
-    // Notificar mudanças para auto-save
+    // Notificar mudanças para auto-save (debounced)
     if (onDataChange) {
       onDataChange(newFormData);
     }
@@ -52,9 +52,9 @@ export const SimpleOnboardingStep2 = forwardRef<{ getData: () => any; isValid: (
         [field]: ''
       }));
     }
-  };
+  }, [formData, onDataChange, errors]);
 
-  const validateForm = () => {
+  const validateForm = useCallback(() => {
     const newErrors: Record<string, string> = {};
 
     if (!formData.position) {
@@ -67,7 +67,7 @@ export const SimpleOnboardingStep2 = forwardRef<{ getData: () => any; isValid: (
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
-  };
+  }, [formData.position, formData.businessSector]);
 
   const handleNext = () => {
     if (!validateForm()) {
@@ -77,11 +77,11 @@ export const SimpleOnboardingStep2 = forwardRef<{ getData: () => any; isValid: (
     onNext({ business_info: formData });
   };
 
-  // Expor funções através da ref
+  // Expor funções através da ref com memoização
   useImperativeHandle(ref, () => ({
     getData: () => ({ business_info: formData }),
     isValid: validateForm
-  }));
+  }), [formData, validateForm]);
 
   return (
     <div className="space-y-8">
@@ -289,4 +289,4 @@ export const SimpleOnboardingStep2 = forwardRef<{ getData: () => any; isValid: (
 
     </div>
   );
-});
+}));
