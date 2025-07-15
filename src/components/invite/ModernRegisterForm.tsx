@@ -93,21 +93,9 @@ const ModernRegisterForm: React.FC<ModernRegisterFormProps> = ({
       return;
     }
     
-    console.log('🔄 [REGISTER] === INICIANDO PROCESSO DE REGISTRO ===');
-    console.log('🔄 [REGISTER] Dados do formulário:', {
-      name: !!name,
-      email: !!email,
-      password: !!password,
-      confirmPassword: !!confirmPassword,
-      passwordsMatch,
-      isPasswordValid,
-      passwordScore: passwordValidation.score,
-      inviteToken: inviteToken ? `${inviteToken.substring(0, 6)}***` : 'sem token',
-      timestamp: new Date().toISOString()
-    });
+    console.log('🚀 [REGISTER] Iniciando processo de registro');
     
     if (!name || !email || !password || !confirmPassword) {
-      console.log('❌ [REGISTER] Campos obrigatórios não preenchidos');
       toast({
         title: "Campos obrigatórios",
         description: "Por favor, preencha todos os campos.",
@@ -117,7 +105,6 @@ const ModernRegisterForm: React.FC<ModernRegisterFormProps> = ({
     }
     
     if (!passwordsMatch) {
-      console.log('❌ [REGISTER] Senhas não coincidem');
       toast({
         title: "Senhas não coincidem",
         description: "As senhas digitadas são diferentes. Verifique e tente novamente.",
@@ -127,7 +114,6 @@ const ModernRegisterForm: React.FC<ModernRegisterFormProps> = ({
     }
     
     if (!isPasswordValid) {
-      console.log('❌ [REGISTER] Senha não atende os critérios:', passwordValidation);
       await logSecurityViolation('weak_password_attempt', 'low', 'Tentativa de registro com senha fraca', {
         passwordScore: passwordValidation.score,
         passwordStrength: passwordValidation.strength
@@ -141,7 +127,6 @@ const ModernRegisterForm: React.FC<ModernRegisterFormProps> = ({
     }
 
     // Validação adicional no servidor
-    console.log('🔍 [REGISTER] Validando senha no servidor...');
     const serverValidation = await validatePasswordOnServer(password);
     if (serverValidation && !serverValidation.is_valid) {
       console.log('❌ [REGISTER] Senha rejeitada pelo servidor:', serverValidation);
@@ -156,19 +141,11 @@ const ModernRegisterForm: React.FC<ModernRegisterFormProps> = ({
     try {
       setIsLoading(true);
       
-      console.log('🚀 [REGISTER] Iniciando registro com feedback visual');
       toast({
         title: "Criando sua conta...",
         description: "Por favor, aguarde enquanto preparamos tudo para você.",
       });
       
-      // Limpar qualquer estado de auth anterior silenciosamente
-      try {
-        await supabase.auth.signOut({ scope: 'global' });
-        await new Promise(resolve => setTimeout(resolve, 300));
-      } catch (e) {
-        // Ignorar erros de limpeza
-      }
       const { data, error } = await supabase.auth.signUp({
         email: email.trim().toLowerCase(),
         password,
@@ -246,54 +223,38 @@ const ModernRegisterForm: React.FC<ModernRegisterFormProps> = ({
           description: "Preparando seu ambiente personalizado...",
         });
         
-        // Verificação de perfil com retry inteligente e fallback robusto
+        // Verificação simplificada de perfil  
         let profileCreated = false;
         let attempts = 0;
-        const maxAttempts = 10; // Reduzido mas com intervalo maior
+        const maxAttempts = 5;
         
-        console.log('🔍 [REGISTER] Iniciando verificação de perfil...');
+        
         
         while (!profileCreated && attempts < maxAttempts) {
-          await new Promise(resolve => setTimeout(resolve, 800)); // Intervalo aumentado
+          await new Promise(resolve => setTimeout(resolve, 500));
           
           try {
-            const { data: profile, error: profileError } = await supabase
+            const { data: profile } = await supabase
               .from('profiles')
-              .select('id, role_id, name, onboarding_completed')
+              .select('id, role_id')
               .eq('id', data.user.id)
               .single();
             
             if (profile) {
-              console.log('✅ [REGISTER] Perfil encontrado:', {
-                id: profile.id,
-                hasRole: !!profile.role_id,
-                onboardingCompleted: profile.onboarding_completed
-              });
+              console.log('✅ [REGISTER] Perfil encontrado:', profile.id);
               profileCreated = true;
               
-              // Se convite existe, aplicá-lo automaticamente
-              if (inviteToken && !profile.role_id) {
-                console.log('🎫 [REGISTER] Aplicando convite automaticamente...');
-                try {
-                  const { error: inviteError } = await supabase.rpc('use_invite_with_onboarding', {
-                    invite_token: inviteToken,
-                    user_id: data.user.id
-                  });
-                  
-                  if (inviteError) {
-                    console.warn('⚠️ [REGISTER] Erro ao aplicar convite:', inviteError);
-                  } else {
-                    console.log('✅ [REGISTER] Convite aplicado com sucesso');
-                  }
-                } catch (inviteErr) {
-                  console.warn('⚠️ [REGISTER] Falha na aplicação do convite:', inviteErr);
-                }
+              // Aplicar convite se necessário
+              if (inviteToken) {
+                console.log('🎫 [REGISTER] Aplicando convite...');
+                await supabase.rpc('use_invite_with_onboarding', {
+                  invite_token: inviteToken,
+                  user_id: data.user.id
+                });
               }
-            } else if (profileError) {
-              console.log(`⏳ [REGISTER] Perfil não encontrado, tentativa ${attempts + 1}/${maxAttempts}:`, profileError.message);
             }
           } catch (err) {
-            console.log(`⏳ [REGISTER] Aguardando criação do perfil... tentativa ${attempts + 1}/${maxAttempts}`);
+            console.log(`⏳ [REGISTER] Tentativa ${attempts + 1}/${maxAttempts}`);
           }
           
           attempts++;
@@ -307,13 +268,12 @@ const ModernRegisterForm: React.FC<ModernRegisterFormProps> = ({
             description: "Redirecionando para o preenchimento dos dados...",
           });
           
-          // Aguardar tempo adequado para garantir sincronia do banco
+          // Redirecionamento simplificado
           setTimeout(() => {
-            console.log('🔄 [REGISTER] Executando redirecionamento para onboarding');
+            console.log('🔄 [REGISTER] Redirecionando para onboarding');
             redirectToNextStep();
-            // Chamar onSuccess após redirecionamento para evitar conflitos
-            setTimeout(() => onSuccess?.(), 500);
-          }, 1500); // Aumentado para garantir que o perfil foi criado
+            onSuccess?.();
+          }, 800);
         } else {
           console.warn('⚠️ [REGISTER] Perfil não foi criado, tentando recovery...');
           
@@ -533,7 +493,6 @@ const ModernRegisterForm: React.FC<ModernRegisterFormProps> = ({
             </p>
           </div>
         </div>
-        </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
         {/* Exibir erro se houver */}
@@ -725,6 +684,7 @@ const ModernRegisterForm: React.FC<ModernRegisterFormProps> = ({
             {" "}e{" "}
             <a href="#" className="text-primary hover:underline font-medium">Política de Privacidade</a>
           </p>
+        </div>
         </div>
       </div>
     </RateLimitGuard>

@@ -25,8 +25,8 @@ const OnboardingRedirectWrapper: React.FC<{ children: React.ReactNode }> = ({ ch
     return <LoadingScreen message="Carregando seu perfil..." />;
   }
 
-  // Se onboarding completo e está na página de onboarding, redirecionar
-  if (profile.onboarding_completed && window.location.pathname.startsWith('/onboarding')) {
+  // Se onboarding completo, redirecionar para dashboard
+  if (profile.onboarding_completed) {
     const roleName = profile.user_roles?.name;
     return <Navigate to={roleName === 'formacao' ? '/formacao' : '/dashboard'} replace />;
   }
