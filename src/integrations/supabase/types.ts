@@ -3066,6 +3066,7 @@ export type Database = {
           personal_info: Json
           personalization: Json
           professional_info: Json | null
+          status: string | null
           time_per_step: Json | null
           updated_at: string
           user_id: string
@@ -3100,6 +3101,7 @@ export type Database = {
           personal_info?: Json
           personalization?: Json
           professional_info?: Json | null
+          status?: string | null
           time_per_step?: Json | null
           updated_at?: string
           user_id: string
@@ -3134,6 +3136,7 @@ export type Database = {
           personal_info?: Json
           personalization?: Json
           professional_info?: Json | null
+          status?: string | null
           time_per_step?: Json | null
           updated_at?: string
           user_id?: string
@@ -6306,7 +6309,7 @@ export type Database = {
         }[]
       }
       validate_onboarding_state: {
-        Args: { p_user_id: string }
+        Args: { p_user_id?: string }
         Returns: Json
       }
       validate_password_strength: {

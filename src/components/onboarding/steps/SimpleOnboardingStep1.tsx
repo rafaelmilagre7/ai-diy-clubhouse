@@ -86,10 +86,14 @@ export const SimpleOnboardingStep1: React.FC<SimpleOnboardingStep1Props> = ({
   };
 
   const validateForm = () => {
+    console.log('🔍 [STEP1] Validando formulário com dados:', formData);
     const newErrors: Record<string, string> = {};
 
+    // Validação mais tolerante - apenas nome e email obrigatórios
     if (!formData.name.trim()) {
       newErrors.name = 'Nome é obrigatório';
+    } else if (formData.name.trim().length < 2) {
+      newErrors.name = 'Nome deve ter pelo menos 2 caracteres';
     }
 
     if (!formData.email.trim()) {
@@ -98,24 +102,41 @@ export const SimpleOnboardingStep1: React.FC<SimpleOnboardingStep1Props> = ({
       newErrors.email = 'Email inválido';
     }
 
-    if (!formData.phone.trim()) {
-      newErrors.phone = 'WhatsApp é obrigatório';
+    // WhatsApp opcional no Step 1
+    if (formData.phone.trim() && formData.phone.length < 10) {
+      newErrors.phone = 'WhatsApp deve ter pelo menos 10 dígitos';
     }
 
-    if (!formData.state) {
-      newErrors.state = 'Estado é obrigatório';
-    }
+    // Localização opcional no Step 1 - pode ser preenchida depois
+    // if (!formData.state) {
+    //   newErrors.state = 'Estado é obrigatório';
+    // }
 
-    if (!formData.city) {
-      newErrors.city = 'Cidade é obrigatória';
-    }
+    // if (!formData.city) {
+    //   newErrors.city = 'Cidade é obrigatória';
+    // }
+
+    console.log('📋 [STEP1] Resultado da validação:', { 
+      hasErrors: Object.keys(newErrors).length > 0, 
+      errors: newErrors 
+    });
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handleNext = () => {
+    console.log('🚀 [STEP1] Tentativa de avançar - validando formulário...');
+    
     if (!validateForm()) {
+      console.warn('⚠️ [STEP1] Validação falhou:', errors);
+      
+      // Scroll para o primeiro erro
+      const firstErrorField = Object.keys(errors)[0];
+      if (firstErrorField) {
+        const element = document.querySelector(`[name="${firstErrorField}"], [data-field="${firstErrorField}"]`);
+        element?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
       return;
     }
 
@@ -138,6 +159,7 @@ export const SimpleOnboardingStep1: React.FC<SimpleOnboardingStep1Props> = ({
       }
     };
 
+    console.log('✅ [STEP1] Dados validados, enviando para próximo step:', stepData);
     onNext(stepData);
   };
 
@@ -168,6 +190,7 @@ export const SimpleOnboardingStep1: React.FC<SimpleOnboardingStep1Props> = ({
           <div>
             <Label className="text-foreground">Nome Completo *</Label>
             <Input
+              name="name"
               value={formData.name}
               onChange={(e) => handleInputChange('name', e.target.value)}
               className="mt-1 bg-background border-border text-foreground"
@@ -181,6 +204,7 @@ export const SimpleOnboardingStep1: React.FC<SimpleOnboardingStep1Props> = ({
           <div>
             <Label className="text-foreground">E-mail *</Label>
             <Input
+              name="email"
               type="email"
               value={formData.email}
               onChange={(e) => handleInputChange('email', e.target.value)}
@@ -252,6 +276,9 @@ export const SimpleOnboardingStep1: React.FC<SimpleOnboardingStep1Props> = ({
             <MapPin className="h-5 w-5 text-primary" />
             Onde você está localizado?
           </CardTitle>
+          <p className="text-sm text-muted-foreground mt-1">
+            Opcional - você pode preencher depois
+          </p>
         </CardHeader>
         <CardContent>
           <LocationSelector
