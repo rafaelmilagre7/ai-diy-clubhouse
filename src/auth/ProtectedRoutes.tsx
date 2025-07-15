@@ -3,7 +3,7 @@ import { Navigate, useLocation } from "react-router-dom";
 import { ReactNode, useEffect, useState } from "react";
 import { useAuth } from "@/contexts/auth";
 import LoadingScreen from "@/components/common/LoadingScreen";
-import { SecurityProvider } from "@/contexts/auth/SecurityContext";
+// Removido SecurityProvider - já está no App.tsx
 import { supabase } from "@/integrations/supabase/client";
 
 interface ProtectedRoutesProps {
@@ -134,9 +134,5 @@ export const ProtectedRoutes = ({ children }: ProtectedRoutesProps) => {
   }
 
   // Usuário autenticado e com onboarding completo - renderizar conteúdo protegido
-  return (
-    <SecurityProvider>
-      {children}
-    </SecurityProvider>
-  );
+  return children;
 };

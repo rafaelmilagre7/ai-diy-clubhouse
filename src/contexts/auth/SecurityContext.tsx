@@ -18,7 +18,16 @@ interface SecurityProviderProps {
 }
 
 export const SecurityProvider: React.FC<SecurityProviderProps> = ({ children }) => {
-  const { user } = useAuth();
+  // Usar try/catch para lidar com contexto não disponível durante inicialização
+  let user = null;
+  try {
+    const auth = useAuth();
+    user = auth.user;
+  } catch (error) {
+    // Se o contexto não estiver disponível, continuar sem auth
+    console.warn('SecurityProvider: AuthContext não disponível ainda, continuando sem auth');
+  }
+  
   const secureSession = useSecureSession({
     maxIdleTime: 120, // 2 horas (menos agressivo)
     checkInterval: 300, // verificar a cada 5 minutos (menos frequente)
