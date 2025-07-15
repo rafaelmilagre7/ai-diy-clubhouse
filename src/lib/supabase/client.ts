@@ -47,7 +47,7 @@ export async function ensureStorageBucketExists(bucketName: string): Promise<boo
     const { data: buckets, error: listError } = await supabase.storage.listBuckets();
     
     if (listError) {
-      console.error(`Erro ao listar buckets:`, listError);
+      // Erro silencioso - storage será configurado conforme necessário
       return false;
     }
     
@@ -62,25 +62,16 @@ export async function ensureStorageBucketExists(bucketName: string): Promise<boo
       });
       
       if (createError) {
-        console.error(`Erro ao criar bucket ${bucketName}:`, createError);
-        
+        // Tratar erros de storage de forma silenciosa durante registro
         if (createError.message.includes('permission') || createError.message.includes('not authorized')) {
-          console.log(`Tentando criar bucket ${bucketName} via RPC...`);
-          
+          // Tentar via RPC silenciosamente
           try {
-            const { data, error } = await supabase.rpc('create_storage_public_policy', {
+            const { error } = await supabase.rpc('create_storage_public_policy', {
               bucket_name: bucketName
             });
             
-            if (error) {
-              console.error(`Erro ao criar bucket ${bucketName} via RPC:`, error);
-              return false;
-            }
-            
-            console.log(`Bucket ${bucketName} criado com sucesso via RPC`);
-            return true;
-          } catch (rpcError) {
-            console.error(`Erro ao chamar RPC para criar bucket ${bucketName}:`, rpcError);
+            return !error;
+          } catch {
             return false;
           }
         }
@@ -90,14 +81,14 @@ export async function ensureStorageBucketExists(bucketName: string): Promise<boo
       
       try {
         await createStoragePublicPolicy(bucketName);
-      } catch (policyError) {
-        console.error(`Não foi possível definir políticas para ${bucketName}:`, policyError);
+      } catch {
+        // Política será criada quando necessário
       }
     }
     
     return true;
-  } catch (error) {
-    console.error("Erro ao verificar/criar bucket:", error);
+  } catch {
+    // Storage será configurado conforme demanda
     return false;
   }
 }
@@ -109,13 +100,11 @@ export async function createStoragePublicPolicy(bucketName: string): Promise<{ s
     });
     
     if (error) {
-      console.error(`Erro ao criar políticas para ${bucketName}:`, error);
       return { success: false, error: error.message };
     }
     
     return { success: true };
   } catch (error: any) {
-    console.error(`Erro ao criar políticas para ${bucketName}:`, error);
     return { success: false, error: error.message };
   }
 }

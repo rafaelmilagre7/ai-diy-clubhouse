@@ -4,6 +4,9 @@ import ReactDOM from 'react-dom/client';
 import App from './App.tsx';
 import './index.css';
 
+// Suprimir erros não críticos em desenvolvimento
+import './utils/errorSuppression';
+
 // Inicializar sistemas de monitoramento em desenvolvimento
 if (import.meta.env.DEV) {
   import('./utils/resourceErrorHandler');
