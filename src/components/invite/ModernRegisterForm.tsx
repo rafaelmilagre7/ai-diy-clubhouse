@@ -8,6 +8,7 @@ import { toast } from "@/hooks/use-toast";
 import { RateLimitGuard } from '@/components/security/RateLimitGuard';
 import { useRateLimit } from '@/hooks/security/useRateLimit';
 import { useSecurityMetrics } from '@/hooks/security/useSecurityMetrics';
+import { useOnboardingRedirect } from '@/hooks/useOnboardingRedirect';
 
 interface ModernRegisterFormProps {
   inviteToken?: string;
@@ -31,6 +32,7 @@ const ModernRegisterForm: React.FC<ModernRegisterFormProps> = ({
   const [step, setStep] = useState<'form' | 'success'>('form');
   const { checkRateLimit } = useRateLimit();
   const { logSecurityViolation } = useSecurityMetrics();
+  const { redirectToNextStep } = useOnboardingRedirect();
 
   const validatePassword = (password: string) => {
     const checks = {
@@ -302,8 +304,9 @@ const ModernRegisterForm: React.FC<ModernRegisterFormProps> = ({
             description: "Redirecionando para o onboarding...",
           });
           setTimeout(() => {
+            redirectToNextStep();
             onSuccess?.();
-          }, 800); // Mais rápido
+          }, 800);
         } else {
           console.warn('⚠️ [REGISTER] Perfil não foi criado, tentando recovery...');
           
@@ -325,6 +328,7 @@ const ModernRegisterForm: React.FC<ModernRegisterFormProps> = ({
                   description: "Tudo foi configurado automaticamente. Bem-vindo!",
                 });
                 setTimeout(() => {
+                  redirectToNextStep();
                   onSuccess?.();
                 }, 1000);
                 return;
@@ -339,6 +343,7 @@ const ModernRegisterForm: React.FC<ModernRegisterFormProps> = ({
               variant: "default",
             });
             setTimeout(() => {
+              redirectToNextStep();
               onSuccess?.();
             }, 1500);
             
@@ -350,6 +355,7 @@ const ModernRegisterForm: React.FC<ModernRegisterFormProps> = ({
               variant: "default",
             });
             setTimeout(() => {
+              redirectToNextStep();
               onSuccess?.();
             }, 2000);
           }
@@ -442,7 +448,10 @@ const ModernRegisterForm: React.FC<ModernRegisterFormProps> = ({
     });
 
     setStep('success');
-    onSuccess?.();
+    setTimeout(() => {
+      redirectToNextStep();
+      onSuccess?.();
+    }, 1000);
   };
 
   if (step === 'success') {
