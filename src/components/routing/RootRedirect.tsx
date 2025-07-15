@@ -25,12 +25,12 @@ const RootRedirect = () => {
     loading: authLoading
   });
 
-  // Circuit breaker para evitar loading infinito
+  // Circuit breaker para evitar loading infinito - timeout reduzido
   useEffect(() => {
     timeoutRef.current = window.setTimeout(() => {
       console.warn("⏰ [ROOT-REDIRECT] Timeout ativado - redirecionamento forçado");
       setForceRedirect(true);
-    }, 5000);
+    }, 3000); // Reduzido de 5000 para 3000ms
     
     return () => {
       if (timeoutRef.current) {
@@ -69,20 +69,24 @@ const RootRedirect = () => {
     return <Navigate to={roleName === 'formacao' ? '/formacao' : '/dashboard'} replace />;
   }
 
-  // VERIFICAÇÃO DO ONBOARDING - Usar hook centralizado
+  // VERIFICAÇÃO DO ONBOARDING - Detectar usuários vindos de convite
   if (profile && !profile.onboarding_completed && !location.pathname.startsWith('/onboarding')) {
+    // Verificar se vem de convite (pathname contém 'invite')
+    const isFromInvite = location.pathname.includes('/invite/') || location.state?.fromInvite;
+    
     // Prevenir loops: só redirecionar se não é a mesma rota
     if (lastPathRef.current !== location.pathname && !hasRedirected) {
-      console.log("🔄 [ROOT-REDIRECT] Onboarding obrigatório - redirecionando");
+      console.log("🔄 [ROOT-REDIRECT] Onboarding obrigatório", isFromInvite ? "(vindo de convite)" : "", "- redirecionando");
       lastPathRef.current = location.pathname;
       setHasRedirected(true);
       
-      // Usar setTimeout para evitar problemas de React strict mode
+      // Delay maior para usuários vindos de convite para garantir sincronia
+      const delay = isFromInvite ? 500 : 100;
       setTimeout(() => {
         redirectToNextStep();
-      }, 0);
+      }, delay);
       
-      return <LoadingScreen message="Redirecionando para onboarding..." />;
+      return <LoadingScreen message={isFromInvite ? "Processando convite..." : "Redirecionando para onboarding..."} />;
     }
     
     // Se já tentou redirecionar mas ainda está aqui, mostrar loading

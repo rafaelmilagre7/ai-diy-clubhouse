@@ -34,14 +34,14 @@ export const useSecurityHeaders = () => {
         document.head.appendChild(contentTypeMeta);
       }
 
-      // X-Frame-Options - DENY para maior segurança, removendo se já existe
+      // X-Frame-Options - SAMEORIGIN para permitir alguns embeds, removendo se já existe
       let frameMeta = document.querySelector('meta[http-equiv="X-Frame-Options"]') as HTMLMetaElement;
       if (frameMeta) {
         frameMeta.remove();
       }
       frameMeta = document.createElement('meta');
       frameMeta.setAttribute('http-equiv', 'X-Frame-Options');
-      frameMeta.setAttribute('content', 'DENY');
+      frameMeta.setAttribute('content', 'SAMEORIGIN');
       document.head.appendChild(frameMeta);
 
       // Referrer Policy

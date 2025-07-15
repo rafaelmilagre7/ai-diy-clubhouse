@@ -299,6 +299,7 @@ const ModernRegisterForm: React.FC<ModernRegisterFormProps> = ({
         
         if (profileCreated) {
           console.log('✅ [REGISTER] Processo completado com sucesso');
+          console.log('🎯 [REGISTER] Redirecionando para onboarding via redirectToNextStep()');
           toast({
             title: "Tudo pronto!",
             description: "Redirecionando para o onboarding...",
