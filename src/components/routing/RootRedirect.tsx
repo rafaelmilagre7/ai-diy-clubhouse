@@ -69,30 +69,10 @@ const RootRedirect = () => {
     return <Navigate to={roleName === 'formacao' ? '/formacao' : '/dashboard'} replace />;
   }
 
-  // VERIFICAÇÃO DO ONBOARDING - Detectar usuários vindos de convite
+  // VERIFICAÇÃO DO ONBOARDING - Simples e direto
   if (profile && !profile.onboarding_completed && !location.pathname.startsWith('/onboarding')) {
-    // Verificar se vem de convite (pathname contém 'invite')
-    const isFromInvite = location.pathname.includes('/invite/') || location.state?.fromInvite;
-    
-    // Prevenir loops: só redirecionar se não é a mesma rota
-    if (lastPathRef.current !== location.pathname && !hasRedirected) {
-      console.log("🔄 [ROOT-REDIRECT] Onboarding obrigatório", isFromInvite ? "(vindo de convite)" : "", "- redirecionando");
-      lastPathRef.current = location.pathname;
-      setHasRedirected(true);
-      
-      // Delay maior para usuários vindos de convite para garantir sincronia
-      const delay = isFromInvite ? 500 : 100;
-      setTimeout(() => {
-        redirectToNextStep();
-      }, delay);
-      
-      return <LoadingScreen message={isFromInvite ? "Processando convite..." : "Redirecionando para onboarding..."} />;
-    }
-    
-    // Se já tentou redirecionar mas ainda está aqui, mostrar loading
-    if (hasRedirected) {
-      return <LoadingScreen message="Processando redirecionamento..." />;
-    }
+    console.log("🔄 [ROOT-REDIRECT] Onboarding obrigatório - redirecionamento direto");
+    return <Navigate to="/onboarding" replace />;
   }
   
   // Se está na página de onboarding mas já completou, redireciona

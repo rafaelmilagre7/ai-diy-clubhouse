@@ -39,7 +39,7 @@ const LayoutProvider = memo(({ children }: { children: ReactNode }) => {
     return "Carregando layout...";
   }, [isLoading, user]);
 
-  // Verificar autenticação assim que o estado estiver pronto
+  // OTIMIZAÇÃO: Verificação mais simples e sem conflitos
   useEffect(() => {
     // Limpar qualquer timeout existente
     if (timeoutRef.current) {
@@ -56,23 +56,14 @@ const LayoutProvider = memo(({ children }: { children: ReactNode }) => {
       // Se temos usuário, marcar layout como pronto
       setLayoutReady(true);
       
-      // Verificar papel do usuário e rota atual
-      if (user && profile) {
-        const { isLearningRoute, isPathAdmin, isPathFormacao } = routeChecks;
-        
-        // Redirecionar apenas se estiver na rota errada
-        if (isAdmin && !isPathAdmin && !isPathFormacao && !isLearningRoute) {
-          navigate('/admin', { replace: true });
-        } 
-        else if (isFormacao && !isAdmin && !isPathFormacao && !isLearningRoute) {
-          navigate('/formacao', { replace: true });
-        }
-      }
+      // REMOÇÃO: Não fazer redirecionamentos automáticos aqui
+      // O RootRedirect já cuida disso de forma mais inteligente
+      
     } else {
-      // Configurar timeout para não ficar preso em carregamento infinito
+      // Timeout reduzido para não interferir no fluxo
       timeoutRef.current = window.setTimeout(() => {
         setLayoutReady(true);
-      }, 2000);
+      }, 1500); // Reduzido de 2000 para 1500ms
     }
     
     return () => {
@@ -80,7 +71,7 @@ const LayoutProvider = memo(({ children }: { children: ReactNode }) => {
         clearTimeout(timeoutRef.current);
       }
     };
-  }, [user, profile, isAdmin, isFormacao, isLoading, navigate, routeChecks]);
+  }, [user, isLoading, navigate]); // Removidas dependências desnecessárias
 
   // Renderizar com base na rota e permissões
   if (layoutReady && user) {

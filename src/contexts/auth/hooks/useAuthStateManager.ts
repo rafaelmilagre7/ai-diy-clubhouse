@@ -38,10 +38,10 @@ export const useAuthStateManager = ({
         return;
       }
 
-      // OTIMIZAÇÃO 2: Timeout reduzido para 2 segundos
+      // OTIMIZAÇÃO 2: Timeout ainda mais reduzido para não bloquear
       const sessionPromise = validateUserSession();
       const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error("Auth session timeout")), 2000) // Reduzido de 4s para 2s
+        setTimeout(() => reject(new Error("Auth session timeout")), 1500) // Reduzido para 1.5s
       );
 
       let sessionResult;
@@ -108,13 +108,13 @@ export const useAuthStateManager = ({
         } catch (profileTimeoutError) {
           logger.warn('[AUTH-STATE] Timeout no perfil - tentando fallback direto');
           
-          // FALLBACK DIRETO: Tentar buscar direto do banco
+          // FALLBACK DIRETO: Buscar direto sem função helper
           try {
-            const { data: directProfile } = await supabase
+            const { data: directProfile, error: directError } = await supabase
               .from('profiles')
               .select(`
                 *,
-                user_roles:role_id (
+                user_roles!inner (
                   id,
                   name,
                   description,
@@ -122,7 +122,11 @@ export const useAuthStateManager = ({
                 )
               `)
               .eq('id', user.id)
-              .single();
+              .maybeSingle(); // Usar maybeSingle para evitar erros se não existir
+              
+            if (directError) {
+              throw directError;
+            }
               
             profile = directProfile as UserProfile | null;
             logger.info('[AUTH-STATE] ✅ Perfil carregado via fallback direto');
