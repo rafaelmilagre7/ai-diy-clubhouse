@@ -88,9 +88,19 @@ export function useInviteChannelService() {
     email
   }: WhatsAppInviteData): Promise<SendInviteResponse> => {
     try {
-      console.log("📱 [DEBUG] Iniciando envio WhatsApp:", { phone, inviteUrl, roleName, email });
+      console.log("📱 [WHATSAPP-SEND] Iniciando envio:", { 
+        phone: phone?.substring(0, 5) + '***', 
+        hasUrl: !!inviteUrl, 
+        roleName, 
+        email: email?.substring(0, 5) + '***'
+      });
       
-      const { data, error } = await supabase.functions.invoke('send-whatsapp-invite', {
+      // Timeout para a chamada da edge function
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('Timeout na chamada da edge function (45s)')), 45000)
+      })
+      
+      const invokePromise = supabase.functions.invoke('send-whatsapp-invite', {
         body: {
           phone,
           inviteUrl,
@@ -101,21 +111,31 @@ export function useInviteChannelService() {
           inviteId,
           email
         }
+      })
+      
+      const { data, error } = await Promise.race([invokePromise, timeoutPromise]) as any
+      
+      console.log("📱 [WHATSAPP-SEND] Resposta recebida:", { 
+        hasData: !!data, 
+        hasError: !!error,
+        dataSuccess: data?.success,
+        errorMessage: error?.message 
       });
       
-      console.log("📱 [DEBUG] Resposta da função WhatsApp:", { data, error });
-      
       if (error) {
-        console.error('❌ [DEBUG] Erro da função:', error);
-        throw error;
+        console.error('❌ [WHATSAPP-SEND] Erro da edge function:', error);
+        throw new Error(`Erro da função: ${error.message}`)
       }
       
-      if (!data.success) {
-        console.error('❌ [DEBUG] Função reportou falha:', data);
-        throw new Error(data.message || data.error);
+      if (!data || !data.success) {
+        console.error('❌ [WHATSAPP-SEND] Função reportou falha:', data);
+        throw new Error(data?.message || data?.error || 'Resposta inválida da função')
       }
       
-      console.log("✅ [DEBUG] WhatsApp enviado com sucesso:", data);
+      console.log("✅ [WHATSAPP-SEND] Sucesso confirmado:", {
+        messageId: data.whatsappId,
+        phone: data.phone?.substring(0, 5) + '***'
+      });
       
       return {
         success: true,
@@ -125,12 +145,32 @@ export function useInviteChannelService() {
         method: data.method,
         channel: 'whatsapp'
       };
+      
     } catch (err: any) {
-      console.error('❌ [DEBUG] Erro completo no envio WhatsApp:', err);
+      console.error('❌ [WHATSAPP-SEND] Erro fatal:', {
+        message: err.message,
+        stack: err.stack?.split('\n')[0] // Apenas primeira linha do stack
+      });
+      
+      // Identificar tipo de erro para melhor feedback
+      let errorMessage = 'Erro ao enviar WhatsApp'
+      let suggestion = 'Verifique o número e tente novamente'
+      
+      if (err.message?.includes('Timeout')) {
+        errorMessage = 'Timeout no envio do WhatsApp'
+        suggestion = 'Servidor demorou muito para responder - tente novamente'
+      } else if (err.message?.includes('Failed to send a request')) {
+        errorMessage = 'Falha na comunicação com o servidor'
+        suggestion = 'Problema de conectividade - verifique sua conexão'
+      } else if (err.message?.includes('Credenciais')) {
+        errorMessage = 'Configuração do WhatsApp incompleta'
+        suggestion = 'Entre em contato com o administrador'
+      }
+      
       return {
         success: false,
-        message: 'Erro ao enviar WhatsApp',
-        error: err.message,
+        message: errorMessage,
+        error: `${err.message} - ${suggestion}`,
         channel: 'whatsapp'
       };
     }

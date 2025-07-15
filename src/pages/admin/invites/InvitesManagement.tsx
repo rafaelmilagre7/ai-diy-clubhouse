@@ -5,7 +5,9 @@ import { usePermissions } from "@/hooks/auth/usePermissions";
 import { useInvitesList } from "@/hooks/admin/invites/useInvitesList";
 import SimpleCreateInviteDialog from "./components/SimpleCreateInviteDialog";
 import SimpleInvitesTab from "./components/SimpleInvitesTab";
+import { WhatsAppDebugPanel } from "@/components/admin/WhatsAppDebugPanel";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const InvitesManagement = () => {
   useDocumentTitle("Gerenciar Convites | Admin");
@@ -46,21 +48,34 @@ const InvitesManagement = () => {
         </div>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Lista de Convites</CardTitle>
-          <CardDescription>
-            Gerencie todos os convites enviados para novos usuários
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <SimpleInvitesTab
-            invites={invites}
-            loading={invitesLoading}
-            onInvitesChange={handleInvitesChange}
-          />
-        </CardContent>
-      </Card>
+      <Tabs defaultValue="invites" className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="invites">Lista de Convites</TabsTrigger>
+          <TabsTrigger value="whatsapp-debug">Debug WhatsApp</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="invites" className="mt-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Lista de Convites</CardTitle>
+              <CardDescription>
+                Gerencie todos os convites enviados para novos usuários
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <SimpleInvitesTab
+                invites={invites}
+                loading={invitesLoading}
+                onInvitesChange={handleInvitesChange}
+              />
+            </CardContent>
+          </Card>
+        </TabsContent>
+        
+        <TabsContent value="whatsapp-debug" className="mt-6">
+          <WhatsAppDebugPanel />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };

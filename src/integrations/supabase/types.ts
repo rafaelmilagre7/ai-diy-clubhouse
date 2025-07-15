@@ -5692,6 +5692,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: Json
       }
+      check_whatsapp_config: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
       clean_user_onboarding_data: {
         Args: { p_user_id: string }
         Returns: Json

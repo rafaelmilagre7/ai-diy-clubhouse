@@ -135,17 +135,38 @@ serve(async (req) => {
     console.log('📱 [WHATSAPP] Phone Number ID:', phoneNumberId)
     console.log('📱 [WHATSAPP] Template data:', JSON.stringify(templateData, null, 2))
 
-    const whatsappResponse = await fetch(
-      `https://graph.facebook.com/v18.0/${phoneNumberId}/messages`,
-      {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${whatsappToken}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(templateData),
+    // Criar timeout e abort controller para evitar travamentos
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), 30000) // 30 segundos
+
+    let whatsappResponse
+    try {
+      whatsappResponse = await fetch(
+        `https://graph.facebook.com/v18.0/${phoneNumberId}/messages`,
+        {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${whatsappToken}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(templateData),
+          signal: controller.signal
+        }
+      )
+    } catch (fetchError: any) {
+      clearTimeout(timeoutId)
+      
+      // Verificar se foi timeout ou erro de rede
+      if (fetchError.name === 'AbortError') {
+        console.error('❌ [WHATSAPP] Timeout na requisição (30s)')
+        throw new Error('Timeout na API do WhatsApp - tente novamente')
       }
-    )
+      
+      console.error('❌ [WHATSAPP] Erro de conectividade:', fetchError.message)
+      throw new Error(`Erro de conectividade: ${fetchError.message}`)
+    } finally {
+      clearTimeout(timeoutId)
+    }
 
     const whatsappResult = await whatsappResponse.json()
 
@@ -217,8 +238,6 @@ serve(async (req) => {
         // Não falhar o envio por causa das estatísticas
       }
     }
-
-    const messageId = whatsappResult.messages?.[0]?.id
 
     console.log('✅ Convite enviado via WhatsApp com sucesso! Message ID:', messageId)
 
