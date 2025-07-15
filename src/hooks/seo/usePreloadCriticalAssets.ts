@@ -27,35 +27,39 @@ export const usePreloadCriticalAssets = () => {
       document.head.appendChild(link);
     };
 
-    // Route-specific preloading
+    // Desabilitar preload nas páginas de onboarding para reduzir erros de console
+    if (location.pathname.includes('/onboarding/')) {
+      return;
+    }
+
+    // Route-specific preloading - apenas para dashboard e home
     switch (location.pathname) {
       case '/':
       case '/dashboard':
-        // Verificar se recursos existem antes de preload
-        try {
-          // Apenas preload se o recurso existir
-          fetch('/lovable-uploads/6bdb44c0-b115-45bc-977d-4284836453c2.png', { method: 'HEAD' })
-            .then(response => {
-              if (response.ok) {
-                preloadImage('/lovable-uploads/6bdb44c0-b115-45bc-977d-4284836453c2.png', 'high');
-              }
-            })
-            .catch(() => {
-              console.log('[PreloadAssets] Avatar image not found, skipping preload');
+        // Verificar se recursos existem antes de preload com timeout curto
+        const checkAndPreload = async (url: string, priority: 'high' | 'low' = 'high') => {
+          try {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 1000); // 1s timeout
+            
+            const response = await fetch(url, { 
+              method: 'HEAD',
+              signal: controller.signal
             });
+            
+            clearTimeout(timeoutId);
+            
+            if (response.ok) {
+              preloadImage(url, priority);
+            }
+          } catch (error) {
+            // Silenciar erros de preload para não poluir console
+          }
+        };
 
-          fetch('/lovable-uploads/d847c892-aafa-4cc1-92c6-110aff1d9755.png', { method: 'HEAD' })
-            .then(response => {
-              if (response.ok) {
-                preloadImage('/lovable-uploads/d847c892-aafa-4cc1-92c6-110aff1d9755.png', 'low');
-              }
-            })
-            .catch(() => {
-              console.log('[PreloadAssets] Logo image not found, skipping preload');
-            });
-        } catch (error) {
-          console.log('[PreloadAssets] Error checking resources:', error);
-        }
+        // Fazer verificações em paralelo sem await para não bloquear
+        checkAndPreload('/lovable-uploads/6bdb44c0-b115-45bc-977d-4284836453c2.png', 'high');
+        checkAndPreload('/lovable-uploads/d847c892-aafa-4cc1-92c6-110aff1d9755.png', 'low');
         break;
       
       case '/tools':

@@ -12,6 +12,10 @@ if (import.meta.env.DEV) {
 // Interceptar console em produção ANTES de tudo
 import './utils/productionSafeConsole';
 import './utils/buildSafeLogger';
+import { consoleManager } from './utils/consoleManager';
+
+// Inicializar gerenciador de console
+consoleManager.init();
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
