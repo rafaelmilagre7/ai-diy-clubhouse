@@ -52,7 +52,7 @@ export interface OnboardingFinalData {
     ai_main_challenge?: string;
   };
   
-  goals: {
+  goals_info: {
     main_objective?: string;
     area_to_impact?: string;
     expected_result_90_days?: string;
@@ -124,7 +124,7 @@ export const useCleanOnboarding = () => {
     location_info: {}, // Compatibilidade
     business_info: {},
     ai_experience: {},
-    goals: {},
+    goals_info: {},
     preferences: {},
     personalization: {}, // Compatibilidade
     current_step: 1,
@@ -178,7 +178,7 @@ export const useCleanOnboarding = () => {
           },
           business_info: onboardingData.business_info || {},
           ai_experience: onboardingData.ai_experience || {},
-          goals: onboardingData.goals || {}, // Campo correto da tabela
+          goals_info: onboardingData.goals_info || {}, // Campo correto da tabela
           preferences: onboardingData.personalization || {}, // Campo correto da tabela
           personalization: onboardingData.personalization || {}, // Compatibilidade
           completed_steps: onboardingData.completed_steps || [],
@@ -279,7 +279,7 @@ export const useCleanOnboarding = () => {
           break;
         case 4:
           if (stepData.goals_info) {
-            updatedData.goals = { ...updatedData.goals, ...stepData.goals_info };
+            updatedData.goals_info = { ...updatedData.goals_info, ...stepData.goals_info };
           }
           break;
         case 5:
@@ -310,7 +310,7 @@ export const useCleanOnboarding = () => {
           personal_info: updatedData.personal_info,
           business_info: updatedData.business_info,
           ai_experience: updatedData.ai_experience,
-          goals: updatedData.goals, // Campo correto da tabela
+          goals_info: updatedData.goals_info, // Campo correto da tabela
           personalization: updatedData.preferences, // Campo correto da tabela
           company_name: updatedData.company_name,
           annual_revenue: updatedData.annual_revenue,
