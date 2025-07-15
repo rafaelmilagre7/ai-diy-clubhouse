@@ -130,15 +130,22 @@ const InviteDebug = () => {
     try {
       console.log('🎯 [TESTE TEMPLATE] Iniciando teste completo de convite...');
       
-      // Passo 1: Buscar role_id de 'member' (ou usar um padrão)
+      // Passo 1: Buscar role_id de 'membro_club' (ou usar um padrão)
       const { data: roles, error: rolesError } = await supabase
         .from('user_roles')
-        .select('id')
-        .eq('name', 'member')
+        .select('id, name')
+        .in('name', ['membro_club', 'formacao', 'member'])
         .limit(1);
 
       if (rolesError || !roles?.length) {
-        throw new Error('Role "member" não encontrado');
+        // Listar roles disponíveis para debug
+        const { data: allRoles } = await supabase
+          .from('user_roles')
+          .select('id, name')
+          .limit(10);
+        
+        const availableRoles = allRoles?.map(r => r.name).join(', ') || 'nenhum';
+        throw new Error(`Role padrão não encontrado. Roles disponíveis: ${availableRoles}`);
       }
 
       const roleId = roles[0].id;
