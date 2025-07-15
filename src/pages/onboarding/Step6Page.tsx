@@ -30,7 +30,7 @@ const OnboardingStep6Page: React.FC = () => {
     if (data.user_id) {
       checkAccess();
     }
-  }, [data.is_completed, data.user_id, navigate]); // Dependências estáveis
+  }, [data.is_completed, data.user_id, navigate]); // Dependências estáveis, sem canAccessStep
 
   const handleNext = async (stepData?: any) => {
     console.log('➡️ [STEP6] handleNext chamado - Finalizando onboarding');

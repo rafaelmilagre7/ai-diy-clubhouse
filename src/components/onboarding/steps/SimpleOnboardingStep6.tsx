@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -21,7 +21,7 @@ interface SimpleOnboardingStep6Props {
   onDataChange?: (data: any) => void;
 }
 
-export const SimpleOnboardingStep6: React.FC<SimpleOnboardingStep6Props> = ({
+export const SimpleOnboardingStep6 = React.memo<SimpleOnboardingStep6Props>(({
   data,
   onNext,
   isLoading = false
@@ -42,7 +42,7 @@ export const SimpleOnboardingStep6: React.FC<SimpleOnboardingStep6Props> = ({
     setConfetti(newConfetti);
   }, []);
 
-  const getPersonalizedSummary = () => {
+  const getPersonalizedSummary = useCallback(() => {
     const insights = [];
     
     if (data.personal_info?.position && data.business_info?.business_sector) {
@@ -62,9 +62,9 @@ export const SimpleOnboardingStep6: React.FC<SimpleOnboardingStep6Props> = ({
     }
     
     return insights.join(', ');
-  };
+  }, [data.personal_info?.position, data.business_info?.business_sector, data.ai_experience?.aiKnowledgeLevel, data.goals_info?.mainObjective]);
 
-  const getRecommendationPreview = () => {
+  const getRecommendationPreview = useCallback(() => {
     const recommendations = [];
     
     if (data.personalization?.weeklyLearningTime === '1-2h') {
@@ -86,17 +86,19 @@ export const SimpleOnboardingStep6: React.FC<SimpleOnboardingStep6Props> = ({
     }
     
     return recommendations;
-  };
+  }, [data.personalization?.weeklyLearningTime, data.goals_info?.urgencyLevel, data.personalization?.wantsNetworking]);
 
-  const handleComplete = () => {
+  const handleComplete = useCallback(() => {
     // Marcar onboarding como completo
     onNext({ is_completed: true });
-  };
+  }, [onNext]);
+
+  const memoizedConfetti = useMemo(() => confetti, [confetti]);
 
   return (
     <div className="relative min-h-screen flex items-center justify-center p-4">
       {/* Confetti Animation */}
-      {confetti.map(({ id, left, delay }) => (
+      {memoizedConfetti.map(({ id, left, delay }) => (
         <motion.div
           key={id}
           className="absolute w-3 h-3 bg-gradient-to-r from-primary to-accent rounded-full"
@@ -364,4 +366,4 @@ export const SimpleOnboardingStep6: React.FC<SimpleOnboardingStep6Props> = ({
       </div>
     </div>
   );
-};
+});
