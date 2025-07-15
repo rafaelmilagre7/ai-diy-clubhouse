@@ -3,7 +3,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Briefcase } from 'lucide-react';
+import { Briefcase, SkipForward } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 interface SimpleOnboardingStep2Props {
   data: any;
@@ -12,7 +13,7 @@ interface SimpleOnboardingStep2Props {
   onDataChange?: (data: any) => void;
 }
 
-export const SimpleOnboardingStep2Fixed = React.memo(forwardRef<{ getData: () => any; isValid: () => boolean }, SimpleOnboardingStep2Props>(({
+export const SimpleOnboardingStep2UltraSimple = React.memo(forwardRef<{ getData: () => any; isValid: () => boolean }, SimpleOnboardingStep2Props>(({
   data,
   onNext,
   isLoading = false,
@@ -21,14 +22,8 @@ export const SimpleOnboardingStep2Fixed = React.memo(forwardRef<{ getData: () =>
   const [formData, setFormData] = useState({
     companyName: data.business_info?.companyName || '',
     position: data.business_info?.position || '',
-    businessSector: data.business_info?.businessSector || '',
-    companySize: data.business_info?.companySize || '',
-    annualRevenue: data.business_info?.annualRevenue || '',
-    companyWebsite: data.business_info?.companyWebsite || ''
+    businessSector: data.business_info?.businessSector || ''
   });
-
-  const [errors, setErrors] = useState<Record<string, string>>({});
-  const getFieldError = (field: string) => errors[field];
 
   const handleInputChange = useCallback((field: string, value: string) => {
     const newFormData = {
@@ -37,37 +32,31 @@ export const SimpleOnboardingStep2Fixed = React.memo(forwardRef<{ getData: () =>
     };
     setFormData(newFormData);
     
-    // Auto-save com debounce
+    // Auto-save
     if (onDataChange) {
       onDataChange({ business_info: newFormData });
     }
-    
-    // Limpar erro do campo quando usuário interagir
-    if (errors[field]) {
-      setErrors(prev => ({
-        ...prev,
-        [field]: ''
-      }));
-    }
-  }, [formData, onDataChange, errors]);
+  }, [formData, onDataChange]);
 
-  // CORREÇÃO FINAL: Validação ultra tolerante - sempre permite prosseguir
-  const validateForm = useCallback(() => {
-    // Sempre retorna true - vamos permitir que o usuário prossiga mesmo com dados vazios
-    // A personalização virá dos próximos steps
-    setErrors({});
-    return true;
-  }, []);
+  // SEMPRE válido - permite prosseguir em qualquer situação
+  const validateForm = useCallback(() => true, []);
 
   const handleNext = () => {
-    if (!validateForm()) {
-      return;
-    }
-    // Enviar dados estruturados para o wizard
     onNext({ business_info: formData });
   };
 
-  // Expor funções através da ref com memoização
+  const handleSkip = () => {
+    // Pular completamente com dados mínimos
+    onNext({ 
+      business_info: { 
+        companyName: 'Não informado',
+        position: 'Não informado',
+        businessSector: 'outros'
+      }
+    });
+  };
+
+  // Expor funções através da ref
   useImperativeHandle(ref, () => ({
     getData: () => ({ business_info: formData }),
     isValid: validateForm
@@ -81,104 +70,96 @@ export const SimpleOnboardingStep2Fixed = React.memo(forwardRef<{ getData: () =>
           <Briefcase className="h-8 w-8 text-primary" />
         </div>
         <h2 className="text-3xl font-bold text-foreground">
-          Contexto Empresarial
+          Contexto Profissional
         </h2>
         <p className="text-muted-foreground text-lg">
-          Para personalizar seu aprendizado, queremos conhecer seu ambiente de trabalho
+          Nos ajude a personalizar sua experiência (opcional)
         </p>
-        <div className="text-sm text-muted-foreground bg-muted/50 p-3 rounded-lg">
-          💡 Todos os campos são opcionais - você pode pular e preencher depois
+        <div className="text-sm text-success bg-success/10 p-3 rounded-lg border border-success/20">
+          ✅ Você pode pular esta etapa e preencher depois
         </div>
       </div>
 
-      {/* Informações Empresariais */}
+      {/* Formulário Ultra Simples */}
       <Card className="bg-card border border-border">
         <CardHeader>
           <CardTitle className="text-xl text-foreground flex items-center gap-2">
             <Briefcase className="h-5 w-5 text-primary" />
-            Informações Profissionais
+            Informações Rápidas
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          {/* Nome da Empresa */}
+          {/* Nome da Empresa - Ultra simples */}
           <div className="space-y-2">
             <Label htmlFor="companyName" className="text-foreground font-medium">
-              Nome da Empresa/Organização <span className="text-muted-foreground">(opcional)</span>
+              Onde você trabalha? <span className="text-muted-foreground">(opcional)</span>
             </Label>
             <Input
               id="companyName"
               value={formData.companyName}
               onChange={(e) => handleInputChange('companyName', e.target.value)}
-              placeholder="Digite o nome da sua empresa..."
+              placeholder="Nome da empresa ou 'Autônomo'"
               className="bg-background border-border text-foreground"
             />
-            {getFieldError('companyName') && (
-              <p className="text-destructive text-sm">{getFieldError('companyName')}</p>
-            )}
           </div>
 
-          {/* Posição/Cargo */}
+          {/* Posição - Ultra simples */}
           <div className="space-y-2">
             <Label htmlFor="position" className="text-foreground font-medium">
-              Sua Posição/Cargo <span className="text-muted-foreground">(opcional)</span>
+              Qual seu cargo? <span className="text-muted-foreground">(opcional)</span>
             </Label>
             <Input
               id="position"
               value={formData.position}
               onChange={(e) => handleInputChange('position', e.target.value)}
-              placeholder="Ex: Gerente, Analista, CEO, Empreendedor..."
+              placeholder="Ex: Gerente, Analista, CEO, Freelancer..."
               className="bg-background border-border text-foreground"
             />
           </div>
 
-          {/* Setor de Atuação - Opcional */}
+          {/* Setor - Ultra simples */}
           <div className="space-y-2">
             <Label htmlFor="businessSector" className="text-foreground font-medium">
-              Setor de Atuação <span className="text-muted-foreground">(opcional)</span>
+              Qual sua área? <span className="text-muted-foreground">(opcional)</span>
             </Label>
             <Select 
               value={formData.businessSector} 
               onValueChange={(value) => handleInputChange('businessSector', value)}
             >
               <SelectTrigger className="bg-background border-border text-foreground">
-                <SelectValue placeholder="Selecione seu setor..." />
+                <SelectValue placeholder="Escolha sua área..." />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="tecnologia">Tecnologia</SelectItem>
-                <SelectItem value="marketing-digital">Marketing Digital</SelectItem>
+                <SelectItem value="marketing">Marketing</SelectItem>
+                <SelectItem value="vendas">Vendas</SelectItem>
                 <SelectItem value="financeiro">Financeiro</SelectItem>
                 <SelectItem value="saude">Saúde</SelectItem>
                 <SelectItem value="educacao">Educação</SelectItem>
                 <SelectItem value="consultoria">Consultoria</SelectItem>
                 <SelectItem value="varejo">Varejo</SelectItem>
                 <SelectItem value="servicos">Serviços</SelectItem>
+                <SelectItem value="juridico">Jurídico</SelectItem>
+                <SelectItem value="recursos-humanos">RH</SelectItem>
                 <SelectItem value="outros">Outros</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
-          {/* Porte da Empresa - Opcional */}
-          <div className="space-y-2">
-            <Label htmlFor="companySize" className="text-foreground font-medium">
-              Porte da Empresa <span className="text-muted-foreground">(opcional)</span>
-            </Label>
-            <Select 
-              value={formData.companySize} 
-              onValueChange={(value) => handleInputChange('companySize', value)}
+          {/* Botão Pular Visível */}
+          <div className="pt-4 border-t border-border">
+            <Button 
+              variant="outline" 
+              onClick={handleSkip}
+              className="w-full gap-2"
+              type="button"
             >
-              <SelectTrigger className="bg-background border-border text-foreground">
-                <SelectValue placeholder="Selecione o porte da empresa" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="1">1 funcionário</SelectItem>
-                <SelectItem value="2-5">2-5 funcionários</SelectItem>
-                <SelectItem value="6-10">6-10 funcionários</SelectItem>
-                <SelectItem value="11-25">11-25 funcionários</SelectItem>
-                <SelectItem value="26-50">26-50 funcionários</SelectItem>
-                <SelectItem value="51-100">51-100 funcionários</SelectItem>
-                <SelectItem value="101+">101+ funcionários</SelectItem>
-              </SelectContent>
-            </Select>
+              <SkipForward className="h-4 w-4" />
+              Pular esta etapa
+            </Button>
+            <p className="text-xs text-muted-foreground text-center mt-2">
+              Você pode preencher essas informações depois no seu perfil
+            </p>
           </div>
         </CardContent>
       </Card>
@@ -186,4 +167,4 @@ export const SimpleOnboardingStep2Fixed = React.memo(forwardRef<{ getData: () =>
   );
 }));
 
-SimpleOnboardingStep2Fixed.displayName = 'SimpleOnboardingStep2Fixed';
+SimpleOnboardingStep2UltraSimple.displayName = 'SimpleOnboardingStep2UltraSimple';
