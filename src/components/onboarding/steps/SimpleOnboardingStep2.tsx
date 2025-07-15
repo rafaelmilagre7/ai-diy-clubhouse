@@ -33,10 +33,17 @@ export const SimpleOnboardingStep2 = forwardRef<{ getData: () => any; isValid: (
   const getFieldError = (field: string) => errors[field];
 
   const handleInputChange = (field: string, value: string) => {
-    setFormData(prev => ({
-      ...prev,
+    const newFormData = {
+      ...formData,
       [field]: value
-    }));
+    };
+    
+    setFormData(newFormData);
+
+    // Notificar mudanças para auto-save
+    if (onDataChange) {
+      onDataChange(newFormData);
+    }
 
     // Limpar erro do campo quando usuário interagir
     if (errors[field]) {

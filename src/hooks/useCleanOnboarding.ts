@@ -3,6 +3,8 @@ import { useAuth } from '@/contexts/auth';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
+import { useOnboardingPersistence } from './useOnboardingPersistence';
+import { debugOnboarding } from '@/utils/onboardingDebug';
 
 // Tipos limpos e corretos baseados na tabela onboarding_final
 export interface OnboardingFinalData {
@@ -117,6 +119,7 @@ export interface OnboardingFinalData {
 export const useCleanOnboarding = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { saveToLocal, loadFromLocal, clearLocal, hasNewerLocalData } = useOnboardingPersistence(user?.id);
   
   const [data, setData] = useState<OnboardingFinalData>({
     user_id: user?.id || '',
@@ -135,6 +138,7 @@ export const useCleanOnboarding = () => {
   
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [dataRestored, setDataRestored] = useState(false);
 
   // Carregar dados na inicialização
   useEffect(() => {
@@ -153,6 +157,10 @@ export const useCleanOnboarding = () => {
     console.log('🔍 [CLEAN-ONBOARDING] Carregando dados para usuário:', user.id);
 
     try {
+      // 1. Tentar recuperar dados locais primeiro
+      const localData = loadFromLocal();
+      
+      // 2. Buscar dados do servidor
       const { data: onboardingData, error } = await supabase
         .from('onboarding_final')
         .select('*')
@@ -160,13 +168,24 @@ export const useCleanOnboarding = () => {
         .maybeSingle();
 
       if (error) {
-        console.error('❌ [CLEAN-ONBOARDING] Erro ao carregar:', error);
+        debugOnboarding.logError('loadData', error, { userId: user.id });
+        
+        // Se erro no servidor mas tem dados locais, usar os locais
+        if (localData) {
+          console.log('🔄 [CLEAN-ONBOARDING] Usando dados locais devido ao erro do servidor');
+          setData(localData);
+          setDataRestored(true);
+          toast({
+            title: "⚠️ Dados restaurados",
+            description: "Suas informações foram recuperadas do cache local.",
+          });
+          return;
+        }
         throw error;
       }
 
       if (onboardingData) {
-        console.log('✅ [CLEAN-ONBOARDING] Dados carregados:', onboardingData);
-        setData({
+        const serverData = {
           ...onboardingData,
           // Garantir estruturas JSONB válidas
           personal_info: onboardingData.personal_info || {},
@@ -184,22 +203,64 @@ export const useCleanOnboarding = () => {
           completed_steps: onboardingData.completed_steps || [],
           time_per_step: onboardingData.time_per_step || {},
           abandonment_points: onboardingData.abandonment_points || []
-        });
+        };
+
+        // 3. Verificar se dados locais são mais recentes
+        if (localData && hasNewerLocalData(serverData)) {
+          console.log('⚡ [CLEAN-ONBOARDING] Dados locais mais recentes, priorizando...');
+          setData(localData);
+          setDataRestored(true);
+          
+          toast({
+            title: "📱 Dados locais recuperados",
+            description: "Suas alterações mais recentes foram restauradas automaticamente.",
+          });
+        } else {
+          console.log('✅ [CLEAN-ONBOARDING] Dados do servidor carregados');
+          setData(serverData);
+        }
       } else {
-        console.log('📭 [CLEAN-ONBOARDING] Nenhum dado encontrado, inicializando...');
-        await initializeOnboarding();
+        // 4. Se não há dados no servidor, verificar se há locais
+        if (localData) {
+          console.log('🔄 [CLEAN-ONBOARDING] Usando dados locais - servidor vazio');
+          setData(localData);
+          setDataRestored(true);
+          
+          toast({
+            title: "📱 Dados restaurados",
+            description: "Suas informações preenchidas foram recuperadas.",
+          });
+        } else {
+          console.log('📭 [CLEAN-ONBOARDING] Nenhum dado encontrado, inicializando...');
+          await initializeOnboarding();
+        }
       }
     } catch (error) {
       console.error('❌ [CLEAN-ONBOARDING] Erro ao carregar dados:', error);
-      toast({
-        title: "Erro ao carregar",
-        description: "Não foi possível carregar seus dados. Tente novamente.",
-        variant: "destructive",
-      });
+      
+      // Fallback para dados locais em caso de erro
+      const localData = loadFromLocal();
+      if (localData) {
+        console.log('🆘 [CLEAN-ONBOARDING] Fallback para dados locais');
+        setData(localData);
+        setDataRestored(true);
+        
+        toast({
+          title: "⚠️ Dados recuperados offline",
+          description: "Suas informações foram recuperadas do cache local.",
+          variant: "default",
+        });
+      } else {
+        toast({
+          title: "Erro ao carregar",
+          description: "Não foi possível carregar seus dados. Tente novamente.",
+          variant: "destructive",
+        });
+      }
     } finally {
       setIsLoading(false);
     }
-  }, [user?.id]);
+  }, [user?.id, loadFromLocal, hasNewerLocalData]);
 
   const initializeOnboarding = useCallback(async () => {
     if (!user?.id) return;
@@ -226,11 +287,19 @@ export const useCleanOnboarding = () => {
 
   const updateData = useCallback((stepData: Partial<OnboardingFinalData>) => {
     console.log('🔄 [CLEAN-ONBOARDING] Atualizando dados locais:', stepData);
-    setData(prev => ({
-      ...prev,
-      ...stepData
-    }));
-  }, []);
+    setData(prev => {
+      const newData = {
+        ...prev,
+        ...stepData,
+        updated_at: new Date().toISOString() // Marcar como atualizado localmente
+      };
+      
+      // Salvar automaticamente no localStorage
+      saveToLocal(newData);
+      
+      return newData;
+    });
+  }, [saveToLocal]);
 
   const saveAndNavigate = useCallback(async (stepData: any, currentStep: number, targetStep: number) => {
     console.log('💾 [CLEAN-ONBOARDING] Salvando e navegando...', { stepData, currentStep, targetStep });
@@ -330,12 +399,20 @@ export const useCleanOnboarding = () => {
         });
 
       if (error) {
-        console.error('❌ [CLEAN-ONBOARDING] Erro ao salvar:', error);
+        debugOnboarding.logError('saveAndNavigate', error, { 
+          stepData, 
+          currentStep, 
+          targetStep,
+          updatedData: JSON.stringify(updatedData).slice(0, 500) + '...'
+        });
         throw error;
       }
 
       console.log('✅ [CLEAN-ONBOARDING] Dados salvos com sucesso');
       setData(updatedData);
+      
+      // Salvar no localStorage após sucesso no servidor
+      saveToLocal(updatedData);
       
       toast({
         title: "Dados salvos! ✅",
@@ -346,7 +423,8 @@ export const useCleanOnboarding = () => {
       if (targetStep <= 6) {
         navigate(`/onboarding/step/${targetStep}`);
       } else {
-        // Onboarding concluído
+        // Onboarding concluído - limpar dados locais
+        clearLocal();
         toast({
           title: "Onboarding concluído! 🎉",
           description: "Bem-vindo(a) à nossa plataforma!",
@@ -367,7 +445,7 @@ export const useCleanOnboarding = () => {
     } finally {
       setIsSaving(false);
     }
-  }, [data, isSaving, user?.id, navigate]);
+  }, [data, isSaving, user?.id, navigate, saveToLocal, clearLocal]);
 
   const canAccessStep = useCallback((step: number) => {
     console.log('🔐 [CLEAN-ONBOARDING] Verificando acesso ao step:', step, {
@@ -395,6 +473,18 @@ export const useCleanOnboarding = () => {
     return canAccess;
   }, [data.is_completed, data.current_step, data.completed_steps]);
 
+  // Auto-save periódico (a cada 30 segundos)
+  useEffect(() => {
+    if (!data.user_id || isLoading) return;
+    
+    const interval = setInterval(() => {
+      console.log('⏰ [CLEAN-ONBOARDING] Auto-save periódico');
+      saveToLocal(data);
+    }, 30000); // 30 segundos
+
+    return () => clearInterval(interval);
+  }, [data, isLoading, saveToLocal]);
+
   return {
     data,
     updateData,
@@ -404,6 +494,7 @@ export const useCleanOnboarding = () => {
     isSaving,
     currentStep: data.current_step,
     completedSteps: data.completed_steps,
-    isCompleted: data.is_completed
+    isCompleted: data.is_completed,
+    dataRestored // Indica se dados foram restaurados do cache
   };
 };

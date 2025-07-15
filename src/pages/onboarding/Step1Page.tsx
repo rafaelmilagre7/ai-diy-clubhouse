@@ -3,11 +3,12 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { OnboardingLayout } from '@/components/layout/OnboardingLayout';
 import { SimpleOnboardingStep1 } from '@/components/onboarding/steps/SimpleOnboardingStep1';
 import { SimpleStepNavigation } from '@/components/onboarding/SimpleStepNavigation';
+import { DataRestoreNotification } from '@/components/onboarding/DataRestoreNotification';
 import { useOnboarding } from '@/hooks/useOnboarding';
 
 const OnboardingStep1Page: React.FC = () => {
   const navigate = useNavigate();
-  const { data, updateData, saveAndNavigate, canAccessStep, isSaving } = useOnboarding();
+  const { data, updateData, saveAndNavigate, canAccessStep, isSaving, dataRestored } = useOnboarding();
 
   // Verificar se pode acessar esta etapa ou se deve redirecionar
   useEffect(() => {
@@ -50,11 +51,16 @@ const OnboardingStep1Page: React.FC = () => {
   const stepProps = {
     data,
     onNext: handleNext,
-    isLoading: isSaving
+    isLoading: isSaving,
+    onDataChange: (stepData: any) => {
+      // Auto-save contínuo quando dados mudarem
+      updateData(stepData);
+    }
   };
 
   return (
     <OnboardingLayout currentStep={1}>
+      <DataRestoreNotification dataRestored={dataRestored} />
       <SimpleOnboardingStep1 {...stepProps} />
       
       {/* Navegação */}
