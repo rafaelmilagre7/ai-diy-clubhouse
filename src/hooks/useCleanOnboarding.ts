@@ -264,12 +264,15 @@ export const useCleanOnboarding = () => {
     }
   }, [user?.id, loadFromLocal, hasNewerLocalData]);
 
-  const initializeOnboarding = useCallback(async () => {
+  const initializeOnboarding = useCallback(async (inviteData?: any) => {
     if (!user?.id) return;
 
     try {
+      console.log('🚀 [CLEAN-ONBOARDING] Inicializando onboarding com dados do convite:', inviteData);
+      
       const { data: result, error } = await supabase.rpc('initialize_onboarding_for_user', {
-        p_user_id: user.id
+        p_user_id: user.id,
+        p_invite_data: inviteData || {}
       });
 
       if (error) {
@@ -278,9 +281,18 @@ export const useCleanOnboarding = () => {
       }
 
       if (result?.success) {
-        console.log('✅ [CLEAN-ONBOARDING] Inicializado com sucesso');
+        console.log('✅ [CLEAN-ONBOARDING] Inicializado com sucesso:', result);
+        console.log('📋 [CLEAN-ONBOARDING] Dados pré-preenchidos:', result.personal_info_preloaded);
+        
         // Recarregar dados após inicialização
         await loadData();
+        
+        if (result.invite_data_used) {
+          toast({
+            title: "Dados do convite carregados! ✨",
+            description: "Suas informações foram pré-preenchidas automaticamente.",
+          });
+        }
       }
     } catch (error) {
       console.error('❌ [CLEAN-ONBOARDING] Erro na inicialização:', error);
@@ -508,14 +520,15 @@ export const useCleanOnboarding = () => {
 
   return {
     data,
-    updateData,
-    saveAndNavigate,
-    canAccessStep,
     isLoading,
     isSaving,
     currentStep: data.current_step,
-    completedSteps: data.completed_steps,
-    isCompleted: data.is_completed,
-    dataRestored // Indica se dados foram restaurados do cache
+    dataRestored,
+    updateData,
+    saveAndNavigate,
+    canAccessStep,
+    loadData,
+    initializeOnboarding,
+    reset: () => {} // Placeholder para compatibilidade
   };
 };

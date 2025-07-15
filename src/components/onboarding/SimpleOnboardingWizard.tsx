@@ -82,15 +82,27 @@ export const SimpleOnboardingWizard: React.FC = () => {
     }
   }, [onboarding.currentStep]);
 
-  // Gerenciar reset via URL
+  // Gerenciar reset via URL e inicialização com dados do convite
   useEffect(() => {
     if (user) {
       const shouldReset = searchParams.get('reset') === 'true';
+      const inviteToken = searchParams.get('invite');
+      
       if (shouldReset) {
         resetOnboardingData();
+      } else if (inviteToken && !onboarding.dataRestored) {
+        // Se há token de convite e ainda não restaurou dados, tentar inicializar com dados do convite
+        console.log('🎫 [ONBOARDING] Detectado token de convite na URL:', inviteToken.substring(0, 6) + '***');
+        
+        // Verificar se onboarding já existe antes de inicializar
+        if (!onboarding.data.id && onboarding.currentStep === 1) {
+          console.log('🚀 [ONBOARDING] Inicializando onboarding com dados do convite...');
+          // A função initializeOnboarding vai buscar dados do convite automaticamente
+          onboarding.initializeOnboarding?.();
+        }
       }
     }
-  }, [user?.id, searchParams]);
+  }, [user?.id, searchParams, onboarding.dataRestored, onboarding.currentStep]);
 
   // Auto-save removido: agora apenas através do debounce em handleDataChange
 

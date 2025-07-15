@@ -1,120 +1,125 @@
 import { useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
-interface InviteFlowEvent {
-  step: 'invite_opened' | 'validation_success' | 'validation_failed' | 'registration_started' | 'registration_completed' | 'profile_created' | 'onboarding_redirected' | 'flow_completed';
-  inviteToken?: string;
-  userId?: string;
-  email?: string;
-  error?: string;
-  metadata?: Record<string, any>;
-}
-
+/**
+ * Hook para telemetria específica do fluxo de convite→onboarding
+ * Rastreia cada etapa do processo para diagnóstico e otimização
+ */
 export const useInviteFlowTelemetry = () => {
-  const trackEvent = useCallback(async (event: InviteFlowEvent) => {
+  
+  const trackEvent = useCallback(async (eventType: string, data: any) => {
     try {
-      const eventData = {
-        event_type: 'invite_flow',
-        event_data: {
-          ...event,
-          timestamp: new Date().toISOString(),
-          user_agent: navigator.userAgent,
-          url: window.location.href
-        },
-        user_id: event.userId || null,
-        created_at: new Date().toISOString()
-      };
-
-      console.log(`📊 [TELEMETRY] Registrando evento: ${event.step}`, eventData);
-
       const { error } = await supabase
         .from('analytics')
-        .insert([eventData]);
-
+        .insert({
+          user_id: data.user_id || 'anonymous',
+          event_type: `invite_flow_${eventType}`,
+          event_data: {
+            ...data,
+            timestamp: new Date().toISOString(),
+            url: window.location.href,
+            user_agent: navigator.userAgent.substring(0, 200)
+          }
+        });
+      
       if (error) {
-        console.warn('⚠️ [TELEMETRY] Erro ao registrar evento:', error);
+        console.warn('⚠️ [INVITE-TELEMETRY] Erro ao registrar evento:', error);
+      } else {
+        console.log(`📊 [INVITE-TELEMETRY] Evento registrado: ${eventType}`);
       }
     } catch (err) {
-      console.warn('⚠️ [TELEMETRY] Falha na telemetria:', err);
+      console.warn('⚠️ [INVITE-TELEMETRY] Falha na telemetria:', err);
     }
   }, []);
 
-  const trackInviteOpened = useCallback((inviteToken: string) => {
-    trackEvent({
-      step: 'invite_opened',
-      inviteToken,
-      metadata: { from_url: document.referrer || 'direct' }
+  const trackInviteValidation = useCallback(async (token: string, isValid: boolean, errorReason?: string) => {
+    await trackEvent('invite_validation', {
+      token_preview: token.substring(0, 6) + '***',
+      is_valid: isValid,
+      error_reason: errorReason,
+      step: 'validation'
     });
   }, [trackEvent]);
 
-  const trackValidationSuccess = useCallback((inviteToken: string, email: string) => {
-    trackEvent({
-      step: 'validation_success',
-      inviteToken,
-      email
+  const trackRegistrationStarted = useCallback(async (token?: string, email?: string) => {
+    await trackEvent('registration_started', {
+      has_invite_token: !!token,
+      token_preview: token ? token.substring(0, 6) + '***' : null,
+      email_domain: email ? email.split('@')[1] : null,
+      step: 'registration_form'
     });
   }, [trackEvent]);
 
-  const trackValidationFailed = useCallback((inviteToken: string, error: string) => {
-    trackEvent({
-      step: 'validation_failed',
-      inviteToken,
-      error
+  const trackRegistrationCompleted = useCallback(async (userId: string, token?: string) => {
+    await trackEvent('registration_completed', {
+      user_id: userId,
+      has_invite_token: !!token,
+      token_preview: token ? token.substring(0, 6) + '***' : null,
+      step: 'user_created'
     });
   }, [trackEvent]);
 
-  const trackRegistrationStarted = useCallback((inviteToken: string, email: string) => {
-    trackEvent({
-      step: 'registration_started',
-      inviteToken,
-      email
+  const trackProfileCreated = useCallback(async (userId: string, roleId?: string, inviteApplied?: boolean) => {
+    await trackEvent('profile_created', {
+      user_id: userId,
+      role_id: roleId,
+      invite_applied: inviteApplied,
+      step: 'profile_setup'
     });
   }, [trackEvent]);
 
-  const trackRegistrationCompleted = useCallback((inviteToken: string, email: string, userId: string) => {
-    trackEvent({
-      step: 'registration_completed',
-      inviteToken,
-      email,
-      userId
+  const trackOnboardingStarted = useCallback(async (userId: string, prefilledData?: any) => {
+    await trackEvent('onboarding_started', {
+      user_id: userId,
+      has_prefilled_data: !!prefilledData && Object.keys(prefilledData).length > 0,
+      prefilled_fields: prefilledData ? Object.keys(prefilledData) : [],
+      step: 'onboarding_init'
     });
   }, [trackEvent]);
 
-  const trackProfileCreated = useCallback((userId: string, email: string, inviteToken?: string) => {
-    trackEvent({
-      step: 'profile_created',
-      userId,
-      email,
-      inviteToken
+  const trackOnboardingRedirected = useCallback(async (userId: string, targetStep: number) => {
+    await trackEvent('onboarding_redirected', {
+      user_id: userId,
+      target_step: targetStep,
+      step: 'onboarding_redirect'
     });
   }, [trackEvent]);
 
-  const trackOnboardingRedirected = useCallback((userId: string, inviteToken?: string) => {
-    trackEvent({
-      step: 'onboarding_redirected',
-      userId,
-      inviteToken
+  const trackStepCompleted = useCallback(async (userId: string, step: number, stepData: any) => {
+    await trackEvent('step_completed', {
+      user_id: userId,
+      step_number: step,
+      fields_filled: stepData ? Object.keys(stepData).length : 0,
+      step: `onboarding_step_${step}`
     });
   }, [trackEvent]);
 
-  const trackFlowCompleted = useCallback((userId: string, inviteToken?: string) => {
-    trackEvent({
-      step: 'flow_completed',
-      userId,
-      inviteToken,
-      metadata: { conversion: true }
+  const trackOnboardingCompleted = useCallback(async (userId: string, roleId?: string) => {
+    await trackEvent('onboarding_completed', {
+      user_id: userId,
+      role_id: roleId,
+      step: 'onboarding_finished'
+    });
+  }, [trackEvent]);
+
+  const trackFlowAbandoned = useCallback(async (userId: string, lastStep: string, reason?: string) => {
+    await trackEvent('flow_abandoned', {
+      user_id: userId,
+      last_step: lastStep,
+      abandonment_reason: reason,
+      step: 'abandonment'
     });
   }, [trackEvent]);
 
   return {
-    trackEvent,
-    trackInviteOpened,
-    trackValidationSuccess,
-    trackValidationFailed,
+    trackInviteValidation,
     trackRegistrationStarted,
     trackRegistrationCompleted,
     trackProfileCreated,
+    trackOnboardingStarted,
     trackOnboardingRedirected,
-    trackFlowCompleted
+    trackStepCompleted,
+    trackOnboardingCompleted,
+    trackFlowAbandoned
   };
 };
