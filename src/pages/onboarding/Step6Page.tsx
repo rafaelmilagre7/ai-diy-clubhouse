@@ -12,10 +12,25 @@ const OnboardingStep6Page: React.FC = () => {
 
   // Verificar se pode acessar esta etapa
   useEffect(() => {
-    if (!canAccessStep(6)) {
-      navigate('/onboarding/step/1');
+    // CORREÇÃO DO LOOP: Verificar apenas uma vez, sem dependência de canAccessStep
+    const checkAccess = () => {
+      if (data.is_completed) {
+        console.log('[STEP6] Onboarding completo, redirecionando para dashboard');
+        navigate('/dashboard', { replace: true });
+        return;
+      }
+      
+      if (!canAccessStep(6)) {
+        console.log('[STEP6] Sem acesso ao step 6, redirecionando para step 1');
+        navigate('/onboarding/step/1', { replace: true });
+      }
+    };
+    
+    // Executar apenas se houver dados carregados
+    if (data.user_id) {
+      checkAccess();
     }
-  }, [canAccessStep, navigate]);
+  }, [data.is_completed, data.user_id, navigate]); // Dependências estáveis
 
   const handleNext = async (stepData?: any) => {
     console.log('➡️ [STEP6] handleNext chamado - Finalizando onboarding');

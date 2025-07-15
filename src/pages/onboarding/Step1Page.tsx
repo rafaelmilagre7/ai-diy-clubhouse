@@ -15,22 +15,18 @@ const OnboardingStep1Page: React.FC = () => {
   useEffect(() => {
     // Se o usuário já completou o onboarding, redirecionar para dashboard
     if (data.is_completed) {
+      console.log('[STEP1] Onboarding já completo, redirecionando para dashboard');
       navigate('/dashboard', { replace: true });
       return;
     }
 
-    // Se tem current_step válido e não é 1, redirecionar para o step correto
-    if (data.current_step && data.current_step !== 1 && data.current_step <= 6) {
-      navigate(`/onboarding/step/${data.current_step}`, { replace: true });
-      return;
-    }
-
-    // Se não pode acessar step 1 e não está completo, algo está errado - redirecionar para início
-    if (!canAccessStep(1) && !data.is_completed) {
-      console.warn('[STEP1] Não pode acessar step 1, redirecionando para onboarding');
-      navigate('/onboarding', { replace: true });
-    }
-  }, [data.is_completed, data.current_step, canAccessStep, navigate]);
+    // CORREÇÃO DO LOOP: Não redirecionar automaticamente baseado em current_step
+    // Deixar usuário navegar livremente entre steps já acessíveis
+    console.log('[STEP1] Acesso permitido ao step 1', {
+      current_step: data.current_step,
+      is_completed: data.is_completed
+    });
+  }, [data.is_completed, navigate]); // Remover canAccessStep e current_step das dependências
 
   const handleNext = async () => {
     // Validar usando ref

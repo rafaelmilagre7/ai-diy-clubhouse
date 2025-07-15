@@ -481,10 +481,21 @@ export const useCleanOnboarding = () => {
       return false;
     }
     
-    // Lógica melhorada: permitir acesso ao step atual e anteriores completados
-    const canAccess = step <= data.current_step || data.completed_steps.includes(step);
+    // CORREÇÃO DO LOOP: Permitir acesso ao step 1 sempre (início)
+    // E permitir próximo step quando atual está completo
+    if (step === 1) {
+      console.log('✅ [CLEAN-ONBOARDING] Step 1 sempre permitido');
+      return true;
+    }
     
-    console.log(`${canAccess ? '✅' : '❌'} [CLEAN-ONBOARDING] Acesso ao step ${step}:`, canAccess);
+    // Para outros steps: verificar se step anterior foi completado
+    const previousStepCompleted = data.completed_steps.includes(step - 1);
+    const canAccess = previousStepCompleted || step <= data.current_step;
+    
+    console.log(`${canAccess ? '✅' : '❌'} [CLEAN-ONBOARDING] Acesso ao step ${step}:`, canAccess, {
+      previousStepCompleted,
+      currentStep: data.current_step
+    });
     return canAccess;
   }, [data.is_completed, data.current_step, data.completed_steps]);
 

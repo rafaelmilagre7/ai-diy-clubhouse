@@ -74,6 +74,22 @@ const InvitePage = () => {
   }
 
   if (user && user.email === validationResult.invite?.email) {
+    // Usuário já está logado com o email correto do convite
+    // Redirecionar direto para onboarding se não completou
+    const isOnboardingCompleted = user.user_metadata?.onboarding_completed;
+    
+    if (!isOnboardingCompleted) {
+      console.log('🎯 [INVITE] Usuário logado, redirecionando para onboarding');
+      setTimeout(() => {
+        navigate('/onboarding', { replace: true });
+      }, 1000);
+      
+      return (
+        <InviteLoadingState message="Redirecionando para seu onboarding personalizado..." />
+      );
+    }
+    
+    // Se já completou onboarding, mostrar sucesso
     return (
       <InviteSuccessState 
         userName={user.user_metadata?.name || user.email?.split('@')[0]}
@@ -101,10 +117,10 @@ const InvitePage = () => {
                     prefilledEmail={validationResult.invite.email}
                     onSuccess={() => {
                       console.log('🎯 [INVITE] Registro concluído, redirecionando para onboarding');
-                      // Timeout reduzido - mais ágil
+                      // Timeout aumentado para garantir que o perfil seja criado
                       setTimeout(() => {
                         navigate('/onboarding', { replace: true });
-                      }, 1000);
+                      }, 2000);
                     }}
                   />
                 </div>
