@@ -40,7 +40,7 @@ export const useOrganizationSchema = () => {
       '@type': 'Organization',
       name: 'Viver de IA Hub',
       url: APP_CONFIG.getAppDomain(),
-      logo: `${APP_CONFIG.getAppDomain()}/lovable-uploads/d847c892-aafa-4cc1-92c6-110aff1d9755.png`,
+      logo: `${APP_CONFIG.getAppDomain()}/favicon.ico`,
       description: 'Plataforma completa para transformar seu negócio com Inteligência Artificial',
       sameAs: []
     };

@@ -12,8 +12,7 @@ export function ModernDashboardHeader({ userName }: { userName: string }) {
         "bg-gradient-to-br from-[#151823] to-[#1A1E2E]/90 backdrop-blur-sm border border-white/5"
       )}
     >
-      {/* Elemento decorativo */}
-      <div className="absolute inset-0 bg-[url('/lovable-uploads/6bdb44c0-b115-45bc-977d-4284836453c2.png')] opacity-5 bg-right bg-no-repeat bg-contain" />
+      {/* Elemento decorativo - removido para evitar 404 */}
       
       {/* Elementos decorativos */}
       <div className="absolute top-0 left-0 w-24 h-24 bg-viverblue/5 rounded-full filter blur-3xl"></div>
@@ -21,13 +20,11 @@ export function ModernDashboardHeader({ userName }: { userName: string }) {
       
       {/* Conteúdo do banner */}
       <div className="relative z-10 flex flex-row items-center gap-6 px-6 md:px-8 py-6 md:py-8">
-        {/* Avatar Milagrinho */}
-        <div className="flex-shrink-0 h-16 w-16 md:h-20 md:w-20 rounded-full shadow-md border border-white/10 bg-white/5 overflow-hidden group transition-transform duration-300 hover:scale-105">
-          <img
-            src="/lovable-uploads/6bdb44c0-b115-45bc-977d-4284836453c2.png"
-            alt="Avatar Milagrinho"
-            className="w-full h-full object-cover object-center group-hover:scale-110 transition-transform duration-500"
-          />
+        {/* Avatar Milagrinho - usando fallback */}
+        <div className="flex-shrink-0 h-16 w-16 md:h-20 md:w-20 rounded-full shadow-md border border-white/10 bg-gradient-to-br from-viverblue to-strategy overflow-hidden group transition-transform duration-300 hover:scale-105">
+          <div className="w-full h-full flex items-center justify-center text-white font-bold text-xl">
+            🤖
+          </div>
         </div>
 
         {/* Texto à direita do avatar */}

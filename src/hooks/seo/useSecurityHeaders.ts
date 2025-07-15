@@ -34,12 +34,12 @@ export const useSecurityHeaders = () => {
         document.head.appendChild(contentTypeMeta);
       }
 
-      // X-Frame-Options
+      // X-Frame-Options - SAMEORIGIN para permitir embeds quando necessário
       let frameMeta = document.querySelector('meta[http-equiv="X-Frame-Options"]') as HTMLMetaElement;
       if (!frameMeta) {
         frameMeta = document.createElement('meta');
         frameMeta.setAttribute('http-equiv', 'X-Frame-Options');
-        frameMeta.setAttribute('content', 'DENY');
+        frameMeta.setAttribute('content', 'SAMEORIGIN');
         document.head.appendChild(frameMeta);
       }
 

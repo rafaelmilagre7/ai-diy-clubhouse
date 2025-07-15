@@ -31,9 +31,31 @@ export const usePreloadCriticalAssets = () => {
     switch (location.pathname) {
       case '/':
       case '/dashboard':
-        // Preload dashboard avatar and hero images
-        preloadImage('/lovable-uploads/6bdb44c0-b115-45bc-977d-4284836453c2.png', 'high');
-        preloadImage('/lovable-uploads/d847c892-aafa-4cc1-92c6-110aff1d9755.png', 'low');
+        // Verificar se recursos existem antes de preload
+        try {
+          // Apenas preload se o recurso existir
+          fetch('/lovable-uploads/6bdb44c0-b115-45bc-977d-4284836453c2.png', { method: 'HEAD' })
+            .then(response => {
+              if (response.ok) {
+                preloadImage('/lovable-uploads/6bdb44c0-b115-45bc-977d-4284836453c2.png', 'high');
+              }
+            })
+            .catch(() => {
+              console.log('[PreloadAssets] Avatar image not found, skipping preload');
+            });
+
+          fetch('/lovable-uploads/d847c892-aafa-4cc1-92c6-110aff1d9755.png', { method: 'HEAD' })
+            .then(response => {
+              if (response.ok) {
+                preloadImage('/lovable-uploads/d847c892-aafa-4cc1-92c6-110aff1d9755.png', 'low');
+              }
+            })
+            .catch(() => {
+              console.log('[PreloadAssets] Logo image not found, skipping preload');
+            });
+        } catch (error) {
+          console.log('[PreloadAssets] Error checking resources:', error);
+        }
         break;
       
       case '/tools':
