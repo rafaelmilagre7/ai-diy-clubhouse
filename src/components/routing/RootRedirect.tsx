@@ -5,10 +5,12 @@ import LoadingScreen from "@/components/common/LoadingScreen";
 import { useEffect, useState, useRef } from "react";
 import { getUserRoleName } from "@/lib/supabase/types";
 import { navigationCache } from "@/utils/navigationCache";
+import { supabase } from "@/integrations/supabase/client";
 
 const RootRedirect = () => {
   const location = useLocation();
   const [forceRedirect, setForceRedirect] = useState(false);
+  const [onboardingRedirectUrl, setOnboardingRedirectUrl] = useState<string | null>(null);
   const timeoutRef = useRef<number | null>(null);
   
   // CORREÇÃO: Verificação segura do contexto
@@ -94,12 +96,44 @@ const RootRedirect = () => {
     return <LoadingScreen message="Carregando seu perfil..." />;
   }
   
-  // VERIFICAÇÃO DO ONBOARDING - Prioridade ABSOLUTA
-  // TODOS os usuários DEVEM completar o onboarding
+  // useEffect para determinar redirecionamento de onboarding
+  useEffect(() => {
+    const determineOnboardingStep = async () => {
+      if (!user?.id || !profile || profile.onboarding_completed || location.pathname.startsWith('/onboarding')) {
+        return;
+      }
+
+      console.log("[ROOT-REDIRECT] Determinando próximo passo do onboarding");
+      
+      try {
+        const { data, error } = await supabase.rpc('get_onboarding_next_step', {
+          p_user_id: user.id
+        });
+
+        if (!error && data?.redirect_url) {
+          setOnboardingRedirectUrl(data.redirect_url);
+        } else {
+          setOnboardingRedirectUrl('/onboarding/step/1');
+        }
+      } catch (error) {
+        console.error("[ROOT-REDIRECT] Erro ao determinar step:", error);
+        setOnboardingRedirectUrl('/onboarding/step/1');
+      }
+    };
+    
+    determineOnboardingStep();
+  }, [user?.id, profile?.onboarding_completed, location.pathname]);
+
+  // VERIFICAÇÃO DO ONBOARDING - Usar função centralizada
   if (profile && !profile.onboarding_completed && !location.pathname.startsWith('/onboarding')) {
     console.log("[ROOT-REDIRECT] ONBOARDING OBRIGATÓRIO - Redirecionando usuário");
     if (timeoutRef.current) clearTimeout(timeoutRef.current);
-    return <Navigate to="/onboarding/step/1" replace />;
+    
+    if (onboardingRedirectUrl) {
+      return <Navigate to={onboardingRedirectUrl} replace />;
+    }
+    
+    return <LoadingScreen message="Determinando próximo passo..." />;
   }
   
   // Se está na página de onboarding mas já completou, redireciona

@@ -4,7 +4,7 @@ import { ReactNode, useEffect, useState } from "react";
 import { useAuth } from "@/contexts/auth";
 import LoadingScreen from "@/components/common/LoadingScreen";
 import { SecurityProvider } from "@/contexts/auth/SecurityContext";
-import { getOnboardingProgress, getNextOnboardingStep, fixCurrentUserOnboarding } from "@/utils/onboardingFix";
+import { supabase } from "@/integrations/supabase/client";
 
 interface ProtectedRoutesProps {
   children: ReactNode;
@@ -27,7 +27,7 @@ export const ProtectedRoutes = ({ children }: ProtectedRoutesProps) => {
 
   const { user, profile, isLoading } = authContext;
 
-  // Verificar progresso real do onboarding quando usuário estiver disponível
+  // Verificar progresso do onboarding usando nova função centralizada
   useEffect(() => {
     if (user && profile && !isCheckingProgress) {
       checkOnboardingProgress();
@@ -38,20 +38,35 @@ export const ProtectedRoutes = ({ children }: ProtectedRoutesProps) => {
     if (!user) return;
     
     setIsCheckingProgress(true);
+    console.log("[PROTECTED] Verificando progresso do onboarding para:", user.id);
+    
     try {
-      const progress = await getOnboardingProgress(user.id);
-      setOnboardingProgress(progress);
-      
-      // Se há inconsistência entre profile e onboarding, tentar corrigir
-      if (progress && !profile?.onboarding_completed && progress.completed_steps.length >= 6 && !hasTriedFix) {
-        console.log("[PROTECTED] Detectada inconsistência, tentando corrigir...");
-        setHasTriedFix(true);
-        await fixCurrentUserOnboarding();
-        // Forçar reload da página para recarregar o profile
-        window.location.reload();
+      // Usar nova função centralizada
+      const { data, error } = await supabase.rpc('get_onboarding_next_step', {
+        p_user_id: user.id
+      });
+
+      if (error) {
+        console.error("[PROTECTED] Erro ao verificar onboarding:", error);
+        return;
       }
+
+      console.log("[PROTECTED] Estado do onboarding:", data);
+      
+      // Converter para formato esperado
+      const progress = data?.is_completed ? {
+        current_step: 7,
+        completed_steps: [1, 2, 3, 4, 5, 6],
+        is_completed: true
+      } : {
+        current_step: data?.current_step || 1,
+        completed_steps: data?.completed_steps || [],
+        is_completed: false
+      };
+      
+      setOnboardingProgress(progress);
     } catch (error) {
-      console.error("[PROTECTED] Erro ao verificar progresso:", error);
+      console.error("[PROTECTED] Erro inesperado:", error);
     } finally {
       setIsCheckingProgress(false);
     }
@@ -82,13 +97,12 @@ export const ProtectedRoutes = ({ children }: ProtectedRoutesProps) => {
   if (profile && !profile.onboarding_completed && !isOnboardingRoute) {
     // Verificar progresso real se disponível
     if (onboardingProgress) {
-      const nextStep = getNextOnboardingStep(onboardingProgress);
-      
       if (onboardingProgress.is_completed) {
         // Se onboarding está completo mas profile não sincronizado, aguardar correção
         return <LoadingScreen message="Sincronizando seu progresso..." />;
       }
       
+      const nextStep = Math.max(1, onboardingProgress.current_step || 1);
       console.log(`[PROTECTED] Redirecionando para step ${nextStep} baseado no progresso real`);
       return <Navigate to={`/onboarding/step/${nextStep}`} replace />;
     } else {

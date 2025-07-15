@@ -178,7 +178,7 @@ export const useCleanOnboarding = () => {
           },
           business_info: onboardingData.business_info || {},
           ai_experience: onboardingData.ai_experience || {},
-          goals: onboardingData.goals_info || {}, // Campo correto da tabela
+          goals: onboardingData.goals || {}, // Campo correto da tabela
           preferences: onboardingData.personalization || {}, // Campo correto da tabela
           personalization: onboardingData.personalization || {}, // Compatibilidade
           completed_steps: onboardingData.completed_steps || [],
@@ -310,7 +310,7 @@ export const useCleanOnboarding = () => {
           personal_info: updatedData.personal_info,
           business_info: updatedData.business_info,
           ai_experience: updatedData.ai_experience,
-          goals_info: updatedData.goals, // Campo correto da tabela
+          goals: updatedData.goals, // Campo correto da tabela
           personalization: updatedData.preferences, // Campo correto da tabela
           company_name: updatedData.company_name,
           annual_revenue: updatedData.annual_revenue,
@@ -369,23 +369,29 @@ export const useCleanOnboarding = () => {
   }, [data, isSaving, user?.id, navigate]);
 
   const canAccessStep = useCallback((step: number) => {
-    // Se já está completo, não deveria acessar nenhuma etapa específica
+    console.log('🔐 [CLEAN-ONBOARDING] Verificando acesso ao step:', step, {
+      is_completed: data.is_completed,
+      current_step: data.current_step,
+      completed_steps: data.completed_steps
+    });
+
+    // Se já está completo, não permitir acesso a steps específicos
     if (data.is_completed) {
+      console.log('⛔ [CLEAN-ONBOARDING] Onboarding completo, negando acesso ao step:', step);
       return false;
     }
     
     // Se current_step é 7, significa que já passou por todas as etapas
     if (data.current_step === 7) {
+      console.log('⛔ [CLEAN-ONBOARDING] Current step é 7, negando acesso ao step:', step);
       return false;
     }
     
-    // Pode acessar a etapa atual ou etapas anteriores completadas
-    // Para step 1, sempre permitir se não estiver completo
-    if (step === 1) {
-      return !data.is_completed;
-    }
+    // Lógica melhorada: permitir acesso ao step atual e anteriores completados
+    const canAccess = step <= data.current_step || data.completed_steps.includes(step);
     
-    return step <= data.current_step || data.completed_steps.includes(step);
+    console.log(`${canAccess ? '✅' : '❌'} [CLEAN-ONBOARDING] Acesso ao step ${step}:`, canAccess);
+    return canAccess;
   }, [data.is_completed, data.current_step, data.completed_steps]);
 
   return {

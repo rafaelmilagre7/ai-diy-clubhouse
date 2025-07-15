@@ -3170,63 +3170,6 @@ export type Database = {
         }
         Relationships: []
       }
-      onboarding_simple: {
-        Row: {
-          company_name: string | null
-          company_size: string | null
-          completed_at: string | null
-          created_at: string
-          current_step: number
-          email: string | null
-          expectations: string | null
-          goals: string[] | null
-          id: string
-          is_completed: boolean
-          main_challenge: string | null
-          name: string | null
-          phone: string | null
-          role: string | null
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          company_name?: string | null
-          company_size?: string | null
-          completed_at?: string | null
-          created_at?: string
-          current_step?: number
-          email?: string | null
-          expectations?: string | null
-          goals?: string[] | null
-          id?: string
-          is_completed?: boolean
-          main_challenge?: string | null
-          name?: string | null
-          phone?: string | null
-          role?: string | null
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          company_name?: string | null
-          company_size?: string | null
-          completed_at?: string | null
-          created_at?: string
-          current_step?: number
-          email?: string | null
-          expectations?: string | null
-          goals?: string[] | null
-          id?: string
-          is_completed?: boolean
-          main_challenge?: string | null
-          name?: string | null
-          phone?: string | null
-          role?: string | null
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
       onboarding_step_tracking: {
         Row: {
           attempts: number | null
@@ -5987,6 +5930,10 @@ export type Database = {
           resources: Json
         }[]
       }
+      get_onboarding_next_step: {
+        Args: { p_user_id: string }
+        Returns: Json
+      }
       get_security_metrics: {
         Args: { p_user_id?: string; p_days?: number }
         Returns: Json
@@ -6357,6 +6304,10 @@ export type Database = {
           expires_at: string
           is_valid: boolean
         }[]
+      }
+      validate_onboarding_state: {
+        Args: { p_user_id: string }
+        Returns: Json
       }
       validate_password_strength: {
         Args: { password: string }
