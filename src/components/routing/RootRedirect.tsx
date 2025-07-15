@@ -26,7 +26,7 @@ const RootRedirect = () => {
     timeoutRef.current = window.setTimeout(() => {
       console.warn("⏰ [ROOT-REDIRECT] Timeout - forçando redirecionamento");
       setForceRedirect(true);
-    }, 2000); // Reduzido para 2s
+    }, 3000);
     
     return () => {
       if (timeoutRef.current) {
