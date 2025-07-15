@@ -4,33 +4,43 @@ import { useAuth } from '@/contexts/auth';
 import LoadingScreen from '@/components/common/LoadingScreen';
 
 /**
- * Wrapper simples e direto para redirecionamento de onboarding
- * Evita loops e garante navegação suave
+ * Wrapper direto sem mascaramentos
  */
 const OnboardingRedirectWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, profile, isLoading } = useAuth();
 
-  // Se carregando, mostrar loading
+  console.log("[ONBOARDING-WRAPPER] Estado:", {
+    hasUser: !!user,
+    hasProfile: !!profile,
+    onboardingCompleted: profile?.onboarding_completed,
+    loading: isLoading
+  });
+
+  // Loading direto
   if (isLoading) {
-    return <LoadingScreen message="Verificando seu progresso..." />;
+    return <LoadingScreen message="Verificando estado..." />;
   }
 
-  // Se não há usuário, vai para login
+  // Sem usuário = erro crítico (não deveria chegar aqui)
   if (!user) {
-    return <Navigate to="/login" replace />;
+    console.error("[ONBOARDING-WRAPPER] ERRO: Sem usuário em onboarding");
+    throw new Error("Usuário não autenticado tentando acessar onboarding");
   }
 
-  // Se não há perfil ainda, aguardar
+  // Sem perfil = erro crítico
   if (!profile) {
-    return <LoadingScreen message="Carregando seu perfil..." />;
+    console.error("[ONBOARDING-WRAPPER] ERRO: Sem perfil em onboarding");
+    throw new Error(`Usuário ${user.id} sem perfil em onboarding`);
   }
 
-  // Se onboarding completo, redirecionar para dashboard
+  // Onboarding completo = redirecionar
   if (profile.onboarding_completed) {
+    console.log("[ONBOARDING-WRAPPER] Onboarding completo - redirecionando");
     const roleName = profile.user_roles?.name;
     return <Navigate to={roleName === 'formacao' ? '/formacao' : '/dashboard'} replace />;
   }
 
+  // Tudo ok - renderizar onboarding
   return <>{children}</>;
 };
 

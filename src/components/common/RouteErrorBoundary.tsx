@@ -63,9 +63,9 @@ class RouteErrorBoundary extends Component<RouteErrorBoundaryProps, RouteErrorBo
       onRouteError(error);
     }
 
-    // Toast específico para roteamento
+    // Toast específico para roteamento - sem mascarar
     if (isRouteError) {
-      toast.error('Erro de navegação', {
+      toast.error(`ERRO DE ROTA: ${error.message}`, {
         description: 'Problema ao carregar a página solicitada.'
       });
     } else {

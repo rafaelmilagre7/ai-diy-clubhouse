@@ -7,10 +7,6 @@ import { getUserRoleName } from "@/lib/supabase/types";
 
 const RootRedirect = () => {
   const location = useLocation();
-  const [forceRedirect, setForceRedirect] = useState(false);
-  const timeoutRef = useRef<number | null>(null);
-  
-  // Hook de auth otimizado
   const { user, profile, isLoading: authLoading } = useAuth();
   
   console.log("🔍 [ROOT-REDIRECT] Estado:", {
@@ -21,57 +17,38 @@ const RootRedirect = () => {
     loading: authLoading
   });
 
-  // Circuit breaker otimizado
-  useEffect(() => {
-    timeoutRef.current = window.setTimeout(() => {
-      setForceRedirect(true);
-    }, 1500); // Sincronizado com AdminLayout
-    
-    return () => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
-    };
-  }, []);
-
-  // Loading state
-  if (authLoading && !forceRedirect) {
+  // Loading direto - sem timeouts
+  if (authLoading) {
     return <LoadingScreen message="Verificando sessão..." />;
   }
 
-  // Sem usuário -> login
+  // Sem usuário = login
   if (!user) {
+    console.log("🔄 [ROOT-REDIRECT] Sem usuário - redirecionando para login");
     return <Navigate to="/login" replace />;
   }
 
-  // Aguardando perfil (com timeout)
-  if (!profile && !forceRedirect) {
-    return <LoadingScreen message="Carregando perfil..." />;
-  }
-
-  // Circuit breaker ativo
-  if (forceRedirect) {
-    if (user && profile) {
-      const roleName = getUserRoleName(profile);
-      return <Navigate to={roleName === 'formacao' ? '/formacao' : '/dashboard'} replace />;
-    }
-    return <Navigate to="/login" replace />;
+  // Sem perfil = erro crítico
+  if (!profile) {
+    console.error("💥 [ROOT-REDIRECT] ERRO CRÍTICO: Usuário sem perfil");
+    throw new Error(`Usuário ${user.id} não possui perfil. Estado de auth corrompido.`);
   }
 
   // Redirecionamento de login para usuários autenticados
-  if (location.pathname === '/login' && user && profile) {
+  if (location.pathname === '/login') {
     const roleName = getUserRoleName(profile);
+    console.log("✅ [ROOT-REDIRECT] Usuário logado, redirecionando para dashboard");
     return <Navigate to={roleName === 'formacao' ? '/formacao' : '/dashboard'} replace />;
   }
 
-  // FLUXO DE ONBOARDING OTIMIZADO
-  if (profile && !profile.onboarding_completed && !location.pathname.startsWith('/onboarding')) {
+  // Onboarding não completo = onboarding obrigatório
+  if (!profile.onboarding_completed && !location.pathname.startsWith('/onboarding')) {
     console.log("🔄 [ROOT-REDIRECT] Onboarding obrigatório");
     return <Navigate to="/onboarding" replace />;
   }
   
-  // Onboarding completo - redirecionar
-  if (profile && profile.onboarding_completed && location.pathname.startsWith('/onboarding')) {
+  // Onboarding completo em rota de onboarding = redirecionar
+  if (profile.onboarding_completed && location.pathname.startsWith('/onboarding')) {
     console.log("✅ [ROOT-REDIRECT] Onboarding completo - redirecionando");
     const roleName = getUserRoleName(profile);
     return <Navigate to={roleName === 'formacao' ? '/formacao' : '/dashboard'} replace />;
@@ -84,7 +61,7 @@ const RootRedirect = () => {
     return <Navigate to="/formacao" replace />;
   }
   
-  // Fallback padrão
+  // Padrão: dashboard
   return <Navigate to="/dashboard" replace />;
 };
 

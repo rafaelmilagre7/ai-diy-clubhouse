@@ -187,6 +187,16 @@ export const ErrorDebugInfo: React.FC<ErrorDebugInfoProps> = ({
             >
               Tentar novamente
             </Button>
+            <Button
+              variant="destructive"
+              onClick={() => {
+                throw error || new Error('Erro forçado para debug');
+              }}
+              className="flex items-center gap-2"
+            >
+              <Bug className="h-4 w-4" />
+              Forçar erro (debug)
+            </Button>
           </div>
         </CardContent>
       </Card>

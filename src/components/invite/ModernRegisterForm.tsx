@@ -180,20 +180,8 @@ const ModernRegisterForm: React.FC<ModernRegisterFormProps> = ({
           details: JSON.stringify(error, null, 2)
         });
         
-        // Verificar se é erro de refresh token (estado de auth corrompido)
-        if (error.message?.includes("refresh_token_not_found") || error.message?.includes("Invalid Refresh Token")) {
-          console.log('🔄 [REGISTER] Detectado estado de auth corrompido, tentando método alternativo...');
-          
-          setError("Detectamos um problema com a sessão. Tentando resolver automaticamente...");
-          
-          try {
-            await handleAlternativeSignup();
-            return;
-          } catch (altError) {
-            console.error('❌ [REGISTER] Método alternativo também falhou:', altError);
-            setError(`Erro persistente: ${altError instanceof Error ? altError.message : 'Erro desconhecido'}`);
-          }
-        }
+        // Não mascarar erro - falhar imediatamente
+        console.error('❌ [REGISTER] Erro no signUp - falhando:', error);
         
         let userMessage = "Não foi possível criar sua conta. ";
         if (error.message?.includes("User already registered")) {
@@ -223,110 +211,44 @@ const ModernRegisterForm: React.FC<ModernRegisterFormProps> = ({
           description: "Preparando seu ambiente personalizado...",
         });
         
-        // Verificação simplificada de perfil  
-        let profileCreated = false;
-        let attempts = 0;
-        const maxAttempts = 5;
+        // Verificação direta de perfil - DEVE funcionar ou falhar
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('id, role_id')
+          .eq('id', data.user.id)
+          .single();
         
-        
-        
-        while (!profileCreated && attempts < maxAttempts) {
-          await new Promise(resolve => setTimeout(resolve, 500));
-          
-          try {
-            const { data: profile } = await supabase
-              .from('profiles')
-              .select('id, role_id')
-              .eq('id', data.user.id)
-              .single();
-            
-            if (profile) {
-              console.log('✅ [REGISTER] Perfil encontrado:', profile.id);
-              profileCreated = true;
-              
-              // Aplicar convite se necessário
-              if (inviteToken) {
-                console.log('🎫 [REGISTER] Aplicando convite...');
-                await supabase.rpc('use_invite_with_onboarding', {
-                  invite_token: inviteToken,
-                  user_id: data.user.id
-                });
-              }
-            }
-          } catch (err) {
-            console.log(`⏳ [REGISTER] Tentativa ${attempts + 1}/${maxAttempts}`);
-          }
-          
-          attempts++;
+        if (profileError) {
+          console.error('❌ [REGISTER] ERRO CRÍTICO: Perfil não criado automaticamente:', profileError);
+          throw new Error(`Perfil não foi criado automaticamente: ${profileError.message}`);
         }
         
-        if (profileCreated) {
-          console.log('✅ [REGISTER] Processo completado com sucesso');
-          console.log('🎯 [REGISTER] Redirecionando para onboarding via redirectToNextStep()');
-          toast({
-            title: "Conta criada com sucesso!",
-            description: "Redirecionando para o preenchimento dos dados...",
+        console.log('✅ [REGISTER] Perfil criado:', profile.id);
+        
+        // Aplicar convite se necessário
+        if (inviteToken) {
+          console.log('🎫 [REGISTER] Aplicando convite...');
+          const { error: inviteError } = await supabase.rpc('use_invite_with_onboarding', {
+            invite_token: inviteToken,
+            user_id: data.user.id
           });
           
-          // Redirecionamento simplificado
-          setTimeout(() => {
-            console.log('🔄 [REGISTER] Redirecionando para onboarding');
-            redirectToNextStep();
-            onSuccess?.();
-          }, 800);
-        } else {
-          console.warn('⚠️ [REGISTER] Perfil não foi criado, tentando recovery...');
-          
-          // FALLBACK: Tentar criar perfil manualmente e aplicar convite
-          try {
-            console.log('🔧 [REGISTER] Executando recovery automático...');
-            
-            if (inviteToken) {
-              // Usar função que cria perfil E aplica convite
-              const { data: recoveryResult, error: recoveryError } = await supabase.rpc('use_invite_with_onboarding', {
-                invite_token: inviteToken,
-                user_id: data.user.id
-              });
-              
-              if (!recoveryError) {
-                console.log('✅ [REGISTER] Recovery bem-sucedido');
-                toast({
-                  title: "Conta configurada!",
-                  description: "Tudo foi configurado automaticamente. Bem-vindo!",
-                });
-                setTimeout(() => {
-                  redirectToNextStep();
-                  onSuccess?.();
-                }, 1000);
-                return;
-              }
-            }
-            
-            // Se chegou aqui, usar fallback simples
-            console.log('🆘 [REGISTER] Usando fallback simples');
-            toast({
-              title: "Conta criada!",
-              description: "Finalizando configuração... Você será direcionado automaticamente.",
-              variant: "default",
-            });
-            setTimeout(() => {
-              redirectToNextStep();
-              onSuccess?.();
-            }, 1500);
-            
-          } catch (recoveryError) {
-            console.error('❌ [REGISTER] Falha no recovery:', recoveryError);
-            toast({
-              title: "Conta criada!",
-              description: "Redirecionando... Se houver problemas, atualize a página.",
-              variant: "default",
-            });
-            setTimeout(() => {
-              redirectToNextStep();
-              onSuccess?.();
-            }, 2000);
+          if (inviteError) {
+            console.error('❌ [REGISTER] ERRO ao aplicar convite:', inviteError);
+            throw new Error(`Erro ao aplicar convite: ${inviteError.message}`);
           }
         }
+        
+        console.log('✅ [REGISTER] Processo completado - redirecionando');
+        toast({
+          title: "Conta criada com sucesso!",
+          description: "Redirecionando para o onboarding...",
+        });
+        
+        setTimeout(() => {
+          redirectToNextStep();
+          onSuccess?.();
+        }, 500);
       }
       
     } catch (error: any) {
@@ -342,84 +264,7 @@ const ModernRegisterForm: React.FC<ModernRegisterFormProps> = ({
     }
   };
 
-  // Método alternativo de registro quando o signUp falha
-  const handleAlternativeSignup = async () => {
-    console.log('🚀 [ALTERNATIVE] Iniciando registro alternativo...');
-    
-    if (!inviteToken) {
-      throw new Error('Método alternativo requer token de convite');
-    }
-
-    // 1. Validar o convite primeiro
-    console.log('🔍 [ALTERNATIVE] Validando convite...');
-    const { data: inviteData } = await supabase.rpc('validate_invite_token_enhanced', {
-      p_token: inviteToken
-    });
-
-    const invite = inviteData?.[0];
-    if (!invite) {
-      throw new Error('Convite inválido para registro alternativo');
-    }
-
-    console.log('✅ [ALTERNATIVE] Convite validado:', invite.email);
-
-    // 2. Tentar criar usuário com método simples
-    console.log('📝 [ALTERNATIVE] Criando usuário com dados mínimos...');
-    const simpleSignUp = await supabase.auth.signUp({
-      email,
-      password
-    });
-
-    if (simpleSignUp.error) {
-      throw simpleSignUp.error;
-    }
-
-    if (!simpleSignUp.data.user) {
-      throw new Error('Usuário não foi criado');
-    }
-
-    console.log('✅ [ALTERNATIVE] Usuário criado:', simpleSignUp.data.user.id);
-
-    // 3. Criar perfil manualmente
-    console.log('👤 [ALTERNATIVE] Criando perfil...');
-    const { error: profileError } = await supabase
-      .from('profiles')
-      .insert({
-        id: simpleSignUp.data.user.id,
-        email: email,
-        name: name,
-        role_id: invite.role_id
-      });
-
-    if (profileError && !profileError.message.includes('duplicate')) {
-      console.error('❌ [ALTERNATIVE] Erro ao criar perfil:', profileError);
-      // Não falhar aqui, tentar aplicar convite mesmo assim
-    }
-
-        // 4. Aplicar convite E inicializar onboarding
-        console.log('🎫 [ALTERNATIVE] Aplicando convite e inicializando onboarding...');
-        const { data: inviteResult, error: inviteError } = await supabase.rpc('use_invite_with_onboarding', {
-          invite_token: inviteToken,
-          user_id: simpleSignUp.data.user.id
-        });
-
-    if (inviteError) {
-      console.error('⚠️ [ALTERNATIVE] Erro ao aplicar convite:', inviteError);
-    }
-
-    // 5. Sucesso!
-    console.log('🎉 [ALTERNATIVE] Registro alternativo concluído com sucesso!');
-    toast({
-      title: "Conta criada com sucesso!",
-      description: "Sua conta foi criada usando um método alternativo. Bem-vindo!",
-    });
-
-    setStep('success');
-    setTimeout(() => {
-      redirectToNextStep();
-      onSuccess?.();
-    }, 1000);
-  };
+  // REMOVIDO: handleAlternativeSignup - sem fallbacks ou recovery
 
   if (step === 'success') {
     return (
