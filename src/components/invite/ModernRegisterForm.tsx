@@ -242,49 +242,117 @@ const ModernRegisterForm: React.FC<ModernRegisterFormProps> = ({
           description: "Preparando seu ambiente personalizado...",
         });
         
-        // Aguardar o trigger processar e verificar se o perfil foi criado
+        // Verificação de perfil com retry inteligente e fallback robusto
         let profileCreated = false;
         let attempts = 0;
-        const maxAttempts = 15; // Aumentar tentativas para dar mais tempo
+        const maxAttempts = 10; // Reduzido mas com intervalo maior
+        
+        console.log('🔍 [REGISTER] Iniciando verificação de perfil...');
         
         while (!profileCreated && attempts < maxAttempts) {
-          await new Promise(resolve => setTimeout(resolve, 500));
+          await new Promise(resolve => setTimeout(resolve, 800)); // Intervalo aumentado
           
           try {
-            const { data: profile } = await supabase
+            const { data: profile, error: profileError } = await supabase
               .from('profiles')
-              .select('id, role_id, name')
+              .select('id, role_id, name, onboarding_completed')
               .eq('id', data.user.id)
               .single();
             
             if (profile) {
-              console.log('✅ [REGISTER] Perfil criado:', profile);
+              console.log('✅ [REGISTER] Perfil encontrado:', {
+                id: profile.id,
+                hasRole: !!profile.role_id,
+                onboardingCompleted: profile.onboarding_completed
+              });
               profileCreated = true;
+              
+              // Se convite existe, aplicá-lo automaticamente
+              if (inviteToken && !profile.role_id) {
+                console.log('🎫 [REGISTER] Aplicando convite automaticamente...');
+                try {
+                  const { error: inviteError } = await supabase.rpc('use_invite_with_onboarding', {
+                    invite_token: inviteToken,
+                    user_id: data.user.id
+                  });
+                  
+                  if (inviteError) {
+                    console.warn('⚠️ [REGISTER] Erro ao aplicar convite:', inviteError);
+                  } else {
+                    console.log('✅ [REGISTER] Convite aplicado com sucesso');
+                  }
+                } catch (inviteErr) {
+                  console.warn('⚠️ [REGISTER] Falha na aplicação do convite:', inviteErr);
+                }
+              }
+            } else if (profileError) {
+              console.log(`⏳ [REGISTER] Perfil não encontrado, tentativa ${attempts + 1}/${maxAttempts}:`, profileError.message);
             }
           } catch (err) {
-            console.log('⏳ [REGISTER] Aguardando criação do perfil... tentativa', attempts + 1);
+            console.log(`⏳ [REGISTER] Aguardando criação do perfil... tentativa ${attempts + 1}/${maxAttempts}`);
           }
           
           attempts++;
         }
         
         if (profileCreated) {
+          console.log('✅ [REGISTER] Processo completado com sucesso');
           toast({
             title: "Tudo pronto!",
             description: "Redirecionando para o onboarding...",
           });
           setTimeout(() => {
             onSuccess?.();
-          }, 1500);
+          }, 800); // Mais rápido
         } else {
-          console.warn('⚠️ [REGISTER] Perfil não foi criado no tempo esperado');
-          toast({
-            title: "Conta criada!",
-            description: "Redirecionando... Se houver problemas, atualize a página.",
-          });
-          setTimeout(() => {
-            onSuccess?.();
-          }, 2000);
+          console.warn('⚠️ [REGISTER] Perfil não foi criado, tentando recovery...');
+          
+          // FALLBACK: Tentar criar perfil manualmente e aplicar convite
+          try {
+            console.log('🔧 [REGISTER] Executando recovery automático...');
+            
+            if (inviteToken) {
+              // Usar função que cria perfil E aplica convite
+              const { data: recoveryResult, error: recoveryError } = await supabase.rpc('use_invite_with_onboarding', {
+                invite_token: inviteToken,
+                user_id: data.user.id
+              });
+              
+              if (!recoveryError) {
+                console.log('✅ [REGISTER] Recovery bem-sucedido');
+                toast({
+                  title: "Conta configurada!",
+                  description: "Tudo foi configurado automaticamente. Bem-vindo!",
+                });
+                setTimeout(() => {
+                  onSuccess?.();
+                }, 1000);
+                return;
+              }
+            }
+            
+            // Se chegou aqui, usar fallback simples
+            console.log('🆘 [REGISTER] Usando fallback simples');
+            toast({
+              title: "Conta criada!",
+              description: "Finalizando configuração... Você será direcionado automaticamente.",
+              variant: "default",
+            });
+            setTimeout(() => {
+              onSuccess?.();
+            }, 1500);
+            
+          } catch (recoveryError) {
+            console.error('❌ [REGISTER] Falha no recovery:', recoveryError);
+            toast({
+              title: "Conta criada!",
+              description: "Redirecionando... Se houver problemas, atualize a página.",
+              variant: "default",
+            });
+            setTimeout(() => {
+              onSuccess?.();
+            }, 2000);
+          }
         }
       }
       

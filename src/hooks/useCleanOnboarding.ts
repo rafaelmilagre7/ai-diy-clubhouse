@@ -422,7 +422,23 @@ export const useCleanOnboarding = () => {
       if (targetStep <= 6) {
         navigate(`/onboarding/step/${targetStep}`);
       } else {
-        // Onboarding concluído - limpar dados locais
+        // Onboarding concluído - completar via RPC para garantir consistência
+        try {
+          console.log('🏁 [CLEAN-ONBOARDING] Finalizando onboarding via RPC...');
+          const { data: completeResult, error: completeError } = await supabase.rpc('complete_onboarding', {
+            p_user_id: user!.id
+          });
+          
+          if (completeError) {
+            console.error('❌ [CLEAN-ONBOARDING] Erro ao finalizar:', completeError);
+          } else {
+            console.log('✅ [CLEAN-ONBOARDING] Onboarding finalizado via RPC:', completeResult);
+          }
+        } catch (rpcError) {
+          console.error('❌ [CLEAN-ONBOARDING] Falha no RPC de finalização:', rpcError);
+        }
+        
+        // Limpar dados locais
         clearLocal();
         toast({
           title: "Onboarding concluído! 🎉",

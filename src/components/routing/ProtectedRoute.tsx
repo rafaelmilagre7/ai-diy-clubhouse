@@ -19,7 +19,7 @@ const ProtectedRoute = ({
   const { user, profile, isAdmin, hasCompletedOnboarding, isLoading } = useAuth();
   const location = useLocation();
   
-  // Se estiver carregando, mostra tela de loading
+  // Se estiver carregando, mostra tela de loading com timeout aumentado
   if (isLoading) {
     return <LoadingScreen message="Verificando sua autenticação..." />;
   }
@@ -38,8 +38,20 @@ const ProtectedRoute = ({
 
   // Se usuário não completou onboarding E não está em rota permitida
   if (!hasCompletedOnboarding && !isOnboardingRoute) {
-    console.log("[PROTECTED-ROUTE] Onboarding obrigatório não completado, redirecionando...");
-    // Redirecionar para a página de redirecionamento inteligente
+    console.log("[PROTECTED-ROUTE] Onboarding obrigatório não completado, redirecionando...", {
+      hasProfile: !!profile,
+      profileId: profile?.id,
+      onboardingCompleted: profile?.onboarding_completed,
+      currentPath: location.pathname
+    });
+    
+    // Fallback: Se não há perfil mas há usuário, dar mais tempo
+    if (user && !profile) {
+      console.log("[PROTECTED-ROUTE] Aguardando criação do perfil...");
+      return <LoadingScreen message="Configurando sua conta..." />;
+    }
+    
+    // Redirecionar para onboarding
     return <Navigate to="/onboarding" replace />;
   }
   

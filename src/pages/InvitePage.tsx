@@ -101,10 +101,10 @@ const InvitePage = () => {
                     prefilledEmail={validationResult.invite.email}
                     onSuccess={() => {
                       console.log('🎯 [INVITE] Registro concluído, redirecionando para onboarding');
-                      // Aguardar um pouco mais para garantir que tudo foi processado
+                      // Timeout reduzido - mais ágil
                       setTimeout(() => {
                         navigate('/onboarding', { replace: true });
-                      }, 3000);
+                      }, 1000);
                     }}
                   />
                 </div>
