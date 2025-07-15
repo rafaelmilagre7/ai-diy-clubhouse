@@ -8,6 +8,7 @@ interface WhatsAppInputProps {
   value?: string;
   onChange: (value: string) => void;
   getFieldError?: (field: string) => string | undefined;
+  fromInvite?: boolean;
 }
 
 // Função para formatar telefone brasileiro
@@ -69,7 +70,8 @@ const validatePhoneNumber = (phone: string): { isValid: boolean; message?: strin
 export const WhatsAppInput: React.FC<WhatsAppInputProps> = ({
   value = '',
   onChange,
-  getFieldError
+  getFieldError,
+  fromInvite = false
 }) => {
   const [isFocused, setIsFocused] = useState(false);
   
@@ -100,8 +102,14 @@ export const WhatsAppInput: React.FC<WhatsAppInputProps> = ({
 
   return (
     <div>
-      <Label htmlFor="phone" className="text-foreground">
+      <Label htmlFor="phone" className="text-foreground flex items-center gap-2">
         WhatsApp *
+        {fromInvite && (
+          <span className="inline-flex items-center gap-1 text-xs bg-primary/10 text-primary px-2 py-1 rounded-full">
+            <Check className="h-3 w-3" />
+            Do convite
+          </span>
+        )}
       </Label>
       <div className="relative mt-1">
         <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
@@ -113,6 +121,8 @@ export const WhatsAppInput: React.FC<WhatsAppInputProps> = ({
           onFocus={handleFocus}
           onBlur={handleBlur}
           className={`pl-10 pr-10 bg-background border-border text-foreground ${
+            fromInvite ? 'border-primary/50 bg-primary/5' : ''
+          } ${
             showValidation 
               ? isValid 
                 ? 'border-green-500 focus:border-green-500' 
@@ -142,8 +152,16 @@ export const WhatsAppInput: React.FC<WhatsAppInputProps> = ({
         </p>
       )}
       
+      {/* Mensagem do convite */}
+      {fromInvite && (
+        <p className="text-primary text-xs mt-1 flex items-center gap-1">
+          <Phone className="h-3 w-3" />
+          Este WhatsApp foi preenchido automaticamente do seu convite
+        </p>
+      )}
+      
       {/* Dica de formato */}
-      {isFocused && !value && (
+      {isFocused && !value && !fromInvite && (
         <p className="text-xs text-muted-foreground mt-1">
           Formato: (11) 99999-9999
         </p>

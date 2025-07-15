@@ -7,7 +7,7 @@ import { WhatsAppInput } from '@/components/onboarding/components/WhatsAppInput'
 import { BirthDateSelector } from '@/components/onboarding/components/BirthDateSelector';
 import { LocationSelector } from '@/components/onboarding/components/LocationSelector';
 import { ProfilePictureUpload } from '@/components/onboarding/components/ProfilePictureUpload';
-import { User, MapPin } from 'lucide-react';
+import { User, MapPin, Mail, Phone, Check } from 'lucide-react';
 
 interface SimpleOnboardingStep1Props {
   data: any;
@@ -47,6 +47,13 @@ export const SimpleOnboardingStep1 = React.memo(forwardRef<Step1Ref, SimpleOnboa
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const getFieldError = (field: string) => errors[field];
+
+  // Detectar campos que vieram do convite
+  const fromInvite = useMemo(() => ({
+    email: data.personal_info?.from_invite === true,
+    phone: data.personal_info?.phone_from_invite === true,
+    name: data.personal_info?.name_from_invite === true
+  }), [data.personal_info?.from_invite, data.personal_info?.phone_from_invite, data.personal_info?.name_from_invite]);
 
   const handleInputChange = useCallback((field: string, value: string) => {
     setFormData(prev => {
@@ -185,31 +192,59 @@ export const SimpleOnboardingStep1 = React.memo(forwardRef<Step1Ref, SimpleOnboa
         </CardHeader>
         <CardContent className="space-y-4">
           <div>
-            <Label className="text-foreground">Nome Completo *</Label>
+            <Label className="text-foreground flex items-center gap-2">
+              Nome Completo *
+              {fromInvite.name && (
+                <span className="inline-flex items-center gap-1 text-xs bg-primary/10 text-primary px-2 py-1 rounded-full">
+                  <Check className="h-3 w-3" />
+                  Do convite
+                </span>
+              )}
+            </Label>
             <Input
               name="name"
               value={formData.name}
               onChange={(e) => handleInputChange('name', e.target.value)}
-              className="mt-1 bg-background border-border text-foreground"
+              className={`mt-1 bg-background border-border text-foreground ${fromInvite.name ? 'border-primary/50 bg-primary/5' : ''}`}
               placeholder="Seu nome completo"
             />
             {getFieldError('name') && (
               <p className="text-destructive text-sm mt-1">{getFieldError('name')}</p>
             )}
+            {fromInvite.name && (
+              <p className="text-primary text-xs mt-1 flex items-center gap-1">
+                <Mail className="h-3 w-3" />
+                Este dado foi preenchido automaticamente do seu convite
+              </p>
+            )}
           </div>
 
           <div>
-            <Label className="text-foreground">E-mail *</Label>
+            <Label className="text-foreground flex items-center gap-2">
+              E-mail *
+              {fromInvite.email && (
+                <span className="inline-flex items-center gap-1 text-xs bg-primary/10 text-primary px-2 py-1 rounded-full">
+                  <Check className="h-3 w-3" />
+                  Do convite
+                </span>
+              )}
+            </Label>
             <Input
               name="email"
               type="email"
               value={formData.email}
               onChange={(e) => handleInputChange('email', e.target.value)}
-              className="mt-1 bg-background border-border text-foreground"
+              className={`mt-1 bg-background border-border text-foreground ${fromInvite.email ? 'border-primary/50 bg-primary/5' : ''}`}
               placeholder="seu@email.com"
             />
             {getFieldError('email') && (
               <p className="text-destructive text-sm mt-1">{getFieldError('email')}</p>
+            )}
+            {fromInvite.email && (
+              <p className="text-primary text-xs mt-1 flex items-center gap-1">
+                <Mail className="h-3 w-3" />
+                Este e-mail foi preenchido automaticamente do seu convite
+              </p>
             )}
           </div>
 
@@ -217,6 +252,7 @@ export const SimpleOnboardingStep1 = React.memo(forwardRef<Step1Ref, SimpleOnboa
             value={formData.phone}
             onChange={(value) => handleInputChange('phone', value)}
             getFieldError={getFieldError}
+            fromInvite={fromInvite.phone}
           />
 
           <div>
