@@ -5969,8 +5969,19 @@ export type Database = {
         Returns: Json
       }
       get_user_profile_safe: {
-        Args: { p_user_id: string }
-        Returns: Json
+        Args: { target_user_id: string }
+        Returns: {
+          id: string
+          email: string
+          name: string
+          company_name: string
+          role_id: string
+          onboarding_completed: boolean
+          onboarding_completed_at: string
+          created_at: string
+          updated_at: string
+          user_roles: Json
+        }[]
       }
       get_user_role: {
         Args: { user_id: string }

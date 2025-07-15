@@ -39,31 +39,28 @@ const LayoutProvider = memo(({ children }: { children: ReactNode }) => {
     return "Carregando layout...";
   }, [isLoading, user]);
 
-  // OTIMIZAÇÃO: Verificação mais simples e sem conflitos
+  // OTIMIZAÇÃO: Simplificação para evitar conflitos com RootRedirect
   useEffect(() => {
-    // Limpar qualquer timeout existente
+    // Limpar timeout existente
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
     }
     
-    // Se não estiver carregando, verificar autenticação
+    // Simplificar verificação
     if (!isLoading) {
       if (!user) {
+        // Apenas navegar para login se não tiver usuário
         navigate('/login', { replace: true });
         return;
       }
       
-      // Se temos usuário, marcar layout como pronto
+      // Marcar layout como pronto imediatamente
       setLayoutReady(true);
-      
-      // REMOÇÃO: Não fazer redirecionamentos automáticos aqui
-      // O RootRedirect já cuida disso de forma mais inteligente
-      
     } else {
-      // Timeout reduzido para não interferir no fluxo
+      // Timeout menor para ser mais responsivo
       timeoutRef.current = window.setTimeout(() => {
         setLayoutReady(true);
-      }, 1500); // Reduzido de 2000 para 1500ms
+      }, 1000); // Reduzido para 1s
     }
     
     return () => {
@@ -71,7 +68,7 @@ const LayoutProvider = memo(({ children }: { children: ReactNode }) => {
         clearTimeout(timeoutRef.current);
       }
     };
-  }, [user, isLoading, navigate]); // Removidas dependências desnecessárias
+  }, [user, isLoading, navigate]);
 
   // Renderizar com base na rota e permissões
   if (layoutReady && user) {

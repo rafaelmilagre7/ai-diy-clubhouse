@@ -4,20 +4,16 @@ import { useAuth } from "@/contexts/auth";
 import LoadingScreen from "@/components/common/LoadingScreen";
 import { useEffect, useState, useRef } from "react";
 import { getUserRoleName } from "@/lib/supabase/types";
-import { useOnboardingRedirect } from "@/hooks/useOnboardingRedirect";
 
 const RootRedirect = () => {
   const location = useLocation();
   const [forceRedirect, setForceRedirect] = useState(false);
-  const [hasRedirected, setHasRedirected] = useState(false);
   const timeoutRef = useRef<number | null>(null);
-  const lastPathRef = useRef<string>('');
   
-  // Hook seguro de auth
+  // Hook de auth otimizado
   const { user, profile, isLoading: authLoading } = useAuth();
-  const { redirectToNextStep } = useOnboardingRedirect();
   
-  console.log("🔍 [ROOT-REDIRECT] Estado atual:", {
+  console.log("🔍 [ROOT-REDIRECT] Estado:", {
     path: location.pathname,
     hasUser: !!user,
     hasProfile: !!profile,
@@ -25,12 +21,12 @@ const RootRedirect = () => {
     loading: authLoading
   });
 
-  // Circuit breaker para evitar loading infinito - timeout reduzido
+  // Circuit breaker otimizado
   useEffect(() => {
     timeoutRef.current = window.setTimeout(() => {
-      console.warn("⏰ [ROOT-REDIRECT] Timeout ativado - redirecionamento forçado");
+      console.warn("⏰ [ROOT-REDIRECT] Timeout - forçando redirecionamento");
       setForceRedirect(true);
-    }, 3000); // Reduzido de 5000 para 3000ms
+    }, 2000); // Reduzido para 2s
     
     return () => {
       if (timeoutRef.current) {
@@ -39,22 +35,22 @@ const RootRedirect = () => {
     };
   }, []);
 
-  // Aguardando autenticação
+  // Loading state
   if (authLoading && !forceRedirect) {
-    return <LoadingScreen message="Verificando sua sessão..." />;
+    return <LoadingScreen message="Verificando sessão..." />;
   }
 
-  // Sem usuário, vai para login
+  // Sem usuário -> login
   if (!user) {
     return <Navigate to="/login" replace />;
   }
 
-  // Aguardando perfil
+  // Aguardando perfil (com timeout)
   if (!profile && !forceRedirect) {
-    return <LoadingScreen message="Carregando seu perfil..." />;
+    return <LoadingScreen message="Carregando perfil..." />;
   }
 
-  // Circuit breaker ativo - redirecionamento forçado
+  // Circuit breaker ativo
   if (forceRedirect) {
     if (user && profile) {
       const roleName = getUserRoleName(profile);
@@ -63,34 +59,33 @@ const RootRedirect = () => {
     return <Navigate to="/login" replace />;
   }
 
-  // Usuário autenticado em /login deve ser redirecionado
+  // Redirecionamento de login para usuários autenticados
   if (location.pathname === '/login' && user && profile) {
     const roleName = getUserRoleName(profile);
     return <Navigate to={roleName === 'formacao' ? '/formacao' : '/dashboard'} replace />;
   }
 
-  // VERIFICAÇÃO DO ONBOARDING - Simples e direto
+  // FLUXO DE ONBOARDING OTIMIZADO
   if (profile && !profile.onboarding_completed && !location.pathname.startsWith('/onboarding')) {
-    console.log("🔄 [ROOT-REDIRECT] Onboarding obrigatório - redirecionamento direto");
+    console.log("🔄 [ROOT-REDIRECT] Onboarding obrigatório");
     return <Navigate to="/onboarding" replace />;
   }
   
-  // Se está na página de onboarding mas já completou, redireciona
+  // Onboarding completo - redirecionar
   if (profile && profile.onboarding_completed && location.pathname.startsWith('/onboarding')) {
-    console.log("✅ [ROOT-REDIRECT] Onboarding completo - redirecionando para dashboard");
+    console.log("✅ [ROOT-REDIRECT] Onboarding completo - redirecionando");
     const roleName = getUserRoleName(profile);
     return <Navigate to={roleName === 'formacao' ? '/formacao' : '/dashboard'} replace />;
   }
   
-  // Verificação de roles
+  // Redirecionamento baseado em role
   const roleName = getUserRoleName(profile);
   
-  // Formação vai direto para área específica
   if (roleName === 'formacao') {
     return <Navigate to="/formacao" replace />;
   }
   
-  // Fallback: dashboard
+  // Fallback padrão
   return <Navigate to="/dashboard" replace />;
 };
 

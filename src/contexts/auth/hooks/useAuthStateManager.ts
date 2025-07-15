@@ -24,35 +24,35 @@ export const useAuthStateManager = ({
   const { setLoading: setGlobalLoading, circuitBreakerActive } = useGlobalLoading();
 
   const setupAuthSession = useCallback(async () => {
-    logger.info('[AUTH-STATE] Iniciando setup - timeout otimizado de 2s');
+    logger.info('[AUTH-STATE] Setup otimizado iniciado');
     
     try {
       setIsLoading(true);
       setGlobalLoading('auth', true);
 
-      // OTIMIZAÇÃO 1: Verificação de circuit breaker mais rápida
+      // Circuit breaker check
       if (circuitBreakerActive) {
-        logger.warn('[AUTH-STATE] Circuit breaker ativo - setup simplificado');
+        logger.warn('[AUTH-STATE] Circuit breaker ativo - usando fallback');
         setIsLoading(false);
         setGlobalLoading('auth', false);
         return;
       }
 
-      // OTIMIZAÇÃO 2: Timeout ainda mais reduzido para não bloquear
+      // Timeout reduzido para melhor performance
       const sessionPromise = validateUserSession();
       const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error("Auth session timeout")), 1500) // Reduzido para 1.5s
+        setTimeout(() => reject(new Error("Auth timeout")), 1000) // Reduzido para 1s
       );
 
       let sessionResult;
       try {
         sessionResult = await Promise.race([sessionPromise, timeoutPromise]) as { session: Session | null; user: User | null };
       } catch (timeoutError) {
-        logger.warn('[AUTH-STATE] Timeout na validação - tentativa final sem timeout');
+        logger.warn('[AUTH-STATE] Timeout - tentativa direta');
         try {
           sessionResult = await validateUserSession();
         } catch (finalError) {
-          logger.error('[AUTH-STATE] Falha final na validação:', finalError);
+          logger.error('[AUTH-STATE] Falha final:', finalError);
           setSession(null);
           setUser(null);
           setProfile(null);
@@ -64,7 +64,7 @@ export const useAuthStateManager = ({
       const { session, user } = sessionResult;
       
       if (!session || !user) {
-        logger.info('[AUTH-STATE] Nenhuma sessão válida - estado limpo');
+        logger.info('[AUTH-STATE] Sem sessão - limpando estado');
         setSession(null);
         setUser(null);
         setProfile(null);
@@ -73,78 +73,41 @@ export const useAuthStateManager = ({
         return;
       }
 
-      // Definir sessão e usuário
+      // Definir sessão e usuário imediatamente
       setSession(session);
       setUser(user);
 
-      // CORREÇÃO DE SEGURANÇA: Removida verificação por email hardcodado
-      // Agora usa APENAS o sistema de roles do banco de dados
-
-      // OTIMIZAÇÃO 4: Verificar cache antes de buscar perfil
+      // Verificar cache de perfil primeiro
       const cachedNavigation = navigationCache.get(user.id);
       if (cachedNavigation?.userProfile) {
-        logger.info('[AUTH-STATE] Perfil em cache - usando dados salvos');
+        logger.info('[AUTH-STATE] ✅ Usando perfil em cache');
         setProfile(cachedNavigation.userProfile);
-        
-        logger.info('[AUTH-STATE] ✅ Setup completo via cache', {
-          userId: user.id.substring(0, 8) + '***',
-          hasProfile: true,
-          cached: true
-        });
-        
         return;
       }
 
-      // CORREÇÃO CRÍTICA: Buscar perfil com timeout mais generoso e fallback robusto
+      // Buscar perfil com fallback otimizado
       try {
-        const profilePromise = fetchUserProfileSecurely(user.id);
-        const profileTimeoutPromise = new Promise((_, reject) => 
-          setTimeout(() => reject(new Error("Profile timeout")), 6000) // Aumentado para 6s
-        );
+        // Usar função de busca segura do backend
+        const { data: profileData, error: profileError } = await supabase
+          .rpc('get_user_profile_safe', { target_user_id: user.id });
 
-        let profile;
-        try {
-          profile = await Promise.race([profilePromise, profileTimeoutPromise]) as UserProfile | null;
-        } catch (profileTimeoutError) {
-          logger.warn('[AUTH-STATE] Timeout no perfil - tentando fallback direto');
-          
-          // FALLBACK DIRETO: Buscar direto sem função helper
-          try {
-            const { data: directProfile, error: directError } = await supabase
-              .from('profiles')
-              .select(`
-                *,
-                user_roles!inner (
-                  id,
-                  name,
-                  description,
-                  permissions
-                )
-              `)
-              .eq('id', user.id)
-              .maybeSingle(); // Usar maybeSingle para evitar erros se não existir
-              
-            if (directError) {
-              throw directError;
-            }
-              
-            profile = directProfile as UserProfile | null;
-            logger.info('[AUTH-STATE] ✅ Perfil carregado via fallback direto');
-          } catch (fallbackError) {
-            logger.error('[AUTH-STATE] Fallback direto falhou:', fallbackError);
-            profile = null;
-          }
+        if (profileError) {
+          logger.error('[AUTH-STATE] Erro na função segura:', profileError);
+          throw profileError;
         }
-        
-        if (profile) {
+
+        if (profileData && profileData.length > 0) {
+          const profile = profileData[0] as UserProfile;
+          
+          // Validação de segurança
           if (profile.id !== user.id) {
-            logger.error('[AUTH-STATE] VIOLAÇÃO DE SEGURANÇA: ID do perfil incorreto');
+            logger.error('[AUTH-STATE] VIOLAÇÃO DE SEGURANÇA: ID incorreto');
             throw new Error('Violação de segurança detectada');
           }
 
           setProfile(profile);
           
-          // Cache de navegação baseado no role do banco
+          // Cache baseado no role
           const roleName = profile.user_roles?.name;
           if (roleName === 'admin') {
             navigationCache.set(user.id, profile, 'admin');
@@ -152,19 +115,17 @@ export const useAuthStateManager = ({
             navigationCache.set(user.id, profile, 'formacao');
           }
           
-          logger.info('[AUTH-STATE] ✅ Setup completo', {
+          logger.info('[AUTH-STATE] ✅ Perfil carregado com sucesso', {
             userId: user.id.substring(0, 8) + '***',
-            hasProfile: true,
-            roleName: profile.user_roles?.name || 'sem role',
-            cached: false
+            roleName: roleName || 'sem role'
           });
         } else {
-          logger.warn('[AUTH-STATE] Sem perfil disponível');
+          logger.warn('[AUTH-STATE] Perfil não encontrado');
           setProfile(null);
         }
         
       } catch (profileError) {
-        logger.error('[AUTH-STATE] Erro no perfil:', profileError);
+        logger.error('[AUTH-STATE] Erro ao buscar perfil:', profileError);
         setProfile(null);
         
         if (profileError instanceof Error && profileError.message.includes('segurança')) {
@@ -179,9 +140,7 @@ export const useAuthStateManager = ({
     } catch (error) {
       logger.error('[AUTH-STATE] Erro crítico:', error);
       
-      if (error instanceof Error && error.message.includes('timeout')) {
-        logger.warn('[AUTH-STATE] Erro de timeout - mantendo sessão básica');
-      } else {
+      if (!(error instanceof Error && error.message.includes('timeout'))) {
         setSession(null);
         setUser(null);
         setProfile(null);
@@ -192,7 +151,7 @@ export const useAuthStateManager = ({
     } finally {
       setIsLoading(false);
       setGlobalLoading('auth', false);
-      logger.info('[AUTH-STATE] ✅ Setup finalizado (otimizado)');
+      logger.info('[AUTH-STATE] ✅ Setup finalizado');
     }
   }, [setSession, setUser, setProfile, setIsLoading, setGlobalLoading, circuitBreakerActive]);
 
