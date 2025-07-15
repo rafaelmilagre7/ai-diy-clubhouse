@@ -11,15 +11,17 @@ const RootRedirect = () => {
   const location = useLocation();
   const [forceRedirect, setForceRedirect] = useState(false);
   const [onboardingRedirectUrl, setOnboardingRedirectUrl] = useState<string | null>(null);
+  const [authError, setAuthError] = useState(false);
   const timeoutRef = useRef<number | null>(null);
   
-  // CORREÇÃO: Verificação segura do contexto
+  // CORREÇÃO: Sempre chamar o hook, tratar erro via state
   let authContext;
   try {
     authContext = useAuth();
   } catch (error) {
     console.error("[ROOT-REDIRECT] Auth context não disponível:", error);
-    return <Navigate to="/login" replace />;
+    authContext = { user: null, profile: null, isAdmin: false, isLoading: false };
+    if (!authError) setAuthError(true);
   }
 
   const { user, profile, isAdmin, isLoading: authLoading } = authContext;
@@ -38,6 +40,11 @@ const RootRedirect = () => {
     });
   }
   
+  // Tratar erro de autenticação primeiro
+  if (authError) {
+    return <Navigate to="/login" replace />;
+  }
+
   // Circuit breaker para evitar loading infinito
   useEffect(() => {
     timeoutRef.current = window.setTimeout(() => {
