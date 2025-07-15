@@ -140,12 +140,12 @@ export const useCleanOnboarding = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [dataRestored, setDataRestored] = useState(false);
 
-  // Carregar dados na inicialização
+  // Carregar dados na inicialização APENAS uma vez
   useEffect(() => {
-    if (user?.id) {
+    if (user?.id && !isLoading) {
       loadData();
     }
-  }, [user?.id]);
+  }, [user?.id]); // Remover loadData das dependências para evitar loops
 
   const loadData = useCallback(async () => {
     if (!user?.id) {
@@ -286,15 +286,14 @@ export const useCleanOnboarding = () => {
   }, [user?.id, loadData]);
 
   const updateData = useCallback((stepData: Partial<OnboardingFinalData>) => {
-    console.log('🔄 [CLEAN-ONBOARDING] Atualizando dados locais:', stepData);
     setData(prev => {
       const newData = {
         ...prev,
         ...stepData,
-        updated_at: new Date().toISOString() // Marcar como atualizado localmente
+        updated_at: new Date().toISOString()
       };
       
-      // Salvar automaticamente no localStorage
+      // Salvar com debounce para evitar loops
       saveToLocal(newData);
       
       return newData;
@@ -473,17 +472,7 @@ export const useCleanOnboarding = () => {
     return canAccess;
   }, [data.is_completed, data.current_step, data.completed_steps]);
 
-  // Auto-save periódico (a cada 30 segundos)
-  useEffect(() => {
-    if (!data.user_id || isLoading) return;
-    
-    const interval = setInterval(() => {
-      console.log('⏰ [CLEAN-ONBOARDING] Auto-save periódico');
-      saveToLocal(data);
-    }, 30000); // 30 segundos
-
-    return () => clearInterval(interval);
-  }, [data, isLoading, saveToLocal]);
+  // Removido auto-save periódico que causava loops
 
   return {
     data,

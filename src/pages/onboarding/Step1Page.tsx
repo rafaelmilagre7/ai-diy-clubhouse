@@ -1,13 +1,14 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { OnboardingLayout } from '@/components/layout/OnboardingLayout';
-import { SimpleOnboardingStep1 } from '@/components/onboarding/steps/SimpleOnboardingStep1';
+import { SimpleOnboardingStep1, Step1Ref } from '@/components/onboarding/steps/SimpleOnboardingStep1';
 import { SimpleStepNavigation } from '@/components/onboarding/SimpleStepNavigation';
 import { DataRestoreNotification } from '@/components/onboarding/DataRestoreNotification';
 import { useOnboarding } from '@/hooks/useOnboarding';
 
 const OnboardingStep1Page: React.FC = () => {
   const navigate = useNavigate();
+  const step1Ref = useRef<Step1Ref>(null);
   const { data, updateData, saveAndNavigate, canAccessStep, isSaving, dataRestored } = useOnboarding();
 
   // Verificar se pode acessar esta etapa ou se deve redirecionar
@@ -31,16 +32,14 @@ const OnboardingStep1Page: React.FC = () => {
     }
   }, [data.is_completed, data.current_step, canAccessStep, navigate]);
 
-  const handleNext = async (stepData?: any) => {
-    console.log('➡️ [STEP1] handleNext chamado com:', stepData);
+  const handleNext = async () => {
+    // Validar usando ref
+    if (!step1Ref.current?.validate()) {
+      return;
+    }
     
-    // Se não fornecido stepData, usar dados atuais
-    const dataToSave = stepData || {
-      personal_info: data.personal_info,
-      location_info: data.location_info
-    };
-    
-    await saveAndNavigate(dataToSave, 1, 2);
+    const stepData = step1Ref.current?.getData();
+    await saveAndNavigate(stepData, 1, 2);
   };
 
   const handlePrevious = () => {
@@ -61,7 +60,7 @@ const OnboardingStep1Page: React.FC = () => {
   return (
     <OnboardingLayout currentStep={1}>
       <DataRestoreNotification dataRestored={dataRestored} />
-      <SimpleOnboardingStep1 {...stepProps} />
+      <SimpleOnboardingStep1 ref={step1Ref} {...stepProps} />
       
       {/* Navegação */}
       <div className="mt-8 pt-6 border-t">

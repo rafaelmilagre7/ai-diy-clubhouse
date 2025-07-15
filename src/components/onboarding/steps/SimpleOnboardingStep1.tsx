@@ -1,14 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useImperativeHandle, forwardRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Button } from '@/components/ui/button';
 import { WhatsAppInput } from '@/components/onboarding/components/WhatsAppInput';
 import { BirthDateSelector } from '@/components/onboarding/components/BirthDateSelector';
 import { LocationSelector } from '@/components/onboarding/components/LocationSelector';
 import { ProfilePictureUpload } from '@/components/onboarding/components/ProfilePictureUpload';
-import { User, MapPin, ChevronRight } from 'lucide-react';
+import { User, MapPin } from 'lucide-react';
 
 interface SimpleOnboardingStep1Props {
   data: any;
@@ -17,12 +16,17 @@ interface SimpleOnboardingStep1Props {
   isLoading?: boolean;
 }
 
-export const SimpleOnboardingStep1: React.FC<SimpleOnboardingStep1Props> = ({
+export interface Step1Ref {
+  validate: () => boolean;
+  getData: () => any;
+}
+
+export const SimpleOnboardingStep1 = forwardRef<Step1Ref, SimpleOnboardingStep1Props>(({
   data,
   onNext,
   onDataChange,
   isLoading = false
-}) => {
+}, ref) => {
   const [formData, setFormData] = useState({
     // Dados pessoais
     name: data.personal_info?.name || '',
@@ -86,7 +90,6 @@ export const SimpleOnboardingStep1: React.FC<SimpleOnboardingStep1Props> = ({
   };
 
   const validateForm = () => {
-    console.log('🔍 [STEP1] Validando formulário com dados:', formData);
     const newErrors: Record<string, string> = {};
 
     // Validação mais tolerante - apenas nome e email obrigatórios
@@ -107,61 +110,44 @@ export const SimpleOnboardingStep1: React.FC<SimpleOnboardingStep1Props> = ({
       newErrors.phone = 'WhatsApp deve ter pelo menos 10 dígitos';
     }
 
-    // Localização opcional no Step 1 - pode ser preenchida depois
-    // if (!formData.state) {
-    //   newErrors.state = 'Estado é obrigatório';
-    // }
-
-    // if (!formData.city) {
-    //   newErrors.city = 'Cidade é obrigatória';
-    // }
-
-    console.log('📋 [STEP1] Resultado da validação:', { 
-      hasErrors: Object.keys(newErrors).length > 0, 
-      errors: newErrors 
-    });
-
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleNext = () => {
-    console.log('🚀 [STEP1] Tentativa de avançar - validando formulário...');
-    
-    if (!validateForm()) {
-      console.warn('⚠️ [STEP1] Validação falhou:', errors);
-      
-      // Scroll para o primeiro erro
-      const firstErrorField = Object.keys(errors)[0];
-      if (firstErrorField) {
-        const element = document.querySelector(`[name="${firstErrorField}"], [data-field="${firstErrorField}"]`);
-        element?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }
-      return;
+  const getStepData = () => ({
+    personal_info: {
+      name: formData.name,
+      email: formData.email,
+      phone: formData.phone,
+      instagram: formData.instagram,
+      linkedin: formData.linkedin,
+      birthDate: formData.birthDate,
+      profilePicture: formData.profilePicture,
+      curiosity: formData.curiosity
+    },
+    location_info: {
+      state: formData.state,
+      city: formData.city,
+      country: formData.country,
+      timezone: formData.timezone
     }
+  });
 
-    const stepData = {
-      personal_info: {
-        name: formData.name,
-        email: formData.email,
-        phone: formData.phone,
-        instagram: formData.instagram,
-        linkedin: formData.linkedin,
-        birthDate: formData.birthDate,
-        profilePicture: formData.profilePicture,
-        curiosity: formData.curiosity
-      },
-      location_info: {
-        state: formData.state,
-        city: formData.city,
-        country: formData.country,
-        timezone: formData.timezone
+  // Expor métodos para o componente pai
+  useImperativeHandle(ref, () => ({
+    validate: () => {
+      const isValid = validateForm();
+      if (!isValid) {
+        const firstErrorField = Object.keys(errors)[0];
+        if (firstErrorField) {
+          const element = document.querySelector(`[name="${firstErrorField}"], [data-field="${firstErrorField}"]`);
+          element?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
       }
-    };
-
-    console.log('✅ [STEP1] Dados validados, enviando para próximo step:', stepData);
-    onNext(stepData);
-  };
+      return isValid;
+    },
+    getData: getStepData
+  }), [formData, errors]);
 
   return (
     <div className="space-y-8">
@@ -291,27 +277,6 @@ export const SimpleOnboardingStep1: React.FC<SimpleOnboardingStep1Props> = ({
         </CardContent>
       </Card>
 
-      {/* Botão Continuar */}
-      <div className="flex justify-end pt-6">
-        <Button
-          onClick={handleNext}
-          disabled={isLoading}
-          className="min-w-[120px] bg-primary text-primary-foreground hover:bg-primary/90"
-        >
-          {isLoading ? (
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
-              Salvando...
-            </div>
-          ) : (
-            <>
-              Continuar
-              <ChevronRight className="w-4 h-4 ml-1" />
-            </>
-          )}
-        </Button>
-      </div>
-
       {/* Privacy note */}
       <div className="bg-muted/50 rounded-lg p-4 text-center">
         <p className="text-sm text-muted-foreground">
@@ -319,7 +284,8 @@ export const SimpleOnboardingStep1: React.FC<SimpleOnboardingStep1Props> = ({
           e seguimos as melhores práticas de segurança para proteger seus dados.
         </p>
       </div>
-
     </div>
   );
-};
+});
+
+SimpleOnboardingStep1.displayName = 'SimpleOnboardingStep1';

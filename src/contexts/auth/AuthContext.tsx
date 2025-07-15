@@ -6,7 +6,7 @@ import { UserProfile } from '@/lib/supabase';
 import { logger } from '@/utils/logger';
 import { useAuthStateManager } from './hooks/useAuthStateManager';
 import { clearProfileCache } from '@/hooks/auth/utils/authSessionUtils';
-import { onboardingFixer } from '@/utils/onboardingFixer';
+// onboardingFixer removido - causava loops
 
 interface AuthContextType {
   user: User | null;
@@ -104,10 +104,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
                 setTimeout(() => {
                   if (mounted) {
                     setupAuthSession();
-                    // Verificar consistência do onboarding após login
-                    if (session?.user?.id) {
-                      onboardingFixer.checkAndFixIfNeeded(session.user.id);
-                    }
+                    // Onboarding check removido - causava loops
                   }
                 }, 0);
               }

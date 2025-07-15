@@ -10,7 +10,7 @@ import { LoggingProvider } from '@/contexts/logging';
 import { SecurityEnforcementProvider } from '@/components/security/SecurityEnforcementProvider';
 import { AppRoutes } from '@/routes';
 import { SEOWrapper } from '@/components/seo/SEOWrapper';
-import OnboardingFixer from '@/components/onboarding/OnboardingFixer';
+// OnboardingFixer removido - causava loops infinitos
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -31,7 +31,6 @@ function App() {
               <Router>
                 <SEOWrapper>
                   <div className="App">
-                    <OnboardingFixer />
                     <AppRoutes />
                     <Toaster 
                       position="top-right"

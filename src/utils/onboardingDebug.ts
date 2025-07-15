@@ -1,76 +1,35 @@
-// Utilitário para debugging do onboarding
+// Utilitário simplificado para debugging do onboarding
 export const debugOnboarding = {
-  // Log estruturado para identificar erros 400
+  // Log apenas para erros críticos
   logError: (operation: string, error: any, context?: any) => {
-    const errorInfo = {
-      timestamp: new Date().toISOString(),
-      operation,
-      error: {
-        message: error?.message,
+    // Apenas para erros reais, não para cada operação
+    if (error?.status >= 400) {
+      console.error(`❌ [ONBOARDING] ${operation}:`, {
         status: error?.status,
-        code: error?.code,
-        details: error?.details,
-        hint: error?.hint
-      },
-      context,
-      userAgent: navigator.userAgent,
-      url: window.location.href
-    };
-    
-    console.group(`🔍 [ONBOARDING-DEBUG] ${operation}`);
-    console.error('Error Info:', errorInfo);
-    
-    // Verificar se é erro de rate limiting
-    if (error?.status === 429 || error?.message?.includes('rate') || error?.message?.includes('limit')) {
-      console.warn('⚠️ Possível erro de rate limiting detectado');
+        message: error?.message,
+        context: context ? JSON.stringify(context).slice(0, 100) : null
+      });
     }
-    
-    // Verificar se é erro de validação
-    if (error?.status === 400) {
-      console.warn('⚠️ Erro 400 - Verificar dados enviados:', context);
-    }
-    
-    console.groupEnd();
-    
-    return errorInfo;
   },
 
-  // Log de sucesso para comparação
-  logSuccess: (operation: string, data?: any) => {
-    console.log(`✅ [ONBOARDING-DEBUG] ${operation} - Sucesso`, {
-      timestamp: new Date().toISOString(),
-      data: data ? JSON.stringify(data).slice(0, 200) + '...' : 'N/A'
-    });
+  // Log de sucesso apenas quando necessário
+  logSuccess: (operation: string) => {
+    // Log minimalista
+    console.log(`✅ [ONBOARDING] ${operation}`);
   },
 
-  // Verificar estrutura dos dados antes do envio
+  // Validação básica sem spam
   validateDataStructure: (data: any, expectedFields: string[]) => {
-    const issues: string[] = [];
+    const critical: string[] = [];
     
-    expectedFields.forEach(field => {
-      if (!(field in data)) {
-        issues.push(`Campo obrigatório ausente: ${field}`);
-      }
-    });
+    // Apenas validações críticas
+    if (!data.user_id) critical.push('user_id ausente');
+    if (typeof data.current_step !== 'number') critical.push('current_step inválido');
     
-    // Verificar tipos específicos
-    if (data.user_id && typeof data.user_id !== 'string') {
-      issues.push('user_id deve ser string');
+    if (critical.length > 0) {
+      console.warn('⚠️ [DATA] Problemas críticos:', critical);
     }
     
-    if (data.current_step && typeof data.current_step !== 'number') {
-      issues.push('current_step deve ser number');
-    }
-    
-    if (data.completed_steps && !Array.isArray(data.completed_steps)) {
-      issues.push('completed_steps deve ser array');
-    }
-    
-    if (issues.length > 0) {
-      console.warn('⚠️ [DATA-VALIDATION] Problemas detectados:', issues);
-      console.log('Dados para análise:', data);
-    }
-    
-    return issues;
+    return critical;
   }
 };

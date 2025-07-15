@@ -3,7 +3,7 @@ import { OnboardingFinalData } from './useCleanOnboarding';
 
 const STORAGE_KEY = 'onboarding_auto_save';
 const SESSION_KEY = 'onboarding_session_backup';
-const AUTOSAVE_DELAY = 1000; // 1 segundo de debounce
+const AUTOSAVE_DELAY = 3000; // 3 segundos de debounce para reduzir loops
 
 interface StorageData {
   data: OnboardingFinalData;
@@ -44,10 +44,7 @@ export const useOnboardingPersistence = (userId: string | undefined) => {
         sessionStorage.setItem(SESSION_KEY, serialized);
         lastSavedRef.current = serialized;
         
-        console.log('💾 [PERSISTENCE] Dados salvos localmente:', {
-          step: data.current_step,
-          timestamp: new Date().toLocaleTimeString()
-        });
+        // Log reduzido para evitar spam no console
       } catch (error) {
         console.error('❌ [PERSISTENCE] Erro ao salvar:', error);
       }
