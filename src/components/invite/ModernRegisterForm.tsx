@@ -301,13 +301,17 @@ const ModernRegisterForm: React.FC<ModernRegisterFormProps> = ({
           console.log('✅ [REGISTER] Processo completado com sucesso');
           console.log('🎯 [REGISTER] Redirecionando para onboarding via redirectToNextStep()');
           toast({
-            title: "Tudo pronto!",
-            description: "Redirecionando para o onboarding...",
+            title: "Conta criada com sucesso!",
+            description: "Redirecionando para o preenchimento dos dados...",
           });
+          
+          // Aguardar tempo adequado para garantir sincronia do banco
           setTimeout(() => {
+            console.log('🔄 [REGISTER] Executando redirecionamento para onboarding');
             redirectToNextStep();
-            onSuccess?.();
-          }, 800);
+            // Chamar onSuccess após redirecionamento para evitar conflitos
+            setTimeout(() => onSuccess?.(), 500);
+          }, 1500); // Aumentado para garantir que o perfil foi criado
         } else {
           console.warn('⚠️ [REGISTER] Perfil não foi criado, tentando recovery...');
           

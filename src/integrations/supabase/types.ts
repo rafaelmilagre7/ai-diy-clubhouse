@@ -5856,6 +5856,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: Json
       }
+      fix_orphaned_invites: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
       generate_certificate_validation_code: {
         Args: Record<PropertyKey, never>
         Returns: string
