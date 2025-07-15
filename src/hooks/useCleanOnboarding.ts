@@ -322,6 +322,7 @@ export const useCleanOnboarding = () => {
           time_per_step: updatedData.time_per_step || {},
           completion_score: updatedData.completion_score,
           abandonment_points: updatedData.abandonment_points || [],
+          status: updatedData.status,
           updated_at: new Date().toISOString()
         }, {
           onConflict: 'user_id',
