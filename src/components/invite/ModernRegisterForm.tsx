@@ -427,9 +427,9 @@ const ModernRegisterForm: React.FC<ModernRegisterFormProps> = ({
 
   return (
     <RateLimitGuard 
-      actionType="registration" 
-      maxAttempts={3} 
-      windowMinutes={60}
+      actionType="invite_registration" 
+      maxAttempts={10} 
+      windowMinutes={15}
       showWarning={true}
     >
       <div className="space-y-6">

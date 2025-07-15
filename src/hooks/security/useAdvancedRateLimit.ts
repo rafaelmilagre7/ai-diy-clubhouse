@@ -33,7 +33,7 @@ export const useAdvancedRateLimit = () => {
     const {
       maxAttempts = 5,
       windowMinutes = 15,
-      identifier = getAdvancedFingerprint(),
+      identifier = getSimpleFingerprint(actionType),
       escalationFactor = 2,
       blockDurationMinutes = 30
     } = config;
@@ -166,7 +166,7 @@ export const useAdvancedRateLimit = () => {
 
   const resetRateLimit = useCallback(async (actionType: string, identifier?: string) => {
     try {
-      const targetIdentifier = identifier || getAdvancedFingerprint();
+      const targetIdentifier = identifier || getSimpleFingerprint(actionType);
       
       await supabase
         .from('rate_limits')
@@ -195,6 +195,31 @@ export const useAdvancedRateLimit = () => {
     ...state
   };
 };
+
+// Simple fingerprinting for invited users (less aggressive)
+function getSimpleFingerprint(actionType: string): string {
+  // For invite registrations, use a more permissive approach
+  if (actionType === 'invite_registration') {
+    const factors = [
+      navigator.userAgent.slice(0, 50), // Less detailed user agent
+      screen.width + 'x' + screen.height,
+      new Date().getTimezoneOffset().toString()
+    ];
+    
+    const combined = factors.join('|');
+    let hash = 0;
+    for (let i = 0; i < combined.length; i++) {
+      const char = combined.charCodeAt(i);
+      hash = ((hash << 5) - hash) + char;
+      hash = hash & hash;
+    }
+    
+    return 'invite_' + Math.abs(hash).toString(36).slice(0, 16);
+  }
+  
+  // Enhanced fingerprinting for other actions
+  return getAdvancedFingerprint();
+}
 
 // Enhanced device fingerprinting
 function getAdvancedFingerprint(): string {
