@@ -1,4 +1,4 @@
-import React, { useState, forwardRef, useImperativeHandle } from 'react';
+import React, { useState, forwardRef, useImperativeHandle, useCallback, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Target, TrendingUp, DollarSign, AlertTriangle } from 'lucide-react';
 import { Card } from '@/components/ui/card';
@@ -107,7 +107,7 @@ const budgetRanges = [
   'Orçamento a definir'
 ];
 
-export const SimpleOnboardingStep4 = forwardRef<{ getData: () => any; isValid: () => boolean }, SimpleOnboardingStep4Props>(({
+export const SimpleOnboardingStep4 = React.memo(forwardRef<{ getData: () => any; isValid: () => boolean }, SimpleOnboardingStep4Props>(({
   data,
   onNext,
   isLoading = false,
@@ -125,27 +125,27 @@ export const SimpleOnboardingStep4 = forwardRef<{ getData: () => any; isValid: (
     ...data.goals_info
   });
 
-  const handleInputChange = (field: string, value: string) => {
+  const handleInputChange = useCallback((field: string, value: string) => {
     setFormData(prev => {
       const newFormData = {
         ...prev,
         [field]: value
       };
       
-      // Notificar mudanças para auto-save do componente pai
+      // Notificar mudanças para auto-save do componente pai (debounced)
       if (onDataChange) {
         onDataChange(newFormData);
       }
       
       return newFormData;
     });
-  };
+  }, [onDataChange]);
 
-  const validateForm = () => {
+  const validateForm = useCallback(() => {
     const requiredFields = ['mainObjective', 'areaToImpact', 'expectedResult90Days', 'urgencyLevel', 'successMetric', 'mainObstacle', 'preferredSupport', 'aiImplementationBudget'];
     const missingFields = requiredFields.filter(field => !formData[field]);
     return missingFields.length === 0;
-  };
+  }, [formData]);
 
   const handleNext = () => {
     if (!validateForm()) {
@@ -157,11 +157,11 @@ export const SimpleOnboardingStep4 = forwardRef<{ getData: () => any; isValid: (
     onNext({ goals_info: formData });
   };
 
-  // Expor funções através da ref
+  // Expor funções através da ref com memoização
   useImperativeHandle(ref, () => ({
     getData: () => ({ goals_info: formData }),
     isValid: validateForm
-  }));
+  }), [formData, validateForm]);
 
   return (
     <motion.div
@@ -430,4 +430,4 @@ export const SimpleOnboardingStep4 = forwardRef<{ getData: () => any; isValid: (
 
     </motion.div>
   );
-});
+}));

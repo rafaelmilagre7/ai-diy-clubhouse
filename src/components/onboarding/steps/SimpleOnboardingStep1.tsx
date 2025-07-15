@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useImperativeHandle, forwardRef } from 'react';
+import React, { useState, useEffect, useImperativeHandle, forwardRef, useCallback, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -21,7 +21,7 @@ export interface Step1Ref {
   getData: () => any;
 }
 
-export const SimpleOnboardingStep1 = forwardRef<Step1Ref, SimpleOnboardingStep1Props>(({
+export const SimpleOnboardingStep1 = React.memo(forwardRef<Step1Ref, SimpleOnboardingStep1Props>(({
   data,
   onNext,
   onDataChange,
@@ -48,11 +48,20 @@ export const SimpleOnboardingStep1 = forwardRef<Step1Ref, SimpleOnboardingStep1P
   const [errors, setErrors] = useState<Record<string, string>>({});
   const getFieldError = (field: string) => errors[field];
 
-  const handleInputChange = (field: string, value: string) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value
-    }));
+  const handleInputChange = useCallback((field: string, value: string) => {
+    setFormData(prev => {
+      const newFormData = {
+        ...prev,
+        [field]: value
+      };
+      
+      // Notificar mudanças para auto-save (debounced)
+      if (onDataChange) {
+        onDataChange(getStepDataFromFormData(newFormData));
+      }
+      
+      return newFormData;
+    });
     
     // Limpar erro do campo quando usuário digitar
     if (errors[field]) {
@@ -61,7 +70,26 @@ export const SimpleOnboardingStep1 = forwardRef<Step1Ref, SimpleOnboardingStep1P
         [field]: ''
       }));
     }
-  };
+  }, [onDataChange, errors]);
+
+  const getStepDataFromFormData = useCallback((formData: any) => ({
+    personal_info: {
+      name: formData.name,
+      email: formData.email,
+      phone: formData.phone,
+      instagram: formData.instagram,
+      linkedin: formData.linkedin,
+      birthDate: formData.birthDate,
+      profilePicture: formData.profilePicture,
+      curiosity: formData.curiosity
+    },
+    location_info: {
+      state: formData.state,
+      city: formData.city,
+      country: formData.country,
+      timezone: formData.timezone
+    }
+  }), []);
 
   const extractDateComponents = (dateString: string) => {
     if (!dateString) return { day: '', month: '', year: '' };
@@ -89,7 +117,7 @@ export const SimpleOnboardingStep1 = forwardRef<Step1Ref, SimpleOnboardingStep1P
     }
   };
 
-  const validateForm = () => {
+  const validateForm = useCallback(() => {
     const newErrors: Record<string, string> = {};
 
     // Validação mais tolerante - apenas nome e email obrigatórios
@@ -112,28 +140,11 @@ export const SimpleOnboardingStep1 = forwardRef<Step1Ref, SimpleOnboardingStep1P
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
-  };
+  }, [formData.name, formData.email, formData.phone]);
 
-  const getStepData = () => ({
-    personal_info: {
-      name: formData.name,
-      email: formData.email,
-      phone: formData.phone,
-      instagram: formData.instagram,
-      linkedin: formData.linkedin,
-      birthDate: formData.birthDate,
-      profilePicture: formData.profilePicture,
-      curiosity: formData.curiosity
-    },
-    location_info: {
-      state: formData.state,
-      city: formData.city,
-      country: formData.country,
-      timezone: formData.timezone
-    }
-  });
+  const getStepData = useCallback(() => getStepDataFromFormData(formData), [formData, getStepDataFromFormData]);
 
-  // Expor métodos para o componente pai
+  // Expor métodos para o componente pai com memoização
   useImperativeHandle(ref, () => ({
     validate: () => {
       const isValid = validateForm();
@@ -147,7 +158,7 @@ export const SimpleOnboardingStep1 = forwardRef<Step1Ref, SimpleOnboardingStep1P
       return isValid;
     },
     getData: getStepData
-  }), [formData, errors]);
+  }), [validateForm, getStepData, errors]);
 
   return (
     <div className="space-y-8">
@@ -286,6 +297,6 @@ export const SimpleOnboardingStep1 = forwardRef<Step1Ref, SimpleOnboardingStep1P
       </div>
     </div>
   );
-});
+}));
 
 SimpleOnboardingStep1.displayName = 'SimpleOnboardingStep1';

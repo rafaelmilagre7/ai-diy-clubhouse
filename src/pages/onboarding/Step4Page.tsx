@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { OnboardingLayout } from '@/components/layout/OnboardingLayout';
 import { SimpleOnboardingStep4 } from '@/components/onboarding/steps/SimpleOnboardingStep4';
@@ -42,17 +42,44 @@ const OnboardingStep4Page: React.FC = () => {
     navigate('/onboarding/step/3');
   };
 
-  const stepProps = {
+  // Debounce onDataChange para evitar múltiplas atualizações
+  const debouncedUpdateData = useCallback(
+    debounce((stepData: any) => {
+      updateData({ goals_info: stepData });
+    }, 300),
+    [updateData]
+  );
+
+  const stepProps = useMemo(() => ({
     data,
     onNext: handleNext,
     isLoading: isSaving,
-    onDataChange: (stepData: any) => {
-      // Auto-save contínuo quando dados mudarem
-      updateData({ goals_info: stepData });
-    }
-  };
+    onDataChange: debouncedUpdateData
+  }), [data, handleNext, isSaving, debouncedUpdateData]);
   
-  const canGoNext = stepRef.current ? stepRef.current.isValid() : true;
+  // Memoizar canGoNext para evitar recálculos constantes
+  const canGoNext = useMemo(() => {
+    if (!stepRef.current) return false;
+    try {
+      return stepRef.current.isValid();
+    } catch (error) {
+      console.warn('⚠️ [STEP4] Erro na validação:', error);
+      return false;
+    }
+  }, [data?.goals_info]); // Recalcular apenas quando goals_info mudar
+
+// Função de debounce simples
+function debounce(func: Function, wait: number) {
+  let timeout: NodeJS.Timeout;
+  return function executedFunction(...args: any[]) {
+    const later = () => {
+      clearTimeout(timeout);
+      func(...args);
+    };
+    clearTimeout(timeout);
+    timeout = setTimeout(later, wait);
+  };
+}
 
   return (
     <OnboardingLayout currentStep={4}>

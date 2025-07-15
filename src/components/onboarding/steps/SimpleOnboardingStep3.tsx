@@ -1,4 +1,4 @@
-import React, { useEffect, useState, forwardRef, useImperativeHandle } from 'react';
+import React, { useEffect, useState, forwardRef, useImperativeHandle, useCallback, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
@@ -15,7 +15,7 @@ interface SimpleOnboardingStep3Props {
   onDataChange?: (data: any) => void;
 }
 
-export const SimpleOnboardingStep3 = forwardRef<{ getData: () => any; isValid: () => boolean }, SimpleOnboardingStep3Props>(({
+export const SimpleOnboardingStep3 = React.memo(forwardRef<{ getData: () => any; isValid: () => boolean }, SimpleOnboardingStep3Props>(({
   data,
   onNext,
   isLoading = false,
@@ -61,27 +61,27 @@ export const SimpleOnboardingStep3 = forwardRef<{ getData: () => any; isValid: (
   }, []);
 
   // Função para atualizar dados sem navegar automaticamente
-  const updateStepData = (field: string, value: string | string[]) => {
+  const updateStepData = useCallback((field: string, value: string | string[]) => {
     setFormData(prev => {
       const newFormData = {
         ...prev,
         [field]: value
       };
       
-      // Notificar mudanças para auto-save do componente pai
+      // Notificar mudanças para auto-save do componente pai (debounced)
       if (onDataChange) {
         onDataChange(newFormData);
       }
       
       return newFormData;
     });
-  };
+  }, [onDataChange]);
 
-  const handleRadioChange = (field: string, value: string) => {
+  const handleRadioChange = useCallback((field: string, value: string) => {
     updateStepData(field, value);
-  };
+  }, [updateStepData]);
 
-  const handleCheckboxChange = (field: string, values: string[], value: string, checked: boolean) => {
+  const handleCheckboxChange = useCallback((field: string, values: string[], value: string, checked: boolean) => {
     let newValues = [...values];
     if (checked) {
       if (!newValues.includes(value)) {
@@ -91,13 +91,13 @@ export const SimpleOnboardingStep3 = forwardRef<{ getData: () => any; isValid: (
       newValues = newValues.filter(v => v !== value);
     }
     updateStepData(field, newValues);
-  };
+  }, [updateStepData]);
 
-  const validateForm = () => {
+  const validateForm = useCallback(() => {
     const requiredFields = ['hasImplementedAI', 'aiKnowledgeLevel', 'whoWillImplement', 'aiImplementationObjective', 'aiImplementationUrgency'];
     const missingFields = requiredFields.filter(field => !formData[field]);
     return missingFields.length === 0;
-  };
+  }, [formData]);
 
   const handleNext = () => {
     if (!validateForm()) {
@@ -109,11 +109,11 @@ export const SimpleOnboardingStep3 = forwardRef<{ getData: () => any; isValid: (
     onNext({ ai_experience: formData });
   };
 
-  // Expor funções através da ref
+  // Expor funções através da ref com memoização
   useImperativeHandle(ref, () => ({
     getData: () => ({ ai_experience: formData }),
     isValid: validateForm
-  }));
+  }), [formData, validateForm]);
 
   return (
     <div className="space-y-8">
@@ -428,4 +428,4 @@ export const SimpleOnboardingStep3 = forwardRef<{ getData: () => any; isValid: (
 
     </div>
   );
-});
+}));

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useCallback, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { OnboardingLayout } from '@/components/layout/OnboardingLayout';
 import { SimpleOnboardingStep1, Step1Ref } from '@/components/onboarding/steps/SimpleOnboardingStep1';
@@ -47,15 +47,33 @@ const OnboardingStep1Page: React.FC = () => {
     navigate('/dashboard');
   };
 
-  const stepProps = {
+  // Debounce onDataChange para evitar múltiplas atualizações
+  const debouncedUpdateData = useCallback(
+    debounce((stepData: any) => {
+      updateData(stepData);
+    }, 300),
+    [updateData]
+  );
+
+  const stepProps = useMemo(() => ({
     data,
     onNext: handleNext,
     isLoading: isSaving,
-    onDataChange: (stepData: any) => {
-      // Auto-save contínuo quando dados mudarem
-      updateData(stepData);
-    }
+    onDataChange: debouncedUpdateData
+  }), [data, handleNext, isSaving, debouncedUpdateData]);
+
+// Função de debounce simples
+function debounce(func: Function, wait: number) {
+  let timeout: NodeJS.Timeout;
+  return function executedFunction(...args: any[]) {
+    const later = () => {
+      clearTimeout(timeout);
+      func(...args);
+    };
+    clearTimeout(timeout);
+    timeout = setTimeout(later, wait);
   };
+}
 
   return (
     <OnboardingLayout currentStep={1}>

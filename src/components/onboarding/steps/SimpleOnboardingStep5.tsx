@@ -1,4 +1,4 @@
-import React, { useState, forwardRef, useImperativeHandle } from 'react';
+import React, { useState, forwardRef, useImperativeHandle, useCallback, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -22,7 +22,7 @@ interface SimpleOnboardingStep5Props {
   onDataChange?: (data: any) => void;
 }
 
-export const SimpleOnboardingStep5 = forwardRef<{ getData: () => any; isValid: () => boolean }, SimpleOnboardingStep5Props>(({
+export const SimpleOnboardingStep5 = React.memo(forwardRef<{ getData: () => any; isValid: () => boolean }, SimpleOnboardingStep5Props>(({
   data,
   onNext,
   isLoading = false,
@@ -42,23 +42,23 @@ export const SimpleOnboardingStep5 = forwardRef<{ getData: () => any; isValid: (
     ...data.personalization
   });
 
-  const handleInputChange = (field: string, value: any) => {
+  const handleInputChange = useCallback((field: string, value: any) => {
     setFormData(prev => {
       const newFormData = {
         ...prev,
         [field]: value
       };
       
-      // Notificar mudanças para auto-save do componente pai
+      // Notificar mudanças para auto-save do componente pai (debounced)
       if (onDataChange) {
         onDataChange(newFormData);
       }
       
       return newFormData;
     });
-  };
+  }, [onDataChange]);
 
-  const validateForm = () => {
+  const validateForm = useCallback(() => {
     const requiredFields = ['weeklyLearningTime', 'bestDays', 'bestPeriods', 'contentPreference', 'wantsNetworking'];
     const missingFields = requiredFields.filter(field => {
       const value = formData[field];
@@ -68,7 +68,7 @@ export const SimpleOnboardingStep5 = forwardRef<{ getData: () => any; isValid: (
       return !value;
     });
     return missingFields.length === 0;
-  };
+  }, [formData]);
 
   const handleNext = () => {
     if (!validateForm()) {
@@ -80,17 +80,17 @@ export const SimpleOnboardingStep5 = forwardRef<{ getData: () => any; isValid: (
     onNext({ personalization: formData });
   };
 
-  // Expor funções através da ref
+  // Expor funções através da ref com memoização
   useImperativeHandle(ref, () => ({
     getData: () => ({ personalization: formData }),
     isValid: validateForm
-  }));
+  }), [formData, validateForm]);
 
-  const handleRadioChange = (field: string, value: string) => {
+  const handleRadioChange = useCallback((field: string, value: string) => {
     handleInputChange(field, value);
-  };
+  }, [handleInputChange]);
 
-  const handleCheckboxChange = (field: string, values: string[], value: string, checked: boolean) => {
+  const handleCheckboxChange = useCallback((field: string, values: string[], value: string, checked: boolean) => {
     let newValues = [...values];
     if (checked) {
       if (!newValues.includes(value)) {
@@ -100,7 +100,7 @@ export const SimpleOnboardingStep5 = forwardRef<{ getData: () => any; isValid: (
       newValues = newValues.filter(v => v !== value);
     }
     handleInputChange(field, newValues);
-  };
+  }, [handleInputChange]);
 
   return (
     <div className="space-y-6">
@@ -450,4 +450,4 @@ export const SimpleOnboardingStep5 = forwardRef<{ getData: () => any; isValid: (
 
     </div>
   );
-});
+}));
