@@ -4965,6 +4965,10 @@ export type Database = {
         Args: { target_user_id: string } | { user_email: string }
         Returns: Json
       }
+      backup_table_data: {
+        Args: { p_table_name: string; p_reason?: string }
+        Returns: Json
+      }
       can_access_benefit: {
         Args: { user_id: string; tool_id: string }
         Returns: boolean
@@ -5057,6 +5061,10 @@ export type Database = {
       }
       check_whatsapp_config: {
         Args: Record<PropertyKey, never>
+        Returns: Json
+      }
+      clean_old_data: {
+        Args: { p_table_name: string; p_retention_period?: unknown }
         Returns: Json
       }
       clean_user_onboarding_data: {
@@ -5428,6 +5436,21 @@ export type Database = {
         Args: { p_user_id: string }
         Returns: number
       }
+      get_user_badges: {
+        Args: { p_user_id: string }
+        Returns: {
+          id: string
+          name: string
+          description: string
+          image_url: string
+          category: string
+          earned_at: string
+        }[]
+      }
+      get_user_complete_data: {
+        Args: { p_user_id: string }
+        Returns: Json
+      }
       get_user_permissions: {
         Args: { user_id: string }
         Returns: Json
@@ -5479,25 +5502,25 @@ export type Database = {
         }[]
       }
       get_visible_events_for_user: {
-        Args: { user_id: string }
+        Args: { p_user_id: string }
         Returns: {
-          cover_image_url: string | null
+          id: string
+          title: string
+          description: string
+          start_time: string
+          end_time: string
+          location_link: string
+          cover_image_url: string
           created_at: string
           created_by: string
-          description: string | null
-          end_time: string
-          id: string
-          is_recurring: boolean | null
-          location_link: string | null
-          parent_event_id: string | null
-          physical_location: string | null
-          recurrence_count: number | null
-          recurrence_day: number | null
-          recurrence_end_date: string | null
-          recurrence_interval: number | null
-          recurrence_pattern: string | null
-          start_time: string
-          title: string
+          physical_location: string
+          is_recurring: boolean
+          recurrence_pattern: string
+          recurrence_interval: number
+          recurrence_day: number
+          recurrence_count: number
+          recurrence_end_date: string
+          parent_event_id: string
         }[]
       }
       has_role: {
@@ -5517,11 +5540,19 @@ export type Database = {
         Returns: undefined
       }
       increment_suggestion_downvote: {
-        Args: { suggestion_id: string }
-        Returns: undefined
+        Args: { p_suggestion_id: string }
+        Returns: Json
       }
       increment_suggestion_upvote: {
-        Args: { suggestion_id: string }
+        Args: { p_suggestion_id: string }
+        Returns: Json
+      }
+      increment_topic_replies: {
+        Args: { p_topic_id: string }
+        Returns: undefined
+      }
+      increment_topic_views: {
+        Args: { p_topic_id: string }
         Returns: undefined
       }
       initialize_onboarding_for_all_users: {
@@ -5701,6 +5732,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: Json
       }
+      reset_onboarding_step: {
+        Args: { p_user_id: string; p_step: number }
+        Returns: Json
+      }
       reset_user_complete: {
         Args: { target_user_id: string }
         Returns: Json
@@ -5728,6 +5763,14 @@ export type Database = {
         Args: { target_user_id: string; new_role_id: string }
         Returns: Json
       }
+      send_invite_email: {
+        Args: { p_invite_id: string }
+        Returns: Json
+      }
+      send_invite_whatsapp: {
+        Args: { p_invite_id: string }
+        Returns: Json
+      }
       setup_learning_storage_buckets: {
         Args: Record<PropertyKey, never>
         Returns: Json
@@ -5743,6 +5786,10 @@ export type Database = {
       update_invite_send_attempt: {
         Args: { invite_id: string }
         Returns: undefined
+      }
+      update_onboarding_step: {
+        Args: { p_user_id: string; p_step: number; p_data?: Json }
+        Returns: Json
       }
       use_invite: {
         Args: { invite_token: string; user_id: string }
@@ -5766,6 +5813,10 @@ export type Database = {
       }
       validate_admin_access: {
         Args: { user_id: string }
+        Returns: Json
+      }
+      validate_certificate_code: {
+        Args: { p_validation_code: string }
         Returns: Json
       }
       validate_complete_rls_security: {
