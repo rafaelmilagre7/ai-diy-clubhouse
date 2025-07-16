@@ -5812,7 +5812,7 @@ export type Database = {
       }
       create_storage_public_policy: {
         Args: { bucket_name: string }
-        Returns: boolean
+        Returns: Json
       }
       create_user_badge: {
         Args: { user_id: string; badge_id: string }
