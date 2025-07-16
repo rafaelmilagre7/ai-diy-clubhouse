@@ -48,21 +48,32 @@ export const useAuthStateManager = ({
       setSession(session);
       setUser(user);
 
-      // Buscar perfil - DEVE existir ou falhar
+      // Buscar perfil diretamente da tabela profiles
       const { data: profileData, error: profileError } = await supabase
-        .rpc('get_user_profile_safe', { target_user_id: user.id });
+        .from('profiles')
+        .select(`
+          *,
+          user_roles (
+            id,
+            name,
+            description,
+            permissions
+          )
+        `)
+        .eq('id', user.id)
+        .single();
 
       if (profileError) {
         logger.error('[AUTH-STATE] ERRO CRÍTICO ao buscar perfil:', profileError);
         throw new Error(`Perfil não encontrado para usuário ${user.id}: ${profileError.message}`);
       }
 
-      if (!profileData || profileData.length === 0) {
+      if (!profileData) {
         logger.error('[AUTH-STATE] ERRO CRÍTICO: Perfil não existe');
         throw new Error(`Usuário ${user.id} não possui perfil. Estado de dados corrompido.`);
       }
 
-      const profile = profileData[0] as UserProfile;
+      const profile = profileData as UserProfile;
       
       // Validação de segurança crítica
       if (profile.id !== user.id) {
