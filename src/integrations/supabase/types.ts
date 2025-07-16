@@ -4958,7 +4958,7 @@ export type Database = {
         Returns: Json
       }
       admin_force_delete_auth_user: {
-        Args: { user_email: string }
+        Args: { target_user_id: string } | { user_email: string }
         Returns: Json
       }
       admin_reset_user: {
@@ -5016,6 +5016,12 @@ export type Database = {
               window_minutes?: number
             }
           | {
+              action_type: string
+              user_id: string
+              max_attempts: number
+              time_window: unknown
+            }
+          | {
               p_identifier: string
               p_action_type: string
               p_max_attempts?: number
@@ -5070,12 +5076,12 @@ export type Database = {
         Returns: number
       }
       cleanup_old_audit_logs: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
+        Args: Record<PropertyKey, never> | { retention_period?: unknown }
+        Returns: number
       }
       cleanup_old_rate_limits: {
         Args: Record<PropertyKey, never>
-        Returns: undefined
+        Returns: number
       }
       cleanup_orphaned_data: {
         Args: Record<PropertyKey, never>
