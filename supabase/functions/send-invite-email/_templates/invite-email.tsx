@@ -102,13 +102,19 @@ export const InviteEmail = ({
               </Button>
             </Section>
 
-            <Text style={urlFallback}>
-              Ou copie e cole este link no seu navegador:
-              <br />
-              <Link href={inviteUrl} style={link}>
+            {/* 🎯 CORREÇÃO: URL alternativo sem tracking */}
+            <Section style={urlFallbackSection}>
+              <Text style={urlFallbackTitle}>
+                💡 Link alternativo (copie e cole):
+              </Text>
+              <Text style={urlFallbackText}>
                 {inviteUrl}
-              </Link>
-            </Text>
+              </Text>
+              <Text style={urlFallbackInstructions}>
+                ⚠️ <strong>Importante:</strong> Se o botão acima não funcionar, 
+                copie e cole o link acima diretamente no seu navegador.
+              </Text>
+            </Section>
 
             {/* Notas do Convite */}
             {notes && (
@@ -366,6 +372,43 @@ const footerLink = {
   fontSize: '12px',
   textDecoration: 'none',
   fontWeight: '500',
+};
+
+// 🎯 Novos estilos para URL fallback melhorada
+const urlFallbackSection = {
+  backgroundColor: '#f8fafc',
+  border: '2px dashed #cbd5e1',
+  borderRadius: '8px',
+  padding: '20px',
+  margin: '24px 0',
+  textAlign: 'center' as const,
+};
+
+const urlFallbackTitle = {
+  color: '#374151',
+  fontSize: '14px',
+  fontWeight: '600',
+  margin: '0 0 12px 0',
+};
+
+const urlFallbackText = {
+  backgroundColor: '#ffffff',
+  border: '1px solid #d1d5db',
+  borderRadius: '4px',
+  color: '#3b82f6',
+  fontSize: '12px',
+  fontFamily: 'Monaco, Menlo, monospace',
+  padding: '8px 12px',
+  margin: '0 0 12px 0',
+  wordBreak: 'break-all' as const,
+  display: 'block',
+};
+
+const urlFallbackInstructions = {
+  color: '#6b7280',
+  fontSize: '12px',
+  lineHeight: '1.4',
+  margin: '0',
 };
 
 export default InviteEmail;

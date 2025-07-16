@@ -126,6 +126,9 @@ const handler = async (req: Request): Promise<Response> => {
           { name: 'role', value: roleName },
           { name: 'source', value: 'admin-invite' },
         ],
+        // 🎯 CORREÇÃO CRÍTICA: Desabilitar link tracking do Resend
+        click_tracking: false,
+        open_tracking: false,
       });
 
       if (resendResponse.error) {
@@ -133,6 +136,8 @@ const handler = async (req: Request): Promise<Response> => {
       }
 
       console.log(`✅ Email enviado via Resend: ${resendResponse.data?.id}`);
+      console.log(`🔗 URL final usado no email: ${correctedInviteUrl}`);
+      console.log(`📧 Link tracking desabilitado: click_tracking=false, open_tracking=false`);
 
       // Atualizar estatísticas do convite
       if (inviteId) {
