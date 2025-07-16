@@ -696,20 +696,6 @@ export type Database = {
             foreignKeyName: "course_access_control_course_id_fkey"
             columns: ["course_id"]
             isOneToOne: false
-            referencedRelation: "course_performance_metrics"
-            referencedColumns: ["course_id"]
-          },
-          {
-            foreignKeyName: "course_access_control_course_id_fkey"
-            columns: ["course_id"]
-            isOneToOne: false
-            referencedRelation: "learning_analytics_data"
-            referencedColumns: ["course_id"]
-          },
-          {
-            foreignKeyName: "course_access_control_course_id_fkey"
-            columns: ["course_id"]
-            isOneToOne: false
             referencedRelation: "learning_courses"
             referencedColumns: ["id"]
           },
@@ -1457,20 +1443,6 @@ export type Database = {
             foreignKeyName: "learning_certificates_course_id_fkey"
             columns: ["course_id"]
             isOneToOne: false
-            referencedRelation: "course_performance_metrics"
-            referencedColumns: ["course_id"]
-          },
-          {
-            foreignKeyName: "learning_certificates_course_id_fkey"
-            columns: ["course_id"]
-            isOneToOne: false
-            referencedRelation: "learning_analytics_data"
-            referencedColumns: ["course_id"]
-          },
-          {
-            foreignKeyName: "learning_certificates_course_id_fkey"
-            columns: ["course_id"]
-            isOneToOne: false
             referencedRelation: "learning_courses"
             referencedColumns: ["id"]
           },
@@ -1864,20 +1836,6 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
-          {
-            foreignKeyName: "learning_modules_course_id_fkey"
-            columns: ["course_id"]
-            isOneToOne: false
-            referencedRelation: "course_performance_metrics"
-            referencedColumns: ["course_id"]
-          },
-          {
-            foreignKeyName: "learning_modules_course_id_fkey"
-            columns: ["course_id"]
-            isOneToOne: false
-            referencedRelation: "learning_analytics_data"
-            referencedColumns: ["course_id"]
-          },
           {
             foreignKeyName: "learning_modules_course_id_fkey"
             columns: ["course_id"]
@@ -4918,44 +4876,6 @@ export type Database = {
       }
     }
     Views: {
-      admin_analytics_overview: {
-        Row: {
-          active_implementations: number | null
-          active_learners_7d: number | null
-          active_users_7d: number | null
-          avg_implementation_time_days: number | null
-          completed_implementations: number | null
-          completed_lessons: number | null
-          forum_topics: number | null
-          new_implementations_30d: number | null
-          new_users_30d: number | null
-          overall_completion_rate: number | null
-          total_benefit_clicks: number | null
-          total_courses: number | null
-          total_solutions: number | null
-          total_users: number | null
-        }
-        Relationships: []
-      }
-      admin_stats_overview: {
-        Row: {
-          active_implementations: number | null
-          active_learners_7d: number | null
-          active_users_7d: number | null
-          avg_implementation_time_days: number | null
-          completed_implementations: number | null
-          completed_lessons: number | null
-          forum_topics: number | null
-          new_implementations_30d: number | null
-          new_users_30d: number | null
-          overall_completion_rate: number | null
-          total_benefit_clicks: number | null
-          total_courses: number | null
-          total_solutions: number | null
-          total_users: number | null
-        }
-        Relationships: []
-      }
       benefits: {
         Row: {
           benefit_badge_url: string | null
@@ -4978,65 +4898,6 @@ export type Database = {
           video_tutorials: Json | null
           video_type: string | null
           video_url: string | null
-        }
-        Relationships: []
-      }
-      course_performance_metrics: {
-        Row: {
-          avg_progress_percentage: number | null
-          completed_lessons_count: number | null
-          course_id: string | null
-          course_title: string | null
-          created_at: string | null
-          enrolled_users: number | null
-          total_lessons: number | null
-          updated_at: string | null
-        }
-        Relationships: []
-      }
-      forum_engagement_metrics: {
-        Row: {
-          date: string | null
-          topics_ratio: number | null
-          total_posts: number | null
-          unique_users: number | null
-        }
-        Relationships: []
-      }
-      implementation_growth_by_date: {
-        Row: {
-          cumulative_implementations: number | null
-          daily_implementations: number | null
-          date: string | null
-        }
-        Relationships: []
-      }
-      learning_analytics_data: {
-        Row: {
-          avg_progress_percentage: number | null
-          completed_lessons: number | null
-          course_id: string | null
-          enrolled_users: number | null
-          title: string | null
-          total_lessons: number | null
-        }
-        Relationships: []
-      }
-      networking_metrics: {
-        Row: {
-          date: string | null
-          metric_name: string | null
-          metric_value: number | null
-        }
-        Relationships: []
-      }
-      retention_cohort_analysis: {
-        Row: {
-          active_users: number | null
-          activity_month: string | null
-          cohort_month: string | null
-          cohort_size: number | null
-          retention_rate: number | null
         }
         Relationships: []
       }
@@ -5076,48 +4937,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
-      }
-      top_performing_content: {
-        Row: {
-          content_type: string | null
-          created_at: string | null
-          id: string | null
-          score: number | null
-          title: string | null
-        }
-        Relationships: []
-      }
-      user_engagement_metrics: {
-        Row: {
-          date: string | null
-          formatted_date: string | null
-          new_users: number | null
-        }
-        Relationships: []
-      }
-      user_growth_by_date: {
-        Row: {
-          cumulative_users: number | null
-          date: string | null
-          new_users: number | null
-        }
-        Relationships: []
-      }
-      user_role_distribution: {
-        Row: {
-          percentage: number | null
-          role_name: string | null
-          user_count: number | null
-        }
-        Relationships: []
-      }
-      weekly_activity_pattern: {
-        Row: {
-          activity_count: number | null
-          day_name: string | null
-          day_of_week: number | null
-        }
-        Relationships: []
       }
     }
     Functions: {
@@ -5438,6 +5257,25 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      get_admin_analytics_overview: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          total_users: number
+          total_solutions: number
+          active_implementations: number
+          completed_implementations: number
+          overall_completion_rate: number
+          avg_implementation_time_days: number
+          total_benefit_clicks: number
+          forum_topics: number
+          total_courses: number
+          completed_lessons: number
+          active_learners_7d: number
+          active_users_7d: number
+          new_implementations_30d: number
+          new_users_30d: number
+        }[]
+      }
       get_admin_stats: {
         Args: Record<PropertyKey, never>
         Returns: Json
@@ -5503,6 +5341,24 @@ export type Database = {
           module: Json
           videos: Json
           resources: Json
+        }[]
+      }
+      get_nps_analytics: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          id: string
+          lesson_id: string
+          user_id: string
+          score: number
+          feedback: string
+          created_at: string
+          updated_at: string
+          user_name: string
+          user_email: string
+          lesson_title: string
+          module_title: string
+          course_title: string
+          course_id: string
         }[]
       }
       get_onboarding_next_step: {
