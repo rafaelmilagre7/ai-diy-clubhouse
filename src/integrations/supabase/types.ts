@@ -4965,10 +4965,6 @@ export type Database = {
         Args: { target_user_id: string } | { user_email: string }
         Returns: Json
       }
-      audit_role_assignments: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
       can_access_benefit: {
         Args: { user_id: string; tool_id: string }
         Returns: boolean
@@ -4986,8 +4982,10 @@ export type Database = {
         Returns: boolean
       }
       can_use_invite: {
-        Args: { invite_token: string; user_email: string }
-        Returns: Json
+        Args:
+          | { invite_token: string; user_email: string }
+          | { p_user_id: string; p_token: string }
+        Returns: boolean
       }
       change_user_role: {
         Args: { target_user_id: string; new_role_id: string }
