@@ -154,7 +154,7 @@ const ModernRegisterForm: React.FC<ModernRegisterFormProps> = ({
         description: "Por favor, aguarde enquanto preparamos tudo para você.",
       });
       
-      // 🎯 NOVO FLUXO: Primeiro signUp simples para criar usuário no auth
+      // 🎯 NOVO FLUXO SIMPLIFICADO: Apenas signUp - o trigger handle_new_user cuida do resto
       const { data, error } = await supabase.auth.signUp({
         email: email.trim().toLowerCase(),
         password,
@@ -164,32 +164,22 @@ const ModernRegisterForm: React.FC<ModernRegisterFormProps> = ({
             full_name: name.trim(),
             display_name: name.trim(),
             ...(inviteToken && { invite_token: inviteToken.trim() })
-          }
+          },
+          emailRedirectTo: `${window.location.origin}/`
         }
       });
       
-      console.log('📊 [DIAGNOSTIC] Resultado do signUp:', {
+      console.log('📊 [REGISTER] Resultado do signUp:', {
         hasData: !!data,
         hasUser: !!data?.user,
         userId: data?.user?.id,
         userEmail: data?.user?.email,
         hasError: !!error,
-        errorCode: error?.status,
-        errorMessage: error?.message,
-        errorName: error?.name
+        errorMessage: error?.message
       });
       
       if (error) {
         console.error('❌ [REGISTER] Erro no signUp:', error);
-        console.error('❌ [REGISTER] Detalhes completos do erro:', {
-          name: error.name,
-          message: error.message,
-          status: error.status,
-          details: JSON.stringify(error, null, 2)
-        });
-        
-        // Não mascarar erro - falhar imediatamente
-        console.error('❌ [REGISTER] Erro no signUp - falhando:', error);
         
         let userMessage = "Não foi possível criar sua conta. ";
         if (error.message?.includes("User already registered")) {
@@ -212,36 +202,14 @@ const ModernRegisterForm: React.FC<ModernRegisterFormProps> = ({
       }
       
       if (data?.user) {
-        console.log('✅ [REGISTER] Usuário criado:', data.user.id);
+        console.log('✅ [REGISTER] Usuário criado - trigger handle_new_user automaticamente criou perfil');
         
-        toast({
-          title: "Conta criada!",
-          description: "Preparando seu ambiente personalizado...",
-        });
-        
-        // 🎯 NOVO FLUXO: Ativar perfil pré-existente ou criar novo
-        console.log('🔄 [REGISTER] Ativando perfil para email:', email);
-        const { data: activationResult, error: activationError } = await supabase.rpc('activate_invited_user', {
-          p_user_id: data.user.id,
-          p_email: email.trim().toLowerCase(),
-          p_name: name.trim(),
-          p_invite_token: inviteToken?.trim() || null
-        });
-        
-        if (activationError) {
-          console.error('❌ [REGISTER] ERRO na ativação:', activationError);
-          throw new Error(`Erro na ativação do perfil: ${activationError.message}`);
-        }
-        
-        console.log('✅ [REGISTER] Perfil ativado:', activationResult);
-        
-        console.log('✅ [REGISTER] Processo completado - redirecionando diretamente');
         toast({
           title: "Conta criada com sucesso!",
           description: "Preparando seu onboarding personalizado...",
         });
         
-        // 🎯 REDIRECIONAMENTO COM TOKEN PRESERVADO
+        // 🎯 REDIRECIONAMENTO DIRETO
         onSuccess?.();
         const redirectUrl = inviteToken 
           ? `/onboarding/step/1?token=${encodeURIComponent(inviteToken.trim())}`

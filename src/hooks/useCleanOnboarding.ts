@@ -302,24 +302,16 @@ export const useCleanOnboarding = () => {
     }
   }, [user?.id, loadFromLocal, hasNewerLocalData, clearLocal]);
 
-  const initializeOnboarding = useCallback(async (inviteData?: any) => {
+  const initializeOnboarding = useCallback(async () => {
     if (!user?.id) return;
 
     try {
-      console.log('🚀 [CLEAN-ONBOARDING] Inicializando onboarding...');
+      console.log('🚀 [CLEAN-ONBOARDING] Inicializando onboarding para usuário:', user.id);
       
-      // 🎯 BUSCAR TOKEN EM MÚLTIPLAS FONTES 
-      const inviteToken = new URLSearchParams(window.location.search).get('token') || 
-                          new URLSearchParams(window.location.search).get('invite') ||
-                          sessionStorage.getItem('current_invite_token') ||
-                          localStorage.getItem('current_invite_token');
-
-      console.log('🎫 [CLEAN-ONBOARDING] Token de convite encontrado:', inviteToken ? inviteToken.substring(0, 6) + '***' : 'nenhum');
-
-      // 🎯 NOVO FLUXO: Inicialização simples pois dados já estão no perfil
+      // 🎯 NOVO FLUXO SIMPLIFICADO: Dados já estão no perfil via trigger
       const { data: result, error } = await supabase.rpc('initialize_onboarding_for_user', {
         p_user_id: user.id,
-        p_invite_token: inviteToken
+        p_invite_token: null  // Dados já foram processados pelo trigger
       });
 
       if (error) {
@@ -329,21 +321,14 @@ export const useCleanOnboarding = () => {
 
       if (result?.success) {
         console.log('✅ [CLEAN-ONBOARDING] Inicializado com sucesso:', result);
-        console.log('📋 [CLEAN-ONBOARDING] Dados pré-preenchidos:', result.personal_info_preloaded);
-        
-        // ⚡ IMPORTANTE: Se há convite, limpar cache antes de recarregar
-        if (inviteToken) {
-          console.log('🧹 [CLEAN-ONBOARDING] Limpando cache antes de recarregar dados do convite');
-          clearLocal();
-        }
         
         // Recarregar dados após inicialização
         await loadData();
         
-        if (result.invite_token_used && result.invite_found) {
+        if (result.profile_used) {
           toast({
-            title: "Dados do convite carregados! ✨",
-            description: "Suas informações foram pré-preenchidas automaticamente.",
+            title: "Dados pré-preenchidos! ✨",
+            description: "Suas informações do convite foram carregadas automaticamente.",
           });
         } else if (result.user_name_used) {
           toast({
@@ -355,7 +340,7 @@ export const useCleanOnboarding = () => {
     } catch (error) {
       console.error('❌ [CLEAN-ONBOARDING] Erro na inicialização:', error);
     }
-  }, [user?.id, loadData, clearLocal]);
+  }, [user?.id, loadData]);
 
   const updateData = useCallback((stepData: Partial<OnboardingFinalData>) => {
     setData(prev => {

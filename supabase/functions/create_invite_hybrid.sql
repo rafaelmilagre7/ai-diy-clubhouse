@@ -50,16 +50,16 @@ BEGIN
   -- Gerar token único
   new_token := public.generate_invite_token();
   
-  -- Criar novo convite
+  -- Criar novo convite (usando nomes corretos das colunas)
   INSERT INTO public.invites (
     email,
-    phone,
+    whatsapp_number,  -- Nome correto da coluna
     role_id,
     token,
     expires_at,
     created_by,
     notes,
-    channel_preference
+    preferred_channel  -- Nome correto da coluna
   )
   VALUES (
     p_email,
