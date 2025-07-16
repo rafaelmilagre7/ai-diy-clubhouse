@@ -5260,6 +5260,10 @@ export type Database = {
         Args: { target_user_id?: string }
         Returns: Json
       }
+      diagnose_onboarding_system: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
       diagnose_stuck_users: {
         Args: Record<PropertyKey, never>
         Returns: {
@@ -5743,6 +5747,10 @@ export type Database = {
         Returns: undefined
       }
       migrate_onboarding_data_to_quick: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
+      monitor_onboarding_flow: {
         Args: Record<PropertyKey, never>
         Returns: Json
       }
