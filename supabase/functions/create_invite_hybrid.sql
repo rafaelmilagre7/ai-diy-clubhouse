@@ -1,8 +1,8 @@
 
 CREATE OR REPLACE FUNCTION public.create_invite_hybrid(
   p_email text, 
+  p_role_id uuid,
   p_phone text DEFAULT NULL,
-  p_role_id uuid, 
   p_expires_in interval DEFAULT '7 days'::interval, 
   p_notes text DEFAULT NULL::text,
   p_channel_preference text DEFAULT 'email'
