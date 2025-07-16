@@ -86,16 +86,12 @@ const OnboardingStep2Page: React.FC = () => {
     onDataChange: debouncedUpdateData
   }), [data, handleNext, isSaving, debouncedUpdateData]);
   
-  // Memoizar canGoNext para evitar recálculos constantes
+  // Step 2 é opcional, sempre permite avançar
   const canGoNext = useMemo(() => {
-    if (!stepRef.current) return false;
-    try {
-      return stepRef.current.isValid();
-    } catch (error) {
-      console.warn('⚠️ [STEP2] Erro na validação:', error);
-      return false;
-    }
-  }, [data?.business_info]); // Recalcular apenas quando business_info mudar
+    // Step 2 sempre válido (informações opcionais da empresa)
+    console.log('🔍 [STEP2] Verificando canGoNext - Step 2 é sempre válido');
+    return true;
+  }, []); // Sem dependências - sempre true
 
 // Função de debounce simples
 function debounce(func: Function, wait: number) {
