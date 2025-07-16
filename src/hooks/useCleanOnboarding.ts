@@ -303,9 +303,15 @@ export const useCleanOnboarding = () => {
         }
       }
       
+      // 🎯 BUSCAR TOKEN EM MÚLTIPLAS FONTES 
+      const inviteToken = new URLSearchParams(window.location.search).get('token') || 
+                          new URLSearchParams(window.location.search).get('invite') ||
+                          sessionStorage.getItem('current_invite_token') ||
+                          localStorage.getItem('current_invite_token');
+
       const { data: result, error } = await supabase.rpc('initialize_onboarding_for_user', {
         p_user_id: user.id,
-        p_invite_data: inviteDataToUse || {}
+        p_invite_token: inviteToken // 🎯 Usar novo parâmetro p_invite_token
       });
 
       if (error) {

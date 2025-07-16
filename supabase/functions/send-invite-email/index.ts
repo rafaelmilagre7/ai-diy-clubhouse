@@ -126,9 +126,12 @@ const handler = async (req: Request): Promise<Response> => {
           { name: 'role', value: roleName },
           { name: 'source', value: 'admin-invite' },
         ],
-        // 🎯 CORREÇÃO CRÍTICA: Desabilitar link tracking do Resend
+        // 🎯 CORREÇÃO CRÍTICA: Desabilitar completamente link tracking
         click_tracking: false,
         open_tracking: false,
+        headers: {
+          'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click'
+        },
       });
 
       if (resendResponse.error) {

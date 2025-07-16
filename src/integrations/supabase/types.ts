@@ -6065,7 +6065,9 @@ export type Database = {
         Returns: Json
       }
       initialize_onboarding_for_user: {
-        Args: { p_user_id: string; p_invite_data?: Json }
+        Args:
+          | { p_user_id: string; p_invite_data?: Json }
+          | { p_user_id: string; p_invite_token?: string }
         Returns: Json
       }
       is_admin: {
