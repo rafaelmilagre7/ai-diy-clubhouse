@@ -4941,7 +4941,7 @@ export type Database = {
     }
     Functions: {
       accept_invite: {
-        Args: { p_token: string }
+        Args: { token: string }
         Returns: Json
       }
       activate_invited_user: {
@@ -4954,7 +4954,7 @@ export type Database = {
         Returns: Json
       }
       admin_complete_user_cleanup: {
-        Args: { user_email: string }
+        Args: { target_user_id: string } | { user_email: string }
         Returns: Json
       }
       admin_force_delete_auth_user: {
@@ -4962,7 +4962,7 @@ export type Database = {
         Returns: Json
       }
       admin_reset_user: {
-        Args: { user_email: string }
+        Args: { target_user_id: string } | { user_email: string }
         Returns: Json
       }
       audit_role_assignments: {
