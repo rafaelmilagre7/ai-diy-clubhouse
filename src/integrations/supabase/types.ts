@@ -5096,11 +5096,13 @@ export type Database = {
         Returns: boolean
       }
       clear_all_networking_data: {
-        Args: Record<PropertyKey, never>
+        Args: Record<PropertyKey, never> | { p_user_id: string }
         Returns: Json
       }
       complete_invite_registration: {
-        Args: { p_token: string; p_user_id: string }
+        Args:
+          | { p_token: string; p_user_id: string }
+          | { p_user_id: string; p_invite_token: string }
         Returns: Json
       }
       complete_onboarding: {
@@ -5108,16 +5110,20 @@ export type Database = {
         Returns: Json
       }
       complete_onboarding_and_unlock_features: {
-        Args: { p_user_id: string; p_onboarding_data: Json }
+        Args:
+          | { p_user_id: string }
+          | { p_user_id: string; p_onboarding_data: Json }
         Returns: Json
       }
       complete_onboarding_secure: {
-        Args: {
-          p_user_id: string
-          p_onboarding_data: Json
-          p_ip_address?: string
-          p_user_agent?: string
-        }
+        Args:
+          | { p_user_id: string }
+          | {
+              p_user_id: string
+              p_onboarding_data: Json
+              p_ip_address?: string
+              p_user_agent?: string
+            }
         Returns: Json
       }
       create_invite: {
@@ -5130,14 +5136,22 @@ export type Database = {
         Returns: Json
       }
       create_invite_hybrid: {
-        Args: {
-          p_email: string
-          p_role_id: string
-          p_phone?: string
-          p_expires_in?: unknown
-          p_notes?: string
-          p_channel_preference?: string
-        }
+        Args:
+          | {
+              p_email: string
+              p_role_id: string
+              p_notes?: string
+              p_whatsapp?: string
+              p_channel?: string
+            }
+          | {
+              p_email: string
+              p_role_id: string
+              p_phone?: string
+              p_expires_in?: unknown
+              p_notes?: string
+              p_channel_preference?: string
+            }
         Returns: Json
       }
       create_learning_certificate_if_eligible: {
@@ -5188,6 +5202,14 @@ export type Database = {
       decrement_suggestion_upvote: {
         Args: { suggestion_id: string }
         Returns: undefined
+      }
+      delete_forum_post: {
+        Args: { p_post_id: string }
+        Returns: Json
+      }
+      delete_forum_topic: {
+        Args: { p_topic_id: string }
+        Returns: Json
       }
       delete_user_complete: {
         Args: { target_user_id: string }
@@ -5293,6 +5315,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: Json
       }
+      get_analytics_overview: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
       get_courses_with_stats: {
         Args: Record<PropertyKey, never>
         Returns: {
@@ -5356,6 +5382,10 @@ export type Database = {
           resources: Json
         }[]
       }
+      get_networking_analytics: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
       get_nps_analytics: {
         Args: Record<PropertyKey, never>
         Returns: {
@@ -5374,13 +5404,29 @@ export type Database = {
           course_id: string
         }[]
       }
+      get_onboarding_analytics: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
       get_onboarding_next_step: {
         Args: { p_user_id: string }
+        Returns: Json
+      }
+      get_progress_analytics: {
+        Args: Record<PropertyKey, never>
         Returns: Json
       }
       get_security_metrics: {
         Args: { p_user_id?: string; p_days?: number }
         Returns: Json
+      }
+      get_stats_overview: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
+      get_total_referrals: {
+        Args: { p_user_id: string }
+        Returns: number
       }
       get_user_permissions: {
         Args: { user_id: string }
