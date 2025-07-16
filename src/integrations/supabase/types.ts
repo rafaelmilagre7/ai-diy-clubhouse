@@ -4995,6 +4995,15 @@ export type Database = {
         Args: { user_id_param: string }
         Returns: Json
       }
+      check_function_security_status: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          function_name: string
+          search_path_status: string
+          security_type: string
+          recommendation: string
+        }[]
+      }
       check_onboarding_integrity: {
         Args: { p_user_id: string }
         Returns: Json
