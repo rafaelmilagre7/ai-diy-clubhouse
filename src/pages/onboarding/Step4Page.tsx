@@ -11,27 +11,32 @@ const OnboardingStep4Page: React.FC = () => {
   const { data, saveAndNavigate, canAccessStep, isSaving, updateData, dataRestored } = useOnboarding();
   const stepRef = useRef<{ getData: () => any; isValid: () => boolean }>(null);
 
-  // Verificar se pode acessar esta etapa
+  // 🎯 CORREÇÃO PREVENTIVA: Verificar se pode acessar esta etapa com proteção contra reset
   useEffect(() => {
-    // CORREÇÃO DO LOOP: Verificar apenas uma vez, sem dependência de canAccessStep
+    // Prevenir execução durante operações de save
+    if (isSaving) {
+      console.log('⏸️ [STEP4] Pulando verificação de acesso durante save');
+      return;
+    }
+    
     const checkAccess = () => {
       if (data.is_completed) {
-        console.log('[STEP4] Onboarding completo, redirecionando para dashboard');
+        console.log('✅ [STEP4] Onboarding completo, redirecionando para dashboard');
         navigate('/dashboard', { replace: true });
         return;
       }
       
       if (!canAccessStep(4)) {
-        console.log('[STEP4] Sem acesso ao step 4, redirecionando para step 1');
+        console.log('🔄 [STEP4] Sem acesso ao step 4, redirecionando para step 1');
         navigate('/onboarding/step/1', { replace: true });
       }
     };
     
-    // Executar apenas se houver dados carregados
-    if (data.user_id) {
+    // Executar apenas se houver dados carregados e não estiver salvando
+    if (data.user_id && !isSaving) {
       checkAccess();
     }
-  }, [data.is_completed, data.user_id, navigate]); // Dependências estáveis
+  }, [data.is_completed, data.user_id, navigate, isSaving]); // Incluir isSaving
 
   const handleNext = async (stepData?: any) => {
     console.log('➡️ [STEP4] handleNext chamado com:', stepData);
@@ -50,7 +55,18 @@ const OnboardingStep4Page: React.FC = () => {
       return;
     }
     
-    await saveAndNavigate(formData, 4, 5);
+    console.log('💾 [STEP4] Iniciando save operation...');
+    const success = await saveAndNavigate(formData, 4, 5);
+    
+    // 🎯 CORREÇÃO PREVENTIVA: Garantir navegação robusta
+    if (success) {
+      console.log('✅ [STEP4] Save bem-sucedido, aplicando navegação com timeout');
+      setTimeout(() => {
+        navigate('/onboarding/step/5', { replace: true });
+      }, 100);
+    } else {
+      console.error('❌ [STEP4] Falha no save, não navegando');
+    }
   };
 
   const handlePrevious = () => {
