@@ -148,41 +148,21 @@ export const useCleanOnboarding = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [dataRestored, setDataRestored] = useState(false);
 
-  // Carregar dados na inicialização APENAS uma vez
+  // Carregar dados na inicialização - SIMPLIFICADO
   useEffect(() => {
     if (user?.id && !isLoading) {
       loadData();
     }
-  }, [user?.id]); // Remover loadData das dependências para evitar loops
+  }, [user?.id]);
 
   const loadData = useCallback(async () => {
-    if (!user?.id) {
-      console.warn('❌ [CLEAN-ONBOARDING] Usuário não identificado');
-      return;
-    }
+    if (!user?.id) return;
 
     setIsLoading(true);
-    
-    // 🎯 VERIFICAR SE É FLUXO DE CONVITE - Se for, NÃO usar cache local
-    const inviteToken = new URLSearchParams(window.location.search).get('token') || 
-                        new URLSearchParams(window.location.search).get('invite') ||
-                        sessionStorage.getItem('current_invite_token') ||
-                        localStorage.getItem('current_invite_token');
-    
-    const isInviteFlow = Boolean(inviteToken);
-    
-    if (isInviteFlow) {
-      console.log('🎫 [CLEAN-ONBOARDING] FLUXO DE CONVITE detectado - Limpando cache local');
-      clearLocal(); // Forçar limpeza do cache no fluxo de convite
-    }
-    
-    console.log('🔍 [CLEAN-ONBOARDING] Carregando dados para usuário:', user.id, {
-      isInviteFlow,
-      inviteToken: inviteToken ? inviteToken.substring(0, 6) + '***' : null
-    });
+    console.log('🔍 [CLEAN-ONBOARDING] Carregando dados para usuário:', user.id);
 
     try {
-      // 1. Buscar dados do servidor SEMPRE
+      // Buscar dados do servidor (única fonte de verdade)
       const { data: onboardingData, error } = await supabase
         .from('onboarding_final')
         .select('*')
@@ -190,29 +170,14 @@ export const useCleanOnboarding = () => {
         .maybeSingle();
 
       if (error) {
-        debugOnboarding.logError('loadData', error, { userId: user.id });
-        
-        // Se erro no servidor E NÃO é fluxo de convite, tentar dados locais
-        if (!isInviteFlow) {
-          const localData = loadFromLocal();
-          if (localData) {
-            console.log('🔄 [CLEAN-ONBOARDING] Usando dados locais devido ao erro do servidor');
-            setData(localData);
-            setDataRestored(true);
-            toast({
-              title: "⚠️ Dados restaurados",
-              description: "Suas informações foram recuperadas do cache local.",
-            });
-            return;
-          }
-        }
+        console.error('❌ [CLEAN-ONBOARDING] Erro ao carregar:', error);
         throw error;
       }
 
       if (onboardingData) {
+        // Dados encontrados - estruturar corretamente
         const serverData = {
           ...onboardingData,
-          // Garantir estruturas JSONB válidas
           personal_info: onboardingData.personal_info || {},
           location_info: {
             state: onboardingData.personal_info?.state,
@@ -222,76 +187,23 @@ export const useCleanOnboarding = () => {
           },
           business_info: onboardingData.business_info || {},
           ai_experience: onboardingData.ai_experience || {},
-          goals_info: onboardingData.goals_info || {}, // Campo correto da tabela
-          preferences: onboardingData.personalization || {}, // Campo correto da tabela
-          personalization: onboardingData.personalization || {}, // Compatibilidade
+          goals_info: onboardingData.goals_info || {},
+          preferences: onboardingData.personalization || {},
+          personalization: onboardingData.personalization || {},
           completed_steps: onboardingData.completed_steps || [],
           time_per_step: onboardingData.time_per_step || {},
           abandonment_points: onboardingData.abandonment_points || []
         };
 
-        // 🎯 NOVO FLUXO: Sempre priorizar dados do servidor (já contém dados do perfil pré-existente)
-        if (isInviteFlow) {
-          console.log('✅ [CLEAN-ONBOARDING] FLUXO DE CONVITE: Usando dados do perfil pré-existente do servidor');
-          setData(serverData);
-        } else {
-          // 3. Fluxo normal: verificar se dados locais são mais recentes
-          const localData = loadFromLocal();
-          if (localData && hasNewerLocalData(serverData)) {
-            console.log('⚡ [CLEAN-ONBOARDING] Dados locais mais recentes, priorizando...');
-            setData(localData);
-            setDataRestored(true);
-            
-            toast({
-              title: "📱 Dados locais recuperados",
-              description: "Suas alterações mais recentes foram restauradas automaticamente.",
-            });
-          } else {
-            console.log('✅ [CLEAN-ONBOARDING] Dados do servidor carregados');
-            setData(serverData);
-          }
-        }
+        console.log('✅ [CLEAN-ONBOARDING] Dados carregados do servidor');
+        setData(serverData);
       } else {
-        // 4. Se não há dados no servidor
-        if (!isInviteFlow) {
-          // Fluxo normal: verificar dados locais
-          const localData = loadFromLocal();
-          if (localData) {
-            console.log('🔄 [CLEAN-ONBOARDING] Usando dados locais - servidor vazio');
-            setData(localData);
-            setDataRestored(true);
-            
-            toast({
-              title: "📱 Dados restaurados",
-              description: "Suas informações preenchidas foram recuperadas.",
-            });
-            return;
-          }
-        }
-        
+        // Nenhum dado encontrado - inicializar
         console.log('📭 [CLEAN-ONBOARDING] Nenhum dado encontrado, inicializando...');
         await initializeOnboarding();
       }
     } catch (error) {
       console.error('❌ [CLEAN-ONBOARDING] Erro ao carregar dados:', error);
-      
-      // Fallback para dados locais apenas se NÃO for fluxo de convite
-      if (!isInviteFlow) {
-        const localData = loadFromLocal();
-        if (localData) {
-          console.log('🆘 [CLEAN-ONBOARDING] Fallback para dados locais');
-          setData(localData);
-          setDataRestored(true);
-          
-          toast({
-            title: "⚠️ Dados recuperados offline",
-            description: "Suas informações foram recuperadas do cache local.",
-            variant: "default",
-          });
-          return;
-        }
-      }
-      
       toast({
         title: "Erro ao carregar",
         description: "Não foi possível carregar seus dados. Tente novamente.",
@@ -300,7 +212,7 @@ export const useCleanOnboarding = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [user?.id, loadFromLocal, hasNewerLocalData, clearLocal]);
+  }, [user?.id]);
 
   const initializeOnboarding = useCallback(async () => {
     if (!user?.id) return;
@@ -368,205 +280,71 @@ export const useCleanOnboarding = () => {
   }, [saveToLocal, isSaving]);
 
   const saveAndNavigate = useCallback(async (stepData: any, currentStep: number, targetStep: number) => {
-    console.log('💾 [CLEAN-ONBOARDING] Salvando e navegando...', { 
-      stepData: JSON.stringify(stepData, null, 2), 
-      currentStep, 
-      targetStep,
-      currentData: JSON.stringify(data, null, 2).slice(0, 500) + '...'
-    });
-    
     if (isSaving) {
       console.warn('⚠️ [CLEAN-ONBOARDING] Já está salvando, cancelando');
       return false;
     }
 
     setIsSaving(true);
-    
-    // Remover timeout forçado - FASE 3 CORREÇÃO
+    console.log('💾 [CLEAN-ONBOARDING] Salvando step:', currentStep, '-> step:', targetStep);
 
     try {
-      // 🎯 CORREÇÃO: Criar uma cópia profunda dos dados atuais
+      // Preparar dados atualizados
       const updatedData = {
         ...data,
-        personal_info: { ...data.personal_info },
-        business_info: { ...data.business_info },
-        ai_experience: { ...data.ai_experience },
-        goals_info: { ...data.goals_info },
-        preferences: { ...data.preferences }
+        ...stepData,
+        current_step: Math.max(targetStep, data.current_step),
+        completed_steps: [...new Set([...data.completed_steps, currentStep])],
+        updated_at: new Date().toISOString()
       };
-      
-      console.log('📝 [CLEAN-ONBOARDING] Processando dados do Step', currentStep);
-      
-      // 🎯 CORREÇÃO: Mapear dados por etapa específica com validação
-      switch (currentStep) {
-        case 1:
-          console.log('🔄 [CLEAN-ONBOARDING] Processando dados pessoais:', stepData);
-          
-          if (stepData.personal_info) {
-            updatedData.personal_info = { ...updatedData.personal_info, ...stepData.personal_info };
-            console.log('✅ [CLEAN-ONBOARDING] personal_info atualizado:', updatedData.personal_info);
-          }
-          
-          if (stepData.location_info) {
-            updatedData.personal_info = { 
-              ...updatedData.personal_info, 
-              state: stepData.location_info.state,
-              city: stepData.location_info.city,
-              country: stepData.location_info.country,
-              timezone: stepData.location_info.timezone
-            };
-            console.log('✅ [CLEAN-ONBOARDING] location_info integrado ao personal_info:', updatedData.personal_info);
-          }
-          break;
-        case 2:
-          if (stepData.business_info) {
-            updatedData.business_info = { ...updatedData.business_info, ...stepData.business_info };
-            // Atualizar campos diretos também
-            updatedData.company_name = stepData.business_info.companyName;
-            updatedData.annual_revenue = stepData.business_info.annualRevenue;
-          }
-          break;
-        case 3:
-          if (stepData.ai_experience) {
-            updatedData.ai_experience = { ...updatedData.ai_experience, ...stepData.ai_experience };
-            // Atualizar campo direto
-            updatedData.ai_knowledge_level = stepData.ai_experience.aiKnowledgeLevel;
-          }
-          break;
-        case 4:
-          if (stepData.goals_info) {
-            updatedData.goals_info = { ...updatedData.goals_info, ...stepData.goals_info };
-          }
-          break;
-        case 5:
-          if (stepData.personalization) {
-            updatedData.preferences = { ...updatedData.preferences, ...stepData.personalization };
-            updatedData.personalization = { ...updatedData.personalization, ...stepData.personalization };
-          }
-          break;
-      }
 
-      // Atualizar controle de etapas
-      const completedSteps = [...new Set([...updatedData.completed_steps, currentStep])];
-      updatedData.completed_steps = completedSteps;
-      updatedData.current_step = Math.max(targetStep, updatedData.current_step);
-      
-      // Se for etapa 6 ou targetStep = 7, marcar como completo
+      // Marcar como completo se for o último step
       if (targetStep > 6) {
         updatedData.is_completed = true;
         updatedData.completed_at = new Date().toISOString();
         updatedData.status = 'completed';
       }
 
-      console.log('💾 [CLEAN-ONBOARDING] Preparando dados para salvar no Supabase:', {
-        user_id: user!.id,
-        personal_info: updatedData.personal_info,
-        business_info: updatedData.business_info,
-        current_step: updatedData.current_step,
-        completed_steps: updatedData.completed_steps
-      });
-
-      // 🎯 CORREÇÃO: Salvar no banco com logs detalhados
-      const { data: savedData, error } = await supabase
+      // Salvar no Supabase
+      const { error } = await supabase
         .from('onboarding_final')
         .upsert({
           user_id: user!.id,
-          personal_info: updatedData.personal_info,
-          business_info: updatedData.business_info,
-          ai_experience: updatedData.ai_experience,
-          goals_info: updatedData.goals_info, // Campo correto da tabela
-          personalization: updatedData.preferences, // Campo correto da tabela
-          company_name: updatedData.company_name,
-          annual_revenue: updatedData.annual_revenue,
-          ai_knowledge_level: updatedData.ai_knowledge_level,
+          personal_info: updatedData.personal_info || {},
+          business_info: updatedData.business_info || {},
+          ai_experience: updatedData.ai_experience || {},
+          goals_info: updatedData.goals_info || {},
+          personalization: updatedData.preferences || updatedData.personalization || {},
           current_step: updatedData.current_step,
           completed_steps: updatedData.completed_steps,
           is_completed: updatedData.is_completed,
           completed_at: updatedData.completed_at,
-          time_per_step: updatedData.time_per_step || {},
-          completion_score: updatedData.completion_score,
-          abandonment_points: updatedData.abandonment_points || [],
           status: updatedData.status,
-          updated_at: new Date().toISOString()
+          updated_at: updatedData.updated_at
         }, {
-          onConflict: 'user_id',
-          ignoreDuplicates: false
-        })
-        .select();
+          onConflict: 'user_id'
+        });
 
       if (error) {
-        console.error('❌ [CLEAN-ONBOARDING] Erro ao salvar no Supabase:', error);
-        debugOnboarding.logError('saveAndNavigate', error, { 
-          stepData, 
-          currentStep, 
-          targetStep,
-          updatedData: JSON.stringify(updatedData).slice(0, 500) + '...'
-        });
+        console.error('❌ [CLEAN-ONBOARDING] Erro ao salvar:', error);
         throw error;
       }
 
-      // Timeout removido - salvamento validado
-      
-      console.log('✅ [CLEAN-ONBOARDING] Dados salvos com sucesso no Supabase:', savedData);
-      
-      // 🎯 CORREÇÃO: Aguardar atualização do estado antes de navegar
+      // Atualizar estado local
       setData(updatedData);
-      
-        // Registrar telemetria de step completado
-        logStepCompleted(currentStep, stepData);
-        trackStepCompleted(user!.id, currentStep, stepData);
-        
-        // Validar completude dos dados
-        if (targetStep > 6) {
-          const completeness = validateDataCompleteness(updatedData);
-          console.log('📊 [CLEAN-ONBOARDING] Completude dos dados:', completeness);
-          
-          // Enriquecer dados do perfil
-          await enrichProfileData(user!.id, updatedData);
-        }
-        
-        // Salvar no localStorage após sucesso no servidor
-        saveToLocal(updatedData);
+
+      console.log('✅ [CLEAN-ONBOARDING] Dados salvos com sucesso');
       
       toast({
         title: "Dados salvos! ✅",
         description: `Etapa ${currentStep} concluída com sucesso.`,
       });
-      
-      console.log('🚀 [CLEAN-ONBOARDING] Navegando para próxima etapa:', targetStep);
-      
-      // 🎯 CORREÇÃO: Navegação garantida com timeout de segurança
+
+      // Navegar APENAS se salvamento foi bem-sucedido
       if (targetStep <= 6) {
-        // Aguardar um pequeno delay para garantir que o estado foi atualizado
-        setTimeout(() => {
-          console.log('📍 [CLEAN-ONBOARDING] Executando navegação para step', targetStep);
-          navigate(`/onboarding/step/${targetStep}`, { replace: true });
-        }, 100);
+        navigate(`/onboarding/step/${targetStep}`, { replace: true });
       } else {
-        // Onboarding concluído - completar via RPC para garantir consistência
-        try {
-          console.log('🏁 [CLEAN-ONBOARDING] Finalizando onboarding via RPC...');
-          const { data: completeResult, error: completeError } = await supabase.rpc('complete_onboarding', {
-            p_user_id: user!.id
-          });
-          
-          if (completeError) {
-            console.error('❌ [CLEAN-ONBOARDING] Erro ao finalizar:', completeError);
-          } else {
-            console.log('✅ [CLEAN-ONBOARDING] Onboarding finalizado via RPC:', completeResult);
-            // Registrar telemetria de conclusão
-            trackOnboardingCompleted(user!.id);
-          }
-        } catch (rpcError) {
-          console.error('❌ [CLEAN-ONBOARDING] Falha no RPC de finalização:', rpcError);
-        }
-        
-        // Limpar dados locais
-        clearLocal();
-        
-        // Verificar acesso pós-onboarding
-        await verifyPostOnboardingAccess();
-        
+        // Onboarding completo
         toast({
           title: "Onboarding concluído! 🎉",
           description: "Bem-vindo(a) à nossa plataforma!",
@@ -577,22 +355,19 @@ export const useCleanOnboarding = () => {
       return true;
 
     } catch (error: any) {
-      console.error('❌ [CLEAN-ONBOARDING] Erro ao salvar e navegar:', error);
-      debugOnboarding.logError('saveAndNavigate', error, { stepData, currentStep, targetStep });
+      console.error('❌ [CLEAN-ONBOARDING] Erro ao salvar:', error);
       
-      // FASE 3 CORREÇÃO: Sem navegação forçada - falha real deve ser tratada
       toast({
         title: "Erro ao salvar",
-        description: `Houve um problema ao salvar seus dados: ${error.message || 'Erro desconhecido'}. Tente novamente.`,
+        description: "Houve um problema ao salvar seus dados. Tente novamente.",
         variant: "destructive",
       });
       
       return false;
     } finally {
-      console.log('🏁 [CLEAN-ONBOARDING] Finalizando saveAndNavigate, isSaving = false');
       setIsSaving(false);
     }
-  }, [data, user, navigate, logStepCompleted, trackStepCompleted, validateDataCompleteness, enrichProfileData, saveToLocal, logOnboardingCompleted, trackOnboardingCompleted, setupUserAccess, clearLocal]);
+  }, [data, user, navigate, isSaving]);
 
   // Verificar acesso pós-onboarding
   const verifyPostOnboardingAccess = useCallback(async () => {
