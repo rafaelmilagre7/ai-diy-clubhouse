@@ -45,6 +45,21 @@ export const SimpleOnboardingStep1 = React.memo(forwardRef<Step1Ref, SimpleOnboa
     timezone: data.location_info?.timezone || 'America/Sao_Paulo'
   });
 
+  // 🎯 CORREÇÃO: Sincronizar com dados que chegam assincronamente do servidor
+  useEffect(() => {
+    if (data?.personal_info) {
+      console.log('[STEP1] Dados recebidos do servidor:', data.personal_info);
+      
+      setFormData(prev => ({
+        ...prev,
+        // Preservar dados já digitados ou usar dados do convite
+        name: prev.name || data.personal_info?.name || '',
+        email: prev.email || data.personal_info?.email || '',
+        phone: prev.phone || data.personal_info?.phone || ''
+      }));
+    }
+  }, [data?.personal_info]);
+
   const [errors, setErrors] = useState<Record<string, string>>({});
   const getFieldError = (field: string) => errors[field];
 
