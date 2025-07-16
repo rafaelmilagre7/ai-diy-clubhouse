@@ -4965,6 +4965,18 @@ export type Database = {
         Args: { target_user_id: string } | { user_email: string }
         Returns: Json
       }
+      analyze_rls_security_issues: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          table_name: string
+          policy_name: string
+          policy_type: string
+          security_level: string
+          issue_description: string
+          recommendation: string
+          policy_definition: string
+        }[]
+      }
       backup_table_data: {
         Args: { p_table_name: string; p_reason?: string }
         Returns: Json
@@ -5058,6 +5070,15 @@ export type Database = {
       check_system_health: {
         Args: Record<PropertyKey, never>
         Returns: Json
+      }
+      check_tables_without_rls: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          table_name: string
+          rls_status: string
+          risk_level: string
+          recommendation: string
+        }[]
       }
       check_whatsapp_config: {
         Args: Record<PropertyKey, never>
