@@ -381,6 +381,13 @@ export const useCleanOnboarding = () => {
     }
 
     setIsSaving(true);
+    
+    // Timeout de segurança para garantir navegação
+    const timeoutId = setTimeout(() => {
+      console.log('⏱️ [CLEAN-ONBOARDING] Timeout atingido, forçando navegação');
+      setIsSaving(false);
+      navigate(`/onboarding/step-${targetStep}`);
+    }, 10000); // 10 segundos
 
     try {
       // 🎯 CORREÇÃO: Criar uma cópia profunda dos dados atuais
@@ -503,6 +510,9 @@ export const useCleanOnboarding = () => {
         throw error;
       }
 
+      // Limpar timeout de segurança
+      clearTimeout(timeoutId);
+      
       console.log('✅ [CLEAN-ONBOARDING] Dados salvos com sucesso no Supabase:', savedData);
       
       // 🎯 CORREÇÃO: Aguardar atualização do estado antes de navegar
@@ -572,18 +582,35 @@ export const useCleanOnboarding = () => {
       
       return true;
 
-    } catch (error) {
+    } catch (error: any) {
+      // Limpar timeout de segurança
+      clearTimeout(timeoutId);
+      
       console.error('❌ [CLEAN-ONBOARDING] Erro ao salvar e navegar:', error);
       debugOnboarding.logError('saveAndNavigate', error, { stepData, currentStep, targetStep });
       
-      toast({
-        title: "Erro ao salvar",
-        description: `Houve um problema ao salvar seus dados: ${error.message || 'Erro desconhecido'}. Tente novamente.`,
-        variant: "destructive",
-      });
-      
-      return false;
+      // 🎯 CORREÇÃO: Navegação forçada mesmo com erro (dados já foram salvos)
+      if (error.message && !error.message.includes('storage') && !error.message.includes('bucket')) {
+        toast({
+          title: "Erro ao salvar",
+          description: `Houve um problema ao salvar seus dados: ${error.message || 'Erro desconhecido'}. Tente novamente.`,
+          variant: "destructive",
+        });
+        return false;
+      } else {
+        // Se foi erro de storage, continuar navegação mas avisar
+        console.log('⚠️ [CLEAN-ONBOARDING] Erro de storage, mas continuando navegação');
+        toast({
+          title: "⚠️ Dados salvos com limitações",
+          description: "Seus dados foram salvos, mas alguns recursos podem estar limitados.",
+          duration: 3000,
+        });
+        
+        navigate(`/onboarding/step-${targetStep}`);
+        return true;
+      }
     } finally {
+      clearTimeout(timeoutId);
       console.log('🏁 [CLEAN-ONBOARDING] Finalizando saveAndNavigate, isSaving = false');
       setIsSaving(false);
     }

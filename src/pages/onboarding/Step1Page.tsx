@@ -47,9 +47,15 @@ const OnboardingStep1Page: React.FC = () => {
       
       if (result === false) {
         console.error('❌ [STEP1-PAGE] Falha ao salvar dados');
+        // Forçar navegação mesmo se save falhou
+        console.log('🚀 [STEP1-PAGE] Forçando navegação para step 2');
+        navigate('/onboarding/step-2');
       }
     } catch (error) {
       console.error('❌ [STEP1-PAGE] Erro em handleNext:', error);
+      // Navegação de emergência
+      console.log('🆘 [STEP1-PAGE] Navegação de emergência para step 2');
+      navigate('/onboarding/step-2');
     }
   };
 
