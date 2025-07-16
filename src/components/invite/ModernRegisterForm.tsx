@@ -141,6 +141,12 @@ const ModernRegisterForm: React.FC<ModernRegisterFormProps> = ({
     try {
       setIsLoading(true);
       
+      // 🎯 PRESERVAR TOKEN NO SESSIONSTORAGE
+      if (inviteToken) {
+        sessionStorage.setItem('current_invite_token', inviteToken.trim());
+        console.log('💾 [REGISTER] Token salvo no sessionStorage:', inviteToken.substring(0, 6) + '***');
+      }
+      
       toast({
         title: "Criando sua conta...",
         description: "Por favor, aguarde enquanto preparamos tudo para você.",
@@ -245,9 +251,13 @@ const ModernRegisterForm: React.FC<ModernRegisterFormProps> = ({
           description: "Preparando seu onboarding personalizado...",
         });
         
-        // Redirecionamento direto SEM delay para preservar contexto
+        // 🎯 REDIRECIONAMENTO COM TOKEN PRESERVADO
         onSuccess?.();
-        window.location.href = '/onboarding/step/1';
+        const redirectUrl = inviteToken 
+          ? `/onboarding/step/1?token=${encodeURIComponent(inviteToken.trim())}`
+          : '/onboarding/step/1';
+        console.log('🔗 [REGISTER] Redirecionando para:', redirectUrl);
+        window.location.href = redirectUrl;
       }
       
     } catch (error: any) {

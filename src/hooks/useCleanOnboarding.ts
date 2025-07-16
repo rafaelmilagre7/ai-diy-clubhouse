@@ -276,13 +276,17 @@ export const useCleanOnboarding = () => {
     try {
       console.log('🚀 [CLEAN-ONBOARDING] Inicializando onboarding com dados do convite:', inviteData);
       
-      // Buscar dados do convite automaticamente se não fornecidos
+      // 🎯 BUSCAR TOKEN EM MÚLTIPLAS FONTES 
       let inviteDataToUse = inviteData;
       if (!inviteDataToUse) {
-        const inviteToken = new URLSearchParams(window.location.search).get('invite') || 
-                            sessionStorage.getItem('current_invite_token');
+        // Ordem de prioridade: URL params -> sessionStorage -> localStorage
+        const inviteToken = new URLSearchParams(window.location.search).get('token') || 
+                            new URLSearchParams(window.location.search).get('invite') ||
+                            sessionStorage.getItem('current_invite_token') ||
+                            localStorage.getItem('current_invite_token');
+                            
         if (inviteToken) {
-          console.log('🎫 [CLEAN-ONBOARDING] Buscando dados do convite automaticamente:', inviteToken.substring(0, 6) + '***');
+          console.log('🎫 [CLEAN-ONBOARDING] Token encontrado (fonte múltipla):', inviteToken.substring(0, 6) + '***');
           
           const { data: inviteInfo, error: inviteError } = await supabase.rpc('validate_invite_token_safe', {
             p_token: inviteToken
@@ -290,7 +294,11 @@ export const useCleanOnboarding = () => {
           
           if (!inviteError && inviteInfo?.valid) {
             inviteDataToUse = inviteInfo.invite;
-            console.log('✅ [CLEAN-ONBOARDING] Dados do convite obtidos:', inviteDataToUse);
+            console.log('✅ [CLEAN-ONBOARDING] Dados do convite recuperados:', {
+              email: inviteDataToUse?.email,
+              whatsapp_number: inviteDataToUse?.whatsapp_number,
+              notes: inviteDataToUse?.notes
+            });
           }
         }
       }
