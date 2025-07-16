@@ -324,6 +324,7 @@ export const useCleanOnboarding = () => {
 
     setIsSaving(true);
     console.log('💾 [CLEAN-ONBOARDING] Salvando step:', currentStep, '-> step:', targetStep);
+    console.log('📋 [CLEAN-ONBOARDING] Dados recebidos para salvar:', stepData);
 
     try {
       // Preparar dados atualizados
@@ -342,6 +343,13 @@ export const useCleanOnboarding = () => {
         updatedData.status = 'completed';
       }
 
+      console.log('📤 [CLEAN-ONBOARDING] Preparando dados para Supabase:', {
+        user_id: user!.id,
+        personal_info: updatedData.personal_info,
+        current_step: updatedData.current_step,
+        completed_steps: updatedData.completed_steps
+      });
+      
       // Salvar no Supabase
       const { error } = await supabase
         .from('onboarding_final')
@@ -363,7 +371,12 @@ export const useCleanOnboarding = () => {
         });
 
       if (error) {
-        console.error('❌ [CLEAN-ONBOARDING] Erro ao salvar:', error);
+        console.error('❌ [CLEAN-ONBOARDING] Erro ao salvar no Supabase:', error);
+        console.error('❌ [CLEAN-ONBOARDING] Detalhes do erro:', {
+          message: error.message,
+          details: error.details,
+          hint: error.hint
+        });
         throw error;
       }
 
@@ -392,11 +405,18 @@ export const useCleanOnboarding = () => {
       return true;
 
     } catch (error: any) {
-      console.error('❌ [CLEAN-ONBOARDING] Erro ao salvar:', error);
+      console.error('❌ [CLEAN-ONBOARDING] Erro crítico ao salvar:', error);
+      console.error('❌ [CLEAN-ONBOARDING] Stack trace:', error.stack);
+      console.error('❌ [CLEAN-ONBOARDING] Dados que tentavam ser salvos:', {
+        stepData,
+        currentStep,
+        targetStep,
+        updatedData: data
+      });
       
       toast({
         title: "Erro ao salvar",
-        description: "Houve um problema ao salvar seus dados. Tente novamente.",
+        description: `Houve um problema ao salvar seus dados (${error.message}). Tente novamente.`,
         variant: "destructive",
       });
       
