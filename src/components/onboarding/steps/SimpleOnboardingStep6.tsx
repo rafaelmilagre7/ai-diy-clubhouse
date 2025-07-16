@@ -89,9 +89,19 @@ export const SimpleOnboardingStep6 = React.memo<SimpleOnboardingStep6Props>(({
   }, [data.personalization?.weeklyLearningTime, data.goals_info?.urgencyLevel, data.personalization?.wantsNetworking]);
 
   const handleComplete = useCallback(() => {
-    // Marcar onboarding como completo
-    onNext({ is_completed: true });
-  }, [onNext]);
+    // Finalizar onboarding com dados completos
+    console.log('🎯 [STEP6] Finalizando onboarding...');
+    
+    const completionData = {
+      is_completed: true,
+      completed_at: new Date().toISOString(),
+      status: 'completed' as const,
+      // Preservar dados de personalização se existirem
+      personalization: data.personalization || data.preferences || {}
+    };
+    
+    onNext(completionData);
+  }, [onNext, data.personalization, data.preferences]);
 
   const memoizedConfetti = useMemo(() => confetti, [confetti]);
 

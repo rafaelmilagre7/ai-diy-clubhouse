@@ -84,25 +84,24 @@ export const SimpleOnboardingWizard: React.FC = () => {
 
   // Gerenciar reset via URL e inicialização com dados do convite
   useEffect(() => {
-    if (user) {
+    if (user && !onboarding.isLoading) {
       const shouldReset = searchParams.get('reset') === 'true';
       const inviteToken = searchParams.get('invite');
       
       if (shouldReset) {
         resetOnboardingData();
-      } else if (inviteToken && !onboarding.dataRestored) {
-        // Se há token de convite e ainda não restaurou dados, tentar inicializar com dados do convite
-        console.log('🎫 [ONBOARDING] Detectado token de convite na URL:', inviteToken.substring(0, 6) + '***');
-        
-        // Verificar se onboarding já existe antes de inicializar
-        if (!onboarding.data.id && onboarding.currentStep === 1) {
-          console.log('🚀 [ONBOARDING] Inicializando onboarding com dados do convite...');
-          // A função initializeOnboarding vai buscar dados do convite automaticamente
-          onboarding.initializeOnboarding?.();
-        }
+      } else {
+        // 🎯 CORREÇÃO: Simplificar inicialização
+        // O hook useCleanOnboarding já cuida da inicialização automaticamente
+        // Só precisamos aguardar o carregamento dos dados
+        console.log('🔍 [ONBOARDING] Dados carregados:', {
+          hasData: !!onboarding.data.id,
+          currentStep: onboarding.currentStep,
+          inviteToken: inviteToken ? inviteToken.substring(0, 6) + '***' : 'none'
+        });
       }
     }
-  }, [user?.id, searchParams, onboarding.dataRestored, onboarding.currentStep]);
+  }, [user?.id, searchParams, onboarding.isLoading]);
 
   // Auto-save removido: agora apenas através do debounce em handleDataChange
 
@@ -129,11 +128,30 @@ export const SimpleOnboardingWizard: React.FC = () => {
 
   const handleNext = async (stepData?: any) => {
     console.log('➡️ [ONBOARDING] === HANDLENEXT CHAMADO ===');
-    console.log('➡️ [ONBOARDING] stepData recebido:', JSON.stringify(stepData, null, 2));
+    console.log('➡️ [ONBOARDING] stepData recebido:', stepData);
     console.log('➡️ [ONBOARDING] currentStep:', currentStep);
     
+    // 🎯 CORREÇÃO: Validar step access antes de salvar
+    if (!onboarding.canAccessStep(currentStep)) {
+      console.error('❌ [ONBOARDING] Sem acesso ao step atual:', currentStep);
+      toast({
+        title: "Acesso negado",
+        description: "Você não tem permissão para acessar esta etapa.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     if (!stepData || Object.keys(stepData).length === 0) {
-      console.log('⚠️ [ONBOARDING] Nenhum dado para salvar, avançando mesmo assim');
+      console.log('⚠️ [ONBOARDING] Nenhum dado para salvar, mas tentando avançar');
+      
+      // Para step 6 (finalização), sempre deve haver dados
+      if (currentStep === 6) {
+        console.error('❌ [ONBOARDING] Step 6 requer dados de finalização');
+        return;
+      }
+      
+      // Para outros steps, permitir avanço sem dados se necessário
       if (currentStep < TOTAL_STEPS) {
         setCurrentStep(currentStep + 1);
         window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -142,12 +160,15 @@ export const SimpleOnboardingWizard: React.FC = () => {
     }
 
     // Usar o hook para salvar e navegar
-    const targetStep = currentStep + 1;
+    const targetStep = currentStep === 6 ? 7 : currentStep + 1; // Step 6 vai para 7 (completo)
     const success = await onboarding.saveAndNavigate(stepData, currentStep, targetStep);
     
-    if (success && currentStep < TOTAL_STEPS) {
-      setCurrentStep(targetStep);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+    if (success) {
+      if (currentStep < TOTAL_STEPS) {
+        setCurrentStep(targetStep);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+      // Se currentStep === 6, o saveAndNavigate já vai redirecionar para /dashboard
     }
     
     console.log('➡️ [ONBOARDING] === HANDLENEXT FINALIZADO ===');

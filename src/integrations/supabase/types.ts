@@ -5112,6 +5112,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: number
       }
+      cleanup_onboarding_orphans: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
       cleanup_orphaned_data: {
         Args: Record<PropertyKey, never>
         Returns: Json

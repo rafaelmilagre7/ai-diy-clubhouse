@@ -51,24 +51,32 @@ export const SimpleOnboardingStep1 = React.memo(forwardRef<Step1Ref, SimpleOnboa
       console.log('[STEP1] Sincronizando dados do servidor:', data.personal_info);
       
       setFormData(prev => {
-        // 🎯 CORREÇÃO: Preservar dados já digitados pelo usuário
-        const newFormData = {
-          ...prev,
-          name: prev.name || data.personal_info?.name || '',
-          email: prev.email || data.personal_info?.email || '',
-          phone: prev.phone || data.personal_info?.phone || '',
-          instagram: prev.instagram || data.personal_info?.instagram || '',
-          linkedin: prev.linkedin || data.personal_info?.linkedin || '',
-          birthDate: prev.birthDate || data.personal_info?.birthDate || '',
-          profilePicture: prev.profilePicture || data.personal_info?.profilePicture || '',
-          curiosity: prev.curiosity || data.personal_info?.curiosity || '',
-          state: prev.state || data.location_info?.state || '',
-          city: prev.city || data.location_info?.city || '',
-          country: prev.country || data.location_info?.country || 'Brasil',
-          timezone: prev.timezone || data.location_info?.timezone || 'America/Sao_Paulo'
+        // 🎯 CORREÇÃO: Apenas sincronizar se valor não existe localmente
+        const shouldUpdate = (localValue: string, serverValue?: string) => {
+          return !localValue && serverValue;
         };
         
-        console.log('[STEP1] FormData atualizado:', newFormData);
+        const newFormData = {
+          ...prev,
+          name: shouldUpdate(prev.name, data.personal_info?.name) ? data.personal_info.name : prev.name,
+          email: shouldUpdate(prev.email, data.personal_info?.email) ? data.personal_info.email : prev.email,
+          phone: shouldUpdate(prev.phone, data.personal_info?.phone) ? data.personal_info.phone : prev.phone,
+          instagram: shouldUpdate(prev.instagram, data.personal_info?.instagram) ? data.personal_info.instagram : prev.instagram,
+          linkedin: shouldUpdate(prev.linkedin, data.personal_info?.linkedin) ? data.personal_info.linkedin : prev.linkedin,
+          birthDate: shouldUpdate(prev.birthDate, data.personal_info?.birthDate) ? data.personal_info.birthDate : prev.birthDate,
+          profilePicture: shouldUpdate(prev.profilePicture, data.personal_info?.profilePicture) ? data.personal_info.profilePicture : prev.profilePicture,
+          curiosity: shouldUpdate(prev.curiosity, data.personal_info?.curiosity) ? data.personal_info.curiosity : prev.curiosity,
+          state: shouldUpdate(prev.state, data.location_info?.state) ? data.location_info.state : prev.state,
+          city: shouldUpdate(prev.city, data.location_info?.city) ? data.location_info.city : prev.city,
+          country: shouldUpdate(prev.country, data.location_info?.country) ? data.location_info.country : (prev.country || 'Brasil'),
+          timezone: shouldUpdate(prev.timezone, data.location_info?.timezone) ? data.location_info.timezone : (prev.timezone || 'America/Sao_Paulo')
+        };
+        
+        console.log('[STEP1] FormData atualizado de forma inteligente:', {
+          before: prev,
+          after: newFormData,
+          serverData: data.personal_info
+        });
         return newFormData;
       });
     }
