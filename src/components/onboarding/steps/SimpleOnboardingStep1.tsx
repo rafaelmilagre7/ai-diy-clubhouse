@@ -48,22 +48,25 @@ export const SimpleOnboardingStep1 = React.memo(forwardRef<Step1Ref, SimpleOnboa
   const [errors, setErrors] = useState<Record<string, string>>({});
   const getFieldError = (field: string) => errors[field];
 
-  // Detectar campos que vieram do convite - corrigido
+  // Detectar campos que vieram do convite - CORRIGIDO
   const fromInvite = useMemo(() => {
     const personalInfo = data.personal_info || {};
     
     console.log('🔍 [ONBOARDING] Analisando dados do convite:', {
       personal_info: personalInfo,
-      from_invite_flag: personalInfo.from_invite,
-      email_from_invite: personalInfo.email && personalInfo.from_invite,
-      phone_from_invite: personalInfo.phone && personalInfo.phone_from_invite,
-      name_from_invite: personalInfo.name && personalInfo.name_from_invite
+      from_invite: personalInfo.from_invite,
+      email_from_invite: personalInfo.email_from_invite,
+      phone_from_invite: personalInfo.phone_from_invite,
+      name_from_invite: personalInfo.name_from_invite,
+      email_present: !!personalInfo.email,
+      phone_present: !!personalInfo.phone,
+      name_present: !!personalInfo.name
     });
     
     return {
-      email: personalInfo.from_invite === true || personalInfo.email_from_invite === true,
-      phone: personalInfo.phone_from_invite === true || personalInfo.from_invite === true,
-      name: personalInfo.name_from_invite === true || personalInfo.from_invite === true
+      email: Boolean(personalInfo.from_invite || personalInfo.email_from_invite),
+      phone: Boolean(personalInfo.phone_from_invite || personalInfo.from_invite),
+      name: Boolean(personalInfo.name_from_invite || personalInfo.from_invite)
     };
   }, [data.personal_info]);
 

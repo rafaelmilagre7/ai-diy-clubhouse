@@ -149,15 +149,15 @@ const ModernRegisterForm: React.FC<ModernRegisterFormProps> = ({
       const { data, error } = await supabase.auth.signUp({
         email: email.trim().toLowerCase(),
         password,
-        options: {
-          data: {
-            name: name.trim(),
-            full_name: name.trim(),
-            display_name: name.trim(),
-            ...(inviteToken && { invite_token: inviteToken.trim() })
-          },
-          emailRedirectTo: `${window.location.origin}/onboarding`
-        }
+          options: {
+            data: {
+              name: name.trim(),
+              full_name: name.trim(),
+              display_name: name.trim(),
+              ...(inviteToken && { invite_token: inviteToken.trim() })
+            }
+            // REMOVIDO emailRedirectTo para evitar refreshs problemáticos
+          }
       });
       
       console.log('📊 [DIAGNOSTIC] Resultado do signUp:', {
@@ -239,16 +239,15 @@ const ModernRegisterForm: React.FC<ModernRegisterFormProps> = ({
           }
         }
         
-        console.log('✅ [REGISTER] Processo completado - redirecionando');
+        console.log('✅ [REGISTER] Processo completado - redirecionando diretamente');
         toast({
           title: "Conta criada com sucesso!",
-          description: "Redirecionando para o onboarding...",
+          description: "Preparando seu onboarding personalizado...",
         });
         
-        setTimeout(() => {
-          redirectToNextStep();
-          onSuccess?.();
-        }, 500);
+        // Redirecionamento direto SEM delay para preservar contexto
+        onSuccess?.();
+        window.location.href = '/onboarding/step/1';
       }
       
     } catch (error: any) {

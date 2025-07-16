@@ -279,7 +279,8 @@ export const useCleanOnboarding = () => {
       // Buscar dados do convite automaticamente se não fornecidos
       let inviteDataToUse = inviteData;
       if (!inviteDataToUse) {
-        const inviteToken = new URLSearchParams(window.location.search).get('invite');
+        const inviteToken = new URLSearchParams(window.location.search).get('invite') || 
+                            sessionStorage.getItem('current_invite_token');
         if (inviteToken) {
           console.log('🎫 [CLEAN-ONBOARDING] Buscando dados do convite automaticamente:', inviteToken.substring(0, 6) + '***');
           
