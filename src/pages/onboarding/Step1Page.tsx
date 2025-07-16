@@ -4,6 +4,7 @@ import { OnboardingLayout } from '@/components/layout/OnboardingLayout';
 import { SimpleOnboardingStep1, Step1Ref } from '@/components/onboarding/steps/SimpleOnboardingStep1';
 import { SimpleStepNavigation } from '@/components/onboarding/SimpleStepNavigation';
 import { DataRestoreNotification } from '@/components/onboarding/DataRestoreNotification';
+import { OnboardingDebugPanel } from '@/components/debug/OnboardingDebugPanel';
 import { useOnboarding } from '@/hooks/useOnboarding';
 
 const OnboardingStep1Page: React.FC = () => {
@@ -29,13 +30,27 @@ const OnboardingStep1Page: React.FC = () => {
   }, [data.is_completed, navigate]); // Remover canAccessStep e current_step das dependências
 
   const handleNext = async () => {
+    console.log('🔄 [STEP1-PAGE] Iniciando handleNext...');
+    
     // Validar usando ref
     if (!step1Ref.current?.validate()) {
+      console.log('❌ [STEP1-PAGE] Validação falhou');
       return;
     }
     
     const stepData = step1Ref.current?.getData();
-    await saveAndNavigate(stepData, 1, 2);
+    console.log('📋 [STEP1-PAGE] Dados do step 1:', stepData);
+    
+    try {
+      const result = await saveAndNavigate(stepData, 1, 2);
+      console.log('✅ [STEP1-PAGE] saveAndNavigate resultado:', result);
+      
+      if (result === false) {
+        console.error('❌ [STEP1-PAGE] Falha ao salvar dados');
+      }
+    } catch (error) {
+      console.error('❌ [STEP1-PAGE] Erro em handleNext:', error);
+    }
   };
 
   const handlePrevious = () => {
@@ -89,6 +104,13 @@ function debounce(func: Function, wait: number) {
           isLoading={isSaving}
         />
       </div>
+      
+      {/* Debug Panel */}
+      <OnboardingDebugPanel 
+        data={data} 
+        isSaving={isSaving} 
+        isLoading={false}
+      />
     </OnboardingLayout>
   );
 };

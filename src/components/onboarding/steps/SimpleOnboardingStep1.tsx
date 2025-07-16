@@ -47,18 +47,32 @@ export const SimpleOnboardingStep1 = React.memo(forwardRef<Step1Ref, SimpleOnboa
 
   // 🎯 CORREÇÃO: Sincronizar com dados que chegam assincronamente do servidor
   useEffect(() => {
-    if (data?.personal_info) {
-      console.log('[STEP1] Dados recebidos do servidor:', data.personal_info);
+    if (data?.personal_info && Object.keys(data.personal_info).length > 0) {
+      console.log('[STEP1] Sincronizando dados do servidor:', data.personal_info);
       
-      setFormData(prev => ({
-        ...prev,
-        // Preservar dados já digitados ou usar dados do convite
-        name: prev.name || data.personal_info?.name || '',
-        email: prev.email || data.personal_info?.email || '',
-        phone: prev.phone || data.personal_info?.phone || ''
-      }));
+      setFormData(prev => {
+        // 🎯 CORREÇÃO: Preservar dados já digitados pelo usuário
+        const newFormData = {
+          ...prev,
+          name: prev.name || data.personal_info?.name || '',
+          email: prev.email || data.personal_info?.email || '',
+          phone: prev.phone || data.personal_info?.phone || '',
+          instagram: prev.instagram || data.personal_info?.instagram || '',
+          linkedin: prev.linkedin || data.personal_info?.linkedin || '',
+          birthDate: prev.birthDate || data.personal_info?.birthDate || '',
+          profilePicture: prev.profilePicture || data.personal_info?.profilePicture || '',
+          curiosity: prev.curiosity || data.personal_info?.curiosity || '',
+          state: prev.state || data.location_info?.state || '',
+          city: prev.city || data.location_info?.city || '',
+          country: prev.country || data.location_info?.country || 'Brasil',
+          timezone: prev.timezone || data.location_info?.timezone || 'America/Sao_Paulo'
+        };
+        
+        console.log('[STEP1] FormData atualizado:', newFormData);
+        return newFormData;
+      });
     }
-  }, [data?.personal_info]);
+  }, [data?.personal_info, data?.location_info]);
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const getFieldError = (field: string) => errors[field];

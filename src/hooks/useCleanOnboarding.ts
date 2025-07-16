@@ -343,6 +343,14 @@ export const useCleanOnboarding = () => {
   }, [user?.id, loadData]);
 
   const updateData = useCallback((stepData: Partial<OnboardingFinalData>) => {
+    // 🎯 CORREÇÃO: Prevenir atualizações durante operações de save
+    if (isSaving) {
+      console.log('⏸️ [CLEAN-ONBOARDING] Pulando updateData durante save operation');
+      return;
+    }
+    
+    console.log('🔄 [CLEAN-ONBOARDING] Atualizando dados localmente:', stepData);
+    
     setData(prev => {
       const newData = {
         ...prev,
@@ -350,15 +358,22 @@ export const useCleanOnboarding = () => {
         updated_at: new Date().toISOString()
       };
       
-      // Salvar com debounce para evitar loops
-      saveToLocal(newData);
+      // Salvar localmente apenas se não estiver em processo de save
+      if (!isSaving) {
+        saveToLocal(newData);
+      }
       
       return newData;
     });
-  }, [saveToLocal]);
+  }, [saveToLocal, isSaving]);
 
   const saveAndNavigate = useCallback(async (stepData: any, currentStep: number, targetStep: number) => {
-    console.log('💾 [CLEAN-ONBOARDING] Salvando e navegando...', { stepData, currentStep, targetStep });
+    console.log('💾 [CLEAN-ONBOARDING] Salvando e navegando...', { 
+      stepData: JSON.stringify(stepData, null, 2), 
+      currentStep, 
+      targetStep,
+      currentData: JSON.stringify(data, null, 2).slice(0, 500) + '...'
+    });
     
     if (isSaving) {
       console.warn('⚠️ [CLEAN-ONBOARDING] Já está salvando, cancelando');
@@ -368,15 +383,28 @@ export const useCleanOnboarding = () => {
     setIsSaving(true);
 
     try {
-      // Preparar dados atualizados
-      const updatedData = { ...data };
+      // 🎯 CORREÇÃO: Criar uma cópia profunda dos dados atuais
+      const updatedData = {
+        ...data,
+        personal_info: { ...data.personal_info },
+        business_info: { ...data.business_info },
+        ai_experience: { ...data.ai_experience },
+        goals_info: { ...data.goals_info },
+        preferences: { ...data.preferences }
+      };
       
-      // Mapear dados por etapa específica
+      console.log('📝 [CLEAN-ONBOARDING] Processando dados do Step', currentStep);
+      
+      // 🎯 CORREÇÃO: Mapear dados por etapa específica com validação
       switch (currentStep) {
         case 1:
+          console.log('🔄 [CLEAN-ONBOARDING] Processando dados pessoais:', stepData);
+          
           if (stepData.personal_info) {
             updatedData.personal_info = { ...updatedData.personal_info, ...stepData.personal_info };
+            console.log('✅ [CLEAN-ONBOARDING] personal_info atualizado:', updatedData.personal_info);
           }
+          
           if (stepData.location_info) {
             updatedData.personal_info = { 
               ...updatedData.personal_info, 
@@ -385,6 +413,7 @@ export const useCleanOnboarding = () => {
               country: stepData.location_info.country,
               timezone: stepData.location_info.timezone
             };
+            console.log('✅ [CLEAN-ONBOARDING] location_info integrado ao personal_info:', updatedData.personal_info);
           }
           break;
         case 2:
@@ -427,8 +456,16 @@ export const useCleanOnboarding = () => {
         updatedData.status = 'completed';
       }
 
-      // Salvar no banco (usando campos corretos da tabela onboarding_final)
-      const { error } = await supabase
+      console.log('💾 [CLEAN-ONBOARDING] Preparando dados para salvar no Supabase:', {
+        user_id: user!.id,
+        personal_info: updatedData.personal_info,
+        business_info: updatedData.business_info,
+        current_step: updatedData.current_step,
+        completed_steps: updatedData.completed_steps
+      });
+
+      // 🎯 CORREÇÃO: Salvar no banco com logs detalhados
+      const { data: savedData, error } = await supabase
         .from('onboarding_final')
         .upsert({
           user_id: user!.id,
@@ -452,9 +489,11 @@ export const useCleanOnboarding = () => {
         }, {
           onConflict: 'user_id',
           ignoreDuplicates: false
-        });
+        })
+        .select();
 
       if (error) {
+        console.error('❌ [CLEAN-ONBOARDING] Erro ao salvar no Supabase:', error);
         debugOnboarding.logError('saveAndNavigate', error, { 
           stepData, 
           currentStep, 
@@ -464,7 +503,9 @@ export const useCleanOnboarding = () => {
         throw error;
       }
 
-      console.log('✅ [CLEAN-ONBOARDING] Dados salvos com sucesso');
+      console.log('✅ [CLEAN-ONBOARDING] Dados salvos com sucesso no Supabase:', savedData);
+      
+      // 🎯 CORREÇÃO: Aguardar atualização do estado antes de navegar
       setData(updatedData);
       
         // Registrar telemetria de step completado
@@ -488,9 +529,15 @@ export const useCleanOnboarding = () => {
         description: `Etapa ${currentStep} concluída com sucesso.`,
       });
       
-      // Navegar para próxima etapa
+      console.log('🚀 [CLEAN-ONBOARDING] Navegando para próxima etapa:', targetStep);
+      
+      // 🎯 CORREÇÃO: Navegação garantida com timeout de segurança
       if (targetStep <= 6) {
-        navigate(`/onboarding/step/${targetStep}`);
+        // Aguardar um pequeno delay para garantir que o estado foi atualizado
+        setTimeout(() => {
+          console.log('📍 [CLEAN-ONBOARDING] Executando navegação para step', targetStep);
+          navigate(`/onboarding/step/${targetStep}`, { replace: true });
+        }, 100);
       } else {
         // Onboarding concluído - completar via RPC para garantir consistência
         try {
@@ -526,17 +573,21 @@ export const useCleanOnboarding = () => {
       return true;
 
     } catch (error) {
-      console.error('❌ [CLEAN-ONBOARDING] Erro ao salvar:', error);
+      console.error('❌ [CLEAN-ONBOARDING] Erro ao salvar e navegar:', error);
+      debugOnboarding.logError('saveAndNavigate', error, { stepData, currentStep, targetStep });
+      
       toast({
         title: "Erro ao salvar",
-        description: "Não foi possível salvar seus dados. Tente novamente.",
+        description: `Houve um problema ao salvar seus dados: ${error.message || 'Erro desconhecido'}. Tente novamente.`,
         variant: "destructive",
       });
+      
       return false;
     } finally {
+      console.log('🏁 [CLEAN-ONBOARDING] Finalizando saveAndNavigate, isSaving = false');
       setIsSaving(false);
     }
-  }, [data, isSaving, user?.id, navigate, saveToLocal, clearLocal]);
+  }, [data, user, navigate, logStepCompleted, trackStepCompleted, validateDataCompleteness, enrichProfileData, saveToLocal, logOnboardingCompleted, trackOnboardingCompleted, setupUserAccess, clearLocal]);
 
   // Verificar acesso pós-onboarding
   const verifyPostOnboardingAccess = useCallback(async () => {
