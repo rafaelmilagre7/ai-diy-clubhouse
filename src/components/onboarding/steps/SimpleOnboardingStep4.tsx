@@ -1,4 +1,4 @@
-import React, { useState, forwardRef, useImperativeHandle, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, forwardRef, useImperativeHandle, useCallback, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Target, TrendingUp, DollarSign, AlertTriangle } from 'lucide-react';
 import { Card } from '@/components/ui/card';
@@ -124,6 +124,18 @@ export const SimpleOnboardingStep4 = React.memo(forwardRef<{ getData: () => any;
     aiImplementationBudget: data.goals_info?.aiImplementationBudget || '',
     ...data.goals_info
   });
+
+  // 🎯 CORREÇÃO: Sincronizar com dados que chegam assincronamente do servidor
+  useEffect(() => {
+    if (data?.goals_info) {
+      console.log('[STEP4] Dados recebidos do servidor:', data.goals_info);
+      
+      setFormData(prev => ({
+        ...prev,
+        ...data.goals_info
+      }));
+    }
+  }, [data?.goals_info]);
 
   const handleInputChange = useCallback((field: string, value: string) => {
     setFormData(prev => {

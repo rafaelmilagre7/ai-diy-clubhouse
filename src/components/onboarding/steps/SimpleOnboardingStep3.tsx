@@ -23,6 +23,18 @@ export const SimpleOnboardingStep3 = React.memo(forwardRef<{ getData: () => any;
   onDataChange
 }, ref) => {
   const [formData, setFormData] = useState(data.ai_experience || {});
+
+  // 🎯 CORREÇÃO: Sincronizar com dados que chegam assincronamente do servidor
+  useEffect(() => {
+    if (data?.ai_experience) {
+      console.log('[STEP3] Dados recebidos do servidor:', data.ai_experience);
+      
+      setFormData(prev => ({
+        ...prev,
+        ...data.ai_experience
+      }));
+    }
+  }, [data?.ai_experience]);
   const [tools, setTools] = useState<Array<{id: string, name: string, category: string, logo_url?: string}>>([]);
   const [loading, setLoading] = useState(true);
   const [toolsByCategory, setToolsByCategory] = useState<Record<string, Array<{id: string, name: string, category: string, logo_url?: string}>>>({});

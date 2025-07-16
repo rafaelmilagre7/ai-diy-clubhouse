@@ -1,4 +1,4 @@
-import React, { useState, forwardRef, useImperativeHandle, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, forwardRef, useImperativeHandle, useCallback, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -41,6 +41,18 @@ export const SimpleOnboardingStep5 = React.memo(forwardRef<{ getData: () => any;
     motivationSharing: data.personalization?.motivationSharing || '',
     ...data.personalization
   });
+
+  // 🎯 CORREÇÃO: Sincronizar com dados que chegam assincronamente do servidor
+  useEffect(() => {
+    if (data?.personalization) {
+      console.log('[STEP5] Dados recebidos do servidor:', data.personalization);
+      
+      setFormData(prev => ({
+        ...prev,
+        ...data.personalization
+      }));
+    }
+  }, [data?.personalization]);
 
   const handleInputChange = useCallback((field: string, value: any) => {
     setFormData(prev => {

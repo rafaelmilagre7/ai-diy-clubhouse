@@ -1,4 +1,4 @@
-import React, { useState, forwardRef, useImperativeHandle, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, forwardRef, useImperativeHandle, useCallback, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
@@ -28,6 +28,24 @@ export const SimpleOnboardingStep2 = React.memo(forwardRef<{ getData: () => any;
     companyWebsite: data.business_info?.companyWebsite || '',
     ...data.business_info
   });
+
+  // 🎯 CORREÇÃO: Sincronizar com dados que chegam assincronamente do servidor
+  useEffect(() => {
+    if (data?.business_info) {
+      console.log('[STEP2] Dados recebidos do servidor:', data.business_info);
+      
+      setFormData(prev => ({
+        ...prev,
+        // Preservar dados já digitados ou usar dados do servidor
+        companyName: prev.companyName || data.business_info?.companyName || '',
+        position: prev.position || data.business_info?.position || '',
+        businessSector: prev.businessSector || data.business_info?.businessSector || '',
+        companySize: prev.companySize || data.business_info?.companySize || '',
+        annualRevenue: prev.annualRevenue || data.business_info?.annualRevenue || '',
+        companyWebsite: prev.companyWebsite || data.business_info?.companyWebsite || ''
+      }));
+    }
+  }, [data?.business_info]);
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const getFieldError = (field: string) => errors[field];
