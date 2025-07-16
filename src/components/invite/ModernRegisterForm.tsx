@@ -14,15 +14,17 @@ import { useInviteFlowTelemetry } from '@/hooks/useInviteFlowTelemetry';
 interface ModernRegisterFormProps {
   inviteToken?: string;
   prefilledEmail?: string;
+  prefilledName?: string;
   onSuccess?: () => void;
 }
 
 const ModernRegisterForm: React.FC<ModernRegisterFormProps> = ({ 
   inviteToken, 
   prefilledEmail,
+  prefilledName,
   onSuccess 
 }) => {
-  const [name, setName] = useState("");
+  const [name, setName] = useState(prefilledName || "");
   const [email, setEmail] = useState(prefilledEmail || "");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -152,18 +154,18 @@ const ModernRegisterForm: React.FC<ModernRegisterFormProps> = ({
         description: "Por favor, aguarde enquanto preparamos tudo para você.",
       });
       
+      // 🎯 NOVO FLUXO: Primeiro signUp simples para criar usuário no auth
       const { data, error } = await supabase.auth.signUp({
         email: email.trim().toLowerCase(),
         password,
-          options: {
-            data: {
-              name: name.trim(),
-              full_name: name.trim(),
-              display_name: name.trim(),
-              ...(inviteToken && { invite_token: inviteToken.trim() })
-            }
-            // REMOVIDO emailRedirectTo para evitar refreshs problemáticos
+        options: {
+          data: {
+            name: name.trim(),
+            full_name: name.trim(),
+            display_name: name.trim(),
+            ...(inviteToken && { invite_token: inviteToken.trim() })
           }
+        }
       });
       
       console.log('📊 [DIAGNOSTIC] Resultado do signUp:', {
@@ -217,33 +219,21 @@ const ModernRegisterForm: React.FC<ModernRegisterFormProps> = ({
           description: "Preparando seu ambiente personalizado...",
         });
         
-        // Verificação direta de perfil - DEVE funcionar ou falhar
-        const { data: profile, error: profileError } = await supabase
-          .from('profiles')
-          .select('id, role_id')
-          .eq('id', data.user.id)
-          .single();
+        // 🎯 NOVO FLUXO: Ativar perfil pré-existente ou criar novo
+        console.log('🔄 [REGISTER] Ativando perfil para email:', email);
+        const { data: activationResult, error: activationError } = await supabase.rpc('activate_invited_user', {
+          p_user_id: data.user.id,
+          p_email: email.trim().toLowerCase(),
+          p_name: name.trim(),
+          p_invite_token: inviteToken?.trim() || null
+        });
         
-        if (profileError) {
-          console.error('❌ [REGISTER] ERRO CRÍTICO: Perfil não criado automaticamente:', profileError);
-          throw new Error(`Perfil não foi criado automaticamente: ${profileError.message}`);
+        if (activationError) {
+          console.error('❌ [REGISTER] ERRO na ativação:', activationError);
+          throw new Error(`Erro na ativação do perfil: ${activationError.message}`);
         }
         
-        console.log('✅ [REGISTER] Perfil criado:', profile.id);
-        
-        // Aplicar convite se necessário
-        if (inviteToken) {
-          console.log('🎫 [REGISTER] Aplicando convite...');
-          const { error: inviteError } = await supabase.rpc('use_invite_with_onboarding', {
-            invite_token: inviteToken,
-            user_id: data.user.id
-          });
-          
-          if (inviteError) {
-            console.error('❌ [REGISTER] ERRO ao aplicar convite:', inviteError);
-            throw new Error(`Erro ao aplicar convite: ${inviteError.message}`);
-          }
-        }
+        console.log('✅ [REGISTER] Perfil ativado:', activationResult);
         
         console.log('✅ [REGISTER] Processo completado - redirecionando diretamente');
         toast({

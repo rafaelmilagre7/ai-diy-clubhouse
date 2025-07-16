@@ -1,89 +1,125 @@
+import { useState } from 'react';
+import { supabase } from '@/lib/supabase';
+import { toast } from '@/hooks/use-toast';
 
-import { useState, useCallback } from 'react';
-import { validateInviteToken, InviteValidationResult } from '@/utils/inviteValidationUtils';
-
-interface ValidationState {
-  isValid: boolean;
-  errors: string[];
-  warnings: string[];
-  isValidating: boolean;
+export interface InviteValidationResult {
+  valid: boolean;
+  invite?: {
+    id: string;
+    email: string;
+    role_id: string;
+    expires_at: string;
+    created_at: string;
+    notes?: string;
+    profile_data?: {
+      name?: string;
+      whatsapp_number?: string;
+      status: string;
+    };
+  };
+  role?: {
+    id: string;
+    name: string;
+    description: string;
+  };
+  reason?: string;
+  message: string;
 }
 
 export const useInviteValidation = () => {
-  const [validationState, setValidationState] = useState<ValidationState>({
-    isValid: true,
-    errors: [],
-    warnings: [],
-    isValidating: false
+  const [isValidating, setIsValidating] = useState(false);
+  const [validationState, setValidationState] = useState({
+    isValidating: false,
+    error: null,
+    result: null
   });
 
-  const validateInviteData = useCallback((email: string, roleId: string) => {
-    const errors: string[] = [];
-    const warnings: string[] = [];
-
-    // Validar email
-    if (!email) {
-      errors.push('Email é obrigatório');
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      errors.push('Formato de email inválido');
+  const validateToken = async (token: string, userEmail?: string): Promise<InviteValidationResult> => {
+    if (!token?.trim()) {
+      return {
+        valid: false,
+        reason: 'missing_token',
+        message: 'Token de convite não fornecido'
+      };
     }
 
-    // Validar role
-    if (!roleId) {
-      errors.push('Papel é obrigatório');
-    }
+    setIsValidating(true);
+    setValidationState({ isValidating: true, error: null, result: null });
+    console.log('🔍 [INVITE-VALIDATION] Validando token:', token.substring(0, 6) + '***');
 
-    // Verificar domínios comuns que podem gerar problemas
-    if (email && /^[^\s@]+@(gmail|yahoo|hotmail|outlook)\.(com|com\.br)$/i.test(email)) {
-      warnings.push('Emails de provedores gratuitos podem ter problemas de entrega');
-    }
-
-    const isValid = errors.length === 0;
-
-    setValidationState({
-      isValid,
-      errors,
-      warnings,
-      isValidating: false
-    });
-
-    return { isValid, errors, warnings };
-  }, []);
-
-  const validateToken = useCallback(async (
-    token: string,
-    currentUserEmail?: string
-  ): Promise<InviteValidationResult> => {
-    setValidationState(prev => ({ ...prev, isValidating: true }));
-    
     try {
-      const result = await validateInviteToken(token, currentUserEmail);
-      
-      setValidationState(prev => ({
-        ...prev,
-        isValidating: false,
-        isValid: result.isValid,
-        errors: result.isValid ? [] : [result.error || 'Erro na validação'],
-        warnings: result.suggestions || []
-      }));
-      
+      // 🎯 NOVO: Buscar dados do convite + perfil pré-existente
+      const { data: validationResult, error } = await supabase.rpc('validate_invite_token_safe', {
+        p_token: token.trim()
+      });
+
+      if (error) {
+        console.error('❌ [INVITE-VALIDATION] Erro na validação:', error);
+        const result = {
+          valid: false,
+          reason: 'validation_error',
+          message: 'Erro ao validar convite'
+        };
+        setValidationState({ isValidating: false, error, result });
+        return result;
+      }
+
+      if (!validationResult?.valid) {
+        console.log('❌ [INVITE-VALIDATION] Token inválido:', validationResult);
+        const result = {
+          valid: false,
+          reason: validationResult?.reason || 'invalid_token',
+          message: validationResult?.message || 'Token de convite inválido'
+        };
+        setValidationState({ isValidating: false, error: null, result });
+        return result;
+      }
+
+      // Buscar dados do perfil pré-existente
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('name, whatsapp_number, status')
+        .eq('email', validationResult.invite.email)
+        .eq('status', 'invited')
+        .single();
+
+      const result: InviteValidationResult = {
+        valid: true,
+        invite: {
+          ...validationResult.invite,
+          profile_data: profileData || undefined
+        },
+        role: validationResult.role,
+        message: 'Convite válido'
+      };
+
+      console.log('✅ [INVITE-VALIDATION] Validação concluída:', result);
+      setValidationState({ isValidating: false, error: null, result });
       return result;
-    } catch (error) {
-      setValidationState(prev => ({
-        ...prev,
-        isValidating: false,
-        isValid: false,
-        errors: ['Erro interno na validação'],
-        warnings: []
-      }));
+
+    } catch (error: any) {
+      console.error('❌ [INVITE-VALIDATION] Erro inesperado:', error);
+      toast({
+        title: "Erro na validação",
+        description: "Não foi possível validar o convite. Tente novamente.",
+        variant: "destructive",
+      });
       
-      throw error;
+      const result = {
+        valid: false,
+        reason: 'unexpected_error',
+        message: 'Erro inesperado na validação'
+      };
+      setValidationState({ isValidating: false, error, result });
+      return result;
+    } finally {
+      setIsValidating(false);
     }
-  }, []);
+  };
 
   return {
-    validationState,
-    validateInviteData,
-    validateToken
+    validateToken,
+    isValidating,
+    validationState
   };
 };

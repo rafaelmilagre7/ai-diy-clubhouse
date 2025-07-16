@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Loader2, Plus, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
@@ -24,7 +23,6 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useInviteCreate } from "@/hooks/admin/invites/useInviteCreate";
-import { useInviteValidation } from "@/hooks/admin/invites/useInviteValidation";
 
 interface CreateInviteDialogProps {
   roles: any[];
@@ -40,7 +38,6 @@ const CreateInviteDialog = ({ roles, onInviteCreated }: CreateInviteDialogProps)
   const [channelPreference, setChannelPreference] = useState<'email' | 'whatsapp' | 'both'>('email');
   const [open, setOpen] = useState(false);
   const { createInvite, isCreating } = useInviteCreate();
-  const { validationState, validateInviteData } = useInviteValidation();
 
   const formatPhone = (value: string) => {
     const numbers = value.replace(/\D/g, '');
@@ -55,18 +52,15 @@ const CreateInviteDialog = ({ roles, onInviteCreated }: CreateInviteDialogProps)
     setPhone(formatted);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    // Validações adicionais
+  const validateForm = () => {
     if (!email || !roleId) {
       toast.error("Email e papel são obrigatórios");
-      return;
+      return false;
     }
 
     if ((channelPreference === 'whatsapp' || channelPreference === 'both') && !phone) {
       toast.error("Telefone é obrigatório para envio via WhatsApp");
-      return;
+      return false;
     }
 
     // Validar formato do telefone se fornecido
@@ -74,24 +68,18 @@ const CreateInviteDialog = ({ roles, onInviteCreated }: CreateInviteDialogProps)
       const cleanPhone = phone.replace(/\D/g, '');
       if (cleanPhone.length < 10 || cleanPhone.length > 11) {
         toast.error("Formato de telefone inválido");
-        return;
+        return false;
       }
     }
 
-    // Validar dados antes de enviar
-    const validation = validateInviteData(email, roleId);
-    if (!validation.isValid) {
-      toast.error("Dados inválidos", {
-        description: validation.errors.join(', ')
-      });
-      return;
-    }
+    return true;
+  };
 
-    // Mostrar avisos se houver
-    if (validation.warnings.length > 0) {
-      validation.warnings.forEach(warning => {
-        toast.warning("Atenção", { description: warning });
-      });
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!validateForm()) {
+      return;
     }
     
     const result = await createInvite(email, roleId, notes, expiration, phone, channelPreference);
@@ -120,30 +108,11 @@ const CreateInviteDialog = ({ roles, onInviteCreated }: CreateInviteDialogProps)
           <DialogHeader className="space-y-3">
             <DialogTitle className="text-xl font-semibold text-white">Criar Novo Convite</DialogTitle>
             <DialogDescription className="text-gray-300">
-              Envie um convite para novos membros acessarem a plataforma.
+              Envie um convite para novos membros acessarem a plataforma. Um perfil será criado automaticamente.
             </DialogDescription>
           </DialogHeader>
           
           <div className="space-y-6">
-            {/* Alertas de validação */}
-            {validationState.errors.length > 0 && (
-              <Alert variant="destructive" className="border-red-500/50 bg-red-500/10">
-                <AlertCircle className="h-4 w-4 text-red-400" />
-                <AlertDescription className="text-sm text-red-300">
-                  {validationState.errors.join(', ')}
-                </AlertDescription>
-              </Alert>
-            )}
-
-            {validationState.warnings.length > 0 && (
-              <Alert className="border-orange-500/50 bg-orange-500/10">
-                <AlertCircle className="h-4 w-4 text-orange-400" />
-                <AlertDescription className="text-sm text-orange-300">
-                  {validationState.warnings.join(', ')}
-                </AlertDescription>
-              </Alert>
-            )}
-
             {/* Formulário */}
             <div className="space-y-5">
               <div className="space-y-2">
@@ -235,15 +204,18 @@ const CreateInviteDialog = ({ roles, onInviteCreated }: CreateInviteDialogProps)
               
               <div className="space-y-2">
                 <Label htmlFor="notes" className="text-sm font-medium text-white">
-                  Observações (opcional)
+                  Nome/Observações (opcional)
                 </Label>
                 <Textarea
                   id="notes"
-                  placeholder="Informações adicionais sobre o convite"
+                  placeholder="Nome da pessoa ou informações adicionais"
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
                   className="min-h-[80px] resize-none bg-gray-800 border-gray-700 text-white placeholder:text-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
+                <p className="text-xs text-gray-400">
+                  💡 Se informar apenas um nome, ele será automaticamente preenchido no registro
+                </p>
               </div>
             </div>
           </div>
@@ -259,16 +231,16 @@ const CreateInviteDialog = ({ roles, onInviteCreated }: CreateInviteDialogProps)
             </Button>
             <Button 
               type="submit" 
-              disabled={isCreating || !validationState.isValid}
+              disabled={isCreating}
               className="h-10"
             >
               {isCreating ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Enviando...
+                  Criando Perfil...
                 </>
               ) : (
-                "Criar Convite"
+                "Criar Convite + Perfil"
               )}
             </Button>
           </DialogFooter>

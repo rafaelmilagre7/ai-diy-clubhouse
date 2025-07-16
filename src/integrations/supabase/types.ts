@@ -3409,6 +3409,7 @@ export type Database = {
           role: string
           role_id: string | null
           skills: string[] | null
+          status: string | null
           successful_referrals_count: number
           updated_at: string | null
           whatsapp_number: string | null
@@ -3432,6 +3433,7 @@ export type Database = {
           role?: string
           role_id?: string | null
           skills?: string[] | null
+          status?: string | null
           successful_referrals_count?: number
           updated_at?: string | null
           whatsapp_number?: string | null
@@ -3455,6 +3457,7 @@ export type Database = {
           role?: string
           role_id?: string | null
           skills?: string[] | null
+          status?: string | null
           successful_referrals_count?: number
           updated_at?: string | null
           whatsapp_number?: string | null
@@ -5601,6 +5604,15 @@ export type Database = {
     Functions: {
       accept_invite: {
         Args: { p_token: string }
+        Returns: Json
+      }
+      activate_invited_user: {
+        Args: {
+          p_user_id: string
+          p_email: string
+          p_name: string
+          p_invite_token?: string
+        }
         Returns: Json
       }
       admin_complete_user_cleanup: {

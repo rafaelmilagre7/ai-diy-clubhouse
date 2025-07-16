@@ -230,9 +230,9 @@ export const useCleanOnboarding = () => {
           abandonment_points: onboardingData.abandonment_points || []
         };
 
-        // 🎯 NO FLUXO DE CONVITE: Sempre priorizar dados do servidor
+        // 🎯 NOVO FLUXO: Sempre priorizar dados do servidor (já contém dados do perfil pré-existente)
         if (isInviteFlow) {
-          console.log('✅ [CLEAN-ONBOARDING] FLUXO DE CONVITE: Usando dados do servidor (nome + email/whatsapp do convite)');
+          console.log('✅ [CLEAN-ONBOARDING] FLUXO DE CONVITE: Usando dados do perfil pré-existente do servidor');
           setData(serverData);
         } else {
           // 3. Fluxo normal: verificar se dados locais são mais recentes
@@ -316,9 +316,10 @@ export const useCleanOnboarding = () => {
 
       console.log('🎫 [CLEAN-ONBOARDING] Token de convite encontrado:', inviteToken ? inviteToken.substring(0, 6) + '***' : 'nenhum');
 
+      // 🎯 NOVO FLUXO: Inicialização simples pois dados já estão no perfil
       const { data: result, error } = await supabase.rpc('initialize_onboarding_for_user', {
         p_user_id: user.id,
-        p_invite_token: inviteToken // 🎯 Usar novo parâmetro p_invite_token
+        p_invite_token: inviteToken
       });
 
       if (error) {

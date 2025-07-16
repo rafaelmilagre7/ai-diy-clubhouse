@@ -33,7 +33,8 @@ const InvitePage = () => {
       const result = await validateToken(token, user?.email);
       setValidationResult(result);
       
-      if (result.isValid && !user) {
+      // 🎯 NOVO FLUXO: Mostrar dados pré-carregados do perfil
+      if (result.valid && !user) {
         setShowRegisterForm(true);
       }
     } catch (error) {
@@ -63,13 +64,15 @@ const InvitePage = () => {
     );
   }
 
-  if (!validationResult.isValid) {
+  if (!validationResult.valid) {
     return (
       <InviteErrorState 
-        error={validationResult.error}
-        suggestions={validationResult.suggestions}
-        needsLogout={validationResult.needsLogout}
-        onLogout={handleLogout}
+        error={validationResult.message}
+        suggestions={[
+          "Verifique se o token está correto",
+          "Solicite um novo convite",
+          "Entre em contato com o administrador"
+        ]}
         onRetry={() => handleValidateToken()}
       />
     );
@@ -117,6 +120,7 @@ const InvitePage = () => {
                   <ModernRegisterForm 
                     inviteToken={token}
                     prefilledEmail={validationResult.invite.email}
+                    prefilledName={validationResult.invite.profile_data?.name}
                     onSuccess={() => {
                       console.log('🎯 [INVITE] Registro concluído via InvitePage');
                       // O redirecionamento agora é feito pelo ModernRegisterForm usando useOnboardingRedirect
