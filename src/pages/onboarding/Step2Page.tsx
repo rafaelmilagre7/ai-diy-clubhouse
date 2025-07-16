@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { OnboardingLayout } from '@/components/layout/OnboardingLayout';
-import { SimpleOnboardingStep2 } from '@/components/onboarding/steps/SimpleOnboardingStep2';
+import { SimpleOnboardingStep2ValidationFixed } from '@/components/onboarding/steps/SimpleOnboardingStep2ValidationFixed';
 import { SimpleStepNavigation } from '@/components/onboarding/SimpleStepNavigation';
 import { DataRestoreNotification } from '@/components/onboarding/DataRestoreNotification';
 import { useCleanOnboarding as useOnboarding } from '@/hooks/useCleanOnboarding';
@@ -113,7 +113,7 @@ function debounce(func: Function, wait: number) {
   return (
     <OnboardingLayout currentStep={2}>
       <DataRestoreNotification dataRestored={dataRestored} />
-      <SimpleOnboardingStep2 ref={stepRef} {...stepProps} />
+      <SimpleOnboardingStep2ValidationFixed ref={stepRef} {...stepProps} />
       
       {/* Navegação */}
       <div className="mt-8 pt-6 border-t">

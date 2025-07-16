@@ -346,27 +346,37 @@ export const useCleanOnboarding = () => {
       console.log('📤 [CLEAN-ONBOARDING] Preparando dados para Supabase:', {
         user_id: user!.id,
         personal_info: updatedData.personal_info,
+        business_info: updatedData.business_info,
+        ai_experience: updatedData.ai_experience,
+        goals_info: updatedData.goals_info,
+        personalization: updatedData.personalization,
         current_step: updatedData.current_step,
-        completed_steps: updatedData.completed_steps
+        completed_steps: updatedData.completed_steps,
+        status: updatedData.status
       });
       
+      // 🎯 CORREÇÃO: Garantir que dados não sejam undefined
+      const cleanData = {
+        user_id: user!.id,
+        personal_info: updatedData.personal_info || {},
+        business_info: updatedData.business_info || {},
+        ai_experience: updatedData.ai_experience || {},
+        goals_info: updatedData.goals_info || {},
+        personalization: updatedData.preferences || updatedData.personalization || {},
+        current_step: updatedData.current_step,
+        completed_steps: updatedData.completed_steps || [],
+        is_completed: updatedData.is_completed || false,
+        status: updatedData.status || 'in_progress',
+        completed_at: updatedData.is_completed ? new Date().toISOString() : null,
+        updated_at: new Date().toISOString()
+      };
+
+      console.log('🧹 [CLEAN-ONBOARDING] Dados limpos para Supabase:', cleanData);
+
       // Salvar no Supabase
       const { error } = await supabase
         .from('onboarding_final')
-        .upsert({
-          user_id: user!.id,
-          personal_info: updatedData.personal_info || {},
-          business_info: updatedData.business_info || {},
-          ai_experience: updatedData.ai_experience || {},
-          goals_info: updatedData.goals_info || {},
-          personalization: updatedData.preferences || updatedData.personalization || {},
-          current_step: updatedData.current_step,
-          completed_steps: updatedData.completed_steps,
-          is_completed: updatedData.is_completed,
-          completed_at: updatedData.completed_at,
-          status: updatedData.status,
-          updated_at: updatedData.updated_at
-        }, {
+        .upsert(cleanData, {
           onConflict: 'user_id'
         });
 
@@ -411,7 +421,7 @@ export const useCleanOnboarding = () => {
         stepData,
         currentStep,
         targetStep,
-        updatedData: data
+        originalData: data
       });
       
       toast({

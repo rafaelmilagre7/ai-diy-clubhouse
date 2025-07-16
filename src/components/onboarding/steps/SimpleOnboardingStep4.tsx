@@ -154,8 +154,14 @@ export const SimpleOnboardingStep4 = React.memo(forwardRef<{ getData: () => any;
   }, [onDataChange]);
 
   const validateForm = useCallback(() => {
-    const requiredFields = ['mainObjective', 'areaToImpact', 'expectedResult90Days', 'urgencyLevel', 'successMetric', 'mainObstacle', 'preferredSupport', 'aiImplementationBudget'];
+    // 🎯 CORREÇÃO: Reduzir campos obrigatórios para tornar mais flexível
+    const requiredFields = ['mainObjective', 'areaToImpact', 'urgencyLevel']; // Apenas 3 campos principais
     const missingFields = requiredFields.filter(field => !formData[field]);
+    
+    console.log(`🔍 [STEP4] Validação - campos obrigatórios:`, requiredFields);
+    console.log(`🔍 [STEP4] Validação - campos faltando:`, missingFields);
+    console.log(`🔍 [STEP4] Validação - formData:`, formData);
+    
     return missingFields.length === 0;
   }, [formData]);
 

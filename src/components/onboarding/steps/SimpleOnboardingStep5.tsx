@@ -79,6 +79,16 @@ export const SimpleOnboardingStep5 = React.memo(forwardRef<{ getData: () => any;
       }
       return !value;
     });
+    
+    console.log(`🔍 [STEP5] Validação - campos obrigatórios:`, requiredFields);
+    console.log(`🔍 [STEP5] Validação - campos faltando:`, missingFields);
+    console.log(`🔍 [STEP5] Validação - formData:`, formData);
+    console.log(`🔍 [STEP5] Validação - arrays vazios:`, {
+      bestDays: formData.bestDays?.length || 0,
+      bestPeriods: formData.bestPeriods?.length || 0,
+      contentPreference: formData.contentPreference?.length || 0
+    });
+    
     return missingFields.length === 0;
   }, [formData]);
 

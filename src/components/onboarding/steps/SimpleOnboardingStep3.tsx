@@ -108,6 +108,11 @@ export const SimpleOnboardingStep3 = React.memo(forwardRef<{ getData: () => any;
   const validateForm = useCallback(() => {
     const requiredFields = ['hasImplementedAI', 'aiKnowledgeLevel', 'whoWillImplement', 'aiImplementationObjective', 'aiImplementationUrgency'];
     const missingFields = requiredFields.filter(field => !formData[field]);
+    
+    console.log(`🔍 [STEP3] Validação - campos obrigatórios:`, requiredFields);
+    console.log(`🔍 [STEP3] Validação - campos faltando:`, missingFields);
+    console.log(`🔍 [STEP3] Validação - formData:`, formData);
+    
     return missingFields.length === 0;
   }, [formData]);
 

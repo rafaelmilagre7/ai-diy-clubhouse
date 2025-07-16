@@ -1,5 +1,6 @@
 
 import { validateBrazilianPhone, validateLinkedInUrl, validateInstagramUrl } from './validationUtils';
+import { validateOnboardingStep, isStepValid } from './validateOnboardingSteps';
 
 export interface PersonalInfoData {
   name: string;
