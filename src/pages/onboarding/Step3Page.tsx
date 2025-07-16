@@ -4,7 +4,7 @@ import { OnboardingLayout } from '@/components/layout/OnboardingLayout';
 import { SimpleOnboardingStep3 } from '@/components/onboarding/steps/SimpleOnboardingStep3';
 import { SimpleStepNavigation } from '@/components/onboarding/SimpleStepNavigation';
 import { DataRestoreNotification } from '@/components/onboarding/DataRestoreNotification';
-import { useOnboarding } from '@/hooks/useOnboarding';
+import { useCleanOnboarding as useOnboarding } from '@/hooks/useCleanOnboarding';
 
 const OnboardingStep3Page: React.FC = () => {
   const navigate = useNavigate();
@@ -58,15 +58,13 @@ const OnboardingStep3Page: React.FC = () => {
     console.log('💾 [STEP3] Iniciando save operation...');
     const success = await saveAndNavigate(formData, 3, 4);
     
-    // 🎯 CORREÇÃO PREVENTIVA: Garantir navegação robusta
-    if (success) {
-      console.log('✅ [STEP3] Save bem-sucedido, aplicando navegação com timeout');
-      setTimeout(() => {
-        navigate('/onboarding/step/4', { replace: true });
-      }, 100);
-    } else {
+    // FASE 3 CORREÇÃO: Navegação baseada apenas em sucesso real
+    if (!success) {
       console.error('❌ [STEP3] Falha no save, não navegando');
+      return;
     }
+    
+    console.log('✅ [STEP3] Save bem-sucedido, navegação será feita pelo hook');
   };
 
   const handlePrevious = () => {

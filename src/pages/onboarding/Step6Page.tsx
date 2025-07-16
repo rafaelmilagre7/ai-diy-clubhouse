@@ -4,7 +4,7 @@ import { OnboardingLayout } from '@/components/layout/OnboardingLayout';
 import { SimpleOnboardingStep6 } from '@/components/onboarding/steps/SimpleOnboardingStep6';
 import { SimpleStepNavigation } from '@/components/onboarding/SimpleStepNavigation';
 import { DataRestoreNotification } from '@/components/onboarding/DataRestoreNotification';
-import { useOnboarding } from '@/hooks/useOnboarding';
+import { useCleanOnboarding as useOnboarding } from '@/hooks/useCleanOnboarding';
 
 const OnboardingStep6Page: React.FC = () => {
   const navigate = useNavigate();

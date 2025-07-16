@@ -5,7 +5,7 @@ import { SimpleOnboardingStep1, Step1Ref } from '@/components/onboarding/steps/S
 import { SimpleStepNavigation } from '@/components/onboarding/SimpleStepNavigation';
 import { DataRestoreNotification } from '@/components/onboarding/DataRestoreNotification';
 import { OnboardingDebugPanel } from '@/components/debug/OnboardingDebugPanel';
-import { useOnboarding } from '@/hooks/useOnboarding';
+import { useCleanOnboarding as useOnboarding } from '@/hooks/useCleanOnboarding';
 
 const OnboardingStep1Page: React.FC = () => {
   const navigate = useNavigate();
@@ -46,16 +46,12 @@ const OnboardingStep1Page: React.FC = () => {
       console.log('✅ [STEP1-PAGE] saveAndNavigate resultado:', result);
       
       if (result === false) {
-        console.error('❌ [STEP1-PAGE] Falha ao salvar dados');
-        // Forçar navegação mesmo se save falhou
-        console.log('🚀 [STEP1-PAGE] Forçando navegação para step 2');
-        navigate('/onboarding/step-2');
+        console.error('❌ [STEP1-PAGE] Falha ao salvar dados - não navegando');
+        return;
       }
     } catch (error) {
       console.error('❌ [STEP1-PAGE] Erro em handleNext:', error);
-      // Navegação de emergência
-      console.log('🆘 [STEP1-PAGE] Navegação de emergência para step 2');
-      navigate('/onboarding/step-2');
+      return;
     }
   };
 

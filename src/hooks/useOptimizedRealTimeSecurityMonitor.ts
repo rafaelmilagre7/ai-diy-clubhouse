@@ -50,77 +50,7 @@ export const useOptimizedRealTimeSecurityMonitor = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Função para gerar dados demonstrativos quando tabelas não existem
-  const generateMockData = useCallback(() => {
-    if (!isAdmin) return;
-
-    const mockEvents: SecurityEvent[] = [
-      {
-        id: '1',
-        event_type: 'system_event',
-        severity: 'medium',
-        action: 'backend_cleanup_completed',
-        resource_type: 'system',
-        timestamp: new Date().toISOString(),
-        user_id: user?.id,
-        details: { 
-          cleaned_tables: 7,
-          rls_policies_added: 8,
-          status: 'success'
-        }
-      },
-      {
-        id: '2',
-        event_type: 'security_event',
-        severity: 'low',
-        action: 'admin_dashboard_access',
-        resource_type: 'dashboard',
-        timestamp: new Date(Date.now() - 300000).toISOString(),
-        user_id: user?.id,
-        details: { page: '/admin', action: 'view' }
-      },
-      {
-        id: '3',
-        event_type: 'system_event',
-        severity: 'low',
-        action: 'database_optimization',
-        resource_type: 'database',
-        timestamp: new Date(Date.now() - 900000).toISOString(),
-        details: { 
-          operation: 'rls_policy_enforcement',
-          tables_secured: 4
-        }
-      }
-    ];
-
-    const mockIncidents: SecurityIncident[] = [
-      {
-        id: '1',
-        title: 'Limpeza de Backend executada',
-        description: 'Sistema de limpeza automática removeu tabelas desnecessárias e otimizou políticas RLS',
-        severity: 'low',
-        status: 'resolved',
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        metadata: { 
-          source: 'automated_cleanup',
-          impact: 'positive',
-          tables_removed: 7
-        },
-        related_logs: ['1', '3']
-      }
-    ];
-
-    setEvents(mockEvents);
-    setIncidents(mockIncidents);
-    setMetrics({
-      totalEvents: mockEvents.length,
-      criticalEvents: mockEvents.filter(e => e.severity === 'critical').length,
-      activeIncidents: mockIncidents.filter(i => i.status === 'open').length,
-      anomaliesDetected: 0,
-      lastUpdate: new Date()
-    });
-  }, [isAdmin, user?.id]);
+  // Mock data removido - dados reais apenas
 
   // Carregar dados com fallback para mock
   const loadInitialData = useCallback(async () => {
@@ -194,17 +124,17 @@ export const useOptimizedRealTimeSecurityMonitor = () => {
         return;
       }
 
-      // Se não há dados reais ou há erro, usar dados demonstrativos
-      console.warn('Usando dados demonstrativos para monitoramento de segurança');
-      generateMockData();
+      // Falha ao carregar dados de segurança
+      console.error('Falha ao carregar dados de segurança - verificar configuração');
+      setError('Erro ao carregar dados de segurança');
 
     } catch (err: any) {
-      console.warn('Erro ao carregar dados de segurança, usando dados demonstrativos:', err);
-      generateMockData();
+      console.error('Erro ao carregar dados de segurança:', err);
+      setError(err.message || 'Erro desconhecido ao carregar segurança');
     } finally {
       setIsLoading(false);
     }
-  }, [isAdmin, generateMockData]);
+  }, [isAdmin]);
 
   // Configurar realtime com fallback
   useEffect(() => {

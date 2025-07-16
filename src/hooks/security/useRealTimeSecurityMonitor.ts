@@ -47,55 +47,7 @@ export const useRealTimeSecurityMonitor = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Função para gerar dados mock quando tabelas não existem
-  const generateMockData = useCallback(() => {
-    const mockEvents: SecurityEvent[] = [
-      {
-        id: '1',
-        event_type: 'auth',
-        severity: 'medium',
-        action: 'Login attempt',
-        resource_type: 'user',
-        timestamp: new Date().toISOString(),
-        user_id: 'mock-user',
-        details: { ip: '192.168.1.100' }
-      },
-      {
-        id: '2',
-        event_type: 'access',
-        severity: 'low',
-        action: 'Resource accessed',
-        resource_type: 'dashboard',
-        timestamp: new Date(Date.now() - 300000).toISOString(),
-        user_id: 'mock-user',
-        details: { page: '/admin' }
-      }
-    ];
-
-    const mockIncidents: SecurityIncident[] = [
-      {
-        id: '1',
-        title: 'Tentativas de login suspeitas',
-        description: 'Múltiplas tentativas de login falhadas detectadas',
-        severity: 'medium',
-        status: 'investigating',
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        metadata: { source: 'automated_detection' },
-        related_logs: ['log-1', 'log-2', 'log-3']
-      }
-    ];
-
-    setEvents(mockEvents);
-    setIncidents(mockIncidents);
-    setMetrics({
-      totalEvents: mockEvents.length,
-      criticalEvents: mockEvents.filter(e => e.severity === 'critical').length,
-      activeIncidents: mockIncidents.filter(i => i.status !== 'resolved').length,
-      anomaliesDetected: 3,
-      lastUpdate: new Date()
-    });
-  }, []);
+  // Mock data removido - dados reais apenas
 
   // Carregar dados com fallback para mock
   const loadInitialData = useCallback(async () => {
@@ -122,11 +74,11 @@ export const useRealTimeSecurityMonitor = () => {
 
       // Se houver erros (tabelas não existem), usar dados mock
       if (eventsError || incidentsError) {
-        console.warn('Tabelas de segurança não encontradas, usando dados demonstrativos:', {
+        console.error('Tabelas de segurança não encontradas:', {
           eventsError: eventsError?.message,
           incidentsError: incidentsError?.message
         });
-        generateMockData();
+        setError('Erro ao carregar dados de segurança');
         return;
       }
 
@@ -145,12 +97,12 @@ export const useRealTimeSecurityMonitor = () => {
       });
 
     } catch (err: any) {
-      console.warn('Erro ao carregar dados de segurança, usando dados demonstrativos:', err);
-      generateMockData();
+      console.error('Erro ao carregar dados de segurança:', err);
+      setError(err.message || 'Erro desconhecido ao carregar segurança');
     } finally {
       setIsLoading(false);
     }
-  }, [isAdmin, generateMockData]);
+  }, [isAdmin]);
 
   // Configurar realtime com fallback
   useEffect(() => {
