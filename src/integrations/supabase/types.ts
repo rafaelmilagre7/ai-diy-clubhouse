@@ -5293,6 +5293,15 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: string
       }
+      generate_final_security_report: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          report_section: string
+          status: string
+          details: string
+          recommendations: string
+        }[]
+      }
       generate_invite_token: {
         Args: Record<PropertyKey, never>
         Returns: string
@@ -5783,6 +5792,16 @@ export type Database = {
       secure_assign_role: {
         Args: { target_user_id: string; new_role_id: string }
         Returns: Json
+      }
+      security_health_check: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          check_name: string
+          status: string
+          critical_issues: number
+          warning_issues: number
+          recommendations: string
+        }[]
       }
       send_invite_email: {
         Args: { p_invite_id: string }
