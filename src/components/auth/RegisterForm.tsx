@@ -1,5 +1,6 @@
 
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,6 +14,7 @@ interface RegisterFormProps {
 }
 
 const RegisterForm = ({ inviteToken, prefilledEmail }: RegisterFormProps = {}) => {
+  const navigate = useNavigate();
   const [name, setName] = useState("");
   const [email, setEmail] = useState(prefilledEmail || "");
   const [password, setPassword] = useState("");
@@ -57,9 +59,7 @@ const RegisterForm = ({ inviteToken, prefilledEmail }: RegisterFormProps = {}) =
             name,
             invite_token: inviteToken, // Incluir o token de convite nos metadados
           },
-          emailRedirectTo: window.location.origin.includes('localhost') 
-            ? 'http://localhost:3000/auth' 
-            : 'https://app.viverdeia.ai/auth'
+          emailRedirectTo: `${window.location.origin}/auth`
         },
       });
       
@@ -88,7 +88,7 @@ const RegisterForm = ({ inviteToken, prefilledEmail }: RegisterFormProps = {}) =
             
             // Redirecionar para onboarding após sucesso
             setTimeout(() => {
-              window.location.href = '/onboarding';
+              navigate('/onboarding', { replace: true });
             }, 2000);
           }
         } catch (inviteError) {
@@ -102,7 +102,7 @@ const RegisterForm = ({ inviteToken, prefilledEmail }: RegisterFormProps = {}) =
       } else {
         // Se não há convite, redirecionar para dashboard
         setTimeout(() => {
-          window.location.href = '/dashboard';
+          navigate('/dashboard', { replace: true });
         }, 2000);
       }
       

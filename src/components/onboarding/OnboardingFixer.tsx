@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/auth';
 import { fixCurrentUserOnboarding, getOnboardingProgress } from '@/utils/onboardingFix';
 import { toast } from '@/hooks/use-toast';
@@ -7,6 +8,7 @@ import { toast } from '@/hooks/use-toast';
  * Componente que detecta e corrige automaticamente problemas de onboarding
  */
 export const OnboardingFixer = () => {
+  const navigate = useNavigate();
   const { user, profile } = useAuth();
   const [hasFixed, setHasFixed] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -67,9 +69,9 @@ export const OnboardingFixer = () => {
                 description: "Redirecionando para o dashboard...",
               });
               
-              // Aguardar um pouco e recarregar para sincronizar estado
+              // Aguardar um pouco e navegar para sincronizar estado
               setTimeout(() => {
-                window.location.href = '/dashboard';
+                navigate('/dashboard', { replace: true });
               }, 2000);
             } else {
               console.warn('⚠️ [FIXER] Falha na correção do onboarding');

@@ -71,45 +71,22 @@ export const RealTimeSecurityDashboard = () => {
     }
   };
 
-  // Função para gerar alertas mockados para demonstração
-  const generateMockAlerts = (): AlertNotification[] => {
-    const mockAlerts: AlertNotification[] = [
-      {
-        id: '1',
-        title: 'Tentativas de Login Suspeitas',
-        message: 'Detectadas 5 tentativas de login falhadas consecutivas do IP 192.168.1.100',
-        severity: 'high' as const,
-        alert_type: 'authentication_anomaly',
-        created_at: new Date().toISOString(),
-        is_acknowledged: false,
-        data: { ip: '192.168.1.100', attempts: 5 }
-      },
-      {
-        id: '2',
-        title: 'Acesso Fora do Horário',
-        message: 'Usuário acessou o sistema às 03:45 AM, fora do horário normal de trabalho',
-        severity: 'medium' as const,
-        alert_type: 'time_anomaly',
-        created_at: new Date(Date.now() - 15 * 60 * 1000).toISOString(),
-        is_acknowledged: false,
-        data: { timestamp: '03:45:00', user_id: 'user123' }
-      },
-      {
-        id: '3',
-        title: 'Múltiplos IPs Detectados',
-        message: 'Mesmo usuário acessando de 3 localizações diferentes em 1 hora',
-        severity: 'critical' as const,
-        alert_type: 'location_anomaly',
-        created_at: new Date(Date.now() - 30 * 60 * 1000).toISOString(),
-        is_acknowledged: true,
-        data: { locations: ['São Paulo', 'Rio de Janeiro', 'Brasília'] }
-      }
-    ];
-    
-    return mockAlerts;
+  // Função para obter alertas reais do sistema
+  const getSystemAlerts = (): AlertNotification[] => {
+    // Retornar apenas alertas reais dos hooks de monitoramento
+    return incidents?.map(incident => ({
+      id: incident.id,
+      title: incident.title || 'Incidente de Segurança',
+      message: incident.description || 'Descrição não disponível',
+      severity: (incident.severity as 'low' | 'medium' | 'high' | 'critical') || 'medium',
+      alert_type: 'security_incident',
+      created_at: incident.created_at,
+      is_acknowledged: incident.status === 'resolved',
+      data: incident.metadata
+    })) || [];
   };
 
-  const mockAlerts = generateMockAlerts();
+  const systemAlerts = getSystemAlerts();
 
   // Funções de manipulação de alertas
   const handleAcknowledgeAlert = (alertId: string) => {
@@ -258,7 +235,7 @@ export const RealTimeSecurityDashboard = () => {
 
         <TabsContent value="alerts" className="space-y-6">
           <SecurityAlertSystem
-            alerts={mockAlerts}
+            alerts={systemAlerts}
             onAcknowledge={handleAcknowledgeAlert}
             onDismiss={handleDismissAlert}
           />

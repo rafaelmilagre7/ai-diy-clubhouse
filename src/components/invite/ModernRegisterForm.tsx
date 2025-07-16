@@ -215,7 +215,7 @@ const ModernRegisterForm: React.FC<ModernRegisterFormProps> = ({
           ? `/onboarding/step/1?token=${encodeURIComponent(inviteToken.trim())}`
           : '/onboarding/step/1';
         console.log('🔗 [REGISTER] Redirecionando para:', redirectUrl);
-        window.location.href = redirectUrl;
+        redirectToNextStep();
       }
       
     } catch (error: any) {
