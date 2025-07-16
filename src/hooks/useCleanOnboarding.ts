@@ -442,35 +442,23 @@ export const useCleanOnboarding = () => {
       completed_steps: data.completed_steps
     });
 
-    // Se já está completo, não permitir acesso a steps específicos
-    if (data.is_completed) {
-      console.log('⛔ [CLEAN-ONBOARDING] Onboarding completo, negando acesso ao step:', step);
+    // 🎯 CORREÇÃO CRÍTICA: Permitir acesso sempre durante o onboarding
+    // Só bloquear se realmente completou todo o processo
+    if (data.is_completed && data.current_step === 7) {
+      console.log('⛔ [CLEAN-ONBOARDING] Onboarding completamente finalizado');
       return false;
     }
     
-    // Se current_step é 7, significa que já passou por todas as etapas
-    if (data.current_step === 7) {
-      console.log('⛔ [CLEAN-ONBOARDING] Current step é 7, negando acesso ao step:', step);
-      return false;
-    }
-    
-    // CORREÇÃO DO LOOP: Permitir acesso ao step 1 sempre (início)
-    // E permitir próximo step quando atual está completo
-    if (step === 1) {
-      console.log('✅ [CLEAN-ONBOARDING] Step 1 sempre permitido');
+    // 🎯 NOVO: Permitir navegação livre entre steps durante onboarding
+    // Usuário pode voltar e avançar conforme necessário
+    if (step >= 1 && step <= 6) {
+      console.log('✅ [CLEAN-ONBOARDING] Acesso permitido ao step:', step);
       return true;
     }
     
-    // Para outros steps: verificar se step anterior foi completado
-    const previousStepCompleted = data.completed_steps.includes(step - 1);
-    const canAccess = previousStepCompleted || step <= data.current_step;
-    
-    console.log(`${canAccess ? '✅' : '❌'} [CLEAN-ONBOARDING] Acesso ao step ${step}:`, canAccess, {
-      previousStepCompleted,
-      currentStep: data.current_step
-    });
-    return canAccess;
-  }, [data.is_completed, data.current_step, data.completed_steps]);
+    console.log('❌ [CLEAN-ONBOARDING] Step fora do range válido:', step);
+    return false;
+  }, [data.is_completed, data.current_step]);
 
   // Removido auto-save periódico que causava loops
 
