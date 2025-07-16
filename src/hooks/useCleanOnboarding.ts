@@ -162,13 +162,27 @@ export const useCleanOnboarding = () => {
     }
 
     setIsLoading(true);
-    console.log('🔍 [CLEAN-ONBOARDING] Carregando dados para usuário:', user.id);
+    
+    // 🎯 VERIFICAR SE É FLUXO DE CONVITE - Se for, NÃO usar cache local
+    const inviteToken = new URLSearchParams(window.location.search).get('token') || 
+                        new URLSearchParams(window.location.search).get('invite') ||
+                        sessionStorage.getItem('current_invite_token') ||
+                        localStorage.getItem('current_invite_token');
+    
+    const isInviteFlow = Boolean(inviteToken);
+    
+    if (isInviteFlow) {
+      console.log('🎫 [CLEAN-ONBOARDING] FLUXO DE CONVITE detectado - Limpando cache local');
+      clearLocal(); // Forçar limpeza do cache no fluxo de convite
+    }
+    
+    console.log('🔍 [CLEAN-ONBOARDING] Carregando dados para usuário:', user.id, {
+      isInviteFlow,
+      inviteToken: inviteToken ? inviteToken.substring(0, 6) + '***' : null
+    });
 
     try {
-      // 1. Tentar recuperar dados locais primeiro
-      const localData = loadFromLocal();
-      
-      // 2. Buscar dados do servidor
+      // 1. Buscar dados do servidor SEMPRE
       const { data: onboardingData, error } = await supabase
         .from('onboarding_final')
         .select('*')
@@ -178,16 +192,19 @@ export const useCleanOnboarding = () => {
       if (error) {
         debugOnboarding.logError('loadData', error, { userId: user.id });
         
-        // Se erro no servidor mas tem dados locais, usar os locais
-        if (localData) {
-          console.log('🔄 [CLEAN-ONBOARDING] Usando dados locais devido ao erro do servidor');
-          setData(localData);
-          setDataRestored(true);
-          toast({
-            title: "⚠️ Dados restaurados",
-            description: "Suas informações foram recuperadas do cache local.",
-          });
-          return;
+        // Se erro no servidor E NÃO é fluxo de convite, tentar dados locais
+        if (!isInviteFlow) {
+          const localData = loadFromLocal();
+          if (localData) {
+            console.log('🔄 [CLEAN-ONBOARDING] Usando dados locais devido ao erro do servidor');
+            setData(localData);
+            setDataRestored(true);
+            toast({
+              title: "⚠️ Dados restaurados",
+              description: "Suas informações foram recuperadas do cache local.",
+            });
+            return;
+          }
         }
         throw error;
       }
@@ -213,101 +230,91 @@ export const useCleanOnboarding = () => {
           abandonment_points: onboardingData.abandonment_points || []
         };
 
-        // 3. Verificar se dados locais são mais recentes
-        if (localData && hasNewerLocalData(serverData)) {
-          console.log('⚡ [CLEAN-ONBOARDING] Dados locais mais recentes, priorizando...');
-          setData(localData);
-          setDataRestored(true);
-          
-          toast({
-            title: "📱 Dados locais recuperados",
-            description: "Suas alterações mais recentes foram restauradas automaticamente.",
-          });
-        } else {
-          console.log('✅ [CLEAN-ONBOARDING] Dados do servidor carregados');
+        // 🎯 NO FLUXO DE CONVITE: Sempre priorizar dados do servidor
+        if (isInviteFlow) {
+          console.log('✅ [CLEAN-ONBOARDING] FLUXO DE CONVITE: Usando dados do servidor (nome + email/whatsapp do convite)');
           setData(serverData);
+        } else {
+          // 3. Fluxo normal: verificar se dados locais são mais recentes
+          const localData = loadFromLocal();
+          if (localData && hasNewerLocalData(serverData)) {
+            console.log('⚡ [CLEAN-ONBOARDING] Dados locais mais recentes, priorizando...');
+            setData(localData);
+            setDataRestored(true);
+            
+            toast({
+              title: "📱 Dados locais recuperados",
+              description: "Suas alterações mais recentes foram restauradas automaticamente.",
+            });
+          } else {
+            console.log('✅ [CLEAN-ONBOARDING] Dados do servidor carregados');
+            setData(serverData);
+          }
         }
       } else {
-        // 4. Se não há dados no servidor, verificar se há locais
-        if (localData) {
-          console.log('🔄 [CLEAN-ONBOARDING] Usando dados locais - servidor vazio');
-          setData(localData);
-          setDataRestored(true);
-          
-          toast({
-            title: "📱 Dados restaurados",
-            description: "Suas informações preenchidas foram recuperadas.",
-          });
-        } else {
-          console.log('📭 [CLEAN-ONBOARDING] Nenhum dado encontrado, inicializando...');
-          await initializeOnboarding();
+        // 4. Se não há dados no servidor
+        if (!isInviteFlow) {
+          // Fluxo normal: verificar dados locais
+          const localData = loadFromLocal();
+          if (localData) {
+            console.log('🔄 [CLEAN-ONBOARDING] Usando dados locais - servidor vazio');
+            setData(localData);
+            setDataRestored(true);
+            
+            toast({
+              title: "📱 Dados restaurados",
+              description: "Suas informações preenchidas foram recuperadas.",
+            });
+            return;
+          }
         }
+        
+        console.log('📭 [CLEAN-ONBOARDING] Nenhum dado encontrado, inicializando...');
+        await initializeOnboarding();
       }
     } catch (error) {
       console.error('❌ [CLEAN-ONBOARDING] Erro ao carregar dados:', error);
       
-      // Fallback para dados locais em caso de erro
-      const localData = loadFromLocal();
-      if (localData) {
-        console.log('🆘 [CLEAN-ONBOARDING] Fallback para dados locais');
-        setData(localData);
-        setDataRestored(true);
-        
-        toast({
-          title: "⚠️ Dados recuperados offline",
-          description: "Suas informações foram recuperadas do cache local.",
-          variant: "default",
-        });
-      } else {
-        toast({
-          title: "Erro ao carregar",
-          description: "Não foi possível carregar seus dados. Tente novamente.",
-          variant: "destructive",
-        });
+      // Fallback para dados locais apenas se NÃO for fluxo de convite
+      if (!isInviteFlow) {
+        const localData = loadFromLocal();
+        if (localData) {
+          console.log('🆘 [CLEAN-ONBOARDING] Fallback para dados locais');
+          setData(localData);
+          setDataRestored(true);
+          
+          toast({
+            title: "⚠️ Dados recuperados offline",
+            description: "Suas informações foram recuperadas do cache local.",
+            variant: "default",
+          });
+          return;
+        }
       }
+      
+      toast({
+        title: "Erro ao carregar",
+        description: "Não foi possível carregar seus dados. Tente novamente.",
+        variant: "destructive",
+      });
     } finally {
       setIsLoading(false);
     }
-  }, [user?.id, loadFromLocal, hasNewerLocalData]);
+  }, [user?.id, loadFromLocal, hasNewerLocalData, clearLocal]);
 
   const initializeOnboarding = useCallback(async (inviteData?: any) => {
     if (!user?.id) return;
 
     try {
-      console.log('🚀 [CLEAN-ONBOARDING] Inicializando onboarding com dados do convite:', inviteData);
-      
-      // 🎯 BUSCAR TOKEN EM MÚLTIPLAS FONTES 
-      let inviteDataToUse = inviteData;
-      if (!inviteDataToUse) {
-        // Ordem de prioridade: URL params -> sessionStorage -> localStorage
-        const inviteToken = new URLSearchParams(window.location.search).get('token') || 
-                            new URLSearchParams(window.location.search).get('invite') ||
-                            sessionStorage.getItem('current_invite_token') ||
-                            localStorage.getItem('current_invite_token');
-                            
-        if (inviteToken) {
-          console.log('🎫 [CLEAN-ONBOARDING] Token encontrado (fonte múltipla):', inviteToken.substring(0, 6) + '***');
-          
-          const { data: inviteInfo, error: inviteError } = await supabase.rpc('validate_invite_token_safe', {
-            p_token: inviteToken
-          });
-          
-          if (!inviteError && inviteInfo?.valid) {
-            inviteDataToUse = inviteInfo.invite;
-            console.log('✅ [CLEAN-ONBOARDING] Dados do convite recuperados:', {
-              email: inviteDataToUse?.email,
-              whatsapp_number: inviteDataToUse?.whatsapp_number,
-              notes: inviteDataToUse?.notes
-            });
-          }
-        }
-      }
+      console.log('🚀 [CLEAN-ONBOARDING] Inicializando onboarding...');
       
       // 🎯 BUSCAR TOKEN EM MÚLTIPLAS FONTES 
       const inviteToken = new URLSearchParams(window.location.search).get('token') || 
                           new URLSearchParams(window.location.search).get('invite') ||
                           sessionStorage.getItem('current_invite_token') ||
                           localStorage.getItem('current_invite_token');
+
+      console.log('🎫 [CLEAN-ONBOARDING] Token de convite encontrado:', inviteToken ? inviteToken.substring(0, 6) + '***' : 'nenhum');
 
       const { data: result, error } = await supabase.rpc('initialize_onboarding_for_user', {
         p_user_id: user.id,
@@ -323,20 +330,31 @@ export const useCleanOnboarding = () => {
         console.log('✅ [CLEAN-ONBOARDING] Inicializado com sucesso:', result);
         console.log('📋 [CLEAN-ONBOARDING] Dados pré-preenchidos:', result.personal_info_preloaded);
         
+        // ⚡ IMPORTANTE: Se há convite, limpar cache antes de recarregar
+        if (inviteToken) {
+          console.log('🧹 [CLEAN-ONBOARDING] Limpando cache antes de recarregar dados do convite');
+          clearLocal();
+        }
+        
         // Recarregar dados após inicialização
         await loadData();
         
-        if (result.invite_data_used) {
+        if (result.invite_token_used && result.invite_found) {
           toast({
             title: "Dados do convite carregados! ✨",
             description: "Suas informações foram pré-preenchidas automaticamente.",
+          });
+        } else if (result.user_name_used) {
+          toast({
+            title: "Bem-vindo! 👋",
+            description: `Olá ${result.user_name_used}, vamos personalizar sua experiência.`,
           });
         }
       }
     } catch (error) {
       console.error('❌ [CLEAN-ONBOARDING] Erro na inicialização:', error);
     }
-  }, [user?.id, loadData]);
+  }, [user?.id, loadData, clearLocal]);
 
   const updateData = useCallback((stepData: Partial<OnboardingFinalData>) => {
     setData(prev => {
