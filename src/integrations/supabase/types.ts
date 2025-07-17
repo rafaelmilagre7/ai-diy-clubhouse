@@ -2682,14 +2682,10 @@ export type Database = {
         Row: {
           abandonment_points: Json | null
           ai_experience: Json
-          ai_knowledge_level: string | null
-          annual_revenue: string | null
           business_context: Json
           business_goals: Json | null
           business_info: Json
-          company_name: string | null
           company_sector: string | null
-          company_size: string | null
           complementary_info: Json | null
           completed_at: string | null
           completed_steps: number[]
@@ -2717,14 +2713,10 @@ export type Database = {
         Insert: {
           abandonment_points?: Json | null
           ai_experience?: Json
-          ai_knowledge_level?: string | null
-          annual_revenue?: string | null
           business_context?: Json
           business_goals?: Json | null
           business_info?: Json
-          company_name?: string | null
           company_sector?: string | null
-          company_size?: string | null
           complementary_info?: Json | null
           completed_at?: string | null
           completed_steps?: number[]
@@ -2752,14 +2744,10 @@ export type Database = {
         Update: {
           abandonment_points?: Json | null
           ai_experience?: Json
-          ai_knowledge_level?: string | null
-          annual_revenue?: string | null
           business_context?: Json
           business_goals?: Json | null
           business_info?: Json
-          company_name?: string | null
           company_sector?: string | null
-          company_size?: string | null
           complementary_info?: Json | null
           completed_at?: string | null
           completed_steps?: number[]
