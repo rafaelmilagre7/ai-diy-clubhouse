@@ -39,6 +39,10 @@ export interface OnboardingFinalData {
     timezone?: string;
   };
   
+  // Campos adicionais do banco de dados
+  discovery_info?: Record<string, any>;
+  business_context?: Record<string, any>;
+  
   business_info: {
     company_name?: string;
     position?: string;
@@ -327,10 +331,48 @@ export const useCleanOnboarding = () => {
     console.log('📋 [CLEAN-ONBOARDING] Dados recebidos para salvar:', stepData);
 
     try {
+      // 🎯 CORREÇÃO: Merge inteligente dos dados JSONB
+      const mergedPersonalInfo = {
+        ...data.personal_info,
+        ...stepData.personal_info
+      };
+      
+      const mergedLocationInfo = {
+        ...data.location_info,
+        ...stepData.location_info
+      };
+      
+      const mergedBusinessInfo = {
+        ...data.business_info,
+        ...stepData.business_info
+      };
+      
+      const mergedAiExperience = {
+        ...data.ai_experience,
+        ...stepData.ai_experience
+      };
+      
+      const mergedGoalsInfo = {
+        ...data.goals_info,
+        ...stepData.goals_info
+      };
+      
+      const mergedPersonalization = {
+        ...data.personalization,
+        ...stepData.personalization,
+        ...stepData.preferences
+      };
+
       // Preparar dados atualizados
       const updatedData = {
         ...data,
         ...stepData,
+        personal_info: mergedPersonalInfo,
+        location_info: mergedLocationInfo,
+        business_info: mergedBusinessInfo,
+        ai_experience: mergedAiExperience,
+        goals_info: mergedGoalsInfo,
+        personalization: mergedPersonalization,
         current_step: Math.max(targetStep, data.current_step),
         completed_steps: [...new Set([...data.completed_steps, currentStep])],
         updated_at: new Date().toISOString()
@@ -343,31 +385,21 @@ export const useCleanOnboarding = () => {
         updatedData.status = 'completed';
       }
 
-      console.log('📤 [CLEAN-ONBOARDING] Preparando dados para Supabase:', {
-        user_id: user!.id,
-        personal_info: updatedData.personal_info,
-        business_info: updatedData.business_info,
-        ai_experience: updatedData.ai_experience,
-        goals_info: updatedData.goals_info,
-        personalization: updatedData.personalization,
-        current_step: updatedData.current_step,
-        completed_steps: updatedData.completed_steps,
-        status: updatedData.status
-      });
-      
-      // 🎯 CORREÇÃO: Garantir que dados não sejam undefined
+      // 🎯 CORREÇÃO: Preparar dados para Supabase com campos JSONB corretos
       const cleanData = {
         user_id: user!.id,
-        personal_info: updatedData.personal_info || {},
-        business_info: updatedData.business_info || {},
-        ai_experience: updatedData.ai_experience || {},
-        goals_info: updatedData.goals_info || {},
-        personalization: updatedData.preferences || updatedData.personalization || {},
+        personal_info: mergedPersonalInfo,
+        location_info: mergedLocationInfo,
+        discovery_info: data.discovery_info || {},
+        business_info: mergedBusinessInfo,
+        business_context: data.business_context || {},
+        goals_info: mergedGoalsInfo,
+        ai_experience: mergedAiExperience,
+        personalization: mergedPersonalization,
         current_step: updatedData.current_step,
         completed_steps: updatedData.completed_steps || [],
         is_completed: updatedData.is_completed || false,
         status: updatedData.status || 'in_progress',
-        completed_at: updatedData.is_completed ? new Date().toISOString() : null,
         updated_at: new Date().toISOString()
       };
 
