@@ -4551,6 +4551,10 @@ export type Database = {
           policy_definition: string
         }[]
       }
+      audit_legacy_references: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
       backup_table_data: {
         Args: { p_table_name: string; p_reason?: string }
         Returns: Json
