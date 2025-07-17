@@ -59,8 +59,6 @@ const createProtectedRoute = (path: string, Component: React.ComponentType<any>)
   element: <ProtectedRoutes><MemberLayout><Component /></MemberLayout></ProtectedRoutes>
 });
 
-// Log para diagnóstico
-console.log("Carregando rotas de membros com RootRedirect corrigido");
 
 export const memberRoutes: RouteObject[] = [
   // Rota raiz agora usa RootRedirect em vez de Dashboard direto

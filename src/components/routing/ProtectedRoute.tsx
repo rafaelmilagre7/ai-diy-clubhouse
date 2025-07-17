@@ -64,20 +64,12 @@ const ProtectedRoute = ({
 
   // Usuários legacy podem navegar livremente
   if (isLegacyUser) {
-    console.log("[PROTECTED-ROUTE] Usuário legacy detectado, permitindo navegação livre");
+    // Permitir navegação livre para usuários legacy
   } else if (!hasCompletedOnboarding && !isOnboardingRoute) {
     // Apenas usuários NOVOS são obrigados a completar o onboarding
-    console.log("[PROTECTED-ROUTE] Usuário novo sem onboarding completado, redirecionando...", {
-      hasProfile: !!profile,
-      profileId: profile?.id,
-      onboardingCompleted: profile?.onboarding_completed,
-      currentPath: location.pathname,
-      isLegacyUser
-    });
     
     // Fallback: Se não há perfil mas há usuário, dar mais tempo
     if (user && !profile) {
-      console.log("[PROTECTED-ROUTE] Aguardando criação do perfil...");
       return <LoadingScreen message="Configurando sua conta..." />;
     }
     

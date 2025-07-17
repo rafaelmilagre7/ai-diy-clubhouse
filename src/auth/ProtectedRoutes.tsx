@@ -39,13 +39,6 @@ export const ProtectedRoutes = ({ children }: ProtectedRoutesProps) => {
     }
   }, [user?.id]);
 
-  console.log("[PROTECTED] Estado atual:", {
-    hasUser: !!user,
-    hasProfile: !!profile,
-    onboardingCompleted: profile?.onboarding_completed,
-    currentPath: location.pathname,
-    isLegacyUser
-  });
 
   // Se estiver carregando ou verificando status legacy, mostra tela de loading
   if (isLoading || (user && isLegacyUser === null)) {
@@ -54,7 +47,6 @@ export const ProtectedRoutes = ({ children }: ProtectedRoutesProps) => {
 
   // Sem usuário = login imediatamente
   if (!user) {
-    console.log("[PROTECTED] Sem usuário - redirecionando para login");
     return <Navigate to="/login" state={{ from: location.pathname }} replace />;
   }
 
@@ -71,7 +63,6 @@ export const ProtectedRoutes = ({ children }: ProtectedRoutesProps) => {
   }
 
   // ONBOARDING REMOVIDO - Todos os usuários podem navegar livremente
-  console.log("[PROTECTED] Onboarding não é mais obrigatório - permitindo navegação livre");
 
   // Tudo ok - renderizar conteúdo
   return children;

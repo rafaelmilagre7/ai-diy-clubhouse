@@ -15,16 +15,6 @@ const MemberLayout = memo<MemberLayoutProps>(({ children }) => {
   const { profile, signOut } = useAuth();
   const { sidebarOpen, setSidebarOpen, toggleSidebar, isMobile } = useSidebarControl();
 
-  // Log apenas em desenvolvimento
-  if (process.env.NODE_ENV === 'development') {
-    console.log('[MemberLayout] Renderizando com:', {
-      profile: !!profile,
-      profileName: profile?.name,
-      hasChildren: !!children,
-      sidebarOpen,
-      isMobile
-    });
-  }
 
   // Memoizar função para obter iniciais
   const getInitials = useCallback((name: string | null) => {
@@ -47,9 +37,6 @@ const MemberLayout = memo<MemberLayoutProps>(({ children }) => {
         toast.error("Erro ao fazer logout");
       }
     } catch (error) {
-      if (process.env.NODE_ENV === 'development') {
-        console.error('[MemberLayout] Erro no signOut:', error);
-      }
       toast.error("Erro ao fazer logout");
     }
   }, [signOut]);
@@ -90,9 +77,6 @@ const MemberLayout = memo<MemberLayoutProps>(({ children }) => {
       </>
     );
   } catch (error) {
-    if (process.env.NODE_ENV === 'development') {
-      console.error('[MemberLayout] Erro ao renderizar:', error);
-    }
     return (
       <div className="flex h-screen bg-background items-center justify-center">
         <div className="text-center">

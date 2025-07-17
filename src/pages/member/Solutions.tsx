@@ -8,7 +8,6 @@ import { Search, Filter, ShieldAlert } from 'lucide-react';
 import LoadingScreen from '@/components/common/LoadingScreen';
 import { Solution } from '@/lib/supabase';
 import { useToolsData } from '@/hooks/useToolsData';
-import { useLogging } from '@/contexts/logging';
 import { useDocumentTitle } from '@/hooks/use-document-title';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
@@ -17,9 +16,6 @@ import { Link } from 'react-router-dom';
 const Solutions = () => {
   // Definir título da página
   useDocumentTitle('Soluções | VIVER DE IA Club');
-  
-  // Logger para depuração
-  const { log } = useLogging();
   
   // Garantir que as ferramentas estejam corretamente configuradas, mas ignorar erros
   const { isLoading: toolsDataLoading } = useToolsData();
@@ -34,13 +30,6 @@ const Solutions = () => {
     canViewSolutions
   } = useSolutionsData();
 
-  // Log data for debugging
-  log("Solutions page loaded", { 
-    solutionsCount: filteredSolutions?.length || 0, 
-    activeCategory,
-    isLoading: loading || toolsDataLoading,
-    canViewSolutions
-  });
 
   // Atualizado para usar nomes de categorias em português
   const categories = [
