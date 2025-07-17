@@ -4,11 +4,11 @@ import { OnboardingLayout } from '@/components/layout/OnboardingLayout';
 import { SimpleOnboardingStep2ValidationFixed } from '@/components/onboarding/steps/SimpleOnboardingStep2ValidationFixed';
 import { SimpleStepNavigation } from '@/components/onboarding/SimpleStepNavigation';
 import { DataRestoreNotification } from '@/components/onboarding/DataRestoreNotification';
-import { useCleanOnboarding as useOnboarding } from '@/hooks/useCleanOnboarding';
+import { useSimpleOnboarding as useOnboarding } from '@/hooks/useSimpleOnboarding';
 
 const OnboardingStep2Page: React.FC = () => {
   const navigate = useNavigate();
-  const { data, saveAndNavigate, canAccessStep, isSaving, updateData, dataRestored } = useOnboarding();
+  const { data, saveAndNavigate, isSaving, updateData, dataRestored } = useOnboarding();
   const stepRef = useRef<{ getData: () => any; isValid: () => boolean }>(null);
 
   // 🎯 CORREÇÃO PREVENTIVA: Verificar se pode acessar esta etapa com proteção contra reset

@@ -6,12 +6,12 @@ import { SimpleStepNavigation } from '@/components/onboarding/SimpleStepNavigati
 import { DataRestoreNotification } from '@/components/onboarding/DataRestoreNotification';
 import { OnboardingDebugPanel } from '@/components/debug/OnboardingDebugPanel';
 import { OnboardingSyncDebug } from '@/components/debug/OnboardingSyncDebug';
-import { useCleanOnboarding as useOnboarding } from '@/hooks/useCleanOnboarding';
+import { useSimpleOnboarding as useOnboarding } from '@/hooks/useSimpleOnboarding';
 
 const OnboardingStep1Page: React.FC = () => {
   const navigate = useNavigate();
   const step1Ref = useRef<Step1Ref>(null);
-  const { data, updateData, saveAndNavigate, canAccessStep, isSaving, dataRestored } = useOnboarding();
+  const { data, updateData, saveAndNavigate, isSaving, dataRestored } = useOnboarding();
 
   // Verificar se pode acessar esta etapa ou se deve redirecionar
   useEffect(() => {
