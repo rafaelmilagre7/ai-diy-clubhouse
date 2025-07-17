@@ -70,15 +70,8 @@ export const ProtectedRoutes = ({ children }: ProtectedRoutesProps) => {
     throw new Error(`Usuário ${user.id} não possui perfil válido. Dados corrompidos.`);
   }
 
-  // VERIFICAÇÃO DE ONBOARDING (APENAS PARA USUÁRIOS NOVOS)
-  // Usuários legacy podem navegar livremente
-  if (isLegacyUser) {
-    console.log("[PROTECTED] Usuário legacy detectado, permitindo navegação livre");
-  } else if (profile && !profile.onboarding_completed && !isOnboardingRoute) {
-    // Apenas usuários NOVOS são obrigados a completar o onboarding
-    console.log("[PROTECTED] Usuário novo sem onboarding completado, redirecionando para step 1");
-    return <Navigate to="/onboarding/step/1" replace />;
-  }
+  // ONBOARDING REMOVIDO - Todos os usuários podem navegar livremente
+  console.log("[PROTECTED] Onboarding não é mais obrigatório - permitindo navegação livre");
 
   // Tudo ok - renderizar conteúdo
   return children;

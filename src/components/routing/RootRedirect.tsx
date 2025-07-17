@@ -75,17 +75,10 @@ const RootRedirect = () => {
     return <Navigate to={roleName === 'formacao' ? '/formacao' : '/dashboard'} replace />;
   }
 
-  // ONBOARDING OBRIGATÓRIO
-  if (!profile.onboarding_completed && !location.pathname.startsWith('/onboarding')) {
-    console.log("🔄 [ROOT-REDIRECT] Onboarding obrigatório");
-    return <Navigate to="/onboarding" replace />;
-  }
-  
-  // ONBOARDING COMPLETO em rota de onboarding
+  // ONBOARDING OPCIONAL - Permitir acesso a onboarding se solicitado, mas não obrigatório
   if (profile.onboarding_completed && location.pathname.startsWith('/onboarding')) {
-    console.log("✅ [ROOT-REDIRECT] Onboarding já completo - redirecionando");
-    const roleName = getUserRoleName(profile);
-    return <Navigate to={roleName === 'formacao' ? '/formacao' : '/dashboard'} replace />;
+    console.log("✅ [ROOT-REDIRECT] Usuário já completou onboarding mas quer acessar - permitindo");
+    // Permitir acesso ao onboarding mesmo se já completou
   }
   
   // REDIRECIONAMENTO POR ROLE na página inicial

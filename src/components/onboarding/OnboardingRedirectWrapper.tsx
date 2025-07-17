@@ -33,22 +33,8 @@ const OnboardingRedirectWrapper: React.FC<{ children: React.ReactNode }> = ({ ch
     throw new Error(`Usuário ${user.id} sem perfil em onboarding`);
   }
 
-  // Onboarding completo = redirecionar (mas permitir acesso a /onboarding se estiver nessa rota)
-  if (profile.onboarding_completed) {
-    console.log("[ONBOARDING-WRAPPER] Onboarding completo - verificando rota atual");
-    const currentPath = window.location.pathname;
-    
-    // Se não está em rota de onboarding, permitir acesso normal
-    if (!currentPath.startsWith('/onboarding')) {
-      console.log("[ONBOARDING-WRAPPER] Rota não é onboarding, permitindo acesso");
-      return <>{children}</>;
-    }
-    
-    // Se está tentando acessar onboarding mas já completou, redirecionar
-    console.log("[ONBOARDING-WRAPPER] Tentando acessar onboarding completo - redirecionando");
-    const roleName = profile.user_roles?.name;
-    return <Navigate to={roleName === 'formacao' ? '/formacao' : '/dashboard'} replace />;
-  }
+  // ONBOARDING OPCIONAL - Sempre permitir acesso
+  console.log("[ONBOARDING-WRAPPER] Onboarding é opcional - permitindo acesso livre");
 
   // Tudo ok - renderizar onboarding
   return <>{children}</>;
