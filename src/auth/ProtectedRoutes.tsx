@@ -13,16 +13,42 @@ interface ProtectedRoutesProps {
 export const ProtectedRoutes = ({ children }: ProtectedRoutesProps) => {
   const location = useLocation();
   const { user, profile, isLoading } = useAuth();
+  const [isLegacyUser, setIsLegacyUser] = useState<boolean | null>(null);
+
+  // Verificar se é usuário legacy
+  useEffect(() => {
+    const checkLegacyStatus = async () => {
+      if (!user?.id) return;
+      
+      try {
+        const { data, error } = await supabase.rpc('is_legacy_user', {
+          user_id: user.id
+        });
+        
+        if (!error) {
+          setIsLegacyUser(data);
+        }
+      } catch (error) {
+        console.error('Erro ao verificar status legacy:', error);
+        setIsLegacyUser(false);
+      }
+    };
+    
+    if (user?.id) {
+      checkLegacyStatus();
+    }
+  }, [user?.id]);
 
   console.log("[PROTECTED] Estado atual:", {
     hasUser: !!user,
     hasProfile: !!profile,
     onboardingCompleted: profile?.onboarding_completed,
-    currentPath: location.pathname
+    currentPath: location.pathname,
+    isLegacyUser
   });
 
-  // Loading direto - sem timeouts
-  if (isLoading) {
+  // Se estiver carregando ou verificando status legacy, mostra tela de loading
+  if (isLoading || (user && isLegacyUser === null)) {
     return <LoadingScreen message="Verificando credenciais..." />;
   }
 
@@ -44,9 +70,13 @@ export const ProtectedRoutes = ({ children }: ProtectedRoutesProps) => {
     throw new Error(`Usuário ${user.id} não possui perfil válido. Dados corrompidos.`);
   }
 
-  // Onboarding não completo = redirecionar para step 1 diretamente
-  if (profile && !profile.onboarding_completed && !isOnboardingRoute) {
-    console.log("[PROTECTED] Onboarding não completo - redirecionando para step 1");
+  // VERIFICAÇÃO DE ONBOARDING (APENAS PARA USUÁRIOS NOVOS)
+  // Usuários legacy podem navegar livremente
+  if (isLegacyUser) {
+    console.log("[PROTECTED] Usuário legacy detectado, permitindo navegação livre");
+  } else if (profile && !profile.onboarding_completed && !isOnboardingRoute) {
+    // Apenas usuários NOVOS são obrigados a completar o onboarding
+    console.log("[PROTECTED] Usuário novo sem onboarding completado, redirecionando para step 1");
     return <Navigate to="/onboarding/step/1" replace />;
   }
 
