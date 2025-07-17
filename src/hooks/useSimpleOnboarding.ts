@@ -104,6 +104,7 @@ export const useSimpleOnboarding = () => {
   
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [dataRestored, setDataRestored] = useState(false);
 
   // **1. FUNÇÃO CORE: Carregar dados**
   const loadData = useCallback(async () => {
@@ -148,7 +149,16 @@ export const useSimpleOnboarding = () => {
           completed_steps: result.completed_steps || []
         };
 
-        console.log('✅ [SIMPLE-ONBOARDING] Dados carregados');
+        // Detectar se dados foram restaurados
+        const hasPreFilledData = Boolean(
+          result.personal_info?.name || 
+          result.personal_info?.email || 
+          result.business_info?.company_name ||
+          result.completed_steps?.length > 0
+        );
+        
+        setDataRestored(hasPreFilledData);
+        console.log('✅ [SIMPLE-ONBOARDING] Dados carregados', { hasPreFilledData });
         setData(mappedData);
       } else {
         // Inicializar se não existe
@@ -181,6 +191,7 @@ export const useSimpleOnboarding = () => {
         await loadData();
         
         if (result.profile_used) {
+          setDataRestored(true);
           toast({
             title: "Dados pré-preenchidos! ✨",
             description: "Suas informações foram carregadas automaticamente.",
@@ -311,6 +322,6 @@ export const useSimpleOnboarding = () => {
     saveAndNavigate,
     loadData,
     // Campos de compatibilidade
-    dataRestored: false
+    dataRestored
   };
 };

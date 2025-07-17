@@ -4,11 +4,11 @@ import { OnboardingLayout } from '@/components/layout/OnboardingLayout';
 import { SimpleOnboardingStep6 } from '@/components/onboarding/steps/SimpleOnboardingStep6';
 import { SimpleStepNavigation } from '@/components/onboarding/SimpleStepNavigation';
 import { DataRestoreNotification } from '@/components/onboarding/DataRestoreNotification';
-import { useSimpleOnboarding as useOnboarding } from '@/hooks/useSimpleOnboarding';
+import { useSimpleOnboarding } from '@/hooks/useSimpleOnboarding';
 
 const OnboardingStep6Page: React.FC = () => {
   const navigate = useNavigate();
-  const { data, saveAndNavigate, isSaving, dataRestored } = useOnboarding();
+  const { data, saveAndNavigate, isSaving, dataRestored } = useSimpleOnboarding();
 
   // Simplificado - apenas verificar se onboarding já foi completado
   useEffect(() => {
