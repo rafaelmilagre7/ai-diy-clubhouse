@@ -6,10 +6,10 @@ import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { Toaster } from 'sonner';
 import { ThemeProvider } from 'next-themes';
 import { AuthProvider } from '@/contexts/auth';
+import { LoggingProvider } from '@/hooks/useLogging';
 import { SecurityEnforcementProvider } from '@/components/security/SecurityEnforcementProvider';
 import { AppRoutes } from '@/routes';
 import { SEOWrapper } from '@/components/seo/SEOWrapper';
-// OnboardingFixer removido - causava loops infinitos
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -25,7 +25,8 @@ function App() {
     <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
-          <SecurityEnforcementProvider>
+          <LoggingProvider>
+            <SecurityEnforcementProvider>
               <Router>
                 <SEOWrapper>
                   <div className="App">
@@ -42,6 +43,7 @@ function App() {
                 </SEOWrapper>
               </Router>
             </SecurityEnforcementProvider>
+          </LoggingProvider>
         </AuthProvider>
       </QueryClientProvider>
     </ThemeProvider>
