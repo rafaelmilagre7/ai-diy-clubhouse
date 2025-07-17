@@ -4,19 +4,33 @@ import { OnboardingLayout } from '@/components/layout/OnboardingLayout';
 import { SimpleOnboardingStep6 } from '@/components/onboarding/steps/SimpleOnboardingStep6';
 import { SimpleStepNavigation } from '@/components/onboarding/SimpleStepNavigation';
 import { DataRestoreNotification } from '@/components/onboarding/DataRestoreNotification';
-import { useSimpleOnboarding } from '@/hooks/useSimpleOnboarding';
+import { useCleanOnboarding as useOnboarding } from '@/hooks/useCleanOnboarding';
 
 const OnboardingStep6Page: React.FC = () => {
   const navigate = useNavigate();
-  const { data, saveAndNavigate, isSaving, dataRestored } = useSimpleOnboarding();
+  const { data, saveAndNavigate, canAccessStep, isSaving, dataRestored } = useOnboarding();
 
-  // Simplificado - apenas verificar se onboarding já foi completado
+  // Verificar se pode acessar esta etapa
   useEffect(() => {
-    if (data.is_completed) {
-      console.log('✅ [STEP6] Onboarding completo, redirecionando para dashboard');
-      navigate('/dashboard', { replace: true });
+    // CORREÇÃO DO LOOP: Verificar apenas uma vez, sem dependência de canAccessStep
+    const checkAccess = () => {
+      if (data.is_completed) {
+        console.log('[STEP6] Onboarding completo, redirecionando para dashboard');
+        navigate('/dashboard', { replace: true });
+        return;
+      }
+      
+      if (!canAccessStep(6)) {
+        console.log('[STEP6] Sem acesso ao step 6, redirecionando para step 1');
+        navigate('/onboarding/step/1', { replace: true });
+      }
+    };
+    
+    // Executar apenas se houver dados carregados
+    if (data.user_id) {
+      checkAccess();
     }
-  }, [data.is_completed, navigate]);
+  }, [data.is_completed, data.user_id, navigate]); // Dependências estáveis, sem canAccessStep
 
   const handleNext = async (stepData?: any) => {
     console.log('➡️ [STEP6] handleNext chamado - Finalizando onboarding');

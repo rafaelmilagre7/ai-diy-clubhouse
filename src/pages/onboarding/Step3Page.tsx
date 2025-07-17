@@ -4,22 +4,39 @@ import { OnboardingLayout } from '@/components/layout/OnboardingLayout';
 import { SimpleOnboardingStep3 } from '@/components/onboarding/steps/SimpleOnboardingStep3';
 import { SimpleStepNavigation } from '@/components/onboarding/SimpleStepNavigation';
 import { DataRestoreNotification } from '@/components/onboarding/DataRestoreNotification';
-import { useSimpleOnboarding } from '@/hooks/useSimpleOnboarding';
+import { useCleanOnboarding as useOnboarding } from '@/hooks/useCleanOnboarding';
 
 const OnboardingStep3Page: React.FC = () => {
   const navigate = useNavigate();
-  const { data, saveAndNavigate, isSaving, updateData, dataRestored } = useSimpleOnboarding();
+  const { data, saveAndNavigate, canAccessStep, isSaving, updateData, dataRestored } = useOnboarding();
   const stepRef = useRef<{ getData: () => any; isValid: () => boolean }>(null);
 
-  // Simplificado - apenas verificar se onboarding já foi completado
+  // 🎯 CORREÇÃO PREVENTIVA: Verificar se pode acessar esta etapa com proteção contra reset
   useEffect(() => {
-    if (isSaving) return;
-    
-    if (data.is_completed) {
-      console.log('✅ [STEP3] Onboarding completo, redirecionando para dashboard');
-      navigate('/dashboard', { replace: true });
+    // Prevenir execução durante operações de save
+    if (isSaving) {
+      console.log('⏸️ [STEP3] Pulando verificação de acesso durante save');
+      return;
     }
-  }, [data.is_completed, navigate, isSaving]);
+    
+    const checkAccess = () => {
+      if (data.is_completed) {
+        console.log('✅ [STEP3] Onboarding completo, redirecionando para dashboard');
+        navigate('/dashboard', { replace: true });
+        return;
+      }
+      
+      if (!canAccessStep(3)) {
+        console.log('🔄 [STEP3] Sem acesso ao step 3, redirecionando para step 1');
+        navigate('/onboarding/step/1', { replace: true });
+      }
+    };
+    
+    // Executar apenas se houver dados carregados e não estiver salvando
+    if (data.user_id && !isSaving) {
+      checkAccess();
+    }
+  }, [data.is_completed, data.user_id, navigate, isSaving]); // Incluir isSaving
 
   const handleNext = async (stepData?: any) => {
     console.log('➡️ [STEP3] handleNext chamado com:', stepData);

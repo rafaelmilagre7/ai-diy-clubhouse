@@ -4,12 +4,14 @@ import { OnboardingLayout } from '@/components/layout/OnboardingLayout';
 import { SimpleOnboardingStep1, Step1Ref } from '@/components/onboarding/steps/SimpleOnboardingStep1';
 import { SimpleStepNavigation } from '@/components/onboarding/SimpleStepNavigation';
 import { DataRestoreNotification } from '@/components/onboarding/DataRestoreNotification';
-import { useSimpleOnboarding } from '@/hooks/useSimpleOnboarding';
+import { OnboardingDebugPanel } from '@/components/debug/OnboardingDebugPanel';
+import { OnboardingSyncDebug } from '@/components/debug/OnboardingSyncDebug';
+import { useCleanOnboarding as useOnboarding } from '@/hooks/useCleanOnboarding';
 
 const OnboardingStep1Page: React.FC = () => {
   const navigate = useNavigate();
   const step1Ref = useRef<Step1Ref>(null);
-  const { data, updateData, saveAndNavigate, isSaving, dataRestored } = useSimpleOnboarding();
+  const { data, updateData, saveAndNavigate, canAccessStep, isSaving, dataRestored } = useOnboarding();
 
   // Verificar se pode acessar esta etapa ou se deve redirecionar
   useEffect(() => {
@@ -112,6 +114,15 @@ function debounce(func: Function, wait: number) {
         />
       </div>
       
+      {/* Debug Panel */}
+      <OnboardingDebugPanel 
+        data={data} 
+        isSaving={isSaving} 
+        isLoading={false}
+      />
+      
+      {/* Sincronização Debug */}
+      <OnboardingSyncDebug />
     </OnboardingLayout>
   );
 };

@@ -4,22 +4,39 @@ import { OnboardingLayout } from '@/components/layout/OnboardingLayout';
 import { SimpleOnboardingStep2ValidationFixed } from '@/components/onboarding/steps/SimpleOnboardingStep2ValidationFixed';
 import { SimpleStepNavigation } from '@/components/onboarding/SimpleStepNavigation';
 import { DataRestoreNotification } from '@/components/onboarding/DataRestoreNotification';
-import { useSimpleOnboarding } from '@/hooks/useSimpleOnboarding';
+import { useCleanOnboarding as useOnboarding } from '@/hooks/useCleanOnboarding';
 
 const OnboardingStep2Page: React.FC = () => {
   const navigate = useNavigate();
-  const { data, saveAndNavigate, isSaving, updateData, dataRestored } = useSimpleOnboarding();
+  const { data, saveAndNavigate, canAccessStep, isSaving, updateData, dataRestored } = useOnboarding();
   const stepRef = useRef<{ getData: () => any; isValid: () => boolean }>(null);
 
-  // Simplificado - apenas verificar se onboarding já foi completado
+  // 🎯 CORREÇÃO PREVENTIVA: Verificar se pode acessar esta etapa com proteção contra reset
   useEffect(() => {
-    if (isSaving) return;
-    
-    if (data.is_completed) {
-      console.log('✅ [STEP2] Onboarding completo, redirecionando para dashboard');
-      navigate('/dashboard', { replace: true });
+    // Prevenir execução durante operações de save
+    if (isSaving) {
+      console.log('⏸️ [STEP2] Pulando verificação de acesso durante save');
+      return;
     }
-  }, [data.is_completed, navigate, isSaving]);
+    
+    const checkAccess = () => {
+      if (data.is_completed) {
+        console.log('✅ [STEP2] Onboarding completo, redirecionando para dashboard');
+        navigate('/dashboard', { replace: true });
+        return;
+      }
+      
+      if (!canAccessStep(2)) {
+        console.log('🔄 [STEP2] Sem acesso ao step 2, redirecionando para step 1');
+        navigate('/onboarding/step/1', { replace: true });
+      }
+    };
+    
+    // Executar apenas se houver dados carregados e não estiver salvando
+    if (data.user_id && !isSaving) {
+      checkAccess();
+    }
+  }, [data.is_completed, data.user_id, navigate, isSaving]); // Incluir isSaving
 
   const handleNext = async (stepData?: any) => {
     // 🎯 PROTEÇÃO: Evitar múltiplos cliques durante save

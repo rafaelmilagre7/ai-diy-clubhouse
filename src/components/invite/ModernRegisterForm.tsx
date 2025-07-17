@@ -9,7 +9,7 @@ import { RateLimitGuard } from '@/components/security/RateLimitGuard';
 import { useRateLimit } from '@/hooks/security/useRateLimit';
 import { useSecurityMetrics } from '@/hooks/security/useSecurityMetrics';
 import { useOnboardingRedirect } from '@/hooks/useOnboardingRedirect';
-// Removido hook de telemetria para simplificação
+import { useInviteFlowTelemetry } from '@/hooks/useInviteFlowTelemetry';
 
 interface ModernRegisterFormProps {
   inviteToken?: string;
@@ -36,7 +36,7 @@ const ModernRegisterForm: React.FC<ModernRegisterFormProps> = ({
   const { checkRateLimit } = useRateLimit();
   const { logSecurityViolation } = useSecurityMetrics();
   const { redirectToNextStep } = useOnboardingRedirect();
-  // Removido hook de telemetria para simplificação
+  const { trackRegistrationStarted, trackRegistrationCompleted, trackProfileCreated, trackOnboardingRedirected } = useInviteFlowTelemetry();
 
   const validatePassword = (password: string) => {
     const checks = {
