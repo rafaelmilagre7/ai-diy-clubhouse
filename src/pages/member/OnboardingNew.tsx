@@ -2,7 +2,7 @@ import React from 'react';
 import { useAuth } from '@/contexts/auth';
 import { Navigate } from 'react-router-dom';
 import LoadingScreen from '@/components/common/LoadingScreen';
-import { SimpleOnboardingWizardNew } from '@/components/onboarding/SimpleOnboardingWizardNew';
+import { SimpleOnboardingWizard } from '@/components/onboarding/SimpleOnboardingWizard';
 
 const OnboardingNewPage = () => {
   const { user, profile, isLoading } = useAuth();
@@ -37,7 +37,7 @@ const OnboardingNewPage = () => {
   }
 
   // Tudo ok - renderizar onboarding para usuário novo
-  return <SimpleOnboardingWizardNew />;
+  return <SimpleOnboardingWizard />;
 };
 
 export default OnboardingNewPage;
