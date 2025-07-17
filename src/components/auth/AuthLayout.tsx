@@ -135,11 +135,11 @@ const AuthLayout = () => {
 
         {/* Título Principal */}
         <div className="mb-8 text-center">
-          <h1 className="text-3xl font-bold text-white mb-2">
-            Potencialize com IA
+          <h1 className="text-2xl font-semibold text-white mb-2">
+            Acesse sua conta
           </h1>
-          <p className="text-gray-300 text-lg">
-            Transforme seu negócio com inteligência artificial
+          <p className="text-gray-400">
+            Entre para acessar a plataforma
           </p>
         </div>
 

@@ -192,59 +192,65 @@ const SignUpForm = ({ onBackToLogin }: SignUpFormProps) => {
       initial={{ opacity: 0, x: 20 }}
       animate={{ opacity: 1, x: 0 }}
       exit={{ opacity: 0, x: -20 }}
-      className="w-full"
+      className="w-full max-w-sm mx-auto"
     >
-      <div className="bg-gray-800 border border-gray-700 rounded-lg shadow-xl p-6">
-        <div className="text-center pb-4">
-          <h2 className="text-2xl text-white mb-2">
-            Criar nova conta
+      {/* Logo do Club */}
+      <div className="mb-6 text-center">
+        <img
+          src="https://milagredigital.com/wp-content/uploads/2025/04/viverdeiaclub.avif"
+          alt="VIVER DE IA Club"
+          className="mx-auto h-16 w-auto"
+        />
+      </div>
+
+      <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl shadow-2xl p-6">
+        <div className="text-center mb-6">
+          <h2 className="text-xl font-semibold text-white mb-1">
+            Definir senha
           </h2>
-          <p className="text-gray-300">
-            {inviteToken ? "Complete seu cadastro para acessar a plataforma" : "Cadastre-se para acessar"}
+          <p className="text-gray-400 text-sm">
+            Complete seu acesso à plataforma
           </p>
         </div>
         
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="name" className="text-gray-200">Nome completo *</Label>
+          <div>
             <Input
               id="name"
               type="text"
-              placeholder="Seu nome completo"
+              placeholder="Nome completo"
               value={name}
               onChange={(e) => setName(e.target.value)}
               disabled={isLoading}
               required
-              className="bg-gray-700 border-gray-600 text-white placeholder-gray-400 focus:ring-blue-500 focus:border-blue-500"
+              className="bg-white/5 border-white/20 text-white placeholder-gray-400 focus:border-cyan-400 focus:ring-cyan-400/20"
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="email" className="text-gray-200">Email *</Label>
+          <div>
             <Input
               id="email"
               type="email"
-              placeholder="seu@email.com"
+              placeholder="Email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               disabled={isLoading}
               required
-              className="bg-gray-700 border-gray-600 text-white placeholder-gray-400 focus:ring-blue-500 focus:border-blue-500"
+              className="bg-white/5 border-white/20 text-white placeholder-gray-400 focus:border-cyan-400 focus:ring-cyan-400/20"
             />
           </div>
           
-          <div className="space-y-2">
-            <Label htmlFor="password" className="text-gray-200">Senha *</Label>
+          <div>
             <div className="relative">
               <Input
                 id="password"
                 type={showPassword ? "text" : "password"}
-                placeholder="********"
+                placeholder="Senha"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 disabled={isLoading}
                 required
-                className="bg-gray-700 border-gray-600 text-white placeholder-gray-400 focus:ring-blue-500 focus:border-blue-500 pr-10"
+                className="bg-white/5 border-white/20 text-white placeholder-gray-400 focus:border-cyan-400 focus:ring-cyan-400/20 pr-10"
               />
               <Button
                 type="button"
@@ -258,59 +264,26 @@ const SignUpForm = ({ onBackToLogin }: SignUpFormProps) => {
               </Button>
             </div>
             
-            {/* Indicador de força da senha */}
-            {password && (
-              <div className="space-y-2">
-                <div className="flex gap-2">
-                  {[1, 2, 3, 4, 5].map((level) => (
-                    <div
-                      key={level}
-                      className={`h-2 flex-1 rounded ${
-                        passwordStrength.score >= level
-                          ? passwordStrength.color === 'red' ? 'bg-red-500'
-                          : passwordStrength.color === 'yellow' ? 'bg-yellow-500'
-                          : 'bg-green-500'
-                          : 'bg-gray-600'
-                      }`}
-                    />
-                  ))}
-                </div>
-                <div className="grid grid-cols-2 gap-x-4 text-xs">
-                  <span className={`flex items-center gap-1 ${passwordStrength.checks.length ? 'text-green-400' : 'text-gray-400'}`}>
-                    {passwordStrength.checks.length ? <CheckCircle className="h-3 w-3" /> : <AlertCircle className="h-3 w-3" />}
-                    8+ caracteres
-                  </span>
-                  <span className={`flex items-center gap-1 ${passwordStrength.checks.numbers ? 'text-green-400' : 'text-gray-400'}`}>
-                    {passwordStrength.checks.numbers ? <CheckCircle className="h-3 w-3" /> : <AlertCircle className="h-3 w-3" />}
-                    Números
-                  </span>
-                  <span className={`flex items-center gap-1 ${passwordStrength.checks.lowercase && passwordStrength.checks.uppercase ? 'text-green-400' : 'text-gray-400'}`}>
-                    {passwordStrength.checks.lowercase && passwordStrength.checks.uppercase ? <CheckCircle className="h-3 w-3" /> : <AlertCircle className="h-3 w-3" />}
-                    Maiús/Minús
-                  </span>
-                  <span className={`flex items-center gap-1 ${passwordStrength.checks.special ? 'text-green-400' : 'text-gray-400'}`}>
-                    {passwordStrength.checks.special ? <CheckCircle className="h-3 w-3" /> : <AlertCircle className="h-3 w-3" />}
-                    Símbolos
-                  </span>
-                </div>
-              </div>
+            {password && passwordStrength.score < 3 && (
+              <p className="text-xs text-gray-400 mt-1">
+                Use pelo menos 8 caracteres com letras, números e símbolos
+              </p>
             )}
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="confirmPassword" className="text-gray-200">Confirmar senha *</Label>
+          <div>
             <div className="relative">
               <Input
                 id="confirmPassword"
                 type={showConfirmPassword ? "text" : "password"}
-                placeholder="********"
+                placeholder="Confirmar senha"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 disabled={isLoading}
                 required
-                className={`bg-gray-700 border-gray-600 text-white placeholder-gray-400 focus:ring-blue-500 focus:border-blue-500 pr-10 ${
-                  confirmPassword && !passwordsMatch ? 'border-red-500' : 
-                  confirmPassword && passwordsMatch ? 'border-green-500' : ''
+                className={`bg-white/5 border-white/20 text-white placeholder-gray-400 focus:border-cyan-400 focus:ring-cyan-400/20 pr-10 ${
+                  confirmPassword && !passwordsMatch ? 'border-red-400' : 
+                  confirmPassword && passwordsMatch ? 'border-green-400' : ''
                 }`}
               />
               <Button
@@ -324,27 +297,17 @@ const SignUpForm = ({ onBackToLogin }: SignUpFormProps) => {
                 {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
               </Button>
             </div>
-            {confirmPassword && (
-              <p className={`text-xs flex items-center gap-1 ${passwordsMatch ? 'text-green-400' : 'text-red-400'}`}>
-                {passwordsMatch ? (
-                  <>  
-                    <CheckCircle className="h-3 w-3" />
-                    Senhas coincidem
-                  </>
-                ) : (
-                  <>
-                    <AlertCircle className="h-3 w-3" />
-                    Senhas não coincidem
-                  </>
-                )}
+            {confirmPassword && !passwordsMatch && (
+              <p className="text-xs text-red-400 mt-1">
+                As senhas não coincidem
               </p>
             )}
           </div>
 
-          <div className="space-y-3 pt-2">
+          <div className="space-y-3 pt-4">
             <Button 
               type="submit" 
-              className="w-full bg-cyan-500 hover:bg-cyan-600 text-white font-semibold uppercase tracking-wide" 
+              className="w-full bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white font-medium py-2.5 rounded-xl transition-all duration-200" 
               disabled={isLoading || !passwordsMatch || passwordStrength.score < 3}
             >
               {isLoading ? (
@@ -353,18 +316,18 @@ const SignUpForm = ({ onBackToLogin }: SignUpFormProps) => {
                   Criando conta...
                 </>
               ) : (
-                "CRIAR CONTA"
+                "Criar conta"
               )}
             </Button>
 
             <Button 
               type="button" 
               variant="ghost"
-              className="w-full text-gray-300 hover:text-white"
+              className="w-full text-gray-400 hover:text-white text-sm"
               onClick={onBackToLogin}
               disabled={isLoading}
             >
-              Já tenho uma conta - Fazer login
+              Voltar ao login
             </Button>
           </div>
         </form>
