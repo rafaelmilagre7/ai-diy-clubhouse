@@ -8,61 +8,95 @@ import { getUserRoleName } from "@/lib/supabase/types";
 const RootRedirect = () => {
   const location = useLocation();
   const { user, profile, isLoading: authLoading } = useAuth();
+  const [timeoutReached, setTimeoutReached] = useState(false);
+  const timeoutRef = useRef<NodeJS.Timeout>();
   
+  // TIMEOUT DE SEGURANÇA: Se ficar carregando muito tempo, forçar redirecionamento
+  useEffect(() => {
+    if (authLoading) {
+      timeoutRef.current = setTimeout(() => {
+        console.warn("⏰ [ROOT-REDIRECT] Timeout de loading atingido - forçando redirecionamento");
+        setTimeoutReached(true);
+      }, 5000); // 5 segundos máximo
+    } else {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+      setTimeoutReached(false);
+    }
+
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, [authLoading]);
+
   console.log("🔍 [ROOT-REDIRECT] Estado:", {
     path: location.pathname,
     hasUser: !!user,
     hasProfile: !!profile,
     onboardingCompleted: profile?.onboarding_completed,
-    loading: authLoading
+    loading: authLoading,
+    timeoutReached
   });
 
-  // Loading direto - sem timeouts
-  if (authLoading) {
+  // TIMEOUT ATINGIDO: Redirecionar para login
+  if (timeoutReached && !user) {
+    console.warn("⚠️ [ROOT-REDIRECT] Timeout - redirecionando para login");
+    return <Navigate to="/login" replace />;
+  }
+
+  // LOADING NORMAL: Mostrar tela de carregamento
+  if (authLoading && !timeoutReached) {
     return <LoadingScreen message="Verificando sessão..." />;
   }
 
-  // Sem usuário = login
+  // SEM USUÁRIO: Redirecionar para login
   if (!user) {
     console.log("🔄 [ROOT-REDIRECT] Sem usuário - redirecionando para login");
     return <Navigate to="/login" replace />;
   }
 
-  // Sem perfil = erro crítico
+  // SEM PERFIL: Aguardar um pouco mais ou mostrar erro
   if (!profile) {
-    console.error("💥 [ROOT-REDIRECT] ERRO CRÍTICO: Usuário sem perfil");
-    throw new Error(`Usuário ${user.id} não possui perfil. Estado de auth corrompido.`);
+    if (authLoading) {
+      return <LoadingScreen message="Carregando perfil..." />;
+    }
+    
+    console.error("💥 [ROOT-REDIRECT] ERRO: Usuário sem perfil após loading");
+    return <LoadingScreen message="Erro: Perfil não encontrado. Tente fazer login novamente." />;
   }
 
-  // Redirecionamento de login para usuários autenticados
+  // USUÁRIO LOGADO EM /login: Redirecionar para dashboard apropriado
   if (location.pathname === '/login') {
     const roleName = getUserRoleName(profile);
-    console.log("✅ [ROOT-REDIRECT] Usuário logado, redirecionando para dashboard");
+    console.log("✅ [ROOT-REDIRECT] Usuário logado - redirecionando para dashboard");
     return <Navigate to={roleName === 'formacao' ? '/formacao' : '/dashboard'} replace />;
   }
 
-  // Onboarding não completo = onboarding obrigatório
+  // ONBOARDING OBRIGATÓRIO
   if (!profile.onboarding_completed && !location.pathname.startsWith('/onboarding')) {
     console.log("🔄 [ROOT-REDIRECT] Onboarding obrigatório");
     return <Navigate to="/onboarding" replace />;
   }
   
-  // Onboarding completo em rota de onboarding = redirecionar
+  // ONBOARDING COMPLETO em rota de onboarding
   if (profile.onboarding_completed && location.pathname.startsWith('/onboarding')) {
-    console.log("✅ [ROOT-REDIRECT] Onboarding completo - redirecionando");
+    console.log("✅ [ROOT-REDIRECT] Onboarding já completo - redirecionando");
     const roleName = getUserRoleName(profile);
     return <Navigate to={roleName === 'formacao' ? '/formacao' : '/dashboard'} replace />;
   }
   
-  // Redirecionamento baseado em role
-  const roleName = getUserRoleName(profile);
-  
-  if (roleName === 'formacao') {
-    return <Navigate to="/formacao" replace />;
+  // REDIRECIONAMENTO POR ROLE na página inicial
+  if (location.pathname === '/') {
+    const roleName = getUserRoleName(profile);
+    console.log(`🎯 [ROOT-REDIRECT] Página inicial - redirecionando para: ${roleName === 'formacao' ? '/formacao' : '/dashboard'}`);
+    return <Navigate to={roleName === 'formacao' ? '/formacao' : '/dashboard'} replace />;
   }
   
-  // Padrão: dashboard
-  return <Navigate to="/dashboard" replace />;
+  // DEIXAR OUTRAS ROTAS PASSAREM
+  return null;
 };
 
 export default RootRedirect;

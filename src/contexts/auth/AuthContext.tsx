@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useEffect, useState, ReactNode, useCallback } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
@@ -6,7 +5,6 @@ import { UserProfile } from '@/lib/supabase';
 import { logger } from '@/utils/logger';
 import { useAuthStateManager } from './hooks/useAuthStateManager';
 import { clearProfileCache } from '@/hooks/auth/utils/authSessionUtils';
-// onboardingFixer removido - causava loops
 
 interface AuthContextType {
   user: User | null;
@@ -71,55 +69,75 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   // VERIFICAÇÃO DE ONBOARDING COMPLETO
   const hasCompletedOnboarding = Boolean(profile?.onboarding_completed);
 
-  // OTIMIZAÇÃO: Configurar sessão na inicialização - APENAS UMA VEZ
+  // INICIALIZAÇÃO OTIMIZADA: Evitar loops e garantir carregamento
   useEffect(() => {
     let mounted = true;
     let authListener: any = null;
+    let initTimeout: NodeJS.Timeout;
 
     const initializeAuth = async () => {
       if (!mounted) return;
 
-      logger.info('[AUTH-CONTEXT] Inicializando AuthProvider');
+      logger.info('[AUTH-CONTEXT] 🚀 Inicializando AuthProvider');
       
       try {
-        // PRIMEIRO: Configurar listener para mudanças de auth
+        setIsLoading(true);
+
+        // PRIMEIRO: Configurar listener de mudanças de auth
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
-          async (event, session) => {
+          (event, session) => {
             if (!mounted) return;
 
-            logger.info('[AUTH-CONTEXT] Auth state change:', { event });
+            logger.info(`[AUTH-CONTEXT] 📡 Auth event: ${event}`);
             
+            // RESET COMPLETO em logout
             if (event === 'SIGNED_OUT' || !session) {
               setSession(null);
               setUser(null);
               setProfile(null);
               setIsLoading(false);
               clearProfileCache();
-            } else if (session?.user) {
+              return;
+            }
+
+            // LOGIN: Configurar sessão e carregar perfil
+            if (session?.user && event === 'SIGNED_IN') {
               setSession(session);
               setUser(session.user);
               
-              // CORREÇÃO: Defer setup para evitar deadlock
-              if (event === 'SIGNED_IN') {
-                setTimeout(() => {
-                  if (mounted) {
-                    setupAuthSession();
-                    // Onboarding check removido - causava loops
-                  }
-                }, 0);
-              }
+              // CRÍTICO: Evitar loops deferindo setup
+              setTimeout(() => {
+                if (mounted) {
+                  setupAuthSession().catch((error) => {
+                    logger.error('[AUTH-CONTEXT] Erro no setup após login:', error);
+                    if (mounted) setIsLoading(false);
+                  });
+                }
+              }, 100);
             }
           }
         );
         
         authListener = subscription;
 
-        // SEGUNDO: Verificar sessão existente (APENAS uma vez)
-        await setupAuthSession();
+        // SEGUNDO: Verificar sessão existente com timeout
+        const setupPromise = setupAuthSession();
+        const timeoutPromise = new Promise((_, reject) => {
+          initTimeout = setTimeout(() => {
+            reject(new Error('Timeout de inicialização - 10s'));
+          }, 10000);
+        });
+
+        await Promise.race([setupPromise, timeoutPromise]);
+        clearTimeout(initTimeout);
 
       } catch (error) {
-        logger.error('[AUTH-CONTEXT] Erro na inicialização:', error);
+        logger.error('[AUTH-CONTEXT] ❌ Erro crítico na inicialização:', error);
         if (mounted) {
+          // Em caso de erro, garantir que não fica carregando infinitamente
+          setSession(null);
+          setUser(null);
+          setProfile(null);
           setIsLoading(false);
         }
       }
@@ -127,14 +145,17 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
     initializeAuth();
 
-    // Cleanup
+    // Cleanup robusto
     return () => {
       mounted = false;
       if (authListener) {
         authListener.unsubscribe();
       }
+      if (initTimeout) {
+        clearTimeout(initTimeout);
+      }
     };
-  }, []); // IMPORTANTE: Array vazio para executar apenas uma vez
+  }, []); // CRÍTICO: Array vazio para executar apenas uma vez
 
   // Função de logout otimizada
   const signOut = useCallback(async (): Promise<{ success: boolean; error?: string }> => {

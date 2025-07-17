@@ -24,18 +24,22 @@ export const useAuthStateManager = ({
   const { setLoading: setGlobalLoading, circuitBreakerActive } = useGlobalLoading();
 
   const setupAuthSession = useCallback(async () => {
-    logger.info('[AUTH-STATE] Setup direto iniciado');
+    logger.info('[AUTH-STATE] 🔧 Setup de sessão iniciado');
     
     try {
       setIsLoading(true);
       setGlobalLoading('auth', true);
 
-      // Validação direta - sem timeouts ou circuit breakers
-      const sessionResult = await validateUserSession();
-      const { session, user } = sessionResult;
+      // PRIMEIRO: Verificar sessão atual
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
       
-      if (!session || !user) {
-        logger.info('[AUTH-STATE] Sem sessão válida');
+      if (sessionError) {
+        logger.error('[AUTH-STATE] Erro ao obter sessão:', sessionError);
+        throw sessionError;
+      }
+
+      if (!session?.user) {
+        logger.info('[AUTH-STATE] 🔓 Nenhuma sessão válida encontrada');
         setSession(null);
         setUser(null);
         setProfile(null);
@@ -44,12 +48,15 @@ export const useAuthStateManager = ({
         return;
       }
 
-      // Definir sessão e usuário
+      const user = session.user;
+      logger.info(`[AUTH-STATE] 👤 Sessão válida encontrada: ${user.email}`);
+
+      // SEGUNDO: Configurar sessão e usuário
       setSession(session);
       setUser(user);
 
-      // Buscar perfil diretamente da tabela profiles
-      const { data: profileData, error: profileError } = await supabase
+      // TERCEIRO: Buscar perfil com timeout
+      const profilePromise = supabase
         .from('profiles')
         .select(`
           *,
@@ -63,49 +70,66 @@ export const useAuthStateManager = ({
         .eq('id', user.id)
         .single();
 
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('Timeout ao buscar perfil')), 8000);
+      });
+
+      const { data: profileData, error: profileError } = await Promise.race([
+        profilePromise,
+        timeoutPromise
+      ]) as any;
+
       if (profileError) {
-        logger.error('[AUTH-STATE] ERRO CRÍTICO ao buscar perfil:', profileError);
-        throw new Error(`Perfil não encontrado para usuário ${user.id}: ${profileError.message}`);
+        logger.error('[AUTH-STATE] ❌ Erro ao buscar perfil:', profileError);
+        
+        // Se for erro de "not found", é um caso especial
+        if (profileError.code === 'PGRST116') {
+          logger.error('[AUTH-STATE] 🚨 PERFIL NÃO EXISTE - usuário órfão');
+          throw new Error(`Usuário ${user.email} não possui perfil. Contate o administrador.`);
+        }
+        
+        throw profileError;
       }
 
       if (!profileData) {
-        logger.error('[AUTH-STATE] ERRO CRÍTICO: Perfil não existe');
-        throw new Error(`Usuário ${user.id} não possui perfil. Estado de dados corrompido.`);
+        logger.error('[AUTH-STATE] 🚨 DADOS DE PERFIL VAZIOS');
+        throw new Error(`Perfil vazio para usuário ${user.email}`);
       }
 
       const profile = profileData as UserProfile;
       
-      // Validação de segurança crítica
+      // VALIDAÇÃO DE SEGURANÇA
       if (profile.id !== user.id) {
-        logger.error('[AUTH-STATE] VIOLAÇÃO DE SEGURANÇA CRÍTICA');
-        throw new Error('Violação de segurança detectada: ID de perfil não corresponde ao usuário');
+        logger.error('[AUTH-STATE] 🔒 VIOLAÇÃO DE SEGURANÇA');
+        throw new Error('Violação de segurança: IDs não coincidem');
       }
 
+      // QUARTO: Configurar perfil e finalizar
       setProfile(profile);
       
-      // Cache sem lógica complexa
-      const roleName = profile.user_roles?.name;
-      if (roleName) {
-        navigationCache.set(user.id, profile, roleName as any);
-        logger.info(`[AUTH-STATE] ✅ Perfil carregado: ${roleName}`);
-      }
+      const roleName = profile.user_roles?.name || 'member';
+      navigationCache.set(user.id, profile, roleName as any);
+      
+      logger.info(`[AUTH-STATE] ✅ Setup completo - Usuário: ${user.email} | Role: ${roleName}`);
 
     } catch (error) {
-      logger.error('[AUTH-STATE] ERRO CRÍTICO:', error);
+      logger.error('[AUTH-STATE] 💥 ERRO CRÍTICO no setup:', error);
       
-      // Limpar tudo e deixar o erro subir
+      // RESET COMPLETO em caso de erro
       setSession(null);
       setUser(null);
       setProfile(null);
       clearProfileCache();
       navigationCache.clear();
       
-      // Re-throw para forçar tratamento no nível superior
+      // Propagar erro para tratamento superior
       throw error;
       
     } finally {
+      // SEMPRE finalizar loading
       setIsLoading(false);
       setGlobalLoading('auth', false);
+      logger.info('[AUTH-STATE] 🏁 Setup finalizado (loading = false)');
     }
   }, [setSession, setUser, setProfile, setIsLoading, setGlobalLoading]);
 
