@@ -105,30 +105,37 @@ const InvitePage = () => {
 
   if (showRegisterForm && validationResult.invite) {
     return (
-      <div className="min-h-screen bg-background">
-        <div className="container mx-auto px-4 py-8">
-          <div className="max-w-6xl mx-auto">
-            <div className="grid lg:grid-cols-2 gap-12 items-center">
-              {/* Welcome Section */}
-              <div className="order-2 lg:order-1">
-                <InviteWelcomeSection inviteData={validationResult.invite} />
-              </div>
-              
-              {/* Register Form */}
-              <div className="order-1 lg:order-2">
-                <div className="bg-card border border-border rounded-lg p-8 shadow-lg">
-                  <ModernRegisterForm 
-                    inviteToken={token}
-                    prefilledEmail={validationResult.invite.email}
-                    prefilledName={validationResult.invite.profile_data?.name}
-                    onSuccess={() => {
-                      console.log('🎯 [INVITE] Registro concluído via InvitePage');
-                      // O redirecionamento agora é feito pelo ModernRegisterForm usando useOnboardingRedirect
-                    }}
-                  />
-                </div>
-              </div>
-            </div>
+      <div className="min-h-screen bg-gradient-to-b from-gray-900 to-black flex items-center justify-center p-4">
+        <div className="w-full max-w-md">
+          {/* Logo do Club */}
+          <div className="mb-8 text-center">
+            <img
+              src="https://milagredigital.com/wp-content/uploads/2025/04/viverdeiaclub.avif"
+              alt="VIVER DE IA Club"
+              className="mx-auto h-16 w-auto"
+            />
+          </div>
+
+          {/* Título */}
+          <div className="mb-8 text-center">
+            <h1 className="text-2xl font-semibold text-white mb-2">
+              Complete seu acesso
+            </h1>
+            <p className="text-gray-400">
+              Finalize seu cadastro para acessar a plataforma
+            </p>
+          </div>
+
+          {/* Formulário */}
+          <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl shadow-2xl p-6">
+            <ModernRegisterForm 
+              inviteToken={token}
+              prefilledEmail={validationResult.invite.email}
+              prefilledName={validationResult.invite.profile_data?.name}
+              onSuccess={() => {
+                console.log('🎯 [INVITE] Registro concluído via InvitePage');
+              }}
+            />
           </div>
         </div>
       </div>
