@@ -51,6 +51,7 @@ import NotificationSettingsPage from '@/pages/profile/NotificationSettingsPage';
 
 // Onboarding page
 import OnboardingPage from '@/pages/member/Onboarding';
+import OnboardingNewPage from '@/pages/member/OnboardingNew';
 
 // Função helper para criar rotas protegidas com MemberLayout
 const createProtectedRoute = (path: string, Component: React.ComponentType<any>) => ({
@@ -68,9 +69,15 @@ export const memberRoutes: RouteObject[] = [
     element: <RootRedirect />
   },
   
-  // Rota de onboarding principal (redireciona para etapa correta)
+  // Nova rota de onboarding simplificada
   {
     path: "/onboarding",
+    element: <ProtectedRoutes><OnboardingNewPage /></ProtectedRoutes>
+  },
+  
+  // Rota de onboarding antiga (backup)
+  {
+    path: "/onboarding-old",
     element: <ProtectedRoutes><OnboardingRedirect /></ProtectedRoutes>
   },
   
