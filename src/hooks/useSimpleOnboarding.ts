@@ -137,11 +137,35 @@ export const useSimpleOnboarding = () => {
         .eq('id', user.id)
         .single();
 
+      // 🎯 TENTAR RECUPERAR DADOS DO CONVITE
+      const inviteToken = sessionStorage.getItem('current_invite_token');
+      let inviteData: { email?: string; from_invite_notes?: string } = {};
+      
+      if (inviteToken) {
+        console.log('🎯 [ONBOARDING] Dados do convite encontrados, integrando no onboarding');
+        try {
+          const { data: inviteInfo } = await supabase.rpc('validate_invite_token_safe', { 
+            p_token: inviteToken 
+          });
+          
+          if (inviteInfo?.valid && inviteInfo?.invite) {
+            inviteData = {
+              email: inviteInfo.invite.email,
+              ...(inviteInfo.invite.notes && { from_invite_notes: inviteInfo.invite.notes })
+            };
+            console.log('✅ [ONBOARDING] Dados do convite integrados:', inviteData);
+          }
+        } catch (error) {
+          console.warn('⚠️ [ONBOARDING] Erro ao validar convite:', error);
+        }
+      }
+
       const initialData: SimpleOnboardingData = {
         user_id: user.id,
         personal_info: {
           name: profile?.name || '',
-          email: profile?.email || user.email || '',
+          email: inviteData.email || profile?.email || user.email || '',
+          ...inviteData,
         },
         business_info: {},
         ai_experience: {},
@@ -155,10 +179,19 @@ export const useSimpleOnboarding = () => {
 
       setData(initialData);
       
-      toast({
-        title: "Bem-vindo! 👋",
-        description: "Vamos personalizar sua experiência conosco.",
-      });
+      // 🎯 MENSAGEM PERSONALIZADA PARA REGISTRO VIA CONVITE
+      const registroRecente = sessionStorage.getItem('registro_recente');
+      if (registroRecente === 'true') {
+        toast({
+          title: "Bem-vindo ao VIVER DE IA Club! 🎉",
+          description: "Vamos personalizar sua experiência e configurar sua conta.",
+        });
+      } else {
+        toast({
+          title: "Bem-vindo! 👋",
+          description: "Vamos personalizar sua experiência conosco.",
+        });
+      }
     } catch (error) {
       console.error('Erro ao inicializar onboarding:', error);
     }
@@ -273,12 +306,17 @@ export const useSimpleOnboarding = () => {
 
       setData(completedData);
       
+      // 🎯 LIMPAR FLAGS DE REGISTRO RECENTE
+      sessionStorage.removeItem('registro_recente');
+      sessionStorage.removeItem('registro_timestamp');
+      sessionStorage.removeItem('current_invite_token');
+      
       toast({
         title: "Onboarding concluído! 🎉",
-        description: "Bem-vindo(a) à nossa plataforma!",
+        description: "Sua conta está configurada! Bem-vindo(a) à plataforma personalizada.",
       });
 
-      // Redirecionar para dashboard
+      // Redirecionar para dashboard personalizado
       setTimeout(() => {
         navigate('/dashboard', { replace: true });
       }, 1500);

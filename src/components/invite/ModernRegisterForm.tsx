@@ -209,13 +209,22 @@ const ModernRegisterForm: React.FC<ModernRegisterFormProps> = ({
           description: "Preparando seu onboarding personalizado...",
         });
         
-        // 🎯 REDIRECIONAMENTO DIRETO
+        // 🎯 MARCAR REGISTRO RECENTE PARA FORÇAR ONBOARDING
+        sessionStorage.setItem('registro_recente', 'true');
+        sessionStorage.setItem('registro_timestamp', Date.now().toString());
+        
+        if (inviteToken) {
+          console.log('💾 [REGISTER] Dados do convite preservados para onboarding');
+        }
+        
+        // 🎯 REDIRECIONAMENTO DIRETO PARA ONBOARDING
         onSuccess?.();
-        const redirectUrl = inviteToken 
-          ? `/onboarding/step/1?token=${encodeURIComponent(inviteToken.trim())}`
-          : '/onboarding/step/1';
-        console.log('🔗 [REGISTER] Redirecionando para:', redirectUrl);
-        redirectToNextStep();
+        console.log('🔗 [REGISTER] Redirecionando para onboarding personalizado');
+        
+        // Pequeno delay para garantir que os dados foram salvos
+        setTimeout(() => {
+          redirectToNextStep();
+        }, 500);
       }
       
     } catch (error: any) {
