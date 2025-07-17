@@ -11,32 +11,15 @@ const OnboardingStep2Page: React.FC = () => {
   const { data, saveAndNavigate, isSaving, updateData, dataRestored } = useOnboarding();
   const stepRef = useRef<{ getData: () => any; isValid: () => boolean }>(null);
 
-  // 🎯 CORREÇÃO PREVENTIVA: Verificar se pode acessar esta etapa com proteção contra reset
+  // Simplificado - apenas verificar se onboarding já foi completado
   useEffect(() => {
-    // Prevenir execução durante operações de save
-    if (isSaving) {
-      console.log('⏸️ [STEP2] Pulando verificação de acesso durante save');
-      return;
-    }
+    if (isSaving) return;
     
-    const checkAccess = () => {
-      if (data.is_completed) {
-        console.log('✅ [STEP2] Onboarding completo, redirecionando para dashboard');
-        navigate('/dashboard', { replace: true });
-        return;
-      }
-      
-      if (!canAccessStep(2)) {
-        console.log('🔄 [STEP2] Sem acesso ao step 2, redirecionando para step 1');
-        navigate('/onboarding/step/1', { replace: true });
-      }
-    };
-    
-    // Executar apenas se houver dados carregados e não estiver salvando
-    if (data.user_id && !isSaving) {
-      checkAccess();
+    if (data.is_completed) {
+      console.log('✅ [STEP2] Onboarding completo, redirecionando para dashboard');
+      navigate('/dashboard', { replace: true });
     }
-  }, [data.is_completed, data.user_id, navigate, isSaving]); // Incluir isSaving
+  }, [data.is_completed, navigate, isSaving]);
 
   const handleNext = async (stepData?: any) => {
     // 🎯 PROTEÇÃO: Evitar múltiplos cliques durante save
