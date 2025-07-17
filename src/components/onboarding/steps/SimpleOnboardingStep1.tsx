@@ -6,7 +6,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { WhatsAppInput } from '@/components/onboarding/components/WhatsAppInput';
 import { BirthDateSelector } from '@/components/onboarding/components/BirthDateSelector';
 import { LocationSelector } from '@/components/onboarding/components/LocationSelector';
-import { ProfilePictureUpload } from '@/components/onboarding/components/ProfilePictureUpload';
+import { OptimizedProfileUpload } from '@/components/onboarding/components/OptimizedProfileUpload';
 import { User, MapPin, Mail, Phone, Check } from 'lucide-react';
 
 interface SimpleOnboardingStep1Props {
@@ -179,27 +179,34 @@ export const SimpleOnboardingStep1 = React.memo(forwardRef<Step1Ref, SimpleOnboa
   const validateForm = useCallback(() => {
     const newErrors: Record<string, string> = {};
 
-    // Validação mais tolerante - apenas nome e email obrigatórios
+    // 🎯 VALIDAÇÃO SUPER SIMPLIFICADA - só nome obrigatório
     if (!formData.name.trim()) {
-      newErrors.name = 'Nome é obrigatório';
+      newErrors.name = 'Nome é obrigatório para prosseguir';
     } else if (formData.name.trim().length < 2) {
       newErrors.name = 'Nome deve ter pelo menos 2 caracteres';
     }
 
-    if (!formData.email.trim()) {
+    // Email pode ser opcional se veio do convite
+    if (!formData.email.trim() && !fromInvite.email) {
       newErrors.email = 'Email é obrigatório';
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = 'Email inválido';
-    }
-
-    // WhatsApp opcional no Step 1
-    if (formData.phone.trim() && formData.phone.length < 10) {
-      newErrors.phone = 'WhatsApp deve ter pelo menos 10 dígitos';
+    } else if (formData.email.trim() && !/\S+@\S+\.\S+/.test(formData.email)) {
+      newErrors.email = 'Formato de email inválido';
     }
 
     setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  }, [formData.name, formData.email, formData.phone]);
+    
+    // 🎯 SUPER TOLERANTE: Só bloqueia se não tiver nome
+    const isValid = Object.keys(newErrors).length === 0;
+    
+    console.log('🔍 [STEP1] Validação:', {
+      formData: { name: formData.name, email: formData.email },
+      errors: newErrors,
+      isValid,
+      fromInvite
+    });
+    
+    return isValid;
+  }, [formData.name, formData.email, fromInvite]);
 
   const getStepData = useCallback(() => getStepDataFromFormData(formData), [formData, getStepDataFromFormData]);
 
@@ -335,7 +342,7 @@ export const SimpleOnboardingStep1 = React.memo(forwardRef<Step1Ref, SimpleOnboa
             getFieldError={getFieldError}
           />
 
-          <ProfilePictureUpload
+          <OptimizedProfileUpload
             value={formData.profilePicture}
             onChange={(url) => handleInputChange('profilePicture', url)}
             userName={formData.name}

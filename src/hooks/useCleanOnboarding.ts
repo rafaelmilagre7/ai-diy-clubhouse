@@ -259,61 +259,67 @@ export const useCleanOnboarding = () => {
   }, [user?.id, loadData]);
 
   const updateData = useCallback((stepData: Partial<OnboardingFinalData>) => {
-    // 🎯 CORREÇÃO: Prevenir atualizações durante operações de save
-    if (isSaving) {
-      console.log('⏸️ [CLEAN-ONBOARDING] Pulando updateData durante save operation');
+    // 🎯 PREVENÇÃO DE LOOPS: Skip durante save ou se dados são vazios
+    if (isSaving || !stepData || Object.keys(stepData).length === 0) {
+      console.log('⏸️ [CLEAN-ONBOARDING] Pulando updateData:', { isSaving, hasData: !!stepData });
       return;
     }
     
     console.log('🔄 [CLEAN-ONBOARDING] Atualizando dados localmente:', stepData);
     
     setData(prev => {
-      // 🎯 CORREÇÃO: Merge inteligente preservando dados existentes
+      // 🎯 MERGE SUPER INTELIGENTE - só atualiza se realmente mudou
+      const hasChanges = JSON.stringify(prev.personal_info) !== JSON.stringify({
+        ...prev.personal_info,
+        ...stepData.personal_info
+      });
+      
+      if (!hasChanges && !stepData.location_info && !stepData.business_info) {
+        console.log('⏭️ [CLEAN-ONBOARDING] Nenhuma mudança detectada, pulando');
+        return prev;
+      }
+      
       const mergedData = {
         ...prev,
         ...stepData,
-        // Preservar dados pessoais se não foram passados no stepData
         personal_info: {
           ...prev.personal_info,
           ...stepData.personal_info
         },
-        // Preservar dados de localização
         location_info: {
           ...prev.location_info,
           ...stepData.location_info
         },
-        // Preservar dados de negócio
         business_info: {
           ...prev.business_info,
           ...stepData.business_info
         },
-        // Preservar dados de experiência IA
         ai_experience: {
           ...prev.ai_experience,
           ...stepData.ai_experience
         },
-        // Preservar dados de objetivos
         goals_info: {
           ...prev.goals_info,
           ...stepData.goals_info
         },
-        // Preservar preferências/personalização
         preferences: {
           ...prev.preferences,
           ...stepData.preferences,
-          ...stepData.personalization // Compatibilidade
+          ...stepData.personalization
         },
         personalization: {
           ...prev.personalization,
           ...stepData.personalization,
-          ...stepData.preferences // Compatibilidade
+          ...stepData.preferences
         },
         updated_at: new Date().toISOString()
       };
       
-      // Salvar localmente apenas se não estiver em processo de save
-      if (!isSaving) {
+      // Auto-save local silencioso
+      try {
         saveToLocal(mergedData);
+      } catch (error) {
+        console.warn('⚠️ [CLEAN-ONBOARDING] Erro no auto-save local:', error);
       }
       
       return mergedData;

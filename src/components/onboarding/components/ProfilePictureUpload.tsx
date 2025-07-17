@@ -62,11 +62,11 @@ export const ProfilePictureUpload: React.FC<ProfilePictureUploadProps> = ({
         {!value && (
           <FileUpload
             bucketName="profile_images"
-            folder={`avatars`}
+            folder="avatars"
             onUploadComplete={handleUpload}
             accept="image/*"
             maxSize={5} // 5MB
-            buttonText="Enviar Foto"
+            buttonText="Adicionar Foto"
             fieldLabel=""
           />
         )}
