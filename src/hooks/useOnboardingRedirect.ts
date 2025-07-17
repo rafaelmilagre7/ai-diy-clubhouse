@@ -24,7 +24,7 @@ export const useOnboardingRedirect = () => {
     const registroRecente = sessionStorage.getItem('registro_recente');
     if (registroRecente === 'true') {
       console.log('🆕 [ONBOARDING-REDIRECT] Registro recente detectado - forçando onboarding');
-      navigate('/onboarding-new', { replace });
+      navigate('/onboarding', { replace });
       return;
     }
 
