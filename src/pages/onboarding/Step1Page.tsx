@@ -5,6 +5,7 @@ import { SimpleOnboardingStep1, Step1Ref } from '@/components/onboarding/steps/S
 import { SimpleStepNavigation } from '@/components/onboarding/SimpleStepNavigation';
 import { DataRestoreNotification } from '@/components/onboarding/DataRestoreNotification';
 import { OnboardingDebugPanel } from '@/components/debug/OnboardingDebugPanel';
+import { OnboardingSyncDebug } from '@/components/debug/OnboardingSyncDebug';
 import { useCleanOnboarding as useOnboarding } from '@/hooks/useCleanOnboarding';
 
 const OnboardingStep1Page: React.FC = () => {
@@ -30,6 +31,12 @@ const OnboardingStep1Page: React.FC = () => {
   }, [data.is_completed, navigate]); // Remover canAccessStep e current_step das dependências
 
   const handleNext = async () => {
+    // 🎯 PROTEÇÃO: Evitar múltiplos cliques durante save
+    if (isSaving) {
+      console.log('⏸️ [STEP1-PAGE] Save em andamento, ignorando clique');
+      return;
+    }
+    
     console.log('🔄 [STEP1-PAGE] Iniciando handleNext...');
     
     // Validar usando ref
@@ -113,6 +120,9 @@ function debounce(func: Function, wait: number) {
         isSaving={isSaving} 
         isLoading={false}
       />
+      
+      {/* Sincronização Debug */}
+      <OnboardingSyncDebug />
     </OnboardingLayout>
   );
 };

@@ -390,21 +390,73 @@ export const useCleanOnboarding = () => {
         throw error;
       }
 
-      // Atualizar estado local
-      setData(updatedData);
+      console.log('✅ [CLEAN-ONBOARDING] Dados salvos no Supabase com sucesso');
 
-      console.log('✅ [CLEAN-ONBOARDING] Dados salvos com sucesso');
+      // 🎯 CORREÇÃO CRÍTICA: Recarregar dados do servidor após save
+      // Garantir sincronização entre front-end e back-end
+      try {
+        console.log('🔄 [CLEAN-ONBOARDING] Recarregando dados do servidor para sincronização...');
+        
+        const { data: freshData, error: refetchError } = await supabase
+          .from('onboarding_final')
+          .select('*')
+          .eq('user_id', user!.id)
+          .single();
+
+        if (refetchError) {
+          console.error('❌ [CLEAN-ONBOARDING] Erro ao recarregar dados:', refetchError);
+          // Fallback para dados locais se refetch falhar
+          setData(updatedData);
+        } else {
+          // Estruturar dados recarregados
+          const serverSyncedData = {
+            ...freshData,
+            personal_info: freshData.personal_info || {},
+            location_info: {
+              state: freshData.personal_info?.state,
+              city: freshData.personal_info?.city,
+              country: freshData.personal_info?.country,
+              timezone: freshData.personal_info?.timezone
+            },
+            business_info: freshData.business_info || {},
+            ai_experience: freshData.ai_experience || {},
+            goals_info: freshData.goals_info || {},
+            preferences: freshData.personalization || {},
+            personalization: freshData.personalization || {},
+            completed_steps: freshData.completed_steps || [],
+            time_per_step: freshData.time_per_step || {},
+            abandonment_points: freshData.abandonment_points || []
+          };
+          
+          console.log('✅ [CLEAN-ONBOARDING] Estado sincronizado com servidor:', {
+            current_step: serverSyncedData.current_step,
+            completed_steps: serverSyncedData.completed_steps,
+            is_completed: serverSyncedData.is_completed
+          });
+          
+          setData(serverSyncedData);
+        }
+      } catch (syncError) {
+        console.error('❌ [CLEAN-ONBOARDING] Erro na sincronização:', syncError);
+        // Fallback para dados locais
+        setData(updatedData);
+      }
+
+      // 🎯 AGUARDAR um frame para garantir que o estado foi atualizado
+      await new Promise(resolve => setTimeout(resolve, 100));
       
       toast({
         title: "Dados salvos! ✅",
         description: `Etapa ${currentStep} concluída com sucesso.`,
       });
 
-      // Navegar APENAS se salvamento foi bem-sucedido
+      // Navegar APENAS após sincronização completa
       if (targetStep <= 6) {
+        console.log('🧭 [CLEAN-ONBOARDING] Navegando para step:', targetStep);
         navigate(`/onboarding/step/${targetStep}`, { replace: true });
       } else {
         // Onboarding completo
+        console.log('🎉 [CLEAN-ONBOARDING] Onboarding completado, navegando para dashboard');
         toast({
           title: "Onboarding concluído! 🎉",
           description: "Bem-vindo(a) à nossa plataforma!",

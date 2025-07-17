@@ -39,6 +39,12 @@ const OnboardingStep2Page: React.FC = () => {
   }, [data.is_completed, data.user_id, navigate, isSaving]); // Incluir isSaving
 
   const handleNext = async (stepData?: any) => {
+    // 🎯 PROTEÇÃO: Evitar múltiplos cliques durante save
+    if (isSaving) {
+      console.log('⏸️ [STEP2] Save em andamento, ignorando clique');
+      return;
+    }
+    
     console.log('➡️ [STEP2] handleNext chamado com:', stepData);
     
     // Coletar dados do componente via ref se não fornecido
@@ -49,10 +55,10 @@ const OnboardingStep2Page: React.FC = () => {
       return;
     }
     
-    // Validar antes de salvar
+    // Validar antes de salvar (Skip validação para step 2 opcional)
     if (stepRef.current && !stepRef.current.isValid()) {
-      console.warn('⚠️ [STEP2] Validação falhou');
-      return;
+      console.warn('⚠️ [STEP2] Validação falhou - mas permitindo prosseguir (step opcional)');
+      // Não retornar - permitir continuar mesmo com validação falha
     }
     
     console.log('💾 [STEP2] Iniciando save operation...');
