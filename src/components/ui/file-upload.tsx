@@ -114,48 +114,8 @@ export const FileUpload: React.FC<FileUploadProps> = ({
       
       let displayMessage = error.message || 'Erro ao fazer upload do arquivo.';
       
-      // Mensagens de erro específicas para problemas comuns
-      if (error.message?.includes('bucket') && error.message?.includes('not found')) {
-        displayMessage = 'Não foi possível encontrar o local de armazenamento. Tentando usar armazenamento alternativo...';
-        // Não exibimos o erro para o usuário, tentamos novamente com bucket alternativo
-        try {
-          abortControllerRef.current = new AbortController();
-          const fallbackBucket = STORAGE_BUCKETS.FALLBACK;
-          const fallbackFolder = `${bucketName}/${folder}`.trim();
-          
-          console.log(`Tentando upload com fallback para bucket: ${fallbackBucket}, pasta: ${fallbackFolder}`);
-          
-          const result = await uploadFileToStorage(
-            file,
-            fallbackBucket,
-            fallbackFolder,
-            (progress) => {
-              setProgress(progress);
-            },
-            abortControllerRef.current.signal
-          );
-          
-          console.log('Upload com fallback bem-sucedido:', result);
-          
-          onUploadComplete(result.publicUrl, file.name, file.size);
-          
-          toast({
-            title: 'Upload realizado com sucesso',
-            description: 'O arquivo foi enviado com sucesso usando armazenamento alternativo.',
-            variant: 'default',
-          });
-          
-          setErrorMessage(null);
-          setIsUploading(false);
-          e.target.value = '';
-          return;
-        } catch (fallbackError: any) {
-          console.error('Erro no upload com fallback:', fallbackError);
-          displayMessage = 'Não foi possível fazer o upload mesmo com armazenamento alternativo. Por favor, tente novamente mais tarde.';
-        }
-      } else if (error.message?.includes('timeout') || error.message?.includes('network')) {
-        displayMessage = 'Tempo limite excedido ou problema de conexão. Tente novamente com um arquivo menor ou verifique sua conexão.';
-      }
+      // Mensagens de erro mais claras para admins
+      displayMessage = error.message || 'Erro ao fazer upload do arquivo.';
       
       setErrorMessage(displayMessage);
       

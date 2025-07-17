@@ -8,50 +8,51 @@ export const uploadFileToSupabase = async (
   onProgressUpdate?: (progress: number) => void
 ) => {
   try {
-    console.log('📤 [UPLOAD] Iniciando upload:', { fileName: file.name, bucketName, folderPath });
+    console.log('📤 [PROFILE_UPLOAD] Iniciando upload de perfil:', { fileName: file.name, bucketName, folderPath });
     
+    // Normalizar bucket name (remover hífens)
+    const normalizedBucket = bucketName.replace(/-/g, '_').toLowerCase();
+    console.log('🔧 [PROFILE_UPLOAD] Bucket normalizado:', { original: bucketName, normalized: normalizedBucket });
+
     const timestamp = new Date().getTime();
     const sanitizedFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
     const filePath = folderPath 
       ? `${folderPath}/${timestamp}-${sanitizedFileName}` 
       : `${timestamp}-${sanitizedFileName}`;
 
-    // 🎯 CORREÇÃO: Usar apenas buckets com underscores (sem hífen)
-    const safeBucketName = bucketName.replace(/-/g, '_');
-    console.log('🔧 [UPLOAD] Bucket normalizado:', { original: bucketName, safe: safeBucketName });
-
     if (onProgressUpdate) onProgressUpdate(10);
 
-    // 🎯 CORREÇÃO: Upload direto sem verificar/criar bucket (já existe)
+    // Upload direto usando bucket normalizado
     const { data, error } = await supabase.storage
-      .from(safeBucketName)
+      .from(normalizedBucket)
       .upload(filePath, file, {
         upsert: true,
-        cacheControl: '3600'
+        cacheControl: '3600',
+        contentType: file.type
       });
 
     if (error) {
-      console.error('❌ [UPLOAD] Erro no upload:', error);
-      throw error;
+      console.error('❌ [PROFILE_UPLOAD] Erro no upload:', error);
+      throw new Error(`Falha no upload: ${error.message}`);
     }
 
-    console.log('✅ [UPLOAD] Upload realizado com sucesso:', data);
+    console.log('✅ [PROFILE_UPLOAD] Upload realizado com sucesso:', data);
     if (onProgressUpdate) onProgressUpdate(80);
 
     const { data: { publicUrl } } = supabase.storage
-      .from(safeBucketName)
+      .from(normalizedBucket)
       .getPublicUrl(data.path);
 
-    console.log('🔗 [UPLOAD] URL pública gerada:', publicUrl);
+    console.log('🔗 [PROFILE_UPLOAD] URL pública gerada:', publicUrl);
     if (onProgressUpdate) onProgressUpdate(100);
 
     return {
       publicUrl,
       fileName: file.name
     };
-  } catch (error) {
-    console.error('❌ [UPLOAD] Erro completo:', error);
-    throw error;
+  } catch (error: any) {
+    console.error('❌ [PROFILE_UPLOAD] Erro completo:', error);
+    throw new Error(error.message || 'Erro no upload da imagem de perfil');
   }
 };
 

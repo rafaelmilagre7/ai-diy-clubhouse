@@ -4863,6 +4863,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      ensure_bucket_exists: {
+        Args: { p_bucket_name: string }
+        Returns: Json
+      }
       fix_existing_users_onboarding: {
         Args: Record<PropertyKey, never>
         Returns: Json
@@ -5339,6 +5343,10 @@ export type Database = {
       monitor_onboarding_flow: {
         Args: Record<PropertyKey, never>
         Returns: Json
+      }
+      normalize_bucket_name: {
+        Args: { bucket_name: string }
+        Returns: string
       }
       process_referral: {
         Args: { p_token: string; p_user_id: string }
