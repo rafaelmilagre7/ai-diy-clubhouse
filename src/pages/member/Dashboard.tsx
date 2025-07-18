@@ -8,16 +8,12 @@ import { ActiveSolutions } from '@/components/dashboard/ActiveSolutions';
 import { CompletedSolutions } from '@/components/dashboard/CompletedSolutions';
 import { RecommendedSolutions } from '@/components/dashboard/RecommendedSolutions';
 import { useNavigate } from 'react-router-dom';
-import { useForceProfileReload } from '@/hooks/useForceProfileReload';
 import { Solution } from '@/lib/supabase';
 
 const Dashboard = () => {
   const { user, profile } = useAuth();
   const { solutions, loading, error } = useDashboardData();
   const navigate = useNavigate();
-  
-  // FORÇA RELOAD DO PERFIL - temporário para corrigir cache
-  useForceProfileReload();
 
   if (loading) {
     return <LoadingScreen message="Carregando dashboard..." />;
