@@ -1,144 +1,148 @@
 
-import { RouteObject } from "react-router-dom";
-import { ProtectedRoutes } from '@/auth/ProtectedRoutes';
-import MemberLayout from '@/components/layout/MemberLayout';
+import { Route } from 'react-router-dom';
+import ProtectedRoute from '@/components/routing/ProtectedRoute';
 import RootRedirect from '@/components/routing/RootRedirect';
+import Layout from '@/components/layout/Layout';
 
-// Member pages
-import Dashboard from '@/pages/member/Dashboard';
-import Solutions from '@/pages/member/Solutions';
-import Tools from '@/pages/member/Tools';
-import ToolDetails from '@/pages/member/ToolDetails';
-import Profile from '@/pages/member/Profile';
-import EditProfile from '@/pages/member/EditProfile';
-import SolutionDetails from '@/pages/member/SolutionDetails';
-import SolutionImplementation from '@/pages/member/SolutionImplementation';
-import ImplementationCompleted from '@/pages/member/ImplementationCompleted';
-import ImplementationTrail from '@/pages/member/ImplementationTrail';
-import Benefits from '@/pages/member/Benefits';
-import Suggestions from '@/pages/member/Suggestions';
-import SuggestionDetails from '@/pages/member/SuggestionDetails';
-import NewSuggestion from '@/pages/member/NewSuggestion';
-import Events from '@/pages/member/Events';
-import SolutionCertificate from '@/pages/member/SolutionCertificate';
-import Networking from '@/pages/member/Networking';
+// Pages
+import DashboardPage from '@/pages/dashboard/DashboardPage';
+import SolutionDetailsPage from '@/pages/solutions/SolutionDetailsPage';
+import LearningPage from '@/pages/learning/LearningPage';
+import LearningCoursePage from '@/pages/learning/LearningCoursePage';
+import LearningLessonPage from '@/pages/learning/LearningLessonPage';
+import OnboardingPage from '@/pages/onboarding/OnboardingPage';
+import NetworkingPage from '@/pages/networking/NetworkingPage';
+import CommunityPage from '@/pages/community/CommunityPage';
+import CommunityTopicPage from '@/pages/community/CommunityTopicPage';
+import EventsPage from '@/pages/events/EventsPage';
+import ProfilePage from '@/pages/profile/ProfilePage';
+import ToolsPage from '@/pages/tools/ToolsPage';
 
-// Member Learning pages
-import LearningPage from '@/pages/member/learning/LearningPage';
-import CourseDetails from '@/pages/member/learning/CourseDetails';
-import LessonView from '@/pages/member/learning/LessonView';
-import CertificatesPage from '@/pages/member/learning/CertificatesPage';
-import MemberCertificates from '@/pages/member/learning/MemberCertificates';
-
-// Onboarding Step Pages
-import OnboardingStep1Page from '@/pages/onboarding/Step1Page';
-import OnboardingStep2Page from '@/pages/onboarding/Step2Page';
-import OnboardingStep3Page from '@/pages/onboarding/Step3Page';
-import OnboardingStep4Page from '@/pages/onboarding/Step4Page';
-import OnboardingStep5Page from '@/pages/onboarding/Step5Page';
-import OnboardingStep6Page from '@/pages/onboarding/Step6Page';
-import OnboardingRedirect from '@/pages/onboarding/OnboardingRedirect';
-
-// Member Community pages
-import CommunityHome from '@/pages/member/community/CommunityHome';
-import TopicView from '@/pages/member/community/TopicView';
-import CategoryView from '@/pages/member/community/CategoryView';
-import NewTopic from '@/pages/member/community/NewTopic';
-
-
-// Profile pages
-import NotificationSettingsPage from '@/pages/profile/NotificationSettingsPage';
-
-// Onboarding page
-import OnboardingPage from '@/pages/member/Onboarding';
-import OnboardingNewPage from '@/pages/member/OnboardingNew';
-
-// Função helper para criar rotas protegidas com MemberLayout
-const createProtectedRoute = (path: string, Component: React.ComponentType<any>) => ({
-  path,
-  element: <ProtectedRoutes><MemberLayout><Component /></MemberLayout></ProtectedRoutes>
-});
-
-
-export const memberRoutes: RouteObject[] = [
-  // Rota raiz agora usa RootRedirect em vez de Dashboard direto
-  { 
-    path: "/", 
-    element: <RootRedirect />
+export const memberRoutes = [
+  {
+    path: "/",
+    element: (
+      <ProtectedRoute>
+        <RootRedirect />
+      </ProtectedRoute>
+    ),
   },
-  
-  // Nova rota de onboarding simplificada
+  {
+    path: "/dashboard",
+    element: (
+      <ProtectedRoute>
+        <Layout>
+          <DashboardPage />
+        </Layout>
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/solutions/:id",
+    element: (
+      <ProtectedRoute>
+        <Layout>
+          <SolutionDetailsPage />
+        </Layout>
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/learning",
+    element: (
+      <ProtectedRoute>
+        <Layout>
+          <LearningPage />
+        </Layout>
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/learning/course/:slug",
+    element: (
+      <ProtectedRoute>
+        <Layout>
+          <LearningCoursePage />
+        </Layout>
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/learning/lesson/:id",
+    element: (
+      <ProtectedRoute>
+        <Layout>
+          <LearningLessonPage />
+        </Layout>
+      </ProtectedRoute>
+    ),
+  },
   {
     path: "/onboarding",
-    element: <ProtectedRoutes><OnboardingNewPage /></ProtectedRoutes>
-  },
-  
-  // Rota de onboarding antiga (backup)
-  {
-    path: "/onboarding-old",
-    element: <ProtectedRoutes><OnboardingRedirect /></ProtectedRoutes>
-  },
-  
-  // Novas rotas de onboarding por etapas (sem MemberLayout)
-  {
-    path: "/onboarding/step/1",
-    element: <ProtectedRoutes><OnboardingStep1Page /></ProtectedRoutes>
+    element: (
+      <ProtectedRoute>
+        <OnboardingPage />
+      </ProtectedRoute>
+    ),
   },
   {
-    path: "/onboarding/step/2", 
-    element: <ProtectedRoutes><OnboardingStep2Page /></ProtectedRoutes>
+    path: "/networking",
+    element: (
+      <ProtectedRoute>
+        <Layout>
+          <NetworkingPage />
+        </Layout>
+      </ProtectedRoute>
+    ),
   },
   {
-    path: "/onboarding/step/3",
-    element: <ProtectedRoutes><OnboardingStep3Page /></ProtectedRoutes>
+    path: "/community",
+    element: (
+      <ProtectedRoute>
+        <Layout>
+          <CommunityPage />
+        </Layout>
+      </ProtectedRoute>
+    ),
   },
   {
-    path: "/onboarding/step/4",
-    element: <ProtectedRoutes><OnboardingStep4Page /></ProtectedRoutes>
+    path: "/community/topic/:id",
+    element: (
+      <ProtectedRoute>
+        <Layout>
+          <CommunityTopicPage />
+        </Layout>
+      </ProtectedRoute>
+    ),
   },
   {
-    path: "/onboarding/step/5",
-    element: <ProtectedRoutes><OnboardingStep5Page /></ProtectedRoutes>
+    path: "/events",
+    element: (
+      <ProtectedRoute>
+        <Layout>
+          <EventsPage />
+        </Layout>
+      </ProtectedRoute>
+    ),
   },
   {
-    path: "/onboarding/step/6",
-    element: <ProtectedRoutes><OnboardingStep6Page /></ProtectedRoutes>
+    path: "/profile",
+    element: (
+      <ProtectedRoute>
+        <Layout>
+          <ProfilePage />
+        </Layout>
+      </ProtectedRoute>
+    ),
   },
-  
-  createProtectedRoute("/dashboard", Dashboard),
-  
-  createProtectedRoute("/solutions", Solutions),
-  createProtectedRoute("/trilha-implementacao", ImplementationTrail),
-  createProtectedRoute("/tools", Tools),
-  createProtectedRoute("/tools/:id", ToolDetails),
-  createProtectedRoute("/networking", Networking),
-  createProtectedRoute("/profile", Profile),
-  createProtectedRoute("/profile/edit", EditProfile),
-  createProtectedRoute("/profile/notifications", NotificationSettingsPage),
-  createProtectedRoute("/solution/:id", SolutionDetails),
-  createProtectedRoute("/solution/:id/certificate", SolutionCertificate),
-  createProtectedRoute("/implement/:id/:moduleIdx", SolutionImplementation),
-  createProtectedRoute("/implementation/:id", SolutionImplementation),
-  createProtectedRoute("/implementation/:id/:moduleIdx", SolutionImplementation),
-  createProtectedRoute("/implementation/completed/:id", ImplementationCompleted),
-  createProtectedRoute("/benefits", Benefits),
-  createProtectedRoute("/events", Events),
-  
-  // Learning/LMS Routes
-  createProtectedRoute("/learning", LearningPage),
-  createProtectedRoute("/learning/course/:id", CourseDetails),
-  createProtectedRoute("/learning/course/:courseId/lesson/:lessonId", LessonView),
-  createProtectedRoute("/learning/certificates", CertificatesPage),
-  
-  // Sugestões Routes
-  createProtectedRoute("/suggestions", Suggestions),
-  createProtectedRoute("/suggestions/:id", SuggestionDetails),
-  createProtectedRoute("/suggestions/new", NewSuggestion),
-  
-  // Comunidade Routes
-  createProtectedRoute("/comunidade", CommunityHome),
-  createProtectedRoute("/comunidade/topico/:topicId", TopicView),
-  createProtectedRoute("/comunidade/categoria/:slug", CategoryView),
-  createProtectedRoute("/comunidade/novo-topico/:categorySlug", NewTopic),
-  
+  {
+    path: "/tools",
+    element: (
+      <ProtectedRoute>
+        <Layout>
+          <ToolsPage />
+        </Layout>
+      </ProtectedRoute>
+    ),
+  },
 ];
