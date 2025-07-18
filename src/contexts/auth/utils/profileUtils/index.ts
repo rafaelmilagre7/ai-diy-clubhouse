@@ -2,7 +2,8 @@
 // Export profile utility functions
 export { 
   fetchUserProfile,
-  createUserProfileIfNeeded
+  createUserProfileIfNeeded,
+  clearProfileCache
 } from './userProfileFunctions';
 export { 
   validateUserRole,

@@ -1,10 +1,11 @@
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from "@/contexts/auth";
 import LoadingScreen from "@/components/common/LoadingScreen";
 import { toast } from "sonner";
 import { logger } from '@/utils/logger';
+import { supabase } from '@/lib/supabase';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -19,28 +20,66 @@ const ProtectedRoute = ({
 }: ProtectedRouteProps) => {
   const { user, profile, isAdmin, hasCompletedOnboarding, isLoading } = useAuth();
   const location = useLocation();
-  const [timeoutReached, setTimeoutReached] = useState(false);
-  const [redirectDelay, setRedirectDelay] = useState(false);
+  const [loadingProgressTimeout, setLoadingProgressTimeout] = useState(false);
+  const [navLoopDetected, setNavLoopDetected] = useState(false);
+  const isMounted = useRef(true);
   
-  // Timeout para carregamento de perfil (10 segundos)
+  // Detectar loops de navegação usando o banco
+  useEffect(() => {
+    if (!user?.id) return;
+    
+    const detectLoop = async () => {
+      try {
+        const { data: loopData } = await supabase.rpc('detect_navigation_loop', {
+          p_user_id: user.id,
+          p_path: location.pathname,
+          p_session_id: user.id
+        });
+        
+        if (loopData?.is_loop && isMounted.current) {
+          logger.error('[PROTECTED] Loop de navegação detectado', {
+            userId: user.id,
+            path: location.pathname,
+            recentCount: loopData.recent_count
+          });
+          setNavLoopDetected(true);
+          toast.error("Loop de navegação detectado. Redirecionando para área segura...");
+        }
+      } catch (error) {
+        logger.error('[PROTECTED] Erro ao detectar loop:', error);
+      }
+    };
+    
+    detectLoop();
+  }, [user?.id, location.pathname]);
+  
+  // Timeout progressivo para loading (só após 8 segundos)
   useEffect(() => {
     if (!user || profile || !isLoading) {
       return;
     }
 
     const timer = setTimeout(() => {
-      if (!profile && user) {
-        logger.warn('[PROTECTED] Timeout no carregamento do perfil', {
+      if (!profile && user && isMounted.current) {
+        logger.warn('[PROTECTED] Loading prolongado detectado', {
           userId: user.id,
           email: user.email,
-          timeoutDuration: '10s'
+          timeoutDuration: '8s'
         });
-        setTimeoutReached(true);
+        setLoadingProgressTimeout(true);
       }
-    }, 10000);
+    }, 8000);
 
     return () => clearTimeout(timer);
   }, [user, profile, isLoading]);
+
+  // Lifecycle management
+  useEffect(() => {
+    isMounted.current = true;
+    return () => {
+      isMounted.current = false;
+    };
+  }, []);
 
   // Log para debug
   useEffect(() => {
@@ -49,18 +88,25 @@ const ProtectedRoute = ({
       hasUser: !!user,
       hasProfile: !!profile,
       isLoading,
-      timeoutReached,
+      loadingProgressTimeout,
+      navLoopDetected,
       requireAdmin,
       requiredRole
     });
-  }, [user, profile, isLoading, timeoutReached, location.pathname, requireAdmin, requiredRole]);
+  }, [user, profile, isLoading, loadingProgressTimeout, navLoopDetected, location.pathname, requireAdmin, requiredRole]);
   
-  // 1. Loading state - aguardar autenticação e perfil
-  if (isLoading && !timeoutReached) {
+  // 1. Loop de navegação detectado - redirecionar para área segura
+  if (navLoopDetected) {
+    logger.error('[PROTECTED] Redirecionando devido a loop de navegação');
+    return <Navigate to="/dashboard" replace />;
+  }
+  
+  // 2. Loading state - aguardar autenticação e perfil com timeout progressivo
+  if (isLoading && !loadingProgressTimeout) {
     return <LoadingScreen message="Verificando sua autenticação..." />;
   }
 
-  // 2. Não autenticado - redirecionar para login
+  // 3. Não autenticado - redirecionar para login
   if (!user) {
     logger.info('[PROTECTED] Usuário não autenticado, redirecionando para login', {
       from: location.pathname
@@ -68,25 +114,28 @@ const ProtectedRoute = ({
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  // 3. Timeout ou sem perfil - mostrar erro e redirecionar
-  if (timeoutReached || (!profile && !isLoading)) {
-    logger.error('[PROTECTED] Perfil não disponível após timeout', {
+  // 4. Loading prolongado mas ainda válido - mostrar mensagem diferente
+  if (isLoading && loadingProgressTimeout && user) {
+    return <LoadingScreen message="Carregando configurações da conta..." />;
+  }
+
+  // 5. Sem perfil após loading completo - criar perfil ou mostrar erro
+  if (!profile && !isLoading) {
+    logger.warn('[PROTECTED] Perfil não encontrado após loading completo', {
       userId: user.id,
-      email: user.email,
-      timeoutReached,
-      hasProfile: !!profile
+      email: user.email
     });
     
-    if (!redirectDelay) {
-      toast.error("Erro na configuração da conta. Redirecionando...");
-      setRedirectDelay(true);
-      
+    // Tentar recarregar página uma vez se ainda não foi tentado
+    if (!loadingProgressTimeout) {
+      setLoadingProgressTimeout(true);
       setTimeout(() => {
-        window.location.href = '/login';
-      }, 2000);
+        window.location.reload();
+      }, 1000);
+      return <LoadingScreen message="Recarregando configurações..." />;
     }
     
-    return <LoadingScreen message="Erro na configuração da conta..." />;
+    return <LoadingScreen message="Configurando sua conta..." />;
   }
 
   // 4. Verificação de onboarding - simplificada

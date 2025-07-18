@@ -7,17 +7,32 @@ import { formacaoRoutes } from './FormacaoRoutes';
 import { certificateRoutes } from './CertificateRoutes';
 import { CommunityRedirects } from '@/components/routing/CommunityRedirects';
 import { useNavigationGuard } from '@/hooks/useNavigationGuard';
+import { useAdvancedNavigationGuard } from '@/hooks/useAdvancedNavigationGuard';
+import { useAuthStateMonitor } from '@/hooks/useAuthStateMonitor';
 import NotFound from '@/pages/NotFound';
 import InvitePage from '@/pages/InvitePage';
 
 const AppRoutes = () => {
   const location = useLocation();
   const { currentPath } = useNavigationGuard();
+  const { navigateToSafeRoute, safeNavigate, isCircuitBreakerOpen, navigationHealth } = useAdvancedNavigationGuard();
+  const { getDebugInfo, detectPerformanceIssues } = useAuthStateMonitor();
+  
+  const perfIssues = detectPerformanceIssues();
   
   console.log("AppRoutes: Navegação para rota:", currentPath, {
     search: location.search,
-    state: location.state
+    state: location.state,
+    circuitBreakerOpen: isCircuitBreakerOpen,
+    navigationHealth,
+    authDebug: getDebugInfo(),
+    performanceIssues: perfIssues
   });
+  
+  // Se há muitos problemas de performance, usar navegação segura
+  if (perfIssues.length > 2) {
+    console.warn("AppRoutes: Muitos problemas detectados, usando navegação segura");
+  }
   
   // Verificar se estamos em uma rota de comunidade para evitar renderizar CommunityRedirects
   // Ou em uma rota de autenticação/convite onde não precisamos do redirecionamento
@@ -62,8 +77,14 @@ const AppRoutes = () => {
           <Route key={route.path} path={route.path} element={route.element} />
         ))}
         
-        {/* Fallback route */}
-        <Route path="*" element={<NotFound />} />
+        {/* Fallback route - navegação inteligente */}
+        <Route path="*" element={
+          isCircuitBreakerOpen ? (
+            <Navigate to="/" replace />
+          ) : (
+            <NotFound />
+          )
+        } />
       </Routes>
     </>
   );

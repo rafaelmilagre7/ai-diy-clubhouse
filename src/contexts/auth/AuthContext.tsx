@@ -1,8 +1,8 @@
 
-import React, { createContext, useContext, useEffect, useState, ReactNode, useCallback } from 'react';
+import React, { createContext, useContext, useEffect, useState, ReactNode, useCallback, useRef } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase, UserProfile } from '@/lib/supabase';
-import { fetchUserProfile, createUserProfileIfNeeded } from './utils/profileUtils';
+import { fetchUserProfile, createUserProfileIfNeeded, clearProfileCache } from './utils/profileUtils/userProfileFunctions';
 import { AuthContextType } from './types';
 import { logger } from '@/utils/logger';
 
@@ -26,10 +26,19 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [authError, setAuthError] = useState<Error | null>(null);
+  
+  // Refs para controle de estado e prevenção de loops
+  const isMounted = useRef(true);
+  const profileLoadPromise = useRef<Promise<void> | null>(null);
+  const retryCount = useRef(0);
+  const maxRetries = 3;
 
   const signIn = useCallback(async (email: string, password: string) => {
     try {
       setIsLoading(true);
+      setAuthError(null);
+      retryCount.current = 0;
+      
       logger.info('[AUTH] Iniciando login...', { email });
 
       const { error } = await supabase.auth.signInWithPassword({ 
@@ -43,7 +52,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         return { error };
       }
       
-      setAuthError(null);
+      // Limpar cache de perfil para garantir dados fresh
+      clearProfileCache();
+      
       logger.info('[AUTH] Login realizado com sucesso', { email });
       return {};
     } catch (error) {
@@ -51,9 +62,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       logger.error('[AUTH] Erro inesperado no login:', authError);
       setAuthError(authError);
       return { error: authError };
-    } finally {
-      setIsLoading(false);
     }
+    // Loading será controlado pelo onAuthStateChange
   }, []);
 
   const signInAsMember = async (email: string, password: string) => {
@@ -74,6 +84,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setSession(null);
       setProfile(null);
       setAuthError(null);
+      
+      // Limpar cache
+      clearProfileCache();
+      retryCount.current = 0;
 
       // Fazer logout no Supabase
       const { error } = await supabase.auth.signOut({ scope: 'global' });
@@ -94,31 +108,86 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   }, []);
 
-  const loadUserProfile = useCallback(async (userId: string) => {
-    try {
-      logger.info('[AUTH] Carregando perfil do usuário...', { userId });
-      
-      const userProfile = await fetchUserProfile(userId);
-      
-      if (userProfile) {
-        logger.info('[AUTH] Perfil carregado com sucesso', { 
-          userId, 
-          profileId: userProfile.id,
-          role: userProfile.user_roles?.name 
-        });
-        setProfile(userProfile);
-      } else {
-        logger.warn('[AUTH] Perfil não encontrado', { userId });
-        setProfile(null);
-      }
-    } catch (error) {
-      logger.error('[AUTH] Erro ao carregar perfil:', error);
-      setProfile(null);
+  const loadUserProfile = useCallback(async (userId: string): Promise<void> => {
+    // Evitar múltiplas chamadas simultâneas
+    if (profileLoadPromise.current) {
+      return profileLoadPromise.current;
     }
+
+    profileLoadPromise.current = (async () => {
+      try {
+        if (!isMounted.current) return;
+        
+        logger.info('[AUTH] Carregando perfil do usuário...', { 
+          userId, 
+          retry: retryCount.current 
+        });
+        
+        const userProfile = await fetchUserProfile(userId);
+        
+        if (!isMounted.current) return;
+        
+        if (userProfile) {
+          logger.info('[AUTH] Perfil carregado com sucesso', { 
+            userId, 
+            profileId: userProfile.id,
+            role: userProfile.user_roles?.name 
+          });
+          setProfile(userProfile);
+          retryCount.current = 0;
+        } else {
+          logger.warn('[AUTH] Perfil não encontrado', { userId, retry: retryCount.current });
+          
+          // Retry com backoff exponencial
+          if (retryCount.current < maxRetries) {
+            retryCount.current++;
+            const delay = Math.pow(2, retryCount.current) * 1000; // 2s, 4s, 8s
+            
+            logger.info('[AUTH] Reagendando busca de perfil', { 
+              userId, 
+              retry: retryCount.current,
+              delay 
+            });
+            
+            setTimeout(() => {
+              if (isMounted.current) {
+                profileLoadPromise.current = null;
+                loadUserProfile(userId);
+              }
+            }, delay);
+          } else {
+            logger.error('[AUTH] Máximo de tentativas excedido para carregamento de perfil', { userId });
+            setProfile(null);
+          }
+        }
+      } catch (error) {
+        if (!isMounted.current) return;
+        
+        logger.error('[AUTH] Erro ao carregar perfil:', { userId, error, retry: retryCount.current });
+        
+        if (retryCount.current < maxRetries) {
+          retryCount.current++;
+          const delay = Math.pow(2, retryCount.current) * 1000;
+          
+          setTimeout(() => {
+            if (isMounted.current) {
+              profileLoadPromise.current = null;
+              loadUserProfile(userId);
+            }
+          }, delay);
+        } else {
+          setProfile(null);
+        }
+      } finally {
+        profileLoadPromise.current = null;
+      }
+    })();
+
+    return profileLoadPromise.current;
   }, []);
 
   useEffect(() => {
-    let mounted = true;
+    isMounted.current = true;
 
     const initializeAuth = async () => {
       try {
@@ -126,8 +195,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
         // 1. Configurar listener de mudanças de auth
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
-          async (event, session) => {
-            if (!mounted) return;
+          (event, session) => {
+            if (!isMounted.current) return;
 
             logger.info('[AUTH] Estado de autenticação mudou', { 
               event, 
@@ -138,27 +207,42 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             // Atualizar session e user de forma síncrona
             setSession(session);
             setUser(session?.user || null);
+            setAuthError(null);
 
             // Buscar perfil de forma assíncrona apenas para SIGNED_IN
             if (event === 'SIGNED_IN' && session?.user?.id) {
-              setTimeout(async () => {
-                if (!mounted) return;
-                try {
-                  await loadUserProfile(session.user.id);
-                  if (mounted) {
-                    setIsLoading(false);
-                  }
-                } catch (error) {
-                  logger.error('[AUTH] Erro ao carregar perfil após login:', error);
-                  if (mounted) {
-                    setProfile(null);
-                    setIsLoading(false);
-                  }
-                }
-              }, 100);
+              // Usar setTimeout(0) para evitar deadlock
+              setTimeout(() => {
+                if (!isMounted.current) return;
+                
+                loadUserProfile(session.user.id)
+                  .then(() => {
+                    if (isMounted.current) {
+                      setIsLoading(false);
+                    }
+                  })
+                  .catch((error) => {
+                    logger.error('[AUTH] Erro ao carregar perfil após login:', error);
+                    if (isMounted.current) {
+                      setProfile(null);
+                      setIsLoading(false);
+                    }
+                  });
+              }, 0);
             } else if (event === 'SIGNED_OUT') {
               setProfile(null);
               setIsLoading(false);
+              clearProfileCache();
+              retryCount.current = 0;
+            } else if (event === 'TOKEN_REFRESHED') {
+              logger.info('[AUTH] Token refreshed, verificando se precisa recarregar perfil');
+              if (session?.user?.id && !profile) {
+                setTimeout(() => {
+                  if (isMounted.current) {
+                    loadUserProfile(session.user.id);
+                  }
+                }, 0);
+              }
             }
           }
         );
@@ -166,7 +250,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         // 2. Verificar sessão existente
         const { data: { session: currentSession } } = await supabase.auth.getSession();
         
-        if (!mounted) return;
+        if (!isMounted.current) return;
 
         if (currentSession?.user?.id) {
           logger.info('[AUTH] Sessão existente encontrada', { 
@@ -181,7 +265,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             await loadUserProfile(currentSession.user.id);
           } catch (error) {
             logger.error('[AUTH] Erro ao carregar perfil da sessão existente:', error);
-            if (mounted) {
+            if (isMounted.current) {
               setProfile(null);
             }
           }
@@ -189,7 +273,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           logger.info('[AUTH] Nenhuma sessão ativa encontrada');
         }
 
-        if (mounted) {
+        if (isMounted.current) {
           setIsLoading(false);
         }
 
@@ -198,7 +282,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         };
       } catch (error) {
         logger.error('[AUTH] Erro na inicialização:', error);
-        if (mounted) {
+        if (isMounted.current) {
           setIsLoading(false);
         }
       }
@@ -207,7 +291,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     initializeAuth();
 
     return () => {
-      mounted = false;
+      isMounted.current = false;
+      clearProfileCache();
     };
   }, [loadUserProfile]);
 

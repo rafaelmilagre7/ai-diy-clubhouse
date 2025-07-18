@@ -2139,6 +2139,36 @@ export type Database = {
           },
         ]
       }
+      navigation_events: {
+        Row: {
+          id: string
+          ip_address: string | null
+          path: string
+          session_id: string | null
+          timestamp: string
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          id?: string
+          ip_address?: string | null
+          path: string
+          session_id?: string | null
+          timestamp?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          id?: string
+          ip_address?: string | null
+          path?: string
+          session_id?: string | null
+          timestamp?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       network_connections: {
         Row: {
           created_at: string
@@ -2795,6 +2825,27 @@ export type Database = {
           id?: string
           name?: string
           updated_at?: string | null
+        }
+        Relationships: []
+      }
+      profile_cache: {
+        Row: {
+          cached_at: string
+          expires_at: string
+          profile_data: Json
+          user_id: string
+        }
+        Insert: {
+          cached_at?: string
+          expires_at?: string
+          profile_data: Json
+          user_id: string
+        }
+        Update: {
+          cached_at?: string
+          expires_at?: string
+          profile_data?: Json
+          user_id?: string
         }
         Relationships: []
       }
@@ -4943,6 +4994,10 @@ export type Database = {
         Args: { p_user_id: string; p_ip_address: string }
         Returns: boolean
       }
+      detect_navigation_loop: {
+        Args: { p_user_id: string; p_path: string; p_session_id?: string }
+        Returns: Json
+      }
       diagnose_auth_state: {
         Args: { target_user_id?: string }
         Returns: Json
@@ -5070,6 +5125,10 @@ export type Database = {
           logo_url: string
           status: boolean
         }[]
+      }
+      get_cached_profile: {
+        Args: { target_user_id: string }
+        Returns: Json
       }
       get_courses_with_stats: {
         Args: Record<PropertyKey, never>
@@ -5235,6 +5294,19 @@ export type Database = {
       get_user_permissions: {
         Args: { user_id: string }
         Returns: Json
+      }
+      get_user_profile_optimized: {
+        Args: { target_user_id: string }
+        Returns: {
+          id: string
+          email: string
+          name: string
+          role_id: string
+          role_name: string
+          onboarding_completed: boolean
+          created_at: string
+          updated_at: string
+        }[]
       }
       get_user_profile_safe: {
         Args: { target_user_id: string }
