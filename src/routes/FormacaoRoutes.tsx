@@ -1,15 +1,15 @@
 
-import { Route } from 'react-router-dom';
+import { RouteObject } from "react-router-dom";
 import ProtectedRoute from '@/components/routing/ProtectedRoute';
 import FormacaoLayout from '@/components/layout/formacao/FormacaoLayout';
 
-// Formação Pages - usando páginas administrativas existentes como base
+// Formação Pages
 import FormacaoDashboard from '@/pages/formacao/FormacaoDashboard';
 import AdminRoles from '@/pages/admin/AdminRoles';
 import AdminEvents from '@/pages/admin/AdminEvents';
 import AdminSolutions from '@/pages/admin/AdminSolutions';
 
-export const formacaoRoutes = [
+export const formacaoRoutes: RouteObject[] = [
   {
     path: "/formacao",
     element: (

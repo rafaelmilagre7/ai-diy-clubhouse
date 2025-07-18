@@ -14,7 +14,7 @@ const AppRoutes = () => {
   const location = useLocation();
   const { currentPath } = useNavigationGuard();
   
-  // Log simplificado sem debug excessivo
+  // Log simplificado
   console.log("AppRoutes: Rota atual:", currentPath);
   
   // Verificar se estamos em uma rota que não precisa de redirecionamentos
@@ -23,6 +23,17 @@ const AppRoutes = () => {
     location.pathname.startsWith('/login') ||
     location.pathname.startsWith('/auth') ||
     location.pathname.startsWith('/convite');
+  
+  // Função helper para renderizar rotas de forma consistente
+  const renderRoutes = (routes: any[]) => {
+    return routes.map((route) => (
+      <Route key={route.path} path={route.path} element={route.element}>
+        {route.children?.map((child: any) => (
+          <Route key={child.path} path={child.path} element={child.element} />
+        ))}
+      </Route>
+    ));
+  };
   
   return (
     <>
@@ -35,33 +46,19 @@ const AppRoutes = () => {
         <Route path="/convite" element={<InvitePage />} />
         
         {/* Certificate Routes - Públicas */}
-        {certificateRoutes.map((route) => (
-          <Route key={route.path} path={route.path} element={route.element} />
-        ))}
+        {renderRoutes(certificateRoutes)}
         
         {/* Auth Routes */}
-        {authRoutes.map((route) => (
-          <Route key={route.path} path={route.path} element={route.element} />
-        ))}
+        {renderRoutes(authRoutes)}
         
         {/* Member Routes */}
-        {memberRoutes.map((route) => (
-          <Route key={route.path} path={route.path} element={route.element}>
-            {route.children?.map((child) => (
-              <Route key={child.path} path={child.path} element={child.element} />
-            ))}
-          </Route>
-        ))}
+        {renderRoutes(memberRoutes)}
         
         {/* Admin Routes */}
-        {adminRoutes.map((route) => (
-          <Route key={route.path} path={route.path} element={route.element} />
-        ))}
+        {renderRoutes(adminRoutes)}
         
         {/* Formação Routes */}
-        {formacaoRoutes.map((route) => (
-          <Route key={route.path} path={route.path} element={route.element} />
-        ))}
+        {renderRoutes(formacaoRoutes)}
         
         {/* Fallback route */}
         <Route path="*" element={<NotFound />} />

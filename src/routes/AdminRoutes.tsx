@@ -1,9 +1,9 @@
 
-import { Route } from 'react-router-dom';
+import { RouteObject } from "react-router-dom";
 import ProtectedRoute from '@/components/routing/ProtectedRoute';
 import AdminLayout from '@/components/layout/admin/AdminLayout';
 
-// Admin Pages - corrigindo imports para os arquivos corretos
+// Admin Pages
 import AdminDashboard from '@/pages/admin/AdminDashboard';
 import AdminAnalytics from '@/pages/admin/AdminAnalytics';
 import InvitesManagement from '@/pages/admin/invites/InvitesManagement';
@@ -14,7 +14,7 @@ import AdminTools from '@/pages/admin/AdminTools';
 import AdminToolEdit from '@/pages/admin/AdminToolEdit';
 import SupabaseDiagnostics from '@/pages/admin/SupabaseDiagnostics';
 
-export const adminRoutes = [
+export const adminRoutes: RouteObject[] = [
   {
     path: "/admin",
     element: (

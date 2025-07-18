@@ -28,9 +28,15 @@ export const memberRoutes: RouteObject[] = [
       // Redirecionar /solutions para dashboard onde as soluções são exibidas
       { path: "/solutions", element: <Navigate to="/dashboard" replace /> },
       
-      // Redirecionamento para rotas antigas/removidas
+      // Redirecionamentos para rotas antigas/removidas
       { path: "/trilha-implementacao", element: <Navigate to="/dashboard" replace /> },
       { path: "/learning", element: <Navigate to="/dashboard" replace /> },
+      { path: "/forum", element: <Navigate to="/dashboard" replace /> },
+      { path: "/forum/*", element: <Navigate to="/dashboard" replace /> },
+      { path: "/comunidade", element: <Navigate to="/dashboard" replace /> },
+      { path: "/comunidade/*", element: <Navigate to="/dashboard" replace /> },
+      { path: "/profile", element: <Navigate to="/dashboard" replace /> },
+      { path: "/settings", element: <Navigate to="/dashboard" replace /> },
 
       // Soluções - rotas existentes
       { path: "/solutions/:id", element: <SolutionDetails /> },
