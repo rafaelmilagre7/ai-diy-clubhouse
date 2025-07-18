@@ -138,25 +138,14 @@ const ProtectedRoute = ({
     return <LoadingScreen message="Configurando sua conta..." />;
   }
 
-  // 4. Verificação de onboarding - simplificada
+  // 4. Onboarding - permitir acesso livre (lógica centralizada em OnboardingNewPage)
   const isOnboardingRoute = location.pathname.startsWith('/onboarding');
-  
-  if (!hasCompletedOnboarding && !isOnboardingRoute) {
-    logger.info('[PROTECTED] Usuário precisa completar onboarding', {
-      userId: user.id,
-      currentPath: location.pathname
-    });
-    return <Navigate to="/onboarding" replace />;
-  }
-
-  // Evitar redirect loop do onboarding
-  if (hasCompletedOnboarding && isOnboardingRoute) {
-    logger.info('[PROTECTED] Usuário já completou onboarding, redirecionando', {
-      userId: user.id,
-      from: location.pathname
-    });
-    return <Navigate to="/dashboard" replace />;
-  }
+  logger.debug('[PROTECTED] Permitindo acesso livre ao onboarding', {
+    userId: user.id,
+    pathname: location.pathname,
+    isOnboardingRoute,
+    hasCompletedOnboarding
+  });
   
   // Verificar se requer admin e usuário não é admin
   if ((requiredRole === 'admin' || requireAdmin) && !isAdmin) {

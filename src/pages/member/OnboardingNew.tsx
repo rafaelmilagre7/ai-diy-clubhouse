@@ -23,18 +23,20 @@ const OnboardingNewPage = () => {
     return <Navigate to="/login" replace />;
   }
 
-  // 🎯 VERIFICAR SE É REGISTRO RECENTE (PRIORIDADE) OU USUÁRIO NOVO
+  // 🎯 PERMITIR ONBOARDING SEMPRE (usuário pode querer refazer)
   const registroRecente = sessionStorage.getItem('registro_recente') === 'true';
   const isNewUser = profile.created_at && new Date(profile.created_at) > new Date('2025-07-16');
   
-  // 🎯 PERMITIR ONBOARDING SE: registro recente OU usuário novo que não completou
-  const shouldShowOnboarding = registroRecente || (isNewUser && !profile.onboarding_completed);
+  console.log('[ONBOARDING] Verificando acesso', {
+    userId: user.id,
+    registroRecente,
+    isNewUser,
+    onboardingCompleted: profile.onboarding_completed,
+    profileCreated: profile.created_at
+  });
   
-  // Usuário legacy ou que já completou - redirecionar para dashboard
-  if (!shouldShowOnboarding) {
-    const roleName = profile.user_roles?.name;
-    return <Navigate to={roleName === 'formacao' ? '/formacao' : '/dashboard'} replace />;
-  }
+  // ✅ PERMITIR ACESSO SEMPRE - usuário pode querer rever onboarding
+  // Apenas mostrar aviso se já completou e não é registro recente
 
   // Tudo ok - renderizar onboarding para usuário novo
   return <SimpleOnboardingWizard />;
