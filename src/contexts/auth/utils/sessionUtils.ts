@@ -31,8 +31,16 @@ export const signOutUser = async (): Promise<void> => {
     // 3. Aguardar um pouco para garantir limpeza
     await new Promise(resolve => setTimeout(resolve, 200));
     
-    // 4. Redirecionar para login
-    window.location.href = '/login';
+    // CORREÇÃO FASE 2: Usar navegação programática mais suave
+    // 4. Tentar navegação programática primeiro
+    try {
+      window.history.pushState({}, '', '/login');
+      // Trigger re-render da aplicação
+      window.dispatchEvent(new PopStateEvent('popstate'));
+    } catch {
+      // Fallback apenas se necessário
+      window.location.href = '/login';
+    }
     
     toast({
       title: 'Logout realizado',
