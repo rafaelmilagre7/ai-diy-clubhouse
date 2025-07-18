@@ -35,11 +35,25 @@ const AuthLayout = () => {
   useEffect(() => {
     const checkAuth = async () => {
       try {
+        // 🎯 LIMPAR QUALQUER REDIRECIONAMENTO INVÁLIDO DO SESSIONSTORAGE
+        try {
+          const invalidKeys = ['redirectTo', 'redirect_path', 'last_route'];
+          invalidKeys.forEach(key => {
+            const value = sessionStorage.getItem(key);
+            if (value && (value.includes('/83') || value === '83' || !value.startsWith('/'))) {
+              console.warn(`[AUTH-LAYOUT] Removendo redirecionamento inválido: ${key}=${value}`);
+              sessionStorage.removeItem(key);
+            }
+          });
+        } catch (storageError) {
+          console.warn('[AUTH-LAYOUT] Erro ao limpar storage:', storageError);
+        }
+
         const { data: { session } } = await supabase.auth.getSession();
         if (session?.user) {
           setLocalUser(session.user);
           console.log("[AUTH-LAYOUT] Usuário já autenticado, aguardando contexto de auth para redirecionamento");
-          // Não redirecionar imediatamente - deixar o RootRedirect decidir
+          // Não redirecionar imediatamente - deixar o contexto de auth decidir
         }
       } catch (error) {
         console.error("[AUTH-LAYOUT] Erro ao verificar autenticação:", error);
@@ -54,8 +68,21 @@ const AuthLayout = () => {
   // Monitorar quando o contexto de auth reconhece o usuário logado
   useEffect(() => {
     if (authUser && !isCheckingAuth) {
-      console.log("[AUTH-LAYOUT] Usuário autenticado pelo contexto, redirecionando para /");
-      navigate('/', { replace: true });
+      console.log("[AUTH-LAYOUT] Usuário autenticado pelo contexto, redirecionando para /dashboard");
+      
+      // 🎯 LIMPAR QUALQUER ESTADO DE REDIRECIONAMENTO INVÁLIDO ANTES DO REDIRECT
+      try {
+        const currentUrl = window.location.pathname;
+        if (currentUrl.includes('/83') || currentUrl === '/83') {
+          console.warn('[AUTH-LAYOUT] URL inválida detectada, corrigindo para /dashboard');
+          window.history.replaceState(null, '', '/dashboard');
+        }
+      } catch (error) {
+        console.warn('[AUTH-LAYOUT] Erro ao corrigir URL:', error);
+      }
+      
+      // 🎯 CORREÇÃO: Redirecionar diretamente para /dashboard ao invés de /
+      navigate('/dashboard', { replace: true });
     }
   }, [authUser, isCheckingAuth, navigate]);
 
@@ -89,11 +116,11 @@ const AuthLayout = () => {
         console.log("[AUTH-LAYOUT] Login bem-sucedido:", data.user.email);
         toast({
           title: "Login realizado com sucesso",
-          description: "Redirecionando...",
+          description: "Redirecionando para dashboard...",
         });
         
         // Aguardar o contexto de auth processar e redirecionar automaticamente
-        console.log("[AUTH-LAYOUT] Login bem-sucedido, aguardando redirecionamento automático...");
+        console.log("[AUTH-LAYOUT] Login bem-sucedido, aguardando redirecionamento automático para /dashboard");
       }
       
     } catch (error: any) {
