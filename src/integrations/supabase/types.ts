@@ -5013,6 +5013,16 @@ export type Database = {
         Args: { p_user_id?: string; p_days?: number }
         Returns: Json
       }
+      get_standardized_buckets: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          bucket_id: string
+          bucket_name: string
+          created_at: string
+          updated_at: string
+          public: boolean
+        }[]
+      }
       get_stats_overview: {
         Args: Record<PropertyKey, never>
         Returns: Json
@@ -5280,6 +5290,17 @@ export type Database = {
         Args: { attempted_action: string; resource_details?: Json }
         Returns: undefined
       }
+      log_upload_activity: {
+        Args: {
+          p_bucket_name: string
+          p_file_path: string
+          p_file_size: number
+          p_file_type: string
+          p_success: boolean
+          p_error_message?: string
+        }
+        Returns: undefined
+      }
       log_user_action: {
         Args: { user_id: string; action_type: string; details?: Json }
         Returns: undefined
@@ -5429,6 +5450,10 @@ export type Database = {
       validate_admin_access: {
         Args: { user_id: string }
         Returns: Json
+      }
+      validate_bucket_name: {
+        Args: { bucket_name: string }
+        Returns: boolean
       }
       validate_certificate_code: {
         Args: { p_validation_code: string }

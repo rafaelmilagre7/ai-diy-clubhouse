@@ -1,18 +1,36 @@
 
 import { supabase } from "@/lib/supabase";
 
+// SERVIÇO UNIFICADO - Usar uploadFileToStorage como padrão
 export const uploadFileToSupabase = async (
   file: File,
   bucketName: string = 'profile_images',
   folderPath: string = '',
   onProgressUpdate?: (progress: number) => void
 ) => {
+  // Importar dinamicamente para evitar circular dependency
+  const { uploadFileToStorage } = await import('../uploadUtils');
+  
   try {
-    console.log('📤 [PROFILE_UPLOAD] Iniciando upload de perfil:', { fileName: file.name, bucketName, folderPath });
+    console.log('🔄 [UNIFIED_UPLOAD] Redirecionando para serviço principal...');
     
-    // Normalizar bucket name (remover hífens)
+    const result = await uploadFileToStorage(
+      file,
+      bucketName,
+      folderPath,
+      onProgressUpdate
+    );
+    
+    return {
+      publicUrl: result.publicUrl,
+      fileName: result.fileName
+    };
+  } catch (error: any) {
+    console.error('❌ [UNIFIED_UPLOAD] Fallback para método legado...');
+    
+    // FALLBACK: Método original se o principal falhar
     const normalizedBucket = bucketName.replace(/-/g, '_').toLowerCase();
-    console.log('🔧 [PROFILE_UPLOAD] Bucket normalizado:', { original: bucketName, normalized: normalizedBucket });
+    console.log('🔧 [FALLBACK_UPLOAD] Bucket normalizado:', { original: bucketName, normalized: normalizedBucket });
 
     const timestamp = new Date().getTime();
     const sanitizedFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
@@ -22,7 +40,6 @@ export const uploadFileToSupabase = async (
 
     if (onProgressUpdate) onProgressUpdate(10);
 
-    // Upload direto usando bucket normalizado
     const { data, error } = await supabase.storage
       .from(normalizedBucket)
       .upload(filePath, file, {
@@ -32,27 +49,24 @@ export const uploadFileToSupabase = async (
       });
 
     if (error) {
-      console.error('❌ [PROFILE_UPLOAD] Erro no upload:', error);
+      console.error('❌ [FALLBACK_UPLOAD] Erro no upload:', error);
       throw new Error(`Falha no upload: ${error.message}`);
     }
 
-    console.log('✅ [PROFILE_UPLOAD] Upload realizado com sucesso:', data);
+    console.log('✅ [FALLBACK_UPLOAD] Upload realizado com sucesso:', data);
     if (onProgressUpdate) onProgressUpdate(80);
 
     const { data: { publicUrl } } = supabase.storage
       .from(normalizedBucket)
       .getPublicUrl(data.path);
 
-    console.log('🔗 [PROFILE_UPLOAD] URL pública gerada:', publicUrl);
+    console.log('🔗 [FALLBACK_UPLOAD] URL pública gerada:', publicUrl);
     if (onProgressUpdate) onProgressUpdate(100);
 
     return {
       publicUrl,
       fileName: file.name
     };
-  } catch (error: any) {
-    console.error('❌ [PROFILE_UPLOAD] Erro completo:', error);
-    throw new Error(error.message || 'Erro no upload da imagem de perfil');
   }
 };
 

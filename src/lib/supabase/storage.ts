@@ -94,49 +94,95 @@ export const ensureBucketExists = async (bucketName: string): Promise<boolean> =
 };
 
 /**
- * Extrai informações de um vídeo do Panda Video
+ * Extrai informações de um vídeo do Panda Video com regex robusta
  * 
  * Aceita um código de incorporação HTML (iframe) ou um objeto com os dados do vídeo
+ * Suporta múltiplos formatos de URL do Panda Video
  */
 export const extractPandaVideoInfo = (data: any): { videoId: string; url: string; thumbnailUrl: string } => {
+  const requestId = `panda_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`;
+  
   // Se recebermos uma string (código iframe), extrair informações do código HTML
   if (typeof data === 'string') {
     try {
-      // Extrair src do iframe
-      const srcMatch = data.match(/src=["'](https:\/\/[^"']+)["']/i);
-      if (!srcMatch || !srcMatch[1]) {
-        throw new Error('URL não encontrada no iframe');
-      }
+      console.log(`🐼 [${requestId}] Processando iframe do Panda Video:`, data.substring(0, 100) + '...');
       
-      const iframeSrc = srcMatch[1];
-      let videoId = '';
-      let thumbnailUrl = '';
+      // Extrair src do iframe com regex mais robusta
+      const srcPatterns = [
+        /src=["'](https:\/\/[^"']+)["']/i,           // Formato padrão
+        /src=["']([^"']*pandavideo[^"']+)["']/i,     // Qualquer URL com pandavideo
+        /src=["']([^"']*player[^"']+)["']/i          // URLs com 'player'
+      ];
       
-      // Extrair videoId do URL
-      // Formato padrão: https://player-vz-d6ebf577-797.tv.pandavideo.com.br/embed/?v=VIDEO_ID
-      const videoIdMatch = iframeSrc.match(/embed\/\?v=([^&]+)/);
-      if (videoIdMatch && videoIdMatch[1]) {
-        videoId = videoIdMatch[1];
-      } else {
-        // Formato alternativo: https://player.pandavideo.com.br/embed/VIDEO_ID
-        const altMatch = iframeSrc.match(/\/embed\/([^/?]+)/);
-        if (altMatch && altMatch[1]) {
-          videoId = altMatch[1];
+      let iframeSrc = '';
+      for (const pattern of srcPatterns) {
+        const match = data.match(pattern);
+        if (match && match[1]) {
+          iframeSrc = match[1];
+          break;
         }
       }
       
-      // Se encontramos um ID de vídeo, podemos compor a URL da thumbnail
-      if (videoId) {
-        thumbnailUrl = `https://thumbs.pandavideo.com.br/${videoId}.jpg`;
+      if (!iframeSrc) {
+        console.warn(`⚠️ [${requestId}] URL não encontrada no iframe`);
+        throw new Error('URL não encontrada no iframe');
       }
       
-      return {
+      console.log(`🔗 [${requestId}] URL extraída:`, iframeSrc);
+      
+      let videoId = '';
+      
+      // Padrões de regex para extrair videoId - ROBUSTOS
+      const videoIdPatterns = [
+        // Formato 1: https://player-vz-d6ebf577-797.tv.pandavideo.com.br/embed/?v=VIDEO_ID
+        /embed\/\?v=([a-zA-Z0-9_-]+)/,
+        // Formato 2: https://player.pandavideo.com.br/embed/VIDEO_ID
+        /\/embed\/([a-zA-Z0-9_-]+)(?:[\/\?]|$)/,
+        // Formato 3: https://player-vz-*.tv.pandavideo.com.br/embed/?v=VIDEO_ID
+        /\.tv\.pandavideo\.com\.br\/embed\/\?v=([a-zA-Z0-9_-]+)/,
+        // Formato 4: URLs com parâmetro v em qualquer posição
+        /[?&]v=([a-zA-Z0-9_-]+)/,
+        // Formato 5: IDs diretos no final da URL
+        /pandavideo\.com\.br\/.*\/([a-zA-Z0-9_-]{10,})\/?$/
+      ];
+      
+      for (const pattern of videoIdPatterns) {
+        const match = iframeSrc.match(pattern);
+        if (match && match[1]) {
+          videoId = match[1];
+          console.log(`✅ [${requestId}] Video ID extraído:`, videoId);
+          break;
+        }
+      }
+      
+      if (!videoId) {
+        console.warn(`⚠️ [${requestId}] ID do vídeo não encontrado na URL:`, iframeSrc);
+      }
+      
+      // Gerar thumbnail URL (múltiplos formatos possíveis)
+      let thumbnailUrl = '';
+      if (videoId) {
+        // Tentar diferentes formatos de thumbnail
+        const thumbnailFormats = [
+          `https://thumbs.pandavideo.com.br/${videoId}.jpg`,
+          `https://thumbs.pandavideo.com.br/${videoId}/thumb.jpg`,
+          `https://storage.pandavideo.com.br/thumbs/${videoId}.jpg`
+        ];
+        thumbnailUrl = thumbnailFormats[0]; // Usar o primeiro como padrão
+        console.log(`🖼️ [${requestId}] Thumbnail URL gerada:`, thumbnailUrl);
+      }
+      
+      const result = {
         videoId,
         url: iframeSrc,
         thumbnailUrl
       };
+      
+      console.log(`🎉 [${requestId}] Extração concluída:`, result);
+      return result;
+      
     } catch (error) {
-      console.error('Erro ao extrair informações do iframe do Panda Video:', error);
+      console.error(`❌ [${requestId}] Erro ao extrair informações do iframe:`, error);
       return { videoId: '', url: '', thumbnailUrl: '' };
     }
   }
