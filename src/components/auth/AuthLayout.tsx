@@ -8,7 +8,6 @@ import { supabase } from "@/lib/supabase";
 import { toast } from "@/hooks/use-toast";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { useAuth } from "@/contexts/auth";
 import SignUpForm from "./SignUpForm";
 
 const AuthLayout = () => {
@@ -19,7 +18,9 @@ const AuthLayout = () => {
   const [isSignUp, setIsSignUp] = useState(false);
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { user: authUser } = useAuth();
+  
+  // CORREÇÃO: Usar estado local para controlar redirecionamento
+  const [shouldRedirect, setShouldRedirect] = useState(false);
 
   // Verificar se há token de convite na URL para mostrar registro
   useEffect(() => {
@@ -29,13 +30,43 @@ const AuthLayout = () => {
     }
   }, [searchParams]);
 
-  // Redirecionar se usuário já está autenticado
+  // Verificar autenticação apenas após o AuthProvider estar pronto
   useEffect(() => {
-    if (authUser) {
-      console.log("[AUTH-LAYOUT] Usuário autenticado, redirecionando para /");
+    let isMounted = true;
+    
+    const checkAuthStatus = async () => {
+      try {
+        // Aguardar um pouco para garantir que o AuthProvider foi inicializado
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
+        if (!isMounted) return;
+        
+        // Tentar obter a sessão diretamente do Supabase
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (session?.user && isMounted) {
+          console.log("[AUTH-LAYOUT] Usuário já autenticado, preparando redirecionamento");
+          setShouldRedirect(true);
+        }
+      } catch (error) {
+        console.warn("[AUTH-LAYOUT] Erro ao verificar autenticação:", error);
+      }
+    };
+
+    checkAuthStatus();
+    
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  // Redirecionar quando necessário
+  useEffect(() => {
+    if (shouldRedirect) {
+      console.log("[AUTH-LAYOUT] Redirecionando usuário autenticado para /");
       navigate('/', { replace: true });
     }
-  }, [authUser, navigate]);
+  }, [shouldRedirect, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
