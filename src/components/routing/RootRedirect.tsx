@@ -17,7 +17,7 @@ const RootRedirect = () => {
       timeoutRef.current = setTimeout(() => {
         console.warn("⏰ [ROOT-REDIRECT] Timeout de loading atingido - forçando redirecionamento");
         setTimeoutReached(true);
-      }, 5000); // 5 segundos máximo
+      }, 8000); // 8 segundos máximo para dar tempo suficiente
     } else {
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
@@ -65,7 +65,8 @@ const RootRedirect = () => {
     }
     
     console.error("💥 [ROOT-REDIRECT] ERRO: Usuário sem perfil após loading");
-    return <LoadingScreen message="Erro: Perfil não encontrado. Tente fazer login novamente." />;
+    // Em vez de erro, redirecionar para login para tentar novamente
+    return <Navigate to="/login" replace />;
   }
 
   // USUÁRIO LOGADO EM /login: Redirecionar para dashboard apropriado

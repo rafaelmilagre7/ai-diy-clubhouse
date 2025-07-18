@@ -8,6 +8,7 @@ import { supabase } from "@/lib/supabase";
 import { toast } from "@/hooks/use-toast";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import { useAuth } from "@/contexts/auth";
 import SignUpForm from "./SignUpForm";
 
 const AuthLayout = () => {
@@ -18,8 +19,9 @@ const AuthLayout = () => {
   const [isSignUp, setIsSignUp] = useState(false);
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const [user, setUser] = useState(null);
+  const [localUser, setLocalUser] = useState(null);
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+  const { user: authUser } = useAuth();
 
   // Verificar se há token de convite na URL para mostrar registro
   useEffect(() => {
@@ -35,9 +37,9 @@ const AuthLayout = () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
         if (session?.user) {
-          setUser(session.user);
-          console.log("[AUTH-LAYOUT] Usuário já autenticado, redirecionando para /");
-          navigate('/', { replace: true });
+          setLocalUser(session.user);
+          console.log("[AUTH-LAYOUT] Usuário já autenticado, aguardando contexto de auth para redirecionamento");
+          // Não redirecionar imediatamente - deixar o RootRedirect decidir
         }
       } catch (error) {
         console.error("[AUTH-LAYOUT] Erro ao verificar autenticação:", error);
@@ -48,6 +50,14 @@ const AuthLayout = () => {
 
     checkAuth();
   }, [navigate]);
+
+  // Monitorar quando o contexto de auth reconhece o usuário logado
+  useEffect(() => {
+    if (authUser && !isCheckingAuth) {
+      console.log("[AUTH-LAYOUT] Usuário autenticado pelo contexto, redirecionando para /");
+      navigate('/', { replace: true });
+    }
+  }, [authUser, isCheckingAuth, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -82,9 +92,8 @@ const AuthLayout = () => {
           description: "Redirecionando...",
         });
         
-        // Redirecionar para a raiz após login
-        console.log("[AUTH-LAYOUT] Redirecionando para /");
-        navigate('/', { replace: true });
+        // Aguardar o contexto de auth processar e redirecionar automaticamente
+        console.log("[AUTH-LAYOUT] Login bem-sucedido, aguardando redirecionamento automático...");
       }
       
     } catch (error: any) {

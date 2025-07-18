@@ -88,6 +88,47 @@ export const useAuthStateManager = ({
           throw new Error(`Usuário ${user.email} não possui perfil. Contate o administrador.`);
         }
         
+        // Se for erro de permissão, tentar abordagem alternativa
+        if (profileError.code === '42501') {
+          logger.warn('[AUTH-STATE] ⚠️ Erro de permissão detectado - tentando busca simples');
+          
+          try {
+            const { data: simpleProfile, error: simpleError } = await supabase
+              .from('profiles')
+              .select('*')
+              .eq('id', user.id)
+              .single();
+              
+            if (simpleError || !simpleProfile) {
+              throw new Error('Não foi possível acessar o perfil do usuário');
+            }
+            
+            // Criar perfil básico sem user_roles
+            const basicProfile = {
+              ...simpleProfile,
+              user_roles: { 
+                id: '', 
+                name: 'member', 
+                description: 'Membro padrão', 
+                permissions: {} 
+              }
+            } as UserProfile;
+            
+            logger.info('[AUTH-STATE] ✅ Perfil básico carregado sem user_roles');
+            setProfile(basicProfile);
+            
+            const roleName = basicProfile.user_roles?.name || 'member';
+            navigationCache.set(user.id, basicProfile, roleName as any);
+            
+            logger.info(`[AUTH-STATE] ✅ Setup completo (fallback) - Usuário: ${user.email} | Role: ${roleName}`);
+            return; // Sair da função aqui
+            
+          } catch (fallbackError) {
+            logger.error('[AUTH-STATE] ❌ Falha na busca alternativa:', fallbackError);
+            throw profileError; // Throw original error
+          }
+        }
+        
         throw profileError;
       }
 
