@@ -2,7 +2,7 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase, UserProfile } from '@/lib/supabase';
-import { fetchUserProfile } from './utils/profileUtils';
+import { fetchUserProfile, createUserProfileIfNeeded } from './utils/profileUtils';
 import { AuthContextType } from './types';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -67,13 +67,38 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
+  const loadUserProfile = async (userId: string) => {
+    try {
+      console.log(`[AUTH] Carregando perfil para usuário: ${userId}`);
+      
+      let userProfile = await fetchUserProfile(userId);
+      
+      // Se não encontrou perfil, tentar criar
+      if (!userProfile) {
+        console.log(`[AUTH] Perfil não encontrado, tentando criar para: ${userId}`);
+        userProfile = await createUserProfileIfNeeded(userId);
+      }
+
+      if (userProfile) {
+        console.log(`[AUTH] Perfil carregado com sucesso: ${userId}`);
+        setProfile(userProfile);
+      } else {
+        console.warn(`[AUTH] Não foi possível carregar/criar perfil para: ${userId}`);
+        setProfile(null);
+      }
+    } catch (error) {
+      console.error(`[AUTH] Erro ao carregar perfil para ${userId}:`, error);
+      setProfile(null);
+    }
+  };
+
   useEffect(() => {
     // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
       if (session?.user) {
-        fetchUserProfile(session.user.id).then(setProfile);
+        loadUserProfile(session.user.id);
       }
       setIsLoading(false);
     });
@@ -81,13 +106,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        console.log(`[AUTH] Auth state change: ${event}`);
         setSession(session);
         setUser(session?.user ?? null);
         
         if (session?.user) {
           // Defer profile fetching to prevent deadlock
           setTimeout(() => {
-            fetchUserProfile(session.user.id).then(setProfile);
+            loadUserProfile(session.user.id);
           }, 0);
         } else {
           setProfile(null);
