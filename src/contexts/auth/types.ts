@@ -19,4 +19,5 @@ export interface AuthContextType {
   setUser: React.Dispatch<React.SetStateAction<User | null>>;
   setProfile: React.Dispatch<React.SetStateAction<UserProfile | null>>;
   setIsLoading: React.Dispatch<React.SetStateAction<boolean>>;
+  forceReloadProfile: () => Promise<void>;
 }

@@ -108,6 +108,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   }, []);
 
+  // Função para forçar reload do perfil (limpar cache)
+  const forceReloadProfile = useCallback(async () => {
+    if (user?.id) {
+      logger.info('[AUTH] 🔄 FORCE RELOAD - Limpando cache e recarregando perfil');
+      clearProfileCache();
+      profileLoadPromise.current = null;
+      retryCount.current = 0;
+      await loadUserProfile(user.id);
+    }
+  }, [user?.id]);
+
   const loadUserProfile = useCallback(async (userId: string): Promise<void> => {
     // Evitar múltiplas chamadas simultâneas
     if (profileLoadPromise.current) {
@@ -118,7 +129,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       try {
         if (!isMounted.current) return;
         
-        logger.info('[AUTH] Carregando perfil do usuário...', { 
+        logger.info('[AUTH] 🔍 Carregando perfil do usuário...', { 
           userId, 
           retry: retryCount.current 
         });
@@ -317,6 +328,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setUser,
     setProfile,
     setIsLoading,
+    forceReloadProfile,
   };
 
   return (

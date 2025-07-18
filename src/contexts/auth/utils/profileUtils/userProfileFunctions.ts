@@ -9,14 +9,11 @@ const CACHE_DURATION = 5 * 60 * 1000; // 5 minutos
 
 export const fetchUserProfile = async (userId: string): Promise<UserProfile | null> => {
   try {
-    logger.info('[PROFILE] Iniciando busca de perfil', { userId });
+    logger.info('[PROFILE] 🔄 FORÇA RELOAD - Iniciando busca de perfil', { userId });
     
-    // Verificar cache local primeiro
-    const cached = profileCache.get(userId);
-    if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
-      logger.info('[PROFILE] Perfil encontrado no cache local', { userId });
-      return cached.profile;
-    }
+    // LIMPAR CACHE CORROMPIDO - ignorar cache local por enquanto
+    profileCache.clear();
+    logger.info('[PROFILE] 🧹 Cache local limpo - forçando dados frescos');
 
     // Tentar buscar do cache do banco primeiro
     const { data: cacheData } = await supabase.rpc('get_cached_profile', {
@@ -24,17 +21,29 @@ export const fetchUserProfile = async (userId: string): Promise<UserProfile | nu
     });
 
     if (cacheData) {
-      logger.info('[PROFILE] Perfil encontrado no cache do banco', { userId, cacheStructure: typeof cacheData });
+      logger.info('[PROFILE] Perfil encontrado no cache do banco (CORRIGIDO)', { 
+        userId, 
+        cacheStructure: typeof cacheData,
+        hasUserRoles: !!(cacheData as any)?.user_roles,
+        roleName: (cacheData as any)?.user_roles?.name 
+      });
+      
       const profile = cacheData as UserProfile;
       
-      // Verificar se tem estrutura correta de user_roles
-      if (!profile.user_roles && profile.role_id) {
-        logger.warn('[PROFILE] Cache sem user_roles, forçando busca direta', { userId, roleId: profile.role_id });
-        // Não usar cache, forçar busca direta para obter estrutura completa
-      } else {
+      // Verificar estrutura dos dados
+      if (profile.user_roles?.name) {
+        logger.info('[PROFILE] ✅ Estrutura correta com user_roles', { 
+          roleName: profile.user_roles.name,
+          name: profile.name 
+        });
         // Atualizar cache local
         profileCache.set(userId, { profile, timestamp: Date.now() });
         return profile;
+      } else {
+        logger.warn('[PROFILE] ⚠️ Ainda sem user_roles, forçando busca direta', { 
+          userId, 
+          roleId: profile.role_id 
+        });
       }
     }
 
