@@ -1,5 +1,5 @@
 
-import { RouteObject, Outlet } from "react-router-dom";
+import { RouteObject, Outlet, Navigate } from "react-router-dom";
 import ProtectedRoute from "@/components/routing/ProtectedRoute";
 import MemberLayout from "@/components/layout/MemberLayout";
 
@@ -24,6 +24,9 @@ export const memberRoutes: RouteObject[] = [
       // Dashboard principal
       { path: "/", element: <Dashboard /> },
       { path: "/dashboard", element: <Dashboard /> },
+      
+      // Redirecionar /solutions para dashboard onde as soluções são exibidas
+      { path: "/solutions", element: <Navigate to="/dashboard" replace /> },
 
       // Soluções - rotas existentes
       { path: "/solutions/:id", element: <SolutionDetails /> },
