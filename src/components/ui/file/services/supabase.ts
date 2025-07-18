@@ -1,7 +1,7 @@
 
 import { supabase } from "@/lib/supabase";
 
-// SERVIÇO UNIFICADO - Usar uploadFileToStorage como padrão
+// SERVIÇO UNIFICADO DE UPLOAD - Usar uploadFileToStorage como padrão
 export const uploadFileToSupabase = async (
   file: File,
   bucketName: string = 'profile_images',
