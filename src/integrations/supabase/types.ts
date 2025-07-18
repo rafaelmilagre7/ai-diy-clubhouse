@@ -348,13 +348,6 @@ export type Database = {
             foreignKeyName: "benefit_access_control_tool_id_fkey"
             columns: ["tool_id"]
             isOneToOne: false
-            referencedRelation: "benefits"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "benefit_access_control_tool_id_fkey"
-            columns: ["tool_id"]
-            isOneToOne: false
             referencedRelation: "tools"
             referencedColumns: ["id"]
           },
@@ -383,13 +376,6 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
-          {
-            foreignKeyName: "benefit_clicks_tool_id_fkey"
-            columns: ["tool_id"]
-            isOneToOne: false
-            referencedRelation: "benefits"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "benefit_clicks_tool_id_fkey"
             columns: ["tool_id"]
@@ -1701,13 +1687,6 @@ export type Database = {
             columns: ["lesson_id"]
             isOneToOne: false
             referencedRelation: "learning_lessons"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "learning_lesson_tools_tool_id_fkey"
-            columns: ["tool_id"]
-            isOneToOne: false
-            referencedRelation: "benefits"
             referencedColumns: ["id"]
           },
           {
@@ -3922,13 +3901,6 @@ export type Database = {
             referencedRelation: "suggestions"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "suggestion_votes_suggestion_id_fkey"
-            columns: ["suggestion_id"]
-            isOneToOne: false
-            referencedRelation: "suggestions_with_profiles"
-            referencedColumns: ["id"]
-          },
         ]
       }
       suggestions: {
@@ -4489,68 +4461,7 @@ export type Database = {
       }
     }
     Views: {
-      benefits: {
-        Row: {
-          benefit_badge_url: string | null
-          benefit_clicks: number | null
-          benefit_description: string | null
-          benefit_link: string | null
-          benefit_title: string | null
-          benefit_type: string | null
-          category: string | null
-          created_at: string | null
-          description: string | null
-          has_member_benefit: boolean | null
-          id: string | null
-          logo_url: string | null
-          name: string | null
-          official_url: string | null
-          status: boolean | null
-          tags: string[] | null
-          updated_at: string | null
-          video_tutorials: Json | null
-          video_type: string | null
-          video_url: string | null
-        }
-        Relationships: []
-      }
-      suggestions_with_profiles: {
-        Row: {
-          author_avatar: string | null
-          author_company: string | null
-          author_name: string | null
-          category_id: string | null
-          comment_count: number | null
-          created_at: string | null
-          description: string | null
-          downvotes: number | null
-          id: string | null
-          image_url: string | null
-          is_hidden: boolean | null
-          is_pinned: boolean | null
-          status: string | null
-          title: string | null
-          updated_at: string | null
-          upvotes: number | null
-          user_id: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "suggestions_category_id_fkey"
-            columns: ["category_id"]
-            isOneToOne: false
-            referencedRelation: "suggestion_categories"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "suggestions_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
+      [_ in never]: never
     }
     Functions: {
       accept_invite: {
@@ -4618,7 +4529,7 @@ export type Database = {
         Args:
           | { invite_token: string; user_email: string }
           | { p_user_id: string; p_token: string }
-        Returns: boolean
+        Returns: Json
       }
       change_user_role: {
         Args: { target_user_id: string; new_role_id: string }
@@ -4986,6 +4897,21 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: Json
       }
+      get_benefits_safe: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          id: string
+          name: string
+          description: string
+          category: string
+          benefit_type: string
+          benefit_title: string
+          benefit_description: string
+          benefit_link: string
+          logo_url: string
+          status: boolean
+        }[]
+      }
       get_courses_with_stats: {
         Args: Record<PropertyKey, never>
         Returns: {
@@ -5245,7 +5171,7 @@ export type Database = {
         Returns: boolean
       }
       is_user_admin: {
-        Args: { user_id?: string }
+        Args: { user_id: string }
         Returns: boolean
       }
       is_user_admin_enhanced: {
@@ -5594,6 +5520,10 @@ export type Database = {
               current_user_id?: string
             }
         Returns: boolean
+      }
+      validate_security_fixes: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
       }
       validate_solution_certificate: {
         Args: { p_validation_code: string }
