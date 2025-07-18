@@ -17,6 +17,12 @@ import CategoryView from '@/pages/member/forum/CategoryView';
 import Events from '@/pages/member/Events';
 import Profile from '@/pages/member/Profile';
 import Tools from '@/pages/member/Tools';
+import Benefits from '@/pages/member/Benefits';
+import Solutions from '@/pages/member/Solutions';
+import SuggestionsPage from '@/pages/member/Suggestions';
+import NewSuggestionPage from '@/pages/member/NewSuggestion';
+import SuggestionDetailsPage from '@/pages/member/SuggestionDetails';
+import CertificatesPage from '@/pages/member/learning/CertificatesPage';
 
 export const memberRoutes = [
   {
@@ -141,6 +147,89 @@ export const memberRoutes = [
       <ProtectedRoute>
         <Layout>
           <Tools />
+        </Layout>
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/solutions",
+    element: (
+      <ProtectedRoute>
+        <Layout>
+          <Solutions />
+        </Layout>
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/benefits",
+    element: (
+      <ProtectedRoute>
+        <Layout>
+          <Benefits />
+        </Layout>
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/suggestions",
+    element: (
+      <ProtectedRoute>
+        <Layout>
+          <SuggestionsPage />
+        </Layout>
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/suggestions/new",
+    element: (
+      <ProtectedRoute>
+        <Layout>
+          <NewSuggestionPage />
+        </Layout>
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/suggestions/:id",
+    element: (
+      <ProtectedRoute>
+        <Layout>
+          <SuggestionDetailsPage />
+        </Layout>
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/learning/certificates",
+    element: (
+      <ProtectedRoute>
+        <Layout>
+          <CertificatesPage />
+        </Layout>
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/trilha-implementacao",
+    element: (
+      <ProtectedRoute>
+        <Layout>
+          <div className="p-6">
+            <h1 className="text-2xl font-bold mb-4">Trilha de Implementação IA</h1>
+            <p className="text-muted-foreground">Esta funcionalidade estará disponível em breve.</p>
+          </div>
+        </Layout>
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/comunidade",
+    element: (
+      <ProtectedRoute>
+        <Layout>
+          <ForumHome />
         </Layout>
       </ProtectedRoute>
     ),
