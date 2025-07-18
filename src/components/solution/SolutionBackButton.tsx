@@ -8,8 +8,8 @@ export const SolutionBackButton = () => {
   const navigate = useNavigate();
   
   const handleBack = () => {
-    // Tentar navegar para a página de soluções, ou para o dashboard se algo der errado
-    navigate('/solutions', { replace: true });
+    // Voltar para o dashboard como página principal
+    navigate('/dashboard', { replace: true });
   };
   
   return (
@@ -20,7 +20,7 @@ export const SolutionBackButton = () => {
       onClick={handleBack}
     >
       <ChevronLeft className="mr-2 h-4 w-4" />
-      Voltar para Soluções
+      Voltar para Dashboard
     </Button>
   );
 };
