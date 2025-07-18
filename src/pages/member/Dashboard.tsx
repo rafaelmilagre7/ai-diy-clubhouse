@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useSolutionsData } from '@/hooks/useSolutionsData';
 import { useDashboardProgress } from '@/hooks/dashboard/useDashboardProgress';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
@@ -9,66 +9,62 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const [category, setCategory] = useState('all');
   
-  // Buscar dados das soluções
+  // Buscar dados das soluções - memoizado
+  const solutionsData = useSolutionsData();
   const { 
     solutions = [], 
     loading: solutionsLoading,
     canViewSolutions 
-  } = useSolutionsData();
+  } = solutionsData;
   
-  // Buscar progresso do usuário
+  // Buscar progresso do usuário - memoizado
+  const progressData = useDashboardProgress(solutions);
   const { 
     active: activeSolutions = [], 
     completed: completedSolutions = [],
     recommended: recommendedSolutions = [],
     loading: progressLoading 
-  } = useDashboardProgress(solutions);
+  } = progressData;
 
-  // Debug log para identificar o problema
-  useEffect(() => {
-    console.log('🎯 [DASHBOARD] Debug Estado:', {
-      solutionsCount: solutions.length,
-      activeCount: activeSolutions.length,
-      completedCount: completedSolutions.length,
-      recommendedCount: recommendedSolutions.length,
-      solutionsLoading,
-      progressLoading,
-      canViewSolutions
-    });
-  }, [solutions.length, activeSolutions.length, completedSolutions.length, recommendedSolutions.length, solutionsLoading, progressLoading, canViewSolutions]);
+  // Memoizar dados para evitar re-renderizações
+  const dashboardData = useMemo(() => ({
+    active: activeSolutions,
+    completed: completedSolutions,
+    recommended: recommendedSolutions,
+    isLoading: solutionsLoading || progressLoading
+  }), [activeSolutions, completedSolutions, recommendedSolutions, solutionsLoading, progressLoading]);
   
   // Função para navegar para detalhes da solução
-  const handleSolutionClick = (solution: any) => {
-    console.log('🎯 [DASHBOARD] Navegando para solução:', solution.id);
+  const handleSolutionClick = useMemo(() => (solution: any) => {
     navigate(`/solutions/${solution.id}`);
-  };
+  }, [navigate]);
   
   // Verificar se o usuário pode ver soluções
   if (!canViewSolutions) {
-    console.log('🚫 [DASHBOARD] Usuário sem permissão para ver soluções');
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-center">
-          <h2 className="text-xl font-semibold mb-2">Acesso Restrito</h2>
-          <p className="text-muted-foreground">
-            Você não tem permissão para visualizar as soluções.
+        <div className="text-center space-y-4">
+          <div className="w-16 h-16 mx-auto bg-destructive/10 rounded-full flex items-center justify-center">
+            <span className="text-2xl">🔒</span>
+          </div>
+          <h2 className="text-xl font-semibold">Acesso Restrito</h2>
+          <p className="text-muted-foreground max-w-sm">
+            Você não tem permissão para visualizar as soluções. Entre em contato com o administrador.
           </p>
         </div>
       </div>
     );
   }
-
-  console.log('✅ [DASHBOARD] Renderizando DashboardLayout');
   
   return (
     <DashboardLayout
-      active={activeSolutions}
-      completed={completedSolutions}
-      recommended={recommendedSolutions}
+      active={dashboardData.active}
+      completed={dashboardData.completed}
+      recommended={dashboardData.recommended}
       category={category}
       onCategoryChange={setCategory}
       onSolutionClick={handleSolutionClick}
-      isLoading={solutionsLoading || progressLoading}
+      isLoading={dashboardData.isLoading}
     />
   );
 }
