@@ -1,4 +1,3 @@
-
 // Enum para categorias de soluções - compatível com banco de dados
 export enum SolutionCategory {
   RECEITA = 'Receita',
