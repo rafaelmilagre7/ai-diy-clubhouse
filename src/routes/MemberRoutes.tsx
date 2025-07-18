@@ -6,10 +6,10 @@ import Layout from '@/components/layout/Layout';
 
 // Pages - corrigindo imports para os arquivos corretos
 import Dashboard from '@/pages/member/Dashboard';
-import SolutionDetailsPage from '@/pages/solutions/SolutionDetailsPage';
+import SolutionDetails from '@/pages/member/SolutionDetails';
 import LearningPage from '@/pages/member/learning/LearningPage';
 import CourseDetails from '@/pages/member/learning/CourseDetails';
-import LearningLessonPage from '@/pages/learning/LearningLessonPage';
+import LessonView from '@/pages/member/learning/LessonView';
 import OnboardingNewPage from '@/pages/member/OnboardingNew';
 import Networking from '@/pages/member/Networking';
 import ForumHome from '@/pages/member/forum/ForumHome';
@@ -42,7 +42,7 @@ export const memberRoutes = [
     element: (
       <ProtectedRoute>
         <Layout>
-          <SolutionDetailsPage />
+          <SolutionDetails />
         </Layout>
       </ProtectedRoute>
     ),
@@ -72,7 +72,7 @@ export const memberRoutes = [
     element: (
       <ProtectedRoute>
         <Layout>
-          <LearningLessonPage />
+          <LessonView />
         </Layout>
       </ProtectedRoute>
     ),
