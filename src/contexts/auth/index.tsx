@@ -1,12 +1,10 @@
-import React, { createContext, useContext, useEffect, useState, useRef, useCallback } from 'react';
+
+import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
 import { UserProfile, getUserRoleName, isAdminRole, isFormacaoRole } from '@/lib/supabase';
 import { useAuthMethods } from './hooks/useAuthMethods';
-import { useAuthStateManager } from './hooks/useAuthStateManager';
-import { clearProfileCache } from '@/hooks/auth/utils/authSessionUtils';
 import { AuthContextType } from './types';
-import { useSessionManager } from '@/hooks/security/useSessionManager';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -28,39 +26,23 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [authError, setAuthError] = useState<Error | null>(null);
-  
-  const authListenerRef = useRef<any>(null);
-  const isInitialized = useRef(false);
-  const lastUserId = useRef<string | null>(null);
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
-
-  // Inicializar useAuthStateManager com os setters como parâmetros
-  const { setupAuthSession } = useAuthStateManager({
-    setSession,
-    setUser,
-    setProfile,
-    setIsLoading,
-  });
 
   const { signIn, signOut, signInAsMember, signInAsAdmin } = useAuthMethods({
     setIsLoading,
   });
 
-  // Initialize session manager
-  useSessionManager();
-
-  // TIMEOUT SINCRONIZADO - 1 segundo (AGRESSIVO)
+  // TIMEOUT OBRIGATÓRIO - 3 segundos (mais realista)
   useEffect(() => {
-    console.log("🔐 [AUTH] Configurando timeout de emergência de 1 segundo");
+    console.log("🔐 [AUTH] Configurando timeout obrigatório de 3 segundos");
     const emergencyTimeout = setTimeout(() => {
-      console.error("🚨 [AUTH-PROVIDER] TIMEOUT DE EMERGÊNCIA - Forçando parada do loading");
+      console.error("🚨 [AUTH-PROVIDER] TIMEOUT OBRIGATÓRIO - Forçando parada do loading");
       setIsLoading(false);
-    }, 1000);
+    }, 3000);
     
     return () => clearTimeout(emergencyTimeout);
   }, []);
 
-  // Computar isAdmin APENAS via role - sem hardcoded emails
+  // Computar isAdmin APENAS via role
   const isAdmin = React.useMemo(() => {
     return isAdminRole(profile);
   }, [profile]);
@@ -75,10 +57,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     return Boolean(profile?.onboarding_completed);
   }, [profile]);
 
-  // INICIALIZAÇÃO SUPER SIMPLIFICADA - APENAS O ESSENCIAL
+  // INICIALIZAÇÃO SUPER SIMPLIFICADA - SEM DEPENDÊNCIAS CIRCULARES
   useEffect(() => {
-    if (isInitialized.current) return;
-    console.log('🚀 [AUTH] INICIALIZAÇÃO SUPER SIMPLIFICADA');
+    console.log('🚀 [AUTH] INICIALIZAÇÃO SUPER SIMPLIFICADA - SEM useSessionManager');
     
     const initAuth = async () => {
       try {
@@ -88,9 +69,31 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         if (session?.user) {
           setUser(session.user);
           setSession(session);
+          
+          // Buscar perfil de forma simples
+          try {
+            const { data: profileData } = await supabase
+              .from('profiles')
+              .select(`
+                *,
+                user_roles (
+                  id,
+                  name,
+                  description,
+                  permissions
+                )
+              `)
+              .eq('id', session.user.id)
+              .single();
+
+            if (profileData) {
+              setProfile(profileData as UserProfile);
+            }
+          } catch (profileError) {
+            console.warn('⚠️ [AUTH] Erro ao buscar perfil:', profileError);
+          }
         }
         
-        // PARAR LOADING IMEDIATAMENTE
         setIsLoading(false);
         
       } catch (error) {
@@ -100,7 +103,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     };
 
     initAuth();
-    isInitialized.current = true;
   }, []);
 
   const value: AuthContextType = {

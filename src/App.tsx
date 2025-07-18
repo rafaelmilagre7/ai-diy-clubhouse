@@ -7,6 +7,7 @@ import { Toaster } from 'sonner';
 import { ThemeProvider } from 'next-themes';
 import { AuthProvider } from '@/contexts/auth';
 import { LoggingProvider } from '@/hooks/useLogging';
+import { SessionManagerWrapper } from '@/components/auth/SessionManagerWrapper';
 import { AppRoutes } from '@/routes';
 import { SEOWrapper } from '@/components/seo/SEOWrapper';
 import EmergencyFallback from '@/components/debug/EmergencyFallback';
@@ -22,13 +23,12 @@ const queryClient = new QueryClient({
 });
 
 function App() {
-  console.log("🚀 [APP] Iniciando aplicação...");
-  console.log("🚀 [APP] React renderizando App component");
+  console.log("🚀 [APP] Iniciando aplicação sem dependências circulares...");
   
-  // DETECTOR DE LOOP - Se a app não renderizar em 3 segundos, forçar fallback
+  // DETECTOR DE LOOP - Se a app não renderizar em 5 segundos, forçar fallback
   React.useEffect(() => {
     const loopDetector = setTimeout(() => {
-      console.error("🚨 [APP] DETECTOR DE LOOP - App não renderizou em 3s - forçando fallback");
+      console.error("🚨 [APP] DETECTOR DE LOOP - App não renderizou em 5s - forçando fallback");
       // Criar um elemento de fallback e anexar ao DOM diretamente
       const fallbackDiv = document.createElement('div');
       fallbackDiv.innerHTML = `
@@ -45,7 +45,7 @@ function App() {
       `;
       document.body.innerHTML = '';
       document.body.appendChild(fallbackDiv);
-    }, 3000);
+    }, 5000);
     
     return () => clearTimeout(loopDetector);
   }, []);
@@ -55,6 +55,7 @@ function App() {
       <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
         <QueryClientProvider client={queryClient}>
           <AuthProvider>
+            <SessionManagerWrapper />
             <LoggingProvider>
               <Router>
                 <SEOWrapper>
