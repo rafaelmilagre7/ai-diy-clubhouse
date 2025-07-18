@@ -24,12 +24,18 @@ export const fetchUserProfile = async (userId: string): Promise<UserProfile | nu
     });
 
     if (cacheData) {
-      logger.info('[PROFILE] Perfil encontrado no cache do banco', { userId });
+      logger.info('[PROFILE] Perfil encontrado no cache do banco', { userId, cacheStructure: typeof cacheData });
       const profile = cacheData as UserProfile;
       
-      // Atualizar cache local
-      profileCache.set(userId, { profile, timestamp: Date.now() });
-      return profile;
+      // Verificar se tem estrutura correta de user_roles
+      if (!profile.user_roles && profile.role_id) {
+        logger.warn('[PROFILE] Cache sem user_roles, forçando busca direta', { userId, roleId: profile.role_id });
+        // Não usar cache, forçar busca direta para obter estrutura completa
+      } else {
+        // Atualizar cache local
+        profileCache.set(userId, { profile, timestamp: Date.now() });
+        return profile;
+      }
     }
 
     // Fallback: busca direta se cache falhar
@@ -39,7 +45,7 @@ export const fetchUserProfile = async (userId: string): Promise<UserProfile | nu
       .from('profiles')
       .select(`
         *,
-        user_roles (
+        user_roles!role_id (
           id,
           name,
           description,
@@ -63,7 +69,14 @@ export const fetchUserProfile = async (userId: string): Promise<UserProfile | nu
     logger.info('[PROFILE] Perfil carregado com sucesso', { 
       userId, 
       profileId: profile.id,
-      role: profile.user_roles?.name 
+      roleId: profile.role_id,
+      hasUserRoles: !!profile.user_roles,
+      roleName: profile.user_roles?.name,
+      profileStructure: {
+        hasRoleId: !!profile.role_id,
+        hasUserRoles: !!profile.user_roles,
+        userRolesType: typeof profile.user_roles
+      }
     });
     
     // Atualizar cache local

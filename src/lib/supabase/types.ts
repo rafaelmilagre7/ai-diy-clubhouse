@@ -226,9 +226,37 @@ export interface UserProfile {
 export const getUserRoleName = (profile: UserProfile | null): string => {
   if (!profile) return 'member';
   
+  // Debug log detalhado
+  console.log('🔍 [DEBUG] getUserRoleName chamado:', {
+    profileId: profile.id?.substring(0, 8) + '***',
+    roleId: profile.role_id,
+    hasUserRoles: !!profile.user_roles,
+    userRolesType: typeof profile.user_roles,
+    userRolesName: profile.user_roles?.name,
+    legacyRole: profile.role
+  });
+  
   // Priorizar user_roles (novo sistema)
   if (profile.user_roles?.name) {
+    console.log('✅ [ROLE] Usando user_roles.name:', profile.user_roles.name);
     return profile.user_roles.name;
+  }
+  
+  // Fallback direto para role_id conhecido
+  if (profile.role_id) {
+    // Mapeamento direto de role_ids conhecidos
+    const roleMapping: Record<string, string> = {
+      'f0724d21-981f-4119-af02-07334300801a': 'admin', // ID real do role admin
+      '550e8400-e29b-41d4-a716-446655440000': 'admin',
+      // Adicionar outros IDs conhecidos conforme necessário
+    };
+    
+    if (roleMapping[profile.role_id]) {
+      console.log('📋 [ROLE] Usando mapeamento role_id:', roleMapping[profile.role_id]);
+      return roleMapping[profile.role_id];
+    }
+    
+    console.warn('⚠️ [ROLE] role_id não mapeado:', profile.role_id);
   }
   
   // Fallback para campo legado durante migração
@@ -241,9 +269,11 @@ export const getUserRoleName = (profile: UserProfile | null): string => {
         hasUserRoles: !!profile.user_roles
       });
     }
+    console.log('🔄 [ROLE] Usando role legado:', profile.role);
     return profile.role;
   }
   
+  console.log('🔻 [ROLE] Fallback para member');
   return 'member';
 };
 
