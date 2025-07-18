@@ -10,6 +10,8 @@ import InvitesManagement from '@/pages/admin/invites/InvitesManagement';
 import AdminRoles from '@/pages/admin/AdminRoles';
 import AdminCommunicationCenter from '@/pages/admin/AdminCommunicationCenter';
 import AdminSolutions from '@/pages/admin/AdminSolutions';
+import AdminTools from '@/pages/admin/AdminTools';
+import AdminToolEdit from '@/pages/admin/AdminToolEdit';
 import SupabaseDiagnostics from '@/pages/admin/SupabaseDiagnostics';
 
 export const adminRoutes = [
@@ -69,6 +71,26 @@ export const adminRoutes = [
       <ProtectedRoute requireAdmin={true}>
         <AdminLayout>
           <AdminSolutions />
+        </AdminLayout>
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/admin/tools",
+    element: (
+      <ProtectedRoute requireAdmin={true}>
+        <AdminLayout>
+          <AdminTools />
+        </AdminLayout>
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/admin/tools/:id",
+    element: (
+      <ProtectedRoute requireAdmin={true}>
+        <AdminLayout>
+          <AdminToolEdit />
         </AdminLayout>
       </ProtectedRoute>
     ),
