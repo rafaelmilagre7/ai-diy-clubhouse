@@ -1,103 +1,90 @@
-import { useEffect, useState } from 'react';
+
+import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/auth';
 import { fixCurrentUserOnboarding, getOnboardingProgress } from '@/utils/onboardingFix';
 import { toast } from '@/hooks/use-toast';
 
 /**
- * Componente que detecta e corrige automaticamente problemas de onboarding
+ * Componente otimizado que corrige problemas de onboarding
+ * Reduz frequência de execução e evita loops
  */
 export const OnboardingFixer = () => {
   const navigate = useNavigate();
   const { user, profile } = useAuth();
-  const [hasFixed, setHasFixed] = useState(false);
-  const [isProcessing, setIsProcessing] = useState(false);
+  const [hasProcessed, setHasProcessed] = useState(false);
+  const processingRef = useRef(false);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
-    const tryFix = async () => {
-      if (!user || !profile || hasFixed || isProcessing) return;
+    const processOnboardingFix = async () => {
+      // Evitar múltiplas execuções
+      if (!user || !profile || hasProcessed || processingRef.current) {
+        return;
+      }
 
-      setIsProcessing(true);
+      // Verificar apenas se realmente há inconsistência
+      if (profile.onboarding_completed) {
+        setHasProcessed(true);
+        return;
+      }
+
+      processingRef.current = true;
       
       try {
-        console.log('🔍 [FIXER] Verificando consistência do onboarding...', {
-          userId: user.id,
-          profileOnboardingCompleted: profile.onboarding_completed
-        });
+        console.log('🔍 [FIXER] Verificando onboarding para:', user.id);
 
-        // Aguardar um pouco mais para garantir que tudo foi processado após o registro
-        await new Promise(resolve => setTimeout(resolve, 2000));
-
-        // Verificar se há inconsistência entre onboarding e profile
         const onboardingProgress = await getOnboardingProgress(user.id);
         
-        if (onboardingProgress) {
-          console.log('📊 [FIXER] Progresso do onboarding:', onboardingProgress);
+        if (!onboardingProgress) {
+          console.log('ℹ️ [FIXER] Nenhum progresso encontrado');
+          return;
+        }
+
+        // Verificação simples de completude
+        const isCompleted = onboardingProgress.is_completed || 
+          (onboardingProgress.completed_steps && onboardingProgress.completed_steps.length >= 5);
+
+        if (isCompleted && !profile.onboarding_completed) {
+          console.log('🔧 [FIXER] Aplicando correção de sincronização');
           
-          // Verificar se o usuário deveria estar completo baseado nos steps concluídos
-          const allStepsCompleted = onboardingProgress.completed_steps && 
-            onboardingProgress.completed_steps.length >= 6 &&
-            onboardingProgress.completed_steps.includes(1) &&
-            onboardingProgress.completed_steps.includes(2) &&
-            onboardingProgress.completed_steps.includes(3) &&
-            onboardingProgress.completed_steps.includes(4) &&
-            onboardingProgress.completed_steps.includes(5) &&
-            onboardingProgress.completed_steps.includes(6);
-
-          const shouldBeCompleted = allStepsCompleted || onboardingProgress.current_step === 7;
-
-          // Se deveria estar completo mas não está, ou se há inconsistência com o profile
-          if (shouldBeCompleted && (!onboardingProgress.is_completed || !profile.onboarding_completed)) {
-            console.log('🔧 [FIXER] Inconsistência detectada! Aplicando correção...', {
-              allStepsCompleted,
-              currentStep: onboardingProgress.current_step,
-              isCompleted: onboardingProgress.is_completed,
-              profileCompleted: profile.onboarding_completed
-            });
-            
+          const success = await fixCurrentUserOnboarding();
+          
+          if (success) {
+            setHasProcessed(true);
             toast({
-              title: "Sincronizando progresso...",
-              description: "Corrigindo inconsistências no seu onboarding.",
+              title: "Progresso sincronizado!",
+              description: "Redirecionando para o dashboard...",
             });
             
-            const success = await fixCurrentUserOnboarding();
-            
-            if (success) {
-              setHasFixed(true);
-              toast({
-                title: "Progresso sincronizado!",
-                description: "Redirecionando para o dashboard...",
-              });
-              
-              // Aguardar um pouco e navegar para sincronizar estado
-              setTimeout(() => {
-                navigate('/dashboard', { replace: true });
-              }, 2000);
-            } else {
-              console.warn('⚠️ [FIXER] Falha na correção do onboarding');
-            }
-          } else if (!shouldBeCompleted) {
-            console.log('ℹ️ [FIXER] Onboarding realmente não está completo, usuário precisa continuar');
-          } else {
-            console.log('✅ [FIXER] Onboarding já está correto e sincronizado');
+            // Timeout mais longo para evitar conflitos
+            timeoutRef.current = setTimeout(() => {
+              navigate('/dashboard', { replace: true });
+            }, 3000);
           }
         } else {
-          console.warn('⚠️ [FIXER] Nenhum progresso de onboarding encontrado');
+          setHasProcessed(true);
         }
       } catch (error) {
-        console.error('❌ [FIXER] Erro ao verificar onboarding:', error);
+        console.error('❌ [FIXER] Erro na verificação:', error);
+        setHasProcessed(true);
       } finally {
-        setIsProcessing(false);
+        processingRef.current = false;
       }
     };
 
-    // Aguardar um pouco mais para garantir que o contexto auth está estável
-    const timeoutId = setTimeout(tryFix, 3000);
+    // Timeout maior para evitar execução excessiva
+    const delayedProcess = setTimeout(processOnboardingFix, 8000);
     
-    return () => clearTimeout(timeoutId);
-  }, [user, profile, hasFixed, isProcessing]);
+    return () => {
+      clearTimeout(delayedProcess);
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, [user?.id, profile?.onboarding_completed]); // Dependências mais específicas
 
-  return null; // Componente invisível
+  return null;
 };
 
 export default OnboardingFixer;

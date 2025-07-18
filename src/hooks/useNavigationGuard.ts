@@ -1,36 +1,39 @@
-import { useEffect, useRef } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
 
-interface NavigationEvent {
-  path: string;
-  timestamp: number;
-}
+import { useEffect, useRef } from 'react';
+import { useLocation } from 'react-router-dom';
 
 /**
- * Hook para prevenir loops de navegação e detectar problemas de roteamento
- * TEMPORARIAMENTE DESABILITADO PARA DEBUG
+ * Hook simplificado para prevenir loops de navegação
+ * Remove verificações complexas e circuit breakers
  */
 export const useNavigationGuard = () => {
   const location = useLocation();
-  const navigate = useNavigate();
-  const navigationHistory = useRef<NavigationEvent[]>([]);
+  const navigationHistory = useRef<string[]>([]);
   const lastSafeRoute = useRef<string>('/dashboard');
 
-  // TEMPORARIAMENTE DESABILITADO - Apenas logging básico
+  // Logging básico apenas
   useEffect(() => {
-    console.log(`[NAVIGATION] Navegando para: ${location.pathname}`);
-  }, [location.pathname]);
+    const currentPath = location.pathname;
+    
+    // Manter histórico simples (últimas 5 rotas)
+    navigationHistory.current = [
+      ...navigationHistory.current.slice(-4),
+      currentPath
+    ];
 
-  const navigateToSafeRoute = () => {
-    navigate(lastSafeRoute.current, { replace: true });
-  };
+    // Atualizar última rota segura (não de auth)
+    if (!currentPath.startsWith('/login') && !currentPath.startsWith('/auth')) {
+      lastSafeRoute.current = currentPath;
+    }
+
+    console.log(`[NAVIGATION] Navegando para: ${currentPath}`);
+  }, [location.pathname]);
 
   const resetNavigationHistory = () => {
     navigationHistory.current = [];
   };
 
   return {
-    navigateToSafeRoute,
     resetNavigationHistory,
     currentPath: location.pathname,
     lastSafeRoute: lastSafeRoute.current

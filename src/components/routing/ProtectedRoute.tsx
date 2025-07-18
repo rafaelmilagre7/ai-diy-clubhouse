@@ -1,168 +1,58 @@
 
-import React, { useEffect, useState, useRef } from 'react';
-import { Navigate, useLocation } from 'react-router-dom';
+import { ReactNode } from "react";
+import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/auth";
 import LoadingScreen from "@/components/common/LoadingScreen";
-import { toast } from "sonner";
-import { logger } from '@/utils/logger';
-import { supabase } from '@/lib/supabase';
+import { logger } from "@/utils/logger";
 
 interface ProtectedRouteProps {
-  children: React.ReactNode;
+  children: ReactNode;
+  requireAuth?: boolean;
   requireAdmin?: boolean;
-  requiredRole?: string;
+  requireFormacao?: boolean;
 }
 
+/**
+ * ProtectedRoute simplificado - remove loops de navegação
+ */
 const ProtectedRoute = ({ 
   children, 
+  requireAuth = true,
   requireAdmin = false,
-  requiredRole
+  requireFormacao = false
 }: ProtectedRouteProps) => {
-  const { user, profile, isAdmin, hasCompletedOnboarding, isLoading } = useAuth();
+  const { user, profile, isAdmin, isFormacao, isLoading } = useAuth();
   const location = useLocation();
-  const [loadingProgressTimeout, setLoadingProgressTimeout] = useState(false);
-  const [navLoopDetected, setNavLoopDetected] = useState(false);
-  const isMounted = useRef(true);
-  
-  // Detectar loops de navegação usando o banco
-  useEffect(() => {
-    if (!user?.id) return;
-    
-    const detectLoop = async () => {
-      try {
-        const { data: loopData } = await supabase.rpc('detect_navigation_loop', {
-          p_user_id: user.id,
-          p_path: location.pathname,
-          p_session_id: user.id
-        });
-        
-        if (loopData?.is_loop && isMounted.current) {
-          logger.error('[PROTECTED] Loop de navegação detectado', {
-            userId: user.id,
-            path: location.pathname,
-            recentCount: loopData.recent_count
-          });
-          setNavLoopDetected(true);
-          toast.error("Loop de navegação detectado. Redirecionando para área segura...");
-        }
-      } catch (error) {
-        logger.error('[PROTECTED] Erro ao detectar loop:', error);
-      }
-    };
-    
-    detectLoop();
-  }, [user?.id, location.pathname]);
-  
-  // Timeout progressivo para loading (só após 8 segundos)
-  useEffect(() => {
-    if (!user || profile || !isLoading) {
-      return;
-    }
 
-    const timer = setTimeout(() => {
-      if (!profile && user && isMounted.current) {
-        logger.warn('[PROTECTED] Loading prolongado detectado', {
-          userId: user.id,
-          email: user.email,
-          timeoutDuration: '8s'
-        });
-        setLoadingProgressTimeout(true);
-      }
-    }, 8000);
-
-    return () => clearTimeout(timer);
-  }, [user, profile, isLoading]);
-
-  // Lifecycle management
-  useEffect(() => {
-    isMounted.current = true;
-    return () => {
-      isMounted.current = false;
-    };
-  }, []);
-
-  // Log para debug
-  useEffect(() => {
-    logger.info('[PROTECTED] Estado da rota protegida', {
-      path: location.pathname,
-      hasUser: !!user,
-      hasProfile: !!profile,
-      isLoading,
-      loadingProgressTimeout,
-      navLoopDetected,
-      requireAdmin,
-      requiredRole
-    });
-  }, [user, profile, isLoading, loadingProgressTimeout, navLoopDetected, location.pathname, requireAdmin, requiredRole]);
-  
-  // 1. Loop de navegação detectado - redirecionar para área segura
-  if (navLoopDetected) {
-    logger.error('[PROTECTED] Redirecionando devido a loop de navegação');
-    return <Navigate to="/dashboard" replace />;
-  }
-  
-  // 2. Loading state - aguardar autenticação e perfil com timeout progressivo
-  if (isLoading && !loadingProgressTimeout) {
-    return <LoadingScreen message="Verificando sua autenticação..." />;
+  // Loading simples sem circuit breaker
+  if (isLoading) {
+    return <LoadingScreen message="Verificando acesso..." />;
   }
 
-  // 3. Não autenticado - redirecionar para login
-  if (!user) {
-    logger.info('[PROTECTED] Usuário não autenticado, redirecionando para login', {
-      from: location.pathname
-    });
+  // Verificação de autenticação
+  if (requireAuth && !user) {
+    logger.info("[PROTECTED] Usuário não autenticado, redirecionando para login");
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  // 4. Loading prolongado mas ainda válido - mostrar mensagem diferente
-  if (isLoading && loadingProgressTimeout && user) {
-    return <LoadingScreen message="Carregando configurações da conta..." />;
+  // Verificação de perfil
+  if (requireAuth && user && !profile) {
+    logger.warn("[PROTECTED] Usuário sem perfil, redirecionando para login");
+    return <Navigate to="/login" replace />;
   }
 
-  // 5. Sem perfil após loading completo - criar perfil ou mostrar erro
-  if (!profile && !isLoading) {
-    logger.warn('[PROTECTED] Perfil não encontrado após loading completo', {
-      userId: user.id,
-      email: user.email
-    });
-    
-    // Tentar recarregar página uma vez se ainda não foi tentado
-    if (!loadingProgressTimeout) {
-      setLoadingProgressTimeout(true);
-      setTimeout(() => {
-        window.location.reload();
-      }, 1000);
-      return <LoadingScreen message="Recarregando configurações..." />;
-    }
-    
-    return <LoadingScreen message="Configurando sua conta..." />;
-  }
-
-  // 4. Onboarding - permitir acesso livre (lógica centralizada em OnboardingNewPage)
-  const isOnboardingRoute = location.pathname.startsWith('/onboarding');
-  logger.debug('[PROTECTED] Permitindo acesso livre ao onboarding', {
-    userId: user.id,
-    pathname: location.pathname,
-    isOnboardingRoute,
-    hasCompletedOnboarding
-  });
-  
-  // Verificar se requer admin e usuário não é admin
-  if ((requiredRole === 'admin' || requireAdmin) && !isAdmin) {
-    toast.error("Você não tem permissão para acessar esta área");
+  // Verificação de admin
+  if (requireAdmin && !isAdmin) {
+    logger.warn("[PROTECTED] Acesso negado - admin necessário");
     return <Navigate to="/dashboard" replace />;
   }
 
-  // Verificar role específico
-  if (requiredRole && requiredRole !== 'admin') {
-    const userRoleName = profile?.user_roles?.name || profile?.role_id;
-    if (userRoleName !== requiredRole && !isAdmin) {
-      toast.error("Você não tem permissão para acessar esta área");
-      return <Navigate to="/dashboard" replace />;
-    }
+  // Verificação de formação
+  if (requireFormacao && !(isFormacao || isAdmin)) {
+    logger.warn("[PROTECTED] Acesso negado - formação necessário");
+    return <Navigate to="/dashboard" replace />;
   }
 
-  // Usuário está autenticado, tem perfil válido e permissões necessárias
   return <>{children}</>;
 };
 

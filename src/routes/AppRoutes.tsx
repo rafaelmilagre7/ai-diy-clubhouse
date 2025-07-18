@@ -7,35 +7,17 @@ import { formacaoRoutes } from './FormacaoRoutes';
 import { certificateRoutes } from './CertificateRoutes';
 import { CommunityRedirects } from '@/components/routing/CommunityRedirects';
 import { useNavigationGuard } from '@/hooks/useNavigationGuard';
-import { useAdvancedNavigationGuard } from '@/hooks/useAdvancedNavigationGuard';
-import { useAuthStateMonitor } from '@/hooks/useAuthStateMonitor';
 import NotFound from '@/pages/NotFound';
 import InvitePage from '@/pages/InvitePage';
 
 const AppRoutes = () => {
   const location = useLocation();
   const { currentPath } = useNavigationGuard();
-  const { navigateToSafeRoute, safeNavigate, isCircuitBreakerOpen, navigationHealth } = useAdvancedNavigationGuard();
-  const { getDebugInfo, detectPerformanceIssues } = useAuthStateMonitor();
   
-  const perfIssues = detectPerformanceIssues();
+  // Log simplificado sem debug excessivo
+  console.log("AppRoutes: Rota atual:", currentPath);
   
-  console.log("AppRoutes: Navegação para rota:", currentPath, {
-    search: location.search,
-    state: location.state,
-    circuitBreakerOpen: isCircuitBreakerOpen,
-    navigationHealth,
-    authDebug: getDebugInfo(),
-    performanceIssues: perfIssues
-  });
-  
-  // Se há muitos problemas de performance, usar navegação segura
-  if (perfIssues.length > 2) {
-    console.warn("AppRoutes: Muitos problemas detectados, usando navegação segura");
-  }
-  
-  // Verificar se estamos em uma rota de comunidade para evitar renderizar CommunityRedirects
-  // Ou em uma rota de autenticação/convite onde não precisamos do redirecionamento
+  // Verificar se estamos em uma rota que não precisa de redirecionamentos
   const skipRedirects = 
     location.pathname.startsWith('/comunidade') || 
     location.pathname.startsWith('/login') ||
@@ -44,11 +26,11 @@ const AppRoutes = () => {
   
   return (
     <>
-      {/* Componente auxiliar para redirecionar antigas URLs - não renderizar em rotas onde não é necessário */}
+      {/* Componente auxiliar para redirecionar antigas URLs */}
       {!skipRedirects && <CommunityRedirects />}
       
       <Routes>
-        {/* Convite Routes - Alta prioridade e fora do sistema de autenticação */}
+        {/* Convite Routes - Alta prioridade */}
         <Route path="/convite/:token" element={<InvitePage />} />
         <Route path="/convite" element={<InvitePage />} />
         
@@ -57,12 +39,12 @@ const AppRoutes = () => {
           <Route key={route.path} path={route.path} element={route.element} />
         ))}
         
-        {/* Auth Routes - Todas usando o design escuro */}
+        {/* Auth Routes */}
         {authRoutes.map((route) => (
           <Route key={route.path} path={route.path} element={route.element} />
         ))}
         
-        {/* Member Routes - Agora incluindo a rota raiz com RootRedirect */}
+        {/* Member Routes */}
         {memberRoutes.map((route) => (
           <Route key={route.path} path={route.path} element={route.element} />
         ))}
@@ -77,14 +59,8 @@ const AppRoutes = () => {
           <Route key={route.path} path={route.path} element={route.element} />
         ))}
         
-        {/* Fallback route - navegação inteligente */}
-        <Route path="*" element={
-          isCircuitBreakerOpen ? (
-            <Navigate to="/" replace />
-          ) : (
-            <NotFound />
-          )
-        } />
+        {/* Fallback route */}
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </>
   );

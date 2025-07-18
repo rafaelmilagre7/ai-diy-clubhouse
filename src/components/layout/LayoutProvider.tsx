@@ -8,8 +8,7 @@ import FormacaoLayout from "./formacao/FormacaoLayout";
 import { PageTransitionWithFallback } from "@/components/transitions/PageTransitionWithFallback";
 
 /**
- * LayoutProvider gerencia autenticação e roteamento baseado em papéis
- * antes de renderizar o componente de layout apropriado
+ * LayoutProvider simplificado - remove timeouts excessivos e circuit breakers
  */
 const LayoutProvider = memo(({ children }: { children: ReactNode }) => {
   const {
@@ -22,52 +21,29 @@ const LayoutProvider = memo(({ children }: { children: ReactNode }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const [layoutReady, setLayoutReady] = useState(false);
-  const timeoutRef = useRef<number | null>(null);
 
-  // Memoizar as verificações de rota para evitar recálculos desnecessários
+  // Memoizar as verificações de rota
   const routeChecks = useMemo(() => ({
-    isLearningRoute: location.pathname.startsWith('/learning'),
-    isPathAdmin: location.pathname.startsWith('/admin'),
-    isPathFormacao: location.pathname.startsWith('/formacao'),
-    isFormacaoRoute: location.pathname.startsWith('/formacao')
+    isFormacaoRoute: location.pathname.startsWith('/formacao'),
+    isLearningRoute: location.pathname.startsWith('/learning')
   }), [location.pathname]);
 
-  // Memoizar a mensagem de loading baseada no estado
+  // Memoizar a mensagem de loading
   const loadingMessage = useMemo(() => {
     if (isLoading) return "Preparando seu dashboard...";
     if (!user) return "Verificando autenticação...";
     return "Carregando layout...";
   }, [isLoading, user]);
 
-  // OTIMIZAÇÃO: Simplificação para evitar conflitos com RootRedirect
+  // Lógica simplificada sem timeouts complexos
   useEffect(() => {
-    // Limpar timeout existente
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
-    }
-    
-    // Simplificar verificação
     if (!isLoading) {
       if (!user) {
-        // Apenas navegar para login se não tiver usuário
         navigate('/login', { replace: true });
         return;
       }
-      
-      // Marcar layout como pronto imediatamente
       setLayoutReady(true);
-    } else {
-      // Timeout sincronizado com outros componentes
-      timeoutRef.current = window.setTimeout(() => {
-        setLayoutReady(true);
-      }, 1500); // Sincronizado com AdminLayout e RootRedirect
     }
-    
-    return () => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
-    };
   }, [user, isLoading, navigate]);
 
   // Renderizar com base na rota e permissões
@@ -89,7 +65,7 @@ const LayoutProvider = memo(({ children }: { children: ReactNode }) => {
     }
   }
 
-  // Mostrar loading enquanto o layout não está pronto
+  // Mostrar loading
   return (
     <PageTransitionWithFallback isVisible={true}>
       <LoadingScreen message={loadingMessage} />
