@@ -10,6 +10,7 @@ export interface AuthContextType {
   isFormacao: boolean;
   isLoading: boolean;
   authError: Error | null;
+  hasCompletedOnboarding: boolean;
   signIn: (email: string, password: string) => Promise<{ error?: Error }>;
   signOut: () => Promise<{ success: boolean; error?: Error | null }>;
   signInAsMember: (email: string, password: string) => Promise<{ error?: Error }>;
