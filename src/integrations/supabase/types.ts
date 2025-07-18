@@ -4946,6 +4946,16 @@ export type Database = {
         Args: { target_user_id: string }
         Returns: Json
       }
+      create_notification: {
+        Args: {
+          p_user_id: string
+          p_title: string
+          p_message: string
+          p_type?: string
+          p_metadata?: Json
+        }
+        Returns: Json
+      }
       create_onboarding_backup: {
         Args: { p_user_id: string; p_backup_type?: string }
         Returns: string
@@ -5291,6 +5301,10 @@ export type Database = {
         Args: { p_user_id: string }
         Returns: Json
       }
+      get_onboarding_progress: {
+        Args: { p_user_id: string }
+        Returns: Json
+      }
       get_profile_safe: {
         Args: { target_user_id?: string }
         Returns: {
@@ -5348,6 +5362,10 @@ export type Database = {
         Args: { p_user_id: string }
         Returns: number
       }
+      get_user_analytics_summary: {
+        Args: { p_user_id: string; p_days_back?: number }
+        Returns: Json
+      }
       get_user_badges: {
         Args: { p_user_id: string }
         Returns: {
@@ -5364,8 +5382,8 @@ export type Database = {
         Returns: Json
       }
       get_user_permissions: {
-        Args: { user_id: string }
-        Returns: Json
+        Args: { p_user_id: string }
+        Returns: string[]
       }
       get_user_profile_optimized: {
         Args: { target_user_id?: string }
@@ -5597,6 +5615,7 @@ export type Database = {
               p_old_values?: string
               p_new_values?: string
             }
+          | { p_event_type: string; p_details?: Json; p_severity?: string }
           | {
               p_event_type: string
               p_severity?: string
@@ -5656,6 +5675,10 @@ export type Database = {
         }
         Returns: string
       }
+      mark_notifications_read: {
+        Args: { p_user_id: string; p_notification_ids?: string[] }
+        Returns: Json
+      }
       merge_json_data: {
         Args: { target: Json; source: Json }
         Returns: Json
@@ -5666,6 +5689,16 @@ export type Database = {
       }
       migrate_onboarding_data_to_quick: {
         Args: Record<PropertyKey, never>
+        Returns: Json
+      }
+      moderate_content: {
+        Args: {
+          p_content_type: string
+          p_content_id: string
+          p_action: string
+          p_reason: string
+          p_duration_hours?: number
+        }
         Returns: Json
       }
       monitor_onboarding_flow: {
@@ -5741,6 +5774,10 @@ export type Database = {
           recommendations: string
         }[]
       }
+      send_direct_message: {
+        Args: { p_recipient_id: string; p_content: string; p_metadata?: Json }
+        Returns: Json
+      }
       send_invite_email: {
         Args: { p_invite_id: string }
         Returns: Json
@@ -5759,6 +5796,18 @@ export type Database = {
       }
       sync_profile_roles: {
         Args: Record<PropertyKey, never>
+        Returns: Json
+      }
+      track_onboarding_step: {
+        Args: { p_user_id: string; p_step_name: string; p_step_data?: Json }
+        Returns: Json
+      }
+      track_tool_usage: {
+        Args: { p_tool_id: string; p_action?: string; p_metadata?: Json }
+        Returns: Json
+      }
+      track_user_event: {
+        Args: { p_event_type: string; p_event_data?: Json }
         Returns: Json
       }
       truncate_text: {
@@ -5918,6 +5967,10 @@ export type Database = {
       }
       validate_user_password: {
         Args: { password: string }
+        Returns: Json
+      }
+      validate_user_role: {
+        Args: { p_user_id: string }
         Returns: Json
       }
       verify_permissions_integrity: {
