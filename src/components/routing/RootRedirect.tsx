@@ -8,59 +8,41 @@ import { getUserRoleName } from "@/lib/supabase/types";
 const RootRedirect = () => {
   const location = useLocation();
   const { user, profile, isLoading: authLoading } = useAuth();
-  const [emergencyRedirect, setEmergencyRedirect] = useState(false);
   
-  console.log("🔄 [ROOT-REDIRECT] RENDER:", {
+  console.log("🔄 [ROOT-REDIRECT] RENDER SIMPLIFICADO:", {
     path: location.pathname,
     hasUser: !!user,
-    hasProfile: !!profile,
     authLoading,
     timestamp: new Date().toISOString()
   });
+
+  // APENAS REDIRECIONAMENTOS ESSENCIAIS - SEM LOOPS
   
-  // TIMEOUT DE EMERGÊNCIA - 2 segundos  
-  useEffect(() => {
-    console.log("🔄 [ROOT-REDIRECT] Configurando timeout de emergência");
-    const timeout = setTimeout(() => {
-      console.error("🚨 [ROOT-REDIRECT] TIMEOUT DE EMERGÊNCIA - Redirecionando para login");
-      setEmergencyRedirect(true);
-    }, 2000);
-    
-    return () => clearTimeout(timeout);
-  }, []);
-
-  // REDIRECIONAMENTO DE EMERGÊNCIA
-  if (emergencyRedirect) {
-    console.error("🚨 [ROOT-REDIRECT] Redirecionamento de emergência ativado");
-    return <Navigate to="/login" replace />;
-  }
-
-  // LÓGICA SUPER SIMPLIFICADA
+  // Se carregando, mostrar loading apenas por 1 segundo
   if (authLoading) {
-    console.log("⏳ [ROOT-REDIRECT] Ainda carregando...");
+    console.log("⏳ [ROOT-REDIRECT] Carregando...");
+    setTimeout(() => {
+      console.warn("⚠️ [ROOT-REDIRECT] Timeout de loading - continuando sem auth");
+    }, 1000);
     return <LoadingScreen message="Carregando..." />;
   }
 
-  if (!user) {
-    console.log("↩️ [ROOT-REDIRECT] Sem usuário - Indo para login");
-    return <Navigate to="/login" replace />;
-  }
-
-  // USUÁRIO LOGADO EM /login: Redirecionar para dashboard apropriado
-  if (location.pathname === '/login') {
-    const roleName = getUserRoleName(profile);
-    console.log("✅ [ROOT-REDIRECT] Usuário logado - redirecionando para dashboard");
-    return <Navigate to={roleName === 'formacao' ? '/formacao' : '/dashboard'} replace />;
-  }
-  
-  // REDIRECIONAMENTO POR ROLE na página inicial
-  if (location.pathname === '/') {
+  // APENAS redirecionamentos da página inicial e login quando logado
+  if (location.pathname === '/' && user) {
     const roleName = getUserRoleName(profile);
     console.log(`🎯 [ROOT-REDIRECT] Página inicial - redirecionando para: ${roleName === 'formacao' ? '/formacao' : '/dashboard'}`);
     return <Navigate to={roleName === 'formacao' ? '/formacao' : '/dashboard'} replace />;
   }
   
-  // DEIXAR OUTRAS ROTAS PASSAREM
+  // Usuário logado tentando acessar /login
+  if (location.pathname === '/login' && user) {
+    const roleName = getUserRoleName(profile);
+    console.log("✅ [ROOT-REDIRECT] Usuário logado em /login - redirecionando");
+    return <Navigate to={roleName === 'formacao' ? '/formacao' : '/dashboard'} replace />;
+  }
+  
+  // PARA TODAS AS OUTRAS ROTAS: DEIXAR OS COMPONENTES PROTEGIDOS LIDAREM
+  console.log("✅ [ROOT-REDIRECT] Deixando rota passar para componentes protegidos");
   return null;
 };
 

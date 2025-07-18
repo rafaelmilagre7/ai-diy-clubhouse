@@ -49,13 +49,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   // Initialize session manager
   useSessionManager();
 
-  // TIMEOUT SINCRONIZADO - 2 segundos
+  // TIMEOUT SINCRONIZADO - 1 segundo (AGRESSIVO)
   useEffect(() => {
-    console.log("🔐 [AUTH] Configurando timeout de emergência de 2 segundos");
+    console.log("🔐 [AUTH] Configurando timeout de emergência de 1 segundo");
     const emergencyTimeout = setTimeout(() => {
       console.error("🚨 [AUTH-PROVIDER] TIMEOUT DE EMERGÊNCIA - Forçando parada do loading");
       setIsLoading(false);
-    }, 2000);
+    }, 1000);
     
     return () => clearTimeout(emergencyTimeout);
   }, []);
