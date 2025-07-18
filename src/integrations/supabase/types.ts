@@ -5598,6 +5598,10 @@ export type Database = {
         }
         Returns: Json
       }
+      log_critical_action: {
+        Args: { p_action: string; p_details?: Json }
+        Returns: undefined
+      }
       log_invite_delivery: {
         Args: {
           p_invite_id: string
