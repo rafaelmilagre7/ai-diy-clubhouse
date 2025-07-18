@@ -76,7 +76,7 @@ const ResourceUploadCard: React.FC<ResourceUploadCardProps> = ({
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid grid-cols-2 mb-6">
             <TabsTrigger value="file">Arquivo</TabsTrigger>
-            <TabsTrigger value="youtube">YouTube</TabsTrigger>
+            <TabsTrigger value="youtube">Panda Video</TabsTrigger>
           </TabsList>
           
           <TabsContent value="file" className="space-y-6">
@@ -99,7 +99,7 @@ const ResourceUploadCard: React.FC<ResourceUploadCardProps> = ({
           
           <TabsContent value="youtube" className="space-y-6">
             <div className="bg-gray-50 dark:bg-gray-800 p-6 rounded-md">
-              <Label htmlFor="youtube-url" className="block mb-2 text-neutral-800 dark:text-white">URL do vídeo do YouTube</Label>
+              <Label htmlFor="youtube-url" className="block mb-2 text-neutral-800 dark:text-white">URL do vídeo do Panda Video</Label>
               <div className="flex gap-2">
                 <div className="relative flex-1">
                   <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
@@ -109,16 +109,16 @@ const ResourceUploadCard: React.FC<ResourceUploadCardProps> = ({
                     id="youtube-url" 
                     value={youtubeUrl} 
                     onChange={e => setYoutubeUrl(e.target.value)} 
-                    placeholder="https://www.youtube.com/watch?v=..." 
+                    placeholder="Cole aqui a URL do Panda Video (ex: embed.pandavideo.com.br/video-id)" 
                     className="pl-10 text-neutral-800 dark:text-white" 
                   />
                 </div>
                 <Button onClick={submitYoutubeUrl} disabled={!youtubeUrl.trim()}>
-                  Adicionar
+                  Adicionar Vídeo Panda
                 </Button>
               </div>
               <p className="mt-2 text-sm text-neutral-700 dark:text-neutral-300">
-                Cole o URL do vídeo do YouTube para adicionar automaticamente.
+                Cole o URL do vídeo do Panda Video para adicionar automaticamente.
               </p>
             </div>
           </TabsContent>

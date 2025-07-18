@@ -1114,6 +1114,45 @@ export type Database = {
           },
         ]
       }
+      implementation_checkpoints: {
+        Row: {
+          checkpoint_data: Json
+          completed_steps: string[] | null
+          created_at: string
+          id: string
+          last_completed_step: string | null
+          progress_percentage: number | null
+          solution_id: string
+          total_steps: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          checkpoint_data?: Json
+          completed_steps?: string[] | null
+          created_at?: string
+          id?: string
+          last_completed_step?: string | null
+          progress_percentage?: number | null
+          solution_id: string
+          total_steps?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          checkpoint_data?: Json
+          completed_steps?: string[] | null
+          created_at?: string
+          id?: string
+          last_completed_step?: string | null
+          progress_percentage?: number | null
+          solution_id?: string
+          total_steps?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       implementation_trails: {
         Row: {
           created_at: string | null
