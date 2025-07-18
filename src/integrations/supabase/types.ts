@@ -5223,30 +5223,7 @@ export type Database = {
       }
       get_cached_profile: {
         Args: { target_user_id: string }
-        Returns: {
-          available_for_networking: boolean | null
-          avatar_url: string | null
-          company_name: string | null
-          created_at: string
-          current_position: string | null
-          email: string
-          id: string
-          industry: string | null
-          last_active: string | null
-          linkedin_url: string | null
-          name: string | null
-          onboarding_completed: boolean
-          onboarding_completed_at: string | null
-          professional_bio: string | null
-          referrals_count: number
-          role: string
-          role_id: string | null
-          skills: string[] | null
-          status: string | null
-          successful_referrals_count: number
-          updated_at: string | null
-          whatsapp_number: string | null
-        }[]
+        Returns: Json
       }
       get_courses_with_stats: {
         Args: Record<PropertyKey, never>
@@ -5559,6 +5536,10 @@ export type Database = {
           | { p_user_id: string; p_invite_data?: Json }
           | { p_user_id: string; p_invite_token?: string }
         Returns: Json
+      }
+      invalidate_profile_cache: {
+        Args: { user_id?: string }
+        Returns: undefined
       }
       is_admin: {
         Args: Record<PropertyKey, never>

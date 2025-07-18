@@ -36,7 +36,8 @@ export const useUser = (): UseUserReturn => {
         console.log('🔍 [PROFILE] Perfil carregado:', {
           name: data.name,
           role: data.user_roles?.name,
-          hasUserRoles: !!data.user_roles
+          hasUserRoles: !!data.user_roles,
+          fullProfile: data
         });
       } else {
         console.warn('⚠️ [PROFILE] Nenhum perfil encontrado para o usuário');

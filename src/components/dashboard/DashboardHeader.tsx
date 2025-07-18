@@ -14,12 +14,16 @@ export const DashboardHeader = () => {
   // Limpar cache na primeira renderização se necessário
   useEffect(() => {
     if (user?.id && (!profile?.user_roles || !profile?.name)) {
-      console.log('🔄 [DASHBOARD] Invalidando cache devido a dados incompletos');
+      console.log('🔄 [DASHBOARD] Invalidando cache devido a dados incompletos', {
+        hasUserRoles: !!profile?.user_roles,
+        hasName: !!profile?.name,
+        profile
+      });
       invalidateCache(user.id);
     }
   }, [user?.id, profile, invalidateCache]);
   
-  const firstName = profile?.name?.split(" ")[0] || profile?.user_roles?.name || "Membro";
+  const firstName = profile?.name?.split(" ")[0] || "Membro";
   
   return (
     <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
