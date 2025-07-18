@@ -1,6 +1,6 @@
 
 import { RouteObject } from "react-router-dom";
-import AdminProtectedRoutes from '@/components/auth/AdminProtectedRoutes';
+import { ProtectedRoutes } from '@/auth/ProtectedRoutes';
 import AdminLayout from '@/components/layout/admin/AdminLayout';
 
 // Admin pages
@@ -26,15 +26,15 @@ import OnboardingPreview from '@/pages/admin/OnboardingPreview';
 import NPSAnalytics from '@/pages/admin/NPSAnalytics';
 import CertificateTemplates from '@/pages/admin/CertificateTemplates';
 
-// Função helper para criar rotas protegidas com AdminLayout - PROTEÇÃO ADMIN REAL
+// Função helper para criar rotas protegidas com AdminLayout (sempre aberto)
 const createAdminRoute = (path: string, Component: React.ComponentType<any>) => ({
   path,
   element: (
-    <AdminProtectedRoutes>
+    <ProtectedRoutes>
       <AdminLayout>
         <Component />
       </AdminLayout>
-    </AdminProtectedRoutes>
+    </ProtectedRoutes>
   )
 });
 

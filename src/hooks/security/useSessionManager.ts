@@ -1,9 +1,10 @@
-
 import { useEffect, useCallback } from 'react';
+import { useAuth } from '@/contexts/auth';
 import { supabase } from '@/lib/supabase';
 
-// Hook simplificado que NÃO depende do useAuth para evitar dependência circular
-export const useSessionManager = (user?: any, session?: any) => {
+export const useSessionManager = () => {
+  const { user, session } = useAuth();
+
   // Initialize session tracking
   useEffect(() => {
     if (user && session) {

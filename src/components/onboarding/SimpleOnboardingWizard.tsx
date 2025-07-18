@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/auth';
 import { toast } from '@/hooks/use-toast';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { useOnboarding } from '@/hooks/useOnboarding';
+import { useCleanOnboarding } from '@/hooks/useCleanOnboarding';
 
 // Import dos steps simplificados (versões corrigidas)
 import { SimpleOnboardingStep1 } from './steps/SimpleOnboardingStep1';
@@ -44,7 +44,7 @@ export const SimpleOnboardingWizard: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const onboarding = useOnboarding();
+  const onboarding = useCleanOnboarding();
   
   const [currentStep, setCurrentStep] = useState(1);
   // Removido auto-save - salvamento apenas nos botões de navegação
@@ -95,7 +95,7 @@ export const SimpleOnboardingWizard: React.FC = () => {
         // O hook useCleanOnboarding já cuida da inicialização automaticamente
         // Só precisamos aguardar o carregamento dos dados
         console.log('🔍 [ONBOARDING] Dados carregados:', {
-          hasData: !!onboarding.data,
+          hasData: !!onboarding.data.id,
           currentStep: onboarding.currentStep,
           inviteToken: inviteToken ? inviteToken.substring(0, 6) + '***' : 'none'
         });
@@ -131,9 +131,14 @@ export const SimpleOnboardingWizard: React.FC = () => {
     console.log('➡️ [ONBOARDING] stepData recebido:', stepData);
     console.log('➡️ [ONBOARDING] currentStep:', currentStep);
     
-    // Validação simples - permitir avanço por agora
-    if (currentStep > TOTAL_STEPS) {
-      console.error('❌ [ONBOARDING] Step inválido:', currentStep);
+    // 🎯 CORREÇÃO: Validar step access antes de salvar
+    if (!onboarding.canAccessStep(currentStep)) {
+      console.error('❌ [ONBOARDING] Sem acesso ao step atual:', currentStep);
+      toast({
+        title: "Acesso negado",
+        description: "Você não tem permissão para acessar esta etapa.",
+        variant: "destructive",
+      });
       return;
     }
     
@@ -154,22 +159,16 @@ export const SimpleOnboardingWizard: React.FC = () => {
       return;
     }
 
-    // Atualizar dados e salvar
-    if (stepData) {
-      onboarding.updateData(stepData);
-    }
-    
-    const success = await onboarding.save();
+    // Usar o hook para salvar e navegar
+    const targetStep = currentStep === 6 ? 7 : currentStep + 1; // Step 6 vai para 7 (completo)
+    const success = await onboarding.saveAndNavigate(stepData, currentStep, targetStep);
     
     if (success) {
-      if (currentStep === 6) {
-        // Finalizar onboarding
-        await onboarding.complete();
-        navigate('/dashboard');
-      } else {
-        setCurrentStep(currentStep + 1);
+      if (currentStep < TOTAL_STEPS) {
+        setCurrentStep(targetStep);
         window.scrollTo({ top: 0, behavior: 'smooth' });
       }
+      // Se currentStep === 6, o saveAndNavigate já vai redirecionar para /dashboard
     }
     
     console.log('➡️ [ONBOARDING] === HANDLENEXT FINALIZADO ===');

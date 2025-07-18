@@ -8,7 +8,6 @@ export interface AuthContextType {
   profile: UserProfile | null;
   isAdmin: boolean;
   isFormacao: boolean;
-  hasCompletedOnboarding: boolean;
   isLoading: boolean;
   authError: Error | null;
   signIn: (email: string, password: string) => Promise<{ error?: Error }>;

@@ -8,6 +8,7 @@ import { supabase } from "@/lib/supabase";
 import { toast } from "@/hooks/use-toast";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import { useAuth } from "@/contexts/auth";
 import SignUpForm from "./SignUpForm";
 
 const AuthLayout = () => {
@@ -18,9 +19,9 @@ const AuthLayout = () => {
   const [isSignUp, setIsSignUp] = useState(false);
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  
-  // CORREÇÃO: Usar estado local para controlar redirecionamento
-  const [shouldRedirect, setShouldRedirect] = useState(false);
+  const [localUser, setLocalUser] = useState(null);
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+  const { user: authUser } = useAuth();
 
   // Verificar se há token de convite na URL para mostrar registro
   useEffect(() => {
@@ -30,43 +31,33 @@ const AuthLayout = () => {
     }
   }, [searchParams]);
 
-  // Verificar autenticação apenas após o AuthProvider estar pronto
+  // Verificar se usuário já está logado e redirecionar
   useEffect(() => {
-    let isMounted = true;
-    
-    const checkAuthStatus = async () => {
+    const checkAuth = async () => {
       try {
-        // Aguardar um pouco para garantir que o AuthProvider foi inicializado
-        await new Promise(resolve => setTimeout(resolve, 100));
-        
-        if (!isMounted) return;
-        
-        // Tentar obter a sessão diretamente do Supabase
         const { data: { session } } = await supabase.auth.getSession();
-        
-        if (session?.user && isMounted) {
-          console.log("[AUTH-LAYOUT] Usuário já autenticado, preparando redirecionamento");
-          setShouldRedirect(true);
+        if (session?.user) {
+          setLocalUser(session.user);
+          console.log("[AUTH-LAYOUT] Usuário já autenticado, aguardando contexto de auth para redirecionamento");
+          // Não redirecionar imediatamente - deixar o RootRedirect decidir
         }
       } catch (error) {
-        console.warn("[AUTH-LAYOUT] Erro ao verificar autenticação:", error);
+        console.error("[AUTH-LAYOUT] Erro ao verificar autenticação:", error);
+      } finally {
+        setIsCheckingAuth(false);
       }
     };
 
-    checkAuthStatus();
-    
-    return () => {
-      isMounted = false;
-    };
-  }, []);
+    checkAuth();
+  }, [navigate]);
 
-  // Redirecionar quando necessário
+  // Monitorar quando o contexto de auth reconhece o usuário logado
   useEffect(() => {
-    if (shouldRedirect) {
-      console.log("[AUTH-LAYOUT] Redirecionando usuário autenticado para /");
+    if (authUser && !isCheckingAuth) {
+      console.log("[AUTH-LAYOUT] Usuário autenticado pelo contexto, redirecionando para /");
       navigate('/', { replace: true });
     }
-  }, [shouldRedirect, navigate]);
+  }, [authUser, isCheckingAuth, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -101,7 +92,7 @@ const AuthLayout = () => {
           description: "Redirecionando...",
         });
         
-        // O redirecionamento será automático quando o contexto de auth processar
+        // Aguardar o contexto de auth processar e redirecionar automaticamente
         console.log("[AUTH-LAYOUT] Login bem-sucedido, aguardando redirecionamento automático...");
       }
       
