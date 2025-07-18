@@ -4682,6 +4682,7 @@ export type Database = {
               max_attempts: number
               time_window: unknown
             }
+          | { p_action: string; p_limit_per_hour?: number }
           | {
               p_identifier: string
               p_action_type: string
@@ -5187,7 +5188,7 @@ export type Database = {
         }[]
       }
       get_user_role: {
-        Args: { user_id: string }
+        Args: Record<PropertyKey, never> | { user_id: string }
         Returns: string
       }
       get_user_role_safe: {
@@ -5299,6 +5300,10 @@ export type Database = {
       }
       is_new_user: {
         Args: { check_user_id?: string }
+        Returns: boolean
+      }
+      is_owner: {
+        Args: { resource_user_id: string }
         Returns: boolean
       }
       is_user_admin: {

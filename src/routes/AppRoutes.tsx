@@ -1,51 +1,23 @@
 
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
-import { useEffect, useState } from 'react';
 import { authRoutes } from './AuthRoutes';
 import { adminRoutes } from './AdminRoutes';
 import { memberRoutes } from './MemberRoutes';
 import { formacaoRoutes } from './FormacaoRoutes';
 import { certificateRoutes } from './CertificateRoutes';
 import { CommunityRedirects } from '@/components/routing/CommunityRedirects';
+import { useNavigationGuard } from '@/hooks/useNavigationGuard';
 import NotFound from '@/pages/NotFound';
 import InvitePage from '@/pages/InvitePage';
 
 const AppRoutes = () => {
   const location = useLocation();
-  const [navigationEvents, setNavigationEvents] = useState<{path: string, timestamp: number}[]>([]);
+  const { currentPath } = useNavigationGuard();
   
-  // Para diagnóstico - mostrar quando a rota muda
-  useEffect(() => {
-    console.log("AppRoutes: Navegação para rota:", location.pathname, {
-      search: location.search,
-      state: location.state
-    });
-    
-    // Armazenar eventos de navegação recentes para detectar loops
-    const now = Date.now();
-    setNavigationEvents(prev => {
-      // Adicionar evento atual
-      const updated = [...prev, {path: location.pathname, timestamp: now}];
-      
-      // Remover eventos antigos (mais de 10 segundos)
-      const filtered = updated.filter(event => now - event.timestamp < 10000);
-      
-      // Detectar possíveis loops
-      const recentPathCounts: Record<string, number> = {};
-      filtered.forEach(event => {
-        recentPathCounts[event.path] = (recentPathCounts[event.path] || 0) + 1;
-      });
-      
-      // Alertar se houver muitos eventos para a mesma rota
-      Object.entries(recentPathCounts).forEach(([path, count]) => {
-        if (count > 3) {
-          console.warn(`AppRoutes: Possível loop de navegação detectado para a rota ${path} (${count} eventos em 10s)`);
-        }
-      });
-      
-      return filtered;
-    });
-  }, [location]);
+  console.log("AppRoutes: Navegação para rota:", currentPath, {
+    search: location.search,
+    state: location.state
+  });
   
   // Verificar se estamos em uma rota de comunidade para evitar renderizar CommunityRedirects
   // Ou em uma rota de autenticação/convite onde não precisamos do redirecionamento

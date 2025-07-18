@@ -20,7 +20,6 @@ const ProtectedRoute = ({
   const { user, profile, isAdmin, hasCompletedOnboarding, isLoading } = useAuth();
   const location = useLocation();
   const [isLegacyUser, setIsLegacyUser] = useState<boolean | null>(null);
-  const [isCreatingProfile, setIsCreatingProfile] = useState(false);
   
   // Verificar se é usuário legacy
   useEffect(() => {
@@ -46,51 +45,24 @@ const ProtectedRoute = ({
     }
   }, [user?.id]);
 
-  // Tentar criar perfil automaticamente se ausente
+  // Simplificado: Apenas aguardar perfil ser carregado pelo AuthContext
   useEffect(() => {
-    const createMissingProfile = async () => {
-      if (!user?.id || profile || isCreatingProfile || isLoading) {
-        return;
-      }
-
-      console.log(`[PROTECTED] Tentando criar perfil para usuário: ${user.id}`);
-      setIsCreatingProfile(true);
-
-      try {
-        const { data, error } = await supabase.rpc('create_missing_profile_safe', {
-          target_user_id: user.id
-        });
-
-        if (error) {
-          console.error('[PROTECTED] Erro ao criar perfil:', error);
-          toast.error('Erro ao configurar perfil do usuário');
-        } else {
-          console.log('[PROTECTED] Resultado da criação de perfil:', data);
-          toast.success('Perfil configurado com sucesso');
-          // Aguardar um momento para o perfil ser carregado no contexto
-          setTimeout(() => {
-            window.location.reload();
-          }, 1000);
-        }
-      } catch (error) {
-        console.error('[PROTECTED] Erro crítico ao criar perfil:', error);
-        toast.error('Erro crítico na configuração do perfil');
-      } finally {
-        setIsCreatingProfile(false);
-      }
-    };
-
+    // Se usuário existe mas não tem perfil após tempo suficiente, pode ser problema
     if (user && !profile && !isLoading && isLegacyUser !== null) {
-      createMissingProfile();
+      const timer = setTimeout(() => {
+        if (!profile) {
+          console.warn('[PROTECTED] Perfil não carregado após timeout, redirecionando para login');
+          toast.error('Erro na configuração da conta. Faça login novamente.');
+        }
+      }, 3000); // 3 segundos de timeout
+
+      return () => clearTimeout(timer);
     }
-  }, [user, profile, isLoading, isLegacyUser, isCreatingProfile]);
+  }, [user, profile, isLoading, isLegacyUser]);
   
   // Se estiver carregando ou verificando status legacy, mostra tela de loading
-  if (isLoading || (user && isLegacyUser === null) || isCreatingProfile) {
-    const message = isCreatingProfile 
-      ? "Configurando seu perfil..." 
-      : "Verificando sua autenticação...";
-    return <LoadingScreen message={message} />;
+  if (isLoading || (user && isLegacyUser === null)) {
+    return <LoadingScreen message="Verificando sua autenticação..." />;
   }
 
   // Se não houver usuário autenticado, redireciona para login
@@ -105,18 +77,11 @@ const ProtectedRoute = ({
     return <Navigate to="/login" replace />;
   }
 
-  // VERIFICAÇÃO DE ONBOARDING (APENAS PARA USUÁRIOS NOVOS)
-  // Rotas permitidas sem onboarding completo
-  const allowedWithoutOnboarding = ['/login', '/onboarding', '/auth'];
-  const isOnboardingRoute = allowedWithoutOnboarding.some(route => 
-    location.pathname.startsWith(route)
-  );
-
-  // Usuários legacy podem navegar livremente
-  if (isLegacyUser) {
-    // Permitir navegação livre para usuários legacy
-  } else if (!hasCompletedOnboarding && !isOnboardingRoute) {
-    // Apenas usuários NOVOS são obrigados a completar o onboarding
+  // VERIFICAÇÃO DE ONBOARDING - Simplificada
+  const isOnboardingRoute = location.pathname.startsWith('/onboarding');
+  
+  // Apenas usuários novos que não completaram onboarding precisam ir para onboarding
+  if (!isLegacyUser && !hasCompletedOnboarding && !isOnboardingRoute) {
     return <Navigate to="/onboarding" replace />;
   }
   

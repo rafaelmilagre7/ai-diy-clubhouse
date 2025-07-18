@@ -71,19 +71,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       console.log(`[AUTH] Carregando perfil para usuário: ${userId}`);
       
-      let userProfile = await fetchUserProfile(userId);
+      const userProfile = await fetchUserProfile(userId);
       
-      // Se não encontrou perfil, tentar criar
-      if (!userProfile) {
-        console.log(`[AUTH] Perfil não encontrado, tentando criar para: ${userId}`);
-        userProfile = await createUserProfileIfNeeded(userId);
-      }
-
       if (userProfile) {
         console.log(`[AUTH] Perfil carregado com sucesso: ${userId}`);
         setProfile(userProfile);
       } else {
-        console.warn(`[AUTH] Não foi possível carregar/criar perfil para: ${userId}`);
+        console.warn(`[AUTH] Perfil não encontrado para: ${userId}`);
         setProfile(null);
       }
     } catch (error) {
@@ -93,19 +87,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   useEffect(() => {
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        loadUserProfile(session.user.id);
-      }
-      setIsLoading(false);
-    });
+    let isInitialized = false;
 
-    // Listen for auth changes
+    // Listen for auth changes FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      (event, session) => {
         console.log(`[AUTH] Auth state change: ${event}`);
         setSession(session);
         setUser(session?.user ?? null);
@@ -119,9 +105,22 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           setProfile(null);
         }
         
-        setIsLoading(false);
+        if (isInitialized) {
+          setIsLoading(false);
+        }
       }
     );
+
+    // THEN get initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      if (session?.user) {
+        loadUserProfile(session.user.id);
+      }
+      isInitialized = true;
+      setIsLoading(false);
+    });
 
     return () => subscription.unsubscribe();
   }, []);
