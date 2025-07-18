@@ -12,6 +12,9 @@ interface UserProfile {
   };
 }
 
+// Cache de permissões com TTL de 5 minutos
+const PERMISSIONS_CACHE_TTL = 5 * 60 * 1000;
+
 export interface UserPermissions {
   isAdmin: boolean;
   isFormacao: boolean;
