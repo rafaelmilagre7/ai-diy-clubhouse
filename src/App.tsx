@@ -7,7 +7,7 @@ import { Toaster } from 'sonner';
 import { ThemeProvider } from 'next-themes';
 import { AuthProvider } from '@/contexts/auth';
 import { LoggingProvider } from '@/hooks/useLogging';
-import { SessionManagerWrapper } from '@/components/auth/SessionManagerWrapper';
+import { AuthenticatedSessionManager } from '@/components/auth/AuthenticatedSessionManager';
 import { AppRoutes } from '@/routes';
 import { SEOWrapper } from '@/components/seo/SEOWrapper';
 import EmergencyFallback from '@/components/debug/EmergencyFallback';
@@ -55,8 +55,8 @@ function App() {
       <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
         <QueryClientProvider client={queryClient}>
           <AuthProvider>
-            <SessionManagerWrapper />
             <LoggingProvider>
+              <AuthenticatedSessionManager />
               <Router>
                 <SEOWrapper>
                   <div className="App">
