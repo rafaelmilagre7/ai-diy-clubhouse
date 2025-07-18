@@ -31,13 +31,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setIsLoading,
   });
 
-  // TIMEOUT OBRIGATÓRIO - 3 segundos (mais realista)
+  // TIMEOUT SINCRONIZADO - 2 segundos (alinhado com outros componentes)
   useEffect(() => {
-    console.log("🔐 [AUTH] Configurando timeout obrigatório de 3 segundos");
+    console.log("🔐 [AUTH] Configurando timeout sincronizado de 2 segundos");
     const emergencyTimeout = setTimeout(() => {
-      console.error("🚨 [AUTH-PROVIDER] TIMEOUT OBRIGATÓRIO - Forçando parada do loading");
+      console.error("🚨 [AUTH-PROVIDER] TIMEOUT SINCRONIZADO - Forçando parada do loading");
       setIsLoading(false);
-    }, 3000);
+    }, 2000);
     
     return () => clearTimeout(emergencyTimeout);
   }, []);

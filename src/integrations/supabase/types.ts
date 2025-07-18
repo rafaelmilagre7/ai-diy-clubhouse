@@ -4836,6 +4836,10 @@ export type Database = {
         Args: { p_user_id: string; p_course_id: string }
         Returns: string
       }
+      create_missing_profile_safe: {
+        Args: { target_user_id: string }
+        Returns: Json
+      }
       create_onboarding_backup: {
         Args: { p_user_id: string; p_backup_type?: string }
         Returns: string

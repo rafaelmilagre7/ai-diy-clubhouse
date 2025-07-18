@@ -16,13 +16,13 @@ const AdminProtectedRoutes = ({ children }: AdminProtectedRoutesProps) => {
   const location = useLocation();
   const [forceTimeout, setForceTimeout] = useState(false);
 
-  // TIMEOUT OBRIGATÓRIO DE 1 SEGUNDO
+  // TIMEOUT SINCRONIZADO DE 2 SEGUNDOS  
   useEffect(() => {
-    console.log("🔒 [ADMIN-PROTECTED] Configurando timeout obrigatório de 1s");
+    console.log("🔒 [ADMIN-PROTECTED] Configurando timeout sincronizado de 2s");
     const timeout = setTimeout(() => {
-      console.error("🚨 [ADMIN-PROTECTED] TIMEOUT OBRIGATÓRIO - Forçando decisão");
+      console.error("🚨 [ADMIN-PROTECTED] TIMEOUT SINCRONIZADO - Forçando decisão");
       setForceTimeout(true);
-    }, 1000);
+    }, 2000);
     
     return () => clearTimeout(timeout);
   }, []);

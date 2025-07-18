@@ -18,12 +18,12 @@ const RootRedirect = () => {
 
   // APENAS REDIRECIONAMENTOS ESSENCIAIS - SEM LOOPS
   
-  // Se carregando, mostrar loading apenas por 1 segundo
+  // Se carregando, mostrar loading apenas por 2 segundos (sincronizado)
   if (authLoading) {
     console.log("⏳ [ROOT-REDIRECT] Carregando...");
     setTimeout(() => {
       console.warn("⚠️ [ROOT-REDIRECT] Timeout de loading - continuando sem auth");
-    }, 1000);
+    }, 2000);
     return <LoadingScreen message="Carregando..." />;
   }
 
@@ -34,10 +34,10 @@ const RootRedirect = () => {
     return <Navigate to={roleName === 'formacao' ? '/formacao' : '/dashboard'} replace />;
   }
   
-  // Usuário logado tentando acessar /login
-  if (location.pathname === '/login' && user) {
+  // Usuário logado tentando acessar /login - APENAS se tiver perfil válido
+  if (location.pathname === '/login' && user && profile) {
     const roleName = getUserRoleName(profile);
-    console.log("✅ [ROOT-REDIRECT] Usuário logado em /login - redirecionando");
+    console.log("✅ [ROOT-REDIRECT] Usuário logado com perfil em /login - redirecionando");
     return <Navigate to={roleName === 'formacao' ? '/formacao' : '/dashboard'} replace />;
   }
   

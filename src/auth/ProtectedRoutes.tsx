@@ -47,34 +47,23 @@ export const ProtectedRoutes = ({ children }: ProtectedRoutesProps) => {
       setProfileCreationAttempted(true);
       
       try {
-        console.log(`[PROTECTED] Tentando criar perfil para usuário: ${user.id}`);
+        console.log(`[PROTECTED] Usando função segura para criar perfil: ${user.id}`);
         
-        // Buscar role padrão
-        const { data: defaultRole } = await supabase
-          .from('user_roles')
-          .select('id')
-          .eq('name', 'membro_club')
-          .single();
+        // Usar a função segura do banco de dados
+        const { data, error } = await supabase.rpc('create_missing_profile_safe', {
+          target_user_id: user.id
+        });
 
-        // Criar perfil básico
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .insert({
-            id: user.id,
-            email: user.email || '',
-            name: user.email?.split('@')[0] || 'Usuário',
-            role_id: defaultRole?.id,
-            onboarding_completed: false
-          });
-
-        if (profileError) {
-          console.error('[PROTECTED] Erro ao criar perfil:', profileError);
+        if (error) {
+          console.error('[PROTECTED] Erro ao criar perfil:', error);
         } else {
-          console.log('[PROTECTED] Perfil criado com sucesso');
-          // Forçar reload da página para recarregar o contexto de auth
-          setTimeout(() => {
-            window.location.reload();
-          }, 1000);
+          console.log('[PROTECTED] Resultado da criação:', data);
+          if (data?.success) {
+            // Forçar reload da página para recarregar o contexto de auth
+            setTimeout(() => {
+              window.location.reload();
+            }, 1000);
+          }
         }
       } catch (error) {
         console.error('[PROTECTED] Erro crítico ao criar perfil:', error);
@@ -100,19 +89,33 @@ export const ProtectedRoutes = ({ children }: ProtectedRoutesProps) => {
     location.pathname.startsWith(route)
   );
 
-  // CORREÇÃO: Em vez de lançar erro, redirecionar para login ou criar perfil
+  // CORREÇÃO DEFINITIVA: NUNCA redirecionar para /login para evitar loops
   if (!profile && !isOnboardingRoute) {
     // Se ainda não tentamos criar o perfil, mostrar loading
     if (!profileCreationAttempted) {
       return <LoadingScreen message="Configurando sua conta..." />;
     }
     
-    // Se já tentamos criar o perfil mas falhou, redirecionar para login
-    console.warn("[PROTECTED] Usuário sem perfil válido - redirecionando para login");
-    return <Navigate to="/login" state={{ 
-      from: location.pathname,
-      error: "Erro na configuração da conta. Tente fazer login novamente." 
-    }} replace />;
+    // Se já tentamos criar o perfil mas falhou, mostrar erro em vez de redirecionar
+    console.warn("[PROTECTED] Usuário sem perfil válido - mostrando erro");
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-background">
+        <div className="text-center p-6 max-w-md">
+          <h2 className="text-xl font-semibold mb-4 text-foreground">
+            Erro na Configuração da Conta
+          </h2>
+          <p className="text-muted-foreground mb-4">
+            Houve um problema ao configurar sua conta. 
+          </p>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="px-4 py-2 bg-primary text-primary-foreground rounded hover:bg-primary/90"
+          >
+            Tentar Novamente
+          </button>
+        </div>
+      </div>
+    );
   }
 
   // Tudo ok - renderizar conteúdo
