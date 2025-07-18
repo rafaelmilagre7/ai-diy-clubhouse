@@ -10,8 +10,20 @@ const RootRedirect = () => {
   const { user, profile, isLoading: authLoading } = useAuth();
   const [timeoutReached, setTimeoutReached] = useState(false);
   const [redirectCount, setRedirectCount] = useState(0);
+  const [emergencyTimeout, setEmergencyTimeout] = useState(false);
   const timeoutRef = useRef<NodeJS.Timeout>();
+  const emergencyRef = useRef<NodeJS.Timeout>();
   const MAX_REDIRECTS = 3;
+  
+  console.log("🔄 [ROOT-REDIRECT] RENDER:", {
+    path: location.pathname,
+    hasUser: !!user,
+    hasProfile: !!profile,
+    authLoading,
+    timeoutReached,
+    redirectCount,
+    emergencyTimeout
+  });
   
   // TIMEOUT SINCRONIZADO: 6 segundos (MESMO EM TODOS OS COMPONENTES)
   useEffect(() => {
@@ -33,6 +45,26 @@ const RootRedirect = () => {
       }
     };
   }, [authLoading]);
+
+  // TIMEOUT DE EMERGÊNCIA ABSOLUTO: Se nada funcionar em 10s, forçar login
+  useEffect(() => {
+    emergencyRef.current = setTimeout(() => {
+      console.error("🚨 [ROOT-REDIRECT] TIMEOUT DE EMERGÊNCIA - Forçando login absoluto");
+      setEmergencyTimeout(true);
+    }, 10000); // 10s timeout de emergência
+
+    return () => {
+      if (emergencyRef.current) {
+        clearTimeout(emergencyRef.current);
+      }
+    };
+  }, []);
+
+  // EMERGÊNCIA ABSOLUTA: Quebrar qualquer loop
+  if (emergencyTimeout) {
+    console.error("🆘 [ROOT-REDIRECT] EMERGÊNCIA ATIVADA - Redirecionamento forçado");
+    return <Navigate to="/login" replace />;
+  }
 
   // PROTEÇÃO ANTI-LOOP: Contar redirecionamentos
   useEffect(() => {

@@ -80,61 +80,68 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     return Boolean(profile?.onboarding_completed);
   }, [profile]);
 
-  // Inicialização simplificada - uma única vez
+  // INICIALIZAÇÃO ULTRA SIMPLIFICADA - QUEBRAR LOOP
   useEffect(() => {
     if (isInitialized.current) return;
+    console.log('🚀 [AUTH] INICIALIZAÇÃO SIMPLIFICADA para quebrar loop');
     
     const initializeAuth = async () => {
-      console.log('🚀 [AUTH] Inicializando autenticação');
-      
       try {
-        // Configurar listener primeiro
+        // VERIFICAÇÃO RÁPIDA: Apenas obter sessão atual
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (session?.user) {
+          console.log('✅ [AUTH] Sessão ativa - configurando...');
+          setUser(session.user);
+          setSession(session);
+          // Carregar perfil em background para não bloquear
+          setTimeout(() => {
+            setupAuthSession().catch(() => {
+              console.warn('⚠️ [AUTH] Erro ao carregar perfil - continuando...');
+              setIsLoading(false);
+            });
+          }, 0);
+        } else {
+          console.log('🔓 [AUTH] SEM SESSÃO - PARANDO loading IMEDIATAMENTE');
+          setUser(null);
+          setProfile(null);
+          setSession(null);
+          setIsLoading(false); // PARAR LOADING IMEDIATAMENTE
+        }
+
+        // Listener simplificado
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
           (event, session) => {
-            console.log(`🔄 [AUTH] Evento: ${event}`);
-            
-            // Limpar cache se mudou usuário
-            const currentUserId = session?.user?.id;
-            if (lastUserId.current && lastUserId.current !== currentUserId) {
-              clearProfileCache();
-            }
-            lastUserId.current = currentUserId;
+            console.log(`🔄 [AUTH] Evento: ${event}, tem sessão: ${!!session}`);
             
             if (event === 'SIGNED_IN' && session?.user) {
-              console.log(`✅ [AUTH] Login: ${session.user.email}`);
-              // Usar timeout para evitar deadlock
-              setTimeout(() => {
-                setupAuthSession().catch(error => {
-                  console.error('❌ [AUTH] Erro no setup:', error);
-                  setAuthError(error instanceof Error ? error : new Error('Erro no setup'));
-                  setIsLoading(false);
-                });
-              }, 100);
+              setUser(session.user);
+              setSession(session);
+              setTimeout(() => setupAuthSession(), 0);
             } else if (event === 'SIGNED_OUT') {
-              console.log('👋 [AUTH] Logout');
               clearProfileCache();
               setUser(null);
               setProfile(null);
               setSession(null);
               setAuthError(null);
               setIsLoading(false);
-            } else if (event === 'INITIAL_SESSION' && !session) {
-              // CRÍTICO: Se não há sessão inicial, parar loading imediatamente
-              console.log('🔓 [AUTH] Sem sessão inicial - parando loading');
+            } else if (!session) {
+              // SEM SESSÃO = PARAR LOADING
+              console.log('🔓 [AUTH] Sem sessão - PARANDO loading');
+              setUser(null);
+              setProfile(null);
+              setSession(null);
               setIsLoading(false);
             }
           }
         );
         
         authListenerRef.current = subscription;
-        
-        // Setup inicial
-        await setupAuthSession();
         isInitialized.current = true;
         
       } catch (error) {
-        console.error('❌ [AUTH] Erro na inicialização:', error);
-        setAuthError(error instanceof Error ? error : new Error('Erro na inicialização'));
+        console.error('❌ [AUTH] Erro crítico - PARANDO loading:', error);
+        setAuthError(error instanceof Error ? error : new Error('Erro crítico'));
         setIsLoading(false);
       }
     };

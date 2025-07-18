@@ -7,7 +7,6 @@ import { Toaster } from 'sonner';
 import { ThemeProvider } from 'next-themes';
 import { AuthProvider } from '@/contexts/auth';
 import { LoggingProvider } from '@/hooks/useLogging';
-import { SecurityEnforcementProvider } from '@/components/security/SecurityEnforcementProvider';
 import { AppRoutes } from '@/routes';
 import { SEOWrapper } from '@/components/seo/SEOWrapper';
 
@@ -21,28 +20,29 @@ const queryClient = new QueryClient({
 });
 
 function App() {
+  console.log("🚀 [APP] Iniciando aplicação...");
+  
   return (
     <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
           <LoggingProvider>
-            <SecurityEnforcementProvider>
-              <Router>
-                <SEOWrapper>
-                  <div className="App">
-                    <AppRoutes />
-                    <Toaster 
-                      position="top-right"
-                      theme="dark"
-                      richColors
-                      expand
-                      visibleToasts={3}
-                    />
-                    <ReactQueryDevtools initialIsOpen={false} />
-                  </div>
-                </SEOWrapper>
-              </Router>
-            </SecurityEnforcementProvider>
+            {/* SecurityEnforcementProvider temporariamente removido para debug de loop */}
+            <Router>
+              <SEOWrapper>
+                <div className="App">
+                  <AppRoutes />
+                  <Toaster 
+                    position="top-right"
+                    theme="dark"
+                    richColors
+                    expand
+                    visibleToasts={3}
+                  />
+                  <ReactQueryDevtools initialIsOpen={false} />
+                </div>
+              </SEOWrapper>
+            </Router>
           </LoggingProvider>
         </AuthProvider>
       </QueryClientProvider>
