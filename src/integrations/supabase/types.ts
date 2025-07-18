@@ -3049,6 +3049,30 @@ export type Database = {
         }
         Relationships: []
       }
+      rate_limit_blocks: {
+        Row: {
+          action: string
+          blocked_until: string
+          created_at: string | null
+          id: string
+          identifier: string
+        }
+        Insert: {
+          action: string
+          blocked_until: string
+          created_at?: string | null
+          id?: string
+          identifier: string
+        }
+        Update: {
+          action?: string
+          blocked_until?: string
+          created_at?: string | null
+          id?: string
+          identifier?: string
+        }
+        Relationships: []
+      }
       rate_limits: {
         Row: {
           action_type: string
@@ -4652,6 +4676,10 @@ export type Database = {
         Args: { target_user_id: string; new_role_id: string }
         Returns: Json
       }
+      check_admin_access: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
       check_and_fix_onboarding_data: {
         Args: { user_id_param: string }
         Returns: Json
@@ -4690,6 +4718,15 @@ export type Database = {
               p_window_minutes?: number
             }
         Returns: boolean
+      }
+      check_rate_limit_safe: {
+        Args: {
+          p_action: string
+          p_limit_per_hour?: number
+          p_limit_per_minute?: number
+          p_identifier?: string
+        }
+        Returns: Json
       }
       check_referral: {
         Args: { p_token: string }
@@ -5126,6 +5163,33 @@ export type Database = {
       get_onboarding_next_step: {
         Args: { p_user_id: string }
         Returns: Json
+      }
+      get_profile_safe: {
+        Args: { target_user_id?: string }
+        Returns: {
+          available_for_networking: boolean | null
+          avatar_url: string | null
+          company_name: string | null
+          created_at: string
+          current_position: string | null
+          email: string
+          id: string
+          industry: string | null
+          last_active: string | null
+          linkedin_url: string | null
+          name: string | null
+          onboarding_completed: boolean
+          onboarding_completed_at: string | null
+          professional_bio: string | null
+          referrals_count: number
+          role: string
+          role_id: string | null
+          skills: string[] | null
+          status: string | null
+          successful_referrals_count: number
+          updated_at: string | null
+          whatsapp_number: string | null
+        }[]
       }
       get_progress_analytics: {
         Args: Record<PropertyKey, never>
@@ -5572,10 +5636,6 @@ export type Database = {
       user_has_permission: {
         Args: { user_id: string; permission_code: string }
         Returns: boolean
-      }
-      validate_admin_access: {
-        Args: { user_id: string }
-        Returns: Json
       }
       validate_bucket_name: {
         Args: { bucket_name: string }
