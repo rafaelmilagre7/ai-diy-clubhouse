@@ -4,19 +4,19 @@ import ProtectedRoute from '@/components/routing/ProtectedRoute';
 import RootRedirect from '@/components/routing/RootRedirect';
 import Layout from '@/components/layout/Layout';
 
-// Pages
-import DashboardPage from '@/pages/dashboard/DashboardPage';
+// Pages - corrigindo imports para os arquivos corretos
+import Dashboard from '@/pages/member/Dashboard';
 import SolutionDetailsPage from '@/pages/solutions/SolutionDetailsPage';
-import LearningPage from '@/pages/learning/LearningPage';
-import LearningCoursePage from '@/pages/learning/LearningCoursePage';
+import LearningPage from '@/pages/member/learning/LearningPage';
+import CourseDetails from '@/pages/member/learning/CourseDetails';
 import LearningLessonPage from '@/pages/learning/LearningLessonPage';
-import OnboardingPage from '@/pages/onboarding/OnboardingPage';
-import NetworkingPage from '@/pages/networking/NetworkingPage';
-import CommunityPage from '@/pages/community/CommunityPage';
-import CommunityTopicPage from '@/pages/community/CommunityTopicPage';
-import EventsPage from '@/pages/events/EventsPage';
-import ProfilePage from '@/pages/profile/ProfilePage';
-import ToolsPage from '@/pages/tools/ToolsPage';
+import OnboardingNewPage from '@/pages/member/OnboardingNew';
+import Networking from '@/pages/member/Networking';
+import ForumHome from '@/pages/member/forum/ForumHome';
+import CategoryView from '@/pages/member/forum/CategoryView';
+import Events from '@/pages/member/Events';
+import Profile from '@/pages/member/Profile';
+import Tools from '@/pages/member/Tools';
 
 export const memberRoutes = [
   {
@@ -32,7 +32,7 @@ export const memberRoutes = [
     element: (
       <ProtectedRoute>
         <Layout>
-          <DashboardPage />
+          <Dashboard />
         </Layout>
       </ProtectedRoute>
     ),
@@ -62,7 +62,7 @@ export const memberRoutes = [
     element: (
       <ProtectedRoute>
         <Layout>
-          <LearningCoursePage />
+          <CourseDetails />
         </Layout>
       </ProtectedRoute>
     ),
@@ -81,7 +81,7 @@ export const memberRoutes = [
     path: "/onboarding",
     element: (
       <ProtectedRoute>
-        <OnboardingPage />
+        <OnboardingNewPage />
       </ProtectedRoute>
     ),
   },
@@ -90,7 +90,7 @@ export const memberRoutes = [
     element: (
       <ProtectedRoute>
         <Layout>
-          <NetworkingPage />
+          <Networking />
         </Layout>
       </ProtectedRoute>
     ),
@@ -100,7 +100,7 @@ export const memberRoutes = [
     element: (
       <ProtectedRoute>
         <Layout>
-          <CommunityPage />
+          <ForumHome />
         </Layout>
       </ProtectedRoute>
     ),
@@ -110,7 +110,7 @@ export const memberRoutes = [
     element: (
       <ProtectedRoute>
         <Layout>
-          <CommunityTopicPage />
+          <CategoryView />
         </Layout>
       </ProtectedRoute>
     ),
@@ -120,7 +120,7 @@ export const memberRoutes = [
     element: (
       <ProtectedRoute>
         <Layout>
-          <EventsPage />
+          <Events />
         </Layout>
       </ProtectedRoute>
     ),
@@ -130,7 +130,7 @@ export const memberRoutes = [
     element: (
       <ProtectedRoute>
         <Layout>
-          <ProfilePage />
+          <Profile />
         </Layout>
       </ProtectedRoute>
     ),
@@ -140,7 +140,7 @@ export const memberRoutes = [
     element: (
       <ProtectedRoute>
         <Layout>
-          <ToolsPage />
+          <Tools />
         </Layout>
       </ProtectedRoute>
     ),

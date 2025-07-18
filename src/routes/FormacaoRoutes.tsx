@@ -3,11 +3,11 @@ import { Route } from 'react-router-dom';
 import ProtectedRoute from '@/components/routing/ProtectedRoute';
 import FormacaoLayout from '@/components/layout/formacao/FormacaoLayout';
 
-// Formação Pages
+// Formação Pages - usando páginas administrativas existentes como base
 import FormacaoDashboard from '@/pages/formacao/FormacaoDashboard';
-import FormacaoMemberManager from '@/pages/formacao/FormacaoMemberManager';
-import FormacaoEventManager from '@/pages/formacao/FormacaoEventManager';
-import FormacaoContentManager from '@/pages/formacao/FormacaoContentManager';
+import AdminRoles from '@/pages/admin/AdminRoles';
+import AdminEvents from '@/pages/admin/AdminEvents';
+import AdminSolutions from '@/pages/admin/AdminSolutions';
 
 export const formacaoRoutes = [
   {
@@ -25,7 +25,7 @@ export const formacaoRoutes = [
     element: (
       <ProtectedRoute requiredRole="formacao">
         <FormacaoLayout>
-          <FormacaoMemberManager />
+          <AdminRoles />
         </FormacaoLayout>
       </ProtectedRoute>
     ),
@@ -35,7 +35,7 @@ export const formacaoRoutes = [
     element: (
       <ProtectedRoute requiredRole="formacao">
         <FormacaoLayout>
-          <FormacaoEventManager />
+          <AdminEvents />
         </FormacaoLayout>
       </ProtectedRoute>
     ),
@@ -45,7 +45,7 @@ export const formacaoRoutes = [
     element: (
       <ProtectedRoute requiredRole="formacao">
         <FormacaoLayout>
-          <FormacaoContentManager />
+          <AdminSolutions />
         </FormacaoLayout>
       </ProtectedRoute>
     ),

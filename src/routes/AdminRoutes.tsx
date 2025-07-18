@@ -3,13 +3,13 @@ import { Route } from 'react-router-dom';
 import ProtectedRoute from '@/components/routing/ProtectedRoute';
 import AdminLayout from '@/components/layout/admin/AdminLayout';
 
-// Admin Pages
+// Admin Pages - corrigindo imports para os arquivos corretos
 import AdminDashboard from '@/pages/admin/AdminDashboard';
 import AdminAnalytics from '@/pages/admin/AdminAnalytics';
-import AdminInviteManager from '@/pages/admin/AdminInviteManager';
-import AdminUserManager from '@/pages/admin/AdminUserManager';
+import InvitesManagement from '@/pages/admin/invites/InvitesManagement';
+import AdminRoles from '@/pages/admin/AdminRoles';
 import AdminCommunicationCenter from '@/pages/admin/AdminCommunicationCenter';
-import AdminSolutionManager from '@/pages/admin/AdminSolutionManager';
+import AdminSolutions from '@/pages/admin/AdminSolutions';
 
 export const adminRoutes = [
   {
@@ -37,7 +37,7 @@ export const adminRoutes = [
     element: (
       <ProtectedRoute requireAdmin={true}>
         <AdminLayout>
-          <AdminInviteManager />
+          <InvitesManagement />
         </AdminLayout>
       </ProtectedRoute>
     ),
@@ -47,7 +47,7 @@ export const adminRoutes = [
     element: (
       <ProtectedRoute requireAdmin={true}>
         <AdminLayout>
-          <AdminUserManager />
+          <AdminRoles />
         </AdminLayout>
       </ProtectedRoute>
     ),
@@ -67,7 +67,7 @@ export const adminRoutes = [
     element: (
       <ProtectedRoute requireAdmin={true}>
         <AdminLayout>
-          <AdminSolutionManager />
+          <AdminSolutions />
         </AdminLayout>
       </ProtectedRoute>
     ),
