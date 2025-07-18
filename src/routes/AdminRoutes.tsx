@@ -1,6 +1,6 @@
 
 import { RouteObject } from "react-router-dom";
-import { AdminProtectedRoutes } from '@/components/auth/AdminProtectedRoutes';
+import AdminProtectedRoutes from '@/components/auth/AdminProtectedRoutes';
 import AdminLayout from '@/components/layout/admin/AdminLayout';
 
 // Admin pages
