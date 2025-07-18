@@ -19,8 +19,6 @@ const AuthLayout = () => {
   const [isSignUp, setIsSignUp] = useState(false);
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const [localUser, setLocalUser] = useState(null);
-  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   const { user: authUser } = useAuth();
 
   // Verificar se há token de convite na URL para mostrar registro
@@ -31,33 +29,13 @@ const AuthLayout = () => {
     }
   }, [searchParams]);
 
-  // Verificar se usuário já está logado e redirecionar
+  // Redirecionar se usuário já está autenticado
   useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session?.user) {
-          setLocalUser(session.user);
-          console.log("[AUTH-LAYOUT] Usuário já autenticado, aguardando contexto de auth para redirecionamento");
-          // Não redirecionar imediatamente - deixar o RootRedirect decidir
-        }
-      } catch (error) {
-        console.error("[AUTH-LAYOUT] Erro ao verificar autenticação:", error);
-      } finally {
-        setIsCheckingAuth(false);
-      }
-    };
-
-    checkAuth();
-  }, [navigate]);
-
-  // Monitorar quando o contexto de auth reconhece o usuário logado
-  useEffect(() => {
-    if (authUser && !isCheckingAuth) {
-      console.log("[AUTH-LAYOUT] Usuário autenticado pelo contexto, redirecionando para /");
+    if (authUser) {
+      console.log("[AUTH-LAYOUT] Usuário autenticado, redirecionando para /");
       navigate('/', { replace: true });
     }
-  }, [authUser, isCheckingAuth, navigate]);
+  }, [authUser, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -92,7 +70,7 @@ const AuthLayout = () => {
           description: "Redirecionando...",
         });
         
-        // Aguardar o contexto de auth processar e redirecionar automaticamente
+        // O redirecionamento será automático quando o contexto de auth processar
         console.log("[AUTH-LAYOUT] Login bem-sucedido, aguardando redirecionamento automático...");
       }
       

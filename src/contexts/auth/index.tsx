@@ -4,7 +4,7 @@ import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
 import { UserProfile, getUserRoleName, isAdminRole, isFormacaoRole } from '@/lib/supabase';
 import { useAuthMethods } from './hooks/useAuthMethods';
-import { useAuthStateManager } from '../../hooks/auth/useAuthStateManager';
+import { useAuthStateManager } from './hooks/useAuthStateManager';
 import { clearProfileCache } from '@/hooks/auth/utils/authSessionUtils';
 import { AuthContextType } from './types';
 import { useSessionManager } from '@/hooks/security/useSessionManager';
@@ -81,6 +81,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   // Computar isFormacao
   const isFormacao = React.useMemo(() => {
     return isFormacaoRole(profile);
+  }, [profile]);
+
+  // Computar hasCompletedOnboarding
+  const hasCompletedOnboarding = React.useMemo(() => {
+    return Boolean(profile?.onboarding_completed);
   }, [profile]);
 
   // Inicialização única otimizada
@@ -163,6 +168,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     profile,
     isAdmin,
     isFormacao,
+    hasCompletedOnboarding,
     isLoading,
     authError,
     signIn,

@@ -11,39 +11,22 @@ export const useSafeNavigation = () => {
 
   const safeNavigate = useCallback((path: string, options?: { 
     replace?: boolean; 
-    forceReload?: boolean;
-    fallbackToHref?: boolean;
   }) => {
     try {
       logger.info(`[SAFE-NAV] Navegando para: ${path}`);
       
-      // Se forceReload é true, usar window.location.href
-      if (options?.forceReload) {
-        window.location.href = path;
-        return;
-      }
-
-      // Tentar navegação programática primeiro
+      // Usar apenas navegação programática
       navigate(path, { replace: options?.replace ?? false });
       
     } catch (error) {
       logger.error('[SAFE-NAV] Erro na navegação programática:', error);
-      
-      // Fallback para window.location.href apenas se permitido
-      if (options?.fallbackToHref !== false) {
-        logger.info('[SAFE-NAV] Usando fallback para window.location.href');
-        window.location.href = path;
-      }
+      // Não usar fallbacks que causem reloads desnecessários
     }
   }, [navigate]);
 
   const safeReload = useCallback(() => {
-    try {
-      logger.info('[SAFE-NAV] Recarregando página...');
-      window.location.reload();
-    } catch (error) {
-      logger.error('[SAFE-NAV] Erro no reload:', error);
-    }
+    logger.info('[SAFE-NAV] Reload não recomendado - usar navegação programática');
+    // Não implementar reload automático
   }, []);
 
   const safeGoBack = useCallback(() => {

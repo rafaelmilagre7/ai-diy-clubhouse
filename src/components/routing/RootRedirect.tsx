@@ -11,13 +11,13 @@ const RootRedirect = () => {
   const [timeoutReached, setTimeoutReached] = useState(false);
   const timeoutRef = useRef<NodeJS.Timeout>();
   
-  // TIMEOUT DE SEGURANÇA: Se ficar carregando muito tempo, forçar redirecionamento
+  // TIMEOUT DE SEGURANÇA: Reduzido para 3 segundos máximo
   useEffect(() => {
     if (authLoading) {
       timeoutRef.current = setTimeout(() => {
         console.warn("⏰ [ROOT-REDIRECT] Timeout de loading atingido - forçando redirecionamento");
         setTimeoutReached(true);
-      }, 8000); // 8 segundos máximo para dar tempo suficiente
+      }, 3000); // Reduzido de 8s para 3s
     } else {
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
@@ -58,14 +58,13 @@ const RootRedirect = () => {
     return <Navigate to="/login" replace />;
   }
 
-  // SEM PERFIL: Aguardar um pouco mais ou mostrar erro
+  // SEM PERFIL: Erro crítico - não deveria acontecer
   if (!profile) {
     if (authLoading) {
       return <LoadingScreen message="Carregando perfil..." />;
     }
     
-    console.error("💥 [ROOT-REDIRECT] ERRO: Usuário sem perfil após loading");
-    // Em vez de erro, redirecionar para login para tentar novamente
+    console.error("💥 [ROOT-REDIRECT] ERRO CRÍTICO: Usuário sem perfil após loading");
     return <Navigate to="/login" replace />;
   }
 
@@ -74,12 +73,6 @@ const RootRedirect = () => {
     const roleName = getUserRoleName(profile);
     console.log("✅ [ROOT-REDIRECT] Usuário logado - redirecionando para dashboard");
     return <Navigate to={roleName === 'formacao' ? '/formacao' : '/dashboard'} replace />;
-  }
-
-  // ONBOARDING OPCIONAL - Permitir acesso a onboarding se solicitado, mas não obrigatório
-  if (profile.onboarding_completed && location.pathname.startsWith('/onboarding')) {
-    console.log("✅ [ROOT-REDIRECT] Usuário já completou onboarding mas quer acessar - permitindo");
-    // Permitir acesso ao onboarding mesmo se já completou
   }
   
   // REDIRECIONAMENTO POR ROLE na página inicial
