@@ -3,25 +3,29 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Edit, Trash2, Shield, Users, Settings, Loader2 } from 'lucide-react';
+import { Edit, Trash2, Shield, Users, Settings, Loader2, RefreshCw, AlertTriangle } from 'lucide-react';
 import { Role } from '@/hooks/admin/useRoles';
 
 interface RolesListProps {
   roles: Role[];
   isLoading: boolean;
+  error?: Error | null;
   onEditRole: (role: Role) => void;
   onDeleteRole: (role: Role) => void;
   onManagePermissions: (role: Role) => void;
   onManageCourseAccess: (role: Role) => void;
+  onRefresh?: () => void;
 }
 
 export const RolesList: React.FC<RolesListProps> = ({
   roles,
   isLoading,
+  error,
   onEditRole,
   onDeleteRole,
   onManagePermissions,
-  onManageCourseAccess
+  onManageCourseAccess,
+  onRefresh
 }) => {
   if (isLoading) {
     return (
@@ -36,6 +40,28 @@ export const RolesList: React.FC<RolesListProps> = ({
     );
   }
 
+  if (error) {
+    return (
+      <Card>
+        <CardContent className="py-6">
+          <div className="text-center">
+            <AlertTriangle className="h-12 w-12 mx-auto mb-4 text-destructive opacity-50" />
+            <p className="text-destructive font-medium mb-2">Erro ao carregar papéis</p>
+            <p className="text-sm text-muted-foreground mb-4">
+              {error.message || 'Erro desconhecido'}
+            </p>
+            {onRefresh && (
+              <Button onClick={onRefresh} variant="outline" size="sm">
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Tentar novamente
+              </Button>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   if (roles.length === 0) {
     return (
       <Card>
@@ -44,6 +70,12 @@ export const RolesList: React.FC<RolesListProps> = ({
             <Users className="h-12 w-12 mx-auto mb-2 opacity-50" />
             <p>Nenhum papel encontrado</p>
             <p className="text-sm">Crie o primeiro papel para o sistema</p>
+            {onRefresh && (
+              <Button onClick={onRefresh} variant="outline" size="sm" className="mt-4">
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Recarregar
+              </Button>
+            )}
           </div>
         </CardContent>
       </Card>

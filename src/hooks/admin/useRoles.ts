@@ -45,10 +45,27 @@ export const useRoles = () => {
       setIsLoading(true);
       setError(null);
       
-      const { data, error } = await supabase
+      // Primeiro verificar conectividade básica
+      const { error: connectError } = await supabase
+        .from('user_roles')
+        .select('count(*)', { count: 'exact', head: true });
+
+      if (connectError) {
+        console.error('❌ [ROLES] Erro de conectividade:', connectError);
+        throw connectError;
+      }
+
+      // Buscar roles com timeout de 10 segundos
+      const fetchPromise = supabase
         .from('user_roles')
         .select('*')
         .order('name');
+
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('Timeout na consulta de roles')), 10000)
+      );
+
+      const { data, error } = await Promise.race([fetchPromise, timeoutPromise]) as any;
 
       if (error) {
         console.error('❌ [ROLES] Erro ao carregar roles:', error);
@@ -61,13 +78,21 @@ export const useRoles = () => {
       console.error('❌ [ROLES] Erro no fetchRoles:', error);
       setError(error as Error);
       
-      // Fallback: tentar criar roles básicos se não existirem
-      if (error instanceof Error && error.message.includes('relation "user_roles" does not exist')) {
-        console.warn('⚠️ [ROLES] Tabela user_roles não existe, usando fallback');
-        setRoles([]);
-        toast.error('Tabela de papéis não encontrada. Contate o administrador.');
-      } else {
-        toast.error('Erro ao carregar papéis do sistema');
+      // Diferentes tratamentos para diferentes tipos de erro
+      if (error instanceof Error) {
+        if (error.message.includes('relation "user_roles" does not exist')) {
+          console.warn('⚠️ [ROLES] Tabela user_roles não existe');
+          setRoles([]);
+          toast.error('Tabela de papéis não encontrada. Contate o administrador.');
+        } else if (error.message.includes('infinite recursion')) {
+          console.warn('⚠️ [ROLES] Recursão infinita detectada');
+          toast.error('Erro de configuração. Atualize a página.');
+        } else if (error.message.includes('Timeout')) {
+          console.warn('⚠️ [ROLES] Timeout na consulta');
+          toast.error('Conexão lenta. Tente novamente.');
+        } else {
+          toast.error('Erro ao carregar papéis do sistema');
+        }
       }
     } finally {
       setLoading(false);
