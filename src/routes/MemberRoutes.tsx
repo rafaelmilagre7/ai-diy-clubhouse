@@ -30,6 +30,7 @@ export const memberRoutes: RouteObject[] = [
       
       // Redirecionamento para rotas antigas/removidas
       { path: "/trilha-implementacao", element: <Navigate to="/dashboard" replace /> },
+      { path: "/learning", element: <Navigate to="/dashboard" replace /> },
 
       // Soluções - rotas existentes
       { path: "/solutions/:id", element: <SolutionDetails /> },
