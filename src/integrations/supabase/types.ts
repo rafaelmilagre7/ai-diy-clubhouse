@@ -4698,6 +4698,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: Json
       }
+      backup_all_onboarding_data: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
       backup_table_data: {
         Args: { p_table_name: string; p_reason?: string }
         Returns: Json
@@ -4839,6 +4843,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: number
       }
+      cleanup_expired_invites: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
       cleanup_expired_invites_enhanced: {
         Args: Record<PropertyKey, never>
         Returns: Json
@@ -4850,6 +4858,10 @@ export type Database = {
       cleanup_expired_sessions_enhanced: {
         Args: Record<PropertyKey, never>
         Returns: number
+      }
+      cleanup_old_analytics: {
+        Args: { p_days_old?: number }
+        Returns: Json
       }
       cleanup_old_audit_logs: {
         Args: Record<PropertyKey, never> | { retention_period?: unknown }
@@ -4915,6 +4927,10 @@ export type Database = {
         }
         Returns: Json
       }
+      create_invite_batch: {
+        Args: { p_emails: string[]; p_role_id: string; p_expires_in?: unknown }
+        Returns: Json
+      }
       create_invite_hybrid: {
         Args:
           | {
@@ -4944,6 +4960,10 @@ export type Database = {
       }
       create_missing_profile_safe: {
         Args: { target_user_id: string }
+        Returns: Json
+      }
+      create_network_connection: {
+        Args: { p_recipient_id: string; p_message?: string }
         Returns: Json
       }
       create_notification: {
@@ -4977,9 +4997,17 @@ export type Database = {
         Args: { bucket_name: string }
         Returns: Json
       }
+      create_user_backup: {
+        Args: { p_user_id: string; p_backup_type?: string }
+        Returns: Json
+      }
       create_user_badge: {
         Args: { user_id: string; badge_id: string }
         Returns: string
+      }
+      createstoragepublicpolicy: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
       }
       current_user_is_admin: {
         Args: Record<PropertyKey, never>
@@ -5011,6 +5039,14 @@ export type Database = {
       }
       delete_user_complete: {
         Args: { target_user_id: string }
+        Returns: Json
+      }
+      deleteforumpost: {
+        Args: { post_id: string }
+        Returns: Json
+      }
+      deleteforumtopic: {
+        Args: { topic_id: string }
         Returns: Json
       }
       detect_at_risk_users: {
@@ -5085,6 +5121,10 @@ export type Database = {
       generate_certificate_validation_code: {
         Args: Record<PropertyKey, never>
         Returns: string
+      }
+      generate_compatibility_score: {
+        Args: { user1_id: string; user2_id: string }
+        Returns: number
       }
       generate_email_template: {
         Args: { template_type: string; user_data: Json }
@@ -5354,6 +5394,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: Json
       }
+      get_system_health_check: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
       get_system_setting: {
         Args: { setting_key: string }
         Returns: string
@@ -5379,6 +5423,10 @@ export type Database = {
       }
       get_user_complete_data: {
         Args: { p_user_id: string }
+        Returns: Json
+      }
+      get_user_learning_stats: {
+        Args: { target_user_id: string }
         Returns: Json
       }
       get_user_permissions: {
@@ -5495,11 +5543,11 @@ export type Database = {
         Returns: Json
       }
       increment_topic_replies: {
-        Args: { p_topic_id: string }
+        Args: { topic_id: string }
         Returns: undefined
       }
       increment_topic_views: {
-        Args: { p_topic_id: string }
+        Args: { topic_id: string }
         Returns: undefined
       }
       initialize_onboarding_for_all_users: {
@@ -5547,6 +5595,14 @@ export type Database = {
       is_valid_url: {
         Args: { url: string }
         Returns: boolean
+      }
+      issue_solution_certificate: {
+        Args: {
+          p_user_id: string
+          p_solution_id: string
+          p_implementation_data?: Json
+        }
+        Returns: Json
       }
       log_invite_delivery: {
         Args: {
@@ -5822,6 +5878,14 @@ export type Database = {
         Args: { p_user_id: string; p_step: number; p_data?: Json }
         Returns: Json
       }
+      update_user_preferences: {
+        Args: { p_user_id: string; p_preferences: Json }
+        Returns: Json
+      }
+      update_user_progress: {
+        Args: { p_user_id: string; p_lesson_id: string; p_progress_data?: Json }
+        Returns: Json
+      }
       use_invite: {
         Args: { invite_token: string; user_id: string }
         Returns: Json
@@ -5849,6 +5913,10 @@ export type Database = {
       validate_bucket_name: {
         Args: { bucket_name: string }
         Returns: boolean
+      }
+      validate_certificate: {
+        Args: { p_validation_code: string }
+        Returns: Json
       }
       validate_certificate_code: {
         Args: { p_validation_code: string }
