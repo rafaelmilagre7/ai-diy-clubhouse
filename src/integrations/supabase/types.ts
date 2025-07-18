@@ -4633,6 +4633,7 @@ export type Database = {
         Row: {
           active_learners: number | null
           active_users_7d: number | null
+          completed_implementations: number | null
           completed_onboarding: number | null
           completion_rate: number | null
           growth_rate: number | null
@@ -4646,10 +4647,10 @@ export type Database = {
       }
       user_segmentation_analytics: {
         Row: {
-          avg_completion_rate: number | null
-          completed_count: number | null
+          completed_onboarding: number | null
           new_users_30d: number | null
-          segment_name: string | null
+          new_users_7d: number | null
+          role_name: string | null
           user_count: number | null
         }
         Relationships: []

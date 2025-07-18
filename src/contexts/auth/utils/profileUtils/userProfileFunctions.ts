@@ -9,89 +9,40 @@ const CACHE_DURATION = 5 * 60 * 1000; // 5 minutos
 
 export const fetchUserProfile = async (userId: string): Promise<UserProfile | null> => {
   try {
-    logger.info('[PROFILE] 🔄 FORÇA RELOAD - Iniciando busca de perfil', { userId });
+    logger.info('[PROFILE] 🔄 Buscando perfil via função de cache segura', { userId });
     
-    // LIMPAR CACHE CORROMPIDO - ignorar cache local por enquanto
+    // LIMPAR CACHE CORROMPIDO
     profileCache.clear();
-    logger.info('[PROFILE] 🧹 Cache local limpo - forçando dados frescos');
+    logger.info('[PROFILE] 🧹 Cache local limpo');
 
-    // Tentar buscar do cache do banco primeiro
-    const { data: cacheData } = await supabase.rpc('get_cached_profile', {
+    // USAR APENAS A FUNÇÃO DE CACHE OTIMIZADA - NÃO ACESSAR TABELAS DIRETAMENTE
+    const { data: cacheData, error: cacheError } = await supabase.rpc('get_cached_profile', {
       target_user_id: userId
     });
 
-    if (cacheData) {
-      logger.info('[PROFILE] Perfil encontrado no cache do banco (CORRIGIDO)', { 
-        userId, 
-        cacheStructure: typeof cacheData,
-        hasUserRoles: !!(cacheData as any)?.user_roles,
-        roleName: (cacheData as any)?.user_roles?.name 
-      });
-      
-      const profile = cacheData as UserProfile;
-      
-      // Verificar estrutura dos dados
-      if (profile.user_roles?.name) {
-        logger.info('[PROFILE] ✅ Estrutura correta com user_roles', { 
-          roleName: profile.user_roles.name,
-          name: profile.name 
-        });
-        // Atualizar cache local
-        profileCache.set(userId, { profile, timestamp: Date.now() });
-        return profile;
-      } else {
-        logger.warn('[PROFILE] ⚠️ Ainda sem user_roles, forçando busca direta', { 
-          userId, 
-          roleId: profile.role_id 
-        });
-      }
-    }
-
-    // Fallback: busca direta se cache falhar
-    logger.info('[PROFILE] Cache miss, buscando perfil diretamente', { userId });
-    
-    const { data: profile, error } = await supabase
-      .from('profiles')
-      .select(`
-        *,
-        user_roles!role_id (
-          id,
-          name,
-          description,
-          permissions
-        )
-      `)
-      .eq('id', userId)
-      .maybeSingle();
-
-    if (error) {
-      logger.error('[PROFILE] Erro ao buscar perfil', { userId, error });
+    if (cacheError) {
+      logger.error('[PROFILE] Erro na função de cache', { userId, error: cacheError });
       return null;
     }
 
-    if (!profile) {
+    if (!cacheData) {
       logger.warn('[PROFILE] Perfil não encontrado', { userId });
-      profileCache.set(userId, { profile: null, timestamp: Date.now() });
       return null;
     }
 
-    logger.info('[PROFILE] Perfil carregado com sucesso', { 
+    const profile = cacheData as UserProfile;
+    
+    logger.info('[PROFILE] ✅ Perfil carregado com sucesso via cache', { 
       userId, 
-      profileId: profile.id,
-      roleId: profile.role_id,
+      name: profile.name,
       hasUserRoles: !!profile.user_roles,
-      roleName: profile.user_roles?.name,
-      profileStructure: {
-        hasRoleId: !!profile.role_id,
-        hasUserRoles: !!profile.user_roles,
-        userRolesType: typeof profile.user_roles
-      }
+      roleName: profile.user_roles?.name
     });
     
     // Atualizar cache local
-    profileCache.set(userId, { profile: profile as UserProfile, timestamp: Date.now() });
+    profileCache.set(userId, { profile, timestamp: Date.now() });
     
-    return profile as UserProfile;
+    return profile;
   } catch (error) {
     logger.error('[PROFILE] Erro inesperado ao buscar perfil', { userId, error });
     return null;
