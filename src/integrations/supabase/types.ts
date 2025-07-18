@@ -4702,6 +4702,10 @@ export type Database = {
         Args: { p_table_name: string; p_reason?: string }
         Returns: Json
       }
+      calculate_average_score: {
+        Args: { scores: number[] }
+        Returns: number
+      }
       can_access_benefit: {
         Args: { user_id: string; tool_id: string }
         Returns: boolean
@@ -4819,6 +4823,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: Json
       }
+      clean_html_tags: {
+        Args: { input_text: string }
+        Returns: string
+      }
       clean_old_data: {
         Args: { p_table_name: string; p_retention_period?: unknown }
         Returns: Json
@@ -4929,6 +4937,10 @@ export type Database = {
       create_learning_certificate_if_eligible: {
         Args: { p_user_id: string; p_course_id: string }
         Returns: string
+      }
+      create_metadata_snapshot: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
       }
       create_missing_profile_safe: {
         Args: { target_user_id: string }
@@ -5048,9 +5060,25 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: Json
       }
+      format_currency: {
+        Args: { amount: number }
+        Returns: string
+      }
+      format_phone: {
+        Args: { phone: string }
+        Returns: string
+      }
+      format_relative_time: {
+        Args: { target_date: string }
+        Returns: string
+      }
       generate_certificate_validation_code: {
         Args: Record<PropertyKey, never>
         Returns: string
+      }
+      generate_email_template: {
+        Args: { template_type: string; user_data: Json }
+        Returns: Json
       }
       generate_final_security_report: {
         Args: Record<PropertyKey, never>
@@ -5085,9 +5113,17 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: Json
       }
+      generate_secure_token: {
+        Args: { token_length?: number }
+        Returns: string
+      }
       generate_security_metrics: {
         Args: Record<PropertyKey, never>
         Returns: undefined
+      }
+      generate_slug: {
+        Args: { input_text: string }
+        Returns: string
       }
       get_admin_analytics_overview: {
         Args: Record<PropertyKey, never>
@@ -5111,6 +5147,10 @@ export type Database = {
       get_admin_stats: {
         Args: Record<PropertyKey, never>
         Returns: Json
+      }
+      get_age_from_date: {
+        Args: { birth_date: string }
+        Returns: number
       }
       get_analytics_overview: {
         Args: Record<PropertyKey, never>
@@ -5300,6 +5340,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: Json
       }
+      get_system_setting: {
+        Args: { setting_key: string }
+        Returns: string
+      }
       get_total_referrals: {
         Args: { p_user_id: string }
         Returns: number
@@ -5412,6 +5456,10 @@ export type Database = {
         Args: { role_name: string; check_user_id?: string }
         Returns: boolean
       }
+      hash_sensitive_data: {
+        Args: { input_data: string }
+        Returns: string
+      }
       increment: {
         Args: { row_id: string; table_name: string; column_name: string }
         Returns: undefined
@@ -5476,6 +5524,10 @@ export type Database = {
       }
       is_user_admin_enhanced: {
         Args: { user_id?: string }
+        Returns: boolean
+      }
+      is_valid_url: {
+        Args: { url: string }
         Returns: boolean
       }
       log_invite_delivery: {
@@ -5709,6 +5761,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: Json
       }
+      truncate_text: {
+        Args: { input_text: string; max_length: number }
+        Returns: string
+      }
       update_invite_send_attempt: {
         Args: { invite_id: string }
         Returns: undefined
@@ -5749,6 +5805,10 @@ export type Database = {
         Args: { p_validation_code: string }
         Returns: Json
       }
+      validate_cnpj: {
+        Args: { cnpj: string }
+        Returns: boolean
+      }
       validate_complete_rls_security: {
         Args: Record<PropertyKey, never>
         Returns: {
@@ -5758,6 +5818,14 @@ export type Database = {
           security_status: string
           risk_level: string
         }[]
+      }
+      validate_cpf: {
+        Args: { cpf: string }
+        Returns: boolean
+      }
+      validate_email: {
+        Args: { email: string }
+        Returns: boolean
       }
       validate_input_security: {
         Args: { p_input: string; p_type?: string }
