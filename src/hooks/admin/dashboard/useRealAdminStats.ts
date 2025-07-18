@@ -59,42 +59,51 @@ export const useRealAdminStats = (timeRange: string) => {
       const startDate = getStartDate(timeRange);
       const startDateISO = startDate.toISOString();
       
-      // Buscar dados das tabelas com JOIN otimizado
-      const [usersResult, solutionsResult, lessonsResult, progressResult] = await Promise.all([
-        // Usuários criados no período com informações de role
-        supabase
-          .from('profiles')
-          .select(`
-            id, 
-            role,
-            created_at,
-            user_roles:role_id (
-              name
-            )
-          `, { count: 'exact' })
-          .gte('created_at', startDateISO),
-        
-        // Soluções publicadas no período
-        supabase
+      // Buscar usuários criados no período com informações de role
+      const usersResult = await supabase
+        .from('profiles')
+        .select(`
+          id, 
+          role,
+          created_at,
+          user_roles:role_id (
+            name
+          )
+        `, { count: 'exact' })
+        .gte('created_at', startDateISO);
+
+      // Tentar buscar soluções com fallback
+      let solutionsResult;
+      try {
+        solutionsResult = await supabase
           .from('solutions')
           .select('id, created_at', { count: 'exact' })
           .eq('published', true)
-          .gte('created_at', startDateISO),
-        
-        // Aulas publicadas no período
-        supabase
-          .from('learning_lessons')
-          .select('id, created_at', { count: 'exact' })
-          .eq('published', true)
-          .gte('created_at', startDateISO),
-        
-        // Implementações completadas no período com timing
-        supabase
+          .gte('created_at', startDateISO);
+      } catch (error) {
+        console.warn('Tabela solutions não existe, usando fallback');
+        solutionsResult = { data: [], count: 0, error: null };
+      }
+      
+      // Buscar aulas publicadas no período
+      const lessonsResult = await supabase
+        .from('learning_lessons')
+        .select('id, created_at', { count: 'exact' })
+        .eq('published', true)
+        .gte('created_at', startDateISO);
+      
+      // Tentar buscar implementações com fallback
+      let progressResult;
+      try {
+        progressResult = await supabase
           .from('progress')
           .select('id, user_id, completed_at, created_at, last_activity', { count: 'exact' })
           .eq('is_completed', true)
-          .gte('completed_at', startDateISO)
-      ]);
+          .gte('completed_at', startDateISO);
+      } catch (error) {
+        console.warn('Tabela progress não existe, usando fallback');
+        progressResult = { data: [], count: 0, error: null };
+      }
 
       // Processar roles dos usuários com fallback
       const rolesCounts = (usersResult.data || []).reduce((acc: Record<string, number>, user) => {
@@ -129,7 +138,7 @@ export const useRealAdminStats = (timeRange: string) => {
 
       // Calcular tempo médio de implementação com dados mais precisos
       let averageImplementationTime = 0;
-      if (progressResult.data && progressResult.data.length > 0) {
+      if (progressResult?.data && progressResult.data.length > 0) {
         const implementationsWithTime = progressResult.data.filter(p => 
           p.completed_at && p.created_at
         );
@@ -152,9 +161,9 @@ export const useRealAdminStats = (timeRange: string) => {
         }
       }
 
-      const totalUsers = usersResult.count || 0;
-      const totalSolutions = solutionsResult.count || 0;
-      const completedImplementations = progressResult.count || 0;
+      const totalUsers = usersResult?.count || 0;
+      const totalSolutions = solutionsResult?.count || 0;
+      const completedImplementations = progressResult?.count || 0;
 
       // Calcular crescimento com base no período anterior
       const previousPeriodStart = new Date(startDate);

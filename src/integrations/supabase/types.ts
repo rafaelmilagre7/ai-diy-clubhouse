@@ -4461,7 +4461,31 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      admin_analytics_overview: {
+        Row: {
+          active_learners: number | null
+          active_users_7d: number | null
+          completed_onboarding: number | null
+          completion_rate: number | null
+          growth_rate: number | null
+          new_solutions_30d: number | null
+          new_users_30d: number | null
+          total_lessons: number | null
+          total_solutions: number | null
+          total_users: number | null
+        }
+        Relationships: []
+      }
+      user_segmentation_analytics: {
+        Row: {
+          avg_completion_rate: number | null
+          completed_count: number | null
+          new_users_30d: number | null
+          segment_name: string | null
+          user_count: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       accept_invite: {

@@ -67,66 +67,63 @@ export const useRealSystemActivity = (timeRange: string) => {
       const startDate = getStartDate(timeRange);
       const startDateISO = startDate.toISOString();
       
-      // Buscar atividades do sistema com queries otimizadas
-      const [
-        analyticsResult,
-        profilesResult,
-        progressResult,
-        forumTopicsResult,
-        forumPostsResult,
-        learningProgressResult,
-        benefitClicksResult
-      ] = await Promise.all([
-        // Atividades de analytics (logins, etc)
-        supabase
-          .from('analytics')
-          .select('event_type, created_at, user_id', { count: 'exact' })
-          .gte('created_at', startDateISO),
-        
-        // Novos usuários
-        supabase
-          .from('profiles')
-          .select('id, created_at', { count: 'exact' })
-          .gte('created_at', startDateISO),
-        
-        // Implementações ativas e completas
-        supabase
+      // Buscar atividades do sistema com fallbacks para tabelas que podem não existir
+      
+      // Analytics sempre existe
+      const analyticsResult = await supabase
+        .from('analytics')
+        .select('event_type, created_at, user_id', { count: 'exact' })
+        .gte('created_at', startDateISO);
+      
+      // Profiles sempre existe
+      const profilesResult = await supabase
+        .from('profiles')
+        .select('id, created_at', { count: 'exact' })
+        .gte('created_at', startDateISO);
+      
+      // Progress pode não existir
+      let progressResult;
+      try {
+        progressResult = await supabase
           .from('progress')
           .select('id, is_completed, created_at, completed_at', { count: 'exact' })
-          .gte('created_at', startDateISO),
-        
-        // Atividade do fórum - tópicos
-        supabase
-          .from('forum_topics')
-          .select('id, created_at', { count: 'exact' })
-          .gte('created_at', startDateISO),
-        
-        // Atividade do fórum - posts
-        supabase
-          .from('forum_posts')
-          .select('id, created_at', { count: 'exact' })
-          .gte('created_at', startDateISO),
-        
-        // Progresso de aprendizagem
-        supabase
-          .from('learning_progress')
-          .select('id, progress_percentage, created_at', { count: 'exact' })
-          .gte('created_at', startDateISO),
-        
-        // Cliques em benefícios
-        supabase
-          .from('benefit_clicks')
-          .select('id, clicked_at', { count: 'exact' })
-          .gte('clicked_at', startDateISO)
-      ]);
+          .gte('created_at', startDateISO);
+      } catch (error) {
+        console.warn('Tabela progress não existe, usando fallback');
+        progressResult = { data: [], count: 0, error: null };
+      }
+      
+      // Forum topics sempre existe
+      const forumTopicsResult = await supabase
+        .from('forum_topics')
+        .select('id, created_at', { count: 'exact' })
+        .gte('created_at', startDateISO);
+      
+      // Forum posts sempre existe  
+      const forumPostsResult = await supabase
+        .from('forum_posts')
+        .select('id, created_at', { count: 'exact' })
+        .gte('created_at', startDateISO);
+      
+      // Learning progress sempre existe
+      const learningProgressResult = await supabase
+        .from('learning_progress')
+        .select('id, progress_percentage, created_at', { count: 'exact' })
+        .gte('created_at', startDateISO);
+      
+      // Benefit clicks sempre existe
+      const benefitClicksResult = await supabase
+        .from('benefit_clicks')
+        .select('id, clicked_at', { count: 'exact' })
+        .gte('clicked_at', startDateISO);
 
       // Processar dados de login
       const loginEvents = (analyticsResult.data || []).filter(
         event => event.event_type === 'login' || event.event_type === 'session_start'
       );
 
-      // Implementações ativas vs completas
-      const progressData = progressResult.data || [];
+      // Implementações ativas vs completas (com fallback)
+      const progressData = progressResult?.data || [];
       const activeImplementations = progressData.filter(p => !p.is_completed).length;
       const completedSolutions = progressData.filter(p => p.is_completed).length;
 
