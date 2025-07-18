@@ -187,13 +187,18 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     };
   }, []); // SEM dependências
 
-  // Tentar carregar perfil se usuário existe mas perfil não
+  // Tentar carregar perfil se usuário existe mas perfil não (SIMPLIFICADO)
   useEffect(() => {
     if (user?.id && !profile && !isLoading && !hasTriedProfileLoad.current && !isCurrentlyLoading.current) {
       logger.info('[AUTH] 🔄 Tentando carregar perfil ausente');
-      loadUserProfile(user.id);
+      // Delay para evitar conflitos
+      const timer = setTimeout(() => {
+        loadUserProfile(user.id);
+      }, 200);
+      
+      return () => clearTimeout(timer);
     }
-  }, [user?.id, profile, isLoading, loadUserProfile]);
+  }, [user?.id, profile, isLoading]);
 
   const value: AuthContextType = {
     session,
