@@ -4826,6 +4826,10 @@ export type Database = {
         Args: { p_user_id: string }
         Returns: Json
       }
+      cleanup_expired_cache: {
+        Args: Record<PropertyKey, never>
+        Returns: number
+      }
       cleanup_expired_invites_enhanced: {
         Args: Record<PropertyKey, never>
         Returns: Json
@@ -5127,8 +5131,18 @@ export type Database = {
         }[]
       }
       get_cached_profile: {
-        Args: { target_user_id: string }
-        Returns: Json
+        Args: { target_user_id?: string }
+        Returns: {
+          id: string
+          email: string
+          name: string
+          role_name: string
+          role_id: string
+          permissions: Json
+          onboarding_completed: boolean
+          created_at: string
+          cached_at: string
+        }[]
       }
       get_courses_with_stats: {
         Args: Record<PropertyKey, never>
@@ -5296,16 +5310,16 @@ export type Database = {
         Returns: Json
       }
       get_user_profile_optimized: {
-        Args: { target_user_id: string }
+        Args: { target_user_id?: string }
         Returns: {
           id: string
           email: string
           name: string
-          role_id: string
           role_name: string
+          role_id: string
+          permissions: Json
           onboarding_completed: boolean
           created_at: string
-          updated_at: string
         }[]
       }
       get_user_profile_safe: {
@@ -5708,6 +5722,10 @@ export type Database = {
       user_has_permission: {
         Args: { user_id: string; permission_code: string }
         Returns: boolean
+      }
+      validate_auth_integrity: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
       }
       validate_bucket_name: {
         Args: { bucket_name: string }
